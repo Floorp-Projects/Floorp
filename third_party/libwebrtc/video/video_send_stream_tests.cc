@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/strings/match.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/task_queue_base.h"
@@ -4029,7 +4030,11 @@ void VideoSendStreamTest::TestTemporalLayers(
               payload_name_, /*max_qp=*/56, /*is_screenshare=*/false,
               /*conference_mode=*/false);
       encoder_config->max_bitrate_bps = kMaxBitrateBps;
-
+      if (absl::EqualsIgnoreCase(payload_name_, "VP9")) {
+        encoder_config->encoder_specific_settings = rtc::make_ref_counted<
+            VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+            VideoEncoder::GetDefaultVp9Settings());
+      }
       if (scalability_mode_.empty()) {
         for (size_t i = 0; i < num_temporal_layers_.size(); ++i) {
           VideoStream& stream = encoder_config->simulcast_layers[i];
@@ -4073,6 +4078,9 @@ void VideoSendStreamTest::TestTemporalLayers(
       if (const auto* vp8_header = absl::get_if<RTPVideoHeaderVP8>(
               &parsed_payload->video_header.video_type_header)) {
         parsed.temporal_idx = vp8_header->temporalIdx;
+      } else if (const auto* vp9_header = absl::get_if<RTPVideoHeaderVP9>(
+                     &parsed_payload->video_header.video_type_header)) {
+        parsed.temporal_idx = vp9_header->temporal_idx;
       } else {
         RTC_DCHECK_NOTREACHED();
       }
@@ -4236,6 +4244,15 @@ TEST_F(VideoSendStreamTest, TestScalabilityModeVp8SimulcastWithoutSimAdapter) {
   TestTemporalLayers(&encoder_factory, "VP8",
                      /*num_temporal_layers=*/{},
                      {ScalabilityMode::kL1T2, ScalabilityMode::kL1T2});
+}
+
+TEST_F(VideoSendStreamTest, TestTemporalLayersVp9) {
+  test::FunctionVideoEncoderFactory encoder_factory(
+      []() { return VP9Encoder::Create(); });
+
+  TestTemporalLayers(&encoder_factory, "VP9",
+                     /*num_temporal_layers=*/{2},
+                     /*scalability_mode=*/{});
 }
 
 }  // namespace webrtc
