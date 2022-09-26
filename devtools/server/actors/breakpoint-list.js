@@ -8,7 +8,7 @@ const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const { breakpointListSpec } = require("devtools/shared/specs/breakpoint-list");
 const {
   SessionDataHelpers,
-} = require("devtools/server/actors/watcher/SessionDataHelpers.jsm");
+} = require("resource://devtools/server/actors/watcher/SessionDataHelpers.jsm");
 const { SUPPORTED_DATA } = SessionDataHelpers;
 const { BREAKPOINTS, XHR_BREAKPOINTS, EVENT_BREAKPOINTS } = SUPPORTED_DATA;
 

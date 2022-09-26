@@ -10,7 +10,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 loader.lazyRequireGetter(
   this,
   "getAddonIdForWindowGlobal",
-  "devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
+  "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
   true
 );
 

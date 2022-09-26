@@ -21,7 +21,7 @@ loader.lazyGetter(this, "ExtensionStorageIDB", () => {
 loader.lazyRequireGetter(
   this,
   "getAddonIdForWindowGlobal",
-  "devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
+  "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
   true
 );
 
