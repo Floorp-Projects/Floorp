@@ -554,6 +554,24 @@ static bool InSharedRegion(mach_vm_address_t aAddr, cpu_type_t aType) {
   return NS_OK;
 }
 
+[[nodiscard]] static nsresult PhysicalFootprintAmount(int64_t* aN,
+                                                      mach_port_t aPort = 0) {
+  MOZ_ASSERT(aN);
+
+  // The phys_footprint value (introduced in 10.11) of the TASK_VM_INFO data
+  // matches the value in the 'Memory' column of the Activity Monitor.
+  task_vm_info_data_t task_vm_info;
+  mach_msg_type_number_t count = TASK_VM_INFO_COUNT;
+  kern_return_t kr = task_info(aPort ? aPort : mach_task_self(), TASK_VM_INFO,
+                               (task_info_t)&task_vm_info, &count);
+  if (kr != KERN_SUCCESS) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aN = task_vm_info.phys_footprint;
+  return NS_OK;
+}
+
 #elif defined(XP_WIN)
 
 #  include <windows.h>
@@ -1041,16 +1059,24 @@ class ResidentUniqueReporter final : public nsIMemoryReporter {
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize) override {
     int64_t amount = 0;
+    // clang-format off
     if (NS_SUCCEEDED(ResidentUniqueDistinguishedAmount(&amount))) {
-      // clang-format off
       MOZ_COLLECT_REPORT(
         "resident-unique", KIND_OTHER, UNITS_BYTES, amount,
 "Memory mapped by the process that is present in physical memory and not "
 "shared with any other processes.  This is also known as the process's unique "
 "set size (USS).  This is the amount of RAM we'd expect to be freed if we "
 "closed this process.");
-      // clang-format on
     }
+#ifdef XP_MACOSX
+    if (NS_SUCCEEDED(PhysicalFootprintAmount(&amount))) {
+      MOZ_COLLECT_REPORT(
+        "resident-phys-footprint", KIND_OTHER, UNITS_BYTES, amount,
+"Memory footprint reported by MacOS's task_info API's phys_footprint field. "
+"This matches the memory column in Activity Monitor.");
+    }
+#endif
+    // clang-format on
     return NS_OK;
   }
 };
