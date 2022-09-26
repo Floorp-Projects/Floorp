@@ -40,16 +40,13 @@ class StunBindingRequest : public StunRequest {
   StunBindingRequest(UDPPort* port,
                      const rtc::SocketAddress& addr,
                      int64_t start_time)
-      : StunRequest(port->request_manager()),
+      : StunRequest(port->request_manager(),
+                    std::make_unique<StunMessage>(STUN_BINDING_REQUEST)),
         port_(port),
         server_addr_(addr),
         start_time_(start_time) {}
 
   const rtc::SocketAddress& server_addr() const { return server_addr_; }
-
-  void Prepare(StunMessage* message) override {
-    message->SetType(STUN_BINDING_REQUEST);
-  }
 
   void OnResponse(StunMessage* response) override {
     const StunAddressAttribute* addr_attr =

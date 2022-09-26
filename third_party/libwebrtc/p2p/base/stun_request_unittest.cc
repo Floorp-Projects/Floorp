@@ -77,16 +77,9 @@ class StunRequestTest : public ::testing::Test {
 // Forwards results to the test class.
 class StunRequestThunker : public StunRequest {
  public:
-  StunRequestThunker(StunRequestManager& manager,
-                     StunMessageType message_type,
-                     StunRequestTest* test)
-      : StunRequest(manager, CreateStunMessage(message_type)), test_(test) {
-    Construct();  // Triggers a call to `Prepare()` which sets the type.
-  }
   StunRequestThunker(StunRequestManager& manager, StunRequestTest* test)
-      : StunRequest(manager), test_(test) {
-    Construct();  // Triggers a call to `Prepare()` which sets the type.
-  }
+      : StunRequest(manager, CreateStunMessage(STUN_BINDING_REQUEST)),
+        test_(test) {}
 
   std::unique_ptr<StunMessage> CreateResponseMessage(StunMessageType type) {
     return CreateStunMessage(type, msg());
@@ -99,16 +92,12 @@ class StunRequestThunker : public StunRequest {
   }
   virtual void OnTimeout() { test_->OnTimeout(); }
 
-  virtual void Prepare(StunMessage* message) {
-    message->SetType(STUN_BINDING_REQUEST);
-  }
-
   StunRequestTest* test_;
 };
 
 // Test handling of a normal binding response.
 TEST_F(StunRequestTest, TestSuccess) {
-  auto* request = new StunRequestThunker(manager_, STUN_BINDING_REQUEST, this);
+  auto* request = new StunRequestThunker(manager_, this);
   std::unique_ptr<StunMessage> res =
       request->CreateResponseMessage(STUN_BINDING_RESPONSE);
   manager_.Send(request);
@@ -122,7 +111,7 @@ TEST_F(StunRequestTest, TestSuccess) {
 
 // Test handling of an error binding response.
 TEST_F(StunRequestTest, TestError) {
-  auto* request = new StunRequestThunker(manager_, STUN_BINDING_REQUEST, this);
+  auto* request = new StunRequestThunker(manager_, this);
   std::unique_ptr<StunMessage> res =
       request->CreateResponseMessage(STUN_BINDING_ERROR_RESPONSE);
   manager_.Send(request);
@@ -136,7 +125,7 @@ TEST_F(StunRequestTest, TestError) {
 
 // Test handling of a binding response with the wrong transaction id.
 TEST_F(StunRequestTest, TestUnexpected) {
-  auto* request = new StunRequestThunker(manager_, STUN_BINDING_REQUEST, this);
+  auto* request = new StunRequestThunker(manager_, this);
   std::unique_ptr<StunMessage> res = CreateStunMessage(STUN_BINDING_RESPONSE);
 
   manager_.Send(request);
@@ -151,7 +140,7 @@ TEST_F(StunRequestTest, TestUnexpected) {
 // Test that requests are sent at the right times.
 TEST_F(StunRequestTest, TestBackoff) {
   rtc::ScopedFakeClock fake_clock;
-  auto* request = new StunRequestThunker(manager_, STUN_BINDING_REQUEST, this);
+  auto* request = new StunRequestThunker(manager_, this);
   std::unique_ptr<StunMessage> res =
       request->CreateResponseMessage(STUN_BINDING_RESPONSE);
 
@@ -176,7 +165,7 @@ TEST_F(StunRequestTest, TestBackoff) {
 // Test that we timeout properly if no response is received.
 TEST_F(StunRequestTest, TestTimeout) {
   rtc::ScopedFakeClock fake_clock;
-  auto* request = new StunRequestThunker(manager_, STUN_BINDING_REQUEST, this);
+  auto* request = new StunRequestThunker(manager_, this);
   std::unique_ptr<StunMessage> res =
       request->CreateResponseMessage(STUN_BINDING_RESPONSE);
 
@@ -213,7 +202,7 @@ TEST_F(StunRequestTest, TestNoEmptyRequest) {
 // which is not recognized, the transaction should be considered a failure and
 // the response should be ignored.
 TEST_F(StunRequestTest, TestUnrecognizedComprehensionRequiredAttribute) {
-  auto* request = new StunRequestThunker(manager_, STUN_BINDING_REQUEST, this);
+  auto* request = new StunRequestThunker(manager_, this);
   std::unique_ptr<StunMessage> res =
       request->CreateResponseMessage(STUN_BINDING_ERROR_RESPONSE);
 

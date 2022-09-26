@@ -114,14 +114,7 @@ class StunRequest : public rtc::MessageHandler {
  protected:
   friend class StunRequestManager;
 
-  // Causes our wrapped StunMessage to be Prepared.
-  // Only called by StunRequestManager.
-  // TODO(tommi): get rid of this (see cc file).
-  void Construct();
-
-  // Fills in a request object to be sent.  Note that request's transaction ID
-  // will already be set and cannot be changed.
-  virtual void Prepare(StunMessage* message) {}
+  StunMessage* mutable_msg() { return msg_.get(); }
 
   // Called when the message receives a response or times out.
   virtual void OnResponse(StunMessage* response) {}
