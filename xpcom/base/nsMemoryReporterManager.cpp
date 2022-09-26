@@ -2451,6 +2451,16 @@ nsMemoryReporterManager::GetResidentUnique(int64_t* aAmount) {
 #endif
 }
 
+#ifdef XP_MACOSX
+/*static*/
+int64_t nsMemoryReporterManager::PhysicalFootprint(mach_port_t aPort) {
+  int64_t amount = 0;
+  nsresult rv = PhysicalFootprintAmount(&amount, aPort);
+  NS_ENSURE_SUCCESS(rv, 0);
+  return amount;
+}
+#endif
+
 typedef
 #ifdef XP_WIN
     HANDLE
