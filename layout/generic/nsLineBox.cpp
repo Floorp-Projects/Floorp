@@ -201,17 +201,6 @@ static void ListFloats(FILE* out, const char* aPrefix,
   return "unknown";
 }
 
-char* nsLineBox::StateToString(char* aBuf, int32_t aBufSize) const {
-  snprintf(aBuf, aBufSize, "%s,%s,%s,%s,%s,before:%s,after:%s[0x%x]",
-           IsBlock() ? "block" : "inline", IsDirty() ? "dirty" : "clean",
-           IsPreviousMarginDirty() ? "prevmargindirty" : "prevmarginclean",
-           IsImpactedByFloat() ? "impacted" : "not-impacted",
-           IsLineWrapped() ? "wrapped" : "not-wrapped",
-           BreakTypeToString(GetBreakTypeBefore()),
-           BreakTypeToString(GetBreakTypeAfter()), mAllFlags);
-  return aBuf;
-}
-
 void nsLineBox::List(FILE* out, int32_t aIndent,
                      nsIFrame::ListFlags aFlags) const {
   nsCString str;
@@ -224,10 +213,16 @@ void nsLineBox::List(FILE* out, int32_t aIndent,
 void nsLineBox::List(FILE* out, const char* aPrefix,
                      nsIFrame::ListFlags aFlags) const {
   nsCString str(aPrefix);
-  char cbuf[100];
-  str += nsPrintfCString("line@%p count=%d state=%s ",
-                         static_cast<const void*>(this), GetChildCount(),
-                         StateToString(cbuf, sizeof(cbuf)));
+  str += nsPrintfCString(
+      "line@%p count=%d state=%s,%s,%s,%s,%s,before:%s,after:%s[0x%x]", this,
+      GetChildCount(), IsBlock() ? "block" : "inline",
+      IsDirty() ? "dirty" : "clean",
+      IsPreviousMarginDirty() ? "prevmargindirty" : "prevmarginclean",
+      IsImpactedByFloat() ? "impacted" : "not-impacted",
+      IsLineWrapped() ? "wrapped" : "not-wrapped",
+      BreakTypeToString(GetBreakTypeBefore()),
+      BreakTypeToString(GetBreakTypeAfter()), mAllFlags);
+
   if (IsBlock() && !GetCarriedOutBEndMargin().IsZero()) {
     const nscoord bm = GetCarriedOutBEndMargin().get();
     str += nsPrintfCString("bm=%s ",

@@ -69,6 +69,12 @@ class BRFrame final : public nsIFrame {
   mozilla::a11y::AccType AccessibleType() override;
 #endif
 
+#ifdef DEBUG_FRAME_DUMP
+  nsresult GetFrameName(nsAString& aResult) const override {
+    return MakeFrameName(u"BR"_ns, aResult);
+  }
+#endif
+
  protected:
   BRFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsIFrame(aStyle, aPresContext, kClassID),
