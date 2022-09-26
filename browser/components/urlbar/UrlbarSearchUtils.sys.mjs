@@ -9,8 +9,6 @@
  * state, and an init method.  A separate object is easier.
  */
 
-"use strict";
-
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};

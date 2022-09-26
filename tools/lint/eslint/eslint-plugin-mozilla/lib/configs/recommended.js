@@ -69,6 +69,14 @@ module.exports = {
       },
     },
     {
+      files: ["**/*.mjs"],
+      rules: {
+        // This rule defaults to not allowing "use strict" in module files since
+        // they are always loaded in strict mode.
+        strict: "error",
+      },
+    },
+    {
       files: ["**/*.jsm", "**/*.jsm.js"],
       rules: {
         "mozilla/mark-exported-symbols-as-used": "error",
