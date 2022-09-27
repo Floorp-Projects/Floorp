@@ -134,13 +134,15 @@ class _ExperimentManager {
 
     for (const experiment of restoredExperiments) {
       this.setExperimentActive(experiment);
-      this._restoreEnrollmentPrefs(experiment);
-      this._updatePrefObservers(experiment);
+      if (this._restoreEnrollmentPrefs(experiment)) {
+        this._updatePrefObservers(experiment);
+      }
     }
     for (const rollout of restoredRollouts) {
       this.setExperimentActive(rollout);
-      this._restoreEnrollmentPrefs(rollout);
-      this._updatePrefObservers(rollout);
+      if (this._restoreEnrollmentPrefs(rollout)) {
+        this._updatePrefObservers(rollout);
+      }
     }
 
     this.observe();
@@ -525,7 +527,10 @@ class _ExperimentManager {
    * @param {string} options.changedPref.branch
    *        The branch that was changed ("user" or "default").
    */
-  _unenroll(enrollment, { reason = "unknown", changedPref = undefined } = {}) {
+  _unenroll(
+    enrollment,
+    { reason = "unknown", changedPref = undefined, duringRestore = false } = {}
+  ) {
     const { slug } = enrollment;
 
     if (!enrollment.active) {
@@ -555,7 +560,7 @@ class _ExperimentManager {
       reason,
     });
 
-    this._unsetEnrollmentPrefs(enrollment, changedPref);
+    this._unsetEnrollmentPrefs(enrollment, { changedPref, duringRestore });
 
     lazy.log.debug(`Recipe unenrolled: ${slug}`);
   }
@@ -877,18 +882,23 @@ class _ExperimentManager {
    * @param {Enrollment} enrollment
    *        The enrollment that has ended.
    *
-   * @param {object?} changedPref
+   * @param {object} options
+   *
+   * @param {object?} options.changedPref
    *        If provided, a changed pref that caused the unenrollment that
    *        triggered unsetting these prefs. This is provided as to not
    *        overwrite a changed pref with an original value.
    *
-   * @param {string} changedPref.name
+   * @param {string} options.changedPref.name
    *        The name of the changed pref.
    *
-   * @param {string} changedPref.branch
+   * @param {string} options.changedPref.branch
    *        The branch that was changed ("user" or "default").
+   *
+   * @param {boolean} options.duringRestore
+   *        The unenrollment was caused during restore.
    */
-  _unsetEnrollmentPrefs(enrollment, changedPref) {
+  _unsetEnrollmentPrefs(enrollment, { changedPref, duringRestore } = {}) {
     if (!enrollment.prefs?.length) {
       return;
     }
@@ -910,25 +920,35 @@ class _ExperimentManager {
       }
 
       let newValue = pref.originalValue;
-      const conflictingEnrollment = getConflictingEnrollment(pref.featureId);
-      const conflictingPref = conflictingEnrollment?.prefs?.find(
-        p => p.name === pref.name
-      );
 
-      if (conflictingPref) {
-        if (enrollment.isRollout) {
-          // If we are unenrolling from a rollout, we have an experiment that
-          // has set the pref. Since experiments take priority, we do not unset
-          // it.
-          continue;
-        } else {
-          // If we are an unenrolling from an experiment, we have a rollout that would
-          // set the same pref, so we update the pref to that value instead of
-          // the original value.
-          newValue = getFeatureFromBranch(
-            conflictingEnrollment.branch,
-            pref.featureId
-          ).value[pref.variable];
+      // If we are unenrolling from an experiment during a restore, we must
+      // ignore any potential conflicting rollout in the store, because its
+      // hasn't gone through `_restoreEnrollmentPrefs`, which might also cause
+      // it to unenroll.
+      //
+      // Both enrollments will have the same `originalValue` stored, so it will
+      // always be restored.
+      if (!duringRestore || enrollment.isRollout) {
+        const conflictingEnrollment = getConflictingEnrollment(pref.featureId);
+        const conflictingPref = conflictingEnrollment?.prefs?.find(
+          p => p.name === pref.name
+        );
+
+        if (conflictingPref) {
+          if (enrollment.isRollout) {
+            // If we are unenrolling from a rollout, we have an experiment that
+            // has set the pref. Since experiments take priority, we do not unset
+            // it.
+            continue;
+          } else {
+            // If we are an unenrolling from an experiment, we have a rollout that would
+            // set the same pref, so we update the pref to that value instead of
+            // the original value.
+            newValue = getFeatureFromBranch(
+              conflictingEnrollment.branch,
+              pref.featureId
+            ).value[pref.variable];
+          }
         }
       }
 
@@ -957,15 +977,62 @@ class _ExperimentManager {
    * @param {object} enrollment.branch The branch that was enrolled.
    * @param {object[]} enrollment.prefs The prefs that are set by the enrollment.
    * @param {object[]} enrollment.isRollout The prefs that are set by the enrollment.
+   *
+   * @returns {boolean} Whether the restore was successful. If false, the
+   *                    enrollment has ended.
    */
-  _restoreEnrollmentPrefs({ branch, prefs, isRollout }) {
+  _restoreEnrollmentPrefs(enrollment) {
+    const { branch, prefs = [], isRollout } = enrollment;
+
     if (!prefs?.length) {
-      return;
+      return false;
     }
 
     const featuresById = Object.assign(
       ...featuresCompat(branch).map(f => ({ [f.featureId]: f }))
     );
+
+    for (const { name, featureId, variable } of prefs) {
+      // If the feature no longer exists, unenroll.
+      if (!Object.hasOwn(lazy.NimbusFeatures, featureId)) {
+        this._unenroll(enrollment, {
+          reason: "invalid-feature",
+          duringRestore: true,
+        });
+        return false;
+      }
+
+      const variables = lazy.NimbusFeatures[featureId].manifest.variables;
+
+      // If the feature is missing a variable that set a pref, unenroll.
+      if (!Object.hasOwn(variables, variable)) {
+        this._unenroll(enrollment, {
+          reason: "pref-variable-missing",
+          duringRestore: true,
+        });
+        return false;
+      }
+
+      const variableDef = variables[variable];
+
+      // If the variable is no longer a pref-setting variable, unenroll.
+      if (!Object.hasOwn(variableDef, "setPref")) {
+        this._unenroll(enrollment, {
+          reason: "pref-variable-no-longer",
+          duringRestore: true,
+        });
+        return false;
+      }
+
+      // If the variable is setting a different preference, unenroll.
+      if (variableDef.setPref !== name) {
+        this._unenroll(enrollment, {
+          reason: "pref-variable-changed",
+          duringRestore: true,
+        });
+        return false;
+      }
+    }
 
     for (const { name, branch: prefBranch, featureId, variable } of prefs) {
       // User prefs are already persisted.
@@ -995,6 +1062,8 @@ class _ExperimentManager {
         lazy.PrefUtils.setPref(name, value, { branch: prefBranch });
       }
     }
+
+    return true;
   }
 
   /**
