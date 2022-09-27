@@ -396,8 +396,6 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">自訂</string>
     <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">使用您的 Firefox 帳號同步書籤、瀏覽紀錄等資料</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">登入後即可同步分頁、書籤、密碼與其他資料。</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox 帳號</string>
@@ -502,7 +500,7 @@
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">經典 %s</string>
     <!-- Text for limited edition wallpapers title. -->
-    <string name="wallpaper_limited_edition_title">限量版</string>
+    <string name="wallpaper_limited_edition_title">期間限定</string>
     <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
     <string name="wallpaper_limited_edition_description_with_learn_more">全新的獨立之聲系列。%s</string>
     <!-- Description text for the limited edition wallpapers. -->
@@ -597,9 +595,6 @@
     <string name="preference_experiments_summary_2">允許 Mozilla 安裝執行使用者研究</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">開啟 Sync</string>
-
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">同步並儲存您的資料</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -817,9 +812,6 @@
     <string name="delete_from_history">從瀏覽紀錄刪除</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s（隱私瀏覽模式）</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">其他分頁</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1250,8 +1242,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">離開</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">將刪除您的所有瀏覽資料。</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">要清除的時間範圍</string>
     <!-- Body text of a delete browsing data dialog. -->

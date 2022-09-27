@@ -289,11 +289,15 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">ਤੁਹਾਡੇ ਆਪਣੇ ਬਣਾਏ ਮੁੱਖ-ਸਫ਼ੇ ਨੂੰ ਸਮਝੋ। ਸੱਜਰੀਆਂ ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕ ਅਤੇ ਖੋਜ ਨਤੀਜੇ ਇੱਥੇ ਦਿਖਾਈ ਦੇਣਗੇ।</string>
     <!-- Home onboarding dialog welcome screen title text. -->
-    <string name="onboarding_home_welcome_title">ਆਜ਼ਾਦ ਇੰਟਰਨੈੱਟ ਲਈ ਜੀ ਆਇਆਂ ਨੂੰ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">ਆਜ਼ਾਦ ਇੰਟਰਨੈੱਟ ਲਈ ਜੀ ਆਇਆਂ ਨੂੰ</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">ਵੱਧ ਨਿੱਜੀ ਇੰਟਰਨੈੱਟ ਲਈ ਜੀ ਆਇਆਂ ਨੂੰ</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">ਵੱਧ ਰੰਗ। ਵੱਧ ਪਰਦੇਦਾਰੀ। ਫਾਇਦੇ ਨਾਲੋਂ ਲੋਕਾਂ ਨੂੰ ਪਹਿਲ ਦੇਣ ਦਾ ਉਹੀ ਵਾਅਦਾ।</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title_2">ਫ਼ੋਨ ਤੋਂ ਲੈਪਟਾਪ ਉੱਤੇ ਜਾਓ ਤੇ ਵਾਪਸ ਆਓ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">ਫ਼ੋਨ ਤੋਂ ਲੈਪਟਾਪ ਉੱਤੇ ਜਾਓ ਤੇ ਵਾਪਸ ਆਓ</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">ਸਕਰੀਨਾਂ ਵਿਚਾਲੇ ਬਦਲਣਾ ਪਹਿਲਾਂ ਤੋਂ ਵੱਧ ਸੌਖਾਲਾ ਹੋਇਆ</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">ਹੋਰ ਡਿਵਾਈਸਾਂ ਤੋਂ ਜਿੱਥੇ ਤੁਸੀਂ ਟੈਬਾਂ ਨੂੰ ਛੱਡਿਆ ਹੈ, ਉਥੋਂ ਹੀ ਹੁਣ ਆਪਣੀ ਮੁੱਖ ਸਕਰੀਨ ਤੋਂ ਲਵੋ।</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -394,8 +398,6 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">ਪਸੰਦੀਦਾ</string>
     <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">ਆਪਣੇ ਫਾਇਰਫਾਕਸ ਖਾਤੇ ਨਾਲ ਬੁੱਕਮਾਰਕ, ਅਤੀਤ ਅਤੇ ਹੋਰ ਨੂੰ ਸਿੰਕ ਕਰੋ</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕਾਂ, ਪਾਸਵਰਡਾ ਤੇ ਹੋਰਾਂ ਨੂੰ ਸਿੰਕ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ।</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">ਫਾਇਰਫਾਕਸ ਖਾਤਾ</string>
@@ -482,12 +484,35 @@
     <string name="wallpaper_updated_snackbar_message">ਵਾਲਪੇਪਰ ਅੱਪਡੇਟ ਕੀਤਾ!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">ਵੇਖੋ</string>
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">ਵਾਲਪੇਪਰ ਡਾਊਨਲੋਡ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ</string>
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">ਫੇਰ ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">ਵਾਲਪੇਪਰ ਬਦਲਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">ਹੋਰ ਜਾਣੋ</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Firefox ਮੁੱਖ-ਸਫ਼ੇ ਲੋਗੋ ਨੂੰ ਛੂਹ ਕੇ ਵਾਲਪੇਪਰ ਬਦਲੋ</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox ਲੋਗੋ - ਵਾਲਪੇਪਰ ,ਬਟਨ ਬਦਲੋ</string>
+
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">ਕਲਾਸਿਕ %s</string>
+    <!-- Text for limited edition wallpapers title. -->
+    <string name="wallpaper_limited_edition_title">ਲਿਮਟਡ ਐਡੀਸ਼ਨ</string>
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">ਨਵਾਂ ਆਜ਼ਾਦ ਆਵਾਜਾਂ ਦਾ ਭੰਡਾਰ। %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">ਨਵਾਂ ਆਜ਼ਾਦ ਆਵਾਜ਼ਾਂ ਦਾ ਭੰਡਾਰ ਹੈ।</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">ਰੰਗ ਪਾ ਕੇ ਵੇਖੋ</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">ਵਾਲਪੇਪਰ ਚੁਣੋ, ਜੋ ਤੁਹਾਡੇ ਰੰਗ ਵਿੱਚ ਢਲੇ ਹੋਣ।</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">ਹੋਰ ਵਾਲਪੇਪਰ ਵੇਖੋ</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -572,9 +597,6 @@
     <string name="preference_experiments_summary_2">Mozilla ਨੂੰ ਅਧਿਐਨ ਇੰਸਟਾਲ ਕਰਨ ਤੇ ਚਲਾਉਣ ਦੇ ਇਜਾਜ਼ਤ ਦਿਓ</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">ਸਿੰਕ ਚਾਲੂ ਹੈ</string>
-
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">ਆਪਣਾ ਡਾਟਾ ਸਿੰਕ ਕਰੋ ਤੇ ਸੰਭਾਲੋ</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -793,9 +815,6 @@
     <string name="delete_from_history">ਅਤੀਤ ਵਿੱਚੋਂ ਹਟਾਓ</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (ਪ੍ਰਾਈਵੇਟ ਮੋਡ)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">ਹੋਰ ਟੈਬਾਂ</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1207,8 +1226,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">ਬਾਹਰ</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">ਇਹ ਤੁਹਾਡੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਸਾਰੇ ਡਾਟੇ ਨੂੰ ਹਟਾਏਗਾ।</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">ਹਟਾਉਣ ਲਈ ਸਮਾਂ ਹੱਦ</string>
     <!-- Body text of a delete browsing data dialog. -->
@@ -1244,20 +1261,34 @@
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">%s ਵਲੋਂ ਜੀ ਆਇਆਂ ਨੂੰ!</string>
+    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">%s ਵਲੋਂ ਜੀ ਆਇਆਂ ਨੂੰ!</string>
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">ਬੇਹਤਰ ਇੰਟਰਨੈੱਟ ਲਈ ਜੀ ਆਇਆਂ ਨੂੰ</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">ਲੋਕਾਂ ਲਈ, ਨਾ ਕਿ ਫਾਇਦੇ ਲਈ ਬਣਾਇਆ ਬਰਾਊਜ਼ਰ।</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ Firefox ਸਿੰਕ ਕਰੋ</string>
+    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ Firefox ਸਿੰਕ ਕਰੋ</string>
 
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">ਜਿੱਥੇ ਤੁਸੀਂ ਛੱਡਿਆ ਸੀ, ਉੱਥੋਂ ਸ਼ੁਰੂ ਕਰੋ</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string name="onboarding_manual_sign_in_description_2">ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ %1$s ਵਿੱਚ ਬੁੱਕਮਾਰਕ, ਅਤੀਤ ਅਤੇ ਪਾਸਵਰਡ ਲਿਆਓ।</string>
+    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ %1$s ਵਿੱਚ ਬੁੱਕਮਾਰਕ, ਅਤੀਤ ਅਤੇ ਪਾਸਵਰਡ ਲਿਆਓ।</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">ਸਹਿਜ ਨਾਲ ਸਕਰੀਨਾਂ ਬਦਲਣ ਵਾਸਤੇ ਵੱਖ-ਵੱਖ ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ ਟੈਬਾਂ ਤੇ ਪਾਸਵਰਡਾਂ ਨੂੰ ਸਿੰਕ ਕਰੋ।</string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">ਸਾਈਨ ਅੱਪ ਕਰੋ</string>
+    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">ਸਾਈਨ ਅੱਪ ਕਰੋ</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">ਸਾਇਨ ਇਨ</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">ਸਿੰਕ ਚਾਲੂ ਹੈ</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">ਪਰਦੇਦਾਰੀ ਹਮੇਸ਼ਾਂ ਚਾਲੂ</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">ਪਰਦੇਦਾਰੀ ਹਮੇਸ਼ਾਂ ਚਾਲੂ</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">ਮੂਲ ਰੂਪ ਵਿੱਚ ਪਰਦੇਦਾਰੀ ਸੁਰੱਖਿਆ</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">ਤੁਹਾਡੇ ਵਲੋਂ ਵੈਬ ਵਰਤਣ ਦੇ ਦੌਰਾਨ ਕੰਪਨੀਆਂ ਨੂੰ ਚੋਰੀ-ਛੁਪੇ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਨ ਤੋਂ %1$s ਆਪਣੇ-ਆਪ ਰੋਕਦਾ ਹੈ।</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">ਤੁਹਾਡੇ ਵਲੋਂ ਵੈਬ ਵਰਤਣ ਦੇ ਦੌਰਾਨ ਕੰਪਨੀਆਂ ਨੂੰ ਚੋਰੀ-ਛੁਪੇ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਨ ਤੋਂ %1$s ਆਪਣੇ-ਆਪ ਰੋਕਦਾ ਹੈ।</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">ਪੇਸ਼ ਕੀਤੀ ਪੂਰੀ ਕੂਕੀਜ਼ ਸੁਰੱਖਿਆ ਨਾਲ ਤੁਹਾਡੇ ਵਲੋਂ ਖੋਲ੍ਹੀਆਂ ਸਾਈਟਾਂ ਵਿਚਾਲੇ ਟਰੈਕਰਾਂ ਨੂੰ ਕੂਕੀਜ਼ ਵਰਤਣ ਤੋਂ ਰੋਕੋ।</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">ਸਟੈਂਡਰਡ (ਮੂਲ)</string>
     <!-- text for standard blocking option button description -->
@@ -1269,16 +1300,24 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">ਆਪਣੇ ਟੂਲਬਾਰ ਦੀ ਥਾਂ ਚੁਣੋ</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">ਸੌਖੀ ਪਹੁੰਚ ਲਈ ਟੂਲਬਾਰ ਨੂੰ ਰੱਖੋ। ਹੇਠਾਂ ਰੱਖੋ ਜਾਂ ਇਸ ਨੂੰ ਉੱਤੇ ਰੱਖੋ।</string>
+    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">ਸੌਖੀ ਪਹੁੰਚ ਲਈ ਟੂਲਬਾਰ ਨੂੰ ਰੱਖੋ। ਹੇਠਾਂ ਰੱਖੋ ਜਾਂ ਇਸ ਨੂੰ ਉੱਤੇ ਰੱਖੋ।</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">ਇਸ ਨੂੰ ਹੇਠਾਂ ਰੱਕੋ ਜਾਂ ਉੱਤੇ ਲੈ ਜਾਓ।</string>
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">ਆਪਣੇ ਡਾਟਾ ਨੂੰ ਕੰਟਰੋਲ ਕਰੋ</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">ਅਸੀਂ %s ਨੂੰ ਇੰਝ ਬਣਾਇਆ ਹੈ ਕਿ ਤੁਹਾਡੇ ਕੋਲ ਪੂਰਾ ਕੰਟਰੋਲ ਹੋਵੇ ਕਿ ਤੁਸੀਂ
+    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">ਅਸੀਂ %s ਨੂੰ ਇੰਝ ਬਣਾਇਆ ਹੈ ਕਿ ਤੁਹਾਡੇ ਕੋਲ ਪੂਰਾ ਕੰਟਰੋਲ ਹੋਵੇ ਕਿ ਤੁਸੀਂ
 ਆਨਲਾਈਨ ਕੀ ਸਾਂਝਾ ਕਰਦੇ ਹੋ ਅਤੇ ਸਾਡੇ ਨਾਲ ਕੀ ਸਾਂਝਾ ਕਰਦੇ ਹੋ।</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Firefox ਤੁਹਾਡੇ ਹੱਥ ਕੰਟਰੋਲ ਦਿੰਦਾ ਹੈ ਕਿ ਤੁਸੀਂ ਆਨਲਾਈਨ ਕੀ ਸਾਂਝਾ ਕਰਨਾ ਹੈ ਅਤੇ ਕੀ ਸਾਡੇ ਨਾਲ ਸਾਂਝਾ ਕਰਨਾ ਹੈ।</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">ਸਾਡੀ ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ ਨੂੰ ਪੜ੍ਹੋ</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">ਸ਼ਾਨਾਦਰ ਇੰਟਰਨੈੱਟ ਵਰਤਣ ਲਈ ਤਿਆਰ ਹੋ?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">ਬਰਾਊਜ਼ ਕਰਨਾ ਸ਼ੁਰੂ ਕਰੋ</string>
 

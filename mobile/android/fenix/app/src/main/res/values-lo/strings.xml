@@ -270,6 +270,8 @@
 
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">ເຂົ້າໄປເບິງຄືນຈາກການຄົ້ນຫາຫຼ້າສຸດໄດ້ໃນຫນ້າທຳອິດຂອງທ່ານ.</string>
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ໜ້າຫຼັກ Firefox ທີ່ປັບແຕ່ງເປັນແບບສ່ວນຕົວຂອງທ່ານຕອນນີ້ເຮັດໃຫ້ມັນງ່າຍຂຶ້ນໃນການເລືອກບ່ອນທີ່ທ່ານປະໄວ້. ຊອກຫາແຖບ, ບຸກມາກ ແລະຜົນການຄົ້ນຫາຫຼ້າສຸດຂອງທ່ານ.</string>
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">ພົບກັບໜ້າຫຼັກທີ່ເປັນສ່ວນຕົວຂອງທ່ານ. ແຖບຫຼ້າສຸດ, ບຸກມາກ, ແລະຜົນການຊອກຫາຈະປາກົດຢູ່ບ່ອນນີ້.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
@@ -1268,9 +1270,13 @@
     <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">ຄວາມເປັນສ່ວນຕົວເປີດຕະຫຼອດ</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">ການປົກປ້ອງຄວາມເປັນສ່ວນຕົວຖືກກຳນົດເປັນຄ່າເລີ່ມຕົ້ນ</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s ຈະຢຸດບໍລິສັດບໍ່ໃຫ້ຕິດຕາມທ່ານຢ່າງລັບໆໃນທົ່ວເວັບ.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">ມາດຕະຖານ (ຄ່າພື້ນຖານ)</string>
 
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_3">ດຸ່ນດ່ຽງສໍາລັບຄວາມເປັນສ່ວນຕົວແລະການປະຕິບັດ. ໜ້າເວັບໂຫຼດຕາມປົກກະຕິ.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">ເຂັ້ມງວດ</string>
 
@@ -1398,6 +1404,8 @@
     <string name="etp_cookies_title_2">ຄຸກກີຂ້າມເວັບໄຊ</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">ຕົວຂຸດຫລຽນດິຈິຕໍລ</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">ປ້ອງກັນບໍ່ໃຫ້ສະຄຣິບທີ່ເປັນອັນຕະລາຍເຂົ້າເຖິງອຸປະກອນຂອງທ່ານເພື່ອຂຸດຄົ້ນສະກຸນເງິນດິຈິຕອນ.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">ລາຍນິ້ວມື</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
@@ -1422,6 +1430,8 @@
 
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">ປ່ຽນເສັ້ນທາງຕິດຕາມ</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">ລຶບ cookies ທີ່ຕັ້ງໄວ້ໂດຍການປ່ຽນເສັ້ນທາງໄປຫາເວັບໄຊທ໌ຕິດຕາມທີ່ຮູ້ຈັກ.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
 
@@ -1759,6 +1769,8 @@
     <string name="dialog_delete_negative">ຍົກເລີກ</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">ທາງເລືອກການເຂົ້າສູ່ລະບົບ</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">ຊ່ອງຂໍ້ຄວາມທີ່ສາມາດແກ້ໄຂໄດ້ສໍາລັບລະຫັດຜ່ານຂອງການເຂົ້າສູ່ລະບົບ.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">ບັນທຶກການປ່ຽນແປງໃນການເຂົ້າສູ່ລະບົບ.</string>
     <!--  The page title for editing a saved login. -->
@@ -1800,6 +1812,11 @@
     <string name="synced_tabs_sign_in_button">ເຂົ້າສູ່ລະບົບເພື່ອ Sync</string>
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">ບໍ່ມີແທັບທີ່ເປີດຢູ່</string>
+
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">ຂະຫຍາຍກຸ່ມແຖບທີ່ຊິ້ງແລ້ວ</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">ຫຍໍ້ກຸ່ມແຖບທີ່ຊິ້ງແລ້ວ</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
