@@ -29,6 +29,7 @@
 #include "net/dcsctp/packet/data.h"
 #include "net/dcsctp/public/dcsctp_options.h"
 #include "net/dcsctp/testing/data_generator.h"
+#include "net/dcsctp/testing/testing_macros.h"
 #include "net/dcsctp/timer/fake_timeout.h"
 #include "net/dcsctp/timer/timer.h"
 #include "net/dcsctp/tx/mock_send_queue.h"
@@ -70,7 +71,7 @@ class RetransmissionQueueTest : public testing::Test {
         timer_(timer_manager_.CreateTimer(
             "test/t3_rtx",
             []() { return absl::nullopt; },
-            TimerOptions(DurationMs(0)))) {}
+            TimerOptions(options_.rto_initial))) {}
 
   std::function<SendQueue::DataToSend(TimeMs, size_t)> CreateChunk() {
     return [this](TimeMs now, size_t max_size) {
@@ -300,6 +301,87 @@ TEST_F(RetransmissionQueueTest, ResendPacketsWhenNackedThreeTimes) {
                           Pair(TSN(18), State::kAcked),     //
                           Pair(TSN(19), State::kAcked),     //
                           Pair(TSN(20), State::kAcked)));
+}
+
+TEST_F(RetransmissionQueueTest, RestartsT3RtxOnRetransmitFirstOutstandingTSN) {
+  // Verifies that if fast retransmit is retransmitting the first outstanding
+  // TSN, it will also restart T3-RTX.
+  RetransmissionQueue queue = CreateQueue();
+  EXPECT_CALL(producer_, Produce)
+      .WillOnce(CreateChunk())
+      .WillOnce(CreateChunk())
+      .WillOnce(CreateChunk())
+      .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
+
+  static constexpr TimeMs kStartTime(100000);
+  now_ = kStartTime;
+
+  EXPECT_THAT(GetSentPacketTSNs(queue),
+              testing::ElementsAre(TSN(10), TSN(11), TSN(12)));
+
+  // Ack 10, 12, after 100ms.
+  now_ += DurationMs(100);
+  queue.HandleSack(
+      now_, SackChunk(TSN(10), kArwnd, {SackChunk::GapAckBlock(2, 2)}, {}));
+
+  EXPECT_THAT(queue.GetChunkStatesForTesting(),
+              ElementsAre(Pair(TSN(10), State::kAcked),   //
+                          Pair(TSN(11), State::kNacked),  //
+                          Pair(TSN(12), State::kAcked)));
+
+  // Send 13
+  EXPECT_CALL(producer_, Produce)
+      .WillOnce(CreateChunk())
+      .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
+  EXPECT_THAT(GetSentPacketTSNs(queue), testing::ElementsAre(TSN(13)));
+
+  // Ack 10, 12-13, after 100ms.
+  now_ += DurationMs(100);
+  queue.HandleSack(
+      now_, SackChunk(TSN(10), kArwnd, {SackChunk::GapAckBlock(2, 3)}, {}));
+
+  // Send 14
+  EXPECT_CALL(producer_, Produce)
+      .WillOnce(CreateChunk())
+      .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
+  EXPECT_THAT(GetSentPacketTSNs(queue), testing::ElementsAre(TSN(14)));
+
+  // Ack 10, 12-14, after 100 ms.
+  now_ += DurationMs(100);
+  queue.HandleSack(
+      now_, SackChunk(TSN(10), kArwnd, {SackChunk::GapAckBlock(2, 4)}, {}));
+
+  EXPECT_THAT(queue.GetChunkStatesForTesting(),
+              ElementsAre(Pair(TSN(10), State::kAcked),              //
+                          Pair(TSN(11), State::kToBeRetransmitted),  //
+                          Pair(TSN(12), State::kAcked),              //
+                          Pair(TSN(13), State::kAcked),              //
+                          Pair(TSN(14), State::kAcked)));
+
+  // This will trigger "fast retransmit" mode and only chunks 13 and 16 will be
+  // resent right now. The send queue will not even be queried.
+  EXPECT_CALL(producer_, Produce).Times(0);
+
+  EXPECT_THAT(GetTSNsForFastRetransmit(queue), testing::ElementsAre(TSN(11)));
+
+  EXPECT_THAT(queue.GetChunkStatesForTesting(),
+              ElementsAre(Pair(TSN(10), State::kAcked),     //
+                          Pair(TSN(11), State::kInFlight),  //
+                          Pair(TSN(12), State::kAcked),     //
+                          Pair(TSN(13), State::kAcked),     //
+                          Pair(TSN(14), State::kAcked)));
+
+  // Verify that the timer was really restarted when fast-retransmitting. The
+  // timeout is `options_.rto_initial`, so advance the time just before that.
+  now_ += options_.rto_initial - DurationMs(1);
+  EXPECT_FALSE(timeout_manager_.GetNextExpiredTimeout().has_value());
+
+  // And ensure it really is running.
+  now_ += DurationMs(1);
+  ASSERT_HAS_VALUE_AND_ASSIGN(TimeoutID timeout,
+                              timeout_manager_.GetNextExpiredTimeout());
+  // An expired timeout has to be handled (asserts validate this).
+  timer_manager_.HandleTimeout(timeout);
 }
 
 TEST_F(RetransmissionQueueTest, CanOnlyProduceTwoPacketsButWantsToSendThree) {
