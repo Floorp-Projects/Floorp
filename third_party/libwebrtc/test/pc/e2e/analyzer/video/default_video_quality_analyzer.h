@@ -39,7 +39,6 @@
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_internal_shared_objects.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_shared_objects.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_stream_state.h"
-#include "test/pc/e2e/analyzer/video/multi_head_queue.h"
 #include "test/pc/e2e/analyzer/video/names_collection.h"
 #include "test/testsupport/perf_test.h"
 

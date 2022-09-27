@@ -15,7 +15,7 @@
 
 #include "absl/types/optional.h"
 #include "api/units/timestamp.h"
-#include "test/pc/e2e/analyzer/video/multi_head_queue.h"
+#include "test/pc/e2e/analyzer/video/multi_reader_queue.h"
 
 namespace webrtc {
 
@@ -50,7 +50,7 @@ class StreamState {
   // When new peer is added - all current alive frames will be sent to it as
   // well. So we need to register them as expected by copying owner_ head to
   // the new head.
-  void AddPeer() { frame_ids_.AddHead(GetAliveFramesQueueIndex()); }
+  void AddPeer() { frame_ids_.AddReader(GetAliveFramesQueueIndex()); }
 
   size_t GetAliveFramesCount() const {
     return frame_ids_.size(GetAliveFramesQueueIndex());
@@ -86,7 +86,7 @@ class StreamState {
   // If we received frame with id frame_id3, then we will pop frame_id1 and
   // frame_id2 and consider those frames as dropped and then compare received
   // frame with the one from `FrameInFlight` with id frame_id3.
-  MultiHeadQueue<uint16_t> frame_ids_;
+  MultiReaderQueue<uint16_t> frame_ids_;
   std::map<size_t, Timestamp> last_rendered_frame_time_;
 };
 
