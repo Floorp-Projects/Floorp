@@ -42,59 +42,29 @@ const OwnershipModel = {
   Root: "root",
 };
 
+function getUUID() {
+  return Services.uuid
+    .generateUUID()
+    .toString()
+    .slice(1, -1);
+}
+
 /**
- * Simplified representation of WebDriver BiDi's RemoteValue.
- * https://w3c.github.io/webdriver-bidi/#data-types-protocolValue-RemoteValue
+ * Build the serialized RemoteValue.
+ *
+ * @return {Object}
+ *     An object with a mandatory `type` property, and optional `handle`,
+ *     depending on the OwnershipModel, used for the serialization and
+ *     on the value's type.
  */
-class RemoteValue {
-  #handle;
-  #value;
-  #type;
+function buildSerialized(type, handle = null) {
+  const serialized = { type };
 
-  /**
-   * Create a RemoteValue instance for the provided type and handle.
-   *
-   * @param {string} type
-   *     RemoteValue type.
-   * @param {string|null=}
-   *     Optional unique handle id. Defaults to null, otherwise should be a
-   *     string UUID.
-   */
-  constructor(type, handle = null) {
-    this.#type = type;
-    this.#handle = handle;
-    this.#value = null;
+  if (handle !== null) {
+    serialized.handle = handle;
   }
 
-  /**
-   * Serialize the RemoteValue.
-   *
-   * @return {Object}
-   *     An object with a mandatory `type` property, and optional `handle` and
-   *     `value` properties, depending on the OwnershipModel used for the
-   *     serialization and on the value's type.
-   */
-  serialize() {
-    const serialized = { type: this.#type };
-    if (this.#handle !== null) {
-      serialized.handle = this.#handle;
-    }
-    if (this.#value !== null) {
-      serialized.value = this.#value;
-    }
-    return serialized;
-  }
-
-  /**
-   * Set the `value` property of this RemoteValue.
-   *
-   * @param {Object}
-   *     An object representing the value of this RemoteValue. Actual properties
-   *     depend on the RemoteValue's type.
-   */
-  setValue(value) {
-    this.#value = value;
-  }
+  return serialized;
 }
 
 /**
@@ -503,84 +473,82 @@ function serialize(
   }
 
   const className = ChromeUtils.getClassName(value);
-
   const handleId = getHandleForObject(realm, ownershipType, value);
+  const knownObject = serializationInternalMap.has(value);
 
   // Set the OwnershipModel to use for all complex object serializations.
   const childOwnership = OwnershipModel.None;
 
   // Remote values
   if (className == "Array") {
-    const remoteValue = new RemoteValue("array", handleId);
+    const serialized = buildSerialized("array", handleId);
+    setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
 
-    if (maxDepth !== null && maxDepth > 0) {
-      remoteValue.setValue(
-        serializeList(
-          value,
-          maxDepth,
-          childOwnership,
-          serializationInternalMap,
-          realm
-        )
+    if (!knownObject && maxDepth !== null && maxDepth > 0) {
+      serialized.value = serializeList(
+        value,
+        maxDepth,
+        childOwnership,
+        serializationInternalMap,
+        realm
       );
     }
-    return remoteValue.serialize();
+
+    return serialized;
   } else if (className == "RegExp") {
-    const remoteValue = new RemoteValue("regexp", handleId);
-    remoteValue.setValue({ pattern: value.source, flags: value.flags });
-    return remoteValue.serialize();
+    const serialized = buildSerialized("regexp", handleId);
+    serialized.value = { pattern: value.source, flags: value.flags };
+    return serialized;
   } else if (className == "Date") {
-    const remoteValue = new RemoteValue("date", handleId);
-    remoteValue.setValue(value.toISOString());
-    return remoteValue.serialize();
+    const serialized = buildSerialized("date", handleId);
+    serialized.value = value.toISOString();
+    return serialized;
   } else if (className == "Map") {
-    const remoteValue = new RemoteValue("map", handleId);
+    const serialized = buildSerialized("map", handleId);
+    setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
 
-    if (maxDepth !== null && maxDepth > 0) {
-      remoteValue.setValue(
-        serializeMapping(
-          value.entries(),
-          maxDepth,
-          childOwnership,
-          serializationInternalMap,
-          realm
-        )
+    if (!knownObject && maxDepth !== null && maxDepth > 0) {
+      serialized.value = serializeMapping(
+        value.entries(),
+        maxDepth,
+        childOwnership,
+        serializationInternalMap,
+        realm
       );
     }
-    return remoteValue.serialize();
+    return serialized;
   } else if (className == "Set") {
-    const remoteValue = new RemoteValue("set", handleId);
+    const serialized = buildSerialized("set", handleId);
+    setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
 
-    if (maxDepth !== null && maxDepth > 0) {
-      remoteValue.setValue(
-        serializeList(
-          value.values(),
-          maxDepth,
-          childOwnership,
-          serializationInternalMap,
-          realm
-        )
+    if (!knownObject && maxDepth !== null && maxDepth > 0) {
+      serialized.value = serializeList(
+        value.values(),
+        maxDepth,
+        childOwnership,
+        serializationInternalMap,
+        realm
       );
     }
-    return remoteValue.serialize();
+
+    return serialized;
   }
   // TODO: Bug 1770754. Remove the if condition when the serialization of all the other types is implemented,
   // since then the serialization of plain objects should be the fallback.
   else if (className == "Object") {
-    const remoteValue = new RemoteValue("object", handleId);
+    const serialized = buildSerialized("object", handleId);
+    setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
 
-    if (maxDepth !== null && maxDepth > 0) {
-      remoteValue.setValue(
-        serializeMapping(
-          Object.entries(value),
-          maxDepth,
-          childOwnership,
-          serializationInternalMap,
-          realm
-        )
+    if (!knownObject && maxDepth !== null && maxDepth > 0) {
+      serialized.value = serializeMapping(
+        Object.entries(value),
+        maxDepth,
+        childOwnership,
+        serializationInternalMap,
+        realm
       );
     }
-    return remoteValue.serialize();
+    return serialized;
   }
 
   lazy.logger.warn(
@@ -588,6 +556,42 @@ function serialize(
   );
 
   return undefined;
+}
+
+/**
+ * Set the internalId property of a provided serialized RemoteValue,
+ * and potentially of a previously created serialized RemoteValue,
+ * corresponding to the same provided object.
+ *
+ * @see https://w3c.github.io/webdriver-bidi/#set-internal-ids-if-needed
+ *
+ * @param {Map} serializationInternalMap
+ *     Map of objects to remote values.
+ * @param {Object} remoteValue
+ *     A serialized RemoteValue for the provided object.
+ * @param {Object} object
+ *     Object of any type to be serialized.
+ */
+function setInternalIdsIfNeeded(serializationInternalMap, remoteValue, object) {
+  if (!serializationInternalMap.has(object)) {
+    // If the object was not tracked yet in the current serialization, add
+    // a new entry in the serialization internal map. An internal id will only
+    // be generated if the same object is encountered again.
+    serializationInternalMap.set(object, remoteValue);
+  } else {
+    // This is at least the second time this object is encountered, retrieve the
+    // original remote value stored for this object.
+    const previousRemoteValue = serializationInternalMap.get(object);
+
+    if (!previousRemoteValue.internalId) {
+      // If the original remote value has no internal id yet, generate a uuid
+      // and update the internalId of the original remote value with it.
+      previousRemoteValue.internalId = getUUID();
+    }
+
+    // Copy the internalId of the original remote value to the new remote value.
+    remoteValue.internalId = previousRemoteValue.internalId;
+  }
 }
 
 /**
