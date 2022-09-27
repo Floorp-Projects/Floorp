@@ -738,12 +738,15 @@ if (!build_with_chromium) {
       "analyzer/video/default_video_quality_analyzer_frames_comparator.h",
       "analyzer/video/default_video_quality_analyzer_internal_shared_objects.cc",
       "analyzer/video/default_video_quality_analyzer_internal_shared_objects.h",
+      "analyzer/video/default_video_quality_analyzer_stream_state.cc",
+      "analyzer/video/default_video_quality_analyzer_stream_state.h",
       "analyzer/video/names_collection.cc",
       "analyzer/video/names_collection.h",
     ]
 
     deps = [
       ":default_video_quality_analyzer_shared",
+      ":multi_head_queue",
       "../../../api:array_view",
       "../../../api:scoped_refptr",
       "../../../api/numerics:numerics",
