@@ -867,13 +867,13 @@ TEST_F(VideoSendStreamImplTest, DisablesPaddingOnPausedEncoder) {
 
   rtc::Event done;
   test_queue_.PostDelayedTask(
-      ToQueuedTask([&] {
+      [&] {
         // No padding supposed to be sent for paused observer
         EXPECT_EQ(0, padding_bitrate);
         testing::Mock::VerifyAndClearExpectations(&bitrate_allocator_);
         vss_impl->Stop();
         done.Set();
-      }),
+      },
       5000);
 
   // Pause the test suite so that the last delayed task executes.
@@ -905,11 +905,11 @@ TEST_F(VideoSendStreamImplTest, KeepAliveOnDroppedFrame) {
 
   rtc::Event done;
   test_queue_.PostDelayedTask(
-      ToQueuedTask([&] {
+      [&] {
         testing::Mock::VerifyAndClearExpectations(&bitrate_allocator_);
         vss_impl->Stop();
         done.Set();
-      }),
+      },
       2000);
   ASSERT_TRUE(done.Wait(5000));
 }

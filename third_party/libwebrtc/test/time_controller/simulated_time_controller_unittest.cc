@@ -120,8 +120,7 @@ TEST(SimulatedTimeControllerTest, DelayTaskRunOnTime) {
           "TestQueue", TaskQueueFactory::Priority::NORMAL));
 
   bool delay_task_executed = false;
-  task_queue.PostDelayedTask(ToQueuedTask([&] { delay_task_executed = true; }),
-                             10);
+  task_queue.PostDelayedTask([&] { delay_task_executed = true; }, 10);
 
   time_simulation.AdvanceTime(TimeDelta::Millis(10));
   EXPECT_TRUE(delay_task_executed);

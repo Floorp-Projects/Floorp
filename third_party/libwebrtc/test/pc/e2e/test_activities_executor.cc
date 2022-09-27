@@ -103,10 +103,9 @@ void TestActivitiesExecutor::PostActivity(ScheduledActivity activity) {
     return;
   }
 
-  task_queue_->PostDelayedTask(ToQueuedTask([activity, start_time, this]() {
-                                 activity.func(Now() - start_time);
-                               }),
-                               remaining_delay.ms());
+  task_queue_->PostDelayedTask(
+      [activity, start_time, this]() { activity.func(Now() - start_time); },
+      remaining_delay.ms());
 }
 
 Timestamp TestActivitiesExecutor::Now() const {
