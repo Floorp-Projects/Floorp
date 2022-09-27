@@ -402,6 +402,12 @@ pocketNewtab:
         browser.newtabpage.activity-stream.discoverystream.spocs.personalized
       description: >-
         Enables Pocket sponsored content personalization.
+    spocsCacheTimeout:
+      type: int
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.spocs.cacheTimeout
+      description: >-
+        Set sponsored content cache timeout in minutes.
 saveToPocket:
   description: The save to Pocket feature
   owner: sdowne@getpocket.com
