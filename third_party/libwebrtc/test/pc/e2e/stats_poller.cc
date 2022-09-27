@@ -19,7 +19,7 @@ namespace webrtc {
 namespace webrtc_pc_e2e {
 
 void InternalStatsObserver::PollStats() {
-  peer_->pc()->GetStats(this);
+  peer_->GetStats(this);
 }
 
 void InternalStatsObserver::OnStatsDelivered(
@@ -30,8 +30,18 @@ void InternalStatsObserver::OnStatsDelivered(
 }
 
 StatsPoller::StatsPoller(std::vector<StatsObserverInterface*> observers,
+                         std::map<std::string, StatsProvider*> peers)
+    : observers_(std::move(observers)) {
+  webrtc::MutexLock lock(&mutex_);
+  for (auto& peer : peers) {
+    pollers_.push_back(rtc::make_ref_counted<InternalStatsObserver>(
+        peer.first, peer.second, observers_));
+  }
+}
+
+StatsPoller::StatsPoller(std::vector<StatsObserverInterface*> observers,
                          std::map<std::string, TestPeer*> peers)
-    : observers_(observers) {
+    : observers_(std::move(observers)) {
   webrtc::MutexLock lock(&mutex_);
   for (auto& peer : peers) {
     pollers_.push_back(rtc::make_ref_counted<InternalStatsObserver>(
@@ -47,10 +57,21 @@ void StatsPoller::PollStatsAndNotifyObservers() {
 }
 
 void StatsPoller::RegisterParticipantInCall(absl::string_view peer_name,
-                                            TestPeer* peer) {
+                                            StatsProvider* peer) {
   webrtc::MutexLock lock(&mutex_);
   pollers_.push_back(rtc::make_ref_counted<InternalStatsObserver>(
       peer_name, peer, observers_));
+}
+
+bool StatsPoller::UnregisterParticipantInCall(absl::string_view peer_name) {
+  webrtc::MutexLock lock(&mutex_);
+  for (auto it = pollers_.begin(); it != pollers_.end(); ++it) {
+    if ((*it)->pc_label() == peer_name) {
+      pollers_.erase(it);
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace webrtc_pc_e2e

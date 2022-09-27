@@ -28,13 +28,16 @@
 #include "rtc_base/synchronization/mutex.h"
 #include "test/pc/e2e/peer_configurer.h"
 #include "test/pc/e2e/peer_connection_quality_test_params.h"
+#include "test/pc/e2e/stats_provider.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
 
 // Describes a single participant in the call.
-class TestPeer final {
+class TestPeer final : public StatsProvider {
  public:
+  ~TestPeer() override = default;
+
   const Params& params() const { return params_; }
 
   ConfigurableParams configurable_params() const;
@@ -44,6 +47,10 @@ class TestPeer final {
   void RemoveVideoConfig(absl::string_view stream_label);
   void SetVideoSubscription(
       PeerConnectionE2EQualityTestFixture::VideoSubscription subscription);
+
+  void GetStats(RTCStatsCollectorCallback* callback) override {
+    pc()->GetStats(callback);
+  }
 
   PeerConfigurerImpl::VideoSource ReleaseVideoSource(size_t i) {
     RTC_CHECK(wrapper_) << "TestPeer is already closed";

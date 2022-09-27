@@ -39,6 +39,7 @@ if (!build_with_chromium) {
         ":multi_head_queue_test",
         ":peer_connection_e2e_smoke_test",
         ":single_process_encoded_image_data_injector_unittest",
+        ":stats_poller_test",
         ":video_frame_tracking_id_injector_unittest",
       ]
     }
@@ -226,6 +227,7 @@ if (!build_with_chromium) {
       deps = [
         ":peer_configurer",
         ":peer_connection_quality_test_params",
+        ":stats_provider",
         "../../../api:frame_generator_api",
         "../../../api:function_view",
         "../../../api:libjingle_peerconnection_api",
@@ -500,6 +502,13 @@ if (!build_with_chromium) {
       }
     }
 
+    rtc_library("stats_provider") {
+      visibility = [ "*" ]
+      testonly = true
+      sources = [ "stats_provider.h" ]
+      deps = [ "../../../api:rtc_stats_api" ]
+    }
+
     rtc_library("stats_poller") {
       visibility = [ "*" ]
       testonly = true
@@ -508,6 +517,7 @@ if (!build_with_chromium) {
         "stats_poller.h",
       ]
       deps = [
+        ":stats_provider",
         ":test_peer",
         "../../../api:libjingle_peerconnection_api",
         "../../../api:rtc_stats_api",
@@ -515,6 +525,16 @@ if (!build_with_chromium) {
         "../../../rtc_base:logging",
         "../../../rtc_base:macromagic",
         "../../../rtc_base/synchronization:mutex",
+      ]
+    }
+
+    rtc_library("stats_poller_test") {
+      testonly = true
+      sources = [ "stats_poller_test.cc" ]
+      deps = [
+        ":stats_poller",
+        "../..:test_support",
+        "../../../api:rtc_stats_api",
       ]
     }
 
