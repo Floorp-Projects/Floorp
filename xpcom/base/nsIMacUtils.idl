@@ -9,7 +9,7 @@
  * nsIMacUtils: Generic globally-available Mac-specific utilities.
  */
 
-[scriptable, uuid(5E9072D7-FF95-455E-9466-8AF9841A72EC)]
+[uuid(5E9072D7-FF95-455E-9466-8AF9841A72EC)]
 interface nsIMacUtils : nsISupports
 {
   /**

@@ -33,7 +33,7 @@
  * Although not required by this interface, it is recommended that
  * numbers remain within the limits of a signed char, i.e. -127 to 128.
  */
-[scriptable, uuid(e6cd620a-edbb-41d2-9e42-9a2ffc8107f3)]
+[builtinclass, scriptable, uuid(e6cd620a-edbb-41d2-9e42-9a2ffc8107f3)]
 interface nsIVersionComparator : nsISupports
 {
   /**

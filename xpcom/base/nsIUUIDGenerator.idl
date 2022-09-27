@@ -12,7 +12,7 @@
  * universally unique identifiers, ideally using any platform-native
  * method for generating UUIDs.
  */
-[scriptable, uuid(138ad1b2-c694-41cc-b201-333ce936d8b8)]
+[builtinclass, scriptable, uuid(138ad1b2-c694-41cc-b201-333ce936d8b8)]
 interface nsIUUIDGenerator : nsISupports
 {
   /**

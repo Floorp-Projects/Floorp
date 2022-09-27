@@ -14,7 +14,7 @@
  *
  * This interface is highly macOS specific.
  */
-[scriptable, uuid(b0f20595-88ce-4738-a1a4-24de78eb8051)]
+[builtinclass, scriptable, uuid(b0f20595-88ce-4738-a1a4-24de78eb8051)]
 interface nsIMacPreferencesReader : nsISupports
 {
   /**

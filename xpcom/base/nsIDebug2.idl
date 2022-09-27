@@ -8,16 +8,13 @@
 #include "nsISupports.idl"
 
 /**
- *   For use by consumers in scripted languages (JavaScript, Java, Python,
- *   Perl, ...).
- *
  *   @note C/C++ consumers who are planning to use the nsIDebug2 interface with
  *   the "@mozilla.org/xpcom;1" contract should use NS_DebugBreak from xpcom
  *   glue instead.
  *
  */
 
-[scriptable, uuid(9641dc15-10fb-42e3-a285-18be90a5c10b)]
+[builtinclass, scriptable, uuid(9641dc15-10fb-42e3-a285-18be90a5c10b)]
 interface nsIDebug2 : nsISupports
 {
     /**
