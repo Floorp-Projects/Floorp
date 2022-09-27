@@ -1281,3 +1281,19 @@ add_task(async function test_mr2022Holdback() {
     await doExperimentCleanup();
   }
 });
+
+add_task(async function test_distributionId() {
+  is(
+    ASRouterTargeting.Environment.distributionId,
+    "",
+    "Should return an empty distribution Id"
+  );
+
+  Services.prefs.getDefaultBranch(null).setCharPref("distribution.id", "test");
+
+  is(
+    ASRouterTargeting.Environment.distributionId,
+    "test",
+    "Should return the correct distribution Id"
+  );
+});
