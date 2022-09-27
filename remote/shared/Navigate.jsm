@@ -324,7 +324,7 @@ class ProgressListener {
     if (this.#webProgress.isLoadingDocument) {
       this.#targetURI = this.#getTargetURI(this.#webProgress.documentRequest);
 
-      if (this.#resolveWhenStarted) {
+      if (this.#resolveWhenStarted && !this.#waitForExplicitStart) {
         // Resolve immediately when the page is already loading and there
         // is no requirement to wait for it to finish.
         return Promise.resolve();
