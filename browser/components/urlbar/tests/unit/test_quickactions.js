@@ -22,6 +22,7 @@ let expectedMatch = (key, inputLength) => ({
 });
 
 add_task(async function init() {
+  UrlbarPrefs.set("quickactions.enabled", true);
   UrlbarPrefs.set("suggest.quickactions", true);
   // Install a default test engine.
   let engine = await addTestSuggestionsEngine();
@@ -32,6 +33,7 @@ add_task(async function init() {
   });
 
   registerCleanupFunction(async () => {
+    UrlbarPrefs.clear("quickactions.enabled");
     UrlbarPrefs.clear("suggest.quickactions");
     UrlbarProviderQuickActions.removeAction("newaction");
   });
