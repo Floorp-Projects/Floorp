@@ -8,24 +8,57 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "test/pc/e2e/analyzer/video/multi_head_queue.h"
+#include "test/pc/e2e/analyzer/video/multi_reader_queue.h"
+
 #include "absl/types/optional.h"
 #include "test/gtest.h"
 
 namespace webrtc {
 namespace {
 
-TEST(MultiHeadQueueTest, GetOnEmpty) {
-  MultiHeadQueue<int> queue = MultiHeadQueue<int>(10);
-  EXPECT_TRUE(queue.IsEmpty(0));
+TEST(MultiReaderQueueTest, EmptyQueueEmptyForAllHeads) {
+  MultiReaderQueue<int> queue = MultiReaderQueue<int>(10);
+  EXPECT_EQ(queue.size(), 0lu);
   for (int i = 0; i < 10; ++i) {
+    EXPECT_TRUE(queue.IsEmpty(i));
+    EXPECT_EQ(queue.size(i), 0lu);
     EXPECT_FALSE(queue.PopFront(i).has_value());
     EXPECT_FALSE(queue.Front(i).has_value());
   }
 }
 
-TEST(MultiHeadQueueTest, SingleHeadOneAddOneRemove) {
-  MultiHeadQueue<int> queue = MultiHeadQueue<int>(1);
+TEST(MultiReaderQueueTest, SizeIsEqualForAllHeadsAfterAddOnly) {
+  MultiReaderQueue<int> queue = MultiReaderQueue<int>(10);
+  queue.PushBack(1);
+  queue.PushBack(2);
+  queue.PushBack(3);
+  EXPECT_EQ(queue.size(), 3lu);
+  for (int i = 0; i < 10; ++i) {
+    EXPECT_FALSE(queue.IsEmpty(i));
+    EXPECT_EQ(queue.size(i), 3lu);
+  }
+}
+
+TEST(MultiReaderQueueTest, SizeIsCorrectAfterRemoveFromOnlyOneHead) {
+  MultiReaderQueue<int> queue = MultiReaderQueue<int>(10);
+  for (int i = 0; i < 5; ++i) {
+    queue.PushBack(i);
+  }
+  EXPECT_EQ(queue.size(), 5lu);
+  // Removing elements from queue #0
+  for (int i = 0; i < 5; ++i) {
+    EXPECT_EQ(queue.size(0), static_cast<size_t>(5 - i));
+    EXPECT_EQ(queue.PopFront(0), absl::optional<int>(i));
+    for (int j = 1; j < 10; ++j) {
+      EXPECT_EQ(queue.size(j), 5lu);
+    }
+  }
+  EXPECT_EQ(queue.size(0), 0lu);
+  EXPECT_TRUE(queue.IsEmpty(0));
+}
+
+TEST(MultiReaderQueueTest, SingleHeadOneAddOneRemove) {
+  MultiReaderQueue<int> queue = MultiReaderQueue<int>(1);
   queue.PushBack(1);
   EXPECT_EQ(queue.size(), 1lu);
   EXPECT_TRUE(queue.Front(0).has_value());
@@ -37,22 +70,21 @@ TEST(MultiHeadQueueTest, SingleHeadOneAddOneRemove) {
   EXPECT_TRUE(queue.IsEmpty(0));
 }
 
-TEST(MultiHeadQueueTest, SingleHead) {
-  MultiHeadQueue<size_t> queue = MultiHeadQueue<size_t>(1);
+TEST(MultiReaderQueueTest, SingleHead) {
+  MultiReaderQueue<size_t> queue = MultiReaderQueue<size_t>(1);
   for (size_t i = 0; i < 10; ++i) {
     queue.PushBack(i);
     EXPECT_EQ(queue.size(), i + 1);
   }
   for (size_t i = 0; i < 10; ++i) {
-    absl::optional<size_t> value = queue.PopFront(0);
+    EXPECT_EQ(queue.Front(0), absl::optional<size_t>(i));
+    EXPECT_EQ(queue.PopFront(0), absl::optional<size_t>(i));
     EXPECT_EQ(queue.size(), 10 - i - 1);
-    ASSERT_TRUE(value.has_value());
-    EXPECT_EQ(value.value(), i);
   }
 }
 
-TEST(MultiHeadQueueTest, ThreeHeadsAddAllRemoveAllPerHead) {
-  MultiHeadQueue<size_t> queue = MultiHeadQueue<size_t>(3);
+TEST(MultiReaderQueueTest, ThreeHeadsAddAllRemoveAllPerHead) {
+  MultiReaderQueue<size_t> queue = MultiReaderQueue<size_t>(3);
   for (size_t i = 0; i < 10; ++i) {
     queue.PushBack(i);
     EXPECT_EQ(queue.size(), i + 1);
@@ -77,8 +109,8 @@ TEST(MultiHeadQueueTest, ThreeHeadsAddAllRemoveAllPerHead) {
   }
 }
 
-TEST(MultiHeadQueueTest, ThreeHeadsAddAllRemoveAll) {
-  MultiHeadQueue<size_t> queue = MultiHeadQueue<size_t>(3);
+TEST(MultiReaderQueueTest, ThreeHeadsAddAllRemoveAll) {
+  MultiReaderQueue<size_t> queue = MultiReaderQueue<size_t>(3);
   for (size_t i = 0; i < 10; ++i) {
     queue.PushBack(i);
     EXPECT_EQ(queue.size(), i + 1);
@@ -97,14 +129,14 @@ TEST(MultiHeadQueueTest, ThreeHeadsAddAllRemoveAll) {
   }
 }
 
-TEST(MultiHeadQueueTest, HeadCopy) {
-  MultiHeadQueue<size_t> queue = MultiHeadQueue<size_t>(1);
+TEST(MultiReaderQueueTest, AddReader) {
+  MultiReaderQueue<size_t> queue = MultiReaderQueue<size_t>(1);
   for (size_t i = 0; i < 10; ++i) {
     queue.PushBack(i);
     EXPECT_EQ(queue.size(), i + 1);
   }
-  queue.AddHead(0);
-  EXPECT_EQ(queue.readers_count(), 2u);
+  queue.AddReader(0);
+  EXPECT_EQ(queue.readers_count(), 2lu);
   for (size_t i = 0; i < 10; ++i) {
     absl::optional<size_t> value1 = queue.PopFront(0);
     absl::optional<size_t> value2 = queue.PopFront(1);
@@ -114,6 +146,32 @@ TEST(MultiHeadQueueTest, HeadCopy) {
     EXPECT_EQ(value1.value(), i);
     EXPECT_EQ(value2.value(), i);
   }
+}
+
+TEST(MultiReaderQueueTest, RemoveReaderWontChangeOthers) {
+  MultiReaderQueue<size_t> queue = MultiReaderQueue<size_t>(2);
+  for (size_t i = 0; i < 10; ++i) {
+    queue.PushBack(i);
+  }
+  EXPECT_EQ(queue.size(1), 10lu);
+
+  queue.RemoveReader(0);
+
+  EXPECT_EQ(queue.readers_count(), 1lu);
+  EXPECT_EQ(queue.size(1), 10lu);
+}
+
+TEST(MultiReaderQueueTest, RemoveLastReaderMakesQueueEmpty) {
+  MultiReaderQueue<size_t> queue = MultiReaderQueue<size_t>(1);
+  for (size_t i = 0; i < 10; ++i) {
+    queue.PushBack(i);
+  }
+  EXPECT_EQ(queue.size(), 10lu);
+
+  queue.RemoveReader(0);
+
+  EXPECT_EQ(queue.size(), 0lu);
+  EXPECT_EQ(queue.readers_count(), 0lu);
 }
 
 }  // namespace

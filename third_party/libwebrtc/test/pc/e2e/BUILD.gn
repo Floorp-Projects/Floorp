@@ -36,7 +36,7 @@ if (!build_with_chromium) {
       deps = [
         ":default_video_quality_analyzer_frames_comparator_test",
         ":default_video_quality_analyzer_test",
-        ":multi_head_queue_test",
+        ":multi_reader_queue_test",
         ":names_collection_test",
         ":peer_connection_e2e_smoke_test",
         ":single_process_encoded_image_data_injector_unittest",
@@ -585,11 +585,11 @@ if (!build_with_chromium) {
       ]
     }
 
-    rtc_library("multi_head_queue_test") {
+    rtc_library("multi_reader_queue_test") {
       testonly = true
-      sources = [ "analyzer/video/multi_head_queue_test.cc" ]
+      sources = [ "analyzer/video/multi_reader_queue_test.cc" ]
       deps = [
-        ":multi_head_queue",
+        ":multi_reader_queue",
         "../../../test:test_support",
       ]
       absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -692,7 +692,6 @@ if (!build_with_chromium) {
     deps = [
       ":default_video_quality_analyzer_internal",
       ":default_video_quality_analyzer_shared",
-      ":multi_head_queue",
       "../..:perf_test",
       "../../../api:array_view",
       "../../../api:video_quality_analyzer_api",
@@ -748,7 +747,7 @@ if (!build_with_chromium) {
 
     deps = [
       ":default_video_quality_analyzer_shared",
-      ":multi_head_queue",
+      ":multi_reader_queue",
       "../../../api:array_view",
       "../../../api:scoped_refptr",
       "../../../api/numerics:numerics",
@@ -895,10 +894,10 @@ if (!build_with_chromium) {
     ]
   }
 
-  rtc_library("multi_head_queue") {
+  rtc_library("multi_reader_queue") {
     visibility = [ "*" ]
     testonly = true
-    sources = [ "analyzer/video/multi_head_queue.h" ]
+    sources = [ "analyzer/video/multi_reader_queue.h" ]
     deps = [ "../../../rtc_base:checks" ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
