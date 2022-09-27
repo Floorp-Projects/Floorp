@@ -1,12 +1,20 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { _ExperimentFeature: ExperimentFeature } = ChromeUtils.import(
-  "resource://nimbus/ExperimentAPI.jsm"
-);
+const {
+  _ExperimentFeature: ExperimentFeature,
+  NimbusFeatures,
+} = ChromeUtils.import("resource://nimbus/ExperimentAPI.jsm");
 
 const { PrefUtils } = ChromeUtils.import(
   "resource://normandy/lib/PrefUtils.jsm"
+);
+
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
+const { TelemetryEvents } = ChromeUtils.import(
+  "resource://normandy/lib/TelemetryEvents.jsm"
 );
 
 /**
@@ -235,6 +243,9 @@ function removePrefObservers(manager) {
 }
 
 add_setup(function setup() {
+  do_get_profile();
+  Services.fog.initializeFOG();
+
   const cleanupFeatures = ExperimentTestUtils.addTestFeatures(...PREF_FEATURES);
   registerCleanupFunction(cleanupFeatures);
 });
@@ -2666,4 +2677,476 @@ add_task(async function test_prefChanged_noPrefSet() {
     cleanupFeature();
     await cleanupStore(store);
   }
+});
+
+add_task(async function test_restorePrefs_manifestChanged() {
+  TelemetryEvents.init();
+
+  const LEGACY_FILTER = {
+    category: "normandy",
+    method: "unenroll",
+    object: "nimbus_experiment",
+  };
+
+  const BOGUS_PREF = "nimbus.test-only.bogus";
+
+  const REMOVE_FEATURE = "remove-feature";
+  const REMOVE_PREF_VARIABLE = "remove-pref-variable";
+  const REMOVE_OTHER_VARIABLE = "remove-other-variable";
+  const REMOVE_SETPREF = "remove-setpref";
+  const CHANGE_SETPREF = "change-setpref";
+
+  const OPERATIONS = [
+    REMOVE_FEATURE,
+    REMOVE_PREF_VARIABLE,
+    REMOVE_OTHER_VARIABLE,
+    REMOVE_SETPREF,
+    CHANGE_SETPREF,
+  ];
+
+  const REASONS = {
+    [REMOVE_FEATURE]: "invalid-feature",
+    [REMOVE_PREF_VARIABLE]: "pref-variable-missing",
+    [REMOVE_SETPREF]: "pref-variable-no-longer",
+    [CHANGE_SETPREF]: "pref-variable-changed",
+  };
+
+  const featureId = "test-set-pref-temp";
+  const pref = "nimbus.test-only.baz";
+
+  // Return a new object so we can modified the returned value.
+  function featureFactory(isEarlyStartup) {
+    return new ExperimentFeature(featureId, {
+      description: "Test feature that sets a pref on the default branch.",
+      owner: "test@test.test",
+      hasExposure: false,
+      isEarlyStartup,
+      variables: {
+        baz: {
+          type: "string",
+          description: "Test variable",
+          setPref: pref,
+        },
+        qux: {
+          type: "string",
+          description: "Test variable",
+        },
+      },
+    });
+  }
+
+  /*
+   * Test that enrollments end when the manifest is sufficiently changed and
+   * that the appropriate telemetry is submitted.
+   *
+   * This test sets up some enrollments and saves them to disk. Then the
+   * manifest will be modified according to `operation`.
+   *
+   * A browser restart will be simulated by creating a new ExperimentStore and
+   * ExperimentManager to restore the saved enrollments.
+   *
+   * @param {object} options
+   *
+   * @param {string} options.branch
+   *        The name of the pref branch ("user" or "default").
+   *
+   * @param {string?} options.defaultBranchValue
+   *        An optional value to set for the pref on the default branch
+   *        before the first enrollment.
+   *
+   * @param {string?} options.userBranchValue
+   *        An optional value to set for the pref on the user branch
+   *        before the first enrollment.
+   *
+   * @param {object} options.configs
+   *        The rollout and experiment feature configurations.
+   *
+   * @param {string} options.operation
+   *        The operation that will be performed on the manifest.
+   *
+   *        See `OPERATIONS` above.
+   *
+   * @param {string[]} options.expectedEnrollments
+   *        The list of enrollment kinds (e.g., "rollout" or "experiment") that
+   *        should be active after setting the pref on the requested branch.
+   *
+   * @param {string} options.expectedDefault
+   *        The expected value of the default branch after restoring enrollments.
+   *
+   *        A value of null indicates that the pref should not be set on the
+   *        default branch.
+   *
+   * @param {string} options.expectedUser
+   *        The expected value of the user branch after restoring enrollments.
+   *
+   *        A value of null indicates that the pref should not be set on the
+   *        user branch.
+   */
+  async function doBaseTest({
+    branch,
+    defaultBranchValue = null,
+    userBranchValue = null,
+    configs,
+    operation,
+    expectedEnrollments = [],
+    expectedDefault = null,
+    expectedUser = null,
+  }) {
+    Services.fog.testResetFOG();
+    Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      /* clear = */ true
+    );
+
+    const feature = featureFactory(branch === USER);
+    const cleanupFeatures = ExperimentTestUtils.addTestFeatures(feature);
+
+    setPrefs(pref, { defaultBranchValue, userBranchValue });
+
+    const slugs = {};
+    let userPref = null;
+
+    // Enroll in some experiments and save the state to disk.
+    {
+      const store = ExperimentFakes.store();
+      const manager = ExperimentFakes.manager(store);
+
+      await manager.onStartup();
+
+      assertEmptyStore(store);
+
+      for (const [enrollmentKind, config] of Object.entries(configs)) {
+        const isRollout = enrollmentKind === ROLLOUT;
+        await ExperimentFakes.enrollWithFeatureConfig(config, {
+          manager,
+          isRollout,
+        });
+
+        const enrollments = isRollout
+          ? store.getAllRollouts()
+          : store.getAllActive();
+
+        Assert.equal(
+          enrollments.length,
+          1,
+          `Expected one ${enrollmentKind} enrollment`
+        );
+        slugs[enrollmentKind] = enrollments[0].slug;
+      }
+
+      store._store.saveSoon();
+      await store._store.finalize();
+
+      // User branch prefs persist through restart, so we only want to delete
+      // the prefs if we changed the default branch.
+      if (branch === "user") {
+        userPref = PrefUtils.getPref(pref, { branch });
+      }
+
+      Services.prefs.deleteBranch(pref);
+
+      removePrefObservers(manager);
+      assertNoObservers(manager);
+    }
+
+    // Restore the default branch value as it was before "restarting".
+    setPrefs(pref, {
+      defaultBranchValue,
+      userBranchValue: userPref ?? userBranchValue,
+    });
+
+    // Mangle the manifest.
+    switch (operation) {
+      case REMOVE_FEATURE:
+        cleanupFeatures();
+        break;
+
+      case REMOVE_PREF_VARIABLE:
+        delete NimbusFeatures[featureId].manifest.variables.baz;
+        break;
+
+      case REMOVE_OTHER_VARIABLE:
+        delete NimbusFeatures[featureId].manifest.variables.qux;
+        break;
+
+      case REMOVE_SETPREF:
+        delete NimbusFeatures[featureId].manifest.variables.baz.setPref;
+        break;
+
+      case CHANGE_SETPREF:
+        NimbusFeatures[featureId].manifest.variables.baz.setPref = BOGUS_PREF;
+        break;
+
+      default:
+        Assert.ok(false, "invalid operation");
+    }
+
+    const store = ExperimentFakes.store();
+    const manager = ExperimentFakes.manager(store);
+
+    await manager.onStartup();
+
+    for (const enrollmentKind of expectedEnrollments) {
+      const enrollment = store.get(slugs[enrollmentKind]);
+
+      Assert.ok(
+        enrollment !== null,
+        `An experiment of kind ${enrollmentKind} should exist`
+      );
+      Assert.ok(enrollment.active, "It should still be active");
+    }
+
+    if (expectedDefault === null) {
+      Assert.ok(
+        !Services.prefs.prefHasDefaultValue(pref),
+        `Expected the default branch not to be set for ${pref} value: ${PrefUtils.getPref(
+          pref,
+          { branch: "default" }
+        )}`
+      );
+    } else {
+      Assert.equal(
+        Services.prefs.getDefaultBranch(null).getStringPref(pref),
+        expectedDefault,
+        `Expected the value of ${pref} on the default branch to match the expected value`
+      );
+    }
+
+    if (expectedUser === null) {
+      Assert.ok(
+        !Services.prefs.prefHasUserValue(pref),
+        `Expected the user branch not to be set for ${pref} value: ${PrefUtils.getPref(
+          pref,
+          { branch: "user" }
+        )}`
+      );
+    } else {
+      Assert.equal(
+        Services.prefs.getStringPref(pref),
+        expectedUser,
+        `Expected the value of ${pref} on the user branch to match the expected value`
+      );
+    }
+
+    if (operation === CHANGE_SETPREF) {
+      Assert.ok(
+        !Services.prefs.prefHasDefaultValue(BOGUS_PREF),
+        "The new pref should not have a value on the default branch"
+      );
+      Assert.ok(
+        !Services.prefs.prefHasUserValue(BOGUS_PREF),
+        "The new pref should not have a value on the user branch"
+      );
+    }
+
+    for (const enrollmentKind of Object.keys(configs)) {
+      if (!expectedEnrollments.includes(enrollmentKind)) {
+        const slug = slugs[enrollmentKind];
+        const enrollment = store.get(slug);
+
+        Assert.ok(
+          enrollment !== null,
+          `An enrollment of kind ${enrollmentKind} should exist`
+        );
+        Assert.ok(!enrollment.active, "It should not be active");
+
+        store._deleteForTests(slug);
+      }
+    }
+
+    const gleanEvents = Glean.nimbusEvents.unenrollment.testGetValue();
+    if (expectedEnrollments.length === 0) {
+      const expectedEvents = [EXPERIMENT, ROLLOUT]
+        .filter(enrollmentKind => Object.hasOwn(slugs, enrollmentKind))
+        .map(enrollmentKind => ({
+          reason: REASONS[operation],
+          experiment: slugs[enrollmentKind],
+        }));
+
+      // Extract only the values we care about.
+      const processedEvents = gleanEvents.map(event => ({
+        reason: event.extra.reason,
+        experiment: event.extra.experiment,
+      }));
+
+      Assert.deepEqual(
+        processedEvents,
+        expectedEvents,
+        "Glean should have the expected unenrollment events"
+      );
+
+      const expectedLegacyEvents = expectedEvents.map(extra => ({
+        value: extra.experiment,
+        extra: pick(extra, "reason"),
+      }));
+
+      TelemetryTestUtils.assertEvents(expectedLegacyEvents, LEGACY_FILTER);
+    } else {
+      Assert.equal(
+        gleanEvents,
+        undefined,
+        "Glean should have no unenrollment events"
+      );
+
+      TelemetryTestUtils.assertEvents([], LEGACY_FILTER);
+    }
+
+    for (const enrollmentKind of expectedEnrollments) {
+      const slug = slugs[enrollmentKind];
+      manager.unenroll(slug);
+      store._deleteForTests(slug);
+    }
+
+    assertEmptyStore(store);
+    await cleanupStore(store);
+
+    assertNoObservers(manager);
+    Services.prefs.deleteBranch(pref);
+
+    if (operation !== REMOVE_FEATURE) {
+      // If we try to remove the feature twice, we will throw an exception.
+      cleanupFeatures();
+    }
+  }
+
+  // Test only qux set. These tests should not cause any unenrollments.
+  {
+    const quxConfigs = {
+      [EXPERIMENT]: {
+        featureId,
+        value: {
+          qux: EXPERIMENT_VALUE,
+        },
+      },
+      [ROLLOUT]: {
+        featureId,
+        value: {
+          qux: ROLLOUT_VALUE,
+        },
+      },
+    };
+
+    const doTest = ({
+      branch,
+      defaultBranchValue = null,
+      userBranchValue = null,
+      configs,
+      operation,
+    }) =>
+      doBaseTest({
+        branch,
+        configs,
+        defaultBranchValue,
+        userBranchValue,
+        operation,
+        expectedEnrollments: Object.keys(configs),
+        expectedDefault: defaultBranchValue,
+        expectedUser: userBranchValue,
+      });
+
+    for (const branch of [USER, DEFAULT]) {
+      for (const defaultBranchValue of [null, DEFAULT_VALUE]) {
+        for (const userBranchValue of [null, USER_VALUE]) {
+          for (const specifiedConfigs of [
+            pick(quxConfigs, ROLLOUT),
+            pick(quxConfigs, EXPERIMENT),
+            quxConfigs,
+          ]) {
+            for (const operation of OPERATIONS) {
+              await doTest({
+                branch,
+                defaultBranchValue,
+                userBranchValue,
+                configs: specifiedConfigs,
+                operation,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Test only baz set. All operations except REMOVE_OTHER_VARIABLE will trigger
+  // unenrollment.
+  {
+    const bazConfigs = {
+      [EXPERIMENT]: {
+        featureId,
+        value: {
+          baz: EXPERIMENT_VALUE,
+        },
+      },
+      [ROLLOUT]: {
+        featureId,
+        value: {
+          baz: ROLLOUT_VALUE,
+        },
+      },
+    };
+
+    const doTest = ({
+      branch,
+      defaultBranchValue = null,
+      userBranchValue = null,
+      configs,
+      operation,
+    }) => {
+      const expectedEnrollments =
+        operation === REMOVE_OTHER_VARIABLE ? Object.keys(configs) : [];
+
+      function expectedPref(forBranch, originalValue) {
+        if (forBranch === branch) {
+          if (expectedEnrollments.includes(EXPERIMENT)) {
+            return EXPERIMENT_VALUE;
+          } else if (expectedEnrollments.includes(ROLLOUT)) {
+            return ROLLOUT_VALUE;
+          }
+        }
+        return originalValue;
+      }
+
+      const expectedDefault = expectedPref(DEFAULT, defaultBranchValue);
+      const expectedUser = expectedPref(USER, userBranchValue);
+
+      return doBaseTest({
+        branch,
+        configs,
+        defaultBranchValue,
+        userBranchValue,
+        operation,
+        expectedEnrollments,
+        expectedDefault,
+        expectedUser,
+      });
+    };
+
+    for (const branch of [USER, DEFAULT]) {
+      for (const defaultBranchValue of [null, DEFAULT_VALUE]) {
+        for (const userBranchValue of [null, USER_VALUE]) {
+          for (const specifiedConfigs of [
+            pick(bazConfigs, ROLLOUT),
+            pick(bazConfigs, EXPERIMENT),
+            bazConfigs,
+          ]) {
+            for (const operation of OPERATIONS) {
+              await doTest({
+                branch,
+                defaultBranchValue,
+                userBranchValue,
+                configs: specifiedConfigs,
+                operation,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  Services.fog.testResetFOG();
+  Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+    /* clear = */ true
+  );
 });
