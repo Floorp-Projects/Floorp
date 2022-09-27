@@ -398,6 +398,17 @@ RetransmissionQueue::GetChunksForFastRetransmit(size_t bytes_in_packet) {
       outstanding_data_.GetChunksToBeFastRetransmitted(bytes_in_packet);
   RTC_DCHECK(!to_be_sent.empty());
 
+  // https://tools.ietf.org/html/rfc4960#section-7.2.4
+  // "4)  Restart the T3-rtx timer only if ... the endpoint is retransmitting
+  // the first outstanding DATA chunk sent to that address."
+  if (to_be_sent[0].first ==
+      outstanding_data_.last_cumulative_tsn_ack().next_value().Wrap()) {
+    RTC_DLOG(LS_VERBOSE)
+        << log_prefix_
+        << "First outstanding DATA to be retransmitted - restarting T3-RTX";
+    t3_rtx_.Stop();
+  }
+
   // https://tools.ietf.org/html/rfc4960#section-6.3.2
   // "Every time a DATA chunk is sent to any address (including a
   // retransmission), if the T3-rtx timer of that address is not running,
