@@ -153,7 +153,7 @@ function changeSidebarVisibility() {
   }
 }
 
-function ViewBrowserManagerSidebar() {
+function displayBrowserManagerSidebar() {
   if (document.getElementById("sidebar-splitter2").getAttribute("hidden") == "true") {
     changeSidebarVisibility();
   }
@@ -180,134 +180,29 @@ function unmuteSidebarSite() {
   document.getElementById("webpanel").unmute();  //ミュート解除
 }
 
-function setBrowserManagerSidebarMode() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 0);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setBookmarksSidebarMode() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 1);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setHistorySidebarMode() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 2);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setDownloadsSidebarMode() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 3);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setTreeStyleTabSidebarMode() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 4);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode1() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 5);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode2() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 6);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode3() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 7);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode4() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 8);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode5() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 9);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode6() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 10);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode7() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 11);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode8() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 12);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode9() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 13);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode10() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 14);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode11() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 15);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode12() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 16);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode13() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 17);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode14() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 18);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode15() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 19);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode16() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 20);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode17() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 21);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode18() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 22);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode19() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 23);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
-}
-function setCustomSidebarMode20() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 24);
-  ViewBrowserManagerSidebar();
-  setSelectedPanel();
+/* From 0 to 4 - StaticModeSetter. 5 modes, start from 0
+0 - Browser Manager
+1 - Bookmark
+2 - History
+3 - Downloads
+4 - TreeStyleTab
+*/ 
+function setStaticSidebarMode(sbar_id) { 
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", sbar_id);
+    displayBrowserManagerSidebar()
+    setSelectedPanel()
+} 
+
+/* From 0 to 19 - CustomURLSetter. 20 URLs in total.*/
+function setDynamicSidebarMode(sbar_id){
+    let custom_url_id = sbar_id + DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT /* Hack to start from 0, yet maintain compatibility with the previous solution. eg: If 0, than 5. If 1, than 6  */
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", custom_url_id);
+    displayBrowserManagerSidebar();
+    setSelectedPanel();
 }
 
 function setSidebarIconView() {
-  for (let sbar_id = 1; sbar_id <= SIDEBAR_AMOUNT; sbar_id++) {
+  for (let sbar_id = 1; sbar_id <= DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT; sbar_id++) {
     var sbar_url = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${sbar_id}`, undefined)
     document.getElementById(`select-CustomURL${sbar_id}`).hidden = (sbar_url != "") ? false : true
   }
@@ -336,7 +231,7 @@ function removeAttributeSelectedNode(){
 
 function setBrowserDesign() {
   let floorpinterfacenum = Services.prefs.getIntPref("floorp.browser.user.interface")
-  let ThemeCSS = {
+  const ThemeCSS = {
     ProtonfixUI: `@import url(chrome://browser/skin/protonfix/protonfix.css);`,
     PhotonUI:    `@import url(chrome://browser/skin/photon/photonChrome.css);
                    @import url(chrome://browser/skin/photon/photonContent.css);`,
@@ -473,7 +368,7 @@ function setTabbarMode() {
 }
 
 function setAllfavicons() {
-  for (let sbar_id = 1; sbar_id <= SIDEBAR_AMOUNT; sbar_id++) {
+  for (let sbar_id = 1; sbar_id <= DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT; sbar_id++) {
     var sbar_favicon = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${sbar_id}`)
     document.getElementById(`select-CustomURL${sbar_id}`).style.listStyleImage = `url(http://www.google.com/s2/favicons?domain=${sbar_favicon}`;
   }
