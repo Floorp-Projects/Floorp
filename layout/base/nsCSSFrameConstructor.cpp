@@ -209,9 +209,6 @@ static FrameCtorDebugFlags gFlags[] = {
 
 //------------------------------------------------------------------
 
-nsContainerFrame* NS_NewRootBoxFrame(PresShell* aPresShell,
-                                     ComputedStyle* aStyle);
-
 nsContainerFrame* NS_NewDocElementBoxFrame(PresShell* aPresShell,
                                            ComputedStyle* aStyle);
 
@@ -1467,7 +1464,6 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(Document* aDocument,
       mQuotesDirty(false),
       mCountersDirty(false),
       mIsDestroyingFrameTree(false),
-      mHasRootAbsPosContainingBlock(false),
       mAlwaysCreateFramesForIgnorableWhitespace(false) {
 #ifdef DEBUG
   static bool gFirstTime = true;
@@ -2397,14 +2393,12 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
   }
 
   nsFrameConstructorSaveState docElementContainingBlockAbsoluteSaveState;
-  if (mHasRootAbsPosContainingBlock) {
-    // Push the absolute containing block now so we can absolutely position
-    // the root element
-    mDocElementContainingBlock->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-    state.PushAbsoluteContainingBlock(
-        mDocElementContainingBlock, mDocElementContainingBlock,
-        docElementContainingBlockAbsoluteSaveState);
-  }
+  // Push the absolute containing block now so we can absolutely position
+  // the root element
+  mDocElementContainingBlock->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+  state.PushAbsoluteContainingBlock(
+      mDocElementContainingBlock, mDocElementContainingBlock,
+      docElementContainingBlockAbsoluteSaveState);
 
   // The rules from CSS 2.1, section 9.2.4, have already been applied
   // by the style system, so we can assume that display->mDisplay is
@@ -2619,7 +2613,7 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
   Galley presentation, XUL
 
       ViewportFrame [fixed-cb]
-        nsRootBoxFrame
+        nsCanvasFrame [abs-cb]
           root element frame (nsDocElementBoxFrame)
 
   Print presentation, non-XUL
@@ -2656,7 +2650,7 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
     mRootElementFrame is "root element frame".  This is the primary frame for
       the root element.
     mDocElementContainingBlock is the parent of mRootElementFrame
-      (i.e. nsCanvasFrame or nsRootBoxFrame)
+      (i.e. nsCanvasFrame)
     mPageSequenceFrame is the nsPageSequenceFrame, or null if there isn't
       one
   */
@@ -2699,17 +2693,8 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
       static_cast<nsContainerFrame*>(GetRootFrame());
   ComputedStyle* viewportPseudoStyle = viewportFrame->Style();
 
-  nsContainerFrame* rootFrame = nullptr;
-
-  if (aDocElement->IsXULElement()) {
-    // pass a temporary stylecontext, the correct one will be set later
-    rootFrame = NS_NewRootBoxFrame(mPresShell, viewportPseudoStyle);
-  } else {
-    // pass a temporary stylecontext, the correct one will be set later
-    rootFrame = NS_NewCanvasFrame(mPresShell, viewportPseudoStyle);
-    mHasRootAbsPosContainingBlock = true;
-  }
-
+  nsContainerFrame* rootFrame =
+    NS_NewCanvasFrame(mPresShell, viewportPseudoStyle);
   PseudoStyleType rootPseudo = PseudoStyleType::canvas;
   mDocElementContainingBlock = rootFrame;
 
@@ -2803,7 +2788,6 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
     // The eventual parent of the document element frame.
     // XXX should this be set for every new page (in ConstructPageFrame)?
     mDocElementContainingBlock = canvasFrame;
-    mHasRootAbsPosContainingBlock = true;
   }
 
   if (viewportFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
@@ -5709,7 +5693,7 @@ nsContainerFrame* nsCSSFrameConstructor::GetAbsoluteContainingBlock(
   // It is possible for the search for the containing block to fail, because
   // no absolute container can be found in the parent chain.  In those cases,
   // we fall back to the document element's containing block.
-  return mHasRootAbsPosContainingBlock ? mDocElementContainingBlock : nullptr;
+  return mDocElementContainingBlock;
 }
 
 nsContainerFrame* nsCSSFrameConstructor::GetFloatContainingBlock(
@@ -7593,7 +7577,6 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
       mRootElementStyleFrame = nullptr;
       mDocElementContainingBlock = nullptr;
       mPageSequenceFrame = nullptr;
-      mHasRootAbsPosContainingBlock = false;
     }
 
     if (haveFLS && mRootElementFrame) {
