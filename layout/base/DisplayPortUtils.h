@@ -278,9 +278,9 @@ class DisplayPortUtils {
    * Returns true if there is a displayport on an async scrollable scrollframe
    * after this call, either because one was just added or it already existed.
    */
-  static bool MaybeCreateDisplayPort(nsDisplayListBuilder* aBuilder,
-                                     nsIFrame* aScrollFrame,
-                                     RepaintMode aRepaintMode);
+  static bool MaybeCreateDisplayPort(
+      nsDisplayListBuilder* aBuilder, nsIFrame* aScrollFrame,
+      nsIScrollableFrame* aScrollFrameAsScrollable, RepaintMode aRepaintMode);
 
   /**
    * Sets a zero margin display port on all proper ancestors of aFrame that

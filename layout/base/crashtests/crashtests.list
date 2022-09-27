@@ -105,7 +105,6 @@ load 343540-1.html
 load 344057-1.xhtml
 load 344064-1.html
 load 344300-1.html
-load 344300-2.html
 load chrome://reftest/content/crashtests/layout/base/crashtests/344340-1.xhtml
 load 347898-1.html
 load 348126-1.html
@@ -316,7 +315,6 @@ load 543648-1.html
 load 560447-1.html
 load 564063-1.html
 load 569018-1.html
-load chrome://reftest/content/crashtests/layout/base/crashtests/570038-1.html
 load chrome://reftest/content/crashtests/layout/base/crashtests/572003.xhtml
 load 572582-1.xhtml
 load 576649-1.html

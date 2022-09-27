@@ -9,7 +9,6 @@
 #include "nsGkAtoms.h"
 #include "nsBoxFrame.h"
 #include "nsDisplayList.h"
-#include "nsStackLayout.h"
 #include "nsIPopupContainer.h"
 #include "nsIContent.h"
 #include "nsFrameManager.h"

@@ -113,7 +113,7 @@
     ok(deck instanceof MozXULElement, "instance of MozXULElement");
     ok(XULElement.isInstance(deck), "instance of XULElement");
     is(deck.id, "foo", "attribute set");
-    is(deck.selectedIndex, "0", "Custom Element is property attached");
+    is(deck.selectedIndex, 0, "Custom Element is property attached");
     deck.remove();
 
     info("Checking that whitespace text is removed but non-whitespace text isn't");

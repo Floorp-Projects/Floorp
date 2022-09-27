@@ -117,7 +117,6 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRendering.h"
 #include "nsTHashMap.h"
-#include "nsDeckFrame.h"
 #include "nsDisplayList.h"
 #include "nsFlexContainerFrame.h"
 #include "nsFontInflationData.h"

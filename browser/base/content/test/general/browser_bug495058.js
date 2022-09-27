@@ -47,7 +47,7 @@ add_task(async function() {
     Assert.equal(
       win.document.activeElement,
       expectedActiveElement,
-      uri + ": the active element is expected"
+      `${uri}: the active element is expected: ${win.document.activeElement?.nodeName}`
     );
     Assert.equal(win.gURLBar.value, "", uri + ": urlbar is empty");
     Assert.ok(win.gURLBar.placeholder, uri + ": placeholder text is present");

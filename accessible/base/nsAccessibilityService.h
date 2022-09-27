@@ -154,13 +154,6 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
 
   // nsAccesibilityService
   /**
-   * Notification used to update the accessible tree when deck panel is
-   * switched.
-   */
-  void DeckPanelSwitched(mozilla::PresShell* aPresShell, nsIContent* aDeckNode,
-                         nsIFrame* aPrevBoxFrame, nsIFrame* aCurrentBoxFrame);
-
-  /**
    * Notification used to update the accessible tree when new content is
    * inserted.
    */
@@ -239,6 +232,10 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
 
   void NotifyOfComputedStyleChange(mozilla::PresShell* aPresShell,
                                    nsIContent* aContent);
+
+  void NotifyOfTabPanelVisibilityChange(mozilla::PresShell* aPresShell,
+                                        mozilla::dom::Element* aPanel,
+                                        bool aVisible);
 
   void NotifyOfResolutionChange(mozilla::PresShell* aPresShell,
                                 float aResolution);

@@ -13,7 +13,6 @@
 #include "XULTabAccessible.h"
 #include "HTMLFormControlAccessible.h"
 
-#include "nsDeckFrame.h"
 #include "nsObjCExceptions.h"
 
 using namespace mozilla::a11y;
@@ -126,26 +125,17 @@ enum CheckboxValue {
 @implementation mozPaneAccessible
 
 - (NSArray*)moxChildren {
-  if (!mGeckoAccessible->AsLocal()) return nil;
-
-  nsDeckFrame* deckFrame =
-      do_QueryFrame(mGeckoAccessible->AsLocal()->GetFrame());
-  nsIFrame* selectedFrame = deckFrame ? deckFrame->GetSelectedBox() : nullptr;
-
-  LocalAccessible* selectedAcc = nullptr;
-  if (selectedFrame) {
-    nsINode* node = selectedFrame->GetContent();
-    selectedAcc = mGeckoAccessible->AsLocal()->Document()->GetAccessible(node);
+  // By default, all tab panels are exposed in the a11y tree
+  // even if the tab they represent isn't the active tab. To
+  // prevent VoiceOver from navigating background tab content,
+  // only expose the tab panel that is currently on screen.
+  for (mozAccessible* child in [super moxChildren]) {
+    if (!([child state] & states::OFFSCREEN)) {
+      return [NSArray arrayWithObject:GetObjectOrRepresentedView(child)];
+    }
   }
-
-  if (selectedAcc) {
-    mozAccessible* curNative = GetNativeFromGeckoAccessible(selectedAcc);
-    if (curNative)
-      return
-          [NSArray arrayWithObjects:GetObjectOrRepresentedView(curNative), nil];
-  }
-
-  return nil;
+  MOZ_ASSERT_UNREACHABLE("We have no on screen tab content?");
+  return @[];
 }
 
 @end
