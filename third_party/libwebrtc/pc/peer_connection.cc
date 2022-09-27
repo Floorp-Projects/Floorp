@@ -2275,9 +2275,9 @@ cricket::CandidateStatsList PeerConnection::GetPooledCandidateStats() const {
   RTC_DCHECK_RUN_ON(network_thread());
   if (!network_thread_safety_->alive())
     return {};
-  cricket::CandidateStatsList candidate_states_list;
-  port_allocator_->GetCandidateStatsFromPooledSessions(&candidate_states_list);
-  return candidate_states_list;
+  cricket::CandidateStatsList candidate_stats_list;
+  port_allocator_->GetCandidateStatsFromPooledSessions(&candidate_stats_list);
+  return candidate_stats_list;
 }
 
 std::map<std::string, cricket::TransportStats>

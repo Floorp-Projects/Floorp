@@ -1634,7 +1634,7 @@ void RTCStatsCollector::ProduceIceCandidateAndPairStats_n(
     for (const auto& channel_stats : transport_stats.channel_stats) {
       std::string transport_id = RTCTransportStatsIDFromTransportChannel(
           transport_name, channel_stats.component);
-      for (const cricket::ConnectionInfo& info :
+      for (const auto& info :
            channel_stats.ice_transport_stats.connection_infos) {
         std::unique_ptr<RTCIceCandidatePairStats> candidate_pair_stats(
             new RTCIceCandidatePairStats(
@@ -1709,6 +1709,15 @@ void RTCStatsCollector::ProduceIceCandidateAndPairStats_n(
             info.sent_ping_requests_before_first_response);
 
         report->AddStats(std::move(candidate_pair_stats));
+      }
+
+      // Produce local candidate stats. If a transport exists these will already
+      // have been produced.
+      for (const auto& candidate_stats :
+           channel_stats.ice_transport_stats.candidate_stats_list) {
+        const auto& candidate = candidate_stats.candidate();
+        ProduceIceCandidateStats(timestamp_us, candidate, true, transport_id,
+                                 report);
       }
     }
   }

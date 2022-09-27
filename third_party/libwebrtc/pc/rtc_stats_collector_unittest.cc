@@ -1363,6 +1363,26 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_relay_prflx.network_adapter_type =
       RTCNetworkAdapterType::kUnknown;
 
+  // A non-paired local candidate.
+  std::unique_ptr<cricket::Candidate> a_local_host_not_paired =
+      CreateFakeCandidate("1.2.3.4", 4404, "a_local_host_not_paired's protocol",
+                          rtc::ADAPTER_TYPE_VPN, cricket::LOCAL_PORT_TYPE, 0,
+                          rtc::ADAPTER_TYPE_ETHERNET);
+  RTCLocalIceCandidateStats expected_a_local_host_not_paired(
+      "RTCIceCandidate_" + a_local_host_not_paired->id(), 0);
+  expected_a_local_host_not_paired.transport_id = "RTCTransport_a_0";
+  expected_a_local_host_not_paired.network_type = "vpn";
+  expected_a_local_host_not_paired.ip = "1.2.3.4";
+  expected_a_local_host_not_paired.address = "1.2.3.4";
+  expected_a_local_host_not_paired.port = 4404;
+  expected_a_local_host_not_paired.protocol =
+      "a_local_host_not_paired's protocol";
+  expected_a_local_host_not_paired.candidate_type = "host";
+  expected_a_local_host_not_paired.priority = 0;
+  expected_a_local_host_not_paired.vpn = true;
+  expected_a_local_host_not_paired.network_adapter_type =
+      RTCNetworkAdapterType::kEthernet;
+
   // Candidates in the second transport stats.
   std::unique_ptr<cricket::Candidate> b_local =
       CreateFakeCandidate("42.42.42.42", 42, "b_local's protocol",
@@ -1419,6 +1439,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
       .local_candidate = *a_local_relay_prflx.get();
   a_transport_channel_stats.ice_transport_stats.connection_infos[3]
       .remote_candidate = *a_remote_relay.get();
+  a_transport_channel_stats.ice_transport_stats.candidate_stats_list.push_back(
+      cricket::CandidateStats(*a_local_host_not_paired.get()));
 
   pc_->AddVoiceChannel("audio", "a");
   pc_->SetTransportStats("a", a_transport_channel_stats);
@@ -1439,6 +1461,12 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   ASSERT_TRUE(report->Get(expected_a_local_host.id()));
   EXPECT_EQ(expected_a_local_host, report->Get(expected_a_local_host.id())
                                        ->cast_to<RTCLocalIceCandidateStats>());
+
+  ASSERT_TRUE(report->Get(expected_a_local_host_not_paired.id()));
+  EXPECT_EQ(expected_a_local_host_not_paired,
+            report->Get(expected_a_local_host_not_paired.id())
+                ->cast_to<RTCLocalIceCandidateStats>());
+
   ASSERT_TRUE(report->Get(expected_a_remote_srflx.id()));
   EXPECT_EQ(expected_a_remote_srflx,
             report->Get(expected_a_remote_srflx.id())
