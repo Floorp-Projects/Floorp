@@ -327,11 +327,24 @@ class BrowserRobot {
     }
 
     fun clickAndWriteTextInInputBox(text: String) {
-        mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
-            .waitForExists(waitingTime)
-        mDevice.findObject(UiSelector().textContains("Input Text")).waitForExists(waitingTime)
-        textInputBox.click()
-        textInputBox.setText(text)
+        for (i in 1..RETRY_COUNT) {
+            try {
+                textInputBox.waitForExists(waitingTime)
+                textInputBox.click()
+                textInputBox.setText(text)
+                break
+            } catch (e: UiObjectNotFoundException) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    browserScreen {
+                    }.openMainMenu {
+                    }.clickReloadButton {
+                    }
+                    progressBar.waitUntilGone(waitingTime)
+                }
+            }
+        }
     }
 
     fun longPressTextInputBox() {
