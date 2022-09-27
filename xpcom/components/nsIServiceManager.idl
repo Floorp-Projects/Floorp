@@ -19,7 +19,7 @@
  * and only must call Release when it shuts down.
  */
 
-[scriptable, uuid(8bb35ed9-e332-462d-9155-4a002ab5c958)]
+[builtinclass, scriptable, uuid(8bb35ed9-e332-462d-9155-4a002ab5c958)]
 interface nsIServiceManager : nsISupports
 {
     /**
@@ -34,12 +34,12 @@ interface nsIServiceManager : nsISupports
      * @param result : resulting service
      */
     void getService(in nsCIDRef aClass,
-		    in nsIIDRef aIID,
-		    [iid_is(aIID),retval] out nsQIResult result);
+                    in nsIIDRef aIID,
+                    [iid_is(aIID),retval] out nsQIResult result);
 
     void getServiceByContractID(in string aContractID,
-				in nsIIDRef aIID,
-				[iid_is(aIID),retval] out nsQIResult result);
+                                in nsIIDRef aIID,
+                                [iid_is(aIID),retval] out nsQIResult result);
 
     /**
      * isServiceInstantiated
