@@ -7,11 +7,10 @@ package org.mozilla.fenix.ui
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.ui.robots.homeScreen
 
@@ -24,13 +23,15 @@ class ThreeDotMenuMainTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
 
     private lateinit var mockWebServer: MockWebServer
+    val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
 
     @Before
     fun setUp() {
-        activityTestRule.activity.applicationContext.settings().shouldShowJumpBackInCFR = false
+        featureSettingsHelper.setJumpBackCFREnabled(false)
+        featureSettingsHelper.setTCPCFREnabled(false)
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()
@@ -43,7 +44,6 @@ class ThreeDotMenuMainTest {
     }
 
     // Verifies the list of items in the homescreen's 3 dot main menu
-    @Ignore("Failing with frequent ANR: https://bugzilla.mozilla.org/show_bug.cgi?id=1764605")
     @Test
     fun homeThreeDotMenuItemsTest() {
         homeScreen {
@@ -52,7 +52,8 @@ class ThreeDotMenuMainTest {
             verifyHistoryButton()
             verifyDownloadsButton()
             verifyAddOnsButton()
-            verifySyncSignInButton()
+            // Disabled step due to https://github.com/mozilla-mobile/fenix/issues/26788
+            // verifySyncSignInButton()
             verifyDesktopSite()
             verifyWhatsNewButton()
             verifyHelpButton()
