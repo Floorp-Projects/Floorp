@@ -484,9 +484,9 @@ nodejs-10-linux64:
     description: nodejs 10 for x64 linux
     fetch:
         type: static-url
-        url: https://nodejs.org/dist/v10.23.1/node-v10.23.1-linux-x64.tar.xz
-        sha256: 207e5ec77ca655ba6fcde922d6b329acbb09898b0bd793ccfcce6c27a36fdff0
-        size: 13139076
+        url: https://nodejs.org/dist/v10.24.1/node-v10.24.1-linux-x64.tar.xz
+        sha256: a3b9b97c23bcdc64334be6b02422e9014f040d59dcf604563ffda48003419356
+        size: 13144084
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
@@ -495,9 +495,9 @@ nodejs-12-linux64:
     description: nodejs 12 for x64 linux
     fetch:
         type: static-url
-        url: https://nodejs.org/dist/v12.22.1/node-v12.22.1-linux-x64.tar.xz
-        sha256: 8b537282c222ae4a40e019a52f769ca27b6640699bdde1510375e8d72da7d041
-        size: 14594952
+        url: https://nodejs.org/dist/v12.22.12/node-v12.22.12-linux-x64.tar.xz
+        sha256: e6d052364bfa2c17da92cf31794100cfd709ba147415ddaeed2222eec9ca1469
+        size: 14584388
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
@@ -506,9 +506,9 @@ nodejs-16-linux64:
     description: nodejs 16 for x64 linux
     fetch:
         type: static-url
-        url: https://nodejs.org/dist/v16.0.0/node-v16.0.0-linux-x64.tar.xz
-        sha256: 1736446bb102e19942addce29f6a12b157ca71f38b9159d0446f51ba69618b8d
-        size: 22206588
+        url: https://nodejs.org/dist/v16.16.0/node-v16.16.0-linux-x64.tar.xz
+        sha256: edcb6e9bb049ae365611aa209fc03c4bfc7e0295dbcc5b2f1e710ac70384a8ec
+        size: 22051952
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
@@ -517,9 +517,9 @@ nodejs-10-macosx64:
     description: nodejs 10 for x64 macOS
     fetch:
         type: static-url
-        url: https://nodejs.org/dist/v10.23.1/node-v10.23.1-darwin-x64.tar.xz
-        sha256: febfdabd98ab5b8f8fdff32ab8c111d834083805bf042ab65c923cc22609c99d
-        size: 12233276
+        url: https://nodejs.org/dist/v10.24.1/node-v10.24.1-darwin-x64.tar.xz
+        sha256: 8edae5060c7513de8e764cdbb61daea5ae652b7a3a457d412a7e08c04e5202da
+        size: 12220104
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
@@ -528,9 +528,9 @@ nodejs-12-macosx64:
     description: nodejs 12 for x64 macOS
     fetch:
         type: static-url
-        url: https://nodejs.org/dist/v12.22.1/node-v12.22.1-darwin-x64.tar.xz
-        sha256: de5e317580732530961d83b0fb9b2c370d222bd0c5a1b331900e9ddc0fdfe086
-        size: 13670384
+        url: https://nodejs.org/dist/v12.22.12/node-v12.22.12-darwin-x64.tar.xz
+        sha256: 95799e1276d65b599635f839248d3b3f7d3986873da8f01902a541b9588a6c71
+        size: 13678092
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
@@ -539,9 +539,9 @@ nodejs-16-macosx64:
     description: nodejs 16 for x64 macOS
     fetch:
         type: static-url
-        url: https://nodejs.org/dist/v16.0.0/node-v16.0.0-darwin-x64.tar.xz
-        sha256: 66ecffa48b98cf1ca4d038b42b74f05bfc4d31681e2aa43a1ba50919ea23823b
-        size: 20650712
+        url: https://nodejs.org/dist/v16.16.0/node-v16.16.0-darwin-x64.tar.xz
+        sha256: a65b2b92ede6be9004eae1ca9da26da2178bc696f35e8cca1840c33b777a5421
+        size: 20498416
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
@@ -550,9 +550,9 @@ nodejs-16-macosx64-arm64:
     description: nodejs 16 for arm64 macOS
     fetch:
         type: static-url
-        url: https://nodejs.org/dist/v16.0.0/node-v16.0.0-darwin-arm64.tar.xz
-        sha256: f8710a83738b4408da82fe81b7934373e4d2f84d40c8c1217676119fd3c77c7e
-        size: 19028900
+        url: https://nodejs.org/dist/v16.16.0/node-v16.16.0-darwin-arm64.tar.xz
+        sha256: e4468368bf25ee1c504f08ecfd0d9fec17a9e72ef27c4495406b958cd7b4bafd
+        size: 18889796
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
@@ -561,9 +561,9 @@ nodejs-10-win32:
     description: nodejs 10 for x86 Windows
     fetch:
         type: static-url
-        url: https://nodejs.org/dist/v10.23.1/node-v10.23.1-win-x86.zip
-        sha256: c3be0fd50c218cc52e85377c9e22d7d2110d72de95bdbc9447145b246330f818
-        size: 16806899
+        url: https://nodejs.org/dist/v10.24.1/node-v10.24.1-win-x86.zip
+        sha256: e39380da3a5f859f98b5a07e153e062c7fca852077693f99ad528705f5c0deb5
+        size: 16808719
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
@@ -572,9 +572,9 @@ nodejs-12-win32:
     description: nodejs 12 for x86 Windows
     fetch:
         type: static-url
-        url: https://nodejs.org/dist/v12.22.1/node-v12.22.1-win-x86.zip
-        sha256: 832bd047d3709e4229d1cc95d04391aceb991a5c957b8efd395e01f51832a774
-        size: 17132424
+        url: https://nodejs.org/dist/v12.22.12/node-v12.22.12-win-x86.zip
+        sha256: 2f7fa563c9477d5e9fddc5c22451b21b8a963c9b5004c80dd0140c3a3675a4e8
+        size: 17134607
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
@@ -583,9 +583,9 @@ nodejs-16-win32:
     description: nodejs 16 for x86 Windows
     fetch:
         type: static-url
-        url: https://nodejs.org/dist/v16.0.0/node-v16.0.0-win-x86.zip
-        sha256: 0600dffb5331b6f49e6ff4fa97770811746e0e2ecaf53de6deaafff277a644b4
-        size: 25092862
+        url: https://nodejs.org/dist/v16.16.0/node-v16.16.0-win-x86.zip
+        sha256: 957783527844fcd7da1d0b6dd311b64f92e2c5185112ada2d92e52c1a71fb373
+        size: 24587144
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
@@ -594,9 +594,9 @@ nodejs-10-win64:
     description: nodejs 10 for x64 Windows
     fetch:
         type: static-url
-        url: https://nodejs.org/dist/v10.23.1/node-v10.23.1-win-x64.zip
-        sha256: 497996aa1037b6f7f492c1d275bb90140269223939525286b4e95babad16f0de
-        size: 18307638
+        url: https://nodejs.org/dist/v10.24.1/node-v10.24.1-win-x64.zip
+        sha256: ae0af1b5e0c131dd0df1b3e4713c36e5d7f652ab6ca273ce46d39d4df8522bb0
+        size: 18309598
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
@@ -605,9 +605,9 @@ nodejs-12-win64:
     description: nodejs 12 for x64 Windows
     fetch:
         type: static-url
-        url: https://nodejs.org/dist/v12.22.1/node-v12.22.1-win-x64.zip
-        sha256: 0cf3545c1ff9717bf3196eed6a423d878709ed4560125fdc29b42bd80ee661c3
-        size: 18677788
+        url: https://nodejs.org/dist/v12.22.12/node-v12.22.12-win-x64.zip
+        sha256: 09639bac66d4dc4dd52179968209413ad4b7360e917dcbe8834052a4b936a087
+        size: 18681823
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
@@ -616,9 +616,9 @@ nodejs-16-win64:
     description: nodejs 16 for x64 Windows
     fetch:
         type: static-url
-        url: https://nodejs.org/dist/v16.0.0/node-v16.0.0-win-x64.zip
-        sha256: 99c2b01afb8d966fc876ec30ac7dfdbd9da9b17a3daeda92c19ce657ab9bea61
-        size: 26841308
+        url: https://nodejs.org/dist/v16.16.0/node-v16.16.0-win-x64.zip
+        sha256: c657acc98af55018c8fd6113c7e08d67c8083af75ba0306f9561b0117abc39d4
+        size: 26245926
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
