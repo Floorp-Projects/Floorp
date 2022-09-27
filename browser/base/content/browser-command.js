@@ -94,9 +94,9 @@ async function setTreeStyleTabURL() {
 function setSidebarMode() {
   if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
     const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-    const stringWebpanelNum = String(modeValuePref - 4);
-    const sidebar2elem = document.getElementById("sidebar2");
     const webpanel = document.getElementById("webpanel");
+    const webpanel_id = modeValuePref - 4
+    const sidebar2elem = document.getElementById("sidebar2");
     const panelWidth = Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${modeValuePref}`, undefined);
   
     if(panelWidth !== "" || panelWidth !== undefined || panelWidth !== null){
@@ -106,27 +106,27 @@ function setSidebarMode() {
     switch (modeValuePref) {
       case 0:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
-        changeBrowserManagerSidebarConfigShowBrowserManagers();
+        showSidebarNodes(0);
         break;
       case 1:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/bookmarksSidebar.xhtml");
-        changeBrowserManagerSidebarConfigShowBrowserManagers();
+        showSidebarNodes(0);
         break;
       case 2:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/historySidebar.xhtml");
-        changeBrowserManagerSidebarConfigShowBrowserManagers();
+        showSidebarNodes(0);
         break;
       case 3:
         sidebar2elem.setAttribute("src", "about:downloads");
-        changeBrowserManagerSidebarConfigShowBrowserManagers();
+        showSidebarNodes(0);
         break;
       case 4:
         setTreeStyleTabURL();
-        changeBrowserManagerSidebarConfigShowWebpanels();
+        showSidebarNodes(1);
         break;
       default:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl" + stringWebpanelNum , undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
+        webpanel.setAttribute("src", Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${webpanel_id}`, undefined));
+        showSidebarNodes(1);
         break;
     }
   }
@@ -183,127 +183,127 @@ function unmuteSidebarSite() {
 function setBrowserManagerSidebarMode() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 0);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setBookmarksSidebarMode() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 1);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setHistorySidebarMode() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 2);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setDownloadsSidebarMode() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 3);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setTreeStyleTabSidebarMode() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 4);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode1() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 5);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode2() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 6);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode3() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 7);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode4() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 8);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode5() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 9);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode6() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 10);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode7() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 11);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode8() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 12);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode9() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 13);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode10() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 14);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode11() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 15);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode12() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 16);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode13() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 17);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode14() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 18);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode15() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 19);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode16() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 20);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode17() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 21);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode18() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 22);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode19() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 23);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode20() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 24);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 
 function setSidebarIconView() {
@@ -320,7 +320,7 @@ function keepSidebar2boxWidth() {
 
 function getSelectedNode(){
   let selectedMode = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-  let selectedNode = document.querySelector(".sidepanel-icon[panel= \"" + selectedMode + "\"]");
+  let selectedNode = document.querySelector(`.sidepanel-icon[panel="${selectedMode}"]`);
   return selectedNode;
 }
 
@@ -479,14 +479,12 @@ function setAllfavicons() {
   }
 }
 
-function setSelectedpanel() {
-  let selectedMode = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-  let selectedNode = document.querySelector(".sidepanel-icon[panel= \"" +  selectedMode + "\"]");
-
-  removeAttributeSelectedNode();
-  selectedNode.setAttribute("checked", "true");
+function setSelectedPanel() {
+    let selectedMode = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
+    let selectedNode = document.querySelector(`.sidepanel-icon[panel="${selectedMode}"]`);
+    removeAttributeSelectedNode();
+    selectedNode.setAttribute("checked", "true");
 }
-
 
 function changeMuteStatus() {
   let webpanel = document.getElementById("webpanel");
@@ -500,18 +498,16 @@ function changeMuteStatus() {
   }
 }
 
-function changeBrowserManagerSidebarConfigShowWebpanels() {
-  if (document.getElementById("sidebar2style")){document.getElementById("sidebar2style").remove()}
-  var Tag = document.createElement("style");
-  Tag.innerText = `#sidebar2{max-height:0 !important;}`
-  document.getElementsByTagName("head")[0].insertAdjacentElement('beforeend', Tag);
-  Tag.setAttribute("id", "sidebar2style");
-}
-
-function changeBrowserManagerSidebarConfigShowBrowserManagers() {
-  if (document.getElementById("sidebar2style")){document.getElementById("sidebar2style").remove()}
-  var Tag = document.createElement("style");
-  Tag.innerText = `#webpanel{max-height:0 !important;}#sidebar2-reload,#sidebar2-forward,#sidebar2-back{display:none !important;}`
-  document.getElementsByTagName("head")[0].insertAdjacentElement('beforeend', Tag);
-  Tag.setAttribute("id", "sidebar2style");
+function showSidebarNodes(sidebar_mode) { /* Managers - 0; Webpanels - 1 */
+    var sbar_css = ""
+    if (document.getElementById("sidebar2style")){document.getElementById("sidebar2style").remove()}
+    var Tag = document.createElement("style")
+    if (sidebar_mode == 0) { 
+        sbar_css = "#webpanel{max-height:0 !important;}#sidebar2-reload,#sidebar2-forward,#sidebar2-back{display:none !important;}"
+    }else{
+        sbar_css = "#sidebar2{max-height:0 !important;}"
+    }
+    Tag.innerText = sbar_css
+    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend", Tag);
+    Tag.setAttribute("id", "sidebar2style");
 }
