@@ -188,15 +188,9 @@ class ProviderQuickActions extends UrlbarProvider {
                   ],
                 },
                 {
-                  name: `div-${i}`,
-                  tag: "div",
-                  children: [
-                    {
-                      name: `label-${i}`,
-                      tag: "span",
-                      attributes: { class: "urlbarView-label" },
-                    },
-                  ],
+                  name: `label-${i}`,
+                  tag: "span",
+                  attributes: { class: "urlbarView-label" },
                 },
               ],
             };

@@ -179,6 +179,8 @@
 }
 
 .urlbarView-row[dynamicType=quickactions] .urlbarView-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 11px;
   font-weight: 500;
 }
@@ -208,7 +210,6 @@
   color: var(--autocomplete-popup-highlight-color);
 }
 
-.urlbarView-row[dynamicType=quickactions] .urlbarView-title,
-.urlbarView-row[dynamicType=quickactions] .urlbarView-label {
+.urlbarView-row[dynamicType=quickactions] .urlbarView-title {
   display: flex
 }
