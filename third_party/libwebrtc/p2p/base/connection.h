@@ -179,11 +179,17 @@ class Connection : public CandidatePairInterface {
   int receiving_timeout() const;
   void set_receiving_timeout(absl::optional<int> receiving_timeout_ms);
 
-  // Makes the connection go away.
+  // Deletes a `Connection` instance is by calling the `DestroyConnection`
+  // method in `Port`.
+  // Note: When the function returns, the object has been deleted.
   void Destroy();
 
-  // Makes the connection go away, in a failed state.
-  void FailAndDestroy();
+  // Signals object destruction, releases outstanding references and performs
+  // final logging.
+  // The function will return `true` when shutdown was performed, signals
+  // emitted and outstanding references released. If the function returns
+  // `false`, `Shutdown()` has previously been called.
+  bool Shutdown();
 
   // Prunes the connection and sets its state to STATE_FAILED,
   // It will not be used or send pings although it can still receive packets.
@@ -248,9 +254,6 @@ class Connection : public CandidatePairInterface {
   // This signal will be fired if this connection is nominated by the
   // controlling side.
   sigslot::signal1<Connection*> SignalNominated;
-
-  // Invoked when Connection receives STUN error response with 487 code.
-  void HandleRoleConflictFromPeer();
 
   IceCandidatePairState state() const;
 

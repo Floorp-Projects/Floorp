@@ -296,6 +296,19 @@ class Port : public PortInterface,
   // Returns the connection to the given address or NULL if none exists.
   Connection* GetConnection(const rtc::SocketAddress& remote_addr) override;
 
+  // Removes and deletes a connection object. `DestroyConnection` will
+  // delete the connection object directly whereas `DestroyConnectionAsync`
+  // defers the `delete` operation to when the call stack has been unwound.
+  // Async may be needed when deleting a connection object from within a
+  // callback.
+  void DestroyConnection(Connection* conn) {
+    DestroyConnectionInternal(conn, false);
+  }
+
+  void DestroyConnectionAsync(Connection* conn) {
+    DestroyConnectionInternal(conn, true);
+  }
+
   // In a shared socket mode each port which shares the socket will decide
   // to accept the packet based on the `remote_addr`. Currently only UDP
   // port implemented this method.
@@ -454,8 +467,19 @@ class Port : public PortInterface,
 
  private:
   void Construct();
-  // Called when one of our connections deletes itself.
-  void OnConnectionDestroyed(Connection* conn);
+
+  // Called internally when deleting a connection object.
+  // Returns true if the connection object was removed from the `connections_`
+  // list and the state updated accordingly. If the connection was not found
+  // in the list, the return value is false. Note that this may indicate
+  // incorrect behavior of external code that might be attempting to delete
+  // connection objects from within a 'on destroyed' callback notification
+  // for the connection object itself.
+  bool OnConnectionDestroyed(Connection* conn);
+
+  // Private implementation of DestroyConnection to keep the async usage
+  // distinct.
+  void DestroyConnectionInternal(Connection* conn, bool async);
 
   void OnNetworkTypeChanged(const rtc::Network* network);
 

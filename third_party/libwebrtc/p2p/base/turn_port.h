@@ -201,11 +201,10 @@ class TurnPort : public Port {
   // Finds the turn entry with `address` and sets its channel id.
   // Returns true if the entry is found.
   bool SetEntryChannelId(const rtc::SocketAddress& address, int channel_id);
-  // Visible for testing.
-  // Shuts down the turn port, usually because of some fatal errors.
-  void Close();
 
   void HandleConnectionDestroyed(Connection* conn) override;
+
+  void CloseForTest() { Close(); }
 
  protected:
   TurnPort(rtc::Thread* thread,
@@ -248,6 +247,9 @@ class TurnPort : public Port {
                             const std::string& remote_ufrag);
 
   rtc::DiffServCodePoint StunDscpValue() const override;
+
+  // Shuts down the turn port, frees requests and deletes connections.
+  void Close();
 
  private:
   enum {
