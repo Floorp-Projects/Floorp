@@ -42,7 +42,7 @@ interface nsISpeculativeConnect : nsISupports
  * inline) to determine whether or not to actually make a speculative
  * connection.
  */
-[builtinclass, uuid(1040ebe3-6ed1-45a6-8587-995e082518d7)]
+[uuid(1040ebe3-6ed1-45a6-8587-995e082518d7)]
 interface nsISpeculativeConnectionOverrider : nsISupports
 {
     /**

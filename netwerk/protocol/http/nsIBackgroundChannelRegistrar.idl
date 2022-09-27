@@ -24,7 +24,7 @@ class HttpChannelParent;
  * HttpBackgroundChannelParent::LinkToChannel will be invoked to notify the
  * existence of associated channel object.
  */
-[builtinclass, uuid(8acaa9b1-f0c4-4ade-baeb-39b0d4b96e5b)]
+[uuid(8acaa9b1-f0c4-4ade-baeb-39b0d4b96e5b)]
 interface nsIBackgroundChannelRegistrar : nsISupports
 {
   /*

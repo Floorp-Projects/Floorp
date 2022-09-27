@@ -288,7 +288,7 @@ interface nsIIOService : nsISupports
 
 %}
 
-[builtinclass, uuid(6633c0bf-d97a-428f-8ece-cb6a655fb95a)]
+[uuid(6633c0bf-d97a-428f-8ece-cb6a655fb95a)]
 interface nsIIOServiceInternal : nsISupports
 {
     /**

@@ -25,7 +25,7 @@ interface nsIHttpAuthenticableChannel;
  * called.
  */
 
-[builtinclass, uuid(788f331b-2e1f-436c-b405-4f88a31a105b)]
+[uuid(788f331b-2e1f-436c-b405-4f88a31a105b)]
 interface nsIHttpChannelAuthProvider : nsICancelable
 {
   /**

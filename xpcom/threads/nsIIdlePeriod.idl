@@ -18,7 +18,7 @@ native TimeStamp(mozilla::TimeStamp);
  * nsIThread to estimate when it is likely that it will receive an
  * event.
  */
-[builtinclass, uuid(21dd35a2-eae9-4bd8-b470-0dfa35a0e3b9)]
+[uuid(21dd35a2-eae9-4bd8-b470-0dfa35a0e3b9)]
 interface nsIIdlePeriod : nsISupports
 {
     /**

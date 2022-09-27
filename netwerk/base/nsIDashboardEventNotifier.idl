@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[builtinclass, uuid(24fdfcbe-54cb-4997-8392-3c476126ea3b)]
+[uuid(24fdfcbe-54cb-4997-8392-3c476126ea3b)]
 interface nsIDashboardEventNotifier : nsISupports
 {
     /* These methods are called to register a websocket event with the dashboard
