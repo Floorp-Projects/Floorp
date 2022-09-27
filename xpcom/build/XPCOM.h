@@ -68,7 +68,6 @@
 #include "nsIDebug2.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsIEnvironment.h"
-#include "nsIErrorService.h"
 #include "nsIEventTarget.h"
 #include "nsIException.h"
 #include "nsIFactory.h"

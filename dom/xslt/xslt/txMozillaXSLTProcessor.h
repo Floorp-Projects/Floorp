@@ -36,8 +36,6 @@ enum class ReferrerPolicy : uint8_t;
 }  // namespace dom
 }  // namespace mozilla
 
-#define XSLT_MSGS_URL "chrome://global/locale/xslt/xslt.properties"
-
 /**
  * txMozillaXSLTProcessor is a front-end to the XSLT Processor.
  */

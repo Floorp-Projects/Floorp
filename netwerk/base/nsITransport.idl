@@ -146,8 +146,7 @@ interface nsITransportEventSink : nsISupports
      * @param aTransport
      *        the transport sending this status notification.
      * @param aStatus
-     *        the transport status (resolvable to a string using
-     *        nsIErrorService). See nsISocketTransport for socket specific
+     *        the transport status. See nsISocketTransport for socket specific
      *        status codes and more comments.
      * @param aProgress
      *        the amount of data either read or written depending on the value

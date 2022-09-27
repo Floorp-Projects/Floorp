@@ -18,12 +18,12 @@
 #include "txURIUtils.h"
 #include "txXMLUtils.h"
 #include "txUnknownHandler.h"
+#include "txXSLTMsgsURL.h"
 #include "txXSLTProcessor.h"
 #include "nsIPrincipal.h"
 #include "nsThreadUtils.h"
 #include "jsapi.h"
 #include "txExprParser.h"
-#include "nsErrorService.h"
 #include "nsJSUtils.h"
 #include "nsIXPConnect.h"
 #include "nsNameSpaceManager.h"
@@ -1114,24 +1114,11 @@ nsresult txMozillaXSLTProcessor::Startup() {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsCOMPtr<nsIErrorService> errorService = nsErrorService::GetOrCreate();
-  if (errorService) {
-    errorService->RegisterErrorStringBundle(NS_ERROR_MODULE_XSLT,
-                                            XSLT_MSGS_URL);
-  }
-
   return NS_OK;
 }
 
 /* static*/
-void txMozillaXSLTProcessor::Shutdown() {
-  txXSLTProcessor::shutdown();
-
-  nsCOMPtr<nsIErrorService> errorService = nsErrorService::GetOrCreate();
-  if (errorService) {
-    errorService->UnregisterErrorStringBundle(NS_ERROR_MODULE_XSLT);
-  }
-}
+void txMozillaXSLTProcessor::Shutdown() { txXSLTProcessor::shutdown(); }
 
 /* static */
 UniquePtr<txVariable::OwningXSLTParameterValue> txVariable::convertToOwning(
