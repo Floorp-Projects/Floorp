@@ -18,7 +18,7 @@ interface nsIRunnable;
  *
  * nsIMessageLoop's contractid is "@mozilla.org/message-loop;1".
  */
-[scriptable, uuid(3E8C58E8-E52C-43E0-8E66-669CA788FF5F)]
+[builtinclass, scriptable, uuid(3E8C58E8-E52C-43E0-8E66-669CA788FF5F)]
 interface nsIMessageLoop : nsISupports
 {
   /**

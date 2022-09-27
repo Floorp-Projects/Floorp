@@ -7,18 +7,11 @@
 
 /**
  *
- * nsIMemory: interface to allocate and deallocate memory. Also provides
- * for notifications in low-memory situations.
- *
- * The frozen exported symbols moz_xmalloc, moz_xrealloc, and free
- * provide a more efficient way to access XPCOM memory allocation. Using
- * those symbols is preferred to using the methods on this interface.
- *
  * A client that wishes to be notified of low memory situations (for
  * example, because the client maintains a large memory cache that
  * could be released when memory is tight) should register with the
  * observer service (see nsIObserverService) using the topic
- * "memory-pressure".  There are specific types of notications
+ * "memory-pressure".  There are specific types of notifications
  * that can occur.  These types will be passed as the |aData|
  * parameter of the of the "memory-pressure" notification:
  *
@@ -38,7 +31,7 @@
  * call.
  */
 
-[scriptable, uuid(1e004834-6d8f-425a-bc9c-a2812ed43bb7)]
+[uuid(1e004834-6d8f-425a-bc9c-a2812ed43bb7)]
 interface nsIMemory : nsISupports
 {
     /**
