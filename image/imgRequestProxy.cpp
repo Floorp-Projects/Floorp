@@ -233,15 +233,6 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest* aNewOwner) {
   return NS_OK;
 }
 
-NS_IMETHODIMP imgRequestProxy::GetTriggeringPrincipal(
-    nsIPrincipal** aTriggeringPrincipal) {
-  MOZ_ASSERT(GetOwner());
-  nsCOMPtr<nsIPrincipal> triggeringPrincipal =
-      GetOwner()->GetTriggeringPrincipal();
-  triggeringPrincipal.forget(aTriggeringPrincipal);
-  return NS_OK;
-}
-
 void imgRequestProxy::MarkValidating() {
   MOZ_ASSERT(GetValidator());
   mValidating = true;

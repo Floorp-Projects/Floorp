@@ -2702,7 +2702,8 @@ nsChangeHint nsStyleDisplay::CalcTransformPropertyDifference(
 //
 
 nsStyleVisibility::nsStyleVisibility(const Document& aDocument)
-    : mDirection(aDocument.GetBidiOptions() == IBMBIDI_TEXTDIRECTION_RTL
+    : mImageOrientation(StyleImageOrientation::FromImage),
+      mDirection(aDocument.GetBidiOptions() == IBMBIDI_TEXTDIRECTION_RTL
                      ? StyleDirection::Rtl
                      : StyleDirection::Ltr),
       mVisible(StyleVisibility::Visible),
@@ -2710,20 +2711,19 @@ nsStyleVisibility::nsStyleVisibility(const Document& aDocument)
       mWritingMode(StyleWritingModeProperty::HorizontalTb),
       mTextOrientation(StyleTextOrientation::Mixed),
       mMozBoxLayout(StyleMozBoxLayout::Legacy),
-      mPrintColorAdjust(StylePrintColorAdjust::Economy),
-      mImageOrientation(StyleImageOrientation::FromImage) {
+      mPrintColorAdjust(StylePrintColorAdjust::Economy) {
   MOZ_COUNT_CTOR(nsStyleVisibility);
 }
 
 nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
-    : mDirection(aSource.mDirection),
+    : mImageOrientation(aSource.mImageOrientation),
+      mDirection(aSource.mDirection),
       mVisible(aSource.mVisible),
       mImageRendering(aSource.mImageRendering),
       mWritingMode(aSource.mWritingMode),
       mTextOrientation(aSource.mTextOrientation),
       mMozBoxLayout(aSource.mMozBoxLayout),
-      mPrintColorAdjust(aSource.mPrintColorAdjust),
-      mImageOrientation(aSource.mImageOrientation) {
+      mPrintColorAdjust(aSource.mPrintColorAdjust) {
   MOZ_COUNT_CTOR(nsStyleVisibility);
 }
 
@@ -2767,37 +2767,6 @@ nsChangeHint nsStyleVisibility::CalcDifference(
     hint |= nsChangeHint_NeutralChange;
   }
   return hint;
-}
-
-StyleImageOrientation nsStyleVisibility::UsedImageOrientation(
-    imgIRequest* aRequest) const {
-  return UsedImageOrientation(aRequest, mImageOrientation);
-}
-
-StyleImageOrientation nsStyleVisibility::UsedImageOrientation(
-    imgIRequest* aRequest, StyleImageOrientation aOrientation) {
-  if (!aRequest) {
-    return aOrientation;
-  }
-
-  nsCOMPtr<nsIPrincipal> triggeringPrincipal =
-      aRequest->GetTriggeringPrincipal();
-  nsCOMPtr<nsIURI> uri = aRequest->GetURI();
-
-  // If the request was for a blob, the request may not have a triggering
-  // principal and we should use the input orientation.
-  if (!triggeringPrincipal) {
-    return aOrientation;
-  }
-
-  // If the image request is a cross-origin request, do not enforce the
-  // image orientation found in the style. Use the image orientation found
-  // in the exif data.
-  if (!triggeringPrincipal->IsSameOrigin(uri)) {
-    return StyleImageOrientation::FromImage;
-  }
-
-  return aOrientation;
 }
 
 //-----------------------
