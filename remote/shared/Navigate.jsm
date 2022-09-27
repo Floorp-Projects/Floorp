@@ -168,6 +168,10 @@ class ProgressListener {
     this.#unloadTimerId = null;
   }
 
+  get #messagePrefix() {
+    return `[${this.browsingContext.id}] ${this.constructor.name}`;
+  }
+
   get browsingContext() {
     return this.#webProgress.browsingContext;
   }
@@ -190,16 +194,14 @@ class ProgressListener {
 
   #checkLoadingState(request, options = {}) {
     const { isStart = false, isStop = false, status = 0 } = options;
-    const messagePrefix = `[${this.browsingContext.id}] ${this.constructor.name}`;
 
+    this.#trace(`Check loading state: isStart=${isStart} isStop=${isStop}`);
     if (isStart && !this.#seenStartFlag) {
       this.#seenStartFlag = true;
 
       this.#targetURI = this.#getTargetURI(request);
 
-      lazy.logger.trace(
-        lazy.truncate`${messagePrefix} state=start: ${this.targetURI?.spec}`
-      );
+      this.#trace(`state=start: ${this.targetURI?.spec}`);
 
       if (this.#unloadTimerId !== null) {
         lazy.clearTimeout(this.#unloadTimerId);
@@ -220,29 +222,26 @@ class ProgressListener {
         !Components.isSuccessCode(status) &&
         status != Cr.NS_ERROR_PARSED_DATA_CACHED
       ) {
-        // Ignore if the current navigation to the initial document is stopped
-        // because the real document will be loaded instead.
         if (
           status == Cr.NS_BINDING_ABORTED &&
           this.browsingContext.currentWindowGlobal.isInitialDocument
         ) {
+          this.#trace(
+            `Ignore aborted navigation error to the initial document, real document will be loaded.`
+          );
           return;
         }
 
         // The navigation request caused an error.
         const errorName = ChromeUtils.getXPCOMErrorName(status);
-        lazy.logger.trace(
-          lazy.truncate`${messagePrefix} state=stop: error=0x${status.toString(
-            16
-          )} (${errorName})`
+        this.#trace(
+          `state=stop: error=0x${status.toString(16)} (${errorName})`
         );
         this.stop({ error: new Error(errorName) });
         return;
       }
 
-      lazy.logger.trace(
-        lazy.truncate`${messagePrefix} state=stop: ${this.currentURI.spec}`
-      );
+      this.#trace(`state=stop: ${this.currentURI.spec}`);
 
       // If a non initial page finished loading the navigation is done.
       if (!this.browsingContext.currentWindowGlobal.isInitialDocument) {
@@ -251,8 +250,8 @@ class ProgressListener {
       }
 
       // Otherwise wait for a potential additional page load.
-      lazy.logger.trace(
-        `${messagePrefix} Initial document loaded. Wait for a potential further navigation.`
+      this.#trace(
+        `Initial document loaded. Wait for a potential further navigation.`
       );
       this.#seenStartFlag = false;
       this.#setUnloadTimer();
@@ -269,15 +268,19 @@ class ProgressListener {
 
   #setUnloadTimer() {
     if (!this.#expectNavigation) {
+      this.#trace(`Setting unload timer (${this.#unloadTimeout}ms)`);
+
       this.#unloadTimerId = lazy.setTimeout(() => {
-        lazy.logger.trace(
-          lazy.truncate`[${this.browsingContext.id}] No navigation detected: ${this.currentURI?.spec}`
-        );
+        this.#trace(`No navigation detected: ${this.currentURI?.spec}`);
         // Assume the target is the currently loaded URI.
         this.#targetURI = this.currentURI;
         this.stop();
       }, this.#unloadTimeout);
     }
+  }
+
+  #trace(message) {
+    lazy.logger.trace(lazy.truncate`${this.#messagePrefix} ${message}`);
   }
 
   onStateChange(progress, request, flag, status) {
@@ -289,13 +292,9 @@ class ProgressListener {
   }
 
   onLocationChange(progress, request, location, flag) {
-    const messagePrefix = `[${this.browsingContext.id}] ${this.constructor.name}`;
-
     // If an error page has been loaded abort the navigation.
     if (flag & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
-      lazy.logger.trace(
-        lazy.truncate`${messagePrefix} location=errorPage: ${location.spec}`
-      );
+      this.#trace(`location=errorPage: ${location.spec}`);
       this.stop({ error: new Error("Address restricted") });
       return;
     }
@@ -303,9 +302,7 @@ class ProgressListener {
     // If location has changed in the same document the navigation is done.
     if (flag & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
       this.#targetURI = location;
-      lazy.logger.trace(
-        lazy.truncate`${messagePrefix} location=sameDocument: ${this.targetURI?.spec}`
-      );
+      this.#trace(`location=sameDocument: ${this.targetURI?.spec}`);
       this.stop();
     }
   }
@@ -327,6 +324,7 @@ class ProgressListener {
       if (this.#resolveWhenStarted && !this.#waitForExplicitStart) {
         // Resolve immediately when the page is already loading and there
         // is no requirement to wait for it to finish.
+        this.#trace(`Document already loading ${this.#targetURI}`);
         return Promise.resolve();
       }
     }
