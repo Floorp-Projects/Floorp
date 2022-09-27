@@ -247,6 +247,7 @@ class DiscoveryStreamFeed {
     const nimbusConfig = this.store.getState().Prefs.values?.pocketConfig || {};
     const { region } = this.store.getState().Prefs.values;
 
+    this.setupSpocsCacheUpdateTime();
     const saveToPocketCardRegions = nimbusConfig.saveToPocketCardRegions
       ?.split(",")
       .map(s => s.trim());
@@ -397,6 +398,34 @@ class DiscoveryStreamFeed {
     return null;
   }
 
+  get spocsCacheUpdateTime() {
+    if (this._spocsCacheUpdateTime) {
+      return this._spocsCacheUpdateTime;
+    }
+    this.setupSpocsCacheUpdateTime();
+    return this._spocsCacheUpdateTime;
+  }
+
+  setupSpocsCacheUpdateTime() {
+    const nimbusConfig = this.store.getState().Prefs.values?.pocketConfig || {};
+    const { spocsCacheTimeout } = nimbusConfig;
+    const MAX_TIMEOUT = 30;
+    const MIN_TIMEOUT = 5;
+    // We do a bit of min max checking the the configured value is between
+    // 5 and 30 minutes, to protect against unreasonable values.
+    if (
+      spocsCacheTimeout &&
+      spocsCacheTimeout <= MAX_TIMEOUT &&
+      spocsCacheTimeout >= MIN_TIMEOUT
+    ) {
+      // This value is in minutes, but we want ms.
+      this._spocsCacheUpdateTime = spocsCacheTimeout * 60 * 1000;
+    } else {
+      // The const is already in ms.
+      this._spocsCacheUpdateTime = SPOCS_FEEDS_UPDATE_TIME;
+    }
+  }
+
   /**
    * Returns true if data in the cache for a particular key has expired or is missing.
    * @param {object} cachedData data returned from cache.get()
@@ -408,7 +437,7 @@ class DiscoveryStreamFeed {
     const { layout, spocs, feeds } = cachedData;
     const updateTimePerComponent = {
       layout: LAYOUT_UPDATE_TIME,
-      spocs: SPOCS_FEEDS_UPDATE_TIME,
+      spocs: this.spocsCacheUpdateTime,
       feed: COMPONENT_FEEDS_UPDATE_TIME,
     };
     const EXPIRATION_TIME = isStartup
