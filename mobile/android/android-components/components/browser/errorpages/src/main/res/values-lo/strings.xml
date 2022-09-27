@@ -237,6 +237,14 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">ໂປຼໂຕຄໍທີ່ບໍ່ຮູ້ຈັກ</string>
 
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>ທີ່ຢູ່ລະບຸໂປຣໂຕຄໍ (ເຊັ່ນ: <q>wxyz://</q>) ບຣາວເຊີບໍ່ຮັບຮູ້, ສະນັ້ນ ບຣາວເຊີບໍ່ສາມາດເຊື່ອມຕໍ່ກັບເວັບໄຊທ໌ໄດ້ຢ່າງຖືກຕ້ອງ.</p>
+      <ul>
+        <li>ທ່ານກຳລັງພະຍາຍາມເຂົ້າເຖິງມັນຕິມີເດຍ ຫຼືບໍລິການອື່ນໆທີ່ບໍ່ແມ່ນຂໍ້ຄວາມບໍ? ກວດເບິ່ງເວັບໄຊສຳລັບຄວາມຕ້ອງການເພີ່ມເຕີມ.</li>
+        <li>ບາງໂປຣໂຕຄໍອາດຈະຕ້ອງການຊອບແວພາກສ່ວນທີສາມ ຫຼື plugins ກ່ອນທີ່ຕົວທ່ອງເວັບສາມາດຮັບຮູ້ພວກມັນໄດ້.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">ບໍ່ພົບໄຟລ໌ນີ້</string>
 
