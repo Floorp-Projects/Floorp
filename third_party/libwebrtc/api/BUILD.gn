@@ -1035,19 +1035,6 @@ if (rtc_include_tests) {
     ]
   }
 
-  rtc_source_set("dummy_peer_connection") {
-    visibility = [ "*" ]
-    testonly = true
-    sources = [ "test/dummy_peer_connection.h" ]
-
-    deps = [
-      ":libjingle_peerconnection_api",
-      ":rtc_error",
-      "../rtc_base:checks",
-      "../rtc_base:refcount",
-    ]
-  }
-
   rtc_source_set("mock_peerconnectioninterface") {
     visibility = [ "*" ]
     testonly = true
@@ -1260,7 +1247,6 @@ if (rtc_include_tests) {
     sources = [ "test/compile_all_headers.cc" ]
 
     deps = [
-      ":dummy_peer_connection",
       ":fake_frame_decryptor",
       ":fake_frame_encryptor",
       ":mock_async_dns_resolver",
