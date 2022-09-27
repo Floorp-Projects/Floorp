@@ -56,6 +56,7 @@ const REMOTE_SIMPLE_VALUES = [
 ];
 
 const REMOTE_COMPLEX_VALUES = [
+  { value: Symbol("foo"), serialized: { type: "symbol" } },
   {
     value: [1],
     serialized: {
@@ -221,6 +222,22 @@ const REMOTE_COMPLEX_VALUES = [
     },
     deserializable: true,
   },
+  { value: new WeakMap([[{}, 1]]), serialized: { type: "weakmap" } },
+  { value: new WeakSet([{}]), serialized: { type: "weakset" } },
+  { value: new Error("error message"), serialized: { type: "error" } },
+  {
+    value: new SyntaxError("syntax error message"),
+    serialized: { type: "error" },
+  },
+  {
+    value: new TypeError("type error message"),
+    serialized: { type: "error" },
+  },
+  { value: new Promise(() => true), serialized: { type: "promise" } },
+  { value: new Int8Array(), serialized: { type: "typedarray" } },
+  { value: new ArrayBuffer(), serialized: { type: "arraybuffer" } },
+  { value: () => true, serialized: { type: "function" } },
+  { value() {}, serialized: { type: "function" } },
   {
     value: {},
     maxDepth: 1,
