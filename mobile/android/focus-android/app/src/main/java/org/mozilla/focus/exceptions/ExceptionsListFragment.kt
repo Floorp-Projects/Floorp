@@ -158,12 +158,15 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
         showToolbar(getString(R.string.preference_exceptions))
 
         (binding.exceptionList.adapter as DomainListAdapter).refresh(requireActivity()) {
-            if ((binding.exceptionList.adapter as DomainListAdapter).itemCount == 0) {
-                requireComponents.appStore.dispatch(
-                    AppAction.NavigateUp(requireComponents.store.state.selectedTabId),
-                )
+            // check if the exceptions list is empty only if fragment is still attached.
+            context?.let {
+                if ((binding.exceptionList.adapter as DomainListAdapter).itemCount == 0) {
+                    requireComponents.appStore.dispatch(
+                        AppAction.NavigateUp(requireComponents.store.state.selectedTabId),
+                    )
+                }
+                activity?.invalidateOptionsMenu()
             }
-            activity?.invalidateOptionsMenu()
         }
     }
 
