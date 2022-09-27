@@ -10,18 +10,14 @@
 #include "Layers.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Point.h"
-#include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZPublicUtils.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/LayersMessageUtils.h"
 #include "mozilla/layers/PAPZ.h"
-#include "mozilla/layers/RepaintRequest.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_layout.h"
-#include "nsDeckFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
@@ -33,13 +29,9 @@
 
 namespace mozilla {
 
-using gfx::gfxVars;
 using gfx::IntSize;
 
-using layers::APZCCallbackHelper;
 using layers::FrameMetrics;
-using layers::LayerManager;
-using layers::RepaintRequest;
 using layers::ScrollableLayerGuid;
 
 typedef ScrollableLayerGuid::ViewID ViewID;
@@ -805,12 +797,11 @@ bool DisplayPortUtils::CalculateAndSetDisplayPortMargins(
                                aRepaintMode);
 }
 
-bool DisplayPortUtils::MaybeCreateDisplayPort(nsDisplayListBuilder* aBuilder,
-                                              nsIFrame* aScrollFrame,
-                                              RepaintMode aRepaintMode) {
+bool DisplayPortUtils::MaybeCreateDisplayPort(
+    nsDisplayListBuilder* aBuilder, nsIFrame* aScrollFrame,
+    nsIScrollableFrame* aScrollFrameAsScrollable, RepaintMode aRepaintMode) {
   nsIContent* content = aScrollFrame->GetContent();
-  nsIScrollableFrame* scrollableFrame = do_QueryFrame(aScrollFrame);
-  if (!content || !scrollableFrame) {
+  if (!content) {
     return false;
   }
 
@@ -823,7 +814,7 @@ bool DisplayPortUtils::MaybeCreateDisplayPort(nsDisplayListBuilder* aBuilder,
   if (aBuilder->IsPaintingToWindow() &&
       nsLayoutUtils::AsyncPanZoomEnabled(aScrollFrame) &&
       !aBuilder->HaveScrollableDisplayPort() &&
-      scrollableFrame->WantAsyncScroll()) {
+      aScrollFrameAsScrollable->WantAsyncScroll()) {
     // If we don't already have a displayport, calculate and set one.
     if (!haveDisplayPort) {
       // We only use the viewId for logging purposes, but create it
@@ -835,7 +826,7 @@ bool DisplayPortUtils::MaybeCreateDisplayPort(nsDisplayListBuilder* aBuilder,
           sDisplayportLog, LogLevel::Debug,
           ("Setting DP on first-encountered scrollId=%" PRIu64 "\n", viewId));
 
-      CalculateAndSetDisplayPortMargins(scrollableFrame, aRepaintMode);
+      CalculateAndSetDisplayPortMargins(aScrollFrameAsScrollable, aRepaintMode);
 #ifdef DEBUG
       haveDisplayPort = HasNonMinimalDisplayPort(content);
       MOZ_ASSERT(haveDisplayPort,
@@ -884,10 +875,8 @@ bool DisplayPortUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered(
       aFrame->GetContent()->GetID() == nsGkAtoms::tabbrowser_arrowscrollbox) {
     return false;
   }
-
-  nsIScrollableFrame* sf = do_QueryFrame(aFrame);
-  if (sf) {
-    if (MaybeCreateDisplayPort(aBuilder, aFrame, RepaintMode::Repaint)) {
+  if (nsIScrollableFrame* sf = do_QueryFrame(aFrame)) {
+    if (MaybeCreateDisplayPort(aBuilder, aFrame, sf, RepaintMode::Repaint)) {
       return true;
     }
   }
@@ -901,28 +890,21 @@ bool DisplayPortUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered(
   if (aFrame->IsSubDocumentFrame()) {
     PresShell* presShell = static_cast<nsSubDocumentFrame*>(aFrame)
                                ->GetSubdocumentPresShellForPainting(0);
-    nsIFrame* root = presShell ? presShell->GetRootFrame() : nullptr;
-    if (root) {
+    if (nsIFrame* root = presShell ? presShell->GetRootFrame() : nullptr) {
       if (MaybeCreateDisplayPortInFirstScrollFrameEncountered(root, aBuilder)) {
         return true;
       }
     }
   }
-  if (aFrame->IsDeckFrame()) {
-    // only descend the visible card of a decks
-    nsIFrame* child = static_cast<nsDeckFrame*>(aFrame)->GetSelectedBox();
-    if (child) {
-      return MaybeCreateDisplayPortInFirstScrollFrameEncountered(child,
-                                                                 aBuilder);
-    }
+  if (aFrame->StyleUIReset()->mMozSubtreeHiddenOnlyVisually) {
+    // Only descend the visible card of deck / tabpanels
+    return false;
   }
-
   for (nsIFrame* child : aFrame->PrincipalChildList()) {
     if (MaybeCreateDisplayPortInFirstScrollFrameEncountered(child, aBuilder)) {
       return true;
     }
   }
-
   return false;
 }
 

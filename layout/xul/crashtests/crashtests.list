@@ -5,12 +5,10 @@ load chrome://reftest/content/crashtests/layout/xul/crashtests/151826-1.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/168724-1.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/189814-1.xhtml
 skip-if(Android) load chrome://reftest/content/crashtests/layout/xul/crashtests/289410-1.xhtml
-load 290743.html
 load chrome://reftest/content/crashtests/layout/xul/crashtests/291702-1.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/291702-2.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/291702-3.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/294371-1.xhtml
-load 311457-1.html
 load chrome://reftest/content/crashtests/layout/xul/crashtests/322786-1.xhtml
 skip-if(Android) load chrome://reftest/content/crashtests/layout/xul/crashtests/325377.xhtml
 skip-if(Android) load chrome://reftest/content/crashtests/layout/xul/crashtests/326879-1.xhtml
@@ -24,7 +22,6 @@ load chrome://reftest/content/crashtests/layout/xul/crashtests/366112-1.xhtml
 skip-if(Android) load chrome://reftest/content/crashtests/layout/xul/crashtests/366203-1.xhtml
 load 367185-1.xhtml
 load 369942-1.xhtml
-skip-if(Android) load chrome://reftest/content/crashtests/layout/xul/crashtests/374102-1.xhtml
 load 376137-1.html
 load 376137-2.html
 load 377592-1.svg
@@ -39,7 +36,6 @@ load 384871-1.html
 load chrome://reftest/content/crashtests/layout/xul/crashtests/386642.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/387080-1.xhtml
 load 391974-1.html
-skip-if(Android) load chrome://reftest/content/crashtests/layout/xul/crashtests/399013.xhtml
 load 402912-1.xhtml
 load 404192.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/408904-1.xhtml
