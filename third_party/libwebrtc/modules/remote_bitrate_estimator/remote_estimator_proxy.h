@@ -16,9 +16,12 @@
 #include <memory>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "api/field_trials_view.h"
 #include "api/transport/network_control.h"
 #include "api/units/data_size.h"
+#include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 #include "modules/remote_bitrate_estimator/packet_arrival_map.h"
 #include "rtc_base/experiments/field_trial_parser.h"
@@ -46,6 +49,16 @@ class RemoteEstimatorProxy : public RemoteBitrateEstimator {
                        const FieldTrialsView* key_value_config,
                        NetworkStateEstimator* network_state_estimator);
   ~RemoteEstimatorProxy() override;
+
+  struct Packet {
+    Timestamp arrival_time;
+    DataSize size;
+    uint32_t ssrc;
+    absl::optional<uint32_t> absolute_send_time_24bits;
+    absl::optional<uint16_t> transport_sequence_number;
+    absl::optional<FeedbackRequest> feedback_request;
+  };
+  void IncomingPacket(Packet packet);
 
   void IncomingPacket(int64_t arrival_time_ms,
                       size_t payload_size,
@@ -78,7 +91,7 @@ class RemoteEstimatorProxy : public RemoteBitrateEstimator {
     }
   };
 
-  void MaybeCullOldPackets(int64_t sequence_number, int64_t arrival_time_ms)
+  void MaybeCullOldPackets(int64_t sequence_number, Timestamp arrival_time)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(&lock_);
   void SendPeriodicFeedbacks() RTC_EXCLUSIVE_LOCKS_REQUIRED(&lock_);
   void SendFeedbackOnRequest(int64_t sequence_number,

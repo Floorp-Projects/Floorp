@@ -128,6 +128,8 @@ if (rtc_include_tests) {
       "../../api/transport:network_control",
       "../../api/units:data_rate",
       "../../api/units:data_size",
+      "../../api/units:time_delta",
+      "../../api/units:timestamp",
       "../../rtc_base",
       "../../rtc_base:checks",
       "../../rtc_base:random",
