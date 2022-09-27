@@ -952,7 +952,7 @@ void nsWindow::ResizeInt(const Maybe<LayoutDeviceIntPoint>& aMove,
   ConstrainSize(&aSize.width, &aSize.height);
   LOG("  ConstrainSize: w:%d h;%d\n", aSize.width, aSize.height);
 
-  const bool resized = aSize != mLastSizeRequest;
+  const bool resized = aSize != mLastSizeRequest || mBounds.Size() != aSize;
 
   // For top-level windows, aSize should possibly be
   // interpreted as frame bounds, but NativeMoveResize treats these as window
