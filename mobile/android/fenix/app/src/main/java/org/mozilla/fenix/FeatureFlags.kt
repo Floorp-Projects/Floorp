@@ -82,7 +82,7 @@ object FeatureFlags {
     /**
      * Enables showing the homescreen onboarding card.
      */
-    val showHomeOnboarding = Config.channel.isNightlyOrDebug
+    const val showHomeOnboarding = true
 
     /**
      * Enables history improvement features.
