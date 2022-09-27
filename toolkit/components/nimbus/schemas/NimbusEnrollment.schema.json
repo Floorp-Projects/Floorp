@@ -179,6 +179,36 @@
         "force": {
           "type": "boolean",
           "description": "Whether or not this was a force enrollment."
+        },
+        "prefs": {
+          "type": "array",
+          "description": "Information about prefs set by this enrollment.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the pref that was set."
+              },
+              "featureId": {
+                "type": "string",
+                "description": "The ID of the feature that owns the variable that set this pref."
+              },
+              "variable": {
+                "type": "string",
+                "description": "The variable that set this pref."
+              },
+              "branch": {
+                "type": "string",
+                "enum": ["user", "default"],
+                "description": "The branch the pref was set on."
+              },
+              "originalValue": {
+                "description": "The original value before the experiment."
+              }
+            },
+            "additionalProperties": false
+          }
         }
       },
       "required": [

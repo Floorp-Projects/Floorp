@@ -15,11 +15,13 @@ const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   ExperimentStore: "resource://nimbus/lib/ExperimentStore.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
   Sampling: "resource://gre/modules/components-utils/Sampling.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   FirstStartup: "resource://gre/modules/FirstStartup.jsm",
+  PrefUtils: "resource://normandy/lib/PrefUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
@@ -118,9 +120,11 @@ class _ExperimentManager {
 
     for (const experiment of restoredExperiments) {
       this.setExperimentActive(experiment);
+      this._restoreEnrollmentPrefs(experiment);
     }
     for (const rollout of restoredRollouts) {
       this.setExperimentActive(rollout);
+      this._restoreEnrollmentPrefs(rollout);
     }
 
     this.observe();
@@ -341,6 +345,8 @@ class _ExperimentManager {
     source,
     options = {}
   ) {
+    const { prefs, prefsToSet } = this._getPrefsForBranch(branch, isRollout);
+
     /** @type {Enrollment} */
     const experiment = {
       slug,
@@ -353,6 +359,7 @@ class _ExperimentManager {
       userFacingDescription,
       lastSeen: new Date().toJSON(),
       featureIds,
+      prefs,
     };
 
     if (typeof isRollout !== "undefined") {
@@ -374,6 +381,10 @@ class _ExperimentManager {
       this.setExperimentActive(experiment);
     }
     this.sendEnrollmentTelemetry(experiment);
+
+    for (const { name, value, prefBranch } of prefsToSet) {
+      lazy.PrefUtils.setPref(name, value, { branch: prefBranch });
+    }
 
     lazy.log.debug(
       `New ${isRollout ? "rollout" : "experiment"} started: ${slug}, ${
@@ -496,6 +507,8 @@ class _ExperimentManager {
         enrollment.enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       reason,
     });
+
+    this._unsetEnrollmentPrefs(enrollment);
 
     lazy.log.debug(`Recipe unenrolled: ${slug}`);
   }
@@ -684,6 +697,212 @@ class _ExperimentManager {
 
     const index = await lazy.Sampling.ratioSample(input, ratios);
     return branches[index];
+  }
+
+  /**
+   * Generate the list of prefs a recipe will set.
+   *
+   * @params {object} branch The recipe branch that will be enrolled.
+   * @params {boolean} isRollout Whether or not this recipe is a rollout.
+   *
+   * @returns {object} An object with the following keys:
+   *
+   *                   `prefs`:
+   *                        The full list of prefs that this recipe would set,
+   *                        if there are no conflicts. This will include prefs
+   *                        that, for example, will not be set because this
+   *                        enrollment is a rollout and there is an active
+   *                        experiment that set the same pref.
+   *
+   *                   `prefsToSet`:
+   *                        Prefs that should be set once enrollment is
+   *                        complete.
+   */
+  _getPrefsForBranch(branch, isRollout = false) {
+    const prefs = [];
+    const prefsToSet = [];
+
+    const getConflictingEnrollment = this._makeEnrollmentCache(isRollout);
+
+    for (const { featureId, value: featureValue } of featuresCompat(branch)) {
+      const feature = lazy.NimbusFeatures[featureId];
+
+      if (!feature) {
+        continue;
+      }
+
+      // It is possible to enroll in both an experiment and a rollout, so we
+      // need to check if we have another enrollment for the same feature.
+      const conflictingEnrollment = getConflictingEnrollment(featureId);
+
+      const prefBranch =
+        feature.manifest.isEarlyStartup ?? false ? "user" : "default";
+
+      for (const [variable, value] of Object.entries(featureValue)) {
+        const prefName = feature.getSetPrefName(variable);
+
+        if (prefName) {
+          let originalValue;
+          const conflictingPref = conflictingEnrollment?.prefs?.find(
+            p => p.name === prefName
+          );
+
+          if (conflictingPref) {
+            // If there is another enrollment that has already set the pref we
+            // care about, we use its stored originalValue.
+            originalValue = conflictingPref.originalValue;
+          } else if (
+            prefBranch === "user" &&
+            !Services.prefs.prefHasUserValue(prefName)
+          ) {
+            // If there is a default value set, then attempting to read the user
+            // branch would result in returning the default branch value.
+            originalValue = null;
+          } else {
+            originalValue = lazy.PrefUtils.getPref(prefName, {
+              branch: prefBranch,
+            });
+          }
+
+          prefs.push({
+            name: prefName,
+            branch: prefBranch,
+            featureId,
+            variable,
+            originalValue,
+          });
+
+          // An experiment takes precedence if there is already a pref set.
+          if (!isRollout || !conflictingPref) {
+            prefsToSet.push({ name: prefName, value, prefBranch });
+          }
+        }
+      }
+    }
+
+    return { prefs, prefsToSet };
+  }
+
+  /**
+   * Unset prefs set during this enrollment.
+   *
+   * If this enrollment is an experiment and there is an existing rollout that
+   * would set a pref that was covered by this enrollment, the pref will be
+   * updated to that rollout's value.
+   *
+   * Otherwise, it will be set to the original value from before the enrollment began.
+   *
+   * @param {Enrollment} enrollment The enrollment that has ended.
+   */
+  _unsetEnrollmentPrefs(enrollment) {
+    if (!enrollment.prefs?.length) {
+      return;
+    }
+
+    const getConflictingEnrollment = this._makeEnrollmentCache(
+      enrollment.isRollout
+    );
+
+    for (const pref of enrollment.prefs) {
+      let newValue = pref.originalValue;
+      const conflictingEnrollment = getConflictingEnrollment(pref.featureId);
+      const conflictingPref = conflictingEnrollment?.prefs?.find(
+        p => p.name === pref.name
+      );
+
+      if (conflictingPref) {
+        if (enrollment.isRollout) {
+          // If we are unenrolling from a rollout, we have an experiment that
+          // has set the pref. Since experiments take priority, we do not unset
+          // it.
+          continue;
+        } else {
+          // If we are an unenrolling from an experiment, we have a rollout that would
+          // set the same pref, so we update the pref to that value instead of
+          // the original value.
+          newValue = featuresCompat(conflictingEnrollment.branch).find(
+            f => f.featureId === pref.featureId
+          ).value[pref.variable];
+        }
+      }
+
+      lazy.PrefUtils.setPref(pref.name, newValue, {
+        branch: pref.branch,
+      });
+    }
+  }
+
+  /**
+   * Restore the prefs set by an enrollment.
+   *
+   * @param {object} enrollment The enrollment.
+   * @param {object} enrollment.branch The branch that was enrolled.
+   * @param {object[]} enrollment.prefs The prefs that are set by the enrollment.
+   * @param {object[]} enrollment.isRollout The prefs that are set by the enrollment.
+   */
+  _restoreEnrollmentPrefs({ branch, prefs, isRollout }) {
+    if (!prefs?.length) {
+      return;
+    }
+
+    const featuresById = Object.assign(
+      ...featuresCompat(branch).map(f => ({ [f.featureId]: f }))
+    );
+
+    for (const { name, branch: prefBranch, featureId, variable } of prefs) {
+      // User prefs are already persisted.
+      if (prefBranch === "user") {
+        continue;
+      }
+
+      // If we are a rollout, we need to check for an existing experiment that
+      // has set the same pref. If so, we do not need to set the pref because
+      // experiments take priority.
+      if (isRollout) {
+        const conflictingEnrollment = this.store.getExperimentForFeature(
+          featureId
+        );
+        const conflictingPref = conflictingEnrollment?.prefs?.find(
+          p => p.name === name
+        );
+
+        if (conflictingPref) {
+          continue;
+        }
+      }
+
+      const value = featuresById[featureId].value[variable];
+
+      if (prefBranch !== "user") {
+        lazy.PrefUtils.setPref(name, value, { branch: prefBranch });
+      }
+    }
+  }
+
+  /**
+   * Make a cache to look up enrollments of the oppposite kind by feature ID.
+   *
+   * @param {boolean} isRollout Whether or not the current enrollment is a
+   *                            rollout. If true, the cache will return
+   *                            experiments. If false, the cache will return
+   *                            rollouts.
+   *
+   * @returns {function} The cache, as a callable function.
+   */
+  _makeEnrollmentCache(isRollout) {
+    const getOtherEnrollment = (isRollout
+      ? this.store.getExperimentForFeature
+      : this.store.getRolloutForFeature
+    ).bind(this.store);
+
+    const conflictingEnrollments = {};
+    return featureId => {
+      if (!Object.hasOwn(conflictingEnrollments, featureId)) {
+        conflictingEnrollments[featureId] = getOtherEnrollment(featureId);
+      }
+
+      return conflictingEnrollments[featureId];
+    };
   }
 }
 

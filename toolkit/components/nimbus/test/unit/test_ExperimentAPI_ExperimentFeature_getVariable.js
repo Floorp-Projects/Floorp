@@ -46,11 +46,11 @@ function createInstanceWithVariables(variables) {
   });
 }
 
-add_task(async function test_ExperimentFeature_getPreferenceName() {
+add_task(async function test_ExperimentFeature_getFallbackPrefName() {
   const instance = createInstanceWithVariables(TEST_VARIABLES);
 
   Assert.equal(
-    instance.getPreferenceName("enabled"),
+    instance.getFallbackPrefName("enabled"),
     "testfeature1.enabled",
     "should return the fallback preference name"
   );

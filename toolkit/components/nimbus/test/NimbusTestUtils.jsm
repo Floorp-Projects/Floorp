@@ -234,7 +234,7 @@ const ExperimentFakes = {
   },
   async enrollWithFeatureConfig(
     featureConfig,
-    { manager = lazy.ExperimentManager } = {}
+    { manager = lazy.ExperimentManager, isRollout = false } = {}
   ) {
     await manager.store.ready();
     // Use id passed in featureConfig value to compute experimentId
@@ -259,6 +259,7 @@ const ExperimentFakes = {
           features: [featureConfig],
         },
       ],
+      isRollout,
     });
     let {
       enrollmentPromise,
