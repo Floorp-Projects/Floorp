@@ -1111,10 +1111,11 @@ def ensureInfallibleIsSound(methodOrAttribute):
             "(numbers, booleans, cenum, and raw char types)",
             methodOrAttribute.location,
         )
-    if not methodOrAttribute.iface.attributes.builtinclass:
+    ifaceAttributes = methodOrAttribute.iface.attributes
+    if ifaceAttributes.scriptable and not ifaceAttributes.builtinclass:
         raise IDLError(
             "[infallible] attributes and methods are only allowed on "
-            "[builtinclass] interfaces",
+            "non-[scriptable] or [builtinclass] interfaces",
             methodOrAttribute.location,
         )
 
