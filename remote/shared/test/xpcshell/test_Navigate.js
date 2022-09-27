@@ -655,6 +655,38 @@ add_test(async function test_ProgressListener_waitForExplicitStart() {
 });
 
 add_test(
+  async function test_ProgressListener_waitForExplicitStartAndResolveWhenStarted() {
+    // Create a webprogress and start it before creating the progress listener.
+    const browsingContext = new MockTopContext();
+    const webProgress = browsingContext.webProgress;
+    await webProgress.sendStartState();
+
+    // Create the progress listener for a webprogress already in a navigation.
+    const progressListener = new ProgressListener(webProgress, {
+      resolveWhenStarted: true,
+      waitForExplicitStart: true,
+    });
+    const navigated = progressListener.start();
+
+    // Send stop state to complete the initial navigation
+    await webProgress.sendStopState();
+    ok(
+      !(await hasPromiseResolved(navigated)),
+      "Listener has not resolved after initial navigation"
+    );
+
+    // Start a new navigation
+    await webProgress.sendStartState();
+    ok(
+      await hasPromiseResolved(navigated),
+      "Listener resolved after starting the new navigation"
+    );
+
+    run_next_test();
+  }
+);
+
+add_test(
   async function test_ProgressListener_resolveWhenNavigatingInsideDocument() {
     const browsingContext = new MockTopContext();
     const webProgress = browsingContext.webProgress;
