@@ -464,7 +464,8 @@ rtc_library("desktop_capture_generic") {
     ]
   }
 
-  if (!is_win && !is_mac && !rtc_use_x11_extensions && !rtc_use_pipewire) {
+  if (!is_win && !is_mac && !rtc_use_x11_extensions && !rtc_use_pipewire &&
+      !is_fuchsia) {
     sources += [
       "mouse_cursor_monitor_null.cc",
       "screen_capturer_null.cc",
@@ -494,6 +495,23 @@ rtc_library("desktop_capture_generic") {
     "../../system_wrappers",
     "../../system_wrappers:metrics",
   ]
+
+  if (is_fuchsia) {
+    sources += [
+      "mouse_cursor_monitor_null.cc",
+      "screen_capturer_fuchsia.cc",
+      "screen_capturer_fuchsia.h",
+      "window_capturer_null.cc",
+    ]
+    deps += [
+      "../../rtc_base:divide_round",
+      "//third_party/fuchsia-sdk/sdk/fidl/fuchsia.sysmem",
+      "//third_party/fuchsia-sdk/sdk/fidl/fuchsia.ui.composition",
+      "//third_party/fuchsia-sdk/sdk/fidl/fuchsia.ui.scenic",
+      "//third_party/fuchsia-sdk/sdk/pkg/scenic_cpp",
+      "//third_party/fuchsia-sdk/sdk/pkg/sys_cpp",
+    ]
+  }
 
   if (is_win) {
     sources += [
