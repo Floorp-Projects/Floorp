@@ -189,4 +189,9 @@ void ReceiveSideCongestionController::SetMaxDesiredReceiveBitrate(
   remb_throttler_.SetMaxDesiredReceiveBitrate(bitrate);
 }
 
+void ReceiveSideCongestionController::SetTransportOverhead(
+    DataSize overhead_per_packet) {
+  remote_estimator_proxy_.SetTransportOverhead(overhead_per_packet);
+}
+
 }  // namespace webrtc

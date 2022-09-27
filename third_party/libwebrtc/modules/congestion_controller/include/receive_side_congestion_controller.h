@@ -63,6 +63,8 @@ class ReceiveSideCongestionController : public CallStatsObserver,
   // `bitrate` using RTCP REMB.
   void SetMaxDesiredReceiveBitrate(DataRate bitrate);
 
+  void SetTransportOverhead(DataSize overhead_per_packet);
+
   // Implements Module.
   int64_t TimeUntilNextProcess() override;
   void Process() override;

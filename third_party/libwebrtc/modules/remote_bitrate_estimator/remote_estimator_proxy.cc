@@ -15,6 +15,7 @@
 #include <memory>
 #include <utility>
 
+#include "api/units/data_size.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -40,6 +41,7 @@ RemoteEstimatorProxy::RemoteEstimatorProxy(
       network_state_estimator_(network_state_estimator),
       media_ssrc_(0),
       feedback_packet_count_(0),
+      packet_overhead_(DataSize::Zero()),
       send_interval_ms_(send_config_.default_interval->ms()),
       send_periodic_feedback_(true),
       previous_abs_send_time_(0),
@@ -116,9 +118,8 @@ void RemoteEstimatorProxy::IncomingPacket(int64_t arrival_time_ms,
         TimeDelta::Millis(0));
     previous_abs_send_time_ = header.extension.absoluteSendTime;
     packet_result.sent_packet.send_time = abs_send_timestamp_;
-    // TODO(webrtc:10742): Take IP header and transport overhead into account.
     packet_result.sent_packet.size =
-        DataSize::Bytes(header.headerLength + payload_size);
+        DataSize::Bytes(header.headerLength + payload_size) + packet_overhead_;
     packet_result.sent_packet.sequence_number = seq;
     network_state_estimator_->OnReceivedPacket(packet_result);
   }
@@ -178,6 +179,11 @@ void RemoteEstimatorProxy::SetSendPeriodicFeedback(
     bool send_periodic_feedback) {
   MutexLock lock(&lock_);
   send_periodic_feedback_ = send_periodic_feedback;
+}
+
+void RemoteEstimatorProxy::SetTransportOverhead(DataSize overhead_per_packet) {
+  MutexLock lock(&lock_);
+  packet_overhead_ = overhead_per_packet;
 }
 
 void RemoteEstimatorProxy::SendPeriodicFeedbacks() {
