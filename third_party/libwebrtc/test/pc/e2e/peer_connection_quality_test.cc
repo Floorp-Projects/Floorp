@@ -329,8 +329,10 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
   for (auto& reporter : quality_metrics_reporters_) {
     observers.push_back(reporter.get());
   }
-  StatsPoller stats_poller(observers, {{*alice_->params().name, alice_.get()},
-                                       {*bob_->params().name, bob_.get()}});
+  StatsPoller stats_poller(observers,
+                           std::map<std::string, StatsProvider*>{
+                               {*alice_->params().name, alice_.get()},
+                               {*bob_->params().name, bob_.get()}});
   executor_->ScheduleActivity(TimeDelta::Zero(), kStatsUpdateInterval,
                               [&stats_poller](TimeDelta) {
                                 stats_poller.PollStatsAndNotifyObservers();
