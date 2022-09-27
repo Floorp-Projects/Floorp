@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <deque>
 
+#include "api/units/timestamp.h"
 #include "rtc_base/checks.h"
 
 namespace webrtc {
@@ -43,15 +44,15 @@ class PacketArrivalTimeMap {
   // Returns the sequence number of the element just after the map, i.e. the
   // sequence number that an `end()` iterator would represent.
   int64_t end_sequence_number() const {
-    return begin_sequence_number_ + arrival_times.size();
+    return begin_sequence_number_ + arrival_times_.size();
   }
 
   // Returns an element by `sequence_number`, which must be valid, i.e.
   // between [begin_sequence_number, end_sequence_number).
-  int64_t get(int64_t sequence_number) {
+  Timestamp get(int64_t sequence_number) {
     int64_t pos = sequence_number - begin_sequence_number_;
-    RTC_DCHECK(pos >= 0 && pos < static_cast<int64_t>(arrival_times.size()));
-    return arrival_times[pos];
+    RTC_DCHECK(pos >= 0 && pos < static_cast<int64_t>(arrival_times_.size()));
+    return arrival_times_[pos];
   }
 
   // Clamps `sequence_number` between [begin_sequence_number,
@@ -63,19 +64,19 @@ class PacketArrivalTimeMap {
 
   // Records the fact that a packet with `sequence_number` arrived at
   // `arrival_time_ms`.
-  void AddPacket(int64_t sequence_number, int64_t arrival_time_ms);
+  void AddPacket(int64_t sequence_number, Timestamp arrival_time);
 
   // Removes packets from the beginning of the map as long as they are received
   // before `sequence_number` and with an age older than `arrival_time_limit`
-  void RemoveOldPackets(int64_t sequence_number, int64_t arrival_time_limit);
+  void RemoveOldPackets(int64_t sequence_number, Timestamp arrival_time_limit);
 
  private:
   // Deque representing unwrapped sequence number -> time, where the index +
   // `begin_sequence_number_` represents the packet's sequence number.
-  std::deque<int64_t> arrival_times;
+  std::deque<Timestamp> arrival_times_;
 
   // The unwrapped sequence number for the first element in
-  // `arrival_times`.
+  // `arrival_times_`.
   int64_t begin_sequence_number_ = 0;
 
   // Indicates if this map has had any packet added to it. The first packet
