@@ -34,6 +34,7 @@
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_cpu_measurer.h"
+#include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_frame_in_flight.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_frames_comparator.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_internal_shared_objects.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_shared_objects.h"
@@ -107,118 +108,6 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
 
  private:
   enum State { kNew, kActive, kStopped };
-
-  struct ReceiverFrameStats {
-    // Time when last packet of a frame was received.
-    Timestamp received_time = Timestamp::MinusInfinity();
-    Timestamp decode_start_time = Timestamp::MinusInfinity();
-    Timestamp decode_end_time = Timestamp::MinusInfinity();
-    Timestamp rendered_time = Timestamp::MinusInfinity();
-    Timestamp prev_frame_rendered_time = Timestamp::MinusInfinity();
-
-    // Type and encoded size of received frame.
-    VideoFrameType frame_type = VideoFrameType::kEmptyFrame;
-    DataSize encoded_image_size = DataSize::Bytes(0);
-
-    absl::optional<int> rendered_frame_width = absl::nullopt;
-    absl::optional<int> rendered_frame_height = absl::nullopt;
-
-    // Can be not set if frame was dropped in the network.
-    absl::optional<StreamCodecInfo> used_decoder = absl::nullopt;
-
-    bool dropped = false;
-  };
-
-  class FrameInFlight {
-   public:
-    FrameInFlight(size_t stream,
-                  VideoFrame frame,
-                  Timestamp captured_time,
-                  size_t owner,
-                  size_t peers_count,
-                  bool enable_receive_own_stream)
-        : stream_(stream),
-          owner_(owner),
-          peers_count_(peers_count),
-          enable_receive_own_stream_(enable_receive_own_stream),
-          frame_(std::move(frame)),
-          captured_time_(captured_time) {}
-
-    size_t stream() const { return stream_; }
-    const absl::optional<VideoFrame>& frame() const { return frame_; }
-    // Returns was frame removed or not.
-    bool RemoveFrame();
-    void SetFrameId(uint16_t id);
-
-    void AddPeer() { ++peers_count_; }
-
-    std::vector<size_t> GetPeersWhichDidntReceive() const;
-    bool HaveAllPeersReceived() const;
-
-    void SetPreEncodeTime(webrtc::Timestamp time) { pre_encode_time_ = time; }
-
-    void OnFrameEncoded(webrtc::Timestamp time,
-                        VideoFrameType frame_type,
-                        DataSize encoded_image_size,
-                        uint32_t target_encode_bitrate,
-                        StreamCodecInfo used_encoder);
-
-    bool HasEncodedTime() const { return encoded_time_.IsFinite(); }
-
-    void OnFramePreDecode(size_t peer,
-                          webrtc::Timestamp received_time,
-                          webrtc::Timestamp decode_start_time,
-                          VideoFrameType frame_type,
-                          DataSize encoded_image_size);
-
-    bool HasReceivedTime(size_t peer) const;
-
-    void OnFrameDecoded(size_t peer,
-                        webrtc::Timestamp time,
-                        StreamCodecInfo used_decoder);
-
-    bool HasDecodeEndTime(size_t peer) const;
-
-    void OnFrameRendered(size_t peer,
-                         webrtc::Timestamp time,
-                         int width,
-                         int height);
-
-    bool HasRenderedTime(size_t peer) const;
-
-    // Crash if rendered time is not set for specified `peer`.
-    webrtc::Timestamp rendered_time(size_t peer) const {
-      return receiver_stats_.at(peer).rendered_time;
-    }
-
-    void MarkDropped(size_t peer) { receiver_stats_[peer].dropped = true; }
-    bool IsDropped(size_t peer) const;
-
-    void SetPrevFrameRenderedTime(size_t peer, webrtc::Timestamp time) {
-      receiver_stats_[peer].prev_frame_rendered_time = time;
-    }
-
-    FrameStats GetStatsForPeer(size_t peer) const;
-
-   private:
-    const size_t stream_;
-    const size_t owner_;
-    size_t peers_count_;
-    const bool enable_receive_own_stream_;
-    absl::optional<VideoFrame> frame_;
-
-    // Frame events timestamp.
-    Timestamp captured_time_;
-    Timestamp pre_encode_time_ = Timestamp::MinusInfinity();
-    Timestamp encoded_time_ = Timestamp::MinusInfinity();
-    // Type and encoded size of sent frame.
-    VideoFrameType frame_type_ = VideoFrameType::kEmptyFrame;
-    DataSize encoded_image_size_ = DataSize::Bytes(0);
-    uint32_t target_encode_bitrate_ = 0;
-    // Can be not set if frame was dropped by encoder.
-    absl::optional<StreamCodecInfo> used_encoder_ = absl::nullopt;
-    std::map<size_t, ReceiverFrameStats> receiver_stats_;
-  };
 
   // Returns next frame id to use. Frame ID can't be `VideoFrame::kNotSetId`,
   // because this value is reserved by `VideoFrame` as "ID not set".
