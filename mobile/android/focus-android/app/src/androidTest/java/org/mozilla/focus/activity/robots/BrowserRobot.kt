@@ -236,8 +236,27 @@ class BrowserRobot {
     fun clickCopyImageLocation(): ViewInteraction = copyImageLocation.perform(click())
 
     fun clickLinkMatchingText(expectedText: String) {
-        mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
-        mDevice.findObject(UiSelector().textContains(expectedText)).also { it.click() }
+        for (i in 1..RETRY_COUNT) {
+            try {
+                mDevice.findObject(UiSelector().textContains(expectedText))
+                    .also {
+                        it.waitForExists(waitingTime)
+                        it.click()
+                    }
+
+                break
+            } catch (e: UiObjectNotFoundException) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    browserScreen {
+                    }.openMainMenu {
+                    }.clickReloadButton {
+                    }
+                    progressBar.waitUntilGone(waitingTime)
+                }
+            }
+        }
     }
 
     fun verifyOpenLinksInAppsPrompt(openLinksInAppsEnabled: Boolean, link: String) = assertOpenLinksInAppsPrompt(openLinksInAppsEnabled, link)
