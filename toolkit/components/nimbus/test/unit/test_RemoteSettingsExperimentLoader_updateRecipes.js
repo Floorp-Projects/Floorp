@@ -378,6 +378,9 @@ add_task(async function test_updateRecipes_simpleFeatureInvalidAfterUpdate() {
       enabled: {
         type: "boolean",
       },
+      testSetString: {
+        type: "string",
+      },
     },
     additionalProperties: true,
   };
@@ -418,7 +421,7 @@ add_task(async function test_updateRecipes_simpleFeatureInvalidAfterUpdate() {
   Assert.deepEqual(
     loader._generateVariablesOnlySchema.returnValues[0],
     EXPECTED_SCHEMA,
-    "should have generated a schema with two fields"
+    "should have generated a schema with three fields"
   );
 
   info("Replacing recipe with an invalid one");
