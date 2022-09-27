@@ -16,6 +16,7 @@
 #include "api/transport/field_trial_based_config.h"
 #include "api/transport/network_types.h"
 #include "api/transport/test/mock_network_control.h"
+#include "api/units/data_size.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "system_wrappers/include/clock.h"
@@ -575,16 +576,22 @@ TEST_F(RemoteEstimatorProxyOnRequestTest,
 
 TEST_F(RemoteEstimatorProxyTest, ReportsIncomingPacketToNetworkStateEstimator) {
   Timestamp first_send_timestamp = Timestamp::Millis(0);
+  const DataSize kPacketOverhead = DataSize::Bytes(38);
+  webrtc::RTPHeader first_header = CreateHeader(
+      absl::nullopt, absl::nullopt, AbsoluteSendTime::MsTo24Bits(kBaseTimeMs));
+  proxy_.SetTransportOverhead(kPacketOverhead);
+
   EXPECT_CALL(network_state_estimator_, OnReceivedPacket(_))
-      .WillOnce(Invoke([&first_send_timestamp](const PacketResult& packet) {
+      .WillOnce(Invoke([&](const PacketResult& packet) {
         EXPECT_EQ(packet.receive_time, Timestamp::Millis(kBaseTimeMs));
+        EXPECT_EQ(
+            packet.sent_packet.size,
+            DataSize::Bytes(kDefaultPacketSize + first_header.headerLength) +
+                kPacketOverhead);
         first_send_timestamp = packet.sent_packet.send_time;
       }));
   // Incoming packet with abs sendtime but without transport sequence number.
-  proxy_.IncomingPacket(
-      kBaseTimeMs, kDefaultPacketSize,
-      CreateHeader(absl::nullopt, absl::nullopt,
-                   AbsoluteSendTime::MsTo24Bits(kBaseTimeMs)));
+  proxy_.IncomingPacket(kBaseTimeMs, kDefaultPacketSize, first_header);
 
   // Expect packet with older abs send time to be treated as sent at the same
   // time as the previous packet due to reordering.
@@ -593,6 +600,7 @@ TEST_F(RemoteEstimatorProxyTest, ReportsIncomingPacketToNetworkStateEstimator) {
         EXPECT_EQ(packet.receive_time, Timestamp::Millis(kBaseTimeMs));
         EXPECT_EQ(packet.sent_packet.send_time, first_send_timestamp);
       }));
+
   proxy_.IncomingPacket(
       kBaseTimeMs, kDefaultPacketSize,
       CreateHeader(absl::nullopt, absl::nullopt,

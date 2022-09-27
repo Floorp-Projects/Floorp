@@ -18,6 +18,7 @@
 
 #include "api/field_trials_view.h"
 #include "api/transport/network_control.h"
+#include "api/units/data_size.h"
 #include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 #include "modules/remote_bitrate_estimator/packet_arrival_map.h"
 #include "rtc_base/experiments/field_trial_parser.h"
@@ -58,6 +59,7 @@ class RemoteEstimatorProxy : public RemoteBitrateEstimator {
   void Process() override;
   void OnBitrateChanged(int bitrate);
   void SetSendPeriodicFeedback(bool send_periodic_feedback);
+  void SetTransportOverhead(DataSize overhead_per_packet);
 
  private:
   struct TransportWideFeedbackConfig {
@@ -113,6 +115,7 @@ class RemoteEstimatorProxy : public RemoteBitrateEstimator {
   uint32_t media_ssrc_ RTC_GUARDED_BY(&lock_);
   uint8_t feedback_packet_count_ RTC_GUARDED_BY(&lock_);
   SeqNumUnwrapper<uint16_t> unwrapper_ RTC_GUARDED_BY(&lock_);
+  DataSize packet_overhead_ RTC_GUARDED_BY(&lock_);
 
   // The next sequence number that should be the start sequence number during
   // periodic reporting. Will be absl::nullopt before the first seen packet.

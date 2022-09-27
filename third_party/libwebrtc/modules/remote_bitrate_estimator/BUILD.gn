@@ -127,6 +127,7 @@ if (rtc_include_tests) {
       "../../api/transport:mock_network_control",
       "../../api/transport:network_control",
       "../../api/units:data_rate",
+      "../../api/units:data_size",
       "../../rtc_base",
       "../../rtc_base:checks",
       "../../rtc_base:random",
