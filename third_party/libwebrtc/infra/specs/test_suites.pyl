@@ -186,15 +186,6 @@
         'mixins': ['linux', 'baremetal-try-pool'],
       }
     },
-    'linux_webrtc_perf_tests_tryserver': {
-      'webrtc_perf_tests': {
-        'remove_mixins': ['linux-bionic', 'resultdb-json-format'],
-        'mixins': [
-          'linux', 'baremetal-try-pool', 'quick-perf-tests',
-          'resultdb-gtest-json-format'
-        ],
-      }
-    },
     'mac_video_capture_tests': {
       'video_capture_tests': {
         'remove_mixins': ['mac11'],
@@ -205,15 +196,6 @@
       'video_capture_tests': {
         'remove_mixins': ['mac11'],
         'mixins': ['mac', 'baremetal-try-pool'],
-      }
-    },
-    'mac_webrtc_perf_tests_tryserver': {
-      'webrtc_perf_tests': {
-        'remove_mixins': ['mac11', 'resultdb-json-format'],
-        'mixins': [
-          'mac', 'baremetal-try-pool', 'quick-perf-tests',
-          'resultdb-gtest-json-format'
-        ],
       }
     },
     'more_configs_tests': {
@@ -228,6 +210,11 @@
         'mixins': ['perf-webrtc-perf-tests'],
       },
     },
+    'webrtc_perf_tests_tryserver': {
+      'webrtc_perf_tests': {
+        'mixins': ['quick-perf-tests', 'resultdb-gtest-json-format'],
+      }
+    },
     'win_video_capture_tests': {
       'video_capture_tests': {
         'remove_mixins': ['win7'],
@@ -238,15 +225,6 @@
       'video_capture_tests': {
         'remove_mixins': ['win7'],
         'mixins': ['win', 'baremetal-try-pool'],
-      }
-    },
-    'win_webrtc_perf_tests_tryserver': {
-      'webrtc_perf_tests': {
-        'remove_mixins': ['win7', 'resultdb-json-format'],
-        'mixins': [
-          'win', 'baremetal-try-pool', 'quick-perf-tests',
-          'resultdb-gtest-json-format'
-        ],
       }
     },
   },
@@ -262,7 +240,7 @@
     'linux_tests_tryserver': [
       'desktop_tests',
       'linux_video_capture_tests_tryserver',
-      'linux_webrtc_perf_tests_tryserver',
+      'webrtc_perf_tests_tryserver',
     ],
     'mac_tests': [
       'desktop_tests',
@@ -271,7 +249,7 @@
     'mac_tests_tryserver': [
       'desktop_tests',
       'mac_video_capture_tests_tryserver',
-      'mac_webrtc_perf_tests_tryserver',
+      'webrtc_perf_tests_tryserver',
     ],
     'win_tests': [
       'desktop_tests',
@@ -280,7 +258,7 @@
     'win_tests_tryserver': [
       'desktop_tests',
       'win_video_capture_tests_tryserver',
-      'win_webrtc_perf_tests_tryserver',
+      'webrtc_perf_tests_tryserver',
     ],
   },
 }

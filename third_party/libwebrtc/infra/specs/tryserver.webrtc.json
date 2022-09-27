@@ -7568,8 +7568,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Ubuntu",
-              "pool": "WebRTC-baremetal-try"
+              "os": "Ubuntu-18.04"
             }
           ]
         },
@@ -11376,8 +11375,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "os": "Mac-11"
             }
           ]
         },
@@ -14326,8 +14324,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows",
-              "pool": "WebRTC-baremetal-try"
+              "os": "Windows-7-SP1"
             }
           ]
         },
