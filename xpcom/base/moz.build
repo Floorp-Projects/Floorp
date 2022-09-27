@@ -13,7 +13,6 @@ XPIDL_SOURCES += [
     "nsIDebug2.idl",
     "nsIErrorService.idl",
     "nsIException.idl",
-    "nsIGZFileWriter.idl",
     "nsIInterfaceRequestor.idl",
     "nsIMemory.idl",
     "nsIMemoryInfoDumper.idl",

@@ -16,8 +16,6 @@
 #  include <unistd.h>
 #endif
 
-NS_IMPL_ISUPPORTS(nsGZFileWriter, nsIGZFileWriter)
-
 nsGZFileWriter::nsGZFileWriter(Operation aMode)
     : mMode(aMode), mInitialized(false), mFinished(false), mGZFile(nullptr) {}
 
@@ -27,8 +25,7 @@ nsGZFileWriter::~nsGZFileWriter() {
   }
 }
 
-NS_IMETHODIMP
-nsGZFileWriter::Init(nsIFile* aFile) {
+nsresult nsGZFileWriter::Init(nsIFile* aFile) {
   if (NS_WARN_IF(mInitialized) || NS_WARN_IF(mFinished)) {
     return NS_ERROR_FAILURE;
   }
@@ -44,8 +41,11 @@ nsGZFileWriter::Init(nsIFile* aFile) {
   return InitANSIFileDesc(file);
 }
 
-NS_IMETHODIMP
-nsGZFileWriter::InitANSIFileDesc(FILE* aFile) {
+nsresult nsGZFileWriter::InitANSIFileDesc(FILE* aFile) {
+  if (NS_WARN_IF(mInitialized) || NS_WARN_IF(mFinished)) {
+    return NS_ERROR_FAILURE;
+  }
+
   mGZFile = gzdopen(dup(fileno(aFile)), mMode == Create ? "wb" : "ab");
   fclose(aFile);
 
@@ -59,8 +59,7 @@ nsGZFileWriter::InitANSIFileDesc(FILE* aFile) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGZFileWriter::Write(const nsACString& aStr) {
+nsresult nsGZFileWriter::Write(const nsACString& aStr) {
   if (NS_WARN_IF(!mInitialized) || NS_WARN_IF(mFinished)) {
     return NS_ERROR_FAILURE;
   }
@@ -84,8 +83,7 @@ nsGZFileWriter::Write(const nsACString& aStr) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGZFileWriter::Finish() {
+nsresult nsGZFileWriter::Finish() {
   if (NS_WARN_IF(!mInitialized) || NS_WARN_IF(mFinished)) {
     return NS_ERROR_FAILURE;
   }
