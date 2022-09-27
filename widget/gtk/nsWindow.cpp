@@ -1481,10 +1481,7 @@ void nsWindow::WaylandPopupHierarchyCalculatePositions() {
       }
     }
 #endif
-    if (popup->mPopupContextMenu && !popup->mPopupAnchored) {
-      LOG("  popup [%p] is first context menu", popup);
-      popup->mRelativePopupPosition = popup->mPopupPosition;
-    } else if (popup->WaylandPopupIsFirst()) {
+    if (popup->WaylandPopupIsFirst()) {
       LOG("  popup [%p] has toplevel as parent", popup);
       popup->mRelativePopupPosition = popup->mPopupPosition;
     } else {
