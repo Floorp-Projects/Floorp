@@ -10,6 +10,8 @@
 
 #include "test/pc/e2e/analyzer/video/names_collection.h"
 
+#include <set>
+
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 
@@ -76,6 +78,16 @@ absl::optional<size_t> NamesCollection::RemoveIfPresent(
   removed_[index] = true;
   size_--;
   return index;
+}
+
+std::set<size_t> NamesCollection::GetPresentIndexes() const {
+  std::set<size_t> out;
+  for (size_t i = 0; i < removed_.size(); ++i) {
+    if (!removed_[i]) {
+      out.insert(i);
+    }
+  }
+  return out;
 }
 
 }  // namespace webrtc

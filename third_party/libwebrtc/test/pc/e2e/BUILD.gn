@@ -734,6 +734,8 @@ if (!build_with_chromium) {
     sources = [
       "analyzer/video/default_video_quality_analyzer_cpu_measurer.cc",
       "analyzer/video/default_video_quality_analyzer_cpu_measurer.h",
+      "analyzer/video/default_video_quality_analyzer_frame_in_flight.cc",
+      "analyzer/video/default_video_quality_analyzer_frame_in_flight.h",
       "analyzer/video/default_video_quality_analyzer_frames_comparator.cc",
       "analyzer/video/default_video_quality_analyzer_frames_comparator.h",
       "analyzer/video/default_video_quality_analyzer_internal_shared_objects.cc",

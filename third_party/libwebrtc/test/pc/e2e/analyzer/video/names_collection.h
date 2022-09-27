@@ -12,6 +12,7 @@
 #define TEST_PC_E2E_ANALYZER_VIDEO_NAMES_COLLECTION_H_
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -69,6 +70,10 @@ class NamesCollection {
   // Returns the index of the removed value or absl::nullopt if no such `name`
   // registered in the collection.
   absl::optional<size_t> RemoveIfPresent(absl::string_view name);
+
+  // Returns a set of indexes for all currently present names in the
+  // collection.
+  std::set<size_t> GetPresentIndexes() const;
 
  private:
   std::vector<std::string> names_;
