@@ -300,11 +300,25 @@ class BrowserRobot {
     }
 
     fun clickCalendarForm() {
-        mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
-            .waitForExists(waitingTime)
-        mDevice.findObject(UiSelector().textContains("Calendar Form")).waitForExists(waitingTime)
-        calendarForm.click()
-        mDevice.waitForIdle(waitingTime)
+        for (i in 1..RETRY_COUNT) {
+            try {
+                calendarForm.waitForExists(waitingTime)
+                calendarForm.click()
+                mDevice.waitForIdle(waitingTime)
+
+                break
+            } catch (e: UiObjectNotFoundException) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    browserScreen {
+                    }.openMainMenu {
+                    }.clickReloadButton {
+                    }
+                    progressBar.waitUntilGone(waitingTime)
+                }
+            }
+        }
     }
 
     fun selectDate() {
