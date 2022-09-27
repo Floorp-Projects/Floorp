@@ -269,10 +269,6 @@ deps = {
     'url': 'https://chromium.googlesource.com/external/github.com/kennethreitz/requests.git@refs/tags/v2.23.0',
     'condition': 'checkout_android',
   },
-  'src/third_party/ub-uiautomator/lib': {
-    'url': 'https://chromium.googlesource.com/chromium/third_party/ub-uiautomator.git@00270549ce3161ae72ceb24712618ea28b4f9434',
-    'condition': 'checkout_android',
-  },
   # Dependency used by libjpeg-turbo.
   'src/third_party/yasm/binaries': {
     'url': 'https://chromium.googlesource.com/chromium/deps/yasm/binaries.git@52f9b3f4b0aa06da24ef8b123058bb61ee468881',
