@@ -47,6 +47,9 @@ class RtpStreamReceiverControllerInterface;
 class RtxReceiveStream;
 class VCMTiming;
 
+constexpr TimeDelta kMaxWaitForKeyFrame = TimeDelta::Millis(200);
+constexpr TimeDelta kMaxWaitForFrame = TimeDelta::Seconds(3);
+
 namespace internal {
 
 class CallStats;

@@ -483,7 +483,8 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
     while (decodable_tu_info) {
       schedule = decode_timing_.OnFrameBufferUpdated(
           decodable_tu_info->next_rtp_timestamp,
-          decodable_tu_info->last_rtp_timestamp, IsTooManyFramesQueued());
+          decodable_tu_info->last_rtp_timestamp, MaxWait(),
+          IsTooManyFramesQueued());
       if (schedule) {
         // Don't schedule if already waiting for the same frame.
         if (frame_decode_scheduler_->ScheduledRtpTimestamp() !=
