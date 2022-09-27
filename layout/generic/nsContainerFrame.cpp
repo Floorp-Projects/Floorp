@@ -731,9 +731,8 @@ static bool IsTopLevelWidget(nsIWidget* aWidget) {
 void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
                                             nsIFrame* aFrame, nsView* aView,
                                             gfxContext* aRC, uint32_t aFlags) {
-  if (!aView || aFrame->GetParent() || !aView->HasWidget()) {
+  if (!aView || !nsCSSRendering::IsCanvasFrame(aFrame) || !aView->HasWidget())
     return;
-  }
 
   nsCOMPtr<nsIWidget> windowWidget =
       GetPresContextContainerWidget(aPresContext);

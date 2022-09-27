@@ -32,7 +32,7 @@ void nsPopupSetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   // Normally the root box is our grandparent, but in case of wrapping
   // it can be our great-grandparent.
   nsIPopupContainer* popupContainer =
-      nsIPopupContainer::GetPopupContainer(PresShell());
+      nsIPopupContainer::GetPopupContainer(PresContext()->GetPresShell());
   if (popupContainer) {
     popupContainer->SetPopupSetFrame(this);
   }
@@ -95,7 +95,7 @@ void nsPopupSetFrame::DestroyFrom(nsIFrame* aDestructRoot,
   // Normally the root box is our grandparent, but in case of wrapping
   // it can be our great-grandparent.
   nsIPopupContainer* popupContainer =
-      nsIPopupContainer::GetPopupContainer(PresShell());
+      nsIPopupContainer::GetPopupContainer(PresContext()->GetPresShell());
   if (popupContainer) {
     popupContainer->SetPopupSetFrame(nullptr);
   }

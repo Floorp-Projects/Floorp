@@ -5362,7 +5362,7 @@ void PresShell::AddCanvasBackgroundColorItem(
   // cases (it will usually be a viewport frame when we have a canvas frame in
   // the (sub)tree).
   if (!(aFlags & AddCanvasBackgroundColorFlags::ForceDraw) &&
-      !aFrame->IsViewportFrame() && !aFrame->IsPageContentFrame()) {
+      !nsCSSRendering::IsCanvasFrame(aFrame)) {
     return;
   }
 

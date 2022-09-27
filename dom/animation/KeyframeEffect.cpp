@@ -31,6 +31,7 @@
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"             // For nsCSSProps::PropHasFlags
 #include "nsCSSPseudoElements.h"    // For PseudoStyleType
+#include "nsCSSRendering.h"         // For IsCanvasFrame
 #include "nsDOMMutationObserver.h"  // For nsAutoAnimationMutationBatch
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
@@ -2097,7 +2098,7 @@ KeyframeEffect::MatchForCompositor KeyframeEffect::IsMatchForCompositor(
     // We don't yet support off-main-thread background-color animations on
     // canvas frame or on <html> or <body> which genarate
     // nsDisplayCanvasBackgroundColor or nsDisplaySolidColor display item.
-    if (aFrame->IsCanvasFrame() ||
+    if (nsCSSRendering::IsCanvasFrame(aFrame) ||
         (aFrame->GetContent() &&
          (aFrame->GetContent()->IsHTMLElement(nsGkAtoms::body) ||
           aFrame->GetContent()->IsHTMLElement(nsGkAtoms::html)))) {
