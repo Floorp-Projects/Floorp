@@ -477,7 +477,9 @@ void AudioDeviceBuffer::LogStats(LogState state) {
 
   // Keep posting new (delayed) tasks until state is changed to kLogStop.
   task_queue_.PostDelayedTask(
-      [this] { AudioDeviceBuffer::LogStats(AudioDeviceBuffer::LOG_ACTIVE); },
+      ToQueuedTask([this] {
+        AudioDeviceBuffer::LogStats(AudioDeviceBuffer::LOG_ACTIVE);
+      }),
       time_to_wait_ms);
 }
 

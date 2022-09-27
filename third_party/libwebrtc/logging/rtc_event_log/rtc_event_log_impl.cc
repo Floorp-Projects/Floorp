@@ -181,7 +181,7 @@ void RtcEventLogImpl::ScheduleOutput() {
     const int64_t time_since_output_ms = now_ms - last_output_ms_;
     const uint32_t delay = rtc::SafeClamp(
         *output_period_ms_ - time_since_output_ms, 0, *output_period_ms_);
-    task_queue_->PostDelayedTask(output_task, delay);
+    task_queue_->PostDelayedTask(ToQueuedTask(std::move(output_task)), delay);
   }
 }
 
