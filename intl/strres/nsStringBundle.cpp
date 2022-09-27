@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsStringBundle.h"
+
+#include "netCore.h"
 #include "nsID.h"
 #include "nsString.h"
 #include "nsIStringBundle.h"
@@ -20,12 +22,12 @@
 #include "nsIObserverService.h"
 #include "nsCOMArray.h"
 #include "nsTextFormatter.h"
-#include "nsErrorService.h"
 #include "nsContentUtils.h"
 #include "nsPersistentProperties.h"
 #include "nsQueryObject.h"
 #include "nsSimpleEnumerator.h"
 #include "nsStringStream.h"
+#include "mozilla/dom/txXSLTMsgsURL.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ResultExtensions.h"
@@ -740,10 +742,7 @@ struct bundleCacheEntry_t final : public LinkedListElement<bundleCacheEntry_t> {
 };
 
 nsStringBundleService::nsStringBundleService()
-    : mBundleMap(MAX_CACHED_BUNDLES) {
-  mErrorService = nsErrorService::GetOrCreate();
-  MOZ_ALWAYS_TRUE(mErrorService);
-}
+    : mBundleMap(MAX_CACHED_BUNDLES) {}
 
 NS_IMPL_ISUPPORTS(nsStringBundleService, nsIStringBundleService, nsIObserver,
                   nsISupportsWeakReference, nsIMemoryReporter)
@@ -980,10 +979,8 @@ NS_IMETHODIMP
 nsStringBundleService::FormatStatusMessage(nsresult aStatus,
                                            const char16_t* aStatusArg,
                                            nsAString& result) {
-  nsresult rv;
   uint32_t i, argCount = 0;
   nsCOMPtr<nsIStringBundle> bundle;
-  nsCString stringBundleURL;
 
   // XXX hack for mailnews who has already formatted their messages:
   if (aStatus == NS_OK && aStatusArg) {
@@ -1014,17 +1011,17 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
     }
   }
 
-  // find the string bundle for the error's module:
-  rv = mErrorService->GetErrorStringBundle(NS_ERROR_GET_MODULE(aStatus),
-                                           getter_Copies(stringBundleURL));
-  if (NS_SUCCEEDED(rv)) {
-    getStringBundle(stringBundleURL.get(), getter_AddRefs(bundle));
-    rv = FormatWithBundle(bundle, aStatus, argArray, result);
-  }
-  if (NS_FAILED(rv)) {
-    getStringBundle(GLOBAL_PROPERTIES, getter_AddRefs(bundle));
-    rv = FormatWithBundle(bundle, aStatus, argArray, result);
+  switch (NS_ERROR_GET_MODULE(aStatus)) {
+    case NS_ERROR_MODULE_XSLT:
+      getStringBundle(XSLT_MSGS_URL, getter_AddRefs(bundle));
+      break;
+    case NS_ERROR_MODULE_NETWORK:
+      getStringBundle(NECKO_MSGS_URL, getter_AddRefs(bundle));
+      break;
+    default:
+      getStringBundle(GLOBAL_PROPERTIES, getter_AddRefs(bundle));
+      break;
   }
 
-  return rv;
+  return FormatWithBundle(bundle, aStatus, argArray, result);
 }

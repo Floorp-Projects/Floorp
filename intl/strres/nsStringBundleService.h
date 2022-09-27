@@ -12,7 +12,6 @@
 #include "nsIStringBundle.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
-#include "nsIErrorService.h"
 #include "nsIMemoryReporter.h"
 
 #include "mozilla/LinkedList.h"
@@ -65,8 +64,6 @@ class nsStringBundleService : public nsIStringBundleService,
   mozilla::LinkedList<bundleCacheEntry_t> mBundleCache;
   // List of cached shared-memory string bundles, in arbitrary order.
   mozilla::AutoCleanLinkedList<bundleCacheEntry_t> mSharedBundles;
-
-  nsCOMPtr<nsIErrorService> mErrorService;
 };
 
 #endif

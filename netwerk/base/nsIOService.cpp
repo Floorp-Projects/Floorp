@@ -12,7 +12,6 @@
 #include "nscore.h"
 #include "nsIURI.h"
 #include "prprf.h"
-#include "nsErrorService.h"
 #include "netCore.h"
 #include "nsIObserverService.h"
 #include "nsXPCOM.h"
@@ -256,12 +255,6 @@ static const char* gCallbackSecurityPrefs[] = {
 };
 
 nsresult nsIOService::Init() {
-  // XXX hack until xpidl supports error info directly (bug 13423)
-  nsCOMPtr<nsIErrorService> errorService = nsErrorService::GetOrCreate();
-  MOZ_ALWAYS_TRUE(errorService);
-  errorService->RegisterErrorStringBundle(NS_ERROR_MODULE_NETWORK,
-                                          NECKO_MSGS_URL);
-
   SSLTokensCache::Init();
 
   InitializeCaptivePortalService();
