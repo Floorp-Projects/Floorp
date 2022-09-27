@@ -10,9 +10,13 @@ const fs = require("fs");
 const _path = require("path");
 const { esmifyExtension } = require(_path.resolve(__dirname, "./utils.js"));
 
-const uri_map = JSON.parse(
-  fs.readFileSync(_path.resolve(__dirname, "./map.json"))
-);
+let json_map;
+if (process.env.ESMIFY_MAP_JSON) {
+  json_map = _path.resolve(process.env.ESMIFY_MAP_JSON);
+} else {
+  json_map = _path.resolve(__dirname, "./map.json");
+}
+const uri_map = JSON.parse(fs.readFileSync(json_map));
 const esm_uri_map = generateESMURIMap(uri_map);
 
 function generateESMURIMap(jsm_map) {
