@@ -31,6 +31,7 @@ rtc_library("audio_codecs_api") {
   deps = [
     "..:array_view",
     "..:bitrate_allocation",
+    "..:make_ref_counted",
     "..:scoped_refptr",
     "../../api:field_trials_view",
     "../../rtc_base:buffer",
