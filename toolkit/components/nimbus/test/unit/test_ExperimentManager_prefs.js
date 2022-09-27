@@ -55,6 +55,7 @@ const DEFAULT_VALUE = "default-value";
 const USER_VALUE = "user-value";
 const EXPERIMENT_VALUE = "experiment-value";
 const ROLLOUT_VALUE = "rollout-value";
+const OVERWRITE_VALUE = "overwrite-value";
 
 const USER = "user";
 const DEFAULT = "default";
@@ -203,6 +204,34 @@ async function cleanupStore(store) {
   // JSONFile.saveSoon overwrite files on disk.
   await store._store.finalize();
   await IOUtils.remove(store._store.path);
+}
+
+/**
+ * Assert the manager has no active pref observers.
+ */
+function assertNoObservers(manager) {
+  Assert.equal(
+    manager._prefs.size,
+    0,
+    "There should be no active pref observers"
+  );
+  Assert.equal(
+    manager._prefsBySlug.size,
+    0,
+    "There should be no active pref observers"
+  );
+}
+
+/**
+ * Remove all pref observers on the given ExperimentManager.
+ */
+function removePrefObservers(manager) {
+  for (const [name, entry] of manager._prefs.entries()) {
+    Services.prefs.removeObserver(name, entry.observer);
+  }
+
+  manager._prefs.clear();
+  manager._prefsBySlug.clear();
 }
 
 add_setup(function setup() {
@@ -1302,6 +1331,9 @@ add_task(async function test_restorePrefs_experimentAndRollout() {
       if (branch === "default") {
         Services.prefs.deleteBranch(pref);
       }
+
+      removePrefObservers(manager);
+      assertNoObservers(manager);
     }
 
     // Restore the default branch value as it was before "restarting".
@@ -1370,6 +1402,7 @@ add_task(async function test_restorePrefs_experimentAndRollout() {
       store._deleteForTests(slugs[enrollmentKind]);
     }
 
+    assertNoObservers(manager);
     assertEmptyStore(store);
     await cleanupStore(store);
 
@@ -1640,5 +1673,997 @@ add_task(async function test_restorePrefs_experimentAndRollout() {
       unenrollOrder: [ROLLOUT, EXPERIMENT],
       expectedValues: [EXPERIMENT_VALUE, EXPERIMENT_VALUE, USER_VALUE],
     });
+  }
+});
+
+add_task(async function test_prefChange() {
+  /**
+   * Test that pref tampering causes unenrollment.
+   *
+   * This test sets up some enrollments and then modifies the given `pref` on a
+   * branch specified by `setBranch` and checks that unenrollments happen as
+   * appropriate.
+   *
+   * @param {object} options
+   *
+   * @param {string} options.pref
+   *        The name of the pref.
+   *
+   * @param {string?} options.defaultBranchValue
+   *        An optional value to set for the pref on the default branch
+   *        before the first enrollment.
+   *
+   * @param {string?} options.userBranchValue
+   *        An optional value to set for the pref on the user branch
+   *        before the first enrollment.
+   *
+   * @param {object} options.configs
+   *        The rollout and experiment feature configurations.
+   *
+   * @param {string} options.setBranch
+   *        The branch that the test will set (either "user" or "default").
+   *
+   * @param {string[]} options.expectedEnrollments
+   *        The list of enrollment kinds (e.g., "rollout" or "experiment") that
+   *        should be active after setting the pref on the requested branch.
+   *
+   * @param {string} options.expectedDefault
+   *        The expected value of the default branch after setting the pref on
+   *        the requested branch.
+   *
+   *        A value of null indicates that the pref should not be set on the
+   *        default branch.
+   *
+   * @param {string} options.expectedUser
+   *        The expected value of the user branch after setting the pref on the
+   *        requested branch.
+   *
+   *        A value of null indicates that the pref should not be set on the
+   *        user branch.
+   */
+  async function doBaseTest({
+    pref,
+    defaultBranchValue = null,
+    userBranchValue = null,
+    configs,
+    setBranch,
+    expectedEnrollments = [],
+    expectedDefault = null,
+    expectedUser = null,
+  }) {
+    const store = ExperimentFakes.store();
+    const manager = ExperimentFakes.manager(store);
+
+    const cleanup = {};
+    const slugs = {};
+
+    await manager.onStartup();
+
+    assertEmptyStore(store);
+
+    setPrefs(pref, { defaultBranchValue, userBranchValue });
+
+    info(`Enrolling in ${Array.from(Object.keys(configs)).join(", ")} ...`);
+    for (const [enrollmentKind, config] of Object.entries(configs)) {
+      const isRollout = enrollmentKind === ROLLOUT;
+      cleanup[enrollmentKind] = await ExperimentFakes.enrollWithFeatureConfig(
+        config,
+        {
+          manager,
+          isRollout,
+        }
+      );
+
+      const enrollments = isRollout
+        ? store.getAllRollouts()
+        : store.getAllActive();
+
+      Assert.equal(
+        enrollments.length,
+        1,
+        `Expected one ${enrollmentKind} enrollment`
+      );
+      slugs[enrollmentKind] = enrollments[0].slug;
+    }
+
+    info(
+      `Overwriting ${pref} with "${OVERWRITE_VALUE}" on ${setBranch} branch`
+    );
+
+    PrefUtils.setPref(pref, OVERWRITE_VALUE, { branch: setBranch });
+
+    if (expectedDefault === null) {
+      Assert.ok(
+        !Services.prefs.prefHasDefaultValue(pref),
+        `Expected the default branch not to be set for ${pref}`
+      );
+    } else {
+      Assert.equal(
+        Services.prefs.getDefaultBranch(null).getStringPref(pref),
+        expectedDefault,
+        `Expected the value of ${pref} on the default branch to match the expected value`
+      );
+    }
+
+    if (expectedUser === null) {
+      Assert.ok(
+        !Services.prefs.prefHasUserValue(pref),
+        `Expected the user branch not to be set for ${pref}`
+      );
+    } else {
+      Assert.equal(
+        Services.prefs.getStringPref(pref),
+        expectedUser,
+        `Expected the value of ${pref} on the user branch to match the expected value`
+      );
+    }
+
+    for (const enrollmentKind of expectedEnrollments) {
+      const enrollment = store.get(slugs[enrollmentKind]);
+
+      Assert.ok(
+        enrollment !== null,
+        `An enrollment of kind ${enrollmentKind} should exist`
+      );
+      Assert.ok(enrollment.active, "It should still be active");
+    }
+
+    for (const enrollmentKind of Object.keys(configs)) {
+      if (!expectedEnrollments.includes(enrollmentKind)) {
+        const slug = slugs[enrollmentKind];
+        const enrollment = store.get(slug);
+
+        Assert.ok(
+          enrollment !== null,
+          `An enrollment of kind ${enrollmentKind} should exist`
+        );
+        Assert.ok(!enrollment.active, "It should not be active");
+
+        store._deleteForTests(slug);
+      }
+    }
+
+    for (const enrollmentKind of expectedEnrollments) {
+      await cleanup[enrollmentKind]();
+    }
+
+    assertNoObservers(manager);
+    assertEmptyStore(store);
+    await cleanupStore(store);
+
+    Services.prefs.deleteBranch(pref);
+  }
+
+  {
+    const branch = DEFAULT;
+    const pref = PREFS[branch];
+    const configs = CONFIGS[branch];
+
+    const doTest = args => doBaseTest({ pref, branch, ...args });
+
+    // Enrolled in rollout, set default branch.
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      setBranch: DEFAULT,
+      expectedDefault: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      defaultBranchValue: DEFAULT_VALUE,
+      setBranch: DEFAULT,
+      expectedDefault: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      userBranchValue: USER_VALUE,
+      setBranch: DEFAULT,
+      expectedEnrollments: [ROLLOUT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: USER_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      defaultBranchValue: DEFAULT_VALUE,
+      userBranchValue: USER_VALUE,
+      setBranch: DEFAULT,
+      expectedEnrollments: [ROLLOUT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: USER_VALUE,
+    });
+
+    // Enrolled in rollout, set user branch.
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      setBranch: USER,
+      expectedDefault: ROLLOUT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      defaultBranchValue: DEFAULT_VALUE,
+      setBranch: USER,
+      expectedDefault: DEFAULT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      userBranchValue: USER_VALUE,
+      setBranch: USER,
+      expectedDefault: ROLLOUT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      defaultBranchValue: DEFAULT_VALUE,
+      userBranchValue: USER_VALUE,
+      setBranch: USER,
+      expectedDefault: DEFAULT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    // Enrolled in experiment, set default branch.
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      setBranch: DEFAULT,
+      expectedDefault: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      defaultBranchValue: DEFAULT_VALUE,
+      setBranch: DEFAULT,
+      expectedDefault: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      userBranchValue: USER_VALUE,
+      setBranch: DEFAULT,
+      expectedEnrollments: [EXPERIMENT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: USER_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      defaultBranchValue: DEFAULT_VALUE,
+      userBranchValue: USER_VALUE,
+      setBranch: DEFAULT,
+      expectedEnrollments: [EXPERIMENT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: USER_VALUE,
+    });
+
+    // Enrolled in experiment, set user branch.
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      setBranch: USER,
+      expectedDefault: EXPERIMENT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      defaultBranchValue: DEFAULT_VALUE,
+      setBranch: USER,
+      expectedDefault: DEFAULT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      userBranchValue: USER_VALUE,
+      setBranch: USER,
+      expectedDefault: EXPERIMENT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      defaultBranchValue: DEFAULT_VALUE,
+      userBranchValue: USER_VALUE,
+      setBranch: USER,
+      expectedDefault: DEFAULT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    // Enroll in both, set default branch.
+    await doTest({
+      configs,
+      setBranch: DEFAULT,
+      expectedDefault: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs,
+      defaultBranchValue: DEFAULT_VALUE,
+      setBranch: DEFAULT,
+      expectedDefault: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs,
+      userBranchValue: USER_VALUE,
+      setBranch: DEFAULT,
+      expectedEnrollments: [EXPERIMENT, ROLLOUT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: USER_VALUE,
+    });
+
+    await doTest({
+      configs,
+      defaultBranchValue: DEFAULT_VALUE,
+      userBranchValue: USER_VALUE,
+      setBranch: DEFAULT,
+      expectedEnrollments: [EXPERIMENT, ROLLOUT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: USER_VALUE,
+    });
+
+    // Enroll in both, set user branch.
+    await doTest({
+      configs,
+      setBranch: USER,
+      expectedDefault: EXPERIMENT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs,
+      defaultBranchValue: DEFAULT_VALUE,
+      setBranch: USER,
+      expectedDefault: DEFAULT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs,
+      userBranchValue: USER_VALUE,
+      setBranch: USER,
+      expectedDefault: EXPERIMENT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs,
+      defaultBranchValue: DEFAULT_VALUE,
+      userBranchValue: USER_VALUE,
+      setBranch: USER,
+      expectedDefault: DEFAULT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+  }
+
+  {
+    const branch = USER;
+    const pref = PREFS[branch];
+    const configs = CONFIGS[branch];
+
+    const doTest = args => doBaseTest({ pref, branch, ...args });
+
+    // Enrolled in rollout, set default branch.
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      setBranch: DEFAULT,
+      expectedEnrollments: [ROLLOUT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: ROLLOUT_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      defaultBranchValue: DEFAULT_VALUE,
+      setBranch: DEFAULT,
+      expectedEnrollments: [ROLLOUT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: ROLLOUT_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      userBranchValue: USER_VALUE,
+      setBranch: DEFAULT,
+      expectedEnrollments: [ROLLOUT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: ROLLOUT_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      defaultBranchValue: DEFAULT_VALUE,
+      userBranchValue: USER_VALUE,
+      setBranch: DEFAULT,
+      expectedEnrollments: [ROLLOUT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: ROLLOUT_VALUE,
+    });
+
+    // Enrolled in rollout, set user branch.
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      setBranch: USER,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      defaultBranchValue: DEFAULT_VALUE,
+      setBranch: USER,
+      expectedDefault: DEFAULT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      userBranchValue: USER_VALUE,
+      setBranch: USER,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      defaultBranchValue: DEFAULT_VALUE,
+      userBranchValue: USER_VALUE,
+      setBranch: USER,
+      expectedDefault: DEFAULT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    // Enrolled in experiment, set default branch.
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      setBranch: DEFAULT,
+      expectedEnrollments: [EXPERIMENT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: EXPERIMENT_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      defaultBranchValue: DEFAULT_VALUE,
+      setBranch: DEFAULT,
+      expectedEnrollments: [EXPERIMENT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: EXPERIMENT_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      userBranchValue: USER_VALUE,
+      setBranch: DEFAULT,
+      expectedEnrollments: [EXPERIMENT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: EXPERIMENT_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      defaultBranchValue: DEFAULT_VALUE,
+      userBranchValue: USER_VALUE,
+      setBranch: DEFAULT,
+      expectedEnrollments: [EXPERIMENT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: EXPERIMENT_VALUE,
+    });
+
+    // Enrolled in experiment, set user branch.
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      setBranch: USER,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      defaultBranchValue: DEFAULT_VALUE,
+      setBranch: USER,
+      expectedDefault: DEFAULT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      userBranchValue: USER_VALUE,
+      setBranch: USER,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      defaultBranchValue: DEFAULT_VALUE,
+      userBranchValue: USER_VALUE,
+      setBranch: USER,
+      expectedDefault: DEFAULT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    // Enrolled in both, set default branch.
+    await doTest({
+      configs,
+      setBranch: DEFAULT,
+      expectedEnrollments: [EXPERIMENT, ROLLOUT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: EXPERIMENT_VALUE,
+    });
+
+    await doTest({
+      configs,
+      defaultBranchValue: DEFAULT_VALUE,
+      setBranch: DEFAULT,
+      expectedEnrollments: [EXPERIMENT, ROLLOUT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: EXPERIMENT_VALUE,
+    });
+
+    await doTest({
+      configs,
+      userBranchValue: USER_VALUE,
+      setBranch: DEFAULT,
+      expectedEnrollments: [EXPERIMENT, ROLLOUT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: EXPERIMENT_VALUE,
+    });
+
+    await doTest({
+      configs,
+      defaultBranchValue: DEFAULT_VALUE,
+      userBranchValue: USER_VALUE,
+      setBranch: DEFAULT,
+      expectedEnrollments: [EXPERIMENT, ROLLOUT],
+      expectedDefault: OVERWRITE_VALUE,
+      expectedUser: EXPERIMENT_VALUE,
+    });
+
+    // Enrolled in both, set user branch.
+    await doTest({
+      configs,
+      setBranch: USER,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs,
+      defaultBranchValue: DEFAULT_VALUE,
+      setBranch: USER,
+      expectedDefault: DEFAULT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs,
+      userBranchValue: USER_VALUE,
+      setBranch: USER,
+      expectedUser: OVERWRITE_VALUE,
+    });
+
+    await doTest({
+      configs,
+      defaultBranchValue: DEFAULT_VALUE,
+      userBranchValue: USER_VALUE,
+      setBranch: USER,
+      expectedDefault: DEFAULT_VALUE,
+      expectedUser: OVERWRITE_VALUE,
+    });
+  }
+});
+
+add_task(async function test_deleteBranch() {
+  const store = ExperimentFakes.store();
+  const manager = ExperimentFakes.manager(store);
+
+  await manager.onStartup();
+
+  assertEmptyStore(store);
+
+  const cleanup = [];
+  cleanup.push(
+    await ExperimentFakes.enrollWithFeatureConfig(CONFIGS[USER][EXPERIMENT], {
+      manager,
+    }),
+    await ExperimentFakes.enrollWithFeatureConfig(CONFIGS[USER][ROLLOUT], {
+      manager,
+      isRollout: true,
+    }),
+    await ExperimentFakes.enrollWithFeatureConfig(
+      CONFIGS[DEFAULT][EXPERIMENT],
+      { manager }
+    ),
+    await ExperimentFakes.enrollWithFeatureConfig(CONFIGS[DEFAULT][ROLLOUT], {
+      manager,
+      isRollout: true,
+    })
+  );
+
+  Services.prefs.deleteBranch(PREFS[USER]);
+  Services.prefs.deleteBranch(PREFS[DEFAULT]);
+
+  // deleteBranch does not trigger pref observers!
+  Assert.equal(
+    store.getAll().length,
+    4,
+    "nsIPrefBranch::deleteBranch does not trigger unenrollment"
+  );
+
+  for (const cleanupFn of cleanup) {
+    await cleanupFn();
+  }
+
+  assertNoObservers(manager);
+  assertEmptyStore(store);
+  await cleanupStore(store);
+});
+
+add_task(async function test_clearUserPref() {
+  /**
+   * Test that nsIPrefBranch::clearUserPref() correctly interacts with pref
+   * tampering logic.
+   *
+   * This test sets up some enrollments and then clears the pref specified and
+   * checks that unenrollments happen as * appropriate.
+   *
+   * @param {object} options
+   *
+   * @param {string} options.pref
+   *        The name of the pref.
+   *
+   * @param {string?} options.defaultBranchValue
+   *        An optional value to set for the pref on the default branch
+   *        before the first enrollment.
+   *
+   * @param {string?} options.userBranchValue
+   *        An optional value to set for the pref on the user branch
+   *        before the first enrollment.
+   *
+   * @param {object} options.configs
+   *        The rollout and experiment feature configurations.
+   *
+   * @param {boolean} options.expectedEnrolled
+   *        Whether or not the enrollments defined in `configs` should still be
+   *        active after clearing the user branch.
+   *
+   * @param {string} options.expectedDefault
+   *        The expected value of the default branch after clearing the user branch.
+   *
+   *        A value of null indicates that the pref should not be set on the default
+   *        branch.
+   */
+  async function doBaseTest({
+    pref,
+    defaultBranchValue = null,
+    userBranchValue = null,
+    configs,
+    expectedEnrolled,
+    expectedDefault = null,
+  }) {
+    const store = ExperimentFakes.store();
+    const manager = ExperimentFakes.manager(store);
+
+    await manager.onStartup();
+
+    assertEmptyStore(store);
+
+    const cleanup = [];
+    const slugs = {};
+
+    setPrefs(pref, { defaultBranchValue, userBranchValue });
+
+    for (const [enrollmentKind, config] of Object.entries(configs)) {
+      const isRollout = enrollmentKind === ROLLOUT;
+      cleanup.push(
+        await ExperimentFakes.enrollWithFeatureConfig(config, {
+          manager,
+          isRollout,
+        })
+      );
+
+      const enrollments = isRollout
+        ? store.getAllRollouts()
+        : store.getAllActive();
+
+      Assert.equal(
+        enrollments.length,
+        1,
+        `Expected one ${enrollmentKind} enrollment`
+      );
+      slugs[enrollmentKind] = enrollments[0].slug;
+    }
+
+    Services.prefs.clearUserPref(pref);
+
+    for (const enrollmentKind of Object.keys(configs)) {
+      const slug = slugs[enrollmentKind];
+      const enrollment = store.get(slug);
+      Assert.ok(
+        enrollment !== null,
+        `An enrollment of kind ${enrollmentKind} should exist`
+      );
+
+      if (expectedEnrolled) {
+        Assert.ok(enrollment.active, "It should be active");
+      } else {
+        Assert.ok(!enrollment.active, "It should not be active");
+      }
+    }
+
+    if (expectedDefault === null) {
+      Assert.ok(
+        !Services.prefs.prefHasDefaultValue(pref),
+        `Expected the default branch not to be set for ${pref}`
+      );
+    } else {
+      Assert.equal(
+        Services.prefs.getDefaultBranch(null).getStringPref(pref),
+        expectedDefault,
+        `Expected the value of ${pref} on the default branch to match the expected value`
+      );
+    }
+
+    Assert.ok(
+      !Services.prefs.prefHasUserValue(pref),
+      `Expected the user branch not to be set for ${pref}`
+    );
+
+    if (expectedEnrolled) {
+      for (const cleanupFn of Object.values(cleanup)) {
+        await cleanupFn();
+      }
+    } else {
+      for (const slug of Object.values(slugs)) {
+        store._deleteForTests(slug);
+      }
+    }
+
+    assertNoObservers(manager);
+    assertEmptyStore(store);
+    await cleanupStore(store);
+
+    Services.prefs.deleteBranch(pref);
+  }
+
+  {
+    const branch = DEFAULT;
+    const pref = PREFS[branch];
+    const configs = CONFIGS[branch];
+    const doTest = args => doBaseTest({ pref, branch, ...args });
+
+    // Enroll in rollout.
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      expectedEnrolled: true,
+      expectedDefault: ROLLOUT_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      defaultBranchValue: DEFAULT_VALUE,
+      expectedEnrolled: true,
+      expectedDefault: ROLLOUT_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      userBranchValue: USER_VALUE,
+      expectedEnrolled: false,
+      expectedDefault: ROLLOUT_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, ROLLOUT),
+      defaultBranchValue: DEFAULT_VALUE,
+      userBranchValue: USER_VALUE,
+      expectedEnrolled: false,
+      expectedDefault: DEFAULT_VALUE,
+    });
+
+    // Enroll in experiment.
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      expectedEnrolled: true,
+      expectedDefault: EXPERIMENT_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      defaultBranchValue: DEFAULT_VALUE,
+      expectedEnrolled: true,
+      expectedDefault: EXPERIMENT_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      userBranchValue: USER_VALUE,
+      expectedEnrolled: false,
+      expectedDefault: EXPERIMENT_VALUE,
+    });
+
+    await doTest({
+      configs: pick(configs, EXPERIMENT),
+      defaultBranchValue: DEFAULT_VALUE,
+      userBranchValue: USER_VALUE,
+      expectedEnrolled: false,
+      expectedDefault: DEFAULT_VALUE,
+    });
+
+    // Enroll in both.
+    await doTest({
+      configs,
+      expectedEnrolled: true,
+      expectedDefault: EXPERIMENT_VALUE,
+    });
+
+    await doTest({
+      configs,
+      defaultBranchValue: DEFAULT_VALUE,
+      expectedEnrolled: true,
+      expectedDefault: EXPERIMENT_VALUE,
+    });
+
+    await doTest({
+      configs,
+      userBranchValue: USER_VALUE,
+      expectedEnrolled: false,
+      expectedDefault: EXPERIMENT_VALUE,
+    });
+
+    await doTest({
+      configs,
+      defaultBranchValue: DEFAULT_VALUE,
+      userBranchValue: USER_VALUE,
+      expectedEnrolled: false,
+      expectedDefault: DEFAULT_VALUE,
+    });
+  }
+
+  {
+    const branch = USER;
+    const pref = PREFS[branch];
+    const configs = CONFIGS[branch];
+    const doTest = args =>
+      doBaseTest({ pref, branch, expectedEnrolled: false, ...args });
+
+    // Because this pref is set on the user branch, clearing the user branch has
+    // the same effect for every suite of configs.
+    for (const selectedConfig of [
+      pick(configs, ROLLOUT),
+      pick(configs, EXPERIMENT),
+      configs,
+    ]) {
+      await doTest({
+        configs: selectedConfig,
+      });
+
+      await doTest({
+        configs: selectedConfig,
+        defaultBranchValue: DEFAULT_VALUE,
+        expectedDefault: DEFAULT_VALUE,
+      });
+
+      await doTest({
+        configs: selectedConfig,
+        userBranchValue: USER_VALUE,
+      });
+
+      await doTest({
+        configs: selectedConfig,
+        defaultBranchValue: DEFAULT_VALUE,
+        userBranchValue: USER_VALUE,
+        expectedDefault: DEFAULT_VALUE,
+      });
+    }
+  }
+});
+
+// Test that unenrollment doesn't happen if a pref changes but it wasn't set.
+add_task(async function test_prefChanged_noPrefSet() {
+  const featureId = "test-set-pref-2";
+  const pref = "nimbus.test-only.baz";
+
+  function featureFactory(isEarlyStartup) {
+    return new ExperimentFeature(featureId, {
+      description: "Test feature that sets a pref",
+      owner: "test@test.test",
+      hasExposure: false,
+      isEarlyStartup,
+      variables: {
+        baz: {
+          type: "string",
+          description: "Test variable",
+          setPref: pref,
+        },
+        qux: {
+          type: "string",
+          description: "Test variable",
+        },
+      },
+    });
+  }
+
+  const config = {
+    featureId,
+    value: {
+      qux: "qux",
+    },
+  };
+
+  for (const isEarlyStartup of [true, false]) {
+    const feature = featureFactory(isEarlyStartup);
+    const cleanupFeature = ExperimentTestUtils.addTestFeatures(feature);
+
+    const store = ExperimentFakes.store();
+    const manager = ExperimentFakes.manager(store);
+    await manager.onStartup();
+
+    for (const branch of [USER, DEFAULT]) {
+      for (const defaultBranchValue of [null, DEFAULT_VALUE]) {
+        for (const userBranchValue of [null, USER_VALUE]) {
+          for (const isRollout of [true, false]) {
+            setPrefs(pref, { defaultBranchValue, userBranchValue });
+
+            const doEnrollmentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+              config,
+              { manager, isRollout }
+            );
+
+            PrefUtils.setPref(pref, OVERWRITE_VALUE, { branch });
+
+            const enrollments = await store.getAll();
+            Assert.equal(
+              enrollments.length,
+              1,
+              "There should be one enrollment"
+            );
+            Assert.ok(enrollments[0].active, "The enrollment should be active");
+
+            Assert.equal(
+              PrefUtils.getPref(pref, { branch }),
+              OVERWRITE_VALUE,
+              `The value of ${pref} on the ${branch} branch should be the expected value`
+            );
+
+            if (branch === USER) {
+              if (defaultBranchValue) {
+                Assert.equal(
+                  PrefUtils.getPref(pref, { branch: DEFAULT }),
+                  defaultBranchValue,
+                  "The default branch should have the expected value"
+                );
+              } else {
+                Assert.ok(
+                  !Services.prefs.prefHasDefaultValue(pref),
+                  "The default branch should not have a value"
+                );
+              }
+            } else if (userBranchValue) {
+              Assert.equal(
+                PrefUtils.getPref(pref, { branch: USER }),
+                userBranchValue,
+                "The user branch should have the expected value"
+              );
+            } else {
+              Assert.ok(
+                !Services.prefs.prefHasUserValue(pref),
+                "The user branch should not have a value"
+              );
+            }
+
+            assertNoObservers(manager);
+
+            await doEnrollmentCleanup();
+            assertEmptyStore(store);
+
+            Services.prefs.deleteBranch(pref);
+          }
+        }
+      }
+    }
+
+    cleanupFeature();
+    await cleanupStore(store);
   }
 });
