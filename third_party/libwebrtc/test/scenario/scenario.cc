@@ -266,7 +266,8 @@ void Scenario::Post(std::function<void()> function) {
 
 void Scenario::At(TimeDelta offset, std::function<void()> function) {
   RTC_DCHECK_GT(offset, TimeSinceStart());
-  task_queue_.PostDelayedTask(function, TimeUntilTarget(offset).ms());
+  task_queue_.PostDelayedTask(ToQueuedTask(std::move(function)),
+                              TimeUntilTarget(offset).ms());
 }
 
 void Scenario::RunFor(TimeDelta duration) {

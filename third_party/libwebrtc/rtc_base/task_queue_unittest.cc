@@ -66,7 +66,9 @@ TEST(TaskQueueTest, DISABLED_PostDelayedHighRes) {
   webrtc::TaskQueueForTest queue(kQueueName, TaskQueue::Priority::HIGH);
 
   uint32_t start = Time();
-  queue.PostDelayedTask([&event, &queue] { CheckCurrent(&event, &queue); }, 3);
+  queue.PostDelayedTask(
+      webrtc::ToQueuedTask([&event, &queue] { CheckCurrent(&event, &queue); }),
+      3);
   EXPECT_TRUE(event.Wait(1000));
   uint32_t end = TimeMillis();
   // These tests are a little relaxed due to how "powerful" our test bots can
