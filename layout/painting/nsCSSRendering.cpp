@@ -1152,7 +1152,7 @@ auto nsCSSRendering::FindEffectiveBackgroundColor(nsIFrame* aFrame,
       return {NS_TRANSPARENT, true};
     }
 
-    if (IsCanvasFrame(frame)) {
+    if (frame->IsCanvasFrame()) {
       if (aPreferBodyToCanvas) {
         if (auto* body = frame->PresContext()->Document()->GetBodyElement()) {
           if (nsIFrame* f = body->GetPrimaryFrame()) {
@@ -1171,18 +1171,6 @@ auto nsCSSRendering::FindEffectiveBackgroundColor(nsIFrame* aFrame,
   }
 
   return {aFrame->PresContext()->DefaultBackgroundColor()};
-}
-
-// Returns true if aFrame is a canvas frame.
-// We need to treat the viewport as canvas because, even though
-// it does not actually paint a background, we need to get the right
-// background style so we correctly detect transparent documents.
-bool nsCSSRendering::IsCanvasFrame(const nsIFrame* aFrame) {
-  LayoutFrameType frameType = aFrame->Type();
-  return frameType == LayoutFrameType::Canvas ||
-         frameType == LayoutFrameType::XULRoot ||
-         frameType == LayoutFrameType::PageContent ||
-         frameType == LayoutFrameType::Viewport;
 }
 
 nsIFrame* nsCSSRendering::FindBackgroundStyleFrame(nsIFrame* aForFrame) {
@@ -1242,8 +1230,7 @@ nsIFrame* nsCSSRendering::FindBackgroundStyleFrame(nsIFrame* aForFrame) {
  *   resulting value is 'transparent', the rendering is undefined.
  *
  * Thus, in our implementation, it is responsible for ensuring that:
- *  + we paint the correct background on the |nsCanvasFrame|,
- *    |nsRootBoxFrame|, or |nsPageFrame|,
+ *  + we paint the correct background on the |nsCanvasFrame| or |nsPageFrame|,
  *  + we don't paint the background on the root element, and
  *  + we don't paint the background on the BODY element in *some* cases,
  *    and for SGML-based HTML documents only.
@@ -1261,7 +1248,7 @@ ComputedStyle* nsCSSRendering::FindRootFrameBackground(nsIFrame* aForFrame) {
 // frame).  See documentation for FindBackground.
 inline bool FrameHasMeaningfulBackground(const nsIFrame* aForFrame,
                                          nsIFrame* aRootElementFrame) {
-  MOZ_ASSERT(!nsCSSRendering::IsCanvasFrame(aForFrame),
+  MOZ_ASSERT(!aForFrame->IsCanvasFrame(),
              "FindBackgroundFrame handles canvas frames before calling us, "
              "so we don't need to consider them here");
 
@@ -1307,7 +1294,7 @@ inline bool FrameHasMeaningfulBackground(const nsIFrame* aForFrame,
 nsIFrame* nsCSSRendering::FindBackgroundFrame(const nsIFrame* aForFrame) {
   nsIFrame* rootElementFrame =
       aForFrame->PresShell()->FrameConstructor()->GetRootElementStyleFrame();
-  if (IsCanvasFrame(aForFrame)) {
+  if (aForFrame->IsCanvasFrame()) {
     return FindCanvasBackgroundFrame(aForFrame, rootElementFrame);
   }
 
@@ -2446,7 +2433,7 @@ ImgDrawResult nsCSSRendering::PaintStyleImageLayerWithSC(
   // PresShell::AddCanvasBackgroundColorItem(), and painted by
   // nsDisplayCanvasBackground directly.) Either way we don't need to
   // paint the background color here.
-  bool isCanvasFrame = IsCanvasFrame(aParams.frame);
+  bool isCanvasFrame = aParams.frame->IsCanvasFrame();
   const bool paintMask = aParams.paintFlags & PAINTBG_MASK_IMAGE;
 
   // Determine whether we are drawing background images and/or
