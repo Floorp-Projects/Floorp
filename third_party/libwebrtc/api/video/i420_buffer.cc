@@ -14,8 +14,8 @@
 #include <algorithm>
 #include <utility>
 
+#include "api/make_ref_counted.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/ref_counted_object.h"
 #include "libyuv/include/libyuv/convert.h"
 #include "libyuv/include/libyuv/planar_functions.h"
 #include "libyuv/include/libyuv/scale.h"
