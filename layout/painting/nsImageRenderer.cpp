@@ -148,9 +148,8 @@ bool nsImageRenderer::PrepareImage() {
     }
 
     if (srcImage) {
-      StyleImageOrientation orientation =
-          mForFrame->StyleVisibility()->UsedImageOrientation(request);
-      srcImage = nsLayoutUtils::OrientImage(srcImage, orientation);
+      srcImage = nsLayoutUtils::OrientImage(
+          srcImage, mForFrame->StyleVisibility()->mImageOrientation);
     }
 
     if (!mImage->IsRect()) {

@@ -118,7 +118,10 @@ class imgRequest final : public nsIStreamListener,
 
   // The principal for the document that loaded this image. Used when trying to
   // validate a CORS image load.
-  already_AddRefed<nsIPrincipal> GetTriggeringPrincipal() const;
+  already_AddRefed<nsIPrincipal> GetTriggeringPrincipal() const {
+    nsCOMPtr<nsIPrincipal> principal = mTriggeringPrincipal;
+    return principal.forget();
+  }
 
   // Return the ProgressTracker associated with this imgRequest. It may live
   // in |mProgressTracker| or in |mImage.mProgressTracker|, depending on whether

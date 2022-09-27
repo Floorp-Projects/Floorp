@@ -176,11 +176,6 @@ bool imgRequest::CanReuseWithoutValidation(dom::Document* aDoc) const {
 
 void imgRequest::ClearLoader() { mLoader = nullptr; }
 
-already_AddRefed<nsIPrincipal> imgRequest::GetTriggeringPrincipal() const {
-  nsCOMPtr<nsIPrincipal> principal = mTriggeringPrincipal;
-  return principal.forget();
-}
-
 already_AddRefed<ProgressTracker> imgRequest::GetProgressTracker() const {
   MutexAutoLock lock(mMutex);
 
