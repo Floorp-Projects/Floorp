@@ -715,6 +715,7 @@ describe("DiscoveryStreamFeed", () => {
     let fakeDiscoveryStream;
     beforeEach(() => {
       fakeDiscoveryStream = {
+        Prefs: {},
         DiscoveryStream: {
           layout: [
             { components: [{ feed: { url: "foo.com" } }] },
@@ -2454,6 +2455,76 @@ describe("DiscoveryStreamFeed", () => {
         type: at.DISCOVERY_STREAM_DEV_EXPIRE_CACHE,
       });
       assert.calledOnce(feed.resetContentCache);
+    });
+  });
+
+  describe("#spocsCacheUpdateTime", () => {
+    it("should call setupSpocsCacheUpdateTime", () => {
+      const defaultCacheTime = 30 * 60 * 1000;
+      sandbox.spy(feed, "setupSpocsCacheUpdateTime");
+      const cacheTime = feed.spocsCacheUpdateTime;
+      assert.equal(feed._spocsCacheUpdateTime, defaultCacheTime);
+      assert.equal(cacheTime, defaultCacheTime);
+      assert.calledOnce(feed.setupSpocsCacheUpdateTime);
+    });
+    it("should return _spocsCacheUpdateTime", () => {
+      sandbox.spy(feed, "setupSpocsCacheUpdateTime");
+      const testCacheTime = 123;
+      feed._spocsCacheUpdateTime = testCacheTime;
+      const cacheTime = feed.spocsCacheUpdateTime;
+      // Ensure _spocsCacheUpdateTime was not changed.
+      assert.equal(feed._spocsCacheUpdateTime, testCacheTime);
+      assert.equal(cacheTime, testCacheTime);
+      assert.notCalled(feed.setupSpocsCacheUpdateTime);
+    });
+  });
+
+  describe("#setupSpocsCacheUpdateTime", () => {
+    it("should set _spocsCacheUpdateTime with default value", () => {
+      const defaultCacheTime = 30 * 60 * 1000;
+      feed.setupSpocsCacheUpdateTime();
+      assert.equal(feed._spocsCacheUpdateTime, defaultCacheTime);
+    });
+    it("should set _spocsCacheUpdateTime with min", () => {
+      const defaultCacheTime = 30 * 60 * 1000;
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            pocketConfig: {
+              spocsCacheTimeout: 1,
+            },
+          },
+        },
+      });
+      feed.setupSpocsCacheUpdateTime();
+      assert.equal(feed._spocsCacheUpdateTime, defaultCacheTime);
+    });
+    it("should set _spocsCacheUpdateTime with max", () => {
+      const defaultCacheTime = 30 * 60 * 1000;
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            pocketConfig: {
+              spocsCacheTimeout: 31,
+            },
+          },
+        },
+      });
+      feed.setupSpocsCacheUpdateTime();
+      assert.equal(feed._spocsCacheUpdateTime, defaultCacheTime);
+    });
+    it("should set _spocsCacheUpdateTime with spocsCacheTimeout", () => {
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            pocketConfig: {
+              spocsCacheTimeout: 20,
+            },
+          },
+        },
+      });
+      feed.setupSpocsCacheUpdateTime();
+      assert.equal(feed._spocsCacheUpdateTime, 20 * 60 * 1000);
     });
   });
 
