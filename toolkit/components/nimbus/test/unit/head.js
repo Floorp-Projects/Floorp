@@ -7,4 +7,5 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
+  ExperimentTestUtils: "resource://testing-common/NimbusTestUtils.jsm",
 });

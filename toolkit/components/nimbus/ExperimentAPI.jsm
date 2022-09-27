@@ -373,7 +373,11 @@ class _ExperimentFeature {
     });
   }
 
-  getPreferenceName(variable) {
+  getSetPrefName(variable) {
+    return this.manifest?.variables?.[variable]?.setPref;
+  }
+
+  getFallbackPrefName(variable) {
     return this.manifest?.variables?.[variable]?.fallbackPref;
   }
 
@@ -432,7 +436,7 @@ class _ExperimentFeature {
     }
 
     // Return the default preference value
-    const prefName = this.getPreferenceName(variable);
+    const prefName = this.getFallbackPrefName(variable);
     return prefName ? this.prefGetters[variable] : undefined;
   }
 
