@@ -1229,27 +1229,4 @@ FrameStats DefaultVideoQualityAnalyzer::FrameInFlight::GetStatsForPeer(
   return stats;
 }
 
-size_t DefaultVideoQualityAnalyzer::NamesCollection::AddIfAbsent(
-    absl::string_view name) {
-  auto it = index_.find(name);
-  if (it != index_.end()) {
-    return it->second;
-  }
-  size_t out = names_.size();
-  size_t old_capacity = names_.capacity();
-  names_.emplace_back(name);
-  size_t new_capacity = names_.capacity();
-
-  if (old_capacity == new_capacity) {
-    index_.emplace(names_[out], out);
-  } else {
-    // Reallocation happened in the vector, so we need to rebuild `index_`
-    index_.clear();
-    for (size_t i = 0; i < names_.size(); ++i) {
-      index_.emplace(names_[i], i);
-    }
-  }
-  return out;
-}
-
 }  // namespace webrtc
