@@ -1109,6 +1109,26 @@ TEST_F(RtpVideoStreamReceiver2DependencyDescriptorTest,
   InjectPacketWith(stream_structure2, deltaframe_descriptor);
 }
 
+TEST_F(RtpVideoStreamReceiver2DependencyDescriptorTest,
+       RequestKeyframeIfInitialKeyframePacketIsLost) {
+  FrameDependencyStructure stream_structure = CreateStreamStructure();
+
+  DependencyDescriptor keyframe_descriptor_without_structure;
+  keyframe_descriptor_without_structure.frame_dependencies =
+      stream_structure.templates[0];
+  keyframe_descriptor_without_structure.frame_number = 0;
+
+  EXPECT_CALL(mock_key_frame_request_sender_, RequestKeyFrame).Times(2);
+  InjectPacketWith(stream_structure, keyframe_descriptor_without_structure);
+
+  // Not enough time since last keyframe request
+  time_controller_.AdvanceTime(TimeDelta::Millis(500));
+  InjectPacketWith(stream_structure, keyframe_descriptor_without_structure);
+
+  time_controller_.AdvanceTime(TimeDelta::Millis(501));
+  InjectPacketWith(stream_structure, keyframe_descriptor_without_structure);
+}
+
 TEST_F(RtpVideoStreamReceiver2Test, TransformFrame) {
   rtc::scoped_refptr<MockFrameTransformer> mock_frame_transformer =
       rtc::make_ref_counted<testing::NiceMock<MockFrameTransformer>>();

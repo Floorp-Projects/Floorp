@@ -531,8 +531,18 @@ void RtpVideoStreamReceiver2::OnReceivedPayloadData(
         rtp_packet, video_header.frame_type == VideoFrameType::kVideoFrameKey);
   }
 
-  if (generic_descriptor_state == kDropPacket)
+  if (generic_descriptor_state == kDropPacket) {
+    Timestamp now = clock_->CurrentTime();
+    if (video_structure_ == nullptr &&
+        next_keyframe_request_for_missing_video_structure_ < now) {
+      // No video structure received yet, most likely part of the initial
+      // keyframe was lost.
+      RequestKeyFrame();
+      next_keyframe_request_for_missing_video_structure_ =
+          now + TimeDelta::Seconds(1);
+    }
     return;
+  }
 
   // Color space should only be transmitted in the last packet of a frame,
   // therefore, neglect it otherwise so that last_color_space_ is not reset by
