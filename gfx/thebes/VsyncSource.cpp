@@ -114,18 +114,17 @@ Maybe<TimeDuration> VsyncSource::GetFastestVsyncRate() {
   RefPtr<VsyncSource> vsyncSource = vsyncDispatcher->GetCurrentVsyncSource();
   if (vsyncSource->IsVsyncEnabled()) {
     retVal.emplace(vsyncSource->GetVsyncRate());
-  }
-
 #ifdef MOZ_WAYLAND
-  Maybe<TimeDuration> waylandRate = WaylandVsyncSource::GetFastestVsyncRate();
-  if (waylandRate) {
-    if (!retVal) {
-      retVal.emplace(*waylandRate);
-    } else if (*waylandRate < *retVal) {
-      retVal = waylandRate;
+    Maybe<TimeDuration> waylandRate = WaylandVsyncSource::GetFastestVsyncRate();
+    if (waylandRate) {
+      if (!retVal) {
+        retVal.emplace(*waylandRate);
+      } else if (*waylandRate < *retVal) {
+        retVal = waylandRate;
+      }
     }
-  }
 #endif
+  }
 
   return retVal;
 }
