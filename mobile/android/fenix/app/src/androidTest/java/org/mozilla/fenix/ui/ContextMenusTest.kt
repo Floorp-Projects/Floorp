@@ -215,7 +215,6 @@ class ContextMenusTest {
         }
     }
 
-    @Ignore("Failing with frequent ANR: https://bugzilla.mozilla.org/show_bug.cgi?id=1764605")
     @Test
     fun verifyContextMixedVariations() {
         val pageLinks =
