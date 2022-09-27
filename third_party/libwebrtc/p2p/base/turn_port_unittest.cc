@@ -664,7 +664,8 @@ class TurnPortTest : public ::testing::Test,
 
     // Destroy the connection on the TURN port. The TurnEntry still exists, so
     // the TURN port should still process a ping from an unknown address.
-    conn2->Destroy();
+    turn_port_->DestroyConnection(conn2);
+
     conn1->Ping(0);
     EXPECT_TRUE_SIMULATED_WAIT(turn_unknown_address_, kSimulatedRtt,
                                fake_clock_);
@@ -1268,7 +1269,7 @@ TEST_F(TurnPortTest, TestStopProcessingPacketsAfterClosed) {
   EXPECT_EQ_SIMULATED_WAIT(Connection::STATE_WRITABLE, conn2->write_state(),
                            kSimulatedRtt * 2, fake_clock_);
 
-  turn_port_->Close();
+  turn_port_->CloseForTest();
   SIMULATED_WAIT(false, kSimulatedRtt, fake_clock_);
   turn_unknown_address_ = false;
   conn2->Ping(0);

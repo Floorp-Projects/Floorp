@@ -491,6 +491,8 @@ void TCPConnection::OnClose(rtc::AsyncPacketSocket* socket, int error) {
   RTC_DCHECK(socket == socket_.get());
   RTC_LOG(LS_INFO) << ToString() << ": Connection closed with error " << error;
 
+  RTC_DCHECK(port());
+
   // Guard against the condition where IPC socket will call OnClose for every
   // packet it can't send.
   if (connected()) {
@@ -520,7 +522,7 @@ void TCPConnection::OnClose(rtc::AsyncPacketSocket* socket, int error) {
     // to manually destroy here as this connection, as never connected, will not
     // be scheduled for ping to trigger destroy.
     socket_->UnsubscribeClose(this);
-    Destroy();
+    port()->DestroyConnectionAsync(this);
   }
 }
 
