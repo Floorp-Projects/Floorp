@@ -38,6 +38,7 @@
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_internal_shared_objects.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_shared_objects.h"
 #include "test/pc/e2e/analyzer/video/multi_head_queue.h"
+#include "test/pc/e2e/analyzer/video/names_collection.h"
 #include "test/testsupport/perf_test.h"
 
 namespace webrtc {
@@ -287,35 +288,6 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
     // Can be not set if frame was dropped by encoder.
     absl::optional<StreamCodecInfo> used_encoder_ = absl::nullopt;
     std::map<size_t, ReceiverFrameStats> receiver_stats_;
-  };
-
-  class NamesCollection {
-   public:
-    NamesCollection() = default;
-    explicit NamesCollection(rtc::ArrayView<const std::string> names) {
-      names_ = std::vector<std::string>(names.begin(), names.end());
-      for (size_t i = 0; i < names_.size(); ++i) {
-        index_.emplace(names_[i], i);
-      }
-    }
-
-    size_t size() const { return names_.size(); }
-
-    size_t index(absl::string_view name) const { return index_.at(name); }
-
-    const std::string& name(size_t index) const { return names_[index]; }
-
-    bool HasName(absl::string_view name) const {
-      return index_.find(name) != index_.end();
-    }
-
-    // Add specified `name` to the collection if it isn't presented.
-    // Returns index which corresponds to specified `name`.
-    size_t AddIfAbsent(absl::string_view name);
-
-   private:
-    std::vector<std::string> names_;
-    std::map<absl::string_view, size_t> index_;
   };
 
   // Returns next frame id to use. Frame ID can't be `VideoFrame::kNotSetId`,
