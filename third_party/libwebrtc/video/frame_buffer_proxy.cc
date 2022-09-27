@@ -266,17 +266,18 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
     RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
     FrameMetadata metadata(*frame);
     int complete_units = buffer_->GetTotalNumberOfContinuousTemporalUnits();
+    size_t size = buffer_->CurrentSize();
     buffer_->InsertFrame(std::move(frame));
-    // Don't update stats or frame timing if the inserted frame did not complete
-    // a new temporal layer.
-    if (complete_units < buffer_->GetTotalNumberOfContinuousTemporalUnits()) {
-      stats_proxy_->OnCompleteFrame(metadata.is_keyframe, metadata.size,
-                                    metadata.contentType);
+    if (size != buffer_->CurrentSize()) {
       RTC_DCHECK(metadata.receive_time) << "Frame receive time must be set!";
       if (!metadata.delayed_by_retransmission && metadata.receive_time)
         timing_->IncomingTimestamp(metadata.rtp_timestamp,
                                    *metadata.receive_time);
-      MaybeScheduleFrameForRelease();
+      if (complete_units < buffer_->GetTotalNumberOfContinuousTemporalUnits()) {
+        stats_proxy_->OnCompleteFrame(metadata.is_keyframe, metadata.size,
+                                      metadata.contentType);
+        MaybeScheduleFrameForRelease();
+      }
     }
 
     return buffer_->LastContinuousFrameId();
