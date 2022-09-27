@@ -678,19 +678,20 @@ EditActionResult WhiteSpaceVisibilityKeeper::
                          "HTMLEditor::JoinNearestEditableNodesWithTransaction()"
                          " failed, but ignored");
     if (aListElementTagName.isSome() && atFirstChildOfRightNode.IsSet()) {
-      CreateElementResult convertListTypeResult =
+      Result<CreateElementResult, nsresult> convertListTypeResult =
           aHTMLEditor.ChangeListElementType(
               aRightBlockElement, MOZ_KnownLive(*aListElementTagName.ref()),
               *nsGkAtoms::li);
-      if (NS_WARN_IF(convertListTypeResult.EditorDestroyed())) {
-        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+      if (MOZ_UNLIKELY(convertListTypeResult.isErr())) {
+        if (NS_WARN_IF(convertListTypeResult.inspectErr() ==
+                       NS_ERROR_EDITOR_DESTROYED)) {
+          return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+        }
+        NS_WARNING("HTMLEditor::ChangeListElementType() failed, but ignored");
       }
       // There is AutoTransactionConserveSelection above, therefore, we don't
       // need to update selection here.
-      convertListTypeResult.IgnoreCaretPointSuggestion();
-      NS_WARNING_ASSERTION(
-          convertListTypeResult.isOk(),
-          "HTMLEditor::ChangeListElementType() failed, but ignored");
+      convertListTypeResult.inspect().IgnoreCaretPointSuggestion();
     }
     ret.MarkAsHandled();
   } else {
@@ -748,11 +749,12 @@ EditActionResult WhiteSpaceVisibilityKeeper::
 }
 
 // static
-CreateElementResult WhiteSpaceVisibilityKeeper::InsertBRElement(
+Result<CreateElementResult, nsresult>
+WhiteSpaceVisibilityKeeper::InsertBRElement(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToInsert,
     const Element& aEditingHost) {
   if (MOZ_UNLIKELY(NS_WARN_IF(!aPointToInsert.IsSet()))) {
-    return CreateElementResult(NS_ERROR_INVALID_ARG);
+    return Err(NS_ERROR_INVALID_ARG);
   }
 
   // MOOSE: for now, we always assume non-PRE formatting.  Fix this later.
@@ -763,7 +765,7 @@ CreateElementResult WhiteSpaceVisibilityKeeper::InsertBRElement(
                                                     &aEditingHost);
   if (MOZ_UNLIKELY(
           NS_WARN_IF(!textFragmentDataAtInsertionPoint.IsInitialized()))) {
-    return CreateElementResult(NS_ERROR_FAILURE);
+    return Err(NS_ERROR_FAILURE);
   }
   EditorDOMRange invisibleLeadingWhiteSpaceRangeOfNewLine =
       textFragmentDataAtInsertionPoint
@@ -782,11 +784,11 @@ CreateElementResult WhiteSpaceVisibilityKeeper::InsertBRElement(
           : PointPosition::NotInSameDOMTree;
 
   EditorDOMPoint pointToInsert(aPointToInsert);
-  EditorDOMPoint atNBSPReplacableWithSP;
+  EditorDOMPoint atNBSPReplaceableWithSP;
   if (!invisibleLeadingWhiteSpaceRangeOfNewLine.IsPositioned() &&
       (pointPositionWithVisibleWhiteSpaces == PointPosition::MiddleOfFragment ||
        pointPositionWithVisibleWhiteSpaces == PointPosition::EndOfFragment)) {
-    atNBSPReplacableWithSP =
+    atNBSPReplaceableWithSP =
         textFragmentDataAtInsertionPoint
             .GetPreviousNBSPPointIfNeedToReplaceWithASCIIWhiteSpace(
                 pointToInsert)
@@ -802,7 +804,7 @@ CreateElementResult WhiteSpaceVisibilityKeeper::InsertBRElement(
         AutoTrackDOMPoint trackPointToInsert(aHTMLEditor.RangeUpdaterRef(),
                                              &pointToInsert);
         AutoTrackDOMPoint trackEndOfLineNBSP(aHTMLEditor.RangeUpdaterRef(),
-                                             &atNBSPReplacableWithSP);
+                                             &atNBSPReplaceableWithSP);
         AutoTrackDOMRange trackLeadingWhiteSpaceRange(
             aHTMLEditor.RangeUpdaterRef(),
             &invisibleLeadingWhiteSpaceRangeOfNewLine);
@@ -810,10 +812,10 @@ CreateElementResult WhiteSpaceVisibilityKeeper::InsertBRElement(
             invisibleTrailingWhiteSpaceRangeOfCurrentLine.StartRef(),
             invisibleTrailingWhiteSpaceRangeOfCurrentLine.EndRef(),
             HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
-        if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+        if (NS_FAILED(rv)) {
           NS_WARNING(
               "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-          return CreateElementResult(rv);
+          return Err(rv);
         }
         // Don't refer the following variables anymore unless tracking the
         // change.
@@ -842,7 +844,7 @@ CreateElementResult WhiteSpaceVisibilityKeeper::InsertBRElement(
           AutoTrackDOMPoint trackPointToInsert(aHTMLEditor.RangeUpdaterRef(),
                                                &pointToInsert);
           AutoTrackDOMPoint trackEndOfLineNBSP(aHTMLEditor.RangeUpdaterRef(),
-                                               &atNBSPReplacableWithSP);
+                                               &atNBSPReplaceableWithSP);
           AutoTrackDOMRange trackLeadingWhiteSpaceRange(
               aHTMLEditor.RangeUpdaterRef(),
               &invisibleLeadingWhiteSpaceRangeOfNewLine);
@@ -861,7 +863,7 @@ CreateElementResult WhiteSpaceVisibilityKeeper::InsertBRElement(
             NS_WARNING(
                 "WhiteSpaceVisibilityKeeper::"
                 "ReplaceTextAndRemoveEmptyTextNodes() failed");
-            return CreateElementResult(rv);
+            return Err(rv);
           }
           // Don't refer the following variables anymore unless tracking the
           // change.
@@ -881,24 +883,24 @@ CreateElementResult WhiteSpaceVisibilityKeeper::InsertBRElement(
             invisibleLeadingWhiteSpaceRangeOfNewLine.StartRef(),
             invisibleLeadingWhiteSpaceRangeOfNewLine.EndRef(),
             HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
-        if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+        if (NS_FAILED(rv)) {
           NS_WARNING(
               "WhiteSpaceVisibilityKeeper::"
               "DeleteTextAndTextNodesWithTransaction() failed");
-          return CreateElementResult(rv);
+          return Err(rv);
         }
         // Don't refer the following variables anymore unless tracking the
         // change.
-        atNBSPReplacableWithSP.Clear();
+        atNBSPReplaceableWithSP.Clear();
         invisibleLeadingWhiteSpaceRangeOfNewLine.Clear();
         invisibleTrailingWhiteSpaceRangeOfCurrentLine.Clear();
       }
     }
     // If the `<br>` element is put immediately after an NBSP, it should be
     // replaced with an ASCII white-space.
-    else if (atNBSPReplacableWithSP.IsInTextNode()) {
+    else if (atNBSPReplaceableWithSP.IsInTextNode()) {
       const EditorDOMPointInText atNBSPReplacedWithASCIIWhiteSpace =
-          atNBSPReplacableWithSP.AsInText();
+          atNBSPReplaceableWithSP.AsInText();
       if (!atNBSPReplacedWithASCIIWhiteSpace.IsEndOfContainer() &&
           atNBSPReplacedWithASCIIWhiteSpace.IsCharNBSP()) {
         AutoTrackDOMPoint trackPointToInsert(aHTMLEditor.RangeUpdaterRef(),
@@ -908,21 +910,22 @@ CreateElementResult WhiteSpaceVisibilityKeeper::InsertBRElement(
             MOZ_KnownLive(
                 *atNBSPReplacedWithASCIIWhiteSpace.ContainerAs<Text>()),
             atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
-        if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+        if (NS_FAILED(rv)) {
           NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed failed");
-          return CreateElementResult(rv);
+          return Err(rv);
         }
         // Don't refer the following variables anymore unless tracking the
         // change.
-        atNBSPReplacableWithSP.Clear();
+        atNBSPReplaceableWithSP.Clear();
         invisibleLeadingWhiteSpaceRangeOfNewLine.Clear();
         invisibleTrailingWhiteSpaceRangeOfCurrentLine.Clear();
       }
     }
   }
 
-  CreateElementResult insertBRElementResult = aHTMLEditor.InsertBRElement(
-      HTMLEditor::WithTransaction::Yes, pointToInsert);
+  Result<CreateElementResult, nsresult> insertBRElementResult =
+      aHTMLEditor.InsertBRElement(HTMLEditor::WithTransaction::Yes,
+                                  pointToInsert);
   NS_WARNING_ASSERTION(
       insertBRElementResult.isOk(),
       "HTMLEditor::InsertBRElement(WithTransaction::Yes, eNone) failed");
@@ -3169,16 +3172,16 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
           // the beginning of soft wrapped lines, and lets the user see 2 spaces
           // when they type 2 spaces.
 
-          const CreateElementResult insertBRElementResult =
+          Result<CreateElementResult, nsresult> insertBRElementResult =
               aHTMLEditor.InsertBRElement(HTMLEditor::WithTransaction::Yes,
                                           atEndOfVisibleWhiteSpaces);
-          if (insertBRElementResult.isErr()) {
+          if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
             NS_WARNING(
                 "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
             return insertBRElementResult.unwrapErr();
           }
           // XXX Is this intentional selection change?
-          nsresult rv = insertBRElementResult.SuggestCaretPointTo(
+          nsresult rv = insertBRElementResult.inspect().SuggestCaretPointTo(
               aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
                             SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
                             SuggestCaret::AndIgnoreTrivialError});
@@ -3189,7 +3192,7 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
           NS_WARNING_ASSERTION(
               rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
               "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
-          MOZ_ASSERT(insertBRElementResult.GetNewNode());
+          MOZ_ASSERT(insertBRElementResult.inspect().GetNewNode());
 
           atPreviousCharOfEndOfVisibleWhiteSpaces =
               textFragmentData.GetPreviousEditableCharPoint(

@@ -273,15 +273,15 @@ nsresult HTMLEditor::InsertCell(Element* aCell, int32_t aRowSpan,
   //       actions which may be caused by legacy mutation event listeners or
   //       chrome script.
   AutoTransactionsConserveSelection dontChangeSelection(*this);
-  CreateElementResult insertNewCellResult =
+  Result<CreateElementResult, nsresult> insertNewCellResult =
       InsertNodeWithTransaction<Element>(*newCell, pointToInsert);
-  if (insertNewCellResult.isErr()) {
+  if (MOZ_UNLIKELY(insertNewCellResult.isErr())) {
     NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
     return insertNewCellResult.unwrapErr();
   }
   // Because of dontChangeSelection, we've never allowed to transactions to
   // update selection here.
-  insertNewCellResult.IgnoreCaretPointSuggestion();
+  insertNewCellResult.inspect().IgnoreCaretPointSuggestion();
   return NS_OK;
 }
 
@@ -350,18 +350,19 @@ NS_IMETHODIMP HTMLEditor::InsertTableCell(int32_t aNumberOfCellsToInsert,
         advanced,
         "Failed to set insertion point after current cell, but ignored");
   }
-  const CreateElementResult insertCellElementResult =
+  Result<CreateElementResult, nsresult> insertCellElementResult =
       InsertTableCellsWithTransaction(pointToInsert, aNumberOfCellsToInsert);
-  if (insertCellElementResult.isErr()) {
+  if (MOZ_UNLIKELY(insertCellElementResult.isErr())) {
     NS_WARNING("HTMLEditor::InsertTableCellsWithTransaction() failed");
-    return EditorBase::ToGenericNSResult(insertCellElementResult.inspectErr());
+    return EditorBase::ToGenericNSResult(insertCellElementResult.unwrapErr());
   }
   // We don't need to modify selection here.
-  insertCellElementResult.IgnoreCaretPointSuggestion();
+  insertCellElementResult.inspect().IgnoreCaretPointSuggestion();
   return NS_OK;
 }
 
-CreateElementResult HTMLEditor::InsertTableCellsWithTransaction(
+Result<CreateElementResult, nsresult>
+HTMLEditor::InsertTableCellsWithTransaction(
     const EditorDOMPoint& aPointToInsert, int32_t aNumberOfCellsToInsert) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
@@ -369,7 +370,7 @@ CreateElementResult HTMLEditor::InsertTableCellsWithTransaction(
 
   if (!HTMLEditUtils::IsTableRow(aPointToInsert.GetContainer())) {
     NS_WARNING("Tried to insert cell elements to non-<tr> element");
-    return CreateElementResult(NS_ERROR_FAILURE);
+    return Err(NS_ERROR_FAILURE);
   }
 
   AutoPlaceholderBatch treateAsOneTransaction(
@@ -381,7 +382,7 @@ CreateElementResult HTMLEditor::InsertTableCellsWithTransaction(
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertNode, nsIEditor::eNext, error);
   if (NS_WARN_IF(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return CreateElementResult(error.StealNSResult());
+    return Err(error.StealNSResult());
   }
   NS_WARNING_ASSERTION(
       !error.Failed(),
@@ -422,22 +423,25 @@ CreateElementResult HTMLEditor::InsertTableCellsWithTransaction(
             "HTMLEditor::CreateElementWithDefaults(nsGkAtoms::td) failed");
         return NS_ERROR_FAILURE;
       }
-      CreateElementResult insertNewCellResult = InsertNodeWithTransaction(
-          *newCell, referenceContent
-                        ? EditorDOMPoint(referenceContent)
-                        : EditorDOMPoint::AtEndOf(
-                              *aPointToInsert.ContainerAs<Element>()));
-      if (insertNewCellResult.isErr()) {
+      Result<CreateElementResult, nsresult> insertNewCellResult =
+          InsertNodeWithTransaction(
+              *newCell, referenceContent
+                            ? EditorDOMPoint(referenceContent)
+                            : EditorDOMPoint::AtEndOf(
+                                  *aPointToInsert.ContainerAs<Element>()));
+      if (MOZ_UNLIKELY(insertNewCellResult.isErr())) {
         NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
         return insertNewCellResult.unwrapErr();
       }
-      lastCellElement = insertNewCellResult.UnwrapNewNode();
+      CreateElementResult unwrappedInsertNewCellResult =
+          insertNewCellResult.unwrap();
+      lastCellElement = unwrappedInsertNewCellResult.UnwrapNewNode();
       if (!firstCellElement) {
         firstCellElement = lastCellElement;
       }
       // Because of dontChangeSelection, we've never allowed to transactions
       // to update selection here.
-      insertNewCellResult.IgnoreCaretPointSuggestion();
+      unwrappedInsertNewCellResult.IgnoreCaretPointSuggestion();
       if (!cellToPutCaret) {
         cellToPutCaret = std::move(newCell);  // This is first cell in the row.
       }
@@ -451,10 +455,10 @@ CreateElementResult HTMLEditor::InsertTableCellsWithTransaction(
   }();
   if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED ||
                    NS_WARN_IF(Destroyed()))) {
-    return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_FAILED(rv)) {
-    return CreateElementResult(rv);
+    return Err(rv);
   }
   MOZ_ASSERT(firstCellElement);
   MOZ_ASSERT(lastCellElement);
@@ -812,19 +816,22 @@ nsresult HTMLEditor::InsertTableColumnsWithTransaction(
       if (NS_WARN_IF(!pointToInsert.IsInContentNode())) {
         return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
       }
-      CreateElementResult insertCellElementsResult =
+      Result<CreateElementResult, nsresult> insertCellElementsResult =
           InsertTableCellsWithTransaction(pointToInsert,
                                           aNumberOfColumnsToInsert);
-      if (insertCellElementsResult.isErr()) {
+      if (MOZ_UNLIKELY(insertCellElementsResult.isErr())) {
         NS_WARNING("HTMLEditor::InsertTableCellsWithTransaction() failed");
-        return Err(insertCellElementsResult.unwrapErr());
+        return insertCellElementsResult.propagateErr();
       }
+      CreateElementResult unwrappedInsertCellElementsResult =
+          insertCellElementsResult.unwrap();
       // We'll update selection later into the first inserted cell element in
       // the current row.
-      insertCellElementsResult.IgnoreCaretPointSuggestion();
+      unwrappedInsertCellElementsResult.IgnoreCaretPointSuggestion();
       if (pointToInsert.ContainerAs<Element>() ==
           aPointToInsert.ContainerAs<Element>()) {
-        cellElementToPutCaret = insertCellElementsResult.UnwrapNewNode();
+        cellElementToPutCaret =
+            unwrappedInsertCellElementsResult.UnwrapNewNode();
         MOZ_ASSERT(cellElementToPutCaret);
         MOZ_ASSERT(HTMLEditUtils::IsTableCell(cellElementToPutCaret));
       }
@@ -1147,15 +1154,19 @@ nsresult HTMLEditor::InsertTableRowsWithTransaction(
       }
 
       AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
-      CreateElementResult insertNewRowResult =
+      Result<CreateElementResult, nsresult> insertNewRowResult =
           InsertNodeWithTransaction<Element>(*newRowElement, pointToInsert);
-      if (insertNewRowResult.isErr() && !insertNewRowResult.EditorDestroyed()) {
-        NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-        return Err(insertNewRowResult.unwrapErr());
+      if (MOZ_UNLIKELY(insertNewRowResult.isErr())) {
+        if (insertNewRowResult.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
+          NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
+          return insertNewRowResult.propagateErr();
+        }
+        NS_WARNING(
+            "EditorBase::InsertNodeWithTransaction() failed, but ignored");
       }
       firstInsertedTRElement = std::move(newRowElement);
       // We'll update selection later.
-      insertNewRowResult.IgnoreCaretPointSuggestion();
+      insertNewRowResult.inspect().IgnoreCaretPointSuggestion();
     }
     return firstInsertedTRElement;
   }();
@@ -2909,21 +2920,21 @@ NS_IMETHODIMP HTMLEditor::SwitchTableCellHeaderType(Element* aSourceCell,
 
   // This creates new node, moves children, copies attributes (true)
   //   and manages the selection!
-  CreateElementResult newCellElementOrError =
+  Result<CreateElementResult, nsresult> newCellElementOrError =
       ReplaceContainerAndCloneAttributesWithTransaction(
           *aSourceCell, MOZ_KnownLive(*newCellName));
-  if (newCellElementOrError.isErr()) {
+  if (MOZ_UNLIKELY(newCellElementOrError.isErr())) {
     NS_WARNING(
         "EditorBase::ReplaceContainerAndCloneAttributesWithTransaction() "
         "failed");
     return newCellElementOrError.unwrapErr();
   }
   // restoreSelectionLater will change selection
-  newCellElementOrError.IgnoreCaretPointSuggestion();
+  newCellElementOrError.inspect().IgnoreCaretPointSuggestion();
 
   // Return the new cell
   if (aNewCell) {
-    newCellElementOrError.UnwrapNewNode().forget(aNewCell);
+    newCellElementOrError.unwrap().UnwrapNewNode().forget(aNewCell);
   }
 
   return NS_OK;
@@ -3384,13 +3395,16 @@ nsresult HTMLEditor::MergeCells(RefPtr<Element> aTargetCell,
         NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
         return rv;
       }
-      CreateContentResult insertChildContentResult = InsertNodeWithTransaction(
-          *cellChild, EditorDOMPoint(aTargetCell, insertIndex));
-      if (insertChildContentResult.isErr()) {
+      Result<CreateContentResult, nsresult> insertChildContentResult =
+          InsertNodeWithTransaction(*cellChild,
+                                    EditorDOMPoint(aTargetCell, insertIndex));
+      if (MOZ_UNLIKELY(insertChildContentResult.isErr())) {
         NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
         return insertChildContentResult.unwrapErr();
       }
-      insertChildContentResult.MoveCaretPointTo(
+      CreateContentResult unwrappedInsertChildContentResult =
+          insertChildContentResult.unwrap();
+      unwrappedInsertChildContentResult.MoveCaretPointTo(
           pointToPutCaret, *this,
           {SuggestCaret::OnlyIfHasSuggestion,
            SuggestCaret::OnlyIfTransactionsAllowedToDoIt});

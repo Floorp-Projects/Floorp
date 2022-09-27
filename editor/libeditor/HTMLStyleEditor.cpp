@@ -801,18 +801,20 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
         !aContent.AsElement()->GetAttrCount()) {
       spanElement = aContent.AsElement();
     } else {
-      CreateElementResult wrapWithSpanElementResult =
+      Result<CreateElementResult, nsresult> wrapInSpanElementResult =
           InsertContainerWithTransaction(aContent, *nsGkAtoms::span);
-      if (wrapWithSpanElementResult.isErr()) {
+      if (MOZ_UNLIKELY(wrapInSpanElementResult.isErr())) {
         NS_WARNING(
             "HTMLEditor::InsertContainerWithTransaction(nsGkAtoms::span) "
             "failed");
-        return Err(wrapWithSpanElementResult.unwrapErr());
+        return wrapInSpanElementResult.propagateErr();
       }
-      MOZ_ASSERT(wrapWithSpanElementResult.GetNewNode());
-      wrapWithSpanElementResult.MoveCaretPointTo(
+      CreateElementResult unwrappedWrapInSpanElementResult =
+          wrapInSpanElementResult.unwrap();
+      MOZ_ASSERT(unwrappedWrapInSpanElementResult.GetNewNode());
+      unwrappedWrapInSpanElementResult.MoveCaretPointTo(
           pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
-      spanElement = wrapWithSpanElementResult.UnwrapNewNode();
+      spanElement = unwrappedWrapInSpanElementResult.UnwrapNewNode();
     }
 
     // Add the CSS styles corresponding to the HTML style request
@@ -858,16 +860,16 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
   }
 
   // ok, chuck it in its very own container
-  CreateElementResult wrapWithNewElementToFormatResult =
+  Result<CreateElementResult, nsresult> wrapWithNewElementToFormatResult =
       InsertContainerWithTransaction(
           aContent, aProperty, aAttribute ? *aAttribute : *nsGkAtoms::_empty,
           aValue);
-  if (wrapWithNewElementToFormatResult.isErr()) {
+  if (MOZ_UNLIKELY(wrapWithNewElementToFormatResult.isErr())) {
     NS_WARNING("HTMLEditor::InsertContainerWithTransaction() failed");
-    return Err(wrapWithNewElementToFormatResult.unwrapErr());
+    return wrapWithNewElementToFormatResult.propagateErr();
   }
-  MOZ_ASSERT(wrapWithNewElementToFormatResult.GetNewNode());
-  return wrapWithNewElementToFormatResult.UnwrapCaretPoint();
+  MOZ_ASSERT(wrapWithNewElementToFormatResult.inspect().GetNewNode());
+  return wrapWithNewElementToFormatResult.unwrap().UnwrapCaretPoint();
 }
 
 Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNode(
@@ -1446,19 +1448,21 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveStyleInside(
            aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::_class))) {
         // Move `style` attribute and `class` element to span element before
         // removing aElement from the tree.
-        CreateElementResult wrapWithSpanElementResult =
+        Result<CreateElementResult, nsresult> wrapInSpanElementResult =
             InsertContainerWithTransaction(aElement, *nsGkAtoms::span);
-        if (wrapWithSpanElementResult.isErr()) {
+        if (wrapInSpanElementResult.isErr()) {
           NS_WARNING(
               "HTMLEditor::InsertContainerWithTransaction(nsGkAtoms::span) "
               "failed");
-          return Err(wrapWithSpanElementResult.unwrapErr());
+          return wrapInSpanElementResult.propagateErr();
         }
-        MOZ_ASSERT(wrapWithSpanElementResult.GetNewNode());
-        wrapWithSpanElementResult.MoveCaretPointTo(
+        CreateElementResult unwrappedWrapInSpanElementResult =
+            wrapInSpanElementResult.unwrap();
+        MOZ_ASSERT(unwrappedWrapInSpanElementResult.GetNewNode());
+        unwrappedWrapInSpanElementResult.MoveCaretPointTo(
             pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
         const RefPtr<Element> spanElement =
-            wrapWithSpanElementResult.UnwrapNewNode();
+            unwrappedWrapInSpanElementResult.UnwrapNewNode();
         nsresult rv = CloneAttributeWithTransaction(*nsGkAtoms::style,
                                                     *spanElement, aElement);
         if (NS_WARN_IF(Destroyed())) {
@@ -2693,18 +2697,18 @@ nsresult HTMLEditor::IncrementOrDecrementFontSizeAsSubAction(
     }
 
     if (range.InSameContainer() && range.StartRef().IsInTextNode()) {
-      CreateElementResult wrapWithBigOrSmallElementResult =
+      Result<CreateElementResult, nsresult> wrapInBigOrSmallElementResult =
           SetFontSizeOnTextNode(
               MOZ_KnownLive(*range.StartRef().ContainerAs<Text>()),
               range.StartRef().Offset(), range.EndRef().Offset(),
               aIncrementOrDecrement);
-      if (wrapWithBigOrSmallElementResult.isErr()) {
+      if (MOZ_UNLIKELY(wrapInBigOrSmallElementResult.isErr())) {
         NS_WARNING("HTMLEditor::SetFontSizeOnTextNode() failed");
-        return wrapWithBigOrSmallElementResult.unwrapErr();
+        return wrapInBigOrSmallElementResult.unwrapErr();
       }
       // There is an AutoTransactionsConserveSelection instance so that we don't
       // need to update selection for this change.
-      wrapWithBigOrSmallElementResult.IgnoreCaretPointSuggestion();
+      wrapInBigOrSmallElementResult.inspect().IgnoreCaretPointSuggestion();
       continue;
     }
 
@@ -2757,34 +2761,34 @@ nsresult HTMLEditor::IncrementOrDecrementFontSizeAsSubAction(
         !range.StartRef().IsEndOfContainer() &&
         EditorUtils::IsEditableContent(*range.StartRef().ContainerAs<Text>(),
                                        EditorType::HTML)) {
-      CreateElementResult wrapWithBigOrSmallElementResult =
+      Result<CreateElementResult, nsresult> wrapInBigOrSmallElementResult =
           SetFontSizeOnTextNode(
               MOZ_KnownLive(*range.StartRef().ContainerAs<Text>()),
               range.StartRef().Offset(),
               range.StartRef().ContainerAs<Text>()->TextDataLength(),
               aIncrementOrDecrement);
-      if (wrapWithBigOrSmallElementResult.isErr()) {
+      if (MOZ_UNLIKELY(wrapInBigOrSmallElementResult.isErr())) {
         NS_WARNING("HTMLEditor::SetFontSizeOnTextNode() failed");
-        return wrapWithBigOrSmallElementResult.unwrapErr();
+        return wrapInBigOrSmallElementResult.unwrapErr();
       }
       // There is an AutoTransactionsConserveSelection instance so that we
       // don't need to update selection for this change.
-      wrapWithBigOrSmallElementResult.IgnoreCaretPointSuggestion();
+      wrapInBigOrSmallElementResult.inspect().IgnoreCaretPointSuggestion();
     }
     if (range.EndRef().IsInTextNode() && !range.EndRef().IsStartOfContainer() &&
         EditorUtils::IsEditableContent(*range.EndRef().ContainerAs<Text>(),
                                        EditorType::HTML)) {
-      CreateElementResult wrapWithBigOrSmallElementResult =
+      Result<CreateElementResult, nsresult> wrapInBigOrSmallElementResult =
           SetFontSizeOnTextNode(
               MOZ_KnownLive(*range.EndRef().ContainerAs<Text>()), 0u,
               range.EndRef().Offset(), aIncrementOrDecrement);
-      if (wrapWithBigOrSmallElementResult.isErr()) {
+      if (MOZ_UNLIKELY(wrapInBigOrSmallElementResult.isErr())) {
         NS_WARNING("HTMLEditor::SetFontSizeOnTextNode() failed");
-        return wrapWithBigOrSmallElementResult.unwrapErr();
+        return wrapInBigOrSmallElementResult.unwrapErr();
       }
       // There is an AutoTransactionsConserveSelection instance so that we
       // don't need to update selection for this change.
-      wrapWithBigOrSmallElementResult.IgnoreCaretPointSuggestion();
+      wrapInBigOrSmallElementResult.inspect().IgnoreCaretPointSuggestion();
     }
   }
 
@@ -2798,7 +2802,7 @@ nsresult HTMLEditor::IncrementOrDecrementFontSizeAsSubAction(
   return rv;
 }
 
-CreateElementResult HTMLEditor::SetFontSizeOnTextNode(
+Result<CreateElementResult, nsresult> HTMLEditor::SetFontSizeOnTextNode(
     Text& aTextNode, uint32_t aStartOffset, uint32_t aEndOffset,
     FontSize aIncrementOrDecrement) {
   // Don't need to do anything if no characters actually selected
@@ -2878,7 +2882,7 @@ CreateElementResult HTMLEditor::SetFontSizeOnTextNode(
     }();
     if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
       // Don't warn here since it should be done in the lambda.
-      return CreateElementResult(pointToPutCaretOrError.unwrapErr());
+      return pointToPutCaretOrError.propagateErr();
     }
     pointToPutCaret = pointToPutCaretOrError.unwrap();
   }
@@ -2895,7 +2899,7 @@ CreateElementResult HTMLEditor::SetFontSizeOnTextNode(
         MoveNodeToEndWithTransaction(*textNodeForTheRange, *sibling);
     if (MOZ_UNLIKELY(moveTextNodeResult.isErr())) {
       NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
-      return CreateElementResult(moveTextNodeResult.unwrapErr());
+      return moveTextNodeResult.propagateErr();
     }
     MoveNodeResult unwrappedMoveTextNodeResult = moveTextNodeResult.unwrap();
     unwrappedMoveTextNodeResult.MoveCaretPointTo(
@@ -2912,7 +2916,7 @@ CreateElementResult HTMLEditor::SetFontSizeOnTextNode(
                                 EditorDOMPoint(sibling, 0u));
     if (MOZ_UNLIKELY(moveTextNodeResult.isErr())) {
       NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
-      return CreateElementResult(moveTextNodeResult.unwrapErr());
+      return moveTextNodeResult.propagateErr();
     }
     MoveNodeResult unwrappedMoveTextNodeResult = moveTextNodeResult.unwrap();
     unwrappedMoveTextNodeResult.MoveCaretPointTo(
@@ -2922,17 +2926,19 @@ CreateElementResult HTMLEditor::SetFontSizeOnTextNode(
   }
 
   // Else wrap the node inside font node with appropriate relative size
-  CreateElementResult wrapTextWithBigOrSmallElementResult =
+  Result<CreateElementResult, nsresult> wrapTextInBigOrSmallElementResult =
       InsertContainerWithTransaction(*textNodeForTheRange,
                                      MOZ_KnownLive(*bigOrSmallTagName));
-  if (wrapTextWithBigOrSmallElementResult.isErr()) {
+  if (wrapTextInBigOrSmallElementResult.isErr()) {
     NS_WARNING("HTMLEditor::InsertContainerWithTransaction() failed");
-    return wrapTextWithBigOrSmallElementResult;
+    return wrapTextInBigOrSmallElementResult;
   }
-  wrapTextWithBigOrSmallElementResult.MoveCaretPointTo(
+  CreateElementResult unwrappedWrapTextInBigOrSmallElementResult =
+      wrapTextInBigOrSmallElementResult.unwrap();
+  unwrappedWrapTextInBigOrSmallElementResult.MoveCaretPointTo(
       pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
   return CreateElementResult(
-      wrapTextWithBigOrSmallElementResult.UnwrapNewNode(),
+      unwrappedWrapTextInBigOrSmallElementResult.UnwrapNewNode(),
       std::move(pointToPutCaret));
 }
 
@@ -3066,15 +3072,17 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetFontSizeWithBigOrSmallElement(
     }
 
     // Otherwise, wrap aContent in new <big> or <small>
-    CreateElementResult wrapInBigOrSmallElementResult =
+    Result<CreateElementResult, nsresult> wrapInBigOrSmallElementResult =
         InsertContainerWithTransaction(aContent,
                                        MOZ_KnownLive(*bigOrSmallTagName));
-    if (wrapInBigOrSmallElementResult.isErr()) {
+    if (MOZ_UNLIKELY(wrapInBigOrSmallElementResult.isErr())) {
       NS_WARNING("HTMLEditor::InsertContainerWithTransaction() failed");
       return Err(wrapInBigOrSmallElementResult.unwrapErr());
     }
-    MOZ_ASSERT(wrapInBigOrSmallElementResult.GetNewNode());
-    wrapInBigOrSmallElementResult.MoveCaretPointTo(
+    CreateElementResult unwrappedWrapInBigOrSmallElementResult =
+        wrapInBigOrSmallElementResult.unwrap();
+    MOZ_ASSERT(unwrappedWrapInBigOrSmallElementResult.GetNewNode());
+    unwrappedWrapInBigOrSmallElementResult.MoveCaretPointTo(
         pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
     return pointToPutCaret;
   }
