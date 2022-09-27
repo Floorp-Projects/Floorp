@@ -147,6 +147,9 @@ _OPT\.OBJ/
 
 # Rust/Cargo output from running `cargo` directly
 ^target/
+^servo/ports/geckolib/target/
+^dom/base/rust/target/
+^servo/components/style/target/
 
 # Ignore mozharness execution files
 ^testing/mozharness/.tox/

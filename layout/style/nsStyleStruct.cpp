@@ -2965,8 +2965,8 @@ nsStyleText::nsStyleText(const Document& aDocument)
   RefPtr<nsAtom> language = aDocument.GetContentLanguageAsAtomForStyle();
   mTextEmphasisPosition =
       language && nsStyleUtil::MatchesLanguagePrefix(language, u"zh")
-          ? NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT_ZH
-          : NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT;
+          ? StyleTextEmphasisPosition::DEFAULT_ZH
+          : StyleTextEmphasisPosition::DEFAULT;
 }
 
 nsStyleText::nsStyleText(const nsStyleText& aSource)
@@ -3092,17 +3092,16 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
 }
 
 LogicalSide nsStyleText::TextEmphasisSide(WritingMode aWM) const {
-  MOZ_ASSERT(
-      (!(mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_LEFT) !=
-       !(mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_RIGHT)) &&
-      (!(mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_OVER) !=
-       !(mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_UNDER)));
+  MOZ_ASSERT((!(mTextEmphasisPosition & StyleTextEmphasisPosition::LEFT) !=
+              !(mTextEmphasisPosition & StyleTextEmphasisPosition::RIGHT)) &&
+             (!(mTextEmphasisPosition & StyleTextEmphasisPosition::OVER) !=
+              !(mTextEmphasisPosition & StyleTextEmphasisPosition::UNDER)));
   mozilla::Side side =
       aWM.IsVertical()
-          ? (mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_LEFT
+          ? (mTextEmphasisPosition & StyleTextEmphasisPosition::LEFT
                  ? eSideLeft
                  : eSideRight)
-          : (mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_OVER
+          : (mTextEmphasisPosition & StyleTextEmphasisPosition::OVER
                  ? eSideTop
                  : eSideBottom);
   LogicalSide result = aWM.LogicalSideForPhysicalSide(side);
