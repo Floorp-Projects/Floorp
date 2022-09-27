@@ -101,7 +101,6 @@ class ContextMenusTest {
 
         searchScreen {
         }.loadPage(tab1Page.url) {
-            verifyPageContent("Tab 1")
             longPressLink("Tab 2")
             verifyLinkContextMenu(tab2Page.url)
             clickContextMenuCopyLink()
@@ -122,7 +121,6 @@ class ContextMenusTest {
 
         searchScreen {
         }.loadPage(tab1Page.url) {
-            verifyPageContent("Tab 1")
             longPressLink("Tab 2")
             verifyLinkContextMenu(tab2Page.url)
             clickShareLink()

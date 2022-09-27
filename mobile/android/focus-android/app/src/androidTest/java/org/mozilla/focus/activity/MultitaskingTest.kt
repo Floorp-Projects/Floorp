@@ -78,7 +78,6 @@ class MultitaskingTest {
         // Load website: Erase button visible, Tabs button not
         searchScreen {
         }.loadPage(tab1.url) {
-            verifyPageContent("Tab 1")
             longPressLink("Tab 2")
             verifyLinkContextMenu(tab2.url)
             openLinkInNewTab()
@@ -136,7 +135,6 @@ class MultitaskingTest {
 
         searchScreen {
         }.loadPage(tab1.url) {
-            verifyPageContent("Tab 1")
             longPressLink("Tab 2")
             openLinkInNewTab()
         }.openTabsTray {

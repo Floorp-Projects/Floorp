@@ -16,6 +16,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiObjectNotFoundException
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers.not
@@ -112,9 +113,27 @@ class BrowserRobot {
         eraseBrowsingButton.check(matches(isDisplayed()))
 
     fun longPressLink(linkText: String) {
-        val link = mDevice.findObject(UiSelector().text(linkText))
-        link.waitForExists(waitingTime)
-        link.longClick()
+        for (i in 1..RETRY_COUNT) {
+            try {
+                mDevice.findObject(UiSelector().text(linkText))
+                    .also {
+                        it.waitForExists(waitingTime)
+                        it.longClick()
+                    }
+
+                break
+            } catch (e: UiObjectNotFoundException) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    browserScreen {
+                    }.openMainMenu {
+                    }.clickReloadButton {
+                    }
+                    progressBar.waitUntilGone(waitingTime)
+                }
+            }
+        }
     }
 
     fun openLinkInNewTab() {
