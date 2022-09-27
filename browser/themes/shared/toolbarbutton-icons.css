@@ -503,6 +503,7 @@ toolbarbutton.bookmark-item {
 
 #sidebar-select-box {
   -moz-box-ordinal-group: 0 !important;
+  scrollbar-width: thin;
 }
 
 .sidepanel-icon {
