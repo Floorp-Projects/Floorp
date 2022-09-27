@@ -21,7 +21,6 @@
 #endif
 
 DECL_CLASS(nsISupports);
-DECL_CLASS(nsIModule);
 DECL_CLASS(nsIComponentManager);
 DECL_CLASS(nsIComponentRegistrar);
 DECL_CLASS(nsIServiceManager);

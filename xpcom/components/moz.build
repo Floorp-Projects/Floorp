@@ -10,7 +10,6 @@ XPIDL_SOURCES += [
     "nsIComponentManager.idl",
     "nsIComponentRegistrar.idl",
     "nsIFactory.idl",
-    "nsIModule.idl",
     "nsIServiceManager.idl",
 ]
 
