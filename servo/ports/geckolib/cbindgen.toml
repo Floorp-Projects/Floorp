@@ -207,6 +207,7 @@ include = [
   "SVGPaintKind",
   "GridTemplateComponent",
   "TextEmphasisStyle",
+  "TextEmphasisPosition",
   "VariantAlternatesList",
   "PaintOrder",
   "SVGPaintOrder",
