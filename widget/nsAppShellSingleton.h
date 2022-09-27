@@ -8,7 +8,7 @@
 
 /**
  * This file is designed to be included into the file that provides the
- * nsIModule implementation for a particular widget toolkit.
+ * XPCOM module implementation for a particular widget toolkit.
  *
  * The following functions are defined:
  *   nsAppShellInit

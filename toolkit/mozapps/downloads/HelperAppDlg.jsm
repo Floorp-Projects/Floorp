@@ -110,9 +110,6 @@ nsUnknownContentTypeDialogProgressListener.prototype = {
  * comprised of:
  *   - a JS constructor function
  *   - a prototype providing all the interface methods and implementation stuff
- *
- * In addition, this file implements an nsIModule object that registers the
- * nsUnknownContentTypeDialog component.
  */
 
 const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
