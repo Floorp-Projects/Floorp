@@ -5322,22 +5322,23 @@ Result<MoveNodeResult, nsresult> HTMLEditor::MoveNodeOrChildrenWithTransaction(
         NS_WARNING_ASSERTION(!error.Failed(),
                              "Element::SetAttr(nsGkAtoms::span) failed");
         if (MOZ_LIKELY(!error.Failed())) {
-          CreateElementResult insertSpanElementResult =
+          Result<CreateElementResult, nsresult> insertSpanElementResult =
               InsertNodeWithTransaction<Element>(*newSpanElement,
                                                  aPointToInsert);
-          if (NS_WARN_IF(insertSpanElementResult.EditorDestroyed())) {
-            return Err(NS_ERROR_EDITOR_DESTROYED);
-          }
-          NS_WARNING_ASSERTION(
-              insertSpanElementResult.isOk(),
-              "HTMLEditor::InsertNodeWithTransaction() failed, but ignored");
-          if (MOZ_LIKELY(insertSpanElementResult.isOk())) {
+          if (MOZ_UNLIKELY(insertSpanElementResult.isErr())) {
+            if (NS_WARN_IF(insertSpanElementResult.inspectErr() ==
+                           NS_ERROR_EDITOR_DESTROYED)) {
+              return Err(NS_ERROR_EDITOR_DESTROYED);
+            }
+            NS_WARNING(
+                "HTMLEditor::InsertNodeWithTransaction() failed, but ignored");
+          } else {
             // We should move the node into the new <span> to preserve the
             // style.
             pointToInsert.Set(newSpanElement, 0u);
             // We should put caret after aContentToMove after moving it so that
             // we do not need the suggested caret point here.
-            insertSpanElementResult.IgnoreCaretPointSuggestion();
+            insertSpanElementResult.inspect().IgnoreCaretPointSuggestion();
           }
         }
       }
@@ -5642,19 +5643,17 @@ nsresult HTMLEditor::DeleteMostAncestorMailCiteElementIfEmpty(
     return NS_OK;
   }
 
-  CreateElementResult insertBRElementResult =
+  Result<CreateElementResult, nsresult> insertBRElementResult =
       InsertBRElement(WithTransaction::Yes, atEmptyMailCiteElement);
-  if (insertBRElementResult.isErr()) {
+  if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
     NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
     return insertBRElementResult.unwrapErr();
   }
-  MOZ_ASSERT(insertBRElementResult.GetNewNode());
-  insertBRElementResult.IgnoreCaretPointSuggestion();
+  MOZ_ASSERT(insertBRElementResult.inspect().GetNewNode());
+  insertBRElementResult.inspect().IgnoreCaretPointSuggestion();
   nsresult rv = CollapseSelectionTo(
-      EditorRawDOMPoint(insertBRElementResult.GetNewNode()));
-  if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    NS_WARNING(
-        "EditorBase::CollapseSelectionTo() caused destroying the editor");
+      EditorRawDOMPoint(insertBRElementResult.inspect().GetNewNode()));
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(
@@ -5809,13 +5808,16 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
   if (HTMLEditUtils::IsAnyListElement(atParentOfEmptyListItem.GetContainer())) {
     return RefPtr<Element>();
   }
-  CreateElementResult insertBRElementResult = aHTMLEditor.InsertBRElement(
-      WithTransaction::Yes, atParentOfEmptyListItem);
-  if (insertBRElementResult.isErr()) {
+  Result<CreateElementResult, nsresult> insertBRElementResult =
+      aHTMLEditor.InsertBRElement(WithTransaction::Yes,
+                                  atParentOfEmptyListItem);
+  if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
     NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-    return Err(insertBRElementResult.unwrapErr());
+    return insertBRElementResult.propagateErr();
   }
-  nsresult rv = insertBRElementResult.SuggestCaretPointTo(
+  CreateElementResult unwrappedInsertBRElementResult =
+      insertBRElementResult.unwrap();
+  nsresult rv = unwrappedInsertBRElementResult.SuggestCaretPointTo(
       aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
                     SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
                     SuggestCaret::AndIgnoreTrivialError});
@@ -5823,8 +5825,8 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
     NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
     return Err(rv);
   }
-  MOZ_ASSERT(insertBRElementResult.GetNewNode());
-  return insertBRElementResult.UnwrapNewNode();
+  MOZ_ASSERT(unwrappedInsertBRElementResult.GetNewNode());
+  return unwrappedInsertBRElementResult.UnwrapNewNode();
 }
 
 Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::

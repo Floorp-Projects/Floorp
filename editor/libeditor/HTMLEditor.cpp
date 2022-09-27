@@ -138,15 +138,15 @@ void HTMLEditor::AutoSelectionRestorer::Abort() {
  * HTMLEditor
  *****************************************************************************/
 
-template CreateContentResult
+template Result<CreateContentResult, nsresult>
 HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
     nsIContent& aContentToInsert, const EditorDOMPoint& aPointToInsert,
     SplitAtEdges aSplitAtEdges);
-template CreateElementResult
+template Result<CreateElementResult, nsresult>
 HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
     Element& aContentToInsert, const EditorDOMPoint& aPointToInsert,
     SplitAtEdges aSplitAtEdges);
-template CreateTextResult
+template Result<CreateTextResult, nsresult>
 HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
     Text& aContentToInsert, const EditorDOMPoint& aPointToInsert,
     SplitAtEdges aSplitAtEdges);
@@ -495,40 +495,43 @@ NS_IMETHODIMP HTMLEditor::SetDocumentCharacterSet(
   }
 
   // Create a new meta charset tag
-  CreateElementResult createNewMetaElementResult = CreateAndInsertElement(
-      WithTransaction::Yes, *nsGkAtoms::meta,
-      EditorDOMPoint(primaryHeadElement, 0),
-      [&aCharacterSet](HTMLEditor&, Element& aMetaElement,
-                       const EditorDOMPoint&) {
-        DebugOnly<nsresult> rvIgnored = aMetaElement.SetAttr(
-            kNameSpaceID_None, nsGkAtoms::httpEquiv, u"Content-Type"_ns,
-            aMetaElement.IsInComposedDoc());
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rvIgnored),
-            nsPrintfCString(
-                "Element::SetAttr(nsGkAtoms::httpEquiv, \"Content-Type\", "
-                "%s) failed, but ignored",
-                aMetaElement.IsInComposedDoc() ? "true" : "false")
-                .get());
-        rvIgnored = aMetaElement.SetAttr(
-            kNameSpaceID_None, nsGkAtoms::content,
-            u"text/html;charset="_ns + NS_ConvertASCIItoUTF16(aCharacterSet),
-            aMetaElement.IsInComposedDoc());
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rvIgnored),
-            nsPrintfCString("Element::SetAttr(nsGkAtoms::content, "
-                            "\"text/html;charset=%s\", %s) failed, but ignored",
-                            nsPromiseFlatCString(aCharacterSet).get(),
-                            aMetaElement.IsInComposedDoc() ? "true" : "false")
-                .get());
-        return NS_OK;
-      });
+  Result<CreateElementResult, nsresult> createNewMetaElementResult =
+      CreateAndInsertElement(
+          WithTransaction::Yes, *nsGkAtoms::meta,
+          EditorDOMPoint(primaryHeadElement, 0),
+          [&aCharacterSet](HTMLEditor&, Element& aMetaElement,
+                           const EditorDOMPoint&) {
+            DebugOnly<nsresult> rvIgnored = aMetaElement.SetAttr(
+                kNameSpaceID_None, nsGkAtoms::httpEquiv, u"Content-Type"_ns,
+                aMetaElement.IsInComposedDoc());
+            NS_WARNING_ASSERTION(
+                NS_SUCCEEDED(rvIgnored),
+                nsPrintfCString(
+                    "Element::SetAttr(nsGkAtoms::httpEquiv, \"Content-Type\", "
+                    "%s) failed, but ignored",
+                    aMetaElement.IsInComposedDoc() ? "true" : "false")
+                    .get());
+            rvIgnored =
+                aMetaElement.SetAttr(kNameSpaceID_None, nsGkAtoms::content,
+                                     u"text/html;charset="_ns +
+                                         NS_ConvertASCIItoUTF16(aCharacterSet),
+                                     aMetaElement.IsInComposedDoc());
+            NS_WARNING_ASSERTION(
+                NS_SUCCEEDED(rvIgnored),
+                nsPrintfCString(
+                    "Element::SetAttr(nsGkAtoms::content, "
+                    "\"text/html;charset=%s\", %s) failed, but ignored",
+                    nsPromiseFlatCString(aCharacterSet).get(),
+                    aMetaElement.IsInComposedDoc() ? "true" : "false")
+                    .get());
+            return NS_OK;
+          });
   NS_WARNING_ASSERTION(createNewMetaElementResult.isOk(),
                        "HTMLEditor::CreateAndInsertElement(WithTransaction::"
                        "Yes, nsGkAtoms::meta) failed, but ignored");
   // Probably, we don't need to update selection in this case since we should
   // not put selection into <head> element.
-  createNewMetaElementResult.IgnoreCaretPointSuggestion();
+  createNewMetaElementResult.inspect().IgnoreCaretPointSuggestion();
   return NS_OK;
 }
 
@@ -1604,15 +1607,16 @@ nsresult HTMLEditor::ReplaceHeadContentsWithSourceWithTransaction(
 
   // Loop over the contents of the fragment and move into the document
   while (nsCOMPtr<nsIContent> child = documentFragment->GetFirstChild()) {
-    CreateContentResult insertChildContentResult = InsertNodeWithTransaction(
-        *child, EditorDOMPoint(primaryHeadElement, offsetOfNewNode++));
-    if (insertChildContentResult.isErr()) {
+    Result<CreateContentResult, nsresult> insertChildContentResult =
+        InsertNodeWithTransaction(
+            *child, EditorDOMPoint(primaryHeadElement, offsetOfNewNode++));
+    if (MOZ_UNLIKELY(insertChildContentResult.isErr())) {
       NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
       return insertChildContentResult.unwrapErr();
     }
     // We probably don't need to adjust selection here, although we've done it
     // unless AutoTransactionsConserveSelection is created in a caller.
-    insertChildContentResult.IgnoreCaretPointSuggestion();
+    insertChildContentResult.inspect().IgnoreCaretPointSuggestion();
   }
 
   return NS_OK;
@@ -1999,18 +2003,22 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
     return NS_ERROR_FAILURE;
   }
 
-  const CreateElementResult insertElementResult =
-      InsertNodeIntoProperAncestorWithTransaction<Element>(
-          *aElement, pointToInsert, SplitAtEdges::eAllowToCreateEmptyContainer);
-  if (insertElementResult.isErr()) {
-    NS_WARNING(
-        "HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(SplitAtEdges::"
-        "eAllowToCreateEmptyContainer) failed");
-    return EditorBase::ToGenericNSResult(insertElementResult.unwrapErr());
+  {
+    Result<CreateElementResult, nsresult> insertElementResult =
+        InsertNodeIntoProperAncestorWithTransaction<Element>(
+            *aElement, pointToInsert,
+            SplitAtEdges::eAllowToCreateEmptyContainer);
+    if (MOZ_UNLIKELY(insertElementResult.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::InsertNodeIntoProperAncestorWithTransaction("
+          "SplitAtEdges::"
+          "eAllowToCreateEmptyContainer) failed");
+      return EditorBase::ToGenericNSResult(insertElementResult.unwrapErr());
+    }
+    insertElementResult.inspect().IgnoreCaretPointSuggestion();
   }
   // Set caret after element, but check for special case
   //  of inserting table-related elements: set in first cell instead
-  insertElementResult.IgnoreCaretPointSuggestion();
   if (!SetCaretInTableCell(aElement)) {
     if (NS_WARN_IF(Destroyed())) {
       return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
@@ -2032,29 +2040,27 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
 
   const auto afterElement = EditorDOMPoint::After(*aElement);
   // Collapse selection to the new `<br>` element node after creating it.
-  const CreateElementResult insertBRElementResult =
+  Result<CreateElementResult, nsresult> insertBRElementResult =
       InsertBRElement(WithTransaction::Yes, afterElement, ePrevious);
-  if (insertBRElementResult.isErr()) {
+  if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
     NS_WARNING(
         "HTMLEditor::InsertBRElement(WithTransaction::Yes, ePrevious) failed");
     return EditorBase::ToGenericNSResult(insertBRElementResult.unwrapErr());
   }
-  rv = insertBRElementResult.SuggestCaretPointTo(*this, {});
+  rv = insertBRElementResult.inspect().SuggestCaretPointTo(*this, {});
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::CollapseSelectionTo() failed");
-  MOZ_ASSERT(insertBRElementResult.GetNewNode());
+  MOZ_ASSERT(insertBRElementResult.inspect().GetNewNode());
   return EditorBase::ToGenericNSResult(rv);
 }
 
 template <typename NodeType>
-CreateNodeResultBase<NodeType>
+Result<CreateNodeResultBase<NodeType>, nsresult>
 HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
     NodeType& aContentToInsert, const EditorDOMPoint& aPointToInsert,
     SplitAtEdges aSplitAtEdges) {
-  using ResultType = CreateNodeResultBase<NodeType>;
-
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
-    return ResultType(NS_ERROR_FAILURE);
+    return Err(NS_ERROR_FAILURE);
   }
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
@@ -2071,7 +2077,7 @@ HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
       NS_WARNING(
           "There was no proper container element to insert the content node in "
           "the document");
-      return ResultType(NS_ERROR_FAILURE);
+      return Err(NS_ERROR_FAILURE);
     }
 
     // Get the next point.
@@ -2084,7 +2090,7 @@ HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
       NS_WARNING(
           "There was no proper container element to insert the content node in "
           "the editing host");
-      return ResultType(NS_ERROR_FAILURE);
+      return Err(NS_ERROR_FAILURE);
     }
   }
 
@@ -2096,7 +2102,7 @@ HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
                                      aPointToInsert, aSplitAtEdges);
     if (splitNodeResult.isErr()) {
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
-      return ResultType(splitNodeResult.unwrapErr());
+      return Err(splitNodeResult.unwrapErr());
     }
     pointToInsert = splitNodeResult.AtSplitPoint<EditorDOMPoint>();
     MOZ_ASSERT(pointToInsert.IsSet());
@@ -2106,7 +2112,7 @@ HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
   }
 
   // Now we can insert the new node.
-  ResultType insertContentNodeResult =
+  Result<CreateNodeResultBase<NodeType>, nsresult> insertContentNodeResult =
       InsertNodeWithTransaction<NodeType>(aContentToInsert, pointToInsert);
   if (MOZ_LIKELY(insertContentNodeResult.isOk()) &&
       MOZ_UNLIKELY(NS_WARN_IF(!aContentToInsert.GetParentNode()) ||
@@ -2115,8 +2121,8 @@ HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
     NS_WARNING(
         "EditorBase::InsertNodeWithTransaction() succeeded, but the inserted "
         "node was moved or removed by the web app");
-    insertContentNodeResult.IgnoreCaretPointSuggestion();
-    return ResultType(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    insertContentNodeResult.inspect().IgnoreCaretPointSuggestion();
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
   NS_WARNING_ASSERTION(insertContentNodeResult.isOk(),
                        "EditorBase::InsertNodeWithTransaction() failed");
@@ -3170,7 +3176,7 @@ already_AddRefed<Element> HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
   return lastElementInRange.forget();
 }
 
-CreateElementResult HTMLEditor::CreateAndInsertElement(
+Result<CreateElementResult, nsresult> HTMLEditor::CreateAndInsertElement(
     WithTransaction aWithTransaction, nsAtom& aTagName,
     const EditorDOMPoint& aPointToInsert,
     const InitializeInsertingElement& aInitializer) {
@@ -3186,7 +3192,7 @@ CreateElementResult HTMLEditor::CreateAndInsertElement(
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eCreateNode, nsIEditor::eNext, ignoredError);
   if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
@@ -3200,16 +3206,17 @@ CreateElementResult HTMLEditor::CreateAndInsertElement(
   //       CreatElementTransaction since we can use InsertNodeTransaction
   //       instead.
 
-  CreateElementResult createNewElementResult = [&]() MOZ_CAN_RUN_SCRIPT {
+  auto createNewElementResult =
+      [&]() MOZ_CAN_RUN_SCRIPT -> Result<CreateElementResult, nsresult> {
     RefPtr<Element> newElement = CreateHTMLContent(&aTagName);
     if (MOZ_UNLIKELY(!newElement)) {
       NS_WARNING("EditorBase::CreateHTMLContent() failed");
-      return CreateElementResult(NS_ERROR_FAILURE);
+      return Err(NS_ERROR_FAILURE);
     }
     nsresult rv = MarkElementDirty(*newElement);
     if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
       NS_WARNING("EditorBase::MarkElementDirty() caused destroying the editor");
-      return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
+      return Err(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "EditorBase::MarkElementDirty() failed, but ignored");
@@ -3217,7 +3224,7 @@ CreateElementResult HTMLEditor::CreateAndInsertElement(
       rv = aInitializer(*this, *newElement, aPointToInsert);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "aInitializer failed");
       if (NS_WARN_IF(Destroyed())) {
-        return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
+        return Err(NS_ERROR_EDITOR_DESTROYED);
       }
     }
     RefPtr<InsertNodeTransaction> transaction =
@@ -3230,30 +3237,30 @@ CreateElementResult HTMLEditor::CreateAndInsertElement(
       NS_WARNING(
           "InsertNodeTransaction::DoTransaction() caused destroying the "
           "editor");
-      return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
+      return Err(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_FAILED(rv)) {
       NS_WARNING("InsertNodeTransaction::DoTransaction() failed");
-      return CreateElementResult(rv);
+      return Err(rv);
     }
     // Override the success code if new element was moved by the web apps.
     if (newElement &&
         newElement->GetParentNode() != aPointToInsert.GetContainer()) {
       NS_WARNING("The new element was not inserted into the expected node");
-      return CreateElementResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
     return CreateElementResult(
         std::move(newElement),
         transaction->SuggestPointToPutCaret<EditorDOMPoint>());
   }();
 
-  if (createNewElementResult.isErr()) {
+  if (MOZ_UNLIKELY(createNewElementResult.isErr())) {
     NS_WARNING("EditorBase::DoTransactionInternal() failed");
     // XXX Why do we do this even when DoTransaction() returned error?
     DebugOnly<nsresult> rvIgnored =
         RangeUpdaterRef().SelAdjCreateNode(aPointToInsert);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "Rangeupdater::SelAdjCreateNode() failed");
+                         "RangeUpdater::SelAdjCreateNode() failed");
     return createNewElementResult;
   }
 
@@ -3267,24 +3274,24 @@ CreateElementResult HTMLEditor::CreateAndInsertElement(
       RangeUpdaterRef().SelAdjCreateNode(EditorRawDOMPoint(
           aPointToInsert.GetContainer(), aPointToInsert.Offset()));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                       "Rangeupdater::SelAdjCreateNode() failed, but ignored");
-  if (createNewElementResult.GetNewNode()) {
+                       "RangeUpdater::SelAdjCreateNode() failed, but ignored");
+  if (MOZ_LIKELY(createNewElementResult.inspect().GetNewNode())) {
     TopLevelEditSubActionDataRef().DidCreateElement(
-        *this, *createNewElementResult.GetNewNode());
+        *this, *createNewElementResult.inspect().GetNewNode());
   }
 
   if (!StaticPrefs::editor_initialize_element_before_connect() &&
-      createNewElementResult.GetNewNode()) {
-    // MOZ_KnownLive(newElement) because it's grabbed by createNewElementResult.
-    nsresult rv =
-        aInitializer(*this, MOZ_KnownLive(*createNewElementResult.GetNewNode()),
-                     aPointToInsert);
+      MOZ_LIKELY(createNewElementResult.inspect().GetNewNode())) {
+    // MOZ_KnownLive because it's grabbed by createNewElementResult.
+    nsresult rv = aInitializer(
+        *this, MOZ_KnownLive(*createNewElementResult.inspect().GetNewNode()),
+        aPointToInsert);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "aInitializer failed");
     if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
-      return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
+      return Err(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_FAILED(rv)) {
-      return CreateElementResult(rv);
+      return Err(rv);
     }
   }
 
@@ -3856,7 +3863,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::PrepareToInsertBRElement(
   return atNextContent;
 }
 
-CreateElementResult HTMLEditor::InsertBRElement(
+Result<CreateElementResult, nsresult> HTMLEditor::InsertBRElement(
     WithTransaction aWithTransaction, const EditorDOMPoint& aPointToInsert,
     EDirection aSelect /* = eNone */) {
   MOZ_ASSERT(IsEditActionDataAvailable());
@@ -3868,22 +3875,26 @@ CreateElementResult HTMLEditor::InsertBRElement(
         nsPrintfCString("HTMLEditor::PrepareToInsertBRElement(%s) failed",
                         ToString(aWithTransaction).c_str())
             .get());
-    return CreateElementResult(maybePointToInsert.unwrapErr());
+    return maybePointToInsert.propagateErr();
   }
   MOZ_ASSERT(maybePointToInsert.inspect().IsSetAndValid());
 
-  CreateElementResult createNewBRElementResult = CreateAndInsertElement(
-      aWithTransaction, *nsGkAtoms::br, maybePointToInsert.inspect());
-  if (createNewBRElementResult.isErr()) {
+  Result<CreateElementResult, nsresult> createNewBRElementResult =
+      CreateAndInsertElement(aWithTransaction, *nsGkAtoms::br,
+                             maybePointToInsert.inspect());
+  if (MOZ_UNLIKELY(createNewBRElementResult.isErr())) {
     NS_WARNING(nsPrintfCString("HTMLEditor::CreateAndInsertElement(%s) failed",
                                ToString(aWithTransaction).c_str())
                    .get());
-    return CreateElementResult(createNewBRElementResult.unwrapErr());
+    return createNewBRElementResult.propagateErr();
   }
-  RefPtr<Element> newBRElement = createNewBRElementResult.UnwrapNewNode();
+  CreateElementResult unwrappedCreateNewBRElementResult =
+      createNewBRElementResult.unwrap();
+  RefPtr<Element> newBRElement =
+      unwrappedCreateNewBRElementResult.UnwrapNewNode();
   MOZ_ASSERT(newBRElement);
 
-  createNewBRElementResult.IgnoreCaretPointSuggestion();
+  unwrappedCreateNewBRElementResult.IgnoreCaretPointSuggestion();
   switch (aSelect) {
     case eNext: {
       const auto pointToPutCaret = EditorDOMPoint::After(
@@ -3901,17 +3912,19 @@ CreateElementResult HTMLEditor::InsertBRElement(
           "by itself");
       [[fallthrough]];
     case eNone:
-      return CreateElementResult(std::move(newBRElement),
-                                 createNewBRElementResult.UnwrapCaretPoint());
+      return CreateElementResult(
+          std::move(newBRElement),
+          unwrappedCreateNewBRElementResult.UnwrapCaretPoint());
   }
 }
 
-CreateElementResult HTMLEditor::InsertContainerWithTransactionInternal(
+Result<CreateElementResult, nsresult>
+HTMLEditor::InsertContainerWithTransactionInternal(
     nsIContent& aContentToBeWrapped, nsAtom& aWrapperTagName,
     nsAtom& aAttribute, const nsAString& aAttributeValue) {
   EditorDOMPoint pointToInsertNewContainer(&aContentToBeWrapped);
   if (NS_WARN_IF(!pointToInsertNewContainer.IsSet())) {
-    return CreateElementResult(NS_ERROR_FAILURE);
+    return Err(NS_ERROR_FAILURE);
   }
   // aContentToBeWrapped will be moved to the new container before inserting the
   // new container.  So, when we insert the container, the insertion point is
@@ -3924,7 +3937,7 @@ CreateElementResult HTMLEditor::InsertContainerWithTransactionInternal(
   // Create new container.
   RefPtr<Element> newContainer = CreateHTMLContent(&aWrapperTagName);
   if (NS_WARN_IF(!newContainer)) {
-    return CreateElementResult(NS_ERROR_FAILURE);
+    return Err(NS_ERROR_FAILURE);
   }
 
   // Set attribute if needed.
@@ -3932,11 +3945,11 @@ CreateElementResult HTMLEditor::InsertContainerWithTransactionInternal(
     nsresult rv = newContainer->SetAttr(kNameSpaceID_None, &aAttribute,
                                         aAttributeValue, true);
     if (NS_WARN_IF(Destroyed())) {
-      return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
+      return Err(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_FAILED(rv)) {
       NS_WARNING("Element::SetAttr() failed");
-      return CreateElementResult(rv);
+      return Err(rv);
     }
   }
 
@@ -3948,7 +3961,7 @@ CreateElementResult HTMLEditor::InsertContainerWithTransactionInternal(
   nsresult rv = DeleteNodeWithTransaction(aContentToBeWrapped);
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-    return CreateElementResult(rv);
+    return Err(rv);
   }
 
   {
@@ -3957,17 +3970,18 @@ CreateElementResult HTMLEditor::InsertContainerWithTransactionInternal(
     //       actions which may be caused by legacy mutation event listeners or
     //       chrome script.
     AutoTransactionsConserveSelection conserveSelection(*this);
-    CreateContentResult insertContentNodeResult = InsertNodeWithTransaction(
-        aContentToBeWrapped, EditorDOMPoint(newContainer, 0u));
-    if (insertContentNodeResult.isErr()) {
+    Result<CreateContentResult, nsresult> insertContentNodeResult =
+        InsertNodeWithTransaction(aContentToBeWrapped,
+                                  EditorDOMPoint(newContainer, 0u));
+    if (MOZ_UNLIKELY(insertContentNodeResult.isErr())) {
       NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-      return CreateElementResult(insertContentNodeResult.unwrapErr());
+      return insertContentNodeResult.propagateErr();
     }
-    insertContentNodeResult.IgnoreCaretPointSuggestion();
+    insertContentNodeResult.inspect().IgnoreCaretPointSuggestion();
   }
 
   // Put the new container where aNode was.
-  CreateElementResult insertNewContainerElementResult =
+  Result<CreateElementResult, nsresult> insertNewContainerElementResult =
       InsertNodeWithTransaction<Element>(*newContainer,
                                          pointToInsertNewContainer);
   NS_WARNING_ASSERTION(insertNewContainerElementResult.isOk(),
@@ -3975,19 +3989,20 @@ CreateElementResult HTMLEditor::InsertContainerWithTransactionInternal(
   return insertNewContainerElementResult;
 }
 
-CreateElementResult HTMLEditor::ReplaceContainerWithTransactionInternal(
+Result<CreateElementResult, nsresult>
+HTMLEditor::ReplaceContainerWithTransactionInternal(
     Element& aOldContainer, nsAtom& aTagName, nsAtom& aAttribute,
     const nsAString& aAttributeValue, bool aCloneAllAttributes) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(aOldContainer)) ||
       NS_WARN_IF(!HTMLEditUtils::IsSimplyEditableNode(aOldContainer))) {
-    return CreateElementResult(NS_ERROR_FAILURE);
+    return Err(NS_ERROR_FAILURE);
   }
 
   const RefPtr<Element> newContainer = CreateHTMLContent(&aTagName);
   if (NS_WARN_IF(!newContainer)) {
-    return CreateElementResult(NS_ERROR_FAILURE);
+    return Err(NS_ERROR_FAILURE);
   }
 
   // Set or clone attribute if needed.
@@ -3999,7 +4014,7 @@ CreateElementResult HTMLEditor::ReplaceContainerWithTransactionInternal(
                                         aAttributeValue, true);
     if (NS_FAILED(rv)) {
       NS_WARNING("Element::SetAttr() failed");
-      return CreateElementResult(NS_ERROR_FAILURE);
+      return Err(NS_ERROR_FAILURE);
     }
   }
 
@@ -4028,7 +4043,7 @@ CreateElementResult HTMLEditor::ReplaceContainerWithTransactionInternal(
                                   EditorDOMPoint(newContainer, 0u));
       if (MOZ_UNLIKELY(moveChildResult.isErr())) {
         NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
-        return CreateElementResult(moveChildResult.unwrapErr());
+        return moveChildResult.propagateErr();
       }
       // We'll suggest new caret point which is suggested by new container
       // element insertion result.  Therefore, we need to do nothing here.
@@ -4041,7 +4056,7 @@ CreateElementResult HTMLEditor::ReplaceContainerWithTransactionInternal(
   nsresult rv = DeleteNodeWithTransaction(aOldContainer);
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-    return CreateElementResult(rv);
+    return Err(rv);
   }
 
   if (referenceNode && (!referenceNode->GetParentNode() ||
@@ -4049,18 +4064,19 @@ CreateElementResult HTMLEditor::ReplaceContainerWithTransactionInternal(
     NS_WARNING(
         "The reference node for insertion has been moved to different parent, "
         "so we got lost the insertion point");
-    return CreateElementResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
   // Finally, insert the new node to where probably aOldContainer was.
-  CreateElementResult insertNewContainerElementResult =
+  Result<CreateElementResult, nsresult> insertNewContainerElementResult =
       InsertNodeWithTransaction<Element>(
           *newContainer, referenceNode ? EditorDOMPoint(referenceNode)
                                        : EditorDOMPoint::AtEndOf(*parentNode));
   NS_WARNING_ASSERTION(insertNewContainerElementResult.isOk(),
                        "EditorBase::InsertNodeWithTransaction() failed");
-  MOZ_ASSERT_IF(insertNewContainerElementResult.isOk(),
-                insertNewContainerElementResult.GetNewNode() == newContainer);
+  MOZ_ASSERT_IF(
+      insertNewContainerElementResult.isOk(),
+      insertNewContainerElementResult.inspect().GetNewNode() == newContainer);
   return insertNewContainerElementResult;
 }
 
@@ -4547,16 +4563,19 @@ HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
           !previousSibling->IsHTMLElement(nsGkAtoms::br) &&
           !HTMLEditUtils::IsBlockElement(*child)) {
         // Insert br node
-        CreateElementResult insertBRElementResult = InsertBRElement(
-            WithTransaction::Yes, EditorDOMPoint(&aElement, 0u));
-        if (insertBRElementResult.isErr()) {
+        Result<CreateElementResult, nsresult> insertBRElementResult =
+            InsertBRElement(WithTransaction::Yes,
+                            EditorDOMPoint(&aElement, 0u));
+        if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
           NS_WARNING(
               "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-          return Err(insertBRElementResult.unwrapErr());
+          return insertBRElementResult.propagateErr();
         }
-        insertBRElementResult.MoveCaretPointTo(
+        CreateElementResult unwrappedInsertBRElementResult =
+            insertBRElementResult.unwrap();
+        unwrappedInsertBRElementResult.MoveCaretPointTo(
             pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
-        MOZ_ASSERT(insertBRElementResult.GetNewNode());
+        MOZ_ASSERT(unwrappedInsertBRElementResult.GetNewNode());
       }
     }
 
@@ -4573,16 +4592,19 @@ HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
                 aElement, {WalkTreeOption::IgnoreNonEditableNode})) {
           if (!HTMLEditUtils::IsBlockElement(*lastChild) &&
               !lastChild->IsHTMLElement(nsGkAtoms::br)) {
-            CreateElementResult insertBRElementResult = InsertBRElement(
-                WithTransaction::Yes, EditorDOMPoint::AtEndOf(aElement));
-            if (insertBRElementResult.isErr()) {
+            Result<CreateElementResult, nsresult> insertBRElementResult =
+                InsertBRElement(WithTransaction::Yes,
+                                EditorDOMPoint::AtEndOf(aElement));
+            if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
               NS_WARNING(
                   "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-              return Err(insertBRElementResult.unwrapErr());
+              return insertBRElementResult.propagateErr();
             }
-            insertBRElementResult.MoveCaretPointTo(
+            CreateElementResult unwrappedInsertBRElementResult =
+                insertBRElementResult.unwrap();
+            unwrappedInsertBRElementResult.MoveCaretPointTo(
                 pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
-            MOZ_ASSERT(insertBRElementResult.GetNewNode());
+            MOZ_ASSERT(unwrappedInsertBRElementResult.GetNewNode());
           }
         }
       }
@@ -4601,16 +4623,19 @@ HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
               aElement, {WalkTreeOption::IgnoreNonEditableNode})) {
         if (!HTMLEditUtils::IsBlockElement(*nextSibling) &&
             !nextSibling->IsHTMLElement(nsGkAtoms::br)) {
-          CreateElementResult insertBRElementResult = InsertBRElement(
-              WithTransaction::Yes, EditorDOMPoint(&aElement, 0u));
-          if (insertBRElementResult.isErr()) {
+          Result<CreateElementResult, nsresult> insertBRElementResult =
+              InsertBRElement(WithTransaction::Yes,
+                              EditorDOMPoint(&aElement, 0u));
+          if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
             NS_WARNING(
                 "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-            return Err(insertBRElementResult.unwrapErr());
+            return insertBRElementResult.propagateErr();
           }
-          insertBRElementResult.MoveCaretPointTo(
+          CreateElementResult unwrappedInsertBRElementResult =
+              insertBRElementResult.unwrap();
+          unwrappedInsertBRElementResult.MoveCaretPointTo(
               pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
-          MOZ_ASSERT(insertBRElementResult.GetNewNode());
+          MOZ_ASSERT(unwrappedInsertBRElementResult.GetNewNode());
         }
       }
     }
@@ -5410,24 +5435,25 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::DeleteSelectionAndCreateElement(
   if (!pointToInsert.IsSet()) {
     return Err(NS_ERROR_FAILURE);
   }
-  CreateElementResult createNewElementResult = CreateAndInsertElement(
-      WithTransaction::Yes, aTag, pointToInsert, aInitializer);
-  if (createNewElementResult.isErr()) {
+  Result<CreateElementResult, nsresult> createNewElementResult =
+      CreateAndInsertElement(WithTransaction::Yes, aTag, pointToInsert,
+                             aInitializer);
+  if (MOZ_UNLIKELY(createNewElementResult.isErr())) {
     NS_WARNING(
         "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
-    return Err(createNewElementResult.unwrapErr());
+    return createNewElementResult.propagateErr();
   }
-  MOZ_ASSERT(createNewElementResult.GetNewNode());
+  MOZ_ASSERT(createNewElementResult.inspect().GetNewNode());
 
   // We want the selection to be just after the new node
-  createNewElementResult.IgnoreCaretPointSuggestion();
+  createNewElementResult.inspect().IgnoreCaretPointSuggestion();
   rv = CollapseSelectionTo(
-      EditorRawDOMPoint::After(*createNewElementResult.GetNewNode()));
+      EditorRawDOMPoint::After(*createNewElementResult.inspect().GetNewNode()));
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::CollapseSelectionTo() failed");
     return Err(rv);
   }
-  return createNewElementResult.UnwrapNewNode();
+  return createNewElementResult.unwrap().UnwrapNewNode();
 }
 
 nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
@@ -6076,12 +6102,13 @@ HTMLEditor::CopyLastEditableChildStylesWithTransaction(
     // At first time, just create the most descendant inline container
     // element.
     if (!firstClonedElement) {
-      CreateElementResult createNewElementResult = CreateAndInsertElement(
-          WithTransaction::Yes, tagName, EditorDOMPoint(&aNewBlock, 0u),
-          // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
-          [&elementInPreviousBlock](HTMLEditor& aHTMLEditor,
-                                    Element& aNewElement, const EditorDOMPoint&)
-              MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+      Result<CreateElementResult, nsresult> createNewElementResult =
+          CreateAndInsertElement(
+              WithTransaction::Yes, tagName, EditorDOMPoint(&aNewBlock, 0u),
+              // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
+              [&elementInPreviousBlock](
+                  HTMLEditor& aHTMLEditor, Element& aNewElement,
+                  const EditorDOMPoint&) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
                 // Clone all attributes.  Note that despite the method name,
                 // CloneAttributesWithTransaction does not create
                 // transactions in this case because aNewElement has not
@@ -6091,32 +6118,36 @@ HTMLEditor::CopyLastEditableChildStylesWithTransaction(
                     aNewElement, *elementInPreviousBlock);
                 return NS_OK;
               });
-      if (createNewElementResult.isErr()) {
+      if (MOZ_UNLIKELY(createNewElementResult.isErr())) {
         NS_WARNING(
             "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
-        return Err(createNewElementResult.unwrapErr());
+        return createNewElementResult.propagateErr();
       }
+      CreateElementResult unwrappedCreateNewElementResult =
+          createNewElementResult.unwrap();
       // We'll return with a point suggesting new caret position and the
       // following path does not require an update of selection here.
       // Therefore, we don't need to update selection here.
-      createNewElementResult.IgnoreCaretPointSuggestion();
+      unwrappedCreateNewElementResult.IgnoreCaretPointSuggestion();
       firstClonedElement = lastClonedElement =
-          createNewElementResult.UnwrapNewNode();
+          unwrappedCreateNewElementResult.UnwrapNewNode();
       continue;
     }
     // Otherwise, inserts new parent inline container to the previous inserted
     // inline container.
-    CreateElementResult wrapClonedElementResult =
+    Result<CreateElementResult, nsresult> wrapClonedElementResult =
         InsertContainerWithTransaction(*lastClonedElement, tagName);
-    if (wrapClonedElementResult.isErr()) {
+    if (MOZ_UNLIKELY(wrapClonedElementResult.isErr())) {
       NS_WARNING("HTMLEditor::InsertContainerWithTransaction() failed");
-      return Err(wrapClonedElementResult.unwrapErr());
+      return wrapClonedElementResult.propagateErr();
     }
+    CreateElementResult unwrappedWrapClonedElementResult =
+        wrapClonedElementResult.unwrap();
     // We'll return with a point suggesting new caret so that we don't need to
     // update selection here.
-    wrapClonedElementResult.IgnoreCaretPointSuggestion();
-    MOZ_ASSERT(wrapClonedElementResult.GetNewNode());
-    lastClonedElement = wrapClonedElementResult.UnwrapNewNode();
+    unwrappedWrapClonedElementResult.IgnoreCaretPointSuggestion();
+    MOZ_ASSERT(unwrappedWrapClonedElementResult.GetNewNode());
+    lastClonedElement = unwrappedWrapClonedElementResult.UnwrapNewNode();
     CloneAttributesWithTransaction(*lastClonedElement, *elementInPreviousBlock);
     if (NS_WARN_IF(Destroyed())) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
@@ -6129,15 +6160,15 @@ HTMLEditor::CopyLastEditableChildStylesWithTransaction(
     return EditorDOMPoint(&aNewBlock, 0u);
   }
 
-  CreateElementResult insertBRElementResult = InsertBRElement(
+  Result<CreateElementResult, nsresult> insertBRElementResult = InsertBRElement(
       WithTransaction::Yes, EditorDOMPoint(firstClonedElement, 0u));
-  if (insertBRElementResult.isErr()) {
+  if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
     NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-    return Err(insertBRElementResult.unwrapErr());
+    return insertBRElementResult.propagateErr();
   }
-  insertBRElementResult.IgnoreCaretPointSuggestion();
-  MOZ_ASSERT(insertBRElementResult.GetNewNode());
-  return EditorDOMPoint(insertBRElementResult.GetNewNode());
+  insertBRElementResult.inspect().IgnoreCaretPointSuggestion();
+  MOZ_ASSERT(insertBRElementResult.inspect().GetNewNode());
+  return EditorDOMPoint(insertBRElementResult.inspect().GetNewNode());
 }
 
 nsresult HTMLEditor::GetElementOrigin(Element& aElement, int32_t& aX,

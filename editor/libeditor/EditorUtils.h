@@ -162,31 +162,12 @@ enum class SuggestCaret {
   AndIgnoreTrivialError,
 };
 
-// TODO: Perhaps, we can make this inherits mozilla::Result for guaranteeing
-//       same API.  Then, changing to/from Result<*, nsresult> can be easier.
-//       For now, we should give same API name rather than same as
-//       mozilla::ErrorResult.
 template <typename NodeType>
 class MOZ_STACK_CLASS CreateNodeResultBase final {
-  typedef CreateNodeResultBase<NodeType> SelfType;
+  using SelfType = CreateNodeResultBase<NodeType>;
 
  public:
-  // FYI: NS_SUCCEEDED and NS_FAILED contain MOZ_(UN)LIKELY so that isOk() and
-  // isErr() must not required to wrap with them.
-  bool isOk() const { return NS_SUCCEEDED(mRv); }
-  bool isErr() const { return NS_FAILED(mRv); }
-  bool Handled() const {
-    MOZ_ASSERT_IF(mRv == NS_SUCCESS_DOM_NO_OPERATION, !mNode);
-    return isOk() && mRv == NS_SUCCESS_DOM_NO_OPERATION;
-  }
-  constexpr nsresult inspectErr() const { return mRv; }
-  constexpr nsresult unwrapErr() const { return inspectErr(); }
-  constexpr bool EditorDestroyed() const {
-    return MOZ_UNLIKELY(mRv == NS_ERROR_EDITOR_DESTROYED);
-  }
-  constexpr bool GotUnexpectedDOMTree() const {
-    return MOZ_UNLIKELY(mRv == NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
-  }
+  bool Handled() const { return mNode; }
   NodeType* GetNewNode() const { return mNode; }
   RefPtr<NodeType> UnwrapNewNode() { return std::move(mNode); }
 
@@ -223,72 +204,56 @@ class MOZ_STACK_CLASS CreateNodeResultBase final {
                         const EditorBase& aEditorBase,
                         const SuggestCaretOptions& aOptions);
 
-  explicit CreateNodeResultBase(nsresult aRv) : mRv(aRv) {
-    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mRv));
-  }
-
-  explicit CreateNodeResultBase(NodeType* aNode)
-      : mNode(aNode), mRv(aNode ? NS_OK : NS_ERROR_FAILURE) {}
-  explicit CreateNodeResultBase(NodeType* aNode,
+  explicit CreateNodeResultBase(NodeType& aNode) : mNode(&aNode) {}
+  explicit CreateNodeResultBase(NodeType& aNode,
                                 const EditorDOMPoint& aCandidateCaretPoint)
-      : mNode(aNode),
-        mCaretPoint(aCandidateCaretPoint),
-        mRv(aNode ? NS_OK : NS_ERROR_FAILURE) {}
-  explicit CreateNodeResultBase(NodeType* aNode,
+      : mNode(&aNode), mCaretPoint(aCandidateCaretPoint) {}
+  explicit CreateNodeResultBase(NodeType& aNode,
                                 EditorDOMPoint&& aCandidateCaretPoint)
-      : mNode(aNode),
-        mCaretPoint(std::move(aCandidateCaretPoint)),
-        mRv(aNode ? NS_OK : NS_ERROR_FAILURE) {}
+      : mNode(&aNode), mCaretPoint(std::move(aCandidateCaretPoint)) {}
 
   explicit CreateNodeResultBase(RefPtr<NodeType>&& aNode)
-      : mNode(std::move(aNode)), mRv(mNode.get() ? NS_OK : NS_ERROR_FAILURE) {}
+      : mNode(std::move(aNode)) {}
   explicit CreateNodeResultBase(RefPtr<NodeType>&& aNode,
                                 const EditorDOMPoint& aCandidateCaretPoint)
-      : mNode(std::move(aNode)),
-        mCaretPoint(aCandidateCaretPoint),
-        mRv(mNode.get() ? NS_OK : NS_ERROR_FAILURE) {}
+      : mNode(std::move(aNode)), mCaretPoint(aCandidateCaretPoint) {
+    MOZ_ASSERT(mNode);
+  }
   explicit CreateNodeResultBase(RefPtr<NodeType>&& aNode,
                                 EditorDOMPoint&& aCandidateCaretPoint)
-      : mNode(std::move(aNode)),
-        mCaretPoint(std::move(aCandidateCaretPoint)),
-        mRv(mNode.get() ? NS_OK : NS_ERROR_FAILURE) {}
-
-  [[nodiscard]] static SelfType NotHandled() {
-    SelfType result;
-    result.mRv = NS_SUCCESS_DOM_NO_OPERATION;
-    return result;
+      : mNode(std::move(aNode)), mCaretPoint(std::move(aCandidateCaretPoint)) {
+    MOZ_ASSERT(mNode);
   }
+
+  [[nodiscard]] static SelfType NotHandled() { return SelfType(); }
   [[nodiscard]] static SelfType NotHandled(
       const EditorDOMPoint& aPointToPutCaret) {
     SelfType result;
-    result.mRv = NS_SUCCESS_DOM_NO_OPERATION;
     result.mCaretPoint = aPointToPutCaret;
     return result;
   }
   [[nodiscard]] static SelfType NotHandled(EditorDOMPoint&& aPointToPutCaret) {
     SelfType result;
-    result.mRv = NS_SUCCESS_DOM_NO_OPERATION;
     result.mCaretPoint = std::move(aPointToPutCaret);
     return result;
   }
 
 #ifdef DEBUG
   ~CreateNodeResultBase() {
-    MOZ_ASSERT_IF(isOk(), !mCaretPoint.IsSet() || mHandledCaretPoint);
+    MOZ_ASSERT(!mCaretPoint.IsSet() || mHandledCaretPoint);
   }
 #endif
 
   CreateNodeResultBase(const SelfType& aOther) = delete;
   SelfType& operator=(const SelfType& aOther) = delete;
-  CreateNodeResultBase(SelfType&& aOther) = default;
-  SelfType& operator=(SelfType&& aOther) = default;
+  CreateNodeResultBase(SelfType&& aOther) noexcept = default;
+  SelfType& operator=(SelfType&& aOther) noexcept = default;
 
  private:
   CreateNodeResultBase() = default;
 
   RefPtr<NodeType> mNode;
   EditorDOMPoint mCaretPoint;
-  nsresult mRv = NS_OK;
   bool mutable mHandledCaretPoint = false;
 };
 

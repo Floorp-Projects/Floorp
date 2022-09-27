@@ -698,19 +698,19 @@ nsresult HTMLEditor::SetPositionToAbsolute(Element& aElement) {
   if (parentNode->GetChildCount() != 1) {
     return NS_OK;
   }
-  CreateElementResult insertBRElementResult =
+  Result<CreateElementResult, nsresult> insertBRElementResult =
       InsertBRElement(WithTransaction::Yes, EditorDOMPoint(parentNode, 0u));
-  if (insertBRElementResult.isErr()) {
+  if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
     NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
     return insertBRElementResult.unwrapErr();
   }
   // XXX Is this intentional selection change?
-  nsresult rv = insertBRElementResult.SuggestCaretPointTo(
+  nsresult rv = insertBRElementResult.inspect().SuggestCaretPointTo(
       *this, {SuggestCaret::OnlyIfHasSuggestion,
               SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "CreateElementResult::SuggestCaretPointTo() failed");
-  MOZ_ASSERT(insertBRElementResult.GetNewNode());
+  MOZ_ASSERT(insertBRElementResult.inspect().GetNewNode());
   return rv;
 }
 
@@ -823,29 +823,33 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
   {
     // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
     // by the caller because of MOZ_CAN_RUN_SCRIPT method.
-    CreateElementResult maybeInsertBRElementBeforeFirstChildResult =
-        EnsureHardLineBeginsWithFirstChildOf(MOZ_KnownLive(*styledElement));
-    if (maybeInsertBRElementBeforeFirstChildResult.isErr()) {
+    Result<CreateElementResult, nsresult>
+        maybeInsertBRElementBeforeFirstChildResult =
+            EnsureHardLineBeginsWithFirstChildOf(MOZ_KnownLive(*styledElement));
+    if (MOZ_UNLIKELY(maybeInsertBRElementBeforeFirstChildResult.isErr())) {
       NS_WARNING("HTMLEditor::EnsureHardLineBeginsWithFirstChildOf() failed");
       return maybeInsertBRElementBeforeFirstChildResult.unwrapErr();
     }
-    if (maybeInsertBRElementBeforeFirstChildResult.HasCaretPointSuggestion()) {
-      pointToPutCaret =
-          maybeInsertBRElementBeforeFirstChildResult.UnwrapCaretPoint();
+    CreateElementResult unwrappedResult =
+        maybeInsertBRElementBeforeFirstChildResult.unwrap();
+    if (unwrappedResult.HasCaretPointSuggestion()) {
+      pointToPutCaret = unwrappedResult.UnwrapCaretPoint();
     }
   }
   {
     // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
     // by the caller because of MOZ_CAN_RUN_SCRIPT method.
-    CreateElementResult maybeInsertBRElementAfterLastChildResult =
-        EnsureHardLineEndsWithLastChildOf(MOZ_KnownLive(*styledElement));
-    if (maybeInsertBRElementAfterLastChildResult.isErr()) {
+    Result<CreateElementResult, nsresult>
+        maybeInsertBRElementAfterLastChildResult =
+            EnsureHardLineEndsWithLastChildOf(MOZ_KnownLive(*styledElement));
+    if (MOZ_UNLIKELY(maybeInsertBRElementAfterLastChildResult.isErr())) {
       NS_WARNING("HTMLEditor::EnsureHardLineEndsWithLastChildOf() failed");
       return maybeInsertBRElementAfterLastChildResult.unwrapErr();
     }
-    if (maybeInsertBRElementAfterLastChildResult.HasCaretPointSuggestion()) {
-      pointToPutCaret =
-          maybeInsertBRElementAfterLastChildResult.UnwrapCaretPoint();
+    CreateElementResult unwrappedResult =
+        maybeInsertBRElementAfterLastChildResult.unwrap();
+    if (unwrappedResult.HasCaretPointSuggestion()) {
+      pointToPutCaret = unwrappedResult.UnwrapCaretPoint();
     }
   }
   {
