@@ -1865,6 +1865,25 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1784873
         return false;
       }
+      if (!popup->WaylandPopupIsFirst() &&
+          !mWaylandPopupPrev->WaylandPopupIsFirst() &&
+          !mWaylandPopupPrev->mPopupUseMoveToRect) {
+        // We can't use move-to-rect if there are more parents of
+        // wl_subsurface popups types.
+        //
+        // It's because wl_subsurface is ignored by xgd_popup
+        // (created by move-to-rect) so our popup scenario:
+        //
+        // toplevel -> xgd_popup(1) -> wl_subsurface(2) -> xgd_popup(3)
+        //
+        // looks for Wayland compositor as:
+        //
+        // toplevel -> xgd_popup(1) -> xgd_popup(3)
+        //
+        // If xgd_popup(1) and xgd_popup(3) are not connected
+        // move-to-rect applied to xgd_popup(3) fails and we get missing popup.
+        return false;
+      }
       return true;
     }();
 
