@@ -646,6 +646,7 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
           static_cast<uint32_t>(spa_buffer->datas[i].chunk->offset)};
       plane_datas.push_back(data);
     }
+
     // When importing DMA-BUFs, we use the stride (number of bytes from one row
     // of pixels in the buffer) provided by PipeWire. The stride from PipeWire
     // is given by the graphics driver and some drivers might add some
