@@ -384,7 +384,8 @@ void DragDataProducer::CreateLinkText(const nsAString& inURL,
 
 nsresult DragDataProducer::GetImageData(imgIContainer* aImage,
                                         imgIRequest* aRequest) {
-  nsCOMPtr<nsIURI> imgUri = aRequest->GetURI();
+  nsCOMPtr<nsIURI> imgUri;
+  aRequest->GetURI(getter_AddRefs(imgUri));
 
   nsCOMPtr<nsIURL> imgUrl(do_QueryInterface(imgUri));
   if (imgUrl) {

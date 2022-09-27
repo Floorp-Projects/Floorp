@@ -149,20 +149,9 @@ void SVGImageFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
     return;
   }
 
-  nsCOMPtr<imgIRequest> currentRequest;
-  nsCOMPtr<nsIImageLoadingContent> imageLoader =
-      do_QueryInterface(GetContent());
-  if (imageLoader) {
-    imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
-                            getter_AddRefs(currentRequest));
-  }
+  auto newOrientation = StyleVisibility()->mImageOrientation;
 
-  StyleImageOrientation newOrientation =
-      StyleVisibility()->UsedImageOrientation(currentRequest);
-  StyleImageOrientation oldOrientation =
-      aOldStyle->StyleVisibility()->UsedImageOrientation(currentRequest);
-
-  if (oldOrientation != newOrientation) {
+  if (aOldStyle->StyleVisibility()->mImageOrientation != newOrientation) {
     nsCOMPtr<imgIContainer> image(mImageContainer->Unwrap());
     mImageContainer = nsLayoutUtils::OrientImage(image, newOrientation);
   }
@@ -863,9 +852,8 @@ void SVGImageListener::Notify(imgIRequest* aRequest, int32_t aType,
     nsCOMPtr<imgIContainer> image;
     aRequest->GetImage(getter_AddRefs(image));
     if (image) {
-      StyleImageOrientation orientation =
-          mFrame->StyleVisibility()->UsedImageOrientation(aRequest);
-      image = nsLayoutUtils::OrientImage(image, orientation);
+      image = nsLayoutUtils::OrientImage(
+          image, mFrame->StyleVisibility()->mImageOrientation);
       image->SetAnimationMode(mFrame->PresContext()->ImageAnimationMode());
       mFrame->mImageContainer = std::move(image);
     }
