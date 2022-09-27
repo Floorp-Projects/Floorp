@@ -404,6 +404,12 @@ nsresult MemoryTelemetry::FinishGatheringTotalMemory(
     int64_t aTotalMemory, const nsTArray<int64_t>& aChildSizes) {
   mGatheringTotalMemory = false;
 
+  // Total memory usage can be difficult to measure both accurately and fast
+  // enough for telemetry (iterating memory maps can jank whole processes on
+  // MacOS).  Therefore this shouldn't be relied on as an absolute measurement
+  // especially on MacOS where it double-counts shared memory.  For a more
+  // detailed explaination see:
+  // https://groups.google.com/a/mozilla.org/g/dev-platform/c/WGNOtjHdsdA
   HandleMemoryReport(Telemetry::MEMORY_TOTAL, nsIMemoryReporter::UNITS_BYTES,
                      aTotalMemory);
 
