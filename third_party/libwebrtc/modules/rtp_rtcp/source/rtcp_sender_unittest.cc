@@ -603,8 +603,6 @@ TEST_F(RtcpSenderTest, TestRegisterRtcpPacketTypeObserver) {
   EXPECT_EQ(1, parser()->pli()->num_packets());
   EXPECT_EQ(kRemoteSsrc, observer.ssrc_);
   EXPECT_EQ(1U, observer.counter_.pli_packets);
-  EXPECT_EQ(clock_.TimeInMilliseconds(),
-            observer.counter_.first_packet_time_ms);
 }
 
 TEST_F(RtcpSenderTest, SendTmmbr) {
