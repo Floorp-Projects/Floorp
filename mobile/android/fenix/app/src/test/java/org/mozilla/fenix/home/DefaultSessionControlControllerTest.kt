@@ -889,7 +889,7 @@ class DefaultSessionControlControllerTest {
                 false,
             ),
         )
-        assert(createController().handleShowWallpapersOnboardingDialog(wallpaperState))
+        assertTrue(createController().handleShowWallpapersOnboardingDialog(wallpaperState))
     }
 
     @Test
@@ -900,7 +900,7 @@ class DefaultSessionControlControllerTest {
                 false,
             ),
         )
-        assert(createController().handleShowWallpapersOnboardingDialog(wallpaperState))
+        assertTrue(createController().handleShowWallpapersOnboardingDialog(wallpaperState))
     }
 
     @Test
@@ -911,7 +911,7 @@ class DefaultSessionControlControllerTest {
                 true,
             ),
         )
-        assert(createController().handleShowWallpapersOnboardingDialog(wallpaperState))
+        assertTrue(createController().handleShowWallpapersOnboardingDialog(wallpaperState))
     }
 
     @Test
@@ -922,7 +922,7 @@ class DefaultSessionControlControllerTest {
                 false,
             ),
         )
-        assert(!createController().handleShowWallpapersOnboardingDialog(wallpaperState))
+        assertFalse(createController().handleShowWallpapersOnboardingDialog(wallpaperState))
     }
 
     @Test
@@ -933,7 +933,24 @@ class DefaultSessionControlControllerTest {
                 true,
             ),
         )
-        assert(!createController().handleShowWallpapersOnboardingDialog(wallpaperState))
+        assertFalse(createController().handleShowWallpapersOnboardingDialog(wallpaperState))
+    }
+
+    @Test
+    fun `GIVEN app is in private browsing mode WHEN handling wallpaper dialog THEN the dialog is not shown`() {
+        every { activity.browsingModeManager } returns mockk {
+            every { mode } returns mockk {
+                every { isPrivate } returns true
+            }
+        }
+        val wallpaperState = WallpaperState.default.copy(
+            availableWallpapers = makeFakeRemoteWallpapers(
+                THUMBNAILS_SELECTION_COUNT,
+                true,
+            ),
+        )
+
+        assertFalse(createController().handleShowWallpapersOnboardingDialog(wallpaperState))
     }
 
     @Test

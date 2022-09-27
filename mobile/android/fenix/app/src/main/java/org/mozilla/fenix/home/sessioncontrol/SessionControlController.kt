@@ -510,17 +510,21 @@ class DefaultSessionControlController(
     }
 
     override fun handleShowWallpapersOnboardingDialog(state: WallpaperState): Boolean {
-        return state.availableWallpapers.filter { wallpaper ->
-            wallpaper.thumbnailFileState == Wallpaper.ImageFileState.Downloaded
-        }.size.let { downloadedCount ->
-            // We only display the dialog if enough thumbnails have been downloaded for it.
-            downloadedCount >= THUMBNAILS_SELECTION_COUNT
-        }.also { showOnboarding ->
-            if (showOnboarding) {
-                navController.nav(
-                    R.id.homeFragment,
-                    HomeFragmentDirections.actionGlobalWallpaperOnboardingDialog(),
-                )
+        return if (activity.browsingModeManager.mode.isPrivate) {
+            false
+        } else {
+            state.availableWallpapers.filter { wallpaper ->
+                wallpaper.thumbnailFileState == Wallpaper.ImageFileState.Downloaded
+            }.size.let { downloadedCount ->
+                // We only display the dialog if enough thumbnails have been downloaded for it.
+                downloadedCount >= THUMBNAILS_SELECTION_COUNT
+            }.also { showOnboarding ->
+                if (showOnboarding) {
+                    navController.nav(
+                        R.id.homeFragment,
+                        HomeFragmentDirections.actionGlobalWallpaperOnboardingDialog(),
+                    )
+                }
             }
         }
     }
