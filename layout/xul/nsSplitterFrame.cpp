@@ -228,7 +228,6 @@ void nsSplitterFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   MOZ_ASSERT(!mInner);
   mInner = new nsSplitterFrameInner(this);
 
-
   nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
   mInner->mState = nsSplitterFrameInner::Open;
@@ -497,6 +496,23 @@ nsresult nsSplitterFrameInner::MouseUp(Event* aMouseEvent) {
   return NS_OK;
 }
 
+template <typename LengthLike>
+static nscoord ToLengthWithFallback(const LengthLike& aLengthLike,
+                                    nscoord aFallback) {
+  if (aLengthLike.ConvertsToLength()) {
+    return aLengthLike.ToLength();
+  }
+  return aFallback;
+}
+
+template <typename LengthLike>
+static nsSize ToLengthWithFallback(const LengthLike& aWidth,
+                                   const LengthLike& aHeight,
+                                   nscoord aFallback = 0) {
+  return {ToLengthWithFallback(aWidth, aFallback),
+          ToLengthWithFallback(aHeight, aFallback)};
+}
+
 nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
   NS_ENSURE_TRUE(mOuter, NS_OK);
   dom::MouseEvent* mouseEvent = aMouseEvent->AsMouseEvent();
@@ -578,13 +594,11 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
       }
     }
 
-    nsSize prefSize;
     nsSize minSize;
     nsSize maxSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
     const nscoord flex = childBox->GetXULFlex();
-    // TODO(emilio): Figure out if we need this for regular flexbox.
     if (childBox->IsXULBoxFrame()) {
-      prefSize = childBox->GetXULPrefSize(state);
+      nsSize prefSize = childBox->GetXULPrefSize(state);
       minSize = childBox->GetXULMinSize(state);
       maxSize = nsIFrame::XULBoundsCheckMinMax(minSize,
                                                childBox->GetXULMaxSize(state));
@@ -593,6 +607,11 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
       nsSplitterFrame::AddXULMargin(childBox, minSize);
       nsSplitterFrame::AddXULMargin(childBox, prefSize);
       nsSplitterFrame::AddXULMargin(childBox, maxSize);
+    } else {
+      const auto& pos = *childBox->StylePosition();
+      minSize = ToLengthWithFallback(pos.mMinWidth, pos.mMinHeight);
+      maxSize = ToLengthWithFallback(pos.mMaxWidth, pos.mMaxHeight,
+                                     NS_UNCONSTRAINEDSIZE);
     }
 
     nsMargin margin;
