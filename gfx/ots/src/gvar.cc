@@ -7,6 +7,7 @@
 #include "fvar.h"
 #include "maxp.h"
 #include "variations.h"
+#include "ots-memory-stream.h"
 
 #define TABLE_NAME "gvar"
 
@@ -144,6 +145,56 @@ bool OpenTypeGVAR::Parse(const uint8_t* data, size_t length) {
 
   return true;
 }
+
+#ifdef OTS_SYNTHESIZE_MISSING_GVAR
+bool OpenTypeGVAR::InitEmpty() {
+  // Generate an empty but well-formed 'gvar' table for the font.
+  const ots::Font* font = GetFont();
+
+  OpenTypeFVAR* fvar = static_cast<OpenTypeFVAR*>(font->GetTypedTable(OTS_TAG_FVAR));
+  if (!fvar) {
+    return DropVariations("Required fvar table missing");
+  }
+
+  OpenTypeMAXP* maxp = static_cast<OpenTypeMAXP*>(font->GetTypedTable(OTS_TAG_MAXP));
+  if (!maxp) {
+    return DropVariations("Required maxp table missing");
+  }
+
+  uint16_t majorVersion = 1;
+  uint16_t minorVersion = 0;
+  uint16_t axisCount = fvar->AxisCount();
+  uint16_t sharedTupleCount = 0;
+  uint32_t sharedTuplesOffset = 0;
+  uint16_t glyphCount = maxp->num_glyphs;
+  uint16_t flags = 0;
+  uint32_t glyphVariationDataArrayOffset = 0;
+
+  size_t length = 6 * sizeof(uint16_t) + 2 * sizeof(uint32_t)  // basic header fields
+      + (glyphCount + 1) * sizeof(uint16_t);  // glyphVariationDataOffsets[] array
+
+  uint8_t* data = new uint8_t[length];
+  MemoryStream stream(data, length);
+  if (!stream.WriteU16(majorVersion) ||
+      !stream.WriteU16(minorVersion) ||
+      !stream.WriteU16(axisCount) ||
+      !stream.WriteU16(sharedTupleCount) ||
+      !stream.WriteU32(sharedTuplesOffset) ||
+      !stream.WriteU16(glyphCount) ||
+      !stream.WriteU16(flags) ||
+      !stream.WriteU32(glyphVariationDataArrayOffset) ||
+      !stream.Pad((glyphCount + 1) * sizeof(uint16_t))) {
+    delete[] data;
+    return DropVariations("Failed to generate dummy gvar table");
+  }
+
+  this->m_data = data;
+  this->m_length = length;
+  this->m_ownsData = true;
+
+  return true;
+}
+#endif
 
 bool OpenTypeGVAR::Serialize(OTSStream* out) {
   if (!out->Write(this->m_data, this->m_length)) {

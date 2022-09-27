@@ -263,6 +263,9 @@ class Table {
   // TablePassthru (indicating unparsed data).
   uint32_t Type() { return m_type; }
 
+  // Return the tag assigned when this table was constructed.
+  uint32_t Tag() { return m_tag; }
+
   Font* GetFont() { return m_font; }
 
   bool Error(const char *format, ...);
@@ -314,6 +317,9 @@ struct Font {
   // for |tag|, so it can safely be downcast to the corresponding OpenTypeXXXX;
   // if not (i.e. if the table was treated as Passthru), it will return NULL.
   Table* GetTypedTable(uint32_t tag) const;
+
+  // Insert a new table. Asserts if a table with the same tag already exists.
+  void AddTable(Table* table);
 
   // Drop all Graphite tables and don't parse new ones.
   void DropGraphite();

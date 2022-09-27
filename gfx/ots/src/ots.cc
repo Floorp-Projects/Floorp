@@ -703,6 +703,18 @@ bool ProcessGeneric(ots::FontFile *header,
     }
   }
 
+#ifdef OTS_SYNTHESIZE_MISSING_GVAR
+  // If there was an fvar table but no gvar, synthesize an empty gvar to avoid
+  // issues with rasterizers (e.g. Core Text) that assume it must be present.
+  if (font->GetTable(OTS_TAG_FVAR) && !font->GetTable(OTS_TAG_GVAR)) {
+    ots::OpenTypeGVAR *gvar = new ots::OpenTypeGVAR(font, OTS_TAG_GVAR);
+    if (gvar->InitEmpty()) {
+      table_map[OTS_TAG_GVAR] = { OTS_TAG_GVAR, 0, 0, 0, 0 };
+      font->AddTable(gvar);
+    }
+  }
+#endif
+
   ots::Table *glyf = font->GetTable(OTS_TAG_GLYF);
   ots::Table *loca = font->GetTable(OTS_TAG_LOCA);
   ots::Table *cff  = font->GetTable(OTS_TAG_CFF);
@@ -972,6 +984,13 @@ Table* Font::GetTypedTable(uint32_t tag) const {
   if (t && t->Type() == tag)
     return t;
   return NULL;
+}
+
+void Font::AddTable(Table* table) {
+  // Attempting to add a duplicate table would be an error; this should only
+  // be used to add a table that does not already exist.
+  assert(m_tables.find(table->Tag()) == m_tables.end());
+  m_tables[table->Tag()] = table;
 }
 
 void Font::DropGraphite() {
