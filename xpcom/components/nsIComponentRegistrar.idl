@@ -11,7 +11,7 @@
 interface nsIFile;
 interface nsIFactory;
 
-[scriptable, uuid(2417cbfe-65ad-48a6-b4b6-eb84db174392)]
+[builtinclass, scriptable, uuid(2417cbfe-65ad-48a6-b4b6-eb84db174392)]
 interface nsIComponentRegistrar : nsISupports
 {
     /**
