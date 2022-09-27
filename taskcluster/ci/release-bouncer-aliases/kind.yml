@@ -70,8 +70,7 @@ jobs:
                     firefox-esr-msi-latest-ssl: msi
                     firefox-esr-msix-latest-ssl: msix
                     firefox-esr-pkg-latest-ssl: pkg
-                    # yamllint disable-line rule:comments-indentation
-                # mozilla-esrXX: XXX - to uncomment when we branch next ESR
+                mozilla-esrXXX:  # XXX - to update when we branch next ESR
                     # ... these point to the newer branch
                     firefox-esr-next-latest-ssl: installer-ssl
                     firefox-esr-next-latest: installer
