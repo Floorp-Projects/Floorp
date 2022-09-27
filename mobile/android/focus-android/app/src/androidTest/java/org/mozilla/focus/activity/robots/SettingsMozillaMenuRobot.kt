@@ -26,6 +26,9 @@ import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.idlingResources.SessionLoadedIdlingResource
 
 class SettingsMozillaMenuRobot {
+
+    private lateinit var sessionLoadedIdlingResource: SessionLoadedIdlingResource
+
     fun verifyMozillaMenuItems() {
         mozillaSettingsList.waitForExists(waitingTime)
         aboutFocusPageLink.check(matches(isDisplayed()))
@@ -40,7 +43,8 @@ class SettingsMozillaMenuRobot {
         val versionName = packageInfo.versionName
         val gvBuildId = org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID
         val gvVersion = org.mozilla.geckoview.BuildConfig.MOZ_APP_VERSION
-        val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
+
+        sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
         runWithIdleRes(sessionLoadedIdlingResource) {
             assertTrue(

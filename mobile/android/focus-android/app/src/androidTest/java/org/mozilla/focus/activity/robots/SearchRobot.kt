@@ -76,10 +76,14 @@ class SearchRobot {
     }
 
     class Transition {
+
+        private lateinit var sessionLoadedIdlingResource: SessionLoadedIdlingResource
+
         fun loadPage(url: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
             val geckoEngineView = mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
             val trackingProtectionDialog = mDevice.findObject(UiSelector().resourceId("$packageName:id/message"))
+
+            sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
             searchScreen { typeInSearchBar(url) }
             pressEnterKey()

@@ -24,6 +24,9 @@ import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.idlingResources.SessionLoadedIdlingResource
 
 class CustomTabRobot {
+
+    private lateinit var sessionLoadedIdlingResource: SessionLoadedIdlingResource
+
     val progressBar: UiObject =
         mDevice.findObject(
             UiSelector().resourceId("$packageName:id/progress"),
@@ -59,7 +62,7 @@ class CustomTabRobot {
     }
 
     fun verifyPageURL(expectedText: String) {
-        val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
+        sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
         runWithIdleRes(sessionLoadedIdlingResource) {
             mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
