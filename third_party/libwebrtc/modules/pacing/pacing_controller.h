@@ -145,7 +145,7 @@ class PacingController {
 
   // Sets the pacing rates. Must be called once before packets can be sent.
   void SetPacingRates(DataRate pacing_rate, DataRate padding_rate);
-  DataRate pacing_rate() const { return media_rate_; }
+  DataRate pacing_rate() const { return adjusted_media_rate_; }
 
   // Currently audio traffic is not accounted by pacer and passed through.
   // With the introduction of audio BWE audio traffic will be accounted for
@@ -217,6 +217,7 @@ class PacingController {
   void OnPacketSent(RtpPacketMediaType packet_type,
                     DataSize packet_size,
                     Timestamp send_time);
+  void MaybeUpdateMediaRateDueToLongQueue(Timestamp now);
 
   Timestamp CurrentTime() const;
 
@@ -241,9 +242,17 @@ class PacingController {
   mutable Timestamp last_timestamp_;
   bool paused_;
 
+  // Amount of outstanding data for media and padding.
   DataSize media_debt_;
   DataSize padding_debt_;
-  DataRate media_rate_;
+
+  // The target pacing rate, signaled via SetPacingRates().
+  DataRate pacing_rate_;
+  // The media send rate, which might adjusted from pacing_rate_, e.g. if the
+  // pacing queue is growing too long.
+  DataRate adjusted_media_rate_;
+  // The padding target rate. We aim to fill up to this rate with padding what
+  // is not already used by media.
   DataRate padding_rate_;
 
   BitrateProber prober_;

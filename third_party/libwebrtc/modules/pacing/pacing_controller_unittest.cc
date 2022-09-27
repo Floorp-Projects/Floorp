@@ -1096,45 +1096,6 @@ TEST_F(PacingControllerTest, InactiveFromStart) {
             2 * PacingController::kPausedProcessInterval);
 }
 
-TEST_F(PacingControllerTest, ExpectedQueueTimeMs) {
-  uint32_t ssrc = 12346;
-  uint16_t sequence_number = 1234;
-  const size_t kNumPackets = 60;
-  const size_t kPacketSize = 1200;
-  const int32_t kMaxBitrate = kPaceMultiplier * 30000;
-  auto pacer = std::make_unique<PacingController>(&clock_, &callback_, trials_);
-  pacer->SetPacingRates(kTargetRate * kPaceMultiplier, DataRate::Zero());
-  EXPECT_TRUE(pacer->OldestPacketEnqueueTime().IsInfinite());
-
-  pacer->SetPacingRates(DataRate::BitsPerSec(30000 * kPaceMultiplier),
-                        DataRate::Zero());
-  for (size_t i = 0; i < kNumPackets; ++i) {
-    SendAndExpectPacket(pacer.get(), RtpPacketMediaType::kVideo, ssrc,
-                        sequence_number++, clock_.TimeInMilliseconds(),
-                        kPacketSize);
-  }
-
-  // Queue in ms = 1000 * (bytes in queue) *8 / (bits per second)
-  TimeDelta queue_time =
-      TimeDelta::Millis(1000 * kNumPackets * kPacketSize * 8 / kMaxBitrate);
-  EXPECT_EQ(queue_time, pacer->ExpectedQueueTime());
-
-  const Timestamp time_start = clock_.CurrentTime();
-  while (pacer->QueueSizePackets() > 0) {
-    AdvanceTimeUntil(pacer->NextSendTime());
-    pacer->ProcessPackets();
-  }
-  TimeDelta duration = clock_.CurrentTime() - time_start;
-
-  EXPECT_EQ(TimeDelta::Zero(), pacer->ExpectedQueueTime());
-
-  // Allow for aliasing, duration should be within one pack of max time limit.
-  const TimeDelta deviation =
-      duration - PacingController::kMaxExpectedQueueLength;
-  EXPECT_LT(deviation.Abs(),
-            TimeDelta::Millis(1000 * kPacketSize * 8 / kMaxBitrate));
-}
-
 TEST_F(PacingControllerTest, QueueTimeGrowsOverTime) {
   uint32_t ssrc = 12346;
   uint16_t sequence_number = 1234;
@@ -1756,7 +1717,7 @@ TEST_F(PacingControllerTest,
   }
 }
 
-TEST_F(PacingControllerTest, AccountsForAudioEnqueuTime) {
+TEST_F(PacingControllerTest, AccountsForAudioEnqueueTime) {
   const uint32_t kSsrc = 12345;
   const DataRate kPacingDataRate = DataRate::KilobitsPerSec(125);
   const DataRate kPaddingDataRate = DataRate::Zero();
@@ -2061,6 +2022,46 @@ TEST_F(PacingControllerTest, RespectsTargetRateWhenSendingPacketsInBursts) {
   }
   EXPECT_EQ(pacer.QueueSizePackets(), 88u);
   EXPECT_EQ(number_of_bursts, 4);
+}
+
+TEST_F(PacingControllerTest, RespectsQueueTimeLimit) {
+  static constexpr DataSize kPacketSize = DataSize::Bytes(100);
+  static constexpr DataRate kNominalPacingRate = DataRate::KilobitsPerSec(200);
+  static constexpr TimeDelta kPacketPacingTime =
+      kPacketSize / kNominalPacingRate;
+  static constexpr TimeDelta kQueueTimeLimit = TimeDelta::Millis(1000);
+
+  PacingController pacer(&clock_, &callback_, trials_);
+  pacer.SetPacingRates(kNominalPacingRate, /*padding_rate=*/DataRate::Zero());
+  pacer.SetQueueTimeLimit(kQueueTimeLimit);
+
+  // Fill pacer up to queue time limit.
+  static constexpr int kNumPackets = kQueueTimeLimit / kPacketPacingTime;
+  for (int i = 0; i < kNumPackets; ++i) {
+    pacer.EnqueuePacket(video_.BuildNextPacket(kPacketSize.bytes()));
+  }
+  EXPECT_EQ(pacer.ExpectedQueueTime(), kQueueTimeLimit);
+  EXPECT_EQ(pacer.pacing_rate(), kNominalPacingRate);
+
+  // Double the amount of packets in the queue, the queue time limit should
+  // effectively double the pacing rate in response.
+  for (int i = 0; i < kNumPackets; ++i) {
+    pacer.EnqueuePacket(video_.BuildNextPacket(kPacketSize.bytes()));
+  }
+  EXPECT_EQ(pacer.ExpectedQueueTime(), kQueueTimeLimit);
+  EXPECT_EQ(pacer.pacing_rate(), 2 * kNominalPacingRate);
+
+  // Send all the packets, should take as long as the queue time limit.
+  Timestamp start_time = clock_.CurrentTime();
+  while (pacer.QueueSizePackets() > 0) {
+    AdvanceTimeUntil(pacer.NextSendTime());
+    pacer.ProcessPackets();
+  }
+  EXPECT_EQ(clock_.CurrentTime() - start_time, kQueueTimeLimit);
+
+  // We're back in a normal state - pacing rate should be back to previous
+  // levels.
+  EXPECT_EQ(pacer.pacing_rate(), kNominalPacingRate);
 }
 
 }  // namespace
