@@ -655,12 +655,28 @@ add_test(function test_serializePrimitiveTypes() {
   for (const type of PRIMITIVE_TYPES) {
     const { value, serialized } = type;
 
-    const serializedValue = serialize(value, 0, "none", new Map(), realm);
+    const serializationInternalMap = new Map();
+    const serializedValue = serialize(
+      value,
+      0,
+      "none",
+      serializationInternalMap,
+      realm
+    );
+    assertInternalIds(serializationInternalMap, 0);
     Assert.deepEqual(serialized, serializedValue, "Got expected structure");
 
     // For primitive values, the serialization with ownershipType=root should
     // be exactly identical to the one with ownershipType=none.
-    const serializedWithRoot = serialize(value, 0, "root", new Map(), realm);
+    const serializationInternalMapWithRoot = new Map();
+    const serializedWithRoot = serialize(
+      value,
+      0,
+      "root",
+      serializationInternalMapWithRoot,
+      realm
+    );
+    assertInternalIds(serializationInternalMapWithRoot, 0);
     Assert.deepEqual(serialized, serializedWithRoot, "Got expected structure");
   }
 
@@ -674,13 +690,29 @@ add_test(function test_serializeRemoteSimpleValues() {
     const { value, serialized } = type;
 
     info(`Checking '${serialized.type}' with none ownershipType`);
-    const serializedValue = serialize(value, 0, "none", new Map(), realm);
+    const serializationInternalMapWithNone = new Map();
+    const serializedValue = serialize(
+      value,
+      0,
+      "none",
+      serializationInternalMapWithNone,
+      realm
+    );
 
+    assertInternalIds(serializationInternalMapWithNone, 0);
     Assert.deepEqual(serialized, serializedValue, "Got expected structure");
 
     info(`Checking '${serialized.type}' with root ownershipType`);
-    const serializedWithRoot = serialize(value, 0, "root", new Map(), realm);
+    const serializationInternalMapWithRoot = new Map();
+    const serializedWithRoot = serialize(
+      value,
+      0,
+      "root",
+      serializationInternalMapWithRoot,
+      realm
+    );
 
+    assertInternalIds(serializationInternalMapWithRoot, 0);
     Assert.equal(
       typeof serializedWithRoot.handle,
       "string",
@@ -703,25 +735,29 @@ add_test(function test_serializeRemoteComplexValues() {
     const { value, serialized, maxDepth } = type;
 
     info(`Checking '${serialized.type}' with none ownershipType`);
+    const serializationInternalMapWithNone = new Map();
     const serializedValue = serialize(
       value,
       maxDepth,
       "none",
-      new Map(),
+      serializationInternalMapWithNone,
       realm
     );
 
+    assertInternalIds(serializationInternalMapWithNone, 0);
     Assert.deepEqual(serialized, serializedValue, "Got expected structure");
 
     info(`Checking '${serialized.type}' with root ownershipType`);
+    const serializationInternalMapWithRoot = new Map();
     const serializedWithRoot = serialize(
       value,
       maxDepth,
       "root",
-      new Map(),
+      serializationInternalMapWithRoot,
       realm
     );
 
+    assertInternalIds(serializationInternalMapWithRoot, 0);
     Assert.equal(
       typeof serializedWithRoot.handle,
       "string",
@@ -733,6 +769,121 @@ add_test(function test_serializeRemoteComplexValues() {
       "Got expected structure, plus a generated handle id"
     );
   }
+
+  run_next_test();
+});
+
+add_test(function test_serializeWithSerializationInternalMap() {
+  const dataSet = [
+    {
+      data: [1],
+      serializedData: [{ type: "number", value: 1 }],
+      type: "array",
+    },
+    {
+      data: new Map([[true, false]]),
+      serializedData: [
+        [
+          { type: "boolean", value: true },
+          { type: "boolean", value: false },
+        ],
+      ],
+      type: "map",
+    },
+    {
+      data: new Set(["foo"]),
+      serializedData: [{ type: "string", value: "foo" }],
+      type: "set",
+    },
+    {
+      data: { foo: "bar" },
+      serializedData: [["foo", { type: "string", value: "bar" }]],
+      type: "object",
+    },
+  ];
+  const realm = new Realm();
+
+  for (const { type, data, serializedData } of dataSet) {
+    info(`Checking '${type}' with serializationInternalMap`);
+
+    const serializationInternalMap = new Map();
+    const value = [
+      data,
+      data,
+      [data],
+      new Set([data]),
+      new Map([["bar", data]]),
+      { bar: data },
+    ];
+
+    const serializedValue = serialize(
+      value,
+      2,
+      "none",
+      serializationInternalMap,
+      realm
+    );
+
+    assertInternalIds(serializationInternalMap, 1);
+
+    const internalId = serializationInternalMap.get(data).internalId;
+
+    const serialized = {
+      type: "array",
+      value: [
+        {
+          type,
+          value: serializedData,
+          internalId,
+        },
+        {
+          type,
+          internalId,
+        },
+        {
+          type: "array",
+          value: [{ type, internalId }],
+        },
+        {
+          type: "set",
+          value: [{ type, internalId }],
+        },
+        {
+          type: "map",
+          value: [["bar", { type, internalId }]],
+        },
+        {
+          type: "object",
+          value: [["bar", { type, internalId }]],
+        },
+      ],
+    };
+
+    Assert.deepEqual(serialized, serializedValue, "Got expected structure");
+  }
+
+  run_next_test();
+});
+
+add_test(function test_serializeMultipleValuesWithSerializationInternalMap() {
+  const realm = new Realm();
+  const serializationInternalMap = new Map();
+  const obj1 = { foo: "bar" };
+  const obj2 = [1, 2];
+  const value = [obj1, obj2, obj1, obj2];
+
+  serialize(value, 2, "none", serializationInternalMap, realm);
+
+  assertInternalIds(serializationInternalMap, 2);
+
+  const internalId1 = serializationInternalMap.get(obj1).internalId;
+  const internalId2 = serializationInternalMap.get(obj2).internalId;
+
+  Assert.notEqual(
+    internalId1,
+    internalId2,
+    "Internal ids for different object are also different"
+  );
 
   run_next_test();
 });
@@ -804,5 +955,17 @@ function assertLocalValue(type, value, expectedValue) {
     formattedValue,
     formattedExpectedValue,
     "Got expected structure"
+  );
+}
+
+function assertInternalIds(serializationInternalMap, amount) {
+  const remoteValuesWithInternalIds = Array.from(
+    serializationInternalMap.values()
+  ).filter(remoteValue => !!remoteValue.internalId);
+
+  Assert.equal(
+    remoteValuesWithInternalIds.length,
+    amount,
+    "Got expected amount of internalIds in serializationInternalMap"
   );
 }
