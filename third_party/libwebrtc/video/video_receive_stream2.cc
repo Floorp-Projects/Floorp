@@ -74,10 +74,8 @@ namespace internal {
 namespace {
 
 // The default delay before re-requesting a key frame to be sent.
-constexpr TimeDelta kMaxWaitForKeyFrame = TimeDelta::Millis(200);
 constexpr TimeDelta kMinBaseMinimumDelay = TimeDelta::Zero();
 constexpr TimeDelta kMaxBaseMinimumDelay = TimeDelta::Seconds(10);
-constexpr TimeDelta kMaxWaitForFrame = TimeDelta::Seconds(3);
 
 // Create a decoder for the preferred codec before the stream starts and any
 // other decoder lazily on demand.
