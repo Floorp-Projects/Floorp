@@ -2401,7 +2401,6 @@ TEST_F(SendStatisticsProxyTest, ResetsRtcpCountersOnContentChange) {
   RtcpPacketTypeCounterObserver* proxy =
       static_cast<RtcpPacketTypeCounterObserver*>(statistics_proxy_.get());
   RtcpPacketTypeCounter counters;
-  counters.first_packet_time_ms = fake_clock_.TimeInMilliseconds();
   proxy->RtcpPacketTypesCounterUpdated(kFirstSsrc, counters);
   proxy->RtcpPacketTypesCounterUpdated(kSecondSsrc, counters);
 

@@ -479,9 +479,6 @@ bool RTCPReceiver::ParseCompoundPacket(rtc::ArrayView<const uint8_t> packet,
       break;
     }
 
-    if (packet_type_counter_.first_packet_time_ms == -1)
-      packet_type_counter_.first_packet_time_ms = clock_->TimeInMilliseconds();
-
     switch (rtcp_block.type()) {
       case rtcp::SenderReport::kPacketType:
         HandleSenderReport(rtcp_block, packet_information);

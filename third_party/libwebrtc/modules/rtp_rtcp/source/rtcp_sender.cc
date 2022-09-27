@@ -713,9 +713,6 @@ absl::optional<int32_t> RTCPSender::ComputeCompoundRTCPPacket(
     }
   }
 
-  if (packet_type_counter_.first_packet_time_ms == -1)
-    packet_type_counter_.first_packet_time_ms = clock_->TimeInMilliseconds();
-
   // We need to send our NTP even if we haven't received any reports.
   RtcpContext context(feedback_state, nack_size, nack_list,
                       clock_->CurrentTime());
