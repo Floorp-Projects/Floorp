@@ -265,11 +265,11 @@ static void close_logging() {
 #define PCI_FILL_CLASS 0x0020
 #define PCI_BASE_CLASS_DISPLAY 0x03
 
-static int get_pci_status() {
+static void get_pci_status() {
   if (access("/sys/bus/pci/", F_OK) != 0 &&
       access("/sys/bus/pci_express/", F_OK) != 0) {
     record_warning("cannot access /sys/bus/pci");
-    return 0;
+    return;
   }
 
   void* libpci = dlopen("libpci.so.3", RTLD_LAZY);
@@ -278,7 +278,7 @@ static int get_pci_status() {
   }
   if (!libpci) {
     record_warning("libpci missing");
-    return 0;
+    return;
   }
 
   typedef struct pci_dev {
@@ -323,14 +323,14 @@ static int get_pci_status() {
   if (!pci_alloc || !pci_cleanup || !pci_scan_bus || !pci_fill_info) {
     dlclose(libpci);
     record_warning("libpci missing methods");
-    return 0;
+    return;
   }
 
   pci_access* pacc = pci_alloc();
   if (!pacc) {
     dlclose(libpci);
     record_warning("libpci alloc failed");
-    return 0;
+    return;
   }
 
   pci_init(pacc);
@@ -349,7 +349,6 @@ static int get_pci_status() {
 
   pci_cleanup(pacc);
   dlclose(libpci);
-  return count;
 }
 
 #ifdef MOZ_WAYLAND
@@ -467,8 +466,8 @@ static bool get_render_name(const char* name) {
 }
 #endif
 
-static bool get_gles_status(EGLDisplay dpy,
-                            PFNEGLGETPROCADDRESS eglGetProcAddress) {
+static bool get_egl_gl_status(EGLDisplay dpy,
+                              PFNEGLGETPROCADDRESS eglGetProcAddress) {
   typedef EGLBoolean (*PFNEGLCHOOSECONFIGPROC)(
       EGLDisplay dpy, EGLint const* attrib_list, EGLConfig* configs,
       EGLint config_size, EGLint* num_config);
@@ -627,8 +626,7 @@ static bool get_gles_status(EGLDisplay dpy,
   return true;
 }
 
-static bool get_egl_status(EGLNativeDisplayType native_dpy, bool gles_test,
-                           bool require_driver) {
+static bool get_egl_status(EGLNativeDisplayType native_dpy) {
   void* libegl = dlopen(LIBEGL_FILENAME, RTLD_LAZY);
   if (!libegl) {
     record_warning("libEGL missing");
@@ -682,22 +680,13 @@ static bool get_egl_status(EGLNativeDisplayType native_dpy, bool gles_test,
       cast<PFNEGLGETDISPLAYDRIVERNAMEPROC>(
           eglGetProcAddress("eglGetDisplayDriverName"));
   if (eglGetDisplayDriverName) {
-    // TODO(aosmond): If the driver name is empty, we probably aren't using Mesa
-    // and instead a proprietary GL, most likely NVIDIA's. The PCI device list
-    // in combination with the vendor name is very likely sufficient to identify
-    // the device.
     const char* driDriver = eglGetDisplayDriverName(dpy);
     if (driDriver) {
       record_value("DRI_DRIVER\n%s\n", driDriver);
     }
-  } else if (require_driver) {
-    record_warning("libEGL missing eglGetDisplayDriverName");
-    eglTerminate(dpy);
-    dlclose(libegl);
-    return false;
   }
 
-  if (gles_test && !get_gles_status(dpy, eglGetProcAddress)) {
+  if (!get_egl_gl_status(dpy, eglGetProcAddress)) {
     eglTerminate(dpy);
     dlclose(libegl);
     return false;
@@ -732,7 +721,7 @@ static void get_xrandr_info(Display* dpy) {
   }
 }
 
-static void get_glx_status(int* gotGlxInfo, int* gotDriDriver) {
+static void glxtest() {
   void* libgl = dlopen(LIBGL_FILENAME, RTLD_LAZY);
   if (!libgl) {
     record_error(LIBGL_FILENAME " missing");
@@ -842,7 +831,6 @@ static void get_glx_status(int* gotGlxInfo, int* gotDriDriver) {
     record_value("VENDOR\n%s\nRENDERER\n%s\nVERSION\n%s\nTFP\n%s\n",
                  vendorString, rendererString, versionString,
                  glXBindTexImageEXT ? "TRUE" : "FALSE");
-    *gotGlxInfo = 1;
   } else {
     record_error("glGetString returned null");
   }
@@ -884,7 +872,6 @@ static void get_glx_status(int* gotGlxInfo, int* gotDriDriver) {
   if (glXGetScreenDriverProc) {
     const char* driDriver = glXGetScreenDriverProc(dpy, DefaultScreen(dpy));
     if (driDriver) {
-      *gotDriDriver = 1;
       record_value("DRI_DRIVER\n%s\n", driDriver);
     }
   }
@@ -915,14 +902,20 @@ static void get_glx_status(int* gotGlxInfo, int* gotDriDriver) {
 #  endif
 
   dlclose(libgl);
+
+  record_value("TEST_TYPE\nGLX\n");
 }
 
-static bool x11_egltest(int pci_count) {
+static bool x11_egltest() {
   Display* dpy = XOpenDisplay(nullptr);
   if (!dpy) {
     return false;
   }
   XSetErrorHandler(x_error_handler);
+
+  if (!get_egl_status(dpy)) {
+    return false;
+  }
 
   // Bug 1667621: 30bit "Deep Color" is broken on EGL on Mesa (as of 2021/10).
   // Disable all non-standard depths for the initial EGL roleout.
@@ -931,12 +924,6 @@ static bool x11_egltest(int pci_count) {
     if (DefaultDepth(dpy, idx) != 24) {
       return false;
     }
-  }
-
-  // On at least amdgpu open source driver, eglInitialize fails unless
-  // a valid XDisplay pointer is passed as the native display.
-  if (!get_egl_status(dpy, true, pci_count != 1)) {
-    return false;
   }
 
   // Get monitor and DDX driver information
@@ -948,22 +935,6 @@ static bool x11_egltest(int pci_count) {
 
   record_value("TEST_TYPE\nEGL\n");
   return true;
-}
-
-static void glxtest() {
-  int gotGlxInfo = 0;
-  int gotDriDriver = 0;
-
-  get_glx_status(&gotGlxInfo, &gotDriDriver);
-  if (!gotGlxInfo) {
-    get_egl_status(nullptr, true, false);
-  } else if (!gotDriDriver) {
-    // If we failed to get the driver name from X, try via
-    // EGL_MESA_query_driver. We are probably using Wayland.
-    get_egl_status(nullptr, false, true);
-  }
-
-  record_value("TEST_TYPE\nGLX\n");
 }
 #endif
 
@@ -977,7 +948,7 @@ static void wayland_egltest() {
     return;
   }
 
-  if (!get_egl_status((EGLNativeDisplayType)dpy, true, false)) {
+  if (!get_egl_status((EGLNativeDisplayType)dpy)) {
     record_error("EGL test failed");
   }
 
@@ -1197,7 +1168,7 @@ int childgltest() {
   glxtest_bufsize = bufsize;
 
   // Get a list of all GPUs from the PCI bus.
-  int pci_count = get_pci_status();
+  get_pci_status();
 
 #ifdef MOZ_WAYLAND
   if (IsWaylandEnabled()) {
@@ -1207,7 +1178,7 @@ int childgltest() {
   {
 #ifdef MOZ_X11
     // TODO: --display command line argument is not properly handled
-    if (!x11_egltest(pci_count)) {
+    if (!x11_egltest()) {
       glxtest();
     }
 #endif
