@@ -49,6 +49,20 @@ function getUUID() {
     .slice(1, -1);
 }
 
+const TYPED_ARRAY_CLASSES = [
+  "Uint8Array",
+  "Uint8ClampedArray",
+  "Uint16Array",
+  "Uint32Array",
+  "Int8Array",
+  "Int16Array",
+  "Int32Array",
+  "Float32Array",
+  "Float64Array",
+  "BigInt64Array",
+  "BigUint64Array",
+];
+
 /**
  * Build the serialized RemoteValue.
  *
@@ -472,7 +486,6 @@ function serialize(
     return { type, value };
   }
 
-  const className = ChromeUtils.getClassName(value);
   const handleId = getHandleForObject(realm, ownershipType, value);
   const knownObject = serializationInternalMap.has(value);
 
@@ -480,6 +493,16 @@ function serialize(
   const childOwnership = OwnershipModel.None;
 
   // Remote values
+
+  // symbols are primitive JS values which can only be serialized
+  // as remote values.
+  if (type == "symbol") {
+    return buildSerialized("symbol", handleId);
+  }
+
+  // All other remote values are non-primitives and their
+  // className can be extracted with ChromeUtils.getClassName
+  const className = ChromeUtils.getClassName(value);
   if (className == "Array") {
     const serialized = buildSerialized("array", handleId);
     setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
@@ -530,10 +553,24 @@ function serialize(
         realm
       );
     }
-
     return serialized;
+  } else if (
+    [
+      "ArrayBuffer",
+      "Function",
+      "Promise",
+      "WeakMap",
+      "WeakSet",
+      "Window",
+    ].includes(className)
+  ) {
+    return buildSerialized(className.toLowerCase(), handleId);
+  } else if (lazy.error.isError(value)) {
+    return buildSerialized("error", handleId);
+  } else if (TYPED_ARRAY_CLASSES.includes(className)) {
+    return buildSerialized("typedarray", handleId);
   }
-  // TODO: Bug 1770754. Remove the if condition when the serialization of all the other types is implemented,
+  // TODO: Bug 1770733 and 1792524. Remove the if condition when the serialization of all the other types is implemented,
   // since then the serialization of plain objects should be the fallback.
   else if (className == "Object") {
     const serialized = buildSerialized("object", handleId);
