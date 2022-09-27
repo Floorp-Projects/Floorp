@@ -28,6 +28,10 @@ testFeature:
       type: int
       fallbackPref: nimbus.testing.testInt
       description: Int pref used by platform API tests
+    testSetString:
+      type: string
+      setPref: nimbus.testing.testSetString
+      description: A string pref set by Nimbus tests
 search:
   description: The Search Services
   owner: search-and-suggest-program@mozilla.com
