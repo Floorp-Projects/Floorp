@@ -1255,7 +1255,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     /**
      * Indicates if sync onboarding CFR should be shown.
-     * Returns true if the [FeatureFlags.showSynCFR] and [R.string.pref_key_should_show_sync_cfr] are true.
      */
     var showSyncCFR by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_should_show_sync_cfr),
