@@ -556,8 +556,22 @@ class BrowserRobot {
     }
 
     fun clickMediaPlayerPlayButton() {
-        mediaPlayerPlayButton().waitForExists(waitingTime)
-        mediaPlayerPlayButton().click()
+        for (i in 1..RETRY_COUNT) {
+            try {
+                mediaPlayerPlayButton().waitForExists(waitingTime)
+                mediaPlayerPlayButton().click()
+
+                break
+            } catch (e: UiObjectNotFoundException) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    browserScreen {
+                    }.openThreeDotMenu {
+                    }.refreshPage { }
+                }
+            }
+        }
     }
 
     /**
