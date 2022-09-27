@@ -512,8 +512,8 @@ toolbarbutton.bookmark-item {
   border-radius: 4px;
   color: inherit;
   fill: currentColor;
-  margin: 1px 12px 5px 3px;
-  padding: 11px 4px 11px 11px;
+  margin: 1px 8px 5px 3px;
+  padding: 11px 5px 11px 10px;
   scale: 1.0;
 }
 
