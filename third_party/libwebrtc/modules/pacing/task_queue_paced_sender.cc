@@ -317,9 +317,8 @@ void TaskQueuePacedSender::MaybeProcessPackets(
     }
 
     task_queue_.PostDelayedTaskWithPrecision(
-        precision, ToQueuedTask([this, next_send_time]() {
-          MaybeProcessPackets(next_send_time);
-        }),
+        precision,
+        [this, next_send_time]() { MaybeProcessPackets(next_send_time); },
         time_to_next_process.RoundUpTo(TimeDelta::Millis(1)).ms<uint32_t>());
     next_process_time_ = next_send_time;
   }
