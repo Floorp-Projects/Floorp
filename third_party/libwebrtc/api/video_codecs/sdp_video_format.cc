@@ -11,6 +11,7 @@
 #include "api/video_codecs/sdp_video_format.h"
 
 #include "absl/strings/match.h"
+#include "api/video_codecs/av1_profile.h"
 #include "api/video_codecs/h264_profile_level_id.h"
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/vp9_profile.h"
@@ -55,6 +56,8 @@ bool IsSameCodecSpecific(const SdpVideoFormat& format1,
                                          format2.parameters);
     case kVideoCodecVP9:
       return VP9IsSameProfile(format1.parameters, format2.parameters);
+    case kVideoCodecAV1:
+      return AV1IsSameProfile(format1.parameters, format2.parameters);
     default:
       return true;
   }

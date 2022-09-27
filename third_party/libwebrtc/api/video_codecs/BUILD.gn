@@ -19,6 +19,8 @@ rtc_source_set("scalability_mode") {
 rtc_library("video_codecs_api") {
   visibility = [ "*" ]
   sources = [
+    "av1_profile.cc",
+    "av1_profile.h",
     "h264_profile_level_id.cc",
     "h264_profile_level_id.h",
     "sdp_video_format.cc",
