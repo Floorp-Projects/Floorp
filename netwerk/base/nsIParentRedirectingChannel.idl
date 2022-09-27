@@ -8,7 +8,7 @@ interface nsIRemoteTab;
 interface nsIChannel;
 interface nsIAsyncVerifyRedirectCallback;
 
-[builtinclass, uuid(01987690-48cf-45de-bae3-e143c2adc2a8)]
+[uuid(01987690-48cf-45de-bae3-e143c2adc2a8)]
 interface nsIAsyncVerifyRedirectReadyCallback : nsISupports
 {
   /**

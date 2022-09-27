@@ -19,7 +19,7 @@ native alreadyAddRefed_nsIRunnable(already_AddRefed<nsIRunnable>);
  * New direct task may be dispatched when a current direct task is running. In
  * which case they will be run in FIFO order.
  */
-[builtinclass, uuid(e05bf0fe-94b7-4e28-8462-a8368da9c136)]
+[uuid(e05bf0fe-94b7-4e28-8462-a8368da9c136)]
 interface nsIDirectTaskDispatcher : nsISupports
 {
   /**

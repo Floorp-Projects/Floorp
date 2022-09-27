@@ -374,7 +374,7 @@ interface nsIUDPMessage : nsISupports
     [noscript, notxpcom, nostdcall] Uint8TArrayRef getDataAsTArray();
 };
 
-[noscript, builtinclass, uuid(99f3d085-3d69-45da-a2c2-a6176af617cb)]
+[uuid(99f3d085-3d69-45da-a2c2-a6176af617cb)]
 interface nsIUDPSocketSyncListener : nsISupports
 {
     /**

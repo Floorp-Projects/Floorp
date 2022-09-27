@@ -18,7 +18,7 @@ class OriginAttributes;
 interface nsIPrincipal;
 interface nsIURI;
 
-[builtinclass, uuid(d02b96ed-2789-4f42-a25c-7abe63de7c18)]
+[uuid(d02b96ed-2789-4f42-a25c-7abe63de7c18)]
 interface nsIHttpChannelChild : nsISupports
 {
   [must_use] void addCookiesToRequest();

@@ -41,7 +41,7 @@ interface nsIStreamTransportService : nsISupports
                         in nsIInputAvailableCallback aCallback);
 };
 
-[builtinclass, uuid(ff2da731-44d0-4dd9-8236-c99387fec721)]
+[uuid(ff2da731-44d0-4dd9-8236-c99387fec721)]
 interface nsIInputAvailableCallback : nsISupports
 {
   void onInputAvailableComplete(in unsigned long long available,
