@@ -59,6 +59,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [colorwaysActive](#colorwaysActive)
 * [userEnabledActiveColorway](#userEnabledActiveColorway)
 * [inMr2022Holdback](#inMr2022Holdback)
+* [distributionId](#distributionId)
 
 ## Detailed usage
 
@@ -863,3 +864,8 @@ A boolean. `true` when user has an active Colorway theme enabled.
 ### `inMr2022Holdback`
 
 A boolean. `true` when the user is in the Major Release 2022 holdback study.
+
+### `distributionId`
+
+A string containing the id of the distribution, or the empty string if there
+is no distribution associated with the build.
