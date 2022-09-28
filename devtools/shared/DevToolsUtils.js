@@ -14,20 +14,19 @@ var {
   callFunctionWithAsyncStack,
 } = require("devtools/shared/platform/stack");
 
-loader.lazyRequireGetter(this, "OS", "resource://gre/modules/osfile.jsm", true);
+const lazy = {};
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
-loader.lazyRequireGetter(
-  this,
+ChromeUtils.defineModuleGetter(
+  lazy,
   "FileUtils",
-  "resource://gre/modules/FileUtils.jsm",
-  true
+  "resource://gre/modules/FileUtils.jsm"
 );
 
-loader.lazyRequireGetter(
-  this,
+ChromeUtils.defineModuleGetter(
+  lazy,
   "ObjectUtils",
-  "resource://gre/modules/ObjectUtils.jsm",
-  true
+  "resource://gre/modules/ObjectUtils.jsm"
 );
 
 // Using this name lets the eslint plugin know about lazy defines in
@@ -652,7 +651,7 @@ function mainThreadFetch(
           uri.QueryInterface(Ci.nsIFileURL);
           // Bug 1779574: IOUtils is not available in non-parent processes.
           // eslint-disable-next-line mozilla/reject-osfile
-          const result = OS.File.read(uri.file.path).then(bytes => {
+          const result = lazy.OS.File.read(uri.file.path).then(bytes => {
             // Convert the bytearray to a String.
             const decoder = new TextDecoder();
             const content = decoder.decode(bytes);
@@ -778,7 +777,7 @@ if (this.isWorker) {
  */
 exports.openFileStream = function(filePath) {
   return new Promise((resolve, reject) => {
-    const uri = NetUtil.newURI(new FileUtils.File(filePath));
+    const uri = NetUtil.newURI(new lazy.FileUtils.File(filePath));
     NetUtil.asyncFetch(
       { uri, loadUsingSystemPrincipal: true },
       (stream, result) => {
@@ -976,7 +975,7 @@ exports.getTopWindow = getTopWindow;
  * @return {Boolean}
  */
 exports.deepEqual = (a, b) => {
-  return ObjectUtils.deepEqual(a, b);
+  return lazy.ObjectUtils.deepEqual(a, b);
 };
 
 function isWorkerDebuggerAlive(dbg) {

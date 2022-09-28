@@ -79,11 +79,11 @@ loader.lazyRequireGetter(
   true
 );
 
-loader.lazyRequireGetter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "AppConstants",
-  "resource://gre/modules/AppConstants.jsm",
-  true
+  "resource://gre/modules/AppConstants.jsm"
 );
 loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");
 loader.lazyRequireGetter(
@@ -1269,7 +1269,7 @@ Toolbox.prototype = {
       L10N.getStr("toolbox.toggleToolboxF12.key"),
       this.closeToolbox
     );
-    if (AppConstants.platform == "macosx") {
+    if (lazy.AppConstants.platform == "macosx") {
       shortcuts.on(
         L10N.getStr("toolbox.toggleToolboxOSX.key"),
         this.closeToolbox

@@ -42,11 +42,11 @@ loader.lazyRequireGetter(
   "devtools/shared/security/auth",
   true
 );
-loader.lazyRequireGetter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "DevToolsSocketStatus",
-  "resource://devtools/shared/security/DevToolsSocketStatus.jsm",
-  true
+  "resource://devtools/shared/security/DevToolsSocketStatus.jsm"
 );
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
@@ -411,7 +411,7 @@ SocketListener.prototype = {
       dumpn("Socket listening on: " + (self.port || self.portOrPath));
     })()
       .then(() => {
-        DevToolsSocketStatus.notifySocketOpened({
+        lazy.DevToolsSocketStatus.notifySocketOpened({
           fromBrowserToolbox: self.fromBrowserToolbox,
         });
         this._advertise();
@@ -459,7 +459,7 @@ SocketListener.prototype = {
       this._socket.close();
       this._socket = null;
 
-      DevToolsSocketStatus.notifySocketClosed({
+      lazy.DevToolsSocketStatus.notifySocketClosed({
         fromBrowserToolbox: this.fromBrowserToolbox,
       });
     }

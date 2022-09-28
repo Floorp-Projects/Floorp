@@ -9,11 +9,11 @@ loader.lazyRequireGetter(
   "devtools/server/devtools-server",
   true
 );
-loader.lazyRequireGetter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "AppConstants",
-  "resource://gre/modules/AppConstants.jsm",
-  true
+  "resource://gre/modules/AppConstants.jsm"
 );
 loader.lazyGetter(this, "hostname", () => {
   try {
@@ -154,7 +154,7 @@ function getSystemInfo() {
     profile: getProfileLocation(),
 
     // Update channel
-    channel: AppConstants.MOZ_UPDATE_CHANNEL,
+    channel: lazy.AppConstants.MOZ_UPDATE_CHANNEL,
 
     dpi,
     useragent,

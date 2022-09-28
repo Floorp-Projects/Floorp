@@ -19,11 +19,11 @@ const { PREFS } = require("devtools/client/webconsole/constants");
 
 const FirefoxDataProvider = require("devtools/client/netmonitor/src/connector/firefox-data-provider");
 
-loader.lazyRequireGetter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "AppConstants",
-  "resource://gre/modules/AppConstants.jsm",
-  true
+  "resource://gre/modules/AppConstants.jsm"
 );
 loader.lazyRequireGetter(
   this,
@@ -670,7 +670,7 @@ class WebConsoleUI {
     });
 
     let clearShortcut;
-    if (AppConstants.platform === "macosx") {
+    if (lazy.AppConstants.platform === "macosx") {
       const alternativaClearShortcut = l10n.getStr(
         "webconsole.clear.alternativeKeyOSX"
       );

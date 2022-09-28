@@ -13,11 +13,11 @@ loader.lazyRequireGetter(
   true
 );
 
-loader.lazyRequireGetter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  true
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
 /* A host should always allow this much space for the page to be displayed.
@@ -256,7 +256,7 @@ WindowHost.prototype = {
       // the owner window was passed in the host options.
       const owner =
         this.hostTab?.ownerGlobal || this.options?.browserContentToolboxOpener;
-      if (owner && PrivateBrowsingUtils.isWindowPrivate(owner)) {
+      if (owner && lazy.PrivateBrowsingUtils.isWindowPrivate(owner)) {
         flags += ",private";
       }
 

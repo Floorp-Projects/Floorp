@@ -39,17 +39,15 @@ loader.lazyRequireGetter(
   true
 );
 
-loader.lazyRequireGetter(
+ChromeUtils.defineModuleGetter(
   lazy,
   "FileUtils",
-  "resource://gre/modules/FileUtils.jsm",
-  true
+  "resource://gre/modules/FileUtils.jsm"
 );
-loader.lazyRequireGetter(
+ChromeUtils.defineModuleGetter(
   lazy,
   "NetUtil",
-  "resource://gre/modules/NetUtil.jsm",
-  true
+  "resource://gre/modules/NetUtil.jsm"
 );
 loader.lazyRequireGetter(
   lazy,

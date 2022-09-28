@@ -53,11 +53,11 @@ loader.lazyRequireGetter(
   "devtools/shared/layout/utils",
   true
 );
-loader.lazyRequireGetter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "ContentDOMReference",
-  "resource://gre/modules/ContentDOMReference.jsm",
-  true
+  "resource://gre/modules/ContentDOMReference.jsm"
 );
 
 const RELATIONS_TO_IGNORE = new Set([
@@ -171,7 +171,7 @@ function getSnapshot(acc, a11yService, targetActor) {
   if (useChildTargetToFetchChildren) {
     snapshot.useChildTargetToFetchChildren = useChildTargetToFetchChildren;
     snapshot.childCount = 1;
-    snapshot.contentDOMReference = ContentDOMReference.get(acc.DOMNode);
+    snapshot.contentDOMReference = lazy.ContentDOMReference.get(acc.DOMNode);
   }
 
   return snapshot;

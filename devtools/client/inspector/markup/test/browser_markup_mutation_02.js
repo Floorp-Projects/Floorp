@@ -8,11 +8,6 @@
 
 // Have to use the same timer functions used by the inspector.
 const { clearTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(
-  this,
-  "Preferences",
-  "resource://gre/modules/Preferences.jsm"
-);
 
 const TEST_URL = URL_ROOT + "doc_markup_flashing.html";
 
@@ -118,12 +113,7 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  const timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
-  Preferences.set("privacy.reduceTimerPrecision", false);
-
-  registerCleanupFunction(function() {
-    Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
-  });
+  await pushPref("privacy.reduceTimerPrecision", false);
 
   const { inspector } = await openInspectorForURL(TEST_URL);
 

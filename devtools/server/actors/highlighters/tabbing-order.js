@@ -4,11 +4,11 @@
 
 "use strict";
 
-loader.lazyRequireGetter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "ContentDOMReference",
-  "resource://gre/modules/ContentDOMReference.jsm",
-  true
+  "resource://gre/modules/ContentDOMReference.jsm"
 );
 loader.lazyRequireGetter(
   this,
@@ -140,7 +140,7 @@ class TabbingOrderHighlighter {
     this._trackMutations();
 
     return {
-      contentDOMReference: endElm && ContentDOMReference.get(endElm),
+      contentDOMReference: endElm && lazy.ContentDOMReference.get(endElm),
       index,
     };
   }

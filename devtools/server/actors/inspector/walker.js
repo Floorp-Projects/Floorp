@@ -99,12 +99,12 @@ loader.lazyRequireGetter(
 );
 
 // ContentDOMReference requires ChromeUtils, which isn't available in worker context.
+const lazy = {};
 if (!isWorker) {
-  loader.lazyRequireGetter(
-    this,
+  ChromeUtils.defineModuleGetter(
+    lazy,
     "ContentDOMReference",
-    "resource://gre/modules/ContentDOMReference.jsm",
-    true
+    "resource://gre/modules/ContentDOMReference.jsm"
   );
 }
 
@@ -2646,7 +2646,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * Given a contentDomReference return the NodeActor for the corresponding frameElement.
    */
   getNodeActorFromContentDomReference(contentDomReference) {
-    let rawNode = ContentDOMReference.resolve(contentDomReference);
+    let rawNode = lazy.ContentDOMReference.resolve(contentDomReference);
     if (!rawNode || !this._isInDOMTree(rawNode)) {
       return null;
     }

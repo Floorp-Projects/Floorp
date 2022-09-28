@@ -23,17 +23,15 @@ loader.lazyGetter(lazy, "BufferStream", () => {
   );
 });
 
-loader.lazyRequireGetter(
+ChromeUtils.defineModuleGetter(
   lazy,
   "FileUtils",
-  "resource://gre/modules/FileUtils.jsm",
-  true
+  "resource://gre/modules/FileUtils.jsm"
 );
-loader.lazyRequireGetter(
+ChromeUtils.defineModuleGetter(
   lazy,
   "NetUtil",
-  "resource://gre/modules/NetUtil.jsm",
-  true
+  "resource://gre/modules/NetUtil.jsm"
 );
 
 const { getString, showFilePicker } = ChromeUtils.import(

@@ -36,12 +36,11 @@ loader.lazyRequireGetter(
   true
 );
 
-loader.lazyRequireGetter(
-  this,
-  "getAddonIdForWindowGlobal",
-  "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
-  true
-);
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  getAddonIdForWindowGlobal:
+    "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
+});
 
 const FALLBACK_DOC_URL =
   "chrome://devtools/content/shared/webextension-fallback.html";
@@ -309,7 +308,7 @@ webExtensionTargetPrototype.isExtensionWindowDescendent = function(window) {
   // Check if the source is coming from a descendant docShell of an extension window.
   // We may have an iframe that loads http content which won't use the add-on principal.
   const rootWin = window.docShell.sameTypeRootTreeItem.domWindow;
-  const addonId = getAddonIdForWindowGlobal(rootWin.windowGlobalChild);
+  const addonId = lazy.getAddonIdForWindowGlobal(rootWin.windowGlobalChild);
   return addonId == this.addonId;
 };
 

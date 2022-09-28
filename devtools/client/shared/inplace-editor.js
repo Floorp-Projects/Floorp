@@ -28,11 +28,11 @@ const {
   findMostRelevantCssPropertyIndex,
 } = require("devtools/client/shared/suggestion-picker");
 
-loader.lazyRequireGetter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "AppConstants",
-  "resource://gre/modules/AppConstants.jsm",
-  true
+  "resource://gre/modules/AppConstants.jsm"
 );
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -1368,7 +1368,7 @@ InplaceEditor.prototype = {
    */
   _getIncrement(event) {
     const getSmallIncrementKey = evt => {
-      if (AppConstants.platform === "macosx") {
+      if (lazy.AppConstants.platform === "macosx") {
         return evt.altKey;
       }
       return evt.ctrlKey;
