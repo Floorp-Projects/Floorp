@@ -46,7 +46,7 @@ async function getSortedDirectoryEntries(handle) {
 
 async function createDirectory(test, name, parent) {
   const new_dir_handle = await parent.getDirectoryHandle(name, {create: true});
-  test.add_cleanup(async () => {
+  cleanup(test, new_dir_handle, async () => {
     try {
       await parent.removeEntry(name, {recursive: true});
     } catch (e) {
@@ -59,7 +59,7 @@ async function createDirectory(test, name, parent) {
 
 async function createEmptyFile(test, name, parent) {
   const handle = await parent.getFileHandle(name, {create: true});
-  test.add_cleanup(async () => {
+  cleanup(test, handle, async () => {
     try {
       await parent.removeEntry(name);
     } catch (e) {
@@ -87,20 +87,32 @@ function garbageCollect() {
     self.gc();
 };
 
+var fs_cleanups = [];
+
 async function cleanup(test, value, cleanup_func) {
-  test.add_cleanup(async () => {
-    try {
-      await cleanup_func();
-    } catch (e) {
-      // Ignore any errors when removing files, as tests might already remove
-      // the file.
-    }
-  });
+  if (fs_cleanups.length === 0) {
+    // register to get called back once from cleanup
+    test.add_cleanup(async () => {
+      // Cleanup in LIFO order to ensure locks are released correctly relative
+      // to thinks like removeEntry().  Do so in a serialized form, not in parallel!
+      fs_cleanups.reverse();
+      for (let cleanup of fs_cleanups) {
+        try {
+          await cleanup();
+        } catch (e) {
+          // Ignore any errors when removing files, as tests might already remove
+          // the file.
+        }
+      }
+      fs_cleanups.length = 0;
+    });
+  }
+  fs_cleanups.push(cleanup_func);
   return value;
 }
 
 async function cleanup_writable(test, value) {
   return cleanup(test, value, async () => {
-    value.close();
+    return value.close();
   });
 }
