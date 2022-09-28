@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "absl/memory/memory.h"
+#include "absl/strings/string_view.h"
 #include "api/transport/stun.h"
 #include "p2p/base/connection.h"
 #include "p2p/base/p2p_constants.h"
@@ -348,6 +349,10 @@ bool UDPPort::HandleIncomingPacket(rtc::AsyncPacketSocket* socket,
 }
 
 bool UDPPort::SupportsProtocol(const std::string& protocol) const {
+  return SupportsProtocol(absl::string_view(protocol));
+}
+
+bool UDPPort::SupportsProtocol(absl::string_view protocol) const {
   return protocol == UDP_PROTOCOL_NAME;
 }
 

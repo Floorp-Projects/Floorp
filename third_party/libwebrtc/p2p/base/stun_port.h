@@ -17,6 +17,7 @@
 #include <string>
 
 #include "absl/memory/memory.h"
+#include "absl/strings/string_view.h"
 #include "p2p/base/port.h"
 #include "p2p/base/stun_request.h"
 #include "rtc_base/async_packet_socket.h"
@@ -101,6 +102,7 @@ class UDPPort : public Port {
                             int64_t packet_time_us) override;
 
   bool SupportsProtocol(const std::string& protocol) const override;
+  bool SupportsProtocol(absl::string_view protocol) const override;
   ProtocolType GetProtocol() const override;
 
   void GetStunStats(absl::optional<StunStats>* stats) override;

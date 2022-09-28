@@ -10,10 +10,18 @@
 
 #include "p2p/base/port_interface.h"
 
+#include <string>
+
+#include "absl/strings/string_view.h"
+
 namespace cricket {
 
 PortInterface::PortInterface() = default;
 
 PortInterface::~PortInterface() = default;
+
+bool PortInterface::SupportsProtocol(absl::string_view protocol) const {
+  return SupportsProtocol(std::string(protocol));
+}
 
 }  // namespace cricket

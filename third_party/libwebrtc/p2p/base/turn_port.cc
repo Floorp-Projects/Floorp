@@ -17,6 +17,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/match.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/transport/stun.h"
 #include "p2p/base/connection.h"
@@ -763,6 +764,10 @@ void TurnPort::OnReadyToSend(rtc::AsyncPacketSocket* socket) {
 }
 
 bool TurnPort::SupportsProtocol(const std::string& protocol) const {
+  return SupportsProtocol(absl::string_view(protocol));
+}
+
+bool TurnPort::SupportsProtocol(absl::string_view protocol) const {
   // Turn port only connects to UDP candidates.
   return protocol == UDP_PROTOCOL_NAME;
 }
