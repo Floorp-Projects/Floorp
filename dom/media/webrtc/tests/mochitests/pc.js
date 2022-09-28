@@ -2376,6 +2376,14 @@ function loadScript(...scripts) {
 }
 
 // Ensure SimpleTest.js is loaded before other scripts.
+/* import-globals-from /testing/mochitest/tests/SimpleTest/SimpleTest.js */
+/* import-globals-from head.js */
+/* import-globals-from templates.js */
+/* import-globals-from turnConfig.js */
+/* import-globals-from dataChannel.js */
+/* import-globals-from network.js */
+/* import-globals-from sdpUtils.js */
+
 var scriptsReady = loadScript("/tests/SimpleTest/SimpleTest.js").then(() => {
   return loadScript(
     "head.js",
