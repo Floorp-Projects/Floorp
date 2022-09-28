@@ -23,66 +23,6 @@ void* ErrorAllocator::onOutOfMemory(AllocFunction allocFunc, arena_id_t arena,
   return context_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
 }
 
-MainThreadErrorContext::MainThreadErrorContext(JSContext* cx) : cx_(cx) {}
-
-void* MainThreadErrorContext::onOutOfMemory(AllocFunction allocFunc,
-                                            arena_id_t arena, size_t nbytes,
-                                            void* reallocPtr) {
-  return cx_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
-}
-
-void MainThreadErrorContext::onOutOfMemory() { cx_->onOutOfMemory(); }
-
-void MainThreadErrorContext::onAllocationOverflow() {
-  return cx_->reportAllocationOverflow();
-}
-
-void MainThreadErrorContext::onOverRecursed() { cx_->onOverRecursed(); }
-
-void MainThreadErrorContext::recoverFromOutOfMemory() {
-  cx_->recoverFromOutOfMemory();
-}
-
-const JSErrorFormatString* MainThreadErrorContext::gcSafeCallback(
-    JSErrorCallback callback, void* userRef, const unsigned errorNumber) {
-  gc::AutoSuppressGC suppressGC(cx_);
-  return callback(userRef, errorNumber);
-}
-
-void MainThreadErrorContext::reportError(CompileError* err) {
-  // On the main thread, report the error immediately.
-
-  if (MOZ_UNLIKELY(!cx_->runtime()->hasInitializedSelfHosting())) {
-    return;
-  }
-
-  err->throwError(cx_);
-}
-
-void MainThreadErrorContext::reportWarning(CompileError* err) {
-  err->throwError(cx_);
-}
-
-bool MainThreadErrorContext::hadOutOfMemory() const {
-  return cx_->offThreadFrontendErrors()->outOfMemory;
-}
-
-bool MainThreadErrorContext::hadOverRecursed() const {
-  return cx_->offThreadFrontendErrors()->overRecursed;
-}
-
-bool MainThreadErrorContext::hadAllocationOverflow() const {
-  return cx_->offThreadFrontendErrors()->allocationOverflow;
-}
-
-bool MainThreadErrorContext::hadErrors() const {
-  if (cx_->isExceptionPending()) {
-    return true;
-  }
-
-  return cx_->offThreadFrontendErrors()->hadErrors();
-}
-
 bool OffThreadErrorContext::hadErrors() const {
   if (maybeCx_) {
     if (maybeCx_->isExceptionPending()) {
@@ -204,18 +144,6 @@ void OffThreadErrorContext::linkWithJSContext(JSContext* cx) {
 }
 
 #ifdef __wasi__
-void MainThreadErrorContext::incWasiRecursionDepth() {
-  IncWasiRecursionDepth(cx_);
-}
-
-void MainThreadErrorContext::decWasiRecursionDepth() {
-  DecWasiRecursionDepth(cx_);
-}
-
-bool MainThreadErrorContext::checkWasiRecursionLimit() {
-  return CheckWasiRecursionLimit(cx_);
-}
-
 void OffThreadErrorContext::incWasiRecursionDepth() {
   if (maybeCx_) {
     IncWasiRecursionDepth(maybeCx_);

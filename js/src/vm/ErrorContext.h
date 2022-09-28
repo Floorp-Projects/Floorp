@@ -81,44 +81,6 @@ class ErrorContext {
 #endif  // __wasi__
 };
 
-class MainThreadErrorContext : public ErrorContext {
- private:
-  JSContext* cx_;
-
- public:
-  explicit MainThreadErrorContext(JSContext* cx);
-
-  // Report CompileErrors
-  void reportError(js::CompileError* err) override;
-  void reportWarning(js::CompileError* err) override;
-
-  // Report ErrorAllocator errors
-  void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
-                      size_t nbytes, void* reallocPtr = nullptr) override;
-  void onAllocationOverflow() override;
-
-  void onOutOfMemory() override;
-  void onOverRecursed() override;
-
-  void recoverFromOutOfMemory() override;
-
-  const JSErrorFormatString* gcSafeCallback(
-      JSErrorCallback callback, void* userRef,
-      const unsigned errorNumber) override;
-
-  // Status of errors reported to this ErrorContext
-  bool hadOutOfMemory() const override;
-  bool hadOverRecursed() const override;
-  bool hadAllocationOverflow() const override;
-  bool hadErrors() const override;
-
-#ifdef __wasi__
-  void incWasiRecursionDepth() override;
-  void decWasiRecursionDepth() override;
-  bool checkWasiRecursionLimit() override;
-#endif  // __wasi__
-};
-
 class OffThreadErrorContext : public ErrorContext {
  private:
   js::OffThreadFrontendErrors errors_;
