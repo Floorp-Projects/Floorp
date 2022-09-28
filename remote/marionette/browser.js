@@ -211,7 +211,7 @@ browser.Context = class {
    * @throws UnsupportedOperationError
    *     If tab handling for the current application isn't supported.
    */
-  closeTab() {
+  async closeTab() {
     // If the current window is not a browser then close it directly. Do the
     // same if only one remaining tab is open, or no tab selected at all.
     //
@@ -233,10 +233,10 @@ browser.Context = class {
     let tabClosed;
 
     if (lazy.AppInfo.isAndroid) {
-      lazy.TabManager.removeTab(this.tab);
+      await lazy.TabManager.removeTab(this.tab);
     } else if (lazy.AppInfo.isFirefox) {
       tabClosed = new lazy.EventPromise(this.tab, "TabClose");
-      this.tabBrowser.removeTab(this.tab);
+      await this.tabBrowser.removeTab(this.tab);
     } else {
       throw new lazy.error.UnsupportedOperationError(
         `closeTab() not supported for ${lazy.AppInfo.name}`

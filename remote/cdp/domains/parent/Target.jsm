@@ -105,7 +105,7 @@ class Target extends Domain {
     return { targetId: target.id };
   }
 
-  closeTarget(options = {}) {
+  async closeTarget(options = {}) {
     const { targetId } = options;
     const { targetList } = this.session.target;
     const target = targetList.getById(targetId);
@@ -114,7 +114,7 @@ class Target extends Domain {
       throw new Error(`Unable to find target with id '${targetId}'`);
     }
 
-    lazy.TabManager.removeTab(target.tab);
+    await lazy.TabManager.removeTab(target.tab);
   }
 
   async activateTarget(options = {}) {
