@@ -241,8 +241,8 @@ std::ostream& operator<<(std::ostream& aStream,
 std::ostream& operator<<(std::ostream& aStream, const InputContext& aContext) {
   aStream << "{ mIMEState=" << aContext.mIMEState
           << ", mOrigin=" << aContext.mOrigin << ", mHTMLInputType=\""
-          << aContext.mHTMLInputType << "\", mHTMLInputInputmode=\""
-          << aContext.mHTMLInputInputmode << "\", mActionHint=\""
+          << aContext.mHTMLInputType << "\", mHTMLInputMode=\""
+          << aContext.mHTMLInputMode << "\", mActionHint=\""
           << aContext.mActionHint << "\", mAutocapitalize=\""
           << aContext.mAutocapitalize << "\", mMayBeIMEUnaware="
           << (aContext.mMayBeIMEUnaware ? "true" : "false")

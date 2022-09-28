@@ -1475,21 +1475,21 @@ MOZ_CAN_RUN_SCRIPT static void GetActionHint(const IMEState& aState,
   aActionHint.AssignLiteral("go");
 }
 
-static void GetInputmode(const IMEState& aState, const nsIContent& aContent,
-                         nsAString& aInputmode) {
+static void GetInputMode(const IMEState& aState, const nsIContent& aContent,
+                         nsAString& aInputMode) {
   if (aState.IsEditable() &&
       (StaticPrefs::dom_forms_inputmode() ||
        nsContentUtils::IsChromeDoc(aContent.OwnerDoc()))) {
     aContent.AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::inputmode,
-                                  aInputmode);
+                                  aInputMode);
     if (aContent.IsHTMLElement(nsGkAtoms::input) &&
-        aInputmode.EqualsLiteral("mozAwesomebar")) {
+        aInputMode.EqualsLiteral("mozAwesomebar")) {
       if (!nsContentUtils::IsChromeDoc(aContent.OwnerDoc())) {
         // mozAwesomebar should be allowed only in chrome
-        aInputmode.Truncate();
+        aInputMode.Truncate();
       }
     } else {
-      ToLowerCase(aInputmode);
+      ToLowerCase(aInputMode);
     }
   }
 }
@@ -1565,7 +1565,7 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
   if (focusedElement && focusedElement->IsHTMLElement()) {
     GetInputType(aState, *focusedElement, context.mHTMLInputType);
     GetActionHint(aState, *focusedElement, context.mActionHint);
-    GetInputmode(aState, *focusedElement, context.mHTMLInputInputmode);
+    GetInputMode(aState, *focusedElement, context.mHTMLInputMode);
     GetAutocapitalize(aState, *focusedElement, context,
                       context.mAutocapitalize);
   }
