@@ -1500,7 +1500,7 @@ NotificationPermission Notification::GetPermission(const GlobalObject& aGlobal,
 NotificationPermission Notification::GetPermission(nsIGlobalObject* aGlobal,
                                                    ErrorResult& aRv) {
   if (NS_IsMainThread()) {
-    return GetPermissionInternal(aGlobal->AsInnerWindow(), aRv);
+    return GetPermissionInternal(aGlobal, aRv);
   } else {
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);
@@ -1515,27 +1515,16 @@ NotificationPermission Notification::GetPermission(nsIGlobalObject* aGlobal,
 }
 
 /* static */
-NotificationPermission Notification::GetPermissionInternal(
-    nsPIDOMWindowInner* aWindow, ErrorResult& aRv) {
+NotificationPermission Notification::GetPermissionInternal(nsISupports* aGlobal,
+                                                           ErrorResult& aRv) {
   // Get principal from global to check permission for notifications.
-  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aWindow);
+  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aGlobal);
   if (!sop) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return NotificationPermission::Denied;
   }
 
   nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
-  // Disallow showing notification if our origin is not the same origin as the
-  // toplevel one, see https://github.com/whatwg/notifications/issues/177.
-  if (!StaticPrefs::dom_webnotifications_allowcrossoriginiframe()) {
-    nsCOMPtr<nsIScriptObjectPrincipal> topSop =
-        do_QueryInterface(aWindow->GetBrowsingContext()->Top()->GetDOMWindow());
-    nsIPrincipal* topPrincipal = topSop ? topSop->GetPrincipal() : nullptr;
-    if (!topPrincipal || !principal->Subsumes(topPrincipal)) {
-      return NotificationPermission::Denied;
-    }
-  }
-
   return GetPermissionInternal(principal, aRv);
 }
 
