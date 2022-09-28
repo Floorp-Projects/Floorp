@@ -324,6 +324,8 @@ class DCSurfaceVideo : public DCSurface {
   DCSurfaceVideo* AsDCSurfaceVideo() override { return this; }
 
  protected:
+  virtual ~DCSurfaceVideo();
+
   DXGI_FORMAT GetSwapChainFormat();
   bool CreateVideoSwapChain();
   bool CallVideoProcessorBlt();
