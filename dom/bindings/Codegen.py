@@ -6260,272 +6260,26 @@ def getJSToNativeConversionInfo(
             # a value.  Otherwise we're an already-constructed Maybe.
             unionArgumentObj += ".SetValue()" if isOwningUnion else ".ref()"
 
-        memberTypes = type.flatMemberTypes
-        prettyNames = []
-
-        interfaceMemberTypes = [t for t in memberTypes if t.isNonCallbackInterface()]
-        if len(interfaceMemberTypes) > 0:
-            interfaceObject = []
-            for memberType in interfaceMemberTypes:
-                name = getUnionMemberName(memberType)
-                interfaceObject.append(
-                    CGGeneric(
-                        "(failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext"
-                        % (unionArgumentObj, name)
-                    )
-                )
-                prettyNames.append(memberType.prettyName())
-            interfaceObject = CGWrapper(
-                CGList(interfaceObject, " ||\n"),
-                pre="done = ",
-                post=";\n",
-                reindent=True,
-            )
-        else:
-            interfaceObject = None
-
-        sequenceObjectMemberTypes = [t for t in memberTypes if t.isSequence()]
-        if len(sequenceObjectMemberTypes) > 0:
-            assert len(sequenceObjectMemberTypes) == 1
-            memberType = sequenceObjectMemberTypes[0]
-            name = getUnionMemberName(memberType)
-            sequenceObject = CGGeneric(
-                "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n"
-                % (unionArgumentObj, name)
-            )
-            prettyNames.append(memberType.prettyName())
-        else:
-            sequenceObject = None
-
-        callbackMemberTypes = [
-            t for t in memberTypes if t.isCallback() or t.isCallbackInterface()
-        ]
-        if len(callbackMemberTypes) > 0:
-            assert len(callbackMemberTypes) == 1
-            memberType = callbackMemberTypes[0]
-            name = getUnionMemberName(memberType)
-            callbackObject = CGGeneric(
-                "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n"
-                % (unionArgumentObj, name)
-            )
-            prettyNames.append(memberType.prettyName())
-        else:
-            callbackObject = None
-
-        dictionaryMemberTypes = [t for t in memberTypes if t.isDictionary()]
-        if len(dictionaryMemberTypes) > 0:
-            assert len(dictionaryMemberTypes) == 1
-            memberType = dictionaryMemberTypes[0]
-            name = getUnionMemberName(memberType)
-            setDictionary = CGGeneric(
-                "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n"
-                % (unionArgumentObj, name)
-            )
-            prettyNames.append(memberType.prettyName())
-        else:
-            setDictionary = None
-
-        recordMemberTypes = [t for t in memberTypes if t.isRecord()]
-        if len(recordMemberTypes) > 0:
-            assert len(recordMemberTypes) == 1
-            memberType = recordMemberTypes[0]
-            name = getUnionMemberName(memberType)
-            recordObject = CGGeneric(
-                "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n"
-                % (unionArgumentObj, name)
-            )
-            prettyNames.append(memberType.prettyName())
-        else:
-            recordObject = None
-
-        objectMemberTypes = [t for t in memberTypes if t.isObject()]
-        if len(objectMemberTypes) > 0:
-            assert len(objectMemberTypes) == 1
-            # Very important to NOT construct a temporary Rooted here, since the
-            # SetToObject call can call a Rooted constructor and we need to keep
-            # stack discipline for Rooted.
-            object = CGGeneric(
-                "if (!%s.SetToObject(cx, &${val}.toObject(), ${passedToJSImpl})) {\n"
-                "%s"
-                "}\n"
-                "done = true;\n" % (unionArgumentObj, indent(exceptionCode))
-            )
-            prettyNames.append(objectMemberTypes[0].prettyName())
-        else:
-            object = None
-
-        hasObjectTypes = (
-            interfaceObject
-            or sequenceObject
-            or callbackObject
-            or object
-            or recordObject
-        )
-        if hasObjectTypes:
-            # "object" is not distinguishable from other types
-            assert not object or not (
-                interfaceObject or sequenceObject or callbackObject or recordObject
-            )
-            if sequenceObject or callbackObject:
-                # An object can be both an sequence object and a callback or
-                # dictionary, but we shouldn't have both in the union's members
-                # because they are not distinguishable.
-                assert not (sequenceObject and callbackObject)
-                templateBody = CGElseChain([sequenceObject, callbackObject])
-            else:
-                templateBody = None
-            if interfaceObject:
-                assert not object
-                if templateBody:
-                    templateBody = CGIfWrapper(templateBody, "!done")
-                templateBody = CGList([interfaceObject, templateBody])
-            else:
-                templateBody = CGList([templateBody, object])
-
-            if recordObject:
-                templateBody = CGList(
-                    [templateBody, CGIfWrapper(recordObject, "!done")]
-                )
-
-            templateBody = CGIfWrapper(templateBody, "${val}.isObject()")
-        else:
-            templateBody = CGGeneric()
-
-        if setDictionary:
-            assert not object
-            templateBody = CGList([templateBody, CGIfWrapper(setDictionary, "!done")])
-
-        stringTypes = [t for t in memberTypes if t.isString() or t.isEnum()]
-        numericTypes = [t for t in memberTypes if t.isNumeric()]
-        booleanTypes = [t for t in memberTypes if t.isBoolean()]
-        if stringTypes or numericTypes or booleanTypes:
-            assert len(stringTypes) <= 1
-            assert len(numericTypes) <= 1
-            assert len(booleanTypes) <= 1
-
-            # We will wrap all this stuff in a do { } while (0); so we
-            # can use "break" for flow control.
-            def getStringOrPrimitiveConversion(memberType):
-                name = getUnionMemberName(memberType)
-                return CGGeneric(
-                    "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext)) || !tryNext;\n"
-                    "break;\n" % (unionArgumentObj, name)
-                )
-
-            other = CGList([])
-            stringConversion = [getStringOrPrimitiveConversion(t) for t in stringTypes]
-            numericConversion = [
-                getStringOrPrimitiveConversion(t) for t in numericTypes
-            ]
-            booleanConversion = [
-                getStringOrPrimitiveConversion(t) for t in booleanTypes
-            ]
-            if stringConversion:
-                if booleanConversion:
-                    other.append(
-                        CGIfWrapper(booleanConversion[0], "${val}.isBoolean()")
-                    )
-                if numericConversion:
-                    other.append(CGIfWrapper(numericConversion[0], "${val}.isNumber()"))
-                other.append(stringConversion[0])
-            elif numericConversion:
-                if booleanConversion:
-                    other.append(
-                        CGIfWrapper(booleanConversion[0], "${val}.isBoolean()")
-                    )
-                other.append(numericConversion[0])
-            else:
-                assert booleanConversion
-                other.append(booleanConversion[0])
-
-            other = CGWrapper(
-                CGIndenter(other), pre="do {\n", post="} while (false);\n"
-            )
-            if hasObjectTypes or setDictionary:
-                other = CGWrapper(CGIndenter(other), "{\n", post="}\n")
-                if object:
-                    templateBody = CGElseChain([templateBody, other])
-                else:
-                    other = CGWrapper(other, pre="if (!done) ")
-                    templateBody = CGList([templateBody, other])
-            else:
-                assert templateBody.define() == ""
-                templateBody = other
-        else:
-            other = None
-
-        templateBody = CGWrapper(
-            templateBody, pre="bool done = false, failed = false, tryNext;\n"
-        )
-        throw = CGGeneric(
-            fill(
-                """
-            if (failed) {
-              $*{exceptionCode}
-            }
-            if (!done) {
-              cx.ThrowErrorMessage<MSG_NOT_IN_UNION>("${desc}", "${names}");
-              $*{exceptionCode}
-            }
-            """,
-                exceptionCode=exceptionCode,
-                desc=firstCap(sourceDescription),
-                names=", ".join(prettyNames),
-            )
-        )
-
-        templateBody = CGWrapper(
-            CGIndenter(CGList([templateBody, throw])), pre="{\n", post="}\n"
-        )
-
-        typeName = CGUnionStruct.unionTypeDecl(type, isOwningUnion)
-        argumentTypeName = typeName + "Argument"
-        if nullable:
-            typeName = "Nullable<" + typeName + " >"
-
-        hasUndefinedType = any(t.isUndefined() for t in memberTypes)
-        assert not hasUndefinedType or defaultValue is None
-
-        def handleNull(setToNullVar, extraConditionForNull):
-            if hasUndefinedType:
-                nullTest = "${val}.isNull()"
-            else:
-                nullTest = "${val}.isNullOrUndefined()"
-            return (
-                extraConditionForNull + nullTest,
-                CGGeneric("%s.SetNull();\n" % setToNullVar),
-            )
-
-        elseChain = []
-
-        # The spec does this before anything else, but we do it after checking
-        # for null in the case of a nullable union. In practice this shouldn't
-        # make a difference, but it makes things easier because we first need to
-        # call Construct on our Maybe<...>, before we can set the union type to
-        # undefined, and we do that below after checking for null (see the
-        # 'if nullable:' block below).
-        if hasUndefinedType:
-            elseChain.append(
-                CGIfWrapper(
-                    CGGeneric("%s.SetUndefined();\n" % unionArgumentObj),
-                    "${val}.isUndefined()",
-                )
-            )
-
+        extraConditionForNull = ""
         if type.hasNullableType:
             assert not nullable
             # Make sure to handle a null default value here
             if defaultValue and isinstance(defaultValue, IDLNullValue):
                 assert defaultValue.type == type
                 extraConditionForNull = "!(${haveValue}) || "
-            else:
-                extraConditionForNull = ""
-            nullTest, setToNull = handleNull(unionArgumentObj, extraConditionForNull)
-            elseChain.append(CGIfWrapper(setToNull, nullTest))
 
-        if len(elseChain) > 0:
-            elseChain.append(templateBody)
-            templateBody = CGElseChain(elseChain)
+        templateBody = getUnionConversionTemplate(
+            type,
+            unionArgumentObj,
+            exceptionCode=exceptionCode,
+            sourceDescription=firstCap(sourceDescription),
+            extraConditionForNull=extraConditionForNull,
+        )
+
+        typeName = CGUnionStruct.unionTypeDecl(type, isOwningUnion)
+        argumentTypeName = typeName + "Argument"
+        if nullable:
+            typeName = "Nullable<" + typeName + " >"
 
         declType = CGGeneric(typeName)
         if isOwningUnion:
@@ -6613,6 +6367,7 @@ def getJSToNativeConversionInfo(
         templateBody = CGList([constructHolder, templateBody])
 
         if nullable:
+            assert not type.hasNullableType
             if defaultValue:
                 if isinstance(defaultValue, IDLNullValue):
                     extraConditionForNull = "!(${haveValue}) || "
@@ -6620,8 +6375,18 @@ def getJSToNativeConversionInfo(
                     extraConditionForNull = "(${haveValue}) && "
             else:
                 extraConditionForNull = ""
-            nullTest, setToNull = handleNull(declLoc, extraConditionForNull)
-            templateBody = CGIfElseWrapper(nullTest, setToNull, templateBody)
+
+            hasUndefinedType = any(t.isUndefined() for t in type.flatMemberTypes)
+            assert not hasUndefinedType or defaultValue is None
+
+            nullTest = (
+                "${val}.isNull()" if hasUndefinedType else "${val}.isNullOrUndefined()"
+            )
+            templateBody = CGIfElseWrapper(
+                extraConditionForNull + nullTest,
+                CGGeneric("%s.SetNull();\n" % declLoc),
+                templateBody,
+            )
         elif (
             not type.hasNullableType
             and defaultValue
@@ -12710,6 +12475,253 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider, ownsMembers=Fa
         "ctorArgs": ctorArgs,
         "ctorArgList": [Argument("JSContext*", "cx")] if ctorNeedsCx else [],
     }
+
+
+def getUnionConversionTemplate(
+    type,
+    unionArgumentObj,
+    exceptionCode=None,
+    sourceDescription="value",
+    extraConditionForNull="",
+):
+    assert type.isUnion()
+    assert not type.nullable()
+
+    memberTypes = type.flatMemberTypes
+    prettyNames = []
+
+    interfaceMemberTypes = [t for t in memberTypes if t.isNonCallbackInterface()]
+    if len(interfaceMemberTypes) > 0:
+        interfaceObject = []
+        for memberType in interfaceMemberTypes:
+            name = getUnionMemberName(memberType)
+            interfaceObject.append(
+                CGGeneric(
+                    "(failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext"
+                    % (unionArgumentObj, name)
+                )
+            )
+            prettyNames.append(memberType.prettyName())
+        interfaceObject = CGWrapper(
+            CGList(interfaceObject, " ||\n"),
+            pre="done = ",
+            post=";\n",
+            reindent=True,
+        )
+    else:
+        interfaceObject = None
+
+    sequenceObjectMemberTypes = [t for t in memberTypes if t.isSequence()]
+    if len(sequenceObjectMemberTypes) > 0:
+        assert len(sequenceObjectMemberTypes) == 1
+        memberType = sequenceObjectMemberTypes[0]
+        name = getUnionMemberName(memberType)
+        sequenceObject = CGGeneric(
+            "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n"
+            % (unionArgumentObj, name)
+        )
+        prettyNames.append(memberType.prettyName())
+    else:
+        sequenceObject = None
+
+    callbackMemberTypes = [
+        t for t in memberTypes if t.isCallback() or t.isCallbackInterface()
+    ]
+    if len(callbackMemberTypes) > 0:
+        assert len(callbackMemberTypes) == 1
+        memberType = callbackMemberTypes[0]
+        name = getUnionMemberName(memberType)
+        callbackObject = CGGeneric(
+            "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n"
+            % (unionArgumentObj, name)
+        )
+        prettyNames.append(memberType.prettyName())
+    else:
+        callbackObject = None
+
+    dictionaryMemberTypes = [t for t in memberTypes if t.isDictionary()]
+    if len(dictionaryMemberTypes) > 0:
+        assert len(dictionaryMemberTypes) == 1
+        memberType = dictionaryMemberTypes[0]
+        name = getUnionMemberName(memberType)
+        setDictionary = CGGeneric(
+            "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n"
+            % (unionArgumentObj, name)
+        )
+        prettyNames.append(memberType.prettyName())
+    else:
+        setDictionary = None
+
+    recordMemberTypes = [t for t in memberTypes if t.isRecord()]
+    if len(recordMemberTypes) > 0:
+        assert len(recordMemberTypes) == 1
+        memberType = recordMemberTypes[0]
+        name = getUnionMemberName(memberType)
+        recordObject = CGGeneric(
+            "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n"
+            % (unionArgumentObj, name)
+        )
+        prettyNames.append(memberType.prettyName())
+    else:
+        recordObject = None
+
+    objectMemberTypes = [t for t in memberTypes if t.isObject()]
+    if len(objectMemberTypes) > 0:
+        assert len(objectMemberTypes) == 1
+        # Very important to NOT construct a temporary Rooted here, since the
+        # SetToObject call can call a Rooted constructor and we need to keep
+        # stack discipline for Rooted.
+        object = CGGeneric(
+            "if (!%s.SetToObject(cx, &${val}.toObject(), ${passedToJSImpl})) {\n"
+            "%s"
+            "}\n"
+            "done = true;\n" % (unionArgumentObj, indent(exceptionCode))
+        )
+        prettyNames.append(objectMemberTypes[0].prettyName())
+    else:
+        object = None
+
+    hasObjectTypes = (
+        interfaceObject or sequenceObject or callbackObject or object or recordObject
+    )
+    if hasObjectTypes:
+        # "object" is not distinguishable from other types
+        assert not object or not (
+            interfaceObject or sequenceObject or callbackObject or recordObject
+        )
+        if sequenceObject or callbackObject:
+            # An object can be both an sequence object and a callback or
+            # dictionary, but we shouldn't have both in the union's members
+            # because they are not distinguishable.
+            assert not (sequenceObject and callbackObject)
+            templateBody = CGElseChain([sequenceObject, callbackObject])
+        else:
+            templateBody = None
+        if interfaceObject:
+            assert not object
+            if templateBody:
+                templateBody = CGIfWrapper(templateBody, "!done")
+            templateBody = CGList([interfaceObject, templateBody])
+        else:
+            templateBody = CGList([templateBody, object])
+
+        if recordObject:
+            templateBody = CGList([templateBody, CGIfWrapper(recordObject, "!done")])
+
+        templateBody = CGIfWrapper(templateBody, "${val}.isObject()")
+    else:
+        templateBody = CGGeneric()
+
+    if setDictionary:
+        assert not object
+        templateBody = CGList([templateBody, CGIfWrapper(setDictionary, "!done")])
+
+    stringTypes = [t for t in memberTypes if t.isString() or t.isEnum()]
+    numericTypes = [t for t in memberTypes if t.isNumeric()]
+    booleanTypes = [t for t in memberTypes if t.isBoolean()]
+    if stringTypes or numericTypes or booleanTypes:
+        assert len(stringTypes) <= 1
+        assert len(numericTypes) <= 1
+        assert len(booleanTypes) <= 1
+
+        # We will wrap all this stuff in a do { } while (0); so we
+        # can use "break" for flow control.
+        def getStringOrPrimitiveConversion(memberType):
+            name = getUnionMemberName(memberType)
+            return CGGeneric(
+                "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext)) || !tryNext;\n"
+                "break;\n" % (unionArgumentObj, name)
+            )
+
+        other = CGList([])
+        stringConversion = [getStringOrPrimitiveConversion(t) for t in stringTypes]
+        numericConversion = [getStringOrPrimitiveConversion(t) for t in numericTypes]
+        booleanConversion = [getStringOrPrimitiveConversion(t) for t in booleanTypes]
+        if stringConversion:
+            if booleanConversion:
+                other.append(CGIfWrapper(booleanConversion[0], "${val}.isBoolean()"))
+            if numericConversion:
+                other.append(CGIfWrapper(numericConversion[0], "${val}.isNumber()"))
+            other.append(stringConversion[0])
+        elif numericConversion:
+            if booleanConversion:
+                other.append(CGIfWrapper(booleanConversion[0], "${val}.isBoolean()"))
+            other.append(numericConversion[0])
+        else:
+            assert booleanConversion
+            other.append(booleanConversion[0])
+
+        other = CGWrapper(CGIndenter(other), pre="do {\n", post="} while (false);\n")
+        if hasObjectTypes or setDictionary:
+            other = CGWrapper(CGIndenter(other), "{\n", post="}\n")
+            if object:
+                templateBody = CGElseChain([templateBody, other])
+            else:
+                other = CGWrapper(other, pre="if (!done) ")
+                templateBody = CGList([templateBody, other])
+        else:
+            assert templateBody.define() == ""
+            templateBody = other
+    else:
+        other = None
+
+    templateBody = CGWrapper(
+        templateBody, pre="bool done = false, failed = false, tryNext;\n"
+    )
+    throw = CGGeneric(
+        fill(
+            """
+        if (failed) {
+          $*{exceptionCode}
+        }
+        if (!done) {
+          cx.ThrowErrorMessage<MSG_NOT_IN_UNION>("${desc}", "${names}");
+          $*{exceptionCode}
+        }
+        """,
+            exceptionCode=exceptionCode,
+            desc=sourceDescription,
+            names=", ".join(prettyNames),
+        )
+    )
+
+    templateBody = CGWrapper(
+        CGIndenter(CGList([templateBody, throw])), pre="{\n", post="}\n"
+    )
+
+    hasUndefinedType = any(t.isUndefined() for t in memberTypes)
+    elseChain = []
+
+    # The spec does this before anything else, but we do it after checking
+    # for null in the case of a nullable union. In practice this shouldn't
+    # make a difference, but it makes things easier because we first need to
+    # call Construct on our Maybe<...>, before we can set the union type to
+    # undefined, and we do that below after checking for null (see the
+    # 'if nullable:' block below).
+    if hasUndefinedType:
+        elseChain.append(
+            CGIfWrapper(
+                CGGeneric("%s.SetUndefined();\n" % unionArgumentObj),
+                "${val}.isUndefined()",
+            )
+        )
+
+    if type.hasNullableType:
+        nullTest = (
+            "${val}.isNull()" if hasUndefinedType else "${val}.isNullOrUndefined()"
+        )
+        elseChain.append(
+            CGIfWrapper(
+                CGGeneric("%s.SetNull();\n" % unionArgumentObj),
+                extraConditionForNull + nullTest,
+            )
+        )
+
+    if len(elseChain) > 0:
+        elseChain.append(templateBody)
+        templateBody = CGElseChain(elseChain)
+
+    return templateBody
 
 
 class CGUnionStruct(CGThing):
