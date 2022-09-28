@@ -78,6 +78,9 @@ const intermittently_loaded_scripts = {
     // may not load early enough for the test.
     "resource://webcompat/AboutCompat.jsm",
 
+    // Cookie banner handling.
+    "resource://gre/actors/CookieBannerChild.jsm",
+
     // Test related
     "chrome://remote/content/marionette/actors/MarionetteEventsChild.jsm",
     "chrome://remote/content/shared/Log.jsm",
