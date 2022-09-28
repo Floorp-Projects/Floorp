@@ -193,12 +193,16 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
       }
     }
 
+    std::set<size_t> frame_receivers_indexes = peers_->GetPresentIndexes();
+    if (!options_.enable_receive_own_stream) {
+      frame_receivers_indexes.erase(peer_index);
+    }
+
     auto state_it = stream_states_.find(stream_index);
     if (state_it == stream_states_.end()) {
       stream_states_.emplace(
           stream_index,
-          StreamState(peer_index, peers_->size(),
-                      options_.enable_receive_own_stream, captured_time));
+          StreamState(peer_index, frame_receivers_indexes, captured_time));
     }
     StreamState* state = &stream_states_.at(stream_index);
     state->PushBack(frame_id);
@@ -229,10 +233,6 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
       }
 
       captured_frames_in_flight_.erase(it);
-    }
-    std::set<size_t> frame_receivers_indexes = peers_->GetPresentIndexes();
-    if (!options_.enable_receive_own_stream) {
-      frame_receivers_indexes.erase(peer_index);
     }
     captured_frames_in_flight_.emplace(
         frame_id, FrameInFlight(stream_index, frame, captured_time,
@@ -470,7 +470,7 @@ void DefaultVideoQualityAnalyzer::OnFrameRendered(
 
   const size_t stream_index = frame_in_flight->stream();
   StreamState* state = &stream_states_.at(stream_index);
-  const InternalStatsKey stats_key(stream_index, state->owner(), peer_index);
+  const InternalStatsKey stats_key(stream_index, state->sender(), peer_index);
 
   // Update frames counters.
   frame_counters_.rendered++;
@@ -498,7 +498,6 @@ void DefaultVideoQualityAnalyzer::OnFrameRendered(
 
     auto dropped_frame_it = captured_frames_in_flight_.find(dropped_frame_id);
     RTC_DCHECK(dropped_frame_it != captured_frames_in_flight_.end());
-    absl::optional<VideoFrame> dropped_frame = dropped_frame_it->second.frame();
     dropped_frame_it->second.MarkDropped(peer_index);
 
     analyzer_stats_.frames_in_flight_left_count.AddSample(
@@ -591,7 +590,7 @@ void DefaultVideoQualityAnalyzer::RegisterParticipantInCall(
   // Ensure, that frames states are handled correctly
   // (e.g. dropped frames tracking).
   for (auto& key_val : stream_states_) {
-    key_val.second.AddPeer();
+    key_val.second.AddPeer(new_peer_index);
   }
   // Register new peer for every frame in flight.
   // It is guaranteed, that no garbage FrameInFlight objects will stay in
@@ -624,11 +623,11 @@ void DefaultVideoQualityAnalyzer::Stop() {
       const size_t stream_index = state_entry.first;
       StreamState& stream_state = state_entry.second;
       for (size_t i = 0; i < peers_->size(); ++i) {
-        if (i == stream_state.owner() && !options_.enable_receive_own_stream) {
+        if (i == stream_state.sender() && !options_.enable_receive_own_stream) {
           continue;
         }
 
-        InternalStatsKey stats_key(stream_index, stream_state.owner(), i);
+        InternalStatsKey stats_key(stream_index, stream_state.sender(), i);
 
         // If there are no freezes in the call we have to report
         // time_between_freezes_ms as call duration and in such case
