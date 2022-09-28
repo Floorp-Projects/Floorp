@@ -6231,21 +6231,22 @@ def getJSToNativeConversionInfo(
             # a value.  Otherwise we're an already-constructed Maybe.
             unionArgumentObj += ".SetValue()"
 
-        extraConditionForNull = ""
+        templateBody = CGIfWrapper(
+            CGGeneric(exceptionCode),
+            '!%s.Init(cx, ${val}, "%s", ${passedToJSImpl})'
+            % (unionArgumentObj, firstCap(sourceDescription)),
+        )
+
         if type.hasNullableType:
             assert not nullable
             # Make sure to handle a null default value here
             if defaultValue and isinstance(defaultValue, IDLNullValue):
                 assert defaultValue.type == type
-                extraConditionForNull = "!(${haveValue}) || "
-
-        templateBody = getUnionConversionTemplate(
-            type,
-            unionArgumentObj,
-            exceptionCode=exceptionCode,
-            sourceDescription=firstCap(sourceDescription),
-            extraConditionForNull=extraConditionForNull,
-        )
+                templateBody = CGIfElseWrapper(
+                    "!(${haveValue})",
+                    CGGeneric("%s.SetNull();\n" % unionArgumentObj),
+                    templateBody,
+                )
 
         typeName = CGUnionStruct.unionTypeDecl(type, isOwningUnion)
         argumentTypeName = typeName + "Argument"
@@ -12414,13 +12415,7 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider, isMember=False
     }
 
 
-def getUnionConversionTemplate(
-    type,
-    unionArgumentObj,
-    exceptionCode=None,
-    sourceDescription="value",
-    extraConditionForNull="",
-):
+def getUnionConversionTemplate(type):
     assert type.isUnion()
     assert not type.nullable()
 
@@ -12434,8 +12429,8 @@ def getUnionConversionTemplate(
             name = getUnionMemberName(memberType)
             interfaceObject.append(
                 CGGeneric(
-                    "(failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext"
-                    % (unionArgumentObj, name)
+                    "(failed = !TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext"
+                    % name
                 )
             )
             prettyNames.append(memberType.prettyName())
@@ -12454,8 +12449,8 @@ def getUnionConversionTemplate(
         memberType = sequenceObjectMemberTypes[0]
         name = getUnionMemberName(memberType)
         sequenceObject = CGGeneric(
-            "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n"
-            % (unionArgumentObj, name)
+            "done = (failed = !TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n"
+            % name
         )
         prettyNames.append(memberType.prettyName())
     else:
@@ -12469,8 +12464,8 @@ def getUnionConversionTemplate(
         memberType = callbackMemberTypes[0]
         name = getUnionMemberName(memberType)
         callbackObject = CGGeneric(
-            "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n"
-            % (unionArgumentObj, name)
+            "done = (failed = !TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n"
+            % name
         )
         prettyNames.append(memberType.prettyName())
     else:
@@ -12482,8 +12477,8 @@ def getUnionConversionTemplate(
         memberType = dictionaryMemberTypes[0]
         name = getUnionMemberName(memberType)
         setDictionary = CGGeneric(
-            "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n"
-            % (unionArgumentObj, name)
+            "done = (failed = !TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n"
+            % name
         )
         prettyNames.append(memberType.prettyName())
     else:
@@ -12495,8 +12490,8 @@ def getUnionConversionTemplate(
         memberType = recordMemberTypes[0]
         name = getUnionMemberName(memberType)
         recordObject = CGGeneric(
-            "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n"
-            % (unionArgumentObj, name)
+            "done = (failed = !TrySetTo%s(cx, ${val}, tryNext, ${passedToJSImpl})) || !tryNext;\n"
+            % name
         )
         prettyNames.append(memberType.prettyName())
     else:
@@ -12509,10 +12504,10 @@ def getUnionConversionTemplate(
         # SetToObject call can call a Rooted constructor and we need to keep
         # stack discipline for Rooted.
         object = CGGeneric(
-            "if (!%s.SetToObject(cx, &${val}.toObject(), ${passedToJSImpl})) {\n"
-            "%s"
+            "if (!SetToObject(cx, &${val}.toObject(), ${passedToJSImpl})) {\n"
+            "  return false;\n"
             "}\n"
-            "done = true;\n" % (unionArgumentObj, indent(exceptionCode))
+            "done = true;\n"
         )
         prettyNames.append(objectMemberTypes[0].prettyName())
     else:
@@ -12566,8 +12561,8 @@ def getUnionConversionTemplate(
         def getStringOrPrimitiveConversion(memberType):
             name = getUnionMemberName(memberType)
             return CGGeneric(
-                "done = (failed = !%s.TrySetTo%s(cx, ${val}, tryNext)) || !tryNext;\n"
-                "break;\n" % (unionArgumentObj, name)
+                "done = (failed = !TrySetTo%s(cx, ${val}, tryNext)) || !tryNext;\n"
+                "break;\n" % name
             )
 
         other = CGList([])
@@ -12608,23 +12603,19 @@ def getUnionConversionTemplate(
     throw = CGGeneric(
         fill(
             """
-        if (failed) {
-          $*{exceptionCode}
-        }
-        if (!done) {
-          cx.ThrowErrorMessage<MSG_NOT_IN_UNION>("${desc}", "${names}");
-          $*{exceptionCode}
-        }
-        """,
-            exceptionCode=exceptionCode,
-            desc=sourceDescription,
+            if (failed) {
+              return false;
+            }
+            if (!done) {
+              cx.ThrowErrorMessage<MSG_NOT_IN_UNION>(sourceDescription, "${names}");
+              return false;
+            }
+            """,
             names=", ".join(prettyNames),
         )
     )
 
-    templateBody = CGWrapper(
-        CGIndenter(CGList([templateBody, throw])), pre="{\n", post="}\n"
-    )
+    templateBody = CGList([templateBody, throw])
 
     hasUndefinedType = any(t.isUndefined() for t in memberTypes)
     elseChain = []
@@ -12638,7 +12629,7 @@ def getUnionConversionTemplate(
     if hasUndefinedType:
         elseChain.append(
             CGIfWrapper(
-                CGGeneric("%s.SetUndefined();\n" % unionArgumentObj),
+                CGGeneric("SetUndefined();\n"),
                 "${val}.isUndefined()",
             )
         )
@@ -12649,16 +12640,74 @@ def getUnionConversionTemplate(
         )
         elseChain.append(
             CGIfWrapper(
-                CGGeneric("%s.SetNull();\n" % unionArgumentObj),
-                extraConditionForNull + nullTest,
+                CGGeneric("SetNull();\n"),
+                nullTest,
             )
         )
 
     if len(elseChain) > 0:
-        elseChain.append(templateBody)
+        elseChain.append(CGWrapper(CGIndenter(templateBody), pre="{\n", post="}\n"))
         templateBody = CGElseChain(elseChain)
 
     return templateBody
+
+
+def getUnionInitMethods(type, isOwningUnion=False):
+    assert type.isUnion()
+
+    template = getUnionConversionTemplate(type).define()
+
+    replacements = {
+        "val": "value",
+        "passedToJSImpl": "passedToJSImpl",
+    }
+
+    initBody = fill(
+        """
+        MOZ_ASSERT(mType == eUninitialized);
+
+        $*{conversion}
+        return true;
+        """,
+        conversion=string.Template(template).substitute(replacements),
+    )
+
+    if isOwningUnion:
+        handleType = "JS::Handle<JS::Value>"
+    else:
+        handleType = "JS::MutableHandle<JS::Value>"
+
+    return [
+        ClassMethod(
+            "Init",
+            "bool",
+            [
+                Argument("BindingCallContext&", "cx"),
+                Argument(handleType, "value"),
+                Argument("const char*", "sourceDescription", default='"Value"'),
+                Argument("bool", "passedToJSImpl", default="false"),
+            ],
+            visibility="public",
+            body=initBody,
+        ),
+        ClassMethod(
+            "Init",
+            "bool",
+            [
+                Argument("JSContext*", "cx_"),
+                Argument(handleType, "value"),
+                Argument("const char*", "sourceDescription", default='"Value"'),
+                Argument("bool", "passedToJSImpl", default="false"),
+            ],
+            visibility="public",
+            body=dedent(
+                """
+                BindingCallContext cx(cx_, nullptr);
+                return Init(cx, value, sourceDescription, passedToJSImpl);
+                """
+            ),
+        ),
+    ]
 
 
 class CGUnionStruct(CGThing):
@@ -13006,6 +13055,7 @@ class CGUnionStruct(CGThing):
 
         dtor = CGSwitch("mType", destructorCases).define()
 
+        methods.extend(getUnionInitMethods(self.type, isOwningUnion=self.ownsMembers))
         methods.append(
             ClassMethod(
                 "Uninit",
