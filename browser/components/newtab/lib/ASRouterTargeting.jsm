@@ -746,6 +746,15 @@ const TargetingGetters = {
     let window = lazy.BrowserWindowTracker.getTopWindow();
     return window?.matchMedia("(prefers-reduced-motion: reduce)")?.matches;
   },
+  /**
+   * The distribution id, if any.
+   * @return {string}
+   */
+  get distributionId() {
+    return Services.prefs
+      .getDefaultBranch(null)
+      .getCharPref("distribution.id", "");
+  },
 };
 
 const ASRouterTargeting = {
