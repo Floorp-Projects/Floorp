@@ -399,6 +399,7 @@ const BASE_MESSAGES = () => [
               label: {
                 string_id: "mr2022-onboarding-existing-colorway-checkbox-label",
               },
+              defaultValue: true,
               action: {
                 type: "CONFIGURE_HOMEPAGE",
                 data: { homePage: "default", newtab: "default" },
