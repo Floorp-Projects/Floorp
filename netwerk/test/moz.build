@@ -8,8 +8,8 @@ TEST_DIRS += ["httpserver", "gtest", "http3server"]
 
 BROWSER_CHROME_MANIFESTS += [
     "browser/browser.ini",
-    "useragent/nonsnap.ini",
-    "useragent/snap.ini",
+    "useragent/browser_nonsnap.ini",
+    "useragent/browser_snap.ini",
 ]
 MOCHITEST_MANIFESTS += ["mochitests/mochitest.ini"]
 
