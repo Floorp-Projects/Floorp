@@ -29,6 +29,15 @@
   }
 
 /**
+ * An enumeration type used to represent a method of assignment.
+ */
+enum nsAssignmentType {
+  NS_ASSIGNMENT_COPY,    // copy by value
+  NS_ASSIGNMENT_DEPEND,  // copy by reference
+  NS_ASSIGNMENT_ADOPT    // copy by reference (take ownership of resource)
+};
+
+/**
  * Factory method to get an nsInputStream from a byte buffer.  Result will
  * implement nsIStringInputStream, nsITellableStream and nsISeekableStream.
  *
