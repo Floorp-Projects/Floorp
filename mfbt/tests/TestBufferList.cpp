@@ -242,69 +242,6 @@ int main(void) {
   MOZ_RELEASE_ASSERT(iter2.AdvanceAcrossSegments(bl2, kBorrowSize - 5));
   MOZ_RELEASE_ASSERT(iter1.Data() == iter2.Data());
 
-  // Extracting.
-
-  const size_t kExtractStart = 8;
-  const size_t kExtractSize = 24;
-  const size_t kExtractOverSize = 1000;
-
-  iter = bl.Iter();
-  iter.Advance(bl, kExtractStart);
-  bl2 = bl.Extract(iter, kExtractSize, &success);
-  MOZ_RELEASE_ASSERT(success);
-  MOZ_RELEASE_ASSERT(bl2.Size() == kExtractSize);
-
-  BufferList bl3 = bl.Extract(iter, kExtractOverSize, &success);
-  MOZ_RELEASE_ASSERT(!success);
-
-  iter = bl2.Iter();
-  MOZ_RELEASE_ASSERT(iter.AdvanceAcrossSegments(bl2, kExtractSize));
-  MOZ_RELEASE_ASSERT(iter.Done());
-
-  BufferList bl4(8, 8, 8);
-  MOZ_ALWAYS_TRUE(bl4.WriteBytes("abcd1234", 8));
-  iter = bl4.Iter();
-  iter.Advance(bl4, 8);
-
-  BufferList bl5 = bl4.Extract(iter, kExtractSize, &success);
-  MOZ_RELEASE_ASSERT(!success);
-
-  BufferList bl6(0, 0, 16);
-  MOZ_ALWAYS_TRUE(bl6.WriteBytes("abcdefgh12345678", 16));
-  MOZ_ALWAYS_TRUE(bl6.WriteBytes("ijklmnop87654321", 16));
-  iter = bl6.Iter();
-  iter.Advance(bl6, 8);
-  BufferList bl7 = bl6.Extract(iter, 16, &success);
-  MOZ_RELEASE_ASSERT(success);
-  char data[16];
-  MOZ_RELEASE_ASSERT(bl6.ReadBytes(iter, data, 8));
-  MOZ_RELEASE_ASSERT(memcmp(data, "87654321", 8) == 0);
-  iter = bl7.Iter();
-  MOZ_RELEASE_ASSERT(bl7.ReadBytes(iter, data, 16));
-  MOZ_RELEASE_ASSERT(memcmp(data, "12345678ijklmnop", 16) == 0);
-
-  BufferList bl8(0, 0, 16);
-  MOZ_ALWAYS_TRUE(bl8.WriteBytes("abcdefgh12345678", 16));
-  iter = bl8.Iter();
-  BufferList bl9 = bl8.Extract(iter, 8, &success);
-  MOZ_RELEASE_ASSERT(success);
-  MOZ_RELEASE_ASSERT(bl9.Size() == 8);
-  MOZ_RELEASE_ASSERT(!iter.Done());
-
-  BufferList bl10(0, 0, 8);
-  MOZ_ALWAYS_TRUE(bl10.WriteBytes("abcdefgh", 8));
-  MOZ_ALWAYS_TRUE(bl10.WriteBytes("12345678", 8));
-  iter = bl10.Iter();
-  BufferList bl11 = bl10.Extract(iter, 16, &success);
-  MOZ_RELEASE_ASSERT(success);
-  MOZ_RELEASE_ASSERT(bl11.Size() == 16);
-  MOZ_RELEASE_ASSERT(iter.Done());
-  MOZ_RELEASE_ASSERT(iter.AdvanceAcrossSegments(bl10, 0));
-  MOZ_RELEASE_ASSERT(iter.Done());
-  iter = bl11.Iter();
-  MOZ_RELEASE_ASSERT(bl11.ReadBytes(iter, data, 16));
-  MOZ_RELEASE_ASSERT(memcmp(data, "abcdefgh12345678", 16) == 0);
-
   // RangeLength.
 
   BufferList bl12(0, 0, 8);

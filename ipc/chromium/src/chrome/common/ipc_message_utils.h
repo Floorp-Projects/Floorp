@@ -168,12 +168,6 @@ class MOZ_STACK_CLASS MessageReader final {
     return message_.ReadBytesInto(&iter_, data, length);
   }
 
-  [[nodiscard]] bool ExtractBuffers(
-      size_t length, mozilla::BufferList<InfallibleAllocPolicy>* buffers,
-      uint32_t alignment = sizeof(uint32_t)) {
-    return message_.ExtractBuffers(&iter_, length, buffers, alignment);
-  }
-
   [[nodiscard]] bool IgnoreBytes(uint32_t length) {
     return message_.IgnoreBytes(&iter_, length);
   }
