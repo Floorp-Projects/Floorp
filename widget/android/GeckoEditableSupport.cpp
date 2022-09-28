@@ -1452,10 +1452,10 @@ GeckoEditableSupport::GetIMENotificationRequests() {
 }
 
 static bool ShouldKeyboardDismiss(const nsAString& aInputType,
-                                  const nsAString& aInputmode) {
+                                  const nsAString& aInputMode) {
   // Some input type uses the prompt to input value. So it is unnecessary to
   // show software keyboard.
-  return aInputmode.EqualsLiteral("none") || aInputType.EqualsLiteral("date") ||
+  return aInputMode.EqualsLiteral("none") || aInputType.EqualsLiteral("date") ||
          aInputType.EqualsLiteral("time") ||
          aInputType.EqualsLiteral("month") ||
          aInputType.EqualsLiteral("week") ||
@@ -1478,7 +1478,7 @@ void GeckoEditableSupport::SetInputContext(const InputContext& aContext,
 
   if (mInputContext.mIMEState.mEnabled != IMEEnabled::Disabled &&
       !ShouldKeyboardDismiss(mInputContext.mHTMLInputType,
-                             mInputContext.mHTMLInputInputmode) &&
+                             mInputContext.mHTMLInputMode) &&
       aAction.UserMightRequestOpenVKB()) {
     // Don't reset keyboard when we should simply open the vkb
     mEditable->NotifyIME(EditableListener::NOTIFY_IME_OPEN_VKB);
@@ -1514,10 +1514,10 @@ void GeckoEditableSupport::NotifyIMEContext(const InputContext& aContext,
            ? EditableListener::IME_FOCUS_NOT_CHANGED
            : 0);
 
-  mEditable->NotifyIMEContext(
-      static_cast<int32_t>(aContext.mIMEState.mEnabled),
-      aContext.mHTMLInputType, aContext.mHTMLInputInputmode,
-      aContext.mActionHint, aContext.mAutocapitalize, flags);
+  mEditable->NotifyIMEContext(static_cast<int32_t>(aContext.mIMEState.mEnabled),
+                              aContext.mHTMLInputType, aContext.mHTMLInputMode,
+                              aContext.mActionHint, aContext.mAutocapitalize,
+                              flags);
 }
 
 InputContext GeckoEditableSupport::GetInputContext() {
