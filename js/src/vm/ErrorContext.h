@@ -140,6 +140,7 @@ class OffThreadErrorContext : public ErrorContext {
   void convertToRuntimeError(JSContext* cx, Warning warning = Warning::Report);
 
   void linkWithJSContext(JSContext* cx);
+
   const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>& errors() const {
     return errors_.errors;
   }
