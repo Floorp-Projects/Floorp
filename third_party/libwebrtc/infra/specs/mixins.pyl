@@ -171,6 +171,13 @@
       }
     }
   },
+  'mac11_or_mac12': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Mac-11|Mac-12'
+      }
+    }
+  },
   'mac_12_beta_arm64': {
     'swarming': {
       'dimensions': {

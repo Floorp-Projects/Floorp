@@ -154,6 +154,13 @@
       }
     }
   },
+  'mac11_or_mac12': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Mac-11|Mac-12'
+      }
+    }
+  },
   'perf-low-bandwidth-audio-perf-test': {
     'merge': {
       'script': '//tools_webrtc/perf/process_perf_results_py2.py',
