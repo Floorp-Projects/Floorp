@@ -317,8 +317,7 @@ where
         debug_assert_eq!(next_sequence, Combinator::PseudoElement);
     }
 
-    let result =
-        matches_complex_selector_internal(iter, element, context, Rightmost::Yes);
+    let result = matches_complex_selector_internal(iter, element, context, Rightmost::Yes);
 
     matches!(result, SelectorMatchingResult::Matched)
 }
@@ -478,19 +477,13 @@ where
         selector_iter, element
     );
 
-    let matches_compound_selector = matches_compound_selector(
-        &mut selector_iter,
-        element,
-        context,
-        rightmost,
-    );
+    let matches_compound_selector =
+        matches_compound_selector(&mut selector_iter, element, context, rightmost);
 
     let combinator = selector_iter.next_sequence();
     if combinator.map_or(false, |c| c.is_sibling()) {
         if context.needs_selector_flags() {
-            element.apply_selector_flags(
-                ElementSelectorFlags::HAS_SLOW_SELECTOR_LATER_SIBLINGS
-            );
+            element.apply_selector_flags(ElementSelectorFlags::HAS_SLOW_SELECTOR_LATER_SIBLINGS);
         }
     }
 
@@ -528,7 +521,8 @@ where
             visited_handling = VisitedHandlingMode::AllLinksUnvisited;
         }
 
-        element = match next_element_for_combinator(&element, combinator, &selector_iter, &context) {
+        element = match next_element_for_combinator(&element, combinator, &selector_iter, &context)
+        {
             None => return candidate_not_found,
             Some(next_element) => next_element,
         };
@@ -768,9 +762,9 @@ where
         Component::Slotted(ref selector) => {
             // <slots> are never flattened tree slottables.
             !element.is_html_slot_element() &&
-                context.shared.nest(|context| {
-                    matches_complex_selector(selector.iter(), element, context)
-                })
+                context
+                    .shared
+                    .nest(|context| matches_complex_selector(selector.iter(), element, context))
         },
         Component::PseudoElement(ref pseudo) => {
             element.match_pseudo_element(pseudo, context.shared)
@@ -785,7 +779,10 @@ where
         },
         Component::NonTSPseudoClass(ref pc) => {
             if let Some((ref rightmost, ref iter)) = context.quirks_data {
-                if pc.is_active_or_hover() && !element.is_link() && hover_and_active_quirk_applies(iter, context.shared, *rightmost) {
+                if pc.is_active_or_hover() &&
+                    !element.is_link() &&
+                    hover_and_active_quirk_applies(iter, context.shared, *rightmost)
+                {
                     return false;
                 }
             }
@@ -794,7 +791,8 @@ where
         Component::FirstChild => matches_first_child(element, context.shared),
         Component::LastChild => matches_last_child(element, context.shared),
         Component::OnlyChild => {
-            matches_first_child(element, context.shared) && matches_last_child(element, context.shared)
+            matches_first_child(element, context.shared) &&
+                matches_last_child(element, context.shared)
         },
         Component::Root => element.is_root(),
         Component::Empty => {
@@ -809,9 +807,9 @@ where
                 .shadow_host()
                 .map_or(false, |host| host == element.opaque()) &&
                 selector.as_ref().map_or(true, |selector| {
-                    context.shared.nest(|context| {
-                        matches_complex_selector(selector.iter(), element, context)
-                    })
+                    context
+                        .shared
+                        .nest(|context| matches_complex_selector(selector.iter(), element, context))
                 })
         },
         Component::Scope => match context.shared.scope_element {
@@ -856,9 +854,9 @@ where
             }
             true
         }),
-        Component::Has(ref list) => context.shared.nest(|context| {
-            has_children_matching(list, element, context)
-        }),
+        Component::Has(ref list) => context
+            .shared
+            .nest(|context| has_children_matching(list, element, context)),
         Component::Combinator(_) => unsafe {
             debug_unreachable!("Shouldn't try to selector-match combinators")
         },

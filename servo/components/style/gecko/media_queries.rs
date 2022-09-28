@@ -13,8 +13,8 @@ use crate::gecko_bindings::structs;
 use crate::media_queries::MediaType;
 use crate::properties::ComputedValues;
 use crate::string_cache::Atom;
-use crate::values::computed::{ColorScheme, Length};
 use crate::values::computed::font::GenericFontFamily;
+use crate::values::computed::{ColorScheme, Length};
 use crate::values::specified::color::SystemColor;
 use crate::values::specified::font::FONT_MEDIUM_PX;
 use crate::values::specified::ViewportVariant;
@@ -172,9 +172,7 @@ impl Device {
 
     /// Gets the base size given a generic font family and a language.
     pub fn base_size_for_generic(&self, language: &Atom, generic: GenericFontFamily) -> Length {
-        unsafe {
-            bindings::Gecko_GetBaseSize(self.document(), language.as_ptr(), generic)
-        }
+        unsafe { bindings::Gecko_GetBaseSize(self.document(), language.as_ptr(), generic) }
     }
 
     /// Queries font metrics
