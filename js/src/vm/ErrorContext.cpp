@@ -73,8 +73,12 @@ bool MainThreadErrorContext::hadOverRecursed() const {
   return cx_->offThreadFrontendErrors()->overRecursed;
 }
 
+bool MainThreadErrorContext::hadAllocationOverflow() const {
+  return cx_->offThreadFrontendErrors()->allocationOverflow;
+}
+
 bool MainThreadErrorContext::hadErrors() const {
-  return hadOutOfMemory() || hadOverRecursed() ||
+  return hadOutOfMemory() || hadOverRecursed() || hadAllocationOverflow() ||
          !cx_->offThreadFrontendErrors()->errors.empty();
 }
 
@@ -86,8 +90,7 @@ void* OffThreadErrorContext::onOutOfMemory(AllocFunction allocFunc,
 }
 
 void OffThreadErrorContext::onAllocationOverflow() {
-  // TODO Bug 1780599 - Currently allocation overflows are not reported for
-  // helper threads; see js::reportAllocationOverflow()
+  errors_.allocationOverflow = true;
 }
 
 void OffThreadErrorContext::onOutOfMemory() { addPendingOutOfMemory(); }
@@ -149,6 +152,9 @@ void OffThreadErrorContext::convertToRuntimeError(JSContext* cx) {
   }
   if (hadOverRecursed()) {
     js::ReportOverRecursed(cx);
+  }
+  if (hadAllocationOverflow()) {
+    js::ReportAllocationOverflow(cx);
   }
 }
 
