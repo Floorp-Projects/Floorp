@@ -1803,11 +1803,6 @@ BrowserGlue.prototype = {
       lazy.NimbusFeatures.tcpByDefault.getVariable("enabled") &&
       !hasCookieBehaviorPolicy()
     ) {
-      Services.telemetry.scalarSet(
-        "privacy.dfpi_rollout_tcpByDefault_feature",
-        true
-      );
-
       // Enable TCP by updating the default pref state for cookie behaviour. This
       // means we won't override user choice.
       defaultPrefs.setIntPref(
@@ -1817,10 +1812,6 @@ BrowserGlue.prototype = {
 
       return;
     }
-    Services.telemetry.scalarSet(
-      "privacy.dfpi_rollout_tcpByDefault_feature",
-      false
-    );
 
     // For the initial rollout of dFPI, set the default cookieBehavior based on the pref
     // set during onboarding when the user chooses to enable protections or not.

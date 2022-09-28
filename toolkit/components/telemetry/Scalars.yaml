@@ -1469,22 +1469,6 @@ contentblocking:
     record_in_processes:
       - main
 
-privacy:
-  dfpi_rollout_tcpByDefault_feature:
-    bug_numbers:
-      - 1767415
-    description: >
-      Keeps track of whether the Nimbus tcpByDefault feature is enabled (true) or disabled (false) for a client.
-    expires: "108"
-    kind: boolean
-    notification_emails:
-      - pbz@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
-
 datasanitization:
   privacy_sanitize_sanitizeOnShutdown:
     bug_numbers:
