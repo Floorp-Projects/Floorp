@@ -81,7 +81,7 @@ function hideIcons() {
 }
 
 async function setTreeStyleTabURL() {
-  const webpanel = document.getElementById("webpanel");
+  const webpanel = document.getElementById("TST");
   const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
   let addon = await AddonManager.getAddonByID("treestyletab@piro.sakura.ne.jp");
   let option = await addon.optionsURL;
@@ -94,7 +94,6 @@ async function setTreeStyleTabURL() {
 function setSidebarMode() {
   if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
     const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-    const webpanel = document.getElementById("webpanel");
     const webpanel_id = modeValuePref - 4
     const sidebar2elem = document.getElementById("sidebar2");
     const panelWidth = Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${modeValuePref}`, undefined);
@@ -125,9 +124,31 @@ function setSidebarMode() {
         showSidebarNodes(1);
         break;
       default:
-        webpanel.setAttribute("src", Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${webpanel_id}`, undefined));
-        showSidebarNodes(1);
+        showSidebarNodes(2);
+         if(document.getElementById(`webpanel${webpanel_id}`) == null){
+          let browserManagerSidebarWebpanel = document.createXULElement("browser");
+          browserManagerSidebarWebpanel.setAttribute("xmlns", "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+          browserManagerSidebarWebpanel.setAttribute("id", `webpanel${webpanel_id}`);
+          browserManagerSidebarWebpanel.setAttribute("class", "webpanels");
+          browserManagerSidebarWebpanel.setAttribute("flex", "1");
+          browserManagerSidebarWebpanel.setAttribute("autoscroll", "false");
+          browserManagerSidebarWebpanel.setAttribute("disablehistory", "true");
+          browserManagerSidebarWebpanel.setAttribute("disablefullscreen", "true");
+          browserManagerSidebarWebpanel.setAttribute("style", "min-width:13em;");
+          browserManagerSidebarWebpanel.setAttribute("tooltip", "aHTMLTooltip");
+          browserManagerSidebarWebpanel.setAttribute("disableglobalhistory", "true");
+          browserManagerSidebarWebpanel.setAttribute("messagemanagergroup", "webext-browsers");
+          browserManagerSidebarWebpanel.setAttribute("context", "contentAreaContextMenu");
+          browserManagerSidebarWebpanel.setAttribute("webextension-view-type", "sidebar");
+          browserManagerSidebarWebpanel.setAttribute("autocompletepopup", "PopupAutoComplete");
+          browserManagerSidebarWebpanel.setAttribute("initialBrowsingContextGroupId", "40");
+          browserManagerSidebarWebpanel.setAttribute("type", "content");
+          browserManagerSidebarWebpanel.setAttribute("remote", "true");
+          browserManagerSidebarWebpanel.setAttribute("maychangeremoteness", "true");
+          browserManagerSidebarWebpanel.setAttribute("src", Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${webpanel_id}`, undefined));
+          document.getElementById("sidebar2-box").appendChild(browserManagerSidebarWebpanel);
         break;
+        }
     }
   }
 }
@@ -136,16 +157,21 @@ function changeSidebarVisibility() {
   let sidebar2 = document.getElementById("sidebar2");
   let siderbar2header = document.getElementById("sidebar2-header");
   let sidebarsplit2 = document.getElementById("sidebar-splitter2");
+  let sidebar2box = document.getElementById("sidebar2-box");
 
   if (sidebarsplit2.getAttribute("hidden") == "true" || sidebarsplit2.getAttribute("hidden") == "true") {
-    sidebar2.style.minWidth = "10em";
+    sidebar2.style.minWidth = "15em";
     sidebar2.style.maxWidth = "";
+    sidebar2box.style.minWidth = "15em";
+    sidebar2box.style.maxWidth = "";
     siderbar2header.style.display = "";
     sidebarsplit2.setAttribute("hidden", "false");
     displayIcons();
   } else {
     sidebar2.style.minWidth = "0";
     sidebar2.style.maxWidth = "0";
+    sidebar2box.style.minWidth = "0";
+    sidebar2box.style.maxWidth = "0";
     siderbar2header.style.display = "none";
     sidebarsplit2.setAttribute("hidden", "true");
     hideIcons();
@@ -225,6 +251,62 @@ function removeAttributeSelectedNode(){
   for(let i = 0; i < Nodes.length; i++){
     Nodes[i].setAttribute("checked", "false");
   }
+}
+
+
+function setAllfavicons() {
+  for (let sbar_id = 1; sbar_id <= DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT; sbar_id++) {
+    var sbar_favicon = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${sbar_id}`)
+    document.getElementById(`select-CustomURL${sbar_id}`).style.listStyleImage = `url(http://www.google.com/s2/favicons?domain=${sbar_favicon}`;
+  }
+}
+
+function setSelectedPanel() {
+    let selectedMode = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
+    let selectedNode = document.querySelector(`.sidepanel-icon[panel="${selectedMode}"]`);
+    removeAttributeSelectedNode();
+    selectedNode.setAttribute("checked", "true");
+}
+
+function changeMuteStatus() {
+  let webpanel = document.getElementById("webpanel");
+  let muteicon = document.getElementById("sidebar2-mute");
+  if (muteicon.getAttribute("mute") == "false") {
+    webpanel.mute();
+    muteicon.setAttribute("mute", "true");
+  } else {
+    webpanel.unmute();
+    muteicon.setAttribute("mute", "false");
+  }
+}
+
+function showSidebarNodes(sidebar_mode) { /* Managers - 0; TST - 1  webpanel - 2*/
+    var sbar_css = ""
+    let webpanels = document.getElementsByClassName("webpanels");
+    const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
+    const webpanel_id = modeValuePref - 4
+    const selectedwebpanel = document.getElementById(`webpanel${webpanel_id}`);
+
+    if (document.getElementById("sidebar2style")){document.getElementById("sidebar2style").remove()}
+    var Tag = document.createElement("style")
+    if (sidebar_mode == 0) { 
+        sbar_css = "#TST{max-height:0 !important;}#sidebar2-reload,#sidebar2-forward,#sidebar2-back{display:none !important;}"
+    }
+    else if(sidebar_mode == 1){
+        sbar_css = "#sidebar2{max-height:0 !important;}#sidebar2-reload,#sidebar2-forward,#sidebar2-back{display:none !important;}"
+    }
+    else{
+      sbar_css = "#TST, #sidebar2{max-height:0 !important;}"
+    }
+
+    Tag.innerText = sbar_css
+    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend", Tag);
+    Tag.setAttribute("id", "sidebar2style");
+
+    for (let i = 0; i < webpanels.length; i++) {
+        webpanels[i].hidden = true;
+    }
+    if(selectedwebpanel != null){selectedwebpanel.hidden = false;}
 }
 
 /*---------------------------------------------------------------- design ----------------------------------------------------------------*/
@@ -365,44 +447,4 @@ function setTabbarMode() {
       document.head.appendChild(script);
       break;
   }
-}
-
-function setAllfavicons() {
-  for (let sbar_id = 1; sbar_id <= DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT; sbar_id++) {
-    var sbar_favicon = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${sbar_id}`)
-    document.getElementById(`select-CustomURL${sbar_id}`).style.listStyleImage = `url(http://www.google.com/s2/favicons?domain=${sbar_favicon}`;
-  }
-}
-
-function setSelectedPanel() {
-    let selectedMode = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-    let selectedNode = document.querySelector(`.sidepanel-icon[panel="${selectedMode}"]`);
-    removeAttributeSelectedNode();
-    selectedNode.setAttribute("checked", "true");
-}
-
-function changeMuteStatus() {
-  let webpanel = document.getElementById("webpanel");
-  let muteicon = document.getElementById("sidebar2-mute");
-  if (muteicon.getAttribute("mute") == "false") {
-    webpanel.mute();
-    muteicon.setAttribute("mute", "true");
-  } else {
-    webpanel.unmute();
-    muteicon.setAttribute("mute", "false");
-  }
-}
-
-function showSidebarNodes(sidebar_mode) { /* Managers - 0; Webpanels - 1 */
-    var sbar_css = ""
-    if (document.getElementById("sidebar2style")){document.getElementById("sidebar2style").remove()}
-    var Tag = document.createElement("style")
-    if (sidebar_mode == 0) { 
-        sbar_css = "#webpanel{max-height:0 !important;}#sidebar2-reload,#sidebar2-forward,#sidebar2-back{display:none !important;}"
-    }else{
-        sbar_css = "#sidebar2{max-height:0 !important;}"
-    }
-    Tag.innerText = sbar_css
-    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend", Tag);
-    Tag.setAttribute("id", "sidebar2style");
 }

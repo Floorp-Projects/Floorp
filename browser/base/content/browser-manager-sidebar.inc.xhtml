@@ -8,7 +8,6 @@
         <toolbarbutton id="sidebar2-forward" class="sidebar2-icon" style="margin-left: 1em;" data-l10n-id="sidebar-forward-button"  oncommand="forwardSidebarSite();"/>
         <toolbarbutton id="sidebar2-reload" class="sidebar2-icon" style="margin-left: 1em;" data-l10n-id="sidebar-reload-button"  oncommand="reloadSidebarSite();"/>
         <spacer flex="1000"/>
-        <toolbarbutton id="sidebar2-mute" class="sidebar2-icon" mute="false" style="margin-right: 0.5em;" data-l10n-id="sidebar-muteAndUnmute-button"  oncommand="changeMuteStatus();"/>
         <toolbarbutton id="sidebar2-keeppanelwidth" class="sidebar2-icon" style="margin-right: 0.5em;" data-l10n-id="sidebar-keepWidth-button"  oncommand="keepSidebar2boxWidth();"/>
         <toolbarbutton id="sidebar2-close" class="sidebar2-icon" style="margin-right: 0.5em;" data-l10n-id="sidebar-close-button"  oncommand="changeSidebarVisibility();"/>
         </box>
@@ -18,7 +17,7 @@
                  webextension-view-type="" context="contentAreaContextMenu"
                  autocompletepopup="PopupAutoComplete" initialBrowsingContextGroupId="40"/> 
 
-        <browser id="webpanel"  flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"
+        <browser id="TST"  flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"
                  style="width: 18em; max-width: none; min-width: 13m;" tooltip="aHTMLTooltip"
                  disableglobalhistory="true" messagemanagergroup="webext-browsers"
                  context="contentAreaContextMenu" webextension-view-type="sidebar"
