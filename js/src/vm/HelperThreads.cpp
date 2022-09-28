@@ -2333,19 +2333,8 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
   Rooted<UniquePtr<ParseTask>> parseTask(cx,
                                          removeFinishedParseTask(cx, token));
 
-  // Report out of memory errors eagerly, or errors could be malformed.
-  if (parseTask->ec_.hadOutOfMemory()) {
-    ReportOutOfMemory(cx);
-    return nullptr;
-  }
+  parseTask->ec_.convertToRuntimeError(cx);
 
-  // Report any error or warnings generated during the parse.
-  for (const UniquePtr<CompileError>& error : parseTask->ec_.errors()) {
-    error->throwError(cx);
-  }
-  if (parseTask->ec_.hadOverRecursed()) {
-    ReportOverRecursed(cx);
-  }
   if (cx->isExceptionPending()) {
     return nullptr;
   }

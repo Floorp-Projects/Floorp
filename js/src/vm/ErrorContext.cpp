@@ -7,6 +7,8 @@
 #include "vm/ErrorContext.h"
 
 #include "gc/GC.h"
+#include "js/AllocPolicy.h"         // js::ReportOutOfMemory
+#include "js/friend/StackLimits.h"  // js::ReportOverRecursed
 #include "util/DifferentialTesting.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"  // selfHosting_ErrorReporter
@@ -133,6 +135,21 @@ void OffThreadErrorContext::ReportOutOfMemory() {
 
 void OffThreadErrorContext::addPendingOutOfMemory() {
   errors_.outOfMemory = true;
+}
+
+void OffThreadErrorContext::convertToRuntimeError(JSContext* cx) {
+  // Report out of memory errors eagerly, or errors could be malformed.
+  if (hadOutOfMemory()) {
+    js::ReportOutOfMemory(cx);
+    return;
+  }
+
+  for (const UniquePtr<CompileError>& error : errors()) {
+    error->throwError(cx);
+  }
+  if (hadOverRecursed()) {
+    js::ReportOverRecursed(cx);
+  }
 }
 
 void OffThreadErrorContext::linkWithJSContext(JSContext* cx) {
