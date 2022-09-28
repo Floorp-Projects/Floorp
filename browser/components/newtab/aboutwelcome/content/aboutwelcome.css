@@ -221,6 +221,11 @@ html {
     --mr-screen-background-color: #62697A;
   }
 }
+@media (prefers-contrast) {
+  .onboardingContainer {
+    --mr-screen-background-color: #F8F6F4;
+  }
+}
 @media (prefers-contrast: more) {
   .onboardingContainer {
     background-color: var(--in-content-page-background);
