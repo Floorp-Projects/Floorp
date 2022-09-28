@@ -3195,7 +3195,7 @@ export class SearchService {
       nimbusPrivateDefaultUrlbarResultEnabled
     ) {
       Services.prefs.setBoolPref(
-        `${lazy.SearchUtils.BROWSER_SEARCH_PREF}separatePrivateDefaultUrlbarResultEnabled`,
+        `${lazy.SearchUtils.BROWSER_SEARCH_PREF}separatePrivateDefault.urlbarResult.enabled`,
         nimbusPrivateDefaultUrlbarResultEnabled
       );
     }
