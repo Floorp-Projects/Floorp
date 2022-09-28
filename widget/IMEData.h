@@ -11,6 +11,8 @@
 #include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/ToString.h"
 
+#include "nsCOMPtr.h"
+#include "nsIURI.h"
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsString.h"
@@ -411,6 +413,7 @@ struct InputContext final {
   // of its members need to be deleted at XPCOM shutdown.  Otherwise, it's
   // detected as memory leak.
   void ShutDown() {
+    mURI = nullptr;
     mHTMLInputType.Truncate();
     mHTMLInputInputmode.Truncate();
     mActionHint.Truncate();
@@ -459,6 +462,9 @@ struct InputContext final {
   }
 
   IMEState mIMEState;
+
+  // The URI of the document which has the editable element.
+  nsCOMPtr<nsIURI> mURI;
 
   /* The type of the input if the input is a html input field */
   nsString mHTMLInputType;

@@ -2139,6 +2139,20 @@ nsDOMWindowUtils::GetIMEStatus(uint32_t* aState) {
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetInputContextURI(nsIURI** aURI) {
+  NS_ENSURE_ARG_POINTER(aURI);
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIURI> documentURI = widget->GetInputContext().mURI;
+  documentURI.forget(aURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetInputContextOrigin(uint32_t* aOrigin) {
   NS_ENSURE_ARG_POINTER(aOrigin);
 
