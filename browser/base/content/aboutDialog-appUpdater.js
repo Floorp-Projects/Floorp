@@ -80,7 +80,7 @@ appUpdater.prototype = {
   },
 
   get selectedPanel() {
-    return this.updateDeck.selectedPanel;
+    return this.updateDeck.querySelector(".selected");
   },
 
   _onAppUpdateStatus(status, ...args) {
@@ -94,23 +94,22 @@ appUpdater.prototype = {
       case AppUpdater.STATUS.OTHER_INSTANCE_HANDLING_UPDATES:
         this.selectPanel("otherInstanceHandlingUpdates");
         break;
-      case AppUpdater.STATUS.DOWNLOADING: {
-        let downloading = document.getElementById("downloading");
+      case AppUpdater.STATUS.DOWNLOADING:
+        this.downloadStatus = document.getElementById("downloadStatus");
         if (!args.length) {
-          downloading.textContent = DownloadUtils.getTransferTotal(
+          this.downloadStatus.textContent = DownloadUtils.getTransferTotal(
             0,
             this.update.selectedPatch.size
           );
           this.selectPanel("downloading");
         } else {
           let [progress, max] = args;
-          downloading.textContent = DownloadUtils.getTransferTotal(
+          this.downloadStatus.textContent = DownloadUtils.getTransferTotal(
             progress,
             max
           );
         }
         break;
-      }
       case AppUpdater.STATUS.STAGING:
         this.selectPanel("applying");
         break;
@@ -193,6 +192,8 @@ appUpdater.prototype = {
           "update.downloadAndInstallButton.accesskey"
         );
       }
+      this.selectedPanel?.classList.remove("selected");
+      panel.classList.add("selected");
       if (
         this.options.buttonAutoFocus &&
         (!document.commandDispatcher.focusedElement || // don't steal the focus
@@ -201,8 +202,10 @@ appUpdater.prototype = {
         // except from the other buttons
         button.focus();
       }
+    } else {
+      this.selectedPanel?.classList.remove("selected");
+      panel.classList.add("selected");
     }
-    this.updateDeck.selectedPanel = panel;
   },
 
   /**

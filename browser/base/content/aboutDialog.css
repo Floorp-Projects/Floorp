@@ -3,17 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 @namespace html "http://www.w3.org/1999/xhtml";
 
-:root { -moz-box-layout: flex }
-
 #aboutDialog {
+  width: 620px;
   /* Set an explicit line-height to avoid discrepancies in 'auto' spacing
      across screens with different device DPI, which may cause font metrics
      to round differently. */
   line-height: 1.5;
-}
-
-#aboutDialogContainer {
-  -moz-box-flex: 1;
 }
 
 #rightBox {
@@ -65,17 +60,14 @@
   padding-inline-start: 0;
 }
 
-#updateDeck {
-  align-items: center;
+#updateDeck > *:not(.selected) {
+  visibility: hidden;
 }
 
-#updateButton {
+#updateButton,
+#updateDeck > hbox > label {
   margin-inline-start: 0;
   padding-inline-start: 0;
-}
-
-#updateDeck description {
-  margin: 0;
 }
 
 .update-throbber {
@@ -124,7 +116,7 @@ description > .text-link {
 
 #icons > .icon {
   -moz-context-properties: fill;
-  margin: 10px 5px;
+  margin: 5px;
   width: 16px;
   height: 16px;
 }
