@@ -21,12 +21,11 @@ let expectedMatch = (key, inputLength) => ({
   },
 });
 
+testEngine_setup();
+
 add_task(async function init() {
   UrlbarPrefs.set("quickactions.enabled", true);
   UrlbarPrefs.set("suggest.quickactions", true);
-  // Install a default test engine.
-  let engine = await addTestSuggestionsEngine();
-  await Services.search.setDefault(engine);
 
   UrlbarProviderQuickActions.addAction("newaction", {
     commands: ["newaction"],
