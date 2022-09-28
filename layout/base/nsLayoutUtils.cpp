@@ -6859,25 +6859,29 @@ nsTransparencyMode nsLayoutUtils::GetFrameTransparency(
   StyleAppearance appearance =
       aCSSRootFrame->StyleDisplay()->EffectiveAppearance();
 
-  if (appearance == StyleAppearance::MozWinGlass) return eTransparencyGlass;
+  if (appearance == StyleAppearance::MozWinGlass) {
+    return eTransparencyGlass;
+  }
 
-  if (appearance == StyleAppearance::MozWinBorderlessGlass)
+  if (appearance == StyleAppearance::MozWinBorderlessGlass) {
     return eTransparencyBorderlessGlass;
+  }
 
   nsITheme::Transparency transparency;
-  if (aCSSRootFrame->IsThemed(&transparency))
+  if (aCSSRootFrame->IsThemed(&transparency)) {
     return transparency == nsITheme::eTransparent ? eTransparencyTransparent
                                                   : eTransparencyOpaque;
+  }
 
-  // We need an uninitialized window to be treated as opaque because
-  // doing otherwise breaks window display effects on some platforms,
-  // specifically Vista. (bug 450322)
+  // We need an uninitialized window to be treated as opaque because doing
+  // otherwise breaks window display effects on some platforms, specifically
+  // Vista. (bug 450322)
   if (aBackgroundFrame->IsViewportFrame() &&
       !aBackgroundFrame->PrincipalChildList().FirstChild()) {
     return eTransparencyOpaque;
   }
 
-  ComputedStyle* bgSC = nsCSSRendering::FindBackground(aBackgroundFrame);
+  const ComputedStyle* bgSC = nsCSSRendering::FindBackground(aBackgroundFrame);
   if (!bgSC) {
     return eTransparencyTransparent;
   }
