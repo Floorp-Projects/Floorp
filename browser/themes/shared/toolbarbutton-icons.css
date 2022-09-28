@@ -506,25 +506,14 @@ toolbarbutton.bookmark-item {
   scrollbar-width: thin;
 }
 
-.sidepanel-icon {
+.sidepanel-icon, .sidepanel-browser-icon{
   appearance: none;
   -moz-context-properties: fill, fill-opacity;
   border-radius: 4px;
   color: inherit;
   fill: currentColor;
-  margin: 1px 8px 5px 3px;
-  padding: 11px 5px 11px 10px;
-  scale: 1.0;
-}
-
-.sidepanel-browser-icon{
-  appearance: none;
-  -moz-context-properties: fill, fill-opacity;
-  border-radius: 4px;
-  color: inherit;
-  fill: currentColor;
-  margin: 1px 8px 5px 3px;
-  padding: 11px 5px 11px 10px;
+  margin: 1px 3px 5px 3px;
+  padding: 11px 10px 10px 11px;
   scale: 1.0;
 }
 
