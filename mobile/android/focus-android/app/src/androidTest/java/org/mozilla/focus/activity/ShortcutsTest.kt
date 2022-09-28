@@ -12,10 +12,12 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.activity.robots.browserScreen
+import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.MockWebServerHelper
+import org.mozilla.focus.helpers.TestAssetHelper
 import org.mozilla.focus.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.focus.testAnnotations.SmokeTest
 import java.io.IOException
@@ -70,6 +72,33 @@ class ShortcutsTest {
             clickRenameShortcut()
             renameShortcutAndSave(webPage.newTitle)
             verifyPageShortcutExists(webPage.newTitle)
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun shortcutsDoNotOpenInNewTabTest() {
+        val tab1 = TestAssetHelper.getGenericTabAsset(webServer, 1)
+        val tab2 = TestAssetHelper.getGenericTabAsset(webServer, 2)
+
+        searchScreen {
+        }.loadPage(tab1.url) {
+        }.openMainMenu {
+            clickAddToShortcuts()
+        }
+        browserScreen {
+        }.clearBrowsingData {
+            verifyPageShortcutExists(tab1.title)
+        }
+
+        searchScreen {
+        }.loadPage(tab2.url) {
+        }.openSearchBar {
+        }
+
+        homeScreen {
+        }.clickPageShortcut(tab1.title) {
+            verifyTabsCounterNotShown()
         }
     }
 
