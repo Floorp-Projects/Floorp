@@ -271,10 +271,10 @@ add_task(async function() {
       case "html": {
         checkVisibility("html");
 
-        const text = document.querySelector(".html-preview iframe").srcdoc;
+        const text = document.querySelector(".html-preview iframe").src;
         is(
           text,
-          "<blink>Not Found</blink>",
+          "data:text/html,<blink>Not Found</blink>",
           "The text shown in the iframe is incorrect for the html request."
         );
         break;
