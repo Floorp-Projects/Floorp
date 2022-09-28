@@ -34,7 +34,7 @@
 
       if (window.SharedArrayBuffer) {
         data = new Uint8Array(new SharedArrayBuffer(3));
-        doesThrow(() => { new MIDIMessageEvent('eventType', { data }); }, "shared array buffers are rejected");
+        SimpleTest.doesThrow(() => { new MIDIMessageEvent('eventType', { data }); }, "shared array buffers are rejected");
       } else {
         todo(false, 'SharedArrayBuffer is unavailable.');
       }

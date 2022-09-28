@@ -15,22 +15,18 @@
        await MIDITestUtils.permissionSetup(true);
 
 
-       var checkCount = 0;
-       var state = "connecting";
        var output;
        var test_ports = [];
        let access;
 
        let accessRes;
-       let accessRej;
        let accessPromise;
        let portRes;
-       let portRej;
        let portPromise;
 
        function resetPromises() {
-         accessPromise = new Promise((res, rej) => { accessRes = res; accessRej = rej; });
-         portPromise = new Promise((res, rej) => { portRes = res; portRej = rej; });
+         accessPromise = new Promise((res, rej) => { accessRes = res; });
+         portPromise = new Promise((res, rej) => { portRes = res; });
        }
 
        function accessStateChangeHandler(event) {

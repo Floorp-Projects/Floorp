@@ -49,6 +49,7 @@
     expectWarning(false, "appending video", function() {
       doc.documentElement.appendChild(video);
       // Force a layout flush to make sure the anonymous content is added.
+      // eslint-disable-next-line no-unused-vars
       let dummy = doc.documentElement.offsetLeft;
     });
 

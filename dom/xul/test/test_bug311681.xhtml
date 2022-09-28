@@ -48,7 +48,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=311681
     is(getCont(), node, "Should be getting new node pre-flush 1")
     
     // Trigger a layout flush, just in case.
-    var itemHeight = newParent.offsetHeight/10;
+    let itemHeight = newParent.offsetHeight/10;
 
     // Check what getElementById returns now.
     is(getCont(), node, "Should be getting new node post-flush 1")
@@ -59,7 +59,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=311681
     is(getCont(), testNode, "Should be getting orig node pre-flush 2");
     
     // Trigger a layout flush, just in case.
-    var itemHeight = newParent.offsetHeight/10;
+    itemHeight = newParent.offsetHeight/10;
 
     // Check what getElementById returns now.
     is(getCont(), testNode, "Should be getting orig node post-flush 2");
@@ -72,7 +72,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=311681
     is(getCont(), node, "Should be getting clone pre-flush");
     
     // Trigger a layout flush, just in case.
-    var itemHeight = newParent.offsetHeight/10;
+    // eslint-disable-next-line no-unused-vars
+    itemHeight = newParent.offsetHeight/10;
 
     // Check what getElementById returns now.
     is(getCont(), node, "Should be getting clone post-flush");

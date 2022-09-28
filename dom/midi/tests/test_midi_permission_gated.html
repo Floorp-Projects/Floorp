@@ -66,11 +66,11 @@
       // below and run the test interactively, it should pass. Given that this
       // is a niche feature that's unlikely to break, it doesn't seem worth
       // investing in complicated test infrastructure to check it in automation.
-      for (let sysex of [false, true]) {
-        // $("localhost").contentWindow.postMessage(sysex, "*");
-        // let response = await waitForMessage();
-        // is(response, "succeeded", "MIDI Access Request allowed for localhost");
-      }
+      // for (let sysex of [false, true]) {
+      //   $("localhost").contentWindow.postMessage(sysex, "*");
+      //   let response = await waitForMessage();
+      //   is(response, "succeeded", "MIDI Access Request allowed for localhost");
+      // }
 
       // When an addon is installed, the permission is inserted.  Test
       // that the request succeeds after we insert the permission.

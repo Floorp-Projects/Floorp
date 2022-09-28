@@ -239,21 +239,21 @@ function testMulticast() {
 function testInvalidUDPOptions() {
   info('test for invalid UDPOptions');
   try {
-    let socket = new UDPSocket({localAddress: 'not-a-valid-address'});
+    new UDPSocket({localAddress: 'not-a-valid-address'});
     ok(false, 'should not create an UDPSocket with an invalid localAddress');
   } catch (e) {
     is(e.name, 'InvalidAccessError', 'expected InvalidAccessError will be thrown if localAddress is not a valid IPv4/6 address');
   }
 
   try {
-    let socket = new UDPSocket({localPort: 0});
+    new UDPSocket({localPort: 0});
     ok(false, 'should not create an UDPSocket with an invalid localPort');
   } catch (e) {
     is(e.name, 'InvalidAccessError', 'expected InvalidAccessError will be thrown if localPort is not a valid port number');
   }
 
   try {
-    let socket = new UDPSocket({remotePort: 0});
+    new UDPSocket({remotePort: 0});
     ok(false, 'should not create an UDPSocket with an invalid remotePort');
   } catch (e) {
     is(e.name, 'InvalidAccessError', 'expected InvalidAccessError will be thrown if localPort is not a valid port number');
@@ -351,7 +351,7 @@ async function testBFCache() {
 
     socket.addEventListener('message', recv_again_callback);
 
-    let timeout = setTimeout(function() {
+    setTimeout(function() {
       socket.removeEventListener('message', recv_again_callback);
       socket.close();
       resolve();
