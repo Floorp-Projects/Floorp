@@ -201,7 +201,18 @@ class MOZ_STACK_CLASS AutoReportFrontendContext : public OffThreadErrorContext {
     MOZ_ASSERT(cx_ == maybeCx_);
   }
 
-  ~AutoReportFrontendContext() { convertToRuntimeError(cx_, warning_); }
+  ~AutoReportFrontendContext() {
+    if (cx_) {
+      convertToRuntimeErrorAndClear();
+    }
+  }
+
+  void clearAutoReport() { cx_ = nullptr; }
+
+  void convertToRuntimeErrorAndClear() {
+    convertToRuntimeError(cx_, warning_);
+    cx_ = nullptr;
+  }
 };
 
 }  // namespace js
