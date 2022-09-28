@@ -679,10 +679,7 @@
         return;
       }
 
-      if (aTab.hidden) {
-        this.showTab(aTab);
-      }
-
+      this.showTab(aTab);
       this.moveTabTo(aTab, this._numPinnedTabs);
       aTab.setAttribute("pinned", "true");
       this._updateTabBarForPinnedTabs();
@@ -4665,23 +4662,21 @@
     },
 
     showTab(aTab) {
-      if (aTab == FirefoxViewHandler.tab) {
+      if (!aTab.hidden || aTab == FirefoxViewHandler.tab) {
         return;
       }
-      if (aTab.hidden) {
-        aTab.removeAttribute("hidden");
-        this._invalidateCachedTabs();
+      aTab.removeAttribute("hidden");
+      this._invalidateCachedTabs();
 
-        this.tabContainer._updateCloseButtons();
-        this.tabContainer._updateHiddenTabsStatus();
+      this.tabContainer._updateCloseButtons();
+      this.tabContainer._updateHiddenTabsStatus();
 
-        this.tabContainer._setPositionalAttributes();
+      this.tabContainer._setPositionalAttributes();
 
-        let event = document.createEvent("Events");
-        event.initEvent("TabShow", true, false);
-        aTab.dispatchEvent(event);
-        SessionStore.deleteCustomTabValue(aTab, "hiddenBy");
-      }
+      let event = document.createEvent("Events");
+      event.initEvent("TabShow", true, false);
+      aTab.dispatchEvent(event);
+      SessionStore.deleteCustomTabValue(aTab, "hiddenBy");
     },
 
     hideTab(aTab, aSource) {
