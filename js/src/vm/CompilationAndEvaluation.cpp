@@ -32,7 +32,7 @@
 #include "util/CompleteFile.h"     // js::FileContents, js::ReadCompleteFile
 #include "util/StringBuffer.h"     // js::StringBuffer
 #include "vm/EnvironmentObject.h"  // js::CreateNonSyntacticEnvironmentChain
-#include "vm/ErrorContext.h"       // js::MainThreadErrorContext
+#include "vm/ErrorContext.h"       // js::AutoReportFrontendContext
 #include "vm/Interpreter.h"        // js::Execute
 #include "vm/JSContext.h"          // JSContext
 
@@ -67,9 +67,14 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  MainThreadErrorContext ec(cx);
-  return frontend::CompileGlobalScript(
-      cx, &ec, cx->stackLimitForCurrentPrincipal(), options, srcBuf, scopeKind);
+  JS::Rooted<JSScript*> script(cx);
+  {
+    AutoReportFrontendContext ec(cx);
+    script = frontend::CompileGlobalScript(cx, &ec,
+                                           cx->stackLimitForCurrentPrincipal(),
+                                           options, srcBuf, scopeKind);
+  }
+  return script;
 }
 
 JSScript* JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -100,7 +105,7 @@ JS_PUBLIC_API bool JS::StartIncrementalEncoding(JSContext* cx,
       return false;
     }
 
-    MainThreadErrorContext ec(cx);
+    AutoReportFrontendContext ec(cx);
     if (!initial->steal(&ec, std::move(stencil))) {
       return false;
     }
@@ -165,7 +170,8 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
   using frontend::ParseGoal;
   using frontend::Parser;
 
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx,
+                               AutoReportFrontendContext::Warning::Suppress);
   CompileOptions options(cx);
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
@@ -180,7 +186,6 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
     return false;
   }
 
-  JS::AutoSuppressWarningReporter suppressWarnings(cx);
   Parser<FullParseHandler, char16_t> parser(
       cx, &ec, cx->stackLimitForCurrentPrincipal(), options, chars.get(),
       length,
@@ -515,7 +520,7 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
   options.setNonSyntacticScope(scopeKind == ScopeKind::NonSyntactic);
   options.setIsRunOnce(true);
 
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   RootedScript script(cx, frontend::CompileGlobalScript(
                               cx, &ec, cx->stackLimitForCurrentPrincipal(),
                               options, srcBuf, scopeKind));
