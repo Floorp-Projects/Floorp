@@ -491,7 +491,15 @@ impl ToCss for CustomIdent {
 /// We use a single atom for these. Empty atom represents `none` animation.
 #[repr(transparent)]
 #[derive(
-    Clone, Debug, Hash, PartialEq, MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem,
+    Clone,
+    Debug,
+    Hash,
+    PartialEq,
+    MallocSizeOf,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToResolvedValue,
+    ToShmem,
 )]
 pub struct TimelineOrKeyframesName(Atom);
 
@@ -539,7 +547,7 @@ impl TimelineOrKeyframesName {
         debug_assert!(invalid.contains(&"none"));
 
         if self.0 == atom!("") {
-            return dest.write_str("none")
+            return dest.write_str("none");
         }
 
         self.0.with_str(|s| {
@@ -564,7 +572,17 @@ pub trait IsAuto {
 /// The typedef of <timeline-name>.
 #[repr(transparent)]
 #[derive(
-    Clone, Debug, Deref, Hash, Eq, PartialEq, MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem,
+    Clone,
+    Debug,
+    Deref,
+    Hash,
+    Eq,
+    PartialEq,
+    MallocSizeOf,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToResolvedValue,
+    ToShmem,
 )]
 pub struct TimelineName(TimelineOrKeyframesName);
 
@@ -582,8 +600,14 @@ impl TimelineName {
 }
 
 impl Parse for TimelineName {
-    fn parse<'i, 't>(_: &ParserContext, input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i>> {
-        Ok(Self(TimelineOrKeyframesName::parse(input, &["none", "auto"])?))
+    fn parse<'i, 't>(
+        _: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        Ok(Self(TimelineOrKeyframesName::parse(
+            input,
+            &["none", "auto"],
+        )?))
     }
 }
 
@@ -598,7 +622,17 @@ impl ToCss for TimelineName {
 
 /// The typedef of <keyframes-name>.
 #[derive(
-    Clone, Debug, Deref, Hash, Eq, PartialEq, MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem,
+    Clone,
+    Debug,
+    Deref,
+    Hash,
+    Eq,
+    PartialEq,
+    MallocSizeOf,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToResolvedValue,
+    ToShmem,
 )]
 pub struct KeyframesName(TimelineOrKeyframesName);
 
@@ -616,7 +650,10 @@ impl KeyframesName {
 }
 
 impl Parse for KeyframesName {
-    fn parse<'i, 't>(_: &ParserContext, input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i>> {
+    fn parse<'i, 't>(
+        _: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
         Ok(Self(TimelineOrKeyframesName::parse(input, &["none"])?))
     }
 }

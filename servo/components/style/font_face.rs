@@ -19,7 +19,9 @@ use crate::values::specified::font::SpecifiedFontFeatureSettings;
 use crate::values::specified::font::SpecifiedFontStyle;
 #[cfg(feature = "gecko")]
 use crate::values::specified::font::SpecifiedFontVariationSettings;
-use crate::values::specified::font::{AbsoluteFontWeight, FontStretch as SpecifiedFontStretch, MetricsOverride};
+use crate::values::specified::font::{
+    AbsoluteFontWeight, FontStretch as SpecifiedFontStretch, MetricsOverride,
+};
 use crate::values::specified::url::SpecifiedUrl;
 use crate::values::specified::{Angle, NonNegativePercentage};
 #[cfg(feature = "gecko")]
@@ -477,8 +479,9 @@ impl<'a> FontFace<'a> {
                         // We support only opentype fonts and truetype is an alias for
                         // that format. Sources without format hints need to be
                         // downloaded in case we support them.
-                        url_source.format_hint.as_ref().map_or(true,
-                            |hint| hint == "truetype" || hint == "opentype" || hint == "woff")
+                        url_source.format_hint.as_ref().map_or(true, |hint| {
+                            hint == "truetype" || hint == "opentype" || hint == "woff"
+                        })
                     } else {
                         true
                     }
@@ -547,16 +550,21 @@ impl Parse for Source {
         };
 
         // Parse optional tech()
-        let tech_flags = if static_prefs::pref!("layout.css.font-tech.enabled") && input
-            .try_parse(|input| input.expect_function_matching("tech"))
-            .is_ok()
+        let tech_flags = if static_prefs::pref!("layout.css.font-tech.enabled") &&
+            input
+                .try_parse(|input| input.expect_function_matching("tech"))
+                .is_ok()
         {
             input.parse_nested_block(|input| FontFaceSourceTechFlags::parse(context, input))?
         } else {
             FontFaceSourceTechFlags::empty()
         };
 
-        Ok(Source::Url(UrlSource { url, format_hint, tech_flags }))
+        Ok(Source::Url(UrlSource {
+            url,
+            format_hint,
+            tech_flags,
+        }))
     }
 }
 

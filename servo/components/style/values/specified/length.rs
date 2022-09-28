@@ -162,11 +162,7 @@ impl FontRelativeLength {
             orientation: FontMetricsOrientation,
         ) -> FontMetrics {
             let retrieve_math_scales = false;
-            context.query_font_metrics(
-                base_size,
-                orientation,
-                retrieve_math_scales,
-            )
+            context.query_font_metrics(base_size, orientation, retrieve_math_scales)
         }
 
         let reference_font_size = base_size.resolve(context);
@@ -404,125 +400,34 @@ impl ViewportPercentageLength {
 
     fn unpack(&self) -> (ViewportVariant, ViewportUnit, CSSFloat) {
         match *self {
-            ViewportPercentageLength::Vw(v) => (
-                ViewportVariant::UADefault,
-                ViewportUnit::Vw,
-                v,
-            ),
-            ViewportPercentageLength::Svw(v) => (
-                ViewportVariant::Small,
-                ViewportUnit::Vw,
-                v,
-            ),
-            ViewportPercentageLength::Lvw(v) => (
-                ViewportVariant::Large,
-                ViewportUnit::Vw,
-                v,
-            ),
-            ViewportPercentageLength::Dvw(v) => (
-                ViewportVariant::Dynamic,
-                ViewportUnit::Vw,
-                v,
-            ),
-            ViewportPercentageLength::Vh(v) => (
-                ViewportVariant::UADefault,
-                ViewportUnit::Vh,
-                v,
-            ),
-            ViewportPercentageLength::Svh(v) => (
-                ViewportVariant::Small,
-                ViewportUnit::Vh,
-                v,
-            ),
-            ViewportPercentageLength::Lvh(v) => (
-                ViewportVariant::Large,
-                ViewportUnit::Vh,
-                v),
-            ViewportPercentageLength::Dvh(v) => (
-                ViewportVariant::Dynamic,
-                ViewportUnit::Vh,
-                v,
-            ),
-            ViewportPercentageLength::Vmin(v) => (
-                ViewportVariant::UADefault,
-                ViewportUnit::Vmin,
-                v,
-            ),
-            ViewportPercentageLength::Svmin(v) => (
-                ViewportVariant::Small,
-                ViewportUnit::Vmin,
-                v,
-            ),
-            ViewportPercentageLength::Lvmin(v) => (
-                ViewportVariant::Large,
-                ViewportUnit::Vmin,
-                v,
-            ),
-            ViewportPercentageLength::Dvmin(v) => (
-                ViewportVariant::Dynamic,
-                ViewportUnit::Vmin,
-                v,
-            ),
-            ViewportPercentageLength::Vmax(v) => (
-                ViewportVariant::UADefault,
-                ViewportUnit::Vmax,
-                v,
-            ),
-            ViewportPercentageLength::Svmax(v) => (
-                ViewportVariant::Small,
-                ViewportUnit::Vmax,
-                v,
-            ),
-            ViewportPercentageLength::Lvmax(v) => (
-                ViewportVariant::Large,
-                ViewportUnit::Vmax,
-                v,
-            ),
-            ViewportPercentageLength::Dvmax(v) => (
-                ViewportVariant::Dynamic,
-                ViewportUnit::Vmax,
-                v,
-            ),
-            ViewportPercentageLength::Vb(v) => (
-                ViewportVariant::UADefault,
-                ViewportUnit::Vb,
-                v,
-            ),
-            ViewportPercentageLength::Svb(v) => (
-                ViewportVariant::Small,
-                ViewportUnit::Vb,
-                v,
-            ),
-            ViewportPercentageLength::Lvb(v) => (
-                ViewportVariant::Large,
-                ViewportUnit::Vb,
-                v,
-            ),
-            ViewportPercentageLength::Dvb(v) => (
-                ViewportVariant::Dynamic,
-                ViewportUnit::Vb,
-                v,
-            ),
-            ViewportPercentageLength::Vi(v) => (
-                ViewportVariant::UADefault,
-                ViewportUnit::Vi,
-                v,
-            ),
-            ViewportPercentageLength::Svi(v) => (
-                ViewportVariant::Small,
-                ViewportUnit::Vi,
-                v,
-            ),
-            ViewportPercentageLength::Lvi(v) => (
-                ViewportVariant::Large,
-                ViewportUnit::Vi,
-                v,
-            ),
-            ViewportPercentageLength::Dvi(v) => (
-                ViewportVariant::Dynamic,
-                ViewportUnit::Vi,
-                v,
-            ),
+            ViewportPercentageLength::Vw(v) => (ViewportVariant::UADefault, ViewportUnit::Vw, v),
+            ViewportPercentageLength::Svw(v) => (ViewportVariant::Small, ViewportUnit::Vw, v),
+            ViewportPercentageLength::Lvw(v) => (ViewportVariant::Large, ViewportUnit::Vw, v),
+            ViewportPercentageLength::Dvw(v) => (ViewportVariant::Dynamic, ViewportUnit::Vw, v),
+            ViewportPercentageLength::Vh(v) => (ViewportVariant::UADefault, ViewportUnit::Vh, v),
+            ViewportPercentageLength::Svh(v) => (ViewportVariant::Small, ViewportUnit::Vh, v),
+            ViewportPercentageLength::Lvh(v) => (ViewportVariant::Large, ViewportUnit::Vh, v),
+            ViewportPercentageLength::Dvh(v) => (ViewportVariant::Dynamic, ViewportUnit::Vh, v),
+            ViewportPercentageLength::Vmin(v) => {
+                (ViewportVariant::UADefault, ViewportUnit::Vmin, v)
+            },
+            ViewportPercentageLength::Svmin(v) => (ViewportVariant::Small, ViewportUnit::Vmin, v),
+            ViewportPercentageLength::Lvmin(v) => (ViewportVariant::Large, ViewportUnit::Vmin, v),
+            ViewportPercentageLength::Dvmin(v) => (ViewportVariant::Dynamic, ViewportUnit::Vmin, v),
+            ViewportPercentageLength::Vmax(v) => {
+                (ViewportVariant::UADefault, ViewportUnit::Vmax, v)
+            },
+            ViewportPercentageLength::Svmax(v) => (ViewportVariant::Small, ViewportUnit::Vmax, v),
+            ViewportPercentageLength::Lvmax(v) => (ViewportVariant::Large, ViewportUnit::Vmax, v),
+            ViewportPercentageLength::Dvmax(v) => (ViewportVariant::Dynamic, ViewportUnit::Vmax, v),
+            ViewportPercentageLength::Vb(v) => (ViewportVariant::UADefault, ViewportUnit::Vb, v),
+            ViewportPercentageLength::Svb(v) => (ViewportVariant::Small, ViewportUnit::Vb, v),
+            ViewportPercentageLength::Lvb(v) => (ViewportVariant::Large, ViewportUnit::Vb, v),
+            ViewportPercentageLength::Dvb(v) => (ViewportVariant::Dynamic, ViewportUnit::Vb, v),
+            ViewportPercentageLength::Vi(v) => (ViewportVariant::UADefault, ViewportUnit::Vi, v),
+            ViewportPercentageLength::Svi(v) => (ViewportVariant::Small, ViewportUnit::Vi, v),
+            ViewportPercentageLength::Lvi(v) => (ViewportVariant::Large, ViewportUnit::Vi, v),
+            ViewportPercentageLength::Dvi(v) => (ViewportVariant::Dynamic, ViewportUnit::Vi, v),
         }
     }
 
@@ -562,11 +467,9 @@ impl ViewportPercentageLength {
             // able to figure it own on its own so we help.
             _ => unsafe {
                 match *self {
-                    Vw(..) | Svw(..) | Lvw(..) | Dvw(..) |
-                    Vh(..) | Svh(..) | Lvh(..) | Dvh(..) |
-                    Vmin(..) | Svmin(..) | Lvmin(..) | Dvmin(..) |
-                    Vmax(..) | Svmax(..) | Lvmax(..) | Dvmax(..) |
-                    Vb(..) | Svb(..) | Lvb(..) | Dvb(..) |
+                    Vw(..) | Svw(..) | Lvw(..) | Dvw(..) | Vh(..) | Svh(..) | Lvh(..) |
+                    Dvh(..) | Vmin(..) | Svmin(..) | Lvmin(..) | Dvmin(..) | Vmax(..) |
+                    Svmax(..) | Lvmax(..) | Dvmax(..) | Vb(..) | Svb(..) | Lvb(..) | Dvb(..) |
                     Vi(..) | Svi(..) | Lvi(..) | Dvi(..) => {},
                 }
                 debug_unreachable!("Forgot to handle unit in try_sum()")
@@ -809,10 +712,8 @@ impl NoCalcLength {
     /// because the font they're relative to should be zoomed already.
     pub fn should_zoom_text(&self) -> bool {
         match *self {
-            Self::Absolute(..) |
-            Self::ViewportPercentage(..) => true,
-            Self::ServoCharacterWidth(..) |
-            Self::FontRelative(..) => false,
+            Self::Absolute(..) | Self::ViewportPercentage(..) => true,
+            Self::ServoCharacterWidth(..) | Self::FontRelative(..) => false,
         }
     }
 
@@ -1157,11 +1058,9 @@ impl PartialOrd for ViewportPercentageLength {
             // able to figure it own on its own so we help.
             _ => unsafe {
                 match *self {
-                    Vw(..) | Svw(..) | Lvw(..) | Dvw(..) |
-                    Vh(..) | Svh(..) | Lvh(..) | Dvh(..) |
-                    Vmin(..) | Svmin(..) | Lvmin(..) | Dvmin(..) |
-                    Vmax(..) | Svmax(..) | Lvmax(..) | Dvmax(..) |
-                    Vb(..) | Svb(..) | Lvb(..) | Dvb(..) |
+                    Vw(..) | Svw(..) | Lvw(..) | Dvw(..) | Vh(..) | Svh(..) | Lvh(..) |
+                    Dvh(..) | Vmin(..) | Svmin(..) | Lvmin(..) | Dvmin(..) | Vmax(..) |
+                    Svmax(..) | Lvmax(..) | Dvmax(..) | Vb(..) | Svb(..) | Lvb(..) | Dvb(..) |
                     Vi(..) | Svi(..) | Lvi(..) | Dvi(..) => {},
                 }
                 debug_unreachable!("Forgot an arm in partial_cmp?")

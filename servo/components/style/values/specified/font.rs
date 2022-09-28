@@ -8,8 +8,8 @@ use crate::context::QuirksMode;
 use crate::parser::{Parse, ParserContext};
 use crate::values::computed::font::{FamilyName, FontFamilyList, SingleFontFamily};
 use crate::values::computed::FontSizeAdjust as ComputedFontSizeAdjust;
-use crate::values::computed::{font as computed, Length, NonNegativeLength};
 use crate::values::computed::Percentage as ComputedPercentage;
+use crate::values::computed::{font as computed, Length, NonNegativeLength};
 use crate::values::computed::{CSSPixelLength, Context, ToComputedValue};
 use crate::values::generics::font::VariationValue;
 use crate::values::generics::font::{
@@ -187,9 +187,7 @@ impl AbsoluteFontWeight {
     /// Returns the computed value for this absolute font weight.
     pub fn compute(&self) -> computed::FontWeight {
         match *self {
-            AbsoluteFontWeight::Weight(weight) => {
-                computed::FontWeight::from_float(weight.get())
-            },
+            AbsoluteFontWeight::Weight(weight) => computed::FontWeight::from_float(weight.get()),
             AbsoluteFontWeight::Normal => computed::FontWeight::NORMAL,
             AbsoluteFontWeight::Bold => computed::FontWeight::BOLD,
         }
@@ -438,7 +436,7 @@ impl ToComputedValue for FontStretch {
 
     fn from_computed_value(computed: &Self::ComputedValue) -> Self {
         FontStretch::Stretch(NonNegativePercentage::from_computed_value(&NonNegative(
-            computed.to_percentage()
+            computed.to_percentage(),
         )))
     }
 }
@@ -777,7 +775,9 @@ impl FontSizeKeyword {
     fn to_length(&self, cx: &Context) -> NonNegativeLength {
         let gecko_font = cx.style().get_font().gecko();
         let family = &gecko_font.mFont.family.families;
-        let generic = family.single_generic().unwrap_or(computed::GenericFontFamily::None);
+        let generic = family
+            .single_generic()
+            .unwrap_or(computed::GenericFontFamily::None);
         let base_size = unsafe {
             Atom::with(gecko_font.mLanguage.mRawPtr, |language| {
                 cx.device().base_size_for_generic(language, generic)

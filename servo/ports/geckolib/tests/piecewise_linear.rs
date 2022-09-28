@@ -56,15 +56,9 @@ fn implied_input_spacing() {
         .push(0.0, None)
         .push(1.0, None)
         .build();
-    assert!(implied_spacing
-        .at(0.)
-        .approx_eq(&explicit_spacing.at(0.)));
-    assert!(implied_spacing
-        .at(0.5)
-        .approx_eq(&explicit_spacing.at(0.5)));
-    assert!(implied_spacing
-        .at(1.0)
-        .approx_eq(&explicit_spacing.at(1.0)));
+    assert!(implied_spacing.at(0.).approx_eq(&explicit_spacing.at(0.)));
+    assert!(implied_spacing.at(0.5).approx_eq(&explicit_spacing.at(0.5)));
+    assert!(implied_spacing.at(1.0).approx_eq(&explicit_spacing.at(1.0)));
 }
 
 #[test]
@@ -136,9 +130,7 @@ fn out_of_bounds_flat() {
         .push(1.0, Some(1.0))
         .push(1.0, Some(1.0))
         .build();
-    assert!(oob_flat
-        .at(0.0)
-        .approx_eq(&oob_flat.at(-0.25)));
+    assert!(oob_flat.at(0.0).approx_eq(&oob_flat.at(-0.25)));
     assert!(oob_flat.at(1.0).approx_eq(&oob_flat.at(1.25)));
 }
 
