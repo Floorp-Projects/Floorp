@@ -280,8 +280,6 @@ bool IsTupleUnchecked(JSContext* cx, const CallArgs& args);
 bool intrinsic_IsTuple(JSContext* cx, unsigned argc, JS::Value* vp);
 #endif
 
-void selfHosting_ErrorReporter(JSErrorReport* report);
-
 } /* namespace js */
 
 #endif /* vm_SelfHosting_h_ */

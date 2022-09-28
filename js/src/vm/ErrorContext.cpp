@@ -11,7 +11,6 @@
 #include "js/friend/StackLimits.h"  // js::ReportOverRecursed
 #include "util/DifferentialTesting.h"
 #include "vm/JSContext.h"
-#include "vm/SelfHosting.h"  // selfHosting_ErrorReporter
 
 using namespace js;
 
@@ -54,7 +53,6 @@ void MainThreadErrorContext::reportError(CompileError* err) {
   // On the main thread, report the error immediately.
 
   if (MOZ_UNLIKELY(!cx_->runtime()->hasInitializedSelfHosting())) {
-    selfHosting_ErrorReporter(err);
     return;
   }
 
