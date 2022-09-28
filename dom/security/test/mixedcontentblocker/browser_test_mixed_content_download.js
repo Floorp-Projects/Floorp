@@ -202,7 +202,7 @@ async function runTest(url, link, checkFunction, description) {
   await SpecialPowers.popPrefEnv();
 }
 
-add_task(async function setup() {
+add_setup(async () => {
   let list = await Downloads.getList(Downloads.ALL);
   list.addView(downloadMonitoringView);
   registerCleanupFunction(() => list.removeView(downloadMonitoringView));

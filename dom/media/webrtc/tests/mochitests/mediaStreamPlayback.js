@@ -173,6 +173,8 @@ MediaStreamPlayback.prototype = {
 // haxx to prevent SimpleTest from failing at window.onload
 function addLoadEvent() {}
 
+/* import-globals-from /testing/mochitest/tests/SimpleTest/SimpleTest.js */
+/* import-globals-from head.js */
 var scriptsReady = Promise.all(
   ["/tests/SimpleTest/SimpleTest.js", "head.js"].map(script => {
     var el = document.createElement("script");
