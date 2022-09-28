@@ -50,6 +50,10 @@ nsCanvasFrame* NS_NewCanvasFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsCanvasFrame(aStyle, aPresShell->GetPresContext());
 }
 
+nsIPopupContainer* nsIPopupContainer::GetPopupContainer(PresShell* aPresShell) {
+  return aPresShell ? aPresShell->GetCanvasFrame() : nullptr;
+}
+
 NS_IMPL_FRAMEARENA_HELPERS(nsCanvasFrame)
 
 NS_QUERYFRAME_HEAD(nsCanvasFrame)

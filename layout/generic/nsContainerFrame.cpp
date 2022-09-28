@@ -29,6 +29,7 @@
 #include "nsGkAtoms.h"
 #include "nsViewManager.h"
 #include "nsIWidget.h"
+#include "nsCanvasFrame.h"
 #include "nsCSSRendering.h"
 #include "nsError.h"
 #include "nsDisplayList.h"
@@ -731,17 +732,29 @@ static bool IsTopLevelWidget(nsIWidget* aWidget) {
 void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
                                             nsIFrame* aFrame, nsView* aView,
                                             gfxContext* aRC, uint32_t aFlags) {
-  if (!aView || !nsCSSRendering::IsCanvasFrame(aFrame) || !aView->HasWidget())
+  if (!aView || !aView->HasWidget()) {
     return;
+  }
+
+  {
+    const bool isValid = aFrame->IsCanvasFrame() || aFrame->IsViewportFrame();
+    if (!isValid) {
+      return;
+    }
+  }
 
   nsCOMPtr<nsIWidget> windowWidget =
       GetPresContextContainerWidget(aPresContext);
-  if (!windowWidget || !IsTopLevelWidget(windowWidget)) return;
+  if (!windowWidget || !IsTopLevelWidget(windowWidget)) {
+    return;
+  }
 
   nsViewManager* vm = aView->GetViewManager();
   nsView* rootView = vm->GetRootView();
 
-  if (aView != rootView) return;
+  if (aView != rootView) {
+    return;
+  }
 
   Element* rootElement = aPresContext->Document()->GetRootElement();
   if (!rootElement) {
@@ -750,7 +763,9 @@ void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
 
   nsIFrame* rootFrame =
       aPresContext->PresShell()->FrameConstructor()->GetRootElementStyleFrame();
-  if (!rootFrame) return;
+  if (!rootFrame) {
+    return;
+  }
 
   if (aFlags & SET_ASYNC) {
     aView->SetNeedsWindowPropertiesSync();
@@ -771,8 +786,9 @@ void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
     // careful because apparently some Firefox extensions expect
     // openDialog("something.html") to produce an opaque window
     // even if the HTML doesn't have a background-color set.
-    nsTransparencyMode mode =
-        nsLayoutUtils::GetFrameTransparency(aFrame, rootFrame);
+    auto* canvas = aPresContext->PresShell()->GetCanvasFrame();
+    nsTransparencyMode mode = nsLayoutUtils::GetFrameTransparency(
+        canvas ? canvas : aFrame, rootFrame);
     StyleWindowShadow shadow = rootFrame->StyleUIReset()->mWindowShadow;
     nsCOMPtr<nsIWidget> viewWidget = aView->GetWidget();
     viewWidget->SetTransparencyMode(mode);
@@ -784,7 +800,9 @@ void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
     }
   }
 
-  if (!aRC) return;
+  if (!aRC) {
+    return;
+  }
 
   if (!weak.IsAlive()) {
     return;

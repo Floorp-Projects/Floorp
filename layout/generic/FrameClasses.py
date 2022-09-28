@@ -76,7 +76,6 @@ FRAME_CLASSES = [
     Frame("nsPopupSetFrame", "PopupSet", NOT_LEAF),
     Frame("nsProgressFrame", "Progress", LEAF),
     Frame("nsRangeFrame", "Range", LEAF),
-    Frame("nsRootBoxFrame", "XULRoot", NOT_LEAF),
     Frame("nsRubyBaseContainerFrame", "RubyBaseContainer", NOT_LEAF),
     Frame("nsRubyBaseFrame", "RubyBase", NOT_LEAF),
     Frame("nsRubyFrame", "Ruby", NOT_LEAF),

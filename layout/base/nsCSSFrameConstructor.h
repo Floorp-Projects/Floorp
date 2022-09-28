@@ -2145,8 +2145,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   bool mQuotesDirty : 1;
   bool mCountersDirty : 1;
   bool mIsDestroyingFrameTree : 1;
-  // This is true if mDocElementContainingBlock supports absolute positioning
-  bool mHasRootAbsPosContainingBlock : 1;
   bool mAlwaysCreateFramesForIgnorableWhitespace : 1;
 
   // The layout state from our history entry (to restore scroll positions and
