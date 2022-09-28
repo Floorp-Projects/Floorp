@@ -56,6 +56,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [isBackgroundTaskMode](#isbackgroundtaskmode)
 * [backgroundTaskName](#backgroundtaskname)
 * [userPrefersReducedMotion](#userPrefersReducedMotion)
+* [distributionId](#distributionId)
 
 ## Detailed usage
 
@@ -849,3 +850,7 @@ mode, or `null` if this invocation is not running in background task mode.
 
 Checks if user prefers reduced motion as indicated by the value of a media query for `prefers-reduced-motion`.
 
+### `distributionId`
+
+A string containing the id of the distribution, or the empty string if there
+is no distribution associated with the build.
