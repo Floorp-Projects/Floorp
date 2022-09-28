@@ -118,6 +118,8 @@ class OffThreadErrorContext : public ErrorContext {
  public:
   OffThreadErrorContext() = default;
 
+  void convertToRuntimeError(JSContext* cx);
+
   void linkWithJSContext(JSContext* cx);
   const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>& errors() const {
     return errors_.errors;
