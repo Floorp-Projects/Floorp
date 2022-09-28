@@ -9,7 +9,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemWritableFileStreamBinding.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/UnionConversions.h"
 #include "mozilla/dom/WritableStreamDefaultController.h"
 
 namespace mozilla::dom {
@@ -32,27 +31,25 @@ static void TryGetAsUnion(
     ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams& aOutput,
     JS::Handle<JS::Value> aChunk, ErrorResult& aRv) {
   JS::Rooted<JS::Value> chunk(aCx, aChunk);
-  ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParamsArgument holder(
-      aOutput);
   bool done = false, failed = false, tryNext;
   if (chunk.isObject()) {
     done =
         (failed =
-             !holder.TrySetToArrayBufferView(aCx, &chunk, tryNext, false)) ||
+             !aOutput.TrySetToArrayBufferView(aCx, &chunk, tryNext, false)) ||
         !tryNext ||
-        (failed = !holder.TrySetToArrayBuffer(aCx, &chunk, tryNext, false)) ||
+        (failed = !aOutput.TrySetToArrayBuffer(aCx, &chunk, tryNext, false)) ||
         !tryNext ||
-        (failed = !holder.TrySetToBlob(aCx, &chunk, tryNext, false)) ||
+        (failed = !aOutput.TrySetToBlob(aCx, &chunk, tryNext, false)) ||
         !tryNext;
   }
   if (!done) {
     done =
-        (failed = !holder.TrySetToWriteParams(aCx, &chunk, tryNext, false)) ||
+        (failed = !aOutput.TrySetToWriteParams(aCx, &chunk, tryNext, false)) ||
         !tryNext;
   }
   if (!done) {
     do {
-      done = (failed = !holder.TrySetToUSVString(aCx, &chunk, tryNext)) ||
+      done = (failed = !aOutput.TrySetToUSVString(aCx, &chunk, tryNext)) ||
              !tryNext;
       break;
     } while (false);

@@ -160,7 +160,6 @@ class WebIDLCodegenManager(LoggingMixin):
         "RegisterWorkerBindings.h",
         "RegisterWorkerDebuggerBindings.h",
         "RegisterWorkletBindings.h",
-        "UnionConversions.h",
         "UnionTypes.h",
         "WebIDLPrefs.h",
         "WebIDLSerializable.h",

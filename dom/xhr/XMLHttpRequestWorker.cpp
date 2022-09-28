@@ -27,7 +27,6 @@
 #include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/StreamBlobImpl.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
-#include "mozilla/dom/UnionConversions.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/WorkerRef.h"

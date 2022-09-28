@@ -80,7 +80,6 @@
 #include "mozilla/dom/StorageManager.h"
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TextEncoderBinding.h"
-#include "mozilla/dom/UnionConversions.h"
 #include "mozilla/dom/URLBinding.h"
 #include "mozilla/dom/URLSearchParamsBinding.h"
 #include "mozilla/dom/XMLHttpRequest.h"
@@ -297,13 +296,12 @@ static bool SandboxCreateRTCIdentityProvider(JSContext* cx,
 
 static bool SetFetchRequestFromValue(JSContext* cx, RequestOrUSVString& request,
                                      const MutableHandleValue& requestOrUrl) {
-  RequestOrUSVStringArgument requestHolder(request);
   bool noMatch = true;
   if (requestOrUrl.isObject() &&
-      !requestHolder.TrySetToRequest(cx, requestOrUrl, noMatch, false)) {
+      !request.TrySetToRequest(cx, requestOrUrl, noMatch, false)) {
     return false;
   }
-  if (noMatch && !requestHolder.TrySetToUSVString(cx, requestOrUrl, noMatch)) {
+  if (noMatch && !request.TrySetToUSVString(cx, requestOrUrl, noMatch)) {
     return false;
   }
   if (noMatch) {
