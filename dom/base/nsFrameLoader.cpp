@@ -2654,6 +2654,8 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
       // - about:preferences (in Thunderbird only) so it can load remote
       //     extension options pages for FileLink providers
       // - DevTools webext panels if DevTools is loaded in a content frame
+      // - DevTools Network Monitor, which uses content frame for HTML request
+      // previews
       // - Chrome mochitests can also do this.
       //
       // Note that the new frame's message manager will not be a child of the
@@ -2680,6 +2682,7 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
             "about:preferences"_ns,
 #endif
             "chrome://browser/content/webext-panels.xhtml"_ns,
+            "chrome://devtools/content/netmonitor/index.html"_ns,
         };
 
         for (const auto& allowedURI : kAllowedURIs) {
