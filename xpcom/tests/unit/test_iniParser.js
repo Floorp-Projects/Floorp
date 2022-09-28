@@ -257,8 +257,8 @@ function run_test() {
     );
     Assert.ok(!!factory);
 
-    // Test reading from a variety of files. While we're at it, write out each one
-    // and read it back to ensure that nothing changed.
+    // Test reading from a variety of files and strings. While we're at it,
+    // write out each one and read it back to ensure that nothing changed.
     while (testnum < testdata.length) {
       dump("\nINFO | test #" + ++testnum);
       let filename = testdata[testnum - 1].filename;
@@ -279,6 +279,15 @@ function run_test() {
       checkParserOutput(parser, testdata[testnum - 1].reference);
       // cleanup after the test
       newfile.remove(false);
+
+      // ensure that `writeString` works correctly
+      Assert.ok(parser instanceof Ci.nsIINIParserWriter);
+      let formatted = parser.writeToString();
+      parser = factory.createINIParser(null);
+      // re-parsing the formatted string is the easiest
+      // way to verify correctness...
+      parser.initFromString(formatted);
+      checkParserOutput(parser, testdata[testnum - 1].reference);
     }
 
     dump("INFO | test #" + ++testnum + "\n");

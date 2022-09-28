@@ -34,6 +34,8 @@ class nsINIParser {
    */
   nsresult Init(nsIFile* aFile);
 
+  nsresult InitFromString(const nsCString& aStr);
+
   /**
    * Callback for GetSections
    * @return false to stop enumeration, or true to continue.
@@ -134,6 +136,8 @@ class nsINIParser {
    */
   nsresult WriteToFile(nsIFile* aFile);
 
+  void WriteToString(nsACString& aOutput);
+
  private:
   struct INIValue {
     INIValue(const char* aKey, const char* aValue)
@@ -155,8 +159,6 @@ class nsINIParser {
   };
 
   nsClassHashtable<nsCharPtrHashKey, INIValue> mSections;
-
-  nsresult InitFromString(const nsCString& aStr);
 
   bool IsValidSection(const char* aSection);
   bool IsValidKey(const char* aKey);

@@ -113,6 +113,11 @@ nsINIParserImpl::GetString(const nsACString& aSection, const nsACString& aKey,
 }
 
 NS_IMETHODIMP
+nsINIParserImpl::InitFromString(const nsACString& aData) {
+  return mParser.InitFromString(nsCString(aData));
+}
+
+NS_IMETHODIMP
 nsINIParserImpl::SetString(const nsACString& aSection, const nsACString& aKey,
                            const nsACString& aValue) {
   if (ContainsNull(aSection) || ContainsNull(aKey) || ContainsNull(aValue)) {
@@ -127,4 +132,12 @@ nsINIParserImpl::SetString(const nsACString& aSection, const nsACString& aKey,
 NS_IMETHODIMP
 nsINIParserImpl::WriteFile(nsIFile* aINIFile) {
   return mParser.WriteToFile(aINIFile);
+}
+
+NS_IMETHODIMP
+nsINIParserImpl::WriteToString(nsACString& aOutput) {
+  aOutput.Truncate();
+  mParser.WriteToString(aOutput);
+
+  return NS_OK;
 }
