@@ -33,7 +33,7 @@ add_task(async function triggersTargetDestroyed({ client, tab }) {
   const targetDestroyed = Target.targetDestroyed();
 
   info("Closing the target");
-  Target.closeTarget({ targetId: targetInfo.targetId });
+  await Target.closeTarget({ targetId: targetInfo.targetId });
 
   await tabClosed;
   info("Tab was closed");

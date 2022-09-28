@@ -10,15 +10,16 @@ async def wait_for_navigation(bidi_session, context, url, wait, expect_timeout):
     if expect_timeout:
         with pytest.raises(asyncio.TimeoutError):
             await asyncio.wait_for(
-                bidi_session.browsing_context.navigate(
+                asyncio.shield(bidi_session.browsing_context.navigate(
                     context=context, url=url, wait=wait
-                ),
-              timeout=1,
+                )),
+                timeout=1,
             )
     else:
         await bidi_session.browsing_context.navigate(
             context=context, url=url, wait=wait
         )
+
 
 @pytest.mark.parametrize("value", ["none", "interactive", "complete"])
 async def test_expected_url(bidi_session, inline, new_tab, value):

@@ -102,7 +102,7 @@ class BrowsingContextModule extends Module {
    * @throws {InvalidArgumentError}
    *     If the browsing context is not a top-level one.
    */
-  close(options = {}) {
+  async close(options = {}) {
     const { context: contextId } = options;
 
     lazy.assert.string(
@@ -134,7 +134,8 @@ class BrowsingContextModule extends Module {
     const browser = context.embedderElement;
     const tabBrowser = lazy.TabManager.getTabBrowser(browser.ownerGlobal);
     const tab = tabBrowser.getTabForBrowser(browser);
-    lazy.TabManager.removeTab(tab);
+
+    await lazy.TabManager.removeTab(tab);
   }
 
   /**
