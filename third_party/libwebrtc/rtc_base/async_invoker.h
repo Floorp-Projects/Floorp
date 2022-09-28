@@ -19,7 +19,6 @@
 #include "api/scoped_refptr.h"
 #include "rtc_base/async_invoker_inl.h"
 #include "rtc_base/event.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 

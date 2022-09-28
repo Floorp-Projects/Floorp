@@ -14,7 +14,6 @@
 #include "api/units/time_delta.h"
 #include "call/adaptation/video_stream_adapter.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/ref_counted_object.h"
 
 namespace webrtc {
 

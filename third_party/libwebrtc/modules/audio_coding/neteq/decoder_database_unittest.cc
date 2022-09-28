@@ -15,7 +15,6 @@
 #include <string>
 
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
-#include "rtc_base/ref_counted_object.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/mock_audio_decoder.h"

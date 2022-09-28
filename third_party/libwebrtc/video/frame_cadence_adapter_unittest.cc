@@ -21,7 +21,6 @@
 #include "api/video/video_frame.h"
 #include "rtc_base/event.h"
 #include "rtc_base/rate_statistics.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/metrics.h"

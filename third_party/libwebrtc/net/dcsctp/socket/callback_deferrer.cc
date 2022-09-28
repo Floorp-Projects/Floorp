@@ -9,6 +9,8 @@
  */
 #include "net/dcsctp/socket/callback_deferrer.h"
 
+#include "api/make_ref_counted.h"
+
 namespace dcsctp {
 namespace {
 // A wrapper around the move-only DcSctpMessage, to let it be captured in a

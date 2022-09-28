@@ -13,9 +13,9 @@
 #include <memory>
 
 #include "absl/types/optional.h"
+#include "api/make_ref_counted.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/gunit.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/thread.h"
 #include "test/gtest.h"
 

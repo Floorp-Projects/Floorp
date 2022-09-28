@@ -71,7 +71,6 @@
 #include "rtc_base/event.h"
 #include "rtc_base/location.h"
 #include "rtc_base/message_handler.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/string_utils.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/thread.h"

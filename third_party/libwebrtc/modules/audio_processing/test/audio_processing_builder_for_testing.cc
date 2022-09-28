@@ -14,7 +14,6 @@
 #include <utility>
 
 #include "modules/audio_processing/audio_processing_impl.h"
-#include "rtc_base/ref_counted_object.h"
 
 namespace webrtc {
 

@@ -13,12 +13,12 @@
 #include <memory>
 #include <utility>
 
+#include "api/make_ref_counted.h"
 #include "api/sequence_checker.h"
 #include "modules/audio_device/audio_device_buffer.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/string_utils.h"
 
 namespace webrtc {

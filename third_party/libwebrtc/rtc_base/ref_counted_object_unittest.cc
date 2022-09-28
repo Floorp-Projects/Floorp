@@ -16,6 +16,7 @@
 #include <utility>
 
 #include "absl/strings/string_view.h"
+#include "api/make_ref_counted.h"
 #include "api/scoped_refptr.h"
 #include "rtc_base/ref_count.h"
 #include "test/gtest.h"

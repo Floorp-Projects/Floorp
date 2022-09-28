@@ -21,7 +21,6 @@
 #include "api/video/i444_buffer.h"
 #include "api/video/nv12_buffer.h"
 #include "rtc_base/race_checker.h"
-#include "rtc_base/ref_counted_object.h"
 
 namespace webrtc {
 

@@ -24,7 +24,6 @@
 #include "api/task_queue/task_queue_base.h"
 #include "net/dcsctp/public/dcsctp_message.h"
 #include "net/dcsctp/public/dcsctp_socket.h"
-#include "rtc_base/ref_counted_object.h"
 
 namespace dcsctp {
 // Defers callbacks until they can be safely triggered.

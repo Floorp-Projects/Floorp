@@ -476,6 +476,7 @@ rtc_library("desktop_capture_generic") {
   deps = [
     ":primitives",
     "../../api:function_view",
+    "../../api:make_ref_counted",
     "../../api:refcountedbase",
     "../../api:scoped_refptr",
     "../../api:sequence_checker",
@@ -485,7 +486,6 @@ rtc_library("desktop_capture_generic") {
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
     "../../rtc_base:random",
-    "../../rtc_base:refcount",
     "../../rtc_base:stringutils",
     "../../rtc_base:timeutils",
     "../../rtc_base/synchronization:mutex",

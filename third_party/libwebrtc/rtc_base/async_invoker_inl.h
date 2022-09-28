@@ -11,10 +11,10 @@
 #ifndef RTC_BASE_ASYNC_INVOKER_INL_H_
 #define RTC_BASE_ASYNC_INVOKER_INL_H_
 
+#include "api/make_ref_counted.h"
 #include "api/scoped_refptr.h"
 #include "rtc_base/event.h"
 #include "rtc_base/message_handler.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"

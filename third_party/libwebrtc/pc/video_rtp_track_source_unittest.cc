@@ -16,7 +16,6 @@
 #include "api/video/color_space.h"
 #include "api/video/encoded_image.h"
 #include "api/video/video_codec_type.h"
-#include "rtc_base/ref_counted_object.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 

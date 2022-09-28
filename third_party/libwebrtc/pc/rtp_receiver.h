@@ -34,7 +34,6 @@
 #include "media/base/media_channel.h"
 #include "media/base/video_broadcaster.h"
 #include "pc/video_track_source.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/thread.h"
 
 namespace webrtc {

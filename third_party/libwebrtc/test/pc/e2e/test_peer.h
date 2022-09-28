@@ -24,7 +24,6 @@
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "pc/peer_connection_wrapper.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "test/pc/e2e/peer_configurer.h"
 #include "test/pc/e2e/peer_connection_quality_test_params.h"

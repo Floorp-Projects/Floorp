@@ -1083,11 +1083,11 @@ rtc_library("audio_codec_mocks") {
   deps = [
     ":test_support",
     "../api:array_view",
+    "../api:make_ref_counted",
     "../api:scoped_refptr",
     "../api/audio_codecs:audio_codecs_api",
     "../api/audio_codecs:builtin_audio_decoder_factory",
     "../rtc_base:checks",
-    "../rtc_base:refcount",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
 }

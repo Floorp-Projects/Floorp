@@ -12,6 +12,7 @@
 
 #include <utility>
 
+#include "api/make_ref_counted.h"
 #include "p2p/base/basic_ice_controller.h"
 #include "p2p/base/ice_controller_factory_interface.h"
 
