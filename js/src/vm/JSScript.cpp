@@ -62,7 +62,7 @@
 #include "vm/BytecodeLocation.h"
 #include "vm/BytecodeUtil.h"  // Disassemble
 #include "vm/Compression.h"
-#include "vm/ErrorContext.h"  // AutoReportFrontendContext, MainThreadErrorContext
+#include "vm/ErrorContext.h"       // AutoReportFrontendContext
 #include "vm/HelperThreadState.h"  // js::RunPendingSourceCompressions
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
@@ -1790,7 +1790,7 @@ bool ScriptSource::xdrFinalizeEncoder(JSContext* cx,
 
   auto cleanup = mozilla::MakeScopeExit([&] { xdrEncoder_.reset(); });
 
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   XDRStencilEncoder encoder(cx, &ec, buffer);
 
   frontend::BorrowingCompilationStencil borrowingStencil(
@@ -1798,6 +1798,7 @@ bool ScriptSource::xdrFinalizeEncoder(JSContext* cx,
   XDRResult res = encoder.codeStencil(this, borrowingStencil);
   if (res.isErr()) {
     if (JS::IsTranscodeFailureResult(res.unwrapErr())) {
+      ec.clearAutoReport();
       JS_ReportErrorASCII(cx, "XDR encoding failure");
     }
     return false;

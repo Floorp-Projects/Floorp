@@ -22,7 +22,7 @@
 #include "js/RegExp.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "util/StringBuffer.h"
-#include "vm/ErrorContext.h"  // AutoReportFrontendContext, MainThreadErrorContext
+#include "vm/ErrorContext.h"  // AutoReportFrontendContext
 #include "vm/MatchPairs.h"
 #include "vm/PlainObject.h"
 #include "vm/RegExpStatics.h"
@@ -1193,7 +1193,7 @@ JS_PUBLIC_API bool JS::CheckRegExpSyntax(JSContext* cx, const char16_t* chars,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   CompileOptions dummyOptions(cx);
   frontend::DummyTokenStream dummyTokenStream(cx, &ec, dummyOptions);
 
@@ -1205,9 +1205,11 @@ JS_PUBLIC_API bool JS::CheckRegExpSyntax(JSContext* cx, const char16_t* chars,
   error.set(UndefinedValue());
   if (!success) {
     // We can fail because of OOM or over-recursion even if the syntax is valid.
-    if (cx->isThrowingOutOfMemory() || cx->isThrowingOverRecursed()) {
+    if (ec.hadOutOfMemory() || ec.hadOverRecursed()) {
       return false;
     }
+
+    ec.convertToRuntimeErrorAndClear();
     if (!cx->getPendingException(error)) {
       return false;
     }

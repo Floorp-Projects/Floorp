@@ -74,7 +74,6 @@
 #include "js/StableStringChars.h"     // for AutoStableStringChars
 #include "js/UbiNode.h"               // for Node, RootList, Edge
 #include "js/UbiNodeBreadthFirst.h"   // for BreadthFirst
-#include "js/Warnings.h"              // for AutoSuppressWarningReporter
 #include "js/Wrapper.h"               // for CheckedUnwrapStatic
 #include "util/Text.h"                // for DuplicateString, js_strlen
 #include "vm/ArrayObject.h"           // for ArrayObject
@@ -83,7 +82,7 @@
 #include "vm/BytecodeUtil.h"          // for JSDVG_IGNORE_STACK
 #include "vm/Compartment.h"           // for CrossCompartmentKey
 #include "vm/EnvironmentObject.h"     // for IsSyntacticEnvironment
-#include "vm/ErrorContext.h"          // for MainThreadErrorContext
+#include "vm/ErrorContext.h"          // for AutoReportFrontendContext
 #include "vm/ErrorReporting.h"        // for ReportErrorToGlobal
 #include "vm/GeneratorObject.h"       // for AbstractGeneratorObject
 #include "vm/GlobalObject.h"          // for GlobalObject
@@ -6109,7 +6108,8 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
 
   bool result = true;
 
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx,
+                               AutoReportFrontendContext::Warning::Suppress);
   CompileOptions options(cx);
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
@@ -6124,7 +6124,6 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JS::AutoSuppressWarningReporter suppressWarnings(cx);
   frontend::Parser<frontend::FullParseHandler, char16_t> parser(
       cx, &ec, cx->stackLimitForCurrentPrincipal(), options,
       chars.twoByteChars(), length,
@@ -6133,7 +6132,7 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
   if (!parser.checkOptions() || !parser.parse()) {
     // We ran into an error. If it was because we ran out of memory we report
     // it in the usual way.
-    if (cx->isThrowingOutOfMemory()) {
+    if (ec.hadOutOfMemory()) {
       return false;
     }
 
@@ -6143,7 +6142,7 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
       result = false;
     }
 
-    cx->clearPendingException();
+    ec.clearAutoReport();
   }
 
   args.rval().setBoolean(result);
