@@ -4,30 +4,37 @@
 
 "use strict";
 
+const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { div, iframe } = dom;
+const { div } = dom;
 
 /*
  * Response preview component
  * Display HTML content within a sandbox enabled iframe
  */
-function HTMLPreview({ responseContent }) {
-  const htmlBody = responseContent ? responseContent.content.text : "";
+class HTMLPreview extends Component {
+  static get propTypes() {
+    return {
+      responseContent: PropTypes.object.isRequired,
+    };
+  }
 
-  return div(
-    { className: "html-preview" },
-    iframe({
-      sandbox: "",
-      srcDoc: typeof htmlBody === "string" ? htmlBody : "",
-    })
-  );
+  componentDidMount() {
+    const { container } = this.refs;
+    const browser = container.ownerDocument.createElement("iframe");
+    browser.setAttribute("sandbox", "");
+
+    const { responseContent } = this.props;
+    const htmlBody = responseContent ? responseContent.content.text : "";
+    browser.setAttribute("srcdoc", htmlBody);
+
+    container.appendChild(browser);
+  }
+
+  render() {
+    return div({ className: "html-preview", ref: "container" });
+  }
 }
-
-HTMLPreview.displayName = "HTMLPreview";
-
-HTMLPreview.propTypes = {
-  responseContent: PropTypes.object.isRequired,
-};
 
 module.exports = HTMLPreview;
