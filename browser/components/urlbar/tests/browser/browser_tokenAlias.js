@@ -29,14 +29,20 @@ add_task(async function init() {
   );
   defaultEngine.alias = "@default";
   let oldDefaultEngine = await Services.search.getDefault();
-  Services.search.setDefault(defaultEngine);
+  Services.search.setDefault(
+    defaultEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   await SearchTestUtils.installSearchExtension({
     name: TEST_ALIAS_ENGINE_NAME,
     keyword: ALIAS,
   });
 
   registerCleanupFunction(async function() {
-    Services.search.setDefault(oldDefaultEngine);
+    Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 
   // Search results aren't shown in quantumbar unless search suggestions are

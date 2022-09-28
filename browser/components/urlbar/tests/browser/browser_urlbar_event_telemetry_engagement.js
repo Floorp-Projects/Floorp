@@ -1140,7 +1140,10 @@ add_task(async function init() {
     getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
   );
   let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   await Services.search.moveEngine(engine, 0);
 
   await SearchTestUtils.installSearchExtension({
@@ -1161,7 +1164,10 @@ add_task(async function init() {
   });
 
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     await PlacesUtils.keywords.remove("kw");
     await PlacesUtils.bookmarks.remove(bm);
     await PlacesUtils.history.clear();

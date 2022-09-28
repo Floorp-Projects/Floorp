@@ -39,11 +39,17 @@ add_setup(async function() {
   let engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
   );
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   gPrivateEngine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + "searchSuggestionEngine2.xml"
   );
-  await Services.search.setDefaultPrivate(gPrivateEngine);
+  await Services.search.setDefaultPrivate(
+    gPrivateEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   // Add another engine in the first one-off position.
   let engine2 = await SearchTestUtils.promiseNewSearchEngine(
@@ -59,8 +65,14 @@ add_setup(async function() {
   gAliasEngine = Services.search.getEngineByName("MozSearch");
 
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(oldDefaultEngine);
-    await Services.search.setDefaultPrivate(oldDefaultPrivateEngine);
+    await Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
+    await Services.search.setDefaultPrivate(
+      oldDefaultPrivateEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     await PlacesUtils.history.clear();
   });
 });

@@ -124,6 +124,47 @@ search.engine.default:
     send_in_pings:
       - 'metrics'
 
+  changed:
+    type: event
+    description: |
+      Recorded when the default search engine is changed.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1634555
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1634555
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+    extra_keys:
+      previous_engine_id:
+        type: string
+        description: The id of the previous default engine.
+      new_engine_id:
+        type: string
+        description: The id of the new default engine.
+      new_display_name:
+        type: string
+        description: The display name of the new default engine.
+      new_load_path:
+        type: string
+        description: |
+          The path relating to where the new default engine was installed/loaded
+          from.
+      new_submission_url:
+        type: string
+        description: |
+          The new submission URL of the new default engine. This is
+          limited to 100 characters.
+      change_source:
+        type: string
+        description: |
+          The source of the change of engine. For possible values,
+          see `DEFAULT_CHANGE_REASON` in
+          https://searchfox.org/mozilla-central/source/toolkit/components/search/SearchUtils.sys.mjs
+
 search.engine.private:
   engine_id:
     type: string
@@ -266,3 +307,44 @@ search.engine.private:
     lifetime: application
     send_in_pings:
       - 'metrics'
+
+  changed:
+    type: event
+    description: |
+      Recorded when the default search engine is changed
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1634555
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1634555
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+    extra_keys:
+      previous_engine_id:
+        type: string
+        description: The id of the previous default engine.
+      new_engine_id:
+        type: string
+        description: The id of the new default engine.
+      new_display_name:
+        type: string
+        description: The display name of the new default engine.
+      new_load_path:
+        type: string
+        description: |
+          The path relating to where the new default engine was installed/loaded
+          from.
+      new_submission_url:
+        type: string
+        description: |
+          The new submission URL of the new default engine. This is
+          limited to 100 characters.
+      change_source:
+        type: string
+        description: |
+          The source of the change of engine. For possible values,
+          see `REASON_CHANGE_MAP` in
+          https://searchfox.org/mozilla-central/source/toolkit/components/search/SearchService.sys.mjs

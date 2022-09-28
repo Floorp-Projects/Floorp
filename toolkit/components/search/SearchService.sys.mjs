@@ -54,6 +54,47 @@ const SEARCH_DEFAULT_UPDATE_INTERVAL = 7;
 const RECONFIG_IDLE_TIME_SEC = 5 * 60;
 
 /**
+ * A reason that is used in the change of default search engine event telemetry.
+ * These are mutally exclusive.
+ */
+const REASON_CHANGE_MAP = new Map([
+  // The cause of the change is unknown.
+  [Ci.nsISearchService.CHANGE_REASON_UNKNOWN, "unknown"],
+  // The user changed the default search engine via the options in the
+  // preferences UI.
+  [Ci.nsISearchService.CHANGE_REASON_USER, "user"],
+  // The change resulted from the user toggling the "Use this search engine in
+  // Private Windows" option in the preferences UI.
+  [Ci.nsISearchService.CHANGE_REASON_USER_PRIVATE_SPLIT, "user_private_split"],
+  // The user changed the default via keys (cmd/ctrl-up/down) in the separate
+  // search bar.
+  [Ci.nsISearchService.CHANGE_REASON_USER_SEARCHBAR, "user_searchbar"],
+  // The user changed the default via context menu on the one-off buttons in the
+  // separate search bar.
+  [
+    Ci.nsISearchService.CHANGE_REASON_USER_SEARCHBAR_CONTEXT,
+    "user_searchbar_context",
+  ],
+  // An add-on requested the change of default on install, which was either
+  // accepted automatically or by the user.
+  [Ci.nsISearchService.CHANGE_REASON_ADDON_INSTALL, "addon-install"],
+  // An add-on was uninstalled, which caused the engine to be uninstalled.
+  [Ci.nsISearchService.CHANGE_REASON_ADDON_UNINSTALL, "addon-uninstall"],
+  // A configuration update caused a change of default.
+  [Ci.nsISearchService.CHANGE_REASON_CONFIG, "config"],
+  // A locale update caused a change of default.
+  [Ci.nsISearchService.CHANGE_REASON_LOCALE, "locale"],
+  // A region update caused a change of default.
+  [Ci.nsISearchService.CHANGE_REASON_REGION, "region"],
+  // Turning on/off an experiment caused a change of default.
+  [Ci.nsISearchService.CHANGE_REASON_EXPERIMENT, "experiment"],
+  // An enterprise policy caused a change of default.
+  [Ci.nsISearchService.CHANGE_REASON_ENTERPRISE, "enterprise"],
+  // The UI Tour caused a change of default.
+  [Ci.nsISearchService.CHANGE_REASON_UITOUR, "uitour"],
+]);
+
+/**
  * The ParseSubmissionResult contains getter methods that return attributes
  * about the parsed submission url.
  *
@@ -185,9 +226,9 @@ export class SearchService {
     return this.defaultEngine;
   }
 
-  async setDefault(engine) {
+  async setDefault(engine, changeSource) {
     await this.init();
-    return (this.defaultEngine = engine);
+    this.#setEngineDefault(false, engine, changeSource);
   }
 
   async getDefaultPrivate() {
@@ -195,9 +236,15 @@ export class SearchService {
     return this.defaultPrivateEngine;
   }
 
-  async setDefaultPrivate(engine) {
+  async setDefaultPrivate(engine, changeSource) {
     await this.init();
-    return (this.defaultPrivateEngine = engine);
+    if (!this._separatePrivateDefaultPrefValue) {
+      Services.prefs.setBoolPref(
+        lazy.SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+        true
+      );
+    }
+    this.#setEngineDefault(this.#separatePrivateDefault, engine, changeSource);
   }
 
   /**
@@ -1624,8 +1671,12 @@ export class SearchService {
    *
    * This is prefixed with _ rather than # because it is
    * called in test_reload_engines.js
+   *
+   * @param {integer} changeReason
+   *   The reason reload engines is being called, one of
+   *   Ci.nsISearchService.CHANGE_REASON*
    */
-  async _maybeReloadEngines() {
+  async _maybeReloadEngines(changeReason) {
     if (this.#maybeReloadDebounce) {
       lazy.logConsole.debug("We're already waiting to reload engines.");
       return;
@@ -1639,7 +1690,7 @@ export class SearchService {
           return;
         }
         this.#maybeReloadDebounce = false;
-        this._maybeReloadEngines().catch(Cu.reportError);
+        this._maybeReloadEngines(changeReason).catch(Cu.reportError);
       }, 10000);
       lazy.logConsole.debug(
         "Post-poning maybeReloadEngines() as we're currently initializing."
@@ -1656,7 +1707,7 @@ export class SearchService {
     this._reloadingEngines = true;
 
     try {
-      await this._reloadEngines(settings);
+      await this._reloadEngines(settings, changeReason);
     } catch (ex) {
       lazy.logConsole.error("maybeReloadEngines failed", ex);
     }
@@ -1666,7 +1717,7 @@ export class SearchService {
 
   // This is prefixed with _ rather than # because it is called in
   // test_remove_engine_notification_box.js
-  async _reloadEngines(settings) {
+  async _reloadEngines(settings, changeReason) {
     // Capture the current engine state, in case we need to notify below.
     let prevCurrentEngine = this.#currentEngine;
     let prevPrivateEngine = this.#currentPrivateEngine;
@@ -1805,6 +1856,12 @@ export class SearchService {
     // If the defaultEngine has changed between the previous load and this one,
     // dispatch the appropriate notifications.
     if (prevCurrentEngine && this.defaultEngine !== prevCurrentEngine) {
+      this.#recordDefaultChangedEvent(
+        false,
+        prevCurrentEngine,
+        this.defaultEngine,
+        changeReason
+      );
       lazy.SearchUtils.notifyAction(
         this.#currentEngine,
         lazy.SearchUtils.MODIFIED_TYPE.DEFAULT
@@ -1836,6 +1893,12 @@ export class SearchService {
       prevPrivateEngine &&
       this.defaultPrivateEngine !== prevPrivateEngine
     ) {
+      this.#recordDefaultChangedEvent(
+        true,
+        prevPrivateEngine,
+        this.defaultPrivateEngine,
+        changeReason
+      );
       lazy.SearchUtils.notifyAction(
         this.#currentPrivateEngine,
         lazy.SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
@@ -2719,8 +2782,10 @@ export class SearchService {
    *   check the "separatePrivateDefault" preference - that is up to the caller.
    * @param {nsISearchEngine} newEngine
    *   The search engine to select
+   * @param {SearchUtils.REASON_CHANGE_MAP} changeSource
+   *   The source of the change of engine.
    */
-  #setEngineDefault(privateMode, newEngine) {
+  #setEngineDefault(privateMode, newEngine, changeSource) {
     // Sometimes we get wrapped nsISearchEngine objects (external XPCOM callers),
     // and sometimes we get raw Engine JS objects (callers in this file), so
     // handle both.
@@ -2806,6 +2871,12 @@ export class SearchService {
     // Only do this if we're initialized though - this function can get called
     // during initalization.
     if (this._initialized) {
+      this.#recordDefaultChangedEvent(
+        privateMode,
+        currentEngine,
+        newCurrentEngine,
+        changeSource
+      );
       this.#recordTelemetryData();
     }
 
@@ -2847,7 +2918,7 @@ export class SearchService {
       // The defaultEngine getter will throw if there's no engine at all,
       // which shouldn't happen unless an add-on or a test deleted all of them.
       // Our preferences UI doesn't let users do that.
-      Cu.reportError("getDefaultEngineInfo: No default engine");
+      Cu.reportError("getEngineInfo: No default engine");
       return ["NONE", { name: "NONE" }];
     }
 
@@ -2915,6 +2986,67 @@ export class SearchService {
     }
 
     return [engine.telemetryId, engineData];
+  }
+
+  /**
+   * Records an event for where the default engine is changed. This is
+   * recorded to both Glean and Telemetry.
+   *
+   * The Glean GIFFT functionality is not used here because we use longer
+   * names in the extra arguments to the event.
+   *
+   * @param {boolean} isPrivate
+   *   True if this is a event about a private engine.
+   * @param {SearchEngine} previousEngine
+   *   The previously default search engine.
+   * @param {SearchEngine} newEngine
+   *   The new default search engine.
+   * @param {string} changeSource
+   *   The source of the change of default.
+   */
+  #recordDefaultChangedEvent(
+    isPrivate,
+    previousEngine,
+    newEngine,
+    changeSource = Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  ) {
+    changeSource = REASON_CHANGE_MAP.get(changeSource) ?? "unknown";
+    Services.telemetry.setEventRecordingEnabled("search", true);
+    let [telemetryId, engineInfo] = this.#getEngineInfo(newEngine);
+    let submissionURL = engineInfo.submissionURL ?? "";
+    Services.telemetry.recordEvent(
+      "search",
+      "engine",
+      isPrivate ? "change_private" : "change_default",
+      changeSource,
+      {
+        // In docshell tests, the previous engine does not exist, so we allow
+        // for the previousEngine to be undefined.
+        prev_id: previousEngine?.telemetryId ?? "",
+        new_id: telemetryId,
+        new_name: engineInfo.name,
+        new_load_path: engineInfo.loadPath,
+        // Telemetry has a limit of 80 characters.
+        new_sub_url: submissionURL.slice(0, 80),
+      }
+    );
+
+    let extraArgs = {
+      // In docshell tests, the previous engine does not exist, so we allow
+      // for the previousEngine to be undefined.
+      previous_engine_id: previousEngine?.telemetryId ?? "",
+      new_engine_id: telemetryId,
+      new_display_name: engineInfo.name,
+      new_load_path: engineInfo.loadPath,
+      // Glean has a limit of 100 characters.
+      new_submission_url: submissionURL.slice(0, 100),
+      change_source: changeSource,
+    };
+    if (isPrivate) {
+      Glean.searchEnginePrivate.changed.record(extraArgs);
+    } else {
+      Glean.searchEngineDefault.changed.record(extraArgs);
+    }
   }
 
   /**
@@ -3036,7 +3168,9 @@ export class SearchService {
 
   async #nimbusSearchUpdated() {
     this.#checkNimbusPrefs();
-    Services.search.wrappedJSObject._maybeReloadEngines();
+    Services.search.wrappedJSObject._maybeReloadEngines(
+      Ci.nsISearchService.CHANGE_REASON_EXPERIMENT
+    );
   }
 
   #checkNimbusPrefs() {
@@ -3183,7 +3317,9 @@ export class SearchService {
         lazy.logConsole.debug(
           "Reloading engines after idle due to configuration change"
         );
-        this._maybeReloadEngines().catch(Cu.reportError);
+        this._maybeReloadEngines(
+          Ci.nsISearchService.CHANGE_REASON_CONFIG
+        ).catch(Cu.reportError);
         break;
       }
 
@@ -3204,13 +3340,17 @@ export class SearchService {
         // down at the same time (see _reInit for more info).
         Services.tm.dispatchToMainThread(() => {
           if (!Services.startup.shuttingDown) {
-            this._maybeReloadEngines().catch(Cu.reportError);
+            this._maybeReloadEngines(
+              Ci.nsISearchService.CHANGE_REASON_LOCALE
+            ).catch(Cu.reportError);
           }
         });
         break;
       case lazy.Region.REGION_TOPIC:
         lazy.logConsole.debug("Region updated:", lazy.Region.home);
-        this._maybeReloadEngines().catch(Cu.reportError);
+        this._maybeReloadEngines(
+          Ci.nsISearchService.CHANGE_REASON_REGION
+        ).catch(Cu.reportError);
         break;
     }
   }

@@ -1963,7 +1963,9 @@ var UITour = {
       Services.search.getVisibleEngines().then(engines => {
         for (let engine of engines) {
           if (engine.identifier == aID) {
-            Services.search.setDefault(engine).finally(resolve);
+            Services.search
+              .setDefault(engine, Ci.nsISearchService.CHANGE_REASON_UITOUR)
+              .finally(resolve);
             return;
           }
         }

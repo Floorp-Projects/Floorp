@@ -5,6 +5,10 @@ const { SearchTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/SearchTestUtils.sys.mjs"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
+});
+
 SearchTestUtils.init(this);
 
 add_setup(async function() {
@@ -23,8 +27,14 @@ add_setup(async function() {
   const defaultPrivateEngine = await Services.search.getDefaultPrivate();
 
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(defaultEngine);
-    await Services.search.setDefaultPrivate(defaultPrivateEngine);
+    await Services.search.setDefault(
+      defaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
+    await Services.search.setDefaultPrivate(
+      defaultPrivateEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 });
 
@@ -248,14 +258,60 @@ add_task(async function test_setDefaultEngine() {
   const engine1 = Services.search.getEngineByName("engine1");
 
   // Set an initial default so we have a known engine.
-  await Services.search.setDefault(engine1);
+  await Services.search.setDefault(
+    engine1,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
+
+  Services.telemetry.clearEvents();
+  Services.fog.testResetFOG();
 
   await setDefaultEngine(false, "engine1", "engine2");
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        object: "change_default",
+        value: "user",
+        extra: {
+          prev_id: engine1.telemetryId,
+          new_id: "other-engine2",
+          new_name: "engine2",
+          new_load_path:
+            "[other]addEngineWithDetails:engine2@tests.mozilla.org",
+          new_sub_url: "",
+        },
+      },
+    ],
+    { category: "search", method: "engine" }
+  );
+
+  let snapshot = await Glean.searchEngineDefault.changed.testGetValue();
+  delete snapshot[0].timestamp;
+  Assert.deepEqual(
+    snapshot[0],
+    {
+      category: "search.engine.default",
+      name: "changed",
+      extra: {
+        change_source: "user",
+        previous_engine_id: engine1.telemetryId,
+        new_engine_id: "other-engine2",
+        new_display_name: "engine2",
+        new_load_path: "[other]addEngineWithDetails:engine2@tests.mozilla.org",
+        new_submission_url: "",
+      },
+    },
+    "Should have received the correct event details"
+  );
 
   gBrowser.removeCurrentTab();
 });
 
 add_task(async function test_setPrivateDefaultEngine() {
+  Services.telemetry.clearEvents();
+  Services.fog.testResetFOG();
+
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.separatePrivateDefault.ui.enabled", true],
@@ -266,9 +322,53 @@ add_task(async function test_setPrivateDefaultEngine() {
   const engine2 = Services.search.getEngineByName("engine2");
 
   // Set an initial default so we have a known engine.
-  await Services.search.setDefaultPrivate(engine2);
+  await Services.search.setDefaultPrivate(
+    engine2,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
+
+  Services.telemetry.clearEvents();
+  Services.fog.testResetFOG();
 
   await setDefaultEngine(true, "engine2", "engine1");
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        object: "change_private",
+        value: "user",
+        extra: {
+          prev_id: engine2.telemetryId,
+          new_id: "other-engine1",
+          new_name: "engine1",
+          new_load_path:
+            "[other]addEngineWithDetails:engine1@tests.mozilla.org",
+          new_sub_url: "",
+        },
+      },
+    ],
+    { category: "search", method: "engine" }
+  );
+
+  let snapshot = await Glean.searchEnginePrivate.changed.testGetValue();
+  delete snapshot[0].timestamp;
+  console.log(snapshot);
+  Assert.deepEqual(
+    snapshot[0],
+    {
+      category: "search.engine.private",
+      name: "changed",
+      extra: {
+        change_source: "user",
+        previous_engine_id: engine2.telemetryId,
+        new_engine_id: "other-engine1",
+        new_display_name: "engine1",
+        new_load_path: "[other]addEngineWithDetails:engine1@tests.mozilla.org",
+        new_submission_url: "",
+      },
+    },
+    "Should have received the correct event details"
+  );
 
   gBrowser.removeCurrentTab();
 });

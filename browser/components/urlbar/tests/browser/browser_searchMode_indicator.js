@@ -30,11 +30,17 @@ add_setup(async function() {
   let oldDefaultEngine = await Services.search.getDefault();
   await SearchTestUtils.installSearchExtension();
   defaultEngine = Services.search.getEngineByName("Example");
-  await Services.search.setDefault(defaultEngine);
+  await Services.search.setDefault(
+    defaultEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   await Services.search.moveEngine(suggestionsEngine, 0);
 
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 
   // Set our top sites.

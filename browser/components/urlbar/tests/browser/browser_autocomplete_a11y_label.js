@@ -92,12 +92,18 @@ add_task(async function searchSuggestions() {
     getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
   );
   let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
   let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     Services.prefs.clearUserPref(SUGGEST_ALL_PREF);
     Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
   });

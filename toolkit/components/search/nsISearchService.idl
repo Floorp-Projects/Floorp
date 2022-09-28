@@ -235,6 +235,20 @@ interface nsISearchService : nsISupports
   const unsigned long ERROR_DUPLICATE_ENGINE = 0x2;
   const unsigned long ERROR_ENGINE_CORRUPTED = 0x3;
 
+  const unsigned short CHANGE_REASON_UNKNOWN = 0x0;
+  const unsigned short CHANGE_REASON_USER = 0x1;
+  const unsigned short CHANGE_REASON_USER_PRIVATE_SPLIT = 0x2;
+  const unsigned short CHANGE_REASON_USER_SEARCHBAR = 0x3;
+  const unsigned short CHANGE_REASON_USER_SEARCHBAR_CONTEXT = 0x4;
+  const unsigned short CHANGE_REASON_ADDON_INSTALL = 0x5;
+  const unsigned short CHANGE_REASON_ADDON_UNINSTALL = 0x6;
+  const unsigned short CHANGE_REASON_CONFIG = 0x7;
+  const unsigned short CHANGE_REASON_LOCALE = 0x8;
+  const unsigned short CHANGE_REASON_REGION = 0x9;
+  const unsigned short CHANGE_REASON_EXPERIMENT = 0xA;
+  const unsigned short CHANGE_REASON_ENTERPRISE = 0xB;
+  const unsigned short CHANGE_REASON_UITOUR = 0xC;
+
   /**
    * Start asynchronous initialization.
    *
@@ -462,7 +476,7 @@ interface nsISearchService : nsISupports
   attribute nsISearchEngine defaultEngine;
 
   Promise getDefault();
-  Promise setDefault(in nsISearchEngine engine);
+  Promise setDefault(in nsISearchEngine engine, in unsigned short changeSource);
 
   /**
    * The currently active search engine for private browsing mode.
@@ -471,7 +485,9 @@ interface nsISearchService : nsISupports
   attribute nsISearchEngine defaultPrivateEngine;
 
   Promise getDefaultPrivate();
-  Promise setDefaultPrivate(in nsISearchEngine engine);
+  Promise setDefaultPrivate(
+    in nsISearchEngine engine,
+    in unsigned short changeSource);
 
   /**
    * Whether to display the "Search in Private Window" result in the urlbar.

@@ -32,10 +32,16 @@ add_setup(async function() {
   mochiTestEngine = Services.search.getEngineByName("MochiSearch");
 
   originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(mochiTestEngine);
+  await Services.search.setDefault(
+    mochiTestEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(originalEngine);
+    await Services.search.setDefault(
+      originalEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     await PlacesUtils.history.clear();
   });
 });

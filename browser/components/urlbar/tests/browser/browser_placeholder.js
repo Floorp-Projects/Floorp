@@ -59,7 +59,10 @@ add_setup(async function() {
   });
 
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(originalEngine);
+    await Services.search.setDefault(
+      originalEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     for (let tab of tabs) {
       BrowserTestUtils.removeTab(tab);
     }
@@ -69,7 +72,10 @@ add_setup(async function() {
 add_task(async function test_change_default_engine_updates_placeholder() {
   tabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser));
 
-  await Services.search.setDefault(extraEngine);
+  await Services.search.setDefault(
+    extraEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   await TestUtils.waitForCondition(
     () => gURLBar.placeholder == noEngineString,
@@ -77,7 +83,10 @@ add_task(async function test_change_default_engine_updates_placeholder() {
   );
   Assert.equal(gURLBar.placeholder, noEngineString);
 
-  await Services.search.setDefault(originalEngine);
+  await Services.search.setDefault(
+    originalEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   await TestUtils.waitForCondition(
     () => gURLBar.placeholder == expectedString,
@@ -105,7 +114,10 @@ add_task(async function test_delayed_update_placeholder() {
   let blankTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   tabs.push(blankTab);
 
-  await Services.search.setDefault(extraEngine);
+  await Services.search.setDefault(
+    extraEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   // Pretend we've "initialized".
   BrowserSearch._updateURLBarPlaceholder(extraEngine.name, false, true);
 
@@ -126,7 +138,10 @@ add_task(async function test_delayed_update_placeholder() {
   // Do it the other way to check both named engine and fallback code paths.
   await BrowserTestUtils.switchTab(gBrowser, blankTab);
 
-  await Services.search.setDefault(originalEngine);
+  await Services.search.setDefault(
+    originalEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   BrowserSearch._updateURLBarPlaceholder(originalEngine.name, false, true);
 
   Assert.equal(
@@ -166,7 +181,10 @@ add_task(async function test_delayed_update_placeholder() {
 add_task(async function test_private_window_no_separate_engine() {
   const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
-  await Services.search.setDefault(extraEngine);
+  await Services.search.setDefault(
+    extraEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   await TestUtils.waitForCondition(
     () => win.gURLBar.placeholder == noEngineString,
@@ -174,7 +192,10 @@ add_task(async function test_private_window_no_separate_engine() {
   );
   Assert.equal(win.gURLBar.placeholder, noEngineString);
 
-  await Services.search.setDefault(originalEngine);
+  await Services.search.setDefault(
+    originalEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   await TestUtils.waitForCondition(
     () => win.gURLBar.placeholder == expectedString,
@@ -191,15 +212,24 @@ add_task(async function test_private_window_separate_engine() {
   });
   const originalPrivateEngine = await Services.search.getDefaultPrivate();
   registerCleanupFunction(async () => {
-    await Services.search.setDefaultPrivate(originalPrivateEngine);
+    await Services.search.setDefaultPrivate(
+      originalPrivateEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 
   const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
   // Keep the normal default as a different string to the private, so that we
   // can be sure we're testing the right thing.
-  await Services.search.setDefault(originalEngine);
-  await Services.search.setDefaultPrivate(extraPrivateEngine);
+  await Services.search.setDefault(
+    originalEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
+  await Services.search.setDefaultPrivate(
+    extraPrivateEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   await TestUtils.waitForCondition(
     () => win.gURLBar.placeholder == noEngineString,
@@ -207,8 +237,14 @@ add_task(async function test_private_window_separate_engine() {
   );
   Assert.equal(win.gURLBar.placeholder, noEngineString);
 
-  await Services.search.setDefault(extraEngine);
-  await Services.search.setDefaultPrivate(originalEngine);
+  await Services.search.setDefault(
+    extraEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
+  await Services.search.setDefaultPrivate(
+    originalEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   await TestUtils.waitForCondition(
     () => win.gURLBar.placeholder == expectedString,
@@ -277,7 +313,10 @@ add_task(async function test_change_default_engine_updates_placeholder() {
   tabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser));
 
   info(`Set engine to ${extraEngine.name}`);
-  await Services.search.setDefault(extraEngine);
+  await Services.search.setDefault(
+    extraEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   await TestUtils.waitForCondition(
     () => gURLBar.placeholder == noEngineString,
     "The placeholder should match the default placeholder for non-built-in engines."
@@ -285,7 +324,10 @@ add_task(async function test_change_default_engine_updates_placeholder() {
   Assert.equal(gURLBar.placeholder, noEngineString);
 
   info(`Set engine to ${originalEngine.name}`);
-  await Services.search.setDefault(originalEngine);
+  await Services.search.setDefault(
+    originalEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   await TestUtils.waitForCondition(
     () => gURLBar.placeholder == expectedString,
     "The placeholder should include the engine name for built-in engines."
