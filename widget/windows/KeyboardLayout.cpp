@@ -18,7 +18,6 @@
 #include "nsGkAtoms.h"
 #include "nsIUserIdleServiceInternal.h"
 #include "nsIWindowsRegKey.h"
-#include "nsMemory.h"
 #include "nsPrintfCString.h"
 #include "nsQuickSort.h"
 #include "nsReadableUtils.h"

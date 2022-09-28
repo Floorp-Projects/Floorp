@@ -10,7 +10,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsICrashReporter.h"
-#include "nsMemory.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 

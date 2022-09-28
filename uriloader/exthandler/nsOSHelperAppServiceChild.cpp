@@ -16,7 +16,6 @@
 #include "nsIHandlerService.h"
 #include "nsMimeTypes.h"
 #include "nsMIMEInfoImpl.h"
-#include "nsMemory.h"
 #include "nsCExternalHandlerService.h"
 #include "nsCRT.h"
 #include "nsEmbedCID.h"

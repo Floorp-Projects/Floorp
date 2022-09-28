@@ -21,7 +21,6 @@
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsImageRenderer.h"
-#include "nsMemory.h"
 
 using namespace mozilla;
 using namespace mozilla::image;

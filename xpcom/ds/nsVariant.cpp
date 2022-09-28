@@ -11,7 +11,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "xptinfo.h"
 #include "nsReadableUtils.h"
-#include "nsMemory.h"
 #include "nsString.h"
 #include "nsCRTGlue.h"
 #include "mozilla/FloatingPoint.h"

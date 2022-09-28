@@ -18,7 +18,6 @@
 #include "nsCOMArray.h"
 #include "nsINode.h"
 #include "nsJSUtils.h"
-#include "nsMemory.h"
 #include "nsServiceManagerUtils.h"
 #include "nsArray.h"
 #include "nsThreadUtils.h"

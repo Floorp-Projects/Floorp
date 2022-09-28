@@ -10,7 +10,6 @@
 #include "ThreadDelay.h"
 #include "nsThreadManager.h"
 #include "nsThread.h"
-#include "nsMemory.h"
 #include "nsThreadUtils.h"
 #include "prinrval.h"
 #include "mozilla/Logging.h"

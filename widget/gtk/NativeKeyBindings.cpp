@@ -13,7 +13,6 @@
 
 #include "NativeKeyBindings.h"
 #include "nsString.h"
-#include "nsMemory.h"
 #include "nsGtkKeyUtils.h"
 
 #include <gtk/gtk.h>

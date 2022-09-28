@@ -13,7 +13,6 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStreamPump.h"
 #include "nsComponentManagerUtils.h"
-#include "nsMemory.h"
 #include "nsError.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"

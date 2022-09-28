@@ -7,7 +7,6 @@
 
 #include "MacAutoreleasePool.h"
 #include "mozilla/UniquePtr.h"
-#include "nsMemory.h"
 
 #include <Cocoa/Cocoa.h>
 #include <crt_externs.h>

@@ -8,7 +8,6 @@
 #include <stdio.h>
 
 #include "nsError.h"
-#include "nsMemory.h"
 #include "nsThreadUtils.h"
 #include "nsIClassInfoImpl.h"
 #include "Variant.h"

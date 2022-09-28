@@ -113,7 +113,6 @@
 #include "nsIComponentRegistrar.h"
 #include "nsISupportsPrimitives.h"
 #include "nsISimpleEnumerator.h"
-#include "nsMemory.h"
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
 #include "nsIObserver.h"

@@ -7,7 +7,6 @@
 #include "mozStorageAsyncStatementParams.h"
 
 #include "nsJSUtils.h"
-#include "nsMemory.h"
 #include "nsString.h"
 
 #include "jsapi.h"

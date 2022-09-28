@@ -8,7 +8,6 @@
 #include "nsError.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/DOMStringList.h"
-#include "nsMemory.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"

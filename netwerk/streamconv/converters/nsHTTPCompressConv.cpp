@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsHTTPCompressConv.h"
-#include "nsMemory.h"
 #include "plstr.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"

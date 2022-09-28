@@ -10,7 +10,6 @@
 #define xpctest_private_h___
 
 #include "nsISupports.h"
-#include "nsMemory.h"
 #include "nsString.h"
 #include "xpctest_attributes.h"
 #include "xpctest_params.h"

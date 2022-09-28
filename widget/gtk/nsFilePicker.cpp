@@ -19,7 +19,6 @@
 #include "mozilla/Preferences.h"
 
 #include "nsArrayEnumerator.h"
-#include "nsMemory.h"
 #include "nsEnumeratorUtils.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"

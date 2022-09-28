@@ -13,7 +13,6 @@
 #include "nsCOMPtr.h"
 #include "mozilla/dom/Document.h"
 #include "nsIException.h"
-#include "nsMemory.h"
 #include "xpcprivate.h"
 
 #include "mozilla/dom/DOMExceptionBinding.h"
