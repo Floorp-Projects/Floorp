@@ -109,7 +109,25 @@ async function init(aEvent) {
     document.getElementById("release").hidden = false;
   }
 
-  window.sizeToContent();
+  // TODO: Add a window.sizeToContentConstrained(width, height) that does this instead.
+  const prefSize = 620;
+  let w = {};
+  let h = {};
+  window.docShell.contentViewer.getContentSizeConstrained(
+    prefSize * window.devicePixelRatio,
+    0,
+    w,
+    h
+  );
+  w = Math.ceil(w.value / window.devicePixelRatio);
+  h = Math.ceil(h.value / window.devicePixelRatio);
+  const appWin = window.docShell.treeOwner
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIAppWindow);
+
+  h += appWin.outerToInnerHeightDifferenceInCSSPixels;
+  w += appWin.outerToInnerWidthDifferenceInCSSPixels;
+  window.resizeTo(w, h);
 
   if (AppConstants.platform == "macosx") {
     window.moveTo(
