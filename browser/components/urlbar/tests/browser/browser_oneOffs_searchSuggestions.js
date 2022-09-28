@@ -37,9 +37,15 @@ add_task(async function init() {
   let oldDefaultEngine = await Services.search.getDefault();
   await Services.search.moveEngine(gEngine2, 0);
   await Services.search.moveEngine(gEngine, 0);
-  await Services.search.setDefault(gEngine);
+  await Services.search.setDefault(
+    gEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
 
     await PlacesUtils.history.clear();
     await UrlbarTestUtils.formHistory.clear();

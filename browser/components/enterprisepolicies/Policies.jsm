@@ -2093,7 +2093,10 @@ var Policies = {
               }
               if (defaultEngine) {
                 try {
-                  await Services.search.setDefault(defaultEngine);
+                  await Services.search.setDefault(
+                    defaultEngine,
+                    Ci.nsISearchService.CHANGE_REASON_ENTERPRISE
+                  );
                 } catch (ex) {
                   lazy.log.error("Unable to set the default search engine", ex);
                 }
@@ -2124,7 +2127,10 @@ var Policies = {
               }
               if (defaultPrivateEngine) {
                 try {
-                  await Services.search.setDefaultPrivate(defaultPrivateEngine);
+                  await Services.search.setDefaultPrivate(
+                    defaultPrivateEngine,
+                    Ci.nsISearchService.CHANGE_REASON_ENTERPRISE
+                  );
                 } catch (ex) {
                   lazy.log.error(
                     "Unable to set the default private search engine",

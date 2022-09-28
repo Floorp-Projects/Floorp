@@ -62,12 +62,18 @@ add_setup(async function() {
   engine = await Services.search.getEngineByName(ENGINE_NAME);
   Assert.ok(engine, "Got a search engine");
   oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   privateEngine = await Services.search.getEngineByName(PRIVATE_ENGINE_NAME);
   Assert.ok(privateEngine, "Got a search engine");
   oldDefaultPrivateEngine = await Services.search.getDefaultPrivate();
-  await Services.search.setDefaultPrivate(privateEngine);
+  await Services.search.setDefaultPrivate(
+    privateEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 });
 
 async function checkContextMenu(
@@ -190,7 +196,10 @@ add_task(async function test_privateWindow() {
 add_task(async function test_normalWindow_sameDefaults() {
   // Set the private default engine to be the same as the current default engine
   // in 'normal' mode.
-  await Services.search.setDefaultPrivate(await Services.search.getDefault());
+  await Services.search.setDefaultPrivate(
+    await Services.search.getDefault(),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   await checkContextMenu(
     window,
@@ -223,8 +232,14 @@ add_task(async function test_privateWindow_no_separate_engine() {
 // We can't do the unload within registerCleanupFunction as that's too late for
 // the test to be happy. Do it into a cleanup "test" here instead.
 add_task(async function cleanup() {
-  await Services.search.setDefault(oldDefaultEngine);
-  await Services.search.setDefaultPrivate(oldDefaultPrivateEngine);
+  await Services.search.setDefault(
+    oldDefaultEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
+  await Services.search.setDefaultPrivate(
+    oldDefaultPrivateEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   await Services.search.removeEngine(engine);
   await Services.search.removeEngine(privateEngine);
 

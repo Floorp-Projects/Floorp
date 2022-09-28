@@ -29,9 +29,15 @@ add_task(async function init() {
   );
   let oldDefaultEngine = await Services.search.getDefault();
   await Services.search.moveEngine(engine, 0);
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     await PlacesUtils.history.clear();
   });
 });

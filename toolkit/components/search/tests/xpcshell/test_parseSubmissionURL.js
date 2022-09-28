@@ -43,7 +43,10 @@ add_task(async function test_parseSubmissionURL() {
     search_url_get_params: "",
   });
 
-  await Services.search.setDefault(engine1);
+  await Services.search.setDefault(
+    engine1,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   // Hide the default engines to prevent them from being used in the search.
   for (let engine of await Services.search.getAppProvidedEngines()) {

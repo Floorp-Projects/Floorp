@@ -26,10 +26,16 @@ add_setup(async function() {
   let engine = await Services.search.getEngineByName(ENGINE_NAME);
   ok(engine, "Got a search engine");
   let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 });
 

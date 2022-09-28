@@ -3488,3 +3488,27 @@ firefoxview:
     expiry_version: "never"
     release_channel_collection: opt-out
 
+
+search:
+  engine:
+    objects: ["change_default", "change_private"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: >
+      Recorded when the default search engine is changed, the value field
+      records the action used to trigger the change of default. For possible
+      values, see `REASON_CHANGE_MAP` in
+      https://searchfox.org/mozilla-central/source/toolkit/components/search/SearchService.sys.mjs
+    bug_numbers: [1634555]
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expiry_version: never
+    extra_keys:
+      prev_id: The id of the previous default engine.
+      new_id: The id of the new default engine.
+      new_name: The display name of the new default engine.
+      new_load_path: The path relating to where the new default engine was installed/loaded from.
+      new_sub_url: The new submission URL of the new default engine.

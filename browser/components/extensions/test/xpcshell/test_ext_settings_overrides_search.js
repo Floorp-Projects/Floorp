@@ -147,7 +147,10 @@ add_task(async function test_upgrade_default_position_engine() {
   await AddonTestUtils.waitForSearchProviderStartup(ext1);
 
   let engine = Services.search.getEngineByName("MozSearch");
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   await Services.search.moveEngine(engine, 1);
 
   await ext1.upgrade({

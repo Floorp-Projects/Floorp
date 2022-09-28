@@ -408,11 +408,17 @@ async function withEngine(
   let originalEngine;
   if (makeDefault) {
     originalEngine = await Services.search.getDefault();
-    await Services.search.setDefault(engine);
+    await Services.search.setDefault(
+      engine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   }
   await callback();
   if (originalEngine) {
-    await Services.search.setDefault(originalEngine);
+    await Services.search.setDefault(
+      originalEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   }
   await Services.search.removeEngine(engine);
 }
