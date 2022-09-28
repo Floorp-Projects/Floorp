@@ -77,7 +77,7 @@ add_task(async function test_nimbus_experiment() {
     featureId: "search",
     value: {
       seperatePrivateDefaultUIEnabled: true,
-      sseperatePrivateDefaultUrlbarResultEnabled: false,
+      seperatePrivateDefaultUrlbarResultEnabled: false,
       experiment: "testing",
     },
   });
@@ -86,6 +86,44 @@ add_task(async function test_nimbus_experiment() {
     Services.search.defaultPrivateEngine.name,
     "private",
     "Should have private as private default while in experiment"
+  );
+  reloadObserved = SearchTestUtils.promiseSearchNotification(
+    "engines-reloaded"
+  );
+  await doExperimentCleanup();
+  await reloadObserved;
+  Assert.equal(
+    Services.search.defaultPrivateEngine.name,
+    "basic",
+    "Should turn off private default and restore default engine after experiment"
+  );
+});
+
+add_task(async function test_nimbus_experiment_urlbar_result_enabled() {
+  Assert.equal(
+    Services.search.defaultPrivateEngine.name,
+    "basic",
+    "Should have basic as private default while not in experiment"
+  );
+  await ExperimentAPI.ready();
+
+  let reloadObserved = SearchTestUtils.promiseSearchNotification(
+    "engines-reloaded"
+  );
+
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "search",
+    value: {
+      seperatePrivateDefaultUIEnabled: true,
+      seperatePrivateDefaultUrlbarResultEnabled: true,
+      experiment: "testing",
+    },
+  });
+  await reloadObserved;
+  Assert.equal(
+    Services.search.separatePrivateDefaultUrlbarResultEnabled,
+    true,
+    "Should have set the urlbar result enabled value to true"
   );
   reloadObserved = SearchTestUtils.promiseSearchNotification(
     "engines-reloaded"
