@@ -4,9 +4,7 @@
 
 package org.mozilla.fenix.ui
 
-import android.os.Build
 import androidx.core.net.toUri
-import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.permission.PermissionRequester
 import androidx.test.uiautomator.UiDevice
@@ -137,7 +135,6 @@ class DownloadTest {
         }
     }
 
-    @SdkSuppress(maxSdkVersion = Build.VERSION_CODES.P, codeName = "P")
     @SmokeTest
     @Test
     fun pauseResumeCancelDownloadTest() {

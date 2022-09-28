@@ -20,19 +20,6 @@ gcloud:
   performance-metrics: true
 
   test-targets:
-    - class org.mozilla.fenix.ui.DownloadTest#pauseResumeCancelDownloadTest
-    - class org.mozilla.fenix.ui.SearchTest#scanButtonAllowPermissionTest
-    - class org.mozilla.fenix.ui.SearchTest#scanButtonDenyPermissionTest
-    - class org.mozilla.fenix.ui.SitePermissionsTest#audioVideoPermissionChoiceOnEachRequestTest
-    - class org.mozilla.fenix.ui.SitePermissionsTest#cameraPermissionChoiceOnEachRequestTest
-    - class org.mozilla.fenix.ui.SitePermissionsTest#microphonePermissionChoiceOnEachRequestTest
-    - class org.mozilla.fenix.ui.SitePermissionsTest#rememberAllowAudioVideoPermissionChoiceTest
-    - class org.mozilla.fenix.ui.SitePermissionsTest#rememberAllowCameraPermissionChoiceTest
-    - class org.mozilla.fenix.ui.SitePermissionsTest#rememberAllowMicrophonePermissionChoiceTest
-    - class org.mozilla.fenix.ui.SitePermissionsTest#rememberBlockAudioVideoPermissionChoiceTest
-    - class org.mozilla.fenix.ui.SitePermissionsTest#rememberBlockCameraPermissionChoiceTest
-    - class org.mozilla.fenix.ui.SitePermissionsTest#rememberBlockMicrophonePermissionChoiceTest
-    - class org.mozilla.fenix.ui.SmokeTest#redirectToAppPermissionsSystemSettingsTest
 
   device:
     - model: Pixel2.arm

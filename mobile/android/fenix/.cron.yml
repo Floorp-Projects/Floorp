@@ -36,4 +36,4 @@ jobs:
           type: decision-task
           treeherder-symbol: legacy-api-ui
           target-tasks-method: legacy_api_ui_tests
-      when: [{hour: 10, minute: 30}]
+      when: [] # temporarily unscheduled
