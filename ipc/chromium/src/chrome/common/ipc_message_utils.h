@@ -86,9 +86,8 @@ class MOZ_STACK_CLASS MessageWriter final {
     return message_.WriteData(data, length);
   }
 
-  bool WriteBytes(const void* data, uint32_t data_len,
-                  uint32_t alignment = sizeof(uint32_t)) {
-    return message_.WriteBytes(data, data_len, alignment);
+  bool WriteBytes(const void* data, uint32_t data_len) {
+    return message_.WriteBytes(data, data_len);
   }
 
   bool WriteBytesZeroCopy(void* data, uint32_t data_len, uint32_t capacity) {

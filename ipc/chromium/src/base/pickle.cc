@@ -441,50 +441,45 @@ void Pickle::Truncate(PickleIterator* iter) {
   header_->payload_size -= dropped;
 }
 
-void Pickle::BeginWrite(uint32_t length, uint32_t alignment) {
-  DCHECK(alignment % 4 == 0) << "Must be at least 32-bit aligned!";
+static const char kBytePaddingData[4] = {
+    kBytePaddingMarker,
+    kBytePaddingMarker,
+    kBytePaddingMarker,
+    kBytePaddingMarker,
+};
 
+static void WritePadding(Pickle::BufferList& buffers, uint32_t padding) {
+  MOZ_RELEASE_ASSERT(padding <= 4);
+  if (padding) {
+    MOZ_ALWAYS_TRUE(buffers.WriteBytes(kBytePaddingData, padding));
+  }
+}
+
+void Pickle::BeginWrite(uint32_t length) {
   // write at an alignment-aligned offset from the beginning of the header
   uint32_t offset = AlignInt(header_->payload_size);
-  uint32_t padding = (header_size_ + offset) % alignment;
+  uint32_t padding = (header_size_ + offset) % sizeof(memberAlignmentType);
   uint32_t new_size = offset + padding + AlignInt(length);
   MOZ_RELEASE_ASSERT(new_size >= header_->payload_size);
 
-  DCHECK(intptr_t(header_) % alignment == 0);
+  DCHECK(intptr_t(header_) % sizeof(memberAlignmentType) == 0);
 
 #ifdef ARCH_CPU_64_BITS
   DCHECK_LE(length, std::numeric_limits<uint32_t>::max());
 #endif
 
-  if (padding) {
-    MOZ_RELEASE_ASSERT(padding <= 8);
-    static const char padding_data[8] = {
-        kBytePaddingMarker, kBytePaddingMarker, kBytePaddingMarker,
-        kBytePaddingMarker, kBytePaddingMarker, kBytePaddingMarker,
-        kBytePaddingMarker, kBytePaddingMarker,
-    };
-    MOZ_ALWAYS_TRUE(buffers_.WriteBytes(padding_data, padding));
-  }
+  WritePadding(buffers_, padding);
 
-  DCHECK((header_size_ + header_->payload_size + padding) % alignment == 0);
+  DCHECK((header_size_ + header_->payload_size + padding) %
+             sizeof(memberAlignmentType) ==
+         0);
 
   header_->payload_size = new_size;
 }
 
 void Pickle::EndWrite(uint32_t length) {
-  // Zero-pad to keep tools like purify from complaining about uninitialized
-  // memory.
   uint32_t padding = AlignInt(length) - length;
-  if (padding) {
-    MOZ_RELEASE_ASSERT(padding <= 4);
-    static const char padding_data[4] = {
-        kBytePaddingMarker,
-        kBytePaddingMarker,
-        kBytePaddingMarker,
-        kBytePaddingMarker,
-    };
-    MOZ_ALWAYS_TRUE(buffers_.WriteBytes(padding_data, padding));
-  }
+  WritePadding(buffers_, padding);
 }
 
 bool Pickle::WriteBool(bool value) {
@@ -583,7 +578,7 @@ bool Pickle::WriteUnsignedChar(unsigned char value) {
 
 bool Pickle::WriteBytesZeroCopy(void* data, uint32_t data_len,
                                 uint32_t capacity) {
-  BeginWrite(data_len, sizeof(memberAlignmentType));
+  BeginWrite(data_len);
 
   uint32_t new_capacity = AlignInt(capacity);
 #ifndef MOZ_MEMORY
@@ -606,12 +601,8 @@ bool Pickle::WriteBytesZeroCopy(void* data, uint32_t data_len,
   return true;
 }
 
-bool Pickle::WriteBytes(const void* data, uint32_t data_len,
-                        uint32_t alignment) {
-  DCHECK(alignment == 4 || alignment == 8);
-  DCHECK(intptr_t(header_) % alignment == 0);
-
-  BeginWrite(data_len, alignment);
+bool Pickle::WriteBytes(const void* data, uint32_t data_len) {
+  BeginWrite(data_len);
 
   MOZ_ALWAYS_TRUE(
       buffers_.WriteBytes(reinterpret_cast<const char*>(data), data_len));
