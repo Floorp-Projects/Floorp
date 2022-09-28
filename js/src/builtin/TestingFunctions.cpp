@@ -101,7 +101,7 @@
 #include "util/DifferentialTesting.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
-#include "vm/ErrorContext.h"
+#include "vm/ErrorContext.h"  // AutoReportFrontendContext, MainThreadErrorContext
 #include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/HelperThreads.h"
@@ -6309,7 +6309,7 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
     return false;
   }
 
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   if (!SetSourceOptions(cx, &ec, stencil->source, displayURL, sourceMapURL)) {
     return false;
   }
@@ -6446,7 +6446,7 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   /* Compile the script text to stencil. */
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   frontend::NoScopeBindingCache scopeCache;
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));

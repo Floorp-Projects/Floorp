@@ -25,7 +25,7 @@
 #include "js/SourceText.h"              // for JS::SourceOwnership
 #include "js/String.h"                  // for JS_CopyStringCharsZ
 #include "vm/BytecodeUtil.h"            // for JSDVG_SEARCH_STACK
-#include "vm/ErrorContext.h"            // for MainThreadErrorContext
+#include "vm/ErrorContext.h"            // for AutoReportFrontendContext
 #include "vm/JSContext.h"               // for JSContext (ptr only)
 #include "vm/JSObject.h"                // for JSObject, RequireObject
 #include "vm/JSScript.h"                // for ScriptSource, ScriptSourceObject
@@ -527,7 +527,7 @@ bool DebuggerSource::CallData::setSourceMapURL() {
     return false;
   }
 
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   if (!ss->setSourceMapURL(cx, &ec, std::move(chars))) {
     return false;
   }

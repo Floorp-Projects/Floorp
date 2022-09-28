@@ -12,7 +12,7 @@
 #include "frontend/ParserAtom.h"  // js::frontend::ParserAtomsTable
 #include "js/TypeDecls.h"         // JS::Latin1Char
 #include "jsapi-tests/tests.h"
-#include "vm/ErrorContext.h"
+#include "vm/ErrorContext.h"  // AutoReportFrontendContext
 
 // Test empty strings behave consistently.
 BEGIN_TEST(testParserAtom_empty) {
@@ -21,7 +21,7 @@ BEGIN_TEST(testParserAtom_empty) {
   using js::frontend::ParserAtomVector;
   using js::frontend::TaggedParserAtomIndex;
 
-  js::MainThreadErrorContext ec(cx);
+  js::AutoReportFrontendContext ec(cx);
   js::LifoAlloc alloc(512);
   ParserAtomsTable atomTable(cx->runtime(), alloc);
 
@@ -47,7 +47,7 @@ BEGIN_TEST(testParserAtom_tiny1_ASCII) {
   using js::frontend::ParserAtomsTable;
   using js::frontend::ParserAtomVector;
 
-  js::MainThreadErrorContext ec(cx);
+  js::AutoReportFrontendContext ec(cx);
   js::LifoAlloc alloc(512);
   ParserAtomsTable atomTable(cx->runtime(), alloc);
 
@@ -74,7 +74,7 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
   using js::frontend::ParserAtomsTable;
   using js::frontend::ParserAtomVector;
 
-  js::MainThreadErrorContext ec(cx);
+  js::AutoReportFrontendContext ec(cx);
   js::LifoAlloc alloc(512);
   ParserAtomsTable atomTable(cx->runtime(), alloc);
 
@@ -184,7 +184,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
   using js::frontend::ParserAtom;
   using js::frontend::ParserAtomsTable;
 
-  js::MainThreadErrorContext ec(cx);
+  js::AutoReportFrontendContext ec(cx);
   js::LifoAlloc alloc(512);
   ParserAtomsTable atomTable(cx->runtime(), alloc);
 
@@ -318,7 +318,7 @@ BEGIN_TEST(testParserAtom_tiny2) {
   using js::frontend::ParserAtomsTable;
   using js::frontend::ParserAtomVector;
 
-  js::MainThreadErrorContext ec(cx);
+  js::AutoReportFrontendContext ec(cx);
   js::LifoAlloc alloc(512);
   ParserAtomsTable atomTable(cx->runtime(), alloc);
 
@@ -350,7 +350,7 @@ BEGIN_TEST(testParserAtom_int) {
   using js::frontend::ParserAtomsTable;
   using js::frontend::ParserAtomVector;
 
-  js::MainThreadErrorContext ec(cx);
+  js::AutoReportFrontendContext ec(cx);
   js::LifoAlloc alloc(512);
   ParserAtomsTable atomTable(cx->runtime(), alloc);
 

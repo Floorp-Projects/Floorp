@@ -31,7 +31,7 @@
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/friend/StackLimits.h"    // js::ReportOverRecursed
 #include "util/StringBuffer.h"
-#include "vm/ErrorContext.h"
+#include "vm/ErrorContext.h"  // AutoReportFrontendContext
 #include "vm/MatchPairs.h"
 #include "vm/PlainObject.h"
 #include "vm/RegExpShared.h"
@@ -679,7 +679,7 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
     V8HandleString wrappedPattern(v8::internal::String(pattern), cx->isolate);
     if (!RegExpParser::ParseRegExpFromHeapString(
             cx->isolate, &zone, wrappedPattern, flags, &data)) {
-      MainThreadErrorContext ec(cx);
+      AutoReportFrontendContext ec(cx);
       JS::CompileOptions options(cx);
       DummyTokenStream dummyTokenStream(cx, &ec, options);
       ReportSyntaxError(dummyTokenStream, data, pattern);

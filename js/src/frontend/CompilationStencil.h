@@ -33,7 +33,7 @@
 #include "js/UniquePtr.h"  // js::UniquePtr
 #include "js/Vector.h"
 #include "js/WasmModule.h"
-#include "vm/ErrorContext.h"  // MainThreadErrorContext
+#include "vm/ErrorContext.h"  // AutoReportFrontendContext
 #include "vm/GlobalObject.h"  // GlobalObject
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"  // JSFunction
@@ -624,7 +624,7 @@ struct CompilationInput {
 
   bool initForSelfHostingGlobal(JSContext* cx) {
     target = CompilationTarget::SelfHosting;
-    MainThreadErrorContext ec(cx);
+    AutoReportFrontendContext ec(cx);
     return initScriptSource(cx, &ec);
   }
 

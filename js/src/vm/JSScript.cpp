@@ -62,7 +62,7 @@
 #include "vm/BytecodeLocation.h"
 #include "vm/BytecodeUtil.h"  // Disassemble
 #include "vm/Compression.h"
-#include "vm/ErrorContext.h"
+#include "vm/ErrorContext.h"  // AutoReportFrontendContext, MainThreadErrorContext
 #include "vm/HelperThreadState.h"  // js::RunPendingSourceCompressions
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"

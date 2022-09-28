@@ -19,7 +19,7 @@
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"
-#include "vm/ErrorContext.h"
+#include "vm/ErrorContext.h"  // AutoReportFrontendContext
 #include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
@@ -344,7 +344,7 @@ bool js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res,
 static bool CheckPatternSyntaxSlow(JSContext* cx, Handle<JSAtom*> pattern,
                                    RegExpFlags flags) {
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   CompileOptions options(cx);
   frontend::DummyTokenStream dummyTokenStream(cx, &ec, options);
   return irregexp::CheckPatternSyntax(cx, cx->stackLimitForCurrentPrincipal(),

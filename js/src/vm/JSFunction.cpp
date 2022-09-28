@@ -41,7 +41,7 @@
 #include "util/Text.h"
 #include "vm/BooleanObject.h"
 #include "vm/Compartment.h"
-#include "vm/ErrorContext.h"           // MainThreadErrorContext
+#include "vm/ErrorContext.h"           // AutoReportFrontendContext
 #include "vm/FunctionFlags.h"          // js::FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 #include "vm/GlobalObject.h"
@@ -1406,7 +1406,7 @@ bool JSFunction::delazifyLazilyInterpretedFunction(JSContext* cx,
   }
 
   // Finally, compile the script if it really doesn't exist.
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   if (!frontend::DelazifyCanonicalScriptedFunction(
           cx, &ec, cx->stackLimitForCurrentPrincipal(), fun)) {
     // The frontend shouldn't fail after linking the function and the
