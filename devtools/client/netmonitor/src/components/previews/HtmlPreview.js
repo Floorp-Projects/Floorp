@@ -22,14 +22,32 @@ class HTMLPreview extends Component {
 
   componentDidMount() {
     const { container } = this.refs;
-    const browser = container.ownerDocument.createElement("iframe");
-    browser.setAttribute("sandbox", "");
+    const iframe = container.ownerDocument.createXULElement("iframe");
+    this.iframe = iframe;
+    iframe.setAttribute("type", "content");
+    iframe.setAttribute("remote", "true");
+    iframe.addEventListener("mousedown", e => e.preventDefault(), {
+      capture: true,
+    });
+    container.appendChild(iframe);
+
+    // browsingContext attribute is only available after the iframe
+    // is attached to the DOM Tree.
+    iframe.browsingContext.allowJavascript = false;
 
     const { responseContent } = this.props;
     const htmlBody = responseContent ? responseContent.content.text : "";
-    browser.setAttribute("srcdoc", htmlBody);
+    iframe.setAttribute("src", "data:text/html," + htmlBody);
+  }
 
-    container.appendChild(browser);
+  componentDidUpdate() {
+    const { responseContent } = this.props;
+    const htmlBody = responseContent ? responseContent.content.text : "";
+    this.iframe.setAttribute("src", "data:text/html," + htmlBody);
+  }
+
+  componentWillUnmount() {
+    this.iframe.remove();
   }
 
   render() {
