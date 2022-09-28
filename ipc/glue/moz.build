@@ -180,6 +180,7 @@ UNIFIED_SOURCES += [
     "ProtocolUtils.cpp",
     "ScopedPort.cpp",
     "ScopedXREEmbed.cpp",
+    "SerializedStructuredCloneBuffer.cpp",
     "SharedMemory.cpp",
     "Shmem.cpp",
     "StringUtil.cpp",

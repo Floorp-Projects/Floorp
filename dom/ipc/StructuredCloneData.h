@@ -127,12 +127,11 @@ class SharedJSAllocatedData final {
  * - Steal: Steal the buffers from the underlying JSStructuredCloneData so that
  *   it's safe for the StructuredCloneData to outlive the source data.  This is
  *   safe to use with IPC-provided ClonedMessageData instances because
- *   JSStructuredCloneData's IPC ParamTraits::Read method uses ExtractBuffers,
- *   returning a fatal false if unable to extract.  (And
- *   SerializedStructuredCloneBuffer wraps/defers to it.)  But if it's possible
- *   the ClonedMessageData came from a different source that might have borrowed
- *   the buffers itself, then things will crash.  That would be a pretty strange
- *   implementation; if you see one, change it to use SharedJSAllocatedData.
+ *   JSStructuredCloneData's IPC ParamTraits::Read method copies the relevant
+ *   data into owned buffers.  But if it's possible the ClonedMessageData came
+ *   from a different source that might have borrowed the buffers itself, then
+ *   things will crash.  That would be a pretty strange implementation; if you
+ *   see one, change it to use SharedJSAllocatedData.
  *
  * 1: Specifically, in the Write() case an owning SharedJSAllocatedData is
  *    created efficiently (by stealing from StructuredCloneHolder).  The
