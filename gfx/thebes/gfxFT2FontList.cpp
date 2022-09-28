@@ -43,7 +43,6 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsIMemory.h"
 #include "nsMemory.h"
 #include "nsPresContext.h"
 #include "gfxFontConstants.h"
@@ -1489,11 +1488,9 @@ void gfxFT2FontList::FindFonts() {
   // Look for fonts stored in omnijar, unless we're on a low-memory
   // device where we don't want to spend the RAM to decompress them.
   // (Prefs may disable this, or force-enable it even with low memory.)
-  bool lowmem;
-  nsCOMPtr<nsIMemory> mem = nsMemory::GetGlobalMemoryService();
   if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() > 0 ||
       (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() < 0 &&
-       NS_SUCCEEDED(mem->IsLowMemoryPlatform(&lowmem)) && !lowmem)) {
+       !nsMemory::IsLowMemoryPlatform())) {
     TimeStamp start = TimeStamp::Now();
     FindFontsInOmnijar(mFontNameCache.get());
     TimeStamp end = TimeStamp::Now();
