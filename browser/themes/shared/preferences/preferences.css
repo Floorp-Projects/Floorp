@@ -342,13 +342,9 @@ checkbox {
   margin-block: 4px 32px;
 }
 
-#updateDeck > *:not(.selected) {
-  visibility: hidden;
-}
-
 /* Work around bug 560067 - animated images in visibility: hidden
  * still eat CPU. */
-#updateDeck > *:not(.selected) > .update-throbber {
+#updateDeck > *:not(.deck-selected) > .update-throbber {
   display: none;
 }
 
