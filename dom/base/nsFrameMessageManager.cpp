@@ -469,15 +469,6 @@ bool nsFrameMessageManager::GetParamsForMessage(JSContext* aCx,
 
 static bool sSendingSyncMessage = false;
 
-static bool AllowMessage(size_t aDataLength, const nsAString& aMessageName) {
-  // A message includes more than structured clone data, so subtract
-  // 20KB to make it more likely that a message within this bound won't
-  // result in an overly large IPC message.
-  static const size_t kMaxMessageSize =
-      IPC::Channel::kMaximumMessageSize - 20 * 1024;
-  return aDataLength < kMaxMessageSize;
-}
-
 void nsFrameMessageManager::SendSyncMessage(JSContext* aCx,
                                             const nsAString& aMessageName,
                                             JS::Handle<JS::Value> aObj,
@@ -510,11 +501,6 @@ void nsFrameMessageManager::SendSyncMessage(JSContext* aCx,
                                     JS::UndefinedHandleValue);
   }
 #endif
-
-  if (!AllowMessage(data.DataLength(), aMessageName)) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
 
   if (!mCallback) {
     aError.Throw(NS_ERROR_NOT_INITIALIZED);
@@ -592,11 +578,6 @@ void nsFrameMessageManager::DispatchAsyncMessage(
     MessageManagerFuzzer::TryMutate(aCx, aMessageName, &data, aTransfers);
   }
 #endif
-
-  if (!AllowMessage(data.DataLength(), aMessageName)) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
 
   aError = DispatchAsyncMessageInternal(aCx, aMessageName, data);
 }
