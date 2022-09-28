@@ -235,10 +235,12 @@ NS_DEFINE_STATIC_IID_ACCESSOR(imgRequestProxy, NS_IMGREQUESTPROXY_CID)
 // certain behaviours must be overridden to compensate.
 class imgRequestProxyStatic : public imgRequestProxy {
  public:
-  imgRequestProxyStatic(Image* aImage, nsIPrincipal* aPrincipal,
+  imgRequestProxyStatic(Image* aImage, nsIPrincipal* aImagePrincipal,
+                        nsIPrincipal* aTriggeringPrincipal,
                         bool hadCrossOriginRedirects);
 
   NS_IMETHOD GetImagePrincipal(nsIPrincipal** aPrincipal) override;
+  NS_IMETHOD GetTriggeringPrincipal(nsIPrincipal** aPrincipal) override;
 
   NS_IMETHOD GetHadCrossOriginRedirects(
       bool* aHadCrossOriginRedirects) override;
@@ -248,7 +250,8 @@ class imgRequestProxyStatic : public imgRequestProxy {
 
   // Our principal. We have to cache it, rather than accessing the underlying
   // request on-demand, because static proxies don't have an underlying request.
-  nsCOMPtr<nsIPrincipal> mPrincipal;
+  const nsCOMPtr<nsIPrincipal> mImagePrincipal;
+  const nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   const bool mHadCrossOriginRedirects;
 };
 
