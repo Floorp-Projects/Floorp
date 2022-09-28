@@ -126,7 +126,7 @@ const BASE_MESSAGES = () => [
     },
     // Avoid breaking existing tests that close tabs for now.
     targeting:
-      "tabsClosedCount >= 3 && 'browser.firefox-view.view-count'|preferenceValue == 0 && !'browser.newtabpage.activity-stream.asrouter.providers.cfr'|preferenceIsUserSet",
+      "(currentDate|date - profileAgeCreated) / 86400000 >= 2 && tabsClosedCount >= 3 && 'browser.firefox-view.view-count'|preferenceValue == 0 && !'browser.newtabpage.activity-stream.asrouter.providers.cfr'|preferenceIsUserSet",
   },
   {
     id: "FX_MR_106_UPGRADE",
