@@ -1124,7 +1124,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVisibility {
    * @param aRequest     The image request used to determine if same origin.
    */
   mozilla::StyleImageOrientation UsedImageOrientation(
-      imgIRequest* aRequest) const;
+      imgIRequest* aRequest) const {
+    return UsedImageOrientation(aRequest, mImageOrientation);
+  }
 
   /**
    * Given an image request and an orientation, returns the orientation

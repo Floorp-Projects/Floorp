@@ -2770,13 +2770,8 @@ nsChangeHint nsStyleVisibility::CalcDifference(
 }
 
 StyleImageOrientation nsStyleVisibility::UsedImageOrientation(
-    imgIRequest* aRequest) const {
-  return UsedImageOrientation(aRequest, mImageOrientation);
-}
-
-StyleImageOrientation nsStyleVisibility::UsedImageOrientation(
     imgIRequest* aRequest, StyleImageOrientation aOrientation) {
-  if (!aRequest) {
+  if (aOrientation == StyleImageOrientation::FromImage || !aRequest) {
     return aOrientation;
   }
 
