@@ -1,5 +1,8 @@
 "use strict";
 
+// These are defined in test_tcpsocket_client_and_server_basics.html
+/* global createServer, createSocket, socketCompartmentInstanceOfArrayBuffer */
+
 // Bug 788960 and later bug 1329245 have taught us that attempting to connect to
 // a port that is not listening or is no longer listening fails to consistently
 // result in the error (or any) event we expect on Darwin/OSX/"OS X".

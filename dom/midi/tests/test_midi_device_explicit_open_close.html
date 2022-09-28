@@ -59,7 +59,6 @@
          ok(false, "MIDI Access Request Failed!");
          SimpleTest.finish();
        }
-       let outputEventRes;
        let outputEventHandler = (event) => {
          ok(output_opened === event.port, "output port object and event port object are same object");
          ok(true, "access connection event fired");

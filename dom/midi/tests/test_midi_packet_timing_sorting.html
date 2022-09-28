@@ -16,7 +16,6 @@
        await SpecialPowers.pushPrefEnv({"set": [["privacy.resistFingerprinting.reduceTimerPrecision.jitter", false]]});
        var checkCount = 0;
        var lastTime = 0;
-       var reopened = false;
        var input;
        var output;
        function checkReturn(event) {

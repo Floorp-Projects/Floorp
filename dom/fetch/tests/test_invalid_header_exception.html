@@ -25,7 +25,7 @@ let headerNames = [
   ['\xEAa', '\uFFFDa'],
   ['\xC2\x7F', '\uFFFD\x7F'],
 ];
-for ([invalid, corrected] of headerNames) {
+for (let [invalid, corrected] of headerNames) {
   try {
     new Headers([[invalid, '']]);
   } catch(e) {

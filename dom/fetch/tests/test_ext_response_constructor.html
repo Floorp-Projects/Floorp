@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
   <script>
     add_task(async function testResponseConstructor() {
+      /* eslint-env webextensions */
       function contentScript() {
         new Response();
         browser.test.notifyPass("done");

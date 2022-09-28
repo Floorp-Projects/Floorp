@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=293347
 SimpleTest.waitForExplicitFinish();
 
 function done(iframe) {
-  win = iframe.contentWindow;
+  let win = iframe.contentWindow;
   is(win.document.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "div")
      .length, 2, "doc still intact");
   is(win.document.body.namespaceURI, "http://www.w3.org/1999/xhtml",
