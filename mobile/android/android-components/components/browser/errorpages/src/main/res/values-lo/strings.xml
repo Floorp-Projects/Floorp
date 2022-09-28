@@ -248,6 +248,14 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">ບໍ່ພົບໄຟລ໌ນີ້</string>
 
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>ລາຍການດັ່ງກ່າວຖືກປ່ຽນຊື່, ລຶບອອກ ຫຼື ຍ້າຍອອກບໍ?</li>
+        <li>ມີການສະກົດຄໍາ, ຕົວພິມໃຫຍ່, ຫຼືການພິມຜິດອື່ນໆຢູ່ໃນນີ້ບໍ?</li>
+        <li>ສິດອະນຸຍາດຂອງທ່ານພຽງພໍກັບລາຍການທີ່ຮ້ອງຂໍບໍ?</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">ການເຂົ້າເຖິງໄຟລ໌ຂໍ້ມູນໄດ້ຖືກປະຕິເສດ</string>
 
