@@ -16,6 +16,7 @@
 #include <string>
 
 #include "absl/memory/memory.h"
+#include "absl/strings/string_view.h"
 #include "p2p/base/connection.h"
 #include "p2p/base/port.h"
 #include "rtc_base/async_packet_socket.h"
@@ -63,6 +64,7 @@ class TCPPort : public Port {
   int SetOption(rtc::Socket::Option opt, int value) override;
   int GetError() override;
   bool SupportsProtocol(const std::string& protocol) const override;
+  bool SupportsProtocol(absl::string_view protocol) const override;
   ProtocolType GetProtocol() const override;
 
  protected:

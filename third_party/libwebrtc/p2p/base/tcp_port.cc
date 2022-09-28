@@ -73,6 +73,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
+#include "absl/strings/string_view.h"
 #include "p2p/base/p2p_constants.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/ip_address.h"
@@ -269,6 +270,10 @@ int TCPPort::GetError() {
 }
 
 bool TCPPort::SupportsProtocol(const std::string& protocol) const {
+  return SupportsProtocol(absl::string_view(protocol));
+}
+
+bool TCPPort::SupportsProtocol(absl::string_view protocol) const {
   return protocol == TCP_PROTOCOL_NAME || protocol == SSLTCP_PROTOCOL_NAME;
 }
 

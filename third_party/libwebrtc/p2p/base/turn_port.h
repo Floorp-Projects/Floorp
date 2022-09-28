@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "absl/memory/memory.h"
+#include "absl/strings/string_view.h"
 #include "api/async_dns_resolver.h"
 #include "p2p/base/port.h"
 #include "p2p/client/basic_port_allocator.h"
@@ -159,6 +160,7 @@ class TurnPort : public Port {
                     const rtc::SentPacket& sent_packet) override;
   virtual void OnReadyToSend(rtc::AsyncPacketSocket* socket);
   bool SupportsProtocol(const std::string& protocol) const override;
+  bool SupportsProtocol(absl::string_view protocol) const override;
 
   void OnSocketConnect(rtc::AsyncPacketSocket* socket);
   void OnSocketClose(rtc::AsyncPacketSocket* socket, int error);
