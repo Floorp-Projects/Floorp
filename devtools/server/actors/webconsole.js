@@ -52,11 +52,11 @@ loader.lazyRequireGetter(
   "devtools/shared/webconsole/js-property-provider",
   true
 );
-loader.lazyRequireGetter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "NetUtil",
-  "resource://gre/modules/NetUtil.jsm",
-  true
+  "resource://gre/modules/NetUtil.jsm"
 );
 loader.lazyRequireGetter(
   this,
@@ -1829,8 +1829,8 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     // request won't show up in the opened netmonitor.
     const doc = this.global.document;
 
-    const channel = NetUtil.newChannel({
-      uri: NetUtil.newURI(url),
+    const channel = lazy.NetUtil.newChannel({
+      uri: lazy.NetUtil.newURI(url),
       loadingNode: doc,
       securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       contentPolicyType:
@@ -1873,7 +1873,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       channel.explicitSetUploadStream(bodyStream, null, -1, method, false);
     }
 
-    NetUtil.asyncFetch(channel, () => {});
+    lazy.NetUtil.asyncFetch(channel, () => {});
 
     if (!this.netmonitors) {
       return null;

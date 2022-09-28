@@ -7,11 +7,11 @@
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const { networkContentSpec } = require("devtools/shared/specs/network-content");
 
-loader.lazyRequireGetter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "NetUtil",
-  "resource://gre/modules/NetUtil.jsm",
-  true
+  "resource://gre/modules/NetUtil.jsm"
 );
 
 loader.lazyRequireGetter(
@@ -68,8 +68,8 @@ const NetworkContentActor = ActorClassWithSpec(networkContentSpec, {
       // request won't show up in the opened netmonitor.
       const doc = this.targetActor.window.document;
 
-      const channel = NetUtil.newChannel({
-        uri: NetUtil.newURI(url),
+      const channel = lazy.NetUtil.newChannel({
+        uri: lazy.NetUtil.newURI(url),
         loadingNode: doc,
         securityFlags:
           Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
@@ -121,7 +121,7 @@ const NetworkContentActor = ActorClassWithSpec(networkContentSpec, {
       // Make sure the fetch has completed before sending the channel id,
       // so that there is a higher possibilty that the request get into the
       // redux store beforehand (but this does not gurantee that).
-      NetUtil.asyncFetch(channel, () =>
+      lazy.NetUtil.asyncFetch(channel, () =>
         resolve({ channelId: channel.channelId })
       );
     });

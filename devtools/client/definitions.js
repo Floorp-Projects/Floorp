@@ -75,11 +75,11 @@ loader.lazyRequireGetter(
   "devtools/client/responsive/manager"
 );
 
-loader.lazyRequireGetter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "AppConstants",
-  "resource://gre/modules/AppConstants.jsm",
-  true
+  "resource://gre/modules/AppConstants.jsm"
 );
 loader.lazyRequireGetter(
   this,
@@ -472,7 +472,7 @@ exports.ToolboxButtons = [
   {
     id: "command-button-experimental-prefs",
     description: "DevTools Experimental preferences",
-    isToolSupported: () => !AppConstants.MOZILLA_OFFICIAL,
+    isToolSupported: () => !lazy.AppConstants.MOZILLA_OFFICIAL,
     onClick: (event, toolbox) => DevToolsExperimentalPrefs.showTooltip(toolbox),
     isChecked: () => DevToolsExperimentalPrefs.isAnyPreferenceEnabled(),
   },

@@ -7,8 +7,9 @@ const { ExtensionTestUtils } = ChromeUtils.import(
   "resource://testing-common/ExtensionXPCShellUtils.jsm"
 );
 
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExtensionParent",
   "resource://gre/modules/ExtensionParent.jsm"
 );
@@ -97,7 +98,7 @@ add_task(
     equal(threadFront.paused, false, "The addon threadActor isn't paused");
 
     equal(
-      ExtensionParent.DebugUtils.debugBrowserPromises.size,
+      lazy.ExtensionParent.DebugUtils.debugBrowserPromises.size,
       1,
       "The expected number of debug browser has been created by the addon actor"
     );
@@ -116,7 +117,7 @@ add_task(
     await promiseBgPageFrameUpdate;
 
     equal(
-      ExtensionParent.DebugUtils.debugBrowserPromises.size,
+      lazy.ExtensionParent.DebugUtils.debugBrowserPromises.size,
       1,
       "The number of debug browser has not been changed after an addon reload"
     );
@@ -149,7 +150,7 @@ add_task(
     // Check that if we close the debugging client without uninstalling the addon,
     // the webextension debugging actor should release the debug browser.
     equal(
-      ExtensionParent.DebugUtils.debugBrowserPromises.size,
+      lazy.ExtensionParent.DebugUtils.debugBrowserPromises.size,
       0,
       "The debug browser has been released when the RDP connection has been closed"
     );

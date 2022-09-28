@@ -38,11 +38,11 @@ loader.lazyRequireGetter(
   "devtools/shared/inspector/css-logic",
   true
 );
-loader.lazyRequireGetter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "AppConstants",
-  "resource://gre/modules/AppConstants.jsm",
-  true
+  "resource://gre/modules/AppConstants.jsm"
 );
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -1341,7 +1341,8 @@ TextPropertyEditor.prototype = {
    * @returns {Boolean}
    */
   _hasSmallIncrementModifier(event) {
-    const modifier = AppConstants.platform === "macosx" ? "altKey" : "ctrlKey";
+    const modifier =
+      lazy.AppConstants.platform === "macosx" ? "altKey" : "ctrlKey";
     return event[modifier] === true;
   },
 

@@ -18,12 +18,11 @@ loader.lazyGetter(this, "ExtensionStorageIDB", () => {
   return ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm")
     .ExtensionStorageIDB;
 });
-loader.lazyRequireGetter(
-  this,
-  "getAddonIdForWindowGlobal",
-  "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
-  true
-);
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  getAddonIdForWindowGlobal:
+    "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
+});
 
 const EXTENSION_STORAGE_ENABLED_PREF =
   "devtools.storage.extensionStorage.enabled";
@@ -52,8 +51,6 @@ const SAFE_HOSTS_PREFIXES_REGEX = /^(about\+|https?\+|file\+|moz-extension\+)/;
 // devtools/client/storage/test/head.js and
 // devtools/server/tests/browser/head.js
 const SEPARATOR_GUID = "{9d414cc5-8319-0a04-0586-c0a6ae01670a}";
-
-const lazy = {};
 
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -3632,7 +3629,7 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
   },
 
   isIncludedInTargetExtension(subject) {
-    const addonId = getAddonIdForWindowGlobal(subject.windowGlobalChild);
+    const addonId = lazy.getAddonIdForWindowGlobal(subject.windowGlobalChild);
     return addonId && addonId === this.parentActor.addonId;
   },
 

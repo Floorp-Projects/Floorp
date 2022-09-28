@@ -8,11 +8,11 @@ const { reportException } = require("devtools/shared/DevToolsUtils");
 const { expectState } = require("devtools/server/actors/common");
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
-loader.lazyRequireGetter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm",
-  true
+  "resource://gre/modules/DeferredTask.jsm"
 );
 loader.lazyRequireGetter(
   this,
@@ -229,7 +229,7 @@ Memory.prototype = {
         if (this._poller) {
           this._poller.disarm();
         }
-        this._poller = new DeferredTask(
+        this._poller = new lazy.DeferredTask(
           this._emitAllocations,
           this.drainAllocationsTimeoutTimer,
           0

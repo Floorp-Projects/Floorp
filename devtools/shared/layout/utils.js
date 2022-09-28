@@ -10,11 +10,11 @@ loader.lazyRequireGetter(
   "DevToolsUtils",
   "devtools/shared/DevToolsUtils"
 );
-loader.lazyRequireGetter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "NetUtil",
-  "resource://gre/modules/NetUtil.jsm",
-  true
+  "resource://gre/modules/NetUtil.jsm"
 );
 
 const SHEET_TYPE = {
@@ -916,7 +916,7 @@ function isFrameBlockedByCSP(node) {
 
   let uri;
   try {
-    uri = NetUtil.newURI(node.src);
+    uri = lazy.NetUtil.newURI(node.src);
   } catch (e) {
     return false;
   }

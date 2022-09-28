@@ -7,11 +7,11 @@
 const Debugger = require("Debugger");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-loader.lazyRequireGetter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "Reflect",
-  "resource://gre/modules/reflect.jsm",
-  true
+  "resource://gre/modules/reflect.jsm"
 );
 loader.lazyRequireGetter(
   this,
@@ -268,7 +268,7 @@ function parseErrorOutput(dbgGlobal, string) {
   // since it's already being handled elsewhere and we are only interested
   // in initializing bindings.
   try {
-    ast = Reflect.parse(string);
+    ast = lazy.Reflect.parse(string);
   } catch (ex) {
     return;
   }

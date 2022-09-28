@@ -9,9 +9,7 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ContentTaskUtils",
+const { ContentTaskUtils } = ChromeUtils.import(
   "resource://testing-common/ContentTaskUtils.jsm"
 );
 
