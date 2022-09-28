@@ -195,7 +195,7 @@ NameLocation EmitterScope::searchAndCache(BytecodeEmitter* bce,
   // It is always correct to not cache the location. Ignore OOMs to make
   // lookups infallible.
   if (!putNameInCache(bce, name, *loc)) {
-    bce->cx->recoverFromOutOfMemory();
+    bce->ec->recoverFromOutOfMemory();
   }
 
   return *loc;
