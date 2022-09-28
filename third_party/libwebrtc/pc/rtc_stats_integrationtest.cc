@@ -486,7 +486,6 @@ class RTCStatsReportVerifier {
     verifier.TestMemberIsNonNegative<uint64_t>(candidate_pair.priority);
     verifier.TestMemberIsDefined(candidate_pair.nominated);
     verifier.TestMemberIsDefined(candidate_pair.writable);
-    verifier.TestMemberIsUndefined(candidate_pair.readable);
     verifier.TestMemberIsNonNegative<uint64_t>(candidate_pair.packets_sent);
     verifier.TestMemberIsNonNegative<uint64_t>(
         candidate_pair.packets_discarded_on_send);
@@ -514,13 +513,8 @@ class RTCStatsReportVerifier {
     verifier.TestMemberIsNonNegative<uint64_t>(
         candidate_pair.responses_received);
     verifier.TestMemberIsNonNegative<uint64_t>(candidate_pair.responses_sent);
-    verifier.TestMemberIsUndefined(candidate_pair.retransmissions_received);
-    verifier.TestMemberIsUndefined(candidate_pair.retransmissions_sent);
-    verifier.TestMemberIsUndefined(candidate_pair.consent_requests_received);
     verifier.TestMemberIsNonNegative<uint64_t>(
         candidate_pair.consent_requests_sent);
-    verifier.TestMemberIsUndefined(candidate_pair.consent_responses_received);
-    verifier.TestMemberIsUndefined(candidate_pair.consent_responses_sent);
 
     return verifier.ExpectAllMembersSuccessfullyTested();
   }
@@ -636,10 +630,6 @@ class RTCStatsReportVerifier {
           media_stream_track.frame_width);
       verifier.TestMemberIsNonNegative<uint32_t>(
           media_stream_track.frame_height);
-      verifier.TestMemberIsUndefined(media_stream_track.frames_per_second);
-      verifier.TestMemberIsUndefined(media_stream_track.frames_corrupted);
-      verifier.TestMemberIsUndefined(media_stream_track.partial_frames_lost);
-      verifier.TestMemberIsUndefined(media_stream_track.full_frames_lost);
       // Audio-only members should be undefined
       verifier.TestMemberIsUndefined(media_stream_track.audio_level);
       verifier.TestMemberIsUndefined(media_stream_track.echo_return_loss);
@@ -741,15 +731,11 @@ class RTCStatsReportVerifier {
       // Video-only members should be undefined
       verifier.TestMemberIsUndefined(media_stream_track.frame_width);
       verifier.TestMemberIsUndefined(media_stream_track.frame_height);
-      verifier.TestMemberIsUndefined(media_stream_track.frames_per_second);
       verifier.TestMemberIsUndefined(media_stream_track.frames_sent);
       verifier.TestMemberIsUndefined(media_stream_track.huge_frames_sent);
       verifier.TestMemberIsUndefined(media_stream_track.frames_received);
       verifier.TestMemberIsUndefined(media_stream_track.frames_decoded);
       verifier.TestMemberIsUndefined(media_stream_track.frames_dropped);
-      verifier.TestMemberIsUndefined(media_stream_track.frames_corrupted);
-      verifier.TestMemberIsUndefined(media_stream_track.partial_frames_lost);
-      verifier.TestMemberIsUndefined(media_stream_track.full_frames_lost);
       verifier.TestMemberIsUndefined(media_stream_track.freeze_count);
       verifier.TestMemberIsUndefined(media_stream_track.pause_count);
       verifier.TestMemberIsUndefined(media_stream_track.total_freezes_duration);
@@ -850,7 +836,6 @@ class RTCStatsReportVerifier {
     } else {
       verifier.TestMemberIsUndefined(inbound_stream.frames_per_second);
     }
-    verifier.TestMemberIsUndefined(inbound_stream.frame_bit_depth);
     verifier.TestMemberIsNonNegative<double>(
         inbound_stream.jitter_buffer_delay);
     verifier.TestMemberIsNonNegative<uint64_t>(
@@ -894,16 +879,6 @@ class RTCStatsReportVerifier {
           inbound_stream.total_samples_duration);
       verifier.TestMemberIsUndefined(inbound_stream.frames_received);
     }
-    verifier.TestMemberIsUndefined(inbound_stream.round_trip_time);
-    verifier.TestMemberIsUndefined(inbound_stream.packets_repaired);
-    verifier.TestMemberIsUndefined(inbound_stream.burst_packets_lost);
-    verifier.TestMemberIsUndefined(inbound_stream.burst_packets_discarded);
-    verifier.TestMemberIsUndefined(inbound_stream.burst_loss_count);
-    verifier.TestMemberIsUndefined(inbound_stream.burst_discard_count);
-    verifier.TestMemberIsUndefined(inbound_stream.burst_loss_rate);
-    verifier.TestMemberIsUndefined(inbound_stream.burst_discard_rate);
-    verifier.TestMemberIsUndefined(inbound_stream.gap_loss_rate);
-    verifier.TestMemberIsUndefined(inbound_stream.gap_discard_rate);
     // Test runtime too short to get an estimate (at least two RTCP sender
     // reports need to be received).
     verifier.MarkMemberTested(inbound_stream.estimated_playout_timestamp, true);
