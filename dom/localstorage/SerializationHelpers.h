@@ -55,13 +55,6 @@ struct ParamTraits<mozilla::dom::LSValue> {
            ReadParam(aReader, &aResult->mConversionType) &&
            ReadParam(aReader, &aResult->mCompressionType);
   }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    LogParam(aParam.mBuffer, aLog);
-    LogParam(aParam.mUTF16Length, aLog);
-    LogParam(static_cast<uint8_t>(aParam.mConversionType), aLog);
-    LogParam(static_cast<uint8_t>(aParam.mCompressionType), aLog);
-  }
 };
 
 }  // namespace IPC

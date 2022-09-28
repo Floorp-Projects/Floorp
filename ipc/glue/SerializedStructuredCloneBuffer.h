@@ -117,10 +117,6 @@ struct ParamTraits<mozilla::SerializedStructuredCloneBuffer> {
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &aResult->data);
   }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    LogParam(aParam.data.Size(), aLog);
-  }
 };
 
 }  // namespace IPC

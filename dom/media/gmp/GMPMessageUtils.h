@@ -87,13 +87,6 @@ struct ParamTraits<GMPSimulcastStream> {
     }
     return false;
   }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    aLog->append(StringPrintf(L"[%u, %u, %u, %u, %u, %u, %u]", aParam.mWidth,
-                              aParam.mHeight, aParam.mNumberOfTemporalLayers,
-                              aParam.mMaxBitrate, aParam.mTargetBitrate,
-                              aParam.mMinBitrate, aParam.mQPMax));
-  }
 };
 
 template <>
@@ -173,15 +166,6 @@ struct ParamTraits<GMPVideoCodec> {
     }
 
     return true;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    const char* codecName = nullptr;
-    if (aParam.mCodecType == kGMPVideoCodecVP8) {
-      codecName = "VP8";
-    }
-    aLog->append(StringPrintf(L"[%s, %u, %u]", codecName, aParam.mWidth,
-                              aParam.mHeight));
   }
 };
 

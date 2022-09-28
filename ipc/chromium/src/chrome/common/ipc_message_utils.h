@@ -298,11 +298,6 @@ static inline bool WARN_UNUSED_RESULT ReadParam(MessageReader* reader, P* p) {
   return ParamTraits<P>::Read(reader, p);
 }
 
-template <typename P>
-static inline void LogParam(const P& p, std::wstring* l) {
-  ParamTraits<P>::Log(p, l);
-}
-
 // Temporary fallback class to allow types to declare serialization using the
 // IPDLParamTraits type class. Will be removed once all remaining
 // IPDLParamTraits implementations are gone. (bug 1754009)
@@ -341,9 +336,6 @@ struct ParamTraitsFundamental<bool> {
   static bool Read(MessageReader* reader, param_type* r) {
     return reader->ReadBool(r);
   }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(p ? L"true" : L"false");
-  }
 };
 
 template <>
@@ -354,9 +346,6 @@ struct ParamTraitsFundamental<int> {
   }
   static bool Read(MessageReader* reader, param_type* r) {
     return reader->ReadInt(r);
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%d", p));
   }
 };
 
@@ -369,9 +358,6 @@ struct ParamTraitsFundamental<long> {
   static bool Read(MessageReader* reader, param_type* r) {
     return reader->ReadLong(r);
   }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%l", p));
-  }
 };
 
 template <>
@@ -382,9 +368,6 @@ struct ParamTraitsFundamental<unsigned long> {
   }
   static bool Read(MessageReader* reader, param_type* r) {
     return reader->ReadULong(r);
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%ul", p));
   }
 };
 
@@ -397,9 +380,6 @@ struct ParamTraitsFundamental<long long> {
   static bool Read(MessageReader* reader, param_type* r) {
     return reader->ReadBytesInto(r, sizeof(*r));
   }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%ll", p));
-  }
 };
 
 template <>
@@ -411,9 +391,6 @@ struct ParamTraitsFundamental<unsigned long long> {
   static bool Read(MessageReader* reader, param_type* r) {
     return reader->ReadBytesInto(r, sizeof(*r));
   }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%ull", p));
-  }
 };
 
 template <>
@@ -424,9 +401,6 @@ struct ParamTraitsFundamental<double> {
   }
   static bool Read(MessageReader* reader, param_type* r) {
     return reader->ReadDouble(r);
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"e", p));
   }
 };
 
@@ -444,9 +418,6 @@ struct ParamTraitsFixed<int16_t> {
   static bool Read(MessageReader* reader, param_type* r) {
     return reader->ReadInt16(r);
   }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%hd", p));
-  }
 };
 
 template <>
@@ -457,9 +428,6 @@ struct ParamTraitsFixed<uint16_t> {
   }
   static bool Read(MessageReader* reader, param_type* r) {
     return reader->ReadUInt16(r);
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%hu", p));
   }
 };
 
@@ -472,9 +440,6 @@ struct ParamTraitsFixed<uint32_t> {
   static bool Read(MessageReader* reader, param_type* r) {
     return reader->ReadUInt32(r);
   }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%u", p));
-  }
 };
 
 template <>
@@ -486,9 +451,6 @@ struct ParamTraitsFixed<int64_t> {
   static bool Read(MessageReader* reader, param_type* r) {
     return reader->ReadInt64(r);
   }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%" PRId64L, p));
-  }
 };
 
 template <>
@@ -499,9 +461,6 @@ struct ParamTraitsFixed<uint64_t> {
   }
   static bool Read(MessageReader* reader, param_type* r) {
     return reader->ReadInt64(reinterpret_cast<int64_t*>(r));
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%" PRIu64L, p));
   }
 };
 
@@ -519,9 +478,6 @@ struct ParamTraitsStd<std::string> {
   static bool Read(MessageReader* reader, param_type* r) {
     return reader->ReadString(r);
   }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(UTF8ToWide(p));
-  }
 };
 
 template <>
@@ -533,7 +489,6 @@ struct ParamTraitsStd<std::wstring> {
   static bool Read(MessageReader* reader, param_type* r) {
     return reader->ReadWString(r);
   }
-  static void Log(const param_type& p, std::wstring* l) { l->append(p); }
 };
 
 template <class K, class V>
@@ -558,9 +513,6 @@ struct ParamTraitsStd<std::map<K, V>> {
     }
     return true;
   }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(L"<std::map>");
-  }
 };
 
 // Windows-specific types.
@@ -579,9 +531,6 @@ struct ParamTraitsWindows<HANDLE> {
   static bool Read(MessageReader* reader, HANDLE* r) {
     return reader->ReadIntPtr(reinterpret_cast<intptr_t*>(r));
   }
-  static void Log(const HANDLE& p, std::wstring* l) {
-    l->append(StringPrintf(L"0x%X", p));
-  }
 };
 
 template <>
@@ -593,9 +542,6 @@ struct ParamTraitsWindows<HWND> {
   }
   static bool Read(MessageReader* reader, HWND* r) {
     return reader->ReadIntPtr(reinterpret_cast<intptr_t*>(r));
-  }
-  static void Log(const HWND& p, std::wstring* l) {
-    l->append(StringPrintf(L"0x%X", p));
   }
 };
 #endif  // defined(OS_WIN)
@@ -706,9 +652,6 @@ struct ParamTraitsMozilla<nsresult> {
   }
   static bool Read(MessageReader* reader, param_type* r) {
     return reader->ReadUInt32(reinterpret_cast<uint32_t*>(r));
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%u", static_cast<uint32_t>(p)));
   }
 };
 

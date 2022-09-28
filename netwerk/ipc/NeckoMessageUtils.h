@@ -62,18 +62,6 @@ struct ParamTraits<Permission> {
            ReadParam(aReader, &aResult->expireType) &&
            ReadParam(aReader, &aResult->expireTime);
   }
-
-  static void Log(const Permission& p, std::wstring* l) {
-    l->append(L"(");
-    LogParam(p.origin, l);
-    l->append(L", ");
-    LogParam(p.capability, l);
-    l->append(L", ");
-    LogParam(p.expireTime, l);
-    l->append(L", ");
-    LogParam(p.expireType, l);
-    l->append(L")");
-  }
 };
 
 template <>

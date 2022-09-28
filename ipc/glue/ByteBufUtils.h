@@ -52,10 +52,6 @@ struct ParamTraits<mozilla::ipc::ByteBuf> {
     }
     return aReader->ReadBytesInto(aResult->mData, length);
   }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    aLog->append(L"(byte buf)");
-  }
 };
 
 }  // namespace IPC

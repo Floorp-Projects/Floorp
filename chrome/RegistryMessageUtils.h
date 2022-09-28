@@ -102,13 +102,6 @@ struct ParamTraits<ChromePackage> {
     }
     return false;
   }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    aLog->append(StringPrintf(L"[%s, %s, %s, %s, %u]", aParam.package.get(),
-                              aParam.contentBaseURI.spec.get(),
-                              aParam.localeBaseURI.spec.get(),
-                              aParam.skinBaseURI.spec.get(), aParam.flags));
-  }
 };
 
 template <>
@@ -137,12 +130,6 @@ struct ParamTraits<SubstitutionMapping> {
     }
     return false;
   }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    aLog->append(StringPrintf(L"[%s://%s, %s, %u]", aParam.scheme.get(),
-                              aParam.path.get(),
-                              aParam.resolvedURI.spec.get()));
-  }
 };
 
 template <>
@@ -164,11 +151,6 @@ struct ParamTraits<OverrideMapping> {
       return true;
     }
     return false;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    aLog->append(StringPrintf(L"[%s, %s, %u]", aParam.originalURI.spec.get(),
-                              aParam.overrideURI.spec.get()));
   }
 };
 

@@ -35,10 +35,6 @@ struct ParamTraits<mozilla::dom::indexedDB::Key> {
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &aResult->mBuffer);
   }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    LogParam(aParam.mBuffer, aLog);
-  }
 };
 
 template <>
@@ -60,10 +56,6 @@ struct ParamTraits<mozilla::dom::indexedDB::KeyPath> {
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &aResult->mType) &&
            ReadParam(aReader, &aResult->mStrings);
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    LogParam(aParam.mStrings, aLog);
   }
 };
 

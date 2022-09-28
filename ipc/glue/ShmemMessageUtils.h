@@ -22,10 +22,6 @@ struct IPDLParamTraits<Shmem> {
                     paramType&& aParam);
   static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
                    paramType* aResult);
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    aLog->append(L"(shmem segment)");
-  }
 };
 
 }  // namespace ipc

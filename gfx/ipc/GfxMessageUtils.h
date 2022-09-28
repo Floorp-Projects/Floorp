@@ -69,12 +69,6 @@ struct ParamTraits<mozilla::gfx::Matrix> {
 
     return false;
   }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    aLog->append(StringPrintf(L"[[%g %g] [%g %g] [%g %g]]", aParam._11,
-                              aParam._12, aParam._21, aParam._22, aParam._31,
-                              aParam._32));
-  }
 };
 
 template <>
