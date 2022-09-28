@@ -19,24 +19,36 @@
 #include <utility>      // std::move
 
 #include "js/Transcoding.h"  // JS::TranscodeResult, JS::TranscodeBuffer, JS::TranscodeRange
-#include "js/UniquePtr.h"   // UniquePtr
-#include "js/Utility.h"     // JS::FreePolicy, js_delete
-#include "vm/JSContext.h"   // JSContext, ReportAllocationOverflow
-#include "vm/StringType.h"  // JSString
+#include "js/UniquePtr.h"     // UniquePtr
+#include "js/Utility.h"       // JS::FreePolicy, js_delete
+#include "vm/ErrorContext.h"  // ErrorContext
+#include "vm/JSContext.h"     // JSContext, ReportAllocationOverflow
+#include "vm/StringType.h"    // JSString
 
 using namespace js;
 
 using mozilla::Utf8Unit;
 
 #ifdef DEBUG
-bool XDRCoderBase::validateResultCode(JSContext* cx,
+bool XDRCoderBase::validateResultCode(JSContext* cx, ErrorContext* ec,
                                       JS::TranscodeResult code) const {
   // NOTE: This function is called to verify that we do not have a pending
   // exception on the JSContext at the same time as a TranscodeResult failure.
   if (cx->isHelperThreadContext()) {
     return true;
   }
-  return cx->isExceptionPending() == bool(code == JS::TranscodeResult::Throw);
+
+  // NOTE: Errors during XDR encode/decode are supposed to be reported to
+  //       ErrorContext, instead of JSContext.
+  //       This branch is for covering remaining consumer of JSContext for
+  //       error reporting (e.g. memory allocation).
+  // TODO: Remove this once JSContext is removed from frontend and all errors
+  //       are reported to ErrorContext.
+  if (cx->isExceptionPending()) {
+    return bool(code == JS::TranscodeResult::Throw);
+  }
+
+  return ec->hadErrors() == bool(code == JS::TranscodeResult::Throw);
 }
 #endif
 
