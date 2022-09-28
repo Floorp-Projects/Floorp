@@ -78,8 +78,7 @@ bool MainThreadErrorContext::hadAllocationOverflow() const {
 }
 
 bool MainThreadErrorContext::hadErrors() const {
-  return hadOutOfMemory() || hadOverRecursed() || hadAllocationOverflow() ||
-         !cx_->offThreadFrontendErrors()->errors.empty();
+  return cx_->offThreadFrontendErrors()->hadErrors();
 }
 
 void* OffThreadErrorContext::onOutOfMemory(AllocFunction allocFunc,
