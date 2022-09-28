@@ -288,7 +288,25 @@ A warning message is displayed at the top of the **This Firefox** tab if service
   :class: center
 
 
-Service workers can be unavailable if the ``dom.serviceWorkers.enable`` preference is set to false in ``about:config``.
+Service workers can be unavailable if:
+
+- ``dom.serviceWorkers.enable`` preference is set to false in ``about:config``.
+- ``browser.privatebrowsing.autostart`` preference is set to true in ``about:config`` or through Firefox preferences UI.
+
+
+The ``browser.privatebrowsing.autostart`` preference is set to true if the user selects **Never remember history** option or enables **Always use private browsing mode** in preferences UI, see about:preferences#privacy
+
+
+Always use private browsing mode:
+
+.. image:: always_use_private_browsing_mode.png
+  :class: center
+
+
+Never remember history:
+
+.. image:: never_remember_history.png
+  :class: center
 
 
 Connection to Firefox for Android 68
