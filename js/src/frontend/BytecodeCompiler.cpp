@@ -57,8 +57,7 @@ class MOZ_RAII AutoAssertReportedException {
   bool check_;
 
  public:
-  explicit AutoAssertReportedException(JSContext* cx,
-                                       ErrorContext* ec = nullptr)
+  explicit AutoAssertReportedException(JSContext* cx, ErrorContext* ec)
       : cx_(cx), ec_(ec), check_(true) {}
   void reset() { check_ = false; }
   ~AutoAssertReportedException() {
@@ -66,18 +65,22 @@ class MOZ_RAII AutoAssertReportedException {
       return;
     }
 
-    if (!cx_->isHelperThreadContext()) {
-      // Error while compiling self-hosted code isn't set as an exception.
-      MOZ_ASSERT_IF(cx_->runtime()->hasInitializedSelfHosting(),
-                    cx_->isExceptionPending());
+    // Error while compiling self-hosted code isn't set as an exception.
+    // TODO: Remove this once all errors are added to frontend context.
+    if (!cx_->runtime()->hasInitializedSelfHosting()) {
       return;
     }
 
-    MOZ_ASSERT_IF(ec_, ec_->hadErrors());
+    // TODO: Remove this once JSContext is removed from frontend.
+    if (!cx_->isHelperThreadContext()) {
+      MOZ_ASSERT(cx_->isExceptionPending() || ec_->hadErrors());
+    } else {
+      MOZ_ASSERT(ec_->hadErrors());
+    }
   }
 #else
  public:
-  explicit AutoAssertReportedException(JSContext*, ErrorContext* = nullptr) {}
+  explicit AutoAssertReportedException(JSContext*, ErrorContext*) {}
   void reset() {}
 #endif
 };
@@ -512,9 +515,9 @@ static JSScript* CompileEvalScriptImpl(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     SourceText<Unit>& srcBuf, JS::Handle<js::Scope*> enclosingScope,
     JS::Handle<JSObject*> enclosingEnv) {
-  AutoAssertReportedException assertException(cx);
-
   MainThreadErrorContext ec(cx);
+  AutoAssertReportedException assertException(cx, &ec);
+
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   if (!input.get().initForEval(cx, &ec, enclosingScope)) {
     return nullptr;
@@ -1441,9 +1444,9 @@ static JSFunction* CompileStandaloneFunction(
     JS::SourceText<char16_t>& srcBuf, const Maybe<uint32_t>& parameterListEnd,
     FunctionSyntaxKind syntaxKind, GeneratorKind generatorKind,
     FunctionAsyncKind asyncKind, Handle<Scope*> enclosingScope = nullptr) {
-  AutoAssertReportedException assertException(cx);
-
   MainThreadErrorContext ec(cx);
+  AutoAssertReportedException assertException(cx, &ec);
+
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   if (enclosingScope) {
     if (!input.get().initForStandaloneFunctionInNonSyntacticScope(
