@@ -1155,6 +1155,11 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute unsigned long IMEStatus;
 
   /**
+   * Get the document URI which may be retrieved by native IME.
+   */
+  readonly attribute nsIURI inputContextURI;
+
+  /**
    * Get whether current input context (including IME status) in the widget
    * is set by content or not.
    */
