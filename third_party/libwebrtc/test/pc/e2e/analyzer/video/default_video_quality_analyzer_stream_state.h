@@ -11,7 +11,9 @@
 #ifndef TEST_PC_E2E_ANALYZER_VIDEO_DEFAULT_VIDEO_QUALITY_ANALYZER_STREAM_STATE_H_
 #define TEST_PC_E2E_ANALYZER_VIDEO_DEFAULT_VIDEO_QUALITY_ANALYZER_STREAM_STATE_H_
 
+#include <limits>
 #include <map>
+#include <set>
 
 #include "absl/types/optional.h"
 #include "api/units/timestamp.h"
@@ -21,39 +23,44 @@ namespace webrtc {
 
 // Represents a current state of video stream inside
 // DefaultVideoQualityAnalyzer.
+//
+// Maintains the sequence of frames for each video stream and keeps track about
+// which frames were seen by each of the possible stream receiver.
+//
+// Keeps information about which frames are alive and which are dead. Frame is
+// alive if it contains VideoFrame payload for corresponding FrameInFlight
+// object inside DefaultVideoQualityAnalyzer, otherwise frame is considered
+// dead.
+//
+// Supports peer indexes from 0 to max(size_t) - 1.
 class StreamState {
  public:
-  StreamState(size_t owner,
-              size_t peers_count,
-              bool enable_receive_own_stream,
-              Timestamp stream_started_time)
-      : owner_(owner),
-        enable_receive_own_stream_(enable_receive_own_stream),
-        stream_started_time_(stream_started_time),
-        frame_ids_(enable_receive_own_stream ? peers_count + 1 : peers_count) {}
+  StreamState(size_t sender,
+              std::set<size_t> receivers,
+              Timestamp stream_started_time);
 
-  size_t owner() const { return owner_; }
+  size_t sender() const { return sender_; }
   Timestamp stream_started_time() const { return stream_started_time_; }
 
   void PushBack(uint16_t frame_id) { frame_ids_.PushBack(frame_id); }
-  // Crash if state is empty. Guarantees that there can be no alive frames
-  // that are not in the owner queue
-  uint16_t PopFront(size_t peer);
-  bool IsEmpty(size_t peer) const {
-    return frame_ids_.IsEmpty(GetPeerQueueIndex(peer));
-  }
   // Crash if state is empty.
-  uint16_t Front(size_t peer) const {
-    return frame_ids_.Front(GetPeerQueueIndex(peer)).value();
-  }
+  uint16_t PopFront(size_t peer);
+  bool IsEmpty(size_t peer) const { return frame_ids_.IsEmpty(peer); }
+  // Crash if state is empty.
+  uint16_t Front(size_t peer) const { return frame_ids_.Front(peer).value(); }
 
-  // When new peer is added - all current alive frames will be sent to it as
-  // well. So we need to register them as expected by copying owner_ head to
-  // the new head.
-  void AddPeer() { frame_ids_.AddReader(GetAliveFramesQueueIndex()); }
+  // Adds a new peer to the state. All currently alive frames will be expected
+  // to be received by the newly added peer.
+  void AddPeer(size_t peer);
+
+  // Removes peer from the state. Frames that were expected to be received by
+  // this peer will be removed from it. On the other hand last rendered frame
+  // time for the removed peer will be preserved, because
+  // DefaultVideoQualityAnalyzer still may request it for stats processing.
+  void RemovePeer(size_t peer);
 
   size_t GetAliveFramesCount() const {
-    return frame_ids_.size(GetAliveFramesQueueIndex());
+    return frame_ids_.size(kAliveFramesQueueIndex);
   }
   uint16_t MarkNextAliveFrameAsDead();
 
@@ -61,19 +68,17 @@ class StreamState {
   absl::optional<Timestamp> last_rendered_frame_time(size_t peer) const;
 
  private:
-  // Returns index of the `frame_ids_` queue which is used for specified
-  // `peer_index`.
-  size_t GetPeerQueueIndex(size_t peer_index) const;
+  // Index of the `frame_ids_` queue which is used to track alive frames for
+  // this stream.
+  static constexpr size_t kAliveFramesQueueIndex =
+      std::numeric_limits<size_t>::max();
 
-  // Returns index of the `frame_ids_` queue which is used to track alive
-  // frames for this stream. The frame is alive if it contains VideoFrame
-  // payload in `captured_frames_in_flight_`.
-  size_t GetAliveFramesQueueIndex() const;
+  size_t GetLongestReceiverQueue() const;
 
   // Index of the owner. Owner's queue in `frame_ids_` will keep alive frames.
-  const size_t owner_;
-  const bool enable_receive_own_stream_;
+  const size_t sender_;
   const Timestamp stream_started_time_;
+  std::set<size_t> receivers_;
   // To correctly determine dropped frames we have to know sequence of frames
   // in each stream so we will keep a list of frame ids inside the stream.
   // This list is represented by multi head queue of frame ids with separate
