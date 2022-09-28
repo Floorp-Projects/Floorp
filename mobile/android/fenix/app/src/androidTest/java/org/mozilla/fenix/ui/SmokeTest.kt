@@ -159,7 +159,6 @@ class SmokeTest {
         }
     }
 
-    @Test
     /* Verifies the nav bar:
      - opening a web page
      - the existence of nav bar items
@@ -167,7 +166,7 @@ class SmokeTest {
      - the tab drawer button
      - opening a new search and dismissing the nav bar
     */
-    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
+    @Test
     fun verifyBasicNavigationToolbarFunctionality() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -502,9 +501,8 @@ class SmokeTest {
         }
     }
 
-    @Test
     // Verifies that a recently closed item is properly opened
-    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
+    @Test
     fun openRecentlyClosedItemTest() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -527,9 +525,8 @@ class SmokeTest {
         }
     }
 
-    @Test
     // Verifies that tapping the "x" button removes a recently closed item from the list
-    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
+    @Test
     fun deleteRecentlyClosedTabsItemTest() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 

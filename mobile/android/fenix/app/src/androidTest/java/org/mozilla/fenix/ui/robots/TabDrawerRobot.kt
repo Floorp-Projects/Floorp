@@ -497,7 +497,7 @@ private fun assertExistingTabList() {
 
     assertTrue(
         mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/tab_item"),
+            UiSelector().resourceId("$packageName:id/tray_list_item"),
         ).waitForExists(waitingTime),
     )
 }
@@ -623,8 +623,7 @@ private fun tab(title: String) =
 private fun tabItem(title: String) =
     mDevice.findObject(
         UiSelector()
-            .resourceId("$packageName:id/tab_item")
-            .childSelector(UiSelector().text(title)),
+            .textContains(title),
     )
 
 private fun tabsCounter() = onView(withId(R.id.tab_button))
