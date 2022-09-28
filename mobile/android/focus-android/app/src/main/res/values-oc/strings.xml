@@ -515,6 +515,10 @@
     <!-- New Onboarding flow second screen subtitle the one that appears under title -->
     <string name="onboarding_second_screen_subtitle_one">Escafam l’istoric quand tampatz l’aplicacion per mai de confidencialitat.</string>
 
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Fasètz venir %1$s vòstre navegador per defaut per protegir vòstras donadas per cada ligam que dobrissètz.</string>
+
     <!-- New Onboarding flow second screen make Focus default browser button label-->
     <string name="onboarding_second_screen_default_browser_button_text">Definir coma navegador per defaut</string>
 
@@ -1005,6 +1009,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
     <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Sembla qu’aqueste site ensajava de vos pistar. Clicatz l’escut per accedir als paramètres del site e a las estatisticas de blocatge dels traçadors.</string>
 
+    <string name="cfr_for_toolbar_shield_icon2">Atrapat ! Avèm empachat aqueste site de vos pistar. Tocatz l’escut quand volètz per saber çò qu’avèm blocat.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Tampar lo fenestron</string>
 
@@ -1035,6 +1041,10 @@ The new line here must be kept as the second half of the string is clickable for
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Vos anam daissar navegar en privat, mas lo còp que ven, començat mai rapidament amb un widget %1$s per l’ecran d’acuèlh.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
     <string name="promote_search_widget_button_text">Apondre lo widget a l’ecran d’acuèlh</string>
 
     !-- This is te text of the snackbar that appears after the search widget was added successfully
