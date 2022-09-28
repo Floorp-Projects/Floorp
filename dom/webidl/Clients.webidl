@@ -12,7 +12,7 @@
 interface Clients {
   // The objects returned will be new instances every time
   [NewObject]
-  Promise<any> get(DOMString id);
+  Promise<(Client or undefined)> get(DOMString id);
   [NewObject]
   Promise<sequence<Client>> matchAll(optional ClientQueryOptions options = {});
   [NewObject]

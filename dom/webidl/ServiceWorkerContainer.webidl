@@ -24,7 +24,7 @@ interface ServiceWorkerContainer : EventTarget {
                                               optional RegistrationOptions options = {});
 
   [NewObject]
-  Promise<any> getRegistration(optional USVString documentURL = "");
+  Promise<(ServiceWorkerRegistration or undefined)> getRegistration(optional USVString documentURL = "");
 
   [NewObject]
   Promise<sequence<ServiceWorkerRegistration>> getRegistrations();

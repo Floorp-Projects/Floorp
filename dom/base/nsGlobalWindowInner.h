@@ -638,7 +638,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
                  mozilla::ErrorResult& aError);
   void SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,
                  mozilla::ErrorResult& aError);
-  void GetEvent(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
+  void GetEvent(mozilla::dom::OwningEventOrUndefined& aRetval);
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetParent(
       mozilla::ErrorResult& aError);
   nsPIDOMWindowOuter* GetInProcessScriptableParent() override;

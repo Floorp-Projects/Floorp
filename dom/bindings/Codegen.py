@@ -18614,46 +18614,56 @@ class CGBindingRoot(CGThing):
                 return getDependenciesFromType(type.unroll())
             if type.isUnion():
                 return set([type.unroll()])
+            if type.isCallback():
+                return set([type.unroll()])
             return set()
 
-        def getDependencies(unionTypeOrDictionary):
-            if isinstance(unionTypeOrDictionary, IDLDictionary):
+        def getDependencies(unionTypeOrDictionaryOrCallback):
+            if isinstance(unionTypeOrDictionaryOrCallback, IDLDictionary):
                 deps = set()
-                if unionTypeOrDictionary.parent:
-                    deps.add(unionTypeOrDictionary.parent)
-                for member in unionTypeOrDictionary.members:
+                if unionTypeOrDictionaryOrCallback.parent:
+                    deps.add(unionTypeOrDictionaryOrCallback.parent)
+                for member in unionTypeOrDictionaryOrCallback.members:
                     deps |= getDependenciesFromType(member.type)
                 return deps
 
-            assert unionTypeOrDictionary.isType() and unionTypeOrDictionary.isUnion()
-            deps = set()
-            for member in unionTypeOrDictionary.flatMemberTypes:
-                deps |= getDependenciesFromType(member)
-            return deps
+            if (
+                unionTypeOrDictionaryOrCallback.isType()
+                and unionTypeOrDictionaryOrCallback.isUnion()
+            ):
+                deps = set()
+                for member in unionTypeOrDictionaryOrCallback.flatMemberTypes:
+                    deps |= getDependenciesFromType(member)
+                return deps
 
-        def getName(unionTypeOrDictionary):
-            if isinstance(unionTypeOrDictionary, IDLDictionary):
-                return unionTypeOrDictionary.identifier.name
+            assert unionTypeOrDictionaryOrCallback.isCallback()
+            return set()
 
-            assert unionTypeOrDictionary.isType() and unionTypeOrDictionary.isUnion()
-            return unionTypeOrDictionary.name
+        def getName(unionTypeOrDictionaryOrCallback):
+            if isinstance(unionTypeOrDictionaryOrCallback, IDLDictionary):
+                return unionTypeOrDictionaryOrCallback.identifier.name
+
+            if (
+                unionTypeOrDictionaryOrCallback.isType()
+                and unionTypeOrDictionaryOrCallback.isUnion()
+            ):
+                return unionTypeOrDictionaryOrCallback.name
+
+            assert unionTypeOrDictionaryOrCallback.isCallback()
+            return unionTypeOrDictionaryOrCallback.identifier.name
 
         for t in dependencySortObjects(
-            dictionaries + unionStructs, getDependencies, getName
+            dictionaries + unionStructs + callbacks, getDependencies, getName
         ):
             if t.isDictionary():
                 cgthings.append(CGDictionary(t, config))
-            else:
-                assert t.isUnion()
+            elif t.isUnion():
                 cgthings.append(CGUnionStruct(t, config))
                 cgthings.append(CGUnionStruct(t, config, True))
-
-        # Do codegen for all the callbacks.
-        cgthings.extend(CGCallbackFunction(c, config) for c in callbacks)
-
-        cgthings.extend(
-            [CGNamespace("binding_detail", CGFastCallback(c)) for c in callbacks]
-        )
+            else:
+                assert t.isCallback()
+                cgthings.append(CGCallbackFunction(t, config))
+                cgthings.append(CGNamespace("binding_detail", CGFastCallback(t)))
 
         # Do codegen for all the descriptors
         cgthings.extend([CGDescriptor(x) for x in descriptors])

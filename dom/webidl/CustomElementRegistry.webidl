@@ -10,7 +10,7 @@ interface CustomElementRegistry {
                    optional ElementDefinitionOptions options = {});
   [ChromeOnly, Throws]
   undefined setElementCreationCallback(DOMString name, CustomElementCreationCallback callback);
-  any get(DOMString name);
+  (CustomElementConstructor or undefined) get(DOMString name);
   [Throws]
   Promise<CustomElementConstructor> whenDefined(DOMString name);
   [CEReactions] undefined upgrade(Node root);
