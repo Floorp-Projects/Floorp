@@ -151,12 +151,6 @@ TEST(RefCounted, SmartPointers) {
   static_assert(std::is_polymorphic<FooItf>::value, "");
   static_assert(!std::is_polymorphic<Foo>::value, "");
 
-  // Check if Ref generates the expected types for Foo and FooItf.
-  static_assert(std::is_base_of<Foo, Ref<Foo>::Type>::value &&
-                    !std::is_same<Foo, Ref<Foo>::Type>::value,
-                "");
-  static_assert(std::is_same<FooItf, Ref<FooItf>::Type>::value, "");
-
   {
     // Test with FooItf, a class that inherits from RefCountInterface.
     // Check that we get a valid FooItf reference counted object.
@@ -164,10 +158,8 @@ TEST(RefCounted, SmartPointers) {
     EXPECT_NE(p.get(), nullptr);
     EXPECT_EQ(p->foo_, 5);  // the FooItf ctor just stores 2+3 in foo_.
 
-    // Use a couple of different ways of declaring what should result in the
-    // same type as `p` is of.
-    scoped_refptr<Ref<FooItf>::Type> p2 = p;
-    Ref<FooItf>::Ptr p3 = p;
+    // Declaring what should result in the same type as `p` is of.
+    scoped_refptr<FooItf> p2 = p;
   }
 
   {
@@ -175,8 +167,7 @@ TEST(RefCounted, SmartPointers) {
     auto p = make_ref_counted<Foo>(2, 3);
     EXPECT_NE(p.get(), nullptr);
     EXPECT_EQ(p->foo_, 5);
-    scoped_refptr<Ref<Foo>::Type> p2 = p;
-    Ref<Foo>::Ptr p3 = p;
+    scoped_refptr<FinalRefCountedObject<Foo>> p2 = p;
   }
 }
 

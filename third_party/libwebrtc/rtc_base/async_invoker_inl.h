@@ -39,7 +39,7 @@ class AsyncClosure {
   // an AsyncClosure's destructor that's about to call
   // "invocation_complete_->Set()", it's not dereferenced after being
   // destroyed.
-  rtc::Ref<Event>::Ptr invocation_complete_;
+  rtc::scoped_refptr<FinalRefCountedObject<Event>> invocation_complete_;
 };
 
 // Simple closure that doesn't trigger a callback for the calling thread.
