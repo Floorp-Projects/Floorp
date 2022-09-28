@@ -3123,6 +3123,7 @@ class IDLUnionType(IDLType):
                         [nullableType.location, self.flatMemberTypes[i].location],
                     )
                 self._dictionaryType = self.flatMemberTypes[i]
+                self.flatMemberTypes[i].inner.needsConversionFromJS = True
             elif self.flatMemberTypes[i].isUnion():
                 self.flatMemberTypes[i : i + 1] = self.flatMemberTypes[i].memberTypes
                 continue
