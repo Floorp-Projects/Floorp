@@ -1170,6 +1170,7 @@ if (current_os == "linux" || is_android) {
       ":base_jni",
       ":generated_audio_device_module_base_jni",
       ":native_api_jni",
+      "../../api:make_ref_counted",
       "../../api:sequence_checker",
       "../../api/task_queue",
       "../../api/task_queue:default_task_queue_factory",
@@ -1177,7 +1178,6 @@ if (current_os == "linux" || is_android) {
       "../../modules/audio_device:audio_device_buffer",
       "../../rtc_base:checks",
       "../../rtc_base:logging",
-      "../../rtc_base:refcount",
       "../../system_wrappers:metrics",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]

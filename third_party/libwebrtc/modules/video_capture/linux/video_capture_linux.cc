@@ -35,7 +35,6 @@
 #include "modules/video_capture/linux/video_capture_v4l2.h"
 #include "modules/video_capture/video_capture.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/ref_counted_object.h"
 
 namespace webrtc {
 namespace videocapturemodule {

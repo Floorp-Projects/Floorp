@@ -33,7 +33,6 @@
 #include "pc/media_stream_track_proxy.h"
 #include "pc/remote_audio_source.h"
 #include "pc/rtp_receiver.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread.h"

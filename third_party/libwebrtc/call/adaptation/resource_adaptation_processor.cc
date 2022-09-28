@@ -20,7 +20,6 @@
 #include "api/video/video_adaptation_counters.h"
 #include "call/adaptation/video_stream_adapter.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 

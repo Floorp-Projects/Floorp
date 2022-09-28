@@ -43,7 +43,6 @@
 #include "rtc_base/fake_network.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/mdns_responder_interface.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/virtual_socket_server.h"

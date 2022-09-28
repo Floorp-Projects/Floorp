@@ -233,11 +233,11 @@ if (is_ios || is_mac) {
 
         deps = [
           ":audio_device",
+          "../api:make_ref_counted",
           "../modules/audio_device:audio_device_api",
           "../modules/audio_device:audio_device_generic",
           "../rtc_base:checks",
           "../rtc_base:logging",
-          "../rtc_base:refcount",
           "../system_wrappers",
         ]
       }
@@ -1543,6 +1543,7 @@ if (is_ios || is_mac) {
         ":native_video",
         ":videoframebuffer_objc",
         "../api:libjingle_peerconnection_api",
+        "../api:make_ref_counted",
         "../api:media_stream_interface",
         "../api:scoped_refptr",
         "../api/video:video_frame",
@@ -1552,7 +1553,6 @@ if (is_ios || is_mac) {
         "../rtc_base",
         "../rtc_base:buffer",
         "../rtc_base:logging",
-        "../rtc_base:refcount",
         "../rtc_base:threading",
       ]
       if (is_ios) {
@@ -1616,6 +1616,7 @@ if (is_ios || is_mac) {
         ":videoframebuffer_objc",
         ":vpx_codec_constants",
         ":wrapped_native_codec_objc",
+        "../api:make_ref_counted",
         "../api/video:video_frame",
         "../api/video:video_rtp_headers",
         "../api/video_codecs:video_codecs_api",

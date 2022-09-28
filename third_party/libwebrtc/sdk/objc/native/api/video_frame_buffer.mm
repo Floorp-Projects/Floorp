@@ -10,6 +10,7 @@
 
 #include "sdk/objc/native/api/video_frame_buffer.h"
 
+#include "api/make_ref_counted.h"
 #include "sdk/objc/native/src/objc_frame_buffer.h"
 
 namespace webrtc {

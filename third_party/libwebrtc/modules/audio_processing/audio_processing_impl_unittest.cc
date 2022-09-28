@@ -13,6 +13,7 @@
 #include <array>
 #include <memory>
 
+#include "api/make_ref_counted.h"
 #include "api/scoped_refptr.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/audio_processing/optionally_built_submodule_creators.h"
@@ -22,7 +23,6 @@
 #include "modules/audio_processing/test/test_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/random.h"
-#include "rtc_base/ref_counted_object.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 

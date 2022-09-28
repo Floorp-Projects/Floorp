@@ -35,7 +35,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/event_tracer.h"
 #include "rtc_base/gunit.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/trace_event.h"
 #include "rtc_base/virtual_socket_server.h"

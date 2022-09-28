@@ -22,7 +22,6 @@
 #include "p2p/base/port.h"
 #include "p2p/base/stun_server.h"
 #include "rtc_base/gunit.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/virtual_socket_server.h"

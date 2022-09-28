@@ -14,11 +14,11 @@
 
 #include "absl/types/optional.h"
 #include "api/dtls_transport_interface.h"
+#include "api/make_ref_counted.h"
 #include "api/sequence_checker.h"
 #include "pc/ice_transport.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/ssl_stream_adapter.h"
 
 namespace webrtc {

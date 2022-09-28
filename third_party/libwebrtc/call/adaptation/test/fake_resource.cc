@@ -14,7 +14,7 @@
 #include <utility>
 
 #include "absl/strings/string_view.h"
-#include "rtc_base/ref_counted_object.h"
+#include "api/make_ref_counted.h"
 
 namespace webrtc {
 

@@ -13,7 +13,6 @@
 #import <objc/runtime.h>
 
 #include "rtc_base/numerics/safe_conversions.h"
-#include "rtc_base/ref_counted_object.h"
 
 namespace {
 // An implementation of EncodedImageBufferInterface that doesn't perform any copies.

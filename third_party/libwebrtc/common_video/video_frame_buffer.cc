@@ -9,9 +9,9 @@
  */
 #include "common_video/include/video_frame_buffer.h"
 
+#include "api/make_ref_counted.h"
 #include "api/video/i420_buffer.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/ref_counted_object.h"
 #include "libyuv/include/libyuv/convert.h"
 
 namespace webrtc {

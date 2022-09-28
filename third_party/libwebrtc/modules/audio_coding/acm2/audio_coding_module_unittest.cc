@@ -43,7 +43,6 @@
 #include "rtc_base/message_digest.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/platform_thread.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/arch.h"
 #include "rtc_base/thread_annotations.h"

@@ -22,7 +22,6 @@
 #include "api/scoped_refptr.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "media/base/fake_video_renderer.h"
-#include "rtc_base/ref_counted_object.h"
 #include "sdk/objc/native/api/video_frame.h"
 
 typedef void (^VideoSinkCallback)(RTC_OBJC_TYPE(RTCVideoFrame) *);
