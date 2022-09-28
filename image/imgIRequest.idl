@@ -89,7 +89,7 @@ interface imgIRequest : nsIRequest
    * actual URI for the image (e.g. if HTTP redirects happened during the
    * load).
    */
-  readonly attribute nsIURI URI;
+  [infallible] readonly attribute nsIURI URI;
 
   /**
    * The URI of the resource we ended up loading after all redirects, etc.
