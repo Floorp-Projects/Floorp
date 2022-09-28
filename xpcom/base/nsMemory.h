@@ -101,13 +101,4 @@ class nsMemory {
 #define NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(size, array) \
   NS_FREE_XPCOM_POINTER_ARRAY((size), (array), NS_IF_RELEASE)
 
-/**
- * An enumeration type used to represent a method of assignment.
- */
-enum nsAssignmentType {
-  NS_ASSIGNMENT_COPY,    // copy by value
-  NS_ASSIGNMENT_DEPEND,  // copy by reference
-  NS_ASSIGNMENT_ADOPT    // copy by reference (take ownership of resource)
-};
-
 #endif  // nsMemory_h__
