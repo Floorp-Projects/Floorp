@@ -9,9 +9,15 @@ add_setup(async function() {
     getRootDirectory(gTestPath) + "testEngine.xml"
   );
   const current = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(current);
+    await Services.search.setDefault(
+      current,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 });
 

@@ -297,5 +297,8 @@ add_task(async function search() {
     });
   }
 
-  await Services.search.setDefault(originalDefaultEngine);
+  await Services.search.setDefault(
+    originalDefaultEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 });

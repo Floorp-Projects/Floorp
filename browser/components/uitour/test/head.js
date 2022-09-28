@@ -60,6 +60,7 @@ function taskify(fun) {
     // Output the inner function name otherwise no name will be output.
     info("\t" + fun.name);
     return fun().then(doneFn, reason => {
+      console.error(reason);
       ok(false, reason);
       doneFn();
     });

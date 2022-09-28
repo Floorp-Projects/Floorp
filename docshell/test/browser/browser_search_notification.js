@@ -24,7 +24,8 @@ add_task(async function() {
 
   let oldDefaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(
-    Services.search.getEngineByName(kSearchEngineID)
+    Services.search.getEngineByName(kSearchEngineID),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   let selectedName = (await Services.search.getDefault()).name;
@@ -35,7 +36,10 @@ add_task(async function() {
   );
 
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);

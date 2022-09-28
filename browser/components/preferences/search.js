@@ -560,7 +560,8 @@ var gSearchPane = {
 
   async setDefaultEngine() {
     await Services.search.setDefault(
-      document.getElementById("defaultEngine").selectedItem.engine
+      document.getElementById("defaultEngine").selectedItem.engine,
+      Ci.nsISearchService.CHANGE_REASON_USER
     );
     if (ExtensionSettingsStore.getSetting(SEARCH_TYPE, SEARCH_KEY) !== null) {
       ExtensionSettingsStore.select(
@@ -573,7 +574,8 @@ var gSearchPane = {
 
   async setDefaultPrivateEngine() {
     await Services.search.setDefaultPrivate(
-      document.getElementById("defaultPrivateEngine").selectedItem.engine
+      document.getElementById("defaultPrivateEngine").selectedItem.engine,
+      Ci.nsISearchService.CHANGE_REASON_USER
     );
   },
 };

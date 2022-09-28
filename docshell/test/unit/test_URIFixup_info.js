@@ -841,10 +841,12 @@ add_task(async function setup() {
   await addTestEngines();
 
   await Services.search.setDefault(
-    Services.search.getEngineByName(kSearchEngineID)
+    Services.search.getEngineByName(kSearchEngineID),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
   await Services.search.setDefaultPrivate(
-    Services.search.getEngineByName(kPrivateSearchEngineID)
+    Services.search.getEngineByName(kPrivateSearchEngineID),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 });
 
@@ -870,7 +872,8 @@ add_task(async function run_test() {
   await do_single_test_run(true);
   gSingleWordDNSLookup = false;
   await Services.search.setDefault(
-    Services.search.getEngineByName(kPostSearchEngineID)
+    Services.search.getEngineByName(kPostSearchEngineID),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
   await do_single_test_run();
   await do_single_test_run(true);

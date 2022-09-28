@@ -50,7 +50,8 @@ add_task(async function setup() {
   await setupSearchService();
   await addTestEngines();
   await Services.search.setDefault(
-    Services.search.getEngineByName(kSearchEngineID)
+    Services.search.getEngineByName(kSearchEngineID),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   registerCleanupFunction(() => {

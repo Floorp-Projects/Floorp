@@ -48,8 +48,14 @@ function getDefault(privateMode) {
 
 function setDefault(privateMode, engine) {
   return privateMode
-    ? Services.search.setDefaultPrivate(engine)
-    : Services.search.setDefault(engine);
+    ? Services.search.setDefaultPrivate(
+        engine,
+        Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+      )
+    : Services.search.setDefault(
+        engine,
+        Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+      );
 }
 
 async function checkFallbackDefaultRegion(private) {

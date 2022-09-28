@@ -10,7 +10,10 @@ add_task(async function() {
   await SearchTestUtils.installSearchExtension({ keyword: "moz" });
   let engine = Services.search.getEngineByName("Example");
   let originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -23,7 +26,10 @@ add_task(async function() {
   });
 
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(originalEngine);
+    await Services.search.setDefault(
+      originalEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     try {
       BrowserTestUtils.removeTab(tab);
     } catch (ex) {

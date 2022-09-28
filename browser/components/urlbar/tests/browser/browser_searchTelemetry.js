@@ -17,10 +17,16 @@ add_task(async function prepare() {
     getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
   );
   let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
 
     // Clicking urlbar results causes visits to their associated pages, so clear
     // that history now.

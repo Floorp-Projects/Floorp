@@ -192,13 +192,18 @@ async function checkDefaultSearch(privateOn, reInitSearchService) {
       "telemetrySearchIdentifier"
     );
     engine.hidden = false;
-    await Services.search.setDefault(engine);
+    await Services.search.setDefault(
+      engine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     await Services.search.setDefaultPrivate(
-      Services.search.getEngineByName(SEARCH_ENGINE_ID)
+      Services.search.getEngineByName(SEARCH_ENGINE_ID),
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
     );
   } else {
     await Services.search.setDefault(
-      Services.search.getEngineByName(SEARCH_ENGINE_ID)
+      Services.search.getEngineByName(SEARCH_ENGINE_ID),
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
     );
   }
   await deferred.promise;
@@ -270,7 +275,10 @@ add_task(async function test_defaultSearchEngine() {
     }, "browser-search-engine-modified");
     Services.search.addOpenSearchEngine(gDataRoot + "/engine.xml", null);
   });
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   await promise;
   TelemetryEnvironment.unregisterChangeListener("testWatch_SearchDefault");
   let data = TelemetryEnvironment.currentEnvironment;
@@ -304,7 +312,8 @@ add_task(async function test_defaultSearchEngine() {
   const EXPECTED_SEARCH_ENGINE = "other-" + SEARCH_ENGINE_ID;
   // Work around bug 1165341: Intentionally set the default engine.
   await Services.search.setDefault(
-    Services.search.getEngineByName(SEARCH_ENGINE_ID)
+    Services.search.getEngineByName(SEARCH_ENGINE_ID),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   // Double-check the default for the next part of the test.
@@ -357,7 +366,10 @@ add_task(async function test_defaultSearchEngine_paramsChanged() {
     );
   });
   let engine = Services.search.getEngineByName("TestEngine");
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   await promise;
 
   let data = TelemetryEnvironment.currentEnvironment;

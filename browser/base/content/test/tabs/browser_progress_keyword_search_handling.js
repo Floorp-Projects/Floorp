@@ -25,10 +25,16 @@ add_setup(async function() {
 
   let originalEngine = await Services.search.getDefault();
   let engineDefault = Services.search.getEngineByName("MozSearch");
-  await Services.search.setDefault(engineDefault);
+  await Services.search.setDefault(
+    engineDefault,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(originalEngine);
+    await Services.search.setDefault(
+      originalEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 });
 

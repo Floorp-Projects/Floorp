@@ -13,7 +13,10 @@ registerCleanupFunction(async function cleanup() {
   while (gBrowser.tabs.length > 1) {
     BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
   }
-  await Services.search.setDefault(originalEngine);
+  await Services.search.setDefault(
+    originalEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 });
 
 let originalEngine;
@@ -26,7 +29,10 @@ add_task(async function test_setup() {
   });
   let engine = Services.search.getEngineByName("MozSearch");
   originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 });
 
 add_task(async function single_url() {

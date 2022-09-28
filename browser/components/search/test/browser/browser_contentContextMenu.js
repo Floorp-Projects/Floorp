@@ -138,7 +138,10 @@ add_task(async function() {
 
   for (let test of tests) {
     if (test.changePrivateDefaultEngine) {
-      await Services.search.setDefaultPrivate(otherPrivateDefault);
+      await Services.search.setDefaultPrivate(
+        otherPrivateDefault,
+        Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+      );
     }
 
     await SpecialPowers.spawn(
@@ -215,7 +218,10 @@ add_task(async function() {
     await popupHiddenPromise;
 
     if (test.changePrivateDefaultEngine) {
-      await Services.search.setDefaultPrivate(originalPrivateDefault);
+      await Services.search.setDefaultPrivate(
+        originalPrivateDefault,
+        Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+      );
     }
   }
 
