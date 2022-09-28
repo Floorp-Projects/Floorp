@@ -36,6 +36,12 @@ interface imgIRequest : nsIRequest
   [infallible] readonly attribute unsigned long providerId;
 
   /**
+   * The principal for the document that loaded this image. Used when trying to
+   * validate a CORS image load.
+   */
+  [infallible] readonly attribute nsIPrincipal triggeringPrincipal;
+
+  /**
    * Bits set in the return value from imageStatus
    * @name statusflags
    *
