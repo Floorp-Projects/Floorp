@@ -12,7 +12,6 @@
 #include "mozilla/Utf8.h"
 
 #include "nscore.h"
-#include "nsMemory.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsUTF8Utils.h"

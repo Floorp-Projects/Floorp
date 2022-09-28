@@ -22,7 +22,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsMimeTypes.h"
-#include "nsMemory.h"
 #include "nsIURL.h"
 #include "nsIPipe.h"
 #include "nsNetCID.h"

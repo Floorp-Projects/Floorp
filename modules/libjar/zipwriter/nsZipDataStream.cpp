@@ -10,7 +10,6 @@
 #include "nsDeflateConverter.h"
 #include "nsNetUtil.h"
 #include "nsComponentManagerUtils.h"
-#include "nsMemory.h"
 
 #define ZIP_METHOD_STORE 0
 #define ZIP_METHOD_DEFLATE 8

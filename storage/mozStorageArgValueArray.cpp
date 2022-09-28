@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsError.h"
-#include "nsMemory.h"
 #include "nsString.h"
 
 #include "mozStoragePrivateHelpers.h"

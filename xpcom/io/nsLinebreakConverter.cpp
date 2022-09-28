@@ -6,7 +6,6 @@
 
 #include "nsLinebreakConverter.h"
 
-#include "nsMemory.h"
 #include "nsCRT.h"
 
 /*----------------------------------------------------------------------------

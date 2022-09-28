@@ -32,7 +32,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadContext.h"
 #include "nsIWebNavigation.h"
-#include "nsMemory.h"
 #include "nsProfilerStartParams.h"
 #include "nsProxyRelease.h"
 #include "nsString.h"

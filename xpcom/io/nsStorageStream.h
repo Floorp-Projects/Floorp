@@ -17,7 +17,6 @@
 
 #include "nsIStorageStream.h"
 #include "nsIOutputStream.h"
-#include "nsMemory.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 

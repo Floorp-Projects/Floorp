@@ -12,7 +12,6 @@
 #include "nsStringBundleService.h"
 #include "nsArrayEnumerator.h"
 #include "nscore.h"
-#include "nsMemory.h"
 #include "nsNetUtil.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"

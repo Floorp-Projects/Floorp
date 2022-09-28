@@ -16,7 +16,6 @@
 #include "nsString.h"
 #include "nsISupportsPrimitives.h"
 #include "nsPrimitiveHelpers.h"
-#include "nsMemory.h"
 #include "nsIFile.h"
 #include "nsStringStream.h"
 #include "nsDragService.h"

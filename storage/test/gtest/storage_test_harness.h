@@ -14,7 +14,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
-#include "nsMemory.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"

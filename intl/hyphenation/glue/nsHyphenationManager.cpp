@@ -22,7 +22,6 @@
 #include "nsCRT.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
-#include "nsMemory.h"
 #include "nsXULAppAPI.h"
 
 using namespace mozilla;

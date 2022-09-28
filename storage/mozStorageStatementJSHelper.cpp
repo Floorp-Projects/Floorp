@@ -8,7 +8,6 @@
 #include "mozStorageStatement.h"
 #include "mozStorageService.h"
 
-#include "nsMemory.h"
 #include "nsString.h"
 #include "nsServiceManagerUtils.h"
 

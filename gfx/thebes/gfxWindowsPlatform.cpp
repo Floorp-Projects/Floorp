@@ -62,8 +62,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
 
-#include "nsMemory.h"
-
 #include <dwmapi.h>
 #include <d3d11.h>
 #include <d2d1_1.h>

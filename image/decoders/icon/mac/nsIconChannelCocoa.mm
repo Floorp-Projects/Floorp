@@ -15,7 +15,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsString.h"
 #include "nsMimeTypes.h"
-#include "nsMemory.h"
 #include "nsIURL.h"
 #include "nsNetCID.h"
 #include "nsIPipe.h"

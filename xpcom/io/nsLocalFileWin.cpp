@@ -13,7 +13,6 @@
 #include "mozilla/WinHeaderOnlyUtils.h"
 
 #include "nsCOMPtr.h"
-#include "nsMemory.h"
 
 #include "nsLocalFile.h"
 #include "nsLocalFileCommon.h"

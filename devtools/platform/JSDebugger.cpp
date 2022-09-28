@@ -10,7 +10,6 @@
 #include "jsfriendapi.h"
 #include "js/Wrapper.h"
 #include "nsServiceManagerUtils.h"
-#include "nsMemory.h"
 
 #define JSDEBUGGER_CONTRACTID "@mozilla.org/jsdebugger;1"
 

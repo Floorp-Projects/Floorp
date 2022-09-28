@@ -18,7 +18,6 @@
 #include "NullPrincipal.h"
 #include "DefaultURI.h"
 #include "nsSimpleURI.h"
-#include "nsMemory.h"
 #include "nsIClassInfoImpl.h"
 #include "nsNetCID.h"
 #include "nsError.h"

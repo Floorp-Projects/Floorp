@@ -17,7 +17,6 @@
 #include "nsIFile.h"
 #include "nsILocalFileMac.h"
 #include "nsMimeTypes.h"
-#include "nsMemory.h"
 #include "nsCRT.h"
 #include "nsMIMEInfoMac.h"
 #include "nsEmbedCID.h"

@@ -21,7 +21,6 @@
 #include "mozilla/Services.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
-#include "nsMemory.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"

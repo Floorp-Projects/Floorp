@@ -7,7 +7,6 @@
 #include "nsDeflateConverter.h"
 #include "nsStringStream.h"
 #include "nsComponentManagerUtils.h"
-#include "nsMemory.h"
 #include "nsCRT.h"
 #include "plstr.h"
 #include "mozilla/UniquePtr.h"

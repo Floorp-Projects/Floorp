@@ -27,7 +27,6 @@
 #include "nscore.h"
 #include "nsDebug.h"
 #include "mozilla/Logging.h"
-#include "nsMemory.h"
 
 struct nsHtml5CharacterName {
   uint16_t nameStart;

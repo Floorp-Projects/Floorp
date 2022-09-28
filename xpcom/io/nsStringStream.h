@@ -9,7 +9,6 @@
 
 #include "nsIStringStream.h"
 #include "nsString.h"
-#include "nsMemory.h"
 #include "nsTArray.h"
 
 /**

@@ -37,7 +37,6 @@
 #include "nsThreadUtils.h"     // for GetMainThreadSerialEventTarget
 #include "nsVariant.h"         // for nsIWritableVariant, etc
 #include "nsLiteralString.h"   // for NS_LITERAL_STRING, etc
-#include "nsMemory.h"          // for nsMemory
 #include "nsRange.h"
 #include "nsReadableUtils.h"        // for ToNewUnicode, EmptyString, etc
 #include "nsServiceManagerUtils.h"  // for do_GetService
