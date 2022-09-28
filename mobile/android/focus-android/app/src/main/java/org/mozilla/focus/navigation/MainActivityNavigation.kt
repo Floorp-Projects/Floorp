@@ -16,6 +16,7 @@ import org.mozilla.focus.biometrics.BiometricAuthenticationFragment
 import org.mozilla.focus.exceptions.ExceptionsListFragment
 import org.mozilla.focus.exceptions.ExceptionsRemoveFragment
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.fragment.UrlInputFragment
@@ -175,10 +176,8 @@ class MainActivityNavigation(
      * Show first run onBoarding.
      */
     fun firstRun() {
-        val onboardingFeature = FocusNimbus.features.onboarding
-        val onboardingConfig = onboardingFeature.value(activity)
-        val onboardingFragment = if (onboardingConfig.isEnabled) {
-            onboardingFeature.recordExposure()
+        val onboardingFragment = if (activity.settings.isNewOnboardingEnable) {
+            FocusNimbus.features.onboarding.recordExposure()
             val onBoardingStorage = OnboardingStorage(activity)
             when (onBoardingStorage.getCurrentOnboardingStep()) {
                 OnboardingStep.ON_BOARDING_FIRST_SCREEN -> {

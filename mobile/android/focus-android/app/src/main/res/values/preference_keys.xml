@@ -103,5 +103,6 @@
     <string name="pref_key_first_screen" translatable="false"><xliff:g id="preference_key">pref_key_first_screen</xliff:g></string>
     <string name="pref_key_second_screen" translatable="false"><xliff:g id="preference_key">pref_key_second_screen</xliff:g></string>
     <string name="firstrun_shown" translatable="false"><xliff:g id="preference_key">firstrun_shown</xliff:g></string>
+    <string name="new_onboarding_enabled" translatable="false"><xliff:g id="preference_key">new_onboarding_enabled</xliff:g></string>
 
 </resources>

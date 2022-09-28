@@ -17,6 +17,7 @@ import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.support.ktx.android.content.PreferencesHolder
 import mozilla.components.support.ktx.android.content.booleanPreference
 import org.mozilla.focus.R
+import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsPreferences
 import org.mozilla.focus.utils.AppConstants.isKlarBuild
 
@@ -188,6 +189,21 @@ class Settings(
         set(value) {
             preferences.edit()
                 .putBoolean(getPreferenceKey(R.string.firstrun_shown), value)
+                .apply()
+        }
+
+    /**
+     * This is needed for GUI Testing. If the value is not set in the sharePref
+     * the default value will be the one from Nimbus.
+     */
+    var isNewOnboardingEnable: Boolean
+        get() = preferences.getBoolean(
+            getPreferenceKey(R.string.new_onboarding_enabled),
+            FocusNimbus.features.onboarding.value(context).isEnabled,
+        )
+        set(value) {
+            preferences.edit()
+                .putBoolean(getPreferenceKey(R.string.new_onboarding_enabled), value)
                 .apply()
         }
 
