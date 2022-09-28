@@ -119,10 +119,19 @@ class PendingTaskSafetyFlag final
 class ScopedTaskSafety final {
  public:
   ScopedTaskSafety() = default;
+  explicit ScopedTaskSafety(rtc::scoped_refptr<PendingTaskSafetyFlag> flag)
+      : flag_(std::move(flag)) {}
   ~ScopedTaskSafety() { flag_->SetNotAlive(); }
 
   // Returns a new reference to the safety flag.
   rtc::scoped_refptr<PendingTaskSafetyFlag> flag() const { return flag_; }
+
+  // Marks the current flag as not-alive and attaches to a new one.
+  void reset(rtc::scoped_refptr<PendingTaskSafetyFlag> new_flag =
+                 PendingTaskSafetyFlag::Create()) {
+    flag_->SetNotAlive();
+    flag_ = std::move(new_flag);
+  }
 
  private:
   rtc::scoped_refptr<PendingTaskSafetyFlag> flag_ =

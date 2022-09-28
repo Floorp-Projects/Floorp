@@ -101,6 +101,7 @@ rtc_library("rtc_p2p") {
     "../api/transport:enums",
     "../api/transport:field_trial_based_config",
     "../api/transport:stun_types",
+    "../api/units:time_delta",
     "../logging:ice_log",
     "../rtc_base",
     "../rtc_base:async_resolver_interface",
