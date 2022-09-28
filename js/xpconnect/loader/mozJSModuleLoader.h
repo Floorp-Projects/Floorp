@@ -101,6 +101,8 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
 
 #ifdef STARTUP_RECORDER_ENABLED
   void RecordImportStack(JSContext* aCx, const nsACString& aLocation);
+  void RecordImportStack(JSContext* aCx,
+                         JS::loader::ModuleLoadRequest* aRequest);
 #endif
 
   nsresult Unload(const nsACString& aResourceURI);

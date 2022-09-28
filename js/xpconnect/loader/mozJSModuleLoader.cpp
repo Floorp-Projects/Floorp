@@ -653,7 +653,14 @@ nsresult mozJSModuleLoader::LoadSingleModuleScript(
   bool realFile = LocationIsRealFile(aRequest->mURI);
 
   RootedScript script(aCx);
-  return GetScriptForLocation(aCx, info, sourceFile, realFile, aScriptOut);
+  rv = GetScriptForLocation(aCx, info, sourceFile, realFile, aScriptOut);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef STARTUP_RECORDER_ENABLED
+  sSelf->RecordImportStack(aCx, aRequest);
+#endif
+
+  return NS_OK;
 }
 
 /* static */
@@ -1212,6 +1219,53 @@ void mozJSModuleLoader::RecordImportStack(JSContext* aCx,
   mImportStacks.InsertOrUpdate(
       aLocation, xpc_PrintJSStack(aCx, false, false, false).get());
 }
+
+void mozJSModuleLoader::RecordImportStack(
+    JSContext* aCx, JS::loader::ModuleLoadRequest* aRequest) {
+  if (!Preferences::GetBool("browser.startup.record", false)) {
+    return;
+  }
+
+  nsAutoCString location;
+  nsresult rv = aRequest->mURI->GetSpec(location);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  auto recordJSStackOnly = [&]() {
+    mImportStacks.InsertOrUpdate(
+        location, xpc_PrintJSStack(aCx, false, false, false).get());
+  };
+
+  if (aRequest->IsTopLevel()) {
+    recordJSStackOnly();
+    return;
+  }
+
+  nsAutoCString importerSpec;
+  rv = aRequest->mReferrer->GetSpec(importerSpec);
+  if (NS_FAILED(rv)) {
+    recordJSStackOnly();
+    return;
+  }
+
+  ModuleLoaderInfo importerInfo(importerSpec);
+  auto importerStack = mImportStacks.Lookup(importerInfo.Key());
+  if (!importerStack) {
+    // The importer's stack is not collected, possibly due to OOM.
+    recordJSStackOnly();
+    return;
+  }
+
+  nsAutoCString stack;
+
+  stack += "* import [\"";
+  stack += importerSpec;
+  stack += "\"]\n";
+  stack += *importerStack;
+
+  mImportStacks.InsertOrUpdate(location, stack);
+}
 #endif
 
 nsresult mozJSModuleLoader::GetModuleImportStack(const nsACString& aLocation,
@@ -1664,12 +1718,6 @@ nsresult mozJSModuleLoader::ImportESModule(
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aLocation);
   NS_ENSURE_SUCCESS(rv, rv);
-
-#ifdef STARTUP_RECORDER_ENABLED
-  if (!mModuleLoader->IsModuleFetched(uri)) {
-    RecordImportStack(aCx, aLocation);
-  }
-#endif
 
   nsCOMPtr<nsIPrincipal> principal =
       mModuleLoader->GetGlobalObject()->PrincipalOrNull();
