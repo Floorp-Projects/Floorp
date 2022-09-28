@@ -123,6 +123,7 @@ class OffThreadErrorContext : public ErrorContext {
  private:
   js::OffThreadFrontendErrors errors_;
 
+ protected:
   // (optional) Current JSContext to support main-thread-specific
   // handling for error reporting, GC, and memory allocation.
   //
@@ -182,6 +183,24 @@ class OffThreadErrorContext : public ErrorContext {
  private:
   void ReportOutOfMemory();
   void addPendingOutOfMemory();
+};
+
+// Automatically report any pending exception when leaving the scope.
+class MOZ_STACK_CLASS AutoReportFrontendContext : public OffThreadErrorContext {
+  // The target JSContext to report the errors to.
+  JSContext* cx_;
+
+  Warning warning_;
+
+ public:
+  explicit AutoReportFrontendContext(JSContext* cx,
+                                     Warning warning = Warning::Report)
+      : OffThreadErrorContext(), cx_(cx), warning_(warning) {
+    setCurrentJSContext(cx_);
+    MOZ_ASSERT(cx_ == maybeCx_);
+  }
+
+  ~AutoReportFrontendContext() { convertToRuntimeError(cx_, warning_); }
 };
 
 }  // namespace js
