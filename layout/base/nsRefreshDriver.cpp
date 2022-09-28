@@ -1527,8 +1527,7 @@ void nsRefreshDriver::AddImageRequest(imgIRequest* aRequest) {
   EnsureTimerStarted();
 
   if (profiler_thread_is_being_profiled_for_markers()) {
-    nsCOMPtr<nsIURI> uri;
-    aRequest->GetURI(getter_AddRefs(uri));
+    nsCOMPtr<nsIURI> uri = aRequest->GetURI();
     nsAutoCString uristr;
     uri->GetAsciiSpec(uristr);
 
@@ -1552,8 +1551,7 @@ void nsRefreshDriver::RemoveImageRequest(imgIRequest* aRequest) {
   }
 
   if (removed && profiler_thread_is_being_profiled_for_markers()) {
-    nsCOMPtr<nsIURI> uri;
-    aRequest->GetURI(getter_AddRefs(uri));
+    nsCOMPtr<nsIURI> uri = aRequest->GetURI();
     nsAutoCString uristr;
     uri->GetAsciiSpec(uristr);
 
