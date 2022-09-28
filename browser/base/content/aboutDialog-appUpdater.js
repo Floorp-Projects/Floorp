@@ -80,7 +80,7 @@ appUpdater.prototype = {
   },
 
   get selectedPanel() {
-    return this.updateDeck.querySelector(".selected");
+    return this.updateDeck.selectedPanel;
   },
 
   _onAppUpdateStatus(status, ...args) {
@@ -94,22 +94,23 @@ appUpdater.prototype = {
       case AppUpdater.STATUS.OTHER_INSTANCE_HANDLING_UPDATES:
         this.selectPanel("otherInstanceHandlingUpdates");
         break;
-      case AppUpdater.STATUS.DOWNLOADING:
-        this.downloadStatus = document.getElementById("downloadStatus");
+      case AppUpdater.STATUS.DOWNLOADING: {
+        let downloadStatus = document.getElementById("downloadStatus");
         if (!args.length) {
-          this.downloadStatus.textContent = DownloadUtils.getTransferTotal(
+          downloadStatus.textContent = DownloadUtils.getTransferTotal(
             0,
             this.update.selectedPatch.size
           );
           this.selectPanel("downloading");
         } else {
           let [progress, max] = args;
-          this.downloadStatus.textContent = DownloadUtils.getTransferTotal(
+          downloadStatus.textContent = DownloadUtils.getTransferTotal(
             progress,
             max
           );
         }
         break;
+      }
       case AppUpdater.STATUS.STAGING:
         this.selectPanel("applying");
         break;
@@ -172,6 +173,9 @@ appUpdater.prototype = {
       icons.className = aChildID;
     }
 
+    // Make sure to select the panel before potentially auto-focusing the button.
+    this.updateDeck.selectedPanel = panel;
+
     let button = panel.querySelector("button");
     if (button) {
       if (aChildID == "downloadAndInstall") {
@@ -192,8 +196,6 @@ appUpdater.prototype = {
           "update.downloadAndInstallButton.accesskey"
         );
       }
-      this.selectedPanel?.classList.remove("selected");
-      panel.classList.add("selected");
       if (
         this.options.buttonAutoFocus &&
         (!document.commandDispatcher.focusedElement || // don't steal the focus
@@ -202,9 +204,6 @@ appUpdater.prototype = {
         // except from the other buttons
         button.focus();
       }
-    } else {
-      this.selectedPanel?.classList.remove("selected");
-      panel.classList.add("selected");
     }
   },
 

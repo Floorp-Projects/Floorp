@@ -680,6 +680,10 @@ function runAboutDialogUpdateTest(params, steps) {
       });
       let { selectedPanel } = aboutDialog.gAppUpdater;
       is(selectedPanel.id, panelId, "The panel ID should equal " + panelId);
+      ok(
+        BrowserTestUtils.is_visible(selectedPanel),
+        "The panel should be visible"
+      );
 
       if (checkActiveUpdate) {
         let activeUpdate =
@@ -749,7 +753,7 @@ function runAboutDialogUpdateTest(params, steps) {
               "Sanity check: Expected download status text should be non-empty"
             );
             Assert.equal(
-              aboutDialog.downloadStatus.textContent,
+              aboutDialog.document.getElementById("downloadStatus").textContent,
               expectedText,
               "Download status text should be correct"
             );
