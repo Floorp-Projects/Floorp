@@ -16,12 +16,13 @@ namespace js {
 class ErrorContext;
 
 struct OffThreadFrontendErrors {
-  OffThreadFrontendErrors() : overRecursed(false), outOfMemory(false) {}
+  OffThreadFrontendErrors() = default;
   // Any errors or warnings produced during compilation. These are reported
   // when finishing the script.
   Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy> errors;
-  bool overRecursed;
-  bool outOfMemory;
+  bool overRecursed = false;
+  bool outOfMemory = false;
+  bool allocationOverflow = false;
 };
 
 class ErrorAllocator : public MallocProvider<ErrorAllocator> {
@@ -65,6 +66,7 @@ class ErrorContext {
   // Status of errors reported to this ErrorContext
   virtual bool hadOutOfMemory() const = 0;
   virtual bool hadOverRecursed() const = 0;
+  virtual bool hadAllocationOverflow() const = 0;
   virtual bool hadErrors() const = 0;
 
 #ifdef __wasi__
@@ -102,6 +104,7 @@ class MainThreadErrorContext : public ErrorContext {
   // Status of errors reported to this ErrorContext
   bool hadOutOfMemory() const override;
   bool hadOverRecursed() const override;
+  bool hadAllocationOverflow() const override;
   bool hadErrors() const override;
 
 #ifdef __wasi__
@@ -146,8 +149,12 @@ class OffThreadErrorContext : public ErrorContext {
   // Status of errors reported to this ErrorContext
   bool hadOutOfMemory() const override { return errors_.outOfMemory; }
   bool hadOverRecursed() const override { return errors_.overRecursed; }
+  bool hadAllocationOverflow() const override {
+    return errors_.allocationOverflow;
+  }
   bool hadErrors() const override {
-    return hadOutOfMemory() || hadOverRecursed() || !errors_.errors.empty();
+    return hadOutOfMemory() || hadOverRecursed() || hadAllocationOverflow() ||
+           !errors_.errors.empty();
   }
 
 #ifdef __wasi__
