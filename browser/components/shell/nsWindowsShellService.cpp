@@ -767,8 +767,21 @@ static nsresult WriteShortcutToLog(nsIFile* aShortcutsLogDir,
 
   if (!shortcutsLogEntryExists) {
     parser.SetString(section.get(), keyName.get(), shortcutName.get());
-    rv = parser.WriteToFile(shortcutsLog);
+    // We write this ourselves instead of using parser->WriteToFile because
+    // the INI parser in our uninstaller needs to read this, and only supports
+    // UTF-16LE encoding. nsINIParser does not support UTF-16.
+    nsAutoCString formatted;
+    parser.WriteToString(formatted);
+    FILE* writeFile;
+    rv = shortcutsLog->OpenANSIFileDesc("w,ccs=UTF-16LE", &writeFile);
     NS_ENSURE_SUCCESS(rv, rv);
+    NS_ConvertUTF8toUTF16 formattedUTF16(formatted);
+    if (fwrite(formattedUTF16.get(), sizeof(wchar_t), formattedUTF16.Length(),
+               writeFile) != formattedUTF16.Length()) {
+      fclose(writeFile);
+      return NS_ERROR_FAILURE;
+    }
+    fclose(writeFile);
   }
 
   return NS_OK;
