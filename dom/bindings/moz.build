@@ -50,6 +50,8 @@ EXPORTS.mozilla.dom += [
     "Record.h",
     "RemoteObjectProxy.h",
     "RootedDictionary.h",
+    "RootedRecord.h",
+    "RootedSequence.h",
     "SimpleGlobalObject.h",
     "SpiderMonkeyInterface.h",
     "ToJSValue.h",
