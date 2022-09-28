@@ -23,6 +23,10 @@ struct OffThreadFrontendErrors {
   bool overRecursed = false;
   bool outOfMemory = false;
   bool allocationOverflow = false;
+
+  bool hadErrors() const {
+    return outOfMemory || overRecursed || allocationOverflow || !errors.empty();
+  }
 };
 
 class ErrorAllocator : public MallocProvider<ErrorAllocator> {
@@ -152,10 +156,7 @@ class OffThreadErrorContext : public ErrorContext {
   bool hadAllocationOverflow() const override {
     return errors_.allocationOverflow;
   }
-  bool hadErrors() const override {
-    return hadOutOfMemory() || hadOverRecursed() || hadAllocationOverflow() ||
-           !errors_.errors.empty();
-  }
+  bool hadErrors() const override { return errors_.hadErrors(); }
 
 #ifdef __wasi__
   void incWasiRecursionDepth() override;
