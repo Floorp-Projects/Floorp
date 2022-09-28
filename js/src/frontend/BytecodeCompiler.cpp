@@ -749,7 +749,7 @@ bool ScriptCompiler<Unit>::compile(JSContext* cx, SharedContext* sc) {
     }
   }
 
-  MOZ_ASSERT_IF(!cx->isHelperThreadContext(), !cx->isExceptionPending());
+  MOZ_ASSERT(!this->errorContext->hadErrors());
 
   return true;
 }
@@ -790,7 +790,8 @@ bool ModuleCompiler<Unit>::compile(JSContext* cx, ErrorContext* ec) {
 
   builder.finishFunctionDecls(moduleMetadata);
 
-  MOZ_ASSERT_IF(!cx->isHelperThreadContext(), !cx->isExceptionPending());
+  MOZ_ASSERT(!this->errorContext->hadErrors());
+
   return true;
 }
 
