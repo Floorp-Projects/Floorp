@@ -344,10 +344,16 @@ function testEngine_setup() {
       Services.prefs.clearUserPref(
         "browser.search.separatePrivateDefault.ui.enabled"
       );
-      Services.search.setDefault(oldDefaultEngine);
+      Services.search.setDefault(
+        oldDefaultEngine,
+        Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+      );
     });
 
-    Services.search.setDefault(engine);
+    Services.search.setDefault(
+      engine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     Services.prefs.setBoolPref(
       "browser.search.separatePrivateDefault.ui.enabled",
       false

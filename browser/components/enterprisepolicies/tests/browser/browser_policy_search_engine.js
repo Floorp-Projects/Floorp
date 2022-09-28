@@ -2,15 +2,17 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { SearchTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/SearchTestUtils.sys.mjs"
-);
-const { SearchUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/SearchUtils.sys.mjs"
-);
-const { CustomizableUITestUtils } = ChromeUtils.import(
-  "resource://testing-common/CustomizableUITestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  CustomizableUITestUtils:
+    "resource://testing-common/CustomizableUITestUtils.jsm",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
+});
+
 let gCUITestUtils = new CustomizableUITestUtils(window);
 
 add_task(async function test_setup() {
@@ -64,10 +66,14 @@ async function test_opensearch(shouldWork) {
 }
 
 add_task(async function test_install_and_set_default() {
+  Services.telemetry.clearEvents();
+  Services.fog.testResetFOG();
+
   // Make sure we are starting in an expected state to avoid false positive
   // test results.
+  let prevEngine = await Services.search.getDefault();
   isnot(
-    (await Services.search.getDefault()).name,
+    prevEngine.name,
     "MozSearch",
     "Default search engine should not be MozSearch when test starts"
   );
@@ -100,6 +106,41 @@ add_task(async function test_install_and_set_default() {
     "MozSearch",
     "Specified search engine should be the default"
   );
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        object: "change_default",
+        value: "enterprise",
+        extra: {
+          prev_id: prevEngine.telemetryId,
+          new_id: "other-MozSearch",
+          new_name: "MozSearch",
+          new_load_path: "[other]addEngineWithDetails:set-via-policy",
+          new_sub_url: "",
+        },
+      },
+    ],
+    { category: "search", method: "engine" }
+  );
+
+  let snapshot = await Glean.searchEngineDefault.changed.testGetValue();
+  delete snapshot[0].timestamp;
+  Assert.deepEqual(
+    snapshot[0],
+    {
+      category: "search.engine.default",
+      name: "changed",
+      extra: {
+        change_source: "enterprise",
+        previous_engine_id: prevEngine.telemetryId,
+        new_engine_id: "other-MozSearch",
+        new_display_name: "MozSearch",
+        new_load_path: "[other]addEngineWithDetails:set-via-policy",
+        new_submission_url: "",
+      },
+    },
+    "Should have received the correct event details"
+  );
 
   // Clean up
   await Services.search.removeEngine(await Services.search.getDefault());
@@ -107,10 +148,14 @@ add_task(async function test_install_and_set_default() {
 });
 
 add_task(async function test_install_and_set_default_private() {
+  Services.telemetry.clearEvents();
+  Services.fog.testResetFOG();
+
   // Make sure we are starting in an expected state to avoid false positive
   // test results.
+  let prevEngine = await Services.search.getDefaultPrivate();
   isnot(
-    (await Services.search.getDefaultPrivate()).name,
+    prevEngine.name,
     "MozSearch",
     "Default search engine should not be MozSearch when test starts"
   );
@@ -142,6 +187,46 @@ add_task(async function test_install_and_set_default_private() {
     (await Services.search.getDefaultPrivate()).name,
     "MozSearch",
     "Specified search engine should be the default private engine"
+  );
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        // TODO: Bug 1791658 - this should be `change_private` but this test
+        // is not currently properly testing setting of the default private engine.
+        object: "change_default",
+        value: "enterprise",
+        extra: {
+          prev_id: prevEngine.telemetryId,
+          new_id: "other-MozSearch",
+          new_name: "MozSearch",
+          new_load_path: "[other]addEngineWithDetails:set-via-policy",
+          new_sub_url: "",
+        },
+      },
+    ],
+    { category: "search", method: "engine" }
+  );
+
+  let snapshot = await Glean.searchEngineDefault.changed.testGetValue();
+  delete snapshot[0].timestamp;
+  Assert.deepEqual(
+    snapshot[0],
+    {
+      // TODO: Bug 1791658 - this should be `search.engine.private` but this test
+      // is not currently properly testing setting of the default private engine.
+      category: "search.engine.default",
+      name: "changed",
+      extra: {
+        change_source: "enterprise",
+        previous_engine_id: prevEngine.telemetryId,
+        new_engine_id: "other-MozSearch",
+        new_display_name: "MozSearch",
+        new_load_path: "[other]addEngineWithDetails:set-via-policy",
+        new_submission_url: "",
+      },
+    },
+    "Should have received the correct event details"
   );
 
   // Clean up

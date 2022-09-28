@@ -13,7 +13,10 @@ add_task(async function() {
   });
   await SearchTestUtils.installSearchExtension({ name: "Test" });
   let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(Services.search.getEngineByName("Test"));
+  await Services.search.setDefault(
+    Services.search.getEngineByName("Test"),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   let lotsOfSpaces = "%20".repeat(300);
   await PlacesTestUtils.addVisits({
@@ -27,7 +30,10 @@ add_task(async function() {
   registerCleanupFunction(async function() {
     await PlacesUtils.history.clear();
     await UrlbarTestUtils.formHistory.clear();
-    await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({

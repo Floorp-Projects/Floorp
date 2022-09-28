@@ -54,7 +54,10 @@ add_task(async function hide_search_engine_nomatch() {
     await UrlbarSearchUtils.enginesForDomainPrefix(token)
   )[0];
   Assert.ok(matchedEngine2);
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 });
 
 add_task(async function onlyEnabled_option_nomatch() {

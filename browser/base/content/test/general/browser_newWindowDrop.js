@@ -5,7 +5,10 @@ const { SearchTestUtils } = ChromeUtils.importESModule(
 SearchTestUtils.init(this);
 
 registerCleanupFunction(async function cleanup() {
-  await Services.search.setDefault(originalEngine);
+  await Services.search.setDefault(
+    originalEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 });
 
 let originalEngine;
@@ -21,7 +24,10 @@ add_task(async function test_setup() {
   });
   let engine = Services.search.getEngineByName("MozSearch");
   originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   // Move New Window button to nav bar, to make it possible to drag and drop.
   let { CustomizableUI } = ChromeUtils.import(

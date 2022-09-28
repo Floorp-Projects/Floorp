@@ -59,7 +59,10 @@ add_task(async function() {
         );
 
         engine = await observerPromise;
-        Services.search.setDefault(engine);
+        Services.search.setDefault(
+          engine,
+          Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+        );
         return engine.name;
       });
 
@@ -87,7 +90,10 @@ add_task(async function() {
         );
       });
 
-      await Services.search.setDefault(currEngine);
+      await Services.search.setDefault(
+        currEngine,
+        Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+      );
       try {
         await Services.search.removeEngine(engine);
       } catch (ex) {}
