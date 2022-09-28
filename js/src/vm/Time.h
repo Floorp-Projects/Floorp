@@ -155,10 +155,6 @@ static __inline__ uint64_t ReadTimestampCounter(void) {
 
 namespace js {
 
-static inline mozilla::TimeStamp ReallyNow() {
-  return mozilla::TimeStamp::Now();
-}
-
 class MOZ_RAII AutoIncrementalTimer {
   mozilla::TimeStamp startTime;
   mozilla::TimeDuration& output;
@@ -169,10 +165,10 @@ class MOZ_RAII AutoIncrementalTimer {
 
   explicit AutoIncrementalTimer(mozilla::TimeDuration& output_)
       : output(output_) {
-    startTime = ReallyNow();
+    startTime = mozilla::TimeStamp::Now();
   }
 
-  ~AutoIncrementalTimer() { output += ReallyNow() - startTime; }
+  ~AutoIncrementalTimer() { output += mozilla::TimeStamp::Now() - startTime; }
 };
 
 }  // namespace js

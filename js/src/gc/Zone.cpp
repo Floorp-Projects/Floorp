@@ -7,6 +7,8 @@
 #include "gc/Zone-inl.h"
 #include "js/shadow/Zone.h"  // JS::shadow::Zone
 
+#include "mozilla/TimeStamp.h"
+
 #include <type_traits>
 
 #include "gc/FinalizationObservers.h"
@@ -404,7 +406,7 @@ void Zone::discardJitCode(JS::GCContext* gcx, const DiscardOptions& options) {
   }
 
   if (options.discardJitScripts && options.discardBaselineCode) {
-    lastDiscardedCodeTime_ = ReallyNow();
+    lastDiscardedCodeTime_ = mozilla::TimeStamp::Now();
   }
 
   if (options.discardBaselineCode || options.discardJitScripts) {

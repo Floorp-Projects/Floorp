@@ -396,8 +396,8 @@ GCRuntime::GCRuntime(JSRuntime* rt)
                         1),  // Ensure disjoint from null tagged pointers.
       numArenasFreeCommitted(0),
       verifyPreData(nullptr),
-      lastGCStartTime_(ReallyNow()),
-      lastGCEndTime_(ReallyNow()),
+      lastGCStartTime_(TimeStamp::Now()),
+      lastGCEndTime_(TimeStamp::Now()),
       incrementalGCEnabled(TuningDefaults::IncrementalGCEnabled),
       perZoneGCEnabled(TuningDefaults::PerZoneGCEnabled),
       numActiveZoneIters(0),
@@ -462,7 +462,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       decommitTask(this),
       nursery_(this),
       storeBuffer_(rt, nursery()),
-      lastAllocRateUpdateTime(ReallyNow()) {
+      lastAllocRateUpdateTime(TimeStamp::Now()) {
   marker.setIncrementalGCEnabled(incrementalGCEnabled);
 }
 
@@ -1482,7 +1482,7 @@ JS_PUBLIC_API void JS::SetCreateGCSliceBudgetCallback(
   cx->runtime()->gc.createBudgetCallback = cb;
 }
 
-void TimeBudget::setDeadlineFromNow() { deadline = ReallyNow() + budget; }
+void TimeBudget::setDeadlineFromNow() { deadline = TimeStamp::Now() + budget; }
 
 SliceBudget::SliceBudget(TimeBudget time, InterruptRequestFlag* interrupt)
     : budget(TimeBudget(time)),
@@ -1530,7 +1530,7 @@ bool SliceBudget::checkOverBudget() {
     return true;
   }
 
-  if (ReallyNow() >= budget.as<TimeBudget>().deadline) {
+  if (TimeStamp::Now() >= budget.as<TimeBudget>().deadline) {
     return true;
   }
 
@@ -2286,7 +2286,7 @@ void GCRuntime::startCollection(JS::GCReason reason) {
   cleanUpEverything = ShouldCleanUpEverything(gcOptions());
   isCompacting = shouldCompact();
   rootsRemoved = false;
-  lastGCStartTime_ = ReallyNow();
+  lastGCStartTime_ = TimeStamp::Now();
 
 #ifdef DEBUG
   if (isShutdownGC()) {
@@ -2582,7 +2582,7 @@ void GCRuntime::endPreparePhase(JS::GCReason reason) {
   // Discard JIT code more aggressively if the process is approaching its
   // executable code limit.
   bool canAllocateMoreCode = jit::CanLikelyAllocateMoreExecutableMemory();
-  auto currentTime = ReallyNow();
+  auto currentTime = TimeStamp::Now();
 
   Compartment* activeCompartment = nullptr;
   jit::JitActivationIterator activation(rt->mainContextFromOwnThread());
@@ -2844,7 +2844,7 @@ void GCRuntime::finishCollection() {
 
   maybeStopPretenuring();
 
-  TimeStamp currentTime = ReallyNow();
+  TimeStamp currentTime = TimeStamp::Now();
 
   updateSchedulingStateAfterCollection(currentTime);
 
@@ -2945,7 +2945,7 @@ void GCRuntime::updateAllocationRates() {
   // Calculate mutator time since the last update. This ignores the fact that
   // the zone could have been created since the last update.
 
-  TimeStamp currentTime = ReallyNow();
+  TimeStamp currentTime = TimeStamp::Now();
   TimeDuration totalTime = currentTime - lastAllocRateUpdateTime;
   if (collectorTimeSinceAllocRateUpdate >= totalTime) {
     // It shouldn't happen but occasionally we see collector time being larger
@@ -3624,7 +3624,7 @@ bool GCRuntime::maybeIncreaseSliceBudgetForLongCollections(
   const BudgetAtTime MinBudgetStart{1500, 0.0};
   const BudgetAtTime MinBudgetEnd{2500, 100.0};
 
-  double totalTime = (ReallyNow() - lastGCStartTime()).ToMilliseconds();
+  double totalTime = (TimeStamp::Now() - lastGCStartTime()).ToMilliseconds();
 
   double minBudget =
       LinearInterpolate(totalTime, MinBudgetStart.time, MinBudgetStart.budget,
@@ -3986,7 +3986,7 @@ struct MOZ_RAII AutoSetZoneSliceThresholds {
 
 void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
                         JS::GCReason reason) {
-  mozilla::TimeStamp startTime = TimeStamp::Now();
+  TimeStamp startTime = TimeStamp::Now();
   auto timer = MakeScopeExit([&] {
     if (Realm* realm = rt->mainContextFromOwnThread()->realm()) {
       realm->timers.gcTime += TimeStamp::Now() - startTime;

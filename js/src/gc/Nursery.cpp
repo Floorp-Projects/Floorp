@@ -10,6 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/TimeStamp.h"
 
 #include <algorithm>
 #include <cmath>
@@ -572,14 +573,14 @@ void* Nursery::moveToNextChunkAndAllocate(size_t size) {
     return nullptr;
   }
   if (chunkno == allocatedChunkCount()) {
-    mozilla::TimeStamp start = ReallyNow();
+    TimeStamp start = TimeStamp::Now();
     {
       AutoLockGCBgAlloc lock(gc);
       if (!allocateNextChunk(chunkno, lock)) {
         return nullptr;
       }
     }
-    timeInChunkAlloc_ += ReallyNow() - start;
+    timeInChunkAlloc_ += TimeStamp::Now() - start;
     MOZ_ASSERT(chunkno < allocatedChunkCount());
   }
   setCurrentChunk(chunkno);
@@ -965,11 +966,11 @@ void js::Nursery::maybeClearProfileDurations() {
 }
 
 inline void js::Nursery::startProfile(ProfileKey key) {
-  startTimes_[key] = ReallyNow();
+  startTimes_[key] = TimeStamp::Now();
 }
 
 inline void js::Nursery::endProfile(ProfileKey key) {
-  profileDurations_[key] = ReallyNow() - startTimes_[key];
+  profileDurations_[key] = TimeStamp::Now() - startTimes_[key];
   totalDurations_[key] += profileDurations_[key];
 }
 
@@ -1045,7 +1046,7 @@ inline bool js::Nursery::isUnderused() const {
   // have idle time. This allows the nursery to shrink when it's not being
   // used. There are other heuristics we could use for this, but this is the
   // simplest.
-  TimeDuration timeSinceLastCollection = ReallyNow() - previousGC.endTime;
+  TimeDuration timeSinceLastCollection = TimeStamp::Now() - previousGC.endTime;
   return timeSinceLastCollection > tunables().nurseryTimeoutForIdleCollection();
 }
 
@@ -1159,7 +1160,8 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
     disable();
   }
 
-  previousGC.endTime = ReallyNow();  // Must happen after maybeResizeNursery.
+  previousGC.endTime =
+      TimeStamp::Now();  // Must happen after maybeResizeNursery.
   endProfile(ProfileKey::Total);
   gc->incMinorGcNumber();
 
@@ -1677,7 +1679,7 @@ size_t js::Nursery::targetSize(JS::GCOptions options, JS::GCReason reason) {
     return capacity();
   }
 
-  TimeStamp now = ReallyNow();
+  TimeStamp now = TimeStamp::Now();
 
   // If the nursery is completely unused then minimise it.
   if (hasRecentGrowthData && previousGC.nurseryUsedBytes == 0 &&
