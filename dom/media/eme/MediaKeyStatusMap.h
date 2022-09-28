@@ -44,8 +44,9 @@ class MediaKeyStatusMap final : public nsISupports, public nsWrapperCache {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  void Get(JSContext* aCx, const ArrayBufferViewOrArrayBuffer& aKey,
-           JS::MutableHandle<JS::Value> aOutValue, ErrorResult& aOutRv) const;
+  void Get(const ArrayBufferViewOrArrayBuffer& aKey,
+           OwningMediaKeyStatusOrUndefined& aOutValue,
+           ErrorResult& aOutRv) const;
   bool Has(const ArrayBufferViewOrArrayBuffer& aKey) const;
   uint32_t Size() const;
 

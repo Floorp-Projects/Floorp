@@ -1127,17 +1127,18 @@ void CustomElementRegistry::Upgrade(nsINode& aRoot) {
   }
 }
 
-void CustomElementRegistry::Get(JSContext* aCx, const nsAString& aName,
-                                JS::MutableHandle<JS::Value> aRetVal) {
+void CustomElementRegistry::Get(
+    const nsAString& aName,
+    OwningCustomElementConstructorOrUndefined& aRetVal) {
   RefPtr<nsAtom> nameAtom(NS_Atomize(aName));
   CustomElementDefinition* data = mCustomDefinitions.GetWeak(nameAtom);
 
   if (!data) {
-    aRetVal.setUndefined();
+    aRetVal.SetUndefined();
     return;
   }
 
-  aRetVal.setObject(*data->mConstructor->Callback(aCx));
+  aRetVal.SetAsCustomElementConstructor() = data->mConstructor;
 }
 
 already_AddRefed<Promise> CustomElementRegistry::WhenDefined(

@@ -26,5 +26,5 @@ interface MediaKeyStatusMap {
   readonly attribute unsigned long size;
   boolean has (BufferSource keyId);
   [Throws]
-  any get (BufferSource keyId);
+  (MediaKeyStatus or undefined) get (BufferSource keyId);
 };

@@ -3399,12 +3399,11 @@ void nsGlobalWindowInner::SetOpener(JSContext* aCx,
   RedefineProperty(aCx, "opener", aOpener, aError);
 }
 
-void nsGlobalWindowInner::GetEvent(JSContext* aCx,
-                                   JS::MutableHandle<JS::Value> aRetval) {
+void nsGlobalWindowInner::GetEvent(OwningEventOrUndefined& aRetval) {
   if (mEvent) {
-    Unused << nsContentUtils::WrapNative(aCx, mEvent, aRetval);
+    aRetval.SetAsEvent() = mEvent;
   } else {
-    aRetval.setUndefined();
+    aRetval.SetUndefined();
   }
 }
 

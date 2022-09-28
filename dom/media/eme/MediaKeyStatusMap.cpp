@@ -35,25 +35,21 @@ nsPIDOMWindowInner* MediaKeyStatusMap::GetParentObject() const {
   return mParent;
 }
 
-void MediaKeyStatusMap::Get(JSContext* aCx,
-                            const ArrayBufferViewOrArrayBuffer& aKey,
-                            JS::MutableHandle<JS::Value> aOutValue,
+void MediaKeyStatusMap::Get(const ArrayBufferViewOrArrayBuffer& aKey,
+                            OwningMediaKeyStatusOrUndefined& aOutValue,
                             ErrorResult& aOutRv) const {
   ArrayData keyId = GetArrayBufferViewOrArrayBufferData(aKey);
   if (!keyId.IsValid()) {
-    aOutValue.setUndefined();
+    aOutValue.SetUndefined();
     return;
   }
   for (const KeyStatus& status : mStatuses) {
     if (keyId == status.mKeyId) {
-      bool ok = ToJSValue(aCx, status.mStatus, aOutValue);
-      if (!ok) {
-        aOutRv.NoteJSContextException(aCx);
-      }
+      aOutValue.SetAsMediaKeyStatus() = status.mStatus;
       return;
     }
   }
-  aOutValue.setUndefined();
+  aOutValue.SetUndefined();
 }
 
 bool MediaKeyStatusMap::Has(const ArrayBufferViewOrArrayBuffer& aKey) const {
