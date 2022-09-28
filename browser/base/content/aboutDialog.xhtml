@@ -37,7 +37,7 @@
 
   <script src="chrome://browser/content/aboutDialog.js"/>
 
-  <vbox id="aboutDialogContainer">
+  <html:div id="aboutDialogContainer">
     <hbox id="clientBox">
       <vbox id="leftBox" flex="1"/>
       <vbox id="rightBox" flex="1">
@@ -65,59 +65,42 @@
               <html:img class="icon apply" src="chrome://global/skin/icons/reload.svg" role="presentation"/>
             </html:div>
             <vbox>
-              <stack id="updateDeck" orient="vertical">
-                <hbox id="checkForUpdates" align="center">
-                  <button id="checkForUpdatesButton" align="start"
+              <deck id="updateDeck" orient="vertical">
+                <description id="checkForUpdates">
+                  <button id="checkForUpdatesButton"
                           data-l10n-id="update-checkForUpdatesButton"
                           oncommand="gAppUpdater.checkForUpdates();"/>
-                  <spacer flex="1"/>
-                </hbox>
-                <hbox id="downloadAndInstall" align="center">
-                  <button id="downloadAndInstallButton" align="start"
+                </description>
+                <description id="downloadAndInstall">
+                  <button id="downloadAndInstallButton"
                           oncommand="gAppUpdater.startDownload();"/>
                           <!-- label and accesskey will be filled by JS -->
-                  <spacer flex="1"/>
-                </hbox>
-                <hbox id="apply" align="center">
-                  <button id="updateButton" align="start"
+                </description>
+                <description id="apply">
+                  <button id="updateButton"
                           data-l10n-id="update-updateButton"
                           oncommand="gAppUpdater.buttonRestartAfterDownload();"/>
-                  <spacer flex="1"/>
-                </hbox>
-                <hbox id="checkingForUpdates" align="center">
-                  <label data-l10n-id="update-checkingForUpdates"/>
-                </hbox>
-                <hbox id="downloading" data-l10n-id="update-downloading-message" align="center">
-                  <label id="downloadStatus" data-l10n-name="download-status"/>
-                </hbox>
-                <hbox id="applying" align="center">
-                  <label data-l10n-id="update-applying"/>
-                </hbox>
-                <hbox id="downloadFailed" align="center" data-l10n-id="update-failed">
+                </description>
+                <description id="checkingForUpdates" data-l10n-id="update-checkingForUpdates"/>
+                <description id="downloading" data-l10n-id="update-downloading-message" data-l10n-name="download-status"/>
+                <description id="applying" data-l10n-id="update-applying"/>
+                <description id="downloadFailed" data-l10n-id="update-failed">
                   <label id="failedLink" is="text-link" data-l10n-name="failed-link"/>
-                </hbox>
-                <hbox id="policyDisabled" align="center">
-                  <label data-l10n-id="update-adminDisabled"/>
-                </hbox>
-                <hbox id="noUpdatesFound" align="center">
-                  <label data-l10n-id="update-noUpdatesFound"/>
-                </hbox>
-                <hbox id="otherInstanceHandlingUpdates" align="center">
-                  <label data-l10n-id="update-otherInstanceHandlingUpdates"/>
-                </hbox>
-                <hbox id="manualUpdate" align="center" data-l10n-id="update-manual">
+                </description>
+                <description id="policyDisabled" data-l10n-id="update-adminDisabled"/>
+                <description id="noUpdatesFound" data-l10n-id="update-noUpdatesFound"/>
+                <description id="otherInstanceHandlingUpdates" data-l10n-id="update-otherInstanceHandlingUpdates"/>
+                <description id="manualUpdate" data-l10n-id="update-manual">
                   <label class="manualLink" is="text-link" data-l10n-name="manual-link"/>
-                </hbox>
-                <hbox id="unsupportedSystem" align="center" data-l10n-id="update-unsupported">
+                </description>
+                <description id="unsupportedSystem" data-l10n-id="update-unsupported">
                   <label id="unsupportedLink" is="text-link" data-l10n-name="unsupported-link"/>
-                </hbox>
-                <hbox id="restarting" align="center">
-                  <label data-l10n-id="update-restarting"/>
-                </hbox>
-                <hbox id="internalError" align="center" data-l10n-id="update-internal-error">
+                </description>
+                <description id="restarting" data-l10n-id="update-restarting"/>
+                <description id="internalError" data-l10n-id="update-internal-error">
                   <label class="manualLink" is="text-link" data-l10n-name="manual-link"/>
-                </hbox>
-              </stack>
+                </description>
+              </deck>
               <!-- This HBOX is duplicated above without class="update" -->
               <hbox align="baseline">
                 <label id="version" class="update"/>
@@ -162,7 +145,7 @@
       </hbox>
       <description id="trademark" data-l10n-id="trademarkInfo"></description>
     </vbox>
-  </vbox>
+  </html:div>
 
   <keyset>
     <key keycode="VK_ESCAPE" oncommand="window.close();"/>
