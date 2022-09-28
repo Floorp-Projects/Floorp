@@ -23,7 +23,7 @@
 
 #include "builtin/Array.h"
 #include "builtin/BigInt.h"
-#include "vm/ErrorContext.h"
+#include "vm/ErrorContext.h"  // AutoReportFrontendContext, MainThreadErrorContext
 #ifdef JS_HAS_INTL_API
 #  include "builtin/intl/Collator.h"
 #  include "builtin/intl/DateTimeFormat.h"
@@ -2599,24 +2599,27 @@ ScriptSourceObject* GlobalObject::getOrCreateSelfHostingScriptSourceObject(
     return nullptr;
   }
 
-  MainThreadErrorContext ec(cx);
-  if (!source->initFromOptions(cx, &ec, options)) {
-    return nullptr;
+  Rooted<ScriptSourceObject*> sourceObject(cx);
+  {
+    AutoReportFrontendContext ec(cx);
+    if (!source->initFromOptions(cx, &ec, options)) {
+      return nullptr;
+    }
+
+    sourceObject = ScriptSourceObject::create(cx, source.get());
+    if (!sourceObject) {
+      return nullptr;
+    }
+
+    JS::InstantiateOptions instantiateOptions(options);
+    if (!ScriptSourceObject::initFromOptions(cx, sourceObject,
+                                             instantiateOptions)) {
+      return nullptr;
+    }
+
+    global->data().selfHostingScriptSource.init(sourceObject);
   }
 
-  Rooted<ScriptSourceObject*> sourceObject(
-      cx, ScriptSourceObject::create(cx, source.get()));
-  if (!sourceObject) {
-    return nullptr;
-  }
-
-  JS::InstantiateOptions instantiateOptions(options);
-  if (!ScriptSourceObject::initFromOptions(cx, sourceObject,
-                                           instantiateOptions)) {
-    return nullptr;
-  }
-
-  global->data().selfHostingScriptSource.init(sourceObject);
   return sourceObject;
 }
 

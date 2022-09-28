@@ -22,7 +22,7 @@
 #include "js/RegExp.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "util/StringBuffer.h"
-#include "vm/ErrorContext.h"
+#include "vm/ErrorContext.h"  // AutoReportFrontendContext, MainThreadErrorContext
 #include "vm/MatchPairs.h"
 #include "vm/PlainObject.h"
 #include "vm/RegExpStatics.h"
@@ -203,25 +203,27 @@ RegExpObject* RegExpObject::createSyntaxChecked(JSContext* cx,
 
 RegExpObject* RegExpObject::create(JSContext* cx, Handle<JSAtom*> source,
                                    RegExpFlags flags, NewObjectKind newKind) {
-  MainThreadErrorContext ec(cx);
-  CompileOptions dummyOptions(cx);
-  frontend::DummyTokenStream dummyTokenStream(cx, &ec, dummyOptions);
+  Rooted<RegExpObject*> regexp(cx);
+  {
+    AutoReportFrontendContext ec(cx);
+    CompileOptions dummyOptions(cx);
+    frontend::DummyTokenStream dummyTokenStream(cx, &ec, dummyOptions);
 
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  if (!irregexp::CheckPatternSyntax(cx, cx->stackLimitForCurrentPrincipal(),
-                                    dummyTokenStream, source, flags)) {
-    return nullptr;
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    if (!irregexp::CheckPatternSyntax(cx, cx->stackLimitForCurrentPrincipal(),
+                                      dummyTokenStream, source, flags)) {
+      return nullptr;
+    }
+
+    regexp = RegExpAlloc(cx, newKind);
+    if (!regexp) {
+      return nullptr;
+    }
+
+    regexp->initAndZeroLastIndex(source, flags, cx);
+
+    MOZ_ASSERT(!regexp->hasShared());
   }
-
-  Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, newKind));
-  if (!regexp) {
-    return nullptr;
-  }
-
-  regexp->initAndZeroLastIndex(source, flags, cx);
-
-  MOZ_ASSERT(!regexp->hasShared());
-
   return regexp;
 }
 
