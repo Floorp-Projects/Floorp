@@ -44,6 +44,8 @@ function configureEngine(clients) {
   Services.obs.notifyObservers(null, "weave:engine:sync:finish", "tabs");
 }
 
+testEngine_setup();
+
 add_task(async function setup() {
   // Tell Sync about the mocks.
   Weave.Service.engineManager.register(MockTabsEngine);
@@ -54,12 +56,7 @@ add_task(async function setup() {
   ).wrappedJSObject;
   weaveXPCService.ready = true;
 
-  // Install a test engine.
-  let engine = await addTestSuggestionsEngine();
-  let oldDefaultEngine = await Services.search.getDefault();
-
   registerCleanupFunction(async () => {
-    Services.search.setDefault(oldDefaultEngine);
     Services.prefs.clearUserPref("services.sync.username");
     Services.prefs.clearUserPref("services.sync.registerEngines");
     Services.prefs.clearUserPref("browser.urlbar.suggest.searches");
@@ -67,7 +64,6 @@ add_task(async function setup() {
     await cleanupPlaces();
   });
 
-  Services.search.setDefault(engine);
   Services.prefs.setCharPref("services.sync.username", "someone@somewhere.com");
   Services.prefs.setCharPref("services.sync.registerEngines", "");
   // Avoid hitting the network.
