@@ -32,104 +32,50 @@ namespace mozilla {
 enum class StyleWhiteSpace : uint8_t;
 
 /***************************************************************************
- * EditActionResult is useful to return multiple results of an editor
- * action handler without out params.
- * Note that when you return an anonymous instance from a method, you should
- * use EditActionIgnored(), EditActionHandled() or EditActionCanceled() for
- * easier to read.  In other words, EditActionResult should be used when
- * declaring return type of a method, being an argument or defined as a local
- * variable.
+ * EditActionResult is useful to return the handling state of edit sub actions
+ * without out params.
  */
 class MOZ_STACK_CLASS EditActionResult final {
  public:
-  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
-  bool Failed() const { return NS_FAILED(mRv); }
-  nsresult Rv() const { return mRv; }
   bool Canceled() const { return mCanceled; }
   bool Handled() const { return mHandled; }
   bool Ignored() const { return !mCanceled && !mHandled; }
-  bool EditorDestroyed() const { return mRv == NS_ERROR_EDITOR_DESTROYED; }
 
-  EditActionResult SetResult(nsresult aRv) {
-    mRv = aRv;
-    return *this;
-  }
-  EditActionResult MarkAsCanceled() {
-    mCanceled = true;
-    return *this;
-  }
-  EditActionResult MarkAsHandled() {
-    mHandled = true;
-    return *this;
-  }
-
-  explicit EditActionResult(nsresult aRv)
-      : mRv(aRv), mCanceled(false), mHandled(false) {}
+  void MarkAsCanceled() { mCanceled = true; }
+  void MarkAsHandled() { mHandled = true; }
 
   EditActionResult& operator|=(const EditActionResult& aOther) {
     mCanceled |= aOther.mCanceled;
     mHandled |= aOther.mHandled;
-    // When both result are same, keep the result.
-    if (mRv == aOther.mRv) {
-      return *this;
-    }
-    // If one of the result is NS_ERROR_EDITOR_DESTROYED, use it since it's
-    // the most important error code for editor.
-    if (EditorDestroyed() || aOther.EditorDestroyed()) {
-      mRv = NS_ERROR_EDITOR_DESTROYED;
-    }
-    // If one of the results is error, use NS_ERROR_FAILURE.
-    else if (Failed() || aOther.Failed()) {
-      mRv = NS_ERROR_FAILURE;
-    } else {
-      // Otherwise, use generic success code, NS_OK.
-      mRv = NS_OK;
-    }
     return *this;
   }
 
-  EditActionResult& operator|=(
-      const Result<MoveNodeResult, nsresult>& aMoveNodeResult);
+  EditActionResult& operator|=(const MoveNodeResult& aMoveNodeResult);
+
+  static EditActionResult IgnoredResult() {
+    return EditActionResult(false, false);
+  }
+  static EditActionResult HandledResult() {
+    return EditActionResult(false, true);
+  }
+  static EditActionResult CanceledResult() {
+    return EditActionResult(true, true);
+  }
+
+  EditActionResult(const EditActionResult&) = delete;
+  EditActionResult& operator=(const EditActionResult&) = delete;
+  EditActionResult(EditActionResult&&) = default;
+  EditActionResult& operator=(EditActionResult&&) = default;
 
  private:
-  nsresult mRv;
-  bool mCanceled;
-  bool mHandled;
+  bool mCanceled = false;
+  bool mHandled = false;
 
-  EditActionResult(nsresult aRv, bool aCanceled, bool aHandled)
-      : mRv(aRv), mCanceled(aCanceled), mHandled(aHandled) {}
+  EditActionResult(bool aCanceled, bool aHandled)
+      : mCanceled(aCanceled), mHandled(aHandled) {}
 
-  EditActionResult()
-      : mRv(NS_ERROR_NOT_INITIALIZED), mCanceled(false), mHandled(false) {}
-
-  friend EditActionResult EditActionIgnored(nsresult aRv);
-  friend EditActionResult EditActionHandled(nsresult aRv);
-  friend EditActionResult EditActionCanceled(nsresult aRv);
+  EditActionResult() : mCanceled(false), mHandled(false) {}
 };
-
-/***************************************************************************
- * When an edit action handler (or its helper) does nothing,
- * EditActionIgnored should be returned.
- */
-inline EditActionResult EditActionIgnored(nsresult aRv = NS_OK) {
-  return EditActionResult(aRv, false, false);
-}
-
-/***************************************************************************
- * When an edit action handler (or its helper) handled and not canceled,
- * EditActionHandled should be returned.
- */
-inline EditActionResult EditActionHandled(nsresult aRv = NS_OK) {
-  return EditActionResult(aRv, false, true);
-}
-
-/***************************************************************************
- * When an edit action handler (or its helper) handled and canceled,
- * EditActionHandled should be returned.
- */
-inline EditActionResult EditActionCanceled(nsresult aRv = NS_OK) {
-  return EditActionResult(aRv, true, true);
-}
 
 /***************************************************************************
  * CreateNodeResultBase is a simple class for CreateSomething() methods

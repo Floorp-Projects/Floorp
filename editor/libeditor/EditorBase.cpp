@@ -1422,13 +1422,14 @@ nsresult EditorBase::ComputeValueInternal(const nsAString& aFormatType,
       // we need some complicated handling.  In such case, we need to use the
       // expensive path.
       // XXX Anything else what we cannot return the text node data simply?
-      EditActionResult result =
+      Result<EditActionResult, nsresult> result =
           AsTextEditor()->ComputeValueFromTextNodeAndBRElement(aOutputString);
-      if (result.Failed() || result.Canceled() || result.Handled()) {
-        NS_WARNING_ASSERTION(
-            result.Succeeded(),
-            "TextEditor::ComputeValueFromTextNodeAndBRElement() failed");
-        return result.Rv();
+      if (MOZ_UNLIKELY(result.isErr())) {
+        NS_WARNING("TextEditor::ComputeValueFromTextNodeAndBRElement() failed");
+        return result.unwrapErr();
+      }
+      if (!result.inspect().Ignored()) {
+        return NS_OK;
       }
     }
   }
@@ -4209,12 +4210,16 @@ nsresult EditorBase::DeleteSelectionAsSubAction(
       !ignoredError.Failed(),
       "TextEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  EditActionResult result =
-      HandleDeleteSelection(aDirectionAndAmount, aStripWrappers);
-  if (result.Failed() || result.Canceled()) {
-    NS_WARNING_ASSERTION(result.Succeeded(),
-                         "TextEditor::HandleDeleteSelection() failed");
-    return result.Rv();
+  {
+    Result<EditActionResult, nsresult> result =
+        HandleDeleteSelection(aDirectionAndAmount, aStripWrappers);
+    if (MOZ_UNLIKELY(result.isErr())) {
+      NS_WARNING("TextEditor::HandleDeleteSelection() failed");
+      return result.unwrapErr();
+    }
+    if (result.inspect().Canceled()) {
+      return NS_OK;
+    }
   }
 
   // XXX This is odd.  We just tries to remove empty text node here but we
@@ -6009,11 +6014,13 @@ nsresult EditorBase::InsertTextAsSubAction(
       !ignoredError.Failed(),
       "TextEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  EditActionResult result =
+  Result<EditActionResult, nsresult> result =
       HandleInsertText(editSubAction, aStringToInsert, aSelectionHandling);
-  NS_WARNING_ASSERTION(result.Succeeded(),
-                       "EditorBase::HandleInsertText() failed");
-  return result.Rv();
+  if (MOZ_UNLIKELY(result.isErr())) {
+    NS_WARNING("EditorBase::HandleInsertText() failed");
+    return result.unwrapErr();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP EditorBase::InsertLineBreak() { return NS_ERROR_NOT_IMPLEMENTED; }

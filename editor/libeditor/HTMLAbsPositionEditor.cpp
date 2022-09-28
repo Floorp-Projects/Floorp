@@ -61,16 +61,20 @@ nsresult HTMLEditor::SetSelectionToAbsoluteOrStaticAsAction(
   }
 
   if (aEnabled) {
-    EditActionResult result = SetSelectionToAbsoluteAsSubAction(*editingHost);
-    NS_WARNING_ASSERTION(
-        result.Succeeded(),
-        "HTMLEditor::SetSelectionToAbsoluteAsSubAction() failed");
-    return result.Rv();
+    Result<EditActionResult, nsresult> result =
+        SetSelectionToAbsoluteAsSubAction(*editingHost);
+    if (MOZ_UNLIKELY(result.isErr())) {
+      NS_WARNING("HTMLEditor::SetSelectionToAbsoluteAsSubAction() failed");
+      return result.unwrapErr();
+    }
+    return NS_OK;
   }
-  EditActionResult result = SetSelectionToStaticAsSubAction();
-  NS_WARNING_ASSERTION(result.Succeeded(),
-                       "HTMLEditor::SetSelectionToStaticAsSubAction() failed");
-  return result.Rv();
+  Result<EditActionResult, nsresult> result = SetSelectionToStaticAsSubAction();
+  if (MOZ_UNLIKELY(result.isErr())) {
+    NS_WARNING("HTMLEditor::SetSelectionToStaticAsSubAction() failed");
+    return result.unwrapErr();
+  }
+  return NS_OK;
 }
 
 already_AddRefed<Element>
@@ -183,10 +187,12 @@ nsresult HTMLEditor::AddZIndexAsAction(int32_t aChange,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  EditActionResult result = AddZIndexAsSubAction(aChange);
-  NS_WARNING_ASSERTION(result.Succeeded(),
-                       "HTMLEditor::AddZIndexAsSubAction() failed");
-  return EditorBase::ToGenericNSResult(result.Rv());
+  Result<EditActionResult, nsresult> result = AddZIndexAsSubAction(aChange);
+  if (MOZ_UNLIKELY(result.isErr())) {
+    NS_WARNING("HTMLEditor::AddZIndexAsSubAction() failed");
+    return EditorBase::ToGenericNSResult(result.unwrapErr());
+  }
+  return NS_OK;
 }
 
 int32_t HTMLEditor::GetZIndex(Element& aElement) {

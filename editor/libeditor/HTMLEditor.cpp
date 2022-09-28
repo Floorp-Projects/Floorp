@@ -10,6 +10,7 @@
 #include "EditorBase.h"
 #include "EditorDOMPoint.h"
 #include "EditorUtils.h"
+#include "ErrorList.h"
 #include "HTMLEditorEventListener.h"
 #include "HTMLEditUtils.h"
 #include "InsertNodeTransaction.h"
@@ -1206,12 +1207,13 @@ nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
 
       // If selection is in a table element, we need special handling.
       if (HTMLEditUtils::IsAnyTableElement(editableBlockElement)) {
-        EditActionResult result = HandleTabKeyPressInTable(aKeyboardEvent);
-        if (result.Failed()) {
+        Result<EditActionResult, nsresult> result =
+            HandleTabKeyPressInTable(aKeyboardEvent);
+        if (MOZ_UNLIKELY(result.isErr())) {
           NS_WARNING("HTMLEditor::HandleTabKeyPressInTable() failed");
-          return EditorBase::ToGenericNSResult(result.Rv());
+          return EditorBase::ToGenericNSResult(result.unwrapErr());
         }
-        if (!result.Handled()) {
+        if (!result.inspect().Handled()) {
           return NS_OK;
         }
         nsresult rv = ScrollSelectionFocusIntoView();
@@ -1319,11 +1321,13 @@ NS_IMETHODIMP HTMLEditor::InsertLineBreak() {
     return NS_SUCCESS_DOM_NO_OPERATION;
   }
 
-  EditActionResult result = InsertParagraphSeparatorAsSubAction(*editingHost);
-  NS_WARNING_ASSERTION(
-      result.Succeeded(),
-      "HTMLEditor::InsertParagraphSeparatorAsSubAction() failed");
-  return EditorBase::ToGenericNSResult(result.Rv());
+  Result<EditActionResult, nsresult> result =
+      InsertParagraphSeparatorAsSubAction(*editingHost);
+  if (MOZ_UNLIKELY(result.isErr())) {
+    NS_WARNING("HTMLEditor::InsertParagraphSeparatorAsSubAction() failed");
+    return EditorBase::ToGenericNSResult(result.unwrapErr());
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::InsertLineBreakAsAction(nsIPrincipal* aPrincipal) {
@@ -1364,21 +1368,23 @@ nsresult HTMLEditor::InsertParagraphSeparatorAsAction(
     return NS_SUCCESS_DOM_NO_OPERATION;
   }
 
-  EditActionResult result = InsertParagraphSeparatorAsSubAction(*editingHost);
-  NS_WARNING_ASSERTION(
-      result.Succeeded(),
-      "HTMLEditor::InsertParagraphSeparatorAsSubAction() failed");
-  return EditorBase::ToGenericNSResult(result.Rv());
+  Result<EditActionResult, nsresult> result =
+      InsertParagraphSeparatorAsSubAction(*editingHost);
+  if (MOZ_UNLIKELY(result.isErr())) {
+    NS_WARNING("HTMLEditor::InsertParagraphSeparatorAsSubAction() failed");
+    return EditorBase::ToGenericNSResult(result.unwrapErr());
+  }
+  return NS_OK;
 }
 
-EditActionResult HTMLEditor::HandleTabKeyPressInTable(
+Result<EditActionResult, nsresult> HTMLEditor::HandleTabKeyPressInTable(
     WidgetKeyboardEvent* aKeyboardEvent) {
   MOZ_ASSERT(aKeyboardEvent);
 
   AutoEditActionDataSetter dummyEditActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!dummyEditActionData.CanHandle())) {
     // Do nothing if we didn't find a table cell.
-    return EditActionIgnored();
+    return EditActionResult::IgnoredResult();
   }
 
   // Find enclosing table cell from selection (cell may be selected element)
@@ -1389,7 +1395,7 @@ EditActionResult HTMLEditor::HandleTabKeyPressInTable(
         "HTMLEditor::GetInclusiveAncestorByTagNameAtSelection(*nsGkAtoms::td) "
         "returned nullptr");
     // Do nothing if we didn't find a table cell.
-    return EditActionIgnored();
+    return EditActionResult::IgnoredResult();
   }
 
   // find enclosing table
@@ -1397,7 +1403,7 @@ EditActionResult HTMLEditor::HandleTabKeyPressInTable(
       HTMLEditUtils::GetClosestAncestorTableElement(*cellElement);
   if (!table) {
     NS_WARNING("HTMLEditor::GetClosestAncestorTableElement() failed");
-    return EditActionIgnored();
+    return EditActionResult::IgnoredResult();
   }
 
   // advance to next cell
@@ -1406,13 +1412,13 @@ EditActionResult HTMLEditor::HandleTabKeyPressInTable(
   nsresult rv = postOrderIter.Init(table);
   if (NS_FAILED(rv)) {
     NS_WARNING("PostContentIterator::Init() failed");
-    return EditActionResult(rv);
+    return Err(rv);
   }
   // position postOrderIter at block
   rv = postOrderIter.PositionAt(cellElement);
   if (NS_FAILED(rv)) {
     NS_WARNING("PostContentIterator::PositionAt() failed");
-    return EditActionResult(rv);
+    return Err(rv);
   }
 
   do {
@@ -1428,13 +1434,15 @@ EditActionResult HTMLEditor::HandleTabKeyPressInTable(
             table) {
       aKeyboardEvent->PreventDefault();
       CollapseSelectionToDeepestNonTableFirstChild(node);
-      return EditActionHandled(
-          NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK);
+      if (NS_WARN_IF(Destroyed())) {
+        return Err(NS_ERROR_EDITOR_DESTROYED);
+      }
+      return EditActionResult::HandledResult();
     }
   } while (!postOrderIter.IsDone());
 
   if (aKeyboardEvent->IsShift()) {
-    return EditActionIgnored();
+    return EditActionResult::IgnoredResult();
   }
 
   // If we haven't handled it yet, then we must have run off the end of the
@@ -1444,21 +1452,21 @@ EditActionResult HTMLEditor::HandleTabKeyPressInTable(
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eInsertTableRowElement);
   rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
     NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
                          "CanHandleAndMaybeDispatchBeforeInputEvent(), failed");
-    return EditActionHandled(rv);
+    return Err(rv);
   }
   rv = InsertTableRowsWithTransaction(*cellElement, 1,
                                       InsertPosition::eAfterSelectedCell);
   if (NS_WARN_IF(Destroyed())) {
-    return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_FAILED(rv)) {
     NS_WARNING(
         "HTMLEditor::InsertTableRowsWithTransaction(*cellElement, 1, "
         "InsertPosition::eAfterSelectedCell) failed");
-    return EditActionHandled(rv);
+    return Err(rv);
   }
   aKeyboardEvent->PreventDefault();
   // Put selection in right place.  Use table code to get selection and index
@@ -1469,11 +1477,11 @@ EditActionResult HTMLEditor::HandleTabKeyPressInTable(
                       nullptr, &row, nullptr);
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::GetCellContext() failed");
-    return EditActionHandled(rv);
+    return Err(rv);
   }
   if (!tblElement) {
     NS_WARNING("HTMLEditor::GetCellContext() didn't return table element");
-    return EditActionHandled(NS_ERROR_FAILURE);
+    return Err(NS_ERROR_FAILURE);
   }
   // ...so that we can ask for first cell in that row...
   cell = GetTableCellElementAt(*tblElement, row, 0);
@@ -1482,18 +1490,15 @@ EditActionResult HTMLEditor::HandleTabKeyPressInTable(
   // empty new cell, so this works fine)
   if (cell) {
     nsresult rv = CollapseSelectionToStartOf(*cell);
-    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
-      NS_WARNING(
-          "EditorBase::CollapseSelectionToStartOf() caused destroying the "
-          "editor");
-      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::CollapseSelectionToStartOf() failed");
+      return Err(NS_ERROR_EDITOR_DESTROYED);
     }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "EditorBase::CollapseSelectionToStartOf() failed, but ignored");
   }
-  return EditActionHandled(NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED
-                                                   : NS_OK);
+  if (NS_WARN_IF(Destroyed())) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
+  }
+  return EditActionResult::HandledResult();
 }
 
 void HTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(nsINode* aNode) {
@@ -1891,11 +1896,15 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
     return NS_OK;
   }
 
-  EditActionResult result = CanHandleHTMLEditSubAction();
-  if (result.Failed() || result.Canceled()) {
-    NS_WARNING_ASSERTION(result.Succeeded(),
-                         "HTMLEditor::CanHandleHTMLEditSubAction() failed");
-    return EditorBase::ToGenericNSResult(result.Rv());
+  {
+    Result<EditActionResult, nsresult> result = CanHandleHTMLEditSubAction();
+    if (MOZ_UNLIKELY(result.isErr())) {
+      NS_WARNING("HTMLEditor::CanHandleHTMLEditSubAction() failed");
+      return EditorBase::ToGenericNSResult(result.unwrapErr());
+    }
+    if (result.inspect().Canceled()) {
+      return NS_OK;
+    }
   }
 
   UndefineCaretBidiLevel();
@@ -2234,12 +2243,16 @@ nsresult HTMLEditor::SetParagraphFormatAsAction(
   RefPtr<nsAtom> tagName = NS_Atomize(lowerCaseTagName);
   MOZ_ASSERT(tagName);
   if (tagName == nsGkAtoms::dd || tagName == nsGkAtoms::dt) {
-    EditActionResult result = MakeOrChangeListAndListItemAsSubAction(
-        *tagName, u""_ns, SelectAllOfCurrentList::No);
-    NS_WARNING_ASSERTION(result.Succeeded(),
-                         "HTMLEditor::MakeOrChangeListAndListItemAsSubAction("
-                         "SelectAllOfCurrentList::No) failed");
-    return EditorBase::ToGenericNSResult(result.Rv());
+    Result<EditActionResult, nsresult> result =
+        MakeOrChangeListAndListItemAsSubAction(*tagName, u""_ns,
+                                               SelectAllOfCurrentList::No);
+    if (MOZ_UNLIKELY(result.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::MakeOrChangeListAndListItemAsSubAction("
+          "SelectAllOfCurrentList::No) failed");
+      return EditorBase::ToGenericNSResult(result.unwrapErr());
+    }
+    return NS_OK;
   }
 
   rv = FormatBlockContainerAsSubAction(*tagName);
@@ -2608,12 +2621,14 @@ nsresult HTMLEditor::MakeOrChangeListAsAction(
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  EditActionResult result = MakeOrChangeListAndListItemAsSubAction(
-      aListTagName, aBulletType, aSelectAllOfCurrentList);
-  NS_WARNING_ASSERTION(
-      result.Succeeded(),
-      "HTMLEditor::MakeOrChangeListAndListItemAsSubAction() failed");
-  return EditorBase::ToGenericNSResult(result.Rv());
+  Result<EditActionResult, nsresult> result =
+      MakeOrChangeListAndListItemAsSubAction(aListTagName, aBulletType,
+                                             aSelectAllOfCurrentList);
+  if (MOZ_UNLIKELY(result.isErr())) {
+    NS_WARNING("HTMLEditor::MakeOrChangeListAndListItemAsSubAction() failed");
+    return EditorBase::ToGenericNSResult(result.unwrapErr());
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP HTMLEditor::RemoveList(const nsAString& aListType) {
@@ -2683,11 +2698,15 @@ nsresult HTMLEditor::FormatBlockContainerAsSubAction(nsAtom& aTagName) {
       !ignoredError.Failed(),
       "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  EditActionResult result = CanHandleHTMLEditSubAction();
-  if (result.Failed() || result.Canceled()) {
-    NS_WARNING_ASSERTION(result.Succeeded(),
-                         "HTMLEditor::CanHandleHTMLEditSubAction() failed");
-    return result.Rv();
+  {
+    Result<EditActionResult, nsresult> result = CanHandleHTMLEditSubAction();
+    if (MOZ_UNLIKELY(result.isErr())) {
+      NS_WARNING("HTMLEditor::CanHandleHTMLEditSubAction() failed");
+      return result.unwrapErr();
+    }
+    if (result.inspect().Canceled()) {
+      return NS_OK;
+    }
   }
 
   if (IsSelectionRangeContainerNotContent()) {
@@ -2810,10 +2829,12 @@ nsresult HTMLEditor::IndentAsAction(nsIPrincipal* aPrincipal) {
     return NS_SUCCESS_DOM_NO_OPERATION;
   }
 
-  EditActionResult result = IndentAsSubAction(*editingHost);
-  NS_WARNING_ASSERTION(result.Succeeded(),
-                       "HTMLEditor::IndentAsSubAction() failed");
-  return EditorBase::ToGenericNSResult(result.Rv());
+  Result<EditActionResult, nsresult> result = IndentAsSubAction(*editingHost);
+  if (MOZ_UNLIKELY(result.isErr())) {
+    NS_WARNING("HTMLEditor::IndentAsSubAction() failed");
+    return EditorBase::ToGenericNSResult(result.unwrapErr());
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::OutdentAsAction(nsIPrincipal* aPrincipal) {
@@ -2835,10 +2856,12 @@ nsresult HTMLEditor::OutdentAsAction(nsIPrincipal* aPrincipal) {
     return NS_SUCCESS_DOM_NO_OPERATION;
   }
 
-  EditActionResult result = OutdentAsSubAction(*editingHost);
-  NS_WARNING_ASSERTION(result.Succeeded(),
-                       "HTMLEditor::OutdentAsSubAction() failed");
-  return EditorBase::ToGenericNSResult(result.Rv());
+  Result<EditActionResult, nsresult> result = OutdentAsSubAction(*editingHost);
+  if (MOZ_UNLIKELY(result.isErr())) {
+    NS_WARNING("HTMLEditor::OutdentAsSubAction() failed");
+    return EditorBase::ToGenericNSResult(result.unwrapErr());
+  }
+  return NS_OK;
 }
 
 // TODO: IMPLEMENT ALIGNMENT!
@@ -2859,10 +2882,13 @@ nsresult HTMLEditor::AlignAsAction(const nsAString& aAlignType,
     return NS_SUCCESS_DOM_NO_OPERATION;
   }
 
-  EditActionResult result = AlignAsSubAction(aAlignType, *editingHost);
-  NS_WARNING_ASSERTION(result.Succeeded(),
-                       "HTMLEditor::AlignAsSubAction() failed");
-  return EditorBase::ToGenericNSResult(result.Rv());
+  Result<EditActionResult, nsresult> result =
+      AlignAsSubAction(aAlignType, *editingHost);
+  if (MOZ_UNLIKELY(result.isErr())) {
+    NS_WARNING("HTMLEditor::AlignAsSubAction() failed");
+    return EditorBase::ToGenericNSResult(result.unwrapErr());
+  }
+  return NS_OK;
 }
 
 Element* HTMLEditor::GetInclusiveAncestorByTagName(const nsStaticAtom& aTagName,
@@ -5750,11 +5776,15 @@ nsresult HTMLEditor::SetBlockBackgroundColorWithCSSAsSubAction(
     return NS_OK;
   }
 
-  EditActionResult result = CanHandleHTMLEditSubAction();
-  if (result.Failed() || result.Canceled()) {
-    NS_WARNING_ASSERTION(result.Succeeded(),
-                         "HTMLEditor::CanHandleHTMLEditSubAction() failed");
-    return result.Rv();
+  {
+    Result<EditActionResult, nsresult> result = CanHandleHTMLEditSubAction();
+    if (MOZ_UNLIKELY(result.isErr())) {
+      NS_WARNING("HTMLEditor::CanHandleHTMLEditSubAction() failed");
+      return result.unwrapErr();
+    }
+    if (result.inspect().Canceled()) {
+      return NS_OK;
+    }
   }
 
   IgnoredErrorResult ignoredError;

@@ -155,7 +155,7 @@ WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
 }
 
 // static
-EditActionResult WhiteSpaceVisibilityKeeper::
+Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
     MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement(
         HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
         Element& aRightBlockElement, const EditorDOMPoint& aAtRightBlockChild,
@@ -181,41 +181,44 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     NS_WARNING(
         "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() "
         "failed at left block");
-    return EditActionResult(rv);
+    return Err(rv);
   }
 
   // Check whether aLeftBlockElement is a descendant of aRightBlockElement.
   if (aHTMLEditor.MayHaveMutationEventListeners()) {
     EditorDOMPoint leftBlockContainingPointInRightBlockElement;
     if (aHTMLEditor.MayHaveMutationEventListeners() &&
-        !EditorUtils::IsDescendantOf(
+        MOZ_UNLIKELY(!EditorUtils::IsDescendantOf(
             aLeftBlockElement, aRightBlockElement,
-            &leftBlockContainingPointInRightBlockElement)) {
+            &leftBlockContainingPointInRightBlockElement))) {
       NS_WARNING(
           "Deleting invisible whitespace at end of left block element caused "
           "moving the left block element outside the right block element");
-      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
 
-    if (leftBlockContainingPointInRightBlockElement != aAtRightBlockChild) {
+    if (MOZ_UNLIKELY(leftBlockContainingPointInRightBlockElement !=
+                     aAtRightBlockChild)) {
       NS_WARNING(
           "Deleting invisible whitespace at end of left block element caused "
           "changing the left block element in the right block element");
-      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
 
-    if (!EditorUtils::IsEditableContent(aRightBlockElement, EditorType::HTML)) {
+    if (MOZ_UNLIKELY(!EditorUtils::IsEditableContent(aRightBlockElement,
+                                                     EditorType::HTML))) {
       NS_WARNING(
           "Deleting invisible whitespace at end of left block element caused "
           "making the right block element non-editable");
-      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
 
-    if (!EditorUtils::IsEditableContent(aLeftBlockElement, EditorType::HTML)) {
+    if (MOZ_UNLIKELY(!EditorUtils::IsEditableContent(aLeftBlockElement,
+                                                     EditorType::HTML))) {
       NS_WARNING(
           "Deleting invisible whitespace at end of left block element caused "
           "making the left block element non-editable");
-      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
   }
 
@@ -231,7 +234,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       NS_WARNING(
           "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() "
           "failed at right block child");
-      return EditActionResult(rv);
+      return Err(rv);
     }
 
     // XXX AutoTrackDOMPoint instance, tracker, hasn't been destroyed here.
@@ -243,7 +246,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       rightBlockElement = *afterRightBlockChild.ContainerAs<Element>();
     } else if (NS_WARN_IF(
                    !afterRightBlockChild.GetContainerParentAs<Element>())) {
-      return EditActionResult(NS_ERROR_UNEXPECTED);
+      return Err(NS_ERROR_UNEXPECTED);
     } else {
       rightBlockElement = *afterRightBlockChild.GetContainerParentAs<Element>();
     }
@@ -257,7 +260,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   NS_ASSERTION(
       aPrecedingInvisibleBRElement == invisibleBRElementAtEndOfLeftBlockElement,
       "The preceding invisible BR element computation was different");
-  EditActionResult ret(NS_OK);
+  auto ret = EditActionResult::IgnoredResult();
   // NOTE: Keep syncing with CanMergeLeftAndRightBlockElements() of
   //       AutoInclusiveAncestorBlockElementsJoiner.
   if (NS_WARN_IF(aListElementTagName.isSome())) {
@@ -293,11 +296,11 @@ EditActionResult WhiteSpaceVisibilityKeeper::
             EditorDOMPoint(rightBlockElement, afterRightBlockChild.Offset()),
             EditorDOMPoint(&aLeftBlockElement, 0u), aEditingHost,
             HTMLEditor::MoveToEndOfContainer::Yes);
-    if (moveNodeResult.isErr()) {
+    if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
       NS_WARNING(
           "HTMLEditor::MoveOneHardLineContentsWithTransaction("
           "MoveToEndOfContainer::Yes) failed");
-      return EditActionResult(moveNodeResult.unwrapErr());
+      return moveNodeResult.propagateErr();
     }
 
 #ifdef DEBUG
@@ -314,7 +317,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     // We don't need to update selection here because of dontChangeMySelection
     // above.
     moveNodeResult.inspect().IgnoreCaretPointSuggestion();
-    ret |= moveNodeResult;
+    ret |= moveNodeResult.unwrap();
     // Now, all children of rightBlockElement were moved to leftBlockElement.
     // So, afterRightBlockChild is now invalid.
     afterRightBlockChild.Clear();
@@ -329,13 +332,13 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       *invisibleBRElementAtEndOfLeftBlockElement);
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed, but ignored");
-    return EditActionResult(rv);
+    return Err(rv);
   }
-  return EditActionHandled();
+  return EditActionResult::HandledResult();
 }
 
 // static
-EditActionResult WhiteSpaceVisibilityKeeper::
+Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
     MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement(
         HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
         Element& aRightBlockElement, const EditorDOMPoint& aAtLeftBlockChild,
@@ -365,43 +368,46 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     NS_WARNING(
         "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() failed "
         "at right block");
-    return EditActionResult(rv);
+    return Err(rv);
   }
 
   // Check whether aRightBlockElement is a descendant of aLeftBlockElement.
   if (aHTMLEditor.MayHaveMutationEventListeners()) {
     EditorDOMPoint rightBlockContainingPointInLeftBlockElement;
     if (aHTMLEditor.MayHaveMutationEventListeners() &&
-        !EditorUtils::IsDescendantOf(
+        MOZ_UNLIKELY(!EditorUtils::IsDescendantOf(
             aRightBlockElement, aLeftBlockElement,
-            &rightBlockContainingPointInLeftBlockElement)) {
+            &rightBlockContainingPointInLeftBlockElement))) {
       NS_WARNING(
           "Deleting invisible whitespace at start of right block element "
           "caused moving the right block element outside the left block "
           "element");
-      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
 
-    if (rightBlockContainingPointInLeftBlockElement != aAtLeftBlockChild) {
+    if (MOZ_UNLIKELY(rightBlockContainingPointInLeftBlockElement !=
+                     aAtLeftBlockChild)) {
       NS_WARNING(
           "Deleting invisible whitespace at start of right block element "
           "caused changing the right block element position in the left block "
           "element");
-      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
 
-    if (!EditorUtils::IsEditableContent(aLeftBlockElement, EditorType::HTML)) {
+    if (MOZ_UNLIKELY(!EditorUtils::IsEditableContent(aLeftBlockElement,
+                                                     EditorType::HTML))) {
       NS_WARNING(
           "Deleting invisible whitespace at start of right block element "
           "caused making the left block element non-editable");
-      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
 
-    if (!EditorUtils::IsEditableContent(aRightBlockElement, EditorType::HTML)) {
+    if (MOZ_UNLIKELY(!EditorUtils::IsEditableContent(aRightBlockElement,
+                                                     EditorType::HTML))) {
       NS_WARNING(
           "Deleting invisible whitespace at start of right block element "
           "caused making the right block element non-editable");
-      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
   }
 
@@ -419,14 +425,14 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       NS_WARNING(
           "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() "
           "failed at left block child");
-      return EditActionResult(rv);
+      return Err(rv);
     }
   }
-  if (!atLeftBlockChild.IsSetAndValid()) {
+  if (MOZ_UNLIKELY(!atLeftBlockChild.IsSetAndValid())) {
     NS_WARNING(
         "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() caused "
         "unexpected DOM tree");
-    return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
   // XXX atLeftBlockChild.GetContainerAs<Element>() should always return
   //     an element pointer so that probably here should not use
@@ -435,7 +441,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
           atLeftBlockChild.GetContainerOrContainerParentElement()) {
     leftBlockElement = *nearestAncestor;
   } else {
-    return EditActionResult(NS_ERROR_UNEXPECTED);
+    return Err(NS_ERROR_UNEXPECTED);
   }
 
   // Do br adjustment.
@@ -445,7 +451,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   NS_ASSERTION(
       aPrecedingInvisibleBRElement == invisibleBRElementBeforeLeftBlockElement,
       "The preceding invisible BR element computation was different");
-  EditActionResult ret(NS_OK);
+  auto ret = EditActionResult::IgnoredResult();
   // NOTE: Keep syncing with CanMergeLeftAndRightBlockElements() of
   //       AutoInclusiveAncestorBlockElementsJoiner.
   if (aListElementTagName.isSome()) {
@@ -466,16 +472,11 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
       if (NS_WARN_IF(moveNodeResult.inspectErr() ==
                      NS_ERROR_EDITOR_DESTROYED)) {
-        return EditActionResult(moveNodeResult.unwrapErr());
+        return Err(moveNodeResult.unwrapErr());
       }
       NS_WARNING(
           "HTMLEditor::MoveChildrenWithTransaction() failed, but ignored");
     } else {
-      // We don't need to update selection here because of dontChangeMySelection
-      // above.
-      moveNodeResult.inspect().IgnoreCaretPointSuggestion();
-      ret |= moveNodeResult;
-
 #ifdef DEBUG
       MOZ_ASSERT(!rightBlockHasContent.isErr());
       if (rightBlockHasContent.inspect()) {
@@ -486,6 +487,10 @@ EditActionResult WhiteSpaceVisibilityKeeper::
                      "Failed to consider whether moving or not children");
       }
 #endif  // #ifdef DEBUG
+      // We don't need to update selection here because of dontChangeMySelection
+      // above.
+      moveNodeResult.inspect().IgnoreCaretPointSuggestion();
+      ret |= moveNodeResult.unwrap();
     }
     // atLeftBlockChild was moved to rightListElement.  So, it's invalid now.
     atLeftBlockChild.Clear();
@@ -532,14 +537,14 @@ EditActionResult WhiteSpaceVisibilityKeeper::
               HTMLEditor::SplitAtEdges::eDoNotCreateEmptyContainer);
       if (splitResult.isErr()) {
         NS_WARNING("HTMLEditor::SplitAncestorStyledInlineElementsAt() failed");
-        return EditActionResult(splitResult.unwrapErr());
+        return Err(splitResult.unwrapErr());
       }
       nsresult rv = splitResult.SuggestCaretPointTo(
           aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
                         SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
       if (NS_FAILED(rv)) {
         NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
-        return EditActionResult(rv);
+        return Err(rv);
       }
       if (!splitResult.DidSplit()) {
         // If nothing was split, we should move the first line content to after
@@ -562,16 +567,16 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         if (nsIContent* nextContentAtSplitPoint =
                 splitResult.GetNextContent()) {
           pointToMoveFirstLineContent.Set(nextContentAtSplitPoint);
-          if (!pointToMoveFirstLineContent.IsSet()) {
+          if (MOZ_UNLIKELY(!pointToMoveFirstLineContent.IsSet())) {
             NS_WARNING("Next node of split point was orphaned");
-            return EditActionResult(NS_ERROR_NULL_POINTER);
+            return Err(NS_ERROR_NULL_POINTER);
           }
         } else {
           pointToMoveFirstLineContent =
               splitResult.AtSplitPoint<EditorDOMPoint>();
-          if (!pointToMoveFirstLineContent.IsSet()) {
+          if (MOZ_UNLIKELY(!pointToMoveFirstLineContent.IsSet())) {
             NS_WARNING("Split node was orphaned");
-            return EditActionResult(NS_ERROR_NULL_POINTER);
+            return Err(NS_ERROR_NULL_POINTER);
           }
         }
       }
@@ -584,7 +589,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
             pointToMoveFirstLineContent, aEditingHost);
     if (moveNodeResult.isErr()) {
       NS_WARNING("HTMLEditor::MoveOneHardLineContentsWithTransaction() failed");
-      return EditActionResult(moveNodeResult.unwrapErr());
+      return moveNodeResult.propagateErr();
     }
 
 #ifdef DEBUG
@@ -601,7 +606,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     // We don't need to update selection here because of dontChangeMySelection
     // above.
     moveNodeResult.inspect().IgnoreCaretPointSuggestion();
-    ret |= moveNodeResult;
+    ret |= moveNodeResult.unwrap();
   }
 
   if (!invisibleBRElementBeforeLeftBlockElement ||
@@ -613,13 +618,13 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       *invisibleBRElementBeforeLeftBlockElement);
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed, but ignored");
-    return EditActionResult(rv);
+    return Err(rv);
   }
-  return EditActionHandled();
+  return EditActionResult::HandledResult();
 }
 
 // static
-EditActionResult WhiteSpaceVisibilityKeeper::
+Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
     MergeFirstLineOfRightBlockElementIntoLeftBlockElement(
         HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
         Element& aRightBlockElement, const Maybe<nsAtom*>& aListElementTagName,
@@ -647,7 +652,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     NS_WARNING(
         "WhiteSpaceVisibilityKeeper::"
         "MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange() failed");
-    return EditActionResult(rv);
+    return Err(rv);
   }
   // Do br adjustment.
   RefPtr<HTMLBRElement> invisibleBRElementAtEndOfLeftBlockElement =
@@ -657,7 +662,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   NS_ASSERTION(
       aPrecedingInvisibleBRElement == invisibleBRElementAtEndOfLeftBlockElement,
       "The preceding invisible BR element computation was different");
-  EditActionResult ret(NS_OK);
+  auto ret = EditActionResult::IgnoredResult();
   if (aListElementTagName.isSome() ||
       // TODO: We should stop merging entire blocks even if they have same
       // white-space style because Chrome behave so.  However, it's risky to
@@ -672,7 +677,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     nsresult rv = aHTMLEditor.JoinNearestEditableNodesWithTransaction(
         aLeftBlockElement, aRightBlockElement, &atFirstChildOfRightNode);
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+      return Err(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::JoinNearestEditableNodesWithTransaction()"
@@ -685,7 +690,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       if (MOZ_UNLIKELY(convertListTypeResult.isErr())) {
         if (NS_WARN_IF(convertListTypeResult.inspectErr() ==
                        NS_ERROR_EDITOR_DESTROYED)) {
-          return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+          return Err(NS_ERROR_EDITOR_DESTROYED);
         }
         NS_WARNING("HTMLEditor::ChangeListElementType() failed, but ignored");
       }
@@ -711,7 +716,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       NS_WARNING(
           "HTMLEditor::MoveOneHardLineContentsWithTransaction("
           "MoveToEndOfContainer::Yes) failed");
-      return EditActionResult(moveNodeResult.unwrapErr());
+      return moveNodeResult.propagateErr();
     }
 
 #ifdef DEBUG
@@ -728,12 +733,13 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     // We don't need to update selection here because of dontChangeMySelection
     // above.
     moveNodeResult.inspect().IgnoreCaretPointSuggestion();
-    ret |= moveNodeResult;
+    ret |= moveNodeResult.unwrap();
   }
 
   if (!invisibleBRElementAtEndOfLeftBlockElement ||
       !invisibleBRElementAtEndOfLeftBlockElement->IsInComposedDoc()) {
-    return ret.MarkAsHandled();
+    ret.MarkAsHandled();
+    return ret;
   }
 
   rv = aHTMLEditor.DeleteNodeWithTransaction(
@@ -743,9 +749,9 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   //     is respected?
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-    return EditActionResult(rv);
+    return Err(rv);
   }
-  return EditActionHandled();
+  return EditActionResult::HandledResult();
 }
 
 // static
