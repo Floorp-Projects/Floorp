@@ -1433,7 +1433,7 @@ bool StencilIncrementalEncoderPtr::setInitial(
     return false;
   }
 
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   return merger_->setInitial(
       &ec,
       std::forward<UniquePtr<frontend::ExtensibleCompilationStencil>>(initial));
@@ -1441,7 +1441,7 @@ bool StencilIncrementalEncoderPtr::setInitial(
 
 bool StencilIncrementalEncoderPtr::addDelazification(
     JSContext* cx, const frontend::CompilationStencil& delazification) {
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   return merger_->addDelazification(&ec, delazification);
 }
 

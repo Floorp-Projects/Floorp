@@ -73,7 +73,7 @@
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/EnvironmentObject.h"
-#include "vm/ErrorContext.h"
+#include "vm/ErrorContext.h"  // AutoReportFrontendContext
 #include "vm/ErrorObject.h"
 #include "vm/ErrorReporting.h"
 #include "vm/Interpreter.h"
@@ -3630,7 +3630,7 @@ JS_PUBLIC_API bool JS_ExpandErrorArgumentsASCII(JSContext* cx,
 
   AssertHeapIsIdle();
   va_start(ap, reportp);
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   ok = ExpandErrorArgumentsVA(&ec, errorCallback, nullptr, errorNumber,
                               ArgumentsAreASCII, reportp, ap);
   va_end(ap);
@@ -3848,7 +3848,7 @@ bool JSErrorNotes::addNoteASCII(JSContext* cx, const char* filename,
                                 unsigned column, JSErrorCallback errorCallback,
                                 void* userRef, const unsigned errorNumber,
                                 ...) {
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   va_list ap;
   va_start(ap, errorNumber);
   bool ok = addNoteVA(&ec, filename, sourceId, lineno, column, errorCallback,
@@ -3875,7 +3875,7 @@ bool JSErrorNotes::addNoteLatin1(JSContext* cx, const char* filename,
                                  unsigned column, JSErrorCallback errorCallback,
                                  void* userRef, const unsigned errorNumber,
                                  ...) {
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   va_list ap;
   va_start(ap, errorNumber);
   bool ok = addNoteVA(&ec, filename, sourceId, lineno, column, errorCallback,
@@ -3901,7 +3901,7 @@ bool JSErrorNotes::addNoteUTF8(JSContext* cx, const char* filename,
                                unsigned sourceId, unsigned lineno,
                                unsigned column, JSErrorCallback errorCallback,
                                void* userRef, const unsigned errorNumber, ...) {
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   va_list ap;
   va_start(ap, errorNumber);
   bool ok = addNoteVA(&ec, filename, sourceId, lineno, column, errorCallback,

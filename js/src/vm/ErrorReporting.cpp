@@ -15,7 +15,7 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Printf.h"                // JS_vsmprintf
 #include "js/Warnings.h"              // JS::WarningReporter
-#include "vm/ErrorContext.h"  // MainThreadErrorContext, OffThreadErrorContext
+#include "vm/ErrorContext.h"          // AutoReportFrontendContext
 #include "vm/FrameIter.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
@@ -456,7 +456,7 @@ bool js::ReportErrorNumberVA(JSContext* cx, IsWarning isWarning,
   report.errorNumber = errorNumber;
   PopulateReportBlame(cx, &report);
 
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   if (!ExpandErrorArgumentsVA(&ec, callback, userRef, errorNumber,
                               argumentsType, &report, ap)) {
     return false;
@@ -497,7 +497,7 @@ static bool ReportErrorNumberArray(JSContext* cx, IsWarning isWarning,
   report.errorNumber = errorNumber;
   PopulateReportBlame(cx, &report);
 
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   if (!ExpandErrorArguments(&ec, callback, userRef, errorNumber, args, argType,
                             &report)) {
     return false;

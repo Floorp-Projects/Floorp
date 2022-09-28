@@ -43,7 +43,7 @@
 #include "util/Memory.h"
 #include "util/StringBuffer.h"
 #include "vm/Compartment.h"
-#include "vm/ErrorContext.h"
+#include "vm/ErrorContext.h"  // AutoReportFrontendContext
 #include "vm/ErrorObject.h"
 #include "vm/FrameIter.h"  // js::NonBuiltinFrameIter
 #include "vm/JSAtom.h"
@@ -685,7 +685,7 @@ bool JS::ErrorReportBuilder::populateUncaughtExceptionReportUTF8VA(
     }
   }
 
-  MainThreadErrorContext ec(cx);
+  AutoReportFrontendContext ec(cx);
   if (!ExpandErrorArgumentsVA(&ec, GetErrorMessage, nullptr,
                               JSMSG_UNCAUGHT_EXCEPTION, ArgumentsAreUTF8,
                               &ownedReport, ap)) {

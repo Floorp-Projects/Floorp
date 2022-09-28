@@ -53,7 +53,7 @@
 #include "vm/BytecodeUtil.h"               // for JSDVG_SEARCH_STACK
 #include "vm/Compartment.h"                // for Compartment
 #include "vm/EnvironmentObject.h"          // for IsGlobalLexicalEnvironment
-#include "vm/ErrorContext.h"               // for MainThreadErrorContext
+#include "vm/ErrorContext.h"               // for AutoReportFrontendContext
 #include "vm/GeneratorObject.h"            // for AbstractGeneratorObject
 #include "vm/GlobalObject.h"               // for GlobalObject
 #include "vm/Interpreter.h"                // for Call, ExecuteKernel
@@ -995,7 +995,7 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     MOZ_ASSERT(scopeKind == ScopeKind::Global ||
                scopeKind == ScopeKind::NonSyntactic);
 
-    MainThreadErrorContext ec(cx);
+    AutoReportFrontendContext ec(cx);
     script = frontend::CompileGlobalScript(cx, &ec,
                                            cx->stackLimitForCurrentPrincipal(),
                                            options, srcBuf, scopeKind);
