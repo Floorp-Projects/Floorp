@@ -890,6 +890,11 @@ DCSurfaceVideo::DCSurfaceVideo(bool aIsOpaque, DCLayerTree* aDCLayerTree)
     : DCSurface(wr::DeviceIntSize{}, wr::DeviceIntPoint{}, aIsOpaque,
                 aDCLayerTree) {}
 
+DCSurfaceVideo::~DCSurfaceVideo() {
+  ReleaseDecodeSwapChainResources();
+  MOZ_ASSERT(!mSwapChainSurfaceHandle);
+}
+
 bool IsYUVSwapChainFormat(DXGI_FORMAT aFormat) {
   if (aFormat == DXGI_FORMAT_NV12 || aFormat == DXGI_FORMAT_YUY2) {
     return true;
