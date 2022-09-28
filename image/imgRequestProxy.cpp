@@ -1134,8 +1134,9 @@ already_AddRefed<imgRequestProxy> imgRequestProxy::GetStaticRequest(
   GetImagePrincipal(getter_AddRefs(currentPrincipal));
   bool hadCrossOriginRedirects = true;
   GetHadCrossOriginRedirects(&hadCrossOriginRedirects);
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal = GetTriggeringPrincipal();
   RefPtr<imgRequestProxy> req = new imgRequestProxyStatic(
-      frozenImage, currentPrincipal, hadCrossOriginRedirects);
+      frozenImage, currentPrincipal, triggeringPrincipal, hadCrossOriginRedirects);
   req->Init(nullptr, nullptr, aLoadingDocument, mURI, nullptr);
 
   return req.forget();
@@ -1256,21 +1257,27 @@ class StaticBehaviour : public ProxyBehaviour {
 };
 
 imgRequestProxyStatic::imgRequestProxyStatic(mozilla::image::Image* aImage,
-                                             nsIPrincipal* aPrincipal,
+                                             nsIPrincipal* aImagePrincipal,
+                                             nsIPrincipal* aTriggeringPrincipal,
                                              bool aHadCrossOriginRedirects)
-    : mPrincipal(aPrincipal),
+    : mImagePrincipal(aImagePrincipal),
+      mTriggeringPrincipal(aTriggeringPrincipal),
       mHadCrossOriginRedirects(aHadCrossOriginRedirects) {
   mBehaviour = mozilla::MakeUnique<StaticBehaviour>(aImage);
 }
 
 NS_IMETHODIMP
 imgRequestProxyStatic::GetImagePrincipal(nsIPrincipal** aPrincipal) {
-  if (!mPrincipal) {
+  if (!mImagePrincipal) {
     return NS_ERROR_FAILURE;
   }
+  NS_ADDREF(*aPrincipal = mImagePrincipal);
+  return NS_OK;
+}
 
-  NS_ADDREF(*aPrincipal = mPrincipal);
-
+NS_IMETHODIMP
+imgRequestProxyStatic::GetTriggeringPrincipal(nsIPrincipal** aPrincipal) {
+  NS_IF_ADDREF(*aPrincipal = mTriggeringPrincipal);
   return NS_OK;
 }
 
@@ -1284,9 +1291,11 @@ imgRequestProxyStatic::GetHadCrossOriginRedirects(
 imgRequestProxy* imgRequestProxyStatic::NewClonedProxy() {
   nsCOMPtr<nsIPrincipal> currentPrincipal;
   GetImagePrincipal(getter_AddRefs(currentPrincipal));
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+  GetTriggeringPrincipal(getter_AddRefs(triggeringPrincipal));
   bool hadCrossOriginRedirects = true;
   GetHadCrossOriginRedirects(&hadCrossOriginRedirects);
   RefPtr<mozilla::image::Image> image = GetImage();
-  return new imgRequestProxyStatic(image, currentPrincipal,
+  return new imgRequestProxyStatic(image, currentPrincipal, triggeringPrincipal,
                                    hadCrossOriginRedirects);
 }
