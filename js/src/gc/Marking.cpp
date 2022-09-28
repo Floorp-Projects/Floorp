@@ -15,6 +15,7 @@
 #include <type_traits>
 
 #include "gc/GCInternals.h"
+#include "gc/TraceKind.h"
 #include "jit/JitCode.h"
 #include "js/GCTypeMacros.h"  // JS_FOR_EACH_PUBLIC_{,TAGGED_}GC_POINTER_TYPE
 #include "js/SliceBudget.h"
@@ -1151,31 +1152,6 @@ template <typename S, typename T>
 void js::GCMarker::markAndTraverseEdge(S source, const T& thing) {
   ApplyGCThingTyped(
       thing, [this, source](auto t) { this->markAndTraverseEdge(source, t); });
-}
-
-namespace {
-
-template <typename T>
-struct TraceKindCanBeGray {};
-#define EXPAND_TRACEKIND_DEF(_, type, canBeGray, _1) \
-  template <>                                        \
-  struct TraceKindCanBeGray<type> {                  \
-    static constexpr bool value = canBeGray;         \
-  };
-JS_FOR_EACH_TRACEKIND(EXPAND_TRACEKIND_DEF)
-#undef EXPAND_TRACEKIND_DEF
-
-}  // namespace
-
-struct TraceKindCanBeGrayFunctor {
-  template <typename T>
-  bool operator()() {
-    return TraceKindCanBeGray<T>::value;
-  }
-};
-
-static bool TraceKindCanBeMarkedGray(JS::TraceKind kind) {
-  return DispatchTraceKindTyped(TraceKindCanBeGrayFunctor(), kind);
 }
 
 template <typename T>
@@ -2376,7 +2352,7 @@ bool js::gc::IsMarkedInternal(JSRuntime* rt, T* thing) {
   }
 #endif
 
-  return !zone->isGCMarking() || cell->isMarkedAny();
+  return !zone->isGCMarking() || TenuredThingIsMarkedAny(thing);
 }
 
 template <typename T>
@@ -2404,7 +2380,7 @@ bool js::gc::IsAboutToBeFinalizedInternal(T* thing) {
   }
 #endif
 
-  return zone->isGCSweeping() && !cell->isMarkedAny();
+  return zone->isGCSweeping() && !TenuredThingIsMarkedAny(thing);
 }
 
 template <typename T>

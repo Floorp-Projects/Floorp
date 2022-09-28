@@ -9,6 +9,7 @@
 
 #include "vm/PropMap.h"
 
+#include "gc/Cell.h"
 #include "gc/Zone.h"
 #include "vm/JSContext.h"
 
@@ -223,7 +224,7 @@ inline void SharedPropMap::sweep(JS::GCContext* gcx) {
   MOZ_ASSERT_IF(hasPrevious(), asLinked()->previous()->zone() == zone());
 
   SharedPropMapAndIndex parent = treeDataRef().parent;
-  if (!parent.isNone() && parent.map()->isMarkedAny()) {
+  if (!parent.isNone() && TenuredThingIsMarkedAny(parent.map())) {
     parent.map()->removeChild(gcx, this);
   }
 }

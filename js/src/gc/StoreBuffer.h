@@ -16,6 +16,7 @@
 #include "ds/BitArray.h"
 #include "ds/LifoAlloc.h"
 #include "gc/Nursery.h"
+#include "gc/TraceKind.h"
 #include "js/AllocPolicy.h"
 #include "js/UniquePtr.h"
 #include "threading/Mutex.h"
@@ -31,26 +32,6 @@ extern bool CurrentThreadIsGCMarking();
 #endif
 
 namespace gc {
-
-// Map from all trace kinds to the base GC type.
-template <JS::TraceKind kind>
-struct MapTraceKindToType {};
-
-#define DEFINE_TRACE_KIND_MAP(name, type, _, _1)   \
-  template <>                                      \
-  struct MapTraceKindToType<JS::TraceKind::name> { \
-    using Type = type;                             \
-  };
-JS_FOR_EACH_TRACEKIND(DEFINE_TRACE_KIND_MAP);
-#undef DEFINE_TRACE_KIND_MAP
-
-// Map from a possibly-derived type to the base GC type.
-template <typename T>
-struct BaseGCType {
-  using type =
-      typename MapTraceKindToType<JS::MapTypeToTraceKind<T>::kind>::Type;
-  static_assert(std::is_base_of_v<type, T>, "Failed to find base type");
-};
 
 class Arena;
 class ArenaCellSet;

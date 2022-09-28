@@ -13,9 +13,9 @@
 #include <type_traits>
 
 #include "gc/Heap.h"
+#include "gc/TraceKind.h"
 #include "js/GCAnnotations.h"
 #include "js/shadow/Zone.h"  // JS::shadow::Zone
-#include "js/TraceKind.h"
 #include "js/TypeDecls.h"
 
 namespace JS {
@@ -857,6 +857,20 @@ class alignas(gc::CellAlignBytes) TenuredCellWithGCPointer
     return offsetof(TenuredCellWithGCPointer, header_);
   }
 };
+
+// Check whether a typed GC thing is marked at all. Doesn't check gray bits for
+// kinds that can't be marked gray.
+template <typename T>
+static inline bool TenuredThingIsMarkedAny(T* thing) {
+  using BaseT = typename BaseGCType<T>::type;
+  TenuredCell* cell = &thing->asTenured();
+  if constexpr (TraceKindCanBeGray<BaseT>::value) {
+    return cell->isMarkedAny();
+  } else {
+    MOZ_ASSERT(!cell->isMarkedGray());
+    return cell->isMarkedBlack();
+  }
+}
 
 } /* namespace gc */
 } /* namespace js */
