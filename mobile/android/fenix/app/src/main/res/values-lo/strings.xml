@@ -1282,6 +1282,10 @@
 
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">ເລືອກການຈັດວາງແຖບເຄື່ອງມືຂອງທ່ານ</string>
+    <!-- text for the toolbar position card description -->
+    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">ວາງແຖບເຄື່ອງມືໃຫ້ເຂົ້າເຖິງໄດ້ງ່າຍ. ຮັກສາມັນຢູ່ລຸ່ມ, ຫຼືຍ້າຍມັນໄປເທິງ.</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">ຮັກສາມັນຢູ່ລຸ່ມ, ຫຼືຍ້າຍມັນໄປເທິງ.</string>
     <!-- text for the privacy notice onboarding card header -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">ຄວາມເປັນສ່ວນຕົວຂອງທ່ານ</string>
     <!-- Text for the privacy notice onboarding card header -->
@@ -1769,6 +1773,8 @@
     <string name="dialog_delete_negative">ຍົກເລີກ</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">ທາງເລືອກການເຂົ້າສູ່ລະບົບ</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">ຊ່ອງຂໍ້ຄວາມທີ່ສາມາດແກ້ໄຂໄດ້ສໍາລັບຊື່ຜູ້ໃຊ້ຂອງການເຂົ້າສູ່ລະບົບ.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">ຊ່ອງຂໍ້ຄວາມທີ່ສາມາດແກ້ໄຂໄດ້ສໍາລັບລະຫັດຜ່ານຂອງການເຂົ້າສູ່ລະບົບ.</string>
     <!--  The button description to save changes to an edited login. -->

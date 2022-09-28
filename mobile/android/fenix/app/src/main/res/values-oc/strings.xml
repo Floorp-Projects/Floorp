@@ -284,10 +284,14 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Fasètz coneissença amb vòstra pagina d’acuèlh personalizada. Onglets recents, marcapaginas e resultats de recèrca apreissaràn aicí.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">La benvenguda a Internet independent</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Benvengut dins un Internet mai personal</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Mai de colors. Melhora confidencialitat. Meteis engatjament per las personas abans lo profièch.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Basculatz del mobil a l’ordenador e invèrsament</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">Bascular d’ecran es mai facil que jamai</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Tornatz ont èretz amb los onglets d’autres aparelhs que figuran ara per la pagina d’acuèlh.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -388,8 +392,6 @@
     <string name="preferences_gestures">Gèstes</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personalizacion</string>
-    <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Sincronizatz los marcapaginas, l’istoric e encara mai amb vòstre compte Firefox.</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Connectatz-vos per sincronizar onglets, marcapaginas, senhals e plan mai encara.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -497,8 +499,17 @@
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title">Edicion limitada</string>
 
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">La colleccion novèla de Voses independentas. %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">La colleccion novèla de Voses independentas.</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">Ensajatz de colors novèlas</string>
+
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Causissètz un fons que vos representa.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Exploratz mai de fonzes d’ecran</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -582,8 +593,6 @@
     <string name="preference_experiments_summary_2">Permet a Mozilla d’installar e lançar estudis</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Activar la sincronizacion</string>
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">Sincronizar e enregistrar vòstras donadas</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -803,9 +812,6 @@
     <string name="delete_from_history">Suprimir de l’istoric</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (mòde privat)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Autres dubèrts</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1220,8 +1226,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Sortir</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Aquò suprimirà totas las donadas de navegacion.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Periòde de suprimir</string>
     <!-- Body text of a delete browsing data dialog. -->
@@ -1259,8 +1263,14 @@
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">La benvenguda a %s !</string>
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">Benvengut dins un Internet melhor</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">Un navegador concebut per las gents, pas per far de profièches.</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Sincronizar Firefox entre vòstres aparelhs</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Tornatz ont èretz</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Importatz vòstres marcapaginas, vòstre istoric e vòstres senhals dins %1$s sus aqueste aparelh.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1271,8 +1281,12 @@
     <string name="onboarding_firefox_account_sync_is_on">Sincro. activada</string>
     <!-- text for the tracking protection onboarding card header -->
     <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Confidencialitat totjorn renfortida</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Proteccion de la vida privada per defaut</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s empacha automaticament las entrepresas de vos pistar secrètament pel web.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Embarcant una proteccion totala contra los cookies per empachar los traçadors d’utilizar de cookies per vos pistar de site en site.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Estandard (per defaut)</string>
     <!-- text for standard blocking option button description -->
@@ -1285,14 +1299,22 @@
     <string name="onboarding_toolbar_placement_header_1">Causissètz ont conhar la barra d’aisinas</string>
     <!-- text for the toolbar position card description -->
     <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Plaçatz la barra d’aisinas a portada de man. Daissatz-la enbàs o ennaut.</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Gardatz-la enbàs o desplaçatz-la ennaut.</string>
     <!-- text for the privacy notice onboarding card header -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Vòstra vida privada</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">Contrarotlatz vòstras donadas</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Concebèrem %s per vos donar lo contraròtle de çò que partejatz en linha e çò que partejatz amb nosautres.</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Firefox vos dòna lo contraròtle de çò que partejatz en linha e çò que partejatz amb nosautres.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Legissètz nòstra politica de confidencialitat</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">A punt per descobrir un Internet de pas creire ?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Començar de navegar</string>
 
