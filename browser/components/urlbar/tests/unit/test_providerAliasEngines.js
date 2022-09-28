@@ -6,19 +6,8 @@
  * browser/components/urlbar/tests/browser/browser_tokenAlias.js for tests of
  * the token alias list (i.e. showing all aliased engines on a "@" query).
  */
-add_task(async function setup() {
-  // Install a test engine.
-  let engine = await addTestSuggestionsEngine();
 
-  let oldDefaultEngine = await Services.search.getDefault();
-  registerCleanupFunction(async () => {
-    Services.search.setDefault(oldDefaultEngine);
-    Services.prefs.clearUserPref("browser.urlbar.suggest.searches");
-    Services.prefs.clearUserPref("keyword.enabled");
-  });
-  Services.search.setDefault(engine);
-  Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
-});
+testEngine_setup();
 
 // Basic test that uses two engines, a GET engine and a POST engine, neither
 // providing search suggestions.

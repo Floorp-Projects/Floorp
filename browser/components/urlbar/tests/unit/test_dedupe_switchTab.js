@@ -3,20 +3,7 @@
 
 "use strict";
 
-add_task(async function setup() {
-  let engine = await addTestSuggestionsEngine();
-  let oldDefaultEngine = await Services.search.getDefault();
-
-  registerCleanupFunction(async () => {
-    Services.search.setDefault(oldDefaultEngine);
-    Services.prefs.clearUserPref("browser.urlbar.suggest.searches");
-    await cleanupPlaces();
-  });
-
-  // Install a test engine.
-  Services.search.setDefault(engine);
-  Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
-});
+testEngine_setup();
 
 add_task(async function test_deduplication_for_switch_tab() {
   // Set up Places to think the tab is open locally.

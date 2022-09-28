@@ -6,14 +6,7 @@
  * Test for restrictions set through UrlbarQueryContext.sources.
  */
 
-add_task(async function setup() {
-  let engine = await addTestSuggestionsEngine();
-  let oldDefaultEngine = await Services.search.getDefault();
-  Services.search.setDefault(engine);
-  registerCleanupFunction(async () =>
-    Services.search.setDefault(oldDefaultEngine)
-  );
-});
+testEngine_setup();
 
 add_task(async function test_restrictions() {
   await PlacesTestUtils.addVisits([
