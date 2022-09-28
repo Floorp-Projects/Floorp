@@ -7,6 +7,7 @@
 #include "gc/GCParallelTask.h"
 
 #include "mozilla/Maybe.h"
+#include "mozilla/TimeStamp.h"
 
 #include "gc/GCContext.h"
 #include "gc/GCInternals.h"
@@ -116,7 +117,7 @@ void js::GCParallelTask::joinNonIdleTask(Maybe<TimeStamp> deadline,
   while (!isFinished(lock)) {
     TimeDuration timeout = TimeDuration::Forever();
     if (deadline) {
-      TimeStamp now = ReallyNow();
+      TimeStamp now = TimeStamp::Now();
       if (*deadline <= now) {
         break;
       }
@@ -139,7 +140,7 @@ void js::GCParallelTask::cancelDispatchedTask(AutoLockHelperThreadState& lock) {
 }
 
 static inline TimeDuration TimeSince(TimeStamp prev) {
-  TimeStamp now = ReallyNow();
+  TimeStamp now = TimeStamp::Now();
   // Sadly this happens sometimes.
   MOZ_ASSERT(now >= prev);
   if (now < prev) {
@@ -195,7 +196,7 @@ void GCParallelTask::runTask(JS::GCContext* gcx,
   // allowed to GC.
   JS::AutoSuppressGCAnalysis nogc;
 
-  TimeStamp timeStart = ReallyNow();
+  TimeStamp timeStart = TimeStamp::Now();
   run(lock);
   duration_ = TimeSince(timeStart);
 }

@@ -340,7 +340,7 @@ void GCRuntime::sweepBackgroundThings(ZoneList& zones) {
     Zone* zone = zones.removeFront();
     MOZ_ASSERT(zone->isGCFinished());
 
-    TimeStamp startTime = ReallyNow();
+    TimeStamp startTime = TimeStamp::Now();
 
     Arena* emptyArenas = zone->arenas.takeSweptEmptyArenas();
 
@@ -374,7 +374,7 @@ void GCRuntime::sweepBackgroundThings(ZoneList& zones) {
     }
 
     // Record time spent sweeping this zone.
-    TimeStamp endTime = ReallyNow();
+    TimeStamp endTime = TimeStamp::Now();
     zone->perZoneGCTime += endTime - startTime;
   }
 }
