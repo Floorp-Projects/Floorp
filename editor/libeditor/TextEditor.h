@@ -414,14 +414,14 @@ class TextEditor final : public EditorBase,
    * @return                    If aInsertionString is truncated, it returns "as
    *                            handled", else "as ignored."
    */
-  EditActionResult MaybeTruncateInsertionStringForMaxLength(
+  Result<EditActionResult, nsresult> MaybeTruncateInsertionStringForMaxLength(
       nsAString& aInsertionString);
 
   /**
    * InsertLineFeedCharacterAtSelection() inserts a linefeed character at
    * selection.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditActionResult, nsresult>
   InsertLineFeedCharacterAtSelection();
 
   /**
@@ -446,9 +446,10 @@ class TextEditor final : public EditorBase,
    */
   void HandleNewLinesInStringForSingleLineEditor(nsString& aString) const;
 
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult HandleInsertText(
-      EditSubAction aEditSubAction, const nsAString& aInsertionString,
-      SelectionHandling aSelectionHandling) final;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditActionResult, nsresult>
+  HandleInsertText(EditSubAction aEditSubAction,
+                   const nsAString& aInsertionString,
+                   SelectionHandling aSelectionHandling) final;
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertDroppedDataTransferAsAction(
       AutoEditActionDataSetter& aEditActionData,
@@ -463,7 +464,7 @@ class TextEditor final : public EditorBase,
    *       needs to check if the editor is still available even if this returns
    *       NS_OK.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditActionResult, nsresult>
   HandleDeleteSelectionInternal(nsIEditor::EDirection aDirectionAndAmount,
                                 nsIEditor::EStripWrappers aStripWrappers);
 
@@ -473,7 +474,7 @@ class TextEditor final : public EditorBase,
    * @param aDirectionAndAmount Direction of the deletion.
    * @param aStripWrappers      Must be nsIEditor::eNoStrip.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditActionResult, nsresult>
   HandleDeleteSelection(nsIEditor::EDirection aDirectionAndAmount,
                         nsIEditor::EStripWrappers aStripWrappers) final;
 
@@ -484,7 +485,7 @@ class TextEditor final : public EditorBase,
    * the result is marked as "handled".  Otherwise, the caller needs to
    * compute it with another way.
    */
-  EditActionResult ComputeValueFromTextNodeAndBRElement(
+  Result<EditActionResult, nsresult> ComputeValueFromTextNodeAndBRElement(
       nsAString& aValue) const;
 
   /**
@@ -492,7 +493,7 @@ class TextEditor final : public EditorBase,
    * and `<textarea>.value` to aValue without transaction.  This must be
    * called only when it's not `HTMLEditor` and undo/redo is disabled.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditActionResult, nsresult>
   SetTextWithoutTransaction(const nsAString& aValue);
 
   /**

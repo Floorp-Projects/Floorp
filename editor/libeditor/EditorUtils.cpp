@@ -37,32 +37,8 @@ using namespace dom;
  *****************************************************************************/
 
 EditActionResult& EditActionResult::operator|=(
-    const Result<MoveNodeResult, nsresult>& aMoveNodeResult) {
-  mHandled |= aMoveNodeResult.isOk() && aMoveNodeResult.inspect().Handled();
-
-  // If one of the result is NS_ERROR_EDITOR_DESTROYED, use it since it's
-  // the most important error code for editor.
-  if (EditorDestroyed() ||
-      (aMoveNodeResult.isErr() &&
-       aMoveNodeResult.inspectErr() == NS_ERROR_EDITOR_DESTROYED)) {
-    mRv = NS_ERROR_EDITOR_DESTROYED;
-    return *this;
-  }
-
-  // If one of the results is error, return error.
-  if (Failed() || aMoveNodeResult.isErr()) {
-    // If both failed and the error codes are same, just return.
-    if (Failed() && aMoveNodeResult.isErr() &&
-        mRv == aMoveNodeResult.inspectErr()) {
-      return *this;
-    }
-    // If the error codes is different or one of them succeeded, use the general
-    // error code.
-    mRv = NS_ERROR_FAILURE;
-    return *this;
-  }
-  // Otherwise, use general success code.
-  mRv = NS_OK;
+    const MoveNodeResult& aMoveNodeResult) {
+  mHandled |= aMoveNodeResult.Handled();
   return *this;
 }
 

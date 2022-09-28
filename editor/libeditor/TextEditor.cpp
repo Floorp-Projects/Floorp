@@ -420,11 +420,14 @@ nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
 
   if (!IsIMEComposing() && !IsUndoRedoEnabled() &&
       GetEditAction() != EditAction::eReplaceText && mMaxTextLength < 0) {
-    EditActionResult result = SetTextWithoutTransaction(aString);
-    if (result.Failed() || result.Canceled() || result.Handled()) {
-      NS_WARNING_ASSERTION(result.Succeeded(),
-                           "TextEditor::SetTextWithoutTransaction() failed");
-      return result.Rv();
+    Result<EditActionResult, nsresult> result =
+        SetTextWithoutTransaction(aString);
+    if (MOZ_UNLIKELY(result.isErr())) {
+      NS_WARNING("TextEditor::SetTextWithoutTransaction() failed");
+      return result.unwrapErr();
+    }
+    if (!result.inspect().Ignored()) {
+      return NS_OK;
     }
   }
 
