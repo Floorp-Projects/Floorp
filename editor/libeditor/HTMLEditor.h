@@ -746,7 +746,7 @@ class HTMLEditor final : public EditorBase,
    * @return                    The new <br> node and suggesting point to put
    *                            caret which respects aSelect.
    */
-  MOZ_CAN_RUN_SCRIPT CreateElementResult InsertBRElement(
+  MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult> InsertBRElement(
       WithTransaction aWithTransaction, const EditorDOMPoint& aPointToInsert,
       EDirection aSelect = eNone);
 
@@ -877,7 +877,7 @@ class HTMLEditor final : public EditorBase,
    * Helper routines for font size changing.
    */
   enum class FontSize { incr, decr };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   SetFontSizeOnTextNode(Text& aTextNode, uint32_t aStartOffset,
                         uint32_t aEndOffset, FontSize aIncrementOrDecrement);
 
@@ -1156,8 +1156,9 @@ class HTMLEditor final : public EditorBase,
    * @return                    If succeeded, returns new <br> element and
    *                            candidate caret point.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult HandleInsertBRElement(
-      const EditorDOMPoint& aPointToBreak, const Element& aEditingHost);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
+  HandleInsertBRElement(const EditorDOMPoint& aPointToBreak,
+                        const Element& aEditingHost);
 
   /**
    * HandleInsertLinefeed() inserts a linefeed character into aInsertToBreak.
@@ -1305,7 +1306,8 @@ class HTMLEditor final : public EditorBase,
    * @return                    The created new element node and candidate caret
    *                            position.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult CreateAndInsertElement(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
+  CreateAndInsertElement(
       WithTransaction aWithTransaction, nsAtom& aTagName,
       const EditorDOMPoint& aPointToInsert,
       const InitializeInsertingElement& aInitializer = DoNothingForNewElement);
@@ -1356,7 +1358,7 @@ class HTMLEditor final : public EditorBase,
    *                            suggesting point to put caret.
    */
   enum class BRElementNextToSplitPoint { Keep, Delete };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   InsertElementWithSplittingAncestorsWithTransaction(
       nsAtom& aTagName, const EditorDOMPoint& aPointToInsert,
       BRElementNextToSplitPoint aBRElementNextToSplitPoint,
@@ -1417,7 +1419,7 @@ class HTMLEditor final : public EditorBase,
    *                            The caret suggestion may be unset if there is
    *                            no suggestion.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   WrapContentsInBlockquoteElementsWithTransaction(
       const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
       const Element& aEditingHost);
@@ -1456,7 +1458,7 @@ class HTMLEditor final : public EditorBase,
    * @return                    The latest created new block element and a
    *                            suggest point to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   CreateOrChangeBlockContainerElement(
       nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents, nsAtom& aBlockTag,
       const Element& aEditingHost);
@@ -1612,8 +1614,9 @@ class HTMLEditor final : public EditorBase,
    *                            New list element may be aListElement if its
    *                            tag name is same as aNewListTag.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult ChangeListElementType(
-      Element& aListElement, nsAtom& aListType, nsAtom& aItemType);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
+  ChangeListElementType(Element& aListElement, nsAtom& aListType,
+                        nsAtom& aItemType);
 
   /**
    * ConvertContentAroundRangesToList() converts contents around aRanges to
@@ -1742,7 +1745,7 @@ class HTMLEditor final : public EditorBase,
    *                            with new element.
    * @param aTagName            The name of new element node.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   ReplaceContainerAndCloneAttributesWithTransaction(Element& aOldContainer,
                                                     nsAtom& aTagName) {
     return ReplaceContainerWithTransactionInternal(
@@ -1761,7 +1764,7 @@ class HTMLEditor final : public EditorBase,
    * @param aAttribute          Attribute name to be set to the new element.
    * @param aAttributeValue     Attribute value to be set to aAttribute.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   ReplaceContainerWithTransaction(Element& aOldContainer, nsAtom& aTagName,
                                   nsAtom& aAttribute,
                                   const nsAString& aAttributeValue) {
@@ -1778,7 +1781,7 @@ class HTMLEditor final : public EditorBase,
    *                            with new element.
    * @param aTagName            The name of new element node.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   ReplaceContainerWithTransaction(Element& aOldContainer, nsAtom& aTagName) {
     return ReplaceContainerWithTransactionInternal(
         aOldContainer, aTagName, *nsGkAtoms::_empty, u""_ns, false);
@@ -1807,7 +1810,7 @@ class HTMLEditor final : public EditorBase,
    *                            aContent and be inserted into where aContent
    *                            was.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   InsertContainerWithTransaction(nsIContent& aContentToBeWrapped,
                                  nsAtom& aWrapperTagName) {
     return InsertContainerWithTransactionInternal(
@@ -1831,7 +1834,7 @@ class HTMLEditor final : public EditorBase,
    *                            element.
    * @param aAttributeValue     Value to be set to aAttribute.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   InsertContainerWithTransaction(nsIContent& aContentToBeWrapped,
                                  nsAtom& aWrapperTagName, nsAtom& aAttribute,
                                  const nsAString& aAttributeValue) {
@@ -2475,7 +2478,7 @@ class HTMLEditor final : public EditorBase,
    * first child of aRemovingContainerElement if it will not be start of a
    * hard line after removing aRemovingContainerElement.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   EnsureHardLineBeginsWithFirstChildOf(Element& aRemovingContainerElement);
 
   /**
@@ -2483,7 +2486,7 @@ class HTMLEditor final : public EditorBase,
    * child of aRemovingContainerElement if it will not be end of a hard line
    * after removing aRemovingContainerElement.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   EnsureHardLineEndsWithLastChildOf(Element& aRemovingContainerElement);
 
   /**
@@ -2546,7 +2549,7 @@ class HTMLEditor final : public EditorBase,
    * @return                    New <div> element which has only a padding <br>
    *                            element and is styled to align contents.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   InsertDivElementToAlignContents(const EditorDOMPoint& aPointToInsert,
                                   const nsAString& aAlignType,
                                   const Element& aEditingHost);
@@ -2562,7 +2565,8 @@ class HTMLEditor final : public EditorBase,
    *                            caret and candidate position which may be
    *                            outside the <div> element.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult AlignNodesAndDescendants(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
+  AlignNodesAndDescendants(
       nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
       const nsAString& aAlignType, const Element& aEditingHost);
 
@@ -3197,10 +3201,11 @@ class HTMLEditor final : public EditorBase,
    * @param aSplitAtEdges     Splitting can result in empty nodes?
    */
   template <typename NodeType>
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateNodeResultBase<NodeType>
-  InsertNodeIntoProperAncestorWithTransaction(
-      NodeType& aContent, const EditorDOMPoint& aPointToInsert,
-      SplitAtEdges aSplitAtEdges);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT
+      Result<CreateNodeResultBase<NodeType>, nsresult>
+      InsertNodeIntoProperAncestorWithTransaction(
+          NodeType& aContent, const EditorDOMPoint& aPointToInsert,
+          SplitAtEdges aSplitAtEdges);
 
   /**
    * InsertTextWithQuotationsInternal() replaces selection with new content.
@@ -3229,7 +3234,7 @@ class HTMLEditor final : public EditorBase,
    * @param aCloneAllAttributes If true, all attributes of aOldContainer will
    *                            be copied to the new element.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   ReplaceContainerWithTransactionInternal(Element& aElement, nsAtom& aTagName,
                                           nsAtom& aAttribute,
                                           const nsAString& aAttributeValue,
@@ -3253,7 +3258,7 @@ class HTMLEditor final : public EditorBase,
    *                            element.
    * @param aAttributeValue     Value to be set to aAttribute.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   InsertContainerWithTransactionInternal(nsIContent& aContentToBeWrapped,
                                          nsAtom& aWrapperTagName,
                                          nsAtom& aAttribute,
@@ -3507,7 +3512,7 @@ class HTMLEditor final : public EditorBase,
    *                                    start of the last inserted cell element
    *                                    as a point to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   InsertTableCellsWithTransaction(const EditorDOMPoint& aPointToInsert,
                                   int32_t aNumberOfCellsToInsert);
 

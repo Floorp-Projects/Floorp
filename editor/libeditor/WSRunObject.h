@@ -1473,9 +1473,9 @@ class WhiteSpaceVisibilityKeeper final {
    * @return                If succeeded, returns the new <br> element and
    *                        point to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static CreateElementResult InsertBRElement(
-      HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToInsert,
-      const Element& aEditingHost);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<CreateElementResult, nsresult>
+  InsertBRElement(HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToInsert,
+                  const Element& aEditingHost);
 
   /**
    * InsertText() inserts aStringToInsert to aPointToInsert and makes any needed
