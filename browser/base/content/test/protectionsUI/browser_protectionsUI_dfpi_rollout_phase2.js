@@ -39,12 +39,6 @@ function cleanup() {
   Services.prefs.clearUserPref(ROLLOUT_PREF_PHASE1);
   Services.prefs.clearUserPref(ROLLOUT_PREF_PHASE1_PREFERENCES);
   Services.prefs.clearUserPref(CB_CATEGORY_PREF);
-
-  // Same for the tcpByDefault feature probe.
-  Services.telemetry.scalarSet(
-    "privacy.dfpi_rollout_tcpByDefault_feature",
-    false
-  );
 }
 
 /**
@@ -61,19 +55,6 @@ async function waitForAndAssertPrefState(pref, expectedValue, message) {
     is(value, expectedValue, message);
     return true;
   });
-}
-
-function testTelemetryState(
-  expectedValueOptIn,
-  expectedValueTCPByDefault,
-  message = "Scalars should have correct value"
-) {
-  TelemetryTestUtils.assertScalar(
-    TelemetryTestUtils.getProcessScalars("parent"),
-    "privacy.dfpi_rollout_tcpByDefault_feature",
-    expectedValueTCPByDefault,
-    message
-  );
 }
 
 // Copied from browser/components/preferences/tests/head.js
@@ -167,8 +148,6 @@ add_task(async function test_phase2() {
     "TCP preferences section should not be visible initially."
   );
 
-  testTelemetryState(2, false, "Telemetry should indicate not enrolled.");
-
   let cookieBehaviorChange = waitForAndAssertPrefState(
     COOKIE_BEHAVIOR_PREF,
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
@@ -206,8 +185,6 @@ add_task(async function test_phase2() {
     "Preferences section should still not be visible."
   );
 
-  testTelemetryState(2, true, "Telemetry should indicate phase 2");
-
   await doEnrollmentCleanup();
   cleanup();
 });
@@ -244,8 +221,6 @@ add_task(async function test_phase1_opt_out_to_phase2() {
     "TCP preferences section should not be visible initially."
   );
 
-  testTelemetryState(2, false, "Telemetry should indicate not enrolled.");
-
   info("Set the phase 1 rollout pref indicating user opt-out state.");
   // This simulates the prefs set when the user opts out via the messaging
   // system modal.
@@ -257,8 +232,6 @@ add_task(async function test_phase1_opt_out_to_phase2() {
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
     `After opt-out TCP is still disabled by default.`
   );
-
-  testTelemetryState(0, false, "Telemetry indicates opt-out.");
 
   ok(
     !NimbusFeatures.tcpByDefault.getVariable("enabled"),
@@ -302,8 +275,6 @@ add_task(async function test_phase1_opt_out_to_phase2() {
     "Preferences section should no longer be visible."
   );
 
-  testTelemetryState(0, true, "Telemetry should indicate phase 2.");
-
   await doEnrollmentCleanup();
   cleanup();
 });
@@ -340,8 +311,6 @@ add_task(async function test_phase1_opt_in_to_phase2() {
     "TCP preferences section should not be visible initially."
   );
 
-  testTelemetryState(2, false, "Telemetry should indicate not enrolled.");
-
   info("Set the phase 1 rollout pref indicator user opt-in state.");
   // This simulates the prefs set when the user opts-in via the messaging
   // system modal.
@@ -352,8 +321,6 @@ add_task(async function test_phase1_opt_in_to_phase2() {
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
     `TCP is enabled default.`
   );
-
-  testTelemetryState(1, false, "Telemetry indicates opt-in.");
 
   ok(
     !NimbusFeatures.tcpByDefault.getVariable("enabled"),
@@ -404,8 +371,6 @@ add_task(async function test_phase1_opt_in_to_phase2() {
     false,
     "Preferences section should still not be visible."
   );
-
-  testTelemetryState(1, true, "Telemetry should indicate phase 2.");
 
   info(
     "Changing opt-in choice after phase 2 enrollment should not disable TCP."
