@@ -51,14 +51,6 @@
   -moz-image-region: rect(0px, 160px, 32px, 128px)
 }
 
-#mainDeck {
-  padding-inline: 2px;
-}
-
-#mainDeck {
-  padding: 10px;
-}
-
 /* Misc */
 tree {
   margin: .5em;

@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#mainDeck {
+  padding: 10px;
+  min-height: 0;
+}
+
 #viewGroup > radio > .radio-label-box {
   -moz-box-orient: vertical;
   -moz-box-align: center;
