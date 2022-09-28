@@ -174,8 +174,7 @@ class Pickle {
   bool WriteString(const std::string& value);
   bool WriteWString(const std::wstring& value);
   bool WriteData(const char* data, uint32_t length);
-  bool WriteBytes(const void* data, uint32_t data_len,
-                  uint32_t alignment = sizeof(memberAlignmentType));
+  bool WriteBytes(const void* data, uint32_t data_len);
   // Takes ownership of data
   bool WriteBytesZeroCopy(void* data, uint32_t data_len, uint32_t capacity);
 
@@ -216,15 +215,13 @@ class Pickle {
  protected:
   uint32_t payload_size() const { return header_->payload_size; }
 
-  // Resizes the buffer for use when writing the specified amount of data. The
-  // location that the data should be written at is returned, or NULL if there
-  // was an error. Call EndWrite with the returned offset and the given length
-  // to pad out for the next write.
-  void BeginWrite(uint32_t length, uint32_t alignment);
+  // Resizes the buffer for use when writing the specified amount of data. Call
+  // EndWrite with the given length to pad out for the next write.
+  void BeginWrite(uint32_t length);
 
-  // Completes the write operation by padding the data with NULL bytes until it
-  // is padded. Should be paired with BeginWrite, but it does not necessarily
-  // have to be called after the data is written.
+  // Completes the write operation by padding the data with poison bytes. Should
+  // be paired with BeginWrite, but it does not necessarily have to be called
+  // after the data is written.
   void EndWrite(uint32_t length);
 
   // Round 'bytes' up to the next multiple of 'alignment'.  'alignment' must be
