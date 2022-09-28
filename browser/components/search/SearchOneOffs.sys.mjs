@@ -1073,7 +1073,17 @@ export class SearchOneOffs {
         button.engine = currentEngine;
       }
 
-      Services.search[engineType] = this._contextEngine;
+      if (isPrivateButton) {
+        Services.search.setDefaultPrivate(
+          this._contextEngine,
+          Ci.nsISearchService.CHANGE_REASON_USER_SEARCHBAR_CONTEXT
+        );
+      } else {
+        Services.search.setDefault(
+          this._contextEngine,
+          Ci.nsISearchService.CHANGE_REASON_USER_SEARCHBAR_CONTEXT
+        );
+      }
     }
   }
 

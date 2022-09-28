@@ -286,7 +286,10 @@ add_task(async function test_other_search_mode() {
   );
   defaultEngine.alias = "testalias";
   let oldDefaultEngine = await Services.search.getDefault();
-  Services.search.setDefault(defaultEngine);
+  Services.search.setDefault(
+    defaultEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -304,7 +307,10 @@ add_task(async function test_other_search_mode() {
   await UrlbarTestUtils.promisePopupClose(window, () => {
     EventUtils.synthesizeKey("KEY_Escape");
   });
-  Services.search.setDefault(oldDefaultEngine);
+  Services.search.setDefault(
+    oldDefaultEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 });
 
 let COMMANDS_TESTS = [

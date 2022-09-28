@@ -55,7 +55,10 @@ add_setup(async function() {
   let engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + "testEngine.xml"
   );
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   // First cleanup the form history in case other tests left things there.
   await new Promise((resolve, reject) => {
     info("cleanup the search history");
@@ -79,7 +82,10 @@ add_setup(async function() {
   textbox.value = kUserValue;
 
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(defaultEngine);
+    await Services.search.setDefault(
+      defaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     gCUITestUtils.removeSearchBar();
   });
 });

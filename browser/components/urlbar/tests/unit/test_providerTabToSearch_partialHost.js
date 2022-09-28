@@ -46,9 +46,15 @@ add_task(async function test() {
   });
   let engine = Services.search.getEngineByName("TestEngine");
   let defaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(defaultEngine);
+    await Services.search.setDefault(
+      defaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
   // Make sure the engine domain would be autofilled.
   await PlacesUtils.bookmarks.insert({

@@ -128,7 +128,8 @@ async function searchInSearchbar(inputText) {
 
 add_task(async function test_simpleQuery_no_attribution() {
   await Services.search.setDefault(
-    Services.search.getEngineByName("Simple Engine")
+    Services.search.getEngineByName("Simple Engine"),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -151,7 +152,10 @@ add_task(async function test_simpleQuery_no_attribution() {
 
   BrowserTestUtils.removeTab(tab);
 
-  await Services.search.setDefault(Services.search.getEngineByName("basic"));
+  await Services.search.setDefault(
+    Services.search.getEngineByName("basic"),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 });
 
 async function checkAttributionRecorded(actionFn, cleanupFn) {
@@ -370,7 +374,8 @@ add_task(async function test_searchbar_oneOff_click() {
   // For this test, set the other engine as default, so that we can select
   // the attribution engine as the first one in the one-offs.
   await Services.search.setDefault(
-    Services.search.getEngineByName("Simple Engine")
+    Services.search.getEngineByName("Simple Engine"),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -412,6 +417,9 @@ add_task(async function test_searchbar_oneOff_click() {
 
   BrowserTestUtils.removeTab(tab);
   // Set back the engine in case of other tests in this file.
-  await Services.search.setDefault(Services.search.getEngineByName("basic"));
+  await Services.search.setDefault(
+    Services.search.getEngineByName("basic"),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   gRequests = [];
 });

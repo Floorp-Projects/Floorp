@@ -59,12 +59,18 @@ add_task(async function init() {
   // Add a mock engine so we don't hit the network.
   await SearchTestUtils.installSearchExtension();
   let oldDefaultEngine = await Services.search.getDefault();
-  Services.search.setDefault(Services.search.getEngineByName("Example"));
+  Services.search.setDefault(
+    Services.search.getEngineByName("Example"),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit(SUGGESTIONS);
 
   registerCleanupFunction(() => {
-    Services.search.setDefault(oldDefaultEngine);
+    Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 });
 
@@ -1149,11 +1155,17 @@ async function withSuggestions(callback) {
     getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
   );
   let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   try {
     await callback(engine);
   } finally {
-    await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     await Services.search.removeEngine(engine);
     await SpecialPowers.popPrefEnv();
   }

@@ -55,14 +55,20 @@ add_setup(async function() {
   });
   const testEngine = Services.search.getEngineByName("Example");
   const originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(testEngine);
+  await Services.search.setDefault(
+    testEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   const oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
   Services.telemetry.setEventRecordingEnabled("navigation", true);
 
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(originalEngine);
+    await Services.search.setDefault(
+      originalEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     await PlacesUtils.history.clear();
 
     Services.telemetry.canRecordExtended = oldCanRecord;

@@ -246,7 +246,10 @@ add_task(async function init() {
     keyword: "@test",
   });
   let engine = Services.search.getEngineByName(TEST_DEFAULT_ENGINE_NAME);
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   await Services.search.moveEngine(engine, 0);
 
   for (let i = 0; i < 5; i++) {
@@ -259,7 +262,10 @@ add_task(async function init() {
   });
 
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     await PlacesUtils.history.clear();
     await PlacesUtils.keywords.remove(KEYWORD);
   });

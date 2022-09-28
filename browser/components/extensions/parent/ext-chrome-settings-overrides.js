@@ -205,7 +205,12 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
           item.value || item.initialValue
         );
         if (engine) {
-          Services.search.defaultEngine = engine;
+          await Services.search.setDefault(
+            engine,
+            action == "enable"
+              ? Ci.nsISearchService.CHANGE_REASON_ADDON_INSTALL
+              : Ci.nsISearchService.CHANGE_REASON_ADDON_UNINSTALL
+          );
         }
       } catch (e) {
         Cu.reportError(e);
@@ -384,8 +389,9 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
               "enable",
               extension.id
             );
-            Services.search.defaultEngine = Services.search.getEngineByName(
-              engineName
+            await Services.search.setDefault(
+              Services.search.getEngineByName(engineName),
+              Ci.nsISearchService.CHANGE_REASON_ADDON_INSTALL
             );
           }
           // For testing
@@ -453,7 +459,8 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       // In this case we do not show the prompt to the user.
       let item = await this.ensureSetting(engineName);
       await Services.search.setDefault(
-        Services.search.getEngineByName(item.value)
+        Services.search.getEngineByName(item.value),
+        Ci.nsISearchService.CHANGE_REASON_ADDON_INSTALL
       );
     } else if (
       ["ADDON_UPGRADE", "ADDON_DOWNGRADE", "ADDON_ENABLE"].includes(
@@ -500,7 +507,8 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
 
       if (control === "controlled_by_this_extension") {
         await Services.search.setDefault(
-          Services.search.getEngineByName(engineName)
+          Services.search.getEngineByName(engineName),
+          Ci.nsISearchService.CHANGE_REASON_ADDON_INSTALL
         );
       } else if (control === "controllable_by_this_extension") {
         if (skipEnablePrompt) {
@@ -510,8 +518,9 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
             "enable",
             extension.id
           );
-          Services.search.defaultEngine = Services.search.getEngineByName(
-            engineName
+          await Services.search.setDefault(
+            Services.search.getEngineByName(engineName),
+            Ci.nsISearchService.CHANGE_REASON_ADDON_INSTALL
           );
         } else if (extension.startupReason == "ADDON_ENABLE") {
           // This extension has precedence, but is not in control.  Ask the user.

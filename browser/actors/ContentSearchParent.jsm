@@ -477,7 +477,10 @@ let ContentSearch = {
   },
 
   _onMessageSetCurrentEngine({ data }) {
-    Services.search.defaultEngine = Services.search.getEngineByName(data);
+    Services.search.setDefault(
+      Services.search.getEngineByName(data),
+      Ci.nsISearchService.CHANGE_REASON_USER_SEARCHBAR
+    );
   },
 
   _onMessageManageEngines({ browser }) {
