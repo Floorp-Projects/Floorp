@@ -61,10 +61,6 @@ struct ParamTraits<mozilla::ipc::ActorHandle> {
     }
     return false;
   }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    aLog->append(StringPrintf(L"(%d)", aParam.mId));
-  }
 };
 
 template <>
@@ -74,10 +70,6 @@ struct ParamTraits<mozilla::ipc::UntypedEndpoint> {
   static void Write(MessageWriter* aWriter, paramType&& aParam);
 
   static bool Read(MessageReader* aReader, paramType* aResult);
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    aLog->append(StringPrintf(L"Endpoint"));
-  }
 };
 
 template <class PFooSide>

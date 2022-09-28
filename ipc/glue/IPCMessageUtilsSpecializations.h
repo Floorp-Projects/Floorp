@@ -111,13 +111,6 @@ struct ParamTraits<nsACString> {
 
     return aReader->ReadBytesInto(aResult->BeginWriting(), length);
   }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    if (aParam.IsVoid())
-      aLog->append(L"(NULL)");
-    else
-      aLog->append(UTF8ToWide(aParam.BeginReading()));
-  }
 };
 
 template <>
@@ -161,21 +154,6 @@ struct ParamTraits<nsAString> {
     aResult->SetLength(length);
 
     return aReader->ReadBytesInto(aResult->BeginWriting(), byteLength.value());
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    if (aParam.IsVoid())
-      aLog->append(L"(NULL)");
-    else {
-#ifdef WCHAR_T_IS_UTF16
-      aLog->append(reinterpret_cast<const wchar_t*>(aParam.BeginReading()));
-#else
-      uint32_t length = aParam.Length();
-      for (uint32_t index = 0; index < length; index++) {
-        aLog->push_back(std::wstring::value_type(aParam[index]));
-      }
-#endif
-    }
   }
 };
 
@@ -332,15 +310,6 @@ struct ParamTraits<nsTArray<E>> {
     }
   }
 
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    for (uint32_t index = 0; index < aParam.Length(); index++) {
-      if (index) {
-        aLog->append(L" ");
-      }
-      LogParam(aParam[index], aLog);
-    }
-  }
-
  private:
   // Length has already been written. Const overload.
   static void WriteValues(MessageWriter* aWriter, const paramType& aParam) {
@@ -380,10 +349,6 @@ struct ParamTraits<FallibleTArray<E>> {
 
     *aResult = std::move(temp);
     return true;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    LogParam(static_cast<const nsTArray<E>&>(aParam), aLog);
   }
 };
 
@@ -468,15 +433,6 @@ struct ParamTraits<mozilla::Vector<E, N, AP>> {
 
     return true;
   }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    for (uint32_t index = 0, len = aParam.length(); index < len; ++index) {
-      if (index) {
-        aLog->append(L" ");
-      }
-      LogParam(aParam[index], aLog);
-    }
-  }
 };
 
 template <typename E>
@@ -542,15 +498,6 @@ struct ParamTraits<std::vector<E>> {
 
     return true;
   }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    for (uint32_t index = 0, len = aParam.size(); index < len; ++index) {
-      if (index) {
-        aLog->append(L" ");
-      }
-      LogParam(aParam[index], aLog);
-    }
-  }
 };
 
 template <typename K, typename V>
@@ -595,10 +542,6 @@ struct ParamTraits<float> {
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return aReader->ReadBytesInto(aResult, sizeof(*aResult));
   }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    aLog->append(StringPrintf(L"%g", aParam));
-  }
 };
 
 template <>
@@ -629,15 +572,6 @@ struct ParamTraits<nsID> {
       if (!ReadParam(aReader, &(aResult->m3[i]))) return false;
 
     return true;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    aLog->append(L"{");
-    aLog->append(
-        StringPrintf(L"%8.8X-%4.4X-%4.4X-", aParam.m0, aParam.m1, aParam.m2));
-    for (unsigned int i = 0; i < mozilla::ArrayLength(aParam.m3); i++)
-      aLog->append(StringPrintf(L"%2.2X", aParam.m3[i]));
-    aLog->append(L"}");
   }
 };
 
@@ -700,10 +634,6 @@ struct ParamTraits<mozilla::dom::ipc::StructuredCloneData> {
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return aResult->ReadIPCParams(aReader);
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    LogParam(aParam.DataLength(), aLog);
   }
 };
 

@@ -282,9 +282,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
     header()->event_footer_size = size;
   }
 
-  // Used for async messages with no parameters.
-  static void Log(const Message* msg, std::wstring* l) {}
-
   static int HeaderSize() { return sizeof(Header); }
 
   // Figure out how big the message starting at range_start is. Returns 0 if
