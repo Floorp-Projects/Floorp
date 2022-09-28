@@ -11,6 +11,11 @@ interface nsIFile;
 interface nsIINIParser : nsISupports
 {
   /**
+   * Initializes an INI file from string data
+   */
+  void initFromString(in AUTF8String aData);
+
+  /**
    * Enumerates the [section]s available in the INI file.
    */
   nsIUTF8StringEnumerator getSections();
@@ -29,6 +34,7 @@ interface nsIINIParser : nsISupports
 [scriptable, uuid(b67bb24b-31a3-4a6a-a5d9-0485c9af5a04)]
 interface nsIINIParserWriter : nsISupports
 {
+
   /**
    * Set the value of a string for a particular section and key.
    */
@@ -38,6 +44,11 @@ interface nsIINIParserWriter : nsISupports
    * Write to the INI file.
    */
   void writeFile(in nsIFile aINIFile);
+
+  /**
+   * Return the formatted INI file contents
+   */
+  AUTF8String writeToString();
 };
 
 [scriptable, uuid(ccae7ea5-1218-4b51-aecb-c2d8ecd46af9)]
