@@ -9,9 +9,11 @@
 
 #include <cstdint>
 #include <map>
+#include <unordered_map>
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <vector>
 #include "ErrorList.h"
 #include "base/basictypes.h"
 #include "base/compiler_specific.h"
@@ -20,6 +22,8 @@
 #include "base/string_util.h"
 #include "build/build_config.h"
 #include "chrome/common/ipc_message.h"
+#include "mozilla/CheckedInt.h"
+#include "mozilla/IntegerRange.h"
 
 #if defined(OS_WIN)
 #  include <windows.h>
@@ -34,6 +38,7 @@ namespace mozilla::ipc {
 class IProtocol;
 template <typename P>
 struct IPDLParamTraits;
+class SharedMemory;
 
 // Implemented in ProtocolUtils.cpp
 MOZ_NEVER_INLINE void PickleFatalError(const char* aMsg, IProtocol* aActor);
@@ -298,6 +303,169 @@ static inline bool WARN_UNUSED_RESULT ReadParam(MessageReader* reader, P* p) {
   return ParamTraits<P>::Read(reader, p);
 }
 
+class MOZ_STACK_CLASS MessageBufferWriter {
+ public:
+  // Create a MessageBufferWriter to write `full_len` bytes into `writer`.
+  // If the length exceeds a threshold, a shared memory region may be used
+  // instead of including the data inline.
+  //
+  // NOTE: This does _NOT_ write out the length of the buffer.
+  // NOTE: Data written this way _MUST_ be read using `MessageBufferReader`.
+  MessageBufferWriter(MessageWriter* writer, uint32_t full_len);
+  ~MessageBufferWriter();
+
+  MessageBufferWriter(const MessageBufferWriter&) = delete;
+  MessageBufferWriter& operator=(const MessageBufferWriter&) = delete;
+
+  // Write `len` bytes from `data` into the message.
+  //
+  // Exactly `full_len` bytes should be written across multiple calls before the
+  // `MessageBufferWriter` is destroyed.
+  //
+  // WARNING: all writes (other than the last write) must be multiples of 4
+  // bytes in length. Not doing this will lead to padding being introduced into
+  // the payload and break things. This can probably be improved in the future
+  // with deeper integration between `MessageBufferWriter` and `Pickle`.
+  bool WriteBytes(const void* data, uint32_t len);
+
+ private:
+  MessageWriter* writer_;
+  RefPtr<mozilla::ipc::SharedMemory> shmem_;
+  char* buffer_ = nullptr;
+  uint32_t remaining_ = 0;
+};
+
+class MOZ_STACK_CLASS MessageBufferReader {
+ public:
+  // Create a MessageBufferReader to read `full_len` bytes from `reader` which
+  // were written using `MessageBufferWriter`.
+  //
+  // NOTE: This may consume a shared memory region from the message, meaning
+  // that the same data cannot be read multiple times.
+  // NOTE: Data read this way _MUST_ be written using `MessageBufferWriter`.
+  MessageBufferReader(MessageReader* reader, uint32_t full_len);
+  ~MessageBufferReader();
+
+  MessageBufferReader(const MessageBufferReader&) = delete;
+  MessageBufferReader& operator=(const MessageBufferReader&) = delete;
+
+  // Read `count` bytes from the message into `data`.
+  //
+  // Exactly `full_len` bytes should be read across multiple calls before the
+  // `MessageBufferReader` is destroyed.
+  //
+  // WARNING: all reads (other than the last read) must be multiples of 4 bytes
+  // in length. Not doing this will lead to bytes being skipped in the payload
+  // and break things. This can probably be improved in the future with deeper
+  // integration between `MessageBufferReader` and `Pickle`.
+  [[nodiscard]] bool ReadBytesInto(void* data, uint32_t len);
+
+ private:
+  MessageReader* reader_;
+  RefPtr<mozilla::ipc::SharedMemory> shmem_;
+  const char* buffer_ = nullptr;
+  uint32_t remaining_ = 0;
+};
+
+// Whether or not it is safe to serialize the given type using
+// `WriteBytesOrShmem`.
+template <typename P>
+constexpr bool kUseWriteBytes =
+    !std::is_same_v<std::remove_const_t<std::remove_reference_t<P>>, bool> &&
+    (std::is_integral_v<std::remove_const_t<std::remove_reference_t<P>>> ||
+     std::is_floating_point_v<std::remove_const_t<std::remove_reference_t<P>>>);
+
+/**
+ * Helper for writing a contiguous sequence (such as for a string or array) into
+ * a message, with optimizations for basic integral and floating point types.
+ *
+ * Integral types will be copied into shared memory if the sequence exceeds 64k
+ * bytes in size.
+ *
+ * Values written with this method must be read with `ReadSequenceParam`.
+ *
+ * The type parameter specifies the semantics to use, and should generally
+ * either be `P&&` or `const P&`. The constness of the `data` argument should
+ * match this parameter.
+ */
+template <typename P>
+void WriteSequenceParam(MessageWriter* writer, std::remove_reference_t<P>* data,
+                        size_t length) {
+  mozilla::CheckedUint32 ipc_length(length);
+  if (!ipc_length.isValid()) {
+    writer->FatalError("invalid length passed to WriteSequenceParam");
+    return;
+  }
+  writer->WriteUInt32(ipc_length.value());
+
+  if constexpr (kUseWriteBytes<P>) {
+    mozilla::CheckedUint32 byte_length =
+        ipc_length * sizeof(std::remove_reference_t<P>);
+    if (!byte_length.isValid()) {
+      writer->FatalError("invalid byte length in WriteSequenceParam");
+      return;
+    }
+    MessageBufferWriter buf_writer(writer, byte_length.value());
+    buf_writer.WriteBytes(data, byte_length.value());
+  } else {
+    auto* end = data + length;
+    for (auto* it = data; it != end; ++it) {
+      WriteParam(writer, std::forward<P>(*it));
+    }
+  }
+}
+
+/**
+ * Helper for reading a contiguous sequence (such as a string or array) into a
+ * message which was previously written using `WriteSequenceParam`.
+ *
+ * The function argument `allocator` will be called with the length of the
+ * sequence, and must return a pointer to the memory region which the sequence
+ * should be read into.
+ */
+template <typename F,
+          typename P = std::remove_reference_t<
+              decltype(*std::declval<F>()(std::declval<uint32_t>()))>>
+auto WARN_UNUSED_RESULT ReadSequenceParam(MessageReader* reader, F&& allocator)
+    -> std::enable_if_t<
+        std::is_same_v<P*, std::remove_reference_t<
+                               decltype(allocator(std::declval<uint32_t>()))>>,
+        bool> {
+  uint32_t length = 0;
+  if (!reader->ReadUInt32(&length)) {
+    reader->FatalError("failed to read byte length in ReadSequenceParam");
+    return false;
+  }
+
+  P* data = allocator(length);
+  if (length == 0) {
+    return true;
+  }
+  if (!data) {
+    reader->FatalError("allocation failed in ReadSequenceParam");
+    return false;
+  }
+
+  if constexpr (kUseWriteBytes<P>) {
+    mozilla::CheckedUint32 byte_length(length);
+    byte_length *= sizeof(P);
+    if (!byte_length.isValid()) {
+      reader->FatalError("invalid byte length in ReadSequenceParam");
+      return false;
+    }
+    MessageBufferReader buf_reader(reader, byte_length.value());
+    return buf_reader.ReadBytesInto(data, byte_length.value());
+  } else {
+    P* end = data + length;
+    for (auto* it = data; it != end; ++it) {
+      if (!ReadParam(reader, it)) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
 // Temporary fallback class to allow types to declare serialization using the
 // IPDLParamTraits type class. Will be removed once all remaining
 // IPDLParamTraits implementations are gone. (bug 1754009)
@@ -469,25 +637,17 @@ struct ParamTraitsFixed<uint64_t> {
 template <class P>
 struct ParamTraitsStd : ParamTraitsFixed<P> {};
 
-template <>
-struct ParamTraitsStd<std::string> {
-  typedef std::string param_type;
+template <class T>
+struct ParamTraitsStd<std::basic_string<T>> {
+  typedef std::basic_string<T> param_type;
   static void Write(MessageWriter* writer, const param_type& p) {
-    writer->WriteString(p);
+    WriteSequenceParam<const T&>(writer, p.data(), p.size());
   }
   static bool Read(MessageReader* reader, param_type* r) {
-    return reader->ReadString(r);
-  }
-};
-
-template <>
-struct ParamTraitsStd<std::wstring> {
-  typedef std::wstring param_type;
-  static void Write(MessageWriter* writer, const param_type& p) {
-    writer->WriteWString(p);
-  }
-  static bool Read(MessageReader* reader, param_type* r) {
-    return reader->ReadWString(r);
+    return ReadSequenceParam(reader, [&](uint32_t length) -> T* {
+      r->resize(length);
+      return r->data();
+    });
   }
 };
 
