@@ -116,7 +116,7 @@
     <key id="restmode"
         keycode="VK_F9"
         oncommand="
-        bosshascomming();"/>  
+        enableRestMode();"/>  
     <key keycode="VK_F2"
          oncommand="changeSidebarVisibility();"/>
     <key id="key_newNavigator"
