@@ -113,9 +113,6 @@ class Pickle {
                                  std::wstring* result) const;
   [[nodiscard]] bool ReadBytesInto(PickleIterator* iter, void* data,
                                    uint32_t length) const;
-  [[nodiscard]] bool ExtractBuffers(
-      PickleIterator* iter, size_t length, BufferList* buffers,
-      uint32_t alignment = sizeof(memberAlignmentType)) const;
 
   // Safer version of ReadInt() checks for the result not being negative.
   // Use it for reading the object sizes.

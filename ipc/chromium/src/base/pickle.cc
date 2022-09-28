@@ -392,32 +392,6 @@ bool Pickle::ReadWString(PickleIterator* iter, std::wstring* result) const {
   return true;
 }
 
-bool Pickle::ExtractBuffers(PickleIterator* iter, size_t length,
-                            BufferList* buffers, uint32_t alignment) const {
-  DCHECK(iter);
-  DCHECK(buffers);
-  DCHECK(alignment == 4 || alignment == 8);
-  DCHECK(intptr_t(header_) % alignment == 0);
-
-  if (AlignInt(length) < length || iter->iter_.Done()) {
-    return false;
-  }
-
-  uint32_t padding_len = intptr_t(iter->iter_.Data()) % alignment;
-  if (!iter->iter_.AdvanceAcrossSegments(buffers_, padding_len)) {
-    return false;
-  }
-
-  bool success;
-  *buffers = const_cast<BufferList*>(&buffers_)->Extract(iter->iter_, length,
-                                                         &success);
-  if (!success) {
-    return false;
-  }
-
-  return iter->iter_.AdvanceAcrossSegments(buffers_, AlignInt(length) - length);
-}
-
 bool Pickle::ReadBytesInto(PickleIterator* iter, void* data,
                            uint32_t length) const {
   if (AlignInt(length) < length) {
