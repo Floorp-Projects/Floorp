@@ -126,7 +126,6 @@
 // TODO(bugs.webrtc.org/7447): We plan to provide a way to let applications
 // inject a PacketSocketFactory and/or NetworkManager, and not expose
 // PortAllocator in the PeerConnection api. This will let us remove nogncheck.
-#include "p2p/base/port.h"            // nogncheck
 #include "p2p/base/port_allocator.h"  // nogncheck
 #include "rtc_base/network.h"
 #include "rtc_base/network_constants.h"
