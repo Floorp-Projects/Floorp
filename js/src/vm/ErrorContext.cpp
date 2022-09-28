@@ -144,7 +144,14 @@ void OffThreadErrorContext::reportError(CompileError* err) {
 }
 
 void OffThreadErrorContext::reportWarning(CompileError* err) {
-  reportError(err);
+  auto errorPtr = getAllocator()->make_unique<CompileError>(std::move(*err));
+  if (!errorPtr) {
+    return;
+  }
+  if (!errors_.warnings.append(std::move(errorPtr))) {
+    ReportOutOfMemory();
+    return;
+  }
 }
 
 void OffThreadErrorContext::ReportOutOfMemory() {
@@ -168,7 +175,8 @@ void OffThreadErrorContext::setCurrentJSContext(JSContext* cx) {
   maybeCx_ = cx;
 }
 
-void OffThreadErrorContext::convertToRuntimeError(JSContext* cx) {
+void OffThreadErrorContext::convertToRuntimeError(
+    JSContext* cx, Warning warning /* = Warning::Report */) {
   // Report out of memory errors eagerly, or errors could be malformed.
   if (hadOutOfMemory()) {
     js::ReportOutOfMemory(cx);
@@ -177,6 +185,11 @@ void OffThreadErrorContext::convertToRuntimeError(JSContext* cx) {
 
   for (const UniquePtr<CompileError>& error : errors()) {
     error->throwError(cx);
+  }
+  if (warning == Warning::Report) {
+    for (const UniquePtr<CompileError>& error : warnings()) {
+      error->throwError(cx);
+    }
   }
   if (hadOverRecursed()) {
     js::ReportOverRecursed(cx);

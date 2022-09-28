@@ -20,6 +20,7 @@ struct OffThreadFrontendErrors {
   // Any errors or warnings produced during compilation. These are reported
   // when finishing the script.
   Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy> errors;
+  Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy> warnings;
   bool overRecursed = false;
   bool outOfMemory = false;
   bool allocationOverflow = false;
@@ -132,11 +133,18 @@ class OffThreadErrorContext : public ErrorContext {
   OffThreadErrorContext() = default;
 
   void setCurrentJSContext(JSContext* cx);
-  void convertToRuntimeError(JSContext* cx);
+
+  enum class Warning { Suppress, Report };
+
+  void convertToRuntimeError(JSContext* cx, Warning warning = Warning::Report);
 
   void linkWithJSContext(JSContext* cx);
   const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>& errors() const {
     return errors_.errors;
+  }
+  const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>& warnings()
+      const {
+    return errors_.warnings;
   }
 
   // Report CompileErrors
