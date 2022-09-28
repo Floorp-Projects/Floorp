@@ -30,10 +30,16 @@ add_setup(async function() {
   defaultTestEngine = Services.search.getEngineByName("MozSearch");
 
   originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(defaultTestEngine);
+  await Services.search.setDefault(
+    defaultTestEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(originalEngine);
+    await Services.search.setDefault(
+      originalEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     await PlacesUtils.history.clear();
     gCUITestUtils.removeSearchBar();
   });

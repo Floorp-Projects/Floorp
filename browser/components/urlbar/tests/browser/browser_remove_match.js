@@ -10,11 +10,17 @@ add_setup(async function() {
 
   let engine = Services.search.getEngineByName("Example");
   let originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   await Services.search.moveEngine(engine, 0);
 
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(originalEngine);
+    await Services.search.setDefault(
+      originalEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 });
 

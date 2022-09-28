@@ -25,7 +25,10 @@ add_setup(async function() {
     getRootDirectory(gTestPath) + "testEngine_diacritics.xml"
   );
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(defaultEngine);
+    await Services.search.setDefault(
+      defaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     Services.prefs.clearUserPref("browser.search.hiddenOneOffs");
   });
 });

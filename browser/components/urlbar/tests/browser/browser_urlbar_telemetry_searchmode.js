@@ -101,7 +101,10 @@ add_setup(async function() {
 
   // Make it the default search engine.
   let originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(suggestionEngine);
+  await Services.search.setDefault(
+    suggestionEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   // And the first one-off engine.
   await Services.search.moveEngine(suggestionEngine, 0);
@@ -129,7 +132,10 @@ add_setup(async function() {
   // Make sure to restore the engine once we're done.
   registerCleanupFunction(async function() {
     Services.telemetry.canRecordExtended = oldCanRecord;
-    await Services.search.setDefault(originalEngine);
+    await Services.search.setDefault(
+      originalEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     await PlacesUtils.history.clear();
     Services.telemetry.setEventRecordingEnabled("navigation", false);
     UrlbarTestUtils.uninit();

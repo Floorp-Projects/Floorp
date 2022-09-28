@@ -28,7 +28,10 @@ add_task(async function() {
         engine = await SearchTestUtils.promiseNewSearchEngine(
           getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
         );
-        await Services.search.setDefault(engine);
+        await Services.search.setDefault(
+          engine,
+          Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+        );
         return engine.name;
       });
 
@@ -94,7 +97,10 @@ add_task(async function() {
         "histogram sum should be incremented"
       );
 
-      await Services.search.setDefault(currEngine);
+      await Services.search.setDefault(
+        currEngine,
+        Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+      );
       try {
         await Services.search.removeEngine(engine);
       } catch (ex) {}

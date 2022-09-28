@@ -107,7 +107,10 @@ add_task(async function test_defaultPrivateEngine() {
   });
 
   promise = promiseDefaultNotification("private");
-  await Services.search.setDefaultPrivate(engine2);
+  await Services.search.setDefaultPrivate(
+    engine2,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   Assert.equal(
     await promise,
     engine2,
@@ -152,7 +155,10 @@ add_task(async function test_defaultPrivateEngine() {
   });
 
   promise = promiseDefaultNotification("private");
-  await Services.search.setDefaultPrivate(engine1);
+  await Services.search.setDefaultPrivate(
+    engine1,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   Assert.equal(
     await promise,
     engine1,

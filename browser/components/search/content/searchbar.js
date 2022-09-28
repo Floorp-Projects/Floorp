@@ -164,9 +164,15 @@
 
     set currentEngine(val) {
       if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-        Services.search.defaultPrivateEngine = val;
+        Services.search.setDefaultPrivate(
+          val,
+          Ci.nsISearchService.CHANGE_REASON_USER_SEARCHBAR
+        );
       } else {
-        Services.search.defaultEngine = val;
+        Services.search.setDefault(
+          val,
+          Ci.nsISearchService.CHANGE_REASON_USER_SEARCHBAR
+        );
       }
     }
 

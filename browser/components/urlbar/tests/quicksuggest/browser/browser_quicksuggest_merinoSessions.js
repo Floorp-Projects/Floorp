@@ -56,7 +56,10 @@ add_setup(async function() {
   await SearchTestUtils.installSearchExtension();
   let originalEngine = await Services.search.getDefault();
   let engine = Services.search.getEngineByName("Example");
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   // Set up the mock Merino server.
   let path = "/merino";
@@ -75,7 +78,10 @@ add_setup(async function() {
   registerCleanupFunction(async () => {
     server.stop();
     gMerinoHandler = null;
-    await Services.search.setDefault(originalEngine);
+    await Services.search.setDefault(
+      originalEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 });
 

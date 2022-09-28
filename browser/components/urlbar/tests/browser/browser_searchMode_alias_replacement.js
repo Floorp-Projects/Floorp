@@ -24,14 +24,20 @@ add_setup(async function() {
   );
   defaultEngine.alias = "@default";
   let oldDefaultEngine = await Services.search.getDefault();
-  Services.search.setDefault(defaultEngine);
+  Services.search.setDefault(
+    defaultEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   await SearchTestUtils.installSearchExtension({
     keyword: ALIAS,
   });
   aliasEngine = Services.search.getEngineByName("Example");
 
   registerCleanupFunction(async function() {
-    Services.search.setDefault(oldDefaultEngine);
+    Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 });
 

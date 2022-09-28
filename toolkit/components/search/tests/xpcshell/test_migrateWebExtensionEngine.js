@@ -20,7 +20,10 @@ add_task(async function test_migrateLegacyEngine() {
   engine.wrappedJSObject._loadPath = `jar:[profile]/extensions/${kExtensionID}.xpi!/simple.xml`;
   engine.wrappedJSObject._extensionID = null;
 
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   // This should replace the existing engine
   let extension = await SearchTestUtils.installSearchExtension(
@@ -56,7 +59,10 @@ add_task(async function test_migrateLegacyEngineDifferentName() {
   engine.wrappedJSObject._loadPath = `jar:[profile]/extensions/${kExtensionID}.xpi!/simple.xml`;
   engine.wrappedJSObject._extensionID = null;
 
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   // This should replace the existing engine - it has the same id, but a different name.
   let extension = await SearchTestUtils.installSearchExtension(
@@ -99,7 +105,10 @@ add_task(async function test_migrateLegacySkipsPolicyAndUser() {
   engine.wrappedJSObject._loadPath = loadPath;
   engine.wrappedJSObject._extensionID = null;
 
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   // This should not replace the existing engine, but be rejected with a
   // duplicate engine warning.

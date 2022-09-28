@@ -704,5 +704,8 @@ function resetSearchTipsProvider() {
 async function setDefaultEngine(name) {
   let engine = (await Services.search.getEngines()).find(e => e.name == name);
   Assert.ok(engine);
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 }

@@ -26,7 +26,8 @@ add_task(async function test_defaultEngine() {
 add_task(async function test_persistAcrossRestarts() {
   // Set the engine through the API.
   await Services.search.setDefault(
-    Services.search.getEngineByName(kTestEngineName)
+    Services.search.getEngineByName(kTestEngineName),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
   Assert.equal(Services.search.defaultEngine.name, kTestEngineName);
   await promiseAfterSettings();
@@ -49,7 +50,8 @@ add_task(async function test_persistAcrossRestarts() {
 add_task(async function test_ignoreInvalidHash() {
   // Set the engine through the API.
   await Services.search.setDefault(
-    Services.search.getEngineByName(kTestEngineName)
+    Services.search.getEngineByName(kTestEngineName),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
   Assert.equal(Services.search.defaultEngine.name, kTestEngineName);
   await promiseAfterSettings();
@@ -69,7 +71,8 @@ add_task(async function test_ignoreInvalidHash() {
 add_task(async function test_settingToDefault() {
   // Set the engine through the API.
   await Services.search.setDefault(
-    Services.search.getEngineByName(kTestEngineName)
+    Services.search.getEngineByName(kTestEngineName),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
   Assert.equal(Services.search.defaultEngine.name, kTestEngineName);
   await promiseAfterSettings();
@@ -80,7 +83,8 @@ add_task(async function test_settingToDefault() {
 
   // Then set the engine back to the default through the API.
   await Services.search.setDefault(
-    Services.search.getEngineByName(kDefaultEngineName)
+    Services.search.getEngineByName(kDefaultEngineName),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
   await promiseAfterSettings();
 
@@ -93,7 +97,8 @@ add_task(async function test_resetToOriginalDefaultEngine() {
   Assert.equal(Services.search.defaultEngine.name, kDefaultEngineName);
 
   await Services.search.setDefault(
-    Services.search.getEngineByName(kTestEngineName)
+    Services.search.getEngineByName(kTestEngineName),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
   Assert.equal(Services.search.defaultEngine.name, kTestEngineName);
   await promiseAfterSettings();
@@ -113,7 +118,10 @@ add_task(async function test_fallback_kept_after_restart() {
       break;
     }
   }
-  await Services.search.setDefault(nonDefaultBuiltInEngine);
+  await Services.search.setDefault(
+    nonDefaultBuiltInEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   Assert.equal(
     Services.search.defaultEngine.name,
     nonDefaultBuiltInEngine.name

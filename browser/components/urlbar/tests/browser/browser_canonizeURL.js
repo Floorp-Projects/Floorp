@@ -77,9 +77,15 @@ add_task(async function checkPrefTurnsOffCanonize() {
     getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
   );
   let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   registerCleanupFunction(async () =>
-    Services.search.setDefault(oldDefaultEngine)
+    Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    )
   );
 
   const win = await BrowserTestUtils.openNewBrowserWindow();

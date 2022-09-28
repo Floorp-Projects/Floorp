@@ -33,7 +33,10 @@ add_task(async function test_basic_upgrade() {
   let params = engine.getSubmission("test").uri.query.split("&");
   Assert.ok(params.includes("version=1.0"), "Correct version installed");
 
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   let promiseChanged = TestUtils.topicObserved(
     "browser-search-engine-modified",
@@ -82,7 +85,10 @@ add_task(async function test_upgrade_changes_name() {
   let engine = Services.search.getEngineByName("engine");
   Assert.ok(!!engine, "Should have loaded the engine");
 
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   // When we add engines currently, we normally force using the saved order.
   // Reset that here, so we can check the order is reset in the case this

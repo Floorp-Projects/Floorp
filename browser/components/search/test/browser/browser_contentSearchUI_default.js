@@ -36,7 +36,10 @@ add_setup(async function() {
   });
 
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(defaultEngine);
+    await Services.search.setDefault(
+      defaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 });
 
@@ -100,7 +103,10 @@ async function runNewTabTest(isHandoff) {
     );
   }
 
-  await Services.search.setDefault(addedEngine);
+  await Services.search.setDefault(
+    addedEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   // We only show the engine's own icon for app provided engines, otherwise show
   // a default. xref https://bugzilla.mozilla.org/show_bug.cgi?id=1449338#c19
@@ -119,7 +125,10 @@ async function runNewTabTest(isHandoff) {
     await SpecialPowers.popPrefEnv();
   }
 
-  await Services.search.setDefault(defaultEngine);
+  await Services.search.setDefault(
+    defaultEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   BrowserTestUtils.removeTab(tab);
 }
@@ -158,7 +167,10 @@ add_task(async function test_content_search_attributes_in_private_window() {
     Services.search.defaultEngine.name
   );
 
-  await Services.search.setDefault(addedEngine);
+  await Services.search.setDefault(
+    addedEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   // We only show the engine's own icon for app provided engines, otherwise show
   // a default. xref https://bugzilla.mozilla.org/show_bug.cgi?id=1449338#c19
@@ -171,7 +183,10 @@ add_task(async function test_content_search_attributes_in_private_window() {
   await ensurePlaceholder(tab, "about-private-browsing-search-btn");
   await SpecialPowers.popPrefEnv();
 
-  await Services.search.setDefault(defaultEngine);
+  await Services.search.setDefault(
+    defaultEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   await BrowserTestUtils.closeWindow(win);
 });

@@ -98,7 +98,10 @@ add_setup(async function() {
   });
   let engine1 = Services.search.getEngineByName("Example");
 
-  await Services.search.setDefault(engine1);
+  await Services.search.setDefault(
+    engine1,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   await gCUITestUtils.addSearchBar();
 
@@ -109,7 +112,8 @@ add_setup(async function() {
     Services.telemetry.canRecordExtended = oldCanRecord;
     Services.telemetry.clearScalars();
     await Services.search.setDefault(
-      Services.search.getEngineByName(currentEngineName)
+      Services.search.getEngineByName(currentEngineName),
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
     );
   });
 });

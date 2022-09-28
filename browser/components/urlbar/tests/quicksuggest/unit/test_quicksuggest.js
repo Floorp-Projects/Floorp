@@ -177,7 +177,10 @@ add_task(async function init() {
 
   // Install a default test engine.
   let engine = await addTestSuggestionsEngine();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   cleanUpQuickSuggest = await QuickSuggestTestUtils.ensureQuickSuggestInit(
     REMOTE_SETTINGS_DATA

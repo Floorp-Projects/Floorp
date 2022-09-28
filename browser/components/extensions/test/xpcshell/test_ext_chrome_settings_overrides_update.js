@@ -588,7 +588,10 @@ async function test_default_search_on_updating_addons_installed_before_bug175776
       extensionInfo.manifest.chrome_settings_overrides.search_provider.name
     );
   }
-  await Services.search.setDefault(initialEngine);
+  await Services.search.setDefault(
+    initialEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   let defaultEngineName = (await Services.search.getDefault()).name;
   Assert.equal(

@@ -14,13 +14,19 @@ add_task(async function test_setup() {
   await SearchTestUtils.installSearchExtension();
   let originalEngine = await Services.search.getDefault();
   let engine = Services.search.getEngineByName("Example");
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   registerCleanupFunction(async function cleanup() {
     while (gBrowser.tabs.length > 1) {
       BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
     }
-    await Services.search.setDefault(originalEngine);
+    await Services.search.setDefault(
+      originalEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 
   CustomizableUI.addWidgetToArea("home-button", "nav-bar");

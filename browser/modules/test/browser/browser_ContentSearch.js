@@ -43,20 +43,32 @@ add_setup(async function() {
   let engine = await SearchTestUtils.promiseNewSearchEngine(
     "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine.xml"
   );
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   let engine2 = await SearchTestUtils.promiseNewSearchEngine(
     "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine_diacritics.xml"
   );
-  await Services.search.setDefaultPrivate(engine2);
+  await Services.search.setDefaultPrivate(
+    engine2,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + "testEngine_chromeicon.xml"
   );
 
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(originalEngine);
-    await Services.search.setDefaultPrivate(originalPrivateEngine);
+    await Services.search.setDefault(
+      originalEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
+    await Services.search.setDefaultPrivate(
+      originalPrivateEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 });
 
@@ -104,7 +116,10 @@ add_task(async function SetDefaultEngine() {
   });
 
   let enginePromise = await waitForTestMsg(browser, "CurrentEngine");
-  await Services.search.setDefault(oldDefaultEngine);
+  await Services.search.setDefault(
+    oldDefaultEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   msg = await enginePromise.donePromise;
   checkMsg(msg, {
     type: "CurrentEngine",
@@ -118,7 +133,10 @@ add_task(async function setDefaultEnginePrivate() {
   const engine = await Services.search.getEngineByName("FooChromeIcon");
   const { browser } = await addTab();
   let enginePromise = await waitForTestMsg(browser, "CurrentPrivateEngine");
-  await Services.search.setDefaultPrivate(engine);
+  await Services.search.setDefaultPrivate(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   let msg = await enginePromise.donePromise;
   checkMsg(msg, {
     type: "CurrentPrivateEngine",

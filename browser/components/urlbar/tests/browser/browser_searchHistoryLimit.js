@@ -19,11 +19,17 @@ add_setup(async function() {
   await SearchTestUtils.installSearchExtension();
   gEngine = Services.search.getEngineByName("Example");
   let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(gEngine);
+  await Services.search.setDefault(
+    gEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   await UrlbarTestUtils.formHistory.clear();
 
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.setDefault(
+      oldDefaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     await UrlbarTestUtils.formHistory.clear();
   });
 });

@@ -8,8 +8,14 @@ let originalEngine;
 let originalPrivateEngine;
 
 async function resetEngines() {
-  await Services.search.setDefault(originalEngine);
-  await Services.search.setDefaultPrivate(originalPrivateEngine);
+  await Services.search.setDefault(
+    originalEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
+  await Services.search.setDefaultPrivate(
+    originalPrivateEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 }
 
 registerCleanupFunction(resetEngines);

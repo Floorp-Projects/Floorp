@@ -44,7 +44,10 @@ add_setup(async function() {
   engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + "testEngine.xml"
   );
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   await clearSearchbarHistory();
 
@@ -61,7 +64,10 @@ add_setup(async function() {
 
   registerCleanupFunction(async () => {
     await clearSearchbarHistory();
-    await Services.search.setDefault(defaultEngine);
+    await Services.search.setDefault(
+      defaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
     gCUITestUtils.removeSearchBar();
   });
 });

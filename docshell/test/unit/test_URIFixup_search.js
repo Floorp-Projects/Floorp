@@ -121,10 +121,12 @@ add_task(async function setup() {
   );
 
   await Services.search.setDefault(
-    Services.search.getEngineByName(kSearchEngineID)
+    Services.search.getEngineByName(kSearchEngineID),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
   await Services.search.setDefaultPrivate(
-    Services.search.getEngineByName(kPrivateSearchEngineID)
+    Services.search.getEngineByName(kPrivateSearchEngineID),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 });
 

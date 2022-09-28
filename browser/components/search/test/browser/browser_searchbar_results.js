@@ -15,13 +15,17 @@ add_setup(async function() {
   });
 
   await Services.search.setDefault(
-    await Services.search.getEngineByName("test")
+    await Services.search.getEngineByName("test"),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   registerCleanupFunction(async () => {
     await clearSearchbarHistory();
     gCUITestUtils.removeSearchBar();
-    await Services.search.setDefault(defaultEngine);
+    await Services.search.setDefault(
+      defaultEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   });
 });
 
