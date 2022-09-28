@@ -33,21 +33,6 @@ void JSProcessActorChild::SendRawMessage(
     return;
   }
 
-  size_t length = 0;
-  if (aData) {
-    length += aData->DataLength();
-  }
-  if (aStack) {
-    length += aStack->DataLength();
-  }
-  if (NS_WARN_IF(!AllowMessage(aMeta, length))) {
-    aRv.ThrowDataCloneError(
-        nsPrintfCString("JSProcessActorChild serialization error: data too "
-                        "large, in actor '%s'",
-                        PromiseFlatCString(aMeta.actorName()).get()));
-    return;
-  }
-
   // If the parent side is in the same process, we have a PInProcess manager,
   // and can dispatch the message directly to the event loop.
   ContentChild* contentChild = mManager->AsContentChild();

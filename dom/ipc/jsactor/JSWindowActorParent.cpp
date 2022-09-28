@@ -51,22 +51,6 @@ void JSWindowActorParent::SendRawMessage(
     return;
   }
 
-  size_t length = 0;
-  if (aData) {
-    length += aData->DataLength();
-  }
-  if (aStack) {
-    length += aStack->DataLength();
-  }
-
-  if (NS_WARN_IF(!AllowMessage(aMeta, length))) {
-    aRv.ThrowDataCloneError(
-        nsPrintfCString("JSWindowActorParent serialization error: data too "
-                        "large, in actor '%s'",
-                        PromiseFlatCString(aMeta.actorName()).get()));
-    return;
-  }
-
   Maybe<ClonedMessageData> msgData;
   if (aData) {
     msgData.emplace();
