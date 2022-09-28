@@ -14,6 +14,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 
+#include "gc/Cell.h"
 #include "gc/GC.h"
 #include "gc/GCContext.h"
 #include "vm/GeckoProfiler.h"

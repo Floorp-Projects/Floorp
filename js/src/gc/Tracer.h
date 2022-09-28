@@ -8,6 +8,7 @@
 #define js_Tracer_h
 
 #include "gc/Barrier.h"
+#include "gc/TraceKind.h"
 #include "js/HashTable.h"
 #include "js/TracingAPI.h"
 
