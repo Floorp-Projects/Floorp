@@ -24,48 +24,6 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(
     FileSystemWritableFileStream::StreamAlgorithms,
     UnderlyingSinkAlgorithmsBase, mStream)
 
-// XXX: This is copied from the bindings layer. We need to autogenerate a
-// helper for this. See bug 1784266.
-static void TryGetAsUnion(
-    JSContext* aCx,
-    ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams& aOutput,
-    JS::Handle<JS::Value> aChunk, ErrorResult& aRv) {
-  JS::Rooted<JS::Value> chunk(aCx, aChunk);
-  bool done = false, failed = false, tryNext;
-  if (chunk.isObject()) {
-    done =
-        (failed =
-             !aOutput.TrySetToArrayBufferView(aCx, &chunk, tryNext, false)) ||
-        !tryNext ||
-        (failed = !aOutput.TrySetToArrayBuffer(aCx, &chunk, tryNext, false)) ||
-        !tryNext ||
-        (failed = !aOutput.TrySetToBlob(aCx, &chunk, tryNext, false)) ||
-        !tryNext;
-  }
-  if (!done) {
-    done =
-        (failed = !aOutput.TrySetToWriteParams(aCx, &chunk, tryNext, false)) ||
-        !tryNext;
-  }
-  if (!done) {
-    do {
-      done = (failed = !aOutput.TrySetToUSVString(aCx, &chunk, tryNext)) ||
-             !tryNext;
-      break;
-    } while (false);
-  }
-  if (failed) {
-    aRv.StealExceptionFromJSContext(aCx);
-    return;
-  }
-  if (!done) {
-    aRv.ThrowTypeError(
-        "The chunk must be one of ArrayBufferView, ArrayBuffer, Blob, "
-        "WriteParams.");
-    return;
-  }
-}
-
 already_AddRefed<Promise>
 FileSystemWritableFileStream::StreamAlgorithms::WriteCallback(
     JSContext* aCx, JS::Handle<JS::Value> aChunk,
@@ -73,8 +31,10 @@ FileSystemWritableFileStream::StreamAlgorithms::WriteCallback(
   // https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
   // Step 3. Let writeAlgorithm be an algorithm which takes a chunk argument ...
   ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams chunkUnion;
-  TryGetAsUnion(aCx, chunkUnion, aChunk, aRv);
-  if (aRv.Failed()) {
+  JS::Rooted<JS::Value> chunk(aCx, aChunk);
+  if (!chunkUnion.Init(aCx, &chunk)) {
+    aRv.MightThrowJSException();
+    aRv.StealExceptionFromJSContext(aCx);
     return nullptr;
   }
   // Step 3. ... and returns the result of running the write a chunk algorithm
