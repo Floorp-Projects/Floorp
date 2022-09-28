@@ -189,7 +189,8 @@ class XDRCoderBase {
     MOZ_ASSERT(resultCode() == JS::TranscodeResult::Ok);
     resultCode_ = code;
   }
-  bool validateResultCode(JSContext* cx, JS::TranscodeResult code) const;
+  bool validateResultCode(JSContext* cx, ErrorContext* ec,
+                          JS::TranscodeResult code) const;
 #endif
 };
 
@@ -227,7 +228,7 @@ class XDRState : public XDRCoderBase {
   XDRResultT<T> fail(JS::TranscodeResult code) {
 #ifdef DEBUG
     MOZ_ASSERT(code != JS::TranscodeResult::Ok);
-    MOZ_ASSERT(validateResultCode(cx(), code));
+    MOZ_ASSERT(validateResultCode(cx(), ec(), code));
     setResultCode(code);
 #endif
     return mozilla::Err(code);
