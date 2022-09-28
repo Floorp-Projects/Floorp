@@ -12377,6 +12377,7 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider, isMember=False
                     Argument("bool&", "tryNext"),
                     Argument("bool", "passedToJSImpl", default="false"),
                 ],
+                visibility="private",
                 body=jsConversion,
             )
         ]
@@ -12401,6 +12402,7 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider, isMember=False
                         Argument("bool&", "tryNext"),
                         Argument("bool", "passedToJSImpl", default="false"),
                     ],
+                    visibility="private",
                     body=shimBody,
                 )
             )
