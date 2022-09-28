@@ -517,6 +517,19 @@ toolbarbutton.bookmark-item {
   scale: 1.0;
 }
 
+@media (-moz-platform: linux) {
+  .sidepanel-icon, .sidepanel-browser-icon {
+    appearance: none;
+    -moz-context-properties: fill, fill-opacity;
+    border-radius: 4px;
+    color: inherit;
+    fill: currentColor;
+    margin: 1px 6px 5px 6px;
+    padding: 11px 10px 10px 13px;
+    scale: 1.0;
+  }
+}
+
 #sidebar-select-box{
   border-left: 1px solid var(--chrome-content-separator-color);
   border-right: 1px solid var(--chrome-content-separator-color);
@@ -603,6 +616,12 @@ toolbarbutton.bookmark-item {
 #select-TST {
   list-style-image: url("chrome://browser/skin/TST-dark.svg");
   padding: 11px 7px 11px 8px !important;
+}
+
+@media (-moz-platform: linux) {
+ #select-TST {
+   padding: 11px 6px 11px 11px !important;
+ }
 }
 
 #select-CustomURL{
