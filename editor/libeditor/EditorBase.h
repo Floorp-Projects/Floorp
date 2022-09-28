@@ -1718,9 +1718,10 @@ class EditorBase : public nsIEditor,
    *                            point to put caret.
    */
   template <typename ContentNodeType>
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateNodeResultBase<ContentNodeType>
-  InsertNodeWithTransaction(ContentNodeType& aContentToInsert,
-                            const EditorDOMPoint& aPointToInsert);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT
+      Result<CreateNodeResultBase<ContentNodeType>, nsresult>
+      InsertNodeWithTransaction(ContentNodeType& aContentToInsert,
+                                const EditorDOMPoint& aPointToInsert);
 
   /**
    * InsertPaddingBRElementForEmptyLastLineWithTransaction() creates a padding
@@ -1732,7 +1733,7 @@ class EditorBase : public nsIEditor,
    * @return                    If succeeded, returns the new <br> element and
    *                            point to put caret around it.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   InsertPaddingBRElementForEmptyLastLineWithTransaction(
       const EditorDOMPoint& aPointToInsert);
 
