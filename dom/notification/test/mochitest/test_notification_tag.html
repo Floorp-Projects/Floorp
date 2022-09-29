@@ -11,9 +11,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=782211
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=782211">Bug 782211</a>
 <p id="display"></p>
-<iframe name="sameDomain"></iframe>
-<iframe name="anotherSameDomain"></iframe>
-<iframe name="crossDomain"></iframe>
 <div id="content" style="display: none">
 </div>
 <pre id="test">
@@ -141,17 +138,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=782211
       // Load two frames with the same origin that create notification with the same tag.
       // Both pages should generate notifications with the same name, and thus the second
       // notification should replace the first.
-      frames.sameDomain.location.href =
-        "http://test1.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
-      frames.anotherSameDomain.location.href =
-        "http://test1.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
+      let sameDomain = window.open("http://test1.example.org:80/tests/dom/notification/test/mochitest/create_notification.html");
+      let anotherSameDomain = window.open("http://test1.example.org:80/tests/dom/notification/test/mochitest/create_notification.html");
       // Load a frame with a different origin that creates a notification with the same tag.
       // The notification name should be different and thus no notifications should be replaced.
-      frames.crossDomain.location.href =
-        "http://test2.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
+      let crossDomain = window.open("http://test2.example.org:80/tests/dom/notification/test/mochitest/create_notification.html");
 
       await MockAlertsService.unregistered();
 
+      sameDomain.close();
+      anotherSameDomain.close();
+      crossDomain.close();
       SimpleTest.finish();
     }
 

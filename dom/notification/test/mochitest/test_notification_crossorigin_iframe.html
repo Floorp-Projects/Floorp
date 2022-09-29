@@ -20,9 +20,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1560741
   const kBlankURL = "https://example.com/tests/dom/notification/test/mochitest/blank.html";
 
   (async function runTest() {
-    await SpecialPowers.setBoolPref("notification.prompt.testing", true);
-    await SpecialPowers.setBoolPref("notification.prompt.testing.allow", true);
-    await SpecialPowers.setBoolPref("dom.webnotifications.allowinsecure", true);
+    await SpecialPowers.pushPrefEnv({"set": [
+      ["notification.prompt.testing", true],
+      ["notification.prompt.testing.allow", true],
+      ["dom.webnotifications.allowinsecure", true],
+    ]});
 
     let iframe = document.createElement("iframe");
     iframe.src = kBlankURL;
@@ -41,15 +43,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1560741
                               ["denied", "Denied permission in cross-origin iframe"],
                               checkRequest);
 
+    let checkPermission = async (expectedPermission, msg) => {
+      /* import-globals-from ../../../../testing/modules/Assert.jsm */
+      let permission = this.content.Notification.permission;
+      Assert.equal(permission, expectedPermission, msg);
+    };
+
+    await SpecialPowers.spawn(iframe,
+                              ["denied", "Permission is denied in cross-origin iframe"],
+                              checkPermission);
+
     await SpecialPowers.pushPrefEnv({"set": [["dom.webnotifications.allowcrossoriginiframe", true]]});
 
     await SpecialPowers.spawn(iframe,
                               ["granted", "Granted permission in cross-origin iframe with pref set"],
                               checkRequest);
-
-    await SpecialPowers.clearUserPref("notification.prompt.testing");
-    await SpecialPowers.clearUserPref("notification.prompt.testing.allow");
-    await SpecialPowers.clearUserPref("dom.webnotifications.allowinsecure");
+    await SpecialPowers.spawn(iframe,
+                              ["granted", "Permission is granted in cross-origin iframe with pref set"],
+                              checkPermission);
 
     SimpleTest.finish();
   })();
