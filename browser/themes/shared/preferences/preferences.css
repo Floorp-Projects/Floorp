@@ -54,7 +54,7 @@
 .pane-container {
   /* A workaround to keep the container always float on the `top: 0` (Bug 1377009) */
   display: block;
-  width: var(--main-pane-width);
+  max-width: var(--main-pane-width);
 }
 
 #mainPrefPane {
