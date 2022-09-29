@@ -67,10 +67,6 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
                                                      const uint8_t* aString) {
   AssertIsOnMainThread();
 
-  if (mLoader->IsCancelled()) {
-    return mLoader->GetCancelResult();
-  }
-
   if (NS_FAILED(aStatus)) {
     return aStatus;
   }
