@@ -104,17 +104,14 @@ void VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
   decodedImage.set_ntp_time_ms(frameInfo->ntp_time_ms);
   decodedImage.set_packet_infos(frameInfo->packet_infos);
   decodedImage.set_rotation(frameInfo->rotation);
-
-  absl::optional<int> max_composition_delay_in_frames =
-      _timing->MaxCompositionDelayInFrames();
-  if (max_composition_delay_in_frames) {
+  VideoFrame::RenderParameters render_parameters = _timing->RenderParameters();
+  if (render_parameters.max_composition_delay_in_frames) {
     // Subtract frames that are in flight.
-    *max_composition_delay_in_frames -= timestamp_map_size;
-    *max_composition_delay_in_frames =
-        std::max(0, *max_composition_delay_in_frames);
-    decodedImage.set_max_composition_delay_in_frames(
-        max_composition_delay_in_frames);
+    render_parameters.max_composition_delay_in_frames =
+        std::max(0, *render_parameters.max_composition_delay_in_frames -
+                        timestamp_map_size);
   }
+  decodedImage.set_render_parameters(render_parameters);
 
   RTC_DCHECK(frameInfo->decodeStart);
   const Timestamp now = _clock->CurrentTime();

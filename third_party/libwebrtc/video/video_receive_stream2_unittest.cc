@@ -88,6 +88,7 @@ using ::testing::Field;
 using ::testing::InSequence;
 using ::testing::Invoke;
 using ::testing::IsEmpty;
+using ::testing::Optional;
 using ::testing::Pointee;
 using ::testing::Property;
 using ::testing::Return;
@@ -386,38 +387,94 @@ TEST_P(VideoReceiveStream2Test, PlayoutDelayPreservesDefaultMinValue) {
   EXPECT_EQ(default_min_playout_latency, timings.min_playout_delay);
 }
 
-TEST_P(VideoReceiveStream2Test, MaxCompositionDelayNotSetByDefault) {
+TEST_P(VideoReceiveStream2Test, RenderParametersSetToDefaultValues) {
+  // Default render parameters.
+  const VideoFrame::RenderParameters kDefaultRenderParameters;
   // Default with no playout delay set.
   std::unique_ptr<test::FakeEncodedFrame> test_frame0 =
       test::FakeFrameBuilder().Id(0).AsLast().Build();
   video_receive_stream_->OnCompleteFrame(std::move(test_frame0));
-  EXPECT_FALSE(timing_->MaxCompositionDelayInFrames());
+  EXPECT_EQ(timing_->RenderParameters(), kDefaultRenderParameters);
+}
 
-  // Max composition delay not set for playout delay 0,0.
+TEST_P(VideoReceiveStream2Test, UseLowLatencyRenderingSetFromPlayoutDelay) {
+  // use_low_latency_rendering set if playout delay set to min=0, max<=500 ms.
+  std::unique_ptr<test::FakeEncodedFrame> test_frame0 =
+      test::FakeFrameBuilder().Id(0).AsLast().Build();
+  test_frame0->SetPlayoutDelay({/*min_ms=*/0, /*max_ms=*/0});
+  video_receive_stream_->OnCompleteFrame(std::move(test_frame0));
+  EXPECT_TRUE(timing_->RenderParameters().use_low_latency_rendering);
+
   std::unique_ptr<test::FakeEncodedFrame> test_frame1 =
       test::FakeFrameBuilder().Id(1).AsLast().Build();
-  test_frame1->SetPlayoutDelay({0, 0});
+  test_frame1->SetPlayoutDelay({/*min_ms=*/0, /*max_ms=*/500});
   video_receive_stream_->OnCompleteFrame(std::move(test_frame1));
-  EXPECT_FALSE(timing_->MaxCompositionDelayInFrames());
-
-  // Max composition delay not set for playout delay X,Y, where X,Y>0.
-  std::unique_ptr<test::FakeEncodedFrame> test_frame2 =
-      test::FakeFrameBuilder().Id(2).AsLast().Build();
-  test_frame2->SetPlayoutDelay({10, 30});
-  video_receive_stream_->OnCompleteFrame(std::move(test_frame2));
-  EXPECT_FALSE(timing_->MaxCompositionDelayInFrames());
+  EXPECT_TRUE(timing_->RenderParameters().use_low_latency_rendering);
 }
 
 TEST_P(VideoReceiveStream2Test, MaxCompositionDelaySetFromMaxPlayoutDelay) {
+  // The max composition delay is dependent on the number of frames in the
+  // pre-decode queue. It's therefore important to advance the time as the test
+  // runs to get the correct expectations of max_composition_delay_in_frames.
+  video_receive_stream_->Start();
+  // Max composition delay not set if no playout delay is set.
+  std::unique_ptr<test::FakeEncodedFrame> test_frame0 =
+      test::FakeFrameBuilder()
+          .Id(0)
+          .Time(RtpTimestampForFrame(0))
+          .ReceivedTime(ReceiveTimeForFrame(0))
+          .AsLast()
+          .Build();
+  video_receive_stream_->OnCompleteFrame(std::move(test_frame0));
+  EXPECT_THAT(timing_->RenderParameters().max_composition_delay_in_frames,
+              Eq(absl::nullopt));
+  time_controller_.AdvanceTime(k30FpsDelay);
+  loop_.Flush();
+
+  // Max composition delay not set for playout delay 0,0.
+  std::unique_ptr<test::FakeEncodedFrame> test_frame1 =
+      test::FakeFrameBuilder()
+          .Id(1)
+          .Time(RtpTimestampForFrame(1))
+          .ReceivedTime(ReceiveTimeForFrame(1))
+          .AsLast()
+          .Build();
+  test_frame1->SetPlayoutDelay({0, 0});
+  video_receive_stream_->OnCompleteFrame(std::move(test_frame1));
+  EXPECT_THAT(timing_->RenderParameters().max_composition_delay_in_frames,
+              Eq(absl::nullopt));
+  time_controller_.AdvanceTime(k30FpsDelay);
+  loop_.Flush();
+
+  // Max composition delay not set for playout delay X,Y, where X,Y>0.
+  std::unique_ptr<test::FakeEncodedFrame> test_frame2 =
+      test::FakeFrameBuilder()
+          .Id(2)
+          .Time(RtpTimestampForFrame(2))
+          .ReceivedTime(ReceiveTimeForFrame(2))
+          .AsLast()
+          .Build();
+  test_frame2->SetPlayoutDelay({10, 30});
+  video_receive_stream_->OnCompleteFrame(std::move(test_frame2));
+  EXPECT_THAT(timing_->RenderParameters().max_composition_delay_in_frames,
+              Eq(absl::nullopt));
+
+  time_controller_.AdvanceTime(k30FpsDelay);
+  loop_.Flush();
+
   // Max composition delay set if playout delay X,Y, where X=0,Y>0.
-  const VideoPlayoutDelay kPlayoutDelayMs = {0, 50};
   const int kExpectedMaxCompositionDelayInFrames = 3;  // ~50 ms at 60 fps.
-  std::unique_ptr<test::FakeEncodedFrame> test_frame =
-      test::FakeFrameBuilder().Id(0).AsLast().Build();
-  test_frame->SetPlayoutDelay(kPlayoutDelayMs);
-  video_receive_stream_->OnCompleteFrame(std::move(test_frame));
-  EXPECT_EQ(kExpectedMaxCompositionDelayInFrames,
-            timing_->MaxCompositionDelayInFrames());
+  std::unique_ptr<test::FakeEncodedFrame> test_frame3 =
+      test::FakeFrameBuilder()
+          .Id(3)
+          .Time(RtpTimestampForFrame(3))
+          .ReceivedTime(ReceiveTimeForFrame(3))
+          .AsLast()
+          .Build();
+  test_frame3->SetPlayoutDelay({0, 50});
+  video_receive_stream_->OnCompleteFrame(std::move(test_frame3));
+  EXPECT_THAT(timing_->RenderParameters().max_composition_delay_in_frames,
+              Optional(kExpectedMaxCompositionDelayInFrames));
 }
 
 TEST_P(VideoReceiveStream2Test, LazyDecoderCreation) {
