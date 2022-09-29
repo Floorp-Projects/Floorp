@@ -838,7 +838,7 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
 
     this._devToolsCommandsPromise = (async () => {
       const commands = await lazy.DevToolsShim.createCommandsForTabForWebExtension(
-        this.devToolsToolbox.commands.descriptorFront.localTab
+        this.devToolsToolbox.descriptorFront.localTab
       );
       await commands.targetCommand.startListening();
       this._devToolsCommands = commands;

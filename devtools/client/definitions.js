@@ -484,14 +484,14 @@ exports.ToolboxButtons = [
     ),
     isToolSupported: toolbox => toolbox.target.isLocalTab,
     onClick(event, toolbox) {
-      const { localTab } = toolbox.commands.descriptorFront;
+      const { localTab } = toolbox.descriptorFront;
       const browserWindow = localTab.ownerDocument.defaultView;
       ResponsiveUIManager.toggle(browserWindow, localTab, {
         trigger: "toolbox",
       });
     },
     isChecked(toolbox) {
-      const { localTab } = toolbox.commands.descriptorFront;
+      const { localTab } = toolbox.descriptorFront;
       if (!localTab) {
         return false;
       }

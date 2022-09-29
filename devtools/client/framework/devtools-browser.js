@@ -368,8 +368,9 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     if (processId) {
       try {
         const commands = await CommandsFactory.forProcess(processId);
+        const descriptor = commands.descriptorFront;
         // Display a new toolbox in a new window
-        const toolbox = await gDevTools.showToolbox(commands, {
+        const toolbox = await gDevTools.showToolbox(descriptor, {
           hostType: Toolbox.HostType.WINDOW,
           hostOptions: {
             // Will be used by the WINDOW host to decide whether to create a

@@ -53,9 +53,6 @@ Services.scriptloader.loadSubScript(
 );
 
 const { TableWidget } = require("devtools/client/shared/widgets/TableWidget");
-const {
-  LocalTabCommandsFactory,
-} = require("devtools/client/framework/local-tab-commands-factory");
 const STORAGE_PREF = "devtools.storage.enabled";
 const DOM_CACHE = "dom.caches.enabled";
 const DUMPEMIT_PREF = "devtools.dump.emit";
@@ -152,15 +149,15 @@ async function openTabAndSetupStorage(url, options = {}) {
  * Open the toolbox, with the storage tool visible.
  *
  * @param tab {XULTab} Optional, the tab for the toolbox; defaults to selected tab
- * @param commands {Object} Optional, the commands for the toolbox; defaults to a tab commands
+ * @param descriptor {Object} Optional, the descriptor for the toolbox; defaults to a tab descriptor
  * @param hostType {Toolbox.HostType} Optional, type of host that will host the toolbox
  *
  * @return {Promise} a promise that resolves when the storage inspector is ready
  */
-var openStoragePanel = async function({ tab, commands, hostType } = {}) {
+var openStoragePanel = async function({ tab, descriptor, hostType } = {}) {
   info("Opening the storage inspector");
-  if (!commands) {
-    commands = await LocalTabCommandsFactory.createCommandsForTab(
+  if (!descriptor) {
+    descriptor = await TabDescriptorFactory.createDescriptorForTab(
       tab || gBrowser.selectedTab
     );
   }
@@ -170,7 +167,7 @@ var openStoragePanel = async function({ tab, commands, hostType } = {}) {
   // Checking if the toolbox and the storage are already loaded
   // The storage-updated event should only be waited for if the storage
   // isn't loaded yet
-  toolbox = gDevTools.getToolboxForCommands(commands);
+  toolbox = gDevTools.getToolboxForDescriptor(descriptor);
   if (toolbox) {
     storage = toolbox.getPanel("storage");
     if (storage) {
@@ -187,7 +184,7 @@ var openStoragePanel = async function({ tab, commands, hostType } = {}) {
   }
 
   info("Opening the toolbox");
-  toolbox = await gDevTools.showToolbox(commands, {
+  toolbox = await gDevTools.showToolbox(descriptor, {
     toolId: "storage",
     hostType,
   });

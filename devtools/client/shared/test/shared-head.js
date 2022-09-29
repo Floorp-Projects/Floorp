@@ -63,6 +63,9 @@ const { loader, require } = ChromeUtils.import(
 
 const { gDevTools } = require("devtools/client/framework/devtools");
 const {
+  TabDescriptorFactory,
+} = require("devtools/client/framework/tab-descriptor-factory");
+const {
   CommandsFactory,
 } = require("devtools/shared/commands/commands-factory");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -1208,7 +1211,7 @@ async function openNewTabAndToolbox(url, toolId, hostType) {
  * closed.
  */
 async function closeTabAndToolbox(tab = gBrowser.selectedTab) {
-  if (gDevTools.hasToolboxForTab(tab)) {
+  if (TabDescriptorFactory.isKnownTab(tab)) {
     await gDevTools.closeToolboxForTab(tab);
   }
 

@@ -996,7 +996,7 @@ class TargetCommand extends EventEmitter {
     // TabDescriptor may emit the event with a null targetFront, interpret that as if the previous target
     // has already been destroyed
     if (targetFront) {
-      // Wait for the target to be destroyed so that LocalTabCommandsFactory clears its memoized target for this tab
+      // Wait for the target to be destroyed so that TabDescriptorFactory clears its memoized target for this tab
       await targetFront.once("target-destroyed");
     }
 

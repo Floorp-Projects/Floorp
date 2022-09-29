@@ -43,10 +43,7 @@ add_task(async function() {
   const menuList = toolbox.doc.getElementById("toolbox-frame-menu");
   const frames = Array.from(menuList.querySelectorAll(".command"));
 
-  // Wait for the inspector to be reloaded
-  // (instead of only new-root) in order to wait for full
-  // async update of the inspector.
-  const onNewRoot = inspector.once("reloaded");
+  const onNewRoot = inspector.once("new-root");
   frames[1].click();
   await onNewRoot;
 

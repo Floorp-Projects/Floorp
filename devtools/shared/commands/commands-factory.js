@@ -83,18 +83,22 @@ exports.CommandsFactory = {
   },
 
   /**
-   * Create commands for a given remote tab.
-   *
-   * Note that it can also be used for local tab, but isLocalTab attribute
-   * on commands.descriptorFront will be false.
-   *
-   * @param {Number} browserId: Identify which tab we should create commands for.
+   * For now, this method is only used by browser_target_command_various_descriptors.js
+   * in order to cover about:debugging codepath, where we connect to remote tabs via
+   * their current browserId.
+   * But:
+   *  1) this can also be used to debug local tab, but TabDescriptor.localTab/isLocalTab will be null/false.
+   *  2) beyond this test, this isn't used to connect to remote tab just yet.
+   * Bug 1700909 should start using this from toolbox-init/descriptor-from-url
+   * and will finaly be used to connect to remote tabs.
+
    * @param {Object} options
+   * @param {Number} options.browserId: Mandatory attribute, to identify which tab we should
+   *        create commands for.
    * @param {DevToolsClient} options.client: An optional DevToolsClient. If none is passed,
    *        a new one will be created.
-   * @returns {Object} Commands
    */
-  async forRemoteTab(browserId, { client } = {}) {
+  async forRemoteTabInTest({ browserId, client }) {
     if (!client) {
       client = await createLocalClient();
     }
@@ -105,20 +109,12 @@ exports.CommandsFactory = {
   },
 
   /**
-   * Create commands for a given main process worker.
-   *
-   * @param {String} id: WorkerDebugger's id, which is a unique ID computed by the platform code.
-   *        These ids are exposed via WorkerDescriptor's id attributes.
-   *        WorkerDescriptors can be retrieved via MainFront.listAllWorkers()/listWorkers().
-   * @param {Object} options
-   * @param {DevToolsClient} options.client: An optional DevToolsClient. If none is passed,
-   *        a new one will be created.
-   * @returns {Object} Commands
+   * `id` is the WorkerDebugger's id, which is a unique ID computed by the platform code.
+   * These ids are exposed via WorkerDescriptor's id attributes.
+   * WorkerDescritpors can be retrieved via MainFront.listAllWorkers()/listWorkers().
    */
-  async forWorker(id, { client } = {}) {
-    if (!client) {
-      client = await createLocalClient();
-    }
+  async forWorker(id) {
+    const client = await createLocalClient();
 
     const descriptor = await client.mainRoot.getWorker(id);
     const commands = await createCommandsDictionary(descriptor);
@@ -149,39 +145,16 @@ exports.CommandsFactory = {
     return commands;
   },
 
-  /**
-   * Create commands for a Web Extension.
-   *
-   * @param {String} id The Web Extension ID to debug.
-   * @param {Object} options
-   * @param {DevToolsClient} options.client: An optional DevToolsClient. If none is passed,
-   *        a new one will be created.
-   * @returns {Object} Commands
-   */
-  async forAddon(id, { client } = {}) {
-    if (!client) {
-      client = await createLocalClient();
-    }
+  async forAddon(id) {
+    const client = await createLocalClient();
 
     const descriptor = await client.mainRoot.getAddon({ id });
     const commands = await createCommandsDictionary(descriptor);
     return commands;
   },
 
-  /**
-   * Create commands for a given process
-   *
-   * @param {String} id: The process PID. Pass 0 if you want to debug the main process.
-   *        But ideally, CommandsFactory.forMainProcess should be used instead.
-   * @param {Object} options
-   * @param {DevToolsClient} options.client: An optional DevToolsClient. If none is passed,
-   *        a new one will be created.
-   * @returns {Object} Commands
-   */
-  async forProcess(osPid, { client } = {}) {
-    if (!client) {
-      client = await createLocalClient();
-    }
+  async forProcess(osPid) {
+    const client = await createLocalClient();
 
     const descriptor = await client.mainRoot.getProcess(osPid);
     const commands = await createCommandsDictionary(descriptor);
