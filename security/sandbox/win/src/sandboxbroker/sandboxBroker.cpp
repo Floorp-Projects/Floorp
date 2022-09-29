@@ -1371,15 +1371,13 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
       && aSandbox != mozilla::ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM
 #endif
   ) {
-#if !defined(__MINGW32__) && !defined(__MINGW64__)
     mitigations |= sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
-#endif  // !defined(__MINGW32__) && !defined(__MINGW64__)
   } else {
     if (IsWin10CreatorsUpdateOrLater() &&
         aSandbox == mozilla::ipc::SandboxingKind::UTILITY_AUDIO_DECODING_WMF) {
-#if defined(_M_X64) && !defined(__MINGW64__)
+#if defined(_M_X64)
       mitigations |= sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
-#endif  // defined(_M_X64) && !defined(__MINGW64__)
+#endif  // defined(_M_X64)
     }
   }
 
