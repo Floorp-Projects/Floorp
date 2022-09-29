@@ -93,15 +93,26 @@ impl rpccore::Server for CallbackServer {
 
                 run_in_callback(|| {
                     let nframes = unsafe {
+                        let input_ptr = if input_frame_size > 0 {
+                            if let Some(buf) = &mut self.duplex_input {
+                                buf.as_ptr()
+                            } else {
+                                self.shm.get_slice(input_nbytes).unwrap().as_ptr()
+                            }
+                        } else {
+                            ptr::null()
+                        };
+                        let output_ptr = if output_frame_size > 0 {
+                            self.shm.get_mut_slice(output_nbytes).unwrap().as_mut_ptr()
+                        } else {
+                            ptr::null_mut()
+                        };
+
                         self.data_cb.unwrap()(
                             ptr::null_mut(), // https://github.com/kinetiknz/cubeb/issues/518
                             self.user_ptr as *mut c_void,
-                            if let Some(buf) = &mut self.duplex_input {
-                                buf.as_mut_ptr()
-                            } else {
-                                self.shm.get_slice(input_nbytes).unwrap().as_ptr()
-                            } as *const _,
-                            self.shm.get_mut_slice(output_nbytes).unwrap().as_mut_ptr() as *mut _,
+                            input_ptr as *const _,
+                            output_ptr as *mut _,
                             nframes as _,
                         )
                     };
@@ -145,7 +156,7 @@ impl<'ctx> ClientStream<'ctx> {
     ) -> Result<Stream> {
         assert_not_in_callback();
 
-        let rpc = ctx.rpc();
+        let rpc = ctx.rpc()?;
         let create_params = StreamCreateParams {
             input_stream_params: init_params.input_stream_params,
             output_stream_params: init_params.output_stream_params,
@@ -227,8 +238,10 @@ impl<'ctx> ClientStream<'ctx> {
 impl Drop for ClientStream<'_> {
     fn drop(&mut self) {
         debug!("ClientStream drop");
-        let rpc = self.context.rpc();
-        let _ = send_recv!(rpc, StreamDestroy(self.token) => StreamDestroyed);
+        let _ = self
+            .context
+            .rpc()
+            .and_then(|rpc| send_recv!(rpc, StreamDestroy(self.token) => StreamDestroyed));
         debug!("ClientStream drop - stream destroyed");
         // Wait for CallbackServer to shutdown.  The remote server drops the RPC
         // connection during StreamDestroy, which will cause CallbackServer to drop
@@ -243,49 +256,49 @@ impl Drop for ClientStream<'_> {
 impl StreamOps for ClientStream<'_> {
     fn start(&mut self) -> Result<()> {
         assert_not_in_callback();
-        let rpc = self.context.rpc();
+        let rpc = self.context.rpc()?;
         send_recv!(rpc, StreamStart(self.token) => StreamStarted)
     }
 
     fn stop(&mut self) -> Result<()> {
         assert_not_in_callback();
-        let rpc = self.context.rpc();
+        let rpc = self.context.rpc()?;
         send_recv!(rpc, StreamStop(self.token) => StreamStopped)
     }
 
     fn position(&mut self) -> Result<u64> {
         assert_not_in_callback();
-        let rpc = self.context.rpc();
+        let rpc = self.context.rpc()?;
         send_recv!(rpc, StreamGetPosition(self.token) => StreamPosition())
     }
 
     fn latency(&mut self) -> Result<u32> {
         assert_not_in_callback();
-        let rpc = self.context.rpc();
+        let rpc = self.context.rpc()?;
         send_recv!(rpc, StreamGetLatency(self.token) => StreamLatency())
     }
 
     fn input_latency(&mut self) -> Result<u32> {
         assert_not_in_callback();
-        let rpc = self.context.rpc();
+        let rpc = self.context.rpc()?;
         send_recv!(rpc, StreamGetInputLatency(self.token) => StreamInputLatency())
     }
 
     fn set_volume(&mut self, volume: f32) -> Result<()> {
         assert_not_in_callback();
-        let rpc = self.context.rpc();
+        let rpc = self.context.rpc()?;
         send_recv!(rpc, StreamSetVolume(self.token, volume) => StreamVolumeSet)
     }
 
     fn set_name(&mut self, name: &CStr) -> Result<()> {
         assert_not_in_callback();
-        let rpc = self.context.rpc();
+        let rpc = self.context.rpc()?;
         send_recv!(rpc, StreamSetName(self.token, name.to_owned()) => StreamNameSet)
     }
 
     fn current_device(&mut self) -> Result<&DeviceRef> {
         assert_not_in_callback();
-        let rpc = self.context.rpc();
+        let rpc = self.context.rpc()?;
         match send_recv!(rpc, StreamGetCurrentDevice(self.token) => StreamCurrentDevice()) {
             Ok(d) => Ok(unsafe { DeviceRef::from_ptr(Box::into_raw(Box::new(d.into()))) }),
             Err(e) => Err(e),
@@ -309,7 +322,7 @@ impl StreamOps for ClientStream<'_> {
         device_changed_callback: ffi::cubeb_device_changed_callback,
     ) -> Result<()> {
         assert_not_in_callback();
-        let rpc = self.context.rpc();
+        let rpc = self.context.rpc()?;
         let enable = device_changed_callback.is_some();
         *self.device_change_cb.lock().unwrap() = device_changed_callback;
         send_recv!(rpc, StreamRegisterDeviceChangeCallback(self.token, enable) => StreamRegisterDeviceChangeCallback)

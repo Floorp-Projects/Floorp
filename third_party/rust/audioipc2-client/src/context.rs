@@ -56,8 +56,8 @@ impl ClientContext {
     }
 
     #[doc(hidden)]
-    pub fn rpc(&self) -> rpccore::Proxy<ServerMessage, ClientMessage> {
-        self.rpc.clone()
+    pub fn rpc(&self) -> Result<rpccore::Proxy<ServerMessage, ClientMessage>> {
+        self.rpc.try_clone().map_err(|_| Error::default())
     }
 
     #[doc(hidden)]
@@ -186,7 +186,7 @@ impl ContextOps for ClientContext {
             .handle()
             .bind_client::<CubebClient>(server_connection)
             .map_err(|_| Error::default())?;
-        let rpc2 = rpc.clone();
+        let rpc2 = rpc.try_clone().map_err(|_| Error::default())?;
 
         // Don't let errors bubble from here.  Later calls against this context
         // will return errors the caller expects to handle.
@@ -225,18 +225,18 @@ impl ContextOps for ClientContext {
 
     fn max_channel_count(&mut self) -> Result<u32> {
         assert_not_in_callback();
-        send_recv!(self.rpc(), ContextGetMaxChannelCount => ContextMaxChannelCount())
+        send_recv!(self.rpc()?, ContextGetMaxChannelCount => ContextMaxChannelCount())
     }
 
     fn min_latency(&mut self, params: StreamParams) -> Result<u32> {
         assert_not_in_callback();
         let params = messages::StreamParams::from(params.as_ref());
-        send_recv!(self.rpc(), ContextGetMinLatency(params) => ContextMinLatency())
+        send_recv!(self.rpc()?, ContextGetMinLatency(params) => ContextMinLatency())
     }
 
     fn preferred_sample_rate(&mut self) -> Result<u32> {
         assert_not_in_callback();
-        send_recv!(self.rpc(), ContextGetPreferredSampleRate => ContextPreferredSampleRate())
+        send_recv!(self.rpc()?, ContextGetPreferredSampleRate => ContextPreferredSampleRate())
     }
 
     fn enumerate_devices(
@@ -246,7 +246,7 @@ impl ContextOps for ClientContext {
     ) -> Result<()> {
         assert_not_in_callback();
         let v: Vec<ffi::cubeb_device_info> = send_recv!(
-            self.rpc(), ContextGetDeviceEnumeration(devtype.bits()) => ContextEnumeratedDevices())?
+            self.rpc()?, ContextGetDeviceEnumeration(devtype.bits()) => ContextEnumeratedDevices())?
         .into_iter()
         .map(|i| i.into())
         .collect();
@@ -329,7 +329,7 @@ impl ContextOps for ClientContext {
         assert_not_in_callback();
 
         if !self.device_collection_rpc {
-            let mut fd = send_recv!(self.rpc(),
+            let mut fd = send_recv!(self.rpc()?,
                                  ContextSetupDeviceCollectionCallback =>
                                  ContextSetupDeviceCollectionCallback())?;
 
@@ -358,7 +358,7 @@ impl ContextOps for ClientContext {
         }
 
         let enable = collection_changed_callback.is_some();
-        send_recv!(self.rpc(),
+        send_recv!(self.rpc()?,
                    ContextRegisterDeviceCollectionChanged(devtype.bits(), enable) =>
                    ContextRegisteredDeviceCollectionChanged)
     }
@@ -367,7 +367,9 @@ impl ContextOps for ClientContext {
 impl Drop for ClientContext {
     fn drop(&mut self) {
         debug!("ClientContext dropped...");
-        let _ = send_recv!(self.rpc(), ClientDisconnect => ClientDisconnected);
+        let _ = self
+            .rpc()
+            .and_then(|rpc| send_recv!(rpc, ClientDisconnect => ClientDisconnected));
     }
 }
 

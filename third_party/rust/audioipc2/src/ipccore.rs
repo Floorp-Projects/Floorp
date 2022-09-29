@@ -66,7 +66,7 @@ impl EventLoopHandle {
         <C as Client>::ServerMessage: Serialize + Debug + AssociateHandleForMessage + Send,
         <C as Client>::ClientMessage: DeserializeOwned + Debug + AssociateHandleForMessage + Send,
     {
-        let (handler, mut proxy) = make_client::<C>();
+        let (handler, mut proxy) = make_client::<C>()?;
         let driver = Box::new(FramedDriver::new(handler));
         let r = self.add_connection(connection, driver);
         trace!("EventLoop::bind_client {:?}", r);
@@ -236,7 +236,7 @@ impl EventLoop {
                         debug!("{}: {:?}: done, removing", self.name, token);
                         let mut connection = self.connections.remove(token.0);
                         if let Err(e) = connection.shutdown(self.poll.registry()) {
-                            warn!(
+                            debug!(
                                 "{}: EventLoop drop - closing connection for {:?} failed: {:?}",
                                 self.name, token, e
                             );
@@ -286,7 +286,7 @@ impl EventLoop {
                         debug!("{}: {:?}: done (wake), removing", self.name, token);
                         let mut connection = self.connections.remove(token.0);
                         if let Err(e) = connection.shutdown(self.poll.registry()) {
-                            warn!(
+                            debug!(
                                 "{}: EventLoop drop - closing connection for {:?} failed: {:?}",
                                 self.name, token, e
                             );
@@ -309,7 +309,7 @@ impl Drop for EventLoop {
                 self.name, token
             );
             if let Err(e) = connection.shutdown(self.poll.registry()) {
-                warn!(
+                debug!(
                     "{}: EventLoop drop - closing connection for {:?} failed: {:?}",
                     self.name, token, e
                 );
@@ -880,6 +880,18 @@ mod test {
         server_handle
             .shutdown()
             .expect_err("sending on closed channel");
+    }
+
+    #[test]
+    fn clone_after_drop() {
+        init();
+        let (server, client, client_proxy) = setup();
+        drop(server);
+        drop(client);
+
+        client_proxy
+            .try_clone()
+            .expect_err("cloning a closed proxy");
     }
 
     #[test]
