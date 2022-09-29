@@ -65,10 +65,15 @@ add_task(async function() {
   });
   ok(true, "The content length is  still correct");
 
+  const prevRequest = getSelectedRequest(store.getState());
+
   info("Send the request");
   const waitUntilEventsDisplayed = waitForNetworkEvents(monitor, 1);
   document.querySelector("#http-custom-request-send-button").click();
   await waitUntilEventsDisplayed;
+
+  // Also make sure the selected request has switched to the new resent request
+  await waitUntil(() => getSelectedRequest(store.getState()) !== prevRequest);
 
   const newRequest = getSelectedRequest(store.getState());
 
