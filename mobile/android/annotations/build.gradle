@@ -2,9 +2,12 @@ buildDir "${topobjdir}/gradle/build/mobile/android/annotations"
 
 apply plugin: 'java'
 
+// lint should be X+23.Y.Z of gradle_plugin version, according to:
+// http://googlesamples.github.io/android-custom-lint-rules/api-guide.html#example:samplelintcheckgithubproject/lintversion?
+
 dependencies {
-    implementation 'com.android.tools.lint:lint:30.2.2'
-    implementation 'com.android.tools.lint:lint-checks:30.2.2'
+    implementation 'com.android.tools.lint:lint:30.3.0'
+    implementation 'com.android.tools.lint:lint-checks:30.3.0'
 }
 
 sourceCompatibility = JavaVersion.VERSION_11
