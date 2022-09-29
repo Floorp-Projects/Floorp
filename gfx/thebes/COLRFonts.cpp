@@ -1615,16 +1615,37 @@ struct PaintComposite {
     if (compositeMode == COMPOSITE_DEST) {
       return DispatchPaint(aState, aOffset + backdropPaintOffset);
     }
-    aState.mDrawTarget->PushLayer(true, 1.0, nullptr, Matrix());
-    bool ok = DispatchPaint(aState, aOffset + backdropPaintOffset);
-    if (ok) {
-      aState.mDrawTarget->PushLayerWithBlend(true, 1.0, nullptr, Matrix(),
-                                             IntRect(), false,
-                                             mapCompositionMode(compositeMode));
-      ok = DispatchPaint(aState, aOffset + sourcePaintOffset);
-      aState.mDrawTarget->PopLayer();
+    Rect r = GetBoundingRect(aState, aOffset);
+    if (r.IsEmpty()) {
+      return true;
     }
-    aState.mDrawTarget->PopLayer();
+    r.RoundOut();
+    // Because not all backends support PushLayerWithBlend (looking at you,
+    // DrawTargetD2D1), we paint this sub-graph of the glyph to a temporary
+    // Skia surface where we know we *can* use PushLayerWithBlend, and then
+    // copy it to the final destination.
+    RefPtr dt = Factory::CreateDrawTarget(BackendType::SKIA,
+                                          IntSize(int(r.width), int(r.height)),
+                                          SurfaceFormat::B8G8R8A8);
+    if (!dt) {
+      // If this failed, we'll just bail out, leaving this glyph (partially)
+      // unpainted, but allow other rendering to continue.
+      return true;
+    }
+    dt->SetTransform(Matrix::Translation(-r.TopLeft()));
+    PaintState state = aState;
+    state.mDrawTarget = dt;
+    bool ok = DispatchPaint(state, aOffset + backdropPaintOffset);
+    if (ok) {
+      dt->PushLayerWithBlend(true, 1.0, nullptr, Matrix(), IntRect(), false,
+                             mapCompositionMode(compositeMode));
+      ok = DispatchPaint(state, aOffset + sourcePaintOffset);
+      dt->PopLayer();
+    }
+    if (ok) {
+      RefPtr snapshot = dt->Snapshot();
+      aState.mDrawTarget->DrawSurface(snapshot, r, Rect(Point(), r.Size()));
+    }
     return ok;
   }
 
