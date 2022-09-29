@@ -293,7 +293,7 @@ if (!build_with_mozilla) {
       # Chromecast build config overrides `WEBRTC_USE_PIPEWIRE` even when
       # `rtc_use_pipewire` is not set, which causes pipewire_config to not be
       # included in targets. More details in: webrtc:13898
-      if (is_linux && !is_chromecast) {
+      if (is_linux && !is_castos) {
         defines += [ "WEBRTC_USE_GIO" ]
       }
     }
@@ -406,7 +406,7 @@ rtc_library("desktop_capture_generic") {
     "window_finder.cc",
     "window_finder.h",
   ]
-  if (is_linux && !is_chromecast && rtc_use_pipewire) {
+  if (is_linux && !is_castos && rtc_use_pipewire) {
     sources += [ "desktop_capture_metadata.h" ]
   }
   if (is_mac) {
