@@ -3717,7 +3717,10 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
   }
 
   // Clear past floats before the block if the clear style is not none
-  aLine->SetBreakTypeBefore(breakType);
+  aLine->ClearForcedLineBreak();
+  if (breakType != StyleClear::None) {
+    aLine->SetBreakTypeBefore(breakType);
+  }
 
   // See if we should apply the block-start margin. If the block frame being
   // reflowed is a continuation, then we don't apply its block-start margin
@@ -4748,7 +4751,7 @@ void nsBlockFrame::ReflowInlineFrame(BlockReflowState& aState,
   // break-after-not-complete. There are two situations: we are a
   // block or we are an inline. This makes a total of 10 cases
   // (fortunately, there is some overlap).
-  aLine->SetBreakTypeAfter(StyleClear::None);
+  aLine->ClearForcedLineBreak();
   if (frameReflowStatus.IsInlineBreak() ||
       aState.mTrailingClearFromPIF != StyleClear::None) {
     // Always abort the line reflow (because a line break is the
@@ -4756,11 +4759,6 @@ void nsBlockFrame::ReflowInlineFrame(BlockReflowState& aState,
     *aLineReflowStatus = LineReflowStatus::Stop;
 
     // XXX what should aLine's break-type be set to in all these cases?
-    StyleClear breakType = frameReflowStatus.BreakType();
-    MOZ_ASSERT(StyleClear::None != breakType ||
-                   StyleClear::None != aState.mTrailingClearFromPIF,
-               "bad break type");
-
     if (frameReflowStatus.IsInlineBreakBefore()) {
       // Break-before cases.
       if (aFrame == aLine->mFirstChild) {
@@ -4782,21 +4780,23 @@ void nsBlockFrame::ReflowInlineFrame(BlockReflowState& aState,
         }
       }
     } else {
+      MOZ_ASSERT(frameReflowStatus.IsInlineBreakAfter() ||
+                     aState.mTrailingClearFromPIF != StyleClear::None,
+                 "We should've handled inline break-before in the if-branch!");
+
       // If a float split and its prev-in-flow was followed by a <BR>, then
       // combine the <BR>'s break type with the inline's break type (the inline
       // will be the very next frame after the split float).
+      StyleClear breakType = frameReflowStatus.BreakType();
       if (aState.mTrailingClearFromPIF != StyleClear::None) {
         breakType = nsLayoutUtils::CombineClearType(
             breakType, aState.mTrailingClearFromPIF);
         aState.mTrailingClearFromPIF = StyleClear::None;
       }
       // Break-after cases
-      if (breakType == StyleClear::Line) {
-        if (!aLineLayout.GetLineEndsInBR()) {
-          breakType = StyleClear::None;
-        }
+      if (breakType != StyleClear::None || aLineLayout.GetLineEndsInBR()) {
+        aLine->SetBreakTypeAfter(breakType);
       }
-      aLine->SetBreakTypeAfter(breakType);
       if (frameReflowStatus.IsComplete()) {
         // Split line, but after the frame just reflowed
         SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(),

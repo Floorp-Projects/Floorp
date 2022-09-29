@@ -309,9 +309,9 @@ class nsReflowStatus final {
   bool IsInlineBreakAfter() const { return mInlineBreak == InlineBreak::After; }
   StyleClear BreakType() const { return mBreakType; }
 
-  // Set the inline line-break-before status, and reset other bit flags. The
-  // break type is StyleClear::Line. Note that other frame completion status
-  // isn't expected to matter after calling this method.
+  // Set the inline line-break-before status, and reset other bit flags. Note
+  // that other frame completion status isn't expected to matter after calling
+  // this method.
   //
   // Here's one scenario where a child frame would report this status. Suppose
   // the child has "break-inside:avoid" in its style, and the child (and its
@@ -320,15 +320,13 @@ class nsReflowStatus final {
   // column/page where it will hopefully fit.
   void SetInlineLineBreakBeforeAndReset() {
     Reset();
-    mBreakType = StyleClear::Line;
+    mBreakType = StyleClear::None;
     mInlineBreak = InlineBreak::Before;
   }
 
   // Set the inline line-break-after status. The break type can be changed
   // via the optional aBreakType param.
-  void SetInlineLineBreakAfter(StyleClear aBreakType = StyleClear::Line) {
-    MOZ_ASSERT(aBreakType != StyleClear::None,
-               "Break-after with StyleClear::None is meaningless!");
+  void SetInlineLineBreakAfter(StyleClear aBreakType = StyleClear::None) {
     mBreakType = aBreakType;
     mInlineBreak = InlineBreak::After;
   }

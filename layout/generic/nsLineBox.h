@@ -11,9 +11,9 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
-
 #include "nsILineIterator.h"
 #include "nsIFrame.h"
+#include "nsStyleConsts.h"
 #include "nsTHashSet.h"
 
 #include <algorithm>
@@ -238,31 +238,35 @@ class nsLineBox final : public nsLineLink {
     }
   }
 
-  // mBreakType value
+  // mHasForcedLineBreak bit & mBreakType value
   // Break information is applied *before* the line if the line is a block,
   // or *after* the line if the line is an inline. Confusing, I know, but
   // using different names should help.
   using StyleClear = mozilla::StyleClear;
-  bool HasBreakBefore() const {
-    return IsBlock() && StyleClear::None != BreakType();
+  bool HasForcedLineBreak() const { return mFlags.mHasForcedLineBreak; }
+  void ClearForcedLineBreak() {
+    mFlags.mHasForcedLineBreak = false;
+    mFlags.mBreakType = StyleClear::None;
   }
+
+  bool HasBreakBefore() const { return IsBlock() && HasForcedLineBreak(); }
   void SetBreakTypeBefore(StyleClear aBreakType) {
     MOZ_ASSERT(IsBlock(), "Only blocks have break-before");
-    MOZ_ASSERT(
-        aBreakType == StyleClear::None || aBreakType == StyleClear::Left ||
-            aBreakType == StyleClear::Right || aBreakType == StyleClear::Both,
-        "Only float break types are allowed before a line");
+    MOZ_ASSERT(aBreakType == StyleClear::Left ||
+                   aBreakType == StyleClear::Right ||
+                   aBreakType == StyleClear::Both,
+               "Only StyleClear:Left/Right/Both are allowed before a line");
+    mFlags.mHasForcedLineBreak = true;
     mFlags.mBreakType = aBreakType;
   }
   StyleClear GetBreakTypeBefore() const {
     return IsBlock() ? BreakType() : StyleClear::None;
   }
 
-  bool HasBreakAfter() const {
-    return IsInline() && StyleClear::None != BreakType();
-  }
+  bool HasBreakAfter() const { return IsInline() && HasForcedLineBreak(); }
   void SetBreakTypeAfter(StyleClear aBreakType) {
     MOZ_ASSERT(IsInline(), "Only inlines have break-after");
+    mFlags.mHasForcedLineBreak = true;
     mFlags.mBreakType = aBreakType;
   }
   bool HasFloatBreakAfter() const {
@@ -519,6 +523,9 @@ class nsLineBox final : public nsLineLink {
     // Has this line moved to a different fragment of the block since
     // the last time it was reflowed?
     bool mMovedFragments : 1;
+    // mHasForcedLineBreak indicates that this line has either a break-before or
+    // a break-after.
+    bool mHasForcedLineBreak : 1;
     StyleClear mBreakType;
   };
 

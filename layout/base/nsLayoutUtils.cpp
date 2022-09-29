@@ -2708,7 +2708,6 @@ StyleClear nsLayoutUtils::CombineClearType(StyleClear aOrigClearType,
       }
       break;
     case StyleClear::Both:
-    case StyleClear::Line:
       // Do nothing.
       break;
   }
