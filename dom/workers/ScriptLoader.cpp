@@ -683,16 +683,25 @@ void WorkerScriptLoader::CancelMainThread(
 
     mCancelMainThread = Some(aCancelResult);
 
-    // In the case of a cancellation, service workers fetching from the
-    // cache will still be doing work despite CancelMainThread. Eagerly
-    // clear the promises associated with these scripts.
     for (WorkerLoadContext* loadContext : *aContextList) {
+      // In the case of a cancellation, service workers fetching from the
+      // cache will still be doing work despite CancelMainThread. Eagerly
+      // clear the promises associated with these scripts.
       if (loadContext->IsAwaitingPromise()) {
+        // This will trigger LoadingFinished if we do not set the cancel flag
+        // ahead of time. But, as we do that above, this should not be a
+        // concern.
         loadContext->mCachePromise->MaybeReject(NS_BINDING_ABORTED);
         loadContext->mCachePromise = nullptr;
       }
+      // Both Service workers and other scripts may or may not have been started
+      // at this point. Regardless of their status, call loadingFinished on them
+      // with the cancel result. This must be done eagerly! Otherwise, the
+      // worker private may not live long enough (for example if the browser is
+      // shutting down).
       if (!loadContext->mLoadingFinished) {
-        // Signal that we aborted to ensure proper cleanup.
+        // Eagerly signal that we aborted to ensure proper cleanup.
+        // DO NOT wait on LoadHandlers to complete!
         LoadingFinished(loadContext->mRequest, aCancelResult);
       }
     }
@@ -715,9 +724,7 @@ nsresult WorkerScriptLoader::LoadScripts(
       nsresult rv = LoadScript(loadContext->mRequest);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         LoadingFinished(loadContext->mRequest, rv);
-        // Let any error to be handled as if it was a fetch error when it
-        // comes time to evaluate its script from its load having completed,
-        // that is: do not CancelMainThread already here.
+        CancelMainThread(rv, &aContextList);
         return rv;
       }
     }
@@ -1020,6 +1027,7 @@ void WorkerScriptLoader::TryShutdown() {
 
 void WorkerScriptLoader::ShutdownScriptLoader(bool aResult, bool aMutedError) {
   MOZ_ASSERT(AllScriptsExecuted());
+  mWorkerRef->Private()->AssertIsOnWorkerThread();
 
   if (!aResult) {
     // At this point there are two possibilities:
@@ -1050,10 +1058,9 @@ void WorkerScriptLoader::ShutdownScriptLoader(bool aResult, bool aMutedError) {
   {
     MutexAutoLock lock(CleanUpLock());
 
-    if (!CleanedUp()) {
-      mWorkerRef->Private()->AssertIsOnWorkerThread();
-      mWorkerRef->Private()->StopSyncLoop(mSyncLoopTarget, aResult);
-    }
+    mWorkerRef->Private()->AssertIsOnWorkerThread();
+    mWorkerRef->Private()->StopSyncLoop(mSyncLoopTarget, aResult);
+
     // Signal cleanup
     mCleanedUp = true;
 

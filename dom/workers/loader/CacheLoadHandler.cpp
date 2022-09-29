@@ -267,6 +267,10 @@ void CacheLoadHandler::Fail(nsresult aRv) {
   }
   mLoadContext->mCachePromise = nullptr;
 
+  if (mLoader->IsCancelled()) {
+    return;
+  }
+
   mLoader->LoadingFinished(mLoadContext->mRequest, aRv);
 }
 
