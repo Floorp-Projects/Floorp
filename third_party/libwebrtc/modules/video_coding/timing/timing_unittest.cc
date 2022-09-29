@@ -138,6 +138,31 @@ TEST(ReceiverTimingTest, TimestampWrapAround) {
   }
 }
 
+TEST(ReceiverTimingTest, UseLowLatencyRenderer) {
+  test::ScopedKeyValueConfig field_trials;
+  SimulatedClock clock(0);
+  VCMTiming timing(&clock, field_trials);
+  timing.Reset();
+  // Default is false.
+  EXPECT_FALSE(timing.RenderParameters().use_low_latency_rendering);
+  // False if min playout delay > 0.
+  timing.set_min_playout_delay(TimeDelta::Millis(10));
+  timing.set_max_playout_delay(TimeDelta::Millis(20));
+  EXPECT_FALSE(timing.RenderParameters().use_low_latency_rendering);
+  // True if min==0, max > 0.
+  timing.set_min_playout_delay(TimeDelta::Millis(0));
+  EXPECT_TRUE(timing.RenderParameters().use_low_latency_rendering);
+  // True if min==max==0.
+  timing.set_max_playout_delay(TimeDelta::Millis(0));
+  EXPECT_TRUE(timing.RenderParameters().use_low_latency_rendering);
+  // True also for max playout delay==500 ms.
+  timing.set_max_playout_delay(TimeDelta::Millis(500));
+  EXPECT_TRUE(timing.RenderParameters().use_low_latency_rendering);
+  // False if max playout delay > 500 ms.
+  timing.set_max_playout_delay(TimeDelta::Millis(501));
+  EXPECT_FALSE(timing.RenderParameters().use_low_latency_rendering);
+}
+
 TEST(ReceiverTimingTest, MaxWaitingTimeIsZeroForZeroRenderTime) {
   // This is the default path when the RTP playout delay header extension is set
   // to min==0 and max==0.

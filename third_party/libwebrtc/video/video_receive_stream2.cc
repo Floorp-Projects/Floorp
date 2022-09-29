@@ -1003,6 +1003,7 @@ void VideoReceiveStream2::UpdatePlayoutDelays() const {
   const std::initializer_list<absl::optional<TimeDelta>> min_delays = {
       frame_minimum_playout_delay_, base_minimum_playout_delay_,
       syncable_minimum_playout_delay_};
+
   // Since nullopt < anything, this will return the largest of the minumum
   // delays, or nullopt if all are nullopt.
   absl::optional<TimeDelta> minimum_delay = std::max(min_delays);

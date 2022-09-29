@@ -71,6 +71,7 @@ rtc_library("timing_module") {
     ":codec_timer",
     "../../../api:field_trials_view",
     "../../../api/units:time_delta",
+    "../../../api/video:video_frame",
     "../../../api/video:video_rtp_headers",
     "../../../rtc_base:logging",
     "../../../rtc_base:macromagic",
