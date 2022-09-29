@@ -302,7 +302,7 @@ const BASE_MESSAGES = () => [
                     string_id: "mr2022-onboarding-colorway-label-default",
                   },
                   tooltip: {
-                    string_id: "mr2022-onboarding-colorway-tooltip-default",
+                    string_id: "mr2022-onboarding-colorway-tooltip-default2",
                   },
                   description: {
                     string_id: "mr2022-onboarding-colorway-description-default",
