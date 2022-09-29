@@ -2,8 +2,8 @@ var InlineSpellChecker;
 var SpellCheckHelper;
 
 function test() {
-  let tempScope = ChromeUtils.import(
-    "resource://gre/modules/InlineSpellChecker.jsm"
+  let tempScope = ChromeUtils.importESModule(
+    "resource://gre/modules/InlineSpellChecker.sys.mjs"
   );
   InlineSpellChecker = tempScope.InlineSpellChecker;
   SpellCheckHelper = tempScope.SpellCheckHelper;

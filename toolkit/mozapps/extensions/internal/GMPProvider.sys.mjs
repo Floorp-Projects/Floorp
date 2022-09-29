@@ -10,19 +10,23 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  GMPInstallManager: "resource://gre/modules/GMPInstallManager.sys.mjs",
+  Log: "resource://gre/modules/Log.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
-  Log: "resource://gre/modules/Log.jsm",
-  GMPInstallManager: "resource://gre/modules/GMPInstallManager.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
-// These symbols are, unfortunately, accessed via the module global from
-// tests, and therefore cannot be lexical definitions.
-var { GMPPrefs, GMPUtils, OPEN_H264_ID, WIDEVINE_ID } = ChromeUtils.import(
-  "resource://gre/modules/GMPUtils.jsm"
-);
+import {
+  GMPPrefs,
+  GMPUtils,
+  OPEN_H264_ID,
+  WIDEVINE_ID,
+} from "resource://gre/modules/GMPUtils.sys.mjs";
 
 const SEC_IN_A_DAY = 24 * 60 * 60;
 // How long to wait after a user enabled EME before attempting to download CDMs.

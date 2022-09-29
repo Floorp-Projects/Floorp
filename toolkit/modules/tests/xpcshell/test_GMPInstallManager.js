@@ -5,12 +5,12 @@
 const URL_HOST = "http://localhost";
 const PR_USEC_PER_MSEC = 1000;
 
-const { GMPExtractor, GMPInstallManager } = ChromeUtils.import(
-  "resource://gre/modules/GMPInstallManager.jsm"
+const { GMPExtractor, GMPInstallManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/GMPInstallManager.sys.mjs"
 );
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { Preferences } = ChromeUtils.import(
@@ -19,11 +19,11 @@ const { Preferences } = ChromeUtils.import(
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
-const { UpdateUtils } = ChromeUtils.import(
-  "resource://gre/modules/UpdateUtils.jsm"
+const { UpdateUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/UpdateUtils.sys.mjs"
 );
-const { GMPPrefs, OPEN_H264_ID } = ChromeUtils.import(
-  "resource://gre/modules/GMPUtils.jsm"
+const { GMPPrefs, OPEN_H264_ID } = ChromeUtils.importESModule(
+  "resource://gre/modules/GMPUtils.sys.mjs"
 );
 const { ProductAddonCheckerTestUtils } = ChromeUtils.import(
   "resource://gre/modules/addons/ProductAddonChecker.jsm"

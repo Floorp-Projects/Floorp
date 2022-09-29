@@ -12,11 +12,6 @@ const { CFRMessageProvider } = ChromeUtils.import(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "ProfileAge",
-  "resource://gre/modules/ProfileAge.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
@@ -25,13 +20,10 @@ ChromeUtils.defineModuleGetter(
   "ShellService",
   "resource:///modules/ShellService.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "NewTabUtils",
-  "resource://gre/modules/NewTabUtils.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
+  ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(

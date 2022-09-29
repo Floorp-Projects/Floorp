@@ -11,8 +11,8 @@
     "resource://gre/modules/AppConstants.jsm"
   );
 
-  const { BrowserUtils } = ChromeUtils.import(
-    "resource://gre/modules/BrowserUtils.jsm"
+  const { BrowserUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/BrowserUtils.sys.mjs"
   );
 
   const { XPCOMUtils } = ChromeUtils.importESModule(
@@ -482,8 +482,9 @@
     get finder() {
       if (this.isRemoteBrowser) {
         if (!this._remoteFinder) {
-          let jsm = "resource://gre/modules/FinderParent.jsm";
-          let { FinderParent } = ChromeUtils.import(jsm);
+          let { FinderParent } = ChromeUtils.importESModule(
+            "resource://gre/modules/FinderParent.sys.mjs"
+          );
           this._remoteFinder = new FinderParent(this);
         }
         return this._remoteFinder;
@@ -493,8 +494,8 @@
           return null;
         }
 
-        let { Finder } = ChromeUtils.import(
-          "resource://gre/modules/Finder.jsm"
+        let { Finder } = ChromeUtils.importESModule(
+          "resource://gre/modules/Finder.sys.mjs"
         );
         this._finder = new Finder(this.docShell);
       }

@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// TODO: Bug 1792404 - this needs to stay using `importESModule` until the bug
-// is fixed, otherwise browser_startup_content*.js will fail.
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const INTERNAL_FIELDS = new Set(["_level", "_message", "_time", "_namespace"]);
 

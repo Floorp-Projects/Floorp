@@ -17,8 +17,11 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
 });
 

@@ -17,9 +17,12 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  Log: "resource://gre/modules/Log.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
-  Log: "resource://gre/modules/Log.jsm",
 });
 
 const { TelemetryUtils } = ChromeUtils.import(

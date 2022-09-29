@@ -14,15 +14,18 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  InlineSpellCheckerContent:
+    "resource://gre/modules/InlineSpellCheckerContent.sys.mjs",
+  SelectionUtils: "resource://gre/modules/SelectionUtils.sys.mjs",
+  SpellCheckHelper: "resource://gre/modules/InlineSpellChecker.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
-  SpellCheckHelper: "resource://gre/modules/InlineSpellChecker.jsm",
   LoginManagerChild: "resource://gre/modules/LoginManagerChild.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  SelectionUtils: "resource://gre/modules/SelectionUtils.jsm",
-  InlineSpellCheckerContent:
-    "resource://gre/modules/InlineSpellCheckerContent.jsm",
   ContentDOMReference: "resource://gre/modules/ContentDOMReference.jsm",
 });
 

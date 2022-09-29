@@ -22,8 +22,8 @@ var { AppConstants } = ChromeUtils.import(
 );
 
 var { Downloads } = ChromeUtils.import("resource://gre/modules/Downloads.jsm");
-var { Integration } = ChromeUtils.import(
-  "resource://gre/modules/Integration.jsm"
+var { Integration } = ChromeUtils.importESModule(
+  "resource://gre/modules/Integration.sys.mjs"
 );
 /* global DownloadIntegration */
 Integration.downloads.defineModuleGetter(
@@ -61,7 +61,12 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 });
 
 ChromeUtils.defineESModuleGetters(this, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderQuickActions:
     "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
@@ -72,31 +77,26 @@ ChromeUtils.defineESModuleGetters(this, {
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AMTelemetry: "resource://gre/modules/AddonManager.jsm",
-  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.jsm",
   DownloadUtils: "resource://gre/modules/DownloadUtils.jsm",
   ExtensionPreferencesManager:
     "resource://gre/modules/ExtensionPreferencesManager.jsm",
   ExtensionSettingsStore: "resource://gre/modules/ExtensionSettingsStore.jsm",
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
   FeatureGate: "resource://featuregates/FeatureGate.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   LangPackMatcher: "resource://gre/modules/LangPackMatcher.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
-  OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
   SelectionChangedMenulist: "resource:///modules/SelectionChangedMenulist.jsm",
-  ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
   SiteDataManager: "resource:///modules/SiteDataManager.jsm",
   TransientPrefs: "resource:///modules/TransientPrefs.jsm",
-  UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
   UIState: "resource://services-sync/UIState.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "gSubDialog", function() {
-  const { SubDialogManager } = ChromeUtils.import(
-    "resource://gre/modules/SubDialog.jsm"
+  const { SubDialogManager } = ChromeUtils.importESModule(
+    "resource://gre/modules/SubDialog.sys.mjs"
   );
   return new SubDialogManager({
     dialogStack: document.getElementById("dialogStack"),

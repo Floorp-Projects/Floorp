@@ -3,9 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var { InlineSpellChecker, SpellCheckHelper } = ChromeUtils.import(
-  "resource://gre/modules/InlineSpellChecker.jsm"
-);
+import {
+  InlineSpellChecker,
+  SpellCheckHelper,
+} from "resource://gre/modules/InlineSpellChecker.sys.mjs";
 
 export var InlineSpellCheckerContent = {
   _spellChecker: null,

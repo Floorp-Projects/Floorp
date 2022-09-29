@@ -1,38 +1,40 @@
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 
 function foo() {
-  return bar(); // line 4
+  return bar(); // line 6
 }
 
 function bar() {
-  return baz(); // line 8
+  return baz(); // line 10
 }
 
 function baz() {
-  return Log.stackTrace(Components.stack.caller); // line 12
+  return Log.stackTrace(Components.stack.caller); // line 14
 }
 
 function start() {
-  return next(); // line 16
+  return next(); // line 18
 }
 
 function next() {
-  return finish(); // line 20
+  return finish(); // line 22
 }
 
 function finish() {
-  return Log.stackTrace(); // line 24
+  return Log.stackTrace(); // line 26
 }
 
 function run_test() {
-  const stackFrameTrace = foo(); // line 28
+  const stackFrameTrace = foo(); // line 30
 
   print(`Got trace for nsIStackFrame case: ${stackFrameTrace}`);
 
-  const fooPos = stackFrameTrace.search(/foo@.*test_Log_nsIStackFrame.js:4/);
-  const barPos = stackFrameTrace.search(/bar@.*test_Log_nsIStackFrame.js:8/);
+  const fooPos = stackFrameTrace.search(/foo@.*test_Log_nsIStackFrame.js:6/);
+  const barPos = stackFrameTrace.search(/bar@.*test_Log_nsIStackFrame.js:10/);
   const runTestPos = stackFrameTrace.search(
-    /run_test@.*test_Log_nsIStackFrame.js:28/
+    /run_test@.*test_Log_nsIStackFrame.js:30/
   );
 
   print(`String positions: ${runTestPos} ${barPos} ${fooPos}`);
@@ -44,10 +46,10 @@ function run_test() {
 
   print(`Got trace for empty argument case: ${emptyArgTrace}`);
 
-  const startPos = emptyArgTrace.search(/start@.*test_Log_nsIStackFrame.js:16/);
-  const nextPos = emptyArgTrace.search(/next@.*test_Log_nsIStackFrame.js:20/);
+  const startPos = emptyArgTrace.search(/start@.*test_Log_nsIStackFrame.js:18/);
+  const nextPos = emptyArgTrace.search(/next@.*test_Log_nsIStackFrame.js:22/);
   const finishPos = emptyArgTrace.search(
-    /finish@.*test_Log_nsIStackFrame.js:24/
+    /finish@.*test_Log_nsIStackFrame.js:26/
   );
 
   print(`String positions: ${finishPos} ${nextPos} ${startPos}`);

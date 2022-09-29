@@ -27,10 +27,10 @@ const { AppConstants } = ChromeUtils.import(
 let JSPROCESSACTORS = {
   AsyncPrefs: {
     parent: {
-      moduleURI: "resource://gre/modules/AsyncPrefs.jsm",
+      esModuleURI: "resource://gre/modules/AsyncPrefs.sys.mjs",
     },
     child: {
-      moduleURI: "resource://gre/modules/AsyncPrefs.jsm",
+      esModuleURI: "resource://gre/modules/AsyncPrefs.sys.mjs",
     },
   },
 

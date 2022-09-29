@@ -8,8 +8,8 @@ const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
 
 const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
 
-const { Integration } = ChromeUtils.import(
-  "resource://gre/modules/Integration.jsm"
+const { Integration } = ChromeUtils.importESModule(
+  "resource://gre/modules/Integration.sys.mjs"
 );
 
 /* global DownloadIntegration */

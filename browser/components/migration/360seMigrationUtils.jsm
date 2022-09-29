@@ -18,10 +18,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Sqlite: "resource://gre/modules/Sqlite.jsm",
+  Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(

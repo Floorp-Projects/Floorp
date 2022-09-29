@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { BinarySearch } = ChromeUtils.import(
-  "resource://gre/modules/BinarySearch.jsm"
+const { BinarySearch } = ChromeUtils.importESModule(
+  "resource://gre/modules/BinarySearch.sys.mjs"
 );
 
 function run_test() {

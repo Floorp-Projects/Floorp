@@ -16,7 +16,9 @@ const {
   SYNC_FAILED_PARTIAL,
   SYNC_SUCCEEDED,
 } = ChromeUtils.import("resource://services-sync/constants.js");
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const { SyncAuthManager } = ChromeUtils.import(
   "resource://services-sync/sync_auth.js"
 );

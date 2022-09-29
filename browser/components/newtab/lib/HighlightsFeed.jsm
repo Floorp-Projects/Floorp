@@ -33,11 +33,9 @@ ChromeUtils.defineModuleGetter(
   "LinksCache",
   "resource://activity-stream/lib/LinksCache.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NewTabUtils",
-  "resource://gre/modules/NewTabUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "Screenshots",

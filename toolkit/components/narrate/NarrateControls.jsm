@@ -10,8 +10,8 @@ const { VoiceSelect } = ChromeUtils.import(
 const { Narrator } = ChromeUtils.import(
   "resource://gre/modules/narrate/Narrator.jsm"
 );
-const { AsyncPrefs } = ChromeUtils.import(
-  "resource://gre/modules/AsyncPrefs.jsm"
+const { AsyncPrefs } = ChromeUtils.importESModule(
+  "resource://gre/modules/AsyncPrefs.sys.mjs"
 );
 
 var EXPORTED_SYMBOLS = ["NarrateControls"];

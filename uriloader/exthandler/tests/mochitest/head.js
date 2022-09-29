@@ -1,4 +1,6 @@
-var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+var { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
+);
 var { HandlerServiceTestUtils } = ChromeUtils.import(
   "resource://testing-common/HandlerServiceTestUtils.jsm"
 );

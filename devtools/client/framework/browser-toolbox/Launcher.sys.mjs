@@ -30,11 +30,9 @@ ChromeUtils.defineModuleGetter(
   "BackgroundTasksUtils",
   "resource://gre/modules/BackgroundTasksUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+});
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   XreDirProvider: [

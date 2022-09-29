@@ -23,6 +23,10 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddressResult: "resource://autofill/ProfileAutoCompleteResult.jsm",
   ComponentUtils: "resource://gre/modules/ComponentUtils.jsm",
@@ -31,7 +35,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   FormAutofill: "resource://autofill/FormAutofill.jsm",
   FormAutofillHandler: "resource://autofill/FormAutofillHandler.jsm",
   FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
-  FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });

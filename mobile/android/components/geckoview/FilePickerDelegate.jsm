@@ -15,8 +15,11 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
 });
 

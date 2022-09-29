@@ -48,11 +48,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "IndexedDB",
-  "resource://gre/modules/IndexedDB.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  IndexedDB: "resource://gre/modules/IndexedDB.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "PrivateBrowsingUtils",

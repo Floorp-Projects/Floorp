@@ -18,6 +18,10 @@ const { FileTestUtils } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   _ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
@@ -27,7 +31,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
   FeatureManifest: "resource://nimbus/FeatureManifest.js",
-  JsonSchema: "resource://gre/modules/JsonSchema.jsm",
 });
 
 const { SYNC_DATA_PREF_BRANCH, SYNC_DEFAULTS_PREF_BRANCH } = ExperimentStore;

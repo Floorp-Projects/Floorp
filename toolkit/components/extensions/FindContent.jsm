@@ -11,22 +11,15 @@ const lazy = {};
 
 /* exported FindContent */
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FinderIterator",
-  "resource://gre/modules/FinderIterator.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FinderHighlighter",
-  "resource://gre/modules/FinderHighlighter.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Finder: "resource://gre/modules/Finder.sys.mjs",
+  FinderHighlighter: "resource://gre/modules/FinderHighlighter.sys.mjs",
+  FinderIterator: "resource://gre/modules/FinderIterator.sys.mjs",
+});
 
 class FindContent {
   constructor(docShell) {
-    const { Finder } = ChromeUtils.import("resource://gre/modules/Finder.jsm");
-    this.finder = new Finder(docShell);
+    this.finder = new lazy.Finder(docShell);
   }
 
   get iterator() {

@@ -17,9 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 
-const { Rect, Point } = ChromeUtils.import(
-  "resource://gre/modules/Geometry.jsm"
-);
+import { Rect, Point } from "resource://gre/modules/Geometry.sys.mjs";
 
 const PLAYER_URI = "chrome://global/content/pictureinpicture/player.xhtml";
 var PLAYER_FEATURES =

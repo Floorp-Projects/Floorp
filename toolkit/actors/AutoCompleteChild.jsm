@@ -9,11 +9,9 @@ var EXPORTED_SYMBOLS = ["AutoCompleteChild"];
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LayoutUtils",
-  "resource://gre/modules/LayoutUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  LayoutUtils: "resource://gre/modules/LayoutUtils.sys.mjs",
+});
 
 ChromeUtils.defineModuleGetter(
   lazy,

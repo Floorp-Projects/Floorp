@@ -9,8 +9,8 @@
 
 "use strict";
 
-var { Integration } = ChromeUtils.import(
-  "resource://gre/modules/Integration.jsm"
+var { Integration } = ChromeUtils.importESModule(
+  "resource://gre/modules/Integration.sys.mjs"
 );
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -20,7 +20,9 @@ const { AppConstants } = ChromeUtils.import(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -28,12 +30,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Downloads: "resource://gre/modules/Downloads.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   FileTestUtils: "resource://testing-common/FileTestUtils.jsm",
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
   HttpServer: "resource://testing-common/httpd.js",
   MockRegistrar: "resource://testing-common/MockRegistrar.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
 });

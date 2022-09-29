@@ -10,8 +10,8 @@ const { AddonsEngine } = ChromeUtils.import(
   "resource://services-sync/engines/addons.js"
 );
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 
 const HTTP_PORT = 8888;

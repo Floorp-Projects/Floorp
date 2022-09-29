@@ -8,8 +8,8 @@ add_task(async function test_getSelectionDetails_input() {
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async browser => {
     await SpecialPowers.spawn(browser, [], () => {
       function checkSelection({ id, text, linkURL }) {
-        const { SelectionUtils } = ChromeUtils.import(
-          "resource://gre/modules/SelectionUtils.jsm"
+        const { SelectionUtils } = ChromeUtils.importESModule(
+          "resource://gre/modules/SelectionUtils.sys.mjs"
         );
         content.document.getElementById(id).select();
         // It seems that when running as a test, the previous line will set

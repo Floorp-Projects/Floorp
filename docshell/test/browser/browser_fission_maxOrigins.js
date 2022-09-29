@@ -134,8 +134,8 @@ add_task(async function() {
     ],
   });
 
-  const { BrowserTelemetryUtils } = ChromeUtils.import(
-    "resource://gre/modules/BrowserTelemetryUtils.jsm"
+  const { BrowserTelemetryUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/BrowserTelemetryUtils.sys.mjs"
   );
 
   // Make sure we actually record telemetry for our disqualifying origin

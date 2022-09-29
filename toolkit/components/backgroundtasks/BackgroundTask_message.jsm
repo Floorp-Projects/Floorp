@@ -71,11 +71,14 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  IndexedDB: "resource://gre/modules/IndexedDB.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ClientEnvironmentBase:
     "resource://gre/modules/components-utils/ClientEnvironment.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
-  IndexedDB: "resource://gre/modules/IndexedDB.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
   ToastNotification: "resource://activity-stream/lib/ToastNotification.jsm",

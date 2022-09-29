@@ -4,11 +4,11 @@
 
 "use strict";
 
-const { Troubleshoot } = ChromeUtils.import(
-  "resource://gre/modules/Troubleshoot.jsm"
+const { Troubleshoot } = ChromeUtils.importESModule(
+  "resource://gre/modules/Troubleshoot.sys.mjs"
 );
-const { ResetProfile } = ChromeUtils.import(
-  "resource://gre/modules/ResetProfile.jsm"
+const { ResetProfile } = ChromeUtils.importESModule(
+  "resource://gre/modules/ResetProfile.sys.mjs"
 );
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
@@ -27,12 +27,8 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineESModuleGetters(this, {
   PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.sys.mjs",
+  ProcessType: "resource://gre/modules/ProcessType.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "ProcessType",
-  "resource://gre/modules/ProcessType.jsm"
-);
 
 window.addEventListener("load", function onload(event) {
   try {

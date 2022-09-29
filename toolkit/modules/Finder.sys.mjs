@@ -5,7 +5,7 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { Rect } = ChromeUtils.import("resource://gre/modules/Geometry.jsm");
+import { Rect } from "resource://gre/modules/Geometry.sys.mjs";
 
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
@@ -13,11 +13,9 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FinderIterator",
-  "resource://gre/modules/FinderIterator.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FinderIterator: "resource://gre/modules/FinderIterator.sys.mjs",
+});
 
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -181,8 +179,8 @@ Finder.prototype = {
       return this._highlighter;
     }
 
-    const { FinderHighlighter } = ChromeUtils.import(
-      "resource://gre/modules/FinderHighlighter.jsm"
+    const { FinderHighlighter } = ChromeUtils.importESModule(
+      "resource://gre/modules/FinderHighlighter.sys.mjs"
     );
     return (this._highlighter = new FinderHighlighter(this));
   },

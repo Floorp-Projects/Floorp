@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["initializeIdentityWithTokenServerResponse"];
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
 const { SyncAuthManager } = ChromeUtils.import(
   "resource://services-sync/sync_auth.js"

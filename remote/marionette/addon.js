@@ -12,10 +12,12 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
-
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
 });
 

@@ -4,8 +4,8 @@
 
 function run_test() {
   const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-  const { FileUtils } = ChromeUtils.import(
-    "resource://gre/modules/FileUtils.jsm"
+  const { FileUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/FileUtils.sys.mjs"
   );
 
   let isWindows = "@mozilla.org/windows-registry-key;1" in Cc;

@@ -6,17 +6,17 @@
 const { GMPTestUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/addons/GMPProvider.sys.mjs"
 );
-const { GMPInstallManager } = ChromeUtils.import(
-  "resource://gre/modules/GMPInstallManager.jsm"
+const { GMPInstallManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/GMPInstallManager.sys.mjs"
 );
 const {
   GMPPrefs,
   GMP_PLUGIN_IDS,
   OPEN_H264_ID,
   WIDEVINE_ID,
-} = ChromeUtils.import("resource://gre/modules/GMPUtils.jsm");
-const { UpdateUtils } = ChromeUtils.import(
-  "resource://gre/modules/UpdateUtils.jsm"
+} = ChromeUtils.importESModule("resource://gre/modules/GMPUtils.sys.mjs");
+const { UpdateUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/UpdateUtils.sys.mjs"
 );
 
 XPCOMUtils.defineLazyGetter(

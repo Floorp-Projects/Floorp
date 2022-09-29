@@ -20,7 +20,9 @@ if (arguments.length != 2) {
 }
 
 var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+var { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
+);
 
 var gCertDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
   Ci.nsIX509CertDB

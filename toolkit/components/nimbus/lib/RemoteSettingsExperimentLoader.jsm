@@ -15,6 +15,10 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
   TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
@@ -22,7 +26,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
   CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
-  JsonSchema: "resource://gre/modules/JsonSchema.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {

@@ -67,8 +67,8 @@ add_setup(async function head_setup() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function() {
-  let { FileUtils } = ChromeUtils.import(
-    "resource://gre/modules/FileUtils.jsm"
+  let { FileUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/FileUtils.sys.mjs"
   );
   let { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
   let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
@@ -92,8 +92,8 @@ XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "SyncPingValidator", function() {
-  const { JsonSchema } = ChromeUtils.import(
-    "resource://gre/modules/JsonSchema.jsm"
+  const { JsonSchema } = ChromeUtils.importESModule(
+    "resource://gre/modules/JsonSchema.sys.mjs"
   );
   return new JsonSchema.Validator(SyncPingSchema);
 });

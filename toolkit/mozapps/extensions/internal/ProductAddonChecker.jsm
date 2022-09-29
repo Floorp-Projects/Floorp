@@ -6,18 +6,17 @@
 
 var EXPORTED_SYMBOLS = ["ProductAddonChecker", "ProductAddonCheckerTestUtils"];
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
 );
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const { CertUtils } = ChromeUtils.import(
-  "resource://gre/modules/CertUtils.jsm"
+const { CertUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/CertUtils.sys.mjs"
 );
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ServiceRequest: "resource://gre/modules/ServiceRequest.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  ServiceRequest: "resource://gre/modules/ServiceRequest.sys.mjs",
 });
 
 // This will inherit settings from the "addons" logger.

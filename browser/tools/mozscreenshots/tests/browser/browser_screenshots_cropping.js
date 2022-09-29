@@ -6,7 +6,9 @@
 
 /* import-globals-from ../../head.js */
 
-const { Rect } = ChromeUtils.import("resource://gre/modules/Geometry.jsm");
+const { Rect } = ChromeUtils.importESModule(
+  "resource://gre/modules/Geometry.sys.mjs"
+);
 
 async function draw(window, src) {
   const { document, Image } = window;

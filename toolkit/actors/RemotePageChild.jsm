@@ -15,20 +15,15 @@ var EXPORTED_SYMBOLS = ["RemotePageChild"];
  */
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AsyncPrefs",
-  "resource://gre/modules/AsyncPrefs.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AsyncPrefs: "resource://gre/modules/AsyncPrefs.sys.mjs",
+  RemotePageAccessManager:
+    "resource://gre/modules/RemotePageAccessManager.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "RemotePageAccessManager",
-  "resource://gre/modules/RemotePageAccessManager.jsm"
 );
 
 class RemotePageChild extends JSWindowActorChild {

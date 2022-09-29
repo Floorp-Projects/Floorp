@@ -10,11 +10,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "JsonSchema",
-  "resource://gre/modules/JsonSchema.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 

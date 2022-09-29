@@ -10,11 +10,10 @@ var EXPORTED_SYMBOLS = ["InlineSpellCheckerChild"];
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "InlineSpellCheckerContent",
-  "resource://gre/modules/InlineSpellCheckerContent.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  InlineSpellCheckerContent:
+    "resource://gre/modules/InlineSpellCheckerContent.sys.mjs",
+});
 
 class InlineSpellCheckerChild extends JSWindowActorChild {
   receiveMessage(msg) {

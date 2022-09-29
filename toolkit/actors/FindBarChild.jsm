@@ -12,11 +12,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+});
 
 class FindBarChild extends JSWindowActorChild {
   constructor() {
@@ -28,8 +26,8 @@ class FindBarChild extends JSWindowActorChild {
       this,
       "FindBarContent",
       () => {
-        const { FindBarContent } = ChromeUtils.import(
-          "resource://gre/modules/FindBarContent.jsm"
+        const { FindBarContent } = ChromeUtils.importESModule(
+          "resource://gre/modules/FindBarContent.sys.mjs"
         );
         return new FindBarContent(this);
       },

@@ -1,7 +1,7 @@
 "use strict";
 
-const { OSKeyStore } = ChromeUtils.import(
-  "resource://gre/modules/OSKeyStore.jsm"
+const { OSKeyStore } = ChromeUtils.importESModule(
+  "resource://gre/modules/OSKeyStore.sys.mjs"
 );
 const { OSKeyStoreTestUtils } = ChromeUtils.import(
   "resource://testing-common/OSKeyStoreTestUtils.jsm"
@@ -410,8 +410,8 @@ async function focusAndWaitForFieldsIdentified(browserOrContext, selector) {
     browserOrContext,
     [selector],
     async function(selector) {
-      const { FormLikeFactory } = ChromeUtils.import(
-        "resource://gre/modules/FormLikeFactory.jsm"
+      const { FormLikeFactory } = ChromeUtils.importESModule(
+        "resource://gre/modules/FormLikeFactory.sys.mjs"
       );
       const input = content.document.querySelector(selector);
       const rootElement = FormLikeFactory.findRootForField(input);
@@ -461,8 +461,8 @@ async function focusAndWaitForFieldsIdentified(browserOrContext, selector) {
 
   await sleep();
   await SpecialPowers.spawn(browserOrContext, [], async function() {
-    const { FormLikeFactory } = ChromeUtils.import(
-      "resource://gre/modules/FormLikeFactory.jsm"
+    const { FormLikeFactory } = ChromeUtils.importESModule(
+      "resource://gre/modules/FormLikeFactory.sys.mjs"
     );
     FormLikeFactory.findRootForField(
       content.document.activeElement

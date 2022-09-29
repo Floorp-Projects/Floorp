@@ -31,8 +31,8 @@ const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>
       <div></div>
     </body>`;
 
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 
 add_task(async function() {

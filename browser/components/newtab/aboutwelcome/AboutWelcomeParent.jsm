@@ -13,12 +13,13 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
@@ -28,7 +29,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",
   AboutWelcomeDefaults:
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeDefaults.jsm",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   LangPackMatcher: "resource://gre/modules/LangPackMatcher.jsm",
 });

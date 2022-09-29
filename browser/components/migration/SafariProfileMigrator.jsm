@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { MigrationUtils, MigratorPrototype } = ChromeUtils.import(
@@ -14,14 +14,10 @@ const { MigrationUtils, MigratorPrototype } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PropertyListUtils",
-  "resource://gre/modules/PropertyListUtils.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  PropertyListUtils: "resource://gre/modules/PropertyListUtils.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   lazy,

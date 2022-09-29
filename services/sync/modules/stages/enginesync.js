@@ -8,7 +8,9 @@
 
 var EXPORTED_SYMBOLS = ["EngineSynchronizer"];
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const {
   ABORT_SYNC_COMMAND,
   LOGIN_FAILED_NETWORK_ERROR,

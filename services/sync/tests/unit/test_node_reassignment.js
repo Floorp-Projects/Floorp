@@ -10,8 +10,8 @@ const { RESTRequest } = ChromeUtils.import(
   "resource://services-common/rest.js"
 );
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
+const { PromiseUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseUtils.sys.mjs"
 );
 
 add_task(async function setup() {

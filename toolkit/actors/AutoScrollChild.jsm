@@ -7,11 +7,9 @@ var EXPORTED_SYMBOLS = ["AutoScrollChild"];
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+});
 
 class AutoScrollChild extends JSWindowActorChild {
   constructor() {

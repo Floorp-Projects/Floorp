@@ -15,10 +15,14 @@ const PR_HOURS = 60 * 60 * 1000000;
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
+
+ChromeUtils.defineESModuleGetters(this, {
+  Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   FormHistory: "resource://gre/modules/FormHistory.jsm",
   FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
-  Sqlite: "resource://gre/modules/Sqlite.jsm",
 });
 
 do_get_profile();

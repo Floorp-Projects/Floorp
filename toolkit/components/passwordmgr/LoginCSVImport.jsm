@@ -20,9 +20,12 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  ResponsivenessMonitor: "resource://gre/modules/ResponsivenessMonitor.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
-  ResponsivenessMonitor: "resource://gre/modules/ResponsivenessMonitor.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "d3", () => {

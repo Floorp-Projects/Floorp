@@ -4,11 +4,8 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 
 const TEST_CONFIG = [

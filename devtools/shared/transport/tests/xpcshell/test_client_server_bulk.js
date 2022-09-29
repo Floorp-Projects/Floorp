@@ -3,7 +3,9 @@
 
 "use strict";
 
-var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+var { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
+);
 var Pipe = Components.Constructor("@mozilla.org/pipe;1", "nsIPipe", "init");
 
 function run_test() {

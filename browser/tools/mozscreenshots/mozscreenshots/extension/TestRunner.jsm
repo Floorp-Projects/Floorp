@@ -16,7 +16,9 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-const { Rect } = ChromeUtils.import("resource://gre/modules/Geometry.jsm");
+const { Rect } = ChromeUtils.importESModule(
+  "resource://gre/modules/Geometry.sys.mjs"
+);
 
 const lazy = {};
 

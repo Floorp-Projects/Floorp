@@ -6,8 +6,8 @@ const { AsyncShutdown } = ChromeUtils.import(
 const { NativeManifests } = ChromeUtils.import(
   "resource://gre/modules/NativeManifests.jsm"
 );
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
 const { Subprocess } = ChromeUtils.import(

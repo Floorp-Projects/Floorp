@@ -21,6 +21,7 @@ try {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BinarySearch: "resource://gre/modules/BinarySearch.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 
@@ -28,12 +29,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BinarySearch",
-  "resource://gre/modules/BinarySearch.jsm"
 );
 
 ChromeUtils.defineModuleGetter(

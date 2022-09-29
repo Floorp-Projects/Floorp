@@ -23,11 +23,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SetClipboardSearchString",
-  "resource://gre/modules/Finder.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  SetClipboardSearchString: "resource://gre/modules/Finder.sys.mjs",
+});
 
 ChromeUtils.defineModuleGetter(
   lazy,

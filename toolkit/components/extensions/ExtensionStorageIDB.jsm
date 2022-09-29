@@ -10,8 +10,8 @@ let ExtensionStorageIDB;
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { IndexedDB } = ChromeUtils.import(
-  "resource://gre/modules/IndexedDB.jsm"
+const { IndexedDB } = ChromeUtils.importESModule(
+  "resource://gre/modules/IndexedDB.sys.mjs"
 );
 
 const lazy = {};

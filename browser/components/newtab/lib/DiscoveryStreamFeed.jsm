@@ -4,11 +4,10 @@
 "use strict";
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NewTabUtils",
-  "resource://gre/modules/NewTabUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+  Region: "resource://gre/modules/Region.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "RemoteSettings",
@@ -25,9 +24,6 @@ const { setTimeout, clearTimeout } = ChromeUtils.import(
 const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
-ChromeUtils.defineESModuleGetters(lazy, {
-  Region: "resource://gre/modules/Region.sys.mjs",
-});
 ChromeUtils.defineModuleGetter(
   lazy,
   "PersistentCache",

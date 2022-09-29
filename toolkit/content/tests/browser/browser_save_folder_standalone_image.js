@@ -49,8 +49,8 @@ MockFilePicker.init(window);
 const { DownloadLastDir } = ChromeUtils.import(
   "resource://gre/modules/DownloadLastDir.jsm"
 );
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 
 add_task(async function() {

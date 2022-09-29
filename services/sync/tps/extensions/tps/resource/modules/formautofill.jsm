@@ -24,11 +24,9 @@ ChromeUtils.defineModuleGetter(
   "resource://autofill/FormAutofillStorage.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "OSKeyStore",
-  "resource://gre/modules/OSKeyStore.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
+});
 
 class FormAutofillBase {
   constructor(props, subStorageName, fields) {

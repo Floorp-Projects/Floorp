@@ -15,8 +15,8 @@ const { Status } = ChromeUtils.import("resource://services-sync/status.js");
 const { SyncAuthManager } = ChromeUtils.import(
   "resource://services-sync/sync_auth.js"
 );
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
+const { PromiseUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseUtils.sys.mjs"
 );
 
 add_task(async function setup() {

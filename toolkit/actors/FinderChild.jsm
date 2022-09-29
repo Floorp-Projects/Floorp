@@ -8,11 +8,9 @@ var EXPORTED_SYMBOLS = ["FinderChild"];
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Finder",
-  "resource://gre/modules/Finder.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Finder: "resource://gre/modules/Finder.sys.mjs",
+});
 
 class FinderChild extends JSWindowActorChild {
   get finder() {

@@ -8,11 +8,14 @@ const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  Log: "resource://gre/modules/Log.sys.mjs",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
-  Log: "resource://gre/modules/Log.jsm",
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

@@ -7,7 +7,9 @@ var EXPORTED_SYMBOLS = ["ErrorHandler", "SyncScheduler"];
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const {
   CREDENTIALS_CHANGED,
   ENGINE_APPLY_FAIL,

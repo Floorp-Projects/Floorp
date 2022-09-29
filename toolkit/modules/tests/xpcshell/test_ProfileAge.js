@@ -1,5 +1,5 @@
-const { ProfileAge } = ChromeUtils.import(
-  "resource://gre/modules/ProfileAge.jsm"
+const { ProfileAge } = ChromeUtils.importESModule(
+  "resource://gre/modules/ProfileAge.sys.mjs"
 );
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"

@@ -4,8 +4,8 @@
 
 "use strict";
 
-let log = ChromeUtils.import(
-  "resource://gre/modules/Log.jsm"
+let log = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
 ).Log.repository.getLogger("Sync.RemoteTabs");
 
 var EXPORTED_SYMBOLS = ["SyncedTabsDeckView"];

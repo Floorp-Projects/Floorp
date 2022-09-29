@@ -5,40 +5,28 @@
 // 1 day default
 const DEFAULT_SECONDS_BETWEEN_CHECKS = 60 * 60 * 24;
 
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
-);
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const { GMPPrefs, GMPUtils, GMP_PLUGIN_IDS, WIDEVINE_ID } = ChromeUtils.import(
-  "resource://gre/modules/GMPUtils.jsm"
-);
+import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
+
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+import {
+  GMPPrefs,
+  GMPUtils,
+  GMP_PLUGIN_IDS,
+  WIDEVINE_ID,
+} from "resource://gre/modules/GMPUtils.sys.mjs";
+
 const { ProductAddonChecker } = ChromeUtils.import(
   "resource://gre/modules/addons/ProductAddonChecker.jsm"
 );
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CertUtils",
-  "resource://gre/modules/CertUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "UpdateUtils",
-  "resource://gre/modules/UpdateUtils.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ServiceRequest",
-  "resource://gre/modules/ServiceRequest.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  CertUtils: "resource://gre/modules/CertUtils.sys.mjs",
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  ServiceRequest: "resource://gre/modules/ServiceRequest.sys.mjs",
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
+});
 
 function getScopedLogger(prefix) {
   // `PARENT_LOGGER_ID.` being passed here effectively links this logger

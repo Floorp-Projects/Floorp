@@ -4,17 +4,17 @@
 
 "use strict";
 
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
+const { PromiseUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseUtils.sys.mjs"
 );
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { GMPInstallManager } = ChromeUtils.import(
-  "resource://gre/modules/GMPInstallManager.jsm"
+const { GMPInstallManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/GMPInstallManager.sys.mjs"
 );
-const { GMPPrefs, GMP_PLUGIN_IDS, WIDEVINE_ID } = ChromeUtils.import(
-  "resource://gre/modules/GMPUtils.jsm"
+const { GMPPrefs, GMP_PLUGIN_IDS, WIDEVINE_ID } = ChromeUtils.importESModule(
+  "resource://gre/modules/GMPUtils.sys.mjs"
 );
 
 const TEST_DATE = new Date(2013, 0, 1, 12);

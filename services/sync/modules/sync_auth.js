@@ -9,7 +9,9 @@ var EXPORTED_SYMBOLS = ["SyncAuthManager", "AuthenticationError"];
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const { Async } = ChromeUtils.import("resource://services-common/async.js");
 const { TokenServerClient } = ChromeUtils.import(
   "resource://services-common/tokenserverclient.js"

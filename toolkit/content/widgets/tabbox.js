@@ -12,11 +12,9 @@
   );
 
   let imports = {};
-  ChromeUtils.defineModuleGetter(
-    imports,
-    "ShortcutUtils",
-    "resource://gre/modules/ShortcutUtils.jsm"
-  );
+  ChromeUtils.defineESModuleGetters(imports, {
+    ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
+  });
 
   class MozTabbox extends MozXULElement {
     constructor() {

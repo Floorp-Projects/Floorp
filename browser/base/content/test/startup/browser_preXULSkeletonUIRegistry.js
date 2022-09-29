@@ -1,8 +1,6 @@
-ChromeUtils.defineModuleGetter(
-  this,
-  "WindowsRegistry",
-  "resource://gre/modules/WindowsRegistry.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
+});
 
 function getFirefoxExecutableFile() {
   let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);

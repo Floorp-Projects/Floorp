@@ -5,8 +5,8 @@
 const { PictureInPicture } = ChromeUtils.importESModule(
   "resource://gre/modules/PictureInPicture.sys.mjs"
 );
-const { ShortcutUtils } = ChromeUtils.import(
-  "resource://gre/modules/ShortcutUtils.jsm"
+const { ShortcutUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/ShortcutUtils.sys.mjs"
 );
 const { DeferredTask } = ChromeUtils.import(
   "resource://gre/modules/DeferredTask.jsm"

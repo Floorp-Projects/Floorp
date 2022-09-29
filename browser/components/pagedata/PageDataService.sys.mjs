@@ -10,11 +10,14 @@ const { EventEmitter } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  HiddenFrame: "resource://gre/modules/HiddenFrame.sys.mjs",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
-  HiddenFrame: "resource://gre/modules/HiddenFrame.jsm",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {

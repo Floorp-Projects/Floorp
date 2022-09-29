@@ -28,9 +28,12 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  Log: "resource://gre/modules/Log.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   formAutofillStorage: "resource://autofill/FormAutofillStorage.jsm",
-  Log: "resource://gre/modules/Log.jsm",
 });
 
 // A helper to sanitize address and creditcard records suitable for logging.

@@ -89,11 +89,9 @@ const { LogManager } = ChromeUtils.import(
 );
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "JSONFile",
-  "resource://gre/modules/JSONFile.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "TelemetryEnvironment",

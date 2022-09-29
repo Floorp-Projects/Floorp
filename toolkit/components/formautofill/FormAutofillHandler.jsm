@@ -26,11 +26,14 @@ const { FormAutofillUtils } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
+  FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  CreditCard: "resource://gre/modules/CreditCard.jsm",
   CreditCardTelemetry: "resource://autofill/FormAutofillTelemetryUtils.jsm",
   FormAutofillHeuristics: "resource://autofill/FormAutofillHeuristics.jsm",
-  FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
 });
 
 const formFillController = Cc[

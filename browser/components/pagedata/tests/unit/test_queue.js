@@ -3,10 +3,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 // Test that urls are retrieved in the expected order.

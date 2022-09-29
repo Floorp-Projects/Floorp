@@ -6,8 +6,8 @@
 
 "use strict";
 
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 
 // The xpcshell test harness sets PYTHON so we can read it here.

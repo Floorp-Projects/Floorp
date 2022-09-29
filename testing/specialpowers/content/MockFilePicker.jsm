@@ -16,11 +16,9 @@ const Cm = Components.manager;
 
 const CONTRACT_ID = "@mozilla.org/filepicker;1";
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+});
 
 /* globals __URI__ */
 if (__URI__.includes("specialpowers")) {

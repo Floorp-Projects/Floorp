@@ -17,8 +17,8 @@ const { FormHistory } = ChromeUtils.import(
 const { SearchSuggestionController } = ChromeUtils.importESModule(
   "resource://gre/modules/SearchSuggestionController.sys.mjs"
 );
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
+const { PromiseUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseUtils.sys.mjs"
 );
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"

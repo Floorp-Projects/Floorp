@@ -232,8 +232,8 @@ var dataProviders = {
     }
 
     if (AppConstants.MOZ_UPDATER) {
-      data.updateChannel = ChromeUtils.import(
-        "resource://gre/modules/UpdateUtils.jsm"
+      data.updateChannel = ChromeUtils.importESModule(
+        "resource://gre/modules/UpdateUtils.sys.mjs"
       ).UpdateUtils.UpdateChannel;
     }
 

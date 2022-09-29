@@ -6,12 +6,15 @@
 var gTestTab;
 var gContentAPI;
 
+ChromeUtils.defineESModuleGetters(this, {
+  ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ProfileAge: "resource://gre/modules/ProfileAge.jsm",
   TelemetryArchiveTesting:
     "resource://testing-common/TelemetryArchiveTesting.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
-  UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
 });
 
 function test() {

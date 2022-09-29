@@ -7,8 +7,8 @@
 
 const TEST_URI =
   "data:text/html;charset=utf-8,<!DOCTYPE html>Test load/save keyboard shortcut";
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 const LOCAL_FILE_NAME = "snippet.js";
 const LOCAL_FILE_ORIGINAL_CONTENT = `"Hello from local file"`;

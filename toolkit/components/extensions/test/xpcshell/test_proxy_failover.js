@@ -20,8 +20,8 @@ XPCOMUtils.defineLazyGetter(this, "directFailoverDisabled", () => {
   );
 });
 
-const { ServiceRequest } = ChromeUtils.import(
-  "resource://gre/modules/ServiceRequest.jsm"
+const { ServiceRequest } = ChromeUtils.importESModule(
+  "resource://gre/modules/ServiceRequest.sys.mjs"
 );
 
 // Prevent the request from reaching out to the network.

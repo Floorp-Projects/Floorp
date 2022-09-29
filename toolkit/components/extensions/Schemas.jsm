@@ -29,11 +29,9 @@ ChromeUtils.defineModuleGetter(
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ShortcutUtils",
-  "resource://gre/modules/ShortcutUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
+});
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "contentPolicyService",

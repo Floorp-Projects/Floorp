@@ -139,11 +139,14 @@ const { FormAutofill } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
+  OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  CreditCard: "resource://gre/modules/CreditCard.jsm",
   FormAutofillNameUtils: "resource://autofill/FormAutofillNameUtils.jsm",
   FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
-  OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
   PhoneNumber: "resource://autofill/phonenumberutils/PhoneNumber.jsm",
 });
 

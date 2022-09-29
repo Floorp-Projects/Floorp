@@ -12,15 +12,11 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineESModuleGetters(lazy, {
   KEYBOARD_CONTROLS: "resource://gre/modules/PictureInPictureControls.sys.mjs",
+  Rect: "resource://gre/modules/Geometry.sys.mjs",
   TOGGLE_POLICIES: "resource://gre/modules/PictureInPictureControls.sys.mjs",
   TOGGLE_POLICY_STRINGS:
     "resource://gre/modules/PictureInPictureControls.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Rect",
-  "resource://gre/modules/Geometry.jsm"
-);
 ChromeUtils.defineModuleGetter(
   lazy,
   "ContentDOMReference",

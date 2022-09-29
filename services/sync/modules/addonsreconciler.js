@@ -17,7 +17,9 @@
 
 "use strict";
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
