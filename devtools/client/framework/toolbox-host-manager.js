@@ -142,14 +142,15 @@ ToolboxHostManager.prototype = {
       this.hostType === Toolbox.HostType.LEFT ||
       this.hostType === Toolbox.HostType.RIGHT
     ) {
-      this.host.frame.minWidth =
-        WIDTH_CHEVRON_AND_MEATBALL_AND_CLOSE * zoomValue;
+      this.host.frame.style.minWidth =
+        WIDTH_CHEVRON_AND_MEATBALL_AND_CLOSE * zoomValue + "px";
     } else if (
       this.hostType === Toolbox.HostType.WINDOW ||
       this.hostType === Toolbox.HostType.PAGE ||
       this.hostType === Toolbox.HostType.BROWSERTOOLBOX
     ) {
-      this.host.frame.minWidth = WIDTH_CHEVRON_AND_MEATBALL * zoomValue;
+      this.host.frame.style.minWidth =
+        WIDTH_CHEVRON_AND_MEATBALL * zoomValue + "px";
     }
   },
 
