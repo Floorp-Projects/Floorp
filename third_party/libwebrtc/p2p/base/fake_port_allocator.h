@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "p2p/base/basic_packet_socket_factory.h"
 #include "p2p/base/port_allocator.h"
 #include "p2p/base/udp_port.h"
@@ -237,9 +238,19 @@ class FakePortAllocator : public cricket::PortAllocator {
       int component,
       const std::string& ice_ufrag,
       const std::string& ice_pwd) override {
-    return new FakePortAllocatorSession(this, network_thread_, factory_,
-                                        content_name, component, ice_ufrag,
-                                        ice_pwd, field_trials_);
+    return CreateSessionInternal(absl::string_view(content_name), component,
+                                 absl::string_view(ice_ufrag),
+                                 absl::string_view(ice_pwd));
+  }
+
+  cricket::PortAllocatorSession* CreateSessionInternal(
+      absl::string_view content_name,
+      int component,
+      absl::string_view ice_ufrag,
+      absl::string_view ice_pwd) override {
+    return new FakePortAllocatorSession(
+        this, network_thread_, factory_, std::string(content_name), component,
+        std::string(ice_ufrag), std::string(ice_pwd), field_trials_);
   }
 
   bool initialized() const { return initialized_; }
