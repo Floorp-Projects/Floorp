@@ -166,7 +166,7 @@ class IMEHandler final {
   /**
    * Append InputScope values from inputmode string.
    */
-  static void AppendInputScopeFromInputMode(const nsAString& aHTMLInputMode,
+  static void AppendInputScopeFromInputmode(const nsAString& aInputmode,
                                             nsTArray<InputScope>& aScopes);
 
   /**
@@ -196,7 +196,7 @@ class IMEHandler final {
   static decltype(SetInputScopes)* sSetInputScopes;
   static void SetInputScopeForIMM32(nsWindow* aWindow,
                                     const nsAString& aHTMLInputType,
-                                    const nsAString& aHTMLInputMode,
+                                    const nsAString& aHTMLInputInputmode,
                                     bool aInPrivateBrowsing);
   static bool sIsInTSFMode;
   // If sIMMEnabled is false, any IME messages are not handled in TSF mode.

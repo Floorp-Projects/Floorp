@@ -1869,7 +1869,7 @@ bool TSFTextStore::Init(nsWindow* aWidget, const InputContext& aContext) {
   }
 
   mInPrivateBrowsing = aContext.mInPrivateBrowsing;
-  SetInputScope(aContext.mHTMLInputType, aContext.mHTMLInputMode);
+  SetInputScope(aContext.mHTMLInputType, aContext.mHTMLInputInputmode);
 
   if (aContext.mURI) {
     // We don't need the document URL if it fails, let's ignore the error.
@@ -3917,13 +3917,13 @@ bool TSFTextStore::ShouldSetInputScopeOfURLBarToDefault() {
 }
 
 void TSFTextStore::SetInputScope(const nsString& aHTMLInputType,
-                                 const nsString& aHTMLInputMode) {
+                                 const nsString& aHTMLInputInputMode) {
   mInputScopes.Clear();
 
   // IME may refer only first input scope, but we will append inputmode's
   // input scopes too like Chrome since IME may refer it.
   IMEHandler::AppendInputScopeFromType(aHTMLInputType, mInputScopes);
-  IMEHandler::AppendInputScopeFromInputMode(aHTMLInputMode, mInputScopes);
+  IMEHandler::AppendInputScopeFromInputmode(aHTMLInputInputMode, mInputScopes);
 
   if (mInPrivateBrowsing) {
     mInputScopes.AppendElement(IS_PRIVATE);
@@ -6700,7 +6700,7 @@ void TSFTextStore::SetInputContext(nsWindow* aWidget,
         RefPtr<TSFTextStore> textStore(sEnabledTextStore);
         textStore->mInPrivateBrowsing = aContext.mInPrivateBrowsing;
         textStore->SetInputScope(aContext.mHTMLInputType,
-                                 aContext.mHTMLInputMode);
+                                 aContext.mHTMLInputInputmode);
         if (aContext.mURI) {
           nsAutoCString spec;
           if (NS_SUCCEEDED(aContext.mURI->GetSpec(spec))) {
