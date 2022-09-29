@@ -3981,12 +3981,12 @@ var SessionStoreInternal = {
     }
 
     if (
-      tabbrowser.selectedTab.hidden &&
+      tabbrowser.tabs.length > tabbrowser.visibleTabs.length &&
       tabbrowser.visibleTabs.length === removableTabs.length
     ) {
-      // If all the visible tabs are also removable and the selected tab is hidden, we will later remove the
-      // visible tabs causing the browser to automatically close because the only tab left is hidden.
-      // To prevent the browser from automatically closing, we will leave one other tab open.
+      // If all the visible tabs are also removable and the selected tab is hidden or removeable, we will later remove
+      // all "removable" tabs causing the browser to automatically close because the only tab left is hidden.
+      // To prevent the browser from automatically closing, we will leave one other visible tab open.
       removableTabs.shift();
     }
 
