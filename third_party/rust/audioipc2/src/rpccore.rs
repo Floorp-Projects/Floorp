@@ -4,9 +4,9 @@
 // accompanying file LICENSE for details
 
 use std::collections::VecDeque;
-use std::io::{self, Result};
+use std::io::{self, Error, ErrorKind, Result};
 use std::mem::ManuallyDrop;
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, Mutex};
 
 use crossbeam_channel::{self, Receiver, Sender};
 use mio::Token;
@@ -58,48 +58,49 @@ type ProxyRequest<Request> = (ProxyKey, Request);
 // Each Proxy is registered with the ClientHandler on initialization via the
 // ProxyManager and unregistered when dropped.
 // A ClientHandler normally lives until the last Proxy is dropped, but if the ClientHandler
-// encounters an internal error, `response_tx` will be closed and `proxy_mgr` can
-// no longer be upgraded to register new Proxies.
+// encounters an internal error, `handler_tx` and `response_tx` will be closed.
 #[derive(Debug)]
 pub struct Proxy<Request, Response> {
     handle: Option<(EventLoopHandle, Token)>,
     key: ProxyKey,
     response_rx: Receiver<Response>,
     handler_tx: ManuallyDrop<Sender<ProxyRequest<Request>>>,
-    proxy_mgr: Weak<ProxyManager<Response>>,
+    proxy_mgr: Arc<ProxyManager<Response>>,
 }
 
 impl<Request, Response> Proxy<Request, Response> {
     fn new(
         handler_tx: Sender<ProxyRequest<Request>>,
-        proxy_mgr: Weak<ProxyManager<Response>>,
-    ) -> Self {
+        proxy_mgr: Arc<ProxyManager<Response>>,
+    ) -> Result<Self> {
         let (tx, rx) = crossbeam_channel::bounded(1);
-        Self {
+        Ok(Self {
             handle: None,
-            key: proxy_mgr.upgrade().unwrap().register_proxy(tx),
+            key: proxy_mgr.register_proxy(tx)?,
             response_rx: rx,
             handler_tx: ManuallyDrop::new(handler_tx),
             proxy_mgr,
-        }
+        })
+    }
+
+    pub fn try_clone(&self) -> Result<Self> {
+        let mut clone = Self::new((*self.handler_tx).clone(), self.proxy_mgr.clone())?;
+        let (handle, token) = self
+            .handle
+            .as_ref()
+            .expect("proxy not connected to event loop");
+        clone.connect_event_loop(handle.clone(), *token);
+        Ok(clone)
     }
 
     pub fn call(&self, request: Request) -> Result<Response> {
         match self.handler_tx.send((self.key, request)) {
             Ok(_) => self.wake_connection(),
-            Err(_) => {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "proxy send error",
-                ))
-            }
+            Err(_) => return Err(Error::new(ErrorKind::Other, "proxy send error")),
         }
         match self.response_rx.recv() {
             Ok(resp) => Ok(resp),
-            Err(_) => Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "proxy recv error",
-            )),
+            Err(_) => Err(Error::new(ErrorKind::Other, "proxy recv error")),
         }
     }
 
@@ -116,26 +117,11 @@ impl<Request, Response> Proxy<Request, Response> {
     }
 }
 
-impl<Request, Response> Clone for Proxy<Request, Response> {
-    fn clone(&self) -> Self {
-        let (tx, rx) = crossbeam_channel::bounded(1);
-        Self {
-            handle: self.handle.clone(),
-            key: self.proxy_mgr.upgrade().unwrap().register_proxy(tx),
-            response_rx: rx,
-            handler_tx: self.handler_tx.clone(),
-            proxy_mgr: self.proxy_mgr.clone(),
-        }
-    }
-}
-
 impl<Request, Response> Drop for Proxy<Request, Response> {
     fn drop(&mut self) {
         trace!("Proxy drop, waking EventLoop");
-        if let Some(mgr) = self.proxy_mgr.upgrade() {
-            mgr.unregister_proxy(self.key)
-        }
-        // Must drop Sender before waking the connection, otherwise
+        let _ = self.proxy_mgr.unregister_proxy(self.key);
+        // Must drop `handler_tx` before waking the connection, otherwise
         // the wake may be processed before Sender is closed.
         unsafe {
             ManuallyDrop::drop(&mut self.handler_tx);
@@ -152,33 +138,72 @@ const RPC_CLIENT_INITIAL_PROXIES: usize = 32; // Initial proxy pre-allocation pe
 // the manager on initialization.
 #[derive(Debug)]
 struct ProxyManager<Response> {
-    proxies: Mutex<Slab<Sender<Response>>>,
+    proxies: Mutex<Option<Slab<Sender<Response>>>>,
 }
 
 impl<Response> ProxyManager<Response> {
     fn new() -> Self {
         Self {
-            proxies: Mutex::new(Slab::with_capacity(RPC_CLIENT_INITIAL_PROXIES)),
+            proxies: Mutex::new(Some(Slab::with_capacity(RPC_CLIENT_INITIAL_PROXIES))),
         }
     }
 
     // Register a Proxy's response Sender, returning a unique ID identifying
     // the Proxy to the ClientHandler.
-    fn register_proxy(&self, tx: Sender<Response>) -> ProxyKey {
+    fn register_proxy(&self, tx: Sender<Response>) -> Result<ProxyKey> {
         let mut proxies = self.proxies.lock().unwrap();
-        let entry = proxies.vacant_entry();
-        let key = entry.key();
-        entry.insert(tx);
-        key
+        match &mut *proxies {
+            Some(proxies) => {
+                let entry = proxies.vacant_entry();
+                let key = entry.key();
+                entry.insert(tx);
+                Ok(key)
+            }
+            None => Err(Error::new(
+                ErrorKind::Other,
+                "register: proxy manager disconnected",
+            )),
+        }
     }
 
-    fn unregister_proxy(&self, key: ProxyKey) {
-        let _ = self.proxies.lock().unwrap().remove(key);
+    fn unregister_proxy(&self, key: ProxyKey) -> Result<()> {
+        let mut proxies = self.proxies.lock().unwrap();
+        match &mut *proxies {
+            Some(proxies) => match proxies.try_remove(key) {
+                Some(_) => Ok(()),
+                None => Err(Error::new(
+                    ErrorKind::Other,
+                    "unregister: unknown proxy key",
+                )),
+            },
+            None => Err(Error::new(
+                ErrorKind::Other,
+                "unregister: proxy manager disconnected",
+            )),
+        }
     }
 
     // Deliver ClientHandler's Response to the Proxy associated with `key`.
-    fn deliver(&self, key: ProxyKey, resp: Response) {
-        let _ = self.proxies.lock().unwrap()[key].send(resp);
+    fn deliver(&self, key: ProxyKey, resp: Response) -> Result<()> {
+        let proxies = self.proxies.lock().unwrap();
+        match &*proxies {
+            Some(proxies) => match proxies.get(key) {
+                Some(proxy) => {
+                    drop(proxy.send(resp));
+                    Ok(())
+                }
+                None => Err(Error::new(ErrorKind::Other, "deliver: unknown proxy key")),
+            },
+            None => Err(Error::new(
+                ErrorKind::Other,
+                "unregister: proxy manager disconnected",
+            )),
+        }
+    }
+
+    // ClientHandler disconnected, close Proxy Senders to unblock any waiters.
+    fn disconnect_handler(&self) {
+        *self.proxies.lock().unwrap() = None;
     }
 }
 
@@ -191,9 +216,9 @@ impl<Response> ProxyManager<Response> {
 // connected to a ProxyResponse.
 pub(crate) struct ClientHandler<C: Client> {
     messages: Receiver<ProxyRequest<C::ServerMessage>>,
-    // Proxies hold a Weak<ProxyManager> to register on initialization.
+    // Proxies hold an Arc<ProxyManager> to register on initialization.
     // When ClientHandler drops, any Proxies blocked on a response will
-    // error due to the Sender closing.
+    // error due to their Sender closing.
     proxies: Arc<ProxyManager<C::ClientMessage>>,
     in_flight: VecDeque<ProxyKey>,
 }
@@ -207,8 +232,8 @@ impl<C: Client> ClientHandler<C> {
         }
     }
 
-    fn proxy_manager(&self) -> Weak<ProxyManager<<C as Client>::ClientMessage>> {
-        Arc::downgrade(&self.proxies)
+    fn proxy_manager(&self) -> &Arc<ProxyManager<<C as Client>::ClientMessage>> {
+        &self.proxies
     }
 }
 
@@ -220,12 +245,9 @@ impl<C: Client> Handler for ClientHandler<C> {
         trace!("ClientHandler::consume");
         // `proxy` identifies the waiting Proxy expecting `response`.
         if let Some(proxy) = self.in_flight.pop_front() {
-            self.proxies.deliver(proxy, response);
+            self.proxies.deliver(proxy, response)?;
         } else {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "request/response mismatch",
-            ));
+            return Err(Error::new(ErrorKind::Other, "request/response mismatch"));
         }
 
         Ok(())
@@ -253,14 +275,21 @@ impl<C: Client> Handler for ClientHandler<C> {
     }
 }
 
+impl<C: Client> Drop for ClientHandler<C> {
+    fn drop(&mut self) {
+        self.proxies.disconnect_handler();
+    }
+}
+
+#[allow(clippy::type_complexity)]
 pub(crate) fn make_client<C: Client>(
-) -> (ClientHandler<C>, Proxy<C::ServerMessage, C::ClientMessage>) {
+) -> Result<(ClientHandler<C>, Proxy<C::ServerMessage, C::ClientMessage>)> {
     let (tx, rx) = crossbeam_channel::bounded(RPC_CLIENT_INITIAL_PROXIES);
 
     let handler = ClientHandler::new(rx);
-    let proxy_mgr = handler.proxy_manager();
+    let proxy_mgr = handler.proxy_manager().clone();
 
-    (handler, Proxy::new(tx, proxy_mgr))
+    Ok((handler, Proxy::new(tx, proxy_mgr)?))
 }
 
 // Server-specific Handler implementation.
