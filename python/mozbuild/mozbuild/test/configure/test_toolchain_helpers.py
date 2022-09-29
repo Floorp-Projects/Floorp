@@ -217,8 +217,8 @@ class FakeCompiler(dict):
             if arg is None:
                 break
             if arg.startswith("-"):
-                # Ignore --sysroot and the argument that follows it.
-                if arg == "--sysroot":
+                # Ignore -isysroot/--sysroot and the argument that follows it.
+                if arg in ("-isysroot", "--sysroot"):
                     next(args, None)
                 else:
                     flags.append(arg)
