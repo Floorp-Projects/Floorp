@@ -257,14 +257,25 @@ bool RenderCompositorSWGL::RequestFullRender() {
 #ifdef MOZ_WIDGET_ANDROID
   // XXX Add partial present support.
   return true;
-#else
-  return false;
 #endif
+#ifdef MOZ_WAYLAND
+  // We're requested to do full render after Resume() on Wayland.
+  if (mRequestFullRender) {
+    mRequestFullRender = false;
+    return true;
+  }
+#endif
+  return false;
 }
 
 void RenderCompositorSWGL::Pause() {}
 
-bool RenderCompositorSWGL::Resume() { return true; }
+bool RenderCompositorSWGL::Resume() {
+#ifdef MOZ_WAYLAND
+  mRequestFullRender = true;
+#endif
+  return true;
+}
 
 LayoutDeviceIntSize RenderCompositorSWGL::GetBufferSize() {
   return mWidget->GetClientSize();
