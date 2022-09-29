@@ -40,6 +40,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -257,6 +259,21 @@ private fun WallpaperThumbnailItem(
     // Completely avoid drawing the item if a bitmap cannot be loaded and is required
     if (bitmap == null && wallpaper != defaultWallpaper) return
 
+    val description = stringResource(
+        R.string.wallpapers_item_name_content_description,
+        wallpaper.name,
+    )
+
+    // For the default wallpaper to be accessible, we should set the content description for
+    // the Surface instead of the thumbnail image
+    val contentDescriptionModifier = if (bitmap == null) {
+        Modifier.semantics {
+            contentDescription = description
+        }
+    } else {
+        Modifier
+    }
+
     Surface(
         elevation = 4.dp,
         shape = thumbnailShape,
@@ -265,16 +282,14 @@ private fun WallpaperThumbnailItem(
             .fillMaxWidth()
             .aspectRatio(aspectRatio)
             .then(border)
-            .clickable { onSelect(wallpaper) },
+            .clickable { onSelect(wallpaper) }
+            .then(contentDescriptionModifier),
     ) {
         bitmap?.let {
             Image(
                 bitmap = it.asImageBitmap(),
                 contentScale = ContentScale.FillBounds,
-                contentDescription = stringResource(
-                    R.string.wallpapers_item_name_content_description,
-                    wallpaper.name,
-                ),
+                contentDescription = description,
                 modifier = Modifier.fillMaxSize(),
                 alpha = if (isLoading) loadingOpacity else 1.0f,
             )
