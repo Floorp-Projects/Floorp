@@ -991,15 +991,15 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
 }
 
 gfx::YUVColorSpace FFmpegVideoDecoder<LIBAV_VER>::GetFrameColorSpace() const {
-  AVColorSpace colorSpace = AVCOL_SPC_UNSPECIFIED;
 #if LIBAVCODEC_VERSION_MAJOR > 58
-  colorSpace = mFrame->colorspace;
+  switch (mFrame->colorspace) {
 #else
+  AVColorSpace colorSpace = AVCOL_SPC_UNSPECIFIED;
   if (mLib->av_frame_get_colorspace) {
     colorSpace = (AVColorSpace)mLib->av_frame_get_colorspace(mFrame);
   }
-#endif
   switch (colorSpace) {
+#endif
 #if LIBAVCODEC_VERSION_MAJOR >= 55
     case AVCOL_SPC_BT2020_NCL:
     case AVCOL_SPC_BT2020_CL:
@@ -1272,8 +1272,7 @@ static const struct {
   VAProfile va_profile;
   char name[100];
 } vaapi_profile_map[] = {
-#  define MAP(c, v, n) \
-    { AV_CODEC_ID_##c, VAProfile##v, n }
+#  define MAP(c, v, n) {AV_CODEC_ID_##c, VAProfile##v, n}
     MAP(H264, H264ConstrainedBaseline, "H264ConstrainedBaseline"),
     MAP(H264, H264Main, "H264Main"),
     MAP(H264, H264High, "H264High"),
