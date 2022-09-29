@@ -163,17 +163,51 @@ class BrowserRobot {
         assertTrue(shareAppsList.waitForExists(waitingTime))
 
     fun clickPlayButton() {
-        val playButton =
-            mDevice.findObject(UiSelector().text("Play"))
-        playButton.waitForExists(pageLoadingTime)
-        playButton.click()
+        for (i in 1..RETRY_COUNT) {
+            try {
+                mDevice.findObject(UiSelector().text("Play"))
+                    .also {
+                        it.waitForExists(waitingTime)
+                        it.click()
+                    }
+
+                break
+            } catch (e: UiObjectNotFoundException) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    browserScreen {
+                    }.openMainMenu {
+                    }.clickReloadButton {
+                    }
+                    progressBar.waitUntilGone(waitingTime)
+                }
+            }
+        }
     }
 
     fun clickPauseButton() {
-        val pauseButton =
-            mDevice.findObject(UiSelector().text("Pause"))
-        pauseButton.waitForExists(pageLoadingTime)
-        pauseButton.click()
+        for (i in 1..RETRY_COUNT) {
+            try {
+                mDevice.findObject(UiSelector().text("Pause"))
+                    .also {
+                        it.waitForExists(waitingTime)
+                        it.click()
+                    }
+
+                break
+            } catch (e: UiObjectNotFoundException) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    browserScreen {
+                    }.openMainMenu {
+                    }.clickReloadButton {
+                    }
+                    progressBar.waitUntilGone(waitingTime)
+                }
+            }
+        }
     }
 
     fun waitForPlaybackToStart() {
