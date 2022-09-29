@@ -322,3 +322,38 @@ menu-help-report-deceptive-site =
 menu-help-not-deceptive =
     .label = This Isn’t a Deceptive Site…
     .accesskey = D
+
+
+# Floorp
+
+css-menu =
+    .label = CSS
+    .accesskey = C
+
+rebuild-css =
+    .label = Rebuild browser CSS files
+    .accesskey = R
+
+make-browsercss-file =
+    .label = Make browser css file
+    .accesskey = M
+
+open-css-folder =
+    .label = Open CSS folder
+    .accesskey = O
+
+edit-userChromeCss-editor =
+    .label = Edit userChrome.css file
+
+edit-userContentCss-editor =
+    .label = Edit userContent.css file
+
+test-chrome-css =
+    .label = Test chrome CSS
+    .accesskey = C
+test-content-css =
+    .label = Test content CSS
+    .accesskey = W
+
+not-found-editor-path = Editor path not found
+set-pref-description = This operation requires a path to the editor. Set "view_source.editor.path" in "about:config"

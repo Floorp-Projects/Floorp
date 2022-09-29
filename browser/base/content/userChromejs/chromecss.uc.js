@@ -109,49 +109,49 @@ window.UCL = {
 		cssmenu.appendChild(menupopup);
 
 		let menu = $C("menu", {
-			label: "メニュー",
+			"data-l10n-id": "css-menu",
 			accesskey: "C"
 		});
 		menupopup.appendChild(menu);
 		let mp = $C("menupopup", { id: "usercssloader-submenupopup" });
 		menu.appendChild(mp);
 		mp.appendChild($C("menuitem", {
-			label: "Rebuld",
+			"data-l10n-id": "rebuild-css",
 			accesskey: "R",
 			acceltext: "Alt + R",
 			oncommand: "UCL.rebuild();"
 		}));
 		mp.appendChild($C("menuseparator"));
 		mp.appendChild($C("menuitem", {
-			label: "ブラウザー CSS ファイルを作成",
+			"data-l10n-id": "make-browsercss-file",
 			accesskey: "N",
 			oncommand: "UCL.create();"
 		}));
 		mp.appendChild($C("menuitem", {
-			label: "CSS フォルダを開く",
+			"data-l10n-id": "open-css-folder",
 			accesskey: "O",
 			oncommand: "UCL.openFolder();"
 		}));
 		mp.appendChild($C("menuitem", {
-			label: "userChrome.css を編集",
+			"data-l10n-id": "edit-userChromeCss-editor",
 //			hidden: true,
 			oncommand: "UCL.editUserCSS(\'userChrome.css\');"
 		}));
 		mp.appendChild($C("menuitem", {
-			label: "userContent.css を編集",
+			"data-l10n-id": "edit-userContentCss-editor",
 //			hidden: true,
 			oncommand: "UCL.editUserCSS(\'userContent.css\');"
 		}));
 		mp.appendChild($C("menuseparator"));
 		mp.appendChild($C("menuitem", {
-			label: "スタイルのテスト (Chrome)",
+			"data-l10n-id": "test-chrome-css",
 			id: "usercssloader-test-chrome",
 			hidden: true,
 			accesskey: "C",
 			oncommand: "UCL.styleTest(window);"
 		}));
 		mp.appendChild($C("menuitem", {
-			label: "スタイルのテスト (Webページ)",
+			"data-l10n-id": "test-content-css",
 			id: "usercssloader-test-content",
 			hidden: true,
 			accesskey: "W",
@@ -325,8 +325,10 @@ window.UCL = {
 		this.edit(file);
 	},
 	edit: function(aFile) {
-		var editor = Services.prefs.getCharPref("view_source.editor.path");
-		if (!editor) return alert("この操作にはエディタのパスが必要です。about:config で\n view_source.editor.path を設定してください");
+		const prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+		let l10n = new Localization(["browser/menubar.ftl"], true);
+		const editor = Services.prefs.getCharPref("view_source.editor.path");
+		if (!editor) return prompts.alert(null, l10n.formatValueSync("not-found-editor-path"),l10n.formatValueSync("set-pref-description"));
 		try {
 			var UI = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
 			UI.charset = window.navigator.platform.toLowerCase().indexOf("win") >= 0? "Shift_JIS": "UTF-8";
