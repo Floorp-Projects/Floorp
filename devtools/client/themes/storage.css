@@ -17,14 +17,9 @@ a {
   min-width: 220px;
   max-width: 500px;
   overflow: auto;
-}
-
-#storage-tree {
+  contain: size;
   background: var(--theme-sidebar-background);
-}
-
-/* Let the component gain focus when a click hits an empty area */
-#storage-tree {
+  /* Let the component gain focus when a click hits an empty area */
   -moz-user-focus: normal;
 }
 
@@ -86,7 +81,7 @@ a {
 
 /* Prevent all columns except for value from resizing with the panel */
 #storage-table .table-widget-column:not(#value) {
-  width: 0;
+  -moz-box-flex: 0;
 }
 
 /* Text input in storage table */
