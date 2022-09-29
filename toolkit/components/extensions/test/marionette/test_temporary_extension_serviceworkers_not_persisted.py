@@ -31,7 +31,7 @@ class TemporarilyInstalledAddonServiceWorkerNotPersisted(
         self.marionette.restart(in_app=True)
 
     def tearDown(self):
-        self.marionette.restart(clean=True)
+        self.marionette.restart(in_app=False, clean=True)
         super(TemporarilyInstalledAddonServiceWorkerNotPersisted, self).tearDown()
 
     def test_temporarily_installed_addon_serviceWorkers_not_persisted(self):

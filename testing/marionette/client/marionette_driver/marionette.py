@@ -976,19 +976,23 @@ class Marionette(object):
         return self._send_message("Marionette:Quit", body)
 
     @do_process_check
-    def quit(self, clean=False, in_app=False, callback=None):
-        """Terminate the currently running instance.
+    def quit(self, clean=False, in_app=True, callback=None):
+        """
+        By default this method will trigger a normal shutdown of the currently running instance.
+        But it can also be used to force terminate the process.
 
         This command will delete the active marionette session. It also allows
         manipulation of eg. the profile data while the application is not running.
         To start the application again, :func:`start_session` has to be called.
 
-        :param clean: If False the same profile will be used after the next start of
-                      the application. Note that the in app initiated restart always
+        :param clean: If True a new profile will be used after the next start of
+                      the application. Note that the in_app initiated quit always
                       maintains the same profile.
+
         :param in_app: If True, marionette will cause a quit from within the
-                       browser. Otherwise the browser will be quit immediately
-                       by killing the process.
+                       application. Otherwise the application will be restarted
+                       immediately by killing the process.
+
         :param callback: If provided and `in_app` is True, the callback will
                          be used to trigger the shutdown.
 
@@ -1003,7 +1007,13 @@ class Marionette(object):
             )
 
         quit_details = {"cause": "shutdown", "forced": False}
+
         if in_app:
+            if clean:
+                raise ValueError(
+                    "An in_app restart cannot be triggered with the clean flag set"
+                )
+
             if callback is not None and not callable(callback):
                 raise ValueError(
                     "Specified callback '{}' is not callable".format(callback)
@@ -1016,6 +1026,7 @@ class Marionette(object):
                 self.is_shutting_down = True
                 if callback is not None:
                     callback()
+                    quit_details["in_app"] = True
                 else:
                     quit_details = self._request_in_app_shutdown()
 
@@ -1050,7 +1061,7 @@ class Marionette(object):
             self.delete_session(send_request=False)
             self.instance.close(clean=clean)
 
-            quit_details["forced"] = True
+            quit_details.update({"in_app": False, "forced": True})
 
         if quit_details.get("cause") not in (None, "shutdown"):
             raise errors.MarionetteException(
@@ -1062,29 +1073,30 @@ class Marionette(object):
 
     @do_process_check
     def restart(
-        self, callback=None, clean=False, in_app=False, safe_mode=False, silent=False
+        self, callback=None, clean=False, in_app=True, safe_mode=False, silent=False
     ):
         """
-        This will terminate the currently running instance, and spawn a new instance
-        with the same profile and then reuse the session id when creating a session again.
+        By default this method will restart the currently running instance by using the same
+        profile. But it can also be forced to terminate the currently running instance, and
+        to spawn a new instance with the same or different profile.
 
         :param callback: If provided and `in_app` is True, the callback will be
                          used to trigger the restart.
 
-        :param clean: If False the same profile will be used after the restart. Note
-                      that the in app initiated restart always maintains the same
+        :param clean: If True a new profile will be used after the restart. Note
+                      that the in_app initiated restart always maintains the same
                       profile.
 
         :param in_app: If True, marionette will cause a restart from within the
-                       browser. Otherwise the browser will be restarted immediately
-                       by killing the process.
+                       application. Otherwise the application will be restarted
+                       immediately by killing the process.
 
         :param safe_mode: Optional flag to indicate that the application has to
             be restarted in safe mode.
 
         :param silent: Optional flag to indicate that the application should
             not open any window after a restart. Note that this flag is only
-            supported on MacOS.
+            supported on MacOS and requires "in_app" to be True.
 
         :returns: A dictionary containing details of the application restart.
                   The `cause` property reflects the reason, and `forced` indicates
@@ -1100,9 +1112,9 @@ class Marionette(object):
         context = self._send_message("Marionette:GetContext", key="value")
         restart_details = {"cause": "restart", "forced": False}
 
-        # Safe mode and the silent flag require in_app restarts.
-        if safe_mode or silent:
-            in_app = True
+        # Safe mode and the silent flag require an in_app restart.
+        if (safe_mode or silent) and not in_app:
+            raise ValueError("An in_app restart is required for safe or silent mode")
 
         if in_app:
             if clean:
@@ -1122,6 +1134,7 @@ class Marionette(object):
                 self.is_shutting_down = True
                 if callback is not None:
                     callback()
+                    restart_details["in_app"] = True
                 else:
                     flags = ["eRestart"]
                     if silent:
@@ -1180,7 +1193,7 @@ class Marionette(object):
             self.instance.restart(clean=clean)
             self.raise_for_port(timeout=self.DEFAULT_STARTUP_TIMEOUT)
 
-            restart_details["forced"] = True
+            restart_details.update({"in_app": False, "forced": True})
 
         if restart_details.get("cause") not in (None, "restart"):
             raise errors.MarionetteException(

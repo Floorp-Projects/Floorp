@@ -50,7 +50,7 @@ class TestMarionette(MarionetteTestCase):
             "MarionetteActivePort file contains port",
         )
 
-        self.marionette.quit(in_app=True)
+        self.marionette.quit()
         self.assertFalse(
             os.path.exists(active_port_file), "MarionetteActivePort file removed"
         )
@@ -85,7 +85,7 @@ class TestMarionette(MarionetteTestCase):
             self.assertRaises(socket.timeout, marionette.raise_for_port, timeout=1.0)
 
         finally:
-            self.marionette.quit()
+            self.marionette.quit(in_app=False)
 
     def test_client_socket_uses_expected_socket_timeout(self):
         current_socket_timeout = self.marionette.socket_timeout
