@@ -19,9 +19,9 @@ add_task(async function() {
   const tab = await addTab(TEST_URL);
 
   info("Create a first commands, which will destroy its top target");
-  const commands = await CommandsFactory.forRemoteTabInTest({
-    browserId: tab.linkedBrowser.browserId,
-  });
+  const commands = await CommandsFactory.forRemoteTab(
+    tab.linkedBrowser.browserId
+  );
   const targetCommand = commands.targetCommand;
 
   // We have to start listening in order to ensure having a targetFront available
@@ -37,10 +37,12 @@ add_task(async function() {
   info(
     "Now create a second commands after destroy, to see if we can spawn a new, functional target"
   );
-  const secondCommands = await CommandsFactory.forRemoteTabInTest({
-    client: commands.client,
-    browserId: tab.linkedBrowser.browserId,
-  });
+  const secondCommands = await CommandsFactory.forRemoteTab(
+    tab.linkedBrowser.browserId,
+    {
+      client: commands.client,
+    }
+  );
   const secondTargetCommand = secondCommands.targetCommand;
 
   // We have to start listening in order to ensure having a targetFront available
