@@ -91,9 +91,19 @@
     </hbox>
   </vbox>
 
-  <checkbox preference="browser.disable.nt.image.gb"
-              id="newtabbg" data-l10n-id="disable-bg-newtab"/>
-  <description class="indent tip-caption" data-l10n-id="how-to-disable-ntbg"/>
+  <vbox data-subcategory="newTabBG">
+    <hbox id="newTabBackground_" align="center">
+      <label control="newTabbackground" data-l10n-id="newtab-background" flex="1" />
+
+      <menulist id="newTabbackground" flex="1" data-preference-related="browser.newtabpage.activity-stream.background.type">
+        <menupopup>
+          <menuitem value="1" data-l10n-id="newtab-background-random-image" />
+          <menuitem value="2" data-l10n-id="newtab-background-gradation" />
+          <menuitem value="0" data-l10n-id="newtab-background-not-background" />
+        </menupopup>
+      </menulist>
+    </hbox>
+  </vbox>
 
 </groupbox>
 </html:template>

@@ -211,9 +211,22 @@ export class BaseContent extends React.PureComponent {
       this.props.adminContent.message &&
       this.props.adminContent.message.id;
 
+    let Background_ClassName = ""
+    switch (prefs["background.type"]) {
+      case 1:
+        Background_ClassName = "random_image"
+        break;
+      case 2:
+        Background_ClassName = "gradation"
+        break;
+      default:
+        Background_ClassName = "not_background"
+        break;
+    }
+
     return (
       <div>
-        <Background />
+        <Background className={Background_ClassName} />
         <CustomizeMenu
           onClose={this.closeCustomizationMenu}
           onOpen={this.openCustomizationMenu}
