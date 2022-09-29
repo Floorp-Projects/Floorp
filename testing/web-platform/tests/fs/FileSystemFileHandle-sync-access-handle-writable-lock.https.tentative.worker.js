@@ -1,4 +1,5 @@
 importScripts('/resources/testharness.js');
+importScripts('resources/test-helpers.js');
 importScripts('resources/sandboxed-fs-test-helpers.js');
 
 'use strict';
@@ -36,7 +37,7 @@ directory_test(async (t, root_dir) =>  {
   const fooFileHandle = await root_dir.getFileHandle('foo.test', {create: true});
   const barFileHandle = await root_dir.getFileHandle('bar.test', {create: true});
 
-  const fooWritable = await fooFileHandle.createWritable();
+  const fooWritable = await cleanup_writable(t, await fooFileHandle.createWritable());
   t.add_cleanup(() => fooWritable.close());
 
   const barSyncHandle = await barFileHandle.createSyncAccessHandle();
@@ -51,7 +52,7 @@ directory_test(async (t, root_dir) =>  {
   const fooSyncHandle = await fooFileHandle.createSyncAccessHandle();
   t.add_cleanup(() => fooSyncHandle.close());
 
-  const barWritable = await barFileHandle.createWritable();
+  const barWritable = await cleanup_writable(t, await barFileHandle.createWritable());
   t.add_cleanup(() => barWritable.close());
 }, 'An access handle from one file does not interfere with the creation of a' +
      ' writable stream on another file');
@@ -61,18 +62,18 @@ directory_test(async (t, root_dir) =>  {
 
   const syncHandle = await fileHandle.createSyncAccessHandle();
   await promise_rejects_dom(
-      t, 'NoModificationAllowedError', fileHandle.createWritable());
+    t, 'NoModificationAllowedError', cleanup_writable(t, fileHandle.createWritable()));
 
   await syncHandle.close();
-  const writable = await fileHandle.createWritable();
+  const writable = await cleanup_writable(t, await fileHandle.createWritable());
   await writable.close();
 }, 'Writable streams cannot be created if there is an open access handle');
 
 directory_test(async (t, root_dir) =>  {
   const fileHandle = await root_dir.getFileHandle('OPFS.test', {create: true});
 
-  const writable1 = await fileHandle.createWritable();
-  const writable2 = await fileHandle.createWritable();
+  const writable1 = await cleanup_writable(t, await fileHandle.createWritable());
+  const writable2 = await cleanup_writable(t, await fileHandle.createWritable());
   await promise_rejects_dom(
       t, 'NoModificationAllowedError', fileHandle.createSyncAccessHandle());
 
