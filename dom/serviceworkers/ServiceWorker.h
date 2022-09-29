@@ -20,6 +20,7 @@ class nsIGlobalObject;
 
 namespace mozilla::dom {
 
+class ServiceWorkerChild;
 class ServiceWorkerCloneData;
 struct StructuredSerializeOptions;
 
@@ -36,39 +37,6 @@ bool ServiceWorkerVisible(JSContext* aCx, JSObject* aGlobal);
 
 class ServiceWorker final : public DOMEventTargetHelper {
  public:
-  // Abstract interface for the internal representation of the
-  // ServiceWorker object.
-  class Inner {
-   public:
-    // This will be called when a DOM ServiceWorker object is
-    // created and takes a strong ref to the Inner object.
-    // RemoveServiceWorker() is guaranteed to be called on the
-    // current thread before the ServiceWorker is destroyed.
-    //
-    // In addition, the Inner object should check to see if
-    // the ServiceWorker's state is correct.  If not, it should
-    // be updated automatically by calling SetState().  This is
-    // necessary to handle race conditions where the DOM
-    // ServiceWorker object is created while the state is being
-    // updated in another process.
-    virtual void AddServiceWorker(ServiceWorker* aWorker) = 0;
-
-    // This is called when the DOM ServiceWorker object is
-    // destroyed and drops its ref to the Inner object.
-    virtual void RemoveServiceWorker(ServiceWorker* aWorker) = 0;
-
-    // Get the associated registration for this ServiceWorker.  The success
-    // callback should always be called asynchronously.
-    virtual void GetRegistration(ServiceWorkerRegistrationCallback&& aSuccessCB,
-                                 ServiceWorkerFailureCallback&& aFailureCB) = 0;
-
-    virtual void PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
-                             const ClientInfo& aClientInfo,
-                             const ClientState& aClientState) = 0;
-
-    NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-  };
-
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_SERVICEWORKER_IID)
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorker, DOMEventTargetHelper)
@@ -101,18 +69,24 @@ class ServiceWorker final : public DOMEventTargetHelper {
 
   void DisconnectFromOwner() override;
 
+  void RevokeActor(ServiceWorkerChild* aActor);
+
  private:
   ServiceWorker(nsIGlobalObject* aWindow,
-                const ServiceWorkerDescriptor& aDescriptor, Inner* aInner);
+                const ServiceWorkerDescriptor& aDescriptor);
 
   // This class is reference-counted and will be destroyed from Release().
   ~ServiceWorker();
 
   void MaybeAttachToRegistration(ServiceWorkerRegistration* aRegistration);
 
+  void Shutdown();
+
   ServiceWorkerDescriptor mDescriptor;
 
-  RefPtr<Inner> mInner;
+  RefPtr<ServiceWorkerChild> mActor;
+  bool mShutdown;
+
   RefPtr<ServiceWorkerRegistration> mRegistration;
   ServiceWorkerState mLastNotifiedState;
 };
