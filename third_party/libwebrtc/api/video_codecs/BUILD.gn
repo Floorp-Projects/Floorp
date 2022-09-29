@@ -13,6 +13,7 @@ if (is_android) {
 }
 
 rtc_source_set("scalability_mode") {
+  visibility = [ "*" ]
   sources = [ "scalability_mode.h" ]
 }
 
