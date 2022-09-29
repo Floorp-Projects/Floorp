@@ -1177,6 +1177,9 @@ def compiler(
         flags = []
         if sysroot.path:
             if host_or_target.kernel == "Darwin":
+                # While --sysroot and -isysroot are roughly equivalent, when not using
+                # -isysroot on mac, clang takes the SDKROOT environment variable into
+                # consideration, which may be set by python and break things.
                 flags.extend(("-isysroot", sysroot.path))
             else:
                 flags.extend(("--sysroot", sysroot.path))
