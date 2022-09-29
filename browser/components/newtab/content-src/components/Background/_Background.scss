@@ -7,7 +7,6 @@
   background-position: center center !important;
   background-repeat: no-repeat !important;
   background-size: cover !important;
-  opacity: 0.8 !important;
   z-index: -1 !important;
   animation: fadeIn 3.7s ease 0s 1 normal !important;
 }
@@ -17,14 +16,18 @@
   100% {opacity: 0.8 !important}
 }
 
-@supports -moz-bool-pref("browser.disable.nt.image.gb") {
-  #background, #floorp, #unsplash {
-    display: none !important;
-  }
+.not_background,.not_background~#unsplash,.gradation~#unsplash{
+  display: none !important;
 }
 
-@supports not -moz-bool-pref("browser.disable.nt.image.gb") {
-  body {
-    background-color: rgba(0, 0, 0, 0.5);
-  }
+.random_image{
+background-color:rgb(0,0,0);
+}
+.random_image > #background{
+  background-image: var(--background-url);
+opacity: 0.8 !important;
+}
+
+.gradation > #background{
+  background: linear-gradient(to right, #d76f3d 0%, #56009c 100%) !important;
 }
