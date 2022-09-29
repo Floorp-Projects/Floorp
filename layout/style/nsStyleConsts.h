@@ -157,7 +157,6 @@ enum class StyleClear : uint8_t {
   Left,
   Right,
   Both,
-  Line,
 };
 
 enum class StyleColumnFill : uint8_t {

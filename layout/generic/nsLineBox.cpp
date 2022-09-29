@@ -195,8 +195,6 @@ static void ListFloats(FILE* out, const char* aPrefix,
       return "rightbr";
     case StyleClear::Both:
       return "leftbr+rightbr";
-    case StyleClear::Line:
-      return "linebr";
   }
   return "unknown";
 }
