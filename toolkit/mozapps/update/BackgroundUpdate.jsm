@@ -19,14 +19,17 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
   BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.jsm",
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
-  JSONFile: "resource://gre/modules/JSONFile.jsm",
   TaskScheduler: "resource://gre/modules/TaskScheduler.jsm",
-  UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {

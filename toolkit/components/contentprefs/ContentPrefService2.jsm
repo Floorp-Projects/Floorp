@@ -12,11 +12,9 @@ const { ContentPrefStore } = ChromeUtils.import(
   "resource://gre/modules/ContentPrefStore.jsm"
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Sqlite",
-  "resource://gre/modules/Sqlite.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
+});
 
 const CACHE_MAX_GROUP_ENTRIES = 100;
 

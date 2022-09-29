@@ -6,8 +6,6 @@
  * This module exports a provider that offers about pages.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import {
   UrlbarProvider,
   UrlbarUtils,
@@ -16,11 +14,8 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AboutPagesUtils: "resource://gre/modules/AboutPagesUtils.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AboutPagesUtils: "resource://gre/modules/AboutPagesUtils.jsm",
 });
 
 /**

@@ -3,8 +3,8 @@
 const { PlacesUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PlacesUtils.sys.mjs"
 );
-const { NewTabUtils } = ChromeUtils.import(
-  "resource://gre/modules/NewTabUtils.jsm"
+const { NewTabUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/NewTabUtils.sys.mjs"
 );
 const { PlacesTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PlacesTestUtils.sys.mjs"

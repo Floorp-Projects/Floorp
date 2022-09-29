@@ -21,8 +21,11 @@ const { StartupCache } = ExtensionParent;
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
   KeyValueService: "resource://gre/modules/kvstore.jsm",
 });
 

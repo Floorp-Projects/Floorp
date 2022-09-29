@@ -2,16 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 /**

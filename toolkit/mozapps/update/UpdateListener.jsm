@@ -18,11 +18,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AppMenuNotifications",
-  "resource://gre/modules/AppMenuNotifications.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,

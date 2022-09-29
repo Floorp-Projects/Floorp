@@ -16,7 +16,9 @@ var EXPORTED_SYMBOLS = [
 const CRYPTO_COLLECTION = "crypto";
 const KEYS_WBO = "keys";
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const {
   DEFAULT_DOWNLOAD_BATCH_SIZE,
   DEFAULT_KEYBUNDLE_NAME,

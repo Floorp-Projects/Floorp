@@ -17,8 +17,8 @@ const { AppConstants } = ChromeUtils.import(
 const { Downloads } = ChromeUtils.import(
   "resource://gre/modules/Downloads.jsm"
 );
-const { Integration } = ChromeUtils.import(
-  "resource://gre/modules/Integration.jsm"
+const { Integration } = ChromeUtils.importESModule(
+  "resource://gre/modules/Integration.sys.mjs"
 );
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -46,11 +46,9 @@ ChromeUtils.defineModuleGetter(
   "DownloadUIHelper",
   "resource://gre/modules/DownloadUIHelper.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "NetUtil",

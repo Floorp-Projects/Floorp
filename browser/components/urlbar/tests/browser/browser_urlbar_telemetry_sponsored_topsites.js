@@ -3,12 +3,15 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   CONTEXTUAL_SERVICES_PING_TYPES:
     "resource:///modules/PartnerLinkAttribution.jsm",
   HttpServer: "resource://testing-common/httpd.js",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
-  NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
 });
 
 const EN_US_TOPSITES =

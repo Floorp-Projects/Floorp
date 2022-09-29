@@ -8,11 +8,9 @@ var EXPORTED_SYMBOLS = ["MessagePort", "MessageListener"];
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PromiseUtils",
-  "resource://gre/modules/PromiseUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+});
 
 class MessageListener {
   constructor() {

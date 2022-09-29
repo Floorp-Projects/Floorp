@@ -8,12 +8,10 @@ const { clearTimeout, setTimeout } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(lazy, "NLP", "resource://gre/modules/NLP.jsm");
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Rect",
-  "resource://gre/modules/Geometry.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  NLP: "resource://gre/modules/NLP.sys.mjs",
+  Rect: "resource://gre/modules/Geometry.sys.mjs",
+});
 
 const kDebug = false;
 const kIterationSizeMax = 100;

@@ -7,8 +7,8 @@ const { TelemetryStorage } = ChromeUtils.import(
   "resource://gre/modules/TelemetryStorage.jsm"
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 
 const gFakeInstallPathHash = "0123456789ABCDEF";

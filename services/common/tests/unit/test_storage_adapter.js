@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+const { Sqlite } = ChromeUtils.importESModule(
+  "resource://gre/modules/Sqlite.sys.mjs"
+);
 const { FirefoxAdapter } = ChromeUtils.import(
   "resource://services-common/kinto-storage-adapter.js"
 );

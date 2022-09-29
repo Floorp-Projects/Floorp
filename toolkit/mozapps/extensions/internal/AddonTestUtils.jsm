@@ -17,8 +17,8 @@ const { AddonManager, AddonManagerPrivate, AMTelemetry } = ChromeUtils.import(
 const { AsyncShutdown } = ChromeUtils.import(
   "resource://gre/modules/AsyncShutdown.jsm"
 );
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { XPCOMUtils } = ChromeUtils.importESModule(

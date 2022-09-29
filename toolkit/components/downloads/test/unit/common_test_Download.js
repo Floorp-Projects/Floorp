@@ -18,11 +18,9 @@
 
 const kDeleteTempFileOnExit = "browser.helperApps.deleteTempFileOnExit";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+});
 
 /**
  * Creates and starts a new download, using either DownloadCopySaver or

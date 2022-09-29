@@ -46,8 +46,8 @@ function getClipboardCacheFDCount() {
     // handles, so if FILE_FLAG_DELETE_ON_CLOSE does the thing it promises, the
     // file is actually removed when the handle is closed.
 
-    let { FileUtils } = ChromeUtils.import(
-      "resource://gre/modules/FileUtils.jsm"
+    let { FileUtils } = ChromeUtils.importESModule(
+      "resource://gre/modules/FileUtils.sys.mjs"
     );
     // Path from nsAnonymousTemporaryFile.cpp, GetTempDir.
     dir = FileUtils.getFile("TmpD", ["mozilla-temp-files"]);

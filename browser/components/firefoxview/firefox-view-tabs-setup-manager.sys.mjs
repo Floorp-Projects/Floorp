@@ -12,8 +12,12 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  Log: "resource://gre/modules/Log.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Log: "resource://gre/modules/Log.jsm",
   UIState: "resource://services-sync/UIState.jsm",
   SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
   Weave: "resource://services-sync/main.js",

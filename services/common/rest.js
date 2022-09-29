@@ -9,9 +9,11 @@ var EXPORTED_SYMBOLS = [
 ];
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
+const { PromiseUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseUtils.sys.mjs"
 );
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"

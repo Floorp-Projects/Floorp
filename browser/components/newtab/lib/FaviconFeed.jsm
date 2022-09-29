@@ -16,13 +16,9 @@ const { RemoteSettings } = ChromeUtils.import(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NewTabUtils",
-  "resource://gre/modules/NewTabUtils.jsm"
-);
 
 const MIN_FAVICON_SIZE = 96;
 

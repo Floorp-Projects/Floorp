@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { BrowserUtils } = ChromeUtils.import(
-  "resource://gre/modules/BrowserUtils.jsm"
+const { BrowserUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/BrowserUtils.sys.mjs"
 );
 const { TelemetryTimestamps } = ChromeUtils.import(
   "resource://gre/modules/TelemetryTimestamps.jsm"

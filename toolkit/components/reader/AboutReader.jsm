@@ -15,11 +15,9 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AsyncPrefs",
-  "resource://gre/modules/AsyncPrefs.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AsyncPrefs: "resource://gre/modules/AsyncPrefs.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "NarrateControls",

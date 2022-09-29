@@ -16,10 +16,13 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   OS: "resource://gre/modules/osfile.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
-  WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
 });
 
 const DASHED = AppConstants.platform === "linux";

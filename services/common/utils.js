@@ -7,7 +7,9 @@ var EXPORTED_SYMBOLS = ["CommonUtils"];
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const lazy = {};
 ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 

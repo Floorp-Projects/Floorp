@@ -4,12 +4,8 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 
 ChromeUtils.defineESModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "PromiseUtils",
-  "resource://gre/modules/PromiseUtils.jsm"
-);
 
 // Various tests in this directory may define gTestBrowser, to use as the
 // default browser under test in some of the functions below.

@@ -9,7 +9,9 @@ do_get_profile();
 const { BroadcastService } = ChromeUtils.import(
   "resource://gre/modules/PushBroadcastService.jsm"
 );
-const { JSONFile } = ChromeUtils.import("resource://gre/modules/JSONFile.jsm");
+const { JSONFile } = ChromeUtils.importESModule(
+  "resource://gre/modules/JSONFile.sys.mjs"
+);
 
 const { FileTestUtils } = ChromeUtils.import(
   "resource://testing-common/FileTestUtils.jsm"

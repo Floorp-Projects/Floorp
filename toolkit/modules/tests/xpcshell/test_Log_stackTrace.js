@@ -10,7 +10,9 @@ function baz(v) {
 } // line 9
 
 print("Make sure lazy constructor calling/assignment works");
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 
 function run_test() {
   print(

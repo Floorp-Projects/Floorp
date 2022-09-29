@@ -6,8 +6,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(lazy, "Log", "resource://gre/modules/Log.jsm");
 ChromeUtils.defineESModuleGetters(lazy, {
+  Log: "resource://gre/modules/Log.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 

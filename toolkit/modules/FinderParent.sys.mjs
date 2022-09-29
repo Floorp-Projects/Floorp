@@ -12,17 +12,10 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "GetClipboardSearchString",
-  "resource://gre/modules/Finder.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Rect",
-  "resource://gre/modules/Geometry.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  GetClipboardSearchString: "resource://gre/modules/Finder.sys.mjs",
+  Rect: "resource://gre/modules/Geometry.sys.mjs",
+});
 
 const kPrefLetterboxing = "privacy.resistFingerprinting.letterboxing";
 

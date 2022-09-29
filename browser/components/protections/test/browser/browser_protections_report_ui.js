@@ -5,7 +5,9 @@
 // Note: This test may cause intermittents if run at exactly midnight.
 
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+const { Sqlite } = ChromeUtils.importESModule(
+  "resource://gre/modules/Sqlite.sys.mjs"
+);
 const { AboutProtectionsParent } = ChromeUtils.import(
   "resource:///actors/AboutProtectionsParent.jsm"
 );

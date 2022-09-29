@@ -10,11 +10,9 @@ ChromeUtils.defineModuleGetter(
   "AsyncShutdown",
   "resource://gre/modules/AsyncShutdown.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "JSONFile",
-  "resource://gre/modules/JSONFile.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   this,
   "FileTestUtils",

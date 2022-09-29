@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 
 var EXPORTED_SYMBOLS = ["LogManager"];
 

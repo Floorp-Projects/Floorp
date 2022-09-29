@@ -13,17 +13,12 @@ const CORRUPT_DB_RETAIN_DAYS = 14;
 // Seconds between maintenance runs.
 const MAINTENANCE_INTERVAL_SECONDS = 7 * 86400;
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesPreviews: "resource://gre/modules/PlacesPreviews.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Sqlite: "resource://gre/modules/Sqlite.jsm",
+  Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
 });
 
 export var PlacesDBUtils = {

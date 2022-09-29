@@ -32,13 +32,16 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIFinalizationWitnessService"
 );
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionContent: "resource://gre/modules/ExtensionContent.jsm",
   ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.jsm",
   ExtensionProcessScript: "resource://gre/modules/ExtensionProcessScript.jsm",
   NativeApp: "resource://gre/modules/NativeMessaging.jsm",
   PerformanceCounters: "resource://gre/modules/PerformanceCounters.jsm",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 
 // We're using the pref to avoid loading PerformanceCounters.jsm for nothing.

@@ -9,7 +9,9 @@ var EXPORTED_SYMBOLS = ["Log"];
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { Log: StdLog } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log: StdLog } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 
 const PREF_REMOTE_LOG_LEVEL = "remote.log.level";
 

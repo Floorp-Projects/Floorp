@@ -8,8 +8,8 @@
 /* global AppConstants, DATA_URI_SPEC, LOG_FUNCTION */
 /* global Services, URL_HOST, TestUtils */
 
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -20,11 +20,9 @@ ChromeUtils.defineModuleGetter(
   "ctypes",
   "resource://gre/modules/ctypes.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "UpdateUtils",
-  "resource://gre/modules/UpdateUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
+});
 
 const PREF_APP_UPDATE_AUTO = "app.update.auto";
 const PREF_APP_UPDATE_BACKGROUNDERRORS = "app.update.backgroundErrors";

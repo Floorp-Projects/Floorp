@@ -10,12 +10,15 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  ServiceRequest: "resource://gre/modules/ServiceRequest.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
-  ServiceRequest: "resource://gre/modules/ServiceRequest.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
 });
@@ -72,7 +75,9 @@ const BLANK_DB = function() {
   };
 };
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const LOGGER_ID = "addons.repository";
 
 // Create a new logger for use by the Addons Repository

@@ -15,13 +15,16 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  HiddenFrame: "resource://gre/modules/HiddenFrame.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionData: "resource://gre/modules/Extension.jsm",
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
   PerTestCoverageUtils: "resource://testing-common/PerTestCoverageUtils.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
   SpecialPowersSandbox: "resource://specialpowers/SpecialPowersSandbox.jsm",
-  HiddenFrame: "resource://gre/modules/HiddenFrame.jsm",
 });
 
 class SpecialPowersError extends Error {

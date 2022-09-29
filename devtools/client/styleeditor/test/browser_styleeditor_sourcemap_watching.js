@@ -15,8 +15,8 @@ const TRANSITIONS_PREF = "devtools.styleeditor.transitions";
 
 const CSS_TEXT = "* { color: blue }";
 
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 
 add_task(async function() {

@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["Windows8WindowFrameColor"];
 
-var { WindowsRegistry: Registry } = ChromeUtils.import(
-  "resource://gre/modules/WindowsRegistry.jsm"
+var { WindowsRegistry: Registry } = ChromeUtils.importESModule(
+  "resource://gre/modules/WindowsRegistry.sys.mjs"
 );
 
 var Windows8WindowFrameColor = {

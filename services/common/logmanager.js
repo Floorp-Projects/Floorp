@@ -3,15 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict;";
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
 const { Preferences } = ChromeUtils.import(

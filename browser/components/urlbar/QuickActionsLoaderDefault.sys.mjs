@@ -8,6 +8,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
+  ResetProfile: "resource://gre/modules/ResetProfile.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderQuickActions:
     "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
@@ -21,7 +22,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AppUpdater: "resource:///modules/AppUpdater.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
-  ResetProfile: "resource://gre/modules/ResetProfile.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "BrowserUpdater", () => {

@@ -11,8 +11,8 @@ const { AppConstants } = ChromeUtils.import(
 const { AsyncShutdown } = ChromeUtils.import(
   "resource://gre/modules/AsyncShutdown.jsm"
 );
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
+const { PromiseUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseUtils.sys.mjs"
 );
 const { DeferredTask } = ChromeUtils.import(
   "resource://gre/modules/DeferredTask.jsm"

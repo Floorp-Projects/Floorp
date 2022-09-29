@@ -11,11 +11,14 @@ const { actionTypes: at } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
   DownloadsViewUI: "resource:///modules/DownloadsViewUI.jsm",
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
-  NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
 });
 
 const DOWNLOAD_CHANGED_DELAY_TIME = 1000; // time in ms to delay timer for downloads changed events

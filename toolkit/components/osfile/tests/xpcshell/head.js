@@ -11,11 +11,9 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 // CommonJS loader, so we do not want OS.File to be loaded eagerly for
 // all the tests in this directory.
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(
-  this,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   this,
   "NetUtil",

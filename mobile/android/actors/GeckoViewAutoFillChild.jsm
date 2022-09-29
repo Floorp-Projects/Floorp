@@ -14,8 +14,11 @@ const { GeckoViewUtils } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
   LoginManagerChild: "resource://gre/modules/LoginManagerChild.jsm",
 });
 

@@ -25,12 +25,14 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
 );
-const { ServiceRequest } = ChromeUtils.import(
-  "resource://gre/modules/ServiceRequest.jsm"
+const { PromiseUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseUtils.sys.mjs"
+);
+const { ServiceRequest } = ChromeUtils.importESModule(
+  "resource://gre/modules/ServiceRequest.sys.mjs"
 );
 const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"

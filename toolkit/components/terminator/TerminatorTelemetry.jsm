@@ -19,11 +19,9 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Timer.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PromiseUtils",
-  "resource://gre/modules/PromiseUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+});
 
 function nsTerminatorTelemetry() {
   this._wasNotified = false;

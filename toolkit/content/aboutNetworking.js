@@ -4,8 +4,9 @@
 
 "use strict";
 
-const FileUtils = ChromeUtils.import("resource://gre/modules/FileUtils.jsm")
-  .FileUtils;
+const FileUtils = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
+).FileUtils;
 const gEnv = Cc["@mozilla.org/process/environment;1"].getService(
   Ci.nsIEnvironment
 );

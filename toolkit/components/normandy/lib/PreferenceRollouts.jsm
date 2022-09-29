@@ -8,11 +8,9 @@ const { LogManager } = ChromeUtils.import(
   "resource://normandy/lib/LogManager.jsm"
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "IndexedDB",
-  "resource://gre/modules/IndexedDB.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  IndexedDB: "resource://gre/modules/IndexedDB.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "TelemetryEnvironment",

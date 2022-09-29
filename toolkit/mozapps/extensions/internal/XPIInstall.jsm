@@ -35,16 +35,18 @@ const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  CertUtils: "resource://gre/modules/CertUtils.sys.mjs",
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
-  CertUtils: "resource://gre/modules/CertUtils.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   ProductAddonChecker: "resource://gre/modules/addons/ProductAddonChecker.jsm",
-  UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
-
   AddonInternal: "resource://gre/modules/addons/XPIDatabase.jsm",
   XPIDatabase: "resource://gre/modules/addons/XPIDatabase.jsm",
   XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm",
@@ -169,7 +171,9 @@ const MSG_JAR_FLUSH = "Extension:FlushJarCache";
  */
 var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i;
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const LOGGER_ID = "addons.xpi";
 
 // Create a new logger for use by all objects in this Addons XPI Provider module

@@ -5,8 +5,8 @@
 "use strict";
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
+const { PromiseUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseUtils.sys.mjs"
 );
 
 const { TestUtils } = ChromeUtils.import(

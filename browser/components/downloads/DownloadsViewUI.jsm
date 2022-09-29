@@ -18,6 +18,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
@@ -26,7 +27,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Downloads: "resource://gre/modules/Downloads.jsm",
   DownloadUtils: "resource://gre/modules/DownloadUtils.jsm",
   DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -43,8 +43,8 @@ XPCOMUtils.defineLazyServiceGetter(
   Ci.nsIApplicationReputationService
 );
 
-const { Integration } = ChromeUtils.import(
-  "resource://gre/modules/Integration.jsm"
+const { Integration } = ChromeUtils.importESModule(
+  "resource://gre/modules/Integration.sys.mjs"
 );
 
 Integration.downloads.defineModuleGetter(

@@ -21,7 +21,9 @@ const {
   CreditCardsBase,
   AddressesBase,
 } = ChromeUtils.import("resource://autofill/FormAutofillStorageBase.jsm");
-const { JSONFile } = ChromeUtils.import("resource://gre/modules/JSONFile.jsm");
+const { JSONFile } = ChromeUtils.importESModule(
+  "resource://gre/modules/JSONFile.sys.mjs"
+);
 
 const lazy = {};
 

@@ -13,8 +13,8 @@ const { TelemetryEnvironment } = ChromeUtils.import(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { UpdateUtils } = ChromeUtils.import(
-  "resource://gre/modules/UpdateUtils.jsm"
+const { UpdateUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/UpdateUtils.sys.mjs"
 );
 
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");

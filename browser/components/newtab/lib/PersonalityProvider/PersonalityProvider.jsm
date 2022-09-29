@@ -17,11 +17,9 @@ ChromeUtils.defineModuleGetter(
   "resource://services-settings/Utils.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NewTabUtils",
-  "resource://gre/modules/NewTabUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+});
 
 const { BasePromiseWorker } = ChromeUtils.import(
   "resource://gre/modules/PromiseWorker.jsm"

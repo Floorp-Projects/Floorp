@@ -3,8 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { PropertyListUtils } = ChromeUtils.import(
-  "resource://gre/modules/PropertyListUtils.jsm"
+const { PropertyListUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PropertyListUtils.sys.mjs"
 );
 
 function checkValue(aPropertyListObject, aType, aValue) {

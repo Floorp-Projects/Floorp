@@ -8,11 +8,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "JSONFile",
-  "resource://gre/modules/JSONFile.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
+});
 
 // BroadcastService is exported for test purposes.
 const EXPORTED_SYMBOLS = ["pushBroadcastService", "BroadcastService"];

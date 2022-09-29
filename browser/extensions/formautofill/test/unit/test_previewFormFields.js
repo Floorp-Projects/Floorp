@@ -16,8 +16,8 @@ const { FIELD_STATES } = FormAutofillUtils;
 const PREVIEW = FIELD_STATES.PREVIEW;
 const NORMAL = FIELD_STATES.NORMAL;
 
-const { OSKeyStore } = ChromeUtils.import(
-  "resource://gre/modules/OSKeyStore.jsm"
+const { OSKeyStore } = ChromeUtils.importESModule(
+  "resource://gre/modules/OSKeyStore.sys.mjs"
 );
 
 const TESTCASES = [

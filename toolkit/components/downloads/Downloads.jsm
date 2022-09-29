@@ -10,8 +10,8 @@
 
 var EXPORTED_SYMBOLS = ["Downloads"];
 
-const { Integration } = ChromeUtils.import(
-  "resource://gre/modules/Integration.jsm"
+const { Integration } = ChromeUtils.importESModule(
+  "resource://gre/modules/Integration.sys.mjs"
 );
 const { Download, DownloadError } = ChromeUtils.import(
   "resource://gre/modules/DownloadCore.jsm"

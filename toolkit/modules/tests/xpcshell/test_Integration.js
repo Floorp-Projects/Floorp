@@ -6,8 +6,8 @@
  */
 
 "use strict";
-const { Integration } = ChromeUtils.import(
-  "resource://gre/modules/Integration.jsm"
+const { Integration } = ChromeUtils.importESModule(
+  "resource://gre/modules/Integration.sys.mjs"
 );
 
 const TestIntegration = {

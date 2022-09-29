@@ -7,8 +7,8 @@ const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 const { logManager } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 
 const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);

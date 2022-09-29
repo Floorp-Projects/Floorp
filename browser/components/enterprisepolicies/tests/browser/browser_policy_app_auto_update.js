@@ -2,11 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
-ChromeUtils.defineModuleGetter(
-  this,
-  "UpdateUtils",
-  "resource://gre/modules/UpdateUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
+});
 
 async function test_app_update_auto(expectedEnabled, expectedLocked) {
   let actualEnabled = await UpdateUtils.getAppUpdateAutoEnabled();

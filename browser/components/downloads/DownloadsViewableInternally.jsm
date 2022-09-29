@@ -37,11 +37,9 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIMIMEService"
 );
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Integration",
-  "resource://gre/modules/Integration.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Integration: "resource://gre/modules/Integration.sys.mjs",
+});
 
 const PREF_BRANCH = "browser.download.viewableInternally.";
 const PREF_ENABLED_TYPES = PREF_BRANCH + "enabledTypes";

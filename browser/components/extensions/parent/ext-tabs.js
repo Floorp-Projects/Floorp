@@ -26,11 +26,9 @@ ChromeUtils.defineModuleGetter(
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "PromiseUtils",
-  "resource://gre/modules/PromiseUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   this,
   "SessionStore",

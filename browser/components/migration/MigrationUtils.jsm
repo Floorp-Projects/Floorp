@@ -21,31 +21,15 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  ResponsivenessMonitor: "resource://gre/modules/ResponsivenessMonitor.sys.mjs",
+  Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
+  WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   lazy,
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PromiseUtils",
-  "resource://gre/modules/PromiseUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ResponsivenessMonitor",
-  "resource://gre/modules/ResponsivenessMonitor.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Sqlite",
-  "resource://gre/modules/Sqlite.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "WindowsRegistry",
-  "resource://gre/modules/WindowsRegistry.jsm"
 );
 ChromeUtils.defineModuleGetter(
   lazy,

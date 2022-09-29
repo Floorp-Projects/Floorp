@@ -25,8 +25,11 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  Log: "resource://gre/modules/Log.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Log: "resource://gre/modules/Log.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });

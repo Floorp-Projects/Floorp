@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 
 const lazy = {};
 
@@ -12,21 +14,11 @@ ChromeUtils.defineModuleGetter(
   "CommonUtils",
   "resource://services-common/utils.js"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PromiseUtils",
-  "resource://gre/modules/PromiseUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ServiceRequest",
-  "resource://gre/modules/ServiceRequest.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "UpdateUtils",
-  "resource://gre/modules/UpdateUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  ServiceRequest: "resource://gre/modules/ServiceRequest.sys.mjs",
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
+});
 
 var EXPORTED_SYMBOLS = ["CoveragePing"];
 

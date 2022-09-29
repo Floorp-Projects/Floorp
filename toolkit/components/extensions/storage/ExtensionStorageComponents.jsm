@@ -10,9 +10,12 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
 });
 
 const EXPORTED_SYMBOLS = ["StorageSyncService"];

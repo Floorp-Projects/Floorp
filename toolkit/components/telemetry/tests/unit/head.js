@@ -8,18 +8,21 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+ChromeUtils.defineESModuleGetters(this, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  Log: "resource://gre/modules/Log.sys.mjs",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryScheduler: "resource://gre/modules/TelemetryScheduler.jsm",
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
-  Log: "resource://gre/modules/Log.jsm",
   HttpServer: "resource://testing-common/httpd.js",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   TelemetrySend: "resource://gre/modules/TelemetrySend.jsm",
   TelemetryStorage: "resource://gre/modules/TelemetryStorage.jsm",
 });

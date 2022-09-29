@@ -58,8 +58,8 @@ function promisePopupNotificationShown(name) {
 }
 
 function promiseAppMenuNotificationShown(id) {
-  const { AppMenuNotifications } = ChromeUtils.import(
-    "resource://gre/modules/AppMenuNotifications.jsm"
+  const { AppMenuNotifications } = ChromeUtils.importESModule(
+    "resource://gre/modules/AppMenuNotifications.sys.mjs"
   );
   return new Promise(resolve => {
     function popupshown() {

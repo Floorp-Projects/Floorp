@@ -7,8 +7,8 @@ var EXPORTED_SYMBOLS = ["Utils"];
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { ServiceRequest } = ChromeUtils.import(
-  "resource://gre/modules/ServiceRequest.jsm"
+const { ServiceRequest } = ChromeUtils.importESModule(
+  "resource://gre/modules/ServiceRequest.sys.mjs"
 );
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"

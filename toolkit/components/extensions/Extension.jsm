@@ -49,6 +49,10 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  Log: "resource://gre/modules/Log.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
@@ -64,7 +68,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.jsm",
   ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
-  Log: "resource://gre/modules/Log.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",

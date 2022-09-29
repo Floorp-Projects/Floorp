@@ -15,7 +15,9 @@ ChromeUtils.defineModuleGetter(lazy, "ShellService", "resource:///modules/ShellS
 ChromeUtils.defineModuleGetter(lazy, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(lazy, "TelemetryArchive", "resource://gre/modules/TelemetryArchive.jsm");
 ChromeUtils.defineModuleGetter(lazy, "TelemetryController", "resource://gre/modules/TelemetryController.jsm");
-ChromeUtils.defineModuleGetter(lazy, "UpdateUtils", "resource://gre/modules/UpdateUtils.jsm");
+ChromeUtils.defineESModuleGetters(lazy, {
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs"
+});
 ChromeUtils.defineModuleGetter(lazy, "AttributionCode", "resource:///modules/AttributionCode.jsm");
 ChromeUtils.defineModuleGetter(lazy, "WindowsVersionInfo", "resource://gre/modules/components-utils/WindowsVersionInfo.jsm");
 ChromeUtils.defineModuleGetter(lazy, "NormandyUtils", "resource://normandy/lib/NormandyUtils.jsm");

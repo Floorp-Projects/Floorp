@@ -20,13 +20,9 @@ const THIRD_PARTY_FAVICON_URI =
   TEST_THIRD_PARTY_SITE +
   "/browser/browser/base/content/test/favicons/file_favicon.png";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "PromiseUtils",
-  "resource://gre/modules/PromiseUtils.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();

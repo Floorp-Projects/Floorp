@@ -6,8 +6,6 @@
  * This module exports a provider that offers bookmarks with keywords.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import {
   UrlbarProvider,
   UrlbarUtils,
@@ -16,12 +14,9 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  KeywordUtils: "resource://gre/modules/KeywordUtils.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  KeywordUtils: "resource://gre/modules/KeywordUtils.jsm",
 });
 
 /**

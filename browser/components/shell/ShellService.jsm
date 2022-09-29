@@ -13,11 +13,15 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   Subprocess: "resource://gre/modules/Subprocess.jsm",
-  WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

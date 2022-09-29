@@ -14,11 +14,14 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AttributionCode: "resource:///modules/AttributionCode.jsm",
   BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
-  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

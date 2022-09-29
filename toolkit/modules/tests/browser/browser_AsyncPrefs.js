@@ -23,8 +23,8 @@ Services.prefs
   .setIntPref("some-int-pref", 0);
 
 async function runTest() {
-  let { AsyncPrefs } = ChromeUtils.import(
-    "resource://gre/modules/AsyncPrefs.jsm"
+  let { AsyncPrefs } = ChromeUtils.importESModule(
+    "resource://gre/modules/AsyncPrefs.sys.mjs"
   );
   const kInChildProcess =
     Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;

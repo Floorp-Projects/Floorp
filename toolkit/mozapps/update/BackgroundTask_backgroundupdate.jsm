@@ -24,12 +24,15 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AppUpdater: "resource:///modules/AppUpdater.jsm",
   BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
-  UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

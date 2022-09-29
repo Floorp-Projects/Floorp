@@ -409,8 +409,8 @@ add_task(async function checkAllTheCSS() {
   // Create a clean iframe to load all the files into. This needs to live at a
   // chrome URI so that it's allowed to load and parse any styles.
   let testFile = getRootDirectory(gTestPath) + "dummy_page.html";
-  let { HiddenFrame } = ChromeUtils.import(
-    "resource://gre/modules/HiddenFrame.jsm"
+  let { HiddenFrame } = ChromeUtils.importESModule(
+    "resource://gre/modules/HiddenFrame.sys.mjs"
   );
   let hiddenFrame = new HiddenFrame();
   let win = await hiddenFrame.get();

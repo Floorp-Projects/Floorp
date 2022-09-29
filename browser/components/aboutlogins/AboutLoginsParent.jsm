@@ -22,13 +22,16 @@ const { E10SUtils } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   LoginBreaches: "resource:///modules/LoginBreaches.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   LoginExport: "resource://gre/modules/LoginExport.jsm",
   LoginCSVImport: "resource://gre/modules/LoginCSVImport.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
-  OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
   UIState: "resource://services-sync/UIState.jsm",
 });
 

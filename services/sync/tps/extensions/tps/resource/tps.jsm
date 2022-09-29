@@ -29,13 +29,16 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
+const { PromiseUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseUtils.sys.mjs"
 );
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
+  Log: "resource://gre/modules/Log.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 
@@ -46,9 +49,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindows: "resource://tps/modules/windows.jsm",
   CommonUtils: "resource://services-common/utils.js",
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
-  JsonSchema: "resource://gre/modules/JsonSchema.jsm",
-  Log: "resource://gre/modules/Log.jsm",
   Logger: "resource://tps/logger.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   Svc: "resource://services-sync/util.js",

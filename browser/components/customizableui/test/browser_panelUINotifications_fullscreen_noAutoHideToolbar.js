@@ -6,8 +6,8 @@
 // error.
 SimpleTest.ignoreAllUncaughtExceptions(true);
 
-const { AppMenuNotifications } = ChromeUtils.import(
-  "resource://gre/modules/AppMenuNotifications.jsm"
+const { AppMenuNotifications } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppMenuNotifications.sys.mjs"
 );
 
 function waitForDocshellActivated() {

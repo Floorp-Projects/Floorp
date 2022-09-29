@@ -1,10 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
+var { PromiseUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseUtils.sys.mjs"
 );
 ChromeUtils.defineESModuleGetters(this, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
@@ -12,11 +13,6 @@ ChromeUtils.defineModuleGetter(
   this,
   "TestUtils",
   "resource://testing-common/TestUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {

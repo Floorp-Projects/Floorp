@@ -12,6 +12,10 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  FirstStartup: "resource://gre/modules/FirstStartup.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   ExperimentStore: "resource://nimbus/lib/ExperimentStore.jsm",
@@ -20,7 +24,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Sampling: "resource://gre/modules/components-utils/Sampling.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
-  FirstStartup: "resource://gre/modules/FirstStartup.jsm",
   PrefUtils: "resource://normandy/lib/PrefUtils.jsm",
 });
 

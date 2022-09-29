@@ -6,8 +6,8 @@
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
-const { UpdateUtils } = ChromeUtils.import(
-  "resource://gre/modules/UpdateUtils.jsm"
+const { UpdateUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/UpdateUtils.sys.mjs"
 );
 
 const PREF_APP_UPDATE_CHANNEL = "app.update.channel";

@@ -57,9 +57,7 @@
  */
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
-);
+import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 import { PlacesUtils } from "resource://gre/modules/PlacesUtils.sys.mjs";
 
 const lazy = {};

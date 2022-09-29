@@ -43,12 +43,15 @@ const { FormAutofillUtils } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
+  OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  CreditCard: "resource://gre/modules/CreditCard.jsm",
   FormAutofillPreferences: "resource://autofill/FormAutofillPreferences.jsm",
   FormAutofillPrompter: "resource://autofill/FormAutofillPrompter.jsm",
-  OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () =>

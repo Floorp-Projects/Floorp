@@ -7,8 +7,8 @@ const { Normandy } = ChromeUtils.import("resource://normandy/Normandy.jsm");
 const { NormandyMigrations } = ChromeUtils.import(
   "resource://normandy/NormandyMigrations.jsm"
 );
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
+const { PromiseUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseUtils.sys.mjs"
 );
 ChromeUtils.defineModuleGetter(
   this,

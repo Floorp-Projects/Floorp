@@ -6,8 +6,8 @@
 function test() {
   waitForExplicitFinish();
 
-  let { FileUtils } = ChromeUtils.import(
-    "resource://gre/modules/FileUtils.jsm"
+  let { FileUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/FileUtils.sys.mjs"
   );
   let { DownloadLastDir } = ChromeUtils.import(
     "resource://gre/modules/DownloadLastDir.jsm"

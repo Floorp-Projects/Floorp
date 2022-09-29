@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = ["HeadlessShell", "ScreenshotParent"];
 const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
-const { HiddenFrame } = ChromeUtils.import(
-  "resource://gre/modules/HiddenFrame.jsm"
+const { HiddenFrame } = ChromeUtils.importESModule(
+  "resource://gre/modules/HiddenFrame.sys.mjs"
 );
 
 // Refrences to the progress listeners to keep them from being gc'ed

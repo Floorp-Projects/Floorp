@@ -2,11 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "UpdateUtils",
-  "resource://gre/modules/UpdateUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
+});
 
 const PREF_NAME = "app.update.background.enabled";
 

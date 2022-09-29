@@ -7,8 +7,8 @@ const { getAppInfo } = ChromeUtils.import(
 const { XPIInstall } = ChromeUtils.import(
   "resource://gre/modules/addons/XPIInstall.jsm"
 );
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
+const { PromiseUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseUtils.sys.mjs"
 );
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const { TelemetryTestUtils } = ChromeUtils.import(

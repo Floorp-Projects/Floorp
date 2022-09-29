@@ -15,16 +15,16 @@ var gLogfileOutputStream;
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 const PREF_APP_UPDATE_LOG = "app.update.log";
 const PREF_APP_UPDATE_LOG_FILE = "app.update.log.file";
 const KEY_PROFILE_DIR = "ProfD";
 const FILE_UPDATE_MESSAGES = "update_messages.log";
 const lazy = {};
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 XPCOMUtils.defineLazyGetter(lazy, "gLogEnabled", function aus_gLogEnabled() {
   return (

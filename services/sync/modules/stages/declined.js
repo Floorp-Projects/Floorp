@@ -11,7 +11,9 @@
 
 var EXPORTED_SYMBOLS = ["DeclinedEngines"];
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );

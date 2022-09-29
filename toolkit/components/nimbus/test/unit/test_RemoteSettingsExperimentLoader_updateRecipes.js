@@ -3,8 +3,8 @@
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
-const { FirstStartup } = ChromeUtils.import(
-  "resource://gre/modules/FirstStartup.jsm"
+const { FirstStartup } = ChromeUtils.importESModule(
+  "resource://gre/modules/FirstStartup.sys.mjs"
 );
 const { NimbusFeatures } = ChromeUtils.import(
   "resource://nimbus/ExperimentAPI.jsm"

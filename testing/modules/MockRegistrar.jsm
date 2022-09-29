@@ -8,7 +8,9 @@ var EXPORTED_SYMBOLS = ["MockRegistrar"];
 
 const Cm = Components.manager;
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 var logger = Log.repository.getLogger("MockRegistrar");
 
 var MockRegistrar = Object.freeze({

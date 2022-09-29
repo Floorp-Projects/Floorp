@@ -40,22 +40,18 @@ ChromeUtils.defineModuleGetter(
   "DownloadsViewUI",
   "resource:///modules/DownloadsViewUI.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   this,
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
-ChromeUtils.defineESModuleGetters(this, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
 
-const { Integration } = ChromeUtils.import(
-  "resource://gre/modules/Integration.jsm"
+const { Integration } = ChromeUtils.importESModule(
+  "resource://gre/modules/Integration.sys.mjs"
 );
 
 /* global DownloadIntegration */

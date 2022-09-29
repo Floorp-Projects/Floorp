@@ -28,11 +28,14 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
+  JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
+  OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  CreditCard: "resource://gre/modules/CreditCard.jsm",
   FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
-  JSONFile: "resource://gre/modules/JSONFile.jsm",
-  OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
 });
 
 const PROFILE_JSON_FILE_NAME = "autofill-profiles.json";

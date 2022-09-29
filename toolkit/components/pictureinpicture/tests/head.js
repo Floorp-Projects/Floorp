@@ -488,7 +488,9 @@ async function getToggleClientRect(
 ) {
   let args = { videoID, toggleID: toggleStyles.rootID };
   return ContentTask.spawn(browser, args, async args => {
-    const { Rect } = ChromeUtils.import("resource://gre/modules/Geometry.jsm");
+    const { Rect } = ChromeUtils.importESModule(
+      "resource://gre/modules/Geometry.sys.mjs"
+    );
 
     let { videoID, toggleID } = args;
     let video = content.document.getElementById(videoID);

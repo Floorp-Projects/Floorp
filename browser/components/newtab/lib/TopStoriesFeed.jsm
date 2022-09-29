@@ -3,10 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { NewTabUtils } = ChromeUtils.import(
-  "resource://gre/modules/NewTabUtils.jsm"
-);
-
 const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
@@ -24,6 +20,11 @@ const { PersistentCache } = ChromeUtils.import(
 );
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+});
+
 ChromeUtils.defineModuleGetter(
   lazy,
   "pktApi",
@@ -252,7 +253,7 @@ class TopStoriesFeed {
     }
 
     const calcResult = items
-      .filter(s => !NewTabUtils.blockedLinks.isBlocked({ url: s.url }))
+      .filter(s => !lazy.NewTabUtils.blockedLinks.isBlocked({ url: s.url }))
       .map(s => {
         let mapped = {
           guid: s.id,

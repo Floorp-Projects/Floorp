@@ -30,20 +30,18 @@ const { fathom } = ChromeUtils.import(
   "resource://gre/modules/third_party/fathom/fathom.jsm"
 );
 const { element: clickedElement, out, rule, ruleset, score, type } = fathom;
-const { CreditCard } = ChromeUtils.import(
-  "resource://gre/modules/CreditCard.jsm"
+const { CreditCard } = ChromeUtils.importESModule(
+  "resource://gre/modules/CreditCard.sys.mjs"
 );
-const { NETWORK_NAMES } = ChromeUtils.import(
-  "resource://gre/modules/CreditCard.jsm"
+const { NETWORK_NAMES } = ChromeUtils.importESModule(
+  "resource://gre/modules/CreditCard.sys.mjs"
 );
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormLikeFactory",
-  "resource://gre/modules/FormLikeFactory.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "FormAutofillUtils",

@@ -8,8 +8,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-let log = ChromeUtils.import(
-  "resource://gre/modules/Log.jsm"
+let log = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
 ).Log.repository.getLogger("Sync.RemoteTabs");
 
 const lazy = {};

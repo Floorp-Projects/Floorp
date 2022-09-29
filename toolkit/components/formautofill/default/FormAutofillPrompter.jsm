@@ -26,8 +26,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  CreditCard: "resource://gre/modules/CreditCard.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () =>

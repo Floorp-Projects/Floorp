@@ -14,7 +14,7 @@
 var { CanonicalJSON } = ChromeUtils.import(
   "resource://gre/modules/CanonicalJSON.jsm"
 );
-var { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+var { Log } = ChromeUtils.importESModule("resource://gre/modules/Log.sys.mjs");
 var { ObjectUtils } = ChromeUtils.import(
   "resource://gre/modules/ObjectUtils.jsm"
 );

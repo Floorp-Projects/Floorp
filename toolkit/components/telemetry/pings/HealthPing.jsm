@@ -34,7 +34,9 @@ ChromeUtils.defineModuleGetter(
   "clearTimeout",
   "resource://gre/modules/Timer.jsm"
 );
-ChromeUtils.defineModuleGetter(lazy, "Log", "resource://gre/modules/Log.jsm");
+ChromeUtils.defineESModuleGetters(lazy, {
+  Log: "resource://gre/modules/Log.sys.mjs",
+});
 
 const Utils = TelemetryUtils;
 

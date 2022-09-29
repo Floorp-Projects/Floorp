@@ -13,11 +13,9 @@ ChromeUtils.defineModuleGetter(
   "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PromiseUtils",
-  "resource://gre/modules/PromiseUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+});
 
 const STREAM_SEGMENT_SIZE = 4096;
 const PR_UINT32_MAX = 0xffffffff;

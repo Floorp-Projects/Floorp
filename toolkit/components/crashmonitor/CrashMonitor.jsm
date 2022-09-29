@@ -36,8 +36,8 @@ var EXPORTED_SYMBOLS = ["CrashMonitor"];
 const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
+const { PromiseUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseUtils.sys.mjs"
 );
 
 const SESSIONSTORE_WINDOWS_RESTORED_TOPIC = "sessionstore-windows-restored";

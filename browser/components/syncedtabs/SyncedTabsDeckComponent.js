@@ -28,8 +28,8 @@ let { getChromeWindow } = ChromeUtils.import(
 );
 const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
-let log = ChromeUtils.import(
-  "resource://gre/modules/Log.jsm"
+let log = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
 ).Log.repository.getLogger("Sync.RemoteTabs");
 
 var EXPORTED_SYMBOLS = ["SyncedTabsDeckComponent"];

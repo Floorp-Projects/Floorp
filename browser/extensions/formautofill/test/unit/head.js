@@ -10,8 +10,8 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 var { ObjectUtils } = ChromeUtils.import(
   "resource://gre/modules/ObjectUtils.jsm"
 );
-var { FormLikeFactory } = ChromeUtils.import(
-  "resource://gre/modules/FormLikeFactory.jsm"
+var { FormLikeFactory } = ChromeUtils.importESModule(
+  "resource://gre/modules/FormLikeFactory.sys.mjs"
 );
 var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
@@ -45,11 +45,9 @@ ChromeUtils.defineModuleGetter(
   "DownloadPaths",
   "resource://gre/modules/DownloadPaths.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+});
 
 ChromeUtils.defineModuleGetter(
   this,

@@ -3,8 +3,8 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 
 let tempFile = new FileUtils.File(PathUtils.tempDir);
@@ -133,8 +133,8 @@ const TESTS = [
   },
 ];
 
-const { BrowserUtils } = ChromeUtils.import(
-  "resource://gre/modules/BrowserUtils.jsm"
+const { BrowserUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/BrowserUtils.sys.mjs"
 );
 
 add_task(async function test_checkStringFormatting() {

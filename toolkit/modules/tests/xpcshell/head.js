@@ -1,5 +1,5 @@
-var { NewTabUtils } = ChromeUtils.import(
-  "resource://gre/modules/NewTabUtils.jsm"
+var { NewTabUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/NewTabUtils.sys.mjs"
 );
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"

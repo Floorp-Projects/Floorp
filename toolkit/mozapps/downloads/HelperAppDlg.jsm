@@ -22,8 +22,8 @@ XPCOMUtils.defineLazyServiceGetter(
   Ci.nsIApplicationReputationService
 );
 
-const { Integration } = ChromeUtils.import(
-  "resource://gre/modules/Integration.jsm"
+const { Integration } = ChromeUtils.importESModule(
+  "resource://gre/modules/Integration.sys.mjs"
 );
 Integration.downloads.defineModuleGetter(
   lazy,
@@ -127,8 +127,8 @@ const { DownloadUtils } = ChromeUtils.import(
 const { Downloads } = ChromeUtils.import(
   "resource://gre/modules/Downloads.jsm"
 );
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 
 /* ctor

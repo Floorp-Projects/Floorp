@@ -18,11 +18,9 @@ ChromeUtils.defineModuleGetter(
   "ExtensionUtils",
   "resource://gre/modules/ExtensionUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "JSONFile",
-  "resource://gre/modules/JSONFile.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
 function isStructuredCloneHolder(value) {

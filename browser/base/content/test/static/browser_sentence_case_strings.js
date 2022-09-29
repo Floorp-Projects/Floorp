@@ -15,8 +15,8 @@ const { CustomizableUITestUtils } = ChromeUtils.import(
   "resource://testing-common/CustomizableUITestUtils.jsm"
 );
 
-const { AppMenuNotifications } = ChromeUtils.import(
-  "resource://gre/modules/AppMenuNotifications.jsm"
+const { AppMenuNotifications } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppMenuNotifications.sys.mjs"
 );
 
 // These are brand names, proper names, or other things that we expect to

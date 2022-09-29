@@ -7,8 +7,8 @@ const { ASRouterTriggerListeners } = ChromeUtils.import(
 const { CFRMessageProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/CFRMessageProvider.jsm"
 );
-const { JsonSchema } = ChromeUtils.import(
-  "resource://gre/modules/JsonSchema.jsm"
+const { JsonSchema } = ChromeUtils.importESModule(
+  "resource://gre/modules/JsonSchema.sys.mjs"
 );
 
 XPCOMUtils.defineLazyGetter(this, "fetchTriggerActionSchema", async () => {

@@ -5,9 +5,7 @@
 const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
-);
+import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 
 const NOTIFICATION_EVENT_DISMISSED = "dismissed";
 const NOTIFICATION_EVENT_REMOVED = "removed";

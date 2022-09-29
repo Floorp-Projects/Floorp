@@ -7,9 +7,7 @@
  * the display of the help panel on invalid elements.
  */
 
-const { LayoutUtils } = ChromeUtils.import(
-  "resource://gre/modules/LayoutUtils.jsm"
-);
+import { LayoutUtils } from "resource://gre/modules/LayoutUtils.sys.mjs";
 
 export class FormValidationChild extends JSWindowActorChild {
   constructor() {

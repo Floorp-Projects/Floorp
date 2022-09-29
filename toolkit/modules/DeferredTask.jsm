@@ -84,11 +84,9 @@ const lazy = {};
 
 // Globals
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PromiseUtils",
-  "resource://gre/modules/PromiseUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+});
 
 const Timer = Components.Constructor(
   "@mozilla.org/timer;1",

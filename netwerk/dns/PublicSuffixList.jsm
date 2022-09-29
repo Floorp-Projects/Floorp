@@ -6,8 +6,9 @@
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
-const FileUtils = ChromeUtils.import("resource://gre/modules/FileUtils.jsm")
-  .FileUtils;
+const FileUtils = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
+).FileUtils;
 
 const EXPORTED_SYMBOLS = ["PublicSuffixList"];
 

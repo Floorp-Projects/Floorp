@@ -8,11 +8,9 @@
 // leaking to window scope.
 {
   let imports = {};
-  ChromeUtils.defineModuleGetter(
-    imports,
-    "ShortcutUtils",
-    "resource://gre/modules/ShortcutUtils.jsm"
-  );
+  ChromeUtils.defineESModuleGetters(imports, {
+    ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
+  });
 
   const MozMenuItemBaseMixin = Base => {
     class MozMenuItemBase extends MozElements.BaseTextMixin(Base) {

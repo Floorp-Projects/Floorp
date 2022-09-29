@@ -53,11 +53,9 @@ ChromeUtils.defineModuleGetter(
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "JSONFile",
-  "resource://gre/modules/JSONFile.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
+});
 
 // Defined for readability of precedence and selection code.  keyInfo.selected will be
 // one of these defines, or the id of an extension if an extension has been explicitly

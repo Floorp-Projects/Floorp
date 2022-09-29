@@ -11,8 +11,11 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
   WindowsVersionInfo:
     "resource://gre/modules/components-utils/WindowsVersionInfo.jsm",
 });

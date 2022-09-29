@@ -11,8 +11,8 @@ const SVG_MIME = "image/svg+xml";
 const AVIF_MIME = "image/avif";
 const WEBP_MIME = "image/webp";
 
-const { Integration } = ChromeUtils.import(
-  "resource://gre/modules/Integration.jsm"
+const { Integration } = ChromeUtils.importESModule(
+  "resource://gre/modules/Integration.sys.mjs"
 );
 const {
   DownloadsViewableInternally,

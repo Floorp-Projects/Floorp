@@ -12,9 +12,12 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 
 // Note: we get loaded in dialogs so we need to define our
 // own getters, separate from preferences.js .
+ChromeUtils.defineESModuleGetters(this, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   ExtensionPreferencesManager:
     "resource://gre/modules/ExtensionPreferencesManager.jsm",

@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["TelemetryArchive"];
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );

@@ -9,7 +9,9 @@ var EXPORTED_SYMBOLS = ["BulkKeyBundle"];
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
 const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
 

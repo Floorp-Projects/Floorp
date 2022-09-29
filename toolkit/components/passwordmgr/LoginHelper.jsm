@@ -18,11 +18,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "OSKeyStore",
-  "resource://gre/modules/OSKeyStore.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
+});
 
 /**
  * A helper class to deal with CSV import rows.

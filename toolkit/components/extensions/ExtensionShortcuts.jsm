@@ -12,11 +12,12 @@ const { ExtensionCommon } = ChromeUtils.import(
 const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
-const { ShortcutUtils } = ChromeUtils.import(
-  "resource://gre/modules/ShortcutUtils.jsm"
-);
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
+});
 
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -504,7 +505,7 @@ class ExtensionShortcuts {
     // The modifiers are the remaining elements.
     keyElement.setAttribute(
       "modifiers",
-      ShortcutUtils.getModifiersAttribute(parts)
+      lazy.ShortcutUtils.getModifiersAttribute(parts)
     );
 
     // A keyElement with key "NumpadX" is created above and isn't from the
@@ -514,7 +515,7 @@ class ExtensionShortcuts {
       keyElement.setAttribute("id", id);
     }
 
-    let [attribute, value] = ShortcutUtils.getKeyAttribute(chromeKey);
+    let [attribute, value] = lazy.ShortcutUtils.getKeyAttribute(chromeKey);
     keyElement.setAttribute(attribute, value);
     if (attribute == "keycode") {
       keyElement.setAttribute("event", "keydown");

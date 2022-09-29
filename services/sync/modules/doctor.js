@@ -11,7 +11,9 @@
 
 var EXPORTED_SYMBOLS = ["Doctor"];
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const { Async } = ChromeUtils.import("resource://services-common/async.js");
 const { Observers } = ChromeUtils.import(
   "resource://services-common/observers.js"

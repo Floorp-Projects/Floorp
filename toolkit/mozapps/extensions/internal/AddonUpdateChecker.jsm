@@ -31,23 +31,19 @@ ChromeUtils.defineModuleGetter(
   "Blocklist",
   "resource://gre/modules/Blocklist.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CertUtils",
-  "resource://gre/modules/CertUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ServiceRequest",
-  "resource://gre/modules/ServiceRequest.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  CertUtils: "resource://gre/modules/CertUtils.sys.mjs",
+  ServiceRequest: "resource://gre/modules/ServiceRequest.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "AddonSettings",
   "resource://gre/modules/addons/AddonSettings.jsm"
 );
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const LOGGER_ID = "addons.update-checker";
 
 // Create a new logger for use by the Addons Update Checker

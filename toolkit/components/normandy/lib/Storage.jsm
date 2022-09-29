@@ -10,11 +10,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "JSONFile",
-  "resource://gre/modules/JSONFile.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
+});
 
 var EXPORTED_SYMBOLS = ["Storage"];
 

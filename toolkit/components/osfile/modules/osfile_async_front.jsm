@@ -54,11 +54,9 @@ var Path = ChromeUtils.import("resource://gre/modules/osfile/ospath.jsm");
 const lazy = {};
 
 // The library of promises.
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PromiseUtils",
-  "resource://gre/modules/PromiseUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+});
 
 // The implementation of communications
 const { BasePromiseWorker } = ChromeUtils.import(

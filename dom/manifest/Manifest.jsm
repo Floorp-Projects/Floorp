@@ -24,11 +24,9 @@ const { ManifestIcons } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "JSONFile",
-  "resource://gre/modules/JSONFile.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
+});
 
 /**
  * Generates an hash for the given string.

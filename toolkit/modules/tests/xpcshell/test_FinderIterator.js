@@ -1,5 +1,5 @@
-const { FinderIterator } = ChromeUtils.import(
-  "resource://gre/modules/FinderIterator.jsm"
+const { FinderIterator } = ChromeUtils.importESModule(
+  "resource://gre/modules/FinderIterator.sys.mjs"
 );
 
 let finderIterator = new FinderIterator();

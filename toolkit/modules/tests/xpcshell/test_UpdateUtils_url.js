@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { UpdateUtils } = ChromeUtils.import(
-  "resource://gre/modules/UpdateUtils.jsm"
+const { UpdateUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/UpdateUtils.sys.mjs"
 );
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
@@ -14,11 +14,9 @@ const { getAppInfo, updateAppInfo } = ChromeUtils.import(
 );
 const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "WindowsRegistry",
-  "resource://gre/modules/WindowsRegistry.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
+});
 
 const PREF_APP_UPDATE_CHANNEL = "app.update.channel";
 const PREF_APP_PARTNER_BRANCH = "app.partner.";

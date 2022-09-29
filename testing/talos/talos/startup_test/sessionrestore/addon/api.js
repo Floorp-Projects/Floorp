@@ -8,9 +8,12 @@
 
 /* globals Services, XPCOMUtils */
 
+ChromeUtils.defineESModuleGetters(this, {
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   StartupPerformance: "resource:///modules/sessionstore/StartupPerformance.jsm",

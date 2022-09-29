@@ -3,8 +3,8 @@
 var { WebRequest } = ChromeUtils.import(
   "resource://gre/modules/WebRequest.jsm"
 );
-var { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
+var { PromiseUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseUtils.sys.mjs"
 );
 var { ExtensionParent } = ChromeUtils.import(
   "resource://gre/modules/ExtensionParent.jsm"

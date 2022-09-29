@@ -19,10 +19,15 @@ const { AppConstants } = ChromeUtils.import(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
   BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",
   BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.sys.mjs",
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
+  Integration: "resource://gre/modules/Integration.sys.mjs",
   Interactions: "resource:///modules/Interactions.sys.mjs",
+  Log: "resource://gre/modules/Log.sys.mjs",
+  NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+  OsEnvironment: "resource://gre/modules/OsEnvironment.sys.mjs",
   PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
   PlacesBackups: "resource://gre/modules/PlacesBackups.sys.mjs",
   PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.sys.mjs",
@@ -30,16 +35,17 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
+  ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
   SnapshotMonitor: "resource:///modules/SnapshotMonitor.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
+  WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
   ASRouterDefaultConfig:
     "resource://activity-stream/lib/ASRouterDefaultConfig.jsm",
   ASRouterNewTabHook: "resource://activity-stream/lib/ASRouterNewTabHook.jsm",
@@ -63,16 +69,12 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   FeatureGate: "resource://featuregates/FeatureGate.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
-  Integration: "resource://gre/modules/Integration.jsm",
-  Log: "resource://gre/modules/Log.jsm",
   LoginBreaches: "resource:///modules/LoginBreaches.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   Normandy: "resource://normandy/Normandy.jsm",
   OnboardingMessageProvider:
     "resource://activity-stream/lib/OnboardingMessageProvider.jsm",
-  OsEnvironment: "resource://gre/modules/OsEnvironment.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
   PdfJs: "resource://pdf.js/PdfJs.jsm",
@@ -91,7 +93,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
-  ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
@@ -100,7 +101,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   TRRRacer: "resource:///modules/TRRPerformance.jsm",
   UIState: "resource://services-sync/UIState.jsm",
   WebChannel: "resource://gre/modules/WebChannel.jsm",
-  WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
 });
 
 if (AppConstants.MOZ_UPDATER) {
@@ -1388,8 +1388,8 @@ BrowserGlue.prototype = {
       return;
     }
 
-    const { ResetProfile } = ChromeUtils.import(
-      "resource://gre/modules/ResetProfile.jsm"
+    const { ResetProfile } = ChromeUtils.importESModule(
+      "resource://gre/modules/ResetProfile.sys.mjs"
     );
     if (!ResetProfile.resetSupported()) {
       return;
@@ -1625,8 +1625,8 @@ BrowserGlue.prototype = {
     );
     channel.listen((id, data, target) => {
       if (data.command == "request") {
-        let { Troubleshoot } = ChromeUtils.import(
-          "resource://gre/modules/Troubleshoot.jsm"
+        let { Troubleshoot } = ChromeUtils.importESModule(
+          "resource://gre/modules/Troubleshoot.sys.mjs"
         );
         Troubleshoot.snapshot(snapshotData => {
           // for privacy we remove crash IDs and all preferences (but bug 1091944
@@ -1657,8 +1657,8 @@ BrowserGlue.prototype = {
       // Check if we were just re-installed and offer Firefox Reset
       let updateChannel;
       try {
-        updateChannel = ChromeUtils.import(
-          "resource://gre/modules/UpdateUtils.jsm"
+        updateChannel = ChromeUtils.importESModule(
+          "resource://gre/modules/UpdateUtils.sys.mjs"
         ).UpdateUtils.UpdateChannel;
       } catch (ex) {}
       if (updateChannel) {
@@ -2320,8 +2320,8 @@ BrowserGlue.prototype = {
     }
 
     if (AppConstants.ASAN_REPORTER) {
-      var { AsanReporter } = ChromeUtils.import(
-        "resource://gre/modules/AsanReporter.jsm"
+      var { AsanReporter } = ChromeUtils.importESModule(
+        "resource://gre/modules/AsanReporter.sys.mjs"
       );
       AsanReporter.init();
     }
@@ -2940,8 +2940,8 @@ BrowserGlue.prototype = {
       },
 
       () => {
-        let { GMPInstallManager } = ChromeUtils.import(
-          "resource://gre/modules/GMPInstallManager.jsm"
+        let { GMPInstallManager } = ChromeUtils.importESModule(
+          "resource://gre/modules/GMPInstallManager.sys.mjs"
         );
         this._gmpInstallManager = new GMPInstallManager();
         // We don't really care about the results, if someone is interested they

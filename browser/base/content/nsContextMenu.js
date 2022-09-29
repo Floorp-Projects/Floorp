@@ -257,8 +257,8 @@ class nsContextMenu {
       this.selectionInfo = this.contentData.selectionInfo;
       this.actor = this.contentData.actor;
     } else {
-      const { SelectionUtils } = ChromeUtils.import(
-        "resource://gre/modules/SelectionUtils.jsm"
+      const { SelectionUtils } = ChromeUtils.importESModule(
+        "resource://gre/modules/SelectionUtils.sys.mjs"
       );
 
       this.browser = this.ownerDoc.defaultView.docShell.chromeEventHandler;

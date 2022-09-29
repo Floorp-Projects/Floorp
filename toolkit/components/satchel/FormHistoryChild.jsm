@@ -12,11 +12,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CreditCard",
-  "resource://gre/modules/CreditCard.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "PrivateBrowsingUtils",

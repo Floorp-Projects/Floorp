@@ -17,6 +17,9 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutReaderParent: "resource:///actors/AboutReaderParent.sys.mjs",
+  ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
+  ResetProfile: "resource://gre/modules/ResetProfile.sys.mjs",
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -26,10 +29,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   PanelMultiView: "resource:///modules/PanelMultiView.jsm",
-  ProfileAge: "resource://gre/modules/ProfileAge.jsm",
-  ResetProfile: "resource://gre/modules/ResetProfile.jsm",
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
-  UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {

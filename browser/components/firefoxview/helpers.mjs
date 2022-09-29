@@ -7,12 +7,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
 });
 

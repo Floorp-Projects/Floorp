@@ -19,12 +19,8 @@ ChromeUtils.defineModuleGetter(
   "DownloadsCommon",
   "resource:///modules/DownloadsCommon.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(

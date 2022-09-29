@@ -5,7 +5,9 @@
 
 "use strict";
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );

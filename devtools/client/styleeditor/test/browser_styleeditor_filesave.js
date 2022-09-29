@@ -7,8 +7,8 @@
 const TESTCASE_URI_HTML = TEST_BASE_HTTP + "simple.html";
 const TESTCASE_URI_CSS = TEST_BASE_HTTP + "simple.css";
 
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
 );
 
 add_task(async function() {

@@ -1,7 +1,7 @@
 "use strict";
 
-const { AppMenuNotifications } = ChromeUtils.import(
-  "resource://gre/modules/AppMenuNotifications.jsm"
+const { AppMenuNotifications } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppMenuNotifications.sys.mjs"
 );
 
 add_task(async function testFullscreen() {

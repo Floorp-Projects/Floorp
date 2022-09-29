@@ -14,8 +14,12 @@ var EXPORTED_SYMBOLS = [
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { JSONFile } = ChromeUtils.import("resource://gre/modules/JSONFile.jsm");
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { JSONFile } = ChromeUtils.importESModule(
+  "resource://gre/modules/JSONFile.sys.mjs"
+);
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const { Async } = ChromeUtils.import("resource://services-common/async.js");
 const { Observers } = ChromeUtils.import(
   "resource://services-common/observers.js"

@@ -11,11 +11,9 @@ var EXPORTED_SYMBOLS = ["PageThumbUtils"];
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+});
 
 var PageThumbUtils = {
   // The default thumbnail size for images

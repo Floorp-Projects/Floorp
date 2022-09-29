@@ -18,9 +18,12 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  BinarySearch: "resource://gre/modules/BinarySearch.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
-  BinarySearch: "resource://gre/modules/BinarySearch.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 

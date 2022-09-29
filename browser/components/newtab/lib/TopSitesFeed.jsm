@@ -47,11 +47,10 @@ ChromeUtils.defineModuleGetter(
   "LinksCache",
   "resource://activity-stream/lib/LinksCache.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NewTabUtils",
-  "resource://gre/modules/NewTabUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+  Region: "resource://gre/modules/Region.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "Screenshots",
@@ -67,9 +66,6 @@ ChromeUtils.defineModuleGetter(
   "RemoteSettings",
   "resource://services-settings/remote-settings.js"
 );
-ChromeUtils.defineESModuleGetters(lazy, {
-  Region: "resource://gre/modules/Region.sys.mjs",
-});
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   const { Logger } = ChromeUtils.import(

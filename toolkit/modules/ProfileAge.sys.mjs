@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+import { Log } from "resource://gre/modules/Log.sys.mjs";
 
 const FILE_TIMES = "times.json";
 

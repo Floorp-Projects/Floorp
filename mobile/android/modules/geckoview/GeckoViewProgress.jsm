@@ -29,8 +29,11 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIIDNService"
 );
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserTelemetryUtils: "resource://gre/modules/BrowserTelemetryUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  BrowserTelemetryUtils: "resource://gre/modules/BrowserTelemetryUtils.jsm",
   HistogramStopwatch: "resource://gre/modules/GeckoViewTelemetry.jsm",
 });
 

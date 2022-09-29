@@ -14,11 +14,9 @@ function debug(aStr) {
 var EXPORTED_SYMBOLS = ["DateTimePickerParent"];
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DateTimePickerPanel",
-  "resource://gre/modules/DateTimePickerPanel.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  DateTimePickerPanel: "resource://gre/modules/DateTimePickerPanel.sys.mjs",
+});
 
 /*
  * DateTimePickerParent receives message from content side (input box) and

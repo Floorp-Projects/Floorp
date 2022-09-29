@@ -6,7 +6,9 @@
 
 "use strict";
 
-const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+const { Sqlite } = ChromeUtils.importESModule(
+  "resource://gre/modules/Sqlite.sys.mjs"
+);
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "TrackingDBService",

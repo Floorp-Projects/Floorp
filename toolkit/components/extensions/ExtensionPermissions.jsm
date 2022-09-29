@@ -14,9 +14,13 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
-  JSONFile: "resource://gre/modules/JSONFile.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(
@@ -29,12 +33,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "KeyValueService",
   "resource://gre/modules/kvstore.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
 );
 
 XPCOMUtils.defineLazyGetter(

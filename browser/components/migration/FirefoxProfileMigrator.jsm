@@ -20,7 +20,9 @@ const { MigrationUtils, MigratorPrototype } = ChromeUtils.import(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   PlacesBackups: "resource://gre/modules/PlacesBackups.sys.mjs",
+  ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -28,16 +30,6 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/sessionstore/SessionMigration.jsm"
 );
 ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ProfileAge",
-  "resource://gre/modules/ProfileAge.jsm"
-);
 
 function FirefoxProfileMigrator() {
   this.wrappedJSObject = this; // for testing...

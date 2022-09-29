@@ -12,6 +12,8 @@ const { AppConstants } = ChromeUtils.import(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  ResetProfile: "resource://gre/modules/ResetProfile.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   UrlbarController: "resource:///modules/UrlbarController.sys.mjs",
   UrlbarQueryContext: "resource:///modules/UrlbarUtils.sys.mjs",
@@ -27,8 +29,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
-  ResetProfile: "resource://gre/modules/ResetProfile.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
 

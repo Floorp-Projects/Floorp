@@ -266,8 +266,8 @@ EnterprisePoliciesManager.prototype = {
       this._callbacks[timing] = [];
     }
 
-    let { PromiseUtils } = ChromeUtils.import(
-      "resource://gre/modules/PromiseUtils.jsm"
+    let { PromiseUtils } = ChromeUtils.importESModule(
+      "resource://gre/modules/PromiseUtils.sys.mjs"
     );
     // Simulate the startup process. This step-by-step is a bit ugly but it
     // tries to emulate the same behavior as of a normal startup.

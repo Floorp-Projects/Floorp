@@ -8,8 +8,8 @@
 const PREF_XPI_WHITELIST_PERMISSIONS = "xpinstall.whitelist.add";
 const PREF_XPI_BLACKLIST_PERMISSIONS = "xpinstall.blacklist.add";
 
-const { PermissionsTestUtils } = ChromeUtils.import(
-  "resource://gre/modules/PermissionsUtils.jsm"
+const { PermissionsTestUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PermissionsUtils.sys.mjs"
 );
 
 function newPrincipal(uri) {

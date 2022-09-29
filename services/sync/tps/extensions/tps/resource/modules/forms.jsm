@@ -14,7 +14,9 @@ const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 const { FormHistory } = ChromeUtils.import(
   "resource://gre/modules/FormHistory.jsm"
 );
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 
 /**
  * FormDB

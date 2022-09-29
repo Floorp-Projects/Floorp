@@ -10,8 +10,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const { LogManager } = ChromeUtils.import(
   "resource://normandy/lib/LogManager.jsm"
 );
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
+const { PromiseUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseUtils.sys.mjs"
 );
 
 const lazy = {};

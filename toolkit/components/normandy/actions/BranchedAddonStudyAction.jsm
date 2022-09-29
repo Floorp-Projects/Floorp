@@ -20,6 +20,10 @@ const { BaseStudyAction } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ActionSchemas: "resource://normandy/actions/schemas/index.js",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
@@ -28,7 +32,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
   NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   Sampling: "resource://gre/modules/components-utils/Sampling.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",

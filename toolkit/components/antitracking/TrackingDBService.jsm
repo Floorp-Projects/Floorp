@@ -7,7 +7,9 @@
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+const { Sqlite } = ChromeUtils.importESModule(
+  "resource://gre/modules/Sqlite.sys.mjs"
+);
 
 const SCHEMA_VERSION = 1;
 const TRACKERS_BLOCKED_COUNT = "contentblocking.trackers_blocked_count";

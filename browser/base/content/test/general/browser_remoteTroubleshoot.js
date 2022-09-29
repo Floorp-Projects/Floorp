@@ -82,8 +82,9 @@ add_task(async function() {
 
   let updateChannel = null;
   try {
-    updateChannel = ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm")
-      .UpdateUtils.UpdateChannel;
+    updateChannel = ChromeUtils.importESModule(
+      "resource://gre/modules/UpdateUtils.sys.mjs"
+    ).UpdateUtils.UpdateChannel;
   } catch (ex) {}
   if (!updateChannel) {
     Assert.ok(
