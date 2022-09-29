@@ -45,13 +45,13 @@ with Files("tests/xpcshell/test_NewTabUtils.js"):
 with Files("tests/xpcshell/test_UpdateUtils*.js"):
     BUG_COMPONENT = ("Toolkit", "Application Update")
 
-with Files("AsyncPrefs.jsm"):
+with Files("AsyncPrefs.sys.mjs"):
     BUG_COMPONENT = ("Core", "Security: Process Sandboxing")
 
-with Files("AsanReporter.jsm"):
+with Files("AsanReporter.sys.mjs"):
     BUG_COMPONENT = ("Firefox Build System", "General")
 
-with Files("Color.jsm"):
+with Files("Color.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Find Toolbar")
 
 with Files("Console.jsm"):
@@ -72,37 +72,37 @@ with Files("nsIE10SUtils.idl"):
 with Files("Finder*.jsm"):
     BUG_COMPONENT = ("Toolkit", "Find Toolbar")
 
-with Files("FormLikeFactory.jsm"):
+with Files("FormLikeFactory.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Password Manager")
 
-with Files("IndexedDB.jsm"):
+with Files("IndexedDB.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Async Tooling")
 
 with Files("InlineSpellChecker*.jsm"):
     BUG_COMPONENT = ("Core", "Spelling checker")
 
-with Files("Integration.jsm"):
+with Files("Integration.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Async Tooling")
 
-with Files("JSONFile.jsm"):
+with Files("JSONFile.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Form Manager")
 
-with Files("LightweightThemeConsumer.jsm"):
+with Files("LightweightThemeConsumer.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
 
-with Files("NLP.jsm"):
+with Files("NLP.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Find Toolbar")
 
-with Files("NewTabUtils.jsm"):
+with Files("NewTabUtils.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
 with Files("ObjectUtils.jsm"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")
 
-with Files("PermissionsUtils.jsm"):
+with Files("PermissionsUtils.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Add-ons Manager")
 
-with Files("PopupNotifications.jsm"):
+with Files("PopupNotifications.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
 
 with Files("PrivateBrowsingUtils.jsm"):
@@ -111,22 +111,22 @@ with Files("PrivateBrowsingUtils.jsm"):
 with Files("Promise*.jsm"):
     BUG_COMPONENT = ("Toolkit", "Async Tooling")
 
-with Files("ResponsivenessMonitor.jsm"):
+with Files("ResponsivenessMonitor.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Migration")
 
-with Files("ShortcutUtils.jsm"):
+with Files("ShortcutUtils.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
 
-with Files("Sqlite.jsm"):
+with Files("Sqlite.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Storage")
 
-with Files("SubDialog.jsm"):
+with Files("SubDialog.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
 
-with Files("UpdateUtils.jsm"):
+with Files("UpdateUtils.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Application Update")
 
-with Files("WindowsRegistry.jsm"):
+with Files("WindowsRegistry.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "General")
 
 
@@ -148,81 +148,81 @@ with Files("docs/**"):
     SCHEDULES.exclusive = ["docs"]
 
 EXTRA_JS_MODULES += [
-    "AboutPagesUtils.jsm",
+    "AboutPagesUtils.sys.mjs",
     "ActorManagerParent.jsm",
-    "AppMenuNotifications.jsm",
-    "AsyncPrefs.jsm",
-    "BinarySearch.jsm",
-    "BrowserTelemetryUtils.jsm",
-    "BrowserUtils.jsm",
+    "AppMenuNotifications.sys.mjs",
+    "AsyncPrefs.sys.mjs",
+    "BinarySearch.sys.mjs",
+    "BrowserTelemetryUtils.sys.mjs",
+    "BrowserUtils.sys.mjs",
     "CanonicalJSON.jsm",
-    "CertUtils.jsm",
-    "Color.jsm",
+    "CertUtils.sys.mjs",
+    "Color.sys.mjs",
     "Console.jsm",
     "ContentDOMReference.jsm",
-    "CreditCard.jsm",
-    "DateTimePickerPanel.jsm",
+    "CreditCard.sys.mjs",
+    "DateTimePickerPanel.sys.mjs",
     "DeferredTask.jsm",
     "Deprecated.jsm",
     "E10SUtils.jsm",
     "EventEmitter.jsm",
-    "FileUtils.jsm",
-    "FindBarContent.jsm",
-    "Finder.jsm",
-    "FinderHighlighter.jsm",
-    "FinderIterator.jsm",
-    "FinderParent.jsm",
-    "FirstStartup.jsm",
-    "FormLikeFactory.jsm",
-    "Geometry.jsm",
-    "HiddenFrame.jsm",
-    "Http.jsm",
+    "FileUtils.sys.mjs",
+    "FindBarContent.sys.mjs",
+    "Finder.sys.mjs",
+    "FinderHighlighter.sys.mjs",
+    "FinderIterator.sys.mjs",
+    "FinderParent.sys.mjs",
+    "FirstStartup.sys.mjs",
+    "FormLikeFactory.sys.mjs",
+    "Geometry.sys.mjs",
+    "HiddenFrame.sys.mjs",
+    "Http.sys.mjs",
     "IgnoreLists.sys.mjs",
-    "IndexedDB.jsm",
-    "InlineSpellChecker.jsm",
-    "InlineSpellCheckerContent.jsm",
-    "Integration.jsm",
-    "JSONFile.jsm",
-    "JsonSchema.jsm",
-    "KeywordUtils.jsm",
-    "LayoutUtils.jsm",
-    "Log.jsm",
-    "NewTabUtils.jsm",
-    "NLP.jsm",
+    "IndexedDB.sys.mjs",
+    "InlineSpellChecker.sys.mjs",
+    "InlineSpellCheckerContent.sys.mjs",
+    "Integration.sys.mjs",
+    "JSONFile.sys.mjs",
+    "JsonSchema.sys.mjs",
+    "KeywordUtils.sys.mjs",
+    "LayoutUtils.sys.mjs",
+    "Log.sys.mjs",
+    "NewTabUtils.sys.mjs",
+    "NLP.sys.mjs",
     "ObjectUtils.jsm",
-    "OsEnvironment.jsm",
-    "OSKeyStore.jsm",
-    "PermissionsUtils.jsm",
-    "PopupNotifications.jsm",
+    "OsEnvironment.sys.mjs",
+    "OSKeyStore.sys.mjs",
+    "PermissionsUtils.sys.mjs",
+    "PopupNotifications.sys.mjs",
     "Preferences.jsm",
     "PrivateBrowsingUtils.jsm",
-    "ProcessType.jsm",
-    "ProfileAge.jsm",
-    "PromiseUtils.jsm",
+    "ProcessType.sys.mjs",
+    "ProfileAge.sys.mjs",
+    "PromiseUtils.sys.mjs",
     "Region.sys.mjs",
-    "RemotePageAccessManager.jsm",
-    "ResetProfile.jsm",
-    "ResponsivenessMonitor.jsm",
-    "SelectionUtils.jsm",
-    "ServiceRequest.jsm",
+    "RemotePageAccessManager.sys.mjs",
+    "ResetProfile.sys.mjs",
+    "ResponsivenessMonitor.sys.mjs",
+    "SelectionUtils.sys.mjs",
+    "ServiceRequest.sys.mjs",
     "Services.jsm",
-    "ShortcutUtils.jsm",
-    "Sqlite.jsm",
-    "SubDialog.jsm",
+    "ShortcutUtils.sys.mjs",
+    "Sqlite.sys.mjs",
+    "SubDialog.sys.mjs",
     "Timer.jsm",
-    "Troubleshoot.jsm",
-    "UpdateUtils.jsm",
+    "Troubleshoot.sys.mjs",
+    "UpdateUtils.sys.mjs",
     "WebChannel.jsm",
 ]
 
 if CONFIG["MOZ_ASAN_REPORTER"]:
     EXTRA_JS_MODULES += [
-        "AsanReporter.jsm",
+        "AsanReporter.sys.mjs",
     ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     EXTRA_JS_MODULES += [
-        "PropertyListUtils.jsm",
+        "PropertyListUtils.sys.mjs",
     ]
 
 EXTRA_JS_MODULES.third_party.jsesc += ["third_party/jsesc/jsesc.js"]
@@ -248,9 +248,9 @@ EXTRA_PP_JS_MODULES += [
 if "Android" != CONFIG["OS_TARGET"]:
     EXTRA_JS_MODULES += [
         "GMPExtractorWorker.js",
-        "GMPInstallManager.jsm",
-        "GMPUtils.jsm",
-        "LightweightThemeConsumer.jsm",
+        "GMPInstallManager.sys.mjs",
+        "GMPUtils.sys.mjs",
+        "LightweightThemeConsumer.sys.mjs",
     ]
 
     DIRS += [
@@ -259,7 +259,7 @@ if "Android" != CONFIG["OS_TARGET"]:
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     EXTRA_JS_MODULES += [
-        "WindowsRegistry.jsm",
+        "WindowsRegistry.sys.mjs",
     ]
 
 for var in (

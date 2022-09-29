@@ -383,13 +383,13 @@ avoid-blacklist-and-whitelist:
         - toolkit/crashreporter/client/ping.cpp
         - toolkit/crashreporter/CrashAnnotations.cpp
         - toolkit/crashreporter/generate_crash_reporter_sources.py
-        - toolkit/modules/PermissionsUtils.jsm
+        - toolkit/modules/PermissionsUtils.sys.mjs
         - toolkit/modules/tests/browser/browser_AsyncPrefs.js
         - toolkit/modules/tests/browser/browser_Troubleshoot.js
         - toolkit/modules/tests/browser/browser_web_channel.js
         - toolkit/modules/tests/xpcshell/test_PermissionsUtils.js
         - toolkit/modules/third_party/jsesc/jsesc.js
-        - toolkit/modules/Troubleshoot.jsm
+        - toolkit/modules/Troubleshoot.sys.mjs
         - toolkit/mozapps/extensions/internal/XPIInstall.jsm
         - toolkit/mozapps/extensions/internal/XPIProvider.jsm
         - toolkit/mozapps/extensions/test/browser/browser_html_discover_view.js

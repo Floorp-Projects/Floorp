@@ -60,12 +60,12 @@ const startupPhases = {
         "resource:///modules/BrowserUsageTelemetry.jsm",
         "resource:///modules/ContentCrashHandlers.jsm",
         "resource:///modules/ShellService.jsm",
-        "resource://gre/modules/NewTabUtils.jsm",
+        "resource://gre/modules/NewTabUtils.sys.mjs",
         "resource://gre/modules/PageThumbs.jsm",
         "resource://gre/modules/PlacesUtils.sys.mjs",
         "resource://gre/modules/Preferences.jsm",
         "resource://gre/modules/SearchService.sys.mjs",
-        "resource://gre/modules/Sqlite.jsm",
+        "resource://gre/modules/Sqlite.sys.mjs",
       ]),
       services: new Set(["@mozilla.org/browser/search-service;1"]),
     },
@@ -100,7 +100,7 @@ const startupPhases = {
   "before becoming idle": {
     denylist: {
       modules: new Set([
-        "resource://gre/modules/AsyncPrefs.jsm",
+        "resource://gre/modules/AsyncPrefs.sys.mjs",
         "resource://gre/modules/LoginManagerContextMenu.jsm",
         "resource://gre/modules/osfile.jsm",
         "resource://pdf.js/PdfStreamConverter.jsm",

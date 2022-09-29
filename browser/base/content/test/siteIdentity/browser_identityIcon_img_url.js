@@ -46,7 +46,7 @@ const TEST_CASES = [
   },
   {
     type: "resource",
-    testURL: "resource://gre/modules/Log.jsm",
+    testURL: "resource://gre/modules/Log.sys.mjs",
     img_url: `url("chrome://global/skin/icons/page-portrait.svg")`,
   },
   {
