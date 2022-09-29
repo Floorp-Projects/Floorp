@@ -50,7 +50,6 @@ UNIFIED_SOURCES += [
     "NavigationPreloadManager.cpp",
     "RemoteServiceWorkerContainerImpl.cpp",
     "RemoteServiceWorkerImpl.cpp",
-    "RemoteServiceWorkerRegistrationImpl.cpp",
     "ServiceWorker.cpp",
     "ServiceWorkerActors.cpp",
     "ServiceWorkerChild.cpp",
