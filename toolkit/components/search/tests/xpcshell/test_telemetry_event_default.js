@@ -98,39 +98,51 @@ function clearTelemetry() {
   Services.fog.testResetFOG();
 }
 
-async function checkTelemetry(source, prevEngine, newEngine) {
+async function checkTelemetry(
+  source,
+  prevEngine,
+  newEngine,
+  checkPrivate = false
+) {
   TelemetryTestUtils.assertEvents(
     [
       {
-        object: "change_default",
+        object: checkPrivate ? "change_private" : "change_default",
         value: source,
         extra: {
-          prev_id: prevEngine.id,
-          new_id: newEngine.id,
-          new_name: newEngine.name,
-          new_load_path: newEngine.loadPath,
+          prev_id: prevEngine?.id ?? "",
+          new_id: newEngine?.id ?? "",
+          new_name: newEngine?.name ?? "",
+          new_load_path: newEngine?.loadPath ?? "",
           // Telemetry has a limit of 80 characters.
-          new_sub_url: newEngine.submissionUrl.slice(0, 80),
+          new_sub_url: newEngine?.submissionUrl.slice(0, 80) ?? "",
         },
       },
     ],
     { category: "search", method: "engine" }
   );
 
-  let snapshot = await Glean.searchEngineDefault.changed.testGetValue();
+  let snapshot;
+  if (checkPrivate) {
+    snapshot = await Glean.searchEnginePrivate.changed.testGetValue();
+  } else {
+    snapshot = await Glean.searchEngineDefault.changed.testGetValue();
+  }
   delete snapshot[0].timestamp;
   Assert.deepEqual(
     snapshot[0],
     {
-      category: "search.engine.default",
+      category: checkPrivate
+        ? "search.engine.private"
+        : "search.engine.default",
       name: "changed",
       extra: {
         change_source: source,
-        previous_engine_id: prevEngine.id,
-        new_engine_id: newEngine.id,
-        new_display_name: newEngine.name,
-        new_load_path: newEngine.loadPath,
-        new_submission_url: newEngine.submissionUrl,
+        previous_engine_id: prevEngine?.id ?? "",
+        new_engine_id: newEngine?.id ?? "",
+        new_display_name: newEngine?.name ?? "",
+        new_load_path: newEngine?.loadPath ?? "",
+        new_submission_url: newEngine?.submissionUrl ?? "",
       },
     },
     "Should have received the correct event details"
@@ -212,4 +224,70 @@ add_task(async function test_region_changes_default() {
   await reloadObserved;
 
   await checkTelemetry("region", testFrEngine, testPrefEngine);
+});
+
+add_task(async function test_user_changes_separate_private_pref() {
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
+    true
+  );
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+    true
+  );
+
+  await Services.search.setDefaultPrivate(
+    Services.search.getEngineByName("engine-chromeicon"),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
+
+  Assert.notEqual(
+    await Services.search.getDefault(),
+    await Services.search.getDefaultPrivate(),
+    "Should have different engines for the pre-condition"
+  );
+
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
+    false
+  );
+
+  clearTelemetry();
+
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+    false
+  );
+
+  await checkTelemetry("user_private_split", testChromeIconEngine, null, true);
+
+  getVariableStub.returns(null);
+});
+
+add_task(async function test_experiment_with_separate_default_notifies() {
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
+    false
+  );
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+    true
+  );
+
+  clearTelemetry();
+
+  getVariableStub.callsFake(name =>
+    name == "seperatePrivateDefaultUIEnabled" ? true : null
+  );
+  NimbusFeatures.search.onUpdate.firstCall.args[0]();
+
+  await checkTelemetry("experiment", null, testChromeIconEngine, true);
+
+  clearTelemetry();
+
+  // Reset the stub so that we are no longer in an experiment.
+  getVariableStub.returns(null);
+  NimbusFeatures.search.onUpdate.firstCall.args[0]();
+
+  await checkTelemetry("experiment", testChromeIconEngine, null, true);
 });
