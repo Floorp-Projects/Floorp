@@ -132,3 +132,20 @@ add_task(async function test_ws_through_https_proxy() {
   await proxy.stop();
   await wss.stop();
 });
+
+add_task(async function test_websocket_over_h2() {
+  Services.prefs.setBoolPref("network.http.http2.websockets", true);
+  let wss = new NodeWebSocketHttp2Server();
+  await wss.start();
+  Assert.notEqual(wss.port(), null);
+  await wss.registerMessageHandler(data => {
+    global.ws.send(data);
+  });
+  let chan = makeWebSocketChan();
+  let url = `wss://localhost:${wss.port()}`;
+  const msg = "test websocket";
+  let [status, res] = await channelOpenPromise(chan, url, msg);
+  Assert.equal(status, Cr.NS_OK);
+  Assert.equal(res, msg);
+  await wss.stop();
+});
