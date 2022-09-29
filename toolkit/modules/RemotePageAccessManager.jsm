@@ -7,15 +7,17 @@
 var EXPORTED_SYMBOLS = ["RemotePageAccessManager"];
 
 /*
- * Used for all kinds of permissions checks which requires explicit
- * whitelisting of specific permissions granted through Remote Pages.
+ * RemotePageAccessManager determines which RPM functions a given
+ * about page is allowed to access. It does this based on a map from about
+ * page URLs to allowed functions for that page/URL.
+ *
  * An RPM function will be exported into the page only if it appears
  * in the access managers's accessMap for that page's uri.
  *
  * This module may be used from both the child and parent process.
  *
  * Please note that prefs that one wants to update need to be
- * whitelisted within AsyncPrefs.jsm.
+ * explicitly allowed within AsyncPrefs.jsm.
  */
 let RemotePageAccessManager = {
   /* The accessMap lists the permissions that are allowed per page.
@@ -219,13 +221,14 @@ let RemotePageAccessManager = {
 
   /**
    * Check if access is allowed to the given feature for a given document.
-   * This should be called from within the child process. A feature must
-   * contain the value in the whitelist array in the list within the
-   * accessMap for access to be granted.
+   * This should be called from within the child process.
+   *
+   * The feature within the accessMap must list the given aValue, for access to
+   * be granted.
    *
    * @param aDocument child process document to call from
    * @param aFeature to feature to check access to
-   * @param aValue value that must be included with that feature's whitelist
+   * @param aValue value that must be included with that feature's allow list
    * @returns true if access is allowed or false otherwise
    */
   checkAllowAccess(aDocument, aFeature, aValue) {
@@ -245,15 +248,16 @@ let RemotePageAccessManager = {
 
   /**
    * Check if access is allowed to the given feature for a given principal.
-   * This may be called from within the child or parent process. A feature
-   * must contain the value in the whitelist array in the list within the
-   * accessMap for access to be granted.
+   * This may be called from within the child or parent process.
+   *
+   * The feature within the accessMap must list the given aValue, for access to
+   * be granted.
    *
    * In the parent process, the passed-in document is expected to be null.
    *
    * @param aPrincipal principal being called from
    * @param aFeature to feature to check access to
-   * @param aValue value that must be included with that feature's whitelist
+   * @param aValue value that must be included with that feature's allow list
    * @param aDocument optional child process document to call from
    * @returns true if access is allowed or false otherwise
    */
@@ -274,7 +278,7 @@ let RemotePageAccessManager = {
       return false;
     }
 
-    // If the actual value is in the whitelist for that feature;
+    // If the actual value is in the allow list for that feature;
     // allow access
     if (accessMapForFeature.includes(aValue) || accessMapForFeature[0] == "*") {
       return true;
@@ -285,12 +289,12 @@ let RemotePageAccessManager = {
 
   /**
    * Check if a particular feature can be accessed without checking for a
-   * value within the whitelist.
+   * specific feature value.
    *
    * @param aPrincipal principal being called from
    * @param aFeature to feature to check access to
    * @param aDocument optional child process document to call from
-   * @returns non-null whitelist if access is allowed or null otherwise
+   * @returns non-null allow list if access is allowed or null otherwise
    */
   checkAllowAccessToFeature(aPrincipal, aFeature, aDocument) {
     let spec;
