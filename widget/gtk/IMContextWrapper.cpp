@@ -1348,15 +1348,15 @@ void IMContextWrapper::SetInputPurposeAndInputHints() {
     purpose = GTK_INPUT_PURPOSE_PHONE;
   } else if (inputType.EqualsLiteral("number")) {
     purpose = GTK_INPUT_PURPOSE_NUMBER;
-  } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("decimal")) {
+  } else if (mInputContext.mHTMLInputMode.EqualsLiteral("decimal")) {
     purpose = GTK_INPUT_PURPOSE_NUMBER;
-  } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("email")) {
+  } else if (mInputContext.mHTMLInputMode.EqualsLiteral("email")) {
     purpose = GTK_INPUT_PURPOSE_EMAIL;
-  } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("numeric")) {
+  } else if (mInputContext.mHTMLInputMode.EqualsLiteral("numeric")) {
     purpose = GTK_INPUT_PURPOSE_DIGITS;
-  } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("tel")) {
+  } else if (mInputContext.mHTMLInputMode.EqualsLiteral("tel")) {
     purpose = GTK_INPUT_PURPOSE_PHONE;
-  } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("url")) {
+  } else if (mInputContext.mHTMLInputMode.EqualsLiteral("url")) {
     purpose = GTK_INPUT_PURPOSE_URL;
   }
   // Search by type and inputmode isn't supported on GTK.
@@ -1365,7 +1365,7 @@ void IMContextWrapper::SetInputPurposeAndInputHints() {
 
   // Although GtkInputHints is enum type, value is bit field.
   gint hints = GTK_INPUT_HINT_NONE;
-  if (mInputContext.mHTMLInputInputmode.EqualsLiteral("none")) {
+  if (mInputContext.mHTMLInputMode.EqualsLiteral("none")) {
     hints |= GTK_INPUT_HINT_INHIBIT_OSK;
   }
 

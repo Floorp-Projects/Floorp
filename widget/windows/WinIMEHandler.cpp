@@ -425,7 +425,7 @@ void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
   // FYI: If there is no composition, this call will do nothing.
   NotifyIME(aWindow, IMENotification(REQUEST_TO_COMMIT_COMPOSITION));
 
-  if (aInputContext.mHTMLInputInputmode.EqualsLiteral("none")) {
+  if (aInputContext.mHTMLInputMode.EqualsLiteral("none")) {
     IMEHandler::MaybeDismissOnScreenKeyboard(aWindow, Sync::Yes);
   } else if (aAction.UserMightRequestOpenVKB()) {
     IMEHandler::MaybeShowOnScreenKeyboard(aWindow, aInputContext);
@@ -453,7 +453,7 @@ void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
   } else {
     // Set at least InputScope even when TextStore is not available.
     SetInputScopeForIMM32(aWindow, aInputContext.mHTMLInputType,
-                          aInputContext.mHTMLInputInputmode,
+                          aInputContext.mHTMLInputMode,
                           aInputContext.mInPrivateBrowsing);
   }
 
@@ -571,7 +571,7 @@ void IMEHandler::OnKeyboardLayoutChanged() {
 // static
 void IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
                                        const nsAString& aHTMLInputType,
-                                       const nsAString& aHTMLInputInputmode,
+                                       const nsAString& aHTMLInputMode,
                                        bool aInPrivateBrowsing) {
   if (sIsInTSFMode || !sSetInputScopes || aWindow->Destroyed()) {
     return;
@@ -581,7 +581,7 @@ void IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
   // IME may refer only first input scope, but we will append inputmode's
   // input scopes since IME may refer it like Chrome.
   AppendInputScopeFromType(aHTMLInputType, scopes);
-  AppendInputScopeFromInputmode(aHTMLInputInputmode, scopes);
+  AppendInputScopeFromInputMode(aHTMLInputMode, scopes);
 
   if (aInPrivateBrowsing) {
     scopes.AppendElement(IS_PRIVATE);
@@ -597,9 +597,9 @@ void IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
 }
 
 // static
-void IMEHandler::AppendInputScopeFromInputmode(const nsAString& aInputmode,
+void IMEHandler::AppendInputScopeFromInputMode(const nsAString& aHTMLInputMode,
                                                nsTArray<InputScope>& aScopes) {
-  if (aInputmode.EqualsLiteral("mozAwesomebar")) {
+  if (aHTMLInputMode.EqualsLiteral("mozAwesomebar")) {
     // Even if Awesomebar has focus, user may not input URL directly.
     // However, on-screen keyboard for URL should be shown because it has
     // some useful additional keys like ".com" and they are not hindrances
@@ -627,19 +627,19 @@ void IMEHandler::AppendInputScopeFromInputmode(const nsAString& aInputmode,
   }
 
   // https://html.spec.whatwg.org/dev/interaction.html#attr-inputmode
-  if (aInputmode.EqualsLiteral("url")) {
+  if (aHTMLInputMode.EqualsLiteral("url")) {
     if (!aScopes.Contains(IS_SEARCH)) {
       aScopes.AppendElement(IS_URL);
     }
     return;
   }
-  if (aInputmode.EqualsLiteral("email")) {
+  if (aHTMLInputMode.EqualsLiteral("email")) {
     if (!aScopes.Contains(IS_EMAIL_SMTPEMAILADDRESS)) {
       aScopes.AppendElement(IS_EMAIL_SMTPEMAILADDRESS);
     }
     return;
   }
-  if (aInputmode.EqualsLiteral("tel")) {
+  if (aHTMLInputMode.EqualsLiteral("tel")) {
     if (!aScopes.Contains(IS_TELEPHONE_FULLTELEPHONENUMBER)) {
       aScopes.AppendElement(IS_TELEPHONE_FULLTELEPHONENUMBER);
     }
@@ -648,19 +648,19 @@ void IMEHandler::AppendInputScopeFromInputmode(const nsAString& aInputmode,
     }
     return;
   }
-  if (aInputmode.EqualsLiteral("numeric")) {
+  if (aHTMLInputMode.EqualsLiteral("numeric")) {
     if (!aScopes.Contains(IS_DIGITS)) {
       aScopes.AppendElement(IS_DIGITS);
     }
     return;
   }
-  if (aInputmode.EqualsLiteral("decimal")) {
+  if (aHTMLInputMode.EqualsLiteral("decimal")) {
     if (!aScopes.Contains(IS_NUMBER)) {
       aScopes.AppendElement(IS_NUMBER);
     }
     return;
   }
-  if (aInputmode.EqualsLiteral("search")) {
+  if (aHTMLInputMode.EqualsLiteral("search")) {
     if (NeedsSearchInputScope() && !aScopes.Contains(IS_SEARCH)) {
       aScopes.AppendElement(IS_SEARCH);
     }
@@ -753,7 +753,7 @@ bool IMEHandler::IsOnScreenKeyboardSupported() {
 // static
 void IMEHandler::MaybeShowOnScreenKeyboard(nsWindow* aWindow,
                                            const InputContext& aInputContext) {
-  if (aInputContext.mHTMLInputInputmode.EqualsLiteral("none")) {
+  if (aInputContext.mHTMLInputMode.EqualsLiteral("none")) {
     return;
   }
 
