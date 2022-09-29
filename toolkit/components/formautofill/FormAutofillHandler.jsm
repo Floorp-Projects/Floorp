@@ -1021,8 +1021,8 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
 
   isValidSection() {
     let ccNumberDetail = null;
-    let hasExpiryDate = false;
-    let hasCCName = false;
+    let ccNameDetail = null;
+    let ccExpiryDetail = null;
 
     for (let detail of this.fieldDetails) {
       switch (detail.fieldName) {
@@ -1033,33 +1033,45 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
         case "cc-given-name":
         case "cc-additional-name":
         case "cc-family-name":
-          hasCCName = true;
+          ccNameDetail = detail;
           break;
         case "cc-exp":
         case "cc-exp-month":
         case "cc-exp-year":
-          hasExpiryDate = true;
+          ccExpiryDetail = detail;
           break;
       }
     }
 
+    // Always trust autocomplete attribute. A section is considered a valid
+    // cc section as long as a field has autocomplete=cc-number, cc-name or cc-exp*
+    if (
+      ccNumberDetail?._reason == "autocomplete" ||
+      ccNameDetail?._reason == "autocomplete" ||
+      ccExpiryDetail?._reason == "autocomplete"
+    ) {
+      return true;
+    }
+
     if (ccNumberDetail) {
-      if (
-        ccNumberDetail._reason == "autocomplete" ||
-        hasExpiryDate ||
-        hasCCName
-      ) {
+      // For fields that are identified as a cc-number field by our heuristics,
+      // we consider the associated section a valid section only if one of
+      // the following conditions meet:
+      // 1. Our heuristics also identify a cc-name field or a cc-exp* field in this
+      //    section
+      // 2. Fathom is pretty confident this is a cc-number field (determined by
+      //    check whether confidence is over a certain threshold) AND the field
+      //    is the only non-hidden input field of its
+      //    form (or ownerDocument).
+      if (ccNameDetail || ccExpiryDetail) {
         return true;
       }
 
-      // There are cases where sites use a separate form/iframe for a cc-number field
-      // (either cc-number in one form, other cc-* in another form, OR each cc-* is in its
-      // own form). For thoses, we don't have cc-name or cc-exp to help us determine
-      // whether this is a cc form. To support those use cases, we add two
-      // extra rules to identify valid credit card section:
-      // 1. Use a higher confidence threshold.
-      // 2. Check whether the <input> is the only non-hidden input field of its
-      //    form (or ownerDocument).
+      // Condition #2 is mainly used to address cases when a form (or iframe) only
+      // contains a cc-number field. Since now the fathom algorithm is not mature
+      // enough to use it as the only source of truth when determining a cc-number
+      // field. We increase the confidence threshold for this case and add a
+      // additional constraint to reduce the false-positive rate.
       if (
         ccNumberDetail.confidence >=
         FormAutofillUtils.ccHeuristicsNumberOnlyThreshold
@@ -1072,8 +1084,8 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
         }
       }
     } else if (
-      hasCCName &&
-      hasExpiryDate &&
+      ccNameDetail &&
+      ccExpiryDetail &&
       FormAutofillUtils.ccHeuristicsNameExpirySection
     ) {
       return true;
