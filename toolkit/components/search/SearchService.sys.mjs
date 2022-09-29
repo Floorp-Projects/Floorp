@@ -2896,7 +2896,7 @@ export class SearchService {
     }
   }
 
-  #onSeparateDefaultPrefChanged() {
+  #onSeparateDefaultPrefChanged(prefName, previousValue, currentValue) {
     // Clear out the sorted engines settings, so that we re-sort it if necessary.
     this._cachedSortedEngines = null;
     // We should notify if the normal default, and the currently saved private
@@ -2908,6 +2908,28 @@ export class SearchService {
         this.defaultPrivateEngine,
         lazy.SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
       );
+    }
+    // Always notify about the change of status of private default if the user
+    // toggled the UI.
+    if (
+      prefName ==
+      lazy.SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault"
+    ) {
+      if (!previousValue && currentValue) {
+        this.#recordDefaultChangedEvent(
+          true,
+          null,
+          this._getEngineDefault(true),
+          Ci.nsISearchService.CHANGE_REASON_USER_PRIVATE_SPLIT
+        );
+      } else {
+        this.#recordDefaultChangedEvent(
+          true,
+          this._getEngineDefault(true),
+          null,
+          Ci.nsISearchService.CHANGE_REASON_USER_PRIVATE_SPLIT
+        );
+      }
     }
     // Update the telemetry data.
     this.#recordTelemetryData();
@@ -2997,9 +3019,9 @@ export class SearchService {
    *
    * @param {boolean} isPrivate
    *   True if this is a event about a private engine.
-   * @param {SearchEngine} previousEngine
+   * @param {SearchEngine} [previousEngine]
    *   The previously default search engine.
-   * @param {SearchEngine} newEngine
+   * @param {SearchEngine} [newEngine]
    *   The new default search engine.
    * @param {string} changeSource
    *   The source of the change of default.
@@ -3012,7 +3034,21 @@ export class SearchService {
   ) {
     changeSource = REASON_CHANGE_MAP.get(changeSource) ?? "unknown";
     Services.telemetry.setEventRecordingEnabled("search", true);
-    let [telemetryId, engineInfo] = this.#getEngineInfo(newEngine);
+    let telemetryId;
+    let engineInfo;
+    // If we are toggling the separate private browsing settings, we might not
+    // have an engine to record.
+    if (newEngine) {
+      [telemetryId, engineInfo] = this.#getEngineInfo(newEngine);
+    } else {
+      telemetryId = "";
+      engineInfo = {
+        name: "",
+        loadPath: "",
+        submissionURL: "",
+      };
+    }
+
     let submissionURL = engineInfo.submissionURL ?? "";
     Services.telemetry.recordEvent(
       "search",
@@ -3181,6 +3217,8 @@ export class SearchService {
       "seperatePrivateDefaultUrlbarResultEnabled"
     );
 
+    let previousPrivateDefault = this.defaultPrivateEngine;
+    let uiWasEnabled = this._separatePrivateDefaultEnabledPrefValue;
     if (
       this._separatePrivateDefaultEnabledPrefValue !=
       nimbusPrivateDefaultUIEnabled
@@ -3189,6 +3227,24 @@ export class SearchService {
         `${lazy.SearchUtils.BROWSER_SEARCH_PREF}separatePrivateDefault.ui.enabled`,
         nimbusPrivateDefaultUIEnabled
       );
+      let newPrivateDefault = this.defaultPrivateEngine;
+      if (previousPrivateDefault != newPrivateDefault) {
+        if (!uiWasEnabled) {
+          this.#recordDefaultChangedEvent(
+            true,
+            null,
+            newPrivateDefault,
+            Ci.nsISearchService.CHANGE_REASON_EXPERIMENT
+          );
+        } else {
+          this.#recordDefaultChangedEvent(
+            true,
+            previousPrivateDefault,
+            null,
+            Ci.nsISearchService.CHANGE_REASON_EXPERIMENT
+          );
+        }
+      }
     }
     if (
       this.separatePrivateDefaultUrlbarResultEnabled !=
