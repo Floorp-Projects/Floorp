@@ -17,21 +17,16 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-/* Work around the pref callback being run after the document has been unlinked.
-   See bug 1543537. */
-var docWeak = Cu.getWeakReference(document);
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "SHOW_OTHER_BOOKMARKS",
   "browser.toolbars.bookmarks.showOtherBookmarks",
   true,
   (aPref, aPrevVal, aNewVal) => {
-    let doc = docWeak.get();
-    if (!doc) {
-      return;
-    }
     BookmarkingUI.maybeShowOtherBookmarksFolder();
-    doc.getElementById("PlacesToolbar")?._placesView?.updateNodesVisibility();
+    document
+      .getElementById("PlacesToolbar")
+      ?._placesView?.updateNodesVisibility();
   }
 );
 ChromeUtils.defineModuleGetter(
