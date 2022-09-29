@@ -7,10 +7,8 @@
 #define TEXTATTRS_INIT_GUID
 #include "TSFTextStore.h"
 
-#include <algorithm>
-#include <comutil.h>  // for _bstr_t
-#include <oleauto.h>  // for SysAllocString
 #include <olectl.h>
+#include <algorithm>
 #include "nscore.h"
 
 #include "IMMHandler.h"
@@ -28,7 +26,6 @@
 #include "mozilla/WindowsVersion.h"
 #include "nsWindow.h"
 #include "nsPrintfCString.h"
-#include "nsReadableUtils.h"  // for VoidString()
 
 // Workaround for mingw32
 #ifndef TS_SD_INPUTPANEMANUALDISPLAYENABLE
@@ -40,14 +37,6 @@
 // big file.
 // Therefore you shouldn't use `LogLevel::Verbose` for logging usual behavior.
 mozilla::LazyLogModule gIMELog("IMEHandler");
-
-// TODO: GUID_PROP_URL has not been declared in the SDK yet.  We should drop the
-//       `s` prefix after it's released by a new SDK and define it with #if.
-static const GUID sGUID_PROP_URL = {
-    0xd5138268,
-    0xa1bf,
-    0x4308,
-    {0xbc, 0xbf, 0x2e, 0x73, 0x93, 0x98, 0xe2, 0x34}};
 
 namespace mozilla {
 namespace widget {
@@ -239,7 +228,6 @@ static nsCString GetGUIDNameStrWithTable(REFGUID aGUID) {
   }
 
   RETURN_GUID_NAME(GUID_PROP_INPUTSCOPE)
-  RETURN_GUID_NAME(sGUID_PROP_URL)
   RETURN_GUID_NAME(TSATTRID_OTHERS)
   RETURN_GUID_NAME(TSATTRID_Font)
   RETURN_GUID_NAME(TSATTRID_Font_FaceName)
@@ -1819,7 +1807,22 @@ TSFTextStore::TSFTextStore()
       mSinkMask(0),
       mLock(0),
       mLockQueued(0),
-      mHandlingKeyMessage(0) {
+      mHandlingKeyMessage(0),
+      mRequestedAttrValues(false),
+      mIsRecordingActionsWithoutLock(false),
+      mHasReturnedNoLayoutError(false),
+      mWaitingQueryLayout(false),
+      mPendingDestroy(false),
+      mDeferClearingContentForTSF(false),
+      mDeferNotifyingTSF(false),
+      mDeferCommittingComposition(false),
+      mDeferCancellingComposition(false),
+      mDestroyed(false),
+      mBeingDestroyed(false) {
+  for (int32_t i = 0; i < NUM_OF_SUPPORTED_ATTRS; i++) {
+    mRequestedAttrs[i] = false;
+  }
+
   // We hope that 5 or more actions don't occur at once.
   mPendingActions.SetCapacity(5);
 
@@ -1868,16 +1871,8 @@ bool TSFTextStore::Init(nsWindow* aWidget, const InputContext& aContext) {
     return false;
   }
 
-  mInPrivateBrowsing = aContext.mInPrivateBrowsing;
-  SetInputScope(aContext.mHTMLInputType, aContext.mHTMLInputInputmode);
-
-  if (aContext.mURI) {
-    // We don't need the document URL if it fails, let's ignore the error.
-    nsAutoCString spec;
-    if (NS_SUCCEEDED(aContext.mURI->GetSpec(spec))) {
-      CopyUTF8toUTF16(spec, mDocumentURL);
-    }
-  }
+  SetInputScope(aContext.mHTMLInputType, aContext.mHTMLInputInputmode,
+                aContext.mInPrivateBrowsing);
 
   // Create document manager
   RefPtr<ITfThreadMgr> threadMgr = sThreadMgr;
@@ -2005,7 +2000,6 @@ void TSFTextStore::ReleaseTSFObjects() {
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p TSFTextStore::ReleaseTSFObjects()", this));
 
-  mDocumentURL.Truncate();
   mContext = nullptr;
   if (mDocumentMgr) {
     RefPtr<ITfDocumentMgr> documentMgr = mDocumentMgr.forget();
@@ -3917,7 +3911,8 @@ bool TSFTextStore::ShouldSetInputScopeOfURLBarToDefault() {
 }
 
 void TSFTextStore::SetInputScope(const nsString& aHTMLInputType,
-                                 const nsString& aHTMLInputInputMode) {
+                                 const nsString& aHTMLInputInputMode,
+                                 bool aInPrivateBrowsing) {
   mInputScopes.Clear();
 
   // IME may refer only first input scope, but we will append inputmode's
@@ -3925,7 +3920,7 @@ void TSFTextStore::SetInputScope(const nsString& aHTMLInputType,
   IMEHandler::AppendInputScopeFromType(aHTMLInputType, mInputScopes);
   IMEHandler::AppendInputScopeFromInputmode(aHTMLInputInputMode, mInputScopes);
 
-  if (mInPrivateBrowsing) {
+  if (aInPrivateBrowsing) {
     mInputScopes.AppendElement(IS_PRIVATE);
   }
 }
@@ -3933,9 +3928,6 @@ void TSFTextStore::SetInputScope(const nsString& aHTMLInputType,
 int32_t TSFTextStore::GetRequestedAttrIndex(const TS_ATTRID& aAttrID) {
   if (IsEqualGUID(aAttrID, GUID_PROP_INPUTSCOPE)) {
     return eInputScope;
-  }
-  if (IsEqualGUID(aAttrID, sGUID_PROP_URL)) {
-    return eDocumentURL;
   }
   if (IsEqualGUID(aAttrID, TSATTRID_Text_VerticalWriting)) {
     return eTextVerticalWriting;
@@ -3951,8 +3943,6 @@ TSFTextStore::GetAttrID(int32_t aIndex) {
   switch (aIndex) {
     case eInputScope:
       return GUID_PROP_INPUTSCOPE;
-    case eDocumentURL:
-      return sGUID_PROP_URL;
     case eTextVerticalWriting:
       return TSATTRID_Text_VerticalWriting;
     case eTextOrientation:
@@ -4059,9 +4049,6 @@ TSFTextStore::FindNextAttrTransition(LONG acpStart, LONG acpHalt,
   return S_OK;
 }
 
-// To test the document URL result, define this to out put it to the stdout
-// #define DEBUG_PRINT_DOCUMENT_URL
-
 STDMETHODIMP
 TSFTextStore::RetrieveRequestedAttrs(ULONG ulCount, TS_ATTRVAL* paAttrVals,
                                      ULONG* pcFetched) {
@@ -4092,32 +4079,6 @@ TSFTextStore::RetrieveRequestedAttrs(ULONG ulCount, TS_ATTRVAL* paAttrVals,
            "ulCount=%lu, mRequestedAttrValues=%s",
            this, ulCount, GetBoolName(mRequestedAttrValues)));
 
-  auto GetExposingURL = [&]() -> BSTR {
-    const bool allowed =
-        StaticPrefs::intl_tsf_expose_url_allowed() &&
-        (!mInPrivateBrowsing ||
-         StaticPrefs::intl_tsf_expose_url_in_private_browsing_allowed());
-    if (!allowed) {
-      MOZ_ASSERT(EmptyString().get());
-      return ::SysAllocString(EmptyString().get());
-    }
-    if (mDocumentURL.IsEmpty()) {
-      MOZ_ASSERT(EmptyString().get());
-      return ::SysAllocString(EmptyString().get());
-    }
-    return ::SysAllocString(mDocumentURL.get());
-  };
-
-#ifdef DEBUG_PRINT_DOCUMENT_URL
-  {
-    BSTR exposingURL = GetExposingURL();
-    printf("TSFTextStore::RetrieveRequestedAttrs: DocumentURL=\"%s\"\n",
-           NS_ConvertUTF16toUTF8(static_cast<char16ptr_t>(_bstr_t(exposingURL)))
-               .get());
-    ::SysFreeString(exposingURL);
-  }
-#endif  // #ifdef DEBUG_PRINT_DOCUMENT_URL
-
   int32_t count = 0;
   for (int32_t i = 0; i < NUM_OF_SUPPORTED_ATTRS; i++) {
     if (!mRequestedAttrs[i]) {
@@ -4142,11 +4103,6 @@ TSFTextStore::RetrieveRequestedAttrs(ULONG ulCount, TS_ATTRVAL* paAttrVals,
           paAttrVals[count].varValue.vt = VT_UNKNOWN;
           RefPtr<IUnknown> inputScope = new InputScopeImpl(mInputScopes);
           paAttrVals[count].varValue.punkVal = inputScope.forget().take();
-          break;
-        }
-        case eDocumentURL: {
-          paAttrVals[count].varValue.vt = VT_BSTR;
-          paAttrVals[count].varValue.bstrVal = GetExposingURL();
           break;
         }
         case eTextVerticalWriting: {
@@ -4194,8 +4150,6 @@ TSFTextStore::RetrieveRequestedAttrs(ULONG ulCount, TS_ATTRVAL* paAttrVals,
   *pcFetched = 0;
   return S_OK;
 }
-
-#undef DEBUG_PRINT_DOCUMENT_URL
 
 STDMETHODIMP
 TSFTextStore::GetEndACP(LONG* pacp) {
@@ -6698,19 +6652,9 @@ void TSFTextStore::SetInputContext(nsWindow* aWidget,
                            "Why is this called when TSF is disabled?");
       if (sEnabledTextStore) {
         RefPtr<TSFTextStore> textStore(sEnabledTextStore);
-        textStore->mInPrivateBrowsing = aContext.mInPrivateBrowsing;
         textStore->SetInputScope(aContext.mHTMLInputType,
-                                 aContext.mHTMLInputInputmode);
-        if (aContext.mURI) {
-          nsAutoCString spec;
-          if (NS_SUCCEEDED(aContext.mURI->GetSpec(spec))) {
-            CopyUTF8toUTF16(spec, textStore->mDocumentURL);
-          } else {
-            textStore->mDocumentURL.Truncate();
-          }
-        } else {
-          textStore->mDocumentURL.Truncate();
-        }
+                                 aContext.mHTMLInputInputmode,
+                                 aContext.mInPrivateBrowsing);
       }
       return;
   }
