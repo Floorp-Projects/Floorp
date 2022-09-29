@@ -87,14 +87,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
-nsIFrame* NS_NewBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle,
-                         bool aIsRoot, nsBoxLayout* aLayoutManager) {
-  return new (aPresShell)
-      nsBoxFrame(aStyle, aPresShell->GetPresContext(), nsBoxFrame::kClassID,
-                 aIsRoot, aLayoutManager);
-}
-
-nsIFrame* NS_NewBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
+nsContainerFrame* NS_NewBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsBoxFrame(aStyle, aPresShell->GetPresContext());
 }
 
@@ -107,22 +100,16 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 #endif
 
 nsBoxFrame::nsBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
-                       ClassID aID, bool aIsRoot, nsBoxLayout* aLayoutManager)
+                       ClassID aID)
     : nsContainerFrame(aStyle, aPresContext, aID), mAscent(0) {
   AddStateBits(NS_STATE_IS_HORIZONTAL | NS_STATE_AUTO_STRETCH);
-
-  if (aIsRoot) AddStateBits(NS_STATE_IS_ROOT);
 
   mValign = vAlign_Top;
   mHalign = hAlign_Left;
 
-  // if no layout manager specified us the static sprocket layout
-  nsCOMPtr<nsBoxLayout> layout = aLayoutManager;
-
-  if (layout == nullptr) {
-    NS_NewSprocketLayout(layout);
-  }
-
+  // Use the static sprocket layout
+  nsCOMPtr<nsBoxLayout> layout;
+  NS_NewSprocketLayout(layout);
   SetXULLayoutManager(layout);
 }
 
@@ -538,7 +525,7 @@ void nsBoxFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
 
   // getting the ascent could be a lot of work. Don't get it if
   // we are the root. The viewport doesn't care about it.
-  if (!(mState & NS_STATE_IS_ROOT)) {
+  if (!Style()->IsRootElementStyle()) {
     ascent = GetXULBoxAscent(state);
   }
 
@@ -707,7 +694,7 @@ nsBoxFrame::DoXULLayout(nsBoxLayoutState& aState) {
 
     // getting the ascent could be a lot of work. Don't get it if
     // we are the root. The viewport doesn't care about it.
-    if (!(mState & NS_STATE_IS_ROOT)) {
+    if (!Style()->IsRootElementStyle()) {
       ascent = GetXULBoxAscent(aState);
     }
     desiredSize.SetBlockStartAscent(ascent);
