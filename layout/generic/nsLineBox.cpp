@@ -188,13 +188,13 @@ static void ListFloats(FILE* out, const char* aPrefix,
 /* static */ const char* nsLineBox::BreakTypeToString(StyleClear aBreakType) {
   switch (aBreakType) {
     case StyleClear::None:
-      return "nobr";
+      return "none";
     case StyleClear::Left:
-      return "leftbr";
+      return "left";
     case StyleClear::Right:
-      return "rightbr";
+      return "right";
     case StyleClear::Both:
-      return "leftbr+rightbr";
+      return "both";
   }
   return "unknown";
 }
@@ -212,14 +212,15 @@ void nsLineBox::List(FILE* out, const char* aPrefix,
                      nsIFrame::ListFlags aFlags) const {
   nsCString str(aPrefix);
   str += nsPrintfCString(
-      "line@%p count=%d state=%s,%s,%s,%s,%s,before:%s,after:%s[0x%x]", this,
-      GetChildCount(), IsBlock() ? "block" : "inline",
+      "line@%p count=%d state=%s,%s,%s,%s,%s,%s,clear-before:%s,clear-after:%s",
+      this, GetChildCount(), IsBlock() ? "block" : "inline",
       IsDirty() ? "dirty" : "clean",
       IsPreviousMarginDirty() ? "prevmargindirty" : "prevmarginclean",
       IsImpactedByFloat() ? "impacted" : "not-impacted",
       IsLineWrapped() ? "wrapped" : "not-wrapped",
+      HasForcedLineBreak() ? "forced-break" : "no-break",
       BreakTypeToString(GetBreakTypeBefore()),
-      BreakTypeToString(GetBreakTypeAfter()), mAllFlags);
+      BreakTypeToString(GetBreakTypeAfter()));
 
   if (IsBlock() && !GetCarriedOutBEndMargin().IsZero()) {
     const nscoord bm = GetCarriedOutBEndMargin().get();
