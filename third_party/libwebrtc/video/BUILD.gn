@@ -172,8 +172,6 @@ rtc_source_set("video_legacy") {
     "call_stats.h",
     "receive_statistics_proxy.cc",
     "receive_statistics_proxy.h",
-    "rtp_video_stream_receiver.cc",
-    "rtp_video_stream_receiver.h",
     "video_quality_observer.cc",
     "video_quality_observer.h",
   ]
@@ -1007,7 +1005,6 @@ if (rtc_include_tests) {
     sources = [
       "call_stats_unittest.cc",
       "receive_statistics_proxy_unittest.cc",
-      "rtp_video_stream_receiver_unittest.cc",
     ]
     deps = [
       ":video_legacy",
