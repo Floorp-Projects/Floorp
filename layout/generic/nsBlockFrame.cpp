@@ -2522,7 +2522,7 @@ void nsBlockFrame::PropagateFloatDamage(BlockReflowState& aState,
 
 static bool LineHasClear(nsLineBox* aLine) {
   return aLine->IsBlock()
-             ? (aLine->GetBreakTypeBefore() != StyleClear::None ||
+             ? (aLine->HasBreakBefore() ||
                 aLine->mFirstChild->HasAnyStateBits(
                     NS_BLOCK_HAS_CLEAR_CHILDREN) ||
                 !nsBlockFrame::BlockCanIntersectFloats(aLine->mFirstChild))
@@ -2678,8 +2678,7 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
 
     // We have to reflow the line if it's a block whose clearance
     // might have changed, so detect that.
-    if (!line->IsDirty() && (line->GetBreakTypeBefore() != StyleClear::None ||
-                             floatAvoidingBlock)) {
+    if (!line->IsDirty() && (line->HasBreakBefore() || floatAvoidingBlock)) {
       nscoord curBCoord = aState.mBCoord;
       // See where we would be after applying any clearance due to
       // BRs.
