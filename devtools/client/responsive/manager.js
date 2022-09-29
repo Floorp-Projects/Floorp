@@ -28,12 +28,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "TabDescriptorFactory",
-  "devtools/client/framework/tab-descriptor-factory",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "gDevTools",
   "devtools/client/framework/devtools",
   true
@@ -141,9 +135,8 @@ class ResponsiveUIManager {
    */
   async recordTelemetryOpen(window, tab, options) {
     // Track whether a toolbox was opened before RDM was opened.
-    const isKnownTab = TabDescriptorFactory.isKnownTab(tab);
     let toolbox;
-    if (isKnownTab) {
+    if (gDevTools.hasToolboxForTab(tab)) {
       toolbox = await gDevTools.getToolboxForTab(tab);
     }
     const hostType = toolbox ? toolbox.hostType : "none";
@@ -211,9 +204,8 @@ class ResponsiveUIManager {
   }
 
   async recordTelemetryClose(window, tab) {
-    const isKnownTab = TabDescriptorFactory.isKnownTab(tab);
     let toolbox;
-    if (isKnownTab) {
+    if (gDevTools.hasToolboxForTab(tab)) {
       toolbox = await gDevTools.getToolboxForTab(tab);
     }
 
