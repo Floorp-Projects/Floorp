@@ -365,6 +365,9 @@ var ctrlTab = {
       return;
     }
 
+    // If the tab is already in the list, remove it before re-inserting it.
+    this.detachTab(aTab);
+
     if (aPos == 0) {
       this._recentlyUsedTabs.unshift(aTab);
     } else if (aPos) {
@@ -566,7 +569,6 @@ var ctrlTab = {
         }
         break;
       case "TabSelect":
-        this.detachTab(event.target);
         this.attachTab(event.target, 0);
         // If the previous tab was hidden (e.g. Firefox View), remove it from
         // the list when it's deselected.
