@@ -75,7 +75,7 @@ declare_args() {
     # When WebRTC is built as part of Chromium it should exclude the default
     # implementation of field_trial unless it is building for NACL or
     # Chromecast.
-    rtc_exclude_field_trial_default = !is_nacl && !is_chromecast
+    rtc_exclude_field_trial_default = !is_nacl && !is_castos && !is_cast_android
   } else {
     rtc_exclude_field_trial_default = false
   }
