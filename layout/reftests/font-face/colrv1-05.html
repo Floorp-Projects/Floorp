@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<meta charset=utf-8>
+<title>COLRv1 font test: compositing operators</title>
+<style>
+@font-face {
+  font-family: CAhem;
+  src: url("CAhem.ttf");
+}
+.test { margin: 10px; padding: 10px; }
+span { font: 100px/1 CAhem; }
+</style>
+
+<p>Some glyphs using PAINT_COMPOSITE:</p>
+<div class="test">
+<span>ghijkl</span>
+</div>
+
+<p>And painting them to a canvas element:</p>
+<canvas id=c width=600 height=100></canvas>
+<script>
+document.fonts.load("100px CAhem").then(function () {
+  ctx = c.getContext("2d");
+  ctx.font = "100px CAhem";
+  ctx.fillText("ghijkl", 0, 80);
+});
+</script>

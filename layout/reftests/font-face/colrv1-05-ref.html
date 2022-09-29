@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<meta charset=utf-8>
+<title>COLRv1 font test: compositing operators</title>
+<style>
+.ref { margin: 10px; padding: 10px; line-height: 0; font-size: 0; }
+span { display: inline-block; width: 100px; height: 100px; position: relative; }
+</style>
+
+<p>Some glyphs using PAINT_COMPOSITE:</p>
+<!-- using blocks to imitate the composited layers in CAhem.ttf -->
+<div class="ref">
+  <span class=g>
+    <div style="background: red; width: 70px; height: 70px; position: absolute; top: 0px; left: 0px;"></div>
+    <div style="background: blue; width: 70px; height: 70px; position: absolute; bottom: 0px; right: 0px;"></div>
+  </span>
+  <span class=h>
+    <div style="background: blue; width: 70px; height: 70px; position: absolute; bottom: 0px; right: 0px;"></div>
+    <div style="background: red; width: 40px; height: 40px; position: absolute; top: 30px; left: 30px;"></div>
+  </span>
+  <span class=i>
+    <div style="background: blue; width: 70px; height: 70px; position: absolute; bottom: 0px; right: 0px;"></div>
+    <div style="background: white; width: 40px; height: 40px; position: absolute; top: 30px; left: 30px;"></div>
+  </span>
+  <span class=j>
+    <div style="background: red; width: 40px; height: 40px; position: absolute; top: 30px; left: 30px;"></div>
+  </span>
+  <span class=k>
+    <div style="background: red; width: 70px; height: 70px; position: absolute; top: 0px; left: 0px;"></div>
+    <div style="background: blue; width: 70px; height: 70px; position: absolute; bottom: 0px; right: 0px;"></div>
+    <div style="background: black; width: 40px; height: 40px; position: absolute; top: 30px; left: 30px;"></div>
+  </span>
+  <span class=l>
+    <div style="background: red; width: 70px; height: 70px; position: absolute; top: 0px; left: 0px;"></div>
+    <div style="background: blue; width: 70px; height: 70px; position: absolute; bottom: 0px; right: 0px;"></div>
+    <div style="background: magenta; width: 40px; height: 40px; position: absolute; top: 30px; left: 30px;"></div>
+  </span>
+</div>
+
+<p>And painting them to a canvas element:</p>
+<canvas id=c width=600 height=100></canvas>
+<script>
+ctx = c.getContext("2d");
+
+// glyph "g"
+ctx.fillStyle = "red";
+ctx.fillRect(0, 0, 70, 70);
+ctx.fillStyle = "blue";
+ctx.fillRect(30, 30, 70, 70);
+ctx.translate(100, 0);
+
+// glyph "h"
+ctx.fillStyle = "blue";
+ctx.fillRect(30, 30, 70, 70);
+ctx.fillStyle = "red";
+ctx.fillRect(30, 30, 40, 40);
+ctx.translate(100, 0);
+
+// glyph "i"
+ctx.fillStyle = "blue";
+ctx.fillRect(30, 30, 70, 70);
+ctx.fillStyle = "white";
+ctx.fillRect(30, 30, 40, 40);
+ctx.translate(100, 0);
+
+// glyph "j"
+ctx.fillStyle = "red";
+ctx.fillRect(30, 30, 40, 40);
+ctx.translate(100, 0);
+
+// glyph "k"
+ctx.fillStyle = "red";
+ctx.fillRect(0, 0, 70, 70);
+ctx.fillStyle = "blue";
+ctx.fillRect(30, 30, 70, 70);
+ctx.fillStyle = "black";
+ctx.fillRect(30, 30, 40, 40);
+ctx.translate(100, 0);
+
+// glyph "l"
+ctx.fillStyle = "red";
+ctx.fillRect(0, 0, 70, 70);
+ctx.fillStyle = "blue";
+ctx.fillRect(30, 30, 70, 70);
+ctx.fillStyle = "magenta";
+ctx.fillRect(30, 30, 40, 40);
+ctx.translate(100, 0);
+
+</script>
