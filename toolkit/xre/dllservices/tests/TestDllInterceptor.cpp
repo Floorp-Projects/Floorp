@@ -21,6 +21,8 @@
 #include "nsWindowsDllInterceptor.h"
 #include "nsWindowsHelpers.h"
 
+#include "mozilla/MozProcessMitigationDynamicCodePolicy.h"
+
 NTSTATUS NTAPI NtFlushBuffersFile(HANDLE, PIO_STATUS_BLOCK);
 NTSTATUS NTAPI NtReadFile(HANDLE, HANDLE, PIO_APC_ROUTINE, PVOID,
                           PIO_STATUS_BLOCK, PVOID, ULONG, PLARGE_INTEGER,
@@ -850,7 +852,7 @@ bool TestDynamicCodePolicy() {
     return true;
   }
 
-  PROCESS_MITIGATION_DYNAMIC_CODE_POLICY policy = {};
+  MOZ_PROCESS_MITIGATION_DYNAMIC_CODE_POLICY policy = {};
   policy.ProhibitDynamicCode = true;
 
   mozilla::DynamicallyLinkedFunctionPtr<decltype(&SetProcessMitigationPolicy)>
