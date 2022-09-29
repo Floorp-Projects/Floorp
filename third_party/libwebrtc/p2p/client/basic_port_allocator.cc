@@ -20,6 +20,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
+#include "absl/strings/string_view.h"
 #include "api/transport/field_trial_based_config.h"
 #include "p2p/base/basic_packet_socket_factory.h"
 #include "p2p/base/port.h"
@@ -258,9 +259,20 @@ PortAllocatorSession* BasicPortAllocator::CreateSessionInternal(
     int component,
     const std::string& ice_ufrag,
     const std::string& ice_pwd) {
+  return CreateSessionInternal(absl::string_view(content_name), component,
+                               absl::string_view(ice_ufrag),
+                               absl::string_view(ice_pwd));
+}
+
+PortAllocatorSession* BasicPortAllocator::CreateSessionInternal(
+    absl::string_view content_name,
+    int component,
+    absl::string_view ice_ufrag,
+    absl::string_view ice_pwd) {
   CheckRunOnValidThreadAndInitialized();
   PortAllocatorSession* session = new BasicPortAllocatorSession(
-      this, content_name, component, ice_ufrag, ice_pwd);
+      this, std::string(content_name), component, std::string(ice_ufrag),
+      std::string(ice_pwd));
   session->SignalIceRegathering.connect(this,
                                         &BasicPortAllocator::OnIceRegathering);
   return session;
