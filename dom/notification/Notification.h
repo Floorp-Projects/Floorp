@@ -257,8 +257,8 @@ class Notification : public DOMEventTargetHelper,
   void ShowInternal();
   void CloseInternal();
 
-  static NotificationPermission GetPermissionInternal(nsISupports* aGlobal,
-                                                      ErrorResult& rv);
+  static NotificationPermission GetPermissionInternal(
+      nsPIDOMWindowInner* aWindow, ErrorResult& rv);
 
   static const nsString DirectionToString(NotificationDirection aDirection) {
     switch (aDirection) {
