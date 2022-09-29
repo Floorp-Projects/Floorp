@@ -12,7 +12,7 @@ from marionette_harness import MarionetteTestCase
 
 class TestAutoConfig(MarionetteTestCase):
     def tearDown(self):
-        self.marionette.quit(clean=True)
+        self.marionette.quit(in_app=False, clean=True)
 
         if hasattr(self, "pref_file"):
             os.remove(self.pref_file)

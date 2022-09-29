@@ -575,7 +575,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
         # Force yet another restart with a clean profile to disconnect from the
         # profile and environment changes we've made, to leave a more or less
         # blank slate for the next person.
-        self.marionette.restart(clean=True, in_app=False)
+        self.marionette.restart(in_app=False, clean=True)
         self.setUpScriptData()
 
         # Super

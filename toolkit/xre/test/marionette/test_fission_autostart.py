@@ -142,7 +142,7 @@ class TestFissionAutostart(MarionetteTestCase):
     def full_restart(self):
         profile = self.marionette.instance.profile
         try:
-            self.marionette.quit(in_app=True, clean=False)
+            self.marionette.quit()
             yield profile
         finally:
             self.marionette.start_session()
@@ -161,7 +161,7 @@ class TestFissionAutostart(MarionetteTestCase):
                 Prefs.FISSION_AUTOSTART
             ]
             del self.marionette.instance.required_prefs[Prefs.FISSION_AUTOSTART]
-            self.marionette.restart(clean=True)
+            self.marionette.restart(in_app=False, clean=True)
 
         self.setUpSession()
 
@@ -177,7 +177,7 @@ class TestFissionAutostart(MarionetteTestCase):
             self.marionette.instance.required_prefs[
                 Prefs.FISSION_AUTOSTART
             ] = self.fissionRequired
-        self.marionette.restart(clean=True)
+        self.marionette.restart(in_app=False, clean=True)
 
         super(TestFissionAutostart, self).tearDown()
 

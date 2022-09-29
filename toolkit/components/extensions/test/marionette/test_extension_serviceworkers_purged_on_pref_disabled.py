@@ -31,7 +31,7 @@ class PurgeExtensionServiceWorkersOnPrefDisabled(MarionetteServiceWorkerTestCase
         self.marionette.restart(in_app=True)
 
     def tearDown(self):
-        self.marionette.restart(clean=True)
+        self.marionette.restart(in_app=False, clean=True)
         super(PurgeExtensionServiceWorkersOnPrefDisabled, self).tearDown()
 
     def test_unregistering_service_worker_when_clearing_data(self):
