@@ -104,7 +104,7 @@ var BrowserUtils = {
 
   /**
    * Returns true if we can show a find bar, including FAYT, for the specified
-   * document location. The location must not be in a blacklist of specific
+   * document location. The location must not be in a blocklist of specific
    * "about:" pages for which find is disabled.
    *
    * This can be called from the parent process or from content processes.
