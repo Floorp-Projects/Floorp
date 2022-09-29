@@ -417,6 +417,14 @@ export class SearchService {
     this._settings._batchTask?.disarm();
   }
 
+  // Test-only function to reset just the engine selector so that it can
+  // load a different configuration.
+  resetEngineSelector() {
+    this.#engineSelector = new lazy.SearchEngineSelector(
+      this.#handleConfigurationUpdated.bind(this)
+    );
+  }
+
   resetToAppDefaultEngine() {
     let appDefaultEngine = this.appDefaultEngine;
     appDefaultEngine.hidden = false;
@@ -1590,8 +1598,8 @@ export class SearchService {
    *   The user's new current default engine.
    * @param { object } prevCurrentEngine
    *   The user's previous default engine.
-   * @param { object } prevAppDefaultEngine
-   *   The user's previous app default engine.
+   * @param { string } prevAppDefaultEngine
+   *   The name of the user's previous app default engine.
    * @returns { boolean }
    *   Return true if the previous default engine has been removed and
    *   notification box should be displayed.
@@ -1612,6 +1620,15 @@ export class SearchService {
     // If for some reason we were unable to install any engines and hence no
     // default engine, do not display the notification box
     if (!newCurrentEngine) {
+      return false;
+    }
+
+    // If the previous engine is still available, don't show the notification
+    // box.
+    if (prevCurrentEngine && this._engines.has(prevCurrentEngine.name)) {
+      return false;
+    }
+    if (!prevCurrentEngine && this._engines.has(prevAppDefaultEngine)) {
       return false;
     }
 
@@ -1879,6 +1896,7 @@ export class SearchService {
         prevMetaData &&
         settings.metaData &&
         !this.#didSettingsMetaDataUpdate(prevMetaData) &&
+        enginesToRemove.includes(prevCurrentEngine) &&
         Services.prefs.getBoolPref("browser.search.removeEngineInfobar.enabled")
       ) {
         this._showRemovalOfSearchEngineNotificationBox(
