@@ -191,19 +191,22 @@ function setCustomURLFavicon(sbar_id) {
 }
 
 function backSidebarSite() {
-  document.getElementById("webpanel").goBack();  //戻る
+  const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
+  const webpanel_id = modeValuePref - 4;
+
+  document.getElementById(`webpanel${webpanel_id}`).goBack();  //戻る
 }
 function forwardSidebarSite() {
-  document.getElementById("webpanel").goForward();  //進む
+  const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
+  const webpanel_id = modeValuePref - 4;
+
+  document.getElementById(`webpanel${webpanel_id}`).goForward();  //進む
 }
 function reloadSidebarSite() {
-  document.getElementById("webpanel").reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);  //リロード
-}
-function muteSidebarSite() {
-  document.getElementById("webpanel").mute();  //ミュート
-}
-function unmuteSidebarSite() {
-  document.getElementById("webpanel").unmute();  //ミュート解除
+  const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
+  const webpanel_id = modeValuePref - 4;
+
+  document.getElementById(`webpanel${webpanel_id}`).reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);  //リロード
 }
 
 /* From 0 to 4 - StaticModeSetter. 5 modes, start from 0
@@ -266,18 +269,6 @@ function setSelectedPanel() {
     let selectedNode = document.querySelector(`.sidepanel-icon[panel="${selectedMode}"]`);
     removeAttributeSelectedNode();
     selectedNode.setAttribute("checked", "true");
-}
-
-function changeMuteStatus() {
-  let webpanel = document.getElementById("webpanel");
-  let muteicon = document.getElementById("sidebar2-mute");
-  if (muteicon.getAttribute("mute") == "false") {
-    webpanel.mute();
-    muteicon.setAttribute("mute", "true");
-  } else {
-    webpanel.unmute();
-    muteicon.setAttribute("mute", "false");
-  }
 }
 
 function showSidebarNodes(sidebar_mode) { /* Managers - 0; TST - 1  webpanel - 2*/
