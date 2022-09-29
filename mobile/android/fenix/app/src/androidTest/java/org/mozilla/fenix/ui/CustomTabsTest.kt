@@ -14,7 +14,7 @@ import org.junit.Test
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.FeatureSettingsHelper
+import org.mozilla.fenix.helpers.FeatureSettingsHelperDelegate
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
@@ -47,7 +47,7 @@ class CustomTabsTest {
         false,
     )
 
-    private val featureSettingsHelper = FeatureSettingsHelper()
+    private val featureSettingsHelper = FeatureSettingsHelperDelegate()
 
     @Before
     fun setUp() {
@@ -57,7 +57,9 @@ class CustomTabsTest {
             start()
         }
 
-        featureSettingsHelper.setTCPCFREnabled(false)
+        featureSettingsHelper.apply {
+            isTCPCFREnabled = false
+        }.applyFlagUpdates()
     }
 
     @After

@@ -36,8 +36,7 @@ class HomeScreenTest {
     private lateinit var mockWebServer: MockWebServer
 
     @get:Rule
-    val activityTestRule = HomeActivityTestRule()
-    private val featureSettingsHelper = activityTestRule.featureSettingsHelper
+    val activityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides()
 
     @Rule
     @JvmField
@@ -51,8 +50,6 @@ class HomeScreenTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
-
-        featureSettingsHelper.setTCPCFREnabled(false)
     }
 
     @After
@@ -147,8 +144,10 @@ class HomeScreenTest {
 
     @Test
     fun dismissOnboardingUsingHelpTest() {
-        featureSettingsHelper.setJumpBackCFREnabled(false)
-        featureSettingsHelper.setShowWallpaperOnboarding(false)
+        activityTestRule.applySettingsExceptions {
+            it.isJumpBackInCFREnabled = false
+            it.isWallpaperOnboardingEnabled = false
+        }
 
         homeScreen {
             verifyWelcomeHeader()
@@ -175,8 +174,10 @@ class HomeScreenTest {
 
     @Test
     fun verifyPocketHomepageStoriesTest() {
-        featureSettingsHelper.setRecentTabsFeatureEnabled(false)
-        featureSettingsHelper.setRecentlyVisitedFeatureEnabled(false)
+        activityTestRule.applySettingsExceptions {
+            it.isRecentTabsFeatureEnabled = false
+            it.isRecentlyVisitedFeatureEnabled = false
+        }
 
         homeScreen {
         }.dismissOnboarding()
@@ -196,8 +197,6 @@ class HomeScreenTest {
     @Test
     fun verifyCustomizeHomepageTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-        featureSettingsHelper.setJumpBackCFREnabled(false)
-        featureSettingsHelper.setShowWallpaperOnboarding(false)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {

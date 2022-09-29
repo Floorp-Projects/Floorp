@@ -37,7 +37,7 @@ class ReaderViewTest {
     private val estimatedReadingTime = "1 - 2 minutes"
 
     @get:Rule
-    val activityIntentTestRule = HomeActivityIntentTestRule()
+    val activityIntentTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
 
     @Rule
     @JvmField

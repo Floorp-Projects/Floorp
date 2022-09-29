@@ -45,8 +45,7 @@ class TabbedBrowsingTest {
 
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     @get:Rule
-    val activityTestRule = HomeActivityTestRule()
-    private val featureSettingsHelper = activityTestRule.featureSettingsHelper
+    val activityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides()
 
     @Rule
     @JvmField
@@ -54,11 +53,6 @@ class TabbedBrowsingTest {
 
     @Before
     fun setUp() {
-        // disabling the new homepage pop-up that interferes with the tests.
-        featureSettingsHelper.setJumpBackCFREnabled(false)
-        featureSettingsHelper.setTCPCFREnabled(false)
-        featureSettingsHelper.setShowWallpaperOnboarding(false)
-
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
@@ -182,8 +176,10 @@ class TabbedBrowsingTest {
     @Test
     fun verifyUndoSnackBarTest() {
         // disabling these features because they interfere with the snackbar visibility
-        featureSettingsHelper.setPocketEnabled(false)
-        featureSettingsHelper.setRecentTabsFeatureEnabled(false)
+        activityTestRule.applySettingsExceptions {
+            it.isPocketEnabled = false
+            it.isRecentTabsFeatureEnabled = false
+        }
 
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 

@@ -10,7 +10,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.ui.robots.homeScreen
 
@@ -23,15 +22,12 @@ class ThreeDotMenuMainTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
 
     private lateinit var mockWebServer: MockWebServer
-    val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
-    val activityTestRule = HomeActivityTestRule()
+    val activityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides()
 
     @Before
     fun setUp() {
-        featureSettingsHelper.setJumpBackCFREnabled(false)
-        featureSettingsHelper.setTCPCFREnabled(false)
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()

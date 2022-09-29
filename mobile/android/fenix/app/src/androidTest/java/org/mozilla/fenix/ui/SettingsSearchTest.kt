@@ -9,7 +9,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.SearchDispatcher
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
@@ -20,11 +19,10 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 class SettingsSearchTest {
     private lateinit var mockWebServer: MockWebServer
     private lateinit var searchMockServer: MockWebServer
-    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
     val activityTestRule = AndroidComposeTestRule(
-        HomeActivityIntentTestRule(),
+        HomeActivityIntentTestRule.withDefaultSettingsOverrides(),
     ) { it.activity }
 
     @Before
@@ -33,17 +31,11 @@ class SettingsSearchTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
-        featureSettingsHelper.setJumpBackCFREnabled(false)
-        featureSettingsHelper.setShowWallpaperOnboarding(false)
-        featureSettingsHelper.setTCPCFREnabled(false)
     }
 
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-
-        // resetting modified features enabled setting to default
-        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @Test

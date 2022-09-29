@@ -6,7 +6,6 @@ package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
 import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -26,14 +25,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 class NoNetworkAccessStartupTests {
 
     @get:Rule
-    val activityTestRule = HomeActivityTestRule(launchActivity = false)
-    private val featureSettingsHelper = activityTestRule.featureSettingsHelper
-
-    @Before
-    fun setUp() {
-        featureSettingsHelper.setTCPCFREnabled(false)
-        featureSettingsHelper.setShowWallpaperOnboarding(false)
-    }
+    val activityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides(launchActivity = false)
 
     @After
     fun tearDown() {
@@ -60,7 +52,6 @@ class NoNetworkAccessStartupTests {
     // Based on STR from https://github.com/mozilla-mobile/fenix/issues/16886
     @Test
     fun networkInterruptedFromBrowserToHomeTest() {
-        featureSettingsHelper.setJumpBackCFREnabled(false)
         val url = "example.com"
 
         activityTestRule.launchActivity(null)

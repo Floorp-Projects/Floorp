@@ -5,7 +5,6 @@
 package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -26,19 +25,11 @@ class BrowsingErrorPagesTest {
     private val harmfulSiteWarning = getStringResource(R.string.mozac_browser_errorpages_safe_harmful_uri_title)
 
     @get: Rule
-    val mActivityTestRule = HomeActivityTestRule()
-    private val featureSettingsHelper = mActivityTestRule.featureSettingsHelper
+    val mActivityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides()
 
     @Rule
     @JvmField
     val retryTestRule = RetryTestRule(3)
-
-    @Before
-    fun setUp() {
-        // disabling the jump-back-in pop-up that interferes with the tests.
-        featureSettingsHelper.setJumpBackCFREnabled(false)
-        featureSettingsHelper.setTCPCFREnabled(false)
-    }
 
     @SmokeTest
     @Test

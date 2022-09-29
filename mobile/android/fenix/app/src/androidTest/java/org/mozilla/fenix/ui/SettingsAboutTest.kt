@@ -13,7 +13,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -30,7 +29,6 @@ class SettingsAboutTest {
 
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
-    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule()
@@ -51,7 +49,6 @@ class SettingsAboutTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     // Walks through settings menu and sub-menus to ensure all items are present
@@ -71,7 +68,9 @@ class SettingsAboutTest {
     // ABOUT
     @Test
     fun verifyRateOnGooglePlayRedirect() {
-        featureSettingsHelper.setTCPCFREnabled(false)
+        activityIntentTestRule.applySettingsExceptions {
+            it.isTCPCFREnabled = false
+        }
 
         homeScreen {
         }.openThreeDotMenu {
@@ -86,8 +85,10 @@ class SettingsAboutTest {
 
     @Test
     fun verifyAboutFirefoxPreview() {
-        featureSettingsHelper.setJumpBackCFREnabled(false)
-        featureSettingsHelper.setTCPCFREnabled(false)
+        activityIntentTestRule.applySettingsExceptions {
+            it.isJumpBackInCFREnabled = false
+            it.isTCPCFREnabled = false
+        }
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {

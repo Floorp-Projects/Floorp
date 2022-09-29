@@ -34,8 +34,7 @@ class NavigationToolbarTest {
 
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     @get:Rule
-    val activityTestRule = HomeActivityTestRule()
-    private val featureSettingsHelper = activityTestRule.featureSettingsHelper
+    val activityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides()
 
     @Before
     fun setUp() {
@@ -44,9 +43,6 @@ class NavigationToolbarTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
-        featureSettingsHelper.setJumpBackCFREnabled(false)
-        featureSettingsHelper.setTCPCFREnabled(false)
-        featureSettingsHelper.disablePwaCFR(true)
     }
 
     @After

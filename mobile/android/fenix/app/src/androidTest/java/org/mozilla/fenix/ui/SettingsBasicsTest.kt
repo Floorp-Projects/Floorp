@@ -15,7 +15,6 @@ import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -23,8 +22,8 @@ import org.mozilla.fenix.helpers.TestAssetHelper.getLoremIpsumAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
-import org.mozilla.fenix.helpers.TestHelper.runWithSystemLocaleChanged
 import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
+import org.mozilla.fenix.helpers.TestHelper.runWithSystemLocaleChanged
 import org.mozilla.fenix.ui.SettingsBasicsTest.CreditCard.MOCK_CREDIT_CARD_NUMBER
 import org.mozilla.fenix.ui.SettingsBasicsTest.CreditCard.MOCK_EXPIRATION_MONTH
 import org.mozilla.fenix.ui.SettingsBasicsTest.CreditCard.MOCK_EXPIRATION_YEAR
@@ -47,7 +46,6 @@ import java.util.Locale
 class SettingsBasicsTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     private lateinit var mockWebServer: MockWebServer
-    private val featureSettingsHelper = FeatureSettingsHelper()
 
     object CreditCard {
         const val MOCK_CREDIT_CARD_NUMBER = "5555555555554444"
@@ -58,7 +56,7 @@ class SettingsBasicsTest {
     }
 
     @get:Rule
-    val activityIntentTestRule = HomeActivityIntentTestRule()
+    val activityIntentTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
 
     @Before
     fun setUp() {
@@ -66,18 +64,11 @@ class SettingsBasicsTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
-
-        featureSettingsHelper.setJumpBackCFREnabled(false)
-        featureSettingsHelper.setTCPCFREnabled(false)
-        featureSettingsHelper.setShowWallpaperOnboarding(false)
     }
 
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-
-        // resetting modified features enabled setting to default
-        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     private fun getUiTheme(): Boolean {

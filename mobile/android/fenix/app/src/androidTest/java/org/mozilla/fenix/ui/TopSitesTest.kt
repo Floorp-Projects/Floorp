@@ -14,7 +14,6 @@ import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
@@ -36,10 +35,9 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 class TopSitesTest {
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
-    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
-    val activityIntentTestRule = HomeActivityIntentTestRule(skipOnboarding = true)
+    val activityIntentTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true)
 
     @get:Rule
     val retryTestRule = RetryTestRule(3)
@@ -51,16 +49,11 @@ class TopSitesTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
-
-        featureSettingsHelper.setJumpBackCFREnabled(false)
-        featureSettingsHelper.setTCPCFREnabled(false)
-        featureSettingsHelper.setShowWallpaperOnboarding(false)
     }
 
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @SmokeTest

@@ -14,7 +14,6 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -41,13 +40,11 @@ class ContextMenusTest {
     private lateinit var mockWebServer: MockWebServer
 
     @get:Rule
-    val activityIntentTestRule = HomeActivityIntentTestRule()
+    val activityIntentTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
 
     @Rule
     @JvmField
     val retryTestRule = RetryTestRule(3)
-
-    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @Before
     fun setUp() {
@@ -57,14 +54,11 @@ class ContextMenusTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
-
-        featureSettingsHelper.setTCPCFREnabled(false)
     }
 
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @SmokeTest

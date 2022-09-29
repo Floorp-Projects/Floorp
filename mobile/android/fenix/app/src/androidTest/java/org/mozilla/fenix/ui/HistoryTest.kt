@@ -39,8 +39,7 @@ class HistoryTest {
     private lateinit var mDevice: UiDevice
 
     @get:Rule
-    val activityTestRule = HomeActivityTestRule()
-    private val featureSettingsHelper = activityTestRule.featureSettingsHelper
+    val activityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides()
 
     @Before
     fun setUp() {
@@ -52,8 +51,6 @@ class HistoryTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
-
-        featureSettingsHelper.setTCPCFREnabled(false)
     }
 
     @After

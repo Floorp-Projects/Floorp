@@ -43,8 +43,7 @@ class MenuScreenShotTest : ScreenshotTest() {
     val localeTestRule = LocaleTestRule()
 
     @get:Rule
-    var mActivityTestRule = HomeActivityTestRule()
-    private val featureSettingsHelper = mActivityTestRule.featureSettingsHelper
+    var mActivityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides()
 
     @Before
     fun setUp() {
@@ -53,8 +52,6 @@ class MenuScreenShotTest : ScreenshotTest() {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
-
-        featureSettingsHelper.setTCPCFREnabled(false)
     }
 
     @After

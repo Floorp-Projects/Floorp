@@ -15,7 +15,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -35,10 +34,9 @@ class MediaNotificationTest {
 
     private lateinit var mockWebServer: MockWebServer
     private lateinit var mDevice: UiDevice
-    val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
-    val activityTestRule = HomeActivityTestRule()
+    val activityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides()
     private lateinit var browserStore: BrowserStore
 
     @Rule
@@ -56,7 +54,6 @@ class MediaNotificationTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
-        featureSettingsHelper.setTCPCFREnabled(false)
     }
 
     @After
