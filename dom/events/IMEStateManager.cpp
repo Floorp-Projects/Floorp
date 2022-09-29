@@ -41,6 +41,7 @@
 #include "nsIFormControl.h"
 #include "nsINode.h"
 #include "nsISupports.h"
+#include "nsIURI.h"
 #include "nsPresContext.h"
 
 namespace mozilla {
@@ -1521,6 +1522,27 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
 
   InputContext context;
   context.mIMEState = aState;
+  if (aPresContext) {
+    if (nsIURI* uri = aPresContext->Document()->GetDocumentURI()) {
+      // We don't need to and should not expose special URLs such as:
+      // about: Any apps like IME should work normally and constantly in any
+      //        default pages such as about:blank, about:home, etc in either
+      //        the main process or a content process.
+      // blob: This may contain big data.  If we copy it to the main process,
+      //       it may make the heap dirty which makes the process slower.
+      // chrome: Same as about, any apps should work normally and constantly in
+      //         any chrome documents.
+      // data: Any native apps in the environment shouldn't change the behavior
+      //       with the data URL's content and it may contain too big data.
+      // file: The file path may contain private things and we shouldn't let
+      //       other apps like IME know which one is touched by the user because
+      //       malicious text services may like files which are explicitly used
+      //       by the user better.
+      if (uri->SchemeIs("http") || uri->SchemeIs("https")) {
+        context.mURI = uri;
+      }
+    }
+  }
   context.mOrigin = aOrigin;
   context.mMayBeIMEUnaware =
       context.mIMEState.IsEditable() &&
