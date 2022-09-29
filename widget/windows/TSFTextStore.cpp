@@ -28,7 +28,6 @@
 #include "mozilla/WindowsVersion.h"
 #include "nsWindow.h"
 #include "nsPrintfCString.h"
-#include "nsReadableUtils.h"  // for VoidString()
 
 // Workaround for mingw32
 #ifndef TS_SD_INPUTPANEMANUALDISPLAYENABLE
@@ -4097,13 +4096,13 @@ TSFTextStore::RetrieveRequestedAttrs(ULONG ulCount, TS_ATTRVAL* paAttrVals,
         StaticPrefs::intl_tsf_expose_url_allowed() &&
         (!mInPrivateBrowsing ||
          StaticPrefs::intl_tsf_expose_url_in_private_browsing_allowed());
-    if (!allowed) {
-      MOZ_ASSERT(EmptyString().get());
-      return ::SysAllocString(EmptyString().get());
-    }
-    if (mDocumentURL.IsEmpty()) {
-      MOZ_ASSERT(EmptyString().get());
-      return ::SysAllocString(EmptyString().get());
+    if (!allowed || mDocumentURL.IsEmpty()) {
+      BSTR emptyString = ::SysAllocString(L"");
+      MOZ_ASSERT(
+          emptyString,
+          "We need to return valid BSTR pointer to notify TSF of supporting it "
+          "with a pointer to empty string");
+      return emptyString;
     }
     return ::SysAllocString(mDocumentURL.get());
   };
