@@ -2684,35 +2684,35 @@ LayoutDeviceIntPoint nsLayoutUtils::TranslateViewToWidget(
   return relativeToViewWidget + WidgetToWidgetOffset(viewWidget, aWidget);
 }
 
-// Combine aNewBreakType with aOrigBreakType, but limit the break types
-// to StyleClear::Left, Right, Both.
-StyleClear nsLayoutUtils::CombineBreakType(StyleClear aOrigBreakType,
-                                           StyleClear aNewBreakType) {
-  StyleClear breakType = aOrigBreakType;
-  switch (breakType) {
+StyleClear nsLayoutUtils::CombineClearType(StyleClear aOrigClearType,
+                                           StyleClear aNewClearType) {
+  StyleClear clearType = aOrigClearType;
+  switch (clearType) {
     case StyleClear::Left:
-      if (StyleClear::Right == aNewBreakType ||
-          StyleClear::Both == aNewBreakType) {
-        breakType = StyleClear::Both;
+      if (StyleClear::Right == aNewClearType ||
+          StyleClear::Both == aNewClearType) {
+        clearType = StyleClear::Both;
       }
       break;
     case StyleClear::Right:
-      if (StyleClear::Left == aNewBreakType ||
-          StyleClear::Both == aNewBreakType) {
-        breakType = StyleClear::Both;
+      if (StyleClear::Left == aNewClearType ||
+          StyleClear::Both == aNewClearType) {
+        clearType = StyleClear::Both;
       }
       break;
     case StyleClear::None:
-      if (StyleClear::Left == aNewBreakType ||
-          StyleClear::Right == aNewBreakType ||
-          StyleClear::Both == aNewBreakType) {
-        breakType = aNewBreakType;
+      if (StyleClear::Left == aNewClearType ||
+          StyleClear::Right == aNewClearType ||
+          StyleClear::Both == aNewClearType) {
+        clearType = aNewClearType;
       }
       break;
-    default:
+    case StyleClear::Both:
+    case StyleClear::Line:
+      // Do nothing.
       break;
   }
-  return breakType;
+  return clearType;
 }
 
 #ifdef MOZ_DUMP_PAINTING

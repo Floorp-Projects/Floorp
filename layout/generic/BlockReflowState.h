@@ -389,7 +389,9 @@ class BlockReflowState {
 
   Flags mFlags;
 
-  StyleClear mFloatBreakType;
+  // Cache the result of nsBlockFrame::FindTrailingClear() from mBlock's
+  // prev-in-flows. See nsBlockFrame::ReflowPushedFloats().
+  StyleClear mTrailingClearFromPIF;
 
   // The amount of computed content block-size "consumed" by our previous
   // continuations.

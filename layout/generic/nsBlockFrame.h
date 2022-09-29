@@ -680,7 +680,9 @@ class nsBlockFrame : public nsContainerFrame {
   void ReflowPushedFloats(BlockReflowState& aState,
                           mozilla::OverflowAreas& aOverflowAreas);
 
-  /** Find any trailing BR clear from the last line of the block (or its PIFs)
+  /**
+   * Find any trailing BR clear from the last line of this block (or from its
+   * prev-in-flows).
    */
   mozilla::StyleClear FindTrailingClear();
 

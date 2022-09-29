@@ -678,10 +678,10 @@ class nsLayoutUtils {
    */
   static nsIFrame* GetFloatFromPlaceholder(nsIFrame* aPlaceholder);
 
-  // Combine aNewBreakType with aOrigBreakType, but limit the break types
+  // Combine aOrigClearType with aNewClearType, but limit the clear types
   // to StyleClear::Left, Right, Both.
-  static mozilla::StyleClear CombineBreakType(
-      mozilla::StyleClear aOrigBreakType, mozilla::StyleClear aNewBreakType);
+  static mozilla::StyleClear CombineClearType(
+      mozilla::StyleClear aOrigClearType, mozilla::StyleClear aNewClearType);
 
   /**
    * Get the coordinates of a given DOM mouse event, relative to a given
