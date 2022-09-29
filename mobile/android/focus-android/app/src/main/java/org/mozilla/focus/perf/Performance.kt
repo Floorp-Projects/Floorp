@@ -8,7 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
-import mozilla.components.support.utils.SafeIntent
+import android.os.Bundle
 import android.provider.Settings as AndroidSettings
 
 /**
@@ -18,7 +18,7 @@ object Performance {
 
     private const val EXTRA_IS_PERFORMANCE_TEST = "performancetest"
 
-    fun processIntentIfPerformanceTest(intent: SafeIntent, context: Context) = isPerformanceTest(intent, context)
+    fun processIntentIfPerformanceTest(bundle: Bundle?, context: Context) = isPerformanceTest(bundle, context)
 
     /**
      * This checks for the charging state and ADB debugging in case another application tries to
@@ -26,8 +26,8 @@ object Performance {
      * it is for testing visual metrics. These checks aren't foolproof but most of our users won't
      * have ADB on and charging at the same time when running Firefox.
      */
-    private fun isPerformanceTest(intent: SafeIntent, context: Context): Boolean {
-        if (!intent.getBooleanExtra(EXTRA_IS_PERFORMANCE_TEST, false)) {
+    private fun isPerformanceTest(bundle: Bundle?, context: Context): Boolean {
+        if (bundle == null || !bundle.getBoolean(EXTRA_IS_PERFORMANCE_TEST, false)) {
             return false
         }
 

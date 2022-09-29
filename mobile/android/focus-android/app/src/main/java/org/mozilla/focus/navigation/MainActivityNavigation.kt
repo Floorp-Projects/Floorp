@@ -5,6 +5,7 @@
 package org.mozilla.focus.navigation
 
 import android.os.Build
+import android.os.Bundle
 import org.mozilla.experiments.nimbus.internal.FeatureHolder
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
@@ -206,8 +207,11 @@ class MainActivityNavigation(
 
     /**
      * Lock app.
+     *
+     * @param bundle it is used for app navigation. If the user can unlock with success he should
+     * be redirected to a certain screen. It comes from the external intent.
      */
-    fun lock() {
+    fun lock(bundle: Bundle? = null) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             throw IllegalStateException("Trying to lock unsupported device")
         }
@@ -230,7 +234,11 @@ class MainActivityNavigation(
 
         fragmentManager
             .beginTransaction()
-            .replace(R.id.container, BiometricAuthenticationFragment(), BiometricAuthenticationFragment.FRAGMENT_TAG)
+            .replace(
+                R.id.container,
+                BiometricAuthenticationFragment.createWithDestinationData(bundle),
+                BiometricAuthenticationFragment.FRAGMENT_TAG,
+            )
             .commit()
     }
 

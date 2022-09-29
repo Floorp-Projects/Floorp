@@ -23,7 +23,7 @@ object AppReducer : Reducer<AppState, AppAction> {
             is AppAction.HideTabs -> hideTabs(state)
             is AppAction.ShowFirstRun -> showFirstRun(state)
             is AppAction.FinishFirstRun -> finishFirstRun(state, action)
-            is AppAction.Lock -> lock(state)
+            is AppAction.Lock -> lock(state, action)
             is AppAction.Unlock -> unlock(state, action)
             is AppAction.OpenSettings -> openSettings(state, action)
             is AppAction.NavigateUp -> navigateUp(state, action)
@@ -128,8 +128,8 @@ private fun showHomeScreen(state: AppState): AppState {
 /**
  * Lock the application.
  */
-private fun lock(state: AppState): AppState {
-    return state.copy(screen = Screen.Locked)
+private fun lock(state: AppState, action: AppAction.Lock): AppState {
+    return state.copy(screen = Screen.Locked(action.bundle))
 }
 
 /**

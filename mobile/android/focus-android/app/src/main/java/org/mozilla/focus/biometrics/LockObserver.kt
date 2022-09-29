@@ -47,14 +47,14 @@ class LockObserver(
                 totalSites = DefaultTopSitesStorage.TOP_SITES_MAX_LIMIT,
                 frecencyConfig = null,
             )
-            if (tabCount == 0L && topSitesList.isNullOrEmpty()) {
+            if (tabCount == 0L && topSitesList.isEmpty()) {
                 return@launch
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
                 context.settings.shouldUseBiometrics() &&
                 context.canUseBiometricFeature()
             ) {
-                appStore.dispatch(AppAction.Lock)
+                appStore.dispatch(AppAction.Lock())
             }
         }
     }

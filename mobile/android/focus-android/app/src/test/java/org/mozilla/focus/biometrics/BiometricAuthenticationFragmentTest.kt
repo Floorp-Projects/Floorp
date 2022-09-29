@@ -16,14 +16,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mozilla.focus.R
-import org.mozilla.focus.ext.components
-import org.mozilla.focus.state.Screen
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -69,26 +66,6 @@ class BiometricAuthenticationFragmentTest {
         fragment.showBiometricPrompt(biometricPromptAuth)
 
         verify(biometricPromptAuth, never()).requestAuthentication(titleBiometric, subTitleBiometric)
-    }
-
-    @Test
-    fun `GIVEN biometric authentication fragment WHEN on Auth Success is  called THEN AppAction Unlock should be dispatched`() {
-        doAnswer {}.`when`(fragment).dismiss()
-
-        fragment.onAuthSuccess()
-
-        verify(fragment).onAuthenticated()
-        assertEquals(testContext.components.appStore.state.screen, Screen.Home)
-        verify(fragment).dismiss()
-    }
-
-    @Test
-    fun `GIVEN biometric authentication fragment WHEN on Auth Success is  called THEN fragment should be dismissed`() {
-        doReturn(fragmentTransaction).`when`(fragmentTransaction).remove(fragment)
-
-        fragment.onAuthSuccess()
-
-        verify(fragmentTransaction).remove(fragment)
     }
 
     @Test

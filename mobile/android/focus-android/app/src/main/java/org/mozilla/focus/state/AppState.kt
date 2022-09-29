@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.state
 
+import android.os.Bundle
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.State
 import org.mozilla.focus.settings.permissions.permissionoptions.SitePermission
@@ -79,8 +80,11 @@ sealed class Screen {
 
     /**
      * The application is locked (and requires unlocking).
+     *
+     * @param bundle it is used for app navigation. If the user can unlock with success he should
+     * be redirected to a certain screen.It comes from the external intent.
      */
-    object Locked : Screen()
+    data class Locked(val bundle: Bundle? = null) : Screen()
     data class SitePermissionOptionsScreen(val sitePermission: SitePermission) : Screen()
     data class Settings(
         val page: Page = Page.Start,

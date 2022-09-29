@@ -19,6 +19,7 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.fragment.BaseFragment
+import org.mozilla.focus.searchwidget.ExternalIntentNavigation
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.ui.theme.FocusTheme
 
@@ -88,6 +89,11 @@ class BiometricAuthenticationFragment : BaseFragment(), AuthenticationDelegate {
 
     @VisibleForTesting
     internal fun onAuthenticated() {
+        ExternalIntentNavigation.handleAppNavigation(
+            bundle = arguments,
+            context = requireContext(),
+        )
+
         val tabId = requireComponents.store.state.selectedTabId
         requireComponents.appStore.dispatch(AppAction.Unlock(tabId))
         dismiss()
@@ -100,5 +106,10 @@ class BiometricAuthenticationFragment : BaseFragment(), AuthenticationDelegate {
 
     companion object {
         const val FRAGMENT_TAG = "biometric-authentication-fragment"
+        fun createWithDestinationData(bundle: Bundle? = null): BiometricAuthenticationFragment {
+            val fragment = BiometricAuthenticationFragment()
+            fragment.arguments = bundle
+            return fragment
+        }
     }
 }

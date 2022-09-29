@@ -47,7 +47,7 @@ class Navigator(
                 screen.tabId,
             )
             is Screen.FirstRun -> navigation.firstRun()
-            is Screen.Locked -> navigation.lock()
+            is Screen.Locked -> navigation.lock(screen.bundle)
             is Screen.Settings -> navigation.settings(screen.page)
             is Screen.SitePermissionOptionsScreen -> navigation.sitePermissionOptionsFragment(screen.sitePermission)
             is Screen.OnboardingSecondScreen -> navigation.showOnBoardingSecondScreen()

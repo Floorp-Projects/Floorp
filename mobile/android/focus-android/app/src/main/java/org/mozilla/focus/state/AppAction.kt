@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.state
 
+import android.os.Bundle
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.Action
 import org.mozilla.focus.settings.permissions.permissionoptions.SitePermission
@@ -51,7 +52,7 @@ sealed class AppAction : Action {
     /**
      * The app should get locked.
      */
-    object Lock : AppAction()
+    data class Lock(val bundle: Bundle? = null) : AppAction()
 
     /**
      * The app should get unlocked.
