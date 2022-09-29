@@ -513,16 +513,15 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
      * We will eventually get rid of this code once all targets are properly supported by
      * the Watcher Actor and we have target helpers for all of them.
      */
-    const targetActor = this._getTargetActorInParentProcess();
-    if (targetActor) {
-      const targetActorResourceTypes = Resources.getResourceTypesForTargetType(
-        resourceTypes,
-        targetActor.targetType
-      );
-      await targetActor.addSessionDataEntry(
-        "resources",
-        targetActorResourceTypes
-      );
+    const frameResourceTypes = Resources.getResourceTypesForTargetType(
+      resourceTypes,
+      Targets.TYPES.FRAME
+    );
+    if (frameResourceTypes.length) {
+      const targetActor = this._getTargetActorInParentProcess();
+      if (targetActor) {
+        await targetActor.addSessionDataEntry("resources", frameResourceTypes);
+      }
     }
   },
 
@@ -584,13 +583,15 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     }
 
     // See comment in watchResources.
-    const targetActor = this._getTargetActorInParentProcess();
-    if (targetActor) {
-      const targetActorResourceTypes = Resources.getResourceTypesForTargetType(
-        resourceTypes,
-        targetActor.targetType
-      );
-      targetActor.removeSessionDataEntry("resources", targetActorResourceTypes);
+    const frameResourceTypes = Resources.getResourceTypesForTargetType(
+      resourceTypes,
+      Targets.TYPES.FRAME
+    );
+    if (frameResourceTypes.length) {
+      const targetActor = this._getTargetActorInParentProcess();
+      if (targetActor) {
+        targetActor.removeSessionDataEntry("resources", frameResourceTypes);
+      }
     }
 
     // Unregister the JS Window Actor if there is no more DevTools code observing any target/resource

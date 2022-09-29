@@ -202,7 +202,8 @@ function onReloadBrowser() {
 }
 
 async function openToolbox(commands) {
-  const form = commands.descriptorFront._form;
+  const { descriptorFront } = commands;
+  const form = descriptorFront._form;
   appendStatusMessage(
     `Create toolbox for target descriptor: ${JSON.stringify({ form }, null, 2)}`
   );
@@ -217,7 +218,7 @@ async function openToolbox(commands) {
   const toolboxOptions = { doc: document };
   appendStatusMessage(`Show toolbox with ${selectedTool} selected`);
 
-  gToolbox = await gDevTools.showToolbox(commands, {
+  gToolbox = await gDevTools.showToolbox(descriptorFront, {
     toolId: selectedTool,
     hostType: Toolbox.HostType.BROWSERTOOLBOX,
     hostOptions: toolboxOptions,
