@@ -2075,7 +2075,7 @@ void APZCTreeManager::AdjustEventPointForDynamicToolbar(
     SideBits sideBits = SideBits::eNone;
     {
       RecursiveMutexAutoLock lock(mTreeLock);
-      sideBits = SidesStuckToRootContent(mTouchBlockHitResult.mNode.Get(lock));
+      sideBits = SidesStuckToRootContent(aHit.mNode.Get(lock));
     }
     MutexAutoLock lock(mMapLock);
     aEventPoint -= RoundedToInt(apz::ComputeFixedMarginsOffset(
