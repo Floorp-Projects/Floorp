@@ -3,16 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 <popupset>
-  <menupopup id="webpanel-context" onload="">
-    <menuitem  label="Mute/Unmute this webpanel" accesskey="M" oncommand="muteSidebar(event);"/>
+  <menupopup id="webpanel-context" onpopupshowing="getSelectedPanel(event);">
+    <menuitem  id="muteMenu" data-l10n-id="sidebar2-mute-and-unmute" label="Mute/Unmute this webpanel" accesskey="M" oncommand="muteSidebar();"/>
   </menupopup>
 </popupset>
-
-
-<script>
-    function muteSidebar(aEvent) {
-        let popup = aEvent.target;
-      const triger = popup.triggerNode.id;
-      console.log(triggerNode);
-    }
-</script>

@@ -844,3 +844,6 @@ rest-mode-description = Browser is stopped. press OK or press a key to resume.
 Sidebar2 =
   .label = Browser Manager Sidebar
   .tooltiptext = Change Sidebar Visibility
+
+sidebar2-mute-and-unmute =
+  .label = Mute/Unmute this panel

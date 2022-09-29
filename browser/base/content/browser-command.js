@@ -300,6 +300,27 @@ function showSidebarNodes(sidebar_mode) { /* Managers - 0; TST - 1  webpanel - 2
     if(selectedwebpanel != null){selectedwebpanel.hidden = false;}
 }
 
+ function getSelectedPanel(event){
+   clickedWebpanel = event.explicitOriginalTarget.id;
+   webpanel = clickedWebpanel.replace("select-CustomURL", "webpanel");
+   contextWebpanel = document.getElementById(webpanel);
+
+   if(contextWebpanel == null){
+     document.getElementById("muteMenu").disabled = true;
+   }
+   else{
+     document.getElementById("muteMenu").disabled = false;
+   }
+  }
+
+ function muteSidebar(){
+    if(contextWebpanel.audioMuted == false){
+      contextWebpanel.mute();
+    }else{
+     contextWebpanel.unmute();
+   }  
+  }
+
 /*---------------------------------------------------------------- design ----------------------------------------------------------------*/
 
 function setBrowserDesign() {
