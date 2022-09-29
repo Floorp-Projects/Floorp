@@ -1035,7 +1035,7 @@ class TSFTextStore final : public ITextStoreACP,
     // Count of the supported attributes
     NUM_OF_SUPPORTED_ATTRS
   };
-  bool mRequestedAttrs[NUM_OF_SUPPORTED_ATTRS]{false};
+  bool mRequestedAttrs[NUM_OF_SUPPORTED_ATTRS] = {false};
 
   int32_t GetRequestedAttrIndex(const TS_ATTRID& aAttrID);
   TS_ATTRID GetAttrID(int32_t aIndex);
@@ -1056,7 +1056,7 @@ class TSFTextStore final : public ITextStoreACP,
   bool mWaitingQueryLayout = false;
   // During the document is locked, we shouldn't destroy the instance.
   // If this is true, the instance will be destroyed after unlocked.
-  bool mPendingDestroy;
+  bool mPendingDestroy = false;
   // If this is false, MaybeFlushPendingNotifications() will clear the
   // mContentForTSF.
   bool mDeferClearingContentForTSF = false;
