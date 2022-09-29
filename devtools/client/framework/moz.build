@@ -27,7 +27,7 @@ DIRS += [
 
 DevToolsModules(
     "browser-menus.js",
-    "descriptor-from-url.js",
+    "commands-from-url.js",
     "devtools-browser.js",
     "devtools.js",
     "enable-devtools-popup.js",

@@ -73,17 +73,13 @@ const url = new window.URL(href);
 // is running in standalone.
 if (window.location.protocol === "chrome:" && url.search.length > 1) {
   const {
-    descriptorFromURL,
-  } = require("devtools/client/framework/descriptor-from-url");
-  const {
-    createCommandsDictionary,
-  } = require("devtools/shared/commands/index");
+    commandsFromURL,
+  } = require("devtools/client/framework/commands-from-url");
 
   (async function() {
     try {
-      const descriptor = await descriptorFromURL(url);
-      const target = await descriptor.getTarget();
-      const commands = await createCommandsDictionary(descriptor);
+      const commands = await commandsFromURL(url);
+      const target = await commands.descriptorFront.getTarget();
       // Create a fake toolbox object
       const toolbox = {
         target,
