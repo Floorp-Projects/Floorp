@@ -12,7 +12,6 @@
    * we're using the `font` shorthand. */
   font: message-box;
   font-size: var(--theme-body-font-size);
-  -moz-box-layout: flex;
 
   --tab-line-hover-color: rgba(0,0,0,.2);
   --tab-line-selected-color: var(--blue-50);

@@ -1767,16 +1767,12 @@ Toolbox.prototype = {
 
     if (openedConsolePanel) {
       deck.collapsed = true;
-      deck.removeAttribute("expanded");
       splitter.hidden = true;
       webconsolePanel.collapsed = false;
-      webconsolePanel.setAttribute("expanded", "");
     } else {
       deck.collapsed = false;
-      deck.toggleAttribute("expanded", !this.splitConsole);
       splitter.hidden = !this.splitConsole;
       webconsolePanel.collapsed = !this.splitConsole;
-      webconsolePanel.removeAttribute("expanded");
     }
   },
 

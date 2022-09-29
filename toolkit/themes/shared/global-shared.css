@@ -107,7 +107,6 @@ xul|iframe {
   border: none;
   min-width: 10px;
   min-height: 10px;
-  contain: size;
 }
 
 /* Label/description formatting */

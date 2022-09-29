@@ -68,6 +68,12 @@ add_task(async function() {
     "The actual height of the console is bound with a min height"
   );
 
+  toolbox.webconsolePanel.style.height = "10000px";
+  ok(
+    toolbox.webconsolePanel.clientHeight < 10000,
+    "The actual height of the console is bound with a max height"
+  );
+
   await toggleSplitConsoleWithEscape(toolbox);
   ok(!toolbox.splitConsole, "Split console is now hidden.");
   is(
@@ -81,7 +87,7 @@ add_task(async function() {
 
   is(
     getHeightPrefValue(),
-    1,
+    10000,
     "Height is set based on panel height after closing"
   );
 
