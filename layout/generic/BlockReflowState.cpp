@@ -47,7 +47,7 @@ BlockReflowState::BlockReflowState(const ReflowInput& aReflowInput,
       mPrevBEndMargin(),
       mMinLineHeight(aReflowInput.GetLineHeight()),
       mLineNumber(0),
-      mFloatBreakType(StyleClear::None),
+      mTrailingClearFromPIF(StyleClear::None),
       mConsumedBSize(aConsumedBSize) {
   NS_ASSERTION(mConsumedBSize != NS_UNCONSTRAINEDSIZE,
                "The consumed block-size should be constrained!");
