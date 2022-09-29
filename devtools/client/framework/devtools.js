@@ -72,9 +72,9 @@ const DEVTOOLS_ALWAYS_ON_TOP = "devtools.toolbox.alwaysOnTop";
 function DevTools() {
   this._tools = new Map(); // Map<toolId, tool>
   this._themes = new Map(); // Map<themeId, theme>
-  this._toolboxes = new Map(); // Map<descriptor, toolbox>
+  this._toolboxes = new Map(); // Map<commands, toolbox>
   // List of toolboxes that are still in process of creation
-  this._creatingToolboxes = new Map(); // Map<descriptor, toolbox Promise>
+  this._creatingToolboxes = new Map(); // Map<commands, toolbox Promise>
 
   EventEmitter.decorate(this);
   this._telemetry = new Telemetry();
@@ -475,8 +475,8 @@ DevTools.prototype = {
   _firstShowToolbox: true,
 
   /**
-   * Show a Toolbox for a descriptor (either by creating a new one, or if a
-   * toolbox already exists for the descriptor, by bringing to the front the
+   * Show a Toolbox for a given "commands" (either by creating a new one, or if a
+   * toolbox already exists for the commands, by bringing to the front the
    * existing one).
    *
    * If a Toolbox already exists, we will still update it based on some of the
@@ -486,8 +486,8 @@ DevTools.prototype = {
    *   - if |hostType| is provided then the toolbox will be switched to the
    *     specified HostType.
    *
-   * @param {TargetDescriptor} descriptor
-   *         The target descriptor the toolbox will debug
+   * @param {Commands Object} commands
+   *         The commands object which designates which context the toolbox will debug
    * @param {Object}
    *        - {String} toolId
    *          The id of the tool to show
@@ -507,7 +507,7 @@ DevTools.prototype = {
    *        The toolbox that was opened
    */
   async showToolbox(
-    descriptor,
+    commands,
     {
       toolId,
       hostType,
@@ -517,7 +517,7 @@ DevTools.prototype = {
       hostOptions,
     } = {}
   ) {
-    let toolbox = this._toolboxes.get(descriptor);
+    let toolbox = this._toolboxes.get(commands);
 
     if (toolbox) {
       if (hostType != null && toolbox.hostType != hostType) {
@@ -536,20 +536,20 @@ DevTools.prototype = {
     } else {
       // Toolbox creation is async, we have to be careful about races.
       // Check if we are already waiting for a Toolbox for the provided
-      // descriptor before creating a new one.
-      const promise = this._creatingToolboxes.get(descriptor);
+      // commands before creating a new one.
+      const promise = this._creatingToolboxes.get(commands);
       if (promise) {
         return promise;
       }
       const toolboxPromise = this._createToolbox(
-        descriptor,
+        commands,
         toolId,
         hostType,
         hostOptions
       );
-      this._creatingToolboxes.set(descriptor, toolboxPromise);
+      this._creatingToolboxes.set(commands, toolboxPromise);
       toolbox = await toolboxPromise;
-      this._creatingToolboxes.delete(descriptor);
+      this._creatingToolboxes.delete(commands);
 
       if (startTime) {
         this.logToolboxOpenTime(toolbox, startTime);
@@ -607,10 +607,7 @@ DevTools.prototype = {
       const openerCommands = await LocalTabCommandsFactory.getCommandsForTab(
         openerTab
       );
-      if (
-        openerCommands &&
-        this.getToolboxForDescriptor(openerCommands.descriptorFront)
-      ) {
+      if (this.getToolboxForCommands(openerCommands)) {
         console.log(
           "Can't open a toolbox for this document as this is debugged from its opener tab"
         );
@@ -618,7 +615,7 @@ DevTools.prototype = {
       }
     }
     const commands = await LocalTabCommandsFactory.createCommandsForTab(tab);
-    return this.showToolbox(commands.descriptorFront, {
+    return this.showToolbox(commands, {
       toolId,
       hostType,
       startTime,
@@ -640,7 +637,7 @@ DevTools.prototype = {
   async showToolboxForWebExtension(extensionId) {
     // Ensure spawning only one commands instance per extension at a time by caching its commands.
     // showToolbox will later reopen the previously opened toolbox if called with the same
-    // descriptor.
+    // commands.
     let commandsPromise = this._commandsPromiseByWebExtId.get(extensionId);
     if (!commandsPromise) {
       commandsPromise = CommandsFactory.forAddon(extensionId);
@@ -651,7 +648,7 @@ DevTools.prototype = {
       this._commandsPromiseByWebExtId.delete(extensionId);
     });
 
-    return this.showToolbox(commands.descriptorFront, {
+    return this.showToolbox(commands, {
       hostType: Toolbox.HostType.WINDOW,
       hostOptions: {
         // The toolbox is always displayed on top so that we can keep
@@ -716,15 +713,15 @@ DevTools.prototype = {
   },
 
   /**
-   * Unconditionally create a new Toolbox instance for the provided descriptor.
+   * Unconditionally create a new Toolbox instance for the provided commands.
    * See `showToolbox` for the arguments' jsdoc.
    */
-  async _createToolbox(descriptor, toolId, hostType, hostOptions) {
-    const manager = new ToolboxHostManager(descriptor, hostType, hostOptions);
+  async _createToolbox(commands, toolId, hostType, hostOptions) {
+    const manager = new ToolboxHostManager(commands, hostType, hostOptions);
 
     const toolbox = await manager.create(toolId);
 
-    this._toolboxes.set(descriptor, toolbox);
+    this._toolboxes.set(commands, toolbox);
 
     this.emit("toolbox-created", toolbox);
 
@@ -733,7 +730,7 @@ DevTools.prototype = {
     });
 
     toolbox.once("destroyed", () => {
-      this._toolboxes.delete(descriptor);
+      this._toolboxes.delete(commands);
       this.emit("toolbox-destroyed", toolbox);
     });
 
@@ -744,16 +741,29 @@ DevTools.prototype = {
   },
 
   /**
-   * Return the toolbox for a given descriptor.
+   * Return the toolbox for a given commands object.
    *
-   * @param  {Descriptor} descriptor
-   *         Target descriptor that owns this toolbox
+   * @param  {Commands Object} commands
+   *         Debugging context commands that owns this toolbox
    *
    * @return {Toolbox} toolbox
-   *         The toolbox that is debugging the given target descriptor
+   *         The toolbox that is debugging the given context designated by the commands
    */
-  getToolboxForDescriptor(descriptor) {
-    return this._toolboxes.get(descriptor);
+  getToolboxForCommands(commands) {
+    return this._toolboxes.get(commands);
+  },
+
+  /**
+   * TabDescriptorFront requires a synchronous method and don't have a reference to its
+   * related commands object. So expose something handcrafted just for this.
+   */
+  getToolboxForDescriptorFront(descriptorFront) {
+    for (const [commands, toolbox] of this._toolboxes) {
+      if (commands.descriptorFront == descriptorFront) {
+        return toolbox;
+      }
+    }
+    return null;
   },
 
   /**
@@ -762,7 +772,7 @@ DevTools.prototype = {
    */
   async getToolboxForTab(tab) {
     const commands = await LocalTabCommandsFactory.getCommandsForTab(tab);
-    return commands && this.getToolboxForDescriptor(commands.descriptorFront);
+    return this.getToolboxForCommands(commands);
   },
 
   /**
@@ -774,10 +784,10 @@ DevTools.prototype = {
    */
   async closeToolboxForTab(tab) {
     const commands = await LocalTabCommandsFactory.getCommandsForTab(tab);
-    const descriptor = commands.descriptorFront;
-    let toolbox = await this._creatingToolboxes.get(descriptor);
+
+    let toolbox = await this._creatingToolboxes.get(commands);
     if (!toolbox) {
-      toolbox = this._toolboxes.get(descriptor);
+      toolbox = this._toolboxes.get(commands);
     }
     if (!toolbox) {
       return;

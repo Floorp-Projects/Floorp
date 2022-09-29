@@ -169,7 +169,7 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
   const target = workerDescriptorFront.parentFront;
   const client = commands.client;
 
-  const toolbox = await gDevTools.showToolbox(workerDescriptorFront, {
+  const toolbox = await gDevTools.showToolbox(commands, {
     toolId: "jsdebugger",
     hostType: Toolbox.HostType.WINDOW,
   });

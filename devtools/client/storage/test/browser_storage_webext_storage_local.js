@@ -18,10 +18,9 @@ const { Toolbox } = require("devtools/client/framework/toolbox");
  */
 async function setupExtensionDebuggingToolbox(id) {
   const commands = await CommandsFactory.forAddon(id);
-  const descriptor = commands.descriptorFront;
 
   const { toolbox, storage } = await openStoragePanel({
-    descriptor,
+    commands,
     hostType: Toolbox.HostType.WINDOW,
   });
 
