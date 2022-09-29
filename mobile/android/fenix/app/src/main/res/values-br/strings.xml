@@ -38,7 +38,7 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Sinedoù nevez</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Sinedoù nevez</string>
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Diskouez an holl sinedoù enrollet</string>
@@ -244,25 +244,25 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">Petra zo nevez e %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Petra zo nevez e %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Aesoc’h eo adstagañ lec’h m’ho peus paouezet.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Aesoc’h eo adstagañ lec’h m’ho peus paouezet.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Pajenn degemer %1$s personelaet</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Pajenn degemer %1$s personelaet</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Mont d’hoc’h ivinelloù digor, sinedoù ha roll istor merdeiñ. </string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Mont d’hoc’h ivinelloù digor, sinedoù ha roll istor merdeiñ. </string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Ivinelloù naet ha renket mat</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Ivinelloù naet ha renket mat</string>
 
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Tennañ an ivinelloù diezhomm gant an aozadur gwellaet hag an ivinelloù a serr o-unan.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Tennañ an ivinelloù diezhomm gant an aozadur gwellaet hag an ivinelloù a serr o-unan.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Klaskoù nevesañ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Klaskoù nevesañ</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Adweladennit ho klaskoù nevesañ diwar ho pajenn degemer hag ivinelloù.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Adweladennit ho klaskoù nevesañ diwar ho pajenn degemer hag ivinelloù.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Gant ho pajenn Firefox personelaet eo aesoc’h da adstagañ lec’h m’ho peus paouezet. Klaskit e-touez hoc’h ivinelloù nevez, sinedoù ha disoc’hoù enklask.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Gant ho pajenn Firefox personelaet eo aesoc’h da adstagañ lec’h m’ho peus paouezet. Klaskit e-touez hoc’h ivinelloù nevez, sinedoù ha disoc’hoù enklask.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -350,8 +350,6 @@
     <string name="preferences_gestures">Jestroù</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personelaat</string>
-    <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Goubredit sinedoù, ar roll istor, ha muiocʼh cʼhoazh gant ho kont Firefox</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Kennaskit evit goubredañ an ivinelloù, sinedoù, gerioù-tremen ha muioc’h c’hoazh.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -525,8 +523,6 @@
     <string name="preference_experiments_summary_2">Aotren Mozilla da staliañ ha da luskañ studioù</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Gweredekaat Sync</string>
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">Goubredañ hag enrollañ ho roadennoù</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -740,9 +736,6 @@
     <string name="delete_from_history">Dilemel eus ar roll istor</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Mod prevez)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Ivinelloù all</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1146,8 +1139,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Kuitaat</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Dilemel a raio ho holl roadennoù merdeiñ.</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
     <string name="delete_history_prompt_button_today_and_yesterday">Hiziv ha dec’h</string>
     <!-- Radio button in the delete browsing data dialog to delete all history. -->
@@ -1176,19 +1167,19 @@
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Donemat war %s!</string>
+    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Donemat war %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Goubredañ Firefox etre an trevnadoù</string>
+    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Goubredañ Firefox etre an trevnadoù</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string name="onboarding_manual_sign_in_description_2">Degasit sinedoù, ur roll-istor ha gerioù-tremen evit %1$s war an trevnad-mañ.</string>
+    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Degasit sinedoù, ur roll-istor ha gerioù-tremen evit %1$s war an trevnad-mañ.</string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">En em rollañ</string>
+    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">En em rollañ</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Enaouet eo Sync</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">Prevezded gweredekaet bepred</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Prevezded gweredekaet bepred</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">%1$s a harz en un doare emgefreek ouzh an embregerezhioù d’ho heuliañ dre guzh war ar web.</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s a harz en un doare emgefreek ouzh an embregerezhioù d’ho heuliañ dre guzh war ar web.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Skoueriek (dre ziouer)</string>
     <!-- text for standard blocking option button description -->
@@ -1200,12 +1191,12 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Dibabit e pelec’h lakaat ho parrenn ostilhoù</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">Lakait ar varrenn ostilhoù en ul lec’h aes da dizhout. Dalc’hit hi en traoñ pe diblasit anezhi e-krec’h.</string>
+    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Lakait ar varrenn ostilhoù en ul lec’h aes da dizhout. Dalc’hit hi en traoñ pe diblasit anezhi e-krec’h.</string>
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">Ho puhez prevez</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Ho puhez prevez</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">Savet hon eus %s evit ma c’hallfec’h reoliñ ar pezh a rannit enlinenn hag ar pezh a rannit ganeomp.</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Savet hon eus %s evit ma c’hallfec’h reoliñ ar pezh a rannit enlinenn hag ar pezh a rannit ganeomp.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lennit hon evezhiadenn a-get buhez prevez</string>
 
@@ -1247,6 +1238,8 @@
     <string name="sign_in_with_email">Ober gant ur chomlec’h postel kentoc’h</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[Kont ebet? <u>Krouit unan</u> evit goubredañ Firefox etre an trevnadoù.]]></string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s a baouezo da c’houbredañ gant ho kont, met ne vo ket dilamet ho roadennoù merdeiñ war an trevnad-mañ.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Digennaskañ</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->

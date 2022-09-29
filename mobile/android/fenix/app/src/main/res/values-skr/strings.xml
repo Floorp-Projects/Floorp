@@ -498,6 +498,13 @@
     <!-- Description text for the limited edition wallpapers. -->
     <string name="wallpaper_limited_edition_description">آزاد آوازاں دا نواں مجموعہ۔</string>
 
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">رنگ دا تُرکا ازماؤ</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">ہک وال پیپر چُݨو جہڑا تہاݙے نال الاوے۔</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">ٻئے وال پیپر پھلورو</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">ایڈ ــ آن سہارا تھیا کائنی</string>
@@ -1246,10 +1253,18 @@
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">%s وچ ست بسم اللہ!</string>
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">بہترین انٹرنیٹ وچ ست بسم اللہ</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">لوکاں کیتے بݨا ہویا براؤزر، نہ کہ منافع کیتے۔</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">ڈیوائساں دے درمیان فائرفوکس ہم وقت کرو</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">جتھوں تساں چھوڑیا ہائی، اُتھوں شروع کرو</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">ایں ڈیوائس تے کتاب نشانیاں، تاریخ تے پاس ورڈ %1$s تے گھن آؤ۔ </string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">ہموار سکرین سوئچنگ کیتے سارے ڈیوائساں تے ٹیباں تے پاس ورڈاں کوں ہم وقت کرو۔</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">سائن اپ</string>
 
@@ -1259,8 +1274,12 @@
     <string name="onboarding_firefox_account_sync_is_on">ہم وقت کرݨ چالو ہے</string>
     <!-- text for the tracking protection onboarding card header -->
     <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">ہمیشہ رازداری تے</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">ڈیفالٹ نال رازدای حفاظت</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s خودکار طور تے کمپنیاں کوں ویب تے  تہاکوں خفیہ فالو کرݨ کنوں روکیندے۔</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description"> ٹریکراں کوں تہاکوں ساریاں سائٹاں وچ پیچھا کرݨ آلیاں کوکیاں ورتݨ کنوں روکݨ کیتے مکمل کوکی حفاظت دی خصوصیت</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">معیاری (پہلے کنوں مقرر)</string>
     <!-- text for standard blocking option button description -->
@@ -1273,15 +1292,23 @@
     <string name="onboarding_toolbar_placement_header_1">آپݨے ٹول بار دی جاء چُݨو</string>
     <!-- text for the toolbar position card description -->
     <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">ٹول بار کوں سوکھی پہنچ آلی جاء تے رکھو۔ ایں کوں تل وچ رکھو یا چوٹی تے گھن ون٘ڄو۔ </string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">ایں کوں تل وچ رکھو، یا اُتے گھن ون٘ڄو۔</string>
     <!-- text for the privacy notice onboarding card header -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">تہاݙی رازداری</string>
 
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">تساں آپݨے ڈیٹا کوں کنٹرول کریندے ہو</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">تساں جہڑی شئے تساں ساکوں شیئر کرو یا آن لائن شیئر کریندے ہو اوں کوں تہاݙے ڳاٻو وچ ݙیوݨ سانگے اساں %s کوں بݨایا ہے۔</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">تساں جہڑی شئے تساں ساکوں شیئر کرو یا آن لائن شیئر کریندے ہو اوں کوں تہاݙے قاٻو وچ ݙیوݨ سانگے اساں %s کوں بݨایا ہے۔</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">تساں جہڑی شئے تساں ساکوں شیئر کرو یا آن لائن شیئر کریندے ہو فائرفوکس اوں کوں تہاݙے قاٻو وچ ݙیندی ہے۔</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">ساݙا رازداری نوٹس پڑھو</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">بھلا تساں ہک حیران کن انٹرنیٹ کھولݨ کیتے تیار ہو؟</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">براؤزنگ شروع کرو</string>
 

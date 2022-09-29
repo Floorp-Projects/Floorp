@@ -389,8 +389,6 @@
     <string name="preferences_customize">Уладкаванне</string>
 
     <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Сінхранізуйце закладкі, гісторыю і шмат іншага з уліковым запісам Firefox</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Увайсці, каб сінхранізаваць карткі, закладкі, паролі і іншае.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Уліковы запіс Firefox</string>
@@ -586,9 +584,6 @@
     <string name="preference_experiments_summary_2">Дазволіць Mozilla ўсталёўваць і запускаць даследаванні</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Уключыць сінхранізацыю</string>
-
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">Сінхранізацыя і захаванне вашых дадзеных</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -806,9 +801,6 @@
     <string name="delete_from_history">Выдаліць з гісторыі</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Прыватны рэжым)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Іншыя карткі</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1224,8 +1216,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Выйсці</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Гэта выдаліць усе дадзеныя вашага аглядання.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Дыяпазон часу для выдалення</string>
     <!-- Body text of a delete browsing data dialog. -->
@@ -1287,6 +1277,8 @@
     <string name="onboarding_tracking_protection_header">Прадвызначаная ахова прыватнасці</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s аўтаматычна спыняе таемнае сачэнне кампаній за вамі ў Інтэрнэце.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Поўная ахова кукаў перашкаджае трэкерам выкарыстоўваць файлы кукі для сачэння за вамі на розных сайтах.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандартная (прадвызначана)</string>
     <!-- text for standard blocking option button description -->
@@ -1299,6 +1291,8 @@
     <string name="onboarding_toolbar_placement_header_1">Выберыце размяшчэнне панэлі інструментаў</string>
     <!-- text for the toolbar position card description -->
     <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Майце панэль інструментаў пад рукой. Пакіньце яе ўнізе або перамясціце ўверх.</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Пакіньце яе ўнізе або перамясціце наверх.</string>
     <!-- text for the privacy notice onboarding card header -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Ваша прыватнасць</string>
     <!-- Text for the privacy notice onboarding card header -->
