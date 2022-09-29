@@ -813,7 +813,7 @@ struct ParamTraits<mozilla::widget::InputContext> {
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mIMEState);
     WriteParam(aWriter, aParam.mHTMLInputType);
-    WriteParam(aWriter, aParam.mHTMLInputMode);
+    WriteParam(aWriter, aParam.mHTMLInputInputmode);
     WriteParam(aWriter, aParam.mActionHint);
     WriteParam(aWriter, aParam.mAutocapitalize);
     WriteParam(aWriter, aParam.mOrigin);
@@ -826,7 +826,7 @@ struct ParamTraits<mozilla::widget::InputContext> {
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &aResult->mIMEState) &&
            ReadParam(aReader, &aResult->mHTMLInputType) &&
-           ReadParam(aReader, &aResult->mHTMLInputMode) &&
+           ReadParam(aReader, &aResult->mHTMLInputInputmode) &&
            ReadParam(aReader, &aResult->mActionHint) &&
            ReadParam(aReader, &aResult->mAutocapitalize) &&
            ReadParam(aReader, &aResult->mOrigin) &&

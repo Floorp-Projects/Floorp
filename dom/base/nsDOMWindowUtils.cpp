@@ -2226,7 +2226,7 @@ nsDOMWindowUtils::GetFocusedInputMode(nsAString& aInputMode) {
   if (!widget) {
     return NS_ERROR_FAILURE;
   }
-  aInputMode = widget->GetInputContext().mHTMLInputMode;
+  aInputMode = widget->GetInputContext().mHTMLInputInputmode;
   return NS_OK;
 }
 
