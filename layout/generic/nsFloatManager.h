@@ -309,19 +309,19 @@ class nsFloatManager {
   nscoord LowestFloatBStart() const;
 
   /**
-   * Return the coordinate of the lowest float matching aBreakType in
+   * Return the coordinate of the lowest float matching aClearType in
    * this float manager. Returns aBCoord if there are no matching
    * floats.
    *
    * Both aBCoord and the result are relative to the current translation.
    */
-  nscoord ClearFloats(nscoord aBCoord, mozilla::StyleClear aBreakType) const;
+  nscoord ClearFloats(nscoord aBCoord, mozilla::StyleClear aClearType) const;
 
   /**
    * Checks if clear would pass into the floats' BFC's next-in-flow,
    * i.e. whether floats affecting this clear have continuations.
    */
-  bool ClearContinues(mozilla::StyleClear aBreakType) const;
+  bool ClearContinues(mozilla::StyleClear aClearType) const;
 
   void AssertStateMatches(SavedState* aState) const {
     NS_ASSERTION(

@@ -156,7 +156,7 @@ class BlockReflowState {
   void PlaceBelowCurrentLineFloats(nsLineBox* aLine);
 
   // Returns the first coordinate >= aBCoord that clears the
-  // floats indicated by aBreakType and has enough inline size between floats
+  // floats indicated by aClearType and has enough inline size between floats
   // (or no floats remaining) to accomodate aFloatAvoidingBlock.
   enum class ClearFloatsResult : uint8_t {
     BCoordNoChange,
@@ -164,7 +164,7 @@ class BlockReflowState {
     FloatsPushedOrSplit,
   };
   std::tuple<nscoord, ClearFloatsResult> ClearFloats(
-      nscoord aBCoord, StyleClear aBreakType,
+      nscoord aBCoord, StyleClear aClearType,
       nsIFrame* aFloatAvoidingBlock = nullptr);
 
   nsFloatManager* FloatManager() const {

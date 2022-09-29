@@ -2208,7 +2208,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mDefaultAppearance(StyleAppearance::None),
       mPosition(StylePositionProperty::Static),
       mFloat(StyleFloat::None),
-      mBreakType(StyleClear::None),
+      mClear(StyleClear::None),
       mBreakInside(StyleBreakWithin::Auto),
       mBreakBefore(StyleBreakBetween::Auto),
       mBreakAfter(StyleBreakBetween::Auto),
@@ -2264,7 +2264,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mDefaultAppearance(aSource.mDefaultAppearance),
       mPosition(aSource.mPosition),
       mFloat(aSource.mFloat),
-      mBreakType(aSource.mBreakType),
+      mClear(aSource.mClear),
       mBreakInside(aSource.mBreakInside),
       mBreakBefore(aSource.mBreakBefore),
       mBreakAfter(aSource.mBreakAfter),
@@ -2539,8 +2539,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   //
   // FIXME(emilio): We definitely change the frame tree in nsCSSFrameConstructor
   // based on break-before / break-after... Shouldn't that reframe?
-  if (mBreakType != aNewData.mBreakType ||
-      mBreakInside != aNewData.mBreakInside ||
+  if (mClear != aNewData.mClear || mBreakInside != aNewData.mBreakInside ||
       mBreakBefore != aNewData.mBreakBefore ||
       mBreakAfter != aNewData.mBreakAfter ||
       mAppearance != aNewData.mAppearance ||
