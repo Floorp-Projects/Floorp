@@ -571,11 +571,8 @@ creditcard:
       User interactions for credit card autofill forms
       Expected values are store in extra_keys and are varies depends on the methods
         'detected': Recorded when a form is recognized as a credit card form.
-                    The possible value of cc_* in extra_keys are "true", "false", or an integer between 0-100
-                    When the value is "true", the field is identified via autocomplete attribute
-                    When the value is "false", the field is not detected in the form
-                    When the value is an integer greater than 0, the value indicates the confidence value from fathom (normalized to 0-100)
-                    When the value is an 0, then the field is identified by regexp-based heuristic
+                    "true" or an integer between 0-100 when the field is identified in the form, "false" otherwise
+                    When the value is an integer number, the value indicates the confidence value from fathom (normalized to 0-100)
         'popup_shown': Recorded when autofill popup is shown. Using field_name to record the field
                        that triggers this event
         'filled': Recorded when a form is autofiled. Possible values are
