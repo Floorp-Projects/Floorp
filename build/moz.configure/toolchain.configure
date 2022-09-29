@@ -1176,7 +1176,10 @@ def compiler(
         wrapper = list(compiler_wrapper or ())
         flags = []
         if sysroot.path:
-            flags.extend(("--sysroot", sysroot.path))
+            if host_or_target.kernel == "Darwin":
+                flags.extend(("-isysroot", sysroot.path))
+            else:
+                flags.extend(("--sysroot", sysroot.path))
         if host_or_target.os == "OSX" and macos_target:
             flags.append("-mmacosx-version-min=%s" % macos_target)
         if provided_compiler:
