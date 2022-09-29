@@ -266,9 +266,7 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
     RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
     FrameMetadata metadata(*frame);
     int complete_units = buffer_->GetTotalNumberOfContinuousTemporalUnits();
-    size_t size = buffer_->CurrentSize();
-    buffer_->InsertFrame(std::move(frame));
-    if (size != buffer_->CurrentSize()) {
+    if (buffer_->InsertFrame(std::move(frame))) {
       RTC_DCHECK(metadata.receive_time) << "Frame receive time must be set!";
       if (!metadata.delayed_by_retransmission && metadata.receive_time)
         timing_->IncomingTimestamp(metadata.rtp_timestamp,

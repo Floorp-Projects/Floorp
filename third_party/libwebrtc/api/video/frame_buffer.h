@@ -18,7 +18,6 @@
 #include "absl/container/inlined_vector.h"
 #include "absl/types/optional.h"
 #include "api/field_trials_view.h"
-#include "api/units/timestamp.h"
 #include "api/video/encoded_frame.h"
 #include "modules/video_coding/utility/decoded_frames_history.h"
 
@@ -36,7 +35,7 @@ class FrameBuffer {
     uint32_t last_rtp_timestamp;
   };
 
-  // The `max_size` determines the maxmimum number of frames the buffer will
+  // The `max_size` determines the maximum number of frames the buffer will
   // store, and max_decode_history determines how far back (by frame ID) the
   // buffer will store if a frame was decoded or not.
   FrameBuffer(int max_size,
@@ -48,8 +47,10 @@ class FrameBuffer {
   ~FrameBuffer() = default;
 
   // Inserted frames may only reference backwards, and must have no duplicate
-  // references.
-  void InsertFrame(std::unique_ptr<EncodedFrame> frame);
+  // references. Frame insertion will fail if `frame` is a duplicate, has
+  // already been decoded, invalid, or if the buffer is full and the frame is
+  // not a keyframe. Returns true if the frame was successfully inserted.
+  bool InsertFrame(std::unique_ptr<EncodedFrame> frame);
 
   // Mark all frames belonging to the next decodable temporal unit as decoded
   // and returns them.

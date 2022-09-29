@@ -67,11 +67,11 @@ FrameBuffer::FrameBuffer(int max_size,
       max_size_(max_size),
       decoded_frame_history_(max_decode_history) {}
 
-void FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
+bool FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
   if (!ValidReferences(*frame)) {
     RTC_DLOG(LS_WARNING) << "Frame " << frame->Id()
                          << " has invalid references, dropping frame.";
-    return;
+    return false;
   }
 
   if (frame->Id() <= decoded_frame_history_.GetLastDecodedFrameId()) {
@@ -84,7 +84,7 @@ void FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
       Clear();
     } else {
       // Already decoded past this frame.
-      return;
+      return false;
     }
   }
 
@@ -95,7 +95,7 @@ void FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
       Clear();
     } else {
       // No space for this frame.
-      return;
+      return false;
     }
   }
 
@@ -103,7 +103,7 @@ void FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
   auto insert_res = frames_.emplace(frame_id, FrameInfo{std::move(frame)});
   if (!insert_res.second) {
     // Frame has already been inserted.
-    return;
+    return false;
   }
 
   if (frames_.size() == max_size_) {
@@ -113,6 +113,7 @@ void FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
 
   PropagateContinuity(insert_res.first);
   FindNextAndLastDecodableTemporalUnit();
+  return true;
 }
 
 absl::InlinedVector<std::unique_ptr<EncodedFrame>, 4>
