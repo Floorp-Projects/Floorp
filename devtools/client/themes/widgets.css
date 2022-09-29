@@ -389,7 +389,6 @@
   width: 100%;
   height: 100%;
   overflow: auto;
-  contain: size;
 }
 
 .table-widget-body[empty="empty"] {

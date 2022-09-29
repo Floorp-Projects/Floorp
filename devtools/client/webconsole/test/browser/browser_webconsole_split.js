@@ -307,7 +307,7 @@ add_task(async function() {
           currentUIState.webconsoleHeight +
           currentUIState.splitterHeight
       ),
-      Math.round(currentUIState.containerHeight),
+      currentUIState.containerHeight,
       "Everything adds up to container height"
     );
     ok(
