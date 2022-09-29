@@ -648,6 +648,79 @@ class NodeWebSocketServer extends BaseNodeServer {
   }
 }
 
+// websocket http2 server
+// This code is inspired by
+// https://github.com/szmarczak/http2-wrapper/blob/master/examples/ws/server.js
+class NodeWebSocketHttp2ServerCode extends BaseNodeHTTPServerCode {
+  static async startServer(port) {
+    const fs = require("fs");
+    const options = {
+      key: fs.readFileSync(__dirname + "/http2-cert.key"),
+      cert: fs.readFileSync(__dirname + "/http2-cert.pem"),
+      settings: {
+        enableConnectProtocol: true,
+      },
+    };
+    const http2 = require("http2");
+    global.h2Server = http2.createSecureServer(options);
+
+    let node_ws_root = `${__dirname}/../node-ws`;
+    const WebSocket = require(`${node_ws_root}/lib/websocket`);
+
+    global.h2Server.on("stream", (stream, headers) => {
+      if (headers[":method"] === "CONNECT") {
+        stream.respond();
+
+        const ws = new WebSocket(null);
+        stream.setNoDelay = () => {};
+        ws.setSocket(stream, Buffer.from(""), 100 * 1024 * 1024);
+        global.ws = ws;
+
+        ws.on("message", data => {
+          if (global.wsInputHandler) {
+            global.wsInputHandler(data);
+            return;
+          }
+
+          ws.send("test");
+        });
+      } else {
+        stream.respond();
+        stream.end("ok");
+      }
+    });
+
+    await global.h2Server.listen(port);
+    let serverPort = global.h2Server.address().port;
+    await ADB.forwardPort(serverPort);
+
+    return serverPort;
+  }
+}
+
+class NodeWebSocketHttp2Server extends BaseNodeServer {
+  _protocol = "h2ws";
+  /// Starts the server
+  /// @port - default 0
+  ///    when provided, will attempt to listen on that port.
+  async start(port = 0) {
+    this.processId = await NodeServer.fork();
+
+    await this.execute(BaseNodeHTTPServerCode);
+    await this.execute(NodeWebSocketHttp2ServerCode);
+    await this.execute(ADB);
+    this._port = await this.execute(
+      `NodeWebSocketHttp2ServerCode.startServer(${port})`
+    );
+    await this.execute(`global.path_handlers = {};`);
+    await this.execute(`global.wsInputHandler = null;`);
+  }
+
+  async registerMessageHandler(handler) {
+    return this.execute(`global.wsInputHandler = ${handler.toString()}`);
+  }
+}
+
 // Helper functions
 
 async function with_node_servers(arrayOfClasses, asyncClosure) {
