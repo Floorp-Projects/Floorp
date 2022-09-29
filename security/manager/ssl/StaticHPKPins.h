@@ -115,14 +115,6 @@ static const char kGOOGLE_PIN_AddTrustPublicCARootFingerprint[] =
 static const char kGOOGLE_PIN_AddTrustQualifiedCARootFingerprint[] =
   "xzr8Lrp3DQy8HuQfJStS6Kk9ErctzOwDHY2DnL+Bink=";
 
-/* GOOGLE_PIN_COMODORSADomainValidationSecureServerCA */
-static const char kGOOGLE_PIN_COMODORSADomainValidationSecureServerCAFingerprint[] =
-  "klO23nT2ehFDXCfx3eHTDRESMz3asj1muO+4aIdjiuY=";
-
-/* GOOGLE_PIN_DSTRootCAX3 */
-static const char kGOOGLE_PIN_DSTRootCAX3Fingerprint[] =
-  "Vjs8r4z+80wjNcr1YKepWQboSIRi63WsWXhIMN+eWys=";
-
 /* GOOGLE_PIN_DigiCertECCSecureServerCA */
 static const char kGOOGLE_PIN_DigiCertECCSecureServerCAFingerprint[] =
   "PZXN3lRAy+8tBKk2Ox6F7jIlnzr2Yzmwqc3JnyfXoCw=";
@@ -318,14 +310,6 @@ static const char kStarfield_Class_2_CAFingerprint[] =
 /* Starfield Root Certificate Authority - G2 */
 static const char kStarfield_Root_Certificate_Authority___G2Fingerprint[] =
   "gI1os/q0iEpflxrOfRBVDXqVoWN3Tz7Dav/7IT++THQ=";
-
-/* Swehack */
-static const char kSwehackFingerprint[] =
-  "FdaffE799rVb3oyAuhJ2mBW/XJwD07Uajb2G6YwSAEw=";
-
-/* SwehackBackup */
-static const char kSwehackBackupFingerprint[] =
-  "z6cuswA6E1vgFkCjUsbEYo0Lf3aP8M8YOvwkoiGzDCo=";
 
 /* TestSPKI */
 static const char kTestSPKIFingerprint[] =
@@ -595,19 +579,6 @@ static const char* const kPinset_yahoo_Data[] = {
 static const StaticFingerprints kPinset_yahoo = {
   sizeof(kPinset_yahoo_Data) / sizeof(const char*),
   kPinset_yahoo_Data
-};
-
-static const char* const kPinset_swehackCom_Data[] = {
-  kSwehackFingerprint,
-  kGOOGLE_PIN_DSTRootCAX3Fingerprint,
-  kLet_s_Encrypt_Authority_X3Fingerprint,
-  kGOOGLE_PIN_COMODORSADomainValidationSecureServerCAFingerprint,
-  kLet_s_Encrypt_Authority_X4Fingerprint,
-  kSwehackBackupFingerprint,
-};
-static const StaticFingerprints kPinset_swehackCom = {
-  sizeof(kPinset_swehackCom_Data) / sizeof(const char*),
-  kPinset_swehackCom_Data
 };
 
 /* Domainlist */
@@ -1055,7 +1026,6 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "static.googleadsserving.cn", true, false, false, -1, &kPinset_google_root_pems },
   { "stats.g.doubleclick.net", true, false, false, -1, &kPinset_google_root_pems },
   { "sv.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
-  { "swehack.org", true, true, false, -1, &kPinset_swehackCom },
   { "sync.services.mozilla.com", true, false, true, 13, &kPinset_mozilla_services },
   { "t.facebook.com", true, false, false, -1, &kPinset_facebook },
   { "tablet.facebook.com", true, false, false, -1, &kPinset_facebook },
@@ -1121,8 +1091,8 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "zh.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
 };
 
-// Pinning Preload List Length = 496;
+// Pinning Preload List Length = 495;
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1672657775247000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1672916945601000);
