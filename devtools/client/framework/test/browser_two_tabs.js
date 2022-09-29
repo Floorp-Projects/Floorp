@@ -95,10 +95,16 @@ async function checkFirstTargetActor(targetFront1) {
 }
 
 async function getTabTarget(client, filter) {
-  const descriptor = await client.mainRoot.getTab(filter);
-  // By default, descriptor returned by getTab will close the client
-  // when the tab is closed. Disable this default behavior for this test.
+  let commands;
+  if (filter.tab) {
+    commands = await CommandsFactory.forTab(filter.tab, { client });
+  } else if (filter.browserId) {
+    commands = await CommandsFactory.forRemoteTab(filter.browserId, { client });
+  }
+  await commands.targetCommand.startListening();
+  // By default, commands will close the client when the tab is closed.
+  // Disable this default behavior for this test.
   // Bug 1698890: The test should probably stop assuming this.
-  descriptor.shouldCloseClient = false;
-  return descriptor.getTarget();
+  commands.shouldCloseClient = false;
+  return commands.descriptorFront.getTarget();
 }

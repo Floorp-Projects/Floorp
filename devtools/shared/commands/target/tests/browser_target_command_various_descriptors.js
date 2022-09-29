@@ -91,11 +91,6 @@ async function testLocalTab() {
     "Descriptor front isTabDescriptor is correct"
   );
 
-  // By default, tab descriptor will close the client when destroying the client
-  // Disable this behavior via this boolean
-  // Bug 1698890: The test should probably stop assuming this.
-  descriptorFront.shouldCloseClient = false;
-
   const targetCommand = commands.targetCommand;
   await targetCommand.startListening();
 

@@ -113,12 +113,6 @@ class TabDescriptorFront extends DescriptorMixin(
   setLocalTab(localTab) {
     this._localTab = localTab;
     this._setupLocalTabListeners();
-
-    // This is pure legacy. We always assumed closing the DevToolsClient
-    // when the tab was closed. It is mostly important for tests,
-    // but also ensure cleaning up the client and everything on tab closing.
-    // (this flag is handled by DescriptorMixin)
-    this.shouldCloseClient = true;
   }
 
   get isTabDescriptor() {

@@ -69,12 +69,13 @@ exports.commandsFromURL = async function commandsFromURL(url) {
     throw e;
   }
 
-  // If this isn't a cached client, it means that we just created a new client
-  // in `clientFromURL` and we have to destroy it at some point.
-  // In such case, force the Descriptor to destroy the client as soon as it gets
-  // destroyed. This typically happens only for about:debugging toolboxes
-  // opened for local Firefox's targets.
-  commands.shouldCloseClient = !isCachedClient;
+  // When opening about:debugging's toolboxes for remote runtimes,
+  // we create a new commands using a shared and cached client.
+  // Prevent closing the DevToolsClient on toolbox close and Commands destruction
+  // as this can be used by about:debugging and other toolboxes.
+  if (isCachedClient) {
+    commands.shouldCloseClient = false;
+  }
 
   return commands;
 };
