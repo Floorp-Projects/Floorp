@@ -150,7 +150,7 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
 
     def quit_browser(self):
         """Quit the browser."""
-        return self.marionette.quit()
+        return self.marionette.quit(in_app=True)
 
     def install_addon(self):
         """Install a minimal addon."""
@@ -231,4 +231,4 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
         """Stop the ping server and tear down the testcase."""
         super(TelemetryTestCase, self).tearDown()
         self.ping_server.stop()
-        self.marionette.quit(in_app=False, clean=True)
+        self.marionette.quit(clean=True)

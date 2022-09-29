@@ -109,7 +109,7 @@ class TestSafeBrowsingInitialDownload(MarionetteTestCase):
     def tearDown(self):
         try:
             # Restart with a fresh profile
-            self.marionette.restart(in_app=False, clean=True)
+            self.marionette.restart(clean=True)
         finally:
             super(TestSafeBrowsingInitialDownload, self).tearDown()
 

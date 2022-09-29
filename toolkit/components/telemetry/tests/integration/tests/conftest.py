@@ -222,7 +222,7 @@ class Browser(object):
 
             return new_tab
 
-    def quit(self, in_app=True):
+    def quit(self, in_app=False):
         self.marionette.quit(in_app=in_app)
 
     def restart(self):
