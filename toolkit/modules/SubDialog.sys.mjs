@@ -470,7 +470,10 @@ SubDialog.prototype = {
     let { scrollWidth } = docEl.ownerDocument.body || docEl;
     // We need to convert em to px because an em value from the dialog window could
     // translate to something else in the host window, as font sizes may vary.
-    let frameMinWidth = this._emToPx(docEl.style.width) || scrollWidth + "px";
+    let frameMinWidth =
+      this._emToPx(docEl.style.minWidth) ||
+      this._emToPx(docEl.style.width) ||
+      scrollWidth + "px";
     let frameWidth = docEl.getAttribute("width")
       ? docEl.getAttribute("width") + "px"
       : frameMinWidth;
@@ -487,6 +490,7 @@ SubDialog.prototype = {
     if (this._box.getAttribute("sizeto") != "available") {
       this._frame.style.width = frameWidth;
     }
+    this._frame.style.minWidth = frameMinWidth;
 
     let boxMinWidth = `calc(${boxHorizontalBorder +
       frameHorizontalMargin}px + ${frameMinWidth})`;

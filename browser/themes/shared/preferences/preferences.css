@@ -665,7 +665,7 @@ richlistitem[selected] .actionsMenu:focus-visible {
   margin: 10px;
   -moz-box-flex: 1;
   /* Default dialog dimensions */
-  width: 66ch;
+  min-width: 66ch;
 }
 
 /**
