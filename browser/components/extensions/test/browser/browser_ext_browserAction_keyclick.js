@@ -7,14 +7,18 @@
 // element's `open` property to go back to being `false` if forced to true
 // synchronously in response to keydown.
 async function focusButtonAndPressKeyWithDelay(key, elem, modifiers) {
+  let focused = BrowserTestUtils.waitForEvent(elem, "focus", true);
   elem.setAttribute("tabindex", "-1");
   elem.focus();
   elem.removeAttribute("tabindex");
+  await focused;
 
   EventUtils.synthesizeKey(key, { type: "keydown", modifiers });
   await new Promise(executeSoon);
   EventUtils.synthesizeKey(key, { type: "keyup", modifiers });
+  let blurred = BrowserTestUtils.waitForEvent(elem, "blur", true);
   elem.blur();
+  await blurred;
 }
 
 // This test verifies that pressing enter while a page action is focused
@@ -23,29 +27,25 @@ add_task(async function testKeyBrowserAction() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       browser_action: {},
-      background: {
-        persistent: false,
-        scripts: ["background.js"],
-      },
     },
 
-    files: {
-      "background.js": async function background() {
-        let counter = 0;
+    async background() {
+      let counter = 0;
 
-        function onClicked() {
-          dump("clicked\n");
-          counter++;
-        }
+      browser.browserAction.onClicked.addListener(() => {
+        counter++;
+      });
 
-        browser.browserAction.onClicked.addListener(onClicked);
+      browser.test.onMessage.addListener(async msg => {
+        browser.test.assertEq(
+          "checkCounter",
+          msg,
+          "expected check counter message"
+        );
+        browser.test.sendMessage("counter", counter);
+      });
 
-        browser.test.onMessage.addListener(async msg => {
-          browser.test.sendMessage("counter", counter);
-        });
-
-        browser.test.sendMessage("ready");
-      },
+      browser.test.sendMessage("ready");
     },
   });
 
@@ -53,9 +53,12 @@ add_task(async function testKeyBrowserAction() {
   await extension.awaitMessage("ready");
 
   let elem = getBrowserActionWidget(extension).forWindow(window).node;
+
+  await promiseAnimationFrame(window);
+  await showBrowserAction(extension, window);
   await focusButtonAndPressKeyWithDelay(" ", elem, {});
 
-  extension.sendMessage("checkCounter", {});
+  extension.sendMessage("checkCounter");
   let counter = await extension.awaitMessage("counter");
   is(counter, 1, "Key only triggered button once");
 
