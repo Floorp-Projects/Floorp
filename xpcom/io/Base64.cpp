@@ -276,26 +276,23 @@ static const uint8_t kBase64DecodeTable[] = {
   /* 112 */ 41, 42, 43, 44, 45, 46, 47, 48,
   /* 120 */ 49, 50, 51, 255, 255, 255, 255, 255,
 };
+static_assert(mozilla::ArrayLength(kBase64DecodeTable) == 0x80);
 // clang-format on
 
 template <typename T>
 [[nodiscard]] bool Base64CharToValue(T aChar, uint8_t* aValue) {
-  static const size_t mask = 0x7f;
-  static_assert(
-      (mask + 1) == sizeof(kBase64DecodeTable) / sizeof(kBase64DecodeTable[0]),
-      "wrong mask");
   size_t index = static_cast<uint8_t>(aChar);
-
-  if (index & ~mask) {
+  if (index >= mozilla::ArrayLength(kBase64DecodeTable)) {
+    *aValue = 255;
     return false;
   }
-  *aValue = kBase64DecodeTable[index & mask];
-
+  *aValue = kBase64DecodeTable[index];
   return *aValue != 255;
 }
 
 static const char kBase64URLAlphabet[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+static_assert(mozilla::ArrayLength(kBase64URLAlphabet) == 0x41);
 
 // Maps an encoded character to a value in the Base64 URL alphabet, per
 // RFC 4648, Table 2. Invalid input characters map to UINT8_MAX.
@@ -318,14 +315,19 @@ static const uint8_t kBase64URLDecodeTable[] = {
   255,
   26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
   42, 43, 44, 45, 46, 47, 48, 49, 50, 51, /* a - z */
-  255, 255, 255, 255,
+  255, 255, 255, 255, 255,
 };
+static_assert(mozilla::ArrayLength(kBase64URLDecodeTable) == 0x80);
 // clang-format on
 
 bool Base64URLCharToValue(char aChar, uint8_t* aValue) {
   uint8_t index = static_cast<uint8_t>(aChar);
-  *aValue = kBase64URLDecodeTable[index & 0x7f];
-  return (*aValue != 255) && !(index & ~0x7f);
+  if (index >= mozilla::ArrayLength(kBase64URLDecodeTable)) {
+    *aValue = 255;
+    return false;
+  }
+  *aValue = kBase64URLDecodeTable[index];
+  return *aValue != 255;
 }
 
 }  // namespace
