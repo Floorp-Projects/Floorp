@@ -206,6 +206,28 @@ add_task(async function test_current_engine_is_null() {
   );
 });
 
+add_task(async function test_default_changed_and_metadata_unchanged_exists() {
+  info("Update region to FR to change engine.");
+  Region._setHomeRegion("FR", false);
+
+  info("Set user settings metadata to the same properties as cached metadata.");
+  await Services.search.wrappedJSObject._fetchEngineSelectorEngines();
+  userSettings.metaData = {
+    ...Services.search.wrappedJSObject._settings.getSettingsMetaData(),
+    appDefaultEngine: "Test search engine",
+  };
+
+  await reloadEngines(structuredClone(userSettings));
+  Assert.ok(
+    stub.notCalled,
+    "_reloadEngines should not show the notification box as the engine still exists."
+  );
+
+  // Reset.
+  Region._setHomeRegion("US", false);
+  await reloadEngines(structuredClone(userSettings));
+});
+
 add_task(async function test_default_engine_changed_and_metadata_unchanged() {
   info("Update region to FR to change engine.");
   Region._setHomeRegion("FR", false);
@@ -219,7 +241,11 @@ add_task(async function test_default_engine_changed_and_metadata_unchanged() {
   await Services.search.wrappedJSObject._fetchEngineSelectorEngines();
   userSettings.metaData = {
     ...Services.search.wrappedJSObject._settings.getSettingsMetaData(),
+    appDefaultEngine: "Test search engine",
   };
+
+  // Update config by removing the app default engine
+  await setConfigToLoad(CONFIG_UPDATED);
 
   await reloadEngines(structuredClone(userSettings));
   Assert.ok(
@@ -249,11 +275,8 @@ add_task(async function test_app_default_engine_changed_on_start_up() {
   // default
   settings.metaData.current = "";
 
-  let searchSettingsObj = await RemoteSettings(SearchUtils.SETTINGS_KEY);
-  // Restore the get method in order to stub it again in useTestEngines
-  searchSettingsObj.get.restore();
   // Update config by removing the app default engine
-  await SearchTestUtils.useTestEngines("data", null, CONFIG_UPDATED);
+  await setConfigToLoad(CONFIG_UPDATED);
 
   await loadEngines(settings);
   Assert.ok(
@@ -261,6 +284,31 @@ add_task(async function test_app_default_engine_changed_on_start_up() {
     "_loadEngines should show the notification box."
   );
 });
+add_task(async function test_app_default_engine_change_start_up_still_exists() {
+  stub.resetHistory();
+  let settings = structuredClone(userSettings);
+
+  // Set the current engine to "" so we can use the app default engine as
+  // default
+  settings.metaData.current = "";
+  settings.metaData.appDefaultEngine = "Test search engine";
+
+  await setConfigToLoad(CONFIG);
+
+  await loadEngines(settings);
+  Assert.ok(
+    stub.notCalled,
+    "_loadEngines should not show the notification box."
+  );
+});
+
+async function setConfigToLoad(config) {
+  let searchSettingsObj = await RemoteSettings(SearchUtils.SETTINGS_KEY);
+  // Restore the get method in order to stub it again in useTestEngines
+  searchSettingsObj.get.restore();
+  Services.search.wrappedJSObject.resetEngineSelector();
+  await SearchTestUtils.useTestEngines("data", null, config);
+}
 
 function writeSettings(settings) {
   return IOUtils.writeJSON(settingsFilePath, settings, { compress: true });
