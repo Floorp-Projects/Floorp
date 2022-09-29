@@ -1,6 +1,6 @@
 directory_test(async (t, root) => {
   const handle = await createEmptyFile(t, 'foo_string.txt', root);
-  const wfs = await handle.createWritable();
+  const wfs = await cleanup_writable(t, await handle.createWritable());
 
   const rs = recordingReadableStream({
     start(controller) {
@@ -16,7 +16,7 @@ directory_test(async (t, root) => {
 
 directory_test(async (t, root) => {
   const handle = await createEmptyFile(t, 'foo_arraybuf.txt', root);
-  const wfs = await handle.createWritable();
+  const wfs = await cleanup_writable(t, await handle.createWritable());
   const buf = new ArrayBuffer(3);
   const intView = new Uint8Array(buf);
   intView[0] = 0x66;
@@ -37,7 +37,7 @@ directory_test(async (t, root) => {
 
 directory_test(async (t, root) => {
   const handle = await createEmptyFile(t, 'foo_blob.txt', root);
-  const wfs = await handle.createWritable();
+  const wfs = await cleanup_writable(t, await handle.createWritable());
 
   const rs = recordingReadableStream({
     start(controller) {
@@ -53,7 +53,7 @@ directory_test(async (t, root) => {
 
 directory_test(async (t, root) => {
   const handle = await createEmptyFile(t, 'foo_write_param.txt', root);
-  const wfs = await handle.createWritable();
+  const wfs = await cleanup_writable(t, await handle.createWritable());
 
   const rs = recordingReadableStream({
     start(controller) {
@@ -69,7 +69,7 @@ directory_test(async (t, root) => {
 
 directory_test(async (t, root) => {
   const handle = await createEmptyFile(t, 'foo_write_param.txt', root);
-  const wfs = await handle.createWritable();
+  const wfs = await cleanup_writable(t, await handle.createWritable());
 
   const rs = recordingReadableStream({
     start(controller) {
@@ -87,7 +87,7 @@ directory_test(async (t, root) => {
 
 directory_test(async (t, root) => {
   const handle = await createEmptyFile(t, 'foo_write_queued.txt', root);
-  const wfs = await handle.createWritable();
+  const wfs = await cleanup_writable(t, await handle.createWritable());
 
   const rs = recordingReadableStream({
     start(controller) {
@@ -105,7 +105,7 @@ directory_test(async (t, root) => {
 
 directory_test(async (t, root) => {
   const handle = await createEmptyFile(t, 'fetched.txt', root);
-  const wfs = await handle.createWritable();
+  const wfs = await cleanup_writable(t, await handle.createWritable());
 
   const response = await fetch('data:text/plain,fetched from far');
   const body = await response.body;
@@ -116,7 +116,7 @@ directory_test(async (t, root) => {
 
 directory_test(async (t, root) => {
   const handle = await createEmptyFile(t, 'aborted should_be_empty.txt', root);
-  const wfs = await handle.createWritable();
+  const wfs = await cleanup_writable(t, await handle.createWritable());
 
   const response = await fetch('data:text/plain,fetched from far');
   const body = await response.body;
