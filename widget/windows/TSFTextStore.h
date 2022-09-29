@@ -382,7 +382,8 @@ class TSFTextStore final : public ITextStoreACP,
   HRESULT HandleRequestAttrs(DWORD aFlags, ULONG aFilterCount,
                              const TS_ATTRID* aFilterAttrs);
   void SetInputScope(const nsString& aHTMLInputType,
-                     const nsString& aHTMLInputInputMode);
+                     const nsString& aHTMLInputInputmode,
+                     bool aInPrivateBrowsing);
 
   // Creates native caret over our caret.  This method only works on desktop
   // application.  Otherwise, this does nothing.
@@ -1017,9 +1018,6 @@ class TSFTextStore final : public ITextStoreACP,
   // The input scopes for this context, defaults to IS_DEFAULT.
   nsTArray<InputScope> mInputScopes;
 
-  // The URL cache of the focused document.
-  nsString mDocumentURL;
-
   // Support retrieving attributes.
   // TODO: We should support RightToLeft, perhaps.
   enum {
@@ -1028,59 +1026,56 @@ class TSFTextStore final : public ITextStoreACP,
 
     // Supported attributes
     eInputScope = 0,
-    eDocumentURL,
     eTextVerticalWriting,
     eTextOrientation,
 
     // Count of the supported attributes
     NUM_OF_SUPPORTED_ATTRS
   };
-  bool mRequestedAttrs[NUM_OF_SUPPORTED_ATTRS]{false};
+  bool mRequestedAttrs[NUM_OF_SUPPORTED_ATTRS];
 
   int32_t GetRequestedAttrIndex(const TS_ATTRID& aAttrID);
   TS_ATTRID GetAttrID(int32_t aIndex);
 
-  bool mRequestedAttrValues = false;
+  bool mRequestedAttrValues;
 
   // If edit actions are being recorded without document lock, this is true.
   // Otherwise, false.
-  bool mIsRecordingActionsWithoutLock = false;
+  bool mIsRecordingActionsWithoutLock;
   // If GetTextExt() or GetACPFromPoint() is called and the layout hasn't been
   // calculated yet, these methods return TS_E_NOLAYOUT.  At that time,
   // mHasReturnedNoLayoutError is set to true.
-  bool mHasReturnedNoLayoutError = false;
+  bool mHasReturnedNoLayoutError;
   // Before calling ITextStoreACPSink::OnLayoutChange() and
   // ITfContextOwnerServices::OnLayoutChange(), mWaitingQueryLayout is set to
   // true.  This is set to  false when GetTextExt() or GetACPFromPoint() is
   // called.
-  bool mWaitingQueryLayout = false;
-  // During the document is locked, we shouldn't destroy the instance.
+  bool mWaitingQueryLayout;
+  // During the documet is locked, we shouldn't destroy the instance.
   // If this is true, the instance will be destroyed after unlocked.
   bool mPendingDestroy;
   // If this is false, MaybeFlushPendingNotifications() will clear the
   // mContentForTSF.
-  bool mDeferClearingContentForTSF = false;
+  bool mDeferClearingContentForTSF;
   // While the instance is dispatching events, the event may not be handled
   // synchronously in e10s mode.  So, in such case, in strictly speaking,
   // we shouldn't query layout information.  However, TS_E_NOLAYOUT bugs of
   // ITextStoreAPC::GetTextExt() blocks us to behave ideally.
   // For preventing it to be called, we should put off notifying TSF of
   // anything until layout information becomes available.
-  bool mDeferNotifyingTSF = false;
+  bool mDeferNotifyingTSF;
   // While the document is locked, committing composition always fails since
   // TSF needs another document lock for modifying the composition, selection
   // and etc.  So, committing composition should be performed after the
   // document is unlocked.
-  bool mDeferCommittingComposition = false;
-  bool mDeferCancellingComposition = false;
+  bool mDeferCommittingComposition;
+  bool mDeferCancellingComposition;
   // Immediately after a call of Destroy(), mDestroyed becomes true.  If this
   // is true, the instance shouldn't grant any requests from the TIP anymore.
-  bool mDestroyed = false;
+  bool mDestroyed;
   // While the instance is being destroyed, this is set to true for avoiding
   // recursive Destroy() calls.
-  bool mBeingDestroyed = false;
-  // Whether we're in the private browsing mode.
-  bool mInPrivateBrowsing = true;
+  bool mBeingDestroyed;
 
   // TSF thread manager object for the current application
   static StaticRefPtr<ITfThreadMgr> sThreadMgr;

@@ -6844,23 +6844,6 @@
     value: @IS_NOT_EARLY_BETA_OR_EARLIER@
     mirror: always
 
-  # If true, TSF and TIP (IME) can retrieve URL of the document containing
-  # the focused element.  When this is set to true, Gecko exposes the spec
-  # of the URL.
-  # And Gecko exposes only "http" and "https" URLs.  E.g., "data", "blob",
-  # "file" URLs are never exposed.
--  name: intl.tsf.expose_url.allowed
-   type: bool
-   value: true
-   mirror: always
-
-  # If true, TSF and TIP (IME) can retrieve URL of the document containing
-  # the focused element in the private browsing mode too.
--  name: intl.tsf.expose_url_in_private_browsing.allowed
-   type: bool
-   value: false
-   mirror: always
-
 #if defined(ENABLE_TESTS)
   # If true, NS_GetComplexLineBreaks compares the line breaks produced in the
   # content process using the Uniscribe line breaker, with those from a
