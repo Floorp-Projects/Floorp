@@ -55,12 +55,12 @@ const LAST_HOST = "devtools.toolbox.host";
 const PREVIOUS_HOST = "devtools.toolbox.previousHost";
 let ID_COUNTER = 1;
 
-function ToolboxHostManager(descriptor, hostType, hostOptions) {
-  this.descriptor = descriptor;
+function ToolboxHostManager(commands, hostType, hostOptions) {
+  this.commands = commands;
 
   // When debugging a local tab, we keep a reference of the current tab into which the toolbox is displayed.
   // This will only change from the descriptor's localTab when we start debugging popups (i.e. window.open).
-  this.currentTab = this.descriptor.localTab;
+  this.currentTab = this.commands.descriptorFront.localTab;
 
   // Keep the previously instantiated Host for all tabs where we displayed the Toolbox.
   // This will only be useful when we start debugging popups (i.e. window.open).
@@ -107,7 +107,7 @@ ToolboxHostManager.prototype = {
       10
     );
     const toolbox = new Toolbox(
-      this.descriptor,
+      this.commands,
       toolId,
       this.host.type,
       this.host.frame.contentWindow,
@@ -206,7 +206,7 @@ ToolboxHostManager.prototype = {
     this.hostPerTab.clear();
     this.host = null;
     this.hostType = null;
-    this.descriptor = null;
+    this.commands = null;
   },
 
   /**

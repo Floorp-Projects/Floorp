@@ -308,7 +308,7 @@ class TabDescriptorFront extends DescriptorMixin(
         // Always destroy the toolbox opened for this local tab descriptor.
         // When the toolbox is in a Window Host, it won't be removed from the
         // DOM when the tab is closed.
-        const toolbox = gDevTools.getToolboxForDescriptor(this);
+        const toolbox = gDevTools.getToolboxForDescriptorFront(this);
         if (toolbox) {
           // Toolbox.destroy will call target.destroy eventually.
           await toolbox.destroy();
