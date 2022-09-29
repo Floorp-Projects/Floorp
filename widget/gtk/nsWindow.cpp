@@ -954,6 +954,11 @@ void nsWindow::ResizeInt(const Maybe<LayoutDeviceIntPoint>& aMove,
   LOG("  ConstrainSize: w:%d h;%d\n", aSize.width, aSize.height);
 
   const bool resized = aSize != mLastSizeRequest || mBounds.Size() != aSize;
+#if MOZ_LOGGING
+  LOG("  resized %d aSize [%d, %d] mLastSizeRequest [%d, %d] mBounds [%d, %d]",
+      resized, aSize.width, aSize.height, mLastSizeRequest.width,
+      mLastSizeRequest.height, mBounds.width, mBounds.height);
+#endif
 
   // For top-level windows, aSize should possibly be
   // interpreted as frame bounds, but NativeMoveResize treats these as window
@@ -976,6 +981,7 @@ void nsWindow::ResizeInt(const Maybe<LayoutDeviceIntPoint>& aMove,
   }
 
   if (!moved && !resized) {
+    LOG("  not moved or resized, quit");
     return;
   }
 
@@ -1038,7 +1044,7 @@ void nsWindow::Move(double aX, double aY) {
   int32_t x = NSToIntRound(aX * scale);
   int32_t y = NSToIntRound(aY * scale);
 
-  LOG("nsWindow::Move to %d %d\n", x, y);
+  LOG("nsWindow::Move to %d x %d\n", x, y);
 
   if (mSizeMode != nsSizeMode_Normal && (mWindowType == eWindowType_toplevel ||
                                          mWindowType == eWindowType_dialog)) {
@@ -1049,7 +1055,7 @@ void nsWindow::Move(double aX, double aY) {
   // Since a popup window's x/y coordinates are in relation to to
   // the parent, the parent might have moved so we always move a
   // popup window.
-  LOG("  bounds %d %d\n", mBounds.y, mBounds.y);
+  LOG("  bounds %d x %d\n", mBounds.x, mBounds.y);
   if (x == mBounds.x && y == mBounds.y && mWindowType != eWindowType_popup) {
     LOG("  position is the same, return\n");
     return;
@@ -1908,8 +1914,9 @@ static void NativeMoveResizeCallback(GdkWindow* window,
                                      void* aWindow) {
   LOG_POPUP("[%p] NativeMoveResizeCallback flipped_x %d flipped_y %d\n",
             aWindow, flipped_x, flipped_y);
-  LOG_POPUP("[%p]   new position [%d, %d] -> [%d x %d]", aWindow, final_rect->x,
-            final_rect->y, final_rect->width, final_rect->height);
+  LOG_POPUP("[%p]    new position [%d, %d] -> [%d x %d]", aWindow,
+            final_rect->x, final_rect->y, final_rect->width,
+            final_rect->height);
   nsWindow* wnd = get_window_for_gdk_window(window);
 
   wnd->NativeMoveResizeWaylandPopupCallback(final_rect, flipped_x, flipped_y);
@@ -1982,26 +1989,6 @@ void nsWindow::NativeMoveResizeWaylandPopupCallback(
 
   bool needsPositionUpdate = newBounds.TopLeft() != mBounds.TopLeft();
   bool needsSizeUpdate = newBounds.Size() != mLastSizeRequest;
-
-  if (needsPositionUpdate) {
-    // See Bug 1735095
-    // Font scale causes rounding errors which we can't handle by move-to-rect.
-    // The font scale should not be used, but let's handle it somehow to
-    // avoid endless move calls.
-    if (StaticPrefs::layout_css_devPixelsPerPx() > 0 ||
-        gfxPlatformGtk::GetFontScaleFactor() != 1) {
-      bool roundingError = (abs(newBounds.x - mBounds.x) < 2 &&
-                            abs(newBounds.y - mBounds.y) < 2);
-      if (roundingError) {
-        // Keep the window where it is.
-        GdkPoint topLeft = DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
-        LOG("  apply rounding error workaround, move to %d, %d", topLeft.x,
-            topLeft.y);
-        gtk_window_move(GTK_WINDOW(mShell), topLeft.x, topLeft.y);
-        needsPositionUpdate = false;
-      }
-    }
-  }
 
   if (needsSizeUpdate) {
     // Wayland compositor changed popup size request from layout.
