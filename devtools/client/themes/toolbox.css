@@ -577,12 +577,29 @@
   -moz-box-flex: 1;
 }
 
+#toolbox-panel-webconsole[collapsed],
+#toolbox-deck[collapsed] {
+  height: 0 !important;
+  min-height: 0 !important;
+}
+
+#toolbox-deck:not([collapsed]),
+#toolbox-panel-webconsole[expanded] {
+  /* Override the splitter-set height and flex instead */
+  height: auto !important;
+}
+
 /**
- * Enrure that selected toolbox panel's contents are keyboard accessible as they
+ * Ensure that selected toolbox panel's contents are keyboard accessible as they
  * are explicitly made not to be when hidden (default).
  */
 .toolbox-panel[selected] * {
   -moz-user-focus: normal;
+}
+
+.toolbox-panel-iframe {
+  /* Allow toolbox frames to shrink under the default size and flex */
+  contain: size;
 }
 
 #toolbox-container {
