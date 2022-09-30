@@ -31,8 +31,7 @@ FileSystemWritableFileStream::StreamAlgorithms::WriteCallback(
   // https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
   // Step 3. Let writeAlgorithm be an algorithm which takes a chunk argument ...
   ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams chunkUnion;
-  JS::Rooted<JS::Value> chunk(aCx, aChunk);
-  if (!chunkUnion.Init(aCx, &chunk)) {
+  if (!chunkUnion.Init(aCx, aChunk)) {
     aRv.MightThrowJSException();
     aRv.StealExceptionFromJSContext(aCx);
     return nullptr;
