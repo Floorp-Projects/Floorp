@@ -5595,6 +5595,25 @@ void HTMLEditor::MovePreviousSiblings(nsIContent& aChild,
                        "HTMLEditor::MoveChildrenBetween() failed");
 }
 
+void HTMLEditor::MoveInclusiveNextSiblings(
+    nsIContent& aChild, const EditorRawDOMPoint& aPointToInsert,
+    ErrorResult& aError) {
+  MOZ_ASSERT(!aError.Failed());
+
+  if (NS_WARN_IF(!aChild.GetParentNode())) {
+    aError.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
+  nsIContent* lastChild = aChild.GetParentNode()->GetLastChild();
+  if (NS_WARN_IF(!lastChild)) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  MoveChildrenBetween(aChild, *lastChild, aPointToInsert, aError);
+  NS_WARNING_ASSERTION(!aError.Failed(),
+                       "HTMLEditor::MoveChildrenBetween() failed");
+}
+
 nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     DeleteContentButKeepTableStructure(HTMLEditor& aHTMLEditor,
                                        nsIContent& aContent) {

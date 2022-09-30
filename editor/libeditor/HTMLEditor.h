@@ -1986,6 +1986,21 @@ class HTMLEditor final : public EditorBase,
                             ErrorResult& aError);
 
   /**
+   * MoveInclusiveNextSiblings() moves aChild and all siblings after it to
+   * before aPointToInsert.GetChild().
+   * See explanation of MoveChildrenBetween() for the detail of the behavior.
+   *
+   * @param aChild              The node which is first node to be moved.
+   * @param aPointToInsert      The insertion point.  The container must not
+   *                            be a data node like a text node.
+   * @param aError              The result.  If this succeeds to move children,
+   *                            returns NS_OK.  Otherwise, an error.
+   */
+  void MoveInclusiveNextSiblings(nsIContent& aChild,
+                                 const EditorRawDOMPoint& aPointToInsert,
+                                 ErrorResult& aError);
+
+  /**
    * MoveOneHardLineContentsWithTransaction() moves the content in a hard line
    * which contains aPointInHardLine to aPointToInsert or end of
    * aPointToInsert's container.
