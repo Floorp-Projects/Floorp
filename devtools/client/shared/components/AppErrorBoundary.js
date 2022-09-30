@@ -5,14 +5,16 @@
 "use strict";
 
 // React deps
-const { Component } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const { div, h1, h2, h3, p, a } = dom;
 
 // Localized strings for (devtools/client/locales/en-US/components.properties)
 loader.lazyGetter(this, "L10N", function() {
-  const { LocalizationHelper } = require("devtools/shared/l10n");
+  const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
   return new LocalizationHelper(
     "devtools/client/locales/components.properties"
   );

@@ -1,5 +1,5 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('devtools/client/shared/vendor/react')) :
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require("resource://devtools/client/shared/vendor/react.js")) :
   typeof define === 'function' && define.amd ? define(['exports', 'react'], factory) :
   (factory((global.ReactRouterDOM = {}),global.React));
 }(this, (function (exports,React) { 'use strict';

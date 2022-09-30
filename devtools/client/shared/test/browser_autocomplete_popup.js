@@ -4,7 +4,7 @@
 "use strict";
 
 add_task(async function() {
-  const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
+  const AutocompletePopup = require("resource://devtools/client/shared/autocomplete-popup.js");
 
   info("Create an autocompletion popup");
   const { doc } = await createHost();

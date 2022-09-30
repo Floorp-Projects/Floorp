@@ -5,7 +5,9 @@
 
 "use strict";
 
-const { angleUtils } = require("devtools/client/shared/css-angle");
+const {
+  angleUtils,
+} = require("resource://devtools/client/shared/css-angle.js");
 
 const CLASSIFY_TESTS = [
   { input: "180deg", output: "deg" },

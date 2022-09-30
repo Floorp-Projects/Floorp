@@ -11,7 +11,7 @@ const {
   getMockedModule,
   setMockedModule,
   removeMockedModule,
-} = require("devtools/shared/loader/browser-loader-mocks");
+} = require("resource://devtools/shared/loader/browser-loader-mocks.js");
 const { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/shared/",
   window,

@@ -9,11 +9,11 @@ const { shallow } = require("enzyme");
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 
 const { Undefined, Rep } = REPS;
 
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/undefined");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/undefined.js");
 // Test that correct rep is chosen
 describe("Test Undefined", () => {
   const stub = stubs.get("Undefined");

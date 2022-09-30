@@ -6,7 +6,7 @@ const {
   _compareVersionCompatibility,
   checkVersionCompatibility,
   COMPATIBILITY_STATUS,
-} = require("devtools/client/shared/remote-debugging/version-checker");
+} = require("resource://devtools/client/shared/remote-debugging/version-checker.js");
 
 const TEST_DATA = [
   {

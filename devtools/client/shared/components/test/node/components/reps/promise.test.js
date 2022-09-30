@@ -9,17 +9,17 @@ const { shallow } = require("enzyme");
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 const { PromiseRep } = REPS;
 const {
   MODE,
-} = require("devtools/client/shared/components/reps/reps/constants");
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/promise");
+} = require("resource://devtools/client/shared/components/reps/reps/constants.js");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/promise.js");
 const {
   expectActorAttribute,
   getSelectableInInspectorGrips,
   getGripLengthBubbleText,
-} = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
+} = require("resource://devtools/client/shared/components/test/node/components/reps/test-helpers.js");
 
 const renderRep = (object, props) => {
   return shallow(PromiseRep.rep({ object, ...props }));

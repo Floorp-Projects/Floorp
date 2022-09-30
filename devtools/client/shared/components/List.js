@@ -9,18 +9,20 @@ const {
   createRef,
   Component,
   cloneElement,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   ul,
   li,
   div,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const { scrollIntoView } = require("devtools/client/shared/scroll");
+const {
+  scrollIntoView,
+} = require("resource://devtools/client/shared/scroll.js");
 const {
   preventDefaultAndStopPropagation,
-} = require("devtools/client/shared/events");
+} = require("resource://devtools/client/shared/events.js");
 
 loader.lazyRequireGetter(
   this,

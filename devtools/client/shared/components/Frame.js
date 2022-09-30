@@ -4,21 +4,25 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   getUnicodeUrl,
   getUnicodeUrlPath,
   getUnicodeHostname,
-} = require("devtools/client/shared/unicode-url");
+} = require("resource://devtools/client/shared/unicode-url.js");
 const {
   getSourceNames,
   parseURL,
   getSourceMappedFile,
-} = require("devtools/client/shared/source-utils");
-const { LocalizationHelper } = require("devtools/shared/l10n");
-const { MESSAGE_SOURCE } = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/shared/source-utils.js");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
+const {
+  MESSAGE_SOURCE,
+} = require("resource://devtools/client/webconsole/constants.js");
 
 const l10n = new LocalizationHelper(
   "devtools/client/locales/components.properties"

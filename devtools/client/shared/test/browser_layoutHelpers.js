@@ -4,7 +4,9 @@
 "use strict";
 
 // Tests that scrollIntoViewIfNeeded works properly.
-const { scrollIntoViewIfNeeded } = require("devtools/client/shared/scroll");
+const {
+  scrollIntoViewIfNeeded,
+} = require("resource://devtools/client/shared/scroll.js");
 
 const TEST_URI = CHROME_URL_ROOT + "doc_layoutHelpers.html";
 

@@ -31,6 +31,6 @@ We no longer need the react-redux repo so feel free to delete it.
    * react-redux v5.0.7
    */
   ```
-- Replace all instances of `'react'` with `'devtools/client/shared/vendor/react'` (including the quotes).
-- Replace all instances of `'redux'` with `'devtools/client/shared/vendor/redux'` (including the quotes).
+- Replace all instances of `'react'` with `'resource://devtools/client/shared/vendor/react.js'` (including the quotes).
+- Replace all instances of `'redux'` with `'resource://devtools/client/shared/vendor/redux.js'` (including the quotes).
 - Replace all instances of `Function('return this')()` with `globalThis`. See Bug 1473549.

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const asyncStorage = require("devtools/shared/async-storage");
+const asyncStorage = require("resource://devtools/shared/async-storage.js");
 
 /*
  * asyncStoreHelper wraps asyncStorage so that it is easy to define project

@@ -2,17 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const Utils = require("devtools/client/shared/components/object-inspector/utils/index");
+const Utils = require("resource://devtools/client/shared/components/object-inspector/utils/index.js");
 const { shouldRenderRootsInReps } = Utils;
 
-const nullStubs = require("devtools/client/shared/components/test/node/stubs/reps/null");
-const numberStubs = require("devtools/client/shared/components/test/node/stubs/reps/number");
-const undefinedStubs = require("devtools/client/shared/components/test/node/stubs/reps/undefined");
-const gripStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip");
-const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
-const symbolStubs = require("devtools/client/shared/components/test/node/stubs/reps/symbol");
-const errorStubs = require("devtools/client/shared/components/test/node/stubs/reps/error");
-const bigIntStubs = require("devtools/client/shared/components/test/node/stubs/reps/big-int");
+const nullStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/null.js");
+const numberStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/number.js");
+const undefinedStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/undefined.js");
+const gripStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip.js");
+const gripArrayStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-array.js");
+const symbolStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/symbol.js");
+const errorStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/error.js");
+const bigIntStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/big-int.js");
 
 describe("shouldRenderRootsInReps", () => {
   it("returns true for a string", () => {

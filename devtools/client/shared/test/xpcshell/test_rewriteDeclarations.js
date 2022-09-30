@@ -3,8 +3,10 @@
 
 "use strict";
 
-const RuleRewriter = require("devtools/client/fronts/inspector/rule-rewriter");
-const { isCssPropertyKnown } = require("devtools/server/actors/css-properties");
+const RuleRewriter = require("resource://devtools/client/fronts/inspector/rule-rewriter.js");
+const {
+  isCssPropertyKnown,
+} = require("resource://devtools/server/actors/css-properties.js");
 
 const TEST_DATA = [
   {

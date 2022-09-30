@@ -3,8 +3,12 @@
 
 "use strict";
 
-const { parseSingleValue } = require("devtools/shared/css/parsing-utils");
-const { isCssPropertyKnown } = require("devtools/server/actors/css-properties");
+const {
+  parseSingleValue,
+} = require("resource://devtools/shared/css/parsing-utils.js");
+const {
+  isCssPropertyKnown,
+} = require("resource://devtools/server/actors/css-properties.js");
 
 const TEST_DATA = [
   { input: null, throws: true },

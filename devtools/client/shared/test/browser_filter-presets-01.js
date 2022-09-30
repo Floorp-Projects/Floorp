@@ -7,7 +7,7 @@
 
 const {
   CSSFilterEditorWidget,
-} = require("devtools/client/shared/widgets/FilterWidget");
+} = require("resource://devtools/client/shared/widgets/FilterWidget.js");
 
 const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 

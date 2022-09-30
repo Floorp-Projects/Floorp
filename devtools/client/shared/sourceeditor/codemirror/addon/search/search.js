@@ -11,7 +11,7 @@
 
 (function(mod) {
   if (typeof exports == "object" && typeof module == "object") // CommonJS
-    mod(require("devtools/client/shared/sourceeditor/codemirror/lib/codemirror"), require("devtools/client/shared/sourceeditor/codemirror/addon/search/searchcursor"), require("devtools/client/shared/sourceeditor/codemirror/addon/dialog/dialog"));
+    mod(require("resource://devtools/client/shared/sourceeditor/codemirror/lib/codemirror.js"), require("resource://devtools/client/shared/sourceeditor/codemirror/addon/search/searchcursor.js"), require("resource://devtools/client/shared/sourceeditor/codemirror/addon/dialog/dialog.js"));
   else if (typeof define == "function" && define.amd) // AMD
     define(["../../lib/codemirror", "./searchcursor", "../dialog/dialog"], mod);
   else // Plain browser env

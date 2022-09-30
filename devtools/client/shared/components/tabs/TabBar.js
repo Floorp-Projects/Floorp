@@ -9,12 +9,12 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 const Sidebar = createFactory(
-  require("devtools/client/shared/components/Sidebar")
+  require("resource://devtools/client/shared/components/Sidebar.js")
 );
 
 loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");

@@ -11,7 +11,9 @@ const { mount } = require("enzyme");
 const dom = require("react-dom-factories");
 
 const { Component, createFactory } = React;
-const Tree = createFactory(require("devtools/client/shared/components/Tree"));
+const Tree = createFactory(
+  require("resource://devtools/client/shared/components/Tree.js")
+);
 
 function mountTree(overrides = {}) {
   return mount(

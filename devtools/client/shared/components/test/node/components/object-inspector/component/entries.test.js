@@ -6,19 +6,19 @@
 
 const {
   mountObjectInspector,
-} = require("devtools/client/shared/components/test/node/components/object-inspector/test-utils");
+} = require("resource://devtools/client/shared/components/test/node/components/object-inspector/test-utils.js");
 const {
   MODE,
-} = require("devtools/client/shared/components/reps/reps/constants");
+} = require("resource://devtools/client/shared/components/reps/reps/constants.js");
 const {
   formatObjectInspector,
   waitForDispatch,
   waitForLoadedProperties,
-} = require("devtools/client/shared/components/test/node/components/object-inspector/test-utils");
+} = require("resource://devtools/client/shared/components/test/node/components/object-inspector/test-utils.js");
 
-const gripMapRepStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map");
-const mapStubs = require("devtools/client/shared/components/test/node/stubs/object-inspector/map");
-const ObjectFront = require("devtools/client/shared/components/test/node/__mocks__/object-front");
+const gripMapRepStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-map.js");
+const mapStubs = require("resource://devtools/client/shared/components/test/node/stubs/object-inspector/map.js");
+const ObjectFront = require("resource://devtools/client/shared/components/test/node/__mocks__/object-front.js");
 
 function generateDefaults(overrides) {
   return {

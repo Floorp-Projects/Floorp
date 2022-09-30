@@ -7,12 +7,12 @@
 
 const {
   CubicBezierPresetWidget,
-} = require("devtools/client/shared/widgets/CubicBezierWidget");
+} = require("resource://devtools/client/shared/widgets/CubicBezierWidget.js");
 const {
   PREDEFINED,
   PRESETS,
   DEFAULT_PRESET_CATEGORY,
-} = require("devtools/client/shared/widgets/CubicBezierPresets");
+} = require("resource://devtools/client/shared/widgets/CubicBezierPresets.js");
 
 const TEST_URI = CHROME_URL_ROOT + "doc_cubic-bezier-01.html";
 

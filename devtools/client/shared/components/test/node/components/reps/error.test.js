@@ -9,18 +9,18 @@ const { shallow } = require("enzyme");
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 
 const {
   expectActorAttribute,
-} = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
+} = require("resource://devtools/client/shared/components/test/node/components/reps/test-helpers.js");
 
 const { ErrorRep } = REPS;
 const {
   MODE,
-} = require("devtools/client/shared/components/reps/reps/constants");
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/error");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/components/reps/reps/constants.js");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/error.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 describe("Error - Simple error", () => {
   // Test object = `new Error("Error message")`

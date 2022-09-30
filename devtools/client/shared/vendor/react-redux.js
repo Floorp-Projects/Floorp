@@ -3,7 +3,7 @@
  */
 
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('devtools/client/shared/vendor/react'), require('devtools/client/shared/vendor/redux')) :
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require("resource://devtools/client/shared/vendor/react.js"), require("resource://devtools/client/shared/vendor/redux.js")) :
 	typeof define === 'function' && define.amd ? define(['exports', 'devtools/client/shared/vendor/react', 'devtools/client/shared/vendor/redux'], factory) :
 	(factory((global.ReactRedux = {}),global.React,global.Redux));
 }(this, (function (exports,react,redux) { 'use strict';

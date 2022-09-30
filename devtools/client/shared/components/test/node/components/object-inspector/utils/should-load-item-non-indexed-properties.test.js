@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const Utils = require("devtools/client/shared/components/object-inspector/utils/index");
+const Utils = require("resource://devtools/client/shared/components/object-inspector/utils/index.js");
 const {
   createNode,
   createGetterNode,
@@ -16,12 +16,12 @@ const { shouldLoadItemNonIndexedProperties } = Utils.loadProperties;
 
 const {
   createGripMapEntry,
-} = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
-const accessorStubs = require("devtools/client/shared/components/test/node/stubs/reps/accessor");
-const gripMapStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map");
-const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
-const gripStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip");
-const windowStubs = require("devtools/client/shared/components/test/node/stubs/reps/window");
+} = require("resource://devtools/client/shared/components/test/node/components/reps/test-helpers.js");
+const accessorStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/accessor.js");
+const gripMapStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-map.js");
+const gripArrayStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-array.js");
+const gripStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip.js");
+const windowStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/window.js");
 
 describe("shouldLoadItemNonIndexedProperties", () => {
   it("returns true for an array", () => {

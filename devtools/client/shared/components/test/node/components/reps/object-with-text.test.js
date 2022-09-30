@@ -7,14 +7,14 @@
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 
 const { shallow } = require("enzyme");
 const {
   expectActorAttribute,
-} = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
+} = require("resource://devtools/client/shared/components/test/node/components/reps/test-helpers.js");
 
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/object-with-text");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/object-with-text.js");
 const { ObjectWithText, Rep } = REPS;
 
 describe("Object with text - CSSStyleRule", () => {

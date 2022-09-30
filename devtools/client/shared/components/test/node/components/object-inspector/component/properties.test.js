@@ -6,13 +6,13 @@
 
 const {
   mountObjectInspector,
-} = require("devtools/client/shared/components/test/node/components/object-inspector/test-utils");
-const gripRepStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip");
-const ObjectFront = require("devtools/client/shared/components/test/node/__mocks__/object-front");
+} = require("resource://devtools/client/shared/components/test/node/components/object-inspector/test-utils.js");
+const gripRepStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip.js");
+const ObjectFront = require("resource://devtools/client/shared/components/test/node/__mocks__/object-front.js");
 
 const {
   formatObjectInspector,
-} = require("devtools/client/shared/components/test/node/components/object-inspector/test-utils");
+} = require("resource://devtools/client/shared/components/test/node/components/object-inspector/test-utils.js");
 
 function generateDefaults(overrides) {
   return {

@@ -9,11 +9,11 @@ const { shallow } = require("enzyme");
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 
 const { InfinityRep, Rep } = REPS;
 
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/infinity");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/infinity.js");
 
 describe("testInfinity", () => {
   const stub = stubs.get("Infinity");

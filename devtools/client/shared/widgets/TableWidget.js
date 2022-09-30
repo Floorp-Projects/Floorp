@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 loader.lazyRequireGetter(
   this,
   ["clearNamedTimeout", "setNamedTimeout"],
@@ -16,7 +16,7 @@ loader.lazyRequireGetter(
   "devtools/shared/natural-sort",
   true
 );
-const { KeyCodes } = require("devtools/client/shared/keycodes");
+const { KeyCodes } = require("resource://devtools/client/shared/keycodes.js");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const AFTER_SCROLL_DELAY = 100;

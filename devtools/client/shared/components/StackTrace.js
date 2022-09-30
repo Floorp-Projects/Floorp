@@ -7,11 +7,13 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { LocalizationHelper } = require("devtools/shared/l10n");
-const Frame = createFactory(require("devtools/client/shared/components/Frame"));
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
+const Frame = createFactory(
+  require("resource://devtools/client/shared/components/Frame.js")
+);
 
 const l10n = new LocalizationHelper(
   "devtools/client/locales/webconsole.properties"

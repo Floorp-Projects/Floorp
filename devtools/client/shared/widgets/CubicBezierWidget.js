@@ -25,13 +25,13 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const {
   PREDEFINED,
   PRESETS,
   DEFAULT_PRESET_CATEGORY,
-} = require("devtools/client/shared/widgets/CubicBezierPresets");
-const { getCSSLexer } = require("devtools/shared/css/lexer");
+} = require("resource://devtools/client/shared/widgets/CubicBezierPresets.js");
+const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**

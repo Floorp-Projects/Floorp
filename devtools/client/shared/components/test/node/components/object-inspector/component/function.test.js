@@ -4,16 +4,16 @@
 
 const {
   mountObjectInspector,
-} = require("devtools/client/shared/components/test/node/components/object-inspector/test-utils");
+} = require("resource://devtools/client/shared/components/test/node/components/object-inspector/test-utils.js");
 const {
   MODE,
-} = require("devtools/client/shared/components/reps/reps/constants");
+} = require("resource://devtools/client/shared/components/reps/reps/constants.js");
 const {
   createNode,
-} = require("devtools/client/shared/components/object-inspector/utils/node");
+} = require("resource://devtools/client/shared/components/object-inspector/utils/node.js");
 
-const functionStubs = require("devtools/client/shared/components/test/node/stubs/reps/function");
-const ObjectFront = require("devtools/client/shared/components/test/node/__mocks__/object-front");
+const functionStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/function.js");
+const ObjectFront = require("resource://devtools/client/shared/components/test/node/__mocks__/object-front.js");
 
 function generateDefaults(overrides) {
   return {

@@ -4,16 +4,16 @@
 
 const {
   maybeEscapePropertyName,
-} = require("devtools/client/shared/components/reps/reps/rep-utils");
-const ArrayRep = require("devtools/client/shared/components/reps/reps/array");
-const GripArrayRep = require("devtools/client/shared/components/reps/reps/grip-array");
-const GripMap = require("devtools/client/shared/components/reps/reps/grip-map");
-const GripEntryRep = require("devtools/client/shared/components/reps/reps/grip-entry");
-const ErrorRep = require("devtools/client/shared/components/reps/reps/error");
-const BigIntRep = require("devtools/client/shared/components/reps/reps/big-int");
+} = require("resource://devtools/client/shared/components/reps/reps/rep-utils.js");
+const ArrayRep = require("resource://devtools/client/shared/components/reps/reps/array.js");
+const GripArrayRep = require("resource://devtools/client/shared/components/reps/reps/grip-array.js");
+const GripMap = require("resource://devtools/client/shared/components/reps/reps/grip-map.js");
+const GripEntryRep = require("resource://devtools/client/shared/components/reps/reps/grip-entry.js");
+const ErrorRep = require("resource://devtools/client/shared/components/reps/reps/error.js");
+const BigIntRep = require("resource://devtools/client/shared/components/reps/reps/big-int.js");
 const {
   isLongString,
-} = require("devtools/client/shared/components/reps/reps/string");
+} = require("resource://devtools/client/shared/components/reps/reps/string.js");
 
 const MAX_NUMERICAL_PROPERTIES = 100;
 

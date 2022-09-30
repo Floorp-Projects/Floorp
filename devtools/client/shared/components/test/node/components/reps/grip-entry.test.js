@@ -10,20 +10,20 @@ const { shallow } = require("enzyme");
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 
 const { GripEntry } = REPS;
 const {
   MODE,
-} = require("devtools/client/shared/components/reps/reps/constants");
+} = require("resource://devtools/client/shared/components/reps/reps/constants.js");
 const {
   createGripMapEntry,
   getGripLengthBubbleText,
-} = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
+} = require("resource://devtools/client/shared/components/test/node/components/reps/test-helpers.js");
 
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-entry");
-const nodeStubs = require("devtools/client/shared/components/test/node/stubs/reps/element-node");
-const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-entry.js");
+const nodeStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/element-node.js");
+const gripArrayStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-array.js");
 
 const renderRep = (object, mode, props) => {
   return shallow(

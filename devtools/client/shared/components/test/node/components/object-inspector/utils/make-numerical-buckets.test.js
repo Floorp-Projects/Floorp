@@ -5,8 +5,8 @@
 const {
   createNode,
   makeNumericalBuckets,
-} = require("devtools/client/shared/components/object-inspector/utils/node");
-const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
+} = require("resource://devtools/client/shared/components/object-inspector/utils/node.js");
+const gripArrayStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-array.js");
 
 describe("makeNumericalBuckets", () => {
   it("handles simple numerical buckets", () => {

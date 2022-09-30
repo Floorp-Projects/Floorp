@@ -10,17 +10,19 @@ const {
   createFactory,
   createRef,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 loader.lazyGetter(this, "SearchBoxAutocompletePopup", function() {
   return createFactory(
-    require("devtools/client/shared/components/SearchBoxAutocompletePopup")
+    require("resource://devtools/client/shared/components/SearchBoxAutocompletePopup.js")
   );
 });
 loader.lazyGetter(this, "MDNLink", function() {
-  return createFactory(require("devtools/client/shared/components/MdnLink"));
+  return createFactory(
+    require("resource://devtools/client/shared/components/MdnLink.js")
+  );
 });
 
 loader.lazyRequireGetter(

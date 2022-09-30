@@ -5,7 +5,7 @@
 
 "use strict";
 
-const { colorUtils } = require("devtools/shared/css/color");
+const { colorUtils } = require("resource://devtools/shared/css/color.js");
 const InspectorUtils = require("InspectorUtils");
 
 const CLASSIFY_TESTS = [

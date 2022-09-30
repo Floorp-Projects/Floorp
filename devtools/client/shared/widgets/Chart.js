@@ -12,8 +12,8 @@ const NAMED_SLICE_MIN_ANGLE = TAU / 8;
 const NAMED_SLICE_TEXT_DISTANCE_RATIO = 1.9;
 const HOVERED_SLICE_TRANSLATE_DISTANCE_RATIO = 20;
 
-const EventEmitter = require("devtools/shared/event-emitter");
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const L10N = new LocalizationHelper(NET_STRINGS_URI);
 
 /**

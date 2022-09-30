@@ -7,7 +7,7 @@ const {
   getDevices,
   getDeviceString,
   addDevice,
-} = require("devtools/client/shared/devices");
+} = require("resource://devtools/client/shared/devices.js");
 
 add_task(async function() {
   let devices = await getDevices();

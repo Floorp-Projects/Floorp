@@ -2,18 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const client = require("devtools/client/shared/components/object-inspector/utils/client");
-const loadProperties = require("devtools/client/shared/components/object-inspector/utils/load-properties");
-const node = require("devtools/client/shared/components/object-inspector/utils/node");
+const client = require("resource://devtools/client/shared/components/object-inspector/utils/client.js");
+const loadProperties = require("resource://devtools/client/shared/components/object-inspector/utils/load-properties.js");
+const node = require("resource://devtools/client/shared/components/object-inspector/utils/node.js");
 const { nodeIsError, nodeIsPrimitive, nodeHasCustomFormatter, nodeHasCustomFormattedBody } = node;
-const selection = require("devtools/client/shared/components/object-inspector/utils/selection");
+const selection = require("resource://devtools/client/shared/components/object-inspector/utils/selection.js");
 
 const {
   MODE,
-} = require("devtools/client/shared/components/reps/reps/constants");
+} = require("resource://devtools/client/shared/components/reps/reps/constants.js");
 const {
   REPS: { Rep, Grip },
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 
 function shouldRenderRootsInReps(roots, props = {}) {
   if (roots.length !== 1) {

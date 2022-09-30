@@ -16,7 +16,7 @@ Follow this steps to upgrade the `react-router-dom` library:
 
 4. Grab the UMD build of `react-router-dom`, which is located in `packages/react-router-dom/umd/react-router-dom.js` and copy it into Firefox source tree.
 
-5. Edit `react-router-dom.js` and change `require('react')` for `require('devtools/client/shared/vendor/react')`
+5. Edit `react-router-dom.js` and change `require('react')` for `require('resource://devtools/client/shared/vendor/react.js')`
 
 6. Update the version below:
 

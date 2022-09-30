@@ -4,10 +4,10 @@
 
 "use strict";
 
-const React = require("devtools/client/shared/vendor/react");
+const React = require("resource://devtools/client/shared/vendor/react.js");
 const { Component, createFactory } = React;
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 // depth
 const AUTO_EXPAND_DEPTH = 0;

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
+const AutocompletePopup = require("resource://devtools/client/shared/autocomplete-popup.js");
 
 loader.lazyRequireGetter(
   this,

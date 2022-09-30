@@ -8,7 +8,10 @@
 // Use any valid test page here.
 const TEST_URI = TEST_URI_ROOT_SSL + "dummy.html";
 
-const { openDocLink, openTrustedLink } = require("devtools/client/shared/link");
+const {
+  openDocLink,
+  openTrustedLink,
+} = require("resource://devtools/client/shared/link.js");
 
 add_task(async function() {
   // Open a link to a page that will not trigger any request.

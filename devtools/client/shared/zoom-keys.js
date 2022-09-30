@@ -8,7 +8,7 @@ const ZOOM_PREF = "devtools.toolbox.zoomValue";
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2;
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"
 );

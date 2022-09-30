@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { dumpn } = require("devtools/shared/DevToolsUtils");
+const { dumpn } = require("resource://devtools/shared/DevToolsUtils.js");
 
 function createTCPSocket(location, port, options) {
   const { TCPSocket } = Cu.getGlobalForObject(

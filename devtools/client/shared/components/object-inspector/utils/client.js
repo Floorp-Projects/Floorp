@@ -5,7 +5,7 @@
 const {
   getValue,
   nodeHasFullText,
-} = require("devtools/client/shared/components/object-inspector/utils/node");
+} = require("resource://devtools/client/shared/components/object-inspector/utils/node.js");
 
 async function enumIndexedProperties(objectFront, start, end) {
   try {

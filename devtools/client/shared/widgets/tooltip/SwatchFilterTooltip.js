@@ -6,8 +6,8 @@
 
 const {
   CSSFilterEditorWidget,
-} = require("devtools/client/shared/widgets/FilterWidget");
-const SwatchBasedEditorTooltip = require("devtools/client/shared/widgets/tooltip/SwatchBasedEditorTooltip");
+} = require("resource://devtools/client/shared/widgets/FilterWidget.js");
+const SwatchBasedEditorTooltip = require("resource://devtools/client/shared/widgets/tooltip/SwatchBasedEditorTooltip.js");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 

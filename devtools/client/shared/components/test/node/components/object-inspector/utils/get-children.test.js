@@ -2,19 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const accessorStubs = require("devtools/client/shared/components/test/node/stubs/reps/accessor");
-const performanceStubs = require("devtools/client/shared/components/test/node/stubs/object-inspector/performance");
-const gripMapStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map");
-const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
-const gripEntryStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-entry");
-const gripStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip");
+const accessorStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/accessor.js");
+const performanceStubs = require("resource://devtools/client/shared/components/test/node/stubs/object-inspector/performance.js");
+const gripMapStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-map.js");
+const gripArrayStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-array.js");
+const gripEntryStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-entry.js");
+const gripStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip.js");
 
 const {
   createNode,
   getChildren,
   getValue,
   makeNodesForProperties,
-} = require("devtools/client/shared/components/object-inspector/utils/node");
+} = require("resource://devtools/client/shared/components/object-inspector/utils/node.js");
 
 function createRootNodeWithAccessorProperty(accessorStub) {
   const node = { name: "root", path: "rootpath" };

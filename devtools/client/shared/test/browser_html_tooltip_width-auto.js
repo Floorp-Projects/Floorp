@@ -13,7 +13,7 @@ const TEST_URI = CHROME_URL_ROOT + "doc_html_tooltip.xhtml";
 
 const {
   HTMLTooltip,
-} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
+} = require("resource://devtools/client/shared/widgets/tooltip/HTMLTooltip.js");
 loadHelperScript("helper_html_tooltip.js");
 
 let useXulWrapper;

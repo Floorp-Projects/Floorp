@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
-const gripMapStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map");
+const gripArrayStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-array.js");
+const gripMapStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-map.js");
 
 const {
   createNode,
   nodeHasEntries,
-} = require("devtools/client/shared/components/object-inspector/utils/node");
+} = require("resource://devtools/client/shared/components/object-inspector/utils/node.js");
 
 const createRootNode = value =>
   createNode({ name: "root", contents: { value } });

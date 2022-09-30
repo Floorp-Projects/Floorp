@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { KeyCodes } = require("devtools/client/shared/keycodes");
+const { KeyCodes } = require("resource://devtools/client/shared/keycodes.js");
 
 const PANE_APPEARANCE_DELAY = 50;
 

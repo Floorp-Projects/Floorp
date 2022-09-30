@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { UndoStack } = require("devtools/client/shared/undo");
+const { UndoStack } = require("resource://devtools/client/shared/undo.js");
 
 const MAX_SIZE = 5;
 

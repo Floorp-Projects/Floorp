@@ -6,10 +6,10 @@
 
 const {
   prepareTCPConnection,
-} = require("devtools/client/shared/remote-debugging/adb/commands/index");
+} = require("resource://devtools/client/shared/remote-debugging/adb/commands/index.js");
 const {
   shell,
-} = require("devtools/client/shared/remote-debugging/adb/commands/index");
+} = require("resource://devtools/client/shared/remote-debugging/adb/commands/index.js");
 
 class AdbRuntime {
   constructor(adbDevice, socketPath) {

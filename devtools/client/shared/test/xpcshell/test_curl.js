@@ -7,7 +7,7 @@
  * Tests utility functions contained in `source-utils.js`
  */
 
-const curl = require("devtools/client/shared/curl");
+const curl = require("resource://devtools/client/shared/curl.js");
 const Curl = curl.Curl;
 const CurlUtils = curl.CurlUtils;
 

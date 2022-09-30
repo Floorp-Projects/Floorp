@@ -8,9 +8,9 @@ const { shallow } = require("enzyme");
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 const { BigInt, Rep } = REPS;
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/big-int");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/big-int.js");
 
 describe("BigInt", () => {
   describe("1n", () => {

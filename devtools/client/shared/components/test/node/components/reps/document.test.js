@@ -8,14 +8,14 @@ const { shallow } = require("enzyme");
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 
 const {
   expectActorAttribute,
-} = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
+} = require("resource://devtools/client/shared/components/test/node/components/reps/test-helpers.js");
 
 const { Document } = REPS;
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/document");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/document.js");
 
 describe("Document", () => {
   const stub = stubs.get("Document");

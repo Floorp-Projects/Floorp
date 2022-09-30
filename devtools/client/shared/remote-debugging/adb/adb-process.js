@@ -4,11 +4,11 @@
 
 "use strict";
 
-const { dumpn } = require("devtools/shared/DevToolsUtils");
-const EventEmitter = require("devtools/shared/event-emitter");
+const { dumpn } = require("resource://devtools/shared/DevToolsUtils.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const {
   getFileForBinary,
-} = require("devtools/client/shared/remote-debugging/adb/adb-binary");
+} = require("resource://devtools/client/shared/remote-debugging/adb/adb-binary.js");
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 loader.lazyRequireGetter(

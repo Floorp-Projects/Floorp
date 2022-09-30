@@ -8,15 +8,15 @@ const { shallow } = require("enzyme");
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 const { Rep, RegExp } = REPS;
 const {
   ELLIPSIS,
-} = require("devtools/client/shared/components/reps/reps/rep-utils");
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/regexp");
+} = require("resource://devtools/client/shared/components/reps/reps/rep-utils.js");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/regexp.js");
 const {
   expectActorAttribute,
-} = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
+} = require("resource://devtools/client/shared/components/test/node/components/reps/test-helpers.js");
 
 describe("test RegExp", () => {
   const stub = stubs.get("RegExp");

@@ -5,8 +5,10 @@
 
 // Tests the advanceValidate function from rule-view.js.
 
-const { advanceValidate } = require("devtools/client/inspector/shared/utils");
-const { KeyCodes } = require("devtools/client/shared/keycodes");
+const {
+  advanceValidate,
+} = require("resource://devtools/client/inspector/shared/utils.js");
+const { KeyCodes } = require("resource://devtools/client/shared/keycodes.js");
 
 //                            1         2         3
 //                  0123456789012345678901234567890

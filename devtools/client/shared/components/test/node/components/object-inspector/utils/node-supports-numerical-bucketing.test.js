@@ -6,7 +6,7 @@ const {
   createNode,
   makeNodesForEntries,
   nodeSupportsNumericalBucketing,
-} = require("devtools/client/shared/components/object-inspector/utils/node");
+} = require("resource://devtools/client/shared/components/object-inspector/utils/node.js");
 
 const createRootNode = stub =>
   createNode({
@@ -14,8 +14,8 @@ const createRootNode = stub =>
     contents: { value: stub },
   });
 
-const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
-const gripMapStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map");
+const gripArrayStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-array.js");
+const gripMapStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-map.js");
 
 describe("nodeSupportsNumericalBucketing", () => {
   it("returns true for Arrays", () => {

@@ -6,12 +6,12 @@
 
 "use strict";
 
-const { dumpn } = require("devtools/shared/DevToolsUtils");
+const { dumpn } = require("resource://devtools/shared/DevToolsUtils.js");
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const {
   adbProcess,
-} = require("devtools/client/shared/remote-debugging/adb/adb-process");
-const client = require("devtools/client/shared/remote-debugging/adb/adb-client");
+} = require("resource://devtools/client/shared/remote-debugging/adb/adb-process.js");
+const client = require("resource://devtools/client/shared/remote-debugging/adb/adb-client.js");
 
 const OKAY = 0x59414b4f;
 

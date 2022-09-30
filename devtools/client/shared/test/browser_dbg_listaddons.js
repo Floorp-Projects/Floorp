@@ -3,8 +3,12 @@
 
 "use strict";
 
-var { DevToolsServer } = require("devtools/server/devtools-server");
-var { DevToolsClient } = require("devtools/client/devtools-client");
+var {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+var {
+  DevToolsClient,
+} = require("resource://devtools/client/devtools-client.js");
 
 /**
  * Make sure the listAddons request works as specified.

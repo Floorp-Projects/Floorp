@@ -7,11 +7,11 @@
 const {
   createStore,
   applyMiddleware,
-} = require("devtools/client/shared/vendor/redux");
+} = require("resource://devtools/client/shared/vendor/redux.js");
 const {
   task,
   ERROR_TYPE,
-} = require("devtools/client/shared/redux/middleware/task");
+} = require("resource://devtools/client/shared/redux/middleware/task.js");
 
 /**
  * Tests that the middleware handles errors thrown in tasks, and rejected promises.

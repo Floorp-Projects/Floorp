@@ -6,11 +6,13 @@
 
 /* global jest */
 const { mount } = require("enzyme");
-const { REPS } = require("devtools/client/shared/components/reps/reps/rep");
+const {
+  REPS,
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 const { Rep } = REPS;
 const {
   getGripLengthBubbleText,
-} = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
+} = require("resource://devtools/client/shared/components/test/node/components/reps/test-helpers.js");
 
 const renderRep = (string, props) =>
   mount(
@@ -544,7 +546,7 @@ describe("test String with URL", () => {
   });
 
   it("does render a link in a grip array", () => {
-    const object = require("devtools/client/shared/components/test/node/stubs/reps/grip-array").get(
+    const object = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-array.js").get(
       '["http://example.com/abcdefghijabcdefghij some other text"]'
     );
     const length = getGripLengthBubbleText(object);
@@ -578,7 +580,7 @@ describe("test String with URL", () => {
   });
 
   it("does render a link in a grip object", () => {
-    const object = require("devtools/client/shared/components/test/node/stubs/reps/grip").get(
+    const object = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip.js").get(
       '{test: "http://example.com/ some other text"}'
     );
     const openLink = jest.fn();

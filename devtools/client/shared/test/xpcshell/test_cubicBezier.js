@@ -8,7 +8,7 @@
 var {
   CubicBezier,
   parseTimingFunction,
-} = require("devtools/client/shared/widgets/CubicBezierWidget");
+} = require("resource://devtools/client/shared/widgets/CubicBezierWidget.js");
 
 function run_test() {
   throwsWhenMissingCoordinates();

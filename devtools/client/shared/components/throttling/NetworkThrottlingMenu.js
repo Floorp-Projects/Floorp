@@ -4,15 +4,17 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  PureComponent,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const throttlingProfiles = require("devtools/client/shared/components/throttling/profiles");
-const Types = require("devtools/client/shared/components/throttling/types");
+const throttlingProfiles = require("resource://devtools/client/shared/components/throttling/profiles.js");
+const Types = require("resource://devtools/client/shared/components/throttling/types.js");
 
 // Localization
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/network-throttling.properties"
 );

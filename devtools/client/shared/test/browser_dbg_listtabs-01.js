@@ -7,8 +7,12 @@
  * Make sure the listTabs request works as specified.
  */
 
-var { DevToolsServer } = require("devtools/server/devtools-server");
-var { DevToolsClient } = require("devtools/client/devtools-client");
+var {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+var {
+  DevToolsClient,
+} = require("resource://devtools/client/devtools-client.js");
 
 const TAB1_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
 const TAB2_URL = EXAMPLE_URL + "doc_empty-tab-02.html";

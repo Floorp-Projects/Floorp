@@ -8,7 +8,7 @@ const {
   SELECTOR_ATTRIBUTE,
   SELECTOR_ELEMENT,
   SELECTOR_PSEUDO_CLASS,
-} = require("devtools/shared/css/parsing-utils");
+} = require("resource://devtools/shared/css/parsing-utils.js");
 
 const TEST_DATA = [
   // Test that a null input throws an exception

@@ -4,15 +4,19 @@
 
 "use strict";
 
-const { angleUtils } = require("devtools/client/shared/css-angle");
-const { colorUtils } = require("devtools/shared/css/color");
-const { getCSSLexer } = require("devtools/shared/css/lexer");
-const EventEmitter = require("devtools/shared/event-emitter");
-const { appendText } = require("devtools/client/inspector/shared/utils");
+const {
+  angleUtils,
+} = require("resource://devtools/client/shared/css-angle.js");
+const { colorUtils } = require("resource://devtools/shared/css/color.js");
+const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const {
+  appendText,
+} = require("resource://devtools/client/inspector/shared/utils.js");
 
 const STYLE_INSPECTOR_PROPERTIES =
   "devtools/shared/locales/styleinspector.properties";
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 
 // Functions that accept an angle argument.

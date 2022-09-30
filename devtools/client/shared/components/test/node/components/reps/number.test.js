@@ -8,9 +8,9 @@ const { shallow } = require("enzyme");
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 const { Number, Rep } = REPS;
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/number");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/number.js");
 
 describe("Int", () => {
   const stub = stubs.get("Int");

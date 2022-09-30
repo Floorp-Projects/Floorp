@@ -5,8 +5,8 @@
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-const EventEmitter = require("devtools/shared/event-emitter");
-const { KeyCodes } = require("devtools/client/shared/keycodes");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const { KeyCodes } = require("resource://devtools/client/shared/keycodes.js");
 
 /**
  * A tree widget with keyboard navigation and collapsable structure.

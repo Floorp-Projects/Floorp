@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const Utils = require("devtools/client/shared/components/object-inspector/utils/index");
+const Utils = require("resource://devtools/client/shared/components/object-inspector/utils/index.js");
 const { createNode, getChildren, makeNodesForEntries } = Utils.node;
 
 const { shouldLoadItemEntries } = Utils.loadProperties;
 
-const gripMapStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map");
-const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
-const gripStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip");
+const gripMapStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-map.js");
+const gripArrayStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-array.js");
+const gripStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip.js");
 
 describe("shouldLoadItemEntries", () => {
   it("returns true for an entries node", () => {

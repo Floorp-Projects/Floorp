@@ -7,13 +7,13 @@
 
 // A button that toggles a doorhanger menu.
 
-const flags = require("devtools/shared/flags");
+const flags = require("resource://devtools/shared/flags.js");
 const {
   createRef,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const { button } = dom;
 
 const isMacOS = Services.appinfo.OS === "Darwin";

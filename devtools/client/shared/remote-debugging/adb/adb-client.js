@@ -12,8 +12,8 @@
 
 const {
   AdbSocket,
-} = require("devtools/client/shared/remote-debugging/adb/adb-socket");
-const { dumpn } = require("devtools/shared/DevToolsUtils");
+} = require("resource://devtools/client/shared/remote-debugging/adb/adb-socket.js");
+const { dumpn } = require("resource://devtools/shared/DevToolsUtils.js");
 
 const OKAY = 0x59414b4f;
 const FAIL = 0x4c494146;
