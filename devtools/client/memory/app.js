@@ -4,53 +4,55 @@
 
 "use strict";
 
-const { assert } = require("devtools/shared/DevToolsUtils");
+const { assert } = require("resource://devtools/shared/DevToolsUtils.js");
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 const {
   censusDisplays,
   labelDisplays,
   treeMapDisplays,
   diffingState,
   viewState,
-} = require("devtools/client/memory/constants");
+} = require("resource://devtools/client/memory/constants.js");
 const {
   toggleRecordingAllocationStacks,
-} = require("devtools/client/memory/actions/allocations");
+} = require("resource://devtools/client/memory/actions/allocations.js");
 const {
   setCensusDisplayAndRefresh,
-} = require("devtools/client/memory/actions/census-display");
+} = require("resource://devtools/client/memory/actions/census-display.js");
 const {
   setLabelDisplayAndRefresh,
-} = require("devtools/client/memory/actions/label-display");
+} = require("resource://devtools/client/memory/actions/label-display.js");
 const {
   setTreeMapDisplayAndRefresh,
-} = require("devtools/client/memory/actions/tree-map-display");
+} = require("resource://devtools/client/memory/actions/tree-map-display.js");
 
 const {
   getCustomCensusDisplays,
   getCustomLabelDisplays,
   getCustomTreeMapDisplays,
-} = require("devtools/client/memory/utils");
+} = require("resource://devtools/client/memory/utils.js");
 const {
   selectSnapshotForDiffingAndRefresh,
   toggleDiffing,
   expandDiffingCensusNode,
   collapseDiffingCensusNode,
   focusDiffingCensusNode,
-} = require("devtools/client/memory/actions/diffing");
+} = require("resource://devtools/client/memory/actions/diffing.js");
 const {
   setFilterStringAndRefresh,
-} = require("devtools/client/memory/actions/filter");
+} = require("resource://devtools/client/memory/actions/filter.js");
 const {
   pickFileAndExportSnapshot,
   pickFileAndImportSnapshotAndCensus,
-} = require("devtools/client/memory/actions/io");
+} = require("resource://devtools/client/memory/actions/io.js");
 const {
   selectSnapshotAndRefresh,
   takeSnapshotAndCensus,
@@ -65,21 +67,29 @@ const {
   focusDominatorTreeNode,
   fetchIndividuals,
   focusIndividual,
-} = require("devtools/client/memory/actions/snapshot");
+} = require("resource://devtools/client/memory/actions/snapshot.js");
 const {
   changeViewAndRefresh,
   popViewAndRefresh,
-} = require("devtools/client/memory/actions/view");
-const { resizeShortestPaths } = require("devtools/client/memory/actions/sizes");
+} = require("resource://devtools/client/memory/actions/view.js");
+const {
+  resizeShortestPaths,
+} = require("resource://devtools/client/memory/actions/sizes.js");
 const Toolbar = createFactory(
-  require("devtools/client/memory/components/Toolbar")
+  require("resource://devtools/client/memory/components/Toolbar.js")
 );
-const List = createFactory(require("devtools/client/memory/components/List"));
+const List = createFactory(
+  require("resource://devtools/client/memory/components/List.js")
+);
 const SnapshotListItem = createFactory(
-  require("devtools/client/memory/components/SnapshotListItem")
+  require("resource://devtools/client/memory/components/SnapshotListItem.js")
 );
-const Heap = createFactory(require("devtools/client/memory/components/Heap"));
-const { app: appModel } = require("devtools/client/memory/models");
+const Heap = createFactory(
+  require("resource://devtools/client/memory/components/Heap.js")
+);
+const {
+  app: appModel,
+} = require("resource://devtools/client/memory/models.js");
 
 class MemoryApp extends Component {
   static get propTypes() {

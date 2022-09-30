@@ -3,15 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-exports.allocations = require("devtools/client/memory/reducers/allocations");
-exports.censusDisplay = require("devtools/client/memory/reducers/census-display");
-exports.diffing = require("devtools/client/memory/reducers/diffing");
-exports.front = require("devtools/client/memory/reducers/front");
-exports.individuals = require("devtools/client/memory/reducers/individuals");
-exports.labelDisplay = require("devtools/client/memory/reducers/label-display");
-exports.treeMapDisplay = require("devtools/client/memory/reducers/tree-map-display");
-exports.errors = require("devtools/client/memory/reducers/errors");
-exports.filter = require("devtools/client/memory/reducers/filter");
-exports.sizes = require("devtools/client/memory/reducers/sizes");
-exports.snapshots = require("devtools/client/memory/reducers/snapshots");
-exports.view = require("devtools/client/memory/reducers/view");
+exports.allocations = require("resource://devtools/client/memory/reducers/allocations.js");
+exports.censusDisplay = require("resource://devtools/client/memory/reducers/census-display.js");
+exports.diffing = require("resource://devtools/client/memory/reducers/diffing.js");
+exports.front = require("resource://devtools/client/memory/reducers/front.js");
+exports.individuals = require("resource://devtools/client/memory/reducers/individuals.js");
+exports.labelDisplay = require("resource://devtools/client/memory/reducers/label-display.js");
+exports.treeMapDisplay = require("resource://devtools/client/memory/reducers/tree-map-display.js");
+exports.errors = require("resource://devtools/client/memory/reducers/errors.js");
+exports.filter = require("resource://devtools/client/memory/reducers/filter.js");
+exports.sizes = require("resource://devtools/client/memory/reducers/sizes.js");
+exports.snapshots = require("resource://devtools/client/memory/reducers/snapshots.js");
+exports.view = require("resource://devtools/client/memory/reducers/view.js");

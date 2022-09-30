@@ -6,7 +6,7 @@
 
 const {
   ERROR_TYPE: TASK_ERROR_TYPE,
-} = require("devtools/client/shared/redux/middleware/task");
+} = require("resource://devtools/client/shared/redux/middleware/task.js");
 
 /**
  * Handle errors dispatched from task middleware and

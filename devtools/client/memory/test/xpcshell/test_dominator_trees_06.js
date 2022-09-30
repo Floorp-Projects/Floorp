@@ -8,14 +8,16 @@
 const {
   dominatorTreeState,
   viewState,
-} = require("devtools/client/memory/constants");
+} = require("resource://devtools/client/memory/constants.js");
 const {
   takeSnapshotAndCensus,
   fetchImmediatelyDominated,
-} = require("devtools/client/memory/actions/snapshot");
-const DominatorTreeLazyChildren = require("devtools/client/memory/dominator-tree-lazy-children");
+} = require("resource://devtools/client/memory/actions/snapshot.js");
+const DominatorTreeLazyChildren = require("resource://devtools/client/memory/dominator-tree-lazy-children.js");
 
-const { changeView } = require("devtools/client/memory/actions/view");
+const {
+  changeView,
+} = require("resource://devtools/client/memory/actions/view.js");
 
 add_task(async function() {
   const front = new StubbedMemoryFront();

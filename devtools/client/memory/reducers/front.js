@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { actions } = require("devtools/client/memory/constants");
+const { actions } = require("resource://devtools/client/memory/constants.js");
 
 module.exports = (front = null, action) => {
   return action.type === actions.UPDATE_MEMORY_FRONT ? action.front : front;

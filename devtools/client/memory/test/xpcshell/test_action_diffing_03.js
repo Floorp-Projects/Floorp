@@ -9,13 +9,17 @@ const {
   diffingState,
   snapshotState,
   viewState,
-} = require("devtools/client/memory/constants");
+} = require("resource://devtools/client/memory/constants.js");
 const {
   toggleDiffing,
   selectSnapshotForDiffing,
-} = require("devtools/client/memory/actions/diffing");
-const { takeSnapshot } = require("devtools/client/memory/actions/snapshot");
-const { changeView } = require("devtools/client/memory/actions/view");
+} = require("resource://devtools/client/memory/actions/diffing.js");
+const {
+  takeSnapshot,
+} = require("resource://devtools/client/memory/actions/snapshot.js");
+const {
+  changeView,
+} = require("resource://devtools/client/memory/actions/view.js");
 
 // We test that you (1) cannot select a snapshot that is not in a diffable
 // state, and (2) cannot select more than 2 snapshots for diffing. Both attempts

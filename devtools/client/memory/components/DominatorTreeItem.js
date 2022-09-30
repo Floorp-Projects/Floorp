@@ -4,20 +4,27 @@
 
 "use strict";
 
-const { assert, isSavedFrame } = require("devtools/shared/DevToolsUtils");
+const {
+  assert,
+  isSavedFrame,
+} = require("resource://devtools/shared/DevToolsUtils.js");
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   L10N,
   formatNumber,
   formatPercent,
-} = require("devtools/client/memory/utils");
-const Frame = createFactory(require("devtools/client/shared/components/Frame"));
-const { TREE_ROW_HEIGHT } = require("devtools/client/memory/constants");
+} = require("resource://devtools/client/memory/utils.js");
+const Frame = createFactory(
+  require("resource://devtools/client/shared/components/Frame.js")
+);
+const {
+  TREE_ROW_HEIGHT,
+} = require("resource://devtools/client/memory/constants.js");
 
 class SeparatorClass extends Component {
   render() {

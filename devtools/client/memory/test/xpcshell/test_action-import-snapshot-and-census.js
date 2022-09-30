@@ -12,14 +12,14 @@ const {
   actions,
   snapshotState: states,
   treeMapState,
-} = require("devtools/client/memory/constants");
+} = require("resource://devtools/client/memory/constants.js");
 const {
   exportSnapshot,
   importSnapshotAndCensus,
-} = require("devtools/client/memory/actions/io");
+} = require("resource://devtools/client/memory/actions/io.js");
 const {
   takeSnapshotAndCensus,
-} = require("devtools/client/memory/actions/snapshot");
+} = require("resource://devtools/client/memory/actions/snapshot.js");
 
 add_task(async function() {
   const front = new StubbedMemoryFront();

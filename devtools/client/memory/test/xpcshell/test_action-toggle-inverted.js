@@ -5,10 +5,12 @@
 
 // Test toggling the top level inversion state of the tree.
 
-const { censusDisplays } = require("devtools/client/memory/constants");
+const {
+  censusDisplays,
+} = require("resource://devtools/client/memory/constants.js");
 const {
   setCensusDisplay,
-} = require("devtools/client/memory/actions/census-display");
+} = require("resource://devtools/client/memory/actions/census-display.js");
 
 add_task(async function() {
   const store = Store();

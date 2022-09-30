@@ -7,13 +7,15 @@
 
 const {
   toggleRecordingAllocationStacks,
-} = require("devtools/client/memory/actions/allocations");
+} = require("resource://devtools/client/memory/actions/allocations.js");
 const {
   takeSnapshotAndCensus,
-} = require("devtools/client/memory/actions/snapshot");
-const censusDisplayActions = require("devtools/client/memory/actions/census-display");
-const { viewState } = require("devtools/client/memory/constants");
-const { changeView } = require("devtools/client/memory/actions/view");
+} = require("resource://devtools/client/memory/actions/snapshot.js");
+const censusDisplayActions = require("resource://devtools/client/memory/actions/census-display.js");
+const { viewState } = require("resource://devtools/client/memory/constants.js");
+const {
+  changeView,
+} = require("resource://devtools/client/memory/actions/view.js");
 
 const TEST_URL =
   "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";

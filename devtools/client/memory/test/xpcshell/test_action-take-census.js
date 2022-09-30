@@ -12,9 +12,11 @@ var {
   censusDisplays,
   censusState,
   viewState,
-} = require("devtools/client/memory/constants");
-var actions = require("devtools/client/memory/actions/snapshot");
-var { changeView } = require("devtools/client/memory/actions/view");
+} = require("resource://devtools/client/memory/constants.js");
+var actions = require("resource://devtools/client/memory/actions/snapshot.js");
+var {
+  changeView,
+} = require("resource://devtools/client/memory/actions/view.js");
 
 // This tests taking a census on a snapshot that is still being read, which
 // triggers an assertion failure.

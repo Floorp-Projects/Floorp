@@ -14,8 +14,8 @@ var {
   censusDisplays,
   censusState,
   snapshotState: states,
-} = require("devtools/client/memory/constants");
-var { L10N } = require("devtools/client/memory/utils");
+} = require("resource://devtools/client/memory/constants.js");
+var { L10N } = require("resource://devtools/client/memory/utils.js");
 
 Services.prefs.setBoolPref("devtools.memory.enabled", true);
 
@@ -139,7 +139,7 @@ function setCensusDisplay(window, display) {
   // fire the onChange event, so just change it in the store.
   // window.document.querySelector(`.select-display`).value = type;
   gStore.dispatch(
-    require("devtools/client/memory/actions/census-display").setCensusDisplayAndRefresh(
+    require("resource://devtools/client/memory/actions/census-display.js").setCensusDisplayAndRefresh(
       gHeapAnalysesClient,
       display
     )

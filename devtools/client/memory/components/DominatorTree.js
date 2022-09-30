@@ -7,24 +7,28 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { assert } = require("devtools/shared/DevToolsUtils");
-const { createParentMap } = require("devtools/shared/heapsnapshot/CensusUtils");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const { assert } = require("resource://devtools/shared/DevToolsUtils.js");
+const {
+  createParentMap,
+} = require("resource://devtools/shared/heapsnapshot/CensusUtils.js");
 const Tree = createFactory(
-  require("devtools/client/shared/components/VirtualizedTree")
+  require("resource://devtools/client/shared/components/VirtualizedTree.js")
 );
 const DominatorTreeItem = createFactory(
-  require("devtools/client/memory/components/DominatorTreeItem")
+  require("resource://devtools/client/memory/components/DominatorTreeItem.js")
 );
-const { L10N } = require("devtools/client/memory/utils");
+const { L10N } = require("resource://devtools/client/memory/utils.js");
 const {
   TREE_ROW_HEIGHT,
   dominatorTreeState,
-} = require("devtools/client/memory/constants");
-const { dominatorTreeModel } = require("devtools/client/memory/models");
-const DominatorTreeLazyChildren = require("devtools/client/memory/dominator-tree-lazy-children");
+} = require("resource://devtools/client/memory/constants.js");
+const {
+  dominatorTreeModel,
+} = require("resource://devtools/client/memory/models.js");
+const DominatorTreeLazyChildren = require("resource://devtools/client/memory/dominator-tree-lazy-children.js");
 
 const DOMINATOR_TREE_AUTO_EXPAND_DEPTH = 3;
 

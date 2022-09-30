@@ -6,9 +6,9 @@
 
 const {
   setupDraw,
-} = require("devtools/client/memory/components/tree-map/draw");
-const DragZoom = require("devtools/client/memory/components/tree-map/drag-zoom");
-const CanvasUtils = require("devtools/client/memory/components/tree-map/canvas-utils");
+} = require("resource://devtools/client/memory/components/tree-map/draw.js");
+const DragZoom = require("resource://devtools/client/memory/components/tree-map/drag-zoom.js");
+const CanvasUtils = require("resource://devtools/client/memory/components/tree-map/canvas-utils.js");
 
 /**
  * Start the tree map visualization

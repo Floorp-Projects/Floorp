@@ -4,10 +4,12 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { treeMapModel } = require("devtools/client/memory/models");
-const startVisualization = require("devtools/client/memory/components/tree-map/start");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const { treeMapModel } = require("resource://devtools/client/memory/models.js");
+const startVisualization = require("resource://devtools/client/memory/components/tree-map/start.js");
 
 class TreeMap extends Component {
   static get propTypes() {

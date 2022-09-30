@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { actions } = require("devtools/client/memory/constants");
+const { actions } = require("resource://devtools/client/memory/constants.js");
 
 /**
  * Update the memory front.

@@ -3,13 +3,15 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { assert } = require("devtools/shared/DevToolsUtils");
-const { Component } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { L10N } = require("devtools/client/memory/utils");
-const models = require("devtools/client/memory/models");
-const { viewState } = require("devtools/client/memory/constants");
+const { assert } = require("resource://devtools/shared/DevToolsUtils.js");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const { L10N } = require("resource://devtools/client/memory/utils.js");
+const models = require("resource://devtools/client/memory/models.js");
+const { viewState } = require("resource://devtools/client/memory/constants.js");
 
 class Toolbar extends Component {
   static get propTypes() {

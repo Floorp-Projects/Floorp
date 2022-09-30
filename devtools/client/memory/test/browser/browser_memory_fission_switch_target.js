@@ -5,7 +5,9 @@
 
 // Test top-level target switching for memory panel.
 
-const { treeMapState } = require("devtools/client/memory/constants");
+const {
+  treeMapState,
+} = require("resource://devtools/client/memory/constants.js");
 const PARENT_PROCESS_URI = "about:robots";
 const CONTENT_PROCESS_URI =
   "data:text/html,<section>content process page</section>";

@@ -7,21 +7,21 @@ const {
   immutableUpdate,
   reportException,
   assert,
-} = require("devtools/shared/DevToolsUtils");
+} = require("resource://devtools/shared/DevToolsUtils.js");
 const {
   snapshotState: states,
   actions,
-} = require("devtools/client/memory/constants");
+} = require("resource://devtools/client/memory/constants.js");
 const {
   L10N,
   openFilePicker,
   createSnapshot,
-} = require("devtools/client/memory/utils");
+} = require("resource://devtools/client/memory/utils.js");
 const {
   selectSnapshot,
   computeSnapshotData,
   readSnapshot,
-} = require("devtools/client/memory/actions/snapshot");
+} = require("resource://devtools/client/memory/actions/snapshot.js");
 const VALID_EXPORT_STATES = [states.SAVED, states.READ];
 
 exports.pickFileAndExportSnapshot = function(snapshot) {

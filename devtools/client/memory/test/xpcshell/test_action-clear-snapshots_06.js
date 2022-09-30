@@ -8,12 +8,15 @@
 const {
   takeSnapshotAndCensus,
   clearSnapshots,
-} = require("devtools/client/memory/actions/snapshot");
-const { actions, treeMapState } = require("devtools/client/memory/constants");
+} = require("resource://devtools/client/memory/actions/snapshot.js");
+const {
+  actions,
+  treeMapState,
+} = require("resource://devtools/client/memory/constants.js");
 const {
   toggleDiffing,
   selectSnapshotForDiffingAndRefresh,
-} = require("devtools/client/memory/actions/diffing");
+} = require("resource://devtools/client/memory/actions/diffing.js");
 
 add_task(async function() {
   const front = new StubbedMemoryFront();

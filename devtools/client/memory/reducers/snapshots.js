@@ -3,8 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Immutable = require("devtools/client/shared/vendor/immutable");
-const { immutableUpdate, assert } = require("devtools/shared/DevToolsUtils");
+const Immutable = require("resource://devtools/client/shared/vendor/immutable.js");
+const {
+  immutableUpdate,
+  assert,
+} = require("resource://devtools/shared/DevToolsUtils.js");
 const {
   actions,
   snapshotState: states,
@@ -12,8 +15,8 @@ const {
   treeMapState,
   dominatorTreeState,
   viewState,
-} = require("devtools/client/memory/constants");
-const DominatorTreeNode = require("devtools/shared/heapsnapshot/DominatorTreeNode");
+} = require("resource://devtools/client/memory/constants.js");
+const DominatorTreeNode = require("resource://devtools/shared/heapsnapshot/DominatorTreeNode.js");
 
 const handlers = Object.create(null);
 

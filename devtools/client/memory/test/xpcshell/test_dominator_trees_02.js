@@ -10,11 +10,13 @@ const {
   dominatorTreeState,
   viewState,
   treeMapState,
-} = require("devtools/client/memory/constants");
+} = require("resource://devtools/client/memory/constants.js");
 const {
   takeSnapshotAndCensus,
-} = require("devtools/client/memory/actions/snapshot");
-const { changeViewAndRefresh } = require("devtools/client/memory/actions/view");
+} = require("resource://devtools/client/memory/actions/snapshot.js");
+const {
+  changeViewAndRefresh,
+} = require("resource://devtools/client/memory/actions/view.js");
 
 add_task(async function() {
   const front = new StubbedMemoryFront();

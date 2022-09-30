@@ -7,38 +7,44 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { assert, safeErrorString } = require("devtools/shared/DevToolsUtils");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  assert,
+  safeErrorString,
+} = require("resource://devtools/shared/DevToolsUtils.js");
 const Census = createFactory(
-  require("devtools/client/memory/components/Census")
+  require("resource://devtools/client/memory/components/Census.js")
 );
 const CensusHeader = createFactory(
-  require("devtools/client/memory/components/CensusHeader")
+  require("resource://devtools/client/memory/components/CensusHeader.js")
 );
 const DominatorTree = createFactory(
-  require("devtools/client/memory/components/DominatorTree")
+  require("resource://devtools/client/memory/components/DominatorTree.js")
 );
 const DominatorTreeHeader = createFactory(
-  require("devtools/client/memory/components/DominatorTreeHeader")
+  require("resource://devtools/client/memory/components/DominatorTreeHeader.js")
 );
 const TreeMap = createFactory(
-  require("devtools/client/memory/components/TreeMap")
+  require("resource://devtools/client/memory/components/TreeMap.js")
 );
 const HSplitBox = createFactory(
-  require("devtools/client/shared/components/HSplitBox")
+  require("resource://devtools/client/shared/components/HSplitBox.js")
 );
 const Individuals = createFactory(
-  require("devtools/client/memory/components/Individuals")
+  require("resource://devtools/client/memory/components/Individuals.js")
 );
 const IndividualsHeader = createFactory(
-  require("devtools/client/memory/components/IndividualsHeader")
+  require("resource://devtools/client/memory/components/IndividualsHeader.js")
 );
 const ShortestPaths = createFactory(
-  require("devtools/client/memory/components/ShortestPaths")
+  require("resource://devtools/client/memory/components/ShortestPaths.js")
 );
-const { getStatusTextFull, L10N } = require("devtools/client/memory/utils");
+const {
+  getStatusTextFull,
+  L10N,
+} = require("resource://devtools/client/memory/utils.js");
 const {
   snapshotState: states,
   diffingState,
@@ -47,8 +53,8 @@ const {
   treeMapState,
   dominatorTreeState,
   individualsState,
-} = require("devtools/client/memory/constants");
-const models = require("devtools/client/memory/models");
+} = require("resource://devtools/client/memory/constants.js");
+const models = require("resource://devtools/client/memory/models.js");
 const { snapshot: snapshotModel, diffingModel } = models;
 
 /**
