@@ -168,12 +168,10 @@
         },
       },
       'MacARM64 M1 Release': {
-        'os_type':
-        'mac',
-        'mixins': [
-          'mac11_or_mac12', 'mac-m1-cpu', 'baremetal-pool',
-          'resultdb-json-format'
-        ],
+        'os_type': 'mac',
+        'mixins': ['mac11_or_mac12', 'mac-m1-cpu', 'resultdb-json-format'],
+        # TODO(b/228171565): Replace desktop_tests by mac_tests when
+        # there is a camera available for the baremetal m1 machines.
         'test_suites': {
           'isolated_scripts': 'desktop_tests',
         },
@@ -559,12 +557,8 @@
         },
       },
       'mac_dbg_m1': {
-        'os_type':
-        'mac',
-        'mixins': [
-          'mac11_or_mac12', 'mac-m1-cpu', 'baremetal-try-pool',
-          'resultdb-json-format'
-        ],
+        'os_type': 'mac',
+        'mixins': ['mac11_or_mac12', 'mac-m1-cpu', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'desktop_tests',
         },
@@ -577,12 +571,10 @@
         },
       },
       'mac_rel_m1': {
-        'os_type':
-        'mac',
-        'mixins': [
-          'mac11_or_mac12', 'mac-m1-cpu', 'baremetal-try-pool',
-          'resultdb-json-format'
-        ],
+        'os_type': 'mac',
+        'mixins': ['mac11_or_mac12', 'mac-m1-cpu', 'resultdb-json-format'],
+        # TODO(b/228171565): Replace desktop_tests by mac_tests_tryserver when
+        # there is a camera available for the baremetal-try m1 machines.
         'test_suites': {
           'isolated_scripts': 'desktop_tests',
         },
