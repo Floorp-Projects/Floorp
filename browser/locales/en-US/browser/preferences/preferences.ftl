@@ -1644,7 +1644,7 @@ newtab-background-gradation =
 
 newtab-background-not-background =
     .label = Disable Background
-usercontext-reboot = Restart { -brand-short-name } to apply the Container preferences changes
+    
 no-container = 
     .label = No Container -Default-
 

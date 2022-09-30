@@ -19,8 +19,21 @@ const DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT = 19 /* CustomURL modes, that are e
             setSidebarIconView()
         })
     }
-}
 
+    for (let webpanel_id = 0; webpanel_id <= DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT; webpanel_id++) {
+		Services.prefs.addObserver(`floorp.browser.sidebar2.customurl${webpanel_id}.usercontext`, function() {
+            console.log(`floorp.browser.sidebar2.customurl${webpanel_id}.usercontext`)
+            let userContextChnagedWebpanel = document.getElementById(`webpanel${webpanel_id}`);
+
+        if(userContextChnagedWebpanel!= null) {
+                userContextChnagedWebpanel.remove();
+        }
+        setSidebarMode()
+        setCustomURLFavicon(webpanel_id)
+        setSidebarIconView()
+    })    
+  }
+ }
 /* This code does not work well. Two clicks are required. The cause is unknown.
 
 const target = document.getElementsByClassName("sidepanel-icon");
