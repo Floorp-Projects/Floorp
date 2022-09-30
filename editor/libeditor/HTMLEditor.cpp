@@ -5182,9 +5182,13 @@ void HTMLEditor::DidJoinNodesTransaction(
 }
 
 nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
-                                 nsIContent& aContentToRemove) {
+                                 nsIContent& aContentToRemove,
+                                 JoinNodesDirection aDirection) {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_DIAGNOSTIC_ASSERT(aContentToKeep.GetParentNode() ==
+                        aContentToRemove.GetParentNode());
 
+  const uint32_t keepingContentLength = aContentToKeep.Length();
   const uint32_t removingContentLength = aContentToRemove.Length();
   const Maybe<uint32_t> keepingContentExIndex =
       aContentToKeep.ComputeIndexInParentNode();
@@ -5226,18 +5230,35 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
         // in the one that is going away instead.  This simplifies later
         // selection adjustment logic at end of this method.
         if (savingRange.mStartContainer) {
-          if (savingRange.mStartContainer == atNodeToKeep.GetContainer() &&
-              atRemovingNode.Offset() < savingRange.mStartOffset &&
-              savingRange.mStartOffset <= atNodeToKeep.Offset()) {
-            savingRange.mStartContainer = &aContentToRemove;
-            savingRange.mStartOffset = removingContentLength;
-          }
-          if (savingRange.mEndContainer == atNodeToKeep.GetContainer() &&
-              atRemovingNode.Offset() < savingRange.mEndOffset &&
-              savingRange.mEndOffset <= atNodeToKeep.Offset()) {
-            savingRange.mEndContainer = &aContentToRemove;
-            savingRange.mEndOffset = removingContentLength;
-          }
+          MOZ_ASSERT(savingRange.mEndContainer);
+          auto AdjustDOMPoint = [&](nsCOMPtr<nsINode>& aContainer,
+                                    uint32_t& aOffset) {
+            if (aDirection == JoinNodesDirection::LeftNodeIntoRightNode) {
+              // If range boundary points aContentToKeep and aContentToRemove
+              // is its left node, remember it as being at end of the removing
+              // node. Then, only chaning the container to aContentToKeep will
+              // point start of the current first content of aContentToKeep.
+              if (aContainer == atRemovingNode.GetContainer() &&
+                  atRemovingNode.Offset() < aOffset &&
+                  aOffset <= atNodeToKeep.Offset()) {
+                aContainer = &aContentToRemove;
+                aOffset = removingContentLength;
+              }
+              return;
+            }
+            // If range boundary points aContentToRemove and aContentToKeep is
+            // its left node, remember it as being at end of aContentToKeep.
+            // Then, it will point start of the first content of moved content
+            // from aContentToRemove.
+            if (aContainer == atRemovingNode.GetContainer() &&
+                atNodeToKeep.Offset() < aOffset &&
+                aOffset <= atRemovingNode.Offset()) {
+              aContainer = &aContentToKeep;
+              aOffset = keepingContentLength;
+            }
+          };
+          AdjustDOMPoint(savingRange.mStartContainer, savingRange.mStartOffset);
+          AdjustDOMPoint(savingRange.mEndContainer, savingRange.mEndOffset);
         }
 
         savedRanges.AppendElement(savingRange);
@@ -5306,7 +5327,7 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
     DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjJoinNodes(
         EditorRawDOMPoint(&aContentToKeep, std::min(removingContentLength,
                                                     aContentToKeep.Length())),
-        aContentToRemove, *keepingContentExIndex, GetJoinNodesDirection());
+        aContentToRemove, *keepingContentExIndex, aDirection);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "RangeUpdater::SelAdjJoinNodes() failed, but ignored");
   }
@@ -5341,19 +5362,36 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
       continue;
     }
 
-    // Check to see if we joined nodes where selection starts.
-    if (savedRange.mStartContainer == &aContentToRemove) {
-      savedRange.mStartContainer = &aContentToKeep;
-    } else if (savedRange.mStartContainer == &aContentToKeep) {
-      savedRange.mStartOffset += removingContentLength;
-    }
-
-    // Check to see if we joined nodes where selection ends.
-    if (savedRange.mEndContainer == &aContentToRemove) {
-      savedRange.mEndContainer = &aContentToKeep;
-    } else if (savedRange.mEndContainer == &aContentToKeep) {
-      savedRange.mEndOffset += removingContentLength;
-    }
+    auto AdjustDOMPoint = [&](nsCOMPtr<nsINode>& aContainer,
+                              uint32_t& aOffset) {
+      if (aDirection == JoinNodesDirection::LeftNodeIntoRightNode) {
+        // Now, all content of aContentToRemove are moved to start of
+        // aContentToKeep.  Therefore, if a range boundary was in
+        // aContentToRemove, we just need to change the container to
+        // aContentToKeep.
+        if (aContainer == &aContentToRemove) {
+          aContainer = &aContentToKeep;
+          return;
+        }
+        // And also if the range boundary was in aContentToKeep, we need to
+        // adjust the offset because the content in aContentToRemove was
+        // instarted before ex-start content of aContentToKeep.
+        if (aContainer == &aContentToKeep) {
+          aOffset += removingContentLength;
+        }
+        return;
+      }
+      // Now, all content of aContentToRemove are moved to end of
+      // aContentToKeep.  Therefore, if a range boundary was in
+      // aContentToRemove, we need to change the container to aContentToKeep and
+      // adjust the offset to after the original content of aContentToKeep.
+      if (aContainer == &aContentToRemove) {
+        aContainer = &aContentToKeep;
+        aOffset += keepingContentLength;
+      }
+    };
+    AdjustDOMPoint(savedRange.mStartContainer, savedRange.mStartOffset);
+    AdjustDOMPoint(savedRange.mEndContainer, savedRange.mEndOffset);
 
     const RefPtr<nsRange> newRange = nsRange::Create(
         savedRange.mStartContainer, savedRange.mStartOffset,
