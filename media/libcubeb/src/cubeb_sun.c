@@ -6,7 +6,6 @@
  */
 #include "cubeb-internal.h"
 #include "cubeb/cubeb.h"
-#include "cubeb_tracing.h"
 #include <fcntl.h>
 #include <limits.h>
 #include <pthread.h>
@@ -429,8 +428,6 @@ sun_io_routine(void * arg)
   size_t read_ofs = 0;
   int drain = 0;
 
-  CUBEB_REGISTER_THREAD("cubeb rendering thread");
-
   s->state_cb(s, s->user_ptr, CUBEB_STATE_STARTED);
   while (state != CUBEB_STATE_ERROR) {
     pthread_mutex_lock(&s->mutex);
@@ -508,7 +505,6 @@ sun_io_routine(void * arg)
     }
   }
   s->state_cb(s, s->user_ptr, state);
-  CUBEB_UNREGISTER_THREAD();
   return NULL;
 }
 

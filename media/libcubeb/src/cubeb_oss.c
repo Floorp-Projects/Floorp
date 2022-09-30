@@ -14,7 +14,6 @@
 #include "cubeb/cubeb.h"
 #include "cubeb_mixer.h"
 #include "cubeb_strings.h"
-#include "cubeb_tracing.h"
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -976,8 +975,6 @@ oss_io_routine(void * arg)
   cubeb_state new_state;
   int stopped;
 
-  CUBEB_REGISTER_THREAD("cubeb rendering thread");
-
   do {
     pthread_mutex_lock(&s->mtx);
     if (s->destroying) {
@@ -1008,9 +1005,6 @@ oss_io_routine(void * arg)
   pthread_mutex_lock(&s->mtx);
   s->thread_created = false;
   pthread_mutex_unlock(&s->mtx);
-
-  CUBEB_UNREGISTER_THREAD();
-
   return NULL;
 }
 
