@@ -1,8 +1,8 @@
-if (self.importScripts) {
-    importScripts('/resources/testharness.js');
-    importScripts('/common/get-host-info.sub.js');
-    importScripts('../resources/test-helpers.js');
-}
+// META: title=Cache.add and Cache.addAll
+// META: global=window,worker
+// META: script=/common/get-host-info.sub.js
+// META: script=./resources/test-helpers.js
+// META: timeout=long
 
 const { REMOTE_HOST } = get_host_info();
 
@@ -15,11 +15,11 @@ cache_test(function(cache, test) {
   }, 'Cache.add called with no arguments');
 
 cache_test(function(cache) {
-    return cache.add('../resources/simple.txt')
+    return cache.add('./resources/simple.txt')
       .then(function(result) {
           assert_equals(result, undefined,
                         'Cache.add should resolve with undefined on success.');
-          return cache.match('../resources/simple.txt');
+          return cache.match('./resources/simple.txt');
         })
         .then(function(response) {
           assert_class_string(response, 'Response',
@@ -41,7 +41,7 @@ cache_test(function(cache, test) {
   }, 'Cache.add called with non-HTTP/HTTPS URL');
 
 cache_test(function(cache) {
-    var request = new Request('../resources/simple.txt');
+    var request = new Request('./resources/simple.txt');
     return cache.add(request)
       .then(function(result) {
           assert_equals(result, undefined,
@@ -50,7 +50,7 @@ cache_test(function(cache) {
   }, 'Cache.add called with Request object');
 
 cache_test(function(cache, test) {
-    var request = new Request('../resources/simple.txt',
+    var request = new Request('./resources/simple.txt',
                               {method: 'POST', body: 'This is a body.'});
     return promise_rejects_js(
       test,
@@ -60,7 +60,7 @@ cache_test(function(cache, test) {
   }, 'Cache.add called with POST request');
 
 cache_test(function(cache) {
-    var request = new Request('../resources/simple.txt');
+    var request = new Request('./resources/simple.txt');
     return cache.add(request)
       .then(function(result) {
           assert_equals(result, undefined,
@@ -76,7 +76,7 @@ cache_test(function(cache) {
   }, 'Cache.add called twice with the same Request object');
 
 cache_test(function(cache) {
-    var request = new Request('../resources/simple.txt');
+    var request = new Request('./resources/simple.txt');
     return request.text()
       .then(function() {
           assert_false(request.bodyUsed);
@@ -90,13 +90,13 @@ cache_test(function(cache, test) {
     return promise_rejects_js(
       test,
       TypeError,
-      cache.add('../resources/fetch-status.py?status=206'),
+      cache.add('./resources/fetch-status.py?status=206'),
       'Cache.add should reject on partial response');
   }, 'Cache.add with 206 response');
 
 cache_test(function(cache, test) {
-    var urls = ['../resources/fetch-status.py?status=206',
-                '../resources/fetch-status.py?status=200'];
+    var urls = ['./resources/fetch-status.py?status=206',
+                './resources/fetch-status.py?status=200'];
     var requests = urls.map(function(url) {
         return new Request(url);
       });
@@ -108,8 +108,8 @@ cache_test(function(cache, test) {
   }, 'Cache.addAll with 206 response');
 
 cache_test(function(cache, test) {
-    var urls = ['../resources/fetch-status.py?status=206',
-                '../resources/fetch-status.py?status=200'];
+    var urls = ['./resources/fetch-status.py?status=206',
+                './resources/fetch-status.py?status=200'];
     var requests = urls.map(function(url) {
         var cross_origin_url = new URL(url, location.href);
         cross_origin_url.hostname = REMOTE_HOST;
@@ -135,7 +135,7 @@ cache_test(function(cache, test) {
     return promise_rejects_js(
       test,
       TypeError,
-      cache.add('../resources/fetch-status.py?status=500'),
+      cache.add('./resources/fetch-status.py?status=500'),
       'Cache.add should reject if response is !ok');
   }, 'Cache.add with request that results in a status of 500');
 
@@ -149,11 +149,11 @@ cache_test(function(cache, test) {
 
 cache_test(function(cache, test) {
     // Assumes the existence of ../resources/simple.txt and ../resources/blank.html
-    var urls = ['../resources/simple.txt', undefined, '../resources/blank.html'];
+    var urls = ['./resources/simple.txt', undefined, './resources/blank.html'];
     return promise_rejects_js(
       test,
       TypeError,
-      cache.addAll(),
+      cache.addAll(urls),
       'Cache.addAll should throw TypeError for an undefined argument.');
   }, 'Cache.addAll with a mix of valid and undefined arguments');
 
@@ -174,9 +174,9 @@ cache_test(function(cache) {
 cache_test(function(cache) {
     // Assumes the existence of ../resources/simple.txt and
     // ../resources/blank.html
-    var urls = ['../resources/simple.txt',
+    var urls = ['./resources/simple.txt',
                 self.location.href,
-                '../resources/blank.html'];
+                './resources/blank.html'];
     return cache.addAll(urls)
       .then(function(result) {
           assert_equals(result, undefined,
@@ -211,9 +211,9 @@ cache_test(function(cache) {
 cache_test(function(cache) {
     // Assumes the existence of ../resources/simple.txt and
     // ../resources/blank.html
-    var urls = ['../resources/simple.txt',
+    var urls = ['./resources/simple.txt',
                 self.location.href,
-                '../resources/blank.html'];
+                './resources/blank.html'];
     var requests = urls.map(function(url) {
         return new Request(url);
       });
@@ -251,9 +251,9 @@ cache_test(function(cache) {
 cache_test(function(cache, test) {
     // Assumes that ../resources/simple.txt and ../resources/blank.html exist.
     // The second resource does not.
-    var urls = ['../resources/simple.txt',
+    var urls = ['./resources/simple.txt',
                 'this-resource-should-not-exist',
-                '../resources/blank.html'];
+                './resources/blank.html'];
     var requests = urls.map(function(url) {
         return new Request(url);
       });
@@ -286,7 +286,7 @@ cache_test(function(cache, test) {
   }, 'Cache.addAll called with the same Request object specified twice');
 
 cache_test(async function(cache, test) {
-    const url = '../resources/vary.py?vary=x-shape';
+    const url = './resources/vary.py?vary=x-shape';
     let requests = [
       new Request(url, { headers: { 'x-shape': 'circle' }}),
       new Request(url, { headers: { 'x-shape': 'square' }}),
@@ -296,7 +296,7 @@ cache_test(async function(cache, test) {
   }, 'Cache.addAll should succeed when entries differ by vary header');
 
 cache_test(async function(cache, test) {
-    const url = '../resources/vary.py?vary=x-shape';
+    const url = './resources/vary.py?vary=x-shape';
     let requests = [
       new Request(url, { headers: { 'x-shape': 'circle' }}),
       new Request(url, { headers: { 'x-shape': 'circle' }}),
@@ -314,7 +314,7 @@ cache_test(async function(cache, test) {
 // test verifies that Cache.addAll() duplicate checking handles this asymmetric
 // behavior correctly.
 cache_test(async function(cache, test) {
-    const base_url = '../resources/vary.py';
+    const base_url = './resources/vary.py';
 
     // Define a request URL that sets a VARY header in the
     // query string to be echoed back by the server.

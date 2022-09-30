@@ -1,7 +1,7 @@
-if (self.importScripts) {
-    importScripts('/resources/testharness.js');
-    importScripts('../resources/test-helpers.js');
-}
+// META: title=CacheStorage
+// META: global=window,worker
+// META: script=./resources/test-helpers.js
+// META: timeout=long
 
 promise_test(function(t) {
     var cache_name = 'cache-storage/foo';
@@ -25,7 +25,7 @@ promise_test(function(t) {
           return self.caches.delete(cache_name);
         })
       .then(function() {
-          return first_cache.add('../resources/simple.txt');
+          return first_cache.add('./resources/simple.txt');
         })
       .then(function() {
           return self.caches.keys();
@@ -149,7 +149,7 @@ promise_test(function(t) {
           cache = result;
         })
       .then(function() {
-          return cache.add('../resources/simple.txt');
+          return cache.add('./resources/simple.txt');
         })
       .then(function() {
           return self.caches.open(cache_name);

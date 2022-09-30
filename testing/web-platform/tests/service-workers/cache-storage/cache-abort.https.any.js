@@ -1,8 +1,8 @@
-if (self.importScripts) {
-  importScripts('/resources/testharness.js');
-  importScripts('../resources/test-helpers.js');
-  importScripts('/common/utils.js');
-}
+// META: title=Cache Storage: Abort
+// META: global=window,worker
+// META: script=./resources/test-helpers.js
+// META: script=/common/utils.js
+// META: timeout=long
 
 // We perform the same tests on put, add, addAll. Parameterise the tests to
 // reduce repetition.

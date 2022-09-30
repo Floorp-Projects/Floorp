@@ -1,7 +1,7 @@
-if (self.importScripts) {
-    importScripts('/resources/testharness.js');
-    importScripts('../resources/test-helpers.js');
-}
+// META: title=Cache.keys
+// META: global=window,worker
+// META: script=./resources/test-helpers.js
+// META: timeout=long
 
 cache_test(cache => {
     return cache.keys()
