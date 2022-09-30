@@ -764,11 +764,8 @@ class HTMLMediaElement::MediaStreamRenderer
 
     for (const auto& t : mAudioTracks) {
       if (t) {
-        if (mAudioOutputSink) {
-          t->AsAudioStreamTrack()->SetAudioOutputDevice(mAudioOutputKey,
-                                                        mAudioOutputSink);
-        }
-        t->AsAudioStreamTrack()->AddAudioOutput(mAudioOutputKey);
+        t->AsAudioStreamTrack()->AddAudioOutput(mAudioOutputKey,
+                                                mAudioOutputSink);
         t->AsAudioStreamTrack()->SetAudioOutputVolume(mAudioOutputKey,
                                                       mAudioOutputVolume);
       }
@@ -831,13 +828,9 @@ class HTMLMediaElement::MediaStreamRenderer
 
     nsTArray<RefPtr<GenericPromise>> promises;
     for (const auto& t : mAudioTracks) {
-      // SetAudioOutputDevice will create a new output MediaTrack, so the
-      // AudioOutput is removed for the current MediaTrack and re-added after
-      // the new MediaTrack has been created.
       t->AsAudioStreamTrack()->RemoveAudioOutput(mAudioOutputKey);
-      promises.AppendElement(t->AsAudioStreamTrack()->SetAudioOutputDevice(
+      promises.AppendElement(t->AsAudioStreamTrack()->AddAudioOutput(
           mAudioOutputKey, mAudioOutputSink));
-      t->AsAudioStreamTrack()->AddAudioOutput(mAudioOutputKey);
       t->AsAudioStreamTrack()->SetAudioOutputVolume(mAudioOutputKey,
                                                     mAudioOutputVolume);
     }
@@ -855,10 +848,7 @@ class HTMLMediaElement::MediaStreamRenderer
     mAudioTracks.AppendElement(aTrack);
     EnsureGraphTimeDummy();
     if (mRendering) {
-      if (mAudioOutputSink) {
-        aTrack->SetAudioOutputDevice(mAudioOutputKey, mAudioOutputSink);
-      }
-      aTrack->AddAudioOutput(mAudioOutputKey);
+      aTrack->AddAudioOutput(mAudioOutputKey, mAudioOutputSink);
       aTrack->SetAudioOutputVolume(mAudioOutputKey, mAudioOutputVolume);
     }
   }
