@@ -6,56 +6,59 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 loader.lazyRequireGetter(
   this,
   "PropTypes",
   "devtools/client/shared/vendor/react-prop-types"
 );
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
 
-const actions = require("devtools/client/webconsole/actions/index");
+const actions = require("resource://devtools/client/webconsole/actions/index.js");
 const {
   FILTERBAR_DISPLAY_MODES,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 // We directly require Components that we know are going to be used right away
 const ConsoleOutput = createFactory(
-  require("devtools/client/webconsole/components/Output/ConsoleOutput")
+  require("resource://devtools/client/webconsole/components/Output/ConsoleOutput.js")
 );
 const FilterBar = createFactory(
-  require("devtools/client/webconsole/components/FilterBar/FilterBar")
+  require("resource://devtools/client/webconsole/components/FilterBar/FilterBar.js")
 );
 const ReverseSearchInput = createFactory(
-  require("devtools/client/webconsole/components/Input/ReverseSearchInput")
+  require("resource://devtools/client/webconsole/components/Input/ReverseSearchInput.js")
 );
 const JSTerm = createFactory(
-  require("devtools/client/webconsole/components/Input/JSTerm")
+  require("resource://devtools/client/webconsole/components/Input/JSTerm.js")
 );
 const ConfirmDialog = createFactory(
-  require("devtools/client/webconsole/components/Input/ConfirmDialog")
+  require("resource://devtools/client/webconsole/components/Input/ConfirmDialog.js")
 );
 const EagerEvaluation = createFactory(
-  require("devtools/client/webconsole/components/Input/EagerEvaluation")
+  require("resource://devtools/client/webconsole/components/Input/EagerEvaluation.js")
 );
 
 // And lazy load the ones that may not be used.
 loader.lazyGetter(this, "SideBar", () =>
-  createFactory(require("devtools/client/webconsole/components/SideBar"))
+  createFactory(
+    require("resource://devtools/client/webconsole/components/SideBar.js")
+  )
 );
 
 loader.lazyGetter(this, "EditorToolbar", () =>
   createFactory(
-    require("devtools/client/webconsole/components/Input/EditorToolbar")
+    require("resource://devtools/client/webconsole/components/Input/EditorToolbar.js")
   )
 );
 
 loader.lazyGetter(this, "NotificationBox", () =>
   createFactory(
-    require("devtools/client/shared/components/NotificationBox").NotificationBox
+    require("resource://devtools/client/shared/components/NotificationBox.js")
+      .NotificationBox
   )
 );
 loader.lazyRequireGetter(
@@ -67,25 +70,27 @@ loader.lazyRequireGetter(
 
 loader.lazyGetter(this, "GridElementWidthResizer", () =>
   createFactory(
-    require("devtools/client/shared/components/splitter/GridElementWidthResizer")
+    require("resource://devtools/client/shared/components/splitter/GridElementWidthResizer.js")
   )
 );
 
 loader.lazyGetter(this, "ChromeDebugToolbar", () =>
   createFactory(
-    require("devtools/client/framework/components/ChromeDebugToolbar")
+    require("resource://devtools/client/framework/components/ChromeDebugToolbar.js")
   )
 );
 
-const l10n = require("devtools/client/webconsole/utils/l10n");
-const { Utils: WebConsoleUtils } = require("devtools/client/webconsole/utils");
+const l10n = require("resource://devtools/client/webconsole/utils/l10n.js");
+const {
+  Utils: WebConsoleUtils,
+} = require("resource://devtools/client/webconsole/utils.js");
 
 const SELF_XSS_OK = l10n.getStr("selfxss.okstring");
 const SELF_XSS_MSG = l10n.getFormatStr("selfxss.msg", [SELF_XSS_OK]);
 
 const {
   getAllNotifications,
-} = require("devtools/client/webconsole/selectors/notifications");
+} = require("resource://devtools/client/webconsole/selectors/notifications.js");
 const { div } = dom;
 const isMacOS = Services.appinfo.OS === "Darwin";
 

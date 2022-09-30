@@ -5,27 +5,33 @@
 "use strict";
 
 // React & Redux
-const { Component } = require("devtools/client/shared/vendor/react");
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const actions = require("devtools/client/webconsole/actions/index");
-const { l10n } = require("devtools/client/webconsole/utils/messages");
+const actions = require("resource://devtools/client/webconsole/actions/index.js");
+const {
+  l10n,
+} = require("resource://devtools/client/webconsole/utils/messages.js");
 
 // Additional Components
 const MenuButton = createFactory(
-  require("devtools/client/shared/components/menu/MenuButton")
+  require("resource://devtools/client/shared/components/menu/MenuButton.js")
 );
 
 loader.lazyGetter(this, "MenuItem", function() {
   return createFactory(
-    require("devtools/client/shared/components/menu/MenuItem")
+    require("resource://devtools/client/shared/components/menu/MenuItem.js")
   );
 });
 
 loader.lazyGetter(this, "MenuList", function() {
   return createFactory(
-    require("devtools/client/shared/components/menu/MenuList")
+    require("resource://devtools/client/shared/components/menu/MenuList.js")
   );
 });
 

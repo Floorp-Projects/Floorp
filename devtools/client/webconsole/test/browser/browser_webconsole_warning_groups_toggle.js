@@ -6,7 +6,7 @@
 "use strict";
 requestLongerTimeout(2);
 
-const { PrefObserver } = require("devtools/client/shared/prefs");
+const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
 
 const TEST_FILE =
   "browser/devtools/client/webconsole/test/browser/test-warning-groups.html";

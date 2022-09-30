@@ -2,13 +2,17 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { MESSAGE_LEVEL } = require("devtools/client/webconsole/constants");
+const {
+  MESSAGE_LEVEL,
+} = require("resource://devtools/client/webconsole/constants.js");
 
 const expect = require("expect");
 const { render } = require("enzyme");
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const MessageIcon = createFactory(
-  require("devtools/client/webconsole/components/Output/MessageIcon")
+  require("resource://devtools/client/webconsole/components/Output/MessageIcon.js")
 );
 
 describe("MessageIcon component:", () => {

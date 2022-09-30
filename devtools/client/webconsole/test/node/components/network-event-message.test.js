@@ -7,21 +7,23 @@ const expect = require("expect");
 const { render } = require("enzyme");
 
 // React
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 
 // Components under test.
 const NetworkEventMessage = createFactory(
-  require("devtools/client/webconsole/components/Output/message-types/NetworkEventMessage")
+  require("resource://devtools/client/webconsole/components/Output/message-types/NetworkEventMessage.js")
 );
 const {
   INDENT_WIDTH,
-} = require("devtools/client/webconsole/components/Output/MessageIndent");
+} = require("resource://devtools/client/webconsole/components/Output/MessageIndent.js");
 
 // Test fakes.
 const {
   stubPreparedMessages,
-} = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
-const serviceContainer = require("devtools/client/webconsole/test/node/fixtures/serviceContainer");
+} = require("resource://devtools/client/webconsole/test/node/fixtures/stubs/index.js");
+const serviceContainer = require("resource://devtools/client/webconsole/test/node/fixtures/serviceContainer.js");
 
 const EXPECTED_URL = "https://example.com/inexistent.html";
 const EXPECTED_STATUS = /\[HTTP\/\d\.\d \d+ [A-Za-z ]+ \d+ms\]/;
@@ -41,7 +43,7 @@ describe("NetworkEventMessage component:", () => {
       );
       const {
         timestampString,
-      } = require("devtools/client/webconsole/utils/l10n");
+      } = require("resource://devtools/client/webconsole/utils/l10n.js");
 
       expect(wrapper.find(".timestamp").text()).toBe(
         timestampString(message.timeStamp)

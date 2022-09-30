@@ -9,21 +9,23 @@ const {
   Component,
   createFactory,
   createElement,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { l10n } = require("devtools/client/webconsole/utils/messages");
-const actions = require("devtools/client/webconsole/actions/index");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const {
+  l10n,
+} = require("resource://devtools/client/webconsole/utils/messages.js");
+const actions = require("resource://devtools/client/webconsole/actions/index.js");
 const {
   MESSAGE_LEVEL,
   MESSAGE_SOURCE,
   MESSAGE_TYPE,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 const {
   MessageIndent,
-} = require("devtools/client/webconsole/components/Output/MessageIndent");
-const MessageIcon = require("devtools/client/webconsole/components/Output/MessageIcon");
+} = require("resource://devtools/client/webconsole/components/Output/MessageIndent.js");
+const MessageIcon = require("resource://devtools/client/webconsole/components/Output/MessageIcon.js");
 const FrameView = createFactory(
-  require("devtools/client/shared/components/Frame")
+  require("resource://devtools/client/shared/components/Frame.js")
 );
 
 loader.lazyRequireGetter(

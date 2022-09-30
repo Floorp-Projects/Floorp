@@ -3,7 +3,7 @@
 
 "use strict";
 
-const L10n = require("devtools/client/webconsole/test/node/fixtures/L10n");
+const L10n = require("resource://devtools/client/webconsole/test/node/fixtures/L10n.js");
 
 const Utils = {
   L10n,

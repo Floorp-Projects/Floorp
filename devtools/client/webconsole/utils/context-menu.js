@@ -4,14 +4,18 @@
 
 "use strict";
 
-const Menu = require("devtools/client/framework/menu");
-const MenuItem = require("devtools/client/framework/menu-item");
+const Menu = require("resource://devtools/client/framework/menu.js");
+const MenuItem = require("resource://devtools/client/framework/menu-item.js");
 
-const { MESSAGE_SOURCE } = require("devtools/client/webconsole/constants");
+const {
+  MESSAGE_SOURCE,
+} = require("resource://devtools/client/webconsole/constants.js");
 
-const clipboardHelper = require("devtools/shared/platform/clipboard");
-const { l10n } = require("devtools/client/webconsole/utils/messages");
-const actions = require("devtools/client/webconsole/actions/index");
+const clipboardHelper = require("resource://devtools/shared/platform/clipboard.js");
+const {
+  l10n,
+} = require("resource://devtools/client/webconsole/utils/messages.js");
+const actions = require("resource://devtools/client/webconsole/actions/index.js");
 
 loader.lazyRequireGetter(this, "saveAs", "devtools/shared/DevToolsUtils", true);
 loader.lazyRequireGetter(
@@ -305,18 +309,18 @@ exports.createContextMenu = createContextMenu;
  */
 async function getUnvirtualizedConsoleOutputText(webConsoleWrapper) {
   return new Promise(resolve => {
-    const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+    const ReactDOM = require("resource://devtools/client/shared/vendor/react-dom.js");
     const {
       createElement,
       createFactory,
-    } = require("devtools/client/shared/vendor/react");
+    } = require("resource://devtools/client/shared/vendor/react.js");
     const ConsoleOutput = createFactory(
-      require("devtools/client/webconsole/components/Output/ConsoleOutput")
+      require("resource://devtools/client/webconsole/components/Output/ConsoleOutput.js")
     );
     const {
       Provider,
       createProvider,
-    } = require("devtools/client/shared/vendor/react-redux");
+    } = require("resource://devtools/client/shared/vendor/react-redux.js");
 
     const { parentNode, toolbox } = webConsoleWrapper;
     const doc = parentNode.ownerDocument;

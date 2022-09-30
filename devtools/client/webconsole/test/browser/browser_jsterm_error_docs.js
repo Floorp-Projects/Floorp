@@ -9,7 +9,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   // Check that errors with entries in errordocs.js display links next to their messages.
-  const ErrorDocs = require("devtools/server/actors/errordocs");
+  const ErrorDocs = require("resource://devtools/server/actors/errordocs.js");
 
   const ErrorDocStatements = {
     JSMSG_BAD_RADIX: "(42).toString(0);",

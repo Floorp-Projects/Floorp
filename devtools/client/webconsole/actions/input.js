@@ -4,16 +4,20 @@
 
 "use strict";
 
-const { Utils: WebConsoleUtils } = require("devtools/client/webconsole/utils");
+const {
+  Utils: WebConsoleUtils,
+} = require("resource://devtools/client/webconsole/utils.js");
 const {
   EVALUATE_EXPRESSION,
   SET_TERMINAL_INPUT,
   SET_TERMINAL_EAGER_RESULT,
   EDITOR_PRETTY_PRINT,
-} = require("devtools/client/webconsole/constants");
-const { getAllPrefs } = require("devtools/client/webconsole/selectors/prefs");
-const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
-const l10n = require("devtools/client/webconsole/utils/l10n");
+} = require("resource://devtools/client/webconsole/constants.js");
+const {
+  getAllPrefs,
+} = require("resource://devtools/client/webconsole/selectors/prefs.js");
+const ResourceCommand = require("resource://devtools/shared/commands/resource/resource-command.js");
+const l10n = require("resource://devtools/client/webconsole/utils/l10n.js");
 
 loader.lazyServiceGetter(
   this,

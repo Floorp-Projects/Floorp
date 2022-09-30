@@ -14,7 +14,7 @@ const {
   REVERSE_SEARCH_BACK,
   REVERSE_SEARCH_NEXT,
   WILL_NAVIGATE,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 function getDefaultState(overrides = {}) {
   return Object.freeze({

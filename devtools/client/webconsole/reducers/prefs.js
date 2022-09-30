@@ -7,7 +7,7 @@ const {
   EAGER_EVALUATION_TOGGLE,
   WARNING_GROUPS_TOGGLE,
   AUTOCOMPLETE_TOGGLE,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 const PrefState = overrides =>
   Object.freeze(

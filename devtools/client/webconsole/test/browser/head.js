@@ -30,9 +30,9 @@ Services.scriptloader.loadSubScript(
 
 var {
   BrowserConsoleManager,
-} = require("devtools/client/webconsole/browser-console-manager");
+} = require("resource://devtools/client/webconsole/browser-console-manager.js");
 
-var WCUL10n = require("devtools/client/webconsole/utils/l10n");
+var WCUL10n = require("resource://devtools/client/webconsole/utils/l10n.js");
 const DOCS_GA_PARAMS = `?${new URLSearchParams({
   utm_source: "mozilla",
   utm_medium: "firefox-console-errors",
@@ -44,7 +44,7 @@ const GA_PARAMS = `?${new URLSearchParams({
   utm_campaign: "default",
 })}`;
 
-const wcActions = require("devtools/client/webconsole/actions/index");
+const wcActions = require("resource://devtools/client/webconsole/actions/index.js");
 
 registerCleanupFunction(async function() {
   // Reset all cookies, tests loading sjs_slow-response-test-server.sjs will

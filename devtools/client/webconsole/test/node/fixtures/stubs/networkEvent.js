@@ -11,11 +11,11 @@
 const {
   parsePacketsWithFronts,
 } = require("chrome://mochitests/content/browser/devtools/client/webconsole/test/browser/stub-generator-helpers");
-const { prepareMessage } = require("devtools/client/webconsole/utils/messages");
+const { prepareMessage } = require("resource://devtools/client/webconsole/utils/messages.js");
 const {
   ConsoleMessage,
   NetworkEventMessage,
-} = require("devtools/client/webconsole/types");
+} = require("resource://devtools/client/webconsole/types.js");
 
 const rawPackets = new Map();
 rawPackets.set(`GET request`, {

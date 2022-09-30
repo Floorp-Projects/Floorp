@@ -5,17 +5,21 @@
 "use strict";
 
 // React & Redux
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const Message = createFactory(
-  require("devtools/client/webconsole/components/Output/Message")
+  require("resource://devtools/client/webconsole/components/Output/Message.js")
 );
-const GripMessageBody = require("devtools/client/webconsole/components/Output/GripMessageBody");
+const GripMessageBody = require("resource://devtools/client/webconsole/components/Output/GripMessageBody.js");
 loader.lazyGetter(this, "REPS", function() {
-  return require("devtools/client/shared/components/reps/index").REPS;
+  return require("resource://devtools/client/shared/components/reps/index.js")
+    .REPS;
 });
 loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/index").MODE;
+  return require("resource://devtools/client/shared/components/reps/index.js")
+    .MODE;
 });
 
 PageError.displayName = "PageError";

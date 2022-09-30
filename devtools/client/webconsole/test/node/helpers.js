@@ -3,25 +3,29 @@
 
 "use strict";
 
-const reduxActions = require("devtools/client/webconsole/actions/index");
-const { configureStore } = require("devtools/client/webconsole/store");
+const reduxActions = require("resource://devtools/client/webconsole/actions/index.js");
+const {
+  configureStore,
+} = require("resource://devtools/client/webconsole/store.js");
 const {
   IdGenerator,
-} = require("devtools/client/webconsole/utils/id-generator");
+} = require("resource://devtools/client/webconsole/utils/id-generator.js");
 const {
   stubPackets,
-} = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
+} = require("resource://devtools/client/webconsole/test/node/fixtures/stubs/index.js");
 const {
   getMutableMessagesById,
-} = require("devtools/client/webconsole/selectors/messages");
-const { getPrefsService } = require("devtools/client/webconsole/utils/prefs");
+} = require("resource://devtools/client/webconsole/selectors/messages.js");
+const {
+  getPrefsService,
+} = require("resource://devtools/client/webconsole/utils/prefs.js");
 const prefsService = getPrefsService({});
-const { PREFS } = require("devtools/client/webconsole/constants");
-const Telemetry = require("devtools/client/shared/telemetry");
+const { PREFS } = require("resource://devtools/client/webconsole/constants.js");
+const Telemetry = require("resource://devtools/client/shared/telemetry.js");
 const {
   getSerializedPacket,
   parsePacketAndCreateFronts,
-} = require("devtools/client/webconsole/test/browser/stub-generator-helpers");
+} = require("resource://devtools/client/webconsole/test/browser/stub-generator-helpers.js");
 
 /**
  * Prepare actions for use in testing.

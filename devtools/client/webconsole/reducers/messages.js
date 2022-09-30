@@ -7,9 +7,9 @@ const {
   isGroupType,
   isMessageNetworkError,
   l10n,
-} = require("devtools/client/webconsole/utils/messages");
+} = require("resource://devtools/client/webconsole/utils/messages.js");
 
-const constants = require("devtools/client/webconsole/constants");
+const constants = require("resource://devtools/client/webconsole/constants.js");
 const { DEFAULT_FILTERS, FILTERS, MESSAGE_TYPE, MESSAGE_SOURCE } = constants;
 
 loader.lazyRequireGetter(
@@ -45,11 +45,13 @@ loader.lazyRequireGetter(
   true
 );
 
-const { UPDATE_REQUEST } = require("devtools/client/netmonitor/src/constants");
+const {
+  UPDATE_REQUEST,
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 const {
   processNetworkUpdates,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 
 const MessageState = overrides =>
   Object.freeze(

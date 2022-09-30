@@ -7,16 +7,18 @@
 const {
   createFactory,
   createElement,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 
 loader.lazyGetter(this, "REPS", function() {
-  return require("devtools/client/shared/components/reps/index").REPS;
+  return require("resource://devtools/client/shared/components/reps/index.js")
+    .REPS;
 });
 loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/index").MODE;
+  return require("resource://devtools/client/shared/components/reps/index.js")
+    .MODE;
 });
 loader.lazyGetter(this, "ObjectInspector", function() {
-  const reps = require("devtools/client/shared/components/reps/index");
+  const reps = require("resource://devtools/client/shared/components/reps/index.js");
   return createFactory(reps.objectInspector.ObjectInspector);
 });
 

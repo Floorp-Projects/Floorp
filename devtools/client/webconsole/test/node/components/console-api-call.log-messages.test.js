@@ -7,20 +7,24 @@ const expect = require("expect");
 const { render } = require("enzyme");
 
 // React
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const { setupStore } = require("devtools/client/webconsole/test/node/helpers");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  setupStore,
+} = require("resource://devtools/client/webconsole/test/node/helpers.js");
 const Provider = createFactory(require("react-redux").Provider);
 
 // Components under test.
 const ConsoleApiCall = createFactory(
-  require("devtools/client/webconsole/components/Output/message-types/ConsoleApiCall")
+  require("resource://devtools/client/webconsole/components/Output/message-types/ConsoleApiCall.js")
 );
 
 const {
   stubPreparedMessages,
-} = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
+} = require("resource://devtools/client/webconsole/test/node/fixtures/stubs/index.js");
 
-const serviceContainer = require("devtools/client/webconsole/test/node/fixtures/serviceContainer");
+const serviceContainer = require("resource://devtools/client/webconsole/test/node/fixtures/serviceContainer.js");
 
 describe("ConsoleAPICall component for platform message", () => {
   describe("Services.console.logStringMessage", () => {

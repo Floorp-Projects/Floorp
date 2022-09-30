@@ -4,20 +4,22 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
-const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
-const { l10n } = require("devtools/client/webconsole/utils/messages");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const KeyShortcuts = require("resource://devtools/client/shared/key-shortcuts.js");
+const {
+  l10n,
+} = require("resource://devtools/client/webconsole/utils/messages.js");
 
 const { BrowserLoader } = ChromeUtils.import(
   "resource://devtools/shared/loader/browser-loader.js"
 );
 const {
   getAdHocFrontOrPrimitiveGrip,
-} = require("devtools/client/fronts/object");
+} = require("resource://devtools/client/fronts/object.js");
 
-const { PREFS } = require("devtools/client/webconsole/constants");
+const { PREFS } = require("resource://devtools/client/webconsole/constants.js");
 
-const FirefoxDataProvider = require("devtools/client/netmonitor/src/connector/firefox-data-provider");
+const FirefoxDataProvider = require("resource://devtools/client/netmonitor/src/connector/firefox-data-provider.js");
 
 const lazy = {};
 ChromeUtils.defineModuleGetter(
@@ -37,7 +39,7 @@ loader.lazyRequireGetter(
   "devtools/client/shared/redux/middleware/ignore",
   true
 );
-const ZoomKeys = require("devtools/client/shared/zoom-keys");
+const ZoomKeys = require("resource://devtools/client/shared/zoom-keys.js");
 
 const PREF_SIDEBAR_ENABLED = "devtools.webconsole.sidebarToggle";
 const PREF_BROWSERTOOLBOX_SCOPE = "devtools.browsertoolbox.scope";

@@ -6,18 +6,20 @@
 const expect = require("expect");
 const { mount } = require("enzyme");
 const sinon = require("sinon");
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const serviceContainer = require("devtools/client/webconsole/test/node/fixtures/serviceContainer");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const serviceContainer = require("resource://devtools/client/webconsole/test/node/fixtures/serviceContainer.js");
 
 let {
   MessageContainer,
-} = require("devtools/client/webconsole/components/Output/MessageContainer");
+} = require("resource://devtools/client/webconsole/components/Output/MessageContainer.js");
 MessageContainer = createFactory(MessageContainer);
 
 // Test fakes.
 const {
   stubPreparedMessages,
-} = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
+} = require("resource://devtools/client/webconsole/test/node/fixtures/stubs/index.js");
 
 describe("Message - location element", () => {
   it("Calls onViewSourceInDebugger when clicked", () => {

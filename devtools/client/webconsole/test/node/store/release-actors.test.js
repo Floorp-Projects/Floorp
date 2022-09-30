@@ -6,11 +6,11 @@ const {
   getFirstMessage,
   setupActions,
   setupStore,
-} = require("devtools/client/webconsole/test/node/helpers");
+} = require("resource://devtools/client/webconsole/test/node/helpers.js");
 
 const {
   stubPackets,
-} = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
+} = require("resource://devtools/client/webconsole/test/node/fixtures/stubs/index.js");
 const expect = require("expect");
 
 describe("Release actor enhancer:", () => {

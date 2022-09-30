@@ -5,21 +5,25 @@
 const expect = require("expect");
 const { render } = require("enzyme");
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const Provider = createFactory(require("react-redux").Provider);
 
 const EagerEvaluation = createFactory(
-  require("devtools/client/webconsole/components/Input/EagerEvaluation")
+  require("resource://devtools/client/webconsole/components/Input/EagerEvaluation.js")
 );
 
-const { setupStore } = require("devtools/client/webconsole/test/node/helpers");
+const {
+  setupStore,
+} = require("resource://devtools/client/webconsole/test/node/helpers.js");
 const {
   SET_TERMINAL_EAGER_RESULT,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 const {
   stubPackets,
-} = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
+} = require("resource://devtools/client/webconsole/test/node/fixtures/stubs/index.js");
 
 function getEagerEvaluation(overrides = {}) {
   return EagerEvaluation({

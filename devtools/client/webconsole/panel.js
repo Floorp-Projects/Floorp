@@ -10,7 +10,7 @@ loader.lazyRequireGetter(
   "devtools/client/webconsole/webconsole"
 );
 loader.lazyGetter(this, "EventEmitter", () =>
-  require("devtools/shared/event-emitter")
+  require("resource://devtools/shared/event-emitter.js")
 );
 
 /**

@@ -5,26 +5,30 @@
 // Test utils.
 const expect = require("expect");
 const { render } = require("enzyme");
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 
 // Components under test.
 const ConsoleApiCall = createFactory(
-  require("devtools/client/webconsole/components/Output/message-types/ConsoleApiCall")
+  require("resource://devtools/client/webconsole/components/Output/message-types/ConsoleApiCall.js")
 );
 const ConsoleCmd = createFactory(
-  require("devtools/client/webconsole/components/Output/message-types/ConsoleCommand")
+  require("resource://devtools/client/webconsole/components/Output/message-types/ConsoleCommand.js")
 );
 const EvaluationResult = createFactory(
-  require("devtools/client/webconsole/components/Output/message-types/EvaluationResult")
+  require("resource://devtools/client/webconsole/components/Output/message-types/EvaluationResult.js")
 );
 
-const { ConsoleCommand } = require("devtools/client/webconsole/types");
+const {
+  ConsoleCommand,
+} = require("resource://devtools/client/webconsole/types.js");
 
 // Test fakes.
 const {
   stubPreparedMessages,
-} = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
-const serviceContainer = require("devtools/client/webconsole/test/node/fixtures/serviceContainer");
+} = require("resource://devtools/client/webconsole/test/node/fixtures/stubs/index.js");
+const serviceContainer = require("resource://devtools/client/webconsole/test/node/fixtures/serviceContainer.js");
 
 describe("message types component ARIA:", () => {
   describe("ConsoleAPICall", () => {

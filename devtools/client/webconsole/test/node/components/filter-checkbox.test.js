@@ -5,10 +5,12 @@
 const expect = require("expect");
 const { render } = require("enzyme");
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 
 const FilterCheckbox = createFactory(
-  require("devtools/client/webconsole/components/FilterBar/FilterCheckbox")
+  require("resource://devtools/client/webconsole/components/FilterBar/FilterCheckbox.js")
 );
 
 describe("FilterCheckbox component:", () => {

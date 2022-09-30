@@ -6,11 +6,13 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 const GridElementWidthResizer = createFactory(
-  require("devtools/client/shared/components/splitter/GridElementWidthResizer")
+  require("resource://devtools/client/shared/components/splitter/GridElementWidthResizer.js")
 );
 loader.lazyRequireGetter(
   this,

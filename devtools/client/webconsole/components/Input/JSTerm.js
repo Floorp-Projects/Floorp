@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { debounce } = require("devtools/shared/debounce");
+const { debounce } = require("resource://devtools/shared/debounce.js");
 const isMacOS = Services.appinfo.OS === "Darwin";
 
 loader.lazyRequireGetter(this, "Debugger", "Debugger");
@@ -54,29 +54,31 @@ loader.lazyRequireGetter(
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 // History Modules
 const {
   getHistory,
   getHistoryValue,
-} = require("devtools/client/webconsole/selectors/history");
+} = require("resource://devtools/client/webconsole/selectors/history.js");
 const {
   getAutocompleteState,
-} = require("devtools/client/webconsole/selectors/autocomplete");
-const actions = require("devtools/client/webconsole/actions/index");
+} = require("resource://devtools/client/webconsole/selectors/autocomplete.js");
+const actions = require("resource://devtools/client/webconsole/actions/index.js");
 
 const EvaluationContextSelector = createFactory(
-  require("devtools/client/webconsole/components/Input/EvaluationContextSelector")
+  require("resource://devtools/client/webconsole/components/Input/EvaluationContextSelector.js")
 );
 
 // Constants used for defining the direction of JSTerm input history navigation.
 const {
   HISTORY_BACK,
   HISTORY_FORWARD,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 const JSTERM_CODEMIRROR_ORIGIN = "jsterm";
 

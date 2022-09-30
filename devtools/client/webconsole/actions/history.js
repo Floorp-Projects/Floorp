@@ -12,7 +12,7 @@ const {
   REVERSE_SEARCH_INPUT_CHANGE,
   REVERSE_SEARCH_BACK,
   REVERSE_SEARCH_NEXT,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 /**
  * Append a new value in the history of executed expressions,

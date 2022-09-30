@@ -6,14 +6,14 @@
 
 const {
   createContextMenu,
-} = require("devtools/client/webconsole/utils/context-menu");
+} = require("resource://devtools/client/webconsole/utils/context-menu.js");
 
 const {
   createEditContextMenu,
-} = require("devtools/client/framework/toolbox-context-menu");
+} = require("resource://devtools/client/framework/toolbox-context-menu.js");
 const {
   getLongStringFullText,
-} = require("devtools/client/shared/string-utils");
+} = require("resource://devtools/client/shared/string-utils.js");
 
 function setupServiceContainer({
   webConsoleUI,

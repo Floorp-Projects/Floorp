@@ -5,12 +5,16 @@
 const expect = require("expect");
 const { render } = require("enzyme");
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 
 const FilterButton = createFactory(
-  require("devtools/client/webconsole/components/FilterBar/FilterButton")
+  require("resource://devtools/client/webconsole/components/FilterBar/FilterButton.js")
 );
-const { MESSAGE_LEVEL } = require("devtools/client/webconsole/constants");
+const {
+  MESSAGE_LEVEL,
+} = require("resource://devtools/client/webconsole/constants.js");
 
 describe("FilterButton component:", () => {
   const props = {

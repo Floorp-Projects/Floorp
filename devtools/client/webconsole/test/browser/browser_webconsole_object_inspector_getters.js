@@ -6,7 +6,7 @@
 // Check evaluating and expanding getters in the console.
 const TEST_URI =
   "data:text/html;charset=utf8,<!DOCTYPE html><h1>Object Inspector on Getters</h1>";
-const { ELLIPSIS } = require("devtools/shared/l10n");
+const { ELLIPSIS } = require("resource://devtools/shared/l10n.js");
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

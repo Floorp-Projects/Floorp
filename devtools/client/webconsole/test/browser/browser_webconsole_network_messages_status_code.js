@@ -10,7 +10,9 @@ const TEST_URI = TEST_PATH + TEST_FILE;
 
 const NET_PREF = "devtools.webconsole.filter.net";
 const XHR_PREF = "devtools.webconsole.filter.netxhr";
-const { l10n } = require("devtools/client/webconsole/utils/messages");
+const {
+  l10n,
+} = require("resource://devtools/client/webconsole/utils/messages.js");
 const LEARN_MORE_URI =
   "https://developer.mozilla.org/docs/Web/HTTP/Status/200" + GA_PARAMS;
 

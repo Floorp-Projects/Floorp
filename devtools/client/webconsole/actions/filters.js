@@ -6,7 +6,7 @@
 
 const {
   getAllFilters,
-} = require("devtools/client/webconsole/selectors/filters");
+} = require("resource://devtools/client/webconsole/selectors/filters.js");
 
 const {
   FILTER_TEXT_SET,
@@ -14,7 +14,7 @@ const {
   FILTERS_CLEAR,
   PREFS,
   FILTERS,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 function filterTextSet(text) {
   return {
