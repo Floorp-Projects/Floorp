@@ -558,7 +558,7 @@ constexpr const char* kFrameBufferFieldTrial = "WebRTC-FrameBuffer3";
 
 FrameBufferArm ParseFrameBufferFieldTrial(const FieldTrialsView& field_trials) {
   webrtc::FieldTrialEnum<FrameBufferArm> arm(
-      "arm", FrameBufferArm::kFrameBuffer2,
+      "arm", FrameBufferArm::kFrameBuffer3,
       {
           {"FrameBuffer2", FrameBufferArm::kFrameBuffer2},
           {"FrameBuffer3", FrameBufferArm::kFrameBuffer3},
