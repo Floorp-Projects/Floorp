@@ -112,7 +112,7 @@ MIDIPermissionRequest::Run() {
   // If the add-on is not installed, auto-deny (except for localhost).
   if (StaticPrefs::dom_webmidi_gated() &&
       !nsContentUtils::HasSitePerm(mPrincipal, kPermName) &&
-      !BasePrincipal::Cast(mPrincipal)->IsLoopbackHost()) {
+      !mPrincipal->GetIsLoopbackHost()) {
     Cancel();
     return NS_OK;
   }

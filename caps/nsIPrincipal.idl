@@ -376,6 +376,9 @@ interface nsIPrincipal : nsISupports
     [infallible]
     readonly attribute boolean isOriginPotentiallyTrustworthy;
 
+    [infallible]
+    readonly attribute boolean isLoopbackHost;
+
     /**
      * Returns the Flags of the Principals 
      * associated AboutModule, in case there is one.
