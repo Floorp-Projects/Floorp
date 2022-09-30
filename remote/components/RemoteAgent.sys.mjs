@@ -9,12 +9,12 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   Deferred: "chrome://remote/content/shared/Sync.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
+  WebDriverBiDi: "chrome://remote/content/webdriver-bidi/WebDriverBiDi.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   CDP: "chrome://remote/content/cdp/CDP.jsm",
   HttpServer: "chrome://remote/content/server/HTTPD.jsm",
-  WebDriverBiDi: "chrome://remote/content/webdriver-bidi/WebDriverBiDi.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

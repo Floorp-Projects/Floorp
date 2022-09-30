@@ -2,17 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["log"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { Module } = ChromeUtils.importESModule(
-  "chrome://remote/content/shared/messagehandler/Module.sys.mjs"
-);
+import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys.mjs";
 
 const lazy = {};
 
@@ -22,11 +12,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ConsoleListener:
     "chrome://remote/content/shared/listeners/ConsoleListener.sys.mjs",
   isChromeFrame: "chrome://remote/content/shared/Stack.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
-  serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
+  OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
+  serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
 });
 
 class LogModule extends Module {
@@ -235,4 +222,4 @@ class LogModule extends Module {
   }
 }
 
-const log = LogModule;
+export const log = LogModule;

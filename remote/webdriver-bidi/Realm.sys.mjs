@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["Realm", "RealmType", "WindowRealm"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -31,7 +25,7 @@ XPCOMUtils.defineLazyGetter(lazy, "dbg", () => {
  * @readonly
  * @enum {RealmType}
  **/
-const RealmType = {
+export const RealmType = {
   AudioWorklet: "audio-worklet",
   DedicatedWorker: "dedicated-worker",
   PaintWorklet: "paint-worklet",
@@ -52,7 +46,7 @@ function getUUID() {
 /**
  * Base class that wraps any kind of WebDriver BiDi realm.
  */
-class Realm {
+export class Realm {
   #handleObjectMap;
   #id;
 
@@ -150,7 +144,7 @@ class Realm {
 /**
  * Wrapper for Window realms including sandbox objects.
  */
-class WindowRealm extends Realm {
+export class WindowRealm extends Realm {
   #globalObject;
   #globalObjectReference;
   #sandboxName;

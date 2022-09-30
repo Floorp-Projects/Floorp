@@ -16,12 +16,13 @@ const protocols = {
   bidi: {},
   test: {},
 };
-XPCOMUtils.defineLazyModuleGetters(protocols.bidi, {
+// eslint-disable-next-line mozilla/lazy-getter-object-name
+ChromeUtils.defineESModuleGetters(protocols.bidi, {
   // Additional protocols might use a different registry for their modules,
   // in which case this will no longer be a constant but will instead depend on
   // the protocol owning the MessageHandler. See Bug 1722464.
   getModuleClass:
-    "chrome://remote/content/webdriver-bidi/modules/ModuleRegistry.jsm",
+    "chrome://remote/content/webdriver-bidi/modules/ModuleRegistry.sys.mjs",
 });
 // eslint-disable-next-line mozilla/lazy-getter-object-name
 ChromeUtils.defineESModuleGetters(protocols.test, {

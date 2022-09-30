@@ -314,12 +314,12 @@ const REMOTE_COMPLEX_VALUES = [
   },
 ];
 
-const { Realm } = ChromeUtils.import(
-  "chrome://remote/content/webdriver-bidi/Realm.jsm"
+const { Realm } = ChromeUtils.importESModule(
+  "chrome://remote/content/webdriver-bidi/Realm.sys.mjs"
 );
 
-const { deserialize, serialize, stringify } = ChromeUtils.import(
-  "chrome://remote/content/webdriver-bidi/RemoteValue.jsm"
+const { deserialize, serialize, stringify } = ChromeUtils.importESModule(
+  "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs"
 );
 
 add_test(function test_deserializePrimitiveTypes() {

@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["log"];
-
-const { Module } = ChromeUtils.importESModule(
-  "chrome://remote/content/shared/messagehandler/Module.sys.mjs"
-);
+import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys.mjs";
 
 const lazy = {};
 
@@ -16,14 +10,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
 });
 
-class LogModule extends Module {
+class BrowsingContextModule extends Module {
   destroy() {}
 
   interceptEvent(name, payload) {
-    if (name == "log.entryAdded") {
+    if (name == "browsingContext.load") {
       // Resolve browsing context to a TabManager id.
-      payload.source.context = lazy.TabManager.getIdForBrowsingContext(
-        payload.source.context
+      payload.context = lazy.TabManager.getIdForBrowsingContext(
+        payload.context
       );
     }
 
@@ -31,4 +25,4 @@ class LogModule extends Module {
   }
 }
 
-const log = LogModule;
+export const browsingContext = BrowsingContextModule;

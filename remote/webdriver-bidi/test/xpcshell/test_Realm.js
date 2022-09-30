@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { Realm } = ChromeUtils.import(
-  "chrome://remote/content/webdriver-bidi/Realm.jsm"
+const { Realm } = ChromeUtils.importESModule(
+  "chrome://remote/content/webdriver-bidi/Realm.sys.mjs"
 );
 
 add_test(function test_id() {

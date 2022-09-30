@@ -2,30 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["WebDriverNewSessionHandler"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  WebDriverBiDiConnection:
+    "chrome://remote/content/webdriver-bidi/WebDriverBiDiConnection.sys.mjs",
   WebSocketHandshake:
     "chrome://remote/content/server/WebSocketHandshake.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  WebDriverBiDiConnection:
-    "chrome://remote/content/webdriver-bidi/WebDriverBiDiConnection.jsm",
 });
 
 /**
  * httpd.js JSON handler for direct BiDi connections.
  */
-class WebDriverNewSessionHandler {
+export class WebDriverNewSessionHandler {
   /**
    * Construct a new JSON handler.
    *
