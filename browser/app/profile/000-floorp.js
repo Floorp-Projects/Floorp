@@ -58,12 +58,14 @@ pref("contentblocking.cryptomining_blocking_enabled",true);
 pref("contentblocking.category", true);
 pref("privacy.trackingprotection.enabled", true);
 pref("network.cookie.cookieBehavior", 5); 
-pref("privacy.partition.serviceWorkers", true); 
+pref("privacy.partition.serviceWorkers", true);
 pref("privacy.restrict3rdpartystorage.rollout.preferences.TCPToggleInStandard", true);
 pref("privacy.restrict3rdpartystorage.rollout.enabledByDefault", true);
 
 //新しいタブの検索を「ウェブを検索」に変更
 pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
+//新しいタブの背景の設定
+pref("browser.newtabpage.activity-stream.floorp.background.type", 1);
 
 pref("floorp.memory.free.button", true);
 pref("floorp.entable.deepl.translate", false);
