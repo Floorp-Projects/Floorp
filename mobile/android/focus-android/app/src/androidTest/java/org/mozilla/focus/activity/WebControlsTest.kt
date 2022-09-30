@@ -144,7 +144,6 @@ class WebControlsTest {
 
     @SmokeTest
     @Test
-    @Ignore("Failing, see https://github.com/mozilla-mobile/focus-android/issues/7363")
     fun verifySelectTextTest() {
         val htmlControlsPage = TestAssetHelper.getHTMLControlsPageAsset(webServer).url
 
