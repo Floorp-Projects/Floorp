@@ -12,6 +12,7 @@
 #include "SelectionState.h"  // for AutoTrackDOMPoint and RangeUpdater
 
 #include "mozilla/Logging.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/ToString.h"
 #include "nsAString.h"
 #include "nsDebug.h"     // for NS_ASSERTION, etc.
@@ -179,16 +180,25 @@ NS_IMETHODIMP SplitNodeTransaction::UndoTransaction() {
   const OwningNonNull<nsIContent> keepingContent = *mSplitContent;
   const OwningNonNull<nsIContent> removingContent = *mNewContent;
   nsresult rv;
-  EditorDOMPoint joinedPoint(keepingContent, 0u);
+  EditorDOMPoint joinedPoint;
   {
-    AutoTrackDOMPoint trackJoinedPoint(htmlEditor->RangeUpdaterRef(),
-                                       &joinedPoint);
+    // Unfortunately, we cannot track joining point if moving right node content
+    // into left node since it cannot track changes from web apps and HTMLEditor
+    // never removes the content of the left node.  So it should be true that
+    // we don't need to track the point in the direction.
+    Maybe<AutoTrackDOMPoint> trackJoinedPoint;
+    if (GetJoinNodesDirection() == JoinNodesDirection::LeftNodeIntoRightNode) {
+      joinedPoint.Set(keepingContent, 0u);
+      trackJoinedPoint.emplace(htmlEditor->RangeUpdaterRef(), &joinedPoint);
+    }
     rv = htmlEditor->DoJoinNodes(keepingContent, removingContent,
                                  GetJoinNodesDirection());
   }
   if (NS_SUCCEEDED(rv)) {
     // Adjust split offset for redo here
-    mSplitOffset = joinedPoint.Offset();
+    if (joinedPoint.IsSet()) {
+      mSplitOffset = joinedPoint.Offset();
+    }
   } else {
     NS_WARNING("HTMLEditor::DoJoinNodes() failed");
   }
