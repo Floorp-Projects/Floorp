@@ -209,6 +209,9 @@ static FrameCtorDebugFlags gFlags[] = {
 
 //------------------------------------------------------------------
 
+nsContainerFrame* NS_NewDocElementBoxFrame(PresShell* aPresShell,
+                                           ComputedStyle* aStyle);
+
 nsIFrame* NS_NewLeafBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewRangeFrame(PresShell* aPresShell, ComputedStyle* aStyle);
@@ -2417,7 +2420,14 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
 
   nsFrameConstructorSaveState absoluteSaveState;
 
-  if (aDocElement->IsSVGElement()) {
+  // Check whether we need to build a XUL box or SVG root frame
+  if (aDocElement->IsXULElement()) {
+    contentFrame = NS_NewDocElementBoxFrame(mPresShell, computedStyle);
+    InitAndRestoreFrame(state, aDocElement, mDocElementContainingBlock,
+                        contentFrame);
+    frameList = {contentFrame, contentFrame};
+    processChildren = true;
+  } else if (aDocElement->IsSVGElement()) {
     if (!aDocElement->IsSVGElement(nsGkAtoms::svg)) {
       return nullptr;
     }
@@ -2437,17 +2447,11 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
   } else if (display->mDisplay == StyleDisplay::Flex ||
              display->mDisplay == StyleDisplay::WebkitBox ||
              display->mDisplay == StyleDisplay::Grid ||
-             display->mDisplay == StyleDisplay::MozBox) {
-    auto func = [&] {
-      if (display->mDisplay == StyleDisplay::Grid) {
-        return NS_NewGridContainerFrame;
-      }
-      if (display->mDisplay == StyleDisplay::MozBox &&
-          !computedStyle->StyleVisibility()->EmulateMozBoxWithFlex()) {
-        return NS_NewBoxFrame;
-      }
-      return NS_NewFlexContainerFrame;
-    }();
+             (display->mDisplay == StyleDisplay::MozBox &&
+              computedStyle->StyleVisibility()->EmulateMozBoxWithFlex())) {
+    auto func = display->mDisplay == StyleDisplay::Grid
+                    ? NS_NewGridContainerFrame
+                    : NS_NewFlexContainerFrame;
     contentFrame = func(mPresShell, computedStyle);
     InitAndRestoreFrame(
         state, aDocElement,
@@ -2598,14 +2602,19 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
   /*
     how the root frame hierarchy should look
 
-  Galley presentation, with scrolling:
+  Galley presentation, non-XUL, with scrolling:
 
       ViewportFrame [fixed-cb]
-        nsHTMLScrollFrame (if needed)
+        nsHTMLScrollFrame
           nsCanvasFrame [abs-cb]
             root element frame (nsBlockFrame, SVGOuterSVGFrame,
-                                nsTableWrapperFrame, nsPlaceholderFrame,
-                                nsBoxFrame)
+                                nsTableWrapperFrame, nsPlaceholderFrame)
+
+  Galley presentation, XUL
+
+      ViewportFrame [fixed-cb]
+        nsCanvasFrame [abs-cb]
+          root element frame (nsDocElementBoxFrame)
 
   Print presentation, non-XUL
 
@@ -4463,8 +4472,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
       if (aMozBoxLayout == StyleMozBoxLayout::Legacy ||
           aElement.IsXULElement(nsGkAtoms::scrollcorner)) {
         static constexpr FrameConstructionData data =
-            SCROLLABLE_ABSPOS_CONTAINER_XUL_FCDATA(
-                ToCreationFunc(NS_NewBoxFrame));
+            SCROLLABLE_ABSPOS_CONTAINER_XUL_FCDATA(NS_NewBoxFrame);
         return &data;
       }
       [[fallthrough]];
