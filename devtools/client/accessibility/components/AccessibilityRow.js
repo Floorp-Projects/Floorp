@@ -9,42 +9,48 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  findDOMNode,
+} = require("resource://devtools/client/shared/vendor/react-dom.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
-const TreeRow = require("devtools/client/shared/components/tree/TreeRow");
+const TreeRow = require("resource://devtools/client/shared/components/tree/TreeRow.js");
 const AuditFilter = createFactory(
-  require("devtools/client/accessibility/components/AuditFilter")
+  require("resource://devtools/client/accessibility/components/AuditFilter.js")
 );
 const AuditController = createFactory(
-  require("devtools/client/accessibility/components/AuditController")
+  require("resource://devtools/client/accessibility/components/AuditController.js")
 );
 
 // Utils
 const {
   flashElementOn,
   flashElementOff,
-} = require("devtools/client/inspector/markup/utils");
-const { openDocLink } = require("devtools/client/shared/link");
+} = require("resource://devtools/client/inspector/markup/utils.js");
+const { openDocLink } = require("resource://devtools/client/shared/link.js");
 const {
   PREFS,
   VALUE_FLASHING_DURATION,
   VALUE_HIGHLIGHT_DURATION,
-} = require("devtools/client/accessibility/constants");
+} = require("resource://devtools/client/accessibility/constants.js");
 
-const nodeConstants = require("devtools/shared/dom-node-constants");
+const nodeConstants = require("resource://devtools/shared/dom-node-constants.js");
 
 // Actions
 const {
   updateDetails,
-} = require("devtools/client/accessibility/actions/details");
+} = require("resource://devtools/client/accessibility/actions/details.js");
 const {
   unhighlight,
-} = require("devtools/client/accessibility/actions/accessibles");
+} = require("resource://devtools/client/accessibility/actions/accessibles.js");
 
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
+const {
+  L10N,
+} = require("resource://devtools/client/accessibility/utils/l10n.js");
 
 loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
 loader.lazyRequireGetter(
@@ -53,7 +59,9 @@ loader.lazyRequireGetter(
   "devtools/client/framework/menu-item"
 );
 
-const { scrollIntoView } = require("devtools/client/shared/scroll");
+const {
+  scrollIntoView,
+} = require("resource://devtools/client/shared/scroll.js");
 
 const JSON_URL_PREFIX = "data:application/json;charset=UTF-8,";
 

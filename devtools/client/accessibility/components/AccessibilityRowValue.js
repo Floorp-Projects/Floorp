@@ -7,18 +7,22 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { span } = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  span,
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 const Badges = createFactory(
-  require("devtools/client/accessibility/components/Badges")
+  require("resource://devtools/client/accessibility/components/Badges.js")
 );
 const AuditController = createFactory(
-  require("devtools/client/accessibility/components/AuditController")
+  require("resource://devtools/client/accessibility/components/AuditController.js")
 );
 
-const { REPS } = require("devtools/client/shared/components/reps/index");
+const {
+  REPS,
+} = require("resource://devtools/client/shared/components/reps/index.js");
 const { Grip } = REPS;
 const Rep = createFactory(REPS.Rep);
 

@@ -5,22 +5,26 @@
 
 const { mount } = require("enzyme");
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const Provider = createFactory(
-  require("devtools/client/shared/vendor/react-redux").Provider
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
 );
 
-const MenuButton = require("devtools/client/shared/components/menu/MenuButton");
-const ConnectedAccessibilityPrefsClass = require("devtools/client/accessibility/components/AccessibilityPrefs");
+const MenuButton = require("resource://devtools/client/shared/components/menu/MenuButton.js");
+const ConnectedAccessibilityPrefsClass = require("resource://devtools/client/accessibility/components/AccessibilityPrefs.js");
 const AccessibilityPrefsClass =
   ConnectedAccessibilityPrefsClass.WrappedComponent;
 const AccessibilityPrefs = createFactory(ConnectedAccessibilityPrefsClass);
 const {
   checkMenuItem,
   setupStore,
-} = require("devtools/client/accessibility/test/node/helpers");
+} = require("resource://devtools/client/accessibility/test/node/helpers.js");
 
-const { PREFS } = require("devtools/client/accessibility/constants");
+const {
+  PREFS,
+} = require("resource://devtools/client/accessibility/constants.js");
 
 function checkTogglePrefCheckbox(wrapper, pref) {
   const prefsInstance = wrapper.find(AccessibilityPrefsClass).instance();

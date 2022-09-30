@@ -5,16 +5,18 @@
 "use strict";
 
 const { mount } = require("enzyme");
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const TextLabelCheckClass = require("devtools/client/accessibility/components/TextLabelCheck");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const TextLabelCheckClass = require("resource://devtools/client/accessibility/components/TextLabelCheck.js");
 const TextLabelCheck = createFactory(TextLabelCheckClass);
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
 const {
   testCustomCheck,
-} = require("devtools/client/accessibility/test/node/helpers");
+} = require("resource://devtools/client/accessibility/test/node/helpers.js");
 
 const {
   accessibility: {
@@ -28,7 +30,7 @@ const {
     },
     SCORES: { BEST_PRACTICES, FAIL, WARNING },
   },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 describe("TextLabelCheck component:", () => {
   const testProps = [

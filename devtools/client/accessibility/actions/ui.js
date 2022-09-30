@@ -11,7 +11,7 @@ const {
   UPDATE_PREF,
   PREF_KEYS,
   UPDATE_DISPLAY_TABBING_ORDER,
-} = require("devtools/client/accessibility/constants");
+} = require("resource://devtools/client/accessibility/constants.js");
 
 /**
  * Reset accessibility panel UI.

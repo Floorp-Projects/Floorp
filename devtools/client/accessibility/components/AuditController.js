@@ -4,8 +4,8 @@
 
 "use strict";
 
-const React = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const React = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 class AuditController extends React.Component {
   static get propTypes() {

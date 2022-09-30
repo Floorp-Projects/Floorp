@@ -4,22 +4,26 @@
 "use strict";
 
 // React & Redux
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   div,
   p,
   img,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const LearnMoreLink = createFactory(
-  require("devtools/client/accessibility/components/LearnMoreLink")
+  require("resource://devtools/client/accessibility/components/LearnMoreLink.js")
 );
 
 // Localization
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
+const {
+  L10N,
+} = require("resource://devtools/client/accessibility/utils/l10n.js");
 
 const {
   A11Y_LEARN_MORE_LINK,
-} = require("devtools/client/accessibility/constants");
+} = require("resource://devtools/client/accessibility/constants.js");
 
 /**
  * Landing UI for the accessibility panel when Accessibility features are

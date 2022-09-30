@@ -5,13 +5,19 @@
 
 const {
   accessibles,
-} = require("devtools/client/accessibility/reducers/accessibles");
-const { audit } = require("devtools/client/accessibility/reducers/audit");
-const { details } = require("devtools/client/accessibility/reducers/details");
+} = require("resource://devtools/client/accessibility/reducers/accessibles.js");
+const {
+  audit,
+} = require("resource://devtools/client/accessibility/reducers/audit.js");
+const {
+  details,
+} = require("resource://devtools/client/accessibility/reducers/details.js");
 const {
   simulation,
-} = require("devtools/client/accessibility/reducers/simulation");
-const { ui } = require("devtools/client/accessibility/reducers/ui");
+} = require("resource://devtools/client/accessibility/reducers/simulation.js");
+const {
+  ui,
+} = require("resource://devtools/client/accessibility/reducers/ui.js");
 
 exports.reducers = {
   accessibles,

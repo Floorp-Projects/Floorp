@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { UPDATE_DETAILS } = require("devtools/client/accessibility/constants");
+const {
+  UPDATE_DETAILS,
+} = require("resource://devtools/client/accessibility/constants.js");
 
 /**
  * Update details with the given accessible object.

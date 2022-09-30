@@ -7,7 +7,7 @@
 
 const {
   isWebRenderEnabled,
-} = require("devtools/server/actors/utils/accessibility");
+} = require("resource://devtools/server/actors/utils/accessibility.js");
 
 const TEST_URI = `<html>
   <head>

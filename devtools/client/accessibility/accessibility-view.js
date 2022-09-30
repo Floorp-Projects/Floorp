@@ -5,26 +5,30 @@
 
 /* global EVENTS */
 
-const nodeConstants = require("devtools/shared/dom-node-constants");
+const nodeConstants = require("resource://devtools/shared/dom-node-constants.js");
 
 // React & Redux
 const {
   createFactory,
   createElement,
-} = require("devtools/client/shared/vendor/react");
-const ReactDOM = require("devtools/client/shared/vendor/react-dom");
-const { Provider } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const ReactDOM = require("resource://devtools/client/shared/vendor/react-dom.js");
+const {
+  Provider,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 // Accessibility Panel
 const MainFrame = createFactory(
-  require("devtools/client/accessibility/components/MainFrame")
+  require("resource://devtools/client/accessibility/components/MainFrame.js")
 );
 
 // Store
-const createStore = require("devtools/client/shared/redux/create-store");
+const createStore = require("resource://devtools/client/shared/redux/create-store.js");
 
 // Reducers
-const { reducers } = require("devtools/client/accessibility/reducers/index");
+const {
+  reducers,
+} = require("resource://devtools/client/accessibility/reducers/index.js");
 const thunkOptions = { options: {} };
 const store = createStore(reducers, {
   // Thunk options will be updated, when we [re]initialize the accessibility
@@ -33,11 +37,13 @@ const store = createStore(reducers, {
 });
 
 // Actions
-const { reset } = require("devtools/client/accessibility/actions/ui");
+const {
+  reset,
+} = require("resource://devtools/client/accessibility/actions/ui.js");
 const {
   select,
   highlight,
-} = require("devtools/client/accessibility/actions/accessibles");
+} = require("resource://devtools/client/accessibility/actions/accessibles.js");
 
 /**
  * This object represents view of the Accessibility panel and is responsible

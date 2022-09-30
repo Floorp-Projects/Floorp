@@ -5,23 +5,29 @@
 
 const { mount } = require("enzyme");
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const { span } = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  span,
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const Provider = createFactory(
-  require("devtools/client/shared/vendor/react-redux").Provider
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
 );
 
-const ConnectedAuditFilterClass = require("devtools/client/accessibility/components/AuditFilter");
+const ConnectedAuditFilterClass = require("resource://devtools/client/accessibility/components/AuditFilter.js");
 const AuditFilterClass = ConnectedAuditFilterClass.WrappedComponent;
 const AuditFilter = createFactory(ConnectedAuditFilterClass);
 const {
   setupStore,
-} = require("devtools/client/accessibility/test/node/helpers");
-const { FILTERS } = require("devtools/client/accessibility/constants");
+} = require("resource://devtools/client/accessibility/test/node/helpers.js");
+const {
+  FILTERS,
+} = require("resource://devtools/client/accessibility/constants.js");
 
 const {
   accessibility: { SCORES },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 describe("AuditController component:", () => {
   it("audit filter not filtered", () => {

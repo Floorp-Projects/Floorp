@@ -5,11 +5,13 @@
 
 const { mount } = require("enzyme");
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const CheckClass = require("devtools/client/accessibility/components/Check");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const CheckClass = require("resource://devtools/client/accessibility/components/Check.js");
 const Check = createFactory(CheckClass);
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
 const {
@@ -20,11 +22,11 @@ const {
     },
     SCORES: { FAIL },
   },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 const {
   testCheck,
-} = require("devtools/client/accessibility/test/node/helpers");
+} = require("resource://devtools/client/accessibility/test/node/helpers.js");
 
 describe("Check component:", () => {
   const props = {

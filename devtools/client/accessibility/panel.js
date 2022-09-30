@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
-const Telemetry = require("devtools/client/shared/telemetry");
+const Telemetry = require("resource://devtools/client/shared/telemetry.js");
 
 loader.lazyRequireGetter(
   this,
@@ -21,7 +21,7 @@ loader.lazyRequireGetter(
 );
 const {
   A11Y_SERVICE_DURATION,
-} = require("devtools/client/accessibility/constants");
+} = require("resource://devtools/client/accessibility/constants.js");
 
 // The panel's window global is an EventEmitter firing the following events:
 const EVENTS = {

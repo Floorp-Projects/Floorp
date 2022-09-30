@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
+const {
+  L10N,
+} = require("resource://devtools/client/accessibility/utils/l10n.js");
 
 // Check that DOM nodes in the sidebar can be highlighted and that clicking on the icon
 // next to them opens the inspector.

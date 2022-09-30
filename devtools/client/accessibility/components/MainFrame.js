@@ -7,48 +7,52 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   span,
   div,
-} = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 const {
   enable,
   reset,
   updateCanBeEnabled,
   updateCanBeDisabled,
-} = require("devtools/client/accessibility/actions/ui");
+} = require("resource://devtools/client/accessibility/actions/ui.js");
 
 // Localization
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
 // Constants
 const {
   SIDEBAR_WIDTH,
   PORTRAIT_MODE_WIDTH,
-} = require("devtools/client/accessibility/constants");
+} = require("resource://devtools/client/accessibility/constants.js");
 
 // Accessibility Panel
 const AccessibilityTree = createFactory(
-  require("devtools/client/accessibility/components/AccessibilityTree")
+  require("resource://devtools/client/accessibility/components/AccessibilityTree.js")
 );
 const AuditProgressOverlay = createFactory(
-  require("devtools/client/accessibility/components/AuditProgressOverlay")
+  require("resource://devtools/client/accessibility/components/AuditProgressOverlay.js")
 );
 const Description = createFactory(
-  require("devtools/client/accessibility/components/Description").Description
+  require("resource://devtools/client/accessibility/components/Description.js")
+    .Description
 );
 const RightSidebar = createFactory(
-  require("devtools/client/accessibility/components/RightSidebar")
+  require("resource://devtools/client/accessibility/components/RightSidebar.js")
 );
 const Toolbar = createFactory(
-  require("devtools/client/accessibility/components/Toolbar").Toolbar
+  require("resource://devtools/client/accessibility/components/Toolbar.js")
+    .Toolbar
 );
 const SplitBox = createFactory(
-  require("devtools/client/shared/components/splitter/SplitBox")
+  require("resource://devtools/client/shared/components/splitter/SplitBox.js")
 );
 
 /**

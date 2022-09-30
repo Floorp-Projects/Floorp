@@ -6,7 +6,7 @@
 
 const {
   accessibility: { AUDIT_TYPE },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 const {
   AUDIT,
   AUDITING,
@@ -15,7 +15,7 @@ const {
   FILTERS,
   RESET,
   SELECT,
-} = require("devtools/client/accessibility/constants");
+} = require("resource://devtools/client/accessibility/constants.js");
 
 /**
  * Initial state definition

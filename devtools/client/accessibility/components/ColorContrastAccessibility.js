@@ -7,21 +7,23 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   div,
   span,
   h3,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const LearnMoreLink = createFactory(
-  require("devtools/client/accessibility/components/LearnMoreLink")
+  require("resource://devtools/client/accessibility/components/LearnMoreLink.js")
 );
 
 const {
   A11Y_CONTRAST_LEARN_MORE_LINK,
-} = require("devtools/client/accessibility/constants");
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
+} = require("resource://devtools/client/accessibility/constants.js");
+const {
+  L10N,
+} = require("resource://devtools/client/accessibility/utils/l10n.js");
 
 /**
  * Component that renders a colour contrast value along with a swatch preview of what the

@@ -5,15 +5,19 @@
 
 const { mount } = require("enzyme");
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const { span } = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  span,
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 const AuditController = createFactory(
-  require("devtools/client/accessibility/components/AuditController")
+  require("resource://devtools/client/accessibility/components/AuditController.js")
 );
 const {
   mockAccessible,
-} = require("devtools/client/accessibility/test/node/helpers");
+} = require("resource://devtools/client/accessibility/test/node/helpers.js");
 
 describe("AuditController component:", () => {
   it("dead accessible actor", () => {

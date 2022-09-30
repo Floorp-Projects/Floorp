@@ -9,31 +9,43 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 const TreeView = createFactory(
-  require("devtools/client/shared/components/tree/TreeView")
+  require("resource://devtools/client/shared/components/tree/TreeView.js")
 );
 // Reps
-const { MODE } = require("devtools/client/shared/components/reps/index");
+const {
+  MODE,
+} = require("resource://devtools/client/shared/components/reps/index.js");
 
 const {
   fetchChildren,
-} = require("devtools/client/accessibility/actions/accessibles");
+} = require("resource://devtools/client/accessibility/actions/accessibles.js");
 
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
-const { isFiltered } = require("devtools/client/accessibility/utils/audit");
+const {
+  L10N,
+} = require("resource://devtools/client/accessibility/utils/l10n.js");
+const {
+  isFiltered,
+} = require("resource://devtools/client/accessibility/utils/audit.js");
 const AccessibilityRow = createFactory(
-  require("devtools/client/accessibility/components/AccessibilityRow")
+  require("resource://devtools/client/accessibility/components/AccessibilityRow.js")
 );
 const AccessibilityRowValue = createFactory(
-  require("devtools/client/accessibility/components/AccessibilityRowValue")
+  require("resource://devtools/client/accessibility/components/AccessibilityRowValue.js")
 );
-const { Provider } = require("devtools/client/accessibility/provider");
+const {
+  Provider,
+} = require("resource://devtools/client/accessibility/provider.js");
 
-const { scrollIntoView } = require("devtools/client/shared/scroll");
+const {
+  scrollIntoView,
+} = require("resource://devtools/client/shared/scroll.js");
 
 /**
  * Renders Accessibility panel tree.

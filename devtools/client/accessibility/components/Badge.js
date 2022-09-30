@@ -4,9 +4,13 @@
 "use strict";
 
 // React
-const { Component } = require("devtools/client/shared/vendor/react");
-const { span } = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  span,
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 class Badge extends Component {
   static get propTypes() {

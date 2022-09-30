@@ -7,17 +7,21 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
+const {
+  L10N,
+} = require("resource://devtools/client/accessibility/utils/l10n.js");
 
 const {
   accessibility: { SCORES },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 loader.lazyGetter(this, "Badge", () =>
-  createFactory(require("devtools/client/accessibility/components/Badge"))
+  createFactory(
+    require("resource://devtools/client/accessibility/components/Badge.js")
+  )
 );
 
 /**

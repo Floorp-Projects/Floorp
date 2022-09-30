@@ -3,14 +3,16 @@
 
 "use strict";
 
-const { reducers } = require("devtools/client/accessibility/reducers/index");
-const CheckClass = require("devtools/client/accessibility/components/Check");
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const {
+  reducers,
+} = require("resource://devtools/client/accessibility/reducers/index.js");
+const CheckClass = require("resource://devtools/client/accessibility/components/Check.js");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 
 const {
   createStore,
   combineReducers,
-} = require("devtools/client/shared/vendor/redux");
+} = require("resource://devtools/client/shared/vendor/redux.js");
 
 /**
  * Prepare the store for use in testing.

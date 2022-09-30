@@ -9,35 +9,41 @@
 const {
   createFactory,
   Component,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   div,
   hr,
   span,
-} = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  L10N,
+} = require("resource://devtools/client/accessibility/utils/l10n.js");
 
 loader.lazyGetter(this, "MenuButton", function() {
   return createFactory(
-    require("devtools/client/shared/components/menu/MenuButton")
+    require("resource://devtools/client/shared/components/menu/MenuButton.js")
   );
 });
 loader.lazyGetter(this, "MenuItem", function() {
   return createFactory(
-    require("devtools/client/shared/components/menu/MenuItem")
+    require("resource://devtools/client/shared/components/menu/MenuItem.js")
   );
 });
 loader.lazyGetter(this, "MenuList", function() {
   return createFactory(
-    require("devtools/client/shared/components/menu/MenuList")
+    require("resource://devtools/client/shared/components/menu/MenuList.js")
   );
 });
 
-const actions = require("devtools/client/accessibility/actions/audit");
+const actions = require("resource://devtools/client/accessibility/actions/audit.js");
 
-const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { FILTERS } = require("devtools/client/accessibility/constants");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
+const {
+  FILTERS,
+} = require("resource://devtools/client/accessibility/constants.js");
 
 const TELEMETRY_AUDIT_ACTIVATED = "devtools.accessibility.audit_activated";
 const FILTER_LABELS = {

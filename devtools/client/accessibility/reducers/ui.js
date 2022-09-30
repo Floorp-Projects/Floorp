@@ -18,9 +18,9 @@ const {
   PREF_KEYS,
   PREFS,
   UPDATE_DISPLAY_TABBING_ORDER,
-} = require("devtools/client/accessibility/constants");
+} = require("resource://devtools/client/accessibility/constants.js");
 
-const TreeView = require("devtools/client/shared/components/tree/TreeView");
+const TreeView = require("resource://devtools/client/shared/components/tree/TreeView.js");
 
 /**
  * Initial state definition

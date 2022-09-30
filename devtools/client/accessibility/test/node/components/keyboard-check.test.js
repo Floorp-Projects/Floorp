@@ -5,16 +5,18 @@
 "use strict";
 
 const { mount } = require("enzyme");
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const KeyboardCheckClass = require("devtools/client/accessibility/components/KeyboardCheck");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const KeyboardCheckClass = require("resource://devtools/client/accessibility/components/KeyboardCheck.js");
 const KeyboardCheck = createFactory(KeyboardCheckClass);
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
 const {
   testCustomCheck,
-} = require("devtools/client/accessibility/test/node/helpers");
+} = require("resource://devtools/client/accessibility/test/node/helpers.js");
 
 const {
   accessibility: {
@@ -24,7 +26,7 @@ const {
     },
     SCORES: { FAIL, WARNING },
   },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 describe("KeyboardCheck component:", () => {
   const testProps = [

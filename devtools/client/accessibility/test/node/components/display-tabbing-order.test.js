@@ -6,18 +6,20 @@
 
 const { mount } = require("enzyme");
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const Provider = createFactory(
-  require("devtools/client/shared/vendor/react-redux").Provider
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
 );
 const {
   setupStore,
-} = require("devtools/client/accessibility/test/node/helpers");
+} = require("resource://devtools/client/accessibility/test/node/helpers.js");
 const {
   UPDATE_DISPLAY_TABBING_ORDER,
-} = require("devtools/client/accessibility/constants");
+} = require("resource://devtools/client/accessibility/constants.js");
 
-const ConnectedDisplayTabbingOrderClass = require("devtools/client/accessibility/components/DisplayTabbingOrder");
+const ConnectedDisplayTabbingOrderClass = require("resource://devtools/client/accessibility/components/DisplayTabbingOrder.js");
 const DisplayTabbingOrderClass =
   ConnectedDisplayTabbingOrderClass.WrappedComponent;
 const DisplayTabbingOrder = createFactory(ConnectedDisplayTabbingOrderClass);

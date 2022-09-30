@@ -4,11 +4,16 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { p, a } = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  p,
+  a,
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const { openDocLink } = require("devtools/client/shared/link");
+const { openDocLink } = require("resource://devtools/client/shared/link.js");
 
 /**
  * Localization friendly component for rendering a block of text with a "Learn more" link

@@ -4,12 +4,14 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   button,
   span,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 const defaultProps = {
   disabled: false,

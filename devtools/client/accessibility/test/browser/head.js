@@ -28,7 +28,7 @@ Services.scriptloader.loadSubScript(
 const {
   ORDERED_PROPS,
   PREF_KEYS,
-} = require("devtools/client/accessibility/constants");
+} = require("resource://devtools/client/accessibility/constants.js");
 
 // Enable the Accessibility panel
 Services.prefs.setBoolPref("devtools.accessibility.enabled", true);

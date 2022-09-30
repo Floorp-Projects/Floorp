@@ -14,4 +14,4 @@ const require = BrowserLoader({
 }).require;
 
 // Load accessibility panel content
-require("devtools/client/accessibility/accessibility-view.js");
+require("resource://devtools/client/accessibility/accessibility-view.js");
