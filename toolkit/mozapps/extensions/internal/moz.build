@@ -8,7 +8,9 @@ EXTRA_JS_MODULES.addons += [
     "AddonRepository.jsm",
     "AddonSettings.jsm",
     "AddonUpdateChecker.jsm",
+    "crypto-utils.sys.mjs",
     "ProductAddonChecker.jsm",
+    "siteperms-addon-utils.sys.mjs",
     "XPIDatabase.jsm",
     "XPIInstall.jsm",
     "XPIProvider.jsm",
@@ -17,6 +19,8 @@ EXTRA_JS_MODULES.addons += [
 if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     EXTRA_JS_MODULES.addons += [
         "GMPProvider.sys.mjs",
+        ## TODO consider extending it to mobile builds too (See Bug 1790084).
+        "SitePermsAddonProvider.sys.mjs",
     ]
 
 TESTING_JS_MODULES += [

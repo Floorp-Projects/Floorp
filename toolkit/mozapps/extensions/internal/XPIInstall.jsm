@@ -26,6 +26,13 @@ var EXPORTED_SYMBOLS = [
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
+const {
+  computeSha256HashAsString,
+  getHashStringForCrypto,
+} = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/crypto-utils.sys.mjs"
+);
+
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -787,21 +794,6 @@ function getTemporaryFile() {
   return file;
 }
 
-/**
- * Returns the string representation (hex) of the SHA256 hash of `input`.
- *
- * @param {string} input
- *        The value to hash.
- * @returns {string}
- *          The hex representation of a SHA256 hash.
- */
-function computeSha256HashAsString(input) {
-  const data = new Uint8Array(new TextEncoder().encode(input));
-  const crypto = CryptoHash("sha256");
-  crypto.update(data, data.length);
-  return getHashStringForCrypto(crypto);
-}
-
 function getHashForFile(file, algorithm) {
   let crypto = CryptoHash(algorithm);
   let fis = new FileInputStream(file, -1, -1, false);
@@ -1223,16 +1215,6 @@ SafeInstallOperation.prototype = {
     }
   },
 };
-
-function getHashStringForCrypto(aCrypto) {
-  // return the two-digit hexadecimal code for a byte
-  let toHexString = charCode => ("0" + charCode.toString(16)).slice(-2);
-
-  // convert the binary hash data to a hex string.
-  let binary = aCrypto.finish(/* base64 */ false);
-  let hash = Array.from(binary, c => toHexString(c.charCodeAt(0)));
-  return hash.join("").toLowerCase();
-}
 
 // A hash algorithm if the caller of AddonInstall did not specify one.
 const DEFAULT_HASH_ALGO = "sha256";

@@ -198,7 +198,8 @@ addonsManager:
         The source that originally triggered the add-on installation, one of "about:addons",
         "about:debugging", "about:preferences", "amo", "disco", "distribution",
         "extension", "enterprise-policy", "file-url", "geckoview-app", "gmp-plugin",
-        "internal", "plugin", "rtamo", "sync", "system-addon", "temporary-addon", "unknown".
+        "internal", "plugin", "rtamo", "siteperm-addon-provider" "sync", "system-addon",
+        "temporary-addon", "unknown".
         For events with method set to "sideload", the source value is derived from the XPIProvider
         location name (e.g. possible values are "app-builtin", "app-global", "app-profile",
         "app-system-addons", "app-system-defaults", "app-system-local", "app-system-profile",
@@ -207,7 +208,7 @@ addonsManager:
         The method used by the source to install the add-on (included when the source can use more than one,
         e.g. install events with source "about:addons" may have "install-from-file" or "url" as method),
         one of "amWebAPI", "drag-and-drop", "installTrigger", "install-from-file", "link",
-        "management-webext-api", "sideload", "url", "product-updates".
+        "management-webext-api", "sideload", "synthetic-install", "url", "product-updates".
       num_strings: The number of permission description strings in the extension permission doorhanger
       updated_from: Determine if an update has been requested by the user or the application ("app" / "user")
       install_origins: This flag indicates whether install_origins is defined in the addon manifest. ("1" / "0")
