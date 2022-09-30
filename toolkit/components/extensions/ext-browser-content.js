@@ -255,21 +255,17 @@ const BrowserListener = {
       this.oldBackground = background;
 
       // Adjust the size of the browser based on its content's preferred size.
-      let { contentViewer } = docShell;
-      let ratio = content.devicePixelRatio;
-
       let w = {},
         h = {};
-      contentViewer.getContentSizeConstrained(
-        this.maxWidth * ratio,
-        this.maxHeight * ratio,
+      docShell.contentViewer.getContentSize(
+        this.maxWidth,
+        this.maxHeight,
         w,
         h
       );
 
-      let width = Math.ceil((w.value * zoom) / ratio);
-      let height = Math.ceil((h.value * zoom) / ratio);
-
+      let width = Math.ceil(w.value * zoom);
+      let height = Math.ceil(h.value * zoom);
       result = { width, height, detail };
     }
 

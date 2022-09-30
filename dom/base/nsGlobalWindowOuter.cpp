@@ -5466,6 +5466,8 @@ void nsGlobalWindowOuter::ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif,
 }
 
 void nsGlobalWindowOuter::SizeToContentOuter(CallerType aCallerType,
+                                             int32_t aMaxWidth,
+                                             int32_t aMaxHeight,
                                              ErrorResult& aError) {
   if (!mDocShell) {
     return;
@@ -5485,22 +5487,19 @@ void nsGlobalWindowOuter::SizeToContentOuter(CallerType aCallerType,
   nsCOMPtr<nsIContentViewer> cv;
   mDocShell->GetContentViewer(getter_AddRefs(cv));
   if (!cv) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
+    return aError.Throw(NS_ERROR_FAILURE);
   }
 
-  nsIntSize contentSize;
-  aError = cv->GetContentSize(&contentSize.width, &contentSize.height);
-  if (aError.Failed()) {
-    return;
+  auto contentSize = cv->GetContentSize(aMaxWidth, aMaxHeight);
+  if (!contentSize) {
+    return aError.Throw(NS_ERROR_FAILURE);
   }
 
   // Make sure the new size is following the CheckSecurityWidthAndHeight
   // rules.
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner = GetTreeOwner();
   if (!treeOwner) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
+    return aError.Throw(NS_ERROR_FAILURE);
   }
 
   // Don't use DevToCSSIntPixelsForBaseWindow() nor
@@ -5511,13 +5510,12 @@ void nsGlobalWindowOuter::SizeToContentOuter(CallerType aCallerType,
   MOZ_ASSERT(
       presContext,
       "Should be non-nullptr if nsIContentViewer::GetContentSize() succeeded");
-  nsIntSize cssSize(presContext->DevPixelsToIntCSSPixels(contentSize.width),
-                    presContext->DevPixelsToIntCSSPixels(contentSize.height));
-
+  CSSIntSize cssSize = *contentSize;
   CheckSecurityWidthAndHeight(&cssSize.width, &cssSize.height, aCallerType);
 
-  nsIntSize newDevSize(presContext->CSSPixelsToDevPixels(cssSize.width),
-                       presContext->CSSPixelsToDevPixels(cssSize.height));
+  LayoutDeviceIntSize newDevSize(
+      presContext->CSSPixelsToDevPixels(cssSize.width),
+      presContext->CSSPixelsToDevPixels(cssSize.height));
 
   nsCOMPtr<nsIDocShell> docShell = mDocShell;
   aError =

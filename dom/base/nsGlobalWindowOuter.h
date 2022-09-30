@@ -625,6 +625,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void SizeToContentOuter(mozilla::dom::CallerType aCallerType,
+                          int32_t aMaxWidth, int32_t aMaxHeight,
                           mozilla::ErrorResult& aError);
   nsIControllers* GetControllersOuter(mozilla::ErrorResult& aError);
   nsresult GetControllers(nsIControllers** aControllers) override;
