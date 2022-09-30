@@ -164,7 +164,7 @@ modules/libpref/test/unit/*data/
 python/
 
 # These are (mainly) imported code that we don't want to lint to make imports easier.
-remote/cdp/Protocol.jsm
+remote/cdp/Protocol.sys.mjs
 remote/cdp/test/browser/chrome-remote-interface.js
 remote/marionette/atom.sys.mjs
 

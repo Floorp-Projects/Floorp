@@ -6,8 +6,8 @@
 
 "use strict";
 
-const { ContentProcessSession } = ChromeUtils.import(
-  "chrome://remote/content/cdp/sessions/ContentProcessSession.jsm"
+const { ContentProcessSession } = ChromeUtils.importESModule(
+  "chrome://remote/content/cdp/sessions/ContentProcessSession.sys.mjs"
 );
 
 new ContentProcessSession(this, docShell.browsingContext, content, docShell);

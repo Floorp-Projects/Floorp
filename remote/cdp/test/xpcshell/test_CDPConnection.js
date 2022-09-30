@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { splitMethod } = ChromeUtils.import(
-  "chrome://remote/content/cdp/CDPConnection.jsm"
+const { splitMethod } = ChromeUtils.importESModule(
+  "chrome://remote/content/cdp/CDPConnection.sys.mjs"
 );
 
 add_test(function test_Connection_splitMethod() {

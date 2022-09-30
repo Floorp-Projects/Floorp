@@ -3,11 +3,11 @@
 
 "use strict";
 
-const { Domain } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/Domain.jsm"
+const { Domain } = ChromeUtils.importESModule(
+  "chrome://remote/content/cdp/domains/Domain.sys.mjs"
 );
-const { DomainCache } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/DomainCache.jsm"
+const { DomainCache } = ChromeUtils.importESModule(
+  "chrome://remote/content/cdp/domains/DomainCache.sys.mjs"
 );
 
 class MockSession {

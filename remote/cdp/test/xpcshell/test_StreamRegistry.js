@@ -5,8 +5,8 @@
 
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-const { StreamRegistry } = ChromeUtils.import(
-  "chrome://remote/content/cdp/StreamRegistry.jsm"
+const { StreamRegistry } = ChromeUtils.importESModule(
+  "chrome://remote/content/cdp/StreamRegistry.sys.mjs"
 );
 
 add_test(function test_constructor() {
