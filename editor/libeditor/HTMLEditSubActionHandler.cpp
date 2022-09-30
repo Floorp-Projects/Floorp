@@ -5701,15 +5701,30 @@ HTMLEditor::RemoveBlockContainerElementWithTransactionBetween(
     NS_WARNING(
         "HTMLEditor::SplitRangeOffFromBlock() failed, but might be ignored");
   }
-  Result<EditorDOMPoint, nsresult> unwrapBlockElementResult =
-      RemoveBlockContainerWithTransaction(aBlockContainerElement);
-  if (unwrapBlockElementResult.isErr()) {
-    NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
-    return SplitRangeOffFromNodeResult(unwrapBlockElementResult.inspectErr());
+
+  // Even if either split aBlockContainerElement or did not split it, we should
+  // unwrap the right most element which is split from aBlockContainerElement
+  // (or aBlockContainerElement itself if it was not split without errors).
+  if (Element* rightmostElement =
+          splitResult.GetRightmostContentAs<Element>()) {
+    MOZ_DIAGNOSTIC_ASSERT(splitResult.isOk());
+    MOZ_ASSERT_IF(
+        GetSplitNodeDirection() == SplitNodeDirection::LeftNodeIsNewOne,
+        rightmostElement == &aBlockContainerElement);
+    // MOZ_KnownLive(rightmostElement) because it's grabbed by splitResult.
+    Result<EditorDOMPoint, nsresult> unwrapBlockElementResult =
+        RemoveBlockContainerWithTransaction(MOZ_KnownLive(*rightmostElement));
+    if (unwrapBlockElementResult.isErr()) {
+      NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
+      return SplitRangeOffFromNodeResult(unwrapBlockElementResult.inspectErr());
+    }
+    if (unwrapBlockElementResult.inspect().IsSet()) {
+      pointToPutCaret = unwrapBlockElementResult.unwrap();
+    }
+  } else {
+    MOZ_DIAGNOSTIC_ASSERT(splitResult.isErr());
   }
-  if (unwrapBlockElementResult.inspect().IsSet()) {
-    pointToPutCaret = unwrapBlockElementResult.unwrap();
-  }
+
   return SplitRangeOffFromNodeResult(splitResult.GetLeftContent(), nullptr,
                                      splitResult.GetRightContent(),
                                      std::move(pointToPutCaret));
@@ -5743,8 +5758,15 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
 
   // Split at after the end
   auto atAfterEnd = EditorDOMPoint::After(aEndOfMiddleElement);
-  SplitNodeResult splitAtEndResult = SplitNodeDeepWithTransaction(
-      aBlockElement, atAfterEnd, SplitAtEdges::eDoNotCreateEmptyContainer);
+  Element* rightElement =
+      splitAtStartResult.DidSplit()
+          ? Element::FromNode(splitAtStartResult.GetNextContent())
+          : &aBlockElement;
+  // MOZ_KnownLive(rightElement) because it's grabbed by splitAtStartResult or
+  // aBlockElement whose lifetime is guaranteed by the caller.
+  SplitNodeResult splitAtEndResult =
+      SplitNodeDeepWithTransaction(MOZ_KnownLive(*rightElement), atAfterEnd,
+                                   SplitAtEdges::eDoNotCreateEmptyContainer);
   if (splitAtEndResult.EditorDestroyed()) {
     NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed (at right)");
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
