@@ -425,6 +425,11 @@ if (IsCSSPropertyPrefEnabled("layout.css.individual-transform.enabled")) {
   supported_properties["translate"] = [ test_translate_transition ];
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.contain-intrinsic-size.enabled")) {
+  supported_properties["contain-intrinsic-width"] = [ test_length_transition, test_auto_with_length_transition ];
+  supported_properties["contain-intrinsic-height"] = supported_properties["contain-intrinsic-width"];
+}
+
 supported_properties["scrollbar-color"] = [
   test_scrollbar_color_transition,
 ];
@@ -454,6 +459,9 @@ for (const logical_size of ["inline", "block"]) {
   supported_properties[logical_size + "-size"] = supported_properties["width"];
   supported_properties["min-" + logical_size + "-size"] = supported_properties["min-width"];
   supported_properties["max-" + logical_size + "-size"] = supported_properties["max-width"];
+  if (IsCSSPropertyPrefEnabled("layout.css.contain-intrinsic-size.enabled")) {
+    supported_properties["contain-intrinsic-" + logical_size + "-size"] = supported_properties["contain-intrinsic-width"];
+  }
 }
 
 var div = document.getElementById("display");
@@ -3095,6 +3103,18 @@ function test_aspect_ratio_transition(prop) {
       check_distance(prop, test.start, test.expected, test.end);
     }
   });
+}
+
+function test_auto_with_length_transition(prop) {
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "auto 4px", "");
+  is(cs.getPropertyValue(prop), "auto 4px",
+     "auto+length-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "auto 12px", "");
+  is(cs.getPropertyValue(prop), "auto 6px",
+     "auto+length-valued property " + prop + ": interpolation of lengths");
+  check_distance(prop, "auto 4px", "auto 6px", "auto 12px");
 }
 
 var OMTAdiv;
