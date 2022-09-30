@@ -68,6 +68,15 @@
       },
     ],
     [
+      "--in-content-zap-gradient",
+      {
+        lwtProperty: "zap_gradient",
+        processColor(value) {
+          return value;
+        },
+      },
+    ],
+    [
       "--lwt-sidebar-background-color",
       {
         lwtProperty: "sidebar",
