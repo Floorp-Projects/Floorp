@@ -4,8 +4,10 @@
 
 "use strict";
 
-const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const {
+  PSEUDO_CLASSES,
+} = require("resource://devtools/shared/css/constants.js");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 
 loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
 loader.lazyRequireGetter(

@@ -4,26 +4,33 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const {
   translateNodeFrontToGrip,
-} = require("devtools/client/inspector/shared/utils");
+} = require("resource://devtools/client/inspector/shared/utils.js");
 
-const { REPS, MODE } = require("devtools/client/shared/components/reps/index");
+const {
+  REPS,
+  MODE,
+} = require("resource://devtools/client/shared/components/reps/index.js");
 const { Rep } = REPS;
 const ElementNode = REPS.ElementNode;
 
 const {
   getInspectorStr,
-} = require("devtools/client/inspector/animation/utils/l10n");
+} = require("resource://devtools/client/inspector/animation/utils/l10n.js");
 
 const {
   highlightNode,
   unhighlightNode,
-} = require("devtools/client/inspector/boxmodel/actions/box-model-highlighter");
+} = require("resource://devtools/client/inspector/boxmodel/actions/box-model-highlighter.js");
 
 class AnimationTarget extends Component {
   static get propTypes() {

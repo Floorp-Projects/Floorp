@@ -10,9 +10,11 @@
 const { shallow } = require("enzyme");
 const React = require("react");
 
-const { COMPATIBILITY_ISSUE_TYPE } = require("devtools/shared/constants");
+const {
+  COMPATIBILITY_ISSUE_TYPE,
+} = require("resource://devtools/shared/constants.js");
 const IssueItem = React.createFactory(
-  require("devtools/client/inspector/compatibility/components/IssueItem")
+  require("resource://devtools/client/inspector/compatibility/components/IssueItem.js")
 );
 
 describe("IssueItem component", () => {

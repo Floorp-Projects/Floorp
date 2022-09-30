@@ -7,15 +7,15 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 const KeyframeMarkerList = createFactory(
-  require("devtools/client/inspector/animation/components/keyframes-graph/KeyframeMarkerList")
+  require("resource://devtools/client/inspector/animation/components/keyframes-graph/KeyframeMarkerList.js")
 );
 const KeyframesGraphPath = createFactory(
-  require("devtools/client/inspector/animation/components/keyframes-graph/KeyframesGraphPath")
+  require("resource://devtools/client/inspector/animation/components/keyframes-graph/KeyframesGraphPath.js")
 );
 
 class KeyframesGraph extends PureComponent {

@@ -4,8 +4,10 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  PureComponent,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 // Show max 10 iterations for infinite animations
 // to give users a clue that the animation does repeat.

@@ -9,7 +9,7 @@ const {
   EXTENSION_SIDEBAR_EXPRESSION_RESULT_VIEW_UPDATE,
   EXTENSION_SIDEBAR_PAGE_UPDATE,
   EXTENSION_SIDEBAR_REMOVE,
-} = require("devtools/client/inspector/extensions/actions/index");
+} = require("resource://devtools/client/inspector/extensions/actions/index.js");
 
 module.exports = {
   /**

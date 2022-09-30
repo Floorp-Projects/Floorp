@@ -12,7 +12,7 @@ loader.lazyRequireGetter(
 
 const {
   getSourceForDisplay,
-} = require("devtools/client/inspector/changes/utils/changes-utils");
+} = require("resource://devtools/client/inspector/changes/utils/changes-utils.js");
 
 /**
  * In the Redux state, changed CSS rules are grouped by source (stylesheet) and stored in

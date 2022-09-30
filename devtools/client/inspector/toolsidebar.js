@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 function ToolSidebar(tabbox, panel, uid, options = {}) {
   EventEmitter.decorate(this);

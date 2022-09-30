@@ -4,9 +4,9 @@
 
 "use strict";
 
-const nodeConstants = require("devtools/shared/dom-node-constants");
+const nodeConstants = require("resource://devtools/shared/dom-node-constants.js");
 
-const UserSettings = require("devtools/client/inspector/shared/compatibility-user-settings");
+const UserSettings = require("resource://devtools/client/inspector/shared/compatibility-user-settings.js");
 
 const {
   COMPATIBILITY_APPEND_NODE_START,
@@ -47,7 +47,7 @@ const {
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_SUCCESS,
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_FAILURE,
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE,
-} = require("devtools/client/inspector/compatibility/actions/index");
+} = require("resource://devtools/client/inspector/compatibility/actions/index.js");
 
 function appendNode(node) {
   return async ({ dispatch, getState }) => {

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { createEnum } = require("devtools/client/shared/enum");
+const { createEnum } = require("resource://devtools/client/shared/enum.js");
 
 createEnum(
   [

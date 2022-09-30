@@ -7,34 +7,36 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 const FontAxis = createFactory(
-  require("devtools/client/inspector/fonts/components/FontAxis")
+  require("resource://devtools/client/inspector/fonts/components/FontAxis.js")
 );
 const FontName = createFactory(
-  require("devtools/client/inspector/fonts/components/FontName")
+  require("resource://devtools/client/inspector/fonts/components/FontName.js")
 );
 const FontSize = createFactory(
-  require("devtools/client/inspector/fonts/components/FontSize")
+  require("resource://devtools/client/inspector/fonts/components/FontSize.js")
 );
 const FontStyle = createFactory(
-  require("devtools/client/inspector/fonts/components/FontStyle")
+  require("resource://devtools/client/inspector/fonts/components/FontStyle.js")
 );
 const FontWeight = createFactory(
-  require("devtools/client/inspector/fonts/components/FontWeight")
+  require("resource://devtools/client/inspector/fonts/components/FontWeight.js")
 );
 const LetterSpacing = createFactory(
-  require("devtools/client/inspector/fonts/components/LetterSpacing")
+  require("resource://devtools/client/inspector/fonts/components/LetterSpacing.js")
 );
 const LineHeight = createFactory(
-  require("devtools/client/inspector/fonts/components/LineHeight")
+  require("resource://devtools/client/inspector/fonts/components/LineHeight.js")
 );
 
-const { getStr } = require("devtools/client/inspector/fonts/utils/l10n");
-const Types = require("devtools/client/inspector/fonts/types");
+const {
+  getStr,
+} = require("resource://devtools/client/inspector/fonts/utils/l10n.js");
+const Types = require("resource://devtools/client/inspector/fonts/types.js");
 
 // Maximum number of font families to be shown by default. Any others will be hidden
 // under a collapsed <details> element with a toggle to reveal them.

@@ -10,7 +10,7 @@ const {
   VIEW_NODE_VALUE_TYPE,
   VIEW_NODE_IMAGE_URL_TYPE,
   VIEW_NODE_LOCATION_TYPE,
-} = require("devtools/client/inspector/shared/node-types");
+} = require("resource://devtools/client/inspector/shared/node-types.js");
 
 loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
 loader.lazyRequireGetter(
@@ -32,7 +32,7 @@ loader.lazyRequireGetter(
 
 const STYLE_INSPECTOR_PROPERTIES =
   "devtools/shared/locales/styleinspector.properties";
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 
 const PREF_ORIG_SOURCES = "devtools.source-map.client-service.enabled";

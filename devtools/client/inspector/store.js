@@ -4,8 +4,10 @@
 
 "use strict";
 
-const createStore = require("devtools/client/shared/redux/create-store");
-const { combineReducers } = require("devtools/client/shared/vendor/redux");
+const createStore = require("resource://devtools/client/shared/redux/create-store.js");
+const {
+  combineReducers,
+} = require("resource://devtools/client/shared/vendor/redux.js");
 // Reducers which need to be available immediately when the Inspector loads.
 const reducers = {
   // Provide a dummy default reducer.

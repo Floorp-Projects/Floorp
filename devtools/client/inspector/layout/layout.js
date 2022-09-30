@@ -7,16 +7,18 @@
 const {
   createFactory,
   createElement,
-} = require("devtools/client/shared/vendor/react");
-const { Provider } = require("devtools/client/shared/vendor/react-redux");
-const FlexboxInspector = require("devtools/client/inspector/flexbox/flexbox");
-const GridInspector = require("devtools/client/inspector/grids/grid-inspector");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  Provider,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
+const FlexboxInspector = require("resource://devtools/client/inspector/flexbox/flexbox.js");
+const GridInspector = require("resource://devtools/client/inspector/grids/grid-inspector.js");
 
 const LayoutApp = createFactory(
-  require("devtools/client/inspector/layout/components/LayoutApp")
+  require("resource://devtools/client/inspector/layout/components/LayoutApp.js")
 );
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const INSPECTOR_L10N = new LocalizationHelper(
   "devtools/client/locales/inspector.properties"
 );

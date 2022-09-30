@@ -4,14 +4,16 @@
 
 "use strict";
 
-const Menu = require("devtools/client/framework/menu");
+const Menu = require("resource://devtools/client/framework/menu.js");
 loader.lazyRequireGetter(
   this,
   "MenuItem",
   "devtools/client/framework/menu-item"
 );
 
-const { getStr } = require("devtools/client/inspector/changes/utils/l10n");
+const {
+  getStr,
+} = require("resource://devtools/client/inspector/changes/utils/l10n.js");
 
 /**
  * Context menu for the Changes panel with options to select, copy and export CSS changes.

@@ -4,10 +4,10 @@
 
 "use strict";
 
-const nodeConstants = require("devtools/shared/dom-node-constants");
-const TextEditor = require("devtools/client/inspector/markup/views/text-editor");
-const MarkupContainer = require("devtools/client/inspector/markup/views/markup-container");
-const { extend } = require("devtools/shared/extend");
+const nodeConstants = require("resource://devtools/shared/dom-node-constants.js");
+const TextEditor = require("resource://devtools/client/inspector/markup/views/text-editor.js");
+const MarkupContainer = require("resource://devtools/client/inspector/markup/views/markup-container.js");
+const { extend } = require("resource://devtools/shared/extend.js");
 
 /**
  * An implementation of MarkupContainer for text node and comment nodes.

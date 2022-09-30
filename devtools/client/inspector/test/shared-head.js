@@ -10,7 +10,7 @@
 
 var {
   getInplaceEditorForSpan: inplaceEditor,
-} = require("devtools/client/shared/inplace-editor");
+} = require("resource://devtools/client/shared/inplace-editor.js");
 
 // This file contains functions related to the inspector that are also of interest to
 // other test directores as well.
@@ -247,7 +247,9 @@ var selectNode = async function(
   const nodeFront = await getNodeFront(selector, inspector);
   const updated = inspector.once("inspector-updated");
 
-  const { ELEMENT_NODE } = require("devtools/shared/dom-node-constants");
+  const {
+    ELEMENT_NODE,
+  } = require("resource://devtools/shared/dom-node-constants.js");
   const onSelectionCssSelectorsUpdated =
     nodeFront?.nodeType == ELEMENT_NODE
       ? inspector.once("selection-css-selectors-updated")

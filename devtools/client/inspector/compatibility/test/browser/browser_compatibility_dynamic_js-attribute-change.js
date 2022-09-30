@@ -3,11 +3,13 @@
 
 "use strict";
 
-const { COMPATIBILITY_ISSUE_TYPE } = require("devtools/shared/constants");
+const {
+  COMPATIBILITY_ISSUE_TYPE,
+} = require("resource://devtools/shared/constants.js");
 
 const {
   COMPATIBILITY_UPDATE_NODE_COMPLETE,
-} = require("devtools/client/inspector/compatibility/actions/index");
+} = require("resource://devtools/client/inspector/compatibility/actions/index.js");
 
 // Test the behavior rules are dynamically added
 

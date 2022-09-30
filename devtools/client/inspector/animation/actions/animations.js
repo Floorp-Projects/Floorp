@@ -12,7 +12,7 @@ const {
   UPDATE_PLAYBACK_RATES,
   UPDATE_SELECTED_ANIMATION,
   UPDATE_SIDEBAR_SIZE,
-} = require("devtools/client/inspector/animation/actions/index");
+} = require("resource://devtools/client/inspector/animation/actions/index.js");
 
 module.exports = {
   /**

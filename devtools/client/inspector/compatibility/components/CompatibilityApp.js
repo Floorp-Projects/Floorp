@@ -4,29 +4,31 @@
 
 "use strict";
 
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 
-const Types = require("devtools/client/inspector/compatibility/types");
+const Types = require("resource://devtools/client/inspector/compatibility/types.js");
 
 const Accordion = createFactory(
-  require("devtools/client/shared/components/Accordion")
+  require("resource://devtools/client/shared/components/Accordion.js")
 );
 const Footer = createFactory(
-  require("devtools/client/inspector/compatibility/components/Footer")
+  require("resource://devtools/client/inspector/compatibility/components/Footer.js")
 );
 const IssuePane = createFactory(
-  require("devtools/client/inspector/compatibility/components/IssuePane")
+  require("resource://devtools/client/inspector/compatibility/components/IssuePane.js")
 );
 const Settings = createFactory(
-  require("devtools/client/inspector/compatibility/components/Settings")
+  require("resource://devtools/client/inspector/compatibility/components/Settings.js")
 );
 
 class CompatibilityApp extends PureComponent {

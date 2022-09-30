@@ -6,7 +6,7 @@
 
 const {
   getFormatStr,
-} = require("devtools/client/inspector/animation/utils/l10n");
+} = require("resource://devtools/client/inspector/animation/utils/l10n.js");
 
 // If total duration for all animations is eqaul to or less than
 // TIME_FORMAT_MAX_DURATION_IN_MS, the text which expresses time is in milliseconds,

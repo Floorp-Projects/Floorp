@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
+const {
+  getStr,
+} = require("resource://devtools/client/inspector/layout/utils/l10n.js");
 
 // Test the flex item list is empty when there are no flex items for the selected flex
 // container.

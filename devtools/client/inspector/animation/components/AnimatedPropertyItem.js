@@ -7,15 +7,15 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 const AnimatedPropertyName = createFactory(
-  require("devtools/client/inspector/animation/components/AnimatedPropertyName")
+  require("resource://devtools/client/inspector/animation/components/AnimatedPropertyName.js")
 );
 const KeyframesGraph = createFactory(
-  require("devtools/client/inspector/animation/components/keyframes-graph/KeyframesGraph")
+  require("resource://devtools/client/inspector/animation/components/keyframes-graph/KeyframesGraph.js")
 );
 
 class AnimatedPropertyItem extends PureComponent {

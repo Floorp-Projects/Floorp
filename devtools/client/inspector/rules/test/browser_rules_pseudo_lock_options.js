@@ -5,7 +5,9 @@
 
 // Tests that the rule view pseudo lock options work properly.
 
-const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
+const {
+  PSEUDO_CLASSES,
+} = require("resource://devtools/shared/css/constants.js");
 const TEST_URI = `
   <style type='text/css'>
     div {

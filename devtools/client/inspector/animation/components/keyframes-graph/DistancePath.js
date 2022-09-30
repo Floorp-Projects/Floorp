@@ -4,9 +4,9 @@
 
 "use strict";
 
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const ComputedStylePath = require("devtools/client/inspector/animation/components/keyframes-graph/ComputedStylePath");
+const ComputedStylePath = require("resource://devtools/client/inspector/animation/components/keyframes-graph/ComputedStylePath.js");
 
 class DistancePath extends ComputedStylePath {
   getPropertyName() {

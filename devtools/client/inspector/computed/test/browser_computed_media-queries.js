@@ -8,7 +8,9 @@
 
 const TEST_URI = URL_ROOT + "doc_media_queries.html";
 
-var { PropertyView } = require("devtools/client/inspector/computed/computed");
+var {
+  PropertyView,
+} = require("resource://devtools/client/inspector/computed/computed.js");
 
 add_task(async function() {
   await addTab(TEST_URI);

@@ -8,32 +8,34 @@ const {
   createFactory,
   createRef,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 const {
   getSelectorFromGrip,
   translateNodeFrontToGrip,
-} = require("devtools/client/inspector/shared/utils");
-const { LocalizationHelper } = require("devtools/shared/l10n");
+} = require("resource://devtools/client/inspector/shared/utils.js");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 
 const Accordion = createFactory(
-  require("devtools/client/shared/components/Accordion")
+  require("resource://devtools/client/shared/components/Accordion.js")
 );
 const BoxModel = createFactory(
-  require("devtools/client/inspector/boxmodel/components/BoxModel")
+  require("resource://devtools/client/inspector/boxmodel/components/BoxModel.js")
 );
 const Flexbox = createFactory(
-  require("devtools/client/inspector/flexbox/components/Flexbox")
+  require("resource://devtools/client/inspector/flexbox/components/Flexbox.js")
 );
 const Grid = createFactory(
-  require("devtools/client/inspector/grids/components/Grid")
+  require("resource://devtools/client/inspector/grids/components/Grid.js")
 );
 
-const BoxModelTypes = require("devtools/client/inspector/boxmodel/types");
-const FlexboxTypes = require("devtools/client/inspector/flexbox/types");
-const GridTypes = require("devtools/client/inspector/grids/types");
+const BoxModelTypes = require("resource://devtools/client/inspector/boxmodel/types.js");
+const FlexboxTypes = require("resource://devtools/client/inspector/flexbox/types.js");
+const GridTypes = require("resource://devtools/client/inspector/grids/types.js");
 
 const BOXMODEL_STRINGS_URI = "devtools/client/locales/boxmodel.properties";
 const BOXMODEL_L10N = new LocalizationHelper(BOXMODEL_STRINGS_URI);

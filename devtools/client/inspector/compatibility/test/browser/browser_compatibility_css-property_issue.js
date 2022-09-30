@@ -5,7 +5,9 @@
 
 // Test whether the deprecated CSS property is shown as issue correctly or not.
 
-const { COMPATIBILITY_ISSUE_TYPE } = require("devtools/shared/constants");
+const {
+  COMPATIBILITY_ISSUE_TYPE,
+} = require("resource://devtools/shared/constants.js");
 
 const TEST_URI = `
   <style>

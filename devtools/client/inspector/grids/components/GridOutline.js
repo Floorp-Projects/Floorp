@@ -4,16 +4,20 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
+const {
+  PureComponent,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  getStr,
+} = require("resource://devtools/client/inspector/layout/utils/l10n.js");
 const {
   getWritingModeMatrix,
   getCSSMatrixTransform,
-} = require("devtools/shared/layout/dom-matrix-2d");
+} = require("resource://devtools/shared/layout/dom-matrix-2d.js");
 
-const Types = require("devtools/client/inspector/grids/types");
+const Types = require("resource://devtools/client/inspector/grids/types.js");
 
 // The delay prior to executing the grid cell highlighting.
 const GRID_HIGHLIGHTING_DEBOUNCE = 50;
@@ -39,7 +43,7 @@ const VIEWPORT_MAX_HEIGHT = 150;
 
 const {
   showGridHighlighter,
-} = require("devtools/client/inspector/grids/actions/grid-highlighter");
+} = require("resource://devtools/client/inspector/grids/actions/grid-highlighter.js");
 
 class GridOutline extends PureComponent {
   static get propTypes() {

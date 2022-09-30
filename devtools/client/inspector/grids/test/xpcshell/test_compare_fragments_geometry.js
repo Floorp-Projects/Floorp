@@ -5,7 +5,7 @@
 
 const {
   compareFragmentsGeometry,
-} = require("devtools/client/inspector/grids/utils/utils");
+} = require("resource://devtools/client/inspector/grids/utils/utils.js");
 
 const TESTS = [
   {

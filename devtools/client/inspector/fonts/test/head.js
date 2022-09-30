@@ -18,7 +18,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.inspector.selectedSidebar");
 });
 
-var nodeConstants = require("devtools/shared/dom-node-constants");
+var nodeConstants = require("resource://devtools/shared/dom-node-constants.js");
 
 /**
  * The font-inspector doesn't participate in the inspector's update mechanism

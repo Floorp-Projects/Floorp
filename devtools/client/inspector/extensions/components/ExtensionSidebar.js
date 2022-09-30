@@ -7,21 +7,23 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 const ExtensionPage = createFactory(
-  require("devtools/client/inspector/extensions/components/ExtensionPage")
+  require("resource://devtools/client/inspector/extensions/components/ExtensionPage.js")
 );
 const ObjectTreeView = createFactory(
-  require("devtools/client/inspector/extensions/components/ObjectTreeView")
+  require("resource://devtools/client/inspector/extensions/components/ObjectTreeView.js")
 );
 const ExpressionResultView = createFactory(
-  require("devtools/client/inspector/extensions/components/ExpressionResultView")
+  require("resource://devtools/client/inspector/extensions/components/ExpressionResultView.js")
 );
-const Types = require("devtools/client/inspector/extensions/types");
+const Types = require("resource://devtools/client/inspector/extensions/types.js");
 
 /**
  * The ExtensionSidebar is a React component with 2 supported viewMode:

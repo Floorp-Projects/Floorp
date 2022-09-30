@@ -4,7 +4,7 @@
 
 "use strict";
 
-const nodeConstants = require("devtools/shared/dom-node-constants");
+const nodeConstants = require("resource://devtools/shared/dom-node-constants.js");
 
 /**
  * Creates an editor for non-editable nodes.

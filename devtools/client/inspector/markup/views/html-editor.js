@@ -4,8 +4,8 @@
 
 "use strict";
 
-const Editor = require("devtools/client/shared/sourceeditor/editor");
-const EventEmitter = require("devtools/shared/event-emitter");
+const Editor = require("resource://devtools/client/shared/sourceeditor/editor.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 /**
  * A wrapper around the Editor component, that allows editing of HTML.

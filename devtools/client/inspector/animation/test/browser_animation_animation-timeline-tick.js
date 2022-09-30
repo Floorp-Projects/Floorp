@@ -8,10 +8,10 @@
 // * tick labels elements existence
 // * count and text of tick label elements changing by the sidebar width
 
-const TimeScale = require("devtools/client/inspector/animation/utils/timescale");
+const TimeScale = require("resource://devtools/client/inspector/animation/utils/timescale.js");
 const {
   findOptimalTimeInterval,
-} = require("devtools/client/inspector/animation/utils/utils");
+} = require("resource://devtools/client/inspector/animation/utils/utils.js");
 
 // Should be kept in sync with TIME_GRADUATION_MIN_SPACING in
 // AnimationTimeTickList component.

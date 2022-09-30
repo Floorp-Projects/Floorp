@@ -6,9 +6,9 @@
 
 const {
   style: { ELEMENT_STYLE },
-} = require("devtools/shared/constants");
-const CssLogic = require("devtools/shared/inspector/css-logic");
-const TextProperty = require("devtools/client/inspector/rules/models/text-property");
+} = require("resource://devtools/shared/constants.js");
+const CssLogic = require("resource://devtools/shared/inspector/css-logic.js");
+const TextProperty = require("resource://devtools/client/inspector/rules/models/text-property.js");
 
 loader.lazyRequireGetter(
   this,
@@ -31,7 +31,7 @@ loader.lazyRequireGetter(
 
 const STYLE_INSPECTOR_PROPERTIES =
   "devtools/shared/locales/styleinspector.properties";
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 
 /**

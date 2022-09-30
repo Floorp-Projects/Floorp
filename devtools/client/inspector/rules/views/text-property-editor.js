@@ -4,21 +4,21 @@
 
 "use strict";
 
-const { l10n } = require("devtools/shared/inspector/css-logic");
+const { l10n } = require("resource://devtools/shared/inspector/css-logic.js");
 const {
   InplaceEditor,
   editableField,
-} = require("devtools/client/shared/inplace-editor");
+} = require("resource://devtools/client/shared/inplace-editor.js");
 const {
   createChild,
   appendText,
   advanceValidate,
   blurOnMultipleProperties,
-} = require("devtools/client/inspector/shared/utils");
-const { throttle } = require("devtools/shared/throttle");
+} = require("resource://devtools/client/inspector/shared/utils.js");
+const { throttle } = require("resource://devtools/shared/throttle.js");
 const {
   style: { ELEMENT_STYLE },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 loader.lazyRequireGetter(
   this,

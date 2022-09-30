@@ -8,7 +8,7 @@ const {
   UPDATE_GRID_COLOR,
   UPDATE_GRID_HIGHLIGHTED,
   UPDATE_GRIDS,
-} = require("devtools/client/inspector/grids/actions/index");
+} = require("resource://devtools/client/inspector/grids/actions/index.js");
 
 module.exports = {
   /**

@@ -6,7 +6,7 @@
 
 // Test the keybindings for element picker with separate window.
 
-const { Toolbox } = require("devtools/client/framework/toolbox");
+const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
 const IS_OSX = Services.appinfo.OS === "Darwin";
 const TEST_URL = "data:text/html;charset=utf8,<div></div>";

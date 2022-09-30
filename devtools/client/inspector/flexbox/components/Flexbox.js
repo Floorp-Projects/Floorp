@@ -9,33 +9,35 @@ const {
   createFactory,
   Fragment,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  getStr,
+} = require("resource://devtools/client/inspector/layout/utils/l10n.js");
 
 loader.lazyGetter(this, "FlexItemList", function() {
   return createFactory(
-    require("devtools/client/inspector/flexbox/components/FlexItemList")
+    require("resource://devtools/client/inspector/flexbox/components/FlexItemList.js")
   );
 });
 loader.lazyGetter(this, "FlexItemSizingOutline", function() {
   return createFactory(
-    require("devtools/client/inspector/flexbox/components/FlexItemSizingOutline")
+    require("resource://devtools/client/inspector/flexbox/components/FlexItemSizingOutline.js")
   );
 });
 loader.lazyGetter(this, "FlexItemSizingProperties", function() {
   return createFactory(
-    require("devtools/client/inspector/flexbox/components/FlexItemSizingProperties")
+    require("resource://devtools/client/inspector/flexbox/components/FlexItemSizingProperties.js")
   );
 });
 loader.lazyGetter(this, "Header", function() {
   return createFactory(
-    require("devtools/client/inspector/flexbox/components/Header")
+    require("resource://devtools/client/inspector/flexbox/components/Header.js")
   );
 });
 
-const Types = require("devtools/client/inspector/flexbox/types");
+const Types = require("resource://devtools/client/inspector/flexbox/types.js");
 
 class Flexbox extends PureComponent {
   static get propTypes() {

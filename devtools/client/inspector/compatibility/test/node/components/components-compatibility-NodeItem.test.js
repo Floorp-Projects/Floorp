@@ -11,7 +11,7 @@ const { shallow } = require("enzyme");
 const React = require("react");
 
 const NodeItem = React.createFactory(
-  require("devtools/client/inspector/compatibility/components/NodeItem")
+  require("resource://devtools/client/inspector/compatibility/components/NodeItem.js")
 );
 
 describe("NodeItem component", () => {

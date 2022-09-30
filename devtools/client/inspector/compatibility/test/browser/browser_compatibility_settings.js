@@ -19,7 +19,7 @@ const TEST_URI = `
 
 const {
   COMPATIBILITY_UPDATE_TARGET_BROWSERS_COMPLETE,
-} = require("devtools/client/inspector/compatibility/actions/index");
+} = require("resource://devtools/client/inspector/compatibility/actions/index.js");
 
 add_task(async function() {
   registerCleanupFunction(() => {

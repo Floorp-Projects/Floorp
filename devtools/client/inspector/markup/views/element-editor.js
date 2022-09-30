@@ -4,15 +4,17 @@
 
 "use strict";
 
-const TextEditor = require("devtools/client/inspector/markup/views/text-editor");
-const { truncateString } = require("devtools/shared/inspector/utils");
+const TextEditor = require("resource://devtools/client/inspector/markup/views/text-editor.js");
+const {
+  truncateString,
+} = require("resource://devtools/shared/inspector/utils.js");
 const {
   editableField,
   InplaceEditor,
-} = require("devtools/client/shared/inplace-editor");
+} = require("resource://devtools/client/shared/inplace-editor.js");
 const {
   parseAttribute,
-} = require("devtools/client/shared/node-attribute-parser");
+} = require("resource://devtools/client/shared/node-attribute-parser.js");
 
 loader.lazyRequireGetter(
   this,
@@ -26,7 +28,7 @@ loader.lazyRequireGetter(
   true
 );
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const INSPECTOR_L10N = new LocalizationHelper(
   "devtools/client/locales/inspector.properties"
 );

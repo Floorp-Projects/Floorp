@@ -52,7 +52,9 @@ add_task(async function() {
         const { require } = ChromeUtils.import(
           "resource://devtools/shared/loader/Loader.jsm"
         );
-        const { getWindowDimensions } = require("devtools/shared/layout/utils");
+        const {
+          getWindowDimensions,
+        } = require("resource://devtools/shared/layout/utils.js");
         return getWindowDimensions(content);
       }
     );

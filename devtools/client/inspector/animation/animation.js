@@ -7,17 +7,19 @@
 const {
   createElement,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const { Provider } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  Provider,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 const App = createFactory(
-  require("devtools/client/inspector/animation/components/App")
+  require("resource://devtools/client/inspector/animation/components/App.js")
 );
-const CurrentTimeTimer = require("devtools/client/inspector/animation/current-time-timer");
+const CurrentTimeTimer = require("resource://devtools/client/inspector/animation/current-time-timer.js");
 
-const animationsReducer = require("devtools/client/inspector/animation/reducers/animations");
+const animationsReducer = require("resource://devtools/client/inspector/animation/reducers/animations.js");
 const {
   updateAnimations,
   updateDetailVisibility,
@@ -26,11 +28,11 @@ const {
   updatePlaybackRates,
   updateSelectedAnimation,
   updateSidebarSize,
-} = require("devtools/client/inspector/animation/actions/animations");
+} = require("resource://devtools/client/inspector/animation/actions/animations.js");
 const {
   hasAnimationIterationCountInfinite,
   hasRunningAnimation,
-} = require("devtools/client/inspector/animation/utils/utils");
+} = require("resource://devtools/client/inspector/animation/utils/utils.js");
 
 class AnimationInspector {
   constructor(inspector, win) {

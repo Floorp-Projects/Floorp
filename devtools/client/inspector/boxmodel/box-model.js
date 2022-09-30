@@ -4,12 +4,12 @@
 
 "use strict";
 
-const boxModelReducer = require("devtools/client/inspector/boxmodel/reducers/box-model");
+const boxModelReducer = require("resource://devtools/client/inspector/boxmodel/reducers/box-model.js");
 const {
   updateGeometryEditorEnabled,
   updateLayout,
   updateOffsetParent,
-} = require("devtools/client/inspector/boxmodel/actions/box-model");
+} = require("resource://devtools/client/inspector/boxmodel/actions/box-model.js");
 
 loader.lazyRequireGetter(
   this,

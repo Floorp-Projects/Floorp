@@ -4,10 +4,12 @@
 
 "use strict";
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 
 const TextNode = createFactory(
-  require("devtools/client/inspector/markup/components/TextNode")
+  require("resource://devtools/client/inspector/markup/components/TextNode.js")
 );
 
 loader.lazyRequireGetter(

@@ -7,20 +7,20 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 const Accordion = createFactory(
-  require("devtools/client/shared/components/Accordion")
+  require("resource://devtools/client/shared/components/Accordion.js")
 );
 
-const Types = require("devtools/client/inspector/extensions/types");
+const Types = require("resource://devtools/client/inspector/extensions/types.js");
 
 const {
   REPS: { Grip },
   MODE,
   objectInspector: { ObjectInspector: ObjectInspectorClass },
-} = require("devtools/client/shared/components/reps/index");
+} = require("resource://devtools/client/shared/components/reps/index.js");
 
 loader.lazyRequireGetter(
   this,

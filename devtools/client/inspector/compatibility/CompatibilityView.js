@@ -7,13 +7,15 @@
 const {
   createFactory,
   createElement,
-} = require("devtools/client/shared/vendor/react");
-const { Provider } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  Provider,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
-const compatibilityReducer = require("devtools/client/inspector/compatibility/reducers/compatibility");
+const compatibilityReducer = require("resource://devtools/client/inspector/compatibility/reducers/compatibility.js");
 const {
   appendNode,
   clearDestroyedNodes,
@@ -23,10 +25,10 @@ const {
   updateSelectedNode,
   updateTopLevelTarget,
   updateNode,
-} = require("devtools/client/inspector/compatibility/actions/compatibility");
+} = require("resource://devtools/client/inspector/compatibility/actions/compatibility.js");
 
 const CompatibilityApp = createFactory(
-  require("devtools/client/inspector/compatibility/components/CompatibilityApp")
+  require("resource://devtools/client/inspector/compatibility/components/CompatibilityApp.js")
 );
 
 class CompatibilityView {

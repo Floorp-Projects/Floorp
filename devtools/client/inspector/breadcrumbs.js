@@ -4,9 +4,9 @@
 
 "use strict";
 
-const flags = require("devtools/shared/flags");
-const { ELLIPSIS } = require("devtools/shared/l10n");
-const EventEmitter = require("devtools/shared/event-emitter");
+const flags = require("resource://devtools/shared/flags.js");
+const { ELLIPSIS } = require("resource://devtools/shared/l10n.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 loader.lazyRequireGetter(
   this,

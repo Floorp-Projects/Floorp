@@ -4,13 +4,15 @@
 
 "use strict";
 
-const { safeAsyncMethod } = require("devtools/shared/async-utils");
-const EventEmitter = require("devtools/shared/event-emitter");
-const WalkerEventListener = require("devtools/client/inspector/shared/walker-event-listener");
+const {
+  safeAsyncMethod,
+} = require("resource://devtools/shared/async-utils.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const WalkerEventListener = require("resource://devtools/client/inspector/shared/walker-event-listener.js");
 const {
   VIEW_NODE_VALUE_TYPE,
   VIEW_NODE_SHAPE_POINT_TYPE,
-} = require("devtools/client/inspector/shared/node-types");
+} = require("resource://devtools/client/inspector/shared/node-types.js");
 
 loader.lazyRequireGetter(
   this,
@@ -1425,7 +1427,7 @@ class HighlightersOverlay {
         if (!highlighter) {
           return null;
         }
-        const ShapesInContextEditor = require("devtools/client/shared/widgets/ShapesInContextEditor");
+        const ShapesInContextEditor = require("resource://devtools/client/shared/widgets/ShapesInContextEditor.js");
 
         editor = new ShapesInContextEditor(
           highlighter,

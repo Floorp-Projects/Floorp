@@ -4,38 +4,40 @@
 
 "use strict";
 
-const { l10n } = require("devtools/shared/inspector/css-logic");
-const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
+const { l10n } = require("resource://devtools/shared/inspector/css-logic.js");
+const {
+  PSEUDO_CLASSES,
+} = require("resource://devtools/shared/css/constants.js");
 const {
   style: { ELEMENT_STYLE },
-} = require("devtools/shared/constants");
-const Rule = require("devtools/client/inspector/rules/models/rule");
+} = require("resource://devtools/shared/constants.js");
+const Rule = require("resource://devtools/client/inspector/rules/models/rule.js");
 const {
   InplaceEditor,
   editableField,
   editableItem,
-} = require("devtools/client/shared/inplace-editor");
-const TextPropertyEditor = require("devtools/client/inspector/rules/views/text-property-editor");
+} = require("resource://devtools/client/shared/inplace-editor.js");
+const TextPropertyEditor = require("resource://devtools/client/inspector/rules/views/text-property-editor.js");
 const {
   createChild,
   blurOnMultipleProperties,
   promiseWarn,
-} = require("devtools/client/inspector/shared/utils");
+} = require("resource://devtools/client/inspector/shared/utils.js");
 const {
   parseNamedDeclarations,
   parsePseudoClassesAndAttributes,
   SELECTOR_ATTRIBUTE,
   SELECTOR_ELEMENT,
   SELECTOR_PSEUDO_CLASS,
-} = require("devtools/shared/css/parsing-utils");
-const EventEmitter = require("devtools/shared/event-emitter");
-const CssLogic = require("devtools/shared/inspector/css-logic");
+} = require("resource://devtools/shared/css/parsing-utils.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const CssLogic = require("resource://devtools/shared/inspector/css-logic.js");
 
 loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
 
 const STYLE_INSPECTOR_PROPERTIES =
   "devtools/shared/locales/styleinspector.properties";
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 
 /**

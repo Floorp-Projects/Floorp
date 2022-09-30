@@ -14,8 +14,8 @@ Services.scriptloader.loadSubScript(
 
 var {
   getInplaceEditorForSpan: inplaceEditor,
-} = require("devtools/client/shared/inplace-editor");
-var clipboard = require("devtools/shared/platform/clipboard");
+} = require("resource://devtools/client/shared/inplace-editor.js");
+var clipboard = require("resource://devtools/shared/platform/clipboard.js");
 
 // If a test times out we want to see the complete log and not just the last few
 // lines.

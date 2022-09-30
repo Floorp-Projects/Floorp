@@ -4,15 +4,15 @@
 
 "use strict";
 
-const { throttle } = require("devtools/shared/throttle");
+const { throttle } = require("resource://devtools/shared/throttle.js");
 
 const {
   clearFlexbox,
   updateFlexbox,
   updateFlexboxColor,
   updateFlexboxHighlighted,
-} = require("devtools/client/inspector/flexbox/actions/flexbox");
-const flexboxReducer = require("devtools/client/inspector/flexbox/reducers/flexbox");
+} = require("resource://devtools/client/inspector/flexbox/actions/flexbox.js");
+const flexboxReducer = require("resource://devtools/client/inspector/flexbox/reducers/flexbox.js");
 
 loader.lazyRequireGetter(
   this,

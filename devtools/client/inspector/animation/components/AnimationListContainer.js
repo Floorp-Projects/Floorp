@@ -8,26 +8,30 @@ const {
   createFactory,
   createRef,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 const AnimationList = createFactory(
-  require("devtools/client/inspector/animation/components/AnimationList")
+  require("resource://devtools/client/inspector/animation/components/AnimationList.js")
 );
 const CurrentTimeScrubber = createFactory(
-  require("devtools/client/inspector/animation/components/CurrentTimeScrubber")
+  require("resource://devtools/client/inspector/animation/components/CurrentTimeScrubber.js")
 );
 const ProgressInspectionPanel = createFactory(
-  require("devtools/client/inspector/animation/components/ProgressInspectionPanel")
+  require("resource://devtools/client/inspector/animation/components/ProgressInspectionPanel.js")
 );
 
 const {
   findOptimalTimeInterval,
-} = require("devtools/client/inspector/animation/utils/utils");
-const { getStr } = require("devtools/client/inspector/animation/utils/l10n");
-const { throttle } = require("devtools/shared/throttle");
+} = require("resource://devtools/client/inspector/animation/utils/utils.js");
+const {
+  getStr,
+} = require("resource://devtools/client/inspector/animation/utils/l10n.js");
+const { throttle } = require("resource://devtools/shared/throttle.js");
 
 // The minimum spacing between 2 time graduation headers in the timeline (px).
 const TIME_GRADUATION_MIN_SPACING = 40;

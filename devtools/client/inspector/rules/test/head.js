@@ -17,11 +17,11 @@ registerCleanupFunction(() => {
 
 var {
   getInplaceEditorForSpan: inplaceEditor,
-} = require("devtools/client/shared/inplace-editor");
+} = require("resource://devtools/client/shared/inplace-editor.js");
 
 const {
   COMPATIBILITY_TOOLTIP_MESSAGE,
-} = require("devtools/client/inspector/rules/constants");
+} = require("resource://devtools/client/inspector/rules/constants.js");
 
 const ROOT_TEST_DIR = getRootDirectory(gTestPath);
 

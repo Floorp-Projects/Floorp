@@ -4,21 +4,23 @@
 
 "use strict";
 
-const flags = require("devtools/shared/flags");
-const nodeConstants = require("devtools/shared/dom-node-constants");
-const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
-const EventEmitter = require("devtools/shared/event-emitter");
-const { LocalizationHelper } = require("devtools/shared/l10n");
-const { PluralForm } = require("devtools/shared/plural-form");
-const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
-const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
-const { scrollIntoViewIfNeeded } = require("devtools/client/shared/scroll");
-const { PrefObserver } = require("devtools/client/shared/prefs");
-const MarkupElementContainer = require("devtools/client/inspector/markup/views/element-container");
-const MarkupReadOnlyContainer = require("devtools/client/inspector/markup/views/read-only-container");
-const MarkupTextContainer = require("devtools/client/inspector/markup/views/text-container");
-const RootContainer = require("devtools/client/inspector/markup/views/root-container");
-const WalkerEventListener = require("devtools/client/inspector/shared/walker-event-listener");
+const flags = require("resource://devtools/shared/flags.js");
+const nodeConstants = require("resource://devtools/shared/dom-node-constants.js");
+const nodeFilterConstants = require("resource://devtools/shared/dom-node-filter-constants.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
+const { PluralForm } = require("resource://devtools/shared/plural-form.js");
+const AutocompletePopup = require("resource://devtools/client/shared/autocomplete-popup.js");
+const KeyShortcuts = require("resource://devtools/client/shared/key-shortcuts.js");
+const {
+  scrollIntoViewIfNeeded,
+} = require("resource://devtools/client/shared/scroll.js");
+const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
+const MarkupElementContainer = require("resource://devtools/client/inspector/markup/views/element-container.js");
+const MarkupReadOnlyContainer = require("resource://devtools/client/inspector/markup/views/read-only-container.js");
+const MarkupTextContainer = require("resource://devtools/client/inspector/markup/views/text-container.js");
+const RootContainer = require("resource://devtools/client/inspector/markup/views/root-container.js");
+const WalkerEventListener = require("resource://devtools/client/inspector/shared/walker-event-listener.js");
 
 loader.lazyRequireGetter(
   this,
@@ -1975,7 +1977,7 @@ MarkupView.prototype = {
       }
       // Load load and create HTML Editor as it is rarely used and fetch complex deps
       if (!this.htmlEditor) {
-        const HTMLEditor = require("devtools/client/inspector/markup/views/html-editor");
+        const HTMLEditor = require("resource://devtools/client/inspector/markup/views/html-editor.js");
         this.htmlEditor = new HTMLEditor(this.doc);
       }
       this.htmlEditor.show(container.tagLine, oldValue);

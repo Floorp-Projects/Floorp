@@ -4,10 +4,10 @@
 
 "use strict";
 
-const { KeyCodes } = require("devtools/client/shared/keycodes");
+const { KeyCodes } = require("resource://devtools/client/shared/keycodes.js");
 
-const EventEmitter = require("devtools/shared/event-emitter");
-const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const AutocompletePopup = require("resource://devtools/client/shared/autocomplete-popup.js");
 
 // Maximum number of selector suggestions shown in the panel.
 const MAX_SUGGESTIONS = 15;
