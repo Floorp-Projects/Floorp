@@ -12,8 +12,8 @@ const { Integration } = ChromeUtils.importESModule(
 const { PermissionUI } = ChromeUtils.import(
   "resource:///modules/PermissionUI.jsm"
 );
-const { SitePermissions } = ChromeUtils.import(
-  "resource:///modules/SitePermissions.jsm"
+const { SITEPERMS_ADDON_PROVIDER_PREF } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs"
 );
 
 // Tests that GeolocationPermissionPrompt works as expected
@@ -50,6 +50,13 @@ add_task(async function test_persistent_storage_permission_prompt() {
 
 // Tests that MidiPrompt works as expected
 add_task(async function test_midi_permission_prompt() {
+  if (Services.prefs.getBoolPref(SITEPERMS_ADDON_PROVIDER_PREF, false)) {
+    ok(
+      true,
+      "PermissionUI.MIDIPermissionPrompt uses SitePermsAddon install flow"
+    );
+    return;
+  }
   await testPrompt(PermissionUI.MIDIPermissionPrompt);
 });
 
