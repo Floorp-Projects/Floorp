@@ -59,6 +59,9 @@ async function _handlePrefChange() {
 
 function _addCalloutLinkElements() {
   function addStylesheet(href) {
+    if (document.querySelector(`link[href="${href}"]`)) {
+      return;
+    }
     const link = document.head.appendChild(document.createElement("link"));
     link.rel = "stylesheet";
     link.href = href;
@@ -89,6 +92,8 @@ let CURRENT_SCREEN;
 let CONFIG;
 let RENDER_OBSERVER;
 let READY = false;
+let LISTENERS_REGISTERED = false;
+let AWSetup = false;
 let SAVED_ACTIVE_ELEMENT;
 
 const TRANSITION_MS = 500;
@@ -289,16 +294,25 @@ function _positionCallout() {
 }
 
 function _addPositionListeners() {
-  window.addEventListener("scroll", _positionCallout);
-  window.addEventListener("resize", _positionCallout);
+  if (!LISTENERS_REGISTERED) {
+    window.addEventListener("scroll", _positionCallout);
+    window.addEventListener("resize", _positionCallout);
+    LISTENERS_REGISTERED = true;
+  }
 }
 
 function _removePositionListeners() {
-  window.removeEventListener("scroll", _positionCallout);
-  window.removeEventListener("resize", _positionCallout);
+  if (LISTENERS_REGISTERED) {
+    window.removeEventListener("scroll", _positionCallout);
+    window.removeEventListener("resize", _positionCallout);
+    LISTENERS_REGISTERED = false;
+  }
 }
 
 function _setupWindowFunctions() {
+  if (AWSetup) {
+    return;
+  }
   const AWParent = new lazy.AboutWelcomeParent();
   addEventListener("unload", () => {
     AWParent.didDestroy();
@@ -318,6 +332,7 @@ function _setupWindowFunctions() {
   );
   window.AWSendToParent = (name, data) => receive(name)(data);
   window.AWFinish = _endTour;
+  AWSetup = true;
 }
 
 function _endTour() {
@@ -325,6 +340,7 @@ function _endTour() {
   // SAVED_ACTIVE_ELEMENT
   window.removeEventListener("focus", focusHandler, { capture: true });
 
+  READY = false;
   // wait for fade out transition
   let container = document.getElementById(CONTAINER_ID);
   container?.classList.add("hidden");
@@ -384,12 +400,19 @@ async function _loadConfig() {
   });
   CONFIG = result.message.content;
 
+  let newScreen = CONFIG?.screens?.[CONFIG?.startScreen || 0];
+
+  if (newScreen === CURRENT_SCREEN) {
+    return false;
+  }
+
   // Only add an impression if we actually have a message to impress
   if (Object.keys(result.message).length) {
     lazy.ASRouter.addImpression(result.message);
   }
 
-  CURRENT_SCREEN = CONFIG?.screens?.[CONFIG?.startScreen || 0];
+  CURRENT_SCREEN = newScreen;
+  return true;
 }
 
 async function _renderCallout() {
@@ -404,9 +427,9 @@ async function _renderCallout() {
  * Render content based on about:welcome multistage template.
  */
 async function showFeatureCallout(messageId) {
-  await _loadConfig();
+  let updated = await _loadConfig();
 
-  if (!CONFIG?.screens?.length) {
+  if (!updated || !CONFIG?.screens?.length) {
     return;
   }
 
@@ -436,6 +459,10 @@ async function showFeatureCallout(messageId) {
   // Add handlers for repositioning callout
   _addPositionListeners();
   _setupWindowFunctions();
+
+  READY = false;
+  const container = document.getElementById(CONTAINER_ID);
+  container?.remove();
 
   // If user has disabled CFR, don't show any callouts. But make sure we load
   // the necessary stylesheets first, since re-enabling CFR should allow
