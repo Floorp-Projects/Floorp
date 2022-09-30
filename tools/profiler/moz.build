@@ -151,6 +151,7 @@ include("/ipc/chromium/chromium-config.mozbuild")
 EXPORTS += [
     "public/ChildProfilerController.h",
     "public/GeckoProfiler.h",
+    "public/MicroGeckoProfiler.h",
     "public/ProfilerBindings.h",
     "public/ProfilerControl.h",
     "public/ProfilerParent.h",
