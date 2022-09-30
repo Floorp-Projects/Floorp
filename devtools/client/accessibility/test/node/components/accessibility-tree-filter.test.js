@@ -5,13 +5,15 @@
 
 const { mount } = require("enzyme");
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const Provider = createFactory(
-  require("devtools/client/shared/vendor/react-redux").Provider
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
 );
 
-const MenuButton = require("devtools/client/shared/components/menu/MenuButton");
-const ConnectedAccessibilityTreeFilterClass = require("devtools/client/accessibility/components/AccessibilityTreeFilter");
+const MenuButton = require("resource://devtools/client/shared/components/menu/MenuButton.js");
+const ConnectedAccessibilityTreeFilterClass = require("resource://devtools/client/accessibility/components/AccessibilityTreeFilter.js");
 const AccessibilityTreeFilterClass =
   ConnectedAccessibilityTreeFilterClass.WrappedComponent;
 const AccessibilityTreeFilter = createFactory(
@@ -20,14 +22,14 @@ const AccessibilityTreeFilter = createFactory(
 const {
   checkMenuItem,
   setupStore,
-} = require("devtools/client/accessibility/test/node/helpers");
+} = require("resource://devtools/client/accessibility/test/node/helpers.js");
 
 const {
   AUDIT,
   AUDITING,
   FILTERS,
   FILTER_TOGGLE,
-} = require("devtools/client/accessibility/constants");
+} = require("resource://devtools/client/accessibility/constants.js");
 
 function checkToggleFilterCheckbox(wrapper, filter) {
   const filterInstance = wrapper.find(AccessibilityTreeFilterClass).instance();

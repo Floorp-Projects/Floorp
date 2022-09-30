@@ -4,18 +4,24 @@
 "use strict";
 
 // React
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const { div } = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  div,
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
+const {
+  L10N,
+} = require("resource://devtools/client/accessibility/utils/l10n.js");
 const Accessible = createFactory(
-  require("devtools/client/accessibility/components/Accessible")
+  require("resource://devtools/client/accessibility/components/Accessible.js")
 );
 const Accordion = createFactory(
-  require("devtools/client/shared/components/Accordion")
+  require("resource://devtools/client/shared/components/Accordion.js")
 );
 const Checks = createFactory(
-  require("devtools/client/accessibility/components/Checks")
+  require("resource://devtools/client/accessibility/components/Checks.js")
 );
 
 // Component that is responsible for rendering accessible panel's sidebar.

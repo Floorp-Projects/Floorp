@@ -15,7 +15,7 @@ const TEST_URI = `<html>
 
 const {
   PREFS: { SCROLL_INTO_VIEW },
-} = require("devtools/client/accessibility/constants");
+} = require("resource://devtools/client/accessibility/constants.js");
 
 /**
  * Test data has the format of:

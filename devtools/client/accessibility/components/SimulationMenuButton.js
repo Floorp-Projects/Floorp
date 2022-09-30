@@ -9,35 +9,39 @@
 const {
   createFactory,
   Component,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   hr,
   span,
   div,
-} = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  L10N,
+} = require("resource://devtools/client/accessibility/utils/l10n.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 const MenuButton = createFactory(
-  require("devtools/client/shared/components/menu/MenuButton")
+  require("resource://devtools/client/shared/components/menu/MenuButton.js")
 );
-const { openDocLink } = require("devtools/client/shared/link");
+const { openDocLink } = require("resource://devtools/client/shared/link.js");
 const {
   A11Y_SIMULATION_DOCUMENTATION_LINK,
-} = require("devtools/client/accessibility/constants");
+} = require("resource://devtools/client/accessibility/constants.js");
 const {
   accessibility: { SIMULATION_TYPE },
-} = require("devtools/shared/constants");
-const actions = require("devtools/client/accessibility/actions/simulation");
+} = require("resource://devtools/shared/constants.js");
+const actions = require("resource://devtools/client/accessibility/actions/simulation.js");
 
 loader.lazyGetter(this, "MenuItem", function() {
   return createFactory(
-    require("devtools/client/shared/components/menu/MenuItem")
+    require("resource://devtools/client/shared/components/menu/MenuItem.js")
   );
 });
 loader.lazyGetter(this, "MenuList", function() {
   return createFactory(
-    require("devtools/client/shared/components/menu/MenuList")
+    require("resource://devtools/client/shared/components/menu/MenuList.js")
   );
 });
 

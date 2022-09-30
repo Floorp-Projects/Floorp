@@ -11,7 +11,7 @@ var { require } = ChromeUtils.import(
 var { BrowserLoader } = ChromeUtils.import(
   "resource://devtools/shared/loader/browser-loader.js"
 );
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 
 var { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/shared/",

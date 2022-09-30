@@ -7,29 +7,35 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { div } = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  div,
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 const List = createFactory(
-  require("devtools/client/shared/components/List").List
+  require("resource://devtools/client/shared/components/List.js").List
 );
 const ColorContrastCheck = createFactory(
-  require("devtools/client/accessibility/components/ColorContrastAccessibility")
+  require("resource://devtools/client/accessibility/components/ColorContrastAccessibility.js")
     .ColorContrastCheck
 );
 const TextLabelCheck = createFactory(
-  require("devtools/client/accessibility/components/TextLabelCheck")
+  require("resource://devtools/client/accessibility/components/TextLabelCheck.js")
 );
 const KeyboardCheck = createFactory(
-  require("devtools/client/accessibility/components/KeyboardCheck")
+  require("resource://devtools/client/accessibility/components/KeyboardCheck.js")
 );
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
+const {
+  L10N,
+} = require("resource://devtools/client/accessibility/utils/l10n.js");
 
 const {
   accessibility: { AUDIT_TYPE },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 function EmptyChecks() {
   return div(

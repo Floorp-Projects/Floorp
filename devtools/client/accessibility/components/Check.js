@@ -8,20 +8,20 @@ const {
   Component,
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const ReactDOM = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const ReactDOM = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
 
-const { openDocLink } = require("devtools/client/shared/link");
+const { openDocLink } = require("resource://devtools/client/shared/link.js");
 
 const {
   accessibility: {
     SCORES: { BEST_PRACTICES, FAIL, WARNING },
   },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 /**
  * A map of accessibility scores to the text descriptions of check icons.

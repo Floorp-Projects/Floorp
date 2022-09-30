@@ -6,21 +6,23 @@
 
 const { shallow, mount } = require("enzyme");
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 
 const Provider = createFactory(
-  require("devtools/client/shared/vendor/react-redux").Provider
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
 );
 const {
   setupStore,
-} = require("devtools/client/accessibility/test/node/helpers");
+} = require("resource://devtools/client/accessibility/test/node/helpers.js");
 
-const Badge = require("devtools/client/accessibility/components/Badge");
-const KeyboardBadgeClass = require("devtools/client/accessibility/components/KeyboardBadge");
+const Badge = require("resource://devtools/client/accessibility/components/Badge.js");
+const KeyboardBadgeClass = require("resource://devtools/client/accessibility/components/KeyboardBadge.js");
 const KeyboardBadge = createFactory(KeyboardBadgeClass);
 const {
   accessibility: { SCORES },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 function testBadge(wrapper) {
   expect(wrapper.html()).toMatchSnapshot();

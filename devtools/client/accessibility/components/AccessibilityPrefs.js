@@ -7,37 +7,47 @@
 const {
   createFactory,
   Component,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  L10N,
+} = require("resource://devtools/client/accessibility/utils/l10n.js");
 
-const { hr } = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  hr,
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 loader.lazyGetter(this, "MenuButton", function() {
   return createFactory(
-    require("devtools/client/shared/components/menu/MenuButton")
+    require("resource://devtools/client/shared/components/menu/MenuButton.js")
   );
 });
 loader.lazyGetter(this, "MenuItem", function() {
   return createFactory(
-    require("devtools/client/shared/components/menu/MenuItem")
+    require("resource://devtools/client/shared/components/menu/MenuItem.js")
   );
 });
 loader.lazyGetter(this, "MenuList", function() {
   return createFactory(
-    require("devtools/client/shared/components/menu/MenuList")
+    require("resource://devtools/client/shared/components/menu/MenuList.js")
   );
 });
 
 const {
   A11Y_LEARN_MORE_LINK,
-} = require("devtools/client/accessibility/constants");
-const { openDocLink } = require("devtools/client/shared/link");
+} = require("resource://devtools/client/accessibility/constants.js");
+const { openDocLink } = require("resource://devtools/client/shared/link.js");
 
-const { updatePref } = require("devtools/client/accessibility/actions/ui");
+const {
+  updatePref,
+} = require("resource://devtools/client/accessibility/actions/ui.js");
 
-const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { PREFS } = require("devtools/client/accessibility/constants");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
+const {
+  PREFS,
+} = require("resource://devtools/client/accessibility/constants.js");
 
 class AccessibilityPrefs extends Component {
   static get propTypes() {

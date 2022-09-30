@@ -6,8 +6,10 @@
 
 const {
   accessibility: { SIMULATION_TYPE },
-} = require("devtools/shared/constants");
-const { SIMULATE } = require("devtools/client/accessibility/constants");
+} = require("resource://devtools/shared/constants.js");
+const {
+  SIMULATE,
+} = require("resource://devtools/client/accessibility/constants.js");
 
 /**
  * Initial state definition

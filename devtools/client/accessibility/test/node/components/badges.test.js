@@ -6,23 +6,25 @@
 
 const { mount } = require("enzyme");
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const Provider = createFactory(
-  require("devtools/client/shared/vendor/react-redux").Provider
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
 );
 const {
   setupStore,
-} = require("devtools/client/accessibility/test/node/helpers");
+} = require("resource://devtools/client/accessibility/test/node/helpers.js");
 
-const Badge = require("devtools/client/accessibility/components/Badge");
+const Badge = require("resource://devtools/client/accessibility/components/Badge.js");
 const Badges = createFactory(
-  require("devtools/client/accessibility/components/Badges")
+  require("resource://devtools/client/accessibility/components/Badges.js")
 );
-const ContrastBadge = require("devtools/client/accessibility/components/ContrastBadge");
+const ContrastBadge = require("resource://devtools/client/accessibility/components/ContrastBadge.js");
 
 const {
   accessibility: { SCORES },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 describe("Badges component:", () => {
   const store = setupStore();

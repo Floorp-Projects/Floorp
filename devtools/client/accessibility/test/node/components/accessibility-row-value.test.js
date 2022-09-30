@@ -6,22 +6,24 @@
 
 const { mount } = require("enzyme");
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const Provider = createFactory(
-  require("devtools/client/shared/vendor/react-redux").Provider
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
 );
 const {
   mockAccessible,
   setupStore,
-} = require("devtools/client/accessibility/test/node/helpers");
+} = require("resource://devtools/client/accessibility/test/node/helpers.js");
 
-const Badges = require("devtools/client/accessibility/components/Badges");
+const Badges = require("resource://devtools/client/accessibility/components/Badges.js");
 const {
   REPS: { Rep },
-} = require("devtools/client/shared/components/reps/index");
-const AuditController = require("devtools/client/accessibility/components/AuditController");
+} = require("resource://devtools/client/shared/components/reps/index.js");
+const AuditController = require("resource://devtools/client/accessibility/components/AuditController.js");
 
-const AccessibilityRowValueClass = require("devtools/client/accessibility/components/AccessibilityRowValue");
+const AccessibilityRowValueClass = require("resource://devtools/client/accessibility/components/AccessibilityRowValue.js");
 const AccessibilityRowValue = createFactory(AccessibilityRowValueClass);
 
 describe("AccessibilityRowValue component:", () => {

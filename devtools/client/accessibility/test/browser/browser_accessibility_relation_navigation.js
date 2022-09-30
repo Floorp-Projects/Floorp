@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
+const {
+  L10N,
+} = require("resource://devtools/client/accessibility/utils/l10n.js");
 
 const TEST_URI = `<html>
   <head>

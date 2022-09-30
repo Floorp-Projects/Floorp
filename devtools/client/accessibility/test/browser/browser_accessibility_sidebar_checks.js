@@ -5,7 +5,7 @@
 
 const {
   accessibility: { SCORES },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 const TEST_URI = `<html>
   <head>

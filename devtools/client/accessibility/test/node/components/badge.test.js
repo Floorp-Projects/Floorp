@@ -5,15 +5,17 @@
 
 const { mount } = require("enzyme");
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const Provider = createFactory(
-  require("devtools/client/shared/vendor/react-redux").Provider
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
 );
 const {
   setupStore,
-} = require("devtools/client/accessibility/test/node/helpers");
+} = require("resource://devtools/client/accessibility/test/node/helpers.js");
 
-const BadgeClass = require("devtools/client/accessibility/components/Badge");
+const BadgeClass = require("resource://devtools/client/accessibility/components/Badge.js");
 const Badge = createFactory(BadgeClass);
 
 describe("Badge component:", () => {

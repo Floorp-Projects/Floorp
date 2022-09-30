@@ -4,18 +4,24 @@
 
 "use strict";
 
-const React = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const React = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
-const { isFiltered } = require("devtools/client/accessibility/utils/audit");
-const { FILTERS } = require("devtools/client/accessibility/constants");
+const {
+  isFiltered,
+} = require("resource://devtools/client/accessibility/utils/audit.js");
+const {
+  FILTERS,
+} = require("resource://devtools/client/accessibility/constants.js");
 const {
   accessibility: {
     AUDIT_TYPE,
     SCORES: { BEST_PRACTICES, FAIL, WARNING },
   },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 function validateCheck({ error, score }) {
   return !error && [BEST_PRACTICES, FAIL, WARNING].includes(score);

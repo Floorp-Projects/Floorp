@@ -37,7 +37,7 @@ const {
       },
     },
   },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 // Used in accessible component for properties tree rendering.
 exports.TREE_ROW_HEIGHT = 21;

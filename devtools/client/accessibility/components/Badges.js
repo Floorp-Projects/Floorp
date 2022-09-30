@@ -7,31 +7,35 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { span } = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  span,
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
+const {
+  L10N,
+} = require("resource://devtools/client/accessibility/utils/l10n.js");
 
 const {
   accessibility: { AUDIT_TYPE },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 loader.lazyGetter(this, "ContrastBadge", () =>
   createFactory(
-    require("devtools/client/accessibility/components/ContrastBadge")
+    require("resource://devtools/client/accessibility/components/ContrastBadge.js")
   )
 );
 
 loader.lazyGetter(this, "KeyboardBadge", () =>
   createFactory(
-    require("devtools/client/accessibility/components/KeyboardBadge")
+    require("resource://devtools/client/accessibility/components/KeyboardBadge.js")
   )
 );
 
 loader.lazyGetter(this, "TextLabelBadge", () =>
   createFactory(
-    require("devtools/client/accessibility/components/TextLabelBadge")
+    require("resource://devtools/client/accessibility/components/TextLabelBadge.js")
   )
 );
 
