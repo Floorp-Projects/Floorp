@@ -506,8 +506,25 @@
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
     <string name="onboarding_first_screen_title">Καλώς ορίσατε στο %1$s</string>
 
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Γρήγορο. Ιδιωτικό. Χωρίς περισπασμούς.</string>
+
     <!-- New Onboarding flow first screen button label-->
     <string name="onboarding_first_screen_button_text">Έναρξη</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">Το %1$s δεν είναι σαν τα άλλα προγράμματα περιήγησης</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Διαγράφουμε το ιστορικό σας όταν κλείνετε την εφαρμογή για επιπλέον ιδιωτικότητα.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Ορίστε το %1$s ως προεπιλογή για να προστατεύσετε τα δεδομένα σας με κάθε σύνδεσμο που ανοίγετε.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Ορισμός ως προεπιλογή</string>
 
     <!-- New Onboarding flow second screen skip onboarding button label-->
     <string name="onboarding_second_screen_skip_button_text">Παράλειψη</string>
@@ -1003,6 +1020,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
     <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Φαίνεται ότι αυτός ο ιστότοπος προσπαθούσε να σας καταγράψει. Πατήστε την ασπίδα για να δείτε τις ρυθμίσεις ιστοτόπου και τα στατιστικά αποκλεισμού καταγραφής.</string>
 
+    <string name="cfr_for_toolbar_shield_icon2">Εμποδίσαμε την παρακολούθησή σας από αυτόν τον ιστότοπο. Πατήστε την ασπίδα ανά πάσα στιγμή για να δείτε τι αποκλείουμε.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Κλείσιμο παραθύρου</string>
 
@@ -1026,8 +1045,20 @@ The new line here must be kept as the second half of the string is clickable for
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Γραφικό στοιχείο αναζήτησης</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
     <string name="promote_search_widget_dialog_title">Το ιστορικό περιήγησης διαγράφηκε! 🎉</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
-    </resources>
+    <string name="promote_search_widget_dialog_subtitle">Θα σας αφήσουμε στην ιδιωτική σας περιήγηση, αλλά ξεκινήστε πιο γρήγορα την επόμενη φορά με το γραφικό στοιχείο %1$s στην αρχική σας οθόνη.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Προσθήκη γραφικού στοιχείου στην αρχική οθόνη</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Το γραφικό στοιχείο προστέθηκε στην αρχική οθόνη</string>
+</resources>
