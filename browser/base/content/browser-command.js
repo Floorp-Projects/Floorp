@@ -209,6 +209,13 @@ function reloadSidebarSite() {
   document.getElementById(`webpanel${webpanel_id}`).reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);  //リロード
 }
 
+function goIndexSidebarSite() {
+  const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
+  const webpanel_id = modeValuePref - 4;
+
+  document.getElementById(`webpanel${webpanel_id}`).gotoIndex();  //ホーム
+}
+
 /* From 0 to 4 - StaticModeSetter. 5 modes, start from 0
 0 - Browser Manager
 1 - Bookmark

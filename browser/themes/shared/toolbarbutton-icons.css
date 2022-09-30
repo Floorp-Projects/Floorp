@@ -575,6 +575,10 @@ toolbarbutton.bookmark-item {
   list-style-image: url("chrome://global/skin/icons/reload.svg");
 }
 
+#sidebar2-go-index {
+  list-style-image: url("chrome://browser/skin/home.svg");
+}
+
 #sidebar2-keeppanelwidth {
 	list-style-image: url("chrome://browser/skin/lepton/screenshot.svg");
 }

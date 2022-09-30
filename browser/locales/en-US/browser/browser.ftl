@@ -846,4 +846,4 @@ Sidebar2 =
   .tooltiptext = Change Sidebar Visibility
 
 sidebar2-mute-and-unmute =
-  .label = Mute/Unmute this panel
+  .label = Toggle the mute state of this panel
