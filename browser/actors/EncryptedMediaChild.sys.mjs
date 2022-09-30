@@ -4,8 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["EncryptedMediaChild"];
-
 /**
  * GlobalCaptureListener is a class that listens for changes to the global
  * capture state of windows and screens. It uses this information to notify
@@ -99,7 +97,7 @@ class GlobalCaptureListener {
 
 const gGlobalCaptureListener = new GlobalCaptureListener();
 
-class EncryptedMediaChild extends JSWindowActorChild {
+export class EncryptedMediaChild extends JSWindowActorChild {
   // Expected to observe 'mediakeys-request' as notified from MediaKeySystemAccess.
   // @param aSubject the nsPIDOMWindowInner associated with the notifying MediaKeySystemAccess.
   // @param aTopic should be "mediakeys-request".
