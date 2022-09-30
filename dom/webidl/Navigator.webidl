@@ -240,7 +240,7 @@ partial interface Navigator {
 
 // http://webaudio.github.io/web-midi-api/#requestmidiaccess
 partial interface Navigator {
-  [SecureContext, NewObject, Pref="dom.webmidi.enabled"]
+  [NewObject, Func="Navigator::HasMidiSupport"]
   Promise<MIDIAccess> requestMIDIAccess(optional MIDIOptions options = {});
 };
 
