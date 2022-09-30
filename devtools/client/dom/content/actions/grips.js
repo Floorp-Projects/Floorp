@@ -4,7 +4,7 @@
 /* globals DomProvider */
 "use strict";
 
-const constants = require("devtools/client/dom/content/constants");
+const constants = require("resource://devtools/client/dom/content/constants.js");
 
 /**
  * Used to fetch grip prototype and properties from the backend.

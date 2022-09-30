@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Property } = require("devtools/client/dom/content/reducers/grips");
+const {
+  Property,
+} = require("resource://devtools/client/dom/content/reducers/grips.js");
 
 // Implementation
 
