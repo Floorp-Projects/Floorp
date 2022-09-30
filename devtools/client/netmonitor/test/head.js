@@ -30,27 +30,29 @@ const { LinkHandlerParent } = ChromeUtils.import(
 const {
   getFormattedIPAndPort,
   getFormattedTime,
-} = require("devtools/client/netmonitor/src/utils/format-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/format-utils.js");
 
 const {
   getSortedRequests,
   getRequestById,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 
 const {
   getUnicodeUrl,
   getUnicodeHostname,
-} = require("devtools/client/shared/unicode-url");
+} = require("resource://devtools/client/shared/unicode-url.js");
 const {
   getFormattedProtocol,
   getUrlHost,
   getUrlScheme,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 const {
   EVENTS,
   TEST_EVENTS,
-} = require("devtools/client/netmonitor/src/constants");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 
 /* eslint-disable no-unused-vars, max-len */
 const EXAMPLE_URL =
@@ -1240,7 +1242,7 @@ function validateRequests(requests, monitor) {
  *        The id of the context menu item
  */
 function getContextMenuItem(monitor, id) {
-  const Menu = require("devtools/client/framework/menu");
+  const Menu = require("resource://devtools/client/framework/menu.js");
   return Menu.getMenuElementById(id, monitor.panelWin.document);
 }
 

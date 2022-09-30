@@ -7,24 +7,26 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const asyncStorage = require("devtools/shared/async-storage");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const asyncStorage = require("resource://devtools/shared/async-storage.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
-const Actions = require("devtools/client/netmonitor/src/actions/index");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
+const Actions = require("resource://devtools/client/netmonitor/src/actions/index.js");
 const {
   getClickedRequest,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 const {
   getUrlQuery,
   parseQueryString,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 const InputMap = createFactory(
-  require("devtools/client/netmonitor/src/components/new-request/InputMap")
+  require("resource://devtools/client/netmonitor/src/components/new-request/InputMap.js")
 );
 const { button, div, footer, label, textarea, select, option } = dom;
 

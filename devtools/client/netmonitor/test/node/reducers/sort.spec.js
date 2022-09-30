@@ -6,8 +6,10 @@
 const {
   Sort,
   sortReducer,
-} = require("devtools/client/netmonitor/src/reducers/sort");
-const { SORT_BY } = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/reducers/sort.js");
+const {
+  SORT_BY,
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 describe("sorting reducer", () => {
   it("it should sort by sort type", () => {

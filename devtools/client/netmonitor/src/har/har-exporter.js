@@ -4,13 +4,15 @@
 
 "use strict";
 
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const JSZip = require("devtools/client/shared/vendor/jszip");
-const clipboardHelper = require("devtools/shared/platform/clipboard");
-const { HarUtils } = require("devtools/client/netmonitor/src/har/har-utils");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
+const JSZip = require("resource://devtools/client/shared/vendor/jszip.js");
+const clipboardHelper = require("resource://devtools/shared/platform/clipboard.js");
+const {
+  HarUtils,
+} = require("resource://devtools/client/netmonitor/src/har/har-utils.js");
 const {
   HarBuilder,
-} = require("devtools/client/netmonitor/src/har/har-builder");
+} = require("resource://devtools/client/netmonitor/src/har/har-builder.js");
 
 var uid = 1;
 

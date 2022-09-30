@@ -4,17 +4,17 @@
 
 "use strict";
 
-const batching = require("devtools/client/netmonitor/src/actions/batching");
-const filters = require("devtools/client/netmonitor/src/actions/filters");
-const httpCustomRequest = require("devtools/client/netmonitor/src/actions/http-custom-request");
-const requests = require("devtools/client/netmonitor/src/actions/requests");
-const selection = require("devtools/client/netmonitor/src/actions/selection");
-const sort = require("devtools/client/netmonitor/src/actions/sort");
-const timingMarkers = require("devtools/client/netmonitor/src/actions/timing-markers");
-const ui = require("devtools/client/netmonitor/src/actions/ui");
-const messages = require("devtools/client/netmonitor/src/actions/messages");
-const search = require("devtools/client/netmonitor/src/actions/search");
-const requestBlocking = require("devtools/client/netmonitor/src/actions/request-blocking");
+const batching = require("resource://devtools/client/netmonitor/src/actions/batching.js");
+const filters = require("resource://devtools/client/netmonitor/src/actions/filters.js");
+const httpCustomRequest = require("resource://devtools/client/netmonitor/src/actions/http-custom-request.js");
+const requests = require("resource://devtools/client/netmonitor/src/actions/requests.js");
+const selection = require("resource://devtools/client/netmonitor/src/actions/selection.js");
+const sort = require("resource://devtools/client/netmonitor/src/actions/sort.js");
+const timingMarkers = require("resource://devtools/client/netmonitor/src/actions/timing-markers.js");
+const ui = require("resource://devtools/client/netmonitor/src/actions/ui.js");
+const messages = require("resource://devtools/client/netmonitor/src/actions/messages.js");
+const search = require("resource://devtools/client/netmonitor/src/actions/search.js");
+const requestBlocking = require("resource://devtools/client/netmonitor/src/actions/request-blocking.js");
 
 Object.assign(
   exports,

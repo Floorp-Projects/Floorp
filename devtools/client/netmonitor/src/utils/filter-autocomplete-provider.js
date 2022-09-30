@@ -7,11 +7,11 @@
 const {
   FILTER_FLAGS,
   SUPPORTED_HTTP_CODES,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 const {
   getRequestPriorityAsText,
-} = require("devtools/client/netmonitor/src/utils/format-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/format-utils.js");
 
 /**
  * Generates a value for the given filter

@@ -15,11 +15,11 @@ const {
   MSG_TOGGLE_COLUMN,
   MSG_RESET_COLUMNS,
   MSG_CLOSE_CONNECTION,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 const {
   getDisplayedMessages,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 const PAGE_SIZE_ITEM_COUNT_RATIO = 5;
 
 /**

@@ -6,10 +6,10 @@
 
 const {
   ObjectProvider,
-} = require("devtools/client/shared/components/tree/ObjectProvider");
+} = require("resource://devtools/client/shared/components/tree/ObjectProvider.js");
 const {
   getFileName,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 
 /**
  * This provider is responsible for providing data from the

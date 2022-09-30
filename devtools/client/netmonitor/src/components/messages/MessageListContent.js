@@ -7,20 +7,22 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
-const { PluralForm } = require("devtools/shared/plural-form");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
+const { PluralForm } = require("resource://devtools/shared/plural-form.js");
 const {
   getDisplayedMessages,
   isCurrentChannelClosed,
   getClosedConnectionDetails,
-} = require("devtools/client/netmonitor/src/selectors/index");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/netmonitor/src/selectors/index.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const { table, tbody, tr, td, div, input, label, hr, p } = dom;
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 const MESSAGES_EMPTY_TEXT = L10N.getStr("messagesEmptyText");
 const TOGGLE_MESSAGES_TRUNCATION = L10N.getStr("toggleMessagesTruncation");
 const TOGGLE_MESSAGES_TRUNCATION_TITLE = L10N.getStr(
@@ -29,23 +31,23 @@ const TOGGLE_MESSAGES_TRUNCATION_TITLE = L10N.getStr(
 const CONNECTION_CLOSED_TEXT = L10N.getStr("netmonitor.ws.connection.closed");
 const {
   MESSAGE_HEADERS,
-} = require("devtools/client/netmonitor/src/constants.js");
-const Actions = require("devtools/client/netmonitor/src/actions/index");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
+const Actions = require("resource://devtools/client/netmonitor/src/actions/index.js");
 
 const {
   getSelectedMessage,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 
 // Components
-const MessageListContextMenu = require("devtools/client/netmonitor/src/components/messages/MessageListContextMenu");
+const MessageListContextMenu = require("resource://devtools/client/netmonitor/src/components/messages/MessageListContextMenu.js");
 loader.lazyGetter(this, "MessageListHeader", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/messages/MessageListHeader")
+    require("resource://devtools/client/netmonitor/src/components/messages/MessageListHeader.js")
   );
 });
 loader.lazyGetter(this, "MessageListItem", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/messages/MessageListItem")
+    require("resource://devtools/client/netmonitor/src/components/messages/MessageListItem.js")
   );
 });
 

@@ -16,27 +16,27 @@ const {
   SELECT_ACTION_BAR_TAB,
   TOGGLE_SEARCH_CASE_SENSITIVE_SEARCH,
   PANELS,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 const {
   getDisplayedRequests,
   getOngoingSearch,
   getSearchStatus,
   getRequestById,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 
 const {
   selectRequest,
-} = require("devtools/client/netmonitor/src/actions/selection");
+} = require("resource://devtools/client/netmonitor/src/actions/selection.js");
 const {
   selectDetailsPanelTab,
-} = require("devtools/client/netmonitor/src/actions/ui");
+} = require("resource://devtools/client/netmonitor/src/actions/ui.js");
 const {
   fetchNetworkUpdatePacket,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 const {
   searchInResource,
-} = require("devtools/client/netmonitor/src/workers/search/index");
+} = require("resource://devtools/client/netmonitor/src/workers/search/index.js");
 
 /**
  * Search through all resources. This is the main action exported

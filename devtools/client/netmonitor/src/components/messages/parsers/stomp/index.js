@@ -4,13 +4,13 @@
 
 "use strict";
 
-const frameModule = require("devtools/client/netmonitor/src/components/messages/parsers/stomp/frame.js");
+const frameModule = require("resource://devtools/client/netmonitor/src/components/messages/parsers/stomp/frame.js");
 const {
   Parser,
-} = require("devtools/client/netmonitor/src/components/messages/parsers/stomp/parser.js");
+} = require("resource://devtools/client/netmonitor/src/components/messages/parsers/stomp/parser.js");
 const {
   parseJSON,
-} = require("devtools/client/netmonitor/src/utils/request-utils.js");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 
 const { Frame } = frameModule;
 

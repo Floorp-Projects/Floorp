@@ -4,13 +4,19 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
-const { div } = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  div,
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 const {
   propertiesEqual,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 
 const UPDATED_DOMAIN_PROPS = ["remoteAddress", "securityState", "urlDetails"];
 

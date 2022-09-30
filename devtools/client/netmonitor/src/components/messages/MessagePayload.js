@@ -7,53 +7,55 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const { div, input, label, span, h2 } = dom;
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
 
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n.js");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 const {
   getMessagePayload,
   getResponseHeader,
   parseJSON,
-} = require("devtools/client/netmonitor/src/utils/request-utils.js");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 const {
   getFormattedSize,
-} = require("devtools/client/netmonitor/src/utils/format-utils.js");
+} = require("resource://devtools/client/netmonitor/src/utils/format-utils.js");
 const MESSAGE_DATA_LIMIT = Services.prefs.getIntPref(
   "devtools.netmonitor.msg.messageDataLimit"
 );
 const MESSAGE_DATA_TRUNCATED = L10N.getStr("messageDataTruncated");
-const SocketIODecoder = require("devtools/client/netmonitor/src/components/messages/parsers/socket-io/index.js");
+const SocketIODecoder = require("resource://devtools/client/netmonitor/src/components/messages/parsers/socket-io/index.js");
 const {
   JsonHubProtocol,
   HandshakeProtocol,
-} = require("devtools/client/netmonitor/src/components/messages/parsers/signalr/index.js");
+} = require("resource://devtools/client/netmonitor/src/components/messages/parsers/signalr/index.js");
 const {
   parseSockJS,
-} = require("devtools/client/netmonitor/src/components/messages/parsers/sockjs/index.js");
+} = require("resource://devtools/client/netmonitor/src/components/messages/parsers/sockjs/index.js");
 const {
   parseStompJs,
-} = require("devtools/client/netmonitor/src/components/messages/parsers/stomp/index.js");
+} = require("resource://devtools/client/netmonitor/src/components/messages/parsers/stomp/index.js");
 const {
   wampSerializers,
-} = require("devtools/client/netmonitor/src/components/messages/parsers/wamp/serializers.js");
+} = require("resource://devtools/client/netmonitor/src/components/messages/parsers/wamp/serializers.js");
 const {
   getRequestByChannelId,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 
 // Components
 const RawData = createFactory(
-  require("devtools/client/netmonitor/src/components/messages/RawData")
+  require("resource://devtools/client/netmonitor/src/components/messages/RawData.js")
 );
 loader.lazyGetter(this, "PropertiesView", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/request-details/PropertiesView")
+    require("resource://devtools/client/netmonitor/src/components/request-details/PropertiesView.js")
   );
 });
 

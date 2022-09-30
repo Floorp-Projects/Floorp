@@ -4,10 +4,12 @@
 
 "use strict";
 
-const { TIMING_KEYS } = require("devtools/client/netmonitor/src/constants");
+const {
+  TIMING_KEYS,
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 const {
   getUrlDetails,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 
 var guid = 0;
 

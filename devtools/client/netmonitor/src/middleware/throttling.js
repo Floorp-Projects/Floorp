@@ -6,7 +6,7 @@
 
 const {
   CHANGE_NETWORK_THROTTLING,
-} = require("devtools/client/shared/components/throttling/actions");
+} = require("resource://devtools/client/shared/components/throttling/actions.js");
 
 /**
  * Network throttling middleware is responsible for

@@ -3,7 +3,7 @@
 
 "use strict";
 
-const asyncStorage = require("devtools/shared/async-storage");
+const asyncStorage = require("resource://devtools/shared/async-storage.js");
 
 /**
  * Test to check the sync between URL parameters and the parameters section

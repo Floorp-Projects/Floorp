@@ -13,7 +13,7 @@ const {
   TOGGLE_SEARCH_CASE_SENSITIVE_SEARCH,
   UPDATE_SEARCH_STATUS,
   SET_TARGET_SEARCH_RESULT,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 /**
  * Search reducer stores the following data:

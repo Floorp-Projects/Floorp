@@ -6,7 +6,7 @@
 
 const {
   isFreetextMatch,
-} = require("devtools/client/netmonitor/src/utils/filter-text-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/filter-text-utils.js");
 
 /**
  * Predicates used when filtering items.

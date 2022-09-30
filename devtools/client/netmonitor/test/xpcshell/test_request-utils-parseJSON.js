@@ -12,7 +12,7 @@ const { require } = ChromeUtils.import(
 );
 const {
   parseJSON,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 
 function run_test() {
   const validJSON = '{"item":{"subitem":true},"seconditem":"bar"}';

@@ -8,9 +8,11 @@ const {
   getUnicodeUrl,
   getUnicodeUrlPath,
   getUnicodeHostname,
-} = require("devtools/client/shared/unicode-url");
+} = require("resource://devtools/client/shared/unicode-url.js");
 
-const { UPDATE_PROPS } = require("devtools/client/netmonitor/src/constants");
+const {
+  UPDATE_PROPS,
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 const CONTENT_MIME_TYPE_ABBREVIATIONS = {
   ecmascript: "js",

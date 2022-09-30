@@ -6,14 +6,16 @@
 
 const {
   HarCollector,
-} = require("devtools/client/netmonitor/src/har/har-collector");
+} = require("resource://devtools/client/netmonitor/src/har/har-collector.js");
 const {
   HarExporter,
-} = require("devtools/client/netmonitor/src/har/har-exporter");
-const { HarUtils } = require("devtools/client/netmonitor/src/har/har-utils");
+} = require("resource://devtools/client/netmonitor/src/har/har-exporter.js");
+const {
+  HarUtils,
+} = require("resource://devtools/client/netmonitor/src/har/har-utils.js");
 const {
   getLongStringFullText,
-} = require("devtools/client/shared/string-utils");
+} = require("resource://devtools/client/shared/string-utils.js");
 
 const prefDomain = "devtools.netmonitor.har.";
 

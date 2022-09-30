@@ -4,13 +4,17 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 const {
   limitTooltipLength,
-} = require("devtools/client/netmonitor/src/utils/tooltips");
+} = require("resource://devtools/client/netmonitor/src/utils/tooltips.js");
 
 /**
  * Renders the "Data" column of a message.

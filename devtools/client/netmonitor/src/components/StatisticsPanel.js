@@ -4,38 +4,42 @@
 
 "use strict";
 
-const ReactDOM = require("devtools/client/shared/vendor/react-dom");
-const { FILTER_TAGS } = require("devtools/client/netmonitor/src/constants");
+const ReactDOM = require("resource://devtools/client/shared/vendor/react-dom.js");
+const {
+  FILTER_TAGS,
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
-const { Chart } = require("devtools/client/shared/widgets/Chart");
-const { PluralForm } = require("devtools/shared/plural-form");
-const Actions = require("devtools/client/netmonitor/src/actions/index");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
+const { Chart } = require("resource://devtools/client/shared/widgets/Chart.js");
+const { PluralForm } = require("resource://devtools/shared/plural-form.js");
+const Actions = require("resource://devtools/client/netmonitor/src/actions/index.js");
 const {
   Filters,
-} = require("devtools/client/netmonitor/src/utils/filter-predicates");
+} = require("resource://devtools/client/netmonitor/src/utils/filter-predicates.js");
 const {
   getSizeWithDecimals,
   getTimeWithDecimals,
-} = require("devtools/client/netmonitor/src/utils/format-utils");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+} = require("resource://devtools/client/netmonitor/src/utils/format-utils.js");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 const {
   getPerformanceAnalysisURL,
-} = require("devtools/client/netmonitor/src/utils/doc-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/doc-utils.js");
 const {
   fetchNetworkUpdatePacket,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 
 // Components
 const MDNLink = createFactory(
-  require("devtools/client/shared/components/MdnLink")
+  require("resource://devtools/client/shared/components/MdnLink.js")
 );
 
 const { button, div } = dom;

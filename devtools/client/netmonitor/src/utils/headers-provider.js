@@ -6,7 +6,7 @@
 
 const {
   ObjectProvider,
-} = require("devtools/client/shared/components/tree/ObjectProvider");
+} = require("resource://devtools/client/shared/components/tree/ObjectProvider.js");
 
 /**
  * Custom tree provider.

@@ -14,7 +14,7 @@ const {
   SET_COLUMNS_WIDTH,
   WS_TOGGLE_COLUMN,
   WS_RESET_COLUMNS,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 /**
  * Update the relevant prefs when:

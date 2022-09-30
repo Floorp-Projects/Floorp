@@ -14,9 +14,9 @@
 
 "use strict";
 
-const Emitter = require("devtools/client/netmonitor/src/components/messages/parsers/socket-io/component-emitter.js");
-const binary = require("devtools/client/netmonitor/src/components/messages/parsers/socket-io/binary.js");
-const isBuf = require("devtools/client/netmonitor/src/components/messages/parsers/socket-io/is-buffer.js");
+const Emitter = require("resource://devtools/client/netmonitor/src/components/messages/parsers/socket-io/component-emitter.js");
+const binary = require("resource://devtools/client/netmonitor/src/components/messages/parsers/socket-io/binary.js");
+const isBuf = require("resource://devtools/client/netmonitor/src/components/messages/parsers/socket-io/is-buffer.js");
 
 /**
  * Packet types

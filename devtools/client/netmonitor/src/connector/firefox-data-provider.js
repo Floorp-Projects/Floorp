@@ -8,15 +8,15 @@
 const {
   EVENTS,
   TEST_EVENTS,
-} = require("devtools/client/netmonitor/src/constants");
-const { CurlUtils } = require("devtools/client/shared/curl");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
+const { CurlUtils } = require("resource://devtools/client/shared/curl.js");
 const {
   fetchHeaders,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 
 const {
   getLongStringFullText,
-} = require("devtools/client/shared/string-utils");
+} = require("resource://devtools/client/shared/string-utils.js");
 
 /**
  * This object is responsible for fetching additional HTTP

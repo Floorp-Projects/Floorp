@@ -4,23 +4,33 @@
 
 "use strict";
 
-const { combineReducers } = require("devtools/client/shared/vendor/redux");
-const batchingReducer = require("devtools/client/netmonitor/src/reducers/batching");
-const requestBlockingReducer = require("devtools/client/netmonitor/src/reducers/request-blocking");
+const {
+  combineReducers,
+} = require("resource://devtools/client/shared/vendor/redux.js");
+const batchingReducer = require("resource://devtools/client/netmonitor/src/reducers/batching.js");
+const requestBlockingReducer = require("resource://devtools/client/netmonitor/src/reducers/request-blocking.js");
 const {
   requestsReducer,
-} = require("devtools/client/netmonitor/src/reducers/requests");
-const { search } = require("devtools/client/netmonitor/src/reducers/search");
-const { sortReducer } = require("devtools/client/netmonitor/src/reducers/sort");
-const { filters } = require("devtools/client/netmonitor/src/reducers/filters");
+} = require("resource://devtools/client/netmonitor/src/reducers/requests.js");
+const {
+  search,
+} = require("resource://devtools/client/netmonitor/src/reducers/search.js");
+const {
+  sortReducer,
+} = require("resource://devtools/client/netmonitor/src/reducers/sort.js");
+const {
+  filters,
+} = require("resource://devtools/client/netmonitor/src/reducers/filters.js");
 const {
   timingMarkers,
-} = require("devtools/client/netmonitor/src/reducers/timing-markers");
-const { ui } = require("devtools/client/netmonitor/src/reducers/ui");
+} = require("resource://devtools/client/netmonitor/src/reducers/timing-markers.js");
+const {
+  ui,
+} = require("resource://devtools/client/netmonitor/src/reducers/ui.js");
 const {
   messages,
-} = require("devtools/client/netmonitor/src/reducers/messages");
-const networkThrottling = require("devtools/client/shared/components/throttling/reducer");
+} = require("resource://devtools/client/netmonitor/src/reducers/messages.js");
+const networkThrottling = require("resource://devtools/client/shared/components/throttling/reducer.js");
 
 module.exports = batchingReducer(
   combineReducers({

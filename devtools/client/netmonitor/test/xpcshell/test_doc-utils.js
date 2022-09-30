@@ -24,7 +24,7 @@ function run_test() {
     getNetMonitorTimingsURL,
     getPerformanceAnalysisURL,
     getFilterBoxURL,
-  } = require("devtools/client/netmonitor/src/utils/doc-utils");
+  } = require("resource://devtools/client/netmonitor/src/utils/doc-utils.js");
 
   info("Checking for supported headers");
   equal(

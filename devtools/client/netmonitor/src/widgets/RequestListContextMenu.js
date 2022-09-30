@@ -4,17 +4,19 @@
 
 "use strict";
 
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 const {
   formDataURI,
   getUrlQuery,
   getUrlBaseName,
   parseQueryString,
   getRequestHeadersRawText,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 const {
   hasMatchingBlockingRequestPattern,
-} = require("devtools/client/netmonitor/src/utils/request-blocking");
+} = require("resource://devtools/client/netmonitor/src/utils/request-blocking.js");
 
 loader.lazyRequireGetter(this, "Curl", "devtools/client/shared/curl", true);
 loader.lazyRequireGetter(this, "saveAs", "devtools/shared/DevToolsUtils", true);

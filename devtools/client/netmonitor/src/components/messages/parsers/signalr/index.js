@@ -4,8 +4,8 @@
 
 "use strict";
 
-const JsonHubProtocol = require("devtools/client/netmonitor/src/components/messages/parsers/signalr/JSONHubProtocol");
-const HandshakeProtocol = require("devtools/client/netmonitor/src/components/messages/parsers/signalr/HandshakeProtocol");
+const JsonHubProtocol = require("resource://devtools/client/netmonitor/src/components/messages/parsers/signalr/JSONHubProtocol.js");
+const HandshakeProtocol = require("resource://devtools/client/netmonitor/src/components/messages/parsers/signalr/HandshakeProtocol.js");
 
 module.exports = {
   JsonHubProtocol: JsonHubProtocol.JsonHubProtocol,

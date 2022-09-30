@@ -15,7 +15,7 @@ const {
   DISABLE_ALL_BLOCKED_URLS,
   REMOVE_ALL_BLOCKED_URLS,
   REQUEST_BLOCKING_UPDATE_COMPLETE,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 const BLOCKING_EVENTS = [
   ADD_BLOCKED_URL,

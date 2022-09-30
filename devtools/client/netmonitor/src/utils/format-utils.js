@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 
 // Constants for formatting bytes.
 const BYTES_IN_KB = 1000;

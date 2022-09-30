@@ -17,7 +17,7 @@
 
 const {
   BYTE,
-} = require("devtools/client/netmonitor/src/components/messages/parsers/stomp/byte.js");
+} = require("resource://devtools/client/netmonitor/src/components/messages/parsers/stomp/byte.js");
 
 /**
  * Frame class represents a STOMP frame.

@@ -18,9 +18,13 @@ const require = (window.windowRequire = BrowserLoader({
   window,
 }).require);
 
-const { NetMonitorAPI } = require("devtools/client/netmonitor/src/api");
-const { NetMonitorApp } = require("devtools/client/netmonitor/src/app");
-const EventEmitter = require("devtools/shared/event-emitter");
+const {
+  NetMonitorAPI,
+} = require("resource://devtools/client/netmonitor/src/api.js");
+const {
+  NetMonitorApp,
+} = require("resource://devtools/client/netmonitor/src/app.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 // Inject EventEmitter into global window.
 EventEmitter.decorate(window);
@@ -74,10 +78,10 @@ const url = new window.URL(href);
 if (window.location.protocol === "chrome:" && url.search.length > 1) {
   const {
     descriptorFromURL,
-  } = require("devtools/client/framework/descriptor-from-url");
+  } = require("resource://devtools/client/framework/descriptor-from-url.js");
   const {
     createCommandsDictionary,
-  } = require("devtools/shared/commands/index");
+  } = require("resource://devtools/shared/commands/index.js");
 
   (async function() {
     try {

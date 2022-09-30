@@ -7,7 +7,7 @@
 const {
   SORT_BY,
   RESET_COLUMNS,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 function Sort() {
   return {

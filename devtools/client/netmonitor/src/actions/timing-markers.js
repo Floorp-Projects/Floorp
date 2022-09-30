@@ -6,7 +6,7 @@
 const {
   ADD_TIMING_MARKER,
   CLEAR_TIMING_MARKERS,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 exports.addTimingMarker = marker => {
   return {

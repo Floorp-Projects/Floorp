@@ -4,20 +4,24 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const {
   MESSAGE_HEADERS,
-} = require("devtools/client/netmonitor/src/constants.js");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n.js");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
-const Actions = require("devtools/client/netmonitor/src/actions/index.js");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
+const Actions = require("resource://devtools/client/netmonitor/src/actions/index.js");
 
 // Components
-const MessageListHeaderContextMenu = require("devtools/client/netmonitor/src/components/messages/MessageListHeaderContextMenu.js");
+const MessageListHeaderContextMenu = require("resource://devtools/client/netmonitor/src/components/messages/MessageListHeaderContextMenu.js");
 
 /**
  * Renders the message list header.

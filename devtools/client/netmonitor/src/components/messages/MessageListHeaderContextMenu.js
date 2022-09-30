@@ -4,11 +4,15 @@
 
 "use strict";
 
-const { showMenu } = require("devtools/client/shared/components/menu/utils");
+const {
+  showMenu,
+} = require("resource://devtools/client/shared/components/menu/utils.js");
 const {
   MESSAGE_HEADERS,
-} = require("devtools/client/netmonitor/src/constants.js");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n.js");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 
 class MessageListHeaderContextMenu {
   constructor(props) {

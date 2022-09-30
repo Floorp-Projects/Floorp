@@ -15,15 +15,15 @@ const {
   SET_EVENT_STREAM_FLAG,
   SET_RECORDING_STATE,
   UPDATE_REQUEST,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 const {
   getSelectedRequest,
   getRequestById,
   getRecordingState,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 const {
   fetchNetworkUpdatePacket,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 
 function addRequest(id, data, batch) {
   return {
