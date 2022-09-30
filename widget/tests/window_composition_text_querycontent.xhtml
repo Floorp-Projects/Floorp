@@ -9794,6 +9794,10 @@ async function runIMEContentObserverTest()
 
   async function testWithHTMLEditor(aDescription, aElement, aDefaultParagraphSeparator)
   {
+    const isTraditionalSplitDirection =!SpecialPowers.getBoolPref(
+      "editor.join_split_direction.compatible_with_the_other_browsers"
+    );
+
     let doc = aElement.ownerDocument;
     let win = doc.defaultView;
     let sel = doc.getSelection();
@@ -10011,18 +10015,45 @@ async function runIMEContentObserverTest()
     checkPositionChangeNotification(notifications[2], description);
     dumpUnexpectedNotifications(description, 3);
 
-    // "aB<br>[]d" or "<block>ab</block><block>[]d</block>"
+    // "aB<br>[]d" or "<block>aB</block><block>[]d</block>"
     description = aDescription + "inserting a line break after 'B' with pressing Enter";
     waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Enter", {}, win, callback);
     await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     if (isDefaultParagraphSeparatorBlock) {
-      // Splitting current block causes removing "<block>aB" and inserting "<block>aB</block><block>".
-      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer - kLFLen, removedLength: getNativeText("\naB").length, addedLength: getNativeText("\naB\n").length });
+      if (isTraditionalSplitDirection) {
+        // Splitting current block causes removing "<block>aB" and inserting "<block>aB</block><block>".
+        checkTextChangeNotification(notifications[0], description, {
+          offset: offsetAtContainer - kLFLen,
+          removedLength: getNativeText("\naB").length,
+          addedLength: getNativeText("\naB\n").length,
+        });
+      } else {
+        // Splitting current block causes removing "d</block>" and inserting "</block><block>d</block>".
+        checkTextChangeNotification(notifications[0], description, {
+          offset: offsetAtContainer + "aB".length,
+          removedLength: getNativeText("d\n").length,
+          addedLength: getNativeText("\nd\n").length,
+        });
+      }
     } else {
-      // Oddly, inserting <br> causes removing "aB" and inserting "ab<br>".
-      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 2, addedLength: getNativeText("ab\n").length });
+      // eslint-disable-next-line no-lonely-if
+      if (isTraditionalSplitDirection) {
+        // Oddly, inserting <br> causes removing "aB" and inserting "ab<br>".
+        checkTextChangeNotification(notifications[0], description, {
+          offset: offsetAtContainer,
+          removedLength: 2,
+          addedLength: getNativeText("aB\n").length,
+        });
+      } else {
+        // Inserting <br> causes removing "d" and inserting "<br>d"
+        checkTextChangeNotification(notifications[0], description, {
+          offset: offsetAtContainer + "aB".length,
+          removedLength: "d".length,
+          addedLength: getNativeText("\nd").length,
+        });
+      }
     }
     checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("aB\n").length + offsetAtContainer, text: "" });
     checkPositionChangeNotification(notifications[2], description);
@@ -10035,13 +10066,30 @@ async function runIMEContentObserverTest()
     await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     if (isDefaultParagraphSeparatorBlock) {
-      // Joining two blocks causes removing both block elements and inserting new block element.
-      checkTextChangeNotification(notifications[0], description, { offset: offsetAtContainer - kLFLen, removedLength: getNativeText("\naB\nd").length, addedLength: getNativeText("\naBd").length });
+      if (isTraditionalSplitDirection) {
+          // Joining two blocks causes removing both block elements and inserting new block element.
+          checkTextChangeNotification(notifications[0], description, {
+            offset: offsetAtContainer - kLFLen,
+            removedLength: getNativeText("\naB\nd").length,
+            addedLength: getNativeText("\naBd").length,
+          });
+      } else {
+          // Joining two blocks causes removing "aB</block><block>d</block>" and inserting "aBd</block>"
+          checkTextChangeNotification(notifications[0], description, {
+            offset: offsetAtContainer,
+            removedLength: getNativeText("aB\nd\n").length,
+            addedLength: getNativeText("aBd\n").length,
+          });
+      }
       checkSelectionChangeNotification(notifications[1], description, { offset: 2 + offsetAtContainer, text: "" });
       checkPositionChangeNotification(notifications[2], description);
       dumpUnexpectedNotifications(description, 3);
     } else {
-      checkTextChangeNotification(notifications[0], description, { offset: 2 + offsetAtContainer, removedLength: kLFLen, addedLength: 0 });
+      checkTextChangeNotification(notifications[0], description, {
+        offset: offsetAtContainer + "aB".length,
+        removedLength: kLFLen,
+        addedLength: 0,
+      });
       is(notifications.length, 3, description + " should cause 3 notifications");
       is(notifications[1] && notifications[1].type, "notify-selection-change", description + " should cause selection change notification");
       is(notifications[2] && notifications[2].type, "notify-position-change", description + " should cause position change notification");
@@ -10058,10 +10106,27 @@ async function runIMEContentObserverTest()
     await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     if (isDefaultParagraphSeparatorBlock) {
-      // Splitting current block causes removing "<block>aB" and inserting "<block>aB</block><block>".
-      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer - kLFLen, removedLength: getNativeText("\naB").length, addedLength: getNativeText("\na\n").length });
+      if (isTraditionalSplitDirection) {
+        // Splitting current block causes removing "<block>aB" and inserting "<block>aB</block><block>".
+        checkTextChangeNotification(notifications[0], description, {
+          offset: offsetAtContainer - kLFLen,
+          removedLength: getNativeText("\naB").length,
+          addedLength: getNativeText("\na\n").length,
+        });
+      } else {
+        // Splitting current block causes removing "Bd</block>" and inserting "</block><block>d</block>".
+        checkTextChangeNotification(notifications[0], description, {
+          offset: offsetAtContainer + "a".length,
+          removedLength: getNativeText("Bd\n").length,
+          addedLength: getNativeText("\nd\n").length,
+        });
+      }
     } else {
-      checkTextChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, removedLength: 1, addedLength: kLFLen });
+      checkTextChangeNotification(notifications[0], description, {
+        offset: offsetAtContainer + "a".length,
+        removedLength: "B".length,
+        addedLength: kLFLen,
+      });
     }
     checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("a\n").length + offsetAtContainer, text: "" });
     checkPositionChangeNotification(notifications[2], description);
@@ -10083,10 +10148,27 @@ async function runIMEContentObserverTest()
     await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     if (isDefaultParagraphSeparatorBlock) {
-      // Joining the blocks causes removing "<block>a</block><block>d</block>" and inserting "<block>ad</block>".
-      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer - kLFLen, removedLength: getNativeText("\na\nd").length, addedLength: getNativeText("\nad").length });
+      if (isTraditionalSplitDirection) {
+        // Joining the blocks causes removing "<block>a</block><block>d</block>" and inserting "<block>ad</block>".
+        checkTextChangeNotification(notifications[0], description, {
+          offset: offsetAtContainer - kLFLen,
+          removedLength: getNativeText("\na\nd").length,
+          addedLength: getNativeText("\nad").length,
+        });
+      } else {
+        // Joining the blocks causes removing "a</block><block>d</block>" and inserting "<block>ad</block>".
+        checkTextChangeNotification(notifications[0], description, {
+          offset: offsetAtContainer,
+          removedLength: getNativeText("a\nd\n").length,
+          addedLength: getNativeText("ad\n").length,
+        });
+      }
     } else {
-      checkTextChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, removedLength: kLFLen, addedLength: 0 });
+      checkTextChangeNotification(notifications[0], description, {
+        offset: offsetAtContainer + "a".length,
+        removedLength: kLFLen,
+        addedLength: 0,
+      });
     }
     checkSelectionChangeNotification(notifications[1], description, { offset: 1 + offsetAtContainer, text: "" });
     checkPositionChangeNotification(notifications[2], description);
