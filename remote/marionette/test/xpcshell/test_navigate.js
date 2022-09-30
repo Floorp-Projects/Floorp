@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { navigate } = ChromeUtils.import(
-  "chrome://remote/content/marionette/navigate.js"
+const { navigate } = ChromeUtils.importESModule(
+  "chrome://remote/content/marionette/navigate.sys.mjs"
 );
 
 const mockTopContext = {

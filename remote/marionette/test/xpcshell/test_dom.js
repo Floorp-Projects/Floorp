@@ -1,7 +1,9 @@
 const {
   ContentEventObserverService,
   WebElementEventTarget,
-} = ChromeUtils.import("chrome://remote/content/marionette/dom.js");
+} = ChromeUtils.importESModule(
+  "chrome://remote/content/marionette/dom.sys.mjs"
+);
 
 class MessageSender {
   constructor() {

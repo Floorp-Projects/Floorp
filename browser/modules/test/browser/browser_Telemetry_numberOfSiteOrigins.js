@@ -20,8 +20,8 @@ const gTestRoot = getRootDirectory(gTestPath).replace(
   "http://mochi.test:8888"
 );
 
-const { TimedPromise } = ChromeUtils.import(
-  "chrome://remote/content/marionette/sync.js"
+const { TimedPromise } = ChromeUtils.importESModule(
+  "chrome://remote/content/marionette/sync.sys.mjs"
 );
 
 async function run_test(count) {

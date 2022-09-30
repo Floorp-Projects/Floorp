@@ -15,8 +15,12 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIEnvironment"
 );
 
-const { Branch, EnvironmentPrefs, MarionettePrefs } = ChromeUtils.import(
-  "chrome://remote/content/marionette/prefs.js"
+const {
+  Branch,
+  EnvironmentPrefs,
+  MarionettePrefs,
+} = ChromeUtils.importESModule(
+  "chrome://remote/content/marionette/prefs.sys.mjs"
 );
 
 function reset() {

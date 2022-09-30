@@ -8,11 +8,11 @@ const {
   getMarionetteCommandsActorProxy,
   registerCommandsActor,
   unregisterCommandsActor,
-} = ChromeUtils.import(
-  "chrome://remote/content/marionette/actors/MarionetteCommandsParent.jsm"
+} = ChromeUtils.importESModule(
+  "chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs"
 );
-const { enableEventsActor, disableEventsActor } = ChromeUtils.import(
-  "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm"
+const { enableEventsActor, disableEventsActor } = ChromeUtils.importESModule(
+  "chrome://remote/content/marionette/actors/MarionetteEventsParent.sys.mjs"
 );
 
 registerCleanupFunction(function() {

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -11,11 +9,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   EventPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  TimedPromise: "chrome://remote/content/marionette/sync.js",
-  waitForObserverTopic: "chrome://remote/content/marionette/sync.js",
+  TimedPromise: "chrome://remote/content/marionette/sync.sys.mjs",
+  waitForObserverTopic: "chrome://remote/content/marionette/sync.sys.mjs",
 });
 
 /**

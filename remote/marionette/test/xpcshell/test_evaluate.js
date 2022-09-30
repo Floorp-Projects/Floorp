@@ -1,8 +1,8 @@
-const { element, WebReference } = ChromeUtils.import(
-  "chrome://remote/content/marionette/element.js"
+const { element, WebReference } = ChromeUtils.importESModule(
+  "chrome://remote/content/marionette/element.sys.mjs"
 );
-const { evaluate } = ChromeUtils.import(
-  "chrome://remote/content/marionette/evaluate.js"
+const { evaluate } = ChromeUtils.importESModule(
+  "chrome://remote/content/marionette/evaluate.sys.mjs"
 );
 
 const SVG_NS = "http://www.w3.org/2000/svg";

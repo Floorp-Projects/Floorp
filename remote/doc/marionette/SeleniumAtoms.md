@@ -13,11 +13,11 @@ Currently the following atoms are in use:
 - `isDisplayed`
 
 To use one of those atoms Javascript modules will have to import
-[atom.js].
+[atom.sys.mjs].
 
 [Selenium atoms]: https://github.com/SeleniumHQ/selenium/tree/master/javascript/webdriver/atoms
 [WebDriver specification]: https://w3c.github.io/webdriver/webdriver-spec.html
-[atom.js]: https://searchfox.org/mozilla-central/source/remote/marionette/atom.js
+[atom.sys.mjs]: https://searchfox.org/mozilla-central/source/remote/marionette/atom.sys.mjs
 
 
 Update required Selenium atoms
@@ -25,7 +25,7 @@ Update required Selenium atoms
 
 In regular intervals the atoms, which are still in use, have to
 be updated.  Therefore they have to be exported from the Selenium
-repository first, and then updated in [atom.js].
+repository first, and then updated in [atom.sys.mjs].
 
 
 ### Export Selenium Atoms
@@ -59,7 +59,7 @@ For each of the exported atoms a file can now be found in the folder
 code including dependencies for the atom wrapped into a single function.
 
 
-### Update atom.js
+### Update atom.sys.mjs
 
 To update the atoms for Marionette the `atoms.js` file has to be edited. For
 each atom to be updated the steps as laid out below have to be performed:
@@ -71,10 +71,10 @@ each atom to be updated the steps as laid out below have to be performed:
    in the middle of the file.
 
 3. Update the parameters of the wrapper function (at the very top)
-   so that those are equal with the used parameters in `atom.js`.
+   so that those are equal with the used parameters in `atom.sys.mjs`.
 
 4. Copy the whole content of the file, and replace the existing
-   code for the atom in `atom.js`.
+   code for the atom in `atom.sys.mjs`.
 
 
 ### Test the changes
