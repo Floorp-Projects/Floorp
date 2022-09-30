@@ -79,6 +79,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    frontendMasters: {
+      "https://*.frontendmasters.com/*": {
+        videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
+      },
+    },
+
     funimation: {
       "https://*.funimation.com/*": {
         videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
