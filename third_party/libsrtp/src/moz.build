@@ -24,7 +24,6 @@ UNIFIED_SOURCES += [
     'crypto/math/datatypes.c',
     'crypto/replay/rdb.c',
     'crypto/replay/rdbx.c',
-    'crypto/replay/ut_sim.c',
     'srtp/srtp.c',
 ]
 
