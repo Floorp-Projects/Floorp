@@ -144,7 +144,8 @@ nsresult JoinNodesTransaction::DoTransactionInternal(
   {
     AutoTrackDOMPoint trackJoinNodePoint(htmlEditor->RangeUpdaterRef(),
                                          &joinNodesPoint);
-    rv = htmlEditor->DoJoinNodes(keepingContent, removingContent);
+    rv = htmlEditor->DoJoinNodes(keepingContent, removingContent,
+                                 GetJoinNodesDirection());
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HTMLEditor::DoJoinNodes() failed");
   }
   // Adjust join node offset to the actual offset where the original first

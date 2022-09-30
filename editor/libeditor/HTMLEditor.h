@@ -1004,9 +1004,13 @@ class HTMLEditor final : public EditorBase,
    * @param aContentToRemove  The node that will be joined with aContentToKeep.
    *                          There is no requirement that the two nodes be of
    *                          the same type.
+   * @param aDirection        Whether aContentToKeep is right node or left node,
+   *                          and whether aContentToRemove is left node or right
+   *                          node.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  DoJoinNodes(nsIContent& aContentToKeep, nsIContent& aContentToRemove);
+  DoJoinNodes(nsIContent& aContentToKeep, nsIContent& aContentToRemove,
+              JoinNodesDirection aDirection);
 
   /**
    * Routines for managing the preservation of selection across

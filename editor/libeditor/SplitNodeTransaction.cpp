@@ -183,7 +183,8 @@ NS_IMETHODIMP SplitNodeTransaction::UndoTransaction() {
   {
     AutoTrackDOMPoint trackJoinedPoint(htmlEditor->RangeUpdaterRef(),
                                        &joinedPoint);
-    rv = htmlEditor->DoJoinNodes(keepingContent, removingContent);
+    rv = htmlEditor->DoJoinNodes(keepingContent, removingContent,
+                                 GetJoinNodesDirection());
   }
   if (NS_SUCCEEDED(rv)) {
     // Adjust split offset for redo here
