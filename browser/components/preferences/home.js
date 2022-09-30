@@ -26,7 +26,7 @@ Preferences.addAll([
   { id: "pref.browser.homepage.disable_button.bookmark_page", type: "bool" },
   { id: "pref.browser.homepage.disable_button.restore_default", type: "bool" },
   { id: "browser.newtabpage.enabled", type: "bool" },
-  { id: "browser.newtabpage.activity-stream.background.type", type: "int" },
+  { id: "browser.newtabpage.activity-stream.floorp.background.type", type: "int" },
 ]);
 
 const HOMEPAGE_OVERRIDE_KEY = "homepage_override";
@@ -100,20 +100,20 @@ var gHomePane = {
 
     if (["0", "1","2"].includes(menulist.value)) {
       let newtabEnabledPref = Services.prefs.getIntPref(
-        "browser.newtabpage.activity-stream.background.type",
+        "browser.newtabpage.activity-stream.floorp.background.type",
         0
       );
       let newValue = menulist.value;
       // Only set this if the pref has changed, otherwise the pref change will trigger other listeners to repeat.
       if (newtabEnabledPref !== newValue) {
-        Services.prefs.setIntPref("browser.newtabpage.activity-stream.background.type", newValue);
+        Services.prefs.setIntPref("browser.newtabpage.activity-stream.floorp.background.type", newValue);
       }
     }
   },
   async syncFromNewTabBackground() {
     let menulist = document.getElementById("newTabbackground");
       let newtabEnabledPref = Services.prefs.getIntPref(
-        "browser.newtabpage.activity-stream.background.type",
+        "browser.newtabpage.activity-stream.floorp.background.type",
         0
       );
       if (newtabEnabledPref !== menulist.value) {
@@ -724,7 +724,7 @@ var gHomePane = {
     this._handleHomePageOverrides();
     this.syncFromNewTabPref();
     this.syncFromNewTabBackground();
-Services.prefs.addObserver("browser.newtabpage.activity-stream.background.type",this.syncFromNewTabBackground.bind(this))
+Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.type",this.syncFromNewTabBackground.bind(this))
     window.addEventListener("focus", this._updateUseCurrentButton.bind(this));
 
     // Extension/override-related events
