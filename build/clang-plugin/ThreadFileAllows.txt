@@ -1,3 +1,25 @@
+# This file is ingested by `ThreadAllows.py` to produce a list of files which
+# our clang plugin will allow to use `NS_NewNamedThread`.
+#
+# Note that this file contains a list of _files_, not _paths_.
+
+######
+# Release files
+
+# declaration and definition of `NS_NewNamedThread`
+nsThreadUtils.h
+nsThreadUtils.cpp
+
+# Thread-pools are permitted to make dynamically many threads, using dynamic
+# thread names with explicit numbering.
+nsThreadPool.cpp
+
+######
+# Unsorted files
+#
+# Files below this point are grandfathered in. Please do not add new files to
+# this list -- and please remove any that you can, whether by documenting and
+# moving them or by confirming that they are no longer required.
 ActorsParent.cpp
 DecodePool.cpp
 GeckoChildProcessHost.cpp
@@ -6,6 +28,3 @@ LazyIdleThread.h
 VRThread.cpp
 mozStorageConnection.cpp
 nr_socket_prsock.cpp
-nsThreadPool.cpp
-nsThreadUtils.cpp
-nsThreadUtils.h
