@@ -21,39 +21,49 @@ const char* RegisterAllocChildActor(
 // Internal helper type used to declare IPDL tests.
 class IPDLTestHelper {
  public:
-  void TestWrapper(bool aCrossProcess);
+  enum class TestMode {
+    SameProcess,
+    CrossProcess,
+  };
+
+  void TestWrapper();
   virtual const char* GetName() = 0;
   virtual ipc::IToplevelProtocol* GetActor() = 0;
+  virtual TestMode GetTestMode() = 0;
   virtual void TestBody() = 0;
 };
 
 #define IPDL_TEST_CLASS_NAME_(actorname) IPDL_TEST_##actorname
 
-#define IPDL_TEST_HEAD_(actorname)                                        \
-  class IPDL_TEST_CLASS_NAME_(actorname)                                  \
-      : public ::mozilla::_ipdltest::IPDLTestHelper {                     \
-   public:                                                                \
-    IPDL_TEST_CLASS_NAME_(actorname)() : mActor(new actorname##Parent) {} \
-                                                                          \
-   private:                                                               \
-    void TestBody() override;                                             \
-    const char* GetName() override { return sName; };                     \
-    actorname##Parent* GetActor() override { return mActor; };            \
-                                                                          \
-    actorname##Parent* mActor;                                            \
-    static const char* sName;                                             \
-  };                                                                      \
-  const char* IPDL_TEST_CLASS_NAME_(actorname)::sName =                   \
-      ::mozilla::_ipdltest::RegisterAllocChildActor(                      \
-          #actorname, []() -> ::mozilla::ipc::IToplevelProtocol* {        \
-            return new actorname##Child;                                  \
+#define IPDL_TEST_HEAD_(actorname)                                 \
+  class IPDL_TEST_CLASS_NAME_(actorname)                           \
+      : public ::mozilla::_ipdltest::IPDLTestHelper {              \
+   public:                                                         \
+    explicit IPDL_TEST_CLASS_NAME_(actorname)(TestMode aTestMode)  \
+        : mTestMode(aTestMode), mActor(new actorname##Parent) {}   \
+                                                                   \
+   private:                                                        \
+    void TestBody() override;                                      \
+    const char* GetName() override { return sName; }               \
+    actorname##Parent* GetActor() override { return mActor; }      \
+    TestMode GetTestMode() override { return mTestMode; }          \
+                                                                   \
+    const TestMode mTestMode;                                      \
+    actorname##Parent* mActor;                                     \
+    static const char* sName;                                      \
+  };                                                               \
+  const char* IPDL_TEST_CLASS_NAME_(actorname)::sName =            \
+      ::mozilla::_ipdltest::RegisterAllocChildActor(               \
+          #actorname, []() -> ::mozilla::ipc::IToplevelProtocol* { \
+            return new actorname##Child;                           \
           });
 
-#define IPDL_TEST_DECL_(testgroup, actorname, crossprocess) \
-  TEST(testgroup, actorname)                                \
-  {                                                         \
-    IPDL_TEST_CLASS_NAME_(actorname) test;                  \
-    test.TestWrapper(crossprocess);                         \
+#define IPDL_TEST_DECL_(testgroup, actorname, mode)           \
+  TEST(testgroup, actorname)                                  \
+  {                                                           \
+    IPDL_TEST_CLASS_NAME_(actorname){                         \
+        ::mozilla::_ipdltest::IPDLTestHelper::TestMode::mode} \
+        .TestWrapper();                                       \
   }
 
 #define IPDL_TEST_BODY_SEGUE_(actorname) \
@@ -68,10 +78,10 @@ class IPDLTestHelper {
 //
 // GTest assertions fired in the child process will be relayed to the parent
 // process, and should generally function correctly.
-#define IPDL_TEST(actorname)                              \
-  IPDL_TEST_HEAD_(actorname)                              \
-  IPDL_TEST_DECL_(IPDLTest_CrossProcess, actorname, true) \
-  IPDL_TEST_DECL_(IPDLTest_CrossThread, actorname, false) \
+#define IPDL_TEST(actorname)                                      \
+  IPDL_TEST_HEAD_(actorname)                                      \
+  IPDL_TEST_DECL_(IPDLTest_CrossProcess, actorname, CrossProcess) \
+  IPDL_TEST_DECL_(IPDLTest_CrossThread, actorname, SameProcess)   \
   IPDL_TEST_BODY_SEGUE_(actorname)
 
 }  // namespace mozilla::_ipdltest
