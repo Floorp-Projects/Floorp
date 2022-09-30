@@ -4853,7 +4853,8 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
 }
 
 SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
-                                        nsIContent& aNewNode) {
+                                        nsIContent& aNewNode,
+                                        SplitNodeDirection aDirection) {
   // Ensure computing the offset if it's intialized with a child content node.
   Unused << aStartOfRightNode.Offset();
 
@@ -4999,30 +5000,45 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
       continue;
     }
 
-    // Split the selection into existing node and new node.
-    if (savedRange.mStartContainer == aStartOfRightNode.GetContainer()) {
-      if (savedRange.mStartOffset < aStartOfRightNode.Offset()) {
-        savedRange.mStartContainer = &aNewNode;
-      } else if (savedRange.mStartOffset >= aStartOfRightNode.Offset()) {
-        savedRange.mStartOffset -= aStartOfRightNode.Offset();
-      } else {
-        NS_WARNING(
-            "The stored start offset was smaller than the right node offset");
-        savedRange.mStartOffset = 0u;
+    auto AdjustDOMPoint = [&](nsCOMPtr<nsINode>& aContainer,
+                              uint32_t& aOffset) {
+      if (aContainer != aStartOfRightNode.GetContainer()) {
+        return;
       }
-    }
 
-    if (savedRange.mEndContainer == aStartOfRightNode.GetContainer()) {
-      if (savedRange.mEndOffset < aStartOfRightNode.Offset()) {
-        savedRange.mEndContainer = &aNewNode;
-      } else if (savedRange.mEndOffset >= aStartOfRightNode.Offset()) {
-        savedRange.mEndOffset -= aStartOfRightNode.Offset();
-      } else {
-        NS_WARNING(
-            "The stored end offset was smaller than the right node offset");
-        savedRange.mEndOffset = 0u;
+      if (aDirection == SplitNodeDirection::LeftNodeIsNewOne) {
+        // If the container is the right node and offset is before the split
+        // point, the content was moved into aNewNode.  So, just changing the
+        // container will point proper position.
+        if (aOffset < aStartOfRightNode.Offset()) {
+          aContainer = &aNewNode;
+          return;
+        }
+
+        // If the container is the right node and offset equals or is larger
+        // than the split point, we need to decrease the offset since some
+        // content before the split point was moved to aNewNode.
+        if (aOffset >= aStartOfRightNode.Offset()) {
+          aOffset -= aStartOfRightNode.Offset();
+          return;
+        }
+
+        NS_WARNING("The stored offset was smaller than the right node offset");
+        aOffset = 0u;
+        return;
       }
-    }
+
+      // If the container is the left node and offset is after the split
+      // point, the content was moved from the right node to aNewNode.
+      // So, we need to change the container to aNewNode and decrease the
+      // offset.
+      if (aOffset >= aStartOfRightNode.Offset()) {
+        aContainer = &aNewNode;
+        aOffset -= aStartOfRightNode.Offset();
+      }
+    };
+    AdjustDOMPoint(savedRange.mStartContainer, savedRange.mStartOffset);
+    AdjustDOMPoint(savedRange.mEndContainer, savedRange.mEndOffset);
 
     RefPtr<nsRange> newRange =
         nsRange::Create(savedRange.mStartContainer, savedRange.mStartOffset,
@@ -5066,12 +5082,12 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
 
   DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjSplitNode(
       *aStartOfRightNode.ContainerAs<nsIContent>(), aStartOfRightNode.Offset(),
-      aNewNode, GetSplitNodeDirection());
+      aNewNode, aDirection);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "RangeUpdater::SelAdjSplitNode() failed, but ignored");
 
   return SplitNodeResult(aNewNode, *aStartOfRightNode.ContainerAs<nsIContent>(),
-                         GetSplitNodeDirection());
+                         aDirection);
 }
 
 JoinNodesResult HTMLEditor::JoinNodesWithTransaction(

@@ -334,7 +334,7 @@ nsresult RangeUpdater::SelAdjSplitNode(nsIContent& aOriginalContent,
       }
     } else if (aOffset >= aSplitOffset) {
       aContainer = &aNewContent;
-      aOffset = aSplitOffset - aOffset;
+      aOffset -= aSplitOffset;
     }
   };
 
