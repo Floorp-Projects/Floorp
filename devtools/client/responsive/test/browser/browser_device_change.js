@@ -8,7 +8,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const TEST_URL = `${URL_ROOT}doc_page_state.html`;
 const DEFAULT_DPPX = window.devicePixelRatio;
 
-const Types = require("devtools/client/responsive/types");
+const Types = require("resource://devtools/client/responsive/types.js");
 
 const testDevice = {
   name: "Fake Phone RDM Test",
@@ -28,7 +28,7 @@ addDeviceForTest(testDevice);
 // Add the laptop to the device list
 const {
   updatePreferredDevices,
-} = require("devtools/client/responsive/actions/devices");
+} = require("resource://devtools/client/responsive/actions/devices.js");
 updatePreferredDevices({
   added: ["Laptop with MDPI screen"],
   removed: [],

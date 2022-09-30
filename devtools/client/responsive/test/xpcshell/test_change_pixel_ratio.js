@@ -8,7 +8,7 @@
 const {
   addViewport,
   changePixelRatio,
-} = require("devtools/client/responsive/actions/viewports");
+} = require("resource://devtools/client/responsive/actions/viewports.js");
 const NEW_PIXEL_RATIO = 5.5;
 
 add_task(async function() {

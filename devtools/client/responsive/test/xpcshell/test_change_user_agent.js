@@ -5,7 +5,9 @@
 
 // Test changing the user agent.
 
-const { changeUserAgent } = require("devtools/client/responsive/actions/ui");
+const {
+  changeUserAgent,
+} = require("resource://devtools/client/responsive/actions/ui.js");
 
 const NEW_USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) " +

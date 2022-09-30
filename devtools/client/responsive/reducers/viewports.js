@@ -14,7 +14,7 @@ const {
   RESIZE_VIEWPORT,
   ROTATE_VIEWPORT,
   ZOOM_VIEWPORT,
-} = require("devtools/client/responsive/actions/index");
+} = require("resource://devtools/client/responsive/actions/index.js");
 
 const VIEWPORT_WIDTH_PREF = "devtools.responsive.viewport.width";
 const VIEWPORT_HEIGHT_PREF = "devtools.responsive.viewport.height";

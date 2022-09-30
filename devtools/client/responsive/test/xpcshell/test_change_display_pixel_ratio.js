@@ -7,7 +7,7 @@
 
 const {
   changeDisplayPixelRatio,
-} = require("devtools/client/responsive/actions/ui");
+} = require("resource://devtools/client/responsive/actions/ui.js");
 
 const NEW_PIXEL_RATIO = 5.5;
 

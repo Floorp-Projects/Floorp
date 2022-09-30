@@ -9,35 +9,39 @@ const {
   createFactory,
   Fragment,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 const DevicePixelRatioMenu = createFactory(
-  require("devtools/client/responsive/components/DevicePixelRatioMenu")
+  require("resource://devtools/client/responsive/components/DevicePixelRatioMenu.js")
 );
 const DeviceSelector = createFactory(
-  require("devtools/client/responsive/components/DeviceSelector")
+  require("resource://devtools/client/responsive/components/DeviceSelector.js")
 );
 const NetworkThrottlingMenu = createFactory(
-  require("devtools/client/shared/components/throttling/NetworkThrottlingMenu")
+  require("resource://devtools/client/shared/components/throttling/NetworkThrottlingMenu.js")
 );
 const SettingsMenu = createFactory(
-  require("devtools/client/responsive/components/SettingsMenu")
+  require("resource://devtools/client/responsive/components/SettingsMenu.js")
 );
 const ViewportDimension = createFactory(
-  require("devtools/client/responsive/components/ViewportDimension")
+  require("resource://devtools/client/responsive/components/ViewportDimension.js")
 );
 
 loader.lazyGetter(this, "UserAgentInput", function() {
   return createFactory(
-    require("devtools/client/responsive/components/UserAgentInput")
+    require("resource://devtools/client/responsive/components/UserAgentInput.js")
   );
 });
 
-const { getStr } = require("devtools/client/responsive/utils/l10n");
-const Types = require("devtools/client/responsive/types");
+const {
+  getStr,
+} = require("resource://devtools/client/responsive/utils/l10n.js");
+const Types = require("resource://devtools/client/responsive/types.js");
 
 class Toolbar extends PureComponent {
   static get propTypes() {

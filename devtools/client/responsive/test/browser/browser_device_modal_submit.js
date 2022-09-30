@@ -4,7 +4,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
 // Test submitting display device changes on the device modal
-const { getDevices } = require("devtools/client/shared/devices");
+const { getDevices } = require("resource://devtools/client/shared/devices.js");
 
 const addedDevice = {
   name: "Fake Phone RDM Test",

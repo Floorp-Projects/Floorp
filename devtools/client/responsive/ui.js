@@ -4,14 +4,14 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const {
   getOrientation,
-} = require("devtools/client/responsive/utils/orientation");
-const Constants = require("devtools/client/responsive/constants");
+} = require("resource://devtools/client/responsive/utils/orientation.js");
+const Constants = require("resource://devtools/client/responsive/constants.js");
 const {
   CommandsFactory,
-} = require("devtools/shared/commands/commands-factory");
+} = require("resource://devtools/shared/commands/commands-factory.js");
 
 loader.lazyRequireGetter(
   this,

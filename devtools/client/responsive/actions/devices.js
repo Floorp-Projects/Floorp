@@ -4,7 +4,7 @@
 
 "use strict";
 
-const asyncStorage = require("devtools/shared/async-storage");
+const asyncStorage = require("resource://devtools/shared/async-storage.js");
 
 const {
   ADD_DEVICE,
@@ -16,24 +16,26 @@ const {
   REMOVE_DEVICE,
   UPDATE_DEVICE_DISPLAYED,
   UPDATE_DEVICE_MODAL,
-} = require("devtools/client/responsive/actions/index");
-const { post } = require("devtools/client/responsive/utils/message");
+} = require("resource://devtools/client/responsive/actions/index.js");
+const {
+  post,
+} = require("resource://devtools/client/responsive/utils/message.js");
 
 const {
   addDevice,
   editDevice,
   getDevices,
   removeDevice,
-} = require("devtools/client/shared/devices");
+} = require("resource://devtools/client/shared/devices.js");
 const {
   changeUserAgent,
   toggleTouchSimulation,
-} = require("devtools/client/responsive/actions/ui");
+} = require("resource://devtools/client/responsive/actions/ui.js");
 const {
   changeDevice,
   changePixelRatio,
   changeViewportAngle,
-} = require("devtools/client/responsive/actions/viewports");
+} = require("resource://devtools/client/responsive/actions/viewports.js");
 
 const DISPLAYED_DEVICES_PREF = "devtools.responsive.html.displayedDeviceList";
 

@@ -7,7 +7,7 @@
 
 const {
   toggleTouchSimulation,
-} = require("devtools/client/responsive/actions/ui");
+} = require("resource://devtools/client/responsive/actions/ui.js");
 
 add_task(async function() {
   const store = Store();

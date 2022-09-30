@@ -12,7 +12,7 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(
   /Permission denied to access property "document" on cross-origin object/
 );
 
-const Types = require("devtools/client/responsive/types");
+const Types = require("resource://devtools/client/responsive/types.js");
 
 const TEST_URL = "http://example.com/";
 
