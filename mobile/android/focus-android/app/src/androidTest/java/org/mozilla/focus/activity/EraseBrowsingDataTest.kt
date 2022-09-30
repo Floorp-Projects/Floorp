@@ -116,7 +116,6 @@ class EraseBrowsingDataTest {
         }
     }
 
-    @Ignore("See: https://github.com/mozilla-mobile/focus-android/issues/6438")
     @SmokeTest
     @Test
     fun systemBarHomeViewTest() {
