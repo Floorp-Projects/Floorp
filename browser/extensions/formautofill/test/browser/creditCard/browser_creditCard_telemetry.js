@@ -170,8 +170,6 @@ add_task(async function test_popup_opened() {
     }
   );
 
-  await removeAllRecords();
-
   await assertTelemetry([
     ccFormArgsv1("detected"),
     ccFormArgsv2("detected", buildccFormv2Extra({ cc_exp: "false" }, "true")),
@@ -190,6 +188,7 @@ add_task(async function test_popup_opened() {
     "formautofill.creditCards.submitted_sections_count"
   );
 
+  await removeAllRecords();
   await SpecialPowers.popPrefEnv();
 });
 
@@ -220,13 +219,11 @@ add_task(async function test_popup_opened_form_without_autocomplete() {
     }
   );
 
-  await removeAllRecords();
-
   await assertTelemetry([
     ccFormArgsv1("detected"),
     ccFormArgsv2(
       "detected",
-      buildccFormv2Extra({ cc_number: "1", cc_exp: "false" }, "true")
+      buildccFormv2Extra({ cc_number: "1", cc_exp: "false" }, "0")
     ),
     ccFormArgsv1("popup_shown"),
     ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
@@ -243,8 +240,81 @@ add_task(async function test_popup_opened_form_without_autocomplete() {
     "formautofill.creditCards.submitted_sections_count"
   );
 
+  await removeAllRecords();
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(
+  async function test_popup_opened_form_without_autocomplete_separate_cc_number() {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
+        [AUTOFILL_CREDITCARDS_AVAILABLE_PREF, "on"],
+        ["extensions.formautofill.creditCards.heuristics.testConfidence", "1"],
+      ],
+    });
+
+    Services.telemetry.clearEvents();
+    Services.telemetry.clearScalars();
+    Services.telemetry.setEventRecordingEnabled("creditcard", true);
+
+    await setStorage(TEST_CREDIT_CARD_1);
+
+    // Click on the cc-number field of the form that only contains a cc-number field
+    // (detected by Fathom)
+    await BrowserTestUtils.withNewTab(
+      { gBrowser, url: CREDITCARD_FORM_WITHOUT_AUTOCOMPLETE_URL },
+      async function(browser) {
+        await openPopupOn(browser, "#form2-cc-number #cc-number");
+        await closePopup(browser);
+      }
+    );
+
+    await assertTelemetry([
+      ccFormArgsv1("detected"),
+      ccFormArgsv2("detected", buildccFormv2Extra({ cc_number: "1" }, "false")),
+      ccFormArgsv1("popup_shown"),
+      ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
+    ]);
+
+    // Then click on the cc-name field of the form that doesn't have a cc-number field
+    // (detected by regexp-based heuristic)
+    await BrowserTestUtils.withNewTab(
+      { gBrowser, url: CREDITCARD_FORM_WITHOUT_AUTOCOMPLETE_URL },
+      async function(browser) {
+        await openPopupOn(browser, "#form2-cc-other #cc-name");
+        await closePopup(browser);
+      }
+    );
+
+    await assertTelemetry([
+      ccFormArgsv1("detected"),
+      ccFormArgsv2(
+        "detected",
+        buildccFormv2Extra(
+          { cc_name: "0", cc_type: "0", cc_exp_month: "0", cc_exp_year: "0" },
+          "false"
+        )
+      ),
+      ccFormArgsv1("popup_shown"),
+      ccFormArgsv2("popup_shown", { field_name: "cc-name" }),
+    ]);
+
+    TelemetryTestUtils.assertScalar(
+      TelemetryTestUtils.getProcessScalars("content"),
+      "formautofill.creditCards.detected_sections_count",
+      2,
+      "There should be 1 section detected."
+    );
+    TelemetryTestUtils.assertScalarUnset(
+      TelemetryTestUtils.getProcessScalars("content"),
+      "formautofill.creditCards.submitted_sections_count"
+    );
+
+    await removeAllRecords();
+    await SpecialPowers.popPrefEnv();
+  }
+);
 
 add_task(async function test_submit_creditCard_new() {
   async function test_per_command(
@@ -290,11 +360,10 @@ add_task(async function test_submit_creditCard_new() {
       }
     );
 
-    SpecialPowers.popPrefEnv();
-
     assertHistogram(CC_NUM_USES_HISTOGRAM, useCount);
 
     await removeAllRecords();
+    SpecialPowers.popPrefEnv();
   }
 
   Services.telemetry.clearEvents();
@@ -378,8 +447,6 @@ add_task(async function test_submit_creditCard_autofill() {
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
 
-  await removeAllRecords();
-
   await assertTelemetry(
     [
       ccFormArgsv1("detected"),
@@ -403,6 +470,9 @@ add_task(async function test_submit_creditCard_autofill() {
     ],
     []
   );
+
+  await removeAllRecords();
+  SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_submit_creditCard_update() {
@@ -555,9 +625,8 @@ add_task(async function test_removingCreditCardsViaKeyboardDelete() {
     ["creditcard", "delete", "manage"],
   ]);
 
-  SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
-
   await removeAllRecords();
+  SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_saveCreditCard() {
@@ -593,11 +662,10 @@ add_task(async function test_saveCreditCard() {
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
   });
 
-  SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
+  await assertTelemetry(undefined, [["creditcard", "add", "manage"]]);
 
   await removeAllRecords();
-
-  await assertTelemetry(undefined, [["creditcard", "add", "manage"]]);
+  SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_editCreditCard() {
@@ -628,13 +696,13 @@ add_task(async function test_editCreditCard() {
     }
   );
 
-  SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
-
-  await removeAllRecords();
   await assertTelemetry(undefined, [
     ["creditcard", "show_entry", "manage"],
     ["creditcard", "edit", "manage"],
   ]);
+
+  await removeAllRecords();
+  SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_histogram() {
@@ -692,13 +760,11 @@ add_task(async function test_histogram() {
     2: 2,
   });
 
-  SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
-
   await removeAllRecords();
+  SpecialPowers.popPrefEnv();
 
   assertHistogram(CC_NUM_USES_HISTOGRAM, {});
 });
-
 add_task(async function test_submit_creditCard_new_with_hidden_ui() {
   const AUTOFILL_CREDITCARDS_HIDE_UI_PREF =
     "extensions.formautofill.creditCards.hideui";
@@ -770,7 +836,6 @@ add_task(async function test_submit_creditCard_new_with_hidden_ui() {
     ccFormArgsv2("submitted", buildccFormv2Extra({}, "unavailable")),
   ];
   await assertTelemetry(expected_content, []);
-  await removeAllRecords();
 
   TelemetryTestUtils.assertScalar(
     TelemetryTestUtils.getProcessScalars("content"),
@@ -784,6 +849,9 @@ add_task(async function test_submit_creditCard_new_with_hidden_ui() {
     1,
     "There should be 1 section submitted."
   );
+
+  await removeAllRecords();
+  SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_clear_creditCard_autofill() {
@@ -872,4 +940,7 @@ add_task(async function test_clear_creditCard_autofill() {
   Services.telemetry.clearEvents();
 
   await BrowserTestUtils.removeTab(tab);
+
+  await removeAllRecords();
+  SpecialPowers.popPrefEnv();
 });

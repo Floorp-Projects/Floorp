@@ -91,17 +91,17 @@ const CreditCardTelemetry = {
     fieldDetails.forEach(detail => {
       identified.add(detail.fieldName);
 
-      // confidence exists only when a field is identified by fathom.
-      if (detail.confidence > 0) {
-        // Keep two decimal places is good enough
-        let confidence = Math.floor(100 * detail.confidence) / 100;
+      if (detail._reason == "autocomplete") {
+        this._ccFormV2SetExtra(ccFormV2Extra, detail.fieldName, "true");
+      } else {
+        // confidence exists only when a field is identified by fathom.
+        let confidence =
+          detail.confidence > 0 ? Math.floor(100 * detail.confidence) / 100 : 0;
         this._ccFormV2SetExtra(
           ccFormV2Extra,
           detail.fieldName,
           confidence.toString()
         );
-      } else {
-        this._ccFormV2SetExtra(ccFormV2Extra, detail.fieldName, "true");
       }
     });
 
