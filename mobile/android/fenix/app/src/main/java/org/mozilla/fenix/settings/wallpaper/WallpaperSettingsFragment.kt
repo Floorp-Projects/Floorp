@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -43,7 +44,7 @@ class WallpaperSettingsFragment : Fragment() {
         savedInstanceState: Bundle?,
     ): View {
         Wallpapers.wallpaperSettingsOpened.record(NoExtras())
-        return ComposeView(requireContext()).apply {
+        val wallpaperSettings = ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 FirefoxTheme {
@@ -70,7 +71,7 @@ class WallpaperSettingsFragment : Fragment() {
                         onSelectWallpaper = {
                             coroutineScope.launch {
                                 val result = wallpaperUseCases.selectWallpaper(it)
-                                onWallpaperSelected(it, result, this@apply)
+                                onWallpaperSelected(it, result, requireView())
                             }
                         },
                         onLearnMoreClick = { url, collectionName ->
@@ -89,6 +90,12 @@ class WallpaperSettingsFragment : Fragment() {
                     )
                 }
             }
+        }
+
+        // Using CoordinatorLayout as a parent view for the fragment gives the benefit of hiding
+        // snackbars automatically when the fragment is closed.
+        return CoordinatorLayout(requireContext()).apply {
+            addView(wallpaperSettings)
         }
     }
 
