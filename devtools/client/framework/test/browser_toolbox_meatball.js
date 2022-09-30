@@ -8,8 +8,10 @@
 // We also use this to test the common Menu* components since we don't currently
 // have a means of testing React components in isolation.
 
-const { focusableSelector } = require("devtools/client/shared/focus");
-const { Toolbox } = require("devtools/client/framework/toolbox");
+const {
+  focusableSelector,
+} = require("resource://devtools/client/shared/focus.js");
+const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
 add_task(async function() {
   const tab = await addTab("about:blank");

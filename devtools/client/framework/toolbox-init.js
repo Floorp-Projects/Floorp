@@ -51,7 +51,7 @@ async function showErrorPage(doc, errorMessage) {
   const React = browserRequire("devtools/client/shared/vendor/react");
   const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
   const DebugTargetErrorPage = React.createFactory(
-    require("devtools/client/framework/components/DebugTargetErrorPage")
+    require("resource://devtools/client/framework/components/DebugTargetErrorPage.js")
   );
   const { LocalizationHelper } = browserRequire("devtools/shared/l10n");
   const L10N = new LocalizationHelper(
@@ -82,12 +82,16 @@ async function showErrorPage(doc, errorMessage) {
 }
 
 async function initToolbox(url, host) {
-  const { gDevTools } = require("devtools/client/framework/devtools");
+  const {
+    gDevTools,
+  } = require("resource://devtools/client/framework/devtools.js");
 
   const {
     descriptorFromURL,
-  } = require("devtools/client/framework/descriptor-from-url");
-  const { Toolbox } = require("devtools/client/framework/toolbox");
+  } = require("resource://devtools/client/framework/descriptor-from-url.js");
+  const {
+    Toolbox,
+  } = require("resource://devtools/client/framework/toolbox.js");
 
   // Specify the default tool to open
   const tool = url.searchParams.get("tool");

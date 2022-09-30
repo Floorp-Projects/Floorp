@@ -11,7 +11,9 @@ const TEST_URL =
 const { require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
-const { gDevTools } = require("devtools/client/framework/devtools");
+const {
+  gDevTools,
+} = require("resource://devtools/client/framework/devtools.js");
 
 async function testScript(tab) {
   const toolbox = await gDevTools.showToolboxForTab(tab, {

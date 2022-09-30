@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const createStore = require("devtools/client/shared/redux/create-store");
-const reducers = require("devtools/client/framework/reducers/index");
+const createStore = require("resource://devtools/client/shared/redux/create-store.js");
+const reducers = require("resource://devtools/client/framework/reducers/index.js");
 
 exports.createToolboxStore = () =>
   createStore(reducers, {

@@ -7,13 +7,13 @@
  * Unit tests for targets management on the toolbox store.
  */
 
-const createStore = require("devtools/client/shared/redux/create-store");
-const reducer = require("devtools/shared/commands/target/reducers/targets");
-const actions = require("devtools/shared/commands/target/actions/targets");
+const createStore = require("resource://devtools/client/shared/redux/create-store.js");
+const reducer = require("resource://devtools/shared/commands/target/reducers/targets.js");
+const actions = require("resource://devtools/shared/commands/target/actions/targets.js");
 const {
   getSelectedTarget,
   getToolboxTargets,
-} = require("devtools/shared/commands/target/selectors/targets");
+} = require("resource://devtools/shared/commands/target/selectors/targets.js");
 
 describe("Toolbox store - targets", () => {
   describe("registerTarget", () => {

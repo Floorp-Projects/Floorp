@@ -6,9 +6,9 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const ToolboxToolbar = createFactory(
-  require("devtools/client/framework/components/ToolboxToolbar")
+  require("resource://devtools/client/framework/components/ToolboxToolbar.js")
 );
 const ELEMENT_PICKER_ID = "command-button-pick";
 

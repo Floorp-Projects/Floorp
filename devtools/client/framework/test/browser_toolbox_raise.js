@@ -3,7 +3,7 @@
 
 const TEST_URL = "data:text/html,test for opening toolbox in different hosts";
 
-var { Toolbox } = require("devtools/client/framework/toolbox");
+var { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
 var toolbox, tab1, tab2;
 

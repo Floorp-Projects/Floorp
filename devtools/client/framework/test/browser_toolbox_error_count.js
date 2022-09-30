@@ -20,7 +20,7 @@ const TEST_URI = `https://example.com/document-builder.sjs?html=<meta charset=ut
   cache.unknown.access
 </script><body>`;
 
-const { Toolbox } = require("devtools/client/framework/toolbox");
+const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
 add_task(async function() {
   // Make sure we start the test with the split console disabled.

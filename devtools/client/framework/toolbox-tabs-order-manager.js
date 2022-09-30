@@ -7,8 +7,10 @@
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
-const { gDevTools } = require("devtools/client/framework/devtools");
-const Telemetry = require("devtools/client/shared/telemetry");
+const {
+  gDevTools,
+} = require("resource://devtools/client/framework/devtools.js");
+const Telemetry = require("resource://devtools/client/shared/telemetry.js");
 const TABS_REORDERED_SCALAR = "devtools.toolbox.tabs_reordered";
 const PREFERENCE_NAME = "devtools.toolbox.tabsOrder";
 

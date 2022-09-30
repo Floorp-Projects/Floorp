@@ -14,7 +14,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 /**
  * Retrieve all tool ids compatible with a target created for the provided tab.

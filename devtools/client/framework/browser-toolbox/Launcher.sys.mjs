@@ -41,8 +41,8 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
   ],
 });
 
-const Telemetry = require("devtools/client/shared/telemetry");
-const EventEmitter = require("devtools/shared/event-emitter");
+const Telemetry = require("resource://devtools/client/shared/telemetry.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 const env = Cc["@mozilla.org/process/environment;1"].getService(
   Ci.nsIEnvironment

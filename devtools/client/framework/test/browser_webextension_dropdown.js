@@ -15,7 +15,9 @@ add_task(async function runTest() {
   const toolbox = await gDevTools.showToolboxForTab(tab, {
     toolId: "webconsole",
   });
-  const { Toolbox } = require("devtools/client/framework/toolbox");
+  const {
+    Toolbox,
+  } = require("resource://devtools/client/framework/toolbox.js");
   await toolbox.switchHost(Toolbox.HostType.WINDOW);
 
   await extension.awaitMessage("devtools_page_loaded");

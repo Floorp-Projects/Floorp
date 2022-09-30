@@ -5,7 +5,9 @@
 
 // Test TabDescriptorFactory
 
-const { createCommandsDictionary } = require("devtools/shared/commands/index");
+const {
+  createCommandsDictionary,
+} = require("resource://devtools/shared/commands/index.js");
 
 add_task(async function() {
   await testTabDescriptorWithURL("data:text/html;charset=utf-8,foo");

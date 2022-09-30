@@ -7,32 +7,32 @@ const {
   Component,
   createFactory,
   createRef,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   ToolboxTabsOrderManager,
-} = require("devtools/client/framework/toolbox-tabs-order-manager");
+} = require("resource://devtools/client/framework/toolbox-tabs-order-manager.js");
 
 const { div } = dom;
 
 const ToolboxTab = createFactory(
-  require("devtools/client/framework/components/ToolboxTab")
+  require("resource://devtools/client/framework/components/ToolboxTab.js")
 );
 
 loader.lazyGetter(this, "MenuButton", function() {
   return createFactory(
-    require("devtools/client/shared/components/menu/MenuButton")
+    require("resource://devtools/client/shared/components/menu/MenuButton.js")
   );
 });
 loader.lazyGetter(this, "MenuItem", function() {
   return createFactory(
-    require("devtools/client/shared/components/menu/MenuItem")
+    require("resource://devtools/client/shared/components/menu/MenuItem.js")
   );
 });
 loader.lazyGetter(this, "MenuList", function() {
   return createFactory(
-    require("devtools/client/shared/components/menu/MenuList")
+    require("resource://devtools/client/shared/components/menu/MenuList.js")
   );
 });
 

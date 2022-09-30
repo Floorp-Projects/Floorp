@@ -57,7 +57,7 @@ const TEST_DATA = [
 function run_test() {
   const {
     toAbsoluteOrder,
-  } = require("devtools/client/framework/toolbox-tabs-order-manager");
+  } = require("resource://devtools/client/framework/toolbox-tabs-order-manager.js");
 
   for (const {
     description,

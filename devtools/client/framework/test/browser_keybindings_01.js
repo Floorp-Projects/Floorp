@@ -14,7 +14,7 @@ const TEST_URL =
 
 const {
   gDevToolsBrowser,
-} = require("devtools/client/framework/devtools-browser");
+} = require("resource://devtools/client/framework/devtools-browser.js");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );

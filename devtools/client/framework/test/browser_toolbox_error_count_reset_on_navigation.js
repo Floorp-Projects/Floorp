@@ -12,7 +12,7 @@ const TEST_URI = `http://example.org/document-builder.sjs?html=<meta charset=utf
   cache.unknown.access
 </script>`;
 
-const { Toolbox } = require("devtools/client/framework/toolbox");
+const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
 add_task(async function() {
   // Disable bfcache for Fission for now.

@@ -50,15 +50,15 @@ loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 const {
   defaultTools: DefaultTools,
   defaultThemes: DefaultThemes,
-} = require("devtools/client/definitions");
-const EventEmitter = require("devtools/shared/event-emitter");
+} = require("resource://devtools/client/definitions.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const {
   getTheme,
   setTheme,
   getAutoTheme,
   addThemeObserver,
   removeThemeObserver,
-} = require("devtools/client/shared/theme");
+} = require("resource://devtools/client/shared/theme.js");
 
 const FORBIDDEN_IDS = new Set(["toolbox", ""]);
 const MAX_ORDINAL = 99;
@@ -808,7 +808,7 @@ DevTools.prototype = {
   openBrowserConsole() {
     const {
       BrowserConsoleManager,
-    } = require("devtools/client/webconsole/browser-console-manager");
+    } = require("resource://devtools/client/webconsole/browser-console-manager.js");
     BrowserConsoleManager.openBrowserConsoleOrFocus();
   },
 

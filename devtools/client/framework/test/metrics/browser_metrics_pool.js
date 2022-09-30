@@ -3,8 +3,10 @@
 
 "use strict";
 
-const { DevToolsServer } = require("devtools/server/devtools-server");
-const { Pool } = require("devtools/shared/protocol");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+const { Pool } = require("resource://devtools/shared/protocol.js");
 
 // Test parameters
 const ROOT_POOLS = 100;

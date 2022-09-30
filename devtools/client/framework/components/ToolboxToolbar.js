@@ -6,42 +6,45 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const { div, button } = dom;
 const MenuButton = createFactory(
-  require("devtools/client/shared/components/menu/MenuButton")
+  require("resource://devtools/client/shared/components/menu/MenuButton.js")
 );
 const ToolboxTabs = createFactory(
-  require("devtools/client/framework/components/ToolboxTabs")
+  require("resource://devtools/client/framework/components/ToolboxTabs.js")
 );
 loader.lazyGetter(this, "MeatballMenu", function() {
   return createFactory(
-    require("devtools/client/framework/components/MeatballMenu")
+    require("resource://devtools/client/framework/components/MeatballMenu.js")
   );
 });
 loader.lazyGetter(this, "MenuItem", function() {
   return createFactory(
-    require("devtools/client/shared/components/menu/MenuItem")
+    require("resource://devtools/client/shared/components/menu/MenuItem.js")
   );
 });
 loader.lazyGetter(this, "MenuList", function() {
   return createFactory(
-    require("devtools/client/shared/components/menu/MenuList")
+    require("resource://devtools/client/shared/components/menu/MenuList.js")
   );
 });
 loader.lazyGetter(this, "LocalizationProvider", function() {
   return createFactory(
-    require("devtools/client/shared/vendor/fluent-react").LocalizationProvider
+    require("resource://devtools/client/shared/vendor/fluent-react.js")
+      .LocalizationProvider
   );
 });
 loader.lazyGetter(this, "DebugTargetInfo", () =>
-  createFactory(require("devtools/client/framework/components/DebugTargetInfo"))
+  createFactory(
+    require("resource://devtools/client/framework/components/DebugTargetInfo.js")
+  )
 );
 loader.lazyGetter(this, "ChromeDebugToolbar", () =>
   createFactory(
-    require("devtools/client/framework/components/ChromeDebugToolbar")
+    require("resource://devtools/client/framework/components/ChromeDebugToolbar.js")
   )
 );
 
