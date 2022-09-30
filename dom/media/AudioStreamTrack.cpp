@@ -14,8 +14,8 @@ void AudioStreamTrack::AddAudioOutput(void* aKey) {
   if (Ended()) {
     return;
   }
-  if (UniquePtr<CrossGraphPort>* cgm = mCrossGraphs.Get(aKey)) {
-    (*cgm)->AddAudioOutput(aKey);
+  if (CrossGraphPort* cgm = mCrossGraphs.Get(aKey)) {
+    cgm->AddAudioOutput(aKey);
     return;
   }
   mTrack->AddAudioOutput(aKey);
@@ -25,8 +25,8 @@ void AudioStreamTrack::RemoveAudioOutput(void* aKey) {
   if (Ended()) {
     return;
   }
-  if (UniquePtr<CrossGraphPort>* cgm = mCrossGraphs.Get(aKey)) {
-    (*cgm)->RemoveAudioOutput(aKey);
+  if (CrossGraphPort* cgm = mCrossGraphs.Get(aKey)) {
+    cgm->RemoveAudioOutput(aKey);
     return;
   }
   mTrack->RemoveAudioOutput(aKey);
@@ -36,8 +36,8 @@ void AudioStreamTrack::SetAudioOutputVolume(void* aKey, float aVolume) {
   if (Ended()) {
     return;
   }
-  if (UniquePtr<CrossGraphPort>* cgm = mCrossGraphs.Get(aKey)) {
-    (*cgm)->SetAudioOutputVolume(aKey, aVolume);
+  if (CrossGraphPort* cgm = mCrossGraphs.Get(aKey)) {
+    cgm->SetAudioOutputVolume(aKey, aVolume);
     return;
   }
   mTrack->SetAudioOutputVolume(aKey, aVolume);
@@ -61,8 +61,7 @@ void AudioStreamTrack::SetReadyState(MediaStreamTrackState aState) {
       mReadyState == MediaStreamTrackState::Live &&
       aState == MediaStreamTrackState::Ended) {
     for (const auto& data : mCrossGraphs.Values()) {
-      (*data)->Destroy();
-      data->reset();
+      data->Destroy();
     }
     mCrossGraphs.Clear();
   }
@@ -85,14 +84,14 @@ RefPtr<GenericPromise> AudioStreamTrack::SetAudioOutputDevice(
     if (entry) {
       // There is an existing non-default output device for this track. Remove
       // it.
-      (*entry.Data())->Destroy();
+      entry.Data()->Destroy();
       entry.Remove();
     }
     return GenericPromise::CreateAndResolve(true, __func__);
   }
 
   // We are setting a non-default output device.
-  UniquePtr<CrossGraphPort>& crossGraphPtr = *mCrossGraphs.GetOrInsertNew(key);
+  UniquePtr<CrossGraphPort>& crossGraphPtr = mCrossGraphs.LookupOrInsert(key);
   if (crossGraphPtr) {
     // This key already has a non-default output device set. Destroy it.
     crossGraphPtr->Destroy();
