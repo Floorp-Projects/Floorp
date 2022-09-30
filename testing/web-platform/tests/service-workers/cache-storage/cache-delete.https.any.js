@@ -1,7 +1,7 @@
-if (self.importScripts) {
-    importScripts('/resources/testharness.js');
-    importScripts('../resources/test-helpers.js');
-}
+// META: title=Cache.delete
+// META: global=window,worker
+// META: script=./resources/test-helpers.js
+// META: timeout=long
 
 var test_url = 'https://example.com/foo';
 

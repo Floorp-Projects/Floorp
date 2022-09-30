@@ -1,8 +1,8 @@
-if (self.importScripts) {
-    importScripts('/resources/testharness.js');
-    importScripts('../resources/test-helpers.js');
-    importScripts('/common/get-host-info.sub.js');
-}
+// META: title=Cache.match
+// META: global=window,worker
+// META: script=./resources/test-helpers.js
+// META: script=/common/get-host-info.sub.js
+// META: timeout=long
 
 prepopulated_cache_test(simple_entries, function(cache, entries) {
     return cache.match('not-present-in-the-cache')
@@ -196,7 +196,7 @@ prepopulated_cache_test(vary_entries, function(cache, entries) {
 cache_test(function(cache) {
     var request = new Request('http://example.com');
     var response;
-    var request_url = new URL('../resources/simple.txt', location.href).href;
+    var request_url = new URL('./resources/simple.txt', location.href).href;
     return fetch(request_url)
       .then(function(fetch_result) {
           response = fetch_result;
@@ -224,7 +224,7 @@ cache_test(function(cache) {
   }, 'Cache.match with Request and Response objects with different URLs');
 
 cache_test(function(cache) {
-    var request_url = new URL('../resources/simple.txt', location.href).href;
+    var request_url = new URL('./resources/simple.txt', location.href).href;
     return fetch(request_url)
       .then(function(fetch_result) {
           return cache.put(new Request(request_url), fetch_result);
@@ -254,7 +254,7 @@ cache_test(function(cache) {
   }, 'Cache.match invoked multiple times for the same Request/Response');
 
 cache_test(function(cache) {
-    var request_url = new URL('../resources/simple.txt', location.href).href;
+    var request_url = new URL('./resources/simple.txt', location.href).href;
     return fetch(request_url)
       .then(function(fetch_result) {
           return cache.put(new Request(request_url), fetch_result);
@@ -414,7 +414,7 @@ cache_test(async (cache) => {
   }, 'MIME type should reflect Content-Type headers of response.');
 
 cache_test(async (cache) => {
-  const url = new URL('../resources/vary.py?vary=foo',
+  const url = new URL('./resources/vary.py?vary=foo',
       get_host_info().HTTPS_REMOTE_ORIGIN + self.location.pathname);
   const original_request = new Request(url, { mode: 'no-cors',
                                               headers: { 'foo': 'bar' } });

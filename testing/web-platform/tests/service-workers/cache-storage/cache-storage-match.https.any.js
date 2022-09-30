@@ -1,7 +1,7 @@
-if (self.importScripts) {
-    importScripts('/resources/testharness.js');
-    importScripts('../resources/test-helpers.js');
-}
+// META: title=CacheStorage.match
+// META: global=window,worker
+// META: script=./resources/test-helpers.js
+// META: timeout=long
 
 (function() {
   var next_index = 1;

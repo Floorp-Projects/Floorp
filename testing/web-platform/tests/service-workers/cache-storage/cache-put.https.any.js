@@ -1,8 +1,8 @@
-if (self.importScripts) {
-    importScripts('/resources/testharness.js');
-    importScripts('/common/get-host-info.sub.js');
-    importScripts('../resources/test-helpers.js');
-}
+// META: title=Cache.put
+// META: global=window,worker
+// META: script=/common/get-host-info.sub.js
+// META: script=./resources/test-helpers.js
+// META: timeout=long
 
 var test_url = 'https://example.com/foo';
 var test_body = 'Hello world!';
@@ -19,7 +19,7 @@ cache_test(function(cache) {
   }, 'Cache.put called with simple Request and Response');
 
 cache_test(function(cache) {
-    var test_url = new URL('../resources/simple.txt', location.href).href;
+    var test_url = new URL('./resources/simple.txt', location.href).href;
     var request = new Request(test_url);
     var response;
     return fetch(test_url)
@@ -119,7 +119,7 @@ cache_test(function(cache, test) {
   }, 'Cache.put with synthetic 206 response');
 
 cache_test(function(cache, test) {
-    var test_url = new URL('../resources/fetch-status.py?status=206', location.href).href;
+    var test_url = new URL('./resources/fetch-status.py?status=206', location.href).href;
     var request = new Request(test_url);
     var response;
     return fetch(test_url)
@@ -132,7 +132,7 @@ cache_test(function(cache, test) {
   }, 'Cache.put with HTTP 206 response');
 
 cache_test(function(cache, test) {
-    var test_url = new URL('../resources/fetch-status.py?status=206', location.href);
+    var test_url = new URL('./resources/fetch-status.py?status=206', location.href);
     test_url.hostname = REMOTE_HOST;
     var request = new Request(test_url.href, { mode: 'no-cors' });
     var response;
@@ -156,7 +156,7 @@ cache_test(function(cache, test) {
   }, 'Cache.put with opaque-filtered HTTP 206 response');
 
 cache_test(function(cache) {
-    var test_url = new URL('../resources/fetch-status.py?status=500', location.href).href;
+    var test_url = new URL('./resources/fetch-status.py?status=500', location.href).href;
     var request = new Request(test_url);
     var response;
     return fetch(test_url)
@@ -344,7 +344,7 @@ cache_test(function(cache, test) {
   }, 'Cache.put with an embedded VARY:* Response');
 
 cache_test(async function(cache, test) {
-    const url = new URL('../resources/vary.py?vary=*',
+    const url = new URL('./resources/vary.py?vary=*',
         get_host_info().HTTPS_REMOTE_ORIGIN + self.location.pathname);
     const request = new Request(url, { mode: 'no-cors' });
     const response = await fetch(request);
@@ -377,5 +377,17 @@ cache_test(async (cache) => {
     var cachedResponse = await cache.match(request);
     assert_equals(await cachedResponse.text(), test_body);
   }, 'Cache.put called with simple Request and blob Response');
+
+cache_test(async (cache) => {
+  var formData = new FormData();
+  formData.append("name", "value");
+
+  var request = new Request(test_url);
+  var response = new Response(formData);
+  await cache.put(request, response);
+  var cachedResponse = await cache.match(request);
+  var cachedResponseText = await cachedResponse.text();
+  assert_true(cachedResponseText.indexOf("name=\"name\"\r\n\r\nvalue") !== -1);
+}, 'Cache.put called with simple Request and form data Response');
 
 done();

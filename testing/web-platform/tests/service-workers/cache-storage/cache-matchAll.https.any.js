@@ -1,7 +1,7 @@
-if (self.importScripts) {
-    importScripts('/resources/testharness.js');
-    importScripts('../resources/test-helpers.js');
-}
+// META: title=Cache.matchAll
+// META: global=window,worker
+// META: script=./resources/test-helpers.js
+// META: timeout=long
 
 prepopulated_cache_test(simple_entries, function(cache, entries) {
     return cache.matchAll('not-present-in-the-cache')

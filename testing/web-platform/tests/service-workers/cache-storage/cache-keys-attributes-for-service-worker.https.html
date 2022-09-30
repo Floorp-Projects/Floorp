@@ -3,16 +3,16 @@
 <link rel="help" href="https://w3c.github.io/ServiceWorker/#cache-keys">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<script src="../../service-worker/resources/test-helpers.sub.js"></script>
+<script src="./../service-worker/resources/test-helpers.sub.js"></script>
 <script>
-const worker = '../resources/cache-keys-attributes-for-service-worker.js';
+const worker = './resources/cache-keys-attributes-for-service-worker.js';
 
 function wait(ms) {
   return new Promise(resolve => step_timeout(resolve, ms));
 }
 
 promise_test(async (t) => {
-    const scope = '../resources/blank.html?name=isReloadNavigation';
+    const scope = './resources/blank.html?name=isReloadNavigation';
     let frame;
     let reg;
 
@@ -39,7 +39,7 @@ promise_test(async (t) => {
 }, 'Request.IsReloadNavigation should persist.');
 
 promise_test(async (t) => {
-    const scope = '../resources/blank.html?name=isHistoryNavigation';
+    const scope = './resources/blank.html?name=isHistoryNavigation';
     let frame;
     let reg;
 

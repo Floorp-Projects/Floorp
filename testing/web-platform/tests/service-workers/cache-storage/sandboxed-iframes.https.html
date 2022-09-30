@@ -32,7 +32,7 @@ function wait_for_message(id) {
 var counter = 0;
 
 promise_test(function(t) {
-    return load_iframe('../resources/iframe.html',
+    return load_iframe('./resources/iframe.html',
                        'allow-scripts allow-same-origin')
         .then(function(iframe) {
             var id = ++counter;
@@ -47,7 +47,7 @@ promise_test(function(t) {
 }, 'Sandboxed iframe with allow-same-origin is allowed access');
 
 promise_test(function(t) {
-    return load_iframe('../resources/iframe.html',
+    return load_iframe('./resources/iframe.html',
                        'allow-scripts')
         .then(function(iframe) {
             var id = ++counter;
