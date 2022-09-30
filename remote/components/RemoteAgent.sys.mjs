@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["RemoteAgent", "RemoteAgentFactory"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -508,7 +502,7 @@ class RemoteAgentContentProcess {
   }
 }
 
-var RemoteAgent;
+export var RemoteAgent;
 if (isRemote) {
   RemoteAgent = new RemoteAgentContentProcess();
 } else {
@@ -516,6 +510,6 @@ if (isRemote) {
 }
 
 // This is used by the XPCOM codepath which expects a constructor
-var RemoteAgentFactory = function() {
+export var RemoteAgentFactory = function() {
   return RemoteAgent;
 };

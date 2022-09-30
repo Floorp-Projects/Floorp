@@ -17,11 +17,11 @@ const { Target } = ChromeUtils.import(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  RemoteAgent: "chrome://remote/content/components/RemoteAgent.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
   TabSession: "chrome://remote/content/cdp/sessions/TabSession.jsm",
 });
 

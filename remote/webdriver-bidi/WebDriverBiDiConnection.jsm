@@ -20,10 +20,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
+  RemoteAgent: "chrome://remote/content/components/RemoteAgent.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>

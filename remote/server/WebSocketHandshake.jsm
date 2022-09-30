@@ -19,10 +19,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   executeSoon: "chrome://remote/content/shared/Sync.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
+  RemoteAgent: "chrome://remote/content/components/RemoteAgent.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
