@@ -15,6 +15,7 @@
 
 #include "api/task_queue/task_queue_base.h"
 #include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "rtc_base/task_utils/repeating_task.h"
 #include "system_wrappers/include/clock.h"
 
@@ -27,7 +28,7 @@ class VideoReceiveStreamTimeoutTracker {
     TimeDelta max_wait_for_frame;
   };
 
-  using TimeoutCallback = std::function<void()>;
+  using TimeoutCallback = std::function<void(TimeDelta wait)>;
   VideoReceiveStreamTimeoutTracker(Clock* clock,
                                    TaskQueueBase* const bookkeeping_queue,
                                    const Timeouts& timeouts,
@@ -54,9 +55,10 @@ class VideoReceiveStreamTimeoutTracker {
   Clock* const clock_;
   TaskQueueBase* const bookkeeping_queue_;
   const Timeouts timeouts_;
-  const TimeoutCallback callback_;
+  const TimeoutCallback timeout_cb_;
   RepeatingTaskHandle timeout_task_;
 
+  Timestamp last_frame_ = Timestamp::MinusInfinity();
   Timestamp timeout_ = Timestamp::MinusInfinity();
   bool waiting_for_keyframe_;
 };
