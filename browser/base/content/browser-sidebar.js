@@ -144,7 +144,7 @@ var SidebarUI = {
         xulStore.removeValue(document.documentURI, "sidebar-box", "checked");
       }
 
-      xulStore.persist(this._box, "width");
+      xulStore.persist(this._box, "style");
       xulStore.persist(this._title, "value");
     }
 
@@ -345,10 +345,7 @@ var SidebarUI = {
       return true;
     }
 
-    this._box.setAttribute(
-      "width",
-      sourceUI._box.getBoundingClientRect().width
-    );
+    this._box.style.width = sourceUI._box.getBoundingClientRect().width + "px";
     this.showInitially(commandID);
 
     return true;
