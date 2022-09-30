@@ -27,6 +27,9 @@ const PRINCIPAL_GITHUB = ssm.createContentPrincipalFromOrigin(
 const PRINCIPAL_UNSECURE = ssm.createContentPrincipalFromOrigin(
   "http://example.net"
 );
+const PRINCIPAL_IP = ssm.createContentPrincipalFromOrigin(
+  "https://18.154.122.194"
+);
 
 const GATED_SITE_PERM1 = "test/gatedSitePerm";
 const GATED_SITE_PERM2 = "test/anotherGatedSitePerm";
@@ -222,5 +225,135 @@ add_task(async function() {
     addons.length,
     0,
     "Adding a gated permission to an unsecure principal shouldn't add a new addon"
+  );
+
+  info("Call installSitePermsAddonFromWebpage without proper principal");
+  await Assert.rejects(
+    AddonManager.installSitePermsAddonFromWebpage(
+      null,
+      // principal
+      null,
+      GATED_SITE_PERM1
+    ),
+    /aInstallingPrincipal must be a nsIPrincipal/,
+    "installSitePermsAddonFromWebpage rejected when called without a principal"
+  );
+
+  info(
+    "Call installSitePermsAddonFromWebpage with non-null, non-element browser"
+  );
+  await Assert.rejects(
+    AddonManager.installSitePermsAddonFromWebpage(
+      "browser",
+      PRINCIPAL_COM,
+      GATED_SITE_PERM1
+    ),
+    /aBrowser must be an Element, or null/,
+    "installSitePermsAddonFromWebpage rejected when called  with a non-null, non-element browser"
+  );
+
+  info("Call installSitePermsAddonFromWebpage with unsecure principal");
+  await Assert.rejects(
+    AddonManager.installSitePermsAddonFromWebpage(
+      null,
+      PRINCIPAL_UNSECURE,
+      GATED_SITE_PERM1
+    ),
+    /SitePermsAddons can only be installed from secure origins/,
+    "installSitePermsAddonFromWebpage rejected when called with unsecure principal"
+  );
+
+  info(
+    "Call installSitePermsAddonFromWebpage for public principal and gated permission"
+  );
+  await Assert.rejects(
+    AddonManager.installSitePermsAddonFromWebpage(
+      null,
+      PRINCIPAL_GITHUB,
+      GATED_SITE_PERM1
+    ),
+    /SitePermsAddon can\'t be installed from public eTLDs/,
+    "installSitePermsAddonFromWebpage rejected when called with public principal"
+  );
+
+  addons = await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE]);
+  Assert.equal(addons.length, 0, "there was no added addon...");
+  Assert.equal(
+    PermissionTestUtils.testExactPermission(PRINCIPAL_GITHUB, GATED_SITE_PERM1),
+    false,
+    "...and no new permission either"
+  );
+
+  info(
+    "Call installSitePermsAddonFromWebpage for plain-ip principal and gated permission"
+  );
+  await Assert.rejects(
+    AddonManager.installSitePermsAddonFromWebpage(
+      null,
+      PRINCIPAL_IP,
+      GATED_SITE_PERM1
+    ),
+    /SitePermsAddons install disallowed when the host is an IP address/,
+    "installSitePermsAddonFromWebpage rejected when called with plain-ip principal"
+  );
+
+  addons = await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE]);
+  Assert.equal(addons.length, 0, "there was no added addon...");
+  Assert.equal(
+    PermissionTestUtils.testExactPermission(PRINCIPAL_IP, GATED_SITE_PERM1),
+    false,
+    "...and no new permission either"
+  );
+
+  info(
+    "Call installSitePermsAddonFromWebpage for authorized principal and non-gated permission"
+  );
+  await Assert.rejects(
+    AddonManager.installSitePermsAddonFromWebpage(
+      null,
+      PRINCIPAL_COM,
+      NON_GATED_SITE_PERM
+    ),
+    new RegExp(`"${NON_GATED_SITE_PERM}" is not a gated permission`),
+    "installSitePermsAddonFromWebpage rejected for non-gated permission"
+  );
+
+  addons = await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE]);
+  Assert.equal(
+    addons.length,
+    0,
+    "installSitePermsAddonFromWebpage with non-gated permission should not add the addon"
+  );
+
+  info(
+    "Call installSitePermsAddonFromWebpage for authorized principal and gated permission"
+  );
+  // Observers to bypass panels and continue install.
+  TestUtils.topicObserved("addon-install-blocked").then(([subject]) => {
+    let installInfo = subject.wrappedJSObject;
+    info("==== test got addon-install-blocked, calling `install`");
+    installInfo.install();
+  });
+  TestUtils.topicObserved("webextension-permission-prompt").then(
+    ([subject]) => {
+      info("==== test webextension-permission-prompt, calling `resolve`");
+      subject.wrappedJSObject.info.resolve();
+    }
+  );
+  await AddonManager.installSitePermsAddonFromWebpage(
+    null,
+    PRINCIPAL_COM,
+    GATED_SITE_PERM1
+  );
+  addons = await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE]);
+  Assert.equal(
+    addons.length,
+    1,
+    "installSitePermsAddonFromWebpage should add the addon..."
+  );
+  Assert.equal(
+    PermissionTestUtils.testExactPermission(PRINCIPAL_COM, GATED_SITE_PERM1),
+    true,
+    "...and set the permission"
   );
 });
