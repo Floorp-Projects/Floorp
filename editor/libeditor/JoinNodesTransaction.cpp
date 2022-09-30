@@ -177,7 +177,7 @@ NS_IMETHODIMP JoinNodesTransaction::UndoTransaction() {
   const SplitNodeResult splitNodeResult = htmlEditor->DoSplitNode(
       EditorDOMPoint(mKeepingContent,
                      std::min(mJoinedOffset, mKeepingContent->Length())),
-      removedContent);
+      removedContent, GetSplitNodeDirection());
   NS_WARNING_ASSERTION(splitNodeResult.isOk(),
                        "HTMLEditor::DoSplitNode() failed");
   // When adding caret suggestion to SplitNodeResult, here didn't change

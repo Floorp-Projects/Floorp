@@ -978,20 +978,20 @@ class HTMLEditor final : public EditorBase,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult OnModifyDocument();
 
   /**
-   * DoSplitNode() inserts aNewNode (left node before the container of
-   * aStartOfRightNode (right node), and moves all content before
+   * DoSplitNode() inserts aNewNode and moves all content before or after
    * aStartOfRightNode to aNewNode.
    *
-   * @param aStartOfRightNode   The point to split.  Its container will be
-   *                            the right node, i.e., becomes aNewNode's
-   *                            next sibling.  And the point will be start
-   *                            of the right node.
-   * @param aNewNode            The new node called as left node, so, this
-   *                            becomes the container of all previous content
-   *                            before aPointToSplit.
+   * @param aStartOfRightNode   The point to split.  The container will keep
+   *                            having following or previous content of this.
+   * @param aNewNode            The new node called.  The previous or following
+   *                            content of aStartOfRightNode will be moved into
+   *                            this node.
+   * @param aDirection          Whether aNewNode will have previous or following
+   *                            content of aStartOfRightNode.
    */
   MOZ_CAN_RUN_SCRIPT SplitNodeResult
-  DoSplitNode(const EditorDOMPoint& aStartOfRightNode, nsIContent& aNewNode);
+  DoSplitNode(const EditorDOMPoint& aStartOfRightNode, nsIContent& aNewNode,
+              SplitNodeDirection aDirection);
 
   /**
    * DoJoinNodes() merges contents in aContentToRemove to aContentToKeep and

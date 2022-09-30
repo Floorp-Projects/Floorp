@@ -154,7 +154,7 @@ SplitNodeResult SplitNodeTransaction::DoTransactionInternal(
   SplitNodeResult splitNodeResult = aHTMLEditor.DoSplitNode(
       EditorDOMPoint(&aSplittingContent,
                      std::min(aSplitOffset, aSplittingContent.Length())),
-      aNewContent);
+      aNewContent, GetSplitNodeDirection());
   NS_WARNING_ASSERTION(splitNodeResult.isOk(),
                        "HTMLEditor::DoSplitNode() failed");
   // When adding caret suggestion to SplitNodeResult, here didn't change
