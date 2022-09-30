@@ -766,5 +766,8 @@ TRRLoadInfo::GetUnstrippedURI(nsIURI** aURI) {
 NS_IMETHODIMP
 TRRLoadInfo::SetUnstrippedURI(nsIURI* aURI) { return NS_ERROR_NOT_IMPLEMENTED; }
 
+nsIInterceptionInfo* TRRLoadInfo::InterceptionInfo() { return nullptr; }
+void TRRLoadInfo::SetInterceptionInfo(nsIInterceptionInfo* aPrincipla) {}
+
 }  // namespace net
 }  // namespace mozilla

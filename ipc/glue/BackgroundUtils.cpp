@@ -14,6 +14,7 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/CookieJarSettings.h"
+#include "mozilla/net/InterceptionInfo.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "ExpandedPrincipal.h"
 #include "nsIScriptSecurityManager.h"
@@ -497,6 +498,29 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
         aLoadInfo->GetIsThirdPartyContextToTopWindow());
   }
 
+  Maybe<InterceptionInfoArg> interceptionInfoArg;
+  nsIInterceptionInfo* interceptionInfo = aLoadInfo->InterceptionInfo();
+  if (interceptionInfo) {
+    Maybe<PrincipalInfo> triggeringPrincipalInfo;
+    if (interceptionInfo->TriggeringPrincipal()) {
+      triggeringPrincipalInfo.emplace();
+      rv = PrincipalToPrincipalInfo(interceptionInfo->TriggeringPrincipal(),
+                                    triggeringPrincipalInfo.ptr());
+    }
+
+    nsTArray<RedirectHistoryEntryInfo> redirectChain;
+    for (const nsCOMPtr<nsIRedirectHistoryEntry>& redirectEntry :
+         interceptionInfo->RedirectChain()) {
+      RedirectHistoryEntryInfo* entry = redirectChain.AppendElement();
+      rv = RHEntryToRHEntryInfo(redirectEntry, entry);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    interceptionInfoArg = Some(InterceptionInfoArg(
+        triggeringPrincipalInfo, interceptionInfo->ContentPolicyType(),
+        redirectChain, interceptionInfo->FromThirdParty()));
+  }
+
   *aOptionalLoadInfoArgs = Some(LoadInfoArgs(
       loadingPrincipalInfo, triggeringPrincipalInfo, principalToInheritInfo,
       topLevelPrincipalInfo, optionalResultPrincipalURI,
@@ -539,7 +563,7 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetStoragePermission(), aLoadInfo->GetIsMetaRefresh(),
       aLoadInfo->GetLoadingEmbedderPolicy(),
       aLoadInfo->GetIsOriginTrialCoepCredentiallessEnabledForTopLevel(),
-      unstrippedURI));
+      unstrippedURI, interceptionInfoArg));
 
   return NS_OK;
 }
@@ -667,7 +691,6 @@ nsresult LoadInfoArgsToLoadInfo(
     NS_ENSURE_SUCCESS(rv, rv);
     redirectChain.AppendElement(redirectHistoryEntry.forget());
   }
-
   nsTArray<nsCOMPtr<nsIPrincipal>> ancestorPrincipals;
   nsTArray<uint64_t> ancestorBrowsingContextIDs;
   if (XRE_IsParentProcess() &&
@@ -742,6 +765,34 @@ nsresult LoadInfoArgsToLoadInfo(
         loadInfoArgs.isThirdPartyContextToTopWindow().ref());
   }
 
+  nsCOMPtr<nsIInterceptionInfo> interceptionInfo;
+  if (loadInfoArgs.interceptionInfo().isSome()) {
+    const InterceptionInfoArg& interceptionInfoArg =
+        loadInfoArgs.interceptionInfo().ref();
+    nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+    if (interceptionInfoArg.triggeringPrincipalInfo().isSome()) {
+      auto triggeringPrincipalOrErr = PrincipalInfoToPrincipal(
+          interceptionInfoArg.triggeringPrincipalInfo().ref());
+      if (NS_WARN_IF(triggeringPrincipalOrErr.isErr())) {
+        return triggeringPrincipalOrErr.unwrapErr();
+      }
+      triggeringPrincipal = triggeringPrincipalOrErr.unwrap();
+    }
+
+    RedirectHistoryArray redirectChain;
+    for (const RedirectHistoryEntryInfo& entryInfo :
+         interceptionInfoArg.redirectChain()) {
+      nsCOMPtr<nsIRedirectHistoryEntry> redirectHistoryEntry =
+          RHEntryInfoToRHEntry(entryInfo);
+      NS_ENSURE_SUCCESS(rv, rv);
+      redirectChain.AppendElement(redirectHistoryEntry.forget());
+    }
+
+    interceptionInfo = new InterceptionInfo(
+        triggeringPrincipal, interceptionInfoArg.contentPolicyType(),
+        redirectChain, interceptionInfoArg.fromThirdParty());
+  }
+
   RefPtr<mozilla::net::LoadInfo> loadInfo = new mozilla::net::LoadInfo(
       loadingPrincipal, triggeringPrincipal, principalToInherit,
       topLevelPrincipal, resultPrincipalURI, cookieJarSettings, cspToInherit,
@@ -783,7 +834,7 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.requestBlockingReason(), loadingContext,
       loadInfoArgs.loadingEmbedderPolicy(),
       loadInfoArgs.originTrialCoepCredentiallessEnabledForTopLevel(),
-      loadInfoArgs.unstrippedURI());
+      loadInfoArgs.unstrippedURI(), interceptionInfo);
 
   if (loadInfoArgs.isFromProcessingFrameAttributes()) {
     loadInfo->SetIsFromProcessingFrameAttributes();

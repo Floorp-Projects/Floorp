@@ -463,12 +463,25 @@ bool CookieCommons::IsSafeTopLevelNav(nsIChannel* aChannel) {
     return false;
   }
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  if (loadInfo->GetExternalContentPolicyType() !=
-          ExtContentPolicy::TYPE_DOCUMENT &&
-      loadInfo->GetExternalContentPolicyType() !=
-          ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD) {
+  nsCOMPtr<nsIInterceptionInfo> interceptionInfo = loadInfo->InterceptionInfo();
+  if ((loadInfo->GetExternalContentPolicyType() !=
+           ExtContentPolicy::TYPE_DOCUMENT &&
+       loadInfo->GetExternalContentPolicyType() !=
+           ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD) &&
+      !interceptionInfo) {
     return false;
   }
+
+  if (interceptionInfo &&
+      interceptionInfo->GetExtContentPolicyType() !=
+          ExtContentPolicy::TYPE_DOCUMENT &&
+      interceptionInfo->GetExtContentPolicyType() !=
+          ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD &&
+      interceptionInfo->GetExtContentPolicyType() !=
+          ExtContentPolicy::TYPE_INVALID) {
+    return false;
+  }
+
   return NS_IsSafeMethodNav(aChannel);
 }
 
@@ -510,22 +523,36 @@ bool CookieCommons::IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI,
   // Do not treat loads triggered by web extensions as foreign
   nsCOMPtr<nsIURI> channelURI;
   NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
-  RefPtr<BasePrincipal> triggeringPrincipal =
-      BasePrincipal::Cast(loadInfo->TriggeringPrincipal());
-  if (triggeringPrincipal->AddonPolicy() &&
-      triggeringPrincipal->AddonAllowsLoad(channelURI)) {
-    return false;
+
+  nsCOMPtr<nsIInterceptionInfo> interceptionInfo = loadInfo->InterceptionInfo();
+
+  RefPtr<BasePrincipal> triggeringPrincipal;
+  ExtContentPolicy contentPolicyType;
+  if (interceptionInfo && interceptionInfo->TriggeringPrincipal()) {
+    triggeringPrincipal =
+        BasePrincipal::Cast(interceptionInfo->TriggeringPrincipal());
+    contentPolicyType = interceptionInfo->GetExtContentPolicyType();
+  } else {
+    triggeringPrincipal = BasePrincipal::Cast(loadInfo->TriggeringPrincipal());
+    contentPolicyType = loadInfo->GetExternalContentPolicyType();
+
+    if (triggeringPrincipal->AddonPolicy() &&
+        triggeringPrincipal->AddonAllowsLoad(channelURI)) {
+      return false;
+    }
   }
+  const nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>>& redirectChain(
+      interceptionInfo && interceptionInfo->TriggeringPrincipal()
+          ? interceptionInfo->RedirectChain()
+          : loadInfo->RedirectChain());
 
   nsAutoCString hostScheme, otherScheme;
   aHostURI->GetScheme(hostScheme);
 
   bool isForeign = true;
   nsresult rv;
-  if (loadInfo->GetExternalContentPolicyType() ==
-          ExtContentPolicy::TYPE_DOCUMENT ||
-      loadInfo->GetExternalContentPolicyType() ==
-          ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD) {
+  if (contentPolicyType == ExtContentPolicy::TYPE_DOCUMENT ||
+      contentPolicyType == ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD) {
     // for loads of TYPE_DOCUMENT we query the hostURI from the
     // triggeringPrincipal which returns the URI of the document that caused the
     // navigation.
@@ -533,6 +560,15 @@ bool CookieCommons::IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI,
 
     triggeringPrincipal->GetScheme(otherScheme);
   } else {
+    // If the load is caused by FetchEvent.request or NavigationPreload request,
+    // check the original InterceptedHttpChannel is a third-party channel or
+    // not.
+    if (interceptionInfo && interceptionInfo->TriggeringPrincipal()) {
+      isForeign = interceptionInfo->FromThirdParty();
+      if (isForeign) {
+        return true;
+      }
+    }
     nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
         do_GetService(THIRDPARTYUTIL_CONTRACTID);
     if (!thirdPartyUtil) {
@@ -559,10 +595,8 @@ bool CookieCommons::IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI,
   // iframe which would send same-site cookies. Hence, if the iframe navigation
   // was triggered by a cross-origin triggeringPrincipal, we treat the load as
   // foreign.
-  if (loadInfo->GetExternalContentPolicyType() ==
-      ExtContentPolicy::TYPE_SUBDOCUMENT) {
-    rv = loadInfo->TriggeringPrincipal()->IsThirdPartyChannel(aChannel,
-                                                              &isForeign);
+  if (contentPolicyType == ExtContentPolicy::TYPE_SUBDOCUMENT) {
+    rv = triggeringPrincipal->IsThirdPartyChannel(aChannel, &isForeign);
     if (NS_FAILED(rv) || isForeign) {
       return true;
     }
@@ -573,7 +607,7 @@ bool CookieCommons::IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI,
   // with regards to CSRF.
 
   nsCOMPtr<nsIPrincipal> redirectPrincipal;
-  for (nsIRedirectHistoryEntry* entry : loadInfo->RedirectChain()) {
+  for (nsIRedirectHistoryEntry* entry : redirectChain) {
     entry->GetPrincipal(getter_AddRefs(redirectPrincipal));
     if (redirectPrincipal) {
       rv = redirectPrincipal->IsThirdPartyChannel(aChannel, &isForeign);

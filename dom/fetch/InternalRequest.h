@@ -17,11 +17,14 @@
 #include "nsIChannelEventSink.h"
 #include "nsIInputStream.h"
 #include "nsISupportsImpl.h"
+#include "mozilla/net/NeckoChannelParams.h"
 #ifdef DEBUG
 #  include "nsIURLParser.h"
 #  include "nsNetCID.h"
 #  include "nsServiceManagerUtils.h"
 #endif
+
+using mozilla::net::RedirectHistoryEntryInfo;
 
 namespace mozilla {
 
@@ -326,7 +329,6 @@ class InternalRequest final : public AtomicSafeRefCounted<InternalRequest> {
 
   // Takes ownership of the principal info.
   void SetPrincipalInfo(UniquePtr<mozilla::ipc::PrincipalInfo> aPrincipalInfo);
-
   const UniquePtr<mozilla::ipc::PrincipalInfo>& GetPrincipalInfo() const {
     return mPrincipalInfo;
   }
@@ -349,6 +351,36 @@ class InternalRequest final : public AtomicSafeRefCounted<InternalRequest> {
 
   nsILoadInfo::CrossOriginEmbedderPolicy GetEmbedderPolicy() const {
     return mEmbedderPolicy;
+  }
+
+  void SetInterceptionTriggeringPrincipalInfo(
+      UniquePtr<mozilla::ipc::PrincipalInfo> aPrincipalInfo);
+
+  const UniquePtr<mozilla::ipc::PrincipalInfo>&
+  GetInterceptionTriggeringPrincipalInfo() const {
+    return mInterceptionTriggeringPrincipalInfo;
+  }
+
+  nsContentPolicyType InterceptionContentPolicyType() const {
+    return mInterceptionContentPolicyType;
+  }
+  void SetInterceptionContentPolicyType(nsContentPolicyType aContentPolicyType);
+
+  const nsTArray<RedirectHistoryEntryInfo>& InterceptionRedirectChain() const {
+    return mInterceptionRedirectChain;
+  }
+
+  void SetInterceptionRedirectChain(
+      const nsTArray<RedirectHistoryEntryInfo>& aRedirectChain) {
+    mInterceptionRedirectChain = aRedirectChain;
+  }
+
+  const bool& InterceptionFromThirdParty() const {
+    return mInterceptionFromThirdParty;
+  }
+
+  void SetInterceptionFromThirdParty(bool aFromThirdParty) {
+    mInterceptionFromThirdParty = aFromThirdParty;
   }
 
  private:
@@ -425,6 +457,26 @@ class InternalRequest final : public AtomicSafeRefCounted<InternalRequest> {
       nsILoadInfo::EMBEDDER_POLICY_NULL;
 
   UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
+
+  // Following members are specific for the FetchEvent.request or
+  // NavigationPreload request which is extracted from the
+  // InterceptedHttpChannel.
+  // Notice that these members would not be copied when calling
+  // InternalRequest::GetRequestConstructorCopy() since these information should
+  // not be propagated when copying the Request in ServiceWorker script.
+
+  // This is the trigging principalInfo of the InterceptedHttpChannel.
+  UniquePtr<mozilla::ipc::PrincipalInfo> mInterceptionTriggeringPrincipalInfo;
+
+  // This is the contentPolicyType of the InterceptedHttpChannel.
+  nsContentPolicyType mInterceptionContentPolicyType{
+      nsIContentPolicy::TYPE_INVALID};
+
+  // This is the redirect history of the InterceptedHttpChannel.
+  CopyableTArray<RedirectHistoryEntryInfo> mInterceptionRedirectChain;
+
+  // This indicates that the InterceptedHttpChannel is a third party channel.
+  bool mInterceptionFromThirdParty{false};
 };
 
 }  // namespace dom

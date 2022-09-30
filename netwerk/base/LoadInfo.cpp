@@ -586,7 +586,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mForcePreflight(rhs.mForcePreflight),
       mIsPreflight(rhs.mIsPreflight),
       mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal),
-
       mDocumentHasUserInteracted(rhs.mDocumentHasUserInteracted),
       mAllowListFutureDocumentsCreatedFromThisRedirectChain(
           rhs.mAllowListFutureDocumentsCreatedFromThisRedirectChain),
@@ -608,7 +607,8 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mLoadingEmbedderPolicy(rhs.mLoadingEmbedderPolicy),
       mIsOriginTrialCoepCredentiallessEnabledForTopLevel(
           rhs.mIsOriginTrialCoepCredentiallessEnabledForTopLevel),
-      mUnstrippedURI(rhs.mUnstrippedURI) {}
+      mUnstrippedURI(rhs.mUnstrippedURI),
+      mInterceptionInfo(rhs.mInterceptionInfo) {}
 
 LoadInfo::LoadInfo(
     nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,
@@ -648,7 +648,7 @@ LoadInfo::LoadInfo(
     uint32_t aRequestBlockingReason, nsINode* aLoadingContext,
     nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy,
     bool aIsOriginTrialCoepCredentiallessEnabledForTopLevel,
-    nsIURI* aUnstrippedURI)
+    nsIURI* aUnstrippedURI, nsIInterceptionInfo* aInterceptionInfo)
     : mLoadingPrincipal(aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mPrincipalToInherit(aPrincipalToInherit),
@@ -713,11 +713,11 @@ LoadInfo::LoadInfo(
       mParserCreatedScript(aParserCreatedScript),
       mStoragePermission(aStoragePermission),
       mIsMetaRefresh(aIsMetaRefresh),
-
       mLoadingEmbedderPolicy(aLoadingEmbedderPolicy),
       mIsOriginTrialCoepCredentiallessEnabledForTopLevel(
           aIsOriginTrialCoepCredentiallessEnabledForTopLevel),
-      mUnstrippedURI(aUnstrippedURI) {
+      mUnstrippedURI(aUnstrippedURI),
+      mInterceptionInfo(aInterceptionInfo) {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal ||
              aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
@@ -2196,6 +2196,12 @@ already_AddRefed<nsIContentSecurityPolicy> LoadInfo::GetPreloadCsp() {
 already_AddRefed<nsIContentSecurityPolicy> LoadInfo::GetCspToInherit() {
   nsCOMPtr<nsIContentSecurityPolicy> cspToInherit = mCspToInherit;
   return cspToInherit.forget();
+}
+
+nsIInterceptionInfo* LoadInfo::InterceptionInfo() { return mInterceptionInfo; }
+
+void LoadInfo::SetInterceptionInfo(nsIInterceptionInfo* aInfo) {
+  mInterceptionInfo = aInfo;
 }
 
 }  // namespace mozilla::net
