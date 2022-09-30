@@ -5,7 +5,11 @@
 
 "use strict";
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+var EXPORTED_SYMBOLS = ["EncryptedMediaParent"];
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 const lazy = {};
 
@@ -25,7 +29,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function() {
   return new Localization(["branding/brand.ftl", "browser/browser.ftl"], true);
 });
 
-export class EncryptedMediaParent extends JSWindowActorParent {
+class EncryptedMediaParent extends JSWindowActorParent {
   isUiEnabled() {
     return Services.prefs.getBoolPref("browser.eme.ui.enabled");
   }
