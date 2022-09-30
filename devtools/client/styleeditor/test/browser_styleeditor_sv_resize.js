@@ -7,7 +7,7 @@
 
 const TESTCASE_URI = TEST_BASE_HTTP + "simple.html";
 
-const { Toolbox } = require("devtools/client/framework/toolbox");
+const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
 add_task(async function() {
   const { toolbox, ui } = await openStyleEditorForURL(TESTCASE_URI);

@@ -18,18 +18,23 @@ const { require } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const EventEmitter = require("devtools/shared/event-emitter");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { getSourceNames } = require("devtools/client/shared/source-utils");
-const { extend } = require("devtools/shared/extend");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
+const {
+  getSourceNames,
+} = require("resource://devtools/client/shared/source-utils.js");
+const { extend } = require("resource://devtools/shared/extend.js");
 const {
   ViewHelpers,
   setNamedTimeout,
-} = require("devtools/client/shared/widgets/view-helpers");
-const nodeConstants = require("devtools/shared/dom-node-constants");
-const { KeyCodes } = require("devtools/client/shared/keycodes");
-const { PluralForm } = require("devtools/shared/plural-form");
-const { LocalizationHelper, ELLIPSIS } = require("devtools/shared/l10n");
+} = require("resource://devtools/client/shared/widgets/view-helpers.js");
+const nodeConstants = require("resource://devtools/shared/dom-node-constants.js");
+const { KeyCodes } = require("resource://devtools/client/shared/keycodes.js");
+const { PluralForm } = require("resource://devtools/shared/plural-form.js");
+const {
+  LocalizationHelper,
+  ELLIPSIS,
+} = require("resource://devtools/shared/l10n.js");
 
 const L10N = new LocalizationHelper(DBG_STRINGS_URI);
 const HTML_NS = "http://www.w3.org/1999/xhtml";

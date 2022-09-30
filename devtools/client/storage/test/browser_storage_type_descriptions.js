@@ -8,7 +8,7 @@
 
 "use strict";
 
-const getStorageTypeURL = require("devtools/client/storage/utils/doc-utils");
+const getStorageTypeURL = require("resource://devtools/client/storage/utils/doc-utils.js");
 
 const storeItems = [
   "Cache",

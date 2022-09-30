@@ -4,13 +4,15 @@
 
 "use strict";
 
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 const {
   getStack,
   callFunctionWithAsyncStack,
-} = require("devtools/shared/platform/stack");
-const EventEmitter = require("devtools/shared/event-emitter");
-const { UnsolicitedNotifications } = require("devtools/client/constants");
+} = require("resource://devtools/shared/platform/stack.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const {
+  UnsolicitedNotifications,
+} = require("resource://devtools/client/constants.js");
 
 loader.lazyRequireGetter(
   this,

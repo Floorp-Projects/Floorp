@@ -10,62 +10,72 @@ const osString = Services.appinfo.OS;
 loader.lazyGetter(
   this,
   "OptionsPanel",
-  () => require("devtools/client/framework/toolbox-options").OptionsPanel
+  () =>
+    require("resource://devtools/client/framework/toolbox-options.js")
+      .OptionsPanel
 );
 loader.lazyGetter(
   this,
   "InspectorPanel",
-  () => require("devtools/client/inspector/panel").InspectorPanel
+  () => require("resource://devtools/client/inspector/panel.js").InspectorPanel
 );
 loader.lazyGetter(
   this,
   "WebConsolePanel",
-  () => require("devtools/client/webconsole/panel").WebConsolePanel
+  () =>
+    require("resource://devtools/client/webconsole/panel.js").WebConsolePanel
 );
 loader.lazyGetter(
   this,
   "DebuggerPanel",
-  () => require("devtools/client/debugger/panel").DebuggerPanel
+  () => require("resource://devtools/client/debugger/panel.js").DebuggerPanel
 );
 loader.lazyGetter(
   this,
   "StyleEditorPanel",
-  () => require("devtools/client/styleeditor/panel").StyleEditorPanel
+  () =>
+    require("resource://devtools/client/styleeditor/panel.js").StyleEditorPanel
 );
 loader.lazyGetter(
   this,
   "MemoryPanel",
-  () => require("devtools/client/memory/panel").MemoryPanel
+  () => require("resource://devtools/client/memory/panel.js").MemoryPanel
 );
 loader.lazyGetter(
   this,
   "NewPerformancePanel",
-  () => require("devtools/client/performance-new/panel").PerformancePanel
+  () =>
+    require("resource://devtools/client/performance-new/panel.js")
+      .PerformancePanel
 );
 loader.lazyGetter(
   this,
   "NetMonitorPanel",
-  () => require("devtools/client/netmonitor/panel").NetMonitorPanel
+  () =>
+    require("resource://devtools/client/netmonitor/panel.js").NetMonitorPanel
 );
 loader.lazyGetter(
   this,
   "StoragePanel",
-  () => require("devtools/client/storage/panel").StoragePanel
+  () => require("resource://devtools/client/storage/panel.js").StoragePanel
 );
 loader.lazyGetter(
   this,
   "DomPanel",
-  () => require("devtools/client/dom/panel").DomPanel
+  () => require("resource://devtools/client/dom/panel.js").DomPanel
 );
 loader.lazyGetter(
   this,
   "AccessibilityPanel",
-  () => require("devtools/client/accessibility/panel").AccessibilityPanel
+  () =>
+    require("resource://devtools/client/accessibility/panel.js")
+      .AccessibilityPanel
 );
 loader.lazyGetter(
   this,
   "ApplicationPanel",
-  () => require("devtools/client/application/panel").ApplicationPanel
+  () =>
+    require("resource://devtools/client/application/panel.js").ApplicationPanel
 );
 
 // Other dependencies
@@ -93,7 +103,7 @@ loader.lazyRequireGetter(
   true
 );
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/startup.properties"
 );

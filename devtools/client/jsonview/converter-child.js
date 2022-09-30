@@ -20,7 +20,7 @@ const {
   getTheme,
   addThemeObserver,
   removeThemeObserver,
-} = require("devtools/client/shared/theme");
+} = require("resource://devtools/client/shared/theme.js");
 
 const BinaryInput = Components.Constructor(
   "@mozilla.org/binaryinputstream;1",

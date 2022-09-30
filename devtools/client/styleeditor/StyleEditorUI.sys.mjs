@@ -5,7 +5,7 @@
 const { loader, require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 const {
   getString,
@@ -18,10 +18,10 @@ const {
 const { StyleSheetEditor } = ChromeUtils.import(
   "resource://devtools/client/styleeditor/StyleSheetEditor.jsm"
 );
-const { PluralForm } = require("devtools/shared/plural-form");
-const { PrefObserver } = require("devtools/client/shared/prefs");
+const { PluralForm } = require("resource://devtools/shared/plural-form.js");
+const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
 
-const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
+const KeyShortcuts = require("resource://devtools/client/shared/key-shortcuts.js");
 
 const lazy = {};
 
