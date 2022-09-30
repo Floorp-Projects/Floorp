@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const asyncStoreHelper = require("devtools/client/shared/async-store-helper");
+const asyncStoreHelper = require("resource://devtools/client/shared/async-store-helper.js");
 const { validateBreakpointLocation } = ChromeUtils.import(
   "resource://devtools/shared/validate-breakpoint.jsm"
 );

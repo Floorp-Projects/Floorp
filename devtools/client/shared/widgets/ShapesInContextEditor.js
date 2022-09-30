@@ -4,8 +4,8 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
-const { debounce } = require("devtools/shared/debounce");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const { debounce } = require("resource://devtools/shared/debounce.js");
 
 /**
  * The ShapesInContextEditor:

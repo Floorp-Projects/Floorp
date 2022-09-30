@@ -7,14 +7,20 @@ const {
   combineReducers,
   createStore,
   applyMiddleware,
-} = require("devtools/client/shared/vendor/redux");
-const { thunk } = require("devtools/client/shared/redux/middleware/thunk");
+} = require("resource://devtools/client/shared/vendor/redux.js");
+const {
+  thunk,
+} = require("resource://devtools/client/shared/redux/middleware/thunk.js");
 const {
   waitUntilService,
-} = require("devtools/client/shared/redux/middleware/wait-service");
-const { task } = require("devtools/client/shared/redux/middleware/task");
-const { promise } = require("devtools/client/shared/redux/middleware/promise");
-const flags = require("devtools/shared/flags");
+} = require("resource://devtools/client/shared/redux/middleware/wait-service.js");
+const {
+  task,
+} = require("resource://devtools/client/shared/redux/middleware/task.js");
+const {
+  promise,
+} = require("resource://devtools/client/shared/redux/middleware/promise.js");
+const flags = require("resource://devtools/shared/flags.js");
 
 loader.lazyRequireGetter(
   this,

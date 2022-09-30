@@ -3,7 +3,7 @@
 
 "use strict";
 
-const CSSCompleter = require("devtools/client/shared/sourceeditor/css-autocompleter");
+const CSSCompleter = require("resource://devtools/client/shared/sourceeditor/css-autocompleter.js");
 
 const source = [
   ".devtools-toolbar {",

@@ -6,10 +6,10 @@
 
 const {
   MODE,
-} = require("devtools/client/shared/components/reps/reps/constants");
+} = require("resource://devtools/client/shared/components/reps/reps/constants.js");
 const {
   maxLengthMap,
-} = require("devtools/client/shared/components/reps/reps/grip-array");
+} = require("resource://devtools/client/shared/components/reps/reps/grip-array.js");
 const stubs = new Map();
 
 stubs.set("testBasic", {

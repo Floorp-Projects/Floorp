@@ -4,10 +4,12 @@
 
 "use strict";
 
-const { gDevTools } = require("devtools/client/framework/devtools");
+const {
+  gDevTools,
+} = require("resource://devtools/client/framework/devtools.js");
 const {
   TabDescriptorFactory,
-} = require("devtools/client/framework/tab-descriptor-factory");
+} = require("resource://devtools/client/framework/tab-descriptor-factory.js");
 
 /**
  * Retrieve the most recent chrome window.

@@ -8,7 +8,7 @@
 
 const {
   CSSFilterEditorWidget,
-} = require("devtools/client/shared/widgets/FilterWidget");
+} = require("resource://devtools/client/shared/widgets/FilterWidget.js");
 
 const DEFAULT_VALUE_MULTIPLIER = 1;
 

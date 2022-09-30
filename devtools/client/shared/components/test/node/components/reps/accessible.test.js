@@ -10,12 +10,12 @@ const { JSDOM } = require("jsdom");
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 const { Accessible } = REPS;
 const {
   ELLIPSIS,
-} = require("devtools/client/shared/components/reps/reps/rep-utils");
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/accessible");
+} = require("resource://devtools/client/shared/components/reps/reps/rep-utils.js");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/accessible.js");
 
 describe("Accessible - Document", () => {
   const stub = stubs.get("Document");

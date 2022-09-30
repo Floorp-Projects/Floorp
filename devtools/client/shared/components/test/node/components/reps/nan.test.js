@@ -9,11 +9,11 @@ const { shallow } = require("enzyme");
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 
 const { NaNRep, Rep } = REPS;
 
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/nan");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/nan.js");
 
 describe("NaN", () => {
   const stub = stubs.get("NaN");

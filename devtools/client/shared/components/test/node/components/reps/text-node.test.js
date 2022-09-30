@@ -10,19 +10,19 @@ const { shallow } = require("enzyme");
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 const {
   MODE,
-} = require("devtools/client/shared/components/reps/reps/constants");
+} = require("resource://devtools/client/shared/components/reps/reps/constants.js");
 const { TextNode } = REPS;
 
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/text-node");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/text-node.js");
 const {
   expectActorAttribute,
-} = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
+} = require("resource://devtools/client/shared/components/test/node/components/reps/test-helpers.js");
 const {
   ELLIPSIS,
-} = require("devtools/client/shared/components/reps/reps/rep-utils");
+} = require("resource://devtools/client/shared/components/reps/reps/rep-utils.js");
 
 function quoteNewlines(text) {
   return text.split("\n").join("\\n");

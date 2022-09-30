@@ -7,8 +7,10 @@
 const { shallow, mount } = require("enzyme");
 const {
   ELLIPSIS,
-} = require("devtools/client/shared/components/reps/reps/rep-utils");
-const { REPS } = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep-utils.js");
+const {
+  REPS,
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 const { Rep } = REPS;
 
 const renderRep = (string, props) =>

@@ -6,16 +6,18 @@
 
 /* global jest */
 const { shallow } = require("enzyme");
-const { REPS } = require("devtools/client/shared/components/reps/reps/rep");
+const {
+  REPS,
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 const {
   MODE,
-} = require("devtools/client/shared/components/reps/reps/constants");
+} = require("resource://devtools/client/shared/components/reps/reps/constants.js");
 const { Func } = REPS;
 const { getFunctionName } = Func;
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/function");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/function.js");
 const {
   expectActorAttribute,
-} = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
+} = require("resource://devtools/client/shared/components/test/node/components/reps/test-helpers.js");
 const renderRep = (object, props) => {
   return shallow(Func.rep({ object, ...props }));
 };

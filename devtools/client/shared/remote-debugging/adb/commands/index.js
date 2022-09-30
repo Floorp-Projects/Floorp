@@ -6,19 +6,19 @@
 
 const {
   listDevices,
-} = require("devtools/client/shared/remote-debugging/adb/commands/list-devices");
+} = require("resource://devtools/client/shared/remote-debugging/adb/commands/list-devices.js");
 const {
   prepareTCPConnection,
-} = require("devtools/client/shared/remote-debugging/adb/commands/prepare-tcp-connection");
+} = require("resource://devtools/client/shared/remote-debugging/adb/commands/prepare-tcp-connection.js");
 const {
   runCommand,
-} = require("devtools/client/shared/remote-debugging/adb/commands/run-command");
+} = require("resource://devtools/client/shared/remote-debugging/adb/commands/run-command.js");
 const {
   shell,
-} = require("devtools/client/shared/remote-debugging/adb/commands/shell");
+} = require("resource://devtools/client/shared/remote-debugging/adb/commands/shell.js");
 const {
   TrackDevicesCommand,
-} = require("devtools/client/shared/remote-debugging/adb/commands/track-devices");
+} = require("resource://devtools/client/shared/remote-debugging/adb/commands/track-devices.js");
 
 module.exports = {
   listDevices,

@@ -7,11 +7,13 @@
 const {
   createFactory,
   createElement,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const VisibilityHandler = createFactory(
-  require("devtools/client/shared/components/VisibilityHandler")
+  require("resource://devtools/client/shared/components/VisibilityHandler.js")
 );
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 /**
  * This helper is wrapping Redux's connect() method and applying

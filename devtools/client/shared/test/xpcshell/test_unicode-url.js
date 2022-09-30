@@ -11,7 +11,7 @@ const {
   getUnicodeUrl,
   getUnicodeUrlPath,
   getUnicodeHostname,
-} = require("devtools/client/shared/unicode-url");
+} = require("resource://devtools/client/shared/unicode-url.js");
 
 // List of URLs used to test Unicode URL conversion
 const TEST_URLS = [

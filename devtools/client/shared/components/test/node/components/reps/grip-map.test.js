@@ -7,17 +7,19 @@
 /* global jest */
 
 const { shallow } = require("enzyme");
-const { getRep } = require("devtools/client/shared/components/reps/reps/rep");
-const GripMap = require("devtools/client/shared/components/reps/reps/grip-map");
+const {
+  getRep,
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
+const GripMap = require("resource://devtools/client/shared/components/reps/reps/grip-map.js");
 const {
   MODE,
-} = require("devtools/client/shared/components/reps/reps/constants");
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map");
+} = require("resource://devtools/client/shared/components/reps/reps/constants.js");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-map.js");
 const {
   expectActorAttribute,
   getSelectableInInspectorGrips,
   getMapLengthBubbleText,
-} = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
+} = require("resource://devtools/client/shared/components/test/node/components/reps/test-helpers.js");
 const { maxLengthMap, getLength } = GripMap;
 
 function shallowRenderRep(object, props = {}) {

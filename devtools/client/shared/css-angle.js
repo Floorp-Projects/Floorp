@@ -6,7 +6,7 @@
 
 const SPECIALVALUES = new Set(["initial", "inherit", "unset"]);
 
-const { getCSSLexer } = require("devtools/shared/css/lexer");
+const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
 
 loader.lazyRequireGetter(
   this,

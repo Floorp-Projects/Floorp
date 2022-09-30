@@ -9,11 +9,11 @@ const { shallow } = require("enzyme");
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 
 const { Null, Rep } = REPS;
 
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/null");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/null.js");
 
 describe("testNull", () => {
   const stub = stubs.get("Null");

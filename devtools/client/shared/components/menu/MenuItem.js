@@ -11,12 +11,15 @@ const {
   createFactory,
   createRef,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const { button, li, span } = dom;
 loader.lazyGetter(this, "Localized", () =>
-  createFactory(require("devtools/client/shared/vendor/fluent-react").Localized)
+  createFactory(
+    require("resource://devtools/client/shared/vendor/fluent-react.js")
+      .Localized
+  )
 );
 
 class MenuItem extends PureComponent {

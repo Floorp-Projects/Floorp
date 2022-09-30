@@ -6,8 +6,8 @@
 
 const {
   CubicBezierWidget,
-} = require("devtools/client/shared/widgets/CubicBezierWidget");
-const SwatchBasedEditorTooltip = require("devtools/client/shared/widgets/tooltip/SwatchBasedEditorTooltip");
+} = require("resource://devtools/client/shared/widgets/CubicBezierWidget.js");
+const SwatchBasedEditorTooltip = require("resource://devtools/client/shared/widgets/tooltip/SwatchBasedEditorTooltip.js");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 

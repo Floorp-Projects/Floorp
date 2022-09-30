@@ -7,11 +7,13 @@
 /* global beforeAll, afterAll */
 const { shallow } = require("enzyme");
 
-const { REPS } = require("devtools/client/shared/components/reps/reps/rep");
+const {
+  REPS,
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 
 const { Rep } = REPS;
 
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/failure");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/failure.js");
 
 let originalConsoleError;
 beforeAll(() => {

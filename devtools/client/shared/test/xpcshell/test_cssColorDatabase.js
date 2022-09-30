@@ -5,8 +5,8 @@
 
 "use strict";
 
-const { colorUtils } = require("devtools/shared/css/color");
-const { cssColors } = require("devtools/shared/css/color-db");
+const { colorUtils } = require("resource://devtools/shared/css/color.js");
+const { cssColors } = require("resource://devtools/shared/css/color-db.js");
 const InspectorUtils = require("InspectorUtils");
 
 function isValid(colorName) {

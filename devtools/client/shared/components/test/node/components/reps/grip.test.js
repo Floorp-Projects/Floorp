@@ -10,19 +10,19 @@ const { shallow } = require("enzyme");
 const {
   getRep,
   Rep,
-} = require("devtools/client/shared/components/reps/reps/rep");
-const Grip = require("devtools/client/shared/components/reps/reps/grip");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
+const Grip = require("resource://devtools/client/shared/components/reps/reps/grip.js");
 const {
   MODE,
-} = require("devtools/client/shared/components/reps/reps/constants");
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/grip");
-const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
+} = require("resource://devtools/client/shared/components/reps/reps/constants.js");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip.js");
+const gripArrayStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-array.js");
 
 const {
   expectActorAttribute,
   getSelectableInInspectorGrips,
   getGripLengthBubbleText,
-} = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
+} = require("resource://devtools/client/shared/components/test/node/components/reps/test-helpers.js");
 const { maxLengthMap } = Grip;
 
 function shallowRenderRep(object, props = {}) {

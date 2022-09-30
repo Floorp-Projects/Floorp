@@ -4,7 +4,7 @@
 /* import-globals-from head.js */
 "use strict";
 
-var { angleUtils } = require("devtools/client/shared/css-angle");
+var { angleUtils } = require("resource://devtools/client/shared/css-angle.js");
 
 add_task(async function() {
   await addTab("about:blank");

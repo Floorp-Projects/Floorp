@@ -11,11 +11,13 @@
 "use strict";
 
 const TelemetryStopwatch = require("TelemetryStopwatch");
-const { getNthPathExcluding } = require("devtools/shared/platform/stack");
+const {
+  getNthPathExcluding,
+} = require("resource://devtools/shared/platform/stack.js");
 const { TelemetryEnvironment } = ChromeUtils.import(
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );
-const WeakMapMap = require("devtools/client/shared/WeakMapMap");
+const WeakMapMap = require("resource://devtools/client/shared/WeakMapMap.js");
 
 const CATEGORY = "devtools.main";
 

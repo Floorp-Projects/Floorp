@@ -9,16 +9,18 @@
  * for Rule View's filter swatches
  */
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const STRINGS_URI = "devtools/client/locales/filterwidget.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
-const { cssTokenizer } = require("devtools/shared/css/parsing-utils");
+const {
+  cssTokenizer,
+} = require("resource://devtools/shared/css/parsing-utils.js");
 
-const asyncStorage = require("devtools/shared/async-storage");
+const asyncStorage = require("resource://devtools/shared/async-storage.js");
 
 const DEFAULT_FILTER_TYPE = "length";
 const UNIT_MAPPING = {

@@ -5,19 +5,19 @@
 /* global jest */
 const {
   mountObjectInspector,
-} = require("devtools/client/shared/components/test/node/components/object-inspector/test-utils");
+} = require("resource://devtools/client/shared/components/test/node/components/object-inspector/test-utils.js");
 
 const {
   MODE,
-} = require("devtools/client/shared/components/reps/reps/constants");
-const gripStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip");
+} = require("resource://devtools/client/shared/components/reps/reps/constants.js");
+const gripStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip.js");
 const stub = gripStubs.get("testProxy");
 const proxySlots = gripStubs.get("testProxySlots");
 const {
   formatObjectInspector,
-} = require("devtools/client/shared/components/test/node/components/object-inspector/test-utils");
+} = require("resource://devtools/client/shared/components/test/node/components/object-inspector/test-utils.js");
 
-const ObjectFront = require("devtools/client/shared/components/test/node/__mocks__/object-front");
+const ObjectFront = require("resource://devtools/client/shared/components/test/node/__mocks__/object-front.js");
 function generateDefaults(overrides) {
   return {
     roots: [

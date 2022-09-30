@@ -6,7 +6,7 @@
 
 (function(mod) {
   if (typeof exports == "object" && typeof module == "object") // CommonJS
-    mod(require("devtools/client/shared/sourceeditor/codemirror/lib/codemirror"), require("devtools/client/shared/sourceeditor/codemirror/addon/search/searchcursor"), require("devtools/client/shared/sourceeditor/codemirror/addon/edit/matchbrackets"));
+    mod(require("resource://devtools/client/shared/sourceeditor/codemirror/lib/codemirror.js"), require("resource://devtools/client/shared/sourceeditor/codemirror/addon/search/searchcursor.js"), require("resource://devtools/client/shared/sourceeditor/codemirror/addon/edit/matchbrackets.js"));
   else if (typeof define == "function" && define.amd) // AMD
     define(["../lib/codemirror", "../addon/search/searchcursor", "../addon/edit/matchbrackets"], mod);
   else // Plain browser env

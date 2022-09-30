@@ -11,14 +11,18 @@ var { require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
 var { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
-var { gDevTools } = require("devtools/client/framework/devtools");
+var { gDevTools } = require("resource://devtools/client/framework/devtools.js");
 var { BrowserLoader } = ChromeUtils.import(
   "resource://devtools/shared/loader/browser-loader.js"
 );
-var { DevToolsServer } = require("devtools/server/devtools-server");
-var { DevToolsClient } = require("devtools/client/devtools-client");
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var { Toolbox } = require("devtools/client/framework/toolbox");
+var {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+var {
+  DevToolsClient,
+} = require("resource://devtools/client/devtools-client.js");
+var DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
+var { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
 var { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/shared/",

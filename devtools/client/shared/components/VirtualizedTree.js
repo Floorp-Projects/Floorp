@@ -7,13 +7,15 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { scrollIntoView } = require("devtools/client/shared/scroll");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const {
+  scrollIntoView,
+} = require("resource://devtools/client/shared/scroll.js");
 const {
   preventDefaultAndStopPropagation,
-} = require("devtools/client/shared/events");
+} = require("resource://devtools/client/shared/events.js");
 
 loader.lazyRequireGetter(
   this,

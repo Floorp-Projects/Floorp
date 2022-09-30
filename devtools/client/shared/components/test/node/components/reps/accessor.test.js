@@ -9,11 +9,11 @@ const { shallow } = require("enzyme");
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 
 const { Accessor, Rep } = REPS;
 
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/accessor");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/accessor.js");
 
 describe("Accessor - getter", () => {
   const object = stubs.get("getter");

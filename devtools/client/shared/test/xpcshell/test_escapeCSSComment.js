@@ -6,7 +6,7 @@
 const {
   escapeCSSComment,
   unescapeCSSComment,
-} = require("devtools/shared/css/parsing-utils");
+} = require("resource://devtools/shared/css/parsing-utils.js");
 
 const TEST_DATA = [
   {

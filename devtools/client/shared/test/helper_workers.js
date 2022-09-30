@@ -13,9 +13,13 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-var { DevToolsServer } = require("devtools/server/devtools-server");
-var { DevToolsClient } = require("devtools/client/devtools-client");
-var { Toolbox } = require("devtools/client/framework/toolbox");
+var {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+var {
+  DevToolsClient,
+} = require("resource://devtools/client/devtools-client.js");
+var { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
 function createWorkerInTab(tab, url) {
   info("Creating worker with url '" + url + "' in tab.");

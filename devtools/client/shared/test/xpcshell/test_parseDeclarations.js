@@ -7,8 +7,10 @@ const {
   parseDeclarations,
   _parseCommentDeclarations,
   parseNamedDeclarations,
-} = require("devtools/shared/css/parsing-utils");
-const { isCssPropertyKnown } = require("devtools/server/actors/css-properties");
+} = require("resource://devtools/shared/css/parsing-utils.js");
+const {
+  isCssPropertyKnown,
+} = require("resource://devtools/server/actors/css-properties.js");
 
 const TEST_DATA = [
   // Simple test

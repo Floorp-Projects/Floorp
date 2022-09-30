@@ -10,22 +10,22 @@ const { JSDOM } = require("jsdom");
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 const {
   MODE,
-} = require("devtools/client/shared/components/reps/reps/constants");
+} = require("resource://devtools/client/shared/components/reps/reps/constants.js");
 const {
   MAX_ATTRIBUTE_LENGTH,
-} = require("devtools/client/shared/components/reps/reps/element-node");
+} = require("resource://devtools/client/shared/components/reps/reps/element-node.js");
 const { ElementNode } = REPS;
 const {
   expectActorAttribute,
   getSelectableInInspectorGrips,
-} = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
+} = require("resource://devtools/client/shared/components/test/node/components/reps/test-helpers.js");
 const {
   ELLIPSIS,
-} = require("devtools/client/shared/components/reps/reps/rep-utils");
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/element-node");
+} = require("resource://devtools/client/shared/components/reps/reps/rep-utils.js");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/element-node.js");
 
 describe("ElementNode - BodyNode", () => {
   const stub = stubs.get("BodyNode");

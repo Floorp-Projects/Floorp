@@ -7,7 +7,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('devtools/client/shared/vendor/react'), require('devtools/client/shared/vendor/react-dom')) :
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require("resource://devtools/client/shared/vendor/react.js"), require("resource://devtools/client/shared/vendor/react-dom.js")) :
 	typeof define === 'function' && define.amd ? define(['devtools/client/shared/vendor/react', 'devtools/client/shared/vendor/react-dom'], factory) :
 	(global.ReactTestUtils = factory(global.React,global.ReactDOM));
 }(this, (function (React,ReactDOM) { 'use strict';

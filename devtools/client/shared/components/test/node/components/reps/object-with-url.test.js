@@ -8,12 +8,12 @@ const { shallow } = require("enzyme");
 const {
   REPS,
   getRep,
-} = require("devtools/client/shared/components/reps/reps/rep");
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 const { ObjectWithURL } = REPS;
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/object-with-url");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/object-with-url.js");
 const {
   expectActorAttribute,
-} = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
+} = require("resource://devtools/client/shared/components/test/node/components/reps/test-helpers.js");
 
 describe("ObjectWithURL", () => {
   const stub = stubs.get("ObjectWithUrl");

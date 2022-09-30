@@ -8,8 +8,12 @@
  * are open.
  */
 
-var { DevToolsServer } = require("devtools/server/devtools-server");
-var { DevToolsClient } = require("devtools/client/devtools-client");
+var {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+var {
+  DevToolsClient,
+} = require("resource://devtools/client/devtools-client.js");
 
 const TAB1_URL = "data:text/html;charset=utf-8,first-tab";
 const TAB2_URL = "data:text/html;charset=utf-8,second-tab";

@@ -6,7 +6,7 @@
 
 const {
   CONNECTION_TYPES,
-} = require("devtools/client/shared/remote-debugging/constants");
+} = require("resource://devtools/client/shared/remote-debugging/constants.js");
 
 /**
  * This class is designed to be a singleton shared by all DevTools to get access to

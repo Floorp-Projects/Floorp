@@ -10,8 +10,8 @@
 
 "use strict";
 
-const client = require("devtools/client/shared/remote-debugging/adb/adb-client");
-const { dumpn } = require("devtools/shared/DevToolsUtils");
+const client = require("resource://devtools/client/shared/remote-debugging/adb/adb-client.js");
+const { dumpn } = require("resource://devtools/shared/DevToolsUtils.js");
 
 exports.check = async function check() {
   let socket;

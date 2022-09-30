@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { dumpn } = require("devtools/shared/DevToolsUtils");
+const { dumpn } = require("resource://devtools/shared/DevToolsUtils.js");
 /**
  * The listDevices command is currently unused in DevTools. We are keeping it while
  * working on RemoteDebugging NG, in case it becomes needed later. We will remove it from

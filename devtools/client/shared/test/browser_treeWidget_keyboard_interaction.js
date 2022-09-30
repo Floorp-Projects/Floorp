@@ -9,7 +9,9 @@ const TEST_URI =
   "data:text/html;charset=utf-8,<head>" +
   "<link rel='stylesheet' type='text/css' href='chrome://devtools/skin/widg" +
   "ets.css'></head><body><div></div><span></span></body>";
-const { TreeWidget } = require("devtools/client/shared/widgets/TreeWidget");
+const {
+  TreeWidget,
+} = require("resource://devtools/client/shared/widgets/TreeWidget.js");
 
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({

@@ -8,19 +8,19 @@ const { shallow } = require("enzyme");
 
 const {
   lengthBubble,
-} = require("devtools/client/shared/components/reps/shared/grip-length-bubble");
+} = require("resource://devtools/client/shared/components/reps/shared/grip-length-bubble.js");
 const {
   maxLengthMap: arrayLikeMaxLengthMap,
   getLength: getArrayLikeLength,
-} = require("devtools/client/shared/components/reps/reps/grip-array");
+} = require("resource://devtools/client/shared/components/reps/reps/grip-array.js");
 const {
   maxLengthMap: mapMaxLengths,
   getLength: getMapLength,
-} = require("devtools/client/shared/components/reps/reps/grip-map");
+} = require("resource://devtools/client/shared/components/reps/reps/grip-map.js");
 const {
   getGripPreviewItems,
-} = require("devtools/client/shared/components/reps/reps/rep-utils");
-const nodeConstants = require("devtools/client/shared/components/reps/shared/dom-node-constants");
+} = require("resource://devtools/client/shared/components/reps/reps/rep-utils.js");
+const nodeConstants = require("resource://devtools/client/shared/components/reps/shared/dom-node-constants.js");
 
 /**
  * Get an array of all the items from the grip in parameter (including the grip

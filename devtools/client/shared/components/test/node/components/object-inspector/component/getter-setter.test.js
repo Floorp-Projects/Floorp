@@ -4,18 +4,18 @@
 
 const {
   MODE,
-} = require("devtools/client/shared/components/reps/reps/constants");
+} = require("resource://devtools/client/shared/components/reps/reps/constants.js");
 const {
   formatObjectInspector,
   waitForLoadedProperties,
   mountObjectInspector,
-} = require("devtools/client/shared/components/test/node/components/object-inspector/test-utils");
+} = require("resource://devtools/client/shared/components/test/node/components/object-inspector/test-utils.js");
 
 const {
   makeNodesForProperties,
-} = require("devtools/client/shared/components/object-inspector/utils/node");
-const accessorStubs = require("devtools/client/shared/components/test/node/stubs/reps/accessor");
-const ObjectFront = require("devtools/client/shared/components/test/node/__mocks__/object-front");
+} = require("resource://devtools/client/shared/components/object-inspector/utils/node.js");
+const accessorStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/accessor.js");
+const ObjectFront = require("resource://devtools/client/shared/components/test/node/__mocks__/object-front.js");
 
 function generateDefaults(overrides) {
   return {

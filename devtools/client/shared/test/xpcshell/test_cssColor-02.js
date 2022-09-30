@@ -9,7 +9,7 @@
  * potentially be a little flaky due to the precision of different color representations.
  */
 
-const { colorUtils } = require("devtools/shared/css/color");
+const { colorUtils } = require("resource://devtools/shared/css/color.js");
 const getFixtureColorData = require("resource://test/helper_color_data.js");
 
 function run_test() {

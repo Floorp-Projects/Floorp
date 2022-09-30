@@ -7,9 +7,15 @@
 
 "use strict";
 
-var { DevToolsServer } = require("devtools/server/devtools-server");
-var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
-var { DevToolsClient } = require("devtools/client/devtools-client");
+var {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+var {
+  ActorRegistry,
+} = require("resource://devtools/server/actors/utils/actor-registry.js");
+var {
+  DevToolsClient,
+} = require("resource://devtools/client/devtools-client.js");
 
 const ACTORS_URL = EXAMPLE_URL + "testactors.js";
 

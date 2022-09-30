@@ -7,10 +7,10 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const Draggable = createFactory(
-  require("devtools/client/shared/components/splitter/Draggable")
+  require("resource://devtools/client/shared/components/splitter/Draggable.js")
 );
 
 class GridElementWidthResizer extends Component {

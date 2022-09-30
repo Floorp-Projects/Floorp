@@ -3,37 +3,37 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const { mount } = require("enzyme");
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const { createFactory } = require("resource://devtools/client/shared/vendor/react.js");
 
-const { Provider } = require("devtools/client/shared/vendor/react-redux");
+const { Provider } = require("resource://devtools/client/shared/vendor/react-redux.js");
 const {
   combineReducers,
   createStore,
   applyMiddleware,
-} = require("devtools/client/shared/vendor/redux");
+} = require("resource://devtools/client/shared/vendor/redux.js");
 
-const { thunk } = require("devtools/client/shared/redux/middleware/thunk");
+const { thunk } = require("resource://devtools/client/shared/redux/middleware/thunk.js");
 const {
   waitUntilService,
-} = require("devtools/client/shared/redux/middleware/wait-service");
+} = require("resource://devtools/client/shared/redux/middleware/wait-service.js");
 
 /**
  * Redux store utils
  * @module utils/create-store
  */
-const objectInspector = require("devtools/client/shared/components/object-inspector/index");
+const objectInspector = require("resource://devtools/client/shared/components/object-inspector/index.js");
 const {
   getLoadedProperties,
   getLoadedPropertyKeys,
   getExpandedPaths,
   getExpandedPathKeys,
-} = require("devtools/client/shared/components/object-inspector/reducer");
+} = require("resource://devtools/client/shared/components/object-inspector/reducer.js");
 
 const ObjectInspector = createFactory(objectInspector.ObjectInspector);
 
 const {
   NAME: WAIT_UNTIL_TYPE,
-} = require("devtools/client/shared/redux/middleware/wait-service");
+} = require("resource://devtools/client/shared/redux/middleware/wait-service.js");
 
 /*
  * Takes an Enzyme wrapper (obtained with mount/shallow/…) and

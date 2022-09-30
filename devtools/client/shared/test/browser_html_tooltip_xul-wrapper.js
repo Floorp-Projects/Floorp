@@ -13,7 +13,7 @@ const TEST_URI = CHROME_URL_ROOT + "doc_html_tooltip-05.xhtml";
 
 const {
   HTMLTooltip,
-} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
+} = require("resource://devtools/client/shared/widgets/tooltip/HTMLTooltip.js");
 loadHelperScript("helper_html_tooltip.js");
 
 // The test toolbox will be 200px tall, the anchors are 50px tall, therefore, the maximum

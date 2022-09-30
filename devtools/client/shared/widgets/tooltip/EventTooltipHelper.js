@@ -4,14 +4,14 @@
 
 "use strict";
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/inspector.properties"
 );
 
-const Editor = require("devtools/client/shared/sourceeditor/editor");
-const beautify = require("devtools/shared/jsbeautify/beautify");
-const EventEmitter = require("devtools/shared/event-emitter");
+const Editor = require("resource://devtools/client/shared/sourceeditor/editor.js");
+const beautify = require("resource://devtools/shared/jsbeautify/beautify.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const CONTAINER_WIDTH = 500;

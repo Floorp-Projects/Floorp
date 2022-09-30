@@ -9,7 +9,7 @@ const {
   TAB_SIZE,
   DETECT_INDENT,
   getIndentationFromIteration,
-} = require("devtools/shared/indentation");
+} = require("resource://devtools/shared/indentation.js");
 
 const ENABLE_CODE_FOLDING = "devtools.editor.enableCodeFolding";
 const KEYMAP_PREF = "devtools.editor.keymap";
@@ -40,11 +40,11 @@ const MAX_VERTICAL_OFFSET = 3;
 const RE_JUMP_TO_LINE = /^(\d+):?(\d+)?/;
 const AUTOCOMPLETE_MARK_CLASSNAME = "cm-auto-complete-shadow-text";
 
-const EventEmitter = require("devtools/shared/event-emitter");
-const { PrefObserver } = require("devtools/client/shared/prefs");
-const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
+const KeyShortcuts = require("resource://devtools/client/shared/key-shortcuts.js");
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/sourceeditor.properties"
 );
@@ -609,7 +609,7 @@ Editor.prototype = {
   insertCommandsController() {
     const {
       insertCommandsController,
-    } = require("devtools/client/shared/sourceeditor/editor-commands-controller");
+    } = require("resource://devtools/client/shared/sourceeditor/editor-commands-controller.js");
     insertCommandsController(this);
   },
 
@@ -1376,7 +1376,9 @@ Editor.prototype = {
     // The autocomplete module will overwrite this.initializeAutoCompletion
     // with a mode specific autocompletion handler.
     if (!this.initializeAutoCompletion) {
-      this.extend(require("devtools/client/shared/sourceeditor/autocomplete"));
+      this.extend(
+        require("resource://devtools/client/shared/sourceeditor/autocomplete.js")
+      );
     }
 
     if (this.config.autocomplete && Services.prefs.getBoolPref(AUTOCOMPLETE)) {

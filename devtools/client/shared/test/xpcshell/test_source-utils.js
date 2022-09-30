@@ -7,7 +7,7 @@
  * Tests utility functions contained in `source-utils.js`
  */
 
-const sourceUtils = require("devtools/client/shared/source-utils");
+const sourceUtils = require("resource://devtools/client/shared/source-utils.js");
 
 const CHROME_URLS = [
   "chrome://foo",

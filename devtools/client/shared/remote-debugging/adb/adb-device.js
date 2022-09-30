@@ -6,7 +6,7 @@
 
 const {
   shell,
-} = require("devtools/client/shared/remote-debugging/adb/commands/index");
+} = require("resource://devtools/client/shared/remote-debugging/adb/commands/index.js");
 
 /**
  * A Device instance is created and registered with the Devices module whenever

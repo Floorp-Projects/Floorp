@@ -8,7 +8,10 @@
 // A helper actor for testing highlighters.
 // ⚠️ This should only be used for getting data for objects using CanvasFrameAnonymousContentHelper,
 // that we can't get directly from tests.
-const { getRect, getAdjustedQuads } = require("devtools/shared/layout/utils");
+const {
+  getRect,
+  getAdjustedQuads,
+} = require("resource://devtools/shared/layout/utils.js");
 
 // Set up a dummy environment so that EventUtils works. We need to be careful to
 // pass a window object into each EventUtils method we call rather than having
@@ -29,7 +32,7 @@ const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
-const protocol = require("devtools/shared/protocol");
+const protocol = require("resource://devtools/shared/protocol.js");
 const { Arg, RetVal } = protocol;
 
 const dumpn = msg => {

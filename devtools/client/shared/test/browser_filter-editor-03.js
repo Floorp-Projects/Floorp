@@ -7,7 +7,7 @@
 
 const {
   CSSFilterEditorWidget,
-} = require("devtools/client/shared/widgets/FilterWidget");
+} = require("resource://devtools/client/shared/widgets/FilterWidget.js");
 const GRAYSCALE_MAX = 100;
 const INVERT_MIN = 0;
 

@@ -5,12 +5,14 @@
 "use strict";
 
 const { shallow } = require("enzyme");
-const { REPS } = require("devtools/client/shared/components/reps/reps/rep");
+const {
+  REPS,
+} = require("resource://devtools/client/shared/components/reps/reps/rep.js");
 const { Rep } = REPS;
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/symbol");
+const stubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/symbol.js");
 const {
   expectActorAttribute,
-} = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
+} = require("resource://devtools/client/shared/components/test/node/components/reps/test-helpers.js");
 
 describe("test Symbol", () => {
   const stub = stubs.get("Symbol");

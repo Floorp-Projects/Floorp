@@ -53,6 +53,9 @@ module.exports = (env, argv) => {
       library: "CodeMirror",
     },
     resolve: {
+      alias: {
+        "resource://devtools": "devtools",
+      },
       modules: [path.resolve(__dirname, "../../../..")],
     },
   };

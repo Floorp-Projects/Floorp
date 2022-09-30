@@ -10,7 +10,7 @@
 const {
   findMostRelevantIndex,
   findMostRelevantCssPropertyIndex,
-} = require("devtools/client/shared/suggestion-picker");
+} = require("resource://devtools/client/shared/suggestion-picker.js");
 
 /**
  * Run all tests defined below.

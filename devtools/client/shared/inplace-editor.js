@@ -22,11 +22,11 @@
 "use strict";
 
 const focusManager = Services.focus;
-const { KeyCodes } = require("devtools/client/shared/keycodes");
-const EventEmitter = require("devtools/shared/event-emitter");
+const { KeyCodes } = require("resource://devtools/client/shared/keycodes.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const {
   findMostRelevantCssPropertyIndex,
-} = require("devtools/client/shared/suggestion-picker");
+} = require("resource://devtools/client/shared/suggestion-picker.js");
 
 const lazy = {};
 ChromeUtils.defineModuleGetter(

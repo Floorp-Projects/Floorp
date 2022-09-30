@@ -7,7 +7,7 @@
 
 const {
   parseAttribute,
-} = require("devtools/client/shared/node-attribute-parser");
+} = require("resource://devtools/client/shared/node-attribute-parser.js");
 
 const TEST_DATA = [
   {

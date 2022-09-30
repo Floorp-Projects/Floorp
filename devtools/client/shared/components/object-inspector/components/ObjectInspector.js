@@ -8,32 +8,32 @@ const {
   Component,
   createFactory,
   createElement,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   connect,
   Provider,
-} = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 loader.lazyRequireGetter(
   this,
   "createStore",
   "devtools/client/shared/redux/create-store"
 );
 
-const actions = require("devtools/client/shared/components/object-inspector/actions");
+const actions = require("resource://devtools/client/shared/components/object-inspector/actions.js");
 const {
   getExpandedPaths,
   getLoadedProperties,
   getEvaluations,
   default: reducer,
-} = require("devtools/client/shared/components/object-inspector/reducer");
+} = require("resource://devtools/client/shared/components/object-inspector/reducer.js");
 
-const Tree = createFactory(require("devtools/client/shared/components/Tree"));
+const Tree = createFactory(require("resource://devtools/client/shared/components/Tree.js"));
 
 const ObjectInspectorItem = createFactory(
-  require("devtools/client/shared/components/object-inspector/components/ObjectInspectorItem")
+  require("resource://devtools/client/shared/components/object-inspector/components/ObjectInspectorItem.js")
 );
 
-const Utils = require("devtools/client/shared/components/object-inspector/utils/index");
+const Utils = require("resource://devtools/client/shared/components/object-inspector/utils/index.js");
 const { renderRep, shouldRenderRootsInReps } = Utils;
 const {
   getChildrenWithEvaluations,

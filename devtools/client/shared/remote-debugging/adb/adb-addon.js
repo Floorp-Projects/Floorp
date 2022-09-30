@@ -7,7 +7,7 @@
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 const PREF_ADB_EXTENSION_URL = "devtools.remote.adb.extensionURL";
 const PREF_ADB_EXTENSION_ID = "devtools.remote.adb.extensionID";

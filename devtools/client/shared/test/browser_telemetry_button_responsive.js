@@ -11,7 +11,7 @@ const TEST_URI =
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
-const asyncStorage = require("devtools/shared/async-storage");
+const asyncStorage = require("resource://devtools/shared/async-storage.js");
 
 // Toggling the RDM UI involves several docShell swap operations, which are somewhat slow
 // on debug builds. Usually we are just barely over the limit, so a blanket factor of 2

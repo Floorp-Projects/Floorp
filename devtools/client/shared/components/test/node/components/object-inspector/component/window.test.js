@@ -4,14 +4,14 @@
 
 const {
   createNode,
-} = require("devtools/client/shared/components/object-inspector/utils/node");
+} = require("resource://devtools/client/shared/components/object-inspector/utils/node.js");
 const {
   waitForDispatch,
   mountObjectInspector,
-} = require("devtools/client/shared/components/test/node/components/object-inspector/test-utils");
+} = require("resource://devtools/client/shared/components/test/node/components/object-inspector/test-utils.js");
 
-const gripWindowStubs = require("devtools/client/shared/components/test/node/stubs/reps/window");
-const ObjectFront = require("devtools/client/shared/components/test/node/__mocks__/object-front");
+const gripWindowStubs = require("resource://devtools/client/shared/components/test/node/stubs/reps/window.js");
+const ObjectFront = require("resource://devtools/client/shared/components/test/node/__mocks__/object-front.js");
 const windowNode = createNode({
   name: "window",
   contents: { value: gripWindowStubs.get("Window")._grip },

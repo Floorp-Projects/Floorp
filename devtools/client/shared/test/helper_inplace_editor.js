@@ -10,8 +10,10 @@
  */
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const { editableField } = require("devtools/client/shared/inplace-editor");
-const { colorUtils } = require("devtools/shared/css/color");
+const {
+  editableField,
+} = require("resource://devtools/client/shared/inplace-editor.js");
+const { colorUtils } = require("resource://devtools/shared/css/color.js");
 
 /**
  * Create an inplace editor linked to a span element and click on the span to

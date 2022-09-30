@@ -7,7 +7,9 @@
 
 const TEST_URI = CHROME_URL_ROOT + "doc_tableWidget_basic.html";
 
-const { TableWidget } = require("devtools/client/shared/widgets/TableWidget");
+const {
+  TableWidget,
+} = require("resource://devtools/client/shared/widgets/TableWidget.js");
 
 add_task(async function() {
   await addTab("about:blank");

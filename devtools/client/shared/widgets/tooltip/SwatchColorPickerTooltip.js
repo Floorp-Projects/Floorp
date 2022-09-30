@@ -4,17 +4,17 @@
 
 "use strict";
 
-const { colorUtils } = require("devtools/shared/css/color");
-const Spectrum = require("devtools/client/shared/widgets/Spectrum");
-const SwatchBasedEditorTooltip = require("devtools/client/shared/widgets/tooltip/SwatchBasedEditorTooltip");
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { colorUtils } = require("resource://devtools/shared/css/color.js");
+const Spectrum = require("resource://devtools/client/shared/widgets/Spectrum.js");
+const SwatchBasedEditorTooltip = require("resource://devtools/client/shared/widgets/tooltip/SwatchBasedEditorTooltip.js");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/inspector.properties"
 );
-const { openDocLink } = require("devtools/client/shared/link");
+const { openDocLink } = require("resource://devtools/client/shared/link.js");
 const {
   A11Y_CONTRAST_LEARN_MORE_LINK,
-} = require("devtools/client/accessibility/constants");
+} = require("resource://devtools/client/accessibility/constants.js");
 loader.lazyRequireGetter(this, "throttle", "devtools/shared/throttle", true);
 
 loader.lazyRequireGetter(

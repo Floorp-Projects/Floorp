@@ -7,8 +7,10 @@
 const {
   createStore,
   applyMiddleware,
-} = require("devtools/client/shared/vendor/redux");
-const { task } = require("devtools/client/shared/redux/middleware/task");
+} = require("resource://devtools/client/shared/vendor/redux.js");
+const {
+  task,
+} = require("resource://devtools/client/shared/redux/middleware/task.js");
 
 /**
  * Tests that task middleware allows dispatching generators, promises and objects

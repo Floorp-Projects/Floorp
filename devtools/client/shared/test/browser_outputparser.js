@@ -5,7 +5,7 @@
 
 const {
   getClientCssProperties,
-} = require("devtools/client/fronts/css-properties");
+} = require("resource://devtools/client/fronts/css-properties.js");
 
 add_task(async function() {
   await pushPref("layout.css.backdrop-filter.enabled", true);
@@ -21,7 +21,7 @@ async function performTest() {
     set: [["security.allow_unsafe_parent_loads", true]],
   });
 
-  const OutputParser = require("devtools/client/shared/output-parser");
+  const OutputParser = require("resource://devtools/client/shared/output-parser.js");
 
   const { host, doc } = await createHost(
     "bottom",

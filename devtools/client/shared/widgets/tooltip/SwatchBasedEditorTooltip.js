@@ -4,11 +4,11 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
-const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const KeyShortcuts = require("resource://devtools/client/shared/key-shortcuts.js");
 const {
   HTMLTooltip,
-} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
+} = require("resource://devtools/client/shared/widgets/tooltip/HTMLTooltip.js");
 
 loader.lazyRequireGetter(
   this,

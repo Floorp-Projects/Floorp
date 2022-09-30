@@ -3,7 +3,7 @@
 
 "use strict";
 
-var { colorUtils } = require("devtools/shared/css/color");
+var { colorUtils } = require("resource://devtools/shared/css/color.js");
 /* global getFixtureColorData */
 loadHelperScript("helper_color_data.js");
 

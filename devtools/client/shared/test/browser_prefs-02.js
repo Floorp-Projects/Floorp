@@ -5,7 +5,7 @@
 
 // Tests that preference helpers work properly with custom types of Float and Json.
 
-const { PrefsHelper } = require("devtools/client/shared/prefs");
+const { PrefsHelper } = require("resource://devtools/client/shared/prefs.js");
 
 function test() {
   const Prefs = new PrefsHelper("prefs.helper.test", {
