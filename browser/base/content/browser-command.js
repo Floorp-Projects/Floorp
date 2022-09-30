@@ -320,18 +320,35 @@ function showSidebarNodes(sidebar_mode) { /* Managers - 0; TST - 1  webpanel - 2
     if(selectedwebpanel != null){selectedwebpanel.hidden = false;}
 }
 
- function getSelectedPanel(event){
+ function BSMcontextmenu(event){
    clickedWebpanel = event.explicitOriginalTarget.id;
    webpanel = clickedWebpanel.replace("select-CustomURL", "webpanel");
    contextWebpanel = document.getElementById(webpanel);
+   needLoadedWebpanel = document.getElementsByClassName("needLoadedWebpanel");
 
    if(contextWebpanel == null){
-     document.getElementById("muteMenu").disabled = true;
+      for (let i = 0; i < needLoadedWebpanel.length; i++) {
+        needLoadedWebpanel[i].disabled = true;
+      }
    }
-   else{
-     document.getElementById("muteMenu").disabled = false;
-   }
+   else
+    {
+      for (let i = 0; i < needLoadedWebpanel.length; i++) {
+        needLoadedWebpanel[i].disabled = false;
+      }
+    }
   }
+
+function UnloadWebpanel() {
+  let sidebarsplit2 = document.getElementById("sidebar-splitter2");
+
+  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 30);
+
+  if (sidebarsplit2.getAttribute("hidden") != "true") {
+    changeSidebarVisibility();
+  }
+  contextWebpanel.remove();
+}
 
  function muteSidebar(){
     if(contextWebpanel.audioMuted == false){

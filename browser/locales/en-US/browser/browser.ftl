@@ -847,3 +847,6 @@ Sidebar2 =
 
 sidebar2-mute-and-unmute =
   .label = Mute/Unmute this panel
+
+sidebar2-unload-panel =
+  .label = Unload this panel
