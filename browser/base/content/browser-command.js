@@ -94,7 +94,7 @@ async function setTreeStyleTabURL() {
 function setSidebarMode() {
   if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
     const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-    const webpanel_id = modeValuePref - 4
+    const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT - 1) /* Get sidebar_id */
     const sidebar2elem = document.getElementById("sidebar2");
     const panelWidth = Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${modeValuePref}`, undefined);
   
@@ -192,19 +192,19 @@ function setCustomURLFavicon(sbar_id) {
 
 function backSidebarSite() {
   const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-  const webpanel_id = modeValuePref - 4;
+  const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT - 1);
 
   document.getElementById(`webpanel${webpanel_id}`).goBack();  //戻る
 }
 function forwardSidebarSite() {
   const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-  const webpanel_id = modeValuePref - 4;
+  const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT - 1);
 
   document.getElementById(`webpanel${webpanel_id}`).goForward();  //進む
 }
 function reloadSidebarSite() {
   const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-  const webpanel_id = modeValuePref - 4;
+  const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT - 1);
 
   document.getElementById(`webpanel${webpanel_id}`).reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);  //リロード
 }
@@ -275,7 +275,7 @@ function showSidebarNodes(sidebar_mode) { /* Managers - 0; TST - 1  webpanel - 2
     var sbar_css = ""
     let webpanels = document.getElementsByClassName("webpanels");
     const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-    const webpanel_id = modeValuePref - 4
+    const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT - 1)
     const selectedwebpanel = document.getElementById(`webpanel${webpanel_id}`);
 
     if (document.getElementById("sidebar2style")){document.getElementById("sidebar2style").remove()}
