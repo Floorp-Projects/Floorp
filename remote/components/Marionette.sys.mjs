@@ -8,17 +8,16 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Deferred: "chrome://remote/content/shared/Sync.sys.mjs",
+  EnvironmentPrefs: "chrome://remote/content/marionette/prefs.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
+  MarionettePrefs: "chrome://remote/content/marionette/prefs.sys.mjs",
   RecommendedPreferences:
     "chrome://remote/content/shared/RecommendedPreferences.sys.mjs",
+  TCPListener: "chrome://remote/content/marionette/server.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Preferences: "resource://gre/modules/Preferences.jsm",
-
-  EnvironmentPrefs: "chrome://remote/content/marionette/prefs.js",
-  MarionettePrefs: "chrome://remote/content/marionette/prefs.js",
-  TCPListener: "chrome://remote/content/marionette/server.js",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>

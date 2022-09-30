@@ -5,8 +5,8 @@
 const { error } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/webdriver/Errors.sys.mjs"
 );
-const { Command, Message, Response } = ChromeUtils.import(
-  "chrome://remote/content/marionette/message.js"
+const { Command, Message, Response } = ChromeUtils.importESModule(
+  "chrome://remote/content/marionette/message.sys.mjs"
 );
 
 add_test(function test_Message_Origin() {

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { cookie } = ChromeUtils.import(
-  "chrome://remote/content/marionette/cookie.js"
+const { cookie } = ChromeUtils.importESModule(
+  "chrome://remote/content/marionette/cookie.sys.mjs"
 );
 
 /* eslint-disable mozilla/use-chromeutils-generateqi */

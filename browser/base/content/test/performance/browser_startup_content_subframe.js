@@ -71,7 +71,7 @@ const intermittently_loaded_scripts = {
     "resource://gre/actors/CookieBannerChild.jsm",
 
     // Test related
-    "chrome://remote/content/marionette/actors/MarionetteEventsChild.jsm",
+    "chrome://remote/content/marionette/actors/MarionetteEventsChild.sys.mjs",
     "chrome://remote/content/shared/Log.sys.mjs",
     "resource://testing-common/BrowserTestUtilsChild.jsm",
     "resource://testing-common/ContentEventListenerChild.jsm",

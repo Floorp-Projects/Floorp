@@ -1,5 +1,5 @@
-const { Context } = ChromeUtils.import(
-  "chrome://remote/content/marionette/browser.js"
+const { Context } = ChromeUtils.importESModule(
+  "chrome://remote/content/marionette/browser.sys.mjs"
 );
 
 add_test(function test_Context() {

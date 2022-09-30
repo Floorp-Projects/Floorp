@@ -8,7 +8,9 @@ const {
   WebFrame,
   WebReference,
   WebWindow,
-} = ChromeUtils.import("chrome://remote/content/marionette/element.js");
+} = ChromeUtils.importESModule(
+  "chrome://remote/content/marionette/element.sys.mjs"
+);
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";

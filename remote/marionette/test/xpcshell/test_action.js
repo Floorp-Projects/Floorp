@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { action } = ChromeUtils.import(
-  "chrome://remote/content/marionette/action.js"
+const { action } = ChromeUtils.importESModule(
+  "chrome://remote/content/marionette/action.sys.mjs"
 );
 
 const XHTMLNS = "http://www.w3.org/1999/xhtml";

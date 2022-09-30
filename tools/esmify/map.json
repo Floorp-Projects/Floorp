@@ -123,61 +123,6 @@
     "remote/cdp/targets/Target.jsm",
   "chrome://remote/content/cdp/targets/TargetList.jsm":
     "remote/cdp/targets/TargetList.jsm",
-  "chrome://remote/content/marionette/PerTestCoverageUtils.jsm":
-    "tools/code-coverage/PerTestCoverageUtils.jsm",
-  "chrome://remote/content/marionette/accessibility.js":
-    "remote/marionette/accessibility.js",
-  "chrome://remote/content/marionette/action.js": "remote/marionette/action.js",
-  "chrome://remote/content/marionette/actors/MarionetteCommandsChild.jsm":
-    "remote/marionette/actors/MarionetteCommandsChild.jsm",
-  "chrome://remote/content/marionette/actors/MarionetteCommandsParent.jsm":
-    "remote/marionette/actors/MarionetteCommandsParent.jsm",
-  "chrome://remote/content/marionette/actors/MarionetteEventsChild.jsm":
-    "remote/marionette/actors/MarionetteEventsChild.jsm",
-  "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm":
-    "remote/marionette/actors/MarionetteEventsParent.jsm",
-  "chrome://remote/content/marionette/actors/MarionetteReftestChild.jsm":
-    "remote/marionette/actors/MarionetteReftestChild.jsm",
-  "chrome://remote/content/marionette/actors/MarionetteReftestParent.jsm":
-    "remote/marionette/actors/MarionetteReftestParent.jsm",
-  "chrome://remote/content/marionette/addon.js": "remote/marionette/addon.js",
-  "chrome://remote/content/marionette/atom.js": "remote/marionette/atom.js",
-  "chrome://remote/content/marionette/browser.js":
-    "remote/marionette/browser.js",
-  "chrome://remote/content/marionette/capture.js":
-    "remote/marionette/capture.js",
-  "chrome://remote/content/marionette/cert.js": "remote/marionette/cert.js",
-  "chrome://remote/content/marionette/cookie.js": "remote/marionette/cookie.js",
-  "chrome://remote/content/marionette/dom.js": "remote/marionette/dom.js",
-  "chrome://remote/content/marionette/driver.js": "remote/marionette/driver.js",
-  "chrome://remote/content/marionette/element.js":
-    "remote/marionette/element.js",
-  "chrome://remote/content/marionette/evaluate.js":
-    "remote/marionette/evaluate.js",
-  "chrome://remote/content/marionette/event.js": "remote/marionette/event.js",
-  "chrome://remote/content/marionette/interaction.js":
-    "remote/marionette/interaction.js",
-  "chrome://remote/content/marionette/l10n.js": "remote/marionette/l10n.js",
-  "chrome://remote/content/marionette/legacyaction.js":
-    "remote/marionette/legacyaction.js",
-  "chrome://remote/content/marionette/message.js":
-    "remote/marionette/message.js",
-  "chrome://remote/content/marionette/modal.js": "remote/marionette/modal.js",
-  "chrome://remote/content/marionette/navigate.js":
-    "remote/marionette/navigate.js",
-  "chrome://remote/content/marionette/packets.js":
-    "remote/marionette/packets.js",
-  "chrome://remote/content/marionette/permissions.js":
-    "remote/marionette/permissions.js",
-  "chrome://remote/content/marionette/prefs.js": "remote/marionette/prefs.js",
-  "chrome://remote/content/marionette/reftest.js":
-    "remote/marionette/reftest.js",
-  "chrome://remote/content/marionette/server.js": "remote/marionette/server.js",
-  "chrome://remote/content/marionette/stream-utils.js":
-    "remote/marionette/stream-utils.js",
-  "chrome://remote/content/marionette/sync.js": "remote/marionette/sync.js",
-  "chrome://remote/content/marionette/transport.js":
-    "remote/marionette/transport.js",
   "chrome://remote/content/webdriver-bidi/NewSessionHandler.jsm":
     "remote/webdriver-bidi/NewSessionHandler.jsm",
   "chrome://remote/content/webdriver-bidi/RemoteValue.jsm":

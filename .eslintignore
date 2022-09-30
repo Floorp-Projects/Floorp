@@ -166,7 +166,7 @@ python/
 # These are (mainly) imported code that we don't want to lint to make imports easier.
 remote/cdp/Protocol.jsm
 remote/cdp/test/browser/chrome-remote-interface.js
-remote/marionette/atom.js
+remote/marionette/atom.sys.mjs
 
 # This file explicitly has a syntax error and cannot be parsed by eslint.
 remote/shared/messagehandler/test/browser/resources/modules/root/invalid.sys.mjs
