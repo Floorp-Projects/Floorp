@@ -214,6 +214,7 @@ Object.defineProperty(this, "TEST_UNPACKED", {
 
 const promiseAddonByID = AddonManager.getAddonByID;
 const promiseAddonsByIDs = AddonManager.getAddonsByIDs;
+const promiseAddonsByTypes = AddonManager.getAddonsByTypes;
 
 var gPort = null;
 
