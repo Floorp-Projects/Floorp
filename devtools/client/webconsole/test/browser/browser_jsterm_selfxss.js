@@ -12,7 +12,8 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/widget/clipboardhelper;1",
   "nsIClipboardHelper"
 );
-const WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
+const WebConsoleUtils = require("resource://devtools/client/webconsole/utils.js")
+  .Utils;
 const stringToCopy = "EvilCommand";
 
 add_task(async function() {

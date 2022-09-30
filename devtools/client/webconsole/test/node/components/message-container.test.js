@@ -5,24 +5,26 @@
 // Test utils.
 const expect = require("expect");
 const { render } = require("enzyme");
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 
 // Components under test.
 let {
   MessageContainer,
   getMessageComponent,
-} = require("devtools/client/webconsole/components/Output/MessageContainer");
+} = require("resource://devtools/client/webconsole/components/Output/MessageContainer.js");
 MessageContainer = createFactory(MessageContainer);
-const ConsoleApiCall = require("devtools/client/webconsole/components/Output/message-types/ConsoleApiCall");
-const CSSWarning = require("devtools/client/webconsole/components/Output/message-types/CSSWarning");
-const EvaluationResult = require("devtools/client/webconsole/components/Output/message-types/EvaluationResult");
-const PageError = require("devtools/client/webconsole/components/Output/message-types/PageError");
+const ConsoleApiCall = require("resource://devtools/client/webconsole/components/Output/message-types/ConsoleApiCall.js");
+const CSSWarning = require("resource://devtools/client/webconsole/components/Output/message-types/CSSWarning.js");
+const EvaluationResult = require("resource://devtools/client/webconsole/components/Output/message-types/EvaluationResult.js");
+const PageError = require("resource://devtools/client/webconsole/components/Output/message-types/PageError.js");
 
 // Test fakes.
 const {
   stubPreparedMessages,
-} = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
-const serviceContainer = require("devtools/client/webconsole/test/node/fixtures/serviceContainer");
+} = require("resource://devtools/client/webconsole/test/node/fixtures/stubs/index.js");
+const serviceContainer = require("resource://devtools/client/webconsole/test/node/fixtures/serviceContainer.js");
 
 describe("MessageContainer component:", () => {
   it("pipes data to children as expected", () => {

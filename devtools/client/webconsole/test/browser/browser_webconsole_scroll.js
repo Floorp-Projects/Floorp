@@ -18,7 +18,9 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html><p>Web Console tes
   </script>
 `;
 
-const { MESSAGE_SOURCE } = require("devtools/client/webconsole/constants");
+const {
+  MESSAGE_SOURCE,
+} = require("resource://devtools/client/webconsole/constants.js");
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

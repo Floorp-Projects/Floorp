@@ -17,7 +17,7 @@ const {
   REVERSE_SEARCH_NEXT,
   SET_TERMINAL_INPUT,
   SET_TERMINAL_EAGER_RESULT,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 /**
  * Create default initial state for this reducer.

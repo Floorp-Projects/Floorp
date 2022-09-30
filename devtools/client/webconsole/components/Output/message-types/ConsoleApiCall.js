@@ -5,20 +5,22 @@
 "use strict";
 
 // React & Redux
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const GripMessageBody = require("devtools/client/webconsole/components/Output/GripMessageBody");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const GripMessageBody = require("resource://devtools/client/webconsole/components/Output/GripMessageBody.js");
 const ConsoleTable = createFactory(
-  require("devtools/client/webconsole/components/Output/ConsoleTable")
+  require("resource://devtools/client/webconsole/components/Output/ConsoleTable.js")
 );
 const {
   isGroupType,
   l10n,
-} = require("devtools/client/webconsole/utils/messages");
+} = require("resource://devtools/client/webconsole/utils/messages.js");
 
 const Message = createFactory(
-  require("devtools/client/webconsole/components/Output/Message")
+  require("resource://devtools/client/webconsole/components/Output/Message.js")
 );
 
 ConsoleApiCall.displayName = "ConsoleApiCall";

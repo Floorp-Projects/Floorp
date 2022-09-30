@@ -5,11 +5,13 @@
 
 const expect = require("expect");
 
-const actions = require("devtools/client/webconsole/actions/index");
+const actions = require("resource://devtools/client/webconsole/actions/index.js");
 const {
   getVisibleMessages,
-} = require("devtools/client/webconsole/selectors/messages");
-const { setupStore } = require("devtools/client/webconsole/test/node/helpers");
+} = require("resource://devtools/client/webconsole/selectors/messages.js");
+const {
+  setupStore,
+} = require("resource://devtools/client/webconsole/test/node/helpers.js");
 
 describe("Searching in grips", () => {
   let store;

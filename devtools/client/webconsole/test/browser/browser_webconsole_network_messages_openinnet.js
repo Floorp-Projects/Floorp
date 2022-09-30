@@ -93,7 +93,7 @@ add_task(async function task() {
 
 const {
   getSortedRequests,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 
 function waitForRequestData(store, fields, i) {
   return waitUntil(() => {

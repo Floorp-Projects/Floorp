@@ -7,7 +7,7 @@
 const {
   APPEND_NOTIFICATION,
   REMOVE_NOTIFICATION,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 /**
  * Append a notification into JSTerm notification list.

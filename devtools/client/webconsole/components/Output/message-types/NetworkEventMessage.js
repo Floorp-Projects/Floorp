@@ -8,17 +8,17 @@
 const {
   createFactory,
   createElement,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const Message = createFactory(
-  require("devtools/client/webconsole/components/Output/Message")
+  require("resource://devtools/client/webconsole/components/Output/Message.js")
 );
-const actions = require("devtools/client/webconsole/actions/index");
+const actions = require("resource://devtools/client/webconsole/actions/index.js");
 const {
   isMessageNetworkError,
   l10n,
-} = require("devtools/client/webconsole/utils/messages");
+} = require("resource://devtools/client/webconsole/utils/messages.js");
 
 loader.lazyRequireGetter(
   this,
@@ -27,8 +27,10 @@ loader.lazyRequireGetter(
 );
 const {
   getHTTPStatusCodeURL,
-} = require("devtools/client/netmonitor/src/utils/doc-utils");
-const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
+} = require("resource://devtools/client/netmonitor/src/utils/doc-utils.js");
+const {
+  getUnicodeUrl,
+} = require("resource://devtools/client/shared/unicode-url.js");
 loader.lazyRequireGetter(
   this,
   "BLOCKED_REASON_MESSAGES",

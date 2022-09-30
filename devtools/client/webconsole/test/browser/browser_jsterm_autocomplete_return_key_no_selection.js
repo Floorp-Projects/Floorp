@@ -16,7 +16,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
 
 const {
   getHistoryEntries,
-} = require("devtools/client/webconsole/selectors/history");
+} = require("resource://devtools/client/webconsole/selectors/history.js");
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

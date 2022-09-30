@@ -13,20 +13,20 @@ const {
   getGroupsById,
   getMutableMessagesById,
   getVisibleMessages,
-} = require("devtools/client/webconsole/selectors/messages");
+} = require("resource://devtools/client/webconsole/selectors/messages.js");
 const {
   getFirstMessage,
   getLastMessage,
   getPrivatePacket,
   setupActions,
   setupStore,
-} = require("devtools/client/webconsole/test/node/helpers");
+} = require("resource://devtools/client/webconsole/test/node/helpers.js");
 const {
   stubPackets,
-} = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
+} = require("resource://devtools/client/webconsole/test/node/fixtures/stubs/index.js");
 const {
   CSS_MESSAGE_ADD_MATCHING_ELEMENTS,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 const expect = require("expect");
 

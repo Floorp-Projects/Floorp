@@ -8,7 +8,7 @@ const {
   INITIALIZE,
   FILTER_TOGGLE,
   FILTERS,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 /**
  * This is responsible for ensuring that error reporting is enabled if the CSS

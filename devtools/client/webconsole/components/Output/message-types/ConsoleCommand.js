@@ -8,11 +8,11 @@
 const {
   createElement,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { ELLIPSIS } = require("devtools/shared/l10n");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const { ELLIPSIS } = require("resource://devtools/shared/l10n.js");
 const Message = createFactory(
-  require("devtools/client/webconsole/components/Output/Message")
+  require("resource://devtools/client/webconsole/components/Output/Message.js")
 );
 
 ConsoleCommand.displayName = "ConsoleCommand";

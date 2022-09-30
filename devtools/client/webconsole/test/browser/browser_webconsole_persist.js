@@ -18,10 +18,12 @@ registerCleanupFunction(() => {
 
 const INITIAL_LOGS_NUMBER = 5;
 
-const { MESSAGE_TYPE } = require("devtools/client/webconsole/constants");
+const {
+  MESSAGE_TYPE,
+} = require("resource://devtools/client/webconsole/constants.js");
 const {
   WILL_NAVIGATE_TIME_SHIFT,
-} = require("devtools/server/actors/webconsole/listeners/document-events");
+} = require("resource://devtools/server/actors/webconsole/listeners/document-events.js");
 
 async function logAndAssertInitialMessages(hud) {
   await SpecialPowers.spawn(

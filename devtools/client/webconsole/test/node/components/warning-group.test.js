@@ -7,21 +7,23 @@ const expect = require("expect");
 const { render } = require("enzyme");
 
 // Components under test.
-const WarningGroup = require("devtools/client/webconsole/components/Output/message-types/WarningGroup");
+const WarningGroup = require("resource://devtools/client/webconsole/components/Output/message-types/WarningGroup.js");
 const {
   MESSAGE_SOURCE,
   MESSAGE_TYPE,
-} = require("devtools/client/webconsole/constants");
-const { ConsoleMessage } = require("devtools/client/webconsole/types");
+} = require("resource://devtools/client/webconsole/constants.js");
+const {
+  ConsoleMessage,
+} = require("resource://devtools/client/webconsole/types.js");
 const {
   createWarningGroupMessage,
-} = require("devtools/client/webconsole/utils/messages");
+} = require("resource://devtools/client/webconsole/utils/messages.js");
 
 // Test fakes.
 const {
   stubPreparedMessages,
-} = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
-const serviceContainer = require("devtools/client/webconsole/test/node/fixtures/serviceContainer");
+} = require("resource://devtools/client/webconsole/test/node/fixtures/stubs/index.js");
+const serviceContainer = require("resource://devtools/client/webconsole/test/node/fixtures/serviceContainer.js");
 const mockMessage = ConsoleMessage({
   messageText: "this is a warning group",
   source: MESSAGE_SOURCE.CONSOLE_FRONTEND,
@@ -41,7 +43,7 @@ describe("WarningGroup component:", () => {
 
     const {
       timestampString,
-    } = require("devtools/client/webconsole/utils/l10n");
+    } = require("resource://devtools/client/webconsole/utils/l10n.js");
     expect(wrapper.find(".timestamp").text()).toBe(
       timestampString(mockMessage.timeStamp)
     );

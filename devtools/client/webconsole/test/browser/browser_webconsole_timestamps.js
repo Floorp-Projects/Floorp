@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { PrefObserver } = require("devtools/client/shared/prefs");
+const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
 
 const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
   Web Console test for bug 1307871 - preference for toggling timestamps in messages`;

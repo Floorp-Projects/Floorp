@@ -5,26 +5,27 @@
 "use strict";
 
 // React
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   MESSAGE_TYPE,
   JSTERM_COMMANDS,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 const {
   cleanupStyle,
-} = require("devtools/client/shared/components/reps/reps/rep-utils");
+} = require("resource://devtools/client/shared/components/reps/reps/rep-utils.js");
 const {
   getObjectInspector,
-} = require("devtools/client/webconsole/utils/object-inspector");
-const actions = require("devtools/client/webconsole/actions/index");
+} = require("resource://devtools/client/webconsole/utils/object-inspector.js");
+const actions = require("resource://devtools/client/webconsole/actions/index.js");
 
 loader.lazyGetter(this, "objectInspector", function() {
-  return require("devtools/client/shared/components/reps/index")
+  return require("resource://devtools/client/shared/components/reps/index.js")
     .objectInspector;
 });
 
 loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/index").MODE;
+  return require("resource://devtools/client/shared/components/reps/index.js")
+    .MODE;
 });
 
 GripMessageBody.displayName = "GripMessageBody";

@@ -4,21 +4,27 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 const {
   getTerminalEagerResult,
-} = require("devtools/client/webconsole/selectors/history");
+} = require("resource://devtools/client/webconsole/selectors/history.js");
 
-const actions = require("devtools/client/webconsole/actions/index");
+const actions = require("resource://devtools/client/webconsole/actions/index.js");
 
 loader.lazyGetter(this, "REPS", function() {
-  return require("devtools/client/shared/components/reps/index").REPS;
+  return require("resource://devtools/client/shared/components/reps/index.js")
+    .REPS;
 });
 loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/index").MODE;
+  return require("resource://devtools/client/shared/components/reps/index.js")
+    .MODE;
 });
 loader.lazyRequireGetter(
   this,

@@ -14,7 +14,7 @@ const {
   REVERSE_SEARCH_INPUT_TOGGLE,
   REVERSE_SEARCH_NEXT,
   REVERSE_SEARCH_BACK,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 /**
  * Event telemetry middleware is responsible for logging specific events to telemetry.

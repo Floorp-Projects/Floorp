@@ -5,16 +5,20 @@
 "use strict";
 
 // React & Redux
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const Message = createFactory(
-  require("devtools/client/webconsole/components/Output/Message")
+  require("resource://devtools/client/webconsole/components/Output/Message.js")
 );
 
-const { PluralForm } = require("devtools/shared/plural-form");
-const { l10n } = require("devtools/client/webconsole/utils/messages");
+const { PluralForm } = require("resource://devtools/shared/plural-form.js");
+const {
+  l10n,
+} = require("resource://devtools/client/webconsole/utils/messages.js");
 const messageCountTooltip = l10n.getStr(
   "webconsole.warningGroup.messageCount.tooltip"
 );

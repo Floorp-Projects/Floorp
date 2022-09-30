@@ -9,12 +9,12 @@ const {
   AUTOCOMPLETE_DATA_RECEIVE,
   AUTOCOMPLETE_PENDING_REQUEST,
   AUTOCOMPLETE_RETRIEVE_FROM_CACHE,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 const {
   analyzeInputString,
   shouldInputBeAutocompleted,
-} = require("devtools/shared/webconsole/analyze-input-string");
+} = require("resource://devtools/shared/webconsole/analyze-input-string.js");
 
 /**
  * Update the data used for the autocomplete popup in the console input (JsTerm).

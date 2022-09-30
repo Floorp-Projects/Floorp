@@ -7,13 +7,13 @@
 const {
   prepareMessage,
   getNaturalOrder,
-} = require("devtools/client/webconsole/utils/messages");
+} = require("resource://devtools/client/webconsole/utils/messages.js");
 const {
   IdGenerator,
-} = require("devtools/client/webconsole/utils/id-generator");
+} = require("resource://devtools/client/webconsole/utils/id-generator.js");
 const {
   batchActions,
-} = require("devtools/client/shared/redux/middleware/debounce");
+} = require("resource://devtools/client/shared/redux/middleware/debounce.js");
 
 const {
   CSS_MESSAGE_ADD_MATCHING_ELEMENTS,
@@ -28,7 +28,7 @@ const {
   NETWORK_UPDATES_REQUEST,
   PRIVATE_MESSAGES_CLEAR,
   TARGET_MESSAGES_REMOVE,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 const defaultIdGenerator = new IdGenerator();
 

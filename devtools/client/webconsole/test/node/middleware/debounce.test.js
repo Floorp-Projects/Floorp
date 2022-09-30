@@ -7,7 +7,7 @@ const expect = require("expect");
 
 const {
   debounceActions,
-} = require("devtools/client/shared/redux/middleware/debounce");
+} = require("resource://devtools/client/shared/redux/middleware/debounce.js");
 
 describe("Debounce Middleware", () => {
   let nextArgs = [];

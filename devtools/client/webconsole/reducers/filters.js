@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const constants = require("devtools/client/webconsole/constants");
+const constants = require("resource://devtools/client/webconsole/constants.js");
 
 const FilterState = overrides =>
   Object.freeze(cloneState(constants.DEFAULT_FILTERS_VALUES, overrides));

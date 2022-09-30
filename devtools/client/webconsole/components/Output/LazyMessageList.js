@@ -34,7 +34,7 @@ const {
   Component,
   createElement,
   createRef,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 
 loader.lazyRequireGetter(
   this,

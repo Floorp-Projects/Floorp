@@ -11,7 +11,7 @@ const TEST_URI =
   "test/browser/test-console-group.html";
 const {
   INDENT_WIDTH,
-} = require("devtools/client/webconsole/components/Output/MessageIndent");
+} = require("resource://devtools/client/webconsole/components/Output/MessageIndent.js");
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

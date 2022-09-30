@@ -3,11 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 const GripMessageBody = createFactory(
-  require("devtools/client/webconsole/components/Output/GripMessageBody")
+  require("resource://devtools/client/webconsole/components/Output/GripMessageBody.js")
 );
 
 loader.lazyRequireGetter(
@@ -17,11 +19,12 @@ loader.lazyRequireGetter(
 );
 
 loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/index").MODE;
+  return require("resource://devtools/client/shared/components/reps/index.js")
+    .MODE;
 });
 
 const Message = createFactory(
-  require("devtools/client/webconsole/components/Output/Message")
+  require("resource://devtools/client/webconsole/components/Output/Message.js")
 );
 
 SimpleTable.displayName = "SimpleTable";

@@ -13,7 +13,7 @@ const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html><script>
   throw "Visit \u201c${url1}\u201d or \u201c${url2}\u201d to get more " +
         "information on this error.";
 </script>`;
-const { ELLIPSIS } = require("devtools/shared/l10n");
+const { ELLIPSIS } = require("resource://devtools/shared/l10n.js");
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

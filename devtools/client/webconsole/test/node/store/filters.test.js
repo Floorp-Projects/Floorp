@@ -5,26 +5,33 @@
 
 const expect = require("expect");
 
-const actions = require("devtools/client/webconsole/actions/index");
-const { messagesAdd } = require("devtools/client/webconsole/actions/index");
-const { ConsoleCommand } = require("devtools/client/webconsole/types");
+const actions = require("resource://devtools/client/webconsole/actions/index.js");
+const {
+  messagesAdd,
+} = require("resource://devtools/client/webconsole/actions/index.js");
+const {
+  ConsoleCommand,
+} = require("resource://devtools/client/webconsole/types.js");
 const {
   getVisibleMessages,
-} = require("devtools/client/webconsole/selectors/messages");
+} = require("resource://devtools/client/webconsole/selectors/messages.js");
 const {
   getAllFilters,
-} = require("devtools/client/webconsole/selectors/filters");
+} = require("resource://devtools/client/webconsole/selectors/filters.js");
 const {
   setupStore,
   getFiltersPrefs,
-} = require("devtools/client/webconsole/test/node/helpers");
-const { FILTERS, PREFS } = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/test/node/helpers.js");
+const {
+  FILTERS,
+  PREFS,
+} = require("resource://devtools/client/webconsole/constants.js");
 const {
   stubPackets,
-} = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
+} = require("resource://devtools/client/webconsole/test/node/fixtures/stubs/index.js");
 const {
   stubPreparedMessages,
-} = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
+} = require("resource://devtools/client/webconsole/test/node/fixtures/stubs/index.js");
 
 describe("Filtering", () => {
   let store;

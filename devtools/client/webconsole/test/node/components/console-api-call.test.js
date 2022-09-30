@@ -8,29 +8,35 @@ const { render, mount } = require("enzyme");
 const sinon = require("sinon");
 
 // React
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const Provider = createFactory(require("react-redux").Provider);
-const { setupStore } = require("devtools/client/webconsole/test/node/helpers");
+const {
+  setupStore,
+} = require("resource://devtools/client/webconsole/test/node/helpers.js");
 
 // Components under test.
 const ConsoleApiCall = createFactory(
-  require("devtools/client/webconsole/components/Output/message-types/ConsoleApiCall")
+  require("resource://devtools/client/webconsole/components/Output/message-types/ConsoleApiCall.js")
 );
 const {
   MESSAGE_OPEN,
   MESSAGE_CLOSE,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 const {
   INDENT_WIDTH,
-} = require("devtools/client/webconsole/components/Output/MessageIndent");
-const { prepareMessage } = require("devtools/client/webconsole/utils/messages");
+} = require("resource://devtools/client/webconsole/components/Output/MessageIndent.js");
+const {
+  prepareMessage,
+} = require("resource://devtools/client/webconsole/utils/messages.js");
 
 // Test fakes.
 const {
   stubPreparedMessages,
   stubPackets,
-} = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
-const serviceContainer = require("devtools/client/webconsole/test/node/fixtures/serviceContainer");
+} = require("resource://devtools/client/webconsole/test/node/fixtures/stubs/index.js");
+const serviceContainer = require("resource://devtools/client/webconsole/test/node/fixtures/serviceContainer.js");
 
 describe("ConsoleAPICall component:", () => {
   describe("console.log", () => {
@@ -195,7 +201,7 @@ describe("ConsoleAPICall component:", () => {
       );
       const {
         timestampString,
-      } = require("devtools/client/webconsole/utils/l10n");
+      } = require("resource://devtools/client/webconsole/utils/l10n.js");
 
       expect(wrapper.find(".timestamp").text()).toBe(
         timestampString(message.timeStamp)

@@ -6,7 +6,7 @@
 
 const {
   BATCH_ACTIONS,
-} = require("devtools/client/shared/redux/middleware/debounce");
+} = require("resource://devtools/client/shared/redux/middleware/debounce.js");
 
 /**
  * A enhancer for the store to handle batched actions.

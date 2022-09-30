@@ -4,9 +4,15 @@
 
 "use strict";
 
-const { getAllPrefs } = require("devtools/client/webconsole/selectors/prefs");
-const { getAllUi } = require("devtools/client/webconsole/selectors/ui");
-const { getMessage } = require("devtools/client/webconsole/selectors/messages");
+const {
+  getAllPrefs,
+} = require("resource://devtools/client/webconsole/selectors/prefs.js");
+const {
+  getAllUi,
+} = require("resource://devtools/client/webconsole/selectors/ui.js");
+const {
+  getMessage,
+} = require("resource://devtools/client/webconsole/selectors/messages.js");
 
 const {
   INITIALIZE,
@@ -27,7 +33,7 @@ const {
   EAGER_EVALUATION_TOGGLE,
   AUTOCOMPLETE_TOGGLE,
   ENABLE_NETWORK_MONITORING,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 function openLink(url, e) {
   return ({ hud }) => {

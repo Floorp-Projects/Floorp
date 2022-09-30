@@ -7,13 +7,15 @@ const {
   Component,
   createElement,
   createRef,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
-const { initialize } = require("devtools/client/webconsole/actions/ui");
-const LazyMessageList = require("devtools/client/webconsole/components/Output/LazyMessageList");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
+const {
+  initialize,
+} = require("resource://devtools/client/webconsole/actions/ui.js");
+const LazyMessageList = require("resource://devtools/client/webconsole/components/Output/LazyMessageList.js");
 
 const {
   getMutableMessagesById,
@@ -26,7 +28,7 @@ const {
   getAllRepeatById,
   getAllWarningGroupsById,
   isMessageInWarningGroup,
-} = require("devtools/client/webconsole/selectors/messages");
+} = require("resource://devtools/client/webconsole/selectors/messages.js");
 
 loader.lazyRequireGetter(
   this,
@@ -41,7 +43,9 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");
 
-const { MESSAGE_TYPE } = require("devtools/client/webconsole/constants");
+const {
+  MESSAGE_TYPE,
+} = require("resource://devtools/client/webconsole/constants.js");
 
 class ConsoleOutput extends Component {
   static get propTypes() {

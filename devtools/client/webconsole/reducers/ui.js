@@ -21,9 +21,11 @@ const {
   EDITOR_PRETTY_PRINT,
   EDITOR_SET_WIDTH,
   ENABLE_NETWORK_MONITORING,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
-const { PANELS } = require("devtools/client/netmonitor/src/constants");
+const {
+  PANELS,
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 const UiState = overrides =>
   Object.freeze(

@@ -8,7 +8,9 @@
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-batching.html";
-const { l10n } = require("devtools/client/webconsole/utils/messages");
+const {
+  l10n,
+} = require("resource://devtools/client/webconsole/utils/messages.js");
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

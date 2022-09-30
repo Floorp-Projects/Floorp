@@ -9,7 +9,7 @@ const {
   MESSAGES_CLEAR,
   PRIVATE_MESSAGES_CLEAR,
   FRONTS_TO_RELEASE_CLEAR,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 /**
  * This enhancer is responsible for releasing actors on the backend.

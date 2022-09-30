@@ -8,26 +8,28 @@ const { render, mount } = require("enzyme");
 const sinon = require("sinon");
 
 // React
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const Provider = createFactory(require("react-redux").Provider);
 const {
   formatErrorTextWithCausedBy,
   setupStore,
-} = require("devtools/client/webconsole/test/node/helpers");
+} = require("resource://devtools/client/webconsole/test/node/helpers.js");
 
 // Components under test.
 const EvaluationResult = createFactory(
-  require("devtools/client/webconsole/components/Output/message-types/EvaluationResult")
+  require("resource://devtools/client/webconsole/components/Output/message-types/EvaluationResult.js")
 );
 const {
   INDENT_WIDTH,
-} = require("devtools/client/webconsole/components/Output/MessageIndent");
+} = require("resource://devtools/client/webconsole/components/Output/MessageIndent.js");
 
 // Test fakes.
 const {
   stubPreparedMessages,
-} = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
-const serviceContainer = require("devtools/client/webconsole/test/node/fixtures/serviceContainer");
+} = require("resource://devtools/client/webconsole/test/node/fixtures/stubs/index.js");
+const serviceContainer = require("resource://devtools/client/webconsole/test/node/fixtures/serviceContainer.js");
 
 describe("EvaluationResult component:", () => {
   it.skip("renders a grip result", () => {
@@ -474,7 +476,7 @@ describe("EvaluationResult component:", () => {
     );
     const {
       timestampString,
-    } = require("devtools/client/webconsole/utils/l10n");
+    } = require("resource://devtools/client/webconsole/utils/l10n.js");
 
     expect(wrapper.find(".timestamp").text()).toBe(
       timestampString(message.timeStamp)

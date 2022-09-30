@@ -7,7 +7,7 @@
 const {
   HISTORY_BACK,
   HISTORY_FORWARD,
-} = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/constants.js");
 
 function getHistory(state) {
   return state.history;

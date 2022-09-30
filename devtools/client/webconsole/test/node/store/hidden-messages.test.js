@@ -5,15 +5,19 @@
 
 const expect = require("expect");
 
-const actions = require("devtools/client/webconsole/actions/index");
+const actions = require("resource://devtools/client/webconsole/actions/index.js");
 const {
   getFilteredMessagesCount,
-} = require("devtools/client/webconsole/selectors/messages");
-const { setupStore } = require("devtools/client/webconsole/test/node/helpers");
-const { FILTERS } = require("devtools/client/webconsole/constants");
+} = require("resource://devtools/client/webconsole/selectors/messages.js");
+const {
+  setupStore,
+} = require("resource://devtools/client/webconsole/test/node/helpers.js");
+const {
+  FILTERS,
+} = require("resource://devtools/client/webconsole/constants.js");
 const {
   stubPackets,
-} = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
+} = require("resource://devtools/client/webconsole/test/node/fixtures/stubs/index.js");
 
 describe("Filtering - Hidden messages", () => {
   let store;
