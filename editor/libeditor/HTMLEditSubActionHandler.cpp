@@ -8691,6 +8691,7 @@ HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction(
     const InitializeInsertingElement& aInitializer) {
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
+  const nsCOMPtr<nsIContent> childAtPointToInsert = aPointToInsert.GetChild();
   const SplitNodeResult splitNodeResult =
       MaybeSplitAncestorsForInsertWithTransaction(aTagName, aPointToInsert,
                                                   aEditingHost);
@@ -8707,9 +8708,12 @@ HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction(
 
   // If current handling node has been moved from the container by a
   // mutation event listener when we need to do something more for it,
-  // we should stop handling this action since we cannot handle each of
-  // a lot of edge cases.
-  if (NS_WARN_IF(aPointToInsert.HasChildMovedFromContainer())) {
+  // we should stop handling this action since we cannot handle each
+  // edge case.
+  if (childAtPointToInsert &&
+      NS_WARN_IF(!childAtPointToInsert->IsInclusiveDescendantOf(
+          splitNodeResult.DidSplit() ? splitNodeResult.GetNextContent()
+                                     : aPointToInsert.GetContainer()))) {
     return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
