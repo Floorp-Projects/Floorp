@@ -1055,6 +1055,18 @@ BasePrincipal::GetIsOriginPotentiallyTrustworthy(bool* aResult) {
 }
 
 NS_IMETHODIMP
+BasePrincipal::GetIsLoopbackHost(bool* aRes) {
+  *aRes = false;
+  nsAutoCString host;
+  nsresult rv = GetHost(host);
+  // Swallow potential failure as this method is infallible.
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  *aRes = nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(host);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 BasePrincipal::GetAboutModuleFlags(uint32_t* flags) {
   *flags = 0;
   nsCOMPtr<nsIURI> prinURI;
@@ -1135,13 +1147,6 @@ nsIPrincipal* BasePrincipal::PrincipalToInherit(nsIURI* aRequestedURI) {
     return As<ExpandedPrincipal>()->PrincipalToInherit(aRequestedURI);
   }
   return this;
-}
-
-bool BasePrincipal::IsLoopbackHost() {
-  nsAutoCString host;
-  nsresult rv = GetHost(host);
-  NS_ENSURE_SUCCESS(rv, false);
-  return nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(host);
 }
 
 already_AddRefed<BasePrincipal> BasePrincipal::CreateContentPrincipal(
