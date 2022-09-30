@@ -11,8 +11,10 @@ webidl Document;
 webidl Node;
 
 %{ C++
+#include "mozilla/Maybe.h"
 #include "nsTArray.h"
 #include "nsRect.h"
+#include "Units.h"
 
 class nsIWidget;
 class nsPresContext;
@@ -274,19 +276,25 @@ interface nsIContentViewer : nsISupports
   attribute boolean authorStyleDisabled;
 
   /**
-   * Requests the size of the content to the container.
-   */
-  void getContentSize(out long width, out long height);
-
-  /**
    * Returns the preferred width and height of the content, constrained to the
    * given maximum values. If either maxWidth or maxHeight is less than zero,
    * that dimension is not constrained.
    *
-   * All input and output values are in device pixels, rather than CSS pixels.
+   * All input and output values are in CSS pixels.
    */
-  void getContentSizeConstrained(in long maxWidth, in long maxHeight,
-                                 out long width, out long height);
+  void getContentSize(in long maxWidth, in long maxHeight,
+                      out long width, out long height);
+
+%{C++
+  mozilla::Maybe<mozilla::CSSIntSize> GetContentSize(int32_t aMaxWidth = 0, int32_t aMaxHeight = 0) {
+    int32_t w = 0;
+    int32_t h = 0;
+    if (NS_SUCCEEDED(GetContentSize(aMaxWidth, aMaxHeight, &w, &h))) {
+      return mozilla::Some(mozilla::CSSIntSize(w, h));
+    }
+    return mozilla::Nothing();
+  }
+%}
 
   [noscript, notxpcom] Encoding getReloadEncodingAndSource(out int32_t aSource);
   [noscript, notxpcom] void setReloadEncodingAndSource(in Encoding aEncoding, in int32_t aSource);
