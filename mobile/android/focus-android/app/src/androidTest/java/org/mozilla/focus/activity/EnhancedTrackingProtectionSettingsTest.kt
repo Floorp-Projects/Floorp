@@ -163,7 +163,6 @@ class EnhancedTrackingProtectionSettingsTest {
         }
     }
 
-    @Ignore
     @SmokeTest
     @Test
     fun blockSocialTrackersTest() {
