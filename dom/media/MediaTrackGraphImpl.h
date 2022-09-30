@@ -414,6 +414,10 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Queue audio (mix of track audio and silence for blocked intervals)
    * to the audio output track. Returns the number of frames played.
    */
+  struct TrackAndKey {
+    MediaTrack* mTrack;
+    void* mKey;
+  };
   struct TrackKeyAndVolume {
     MediaTrack* mTrack;
     void* mKey;
@@ -1045,5 +1049,17 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
 };
 
 }  // namespace mozilla
+
+template <>
+class nsDefaultComparator<mozilla::MediaTrackGraphImpl::TrackKeyAndVolume,
+                          mozilla::MediaTrackGraphImpl::TrackAndKey> {
+ public:
+  bool Equals(
+      const mozilla::MediaTrackGraphImpl::TrackKeyAndVolume& aElement,
+      const mozilla::MediaTrackGraphImpl::TrackAndKey& aTrackAndKey) const {
+    return aElement.mTrack == aTrackAndKey.mTrack &&
+           aElement.mKey == aTrackAndKey.mKey;
+  }
+};
 
 #endif /* MEDIATRACKGRAPHIMPL_H_ */
