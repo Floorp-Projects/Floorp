@@ -4,13 +4,13 @@
 
 "use strict";
 
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   ClientWrapper,
-} = require("devtools/client/aboutdebugging/src/modules/client-wrapper");
+} = require("resource://devtools/client/aboutdebugging/src/modules/client-wrapper.js");
 const {
   COMPATIBILITY_STATUS,
-} = require("devtools/client/shared/remote-debugging/version-checker");
+} = require("resource://devtools/client/shared/remote-debugging/version-checker.js");
 
 const runtimeInfo = {
   // device name which is running the runtime,

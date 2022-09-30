@@ -6,7 +6,7 @@
 
 const {
   TELEMETRY_RECORD,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
 /**
  * If a given event cannot be mapped to an existing action, use this action that will only

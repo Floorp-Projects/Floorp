@@ -27,17 +27,17 @@ const {
   SWITCH_PROFILER_CONTEXT,
   USB_RUNTIMES_SCAN_START,
   USB_RUNTIMES_SCAN_SUCCESS,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
-const NetworkLocationsModule = require("devtools/client/aboutdebugging/src/modules/network-locations");
+const NetworkLocationsModule = require("resource://devtools/client/aboutdebugging/src/modules/network-locations.js");
 const {
   adbAddon,
-} = require("devtools/client/shared/remote-debugging/adb/adb-addon");
+} = require("resource://devtools/client/shared/remote-debugging/adb/adb-addon.js");
 const {
   refreshUSBRuntimes,
-} = require("devtools/client/aboutdebugging/src/modules/usb-runtimes");
+} = require("resource://devtools/client/aboutdebugging/src/modules/usb-runtimes.js");
 
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
+const Actions = require("resource://devtools/client/aboutdebugging/src/actions/index.js");
 
 function selectPage(page, runtimeId) {
   return async ({ dispatch, getState }) => {

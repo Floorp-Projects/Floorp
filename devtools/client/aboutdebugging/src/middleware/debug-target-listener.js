@@ -9,11 +9,11 @@ const {
   EXTENSION_BGSCRIPT_STATUS_UPDATED,
   UNWATCH_RUNTIME_START,
   WATCH_RUNTIME_SUCCESS,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
+const Actions = require("resource://devtools/client/aboutdebugging/src/actions/index.js");
 
-const RootResourceCommand = require("devtools/shared/commands/root-resource/root-resource-command");
+const RootResourceCommand = require("resource://devtools/shared/commands/root-resource/root-resource-command.js");
 
 function debugTargetListenerMiddleware(store) {
   const onExtensionsUpdated = () => {

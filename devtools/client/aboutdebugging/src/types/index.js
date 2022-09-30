@@ -4,9 +4,9 @@
 
 "use strict";
 
-const debugTargetTypes = require("devtools/client/aboutdebugging/src/types/debug-target");
-const runtimeTypes = require("devtools/client/aboutdebugging/src/types/runtime");
-const uiTypes = require("devtools/client/aboutdebugging/src/types/ui");
+const debugTargetTypes = require("resource://devtools/client/aboutdebugging/src/types/debug-target.js");
+const runtimeTypes = require("resource://devtools/client/aboutdebugging/src/types/runtime.js");
+const uiTypes = require("resource://devtools/client/aboutdebugging/src/types/ui.js");
 
 module.exports = Object.assign(
   {},

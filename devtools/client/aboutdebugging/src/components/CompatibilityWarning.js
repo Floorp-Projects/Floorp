@@ -7,29 +7,29 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
 
 const Message = createFactory(
-  require("devtools/client/aboutdebugging/src/components/shared/Message")
+  require("resource://devtools/client/aboutdebugging/src/components/shared/Message.js")
 );
 
 const {
   MESSAGE_LEVEL,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 const {
   COMPATIBILITY_STATUS,
-} = require("devtools/client/shared/remote-debugging/version-checker");
+} = require("resource://devtools/client/shared/remote-debugging/version-checker.js");
 
 const TROUBLESHOOTING_URL =
   "https://firefox-source-docs.mozilla.org/devtools-user/about_colon_debugging/";
 const FENNEC_TROUBLESHOOTING_URL =
   "https://firefox-source-docs.mozilla.org/devtools-user/about_colon_debugging/index.html#connection-to-firefox-for-android-68";
 
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+const Types = require("resource://devtools/client/aboutdebugging/src/types/index.js");
 
 class CompatibilityWarning extends PureComponent {
   static get propTypes() {

@@ -39,7 +39,7 @@ async function openAboutDebuggingWithADB() {
 
   const {
     adbAddon,
-  } = require("devtools/client/shared/remote-debugging/adb/adb-addon");
+  } = require("resource://devtools/client/shared/remote-debugging/adb/adb-addon.js");
   adbAddon.install("internal");
   const usbStatusElement = document.querySelector(".qa-sidebar-usb-status");
   await waitUntil(() => usbStatusElement.textContent.includes("USB enabled"));

@@ -4,85 +4,87 @@
 
 "use strict";
 
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
 
 const CompatibilityWarning = createFactory(
-  require("devtools/client/aboutdebugging/src/components/CompatibilityWarning")
+  require("resource://devtools/client/aboutdebugging/src/components/CompatibilityWarning.js")
 );
 const DebugTargetPane = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/DebugTargetPane")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/DebugTargetPane.js")
 );
 const ExtensionDetail = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/ExtensionDetail")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/ExtensionDetail.js")
 );
 const InspectAction = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/InspectAction")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/InspectAction.js")
 );
 const ProfilerDialog = createFactory(
-  require("devtools/client/aboutdebugging/src/components/ProfilerDialog")
+  require("resource://devtools/client/aboutdebugging/src/components/ProfilerDialog.js")
 );
 const RuntimeActions = createFactory(
-  require("devtools/client/aboutdebugging/src/components/RuntimeActions")
+  require("resource://devtools/client/aboutdebugging/src/components/RuntimeActions.js")
 );
 const RuntimeInfo = createFactory(
-  require("devtools/client/aboutdebugging/src/components/RuntimeInfo")
+  require("resource://devtools/client/aboutdebugging/src/components/RuntimeInfo.js")
 );
 const ServiceWorkerAction = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/ServiceWorkerAction")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/ServiceWorkerAction.js")
 );
 const ServiceWorkerAdditionalActions = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/ServiceWorkerAdditionalActions")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/ServiceWorkerAdditionalActions.js")
 );
 const ServiceWorkersWarning = createFactory(
-  require("devtools/client/aboutdebugging/src/components/ServiceWorkersWarning")
+  require("resource://devtools/client/aboutdebugging/src/components/ServiceWorkersWarning.js")
 );
 const ProcessDetail = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/ProcessDetail")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/ProcessDetail.js")
 );
 const TabAction = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/TabAction")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/TabAction.js")
 );
 const TabDetail = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/TabDetail")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/TabDetail.js")
 );
 const TemporaryExtensionAdditionalActions = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/TemporaryExtensionAdditionalActions")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/TemporaryExtensionAdditionalActions.js")
 );
 const TemporaryExtensionDetail = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/TemporaryExtensionDetail")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/TemporaryExtensionDetail.js")
 );
 const TemporaryExtensionInstallSection = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/TemporaryExtensionInstallSection")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/TemporaryExtensionInstallSection.js")
 );
 const WorkerDetail = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/WorkerDetail")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/WorkerDetail.js")
 );
 
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
+const Actions = require("resource://devtools/client/aboutdebugging/src/actions/index.js");
 const {
   DEBUG_TARGETS,
   DEBUG_TARGET_PANE,
   PAGE_TYPES,
-} = require("devtools/client/aboutdebugging/src/constants");
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
+const Types = require("resource://devtools/client/aboutdebugging/src/types/index.js");
 
 const {
   getCurrentRuntimeDetails,
-} = require("devtools/client/aboutdebugging/src/modules/runtimes-state-helper");
+} = require("resource://devtools/client/aboutdebugging/src/modules/runtimes-state-helper.js");
 const {
   isSupportedDebugTargetPane,
   supportsTemporaryExtensionInstaller,
   supportsTemporaryExtensionAdditionalActions,
-} = require("devtools/client/aboutdebugging/src/modules/debug-target-support");
+} = require("resource://devtools/client/aboutdebugging/src/modules/debug-target-support.js");
 
 class RuntimePage extends PureComponent {
   static get propTypes() {

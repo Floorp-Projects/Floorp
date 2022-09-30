@@ -70,7 +70,7 @@ add_task(async function testLocalRuntime() {
 add_task(async function testRemoteRuntime() {
   const {
     remoteClientManager,
-  } = require("devtools/client/shared/remote-debugging/remote-client-manager");
+  } = require("resource://devtools/client/shared/remote-debugging/remote-client-manager.js");
 
   // enable USB devices mocks
   const mocks = new Mocks();

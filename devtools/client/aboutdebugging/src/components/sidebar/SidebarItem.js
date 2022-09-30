@@ -7,11 +7,11 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const Link = createFactory(
-  require("devtools/client/shared/vendor/react-router-dom").Link
+  require("resource://devtools/client/shared/vendor/react-router-dom.js").Link
 );
 
 /**

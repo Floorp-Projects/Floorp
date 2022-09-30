@@ -7,14 +7,14 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
 
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const Actions = require("resource://devtools/client/aboutdebugging/src/actions/index.js");
 
 class RefreshDevicesButton extends PureComponent {
   static get propTypes() {

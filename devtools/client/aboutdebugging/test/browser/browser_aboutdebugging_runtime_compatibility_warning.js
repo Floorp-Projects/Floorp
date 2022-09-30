@@ -15,7 +15,7 @@ const RECENT_DEVICE = "Recent Device";
 add_task(async function() {
   const {
     COMPATIBILITY_STATUS,
-  } = require("devtools/client/shared/remote-debugging/version-checker");
+  } = require("resource://devtools/client/shared/remote-debugging/version-checker.js");
   const {
     COMPATIBLE,
     TOO_OLD,

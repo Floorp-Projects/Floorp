@@ -7,7 +7,7 @@
 const {
   CONNECTION_TYPES,
   DEBUG_TARGET_TYPES,
-} = require("devtools/client/shared/remote-debugging/constants");
+} = require("resource://devtools/client/shared/remote-debugging/constants.js");
 
 const actionTypes = {
   ADB_ADDON_INSTALL_START: "ADB_ADDON_INSTALL_START",

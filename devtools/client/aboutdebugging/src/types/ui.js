@@ -4,14 +4,14 @@
 
 "use strict";
 
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   ADB_ADDON_STATES,
-} = require("devtools/client/shared/remote-debugging/adb/adb-addon");
+} = require("resource://devtools/client/shared/remote-debugging/adb/adb-addon.js");
 const {
   DEBUG_TARGET_PANE,
   PAGE_TYPES,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
 function makeCollapsibilitiesType(isRequired) {
   return (props, propName, componentName, _, propFullName) => {

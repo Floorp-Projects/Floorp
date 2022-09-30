@@ -7,26 +7,26 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
 
 const DetailsLog = createFactory(
-  require("devtools/client/aboutdebugging/src/components/shared/DetailsLog")
+  require("resource://devtools/client/aboutdebugging/src/components/shared/DetailsLog.js")
 );
 const Message = createFactory(
-  require("devtools/client/aboutdebugging/src/components/shared/Message")
+  require("resource://devtools/client/aboutdebugging/src/components/shared/Message.js")
 );
 const TemporaryExtensionInstaller = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/TemporaryExtensionInstaller")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/TemporaryExtensionInstaller.js")
 );
 
 const {
   MESSAGE_LEVEL,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
 /**
  * This component provides an installer and error message area for temporary extension.

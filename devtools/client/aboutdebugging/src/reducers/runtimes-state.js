@@ -16,15 +16,15 @@ const {
   REMOTE_RUNTIMES_UPDATED,
   SELECTED_RUNTIME_ID_UPDATED,
   THIS_FIREFOX_RUNTIME_CREATED,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
 const {
   findRuntimeById,
-} = require("devtools/client/aboutdebugging/src/modules/runtimes-state-helper");
+} = require("resource://devtools/client/aboutdebugging/src/modules/runtimes-state-helper.js");
 
 const {
   remoteClientManager,
-} = require("devtools/client/shared/remote-debugging/remote-client-manager");
+} = require("resource://devtools/client/shared/remote-debugging/remote-client-manager.js");
 
 // Map between known runtime types and nodes in the runtimes state.
 const TYPE_TO_RUNTIMES_KEY = {

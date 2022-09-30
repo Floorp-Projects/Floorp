@@ -19,7 +19,9 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const { RUNTIMES } = require("devtools/client/aboutdebugging/src/constants");
+const {
+  RUNTIMES,
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
 /**
  * This wrapper around the mocks used in about:debugging tests provides helpers to
@@ -99,7 +101,7 @@ class Mocks {
   createNetworkRuntime(host, runtimeInfo) {
     const {
       addNetworkLocation,
-    } = require("devtools/client/aboutdebugging/src/modules/network-locations");
+    } = require("resource://devtools/client/aboutdebugging/src/modules/network-locations.js");
     addNetworkLocation(host);
 
     // Add a valid client that can be returned for this particular runtime id.
@@ -119,7 +121,7 @@ class Mocks {
   removeNetworkRuntime(host) {
     const {
       removeNetworkLocation,
-    } = require("devtools/client/aboutdebugging/src/modules/network-locations");
+    } = require("resource://devtools/client/aboutdebugging/src/modules/network-locations.js");
     removeNetworkLocation(host);
 
     delete this._clients[RUNTIMES.NETWORK][host];
@@ -222,7 +224,7 @@ const silenceWorkerUpdates = function() {
   const {
     removeMockedModule,
     setMockedModule,
-  } = require("devtools/shared/loader/browser-loader-mocks");
+  } = require("resource://devtools/shared/loader/browser-loader-mocks.js");
 
   const mock = {
     WorkersListener: () => {
@@ -242,11 +244,15 @@ const silenceWorkerUpdates = function() {
 
 async function createLocalClientWrapper() {
   info("Create a local DevToolsClient");
-  const { DevToolsServer } = require("devtools/server/devtools-server");
-  const { DevToolsClient } = require("devtools/client/devtools-client");
+  const {
+    DevToolsServer,
+  } = require("resource://devtools/server/devtools-server.js");
+  const {
+    DevToolsClient,
+  } = require("resource://devtools/client/devtools-client.js");
   const {
     ClientWrapper,
-  } = require("devtools/client/aboutdebugging/src/modules/client-wrapper");
+  } = require("resource://devtools/client/aboutdebugging/src/modules/client-wrapper.js");
 
   DevToolsServer.init();
   DevToolsServer.registerAllActors();

@@ -7,17 +7,17 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
 
 const InspectAction = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/InspectAction")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/InspectAction.js")
 );
 
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+const Types = require("resource://devtools/client/aboutdebugging/src/types/index.js");
 
 /**
  * This component displays the inspect button for tabs.

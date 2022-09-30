@@ -7,26 +7,28 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
 
 const {
   getCurrentRuntimeDetails,
-} = require("devtools/client/aboutdebugging/src/modules/runtimes-state-helper");
+} = require("resource://devtools/client/aboutdebugging/src/modules/runtimes-state-helper.js");
 
 const InspectAction = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/InspectAction")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/InspectAction.js")
 );
 
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+const Types = require("resource://devtools/client/aboutdebugging/src/types/index.js");
 const {
   SERVICE_WORKER_STATUSES,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
 /**
  * This component displays buttons for service worker.

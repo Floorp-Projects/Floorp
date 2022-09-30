@@ -4,41 +4,44 @@
 
 "use strict";
 
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
 
 const Route = createFactory(
-  require("devtools/client/shared/vendor/react-router-dom").Route
+  require("resource://devtools/client/shared/vendor/react-router-dom.js").Route
 );
 const Switch = createFactory(
-  require("devtools/client/shared/vendor/react-router-dom").Switch
+  require("resource://devtools/client/shared/vendor/react-router-dom.js").Switch
 );
 const Redirect = createFactory(
-  require("devtools/client/shared/vendor/react-router-dom").Redirect
+  require("resource://devtools/client/shared/vendor/react-router-dom.js")
+    .Redirect
 );
 
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+const Types = require("resource://devtools/client/aboutdebugging/src/types/index.js");
 const {
   PAGE_TYPES,
   RUNTIMES,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
 const ConnectPage = createFactory(
-  require("devtools/client/aboutdebugging/src/components/connect/ConnectPage")
+  require("resource://devtools/client/aboutdebugging/src/components/connect/ConnectPage.js")
 );
 const RuntimePage = createFactory(
-  require("devtools/client/aboutdebugging/src/components/RuntimePage")
+  require("resource://devtools/client/aboutdebugging/src/components/RuntimePage.js")
 );
 const Sidebar = createFactory(
-  require("devtools/client/aboutdebugging/src/components/sidebar/Sidebar")
+  require("resource://devtools/client/aboutdebugging/src/components/sidebar/Sidebar.js")
 );
 
 class App extends PureComponent {

@@ -4,7 +4,7 @@
 
 const {
   parseFileUri,
-} = require("devtools/client/aboutdebugging/src/modules/extensions-helper");
+} = require("resource://devtools/client/aboutdebugging/src/modules/extensions-helper.js");
 
 add_task(async function testParseFileUri() {
   equal(

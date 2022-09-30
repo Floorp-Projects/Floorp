@@ -9,14 +9,14 @@
 
 const { shallow } = require("enzyme");
 const React = require("react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 const {
   MESSAGE_LEVEL,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
 const Message = React.createFactory(
-  require("devtools/client/aboutdebugging/src/components/shared/Message")
+  require("resource://devtools/client/aboutdebugging/src/components/shared/Message.js")
 );
 
 describe("Message component", () => {

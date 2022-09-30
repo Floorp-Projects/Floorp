@@ -17,7 +17,9 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/FileUtils.jsm"
 );
 
-const { PREFERENCES } = require("devtools/client/aboutdebugging/src/constants");
+const {
+  PREFERENCES,
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
 /**
  * Uninstall the addon with the provided id.

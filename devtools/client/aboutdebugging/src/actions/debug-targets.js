@@ -9,25 +9,29 @@ const { AddonManager } = ChromeUtils.import(
 );
 const {
   remoteClientManager,
-} = require("devtools/client/shared/remote-debugging/remote-client-manager");
+} = require("resource://devtools/client/shared/remote-debugging/remote-client-manager.js");
 
-const { l10n } = require("devtools/client/aboutdebugging/src/modules/l10n");
+const {
+  l10n,
+} = require("resource://devtools/client/aboutdebugging/src/modules/l10n.js");
 
 const {
   isSupportedDebugTargetPane,
-} = require("devtools/client/aboutdebugging/src/modules/debug-target-support");
+} = require("resource://devtools/client/aboutdebugging/src/modules/debug-target-support.js");
 
 const {
   openTemporaryExtension,
   uninstallAddon,
-} = require("devtools/client/aboutdebugging/src/modules/extensions-helper");
+} = require("resource://devtools/client/aboutdebugging/src/modules/extensions-helper.js");
 
 const {
   getCurrentClient,
   getCurrentRuntime,
-} = require("devtools/client/aboutdebugging/src/modules/runtimes-state-helper");
+} = require("resource://devtools/client/aboutdebugging/src/modules/runtimes-state-helper.js");
 
-const { gDevTools } = require("devtools/client/framework/devtools");
+const {
+  gDevTools,
+} = require("resource://devtools/client/framework/devtools.js");
 
 const {
   DEBUG_TARGETS,
@@ -54,9 +58,9 @@ const {
   TERMINATE_EXTENSION_BGSCRIPT_SUCCESS,
   TERMINATE_EXTENSION_BGSCRIPT_START,
   RUNTIMES,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
+const Actions = require("resource://devtools/client/aboutdebugging/src/actions/index.js");
 
 function getTabForUrl(url) {
   for (const navigator of Services.wm.getEnumerator("navigator:browser")) {

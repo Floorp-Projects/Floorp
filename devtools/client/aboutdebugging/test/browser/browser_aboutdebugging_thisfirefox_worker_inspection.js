@@ -26,7 +26,7 @@ add_task(async function() {
   runtimeClientFactoryMock.createClientForRuntime = runtime => {
     const {
       RUNTIMES,
-    } = require("devtools/client/aboutdebugging/src/constants");
+    } = require("resource://devtools/client/aboutdebugging/src/constants.js");
     if (runtime.id === RUNTIMES.THIS_FIREFOX) {
       return thisFirefoxClient;
     }
