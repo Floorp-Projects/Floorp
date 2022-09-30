@@ -416,6 +416,7 @@ rtc_library("video_receive_stream_timeout_tracker") {
   deps = [
     "../api/task_queue",
     "../api/units:time_delta",
+    "../api/units:timestamp",
     "../rtc_base/task_utils:repeating_task",
     "../system_wrappers",
   ]

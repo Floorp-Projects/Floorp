@@ -22,7 +22,7 @@ VideoReceiveStreamTimeoutTracker::VideoReceiveStreamTimeoutTracker(
     : clock_(clock),
       bookkeeping_queue_(bookkeeping_queue),
       timeouts_(timeouts),
-      callback_(std::move(callback)) {}
+      timeout_cb_(std::move(callback)) {}
 
 VideoReceiveStreamTimeoutTracker::~VideoReceiveStreamTimeoutTracker() {
   RTC_DCHECK(!timeout_task_.Running());
@@ -36,12 +36,11 @@ void VideoReceiveStreamTimeoutTracker::Start(bool waiting_for_keyframe) {
   RTC_DCHECK(!timeout_task_.Running());
   waiting_for_keyframe_ = waiting_for_keyframe;
   TimeDelta timeout_delay = TimeoutForNextFrame();
-  timeout_ = clock_->CurrentTime() + timeout_delay;
-  timeout_task_ = RepeatingTaskHandle::DelayedStart(
-      bookkeeping_queue_, timeout_delay, [this] {
-        RTC_DCHECK_RUN_ON(bookkeeping_queue_);
-        return HandleTimeoutTask();
-      });
+  last_frame_ = clock_->CurrentTime();
+  timeout_ = last_frame_ + timeout_delay;
+  timeout_task_ =
+      RepeatingTaskHandle::DelayedStart(bookkeeping_queue_, timeout_delay,
+                                        [this] { return HandleTimeoutTask(); });
 }
 
 void VideoReceiveStreamTimeoutTracker::Stop() {
@@ -60,7 +59,8 @@ void VideoReceiveStreamTimeoutTracker::SetWaitingForKeyframe() {
 void VideoReceiveStreamTimeoutTracker::OnEncodedFrameReleased() {
   // If we were waiting for a keyframe, then it has just been released.
   waiting_for_keyframe_ = false;
-  timeout_ = clock_->CurrentTime() + TimeoutForNextFrame();
+  last_frame_ = clock_->CurrentTime();
+  timeout_ = last_frame_ + TimeoutForNextFrame();
 }
 
 TimeDelta VideoReceiveStreamTimeoutTracker::HandleTimeoutTask() {
@@ -70,7 +70,7 @@ TimeDelta VideoReceiveStreamTimeoutTracker::HandleTimeoutTask() {
   if (now >= timeout_) {
     TimeDelta timeout_delay = TimeoutForNextFrame();
     timeout_ = now + timeout_delay;
-    callback_();
+    timeout_cb_(now - last_frame_);
     return timeout_delay;
   }
   // Otherwise, `timeout_` changed since we scheduled a timeout. Reschedule
