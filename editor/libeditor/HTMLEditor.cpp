@@ -24,6 +24,7 @@
 #include "mozilla/ComposerCommandsUpdater.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EditorForwards.h"
 #include "mozilla/Encoding.h"      // for Encoding
 #include "mozilla/IntegerRange.h"  // for IntegerRange
 #include "mozilla/InternalMutationEvent.h"
@@ -5190,8 +5191,10 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
 
   const uint32_t keepingContentLength = aContentToKeep.Length();
   const uint32_t removingContentLength = aContentToRemove.Length();
-  const Maybe<uint32_t> keepingContentExIndex =
-      aContentToKeep.ComputeIndexInParentNode();
+  const Maybe<uint32_t> rightContentExIndex =
+      aDirection == JoinNodesDirection::LeftNodeIntoRightNode
+          ? aContentToKeep.ComputeIndexInParentNode()
+          : aContentToRemove.ComputeIndexInParentNode();
 
   // Remember all selection points.
   // XXX Do we need to restore all types of selections by ourselves?  Normal
@@ -5272,8 +5275,16 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
     if (aContentToKeep.IsText() && aContentToRemove.IsText()) {
       nsAutoString rightText;
       nsAutoString leftText;
-      aContentToKeep.AsText()->GetData(rightText);
-      aContentToRemove.AsText()->GetData(leftText);
+      const nsIContent& rightTextNode =
+          aDirection == JoinNodesDirection::LeftNodeIntoRightNode
+              ? aContentToKeep
+              : aContentToRemove;
+      const nsIContent& leftTextNode =
+          aDirection == JoinNodesDirection::LeftNodeIntoRightNode
+              ? aContentToRemove
+              : aContentToKeep;
+      rightTextNode.AsText()->GetData(rightText);
+      leftTextNode.AsText()->GetData(leftText);
       leftText += rightText;
       IgnoredErrorResult ignoredError;
       DoSetText(MOZ_KnownLive(*aContentToKeep.AsText()), leftText,
@@ -5286,22 +5297,18 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
       return NS_OK;
     }
     // Otherwise it's an interior node, so shuffle around the children.
-    nsCOMPtr<nsINodeList> childNodes = aContentToRemove.ChildNodes();
-    MOZ_ASSERT(childNodes);
+    AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfChildContents;
+    HTMLEditor::GetChildNodesOf(aContentToRemove, arrayOfChildContents);
 
-    // Remember the first child in aContentToKeep, we'll insert all the children
-    // of aContentToRemove in front of it GetFirstChild returns nullptr
-    // firstChild if aContentToKeep has no children, that's OK.
-    nsCOMPtr<nsIContent> firstChild = aContentToKeep.GetFirstChild();
-
-    // Have to go through the list backwards to keep deletes from interfering
-    // with iteration.
-    for (uint32_t i = childNodes->Length(); i; --i) {
-      nsCOMPtr<nsIContent> childNode = childNodes->Item(i - 1);
-      if (childNode) {
-        // prepend children of aContentToRemove
+    if (aDirection == JoinNodesDirection::LeftNodeIntoRightNode) {
+      for (const OwningNonNull<nsIContent>& child :
+           Reversed(arrayOfChildContents)) {
+        // Note that it's safe to pass the reference node to insert the child
+        // without making it grabbed by nsINode::mNextSibling before touching
+        // the DOM tree.
         IgnoredErrorResult error;
-        aContentToKeep.InsertBefore(*childNode, firstChild, error);
+        aContentToKeep.InsertBefore(child, aContentToKeep.GetFirstChild(),
+                                    error);
         if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -5309,7 +5316,18 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
           NS_WARNING("nsINode::InsertBefore() failed");
           return error.StealNSResult();
         }
-        firstChild = std::move(childNode);
+      }
+    } else {
+      for (const OwningNonNull<nsIContent>& child : arrayOfChildContents) {
+        IgnoredErrorResult error;
+        aContentToKeep.AppendChild(child, error);
+        if (NS_WARN_IF(Destroyed())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        if (error.Failed()) {
+          NS_WARNING("nsINode::AppendChild() failed");
+          return error.StealNSResult();
+        }
       }
     }
     return NS_OK;
@@ -5323,11 +5341,14 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
     }
   }
 
-  if (MOZ_LIKELY(keepingContentExIndex.isSome())) {
+  if (MOZ_LIKELY(rightContentExIndex.isSome())) {
     DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjJoinNodes(
-        EditorRawDOMPoint(&aContentToKeep, std::min(removingContentLength,
-                                                    aContentToKeep.Length())),
-        aContentToRemove, *keepingContentExIndex, aDirection);
+        EditorRawDOMPoint(
+            &aContentToKeep,
+            aDirection == JoinNodesDirection::LeftNodeIntoRightNode
+                ? std::min(removingContentLength, aContentToKeep.Length())
+                : std::min(keepingContentLength, aContentToKeep.Length())),
+        aContentToRemove, *rightContentExIndex, aDirection);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "RangeUpdater::SelAdjJoinNodes() failed, but ignored");
   }
@@ -5418,7 +5439,9 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
   if (allowedTransactionsToChangeSelection) {
     // Editor wants us to set selection at join point.
     DebugOnly<nsresult> rvIgnored = CollapseSelectionTo(
-        EditorRawDOMPoint(&aContentToKeep, removingContentLength));
+        aDirection == JoinNodesDirection::LeftNodeIntoRightNode
+            ? EditorRawDOMPoint(&aContentToKeep, removingContentLength)
+            : EditorRawDOMPoint(&aContentToKeep, 0u));
     if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
       NS_WARNING(
           "EditorBase::CollapseSelectionTo() caused destroying the editor");
