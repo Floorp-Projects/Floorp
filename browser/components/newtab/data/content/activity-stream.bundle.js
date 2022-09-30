@@ -2,23 +2,83 @@
 var NewtabRenderUtils;
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
-/******/ 	var __webpack_modules__ = ([
-/* 0 */,
-/* 1 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
+/******/ 	// The require scope
+/******/ 	var __webpack_require__ = {};
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	(() => {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__webpack_require__.n = (module) => {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				() => (module['default']) :
+/******/ 				() => (module);
+/******/ 			__webpack_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/global */
+/******/ 	(() => {
+/******/ 		__webpack_require__.g = (function() {
+/******/ 			if (typeof globalThis === 'object') return globalThis;
+/******/ 			try {
+/******/ 				return this || new Function('return this')();
+/******/ 			} catch (e) {
+/******/ 				if (typeof window === 'object') return window;
+/******/ 			}
+/******/ 		})();
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+var __webpack_exports__ = {};
+// ESM COMPAT FLAG
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "MAIN_MESSAGE_TYPE": () => (/* binding */ MAIN_MESSAGE_TYPE),
-/* harmony export */   "CONTENT_MESSAGE_TYPE": () => (/* binding */ CONTENT_MESSAGE_TYPE),
-/* harmony export */   "PRELOAD_MESSAGE_TYPE": () => (/* binding */ PRELOAD_MESSAGE_TYPE),
-/* harmony export */   "UI_CODE": () => (/* binding */ UI_CODE),
-/* harmony export */   "BACKGROUND_PROCESS": () => (/* binding */ BACKGROUND_PROCESS),
-/* harmony export */   "globalImportContext": () => (/* binding */ globalImportContext),
-/* harmony export */   "actionTypes": () => (/* binding */ actionTypes),
-/* harmony export */   "actionCreators": () => (/* binding */ actionCreators),
-/* harmony export */   "actionUtils": () => (/* binding */ actionUtils)
-/* harmony export */ });
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  "NewTab": () => (/* binding */ NewTab),
+  "renderCache": () => (/* binding */ renderCache),
+  "renderWithoutState": () => (/* binding */ renderWithoutState)
+});
+
+// NAMESPACE OBJECT: ./node_modules/fluent/src/builtins.js
+var builtins_namespaceObject = {};
+__webpack_require__.r(builtins_namespaceObject);
+__webpack_require__.d(builtins_namespaceObject, {
+  "DATETIME": () => (DATETIME),
+  "NUMBER": () => (NUMBER)
+});
+
+;// CONCATENATED MODULE: ./common/Actions.jsm
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -340,344 +400,186 @@ var actionUtils = {
 
   _RouteMessage
 };
+;// CONCATENATED MODULE: ./common/ActorConstants.jsm
+/* vim: set ts=2 sw=2 sts=2 et tw=80: */
 
-/***/ }),
-/* 2 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "PrefsButton": () => (/* binding */ PrefsButton),
-/* harmony export */   "_Base": () => (/* binding */ _Base),
-/* harmony export */   "BaseContent": () => (/* binding */ BaseContent),
-/* harmony export */   "Base": () => (/* binding */ Base)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var content_src_components_ASRouterAdmin_ASRouterAdmin__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
-/* harmony import */ var _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(9);
-/* harmony import */ var content_src_components_ConfirmDialog_ConfirmDialog__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(51);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var content_src_components_DiscoveryStreamBase_DiscoveryStreamBase__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(52);
-/* harmony import */ var content_src_components_ErrorBoundary_ErrorBoundary__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(72);
-/* harmony import */ var content_src_components_CustomizeMenu_CustomizeMenu__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(103);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var content_src_components_Search_Search__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(106);
-/* harmony import */ var content_src_components_Sections_Sections__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(80);
-/* harmony import */ var content_src_components_Background_Background__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(107);
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
+const MESSAGE_TYPE_LIST = ["BLOCK_MESSAGE_BY_ID", "USER_ACTION", "IMPRESSION", "TRIGGER", "NEWTAB_MESSAGE_REQUEST", // PB is Private Browsing
+"PBNEWTAB_MESSAGE_REQUEST", "DOORHANGER_TELEMETRY", "TOOLBAR_BADGE_TELEMETRY", "TOOLBAR_PANEL_TELEMETRY", "MOMENTS_PAGE_TELEMETRY", "INFOBAR_TELEMETRY", "SPOTLIGHT_TELEMETRY", "AS_ROUTER_TELEMETRY_USER_EVENT", // Admin types
+"ADMIN_CONNECT_STATE", "UNBLOCK_MESSAGE_BY_ID", "UNBLOCK_ALL", "BLOCK_BUNDLE", "UNBLOCK_BUNDLE", "DISABLE_PROVIDER", "ENABLE_PROVIDER", "EVALUATE_JEXL_EXPRESSION", "EXPIRE_QUERY_CACHE", "FORCE_ATTRIBUTION", "FORCE_WHATSNEW_PANEL", "CLOSE_WHATSNEW_PANEL", "OVERRIDE_MESSAGE", "MODIFY_MESSAGE_JSON", "RESET_PROVIDER_PREF", "SET_PROVIDER_USER_PREF", "RESET_GROUPS_STATE"];
+const MESSAGE_TYPE_HASH = MESSAGE_TYPE_LIST.reduce((hash, value) => {
+  hash[value] = value;
+  return hash;
+}, {});
+;// CONCATENATED MODULE: ./content-src/asrouter/asrouter-utils.js
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
+const ASRouterUtils = {
+  addListener(listener) {
+    if (__webpack_require__.g.ASRouterAddParentListener) {
+      __webpack_require__.g.ASRouterAddParentListener(listener);
+    }
+  },
 
+  removeListener(listener) {
+    if (__webpack_require__.g.ASRouterRemoveParentListener) {
+      __webpack_require__.g.ASRouterRemoveParentListener(listener);
+    }
+  },
 
-
-
-
-
-
-
-
-
-const PrefsButton = ({
-  onClick,
-  icon
-}) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("div", {
-  className: "prefs-button"
-}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("button", {
-  className: `icon ${icon || "icon-settings"}`,
-  onClick: onClick,
-  "data-l10n-id": "newtab-settings-button"
-})); // Returns a function will not be continuously triggered when called. The
-// function will be triggered if called again after `wait` milliseconds.
-
-function debounce(func, wait) {
-  let timer;
-  return (...args) => {
-    if (timer) {
-      return;
+  sendMessage(action) {
+    if (__webpack_require__.g.ASRouterMessage) {
+      return __webpack_require__.g.ASRouterMessage(action);
     }
 
-    let wakeUp = () => {
-      timer = null;
-    };
+    throw new Error(`Unexpected call:\n${JSON.stringify(action, null, 3)}`);
+  },
 
-    timer = setTimeout(wakeUp, wait);
-    func.apply(this, args);
-  };
-}
-
-class _Base extends (react__WEBPACK_IMPORTED_MODULE_8___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.state = {
-      message: {}
-    };
-    this.notifyContent = this.notifyContent.bind(this);
-  }
-
-  notifyContent(state) {
-    this.setState(state);
-  }
-
-  componentWillUnmount() {
-    this.updateTheme();
-  }
-
-  componentWillUpdate() {
-    this.updateTheme();
-  }
-
-  updateTheme() {
-    const bodyClassName = ["activity-stream", // If we skipped the about:welcome overlay and removed the CSS classes
-    // we don't want to add them back to the Activity Stream view
-    document.body.classList.contains("inline-onboarding") ? "inline-onboarding" : ""].filter(v => v).join(" ");
-    __webpack_require__.g.document.body.className = bodyClassName;
-  }
-
-  render() {
-    const {
-      props
-    } = this;
-    const {
-      App
-    } = props;
-    const isDevtoolsEnabled = props.Prefs.values["asrouter.devtoolsEnabled"];
-
-    if (!App.initialized) {
-      return null;
-    }
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_ErrorBoundary_ErrorBoundary__WEBPACK_IMPORTED_MODULE_6__.ErrorBoundary, {
-      className: "base-content-fallback"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement((react__WEBPACK_IMPORTED_MODULE_8___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(BaseContent, _extends({}, this.props, {
-      adminContent: this.state
-    })), isDevtoolsEnabled ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_ASRouterAdmin_ASRouterAdmin__WEBPACK_IMPORTED_MODULE_1__.ASRouterAdmin, {
-      notifyContent: this.notifyContent
-    }) : null));
-  }
-
-}
-class BaseContent extends (react__WEBPACK_IMPORTED_MODULE_8___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.openPreferences = this.openPreferences.bind(this);
-    this.openCustomizationMenu = this.openCustomizationMenu.bind(this);
-    this.closeCustomizationMenu = this.closeCustomizationMenu.bind(this);
-    this.handleOnKeyDown = this.handleOnKeyDown.bind(this);
-    this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
-    this.setPref = this.setPref.bind(this);
-    this.state = {
-      fixedSearch: false,
-      customizeMenuVisible: false
-    };
-  }
-
-  componentDidMount() {
-    var _document$querySelect;
-
-    __webpack_require__.g.addEventListener("scroll", this.onWindowScroll);
-    __webpack_require__.g.addEventListener("keydown", this.handleOnKeyDown);
-    (_document$querySelect = document.querySelector(".darkreader")) === null || _document$querySelect === void 0 ? void 0 : _document$querySelect.remove();
-  }
-
-  componentWillUnmount() {
-    __webpack_require__.g.removeEventListener("scroll", this.onWindowScroll);
-    __webpack_require__.g.removeEventListener("keydown", this.handleOnKeyDown);
-  }
-
-  onWindowScroll() {
-    const prefs = this.props.Prefs.values;
-    const SCROLL_THRESHOLD = prefs["logowordmark.alwaysVisible"] ? 179 : 34;
-
-    if (__webpack_require__.g.scrollY > SCROLL_THRESHOLD && !this.state.fixedSearch) {
-      this.setState({
-        fixedSearch: true
-      });
-    } else if (__webpack_require__.g.scrollY <= SCROLL_THRESHOLD && this.state.fixedSearch) {
-      this.setState({
-        fixedSearch: false
-      });
-    }
-  }
-
-  openPreferences() {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SETTINGS_OPEN
-    }));
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
-      event: "OPEN_NEWTAB_PREFS"
-    }));
-  }
-
-  openCustomizationMenu() {
-    this.setState({
-      customizeMenuVisible: true
+  blockById(id, options) {
+    return ASRouterUtils.sendMessage({
+      type: MESSAGE_TYPE_HASH.BLOCK_MESSAGE_BY_ID,
+      data: {
+        id,
+        ...options
+      }
     });
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
-      event: "SHOW_PERSONALIZE"
-    }));
-  }
+  },
 
-  closeCustomizationMenu() {
-    if (this.state.customizeMenuVisible) {
-      this.setState({
-        customizeMenuVisible: false
-      });
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
-        event: "HIDE_PERSONALIZE"
-      }));
+  modifyMessageJson(content) {
+    return ASRouterUtils.sendMessage({
+      type: MESSAGE_TYPE_HASH.MODIFY_MESSAGE_JSON,
+      data: {
+        content
+      }
+    });
+  },
+
+  executeAction(button_action) {
+    return ASRouterUtils.sendMessage({
+      type: MESSAGE_TYPE_HASH.USER_ACTION,
+      data: button_action
+    });
+  },
+
+  unblockById(id) {
+    return ASRouterUtils.sendMessage({
+      type: MESSAGE_TYPE_HASH.UNBLOCK_MESSAGE_BY_ID,
+      data: {
+        id
+      }
+    });
+  },
+
+  blockBundle(bundle) {
+    return ASRouterUtils.sendMessage({
+      type: MESSAGE_TYPE_HASH.BLOCK_BUNDLE,
+      data: {
+        bundle
+      }
+    });
+  },
+
+  unblockBundle(bundle) {
+    return ASRouterUtils.sendMessage({
+      type: MESSAGE_TYPE_HASH.UNBLOCK_BUNDLE,
+      data: {
+        bundle
+      }
+    });
+  },
+
+  overrideMessage(id) {
+    return ASRouterUtils.sendMessage({
+      type: MESSAGE_TYPE_HASH.OVERRIDE_MESSAGE,
+      data: {
+        id
+      }
+    });
+  },
+
+  sendTelemetry(ping) {
+    return ASRouterUtils.sendMessage(actionCreators.ASRouterUserEvent(ping));
+  },
+
+  getPreviewEndpoint() {
+    if (__webpack_require__.g.document && __webpack_require__.g.document.location && __webpack_require__.g.document.location.href.includes("endpoint")) {
+      const params = new URLSearchParams(__webpack_require__.g.document.location.href.slice(__webpack_require__.g.document.location.href.indexOf("endpoint")));
+
+      try {
+        const endpoint = new URL(params.get("endpoint"));
+        return {
+          url: endpoint.href,
+          snippetId: params.get("snippetId"),
+          theme: this.getPreviewTheme(),
+          dir: this.getPreviewDir()
+        };
+      } catch (e) {}
     }
+
+    return null;
+  },
+
+  getPreviewTheme() {
+    return new URLSearchParams(__webpack_require__.g.document.location.href.slice(__webpack_require__.g.document.location.href.indexOf("theme"))).get("theme");
+  },
+
+  getPreviewDir() {
+    return new URLSearchParams(__webpack_require__.g.document.location.href.slice(__webpack_require__.g.document.location.href.indexOf("dir"))).get("dir");
   }
 
-  handleOnKeyDown(e) {
-    if (e.key === "Escape") {
-      this.closeCustomizationMenu();
-    }
+};
+;// CONCATENATED MODULE: external "ReactRedux"
+const external_ReactRedux_namespaceObject = ReactRedux;
+;// CONCATENATED MODULE: external "React"
+const external_React_namespaceObject = React;
+var external_React_default = /*#__PURE__*/__webpack_require__.n(external_React_namespaceObject);
+;// CONCATENATED MODULE: ./content-src/components/ASRouterAdmin/SimpleHashRouter.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+class SimpleHashRouter extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.onHashChange = this.onHashChange.bind(this);
+    this.state = {
+      hash: __webpack_require__.g.location.hash
+    };
   }
 
-  setPref(pref, value) {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.SetPref(pref, value));
+  onHashChange() {
+    this.setState({
+      hash: __webpack_require__.g.location.hash
+    });
+  }
+
+  componentWillMount() {
+    __webpack_require__.g.addEventListener("hashchange", this.onHashChange);
+  }
+
+  componentWillUnmount() {
+    __webpack_require__.g.removeEventListener("hashchange", this.onHashChange);
   }
 
   render() {
-    const {
-      props
-    } = this;
-    const {
-      App
-    } = props;
-    const {
-      initialized
-    } = App;
-    const prefs = props.Prefs.values;
-    const isDiscoveryStream = props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
-    let filteredSections = props.Sections.filter(section => section.id !== "topstories");
-    const pocketEnabled = prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
-    const noSectionsEnabled = !prefs["feeds.topsites"] && !pocketEnabled && filteredSections.filter(section => section.enabled).length === 0;
-    const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
-    const showCustomizationMenu = this.state.customizeMenuVisible;
-    const enabledSections = {
-      topSitesEnabled: prefs["feeds.topsites"],
-      pocketEnabled: prefs["feeds.section.topstories"],
-      highlightsEnabled: prefs["feeds.section.highlights"],
-      showSponsoredTopSitesEnabled: prefs.showSponsoredTopSites,
-      showSponsoredPocketEnabled: prefs.showSponsored,
-      topSitesRowsCount: prefs.topSitesRows
-    };
-    const pocketRegion = prefs["feeds.system.topstories"];
-    const {
-      mayHaveSponsoredTopSites
-    } = prefs;
-    const outerClassName = ["outer-wrapper", isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search", prefs["logowordmark.alwaysVisible"] && "visible-logo"].filter(v => v).join(" ");
-    const hasSnippet = prefs["feeds.snippets"] && this.props.adminContent && this.props.adminContent.message && this.props.adminContent.message.id;
-    let Background_ClassName = "";
-
-    switch (prefs["background.type"]) {
-      case 1:
-        Background_ClassName = "random_image";
-        break;
-
-      case 2:
-        Background_ClassName = "gradation";
-        break;
-
-      default:
-        Background_ClassName = "not_background";
-        break;
-    }
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_Background_Background__WEBPACK_IMPORTED_MODULE_11__.Background, {
-      className: Background_ClassName
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_CustomizeMenu_CustomizeMenu__WEBPACK_IMPORTED_MODULE_7__.CustomizeMenu, {
-      onClose: this.closeCustomizationMenu,
-      onOpen: this.openCustomizationMenu,
-      openPreferences: this.openPreferences,
-      setPref: this.setPref,
-      enabledSections: enabledSections,
-      pocketRegion: pocketRegion,
-      mayHaveSponsoredTopSites: mayHaveSponsoredTopSites,
-      showing: showCustomizationMenu
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("div", {
-      className: outerClassName,
-      onClick: this.closeCustomizationMenu
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("main", {
-      className: hasSnippet ? "has-snippet" : ""
-    }, prefs.showSearch && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("div", {
-      className: "non-collapsible-section"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_ErrorBoundary_ErrorBoundary__WEBPACK_IMPORTED_MODULE_6__.ErrorBoundary, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_Search_Search__WEBPACK_IMPORTED_MODULE_9__.Search, _extends({
-      showLogo: noSectionsEnabled || prefs["logowordmark.alwaysVisible"],
-      handoffEnabled: searchHandoffEnabled
-    }, props.Search)))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(_asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_2__.ASRouterUISurface, {
-      adminContent: this.props.adminContent,
-      appUpdateChannel: this.props.Prefs.values.appUpdateChannel,
-      fxaEndpoint: this.props.Prefs.values.fxa_endpoint,
-      dispatch: this.props.dispatch
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("div", {
-      className: `body-wrapper${initialized ? " on" : ""}`
-    }, isDiscoveryStream ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_ErrorBoundary_ErrorBoundary__WEBPACK_IMPORTED_MODULE_6__.ErrorBoundary, {
-      className: "borderless-error"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_DiscoveryStreamBase_DiscoveryStreamBase__WEBPACK_IMPORTED_MODULE_5__.DiscoveryStreamBase, {
-      locale: props.App.locale
-    })) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_Sections_Sections__WEBPACK_IMPORTED_MODULE_10__.Sections, null)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_ConfirmDialog_ConfirmDialog__WEBPACK_IMPORTED_MODULE_3__.ConfirmDialog, null))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("div", {
-      id: "floorp"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("a", {
-      class: "releasenote",
-      href: "https://support.ablaze.one",
-      target: "_blank"
-    }, "Support"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("br", null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("br", null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("a", {
-      class: "releasenote",
-      href: "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp",
-      target: "_blank"
-    }, "Release Note")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("a", {
-      href: "https://unsplash.com/",
-      style: {
-        position: "fixed",
-        bottom: "1em",
-        left: "1em",
-        fontSize: "16px",
-        color: "#ffffff"
-      },
-      target: "_blank",
-      id: "unsplash"
-    }, "Unsplash"));
+    const [, ...routes] = this.state.hash.split("-");
+    return /*#__PURE__*/external_React_default().cloneElement(this.props.children, {
+      location: {
+        hash: this.state.hash,
+        routes
+      }
+    });
   }
 
 }
-const Base = (0,react_redux__WEBPACK_IMPORTED_MODULE_4__.connect)(state => ({
-  App: state.App,
-  Prefs: state.Prefs,
-  Sections: state.Sections,
-  DiscoveryStream: state.DiscoveryStream,
-  Search: state.Search
-}))(_Base);
-
-/***/ }),
-/* 3 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ToggleStoryButton": () => (/* binding */ ToggleStoryButton),
-/* harmony export */   "ToggleMessageJSON": () => (/* binding */ ToggleMessageJSON),
-/* harmony export */   "TogglePrefCheckbox": () => (/* binding */ TogglePrefCheckbox),
-/* harmony export */   "Personalization": () => (/* binding */ Personalization),
-/* harmony export */   "DiscoveryStreamAdmin": () => (/* binding */ DiscoveryStreamAdmin),
-/* harmony export */   "ASRouterAdminInner": () => (/* binding */ ASRouterAdminInner),
-/* harmony export */   "CollapseToggle": () => (/* binding */ CollapseToggle),
-/* harmony export */   "ASRouterAdmin": () => (/* binding */ ASRouterAdmin)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _SimpleHashRouter__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(8);
+;// CONCATENATED MODULE: ./content-src/components/ASRouterAdmin/ASRouterAdmin.jsx
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -689,7 +591,7 @@ function _extends() { _extends = Object.assign || function (target) { for (var i
 
 
 
-const Row = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", _extends({
+const Row = props => /*#__PURE__*/external_React_default().createElement("tr", _extends({
   className: "message-item"
 }, props), props.children);
 
@@ -720,7 +622,7 @@ const LAYOUT_VARIANTS = {
   "dev-test-all": "A little bit of everything. Good layout for testing all components",
   "dev-test-feeds": "Stress testing for slow feeds"
 };
-class ToggleStoryButton extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureComponent) {
+class ToggleStoryButton extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.handleClick = this.handleClick.bind(this);
@@ -731,13 +633,13 @@ class ToggleStoryButton extends (react__WEBPACK_IMPORTED_MODULE_3___default().Pu
   }
 
   render() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    return /*#__PURE__*/external_React_default().createElement("button", {
       onClick: this.handleClick
     }, "collapse/open");
   }
 
 }
-class ToggleMessageJSON extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureComponent) {
+class ToggleMessageJSON extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.handleClick = this.handleClick.bind(this);
@@ -749,16 +651,16 @@ class ToggleMessageJSON extends (react__WEBPACK_IMPORTED_MODULE_3___default().Pu
 
   render() {
     let iconName = this.props.isCollapsed ? "icon icon-arrowhead-forward-small" : "icon icon-arrowhead-down-small";
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    return /*#__PURE__*/external_React_default().createElement("button", {
       className: "clearButton",
       onClick: this.handleClick
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", {
+    }, /*#__PURE__*/external_React_default().createElement("span", {
       className: iconName
     }));
   }
 
 }
-class TogglePrefCheckbox extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureComponent) {
+class TogglePrefCheckbox extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.onChange = this.onChange.bind(this);
@@ -769,7 +671,7 @@ class TogglePrefCheckbox extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
   }
 
   render() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement((react__WEBPACK_IMPORTED_MODULE_3___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("input", {
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("input", {
       type: "checkbox",
       checked: this.props.checked,
       onChange: this.onChange,
@@ -778,15 +680,15 @@ class TogglePrefCheckbox extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
   }
 
 }
-class Personalization extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureComponent) {
+class Personalization extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.togglePersonalization = this.togglePersonalization.bind(this);
   }
 
   togglePersonalization() {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_PERSONALIZATION_TOGGLE
+    this.props.dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.DISCOVERY_STREAM_PERSONALIZATION_TOGGLE
     }));
   }
 
@@ -795,21 +697,21 @@ class Personalization extends (react__WEBPACK_IMPORTED_MODULE_3___default().Pure
       lastUpdated,
       initialized
     } = this.props.state.Personalization;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement((react__WEBPACK_IMPORTED_MODULE_3___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(Row, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, /*#__PURE__*/external_React_default().createElement(Row, null, /*#__PURE__*/external_React_default().createElement("td", {
       colSpan: "2"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(TogglePrefCheckbox, {
+    }, /*#__PURE__*/external_React_default().createElement(TogglePrefCheckbox, {
       checked: this.props.personalized,
       pref: "personalized",
       onChange: this.togglePersonalization
-    }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(Row, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }))), /*#__PURE__*/external_React_default().createElement(Row, null, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }, "Personalization Last Updated"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, relativeTime(lastUpdated) || "(no data)")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(Row, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }, "Personalization Last Updated"), /*#__PURE__*/external_React_default().createElement("td", null, relativeTime(lastUpdated) || "(no data)")), /*#__PURE__*/external_React_default().createElement(Row, null, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }, "Personalization Initialized"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, initialized ? "true" : "false")))));
+    }, "Personalization Initialized"), /*#__PURE__*/external_React_default().createElement("td", null, initialized ? "true" : "false")))));
   }
 
 }
-class DiscoveryStreamAdmin extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureComponent) {
+class DiscoveryStreamAdmin extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.restorePrefDefaults = this.restorePrefDefaults.bind(this);
@@ -827,8 +729,8 @@ class DiscoveryStreamAdmin extends (react__WEBPACK_IMPORTED_MODULE_3___default()
   }
 
   setConfigValue(name, value) {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_CONFIG_SET_VALUE,
+    this.props.dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.DISCOVERY_STREAM_CONFIG_SET_VALUE,
       data: {
         name,
         value
@@ -837,8 +739,8 @@ class DiscoveryStreamAdmin extends (react__WEBPACK_IMPORTED_MODULE_3___default()
   }
 
   restorePrefDefaults(event) {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS
+    this.props.dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS
     }));
   }
 
@@ -846,32 +748,32 @@ class DiscoveryStreamAdmin extends (react__WEBPACK_IMPORTED_MODULE_3___default()
     const {
       config
     } = this.props.state.DiscoveryStream;
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_CONFIG_CHANGE,
+    this.props.dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.DISCOVERY_STREAM_CONFIG_CHANGE,
       data: config
     }));
   }
 
   dispatchSimpleAction(type) {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
+    this.props.dispatch(actionCreators.OnlyToMain({
       type
     }));
   }
 
   systemTick() {
-    this.dispatchSimpleAction(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_DEV_SYSTEM_TICK);
+    this.dispatchSimpleAction(actionTypes.DISCOVERY_STREAM_DEV_SYSTEM_TICK);
   }
 
   expireCache() {
-    this.dispatchSimpleAction(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_DEV_EXPIRE_CACHE);
+    this.dispatchSimpleAction(actionTypes.DISCOVERY_STREAM_DEV_EXPIRE_CACHE);
   }
 
   idleDaily() {
-    this.dispatchSimpleAction(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_DEV_IDLE_DAILY);
+    this.dispatchSimpleAction(actionTypes.DISCOVERY_STREAM_DEV_IDLE_DAILY);
   }
 
   syncRemoteSettings() {
-    this.dispatchSimpleAction(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_DEV_SYNC_RS);
+    this.dispatchSimpleAction(actionTypes.DISCOVERY_STREAM_DEV_SYNC_RS);
   }
 
   changeEndpointVariant(event) {
@@ -883,11 +785,11 @@ class DiscoveryStreamAdmin extends (react__WEBPACK_IMPORTED_MODULE_3___default()
   }
 
   renderComponent(width, component) {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(Row, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    return /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, /*#__PURE__*/external_React_default().createElement(Row, null, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }, "Type"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, component.type)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(Row, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }, "Type"), /*#__PURE__*/external_React_default().createElement("td", null, component.type)), /*#__PURE__*/external_React_default().createElement(Row, null, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }, "Width"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, width)), component.feed && this.renderFeed(component.feed)));
+    }, "Width"), /*#__PURE__*/external_React_default().createElement("td", null, width)), component.feed && this.renderFeed(component.feed)));
   }
 
   isCurrentVariant(id) {
@@ -901,14 +803,14 @@ class DiscoveryStreamAdmin extends (react__WEBPACK_IMPORTED_MODULE_3___default()
       feeds
     } = this.props.state.DiscoveryStream;
     const feed = feeds.data[url].data;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement((react__WEBPACK_IMPORTED_MODULE_3___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h4", null, "Feed url: ", url), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, feed.recommendations.map(story => this.renderStoryData(story)))));
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h4", null, "Feed url: ", url), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, feed.recommendations.map(story => this.renderStoryData(story)))));
   }
 
   renderFeedsData() {
     const {
       feeds
     } = this.props.state.DiscoveryStream;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement((react__WEBPACK_IMPORTED_MODULE_3___default().Fragment), null, Object.keys(feeds.data).map(url => this.renderFeedData(url)));
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, Object.keys(feeds.data).map(url => this.renderFeedData(url)));
   }
 
   renderSpocs() {
@@ -921,11 +823,11 @@ class DiscoveryStreamAdmin extends (react__WEBPACK_IMPORTED_MODULE_3___default()
       spocsData = spocs.data.spocs.items || [];
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement((react__WEBPACK_IMPORTED_MODULE_3___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(Row, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, /*#__PURE__*/external_React_default().createElement(Row, null, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }, "spocs_endpoint"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, spocs.spocs_endpoint)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(Row, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }, "spocs_endpoint"), /*#__PURE__*/external_React_default().createElement("td", null, spocs.spocs_endpoint)), /*#__PURE__*/external_React_default().createElement(Row, null, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }, "Data last fetched"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, relativeTime(spocs.lastUpdated))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h4", null, "Spoc data"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, spocsData.map(spoc => this.renderStoryData(spoc)))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h4", null, "Spoc frequency caps"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, spocs.frequency_caps.map(spoc => this.renderStoryData(spoc)))));
+    }, "Data last fetched"), /*#__PURE__*/external_React_default().createElement("td", null, relativeTime(spocs.lastUpdated))))), /*#__PURE__*/external_React_default().createElement("h4", null, "Spoc data"), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, spocsData.map(spoc => this.renderStoryData(spoc)))), /*#__PURE__*/external_React_default().createElement("h4", null, "Spoc frequency caps"), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, spocs.frequency_caps.map(spoc => this.renderStoryData(spoc)))));
   }
 
   onStoryToggle(story) {
@@ -946,17 +848,17 @@ class DiscoveryStreamAdmin extends (react__WEBPACK_IMPORTED_MODULE_3___default()
       storyData = JSON.stringify(story, null, 2);
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", {
+    return /*#__PURE__*/external_React_default().createElement("tr", {
       className: "message-item",
       key: story.id
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }, /*#__PURE__*/external_React_default().createElement("td", {
       className: "message-id"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", null, story.id, " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("br", null)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(ToggleStoryButton, {
+    }, /*#__PURE__*/external_React_default().createElement("span", null, story.id, " ", /*#__PURE__*/external_React_default().createElement("br", null)), /*#__PURE__*/external_React_default().createElement(ToggleStoryButton, {
       story: story,
       onClick: this.onStoryToggle
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    })), /*#__PURE__*/external_React_default().createElement("td", {
       className: "message-summary"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("pre", null, storyData)));
+    }, /*#__PURE__*/external_React_default().createElement("pre", null, storyData)));
   }
 
   renderFeed(feed) {
@@ -968,11 +870,11 @@ class DiscoveryStreamAdmin extends (react__WEBPACK_IMPORTED_MODULE_3___default()
       return null;
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement((react__WEBPACK_IMPORTED_MODULE_3___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(Row, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement(Row, null, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }, "Feed url"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, feed.url)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(Row, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }, "Feed url"), /*#__PURE__*/external_React_default().createElement("td", null, feed.url)), /*#__PURE__*/external_React_default().createElement(Row, null, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }, "Data last fetched"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, relativeTime(feeds.data[feed.url] ? feeds.data[feed.url].lastUpdated : null) || "(no data)")));
+    }, "Data last fetched"), /*#__PURE__*/external_React_default().createElement("td", null, relativeTime(feeds.data[feed.url] ? feeds.data[feed.url].lastUpdated : null) || "(no data)")));
   }
 
   render() {
@@ -983,67 +885,67 @@ class DiscoveryStreamAdmin extends (react__WEBPACK_IMPORTED_MODULE_3___default()
       layout
     } = this.props.state.DiscoveryStream;
     const personalized = this.props.otherPrefs["discoverystream.personalization.enabled"];
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("button", {
       className: "button",
       onClick: this.restorePrefDefaults
-    }, "Restore Pref Defaults"), " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }, "Restore Pref Defaults"), " ", /*#__PURE__*/external_React_default().createElement("button", {
       className: "button",
       onClick: this.refreshCache
-    }, "Refresh Cache"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("br", null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }, "Refresh Cache"), /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("button", {
       className: "button",
       onClick: this.expireCache
-    }, "Expire Cache"), " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }, "Expire Cache"), " ", /*#__PURE__*/external_React_default().createElement("button", {
       className: "button",
       onClick: this.systemTick
-    }, "Trigger System Tick"), " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }, "Trigger System Tick"), " ", /*#__PURE__*/external_React_default().createElement("button", {
       className: "button",
       onClick: this.idleDaily
-    }, "Trigger Idle Daily"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("br", null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }, "Trigger Idle Daily"), /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("button", {
       className: "button",
       onClick: this.syncRemoteSettings
-    }, "Sync Remote Settings"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, prefToggles.map(pref => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(Row, {
+    }, "Sync Remote Settings"), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, prefToggles.map(pref => /*#__PURE__*/external_React_default().createElement(Row, {
       key: pref
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(TogglePrefCheckbox, {
+    }, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement(TogglePrefCheckbox, {
       checked: config[pref],
       pref: pref,
       onChange: this.setConfigValue
-    })))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h3", null, "Endpoint variant"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("p", null, "You can also change this manually by changing this pref:", " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("code", null, "browser.newtabpage.activity-stream.discoverystream.config")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", {
+    })))))), /*#__PURE__*/external_React_default().createElement("h3", null, "Endpoint variant"), /*#__PURE__*/external_React_default().createElement("p", null, "You can also change this manually by changing this pref:", " ", /*#__PURE__*/external_React_default().createElement("code", null, "browser.newtabpage.activity-stream.discoverystream.config")), /*#__PURE__*/external_React_default().createElement("table", {
       style: config.enabled && !config.hardcoded_layout ? null : {
         opacity: 0.5
       }
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, Object.keys(LAYOUT_VARIANTS).map(id => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(Row, {
+    }, /*#__PURE__*/external_React_default().createElement("tbody", null, Object.keys(LAYOUT_VARIANTS).map(id => /*#__PURE__*/external_React_default().createElement(Row, {
       key: id
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("input", {
+    }, /*#__PURE__*/external_React_default().createElement("input", {
       type: "radio",
       value: id,
       checked: this.isCurrentVariant(id),
       onChange: this.changeEndpointVariant
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    })), /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }, id), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, LAYOUT_VARIANTS[id]))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h3", null, "Caching info"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", {
+    }, id), /*#__PURE__*/external_React_default().createElement("td", null, LAYOUT_VARIANTS[id]))))), /*#__PURE__*/external_React_default().createElement("h3", null, "Caching info"), /*#__PURE__*/external_React_default().createElement("table", {
       style: config.enabled ? null : {
         opacity: 0.5
       }
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(Row, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }, /*#__PURE__*/external_React_default().createElement("tbody", null, /*#__PURE__*/external_React_default().createElement(Row, null, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }, "Data last fetched"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, relativeTime(lastUpdated) || "(no data)")))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h3", null, "Layout"), layout.map((row, rowIndex) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
+    }, "Data last fetched"), /*#__PURE__*/external_React_default().createElement("td", null, relativeTime(lastUpdated) || "(no data)")))), /*#__PURE__*/external_React_default().createElement("h3", null, "Layout"), layout.map((row, rowIndex) => /*#__PURE__*/external_React_default().createElement("div", {
       key: `row-${rowIndex}`
-    }, row.components.map((component, componentIndex) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
+    }, row.components.map((component, componentIndex) => /*#__PURE__*/external_React_default().createElement("div", {
       key: `component-${componentIndex}`,
       className: "ds-component"
-    }, this.renderComponent(row.width, component))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h3", null, "Personalization"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(Personalization, {
+    }, this.renderComponent(row.width, component))))), /*#__PURE__*/external_React_default().createElement("h3", null, "Personalization"), /*#__PURE__*/external_React_default().createElement(Personalization, {
       personalized: personalized,
       dispatch: this.props.dispatch,
       state: {
         Personalization: this.props.state.Personalization
       }
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h3", null, "Spocs"), this.renderSpocs(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h3", null, "Feeds Data"), this.renderFeedsData());
+    }), /*#__PURE__*/external_React_default().createElement("h3", null, "Spocs"), this.renderSpocs(), /*#__PURE__*/external_React_default().createElement("h3", null, "Feeds Data"), this.renderFeedsData());
   }
 
 }
-class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureComponent) {
+class ASRouterAdminInner extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.handleEnabledToggle = this.handleEnabledToggle.bind(this);
@@ -1123,9 +1025,9 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
   }
 
   componentWillMount() {
-    _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.addListener(this.onMessageFromParent);
-    const endpoint = _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.getPreviewEndpoint();
-    _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.sendMessage({
+    ASRouterUtils.addListener(this.onMessageFromParent);
+    const endpoint = ASRouterUtils.getPreviewEndpoint();
+    ASRouterUtils.sendMessage({
       type: "ADMIN_CONNECT_STATE",
       data: {
         endpoint
@@ -1134,11 +1036,11 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
   }
 
   handleBlock(msg) {
-    return () => _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.blockById(msg.id);
+    return () => ASRouterUtils.blockById(msg.id);
   }
 
   handleUnblock(msg) {
-    return () => _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.unblockById(msg.id);
+    return () => ASRouterUtils.unblockById(msg.id);
   }
 
   resetJSON(msg) {
@@ -1172,7 +1074,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
   }
 
   handleOverride(id) {
-    return () => _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.overrideMessage(id).then(state => {
+    return () => ASRouterUtils.overrideMessage(id).then(state => {
       this.setStateFromParent(state);
       this.props.notifyContent({
         message: state.message
@@ -1185,36 +1087,36 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
     let messages = this.state.WNMessages;
 
     for (const msg of messages) {
-      _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.modifyMessageJson(JSON.parse(msg));
+      ASRouterUtils.modifyMessageJson(JSON.parse(msg));
     }
   }
 
   handleForceWNP() {
-    _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.sendMessage({
+    ASRouterUtils.sendMessage({
       type: "FORCE_WHATSNEW_PANEL"
     });
   }
 
   handleCloseWNP() {
-    _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.sendMessage({
+    ASRouterUtils.sendMessage({
       type: "CLOSE_WHATSNEW_PANEL"
     });
   }
 
   expireCache() {
-    _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.sendMessage({
+    ASRouterUtils.sendMessage({
       type: "EXPIRE_QUERY_CACHE"
     });
   }
 
   resetPref() {
-    _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.sendMessage({
+    ASRouterUtils.sendMessage({
       type: "RESET_PROVIDER_PREF"
     });
   }
 
   resetGroups(id, value) {
-    _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.sendMessage({
+    ASRouterUtils.sendMessage({
       type: "RESET_GROUPS_STATE"
     }).then(this.setStateFromParent);
   }
@@ -1227,7 +1129,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
       context[param] = value ? JSON.parse(value) : null;
     }
 
-    _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.sendMessage({
+    ASRouterUtils.sendMessage({
       type: "EVALUATE_JEXL_EXPRESSION",
       data: {
         expression: this.refs.expressionInput.value,
@@ -1271,7 +1173,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
   }
 
   unblockAll() {
-    return _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.sendMessage({
+    return ASRouterUtils.sendMessage({
       type: "UNBLOCK_ALL"
     }).then(this.setStateFromParent);
   }
@@ -1285,13 +1187,13 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
 
     const userPrefInfo = this.state.userPrefs;
     const isUserEnabled = providerId in userPrefInfo ? userPrefInfo[providerId] : true;
-    _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.sendMessage({
+    ASRouterUtils.sendMessage({
       type: "DISABLE_PROVIDER",
       data: providerId
     });
 
     if (!isUserEnabled) {
-      _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.sendMessage({
+      ASRouterUtils.sendMessage({
         type: "SET_PROVIDER_USER_PREF",
         data: {
           id: providerId,
@@ -1300,7 +1202,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
       });
     }
 
-    _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.sendMessage({
+    ASRouterUtils.sendMessage({
       type: "ENABLE_PROVIDER",
       data: providerId
     });
@@ -1315,7 +1217,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
 
     if (isEnabling) {
       if (!isUserEnabled) {
-        _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.sendMessage({
+        ASRouterUtils.sendMessage({
           type: "SET_PROVIDER_USER_PREF",
           data: {
             id: provider.id,
@@ -1325,13 +1227,13 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
       }
 
       if (!isSystemEnabled) {
-        _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.sendMessage({
+        ASRouterUtils.sendMessage({
           type: "ENABLE_PROVIDER",
           data: provider.id
         });
       }
     } else {
-      _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.sendMessage({
+      ASRouterUtils.sendMessage({
         type: "DISABLE_PROVIDER",
         data: provider.id
       });
@@ -1350,7 +1252,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
         value: event.target.checked
       }
     };
-    _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.sendMessage(action);
+    ASRouterUtils.sendMessage(action);
     this.setState({
       messageFilter: "all"
     });
@@ -1447,37 +1349,37 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
       itemClassName += " blocked";
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", {
+    return /*#__PURE__*/external_React_default().createElement("tr", {
       className: itemClassName,
       key: `${msg.id}-${msg.provider}`
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }, /*#__PURE__*/external_React_default().createElement("td", {
       className: "message-id"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", null, msg.id, " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("br", null))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(ToggleMessageJSON, {
+    }, /*#__PURE__*/external_React_default().createElement("span", null, msg.id, " ", /*#__PURE__*/external_React_default().createElement("br", null))), /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement(ToggleMessageJSON, {
       msgId: `${msg.id}`,
       toggleJSON: this.toggleJSON,
       isCollapsed: isCollapsed
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    })), /*#__PURE__*/external_React_default().createElement("td", {
       className: "button-column"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }, /*#__PURE__*/external_React_default().createElement("button", {
       className: `button ${isBlocked ? "" : " primary"}`,
       onClick: isBlocked ? this.handleUnblock(msg) : this.handleBlock(msg)
     }, isBlocked ? "Unblock" : "Block"), // eslint-disable-next-line no-nested-ternary
-    isBlocked ? null : isModified ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    isBlocked ? null : isModified ? /*#__PURE__*/external_React_default().createElement("button", {
       className: "button restore" // eslint-disable-next-line react/jsx-no-bind
       ,
       onClick: e => this.resetJSON(msg)
-    }, "Reset") : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }, "Reset") : /*#__PURE__*/external_React_default().createElement("button", {
       className: "button show",
       onClick: this.handleOverride(msg.id)
-    }, "Show"), isBlocked ? null : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }, "Show"), isBlocked ? null : /*#__PURE__*/external_React_default().createElement("button", {
       className: "button modify" // eslint-disable-next-line react/jsx-no-bind
       ,
       onClick: e => this.modifyJson(msg)
-    }, "Modify"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("br", null), "(", impressions, " impressions)"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }, "Modify"), /*#__PURE__*/external_React_default().createElement("br", null), "(", impressions, " impressions)"), /*#__PURE__*/external_React_default().createElement("td", {
       className: "message-summary"
-    }, isBlocked && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", null, "Block reason:", isBlockedByGroup && " Blocked by group", isProviderExcluded && " Excluded by provider", isMessageBlocked && " Message blocked"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("pre", {
+    }, isBlocked && /*#__PURE__*/external_React_default().createElement("tr", null, "Block reason:", isBlockedByGroup && " Blocked by group", isProviderExcluded && " Excluded by provider", isMessageBlocked && " Message blocked"), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("pre", {
       className: isCollapsed ? "collapsed" : "expanded"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("textarea", {
+    }, /*#__PURE__*/external_React_default().createElement("textarea", {
       id: `${msg.id}-textarea`,
       name: msg.id,
       className: "general-textarea",
@@ -1508,7 +1410,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
 
   modifyJson(content) {
     const message = JSON.parse(document.getElementById(`${content.id}-textarea`).value);
-    return _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.modifyMessageJson(message).then(state => {
+    return ASRouterUtils.modifyMessageJson(message).then(state => {
       this.setStateFromParent(state);
       this.props.notifyContent({
         message: state.message
@@ -1526,24 +1428,24 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
       itemClassName += " blocked";
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", {
+    return /*#__PURE__*/external_React_default().createElement("tr", {
       className: itemClassName,
       key: `${msg.id}-${msg.provider}`
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }, /*#__PURE__*/external_React_default().createElement("td", {
       className: "message-id"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", null, msg.id, " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("br", null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("br", null), "(", impressions, " impressions)")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(ToggleMessageJSON, {
+    }, /*#__PURE__*/external_React_default().createElement("span", null, msg.id, " ", /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("br", null), "(", impressions, " impressions)")), /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement(ToggleMessageJSON, {
       msgId: `${msg.id}`,
       toggleJSON: this.toggleJSON,
       isCollapsed: isCollapsed
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("input", {
+    })), /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("input", {
       type: "checkbox",
       id: `${msg.id} checkbox`,
       name: `${msg.id} checkbox`
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    })), /*#__PURE__*/external_React_default().createElement("td", {
       className: `message-summary`
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("pre", {
+    }, /*#__PURE__*/external_React_default().createElement("pre", {
       className: isCollapsed ? "collapsed" : "expanded"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("textarea", {
+    }, /*#__PURE__*/external_React_default().createElement("textarea", {
       id: `${msg.id}-textarea`,
       className: "wnp-textarea",
       name: msg.id
@@ -1570,15 +1472,15 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
     }
 
     const messagesToShow = this.state.messageFilter === "all" ? this.state.messages : this.state.messages.filter(message => message.provider === this.state.messageFilter);
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("button", {
       className: "ASRouterButton slim" // eslint-disable-next-line react/jsx-no-bind
       ,
       onClick: e => this.toggleAllMessages(messagesToShow)
-    }, "Collapse/Expand All"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("p", {
+    }, "Collapse/Expand All"), /*#__PURE__*/external_React_default().createElement("p", {
       className: "helpLink"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", {
+    }, /*#__PURE__*/external_React_default().createElement("span", {
       className: "icon icon-small-spacer icon-info"
-    }), " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", null, "To modify a message, change the JSON and click 'Modify' to see your changes. Click 'Reset' to restore the JSON to the original.")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, messagesToShow.map(msg => this.renderMessageItem(msg)))));
+    }), " ", /*#__PURE__*/external_React_default().createElement("span", null, "To modify a message, change the JSON and click 'Modify' to see your changes. Click 'Reset' to restore the JSON to the original.")), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, messagesToShow.map(msg => this.renderMessageItem(msg)))));
   }
 
   renderMessagesByGroup() {
@@ -1587,7 +1489,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
     }
 
     const messagesToShow = this.state.messageGroupsFilter === "all" ? this.state.messages.filter(m => m.groups.length) : this.state.messages.filter(message => message.groups.includes(this.state.messageGroupsFilter));
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, messagesToShow.map(msg => this.renderMessageItem(msg))));
+    return /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, messagesToShow.map(msg => this.renderMessageItem(msg))));
   }
 
   renderWNMessages() {
@@ -1596,7 +1498,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
     }
 
     const messagesToShow = this.state.messages.filter(message => message.provider === "whats-new-panel" && message.content.body);
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, messagesToShow.map(msg => this.renderWNMessageItem(msg))));
+    return /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, messagesToShow.map(msg => this.renderWNMessageItem(msg))));
   }
 
   renderMessageFilter() {
@@ -1604,18 +1506,18 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
       return null;
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("p", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    return /*#__PURE__*/external_React_default().createElement("p", null, /*#__PURE__*/external_React_default().createElement("button", {
       className: "unblock-all ASRouterButton test-only",
       onClick: this.unblockAll
-    }, "Unblock All Snippets"), "Show messages from ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("select", {
+    }, "Unblock All Snippets"), "Show messages from ", /*#__PURE__*/external_React_default().createElement("select", {
       value: this.state.messageFilter,
       onChange: this.onChangeMessageFilter
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("option", {
+    }, /*#__PURE__*/external_React_default().createElement("option", {
       value: "all"
-    }, "all providers"), this.state.providers.map(provider => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("option", {
+    }, "all providers"), this.state.providers.map(provider => /*#__PURE__*/external_React_default().createElement("option", {
       key: provider.id,
       value: provider.id
-    }, provider.id))), this.state.messageFilter !== "all" && !this.state.messageFilter.includes("_local_testing") ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }, provider.id))), this.state.messageFilter !== "all" && !this.state.messageFilter.includes("_local_testing") ? /*#__PURE__*/external_React_default().createElement("button", {
       className: "button messages-reset",
       onClick: this.handleClearAllImpressionsByProvider
     }, "Reset All") : null);
@@ -1626,27 +1528,27 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
       return null;
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("p", null, "Show messages from ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("select", {
+    return /*#__PURE__*/external_React_default().createElement("p", null, "Show messages from ", /*#__PURE__*/external_React_default().createElement("select", {
       value: this.state.messageGroupsFilter,
       onChange: this.onChangeMessageGroupsFilter
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("option", {
+    }, /*#__PURE__*/external_React_default().createElement("option", {
       value: "all"
-    }, "all groups"), this.state.groups.map(group => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("option", {
+    }, "all groups"), this.state.groups.map(group => /*#__PURE__*/external_React_default().createElement("option", {
       key: group.id,
       value: group.id
     }, group.id))));
   }
 
   renderTableHead() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("thead", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", {
+    return /*#__PURE__*/external_React_default().createElement("thead", null, /*#__PURE__*/external_React_default().createElement("tr", {
       className: "message-item"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }), /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }, "Provider ID"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, "Source"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }, "Provider ID"), /*#__PURE__*/external_React_default().createElement("td", null, "Source"), /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }, "Cohort"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }, "Cohort"), /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
     }, "Last Updated")));
   }
@@ -1655,7 +1557,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
     const providersConfig = this.state.providerPrefs;
     const providerInfo = this.state.providers;
     const userPrefInfo = this.state.userPrefs;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", null, this.renderTableHead(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, providersConfig.map((provider, i) => {
+    return /*#__PURE__*/external_React_default().createElement("table", null, this.renderTableHead(), /*#__PURE__*/external_React_default().createElement("tbody", null, providersConfig.map((provider, i) => {
       const isTestProvider = provider.id.includes("_local_testing");
       const info = providerInfo.find(p => p.id === provider.id) || {};
       const isUserEnabled = provider.id in userPrefInfo ? userPrefInfo[provider.id] : true;
@@ -1663,7 +1565,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
       let label = "local";
 
       if (provider.type === "remote") {
-        label = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", null, "endpoint (", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("a", {
+        label = /*#__PURE__*/external_React_default().createElement("span", null, "endpoint (", /*#__PURE__*/external_React_default().createElement("a", {
           className: "providerUrl",
           target: "_blank",
           href: info.url,
@@ -1672,7 +1574,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
       } else if (provider.type === "remote-settings") {
         label = `remote settings (${provider.bucket})`;
       } else if (provider.type === "remote-experiments") {
-        label = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", null, "remote settings (", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("a", {
+        label = /*#__PURE__*/external_React_default().createElement("span", null, "remote settings (", /*#__PURE__*/external_React_default().createElement("a", {
           className: "providerUrl",
           target: "_blank",
           href: "https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/nimbus-desktop-experiments/records",
@@ -1694,22 +1596,22 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
         label = `disabled via ${reasonsDisabled.join(", ")}`;
       }
 
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", {
+      return /*#__PURE__*/external_React_default().createElement("tr", {
         className: "message-item",
         key: i
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, isTestProvider ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("input", {
+      }, /*#__PURE__*/external_React_default().createElement("td", null, isTestProvider ? /*#__PURE__*/external_React_default().createElement("input", {
         type: "checkbox",
         disabled: true,
         readOnly: true,
         checked: true
-      }) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("input", {
+      }) : /*#__PURE__*/external_React_default().createElement("input", {
         type: "checkbox",
         "data-provider": provider.id,
         checked: isUserEnabled && isSystemEnabled,
         onChange: this.handleEnabledToggle
-      })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, provider.id), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", {
+      })), /*#__PURE__*/external_React_default().createElement("td", null, provider.id), /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("span", {
         className: `sourceLabel${isUserEnabled && isSystemEnabled ? "" : " isDisabled"}`
-      }, label)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, provider.cohort), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+      }, label)), /*#__PURE__*/external_React_default().createElement("td", null, provider.cohort), /*#__PURE__*/external_React_default().createElement("td", {
         style: {
           whiteSpace: "nowrap"
         }
@@ -1721,17 +1623,17 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
     // There was no error and the result is truthy
     const success = this.state.evaluationStatus.success && !!this.state.evaluationStatus.result;
     const result = JSON.stringify(this.state.evaluationStatus.result, null, 2) || "(Empty result)";
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h2", null, "Evaluate JEXL expression"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("p", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("textarea", {
+    return /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("h2", null, "Evaluate JEXL expression"))), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("p", null, /*#__PURE__*/external_React_default().createElement("textarea", {
       ref: "expressionInput",
       rows: "10",
       cols: "60",
       placeholder: "Evaluate JEXL expressions and mock parameters by changing their values below"
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("p", null, "Status:", " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", {
+    })), /*#__PURE__*/external_React_default().createElement("p", null, "Status:", " ", /*#__PURE__*/external_React_default().createElement("span", {
       ref: "evaluationStatus"
-    }, success ? "✅" : "❌", ", Result: ", result))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }, success ? "✅" : "❌", ", Result: ", result))), /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("button", {
       className: "ASRouterButton secondary",
       onClick: this.handleExpressionEval
-    }, "Evaluate"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h2", null, "Modify targeting parameters"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }, "Evaluate"))), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("h2", null, "Modify targeting parameters"))), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("button", {
       className: "ASRouterButton secondary",
       onClick: this.onCopyTargetingParams,
       disabled: this.state.copiedToClipboard
@@ -1739,22 +1641,22 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
       const value = this.state.stringTargetingParameters[param];
       const errorState = this.state.targetingParametersError && this.state.targetingParametersError.id === param;
       const className = errorState ? "errorState" : "";
-      const inputComp = (value && value.length) > 30 ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("textarea", {
+      const inputComp = (value && value.length) > 30 ? /*#__PURE__*/external_React_default().createElement("textarea", {
         name: param,
         className: className,
         value: value,
         rows: "10",
         cols: "60",
         onChange: this.onChangeTargetingParameters
-      }) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("input", {
+      }) : /*#__PURE__*/external_React_default().createElement("input", {
         name: param,
         className: className,
         value: value,
         onChange: this.onChangeTargetingParameters
       });
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", {
+      return /*#__PURE__*/external_React_default().createElement("tr", {
         key: i
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, param), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, inputComp));
+      }, /*#__PURE__*/external_React_default().createElement("td", null, param), /*#__PURE__*/external_React_default().createElement("td", null, inputComp));
     })));
   }
 
@@ -1776,7 +1678,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
   }
 
   setAttribution(e) {
-    _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.sendMessage({
+    ASRouterUtils.sendMessage({
       type: "FORCE_ATTRIBUTION",
       data: this.state.attributionParameters
     }).then(this.setStateFromParent);
@@ -1794,67 +1696,67 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
     const {
       config
     } = this.props.DiscoveryStream;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", {
+    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, /*#__PURE__*/external_React_default().createElement("tr", {
       className: "message-item"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }, "Enabled"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, config.enabled ? "yes" : "no")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", {
+    }, "Enabled"), /*#__PURE__*/external_React_default().createElement("td", null, config.enabled ? "yes" : "no")), /*#__PURE__*/external_React_default().createElement("tr", {
       className: "message-item"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    }, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }, "Endpoint"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, config.endpoint || "(empty)")))));
+    }, "Endpoint"), /*#__PURE__*/external_React_default().createElement("td", null, config.endpoint || "(empty)")))));
   }
 
   renderAttributionParamers() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h2", null, " Attribution Parameters "), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("p", null, " ", "This forces the browser to set some attribution parameters, useful for testing the Return To AMO feature. Clicking on 'Force Attribution', with the default values in each field, will demo the Return To AMO flow with the addon called 'uBlock Origin'. If you wish to try different attribution parameters, enter them in the text boxes. If you wish to try a different addon with the Return To AMO flow, make sure the 'content' text box has a string that is 'rta:base64(addonID)', the base64 string of the addonID prefixed with 'rta:'. The addon must currently be a recommended addon on AMO. Then click 'Force Attribution'. Clicking on 'Force Attribution' with blank text boxes reset attribution data."), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("b", null, " Source ")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("input", {
+    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("h2", null, " Attribution Parameters "), /*#__PURE__*/external_React_default().createElement("p", null, " ", "This forces the browser to set some attribution parameters, useful for testing the Return To AMO feature. Clicking on 'Force Attribution', with the default values in each field, will demo the Return To AMO flow with the addon called 'uBlock Origin'. If you wish to try different attribution parameters, enter them in the text boxes. If you wish to try a different addon with the Return To AMO flow, make sure the 'content' text box has a string that is 'rta:base64(addonID)', the base64 string of the addonID prefixed with 'rta:'. The addon must currently be a recommended addon on AMO. Then click 'Force Attribution'. Clicking on 'Force Attribution' with blank text boxes reset attribution data."), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("b", null, " Source ")), /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("input", {
       type: "text",
       name: "source",
       placeholder: "addons.mozilla.org",
       value: this.state.attributionParameters.source,
       onChange: this.onChangeAttributionParameters
-    }), " ")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("b", null, " Medium ")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("input", {
+    }), " ")), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("b", null, " Medium ")), /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("input", {
       type: "text",
       name: "medium",
       placeholder: "referral",
       value: this.state.attributionParameters.medium,
       onChange: this.onChangeAttributionParameters
-    }), " ")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("b", null, " Campaign ")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("input", {
+    }), " ")), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("b", null, " Campaign ")), /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("input", {
       type: "text",
       name: "campaign",
       placeholder: "non-fx-button",
       value: this.state.attributionParameters.campaign,
       onChange: this.onChangeAttributionParameters
-    }), " ")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("b", null, " Content ")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("input", {
+    }), " ")), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("b", null, " Content ")), /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("input", {
       type: "text",
       name: "content",
       placeholder: `rta:${btoa("uBlock0@raymondhill.net")}`,
       value: this.state.attributionParameters.content,
       onChange: this.onChangeAttributionParameters
-    }), " ")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("b", null, " Experiment ")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("input", {
+    }), " ")), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("b", null, " Experiment ")), /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("input", {
       type: "text",
       name: "experiment",
       placeholder: "ua-onboarding",
       value: this.state.attributionParameters.experiment,
       onChange: this.onChangeAttributionParameters
-    }), " ")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("b", null, " Variation ")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("input", {
+    }), " ")), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("b", null, " Variation ")), /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("input", {
       type: "text",
       name: "variation",
       placeholder: "chrome",
       value: this.state.attributionParameters.variation,
       onChange: this.onChangeAttributionParameters
-    }), " ")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("b", null, " User Agent ")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("input", {
+    }), " ")), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("b", null, " User Agent ")), /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("input", {
       type: "text",
       name: "ua",
       placeholder: "Google Chrome 123",
       value: this.state.attributionParameters.ua,
       onChange: this.onChangeAttributionParameters
-    }), " ")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("b", null, " Download Token ")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("input", {
+    }), " ")), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("b", null, " Download Token ")), /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("input", {
       type: "text",
       name: "dltoken",
       placeholder: "00000000-0000-0000-0000-000000000000",
       value: this.state.attributionParameters.dltoken,
       onChange: this.onChangeAttributionParameters
-    }), " ")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }), " ")), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("button", {
       className: "ASRouterButton primary button",
       onClick: this.setAttribution
     }, " ", "Force Attribution", " "), " "))));
@@ -1864,28 +1766,28 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
     id,
     errors
   }) {
-    const providerId = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", {
+    const providerId = /*#__PURE__*/external_React_default().createElement("td", {
       rowSpan: errors.length
     }, id); // .reverse() so that the last error (most recent) is first
 
     return errors.map(({
       error,
       timestamp
-    }, cellKey) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", {
+    }, cellKey) => /*#__PURE__*/external_React_default().createElement("tr", {
       key: cellKey
-    }, cellKey === errors.length - 1 ? providerId : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, error.message), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, relativeTime(timestamp)))).reverse();
+    }, cellKey === errors.length - 1 ? providerId : null, /*#__PURE__*/external_React_default().createElement("td", null, error.message), /*#__PURE__*/external_React_default().createElement("td", null, relativeTime(timestamp)))).reverse();
   }
 
   renderErrors() {
     const providersWithErrors = this.state.providers && this.state.providers.filter(p => p.errors && p.errors.length);
 
     if (providersWithErrors && providersWithErrors.length) {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", {
+      return /*#__PURE__*/external_React_default().createElement("table", {
         className: "errorReporting"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("thead", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("th", null, "Provider ID"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("th", null, "Message"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("th", null, "Timestamp"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, providersWithErrors.map(this.renderErrorMessage)));
+      }, /*#__PURE__*/external_React_default().createElement("thead", null, /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("th", null, "Provider ID"), /*#__PURE__*/external_React_default().createElement("th", null, "Message"), /*#__PURE__*/external_React_default().createElement("th", null, "Timestamp"))), /*#__PURE__*/external_React_default().createElement("tbody", null, providersWithErrors.map(this.renderErrorMessage)));
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("p", null, "No errors");
+    return /*#__PURE__*/external_React_default().createElement("p", null, "No errors");
   }
 
   renderWNPTests() {
@@ -1894,20 +1796,20 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
     }
 
     let messagesToShow = this.state.messages.filter(message => message.provider === "whats-new-panel");
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("p", {
+    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("p", {
       className: "helpLink"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", {
+    }, /*#__PURE__*/external_React_default().createElement("span", {
       className: "icon icon-small-spacer icon-info"
-    }), " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", null, "To correctly render selected messages, click 'Open What's New Panel', select the messages you want to see, and click 'Render Selected Messages'.", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("br", null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("br", null), "To modify a message, select it, modify the JSON and click 'Render Selected Messages' again to see your changes.", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("br", null), "Click 'Reset Panel' to close the panel and reset all JSON to its original state.")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }), " ", /*#__PURE__*/external_React_default().createElement("span", null, "To correctly render selected messages, click 'Open What's New Panel', select the messages you want to see, and click 'Render Selected Messages'.", /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("br", null), "To modify a message, select it, modify the JSON and click 'Render Selected Messages' again to see your changes.", /*#__PURE__*/external_React_default().createElement("br", null), "Click 'Reset Panel' to close the panel and reset all JSON to its original state.")), /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("button", {
       className: "ASRouterButton primary button",
       onClick: this.handleForceWNP
-    }, "Open What's New Panel"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }, "Open What's New Panel"), /*#__PURE__*/external_React_default().createElement("button", {
       className: "ASRouterButton secondary button",
       onClick: this.handleUpdateWNMessages
-    }, "Render Selected Messages"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }, "Render Selected Messages"), /*#__PURE__*/external_React_default().createElement("button", {
       className: "ASRouterButton secondary button",
       onClick: this.resetPanel
-    }, "Reset Panel"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h2", null, "Messages"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }, "Reset Panel"), /*#__PURE__*/external_React_default().createElement("h2", null, "Messages"), /*#__PURE__*/external_React_default().createElement("button", {
       className: "ASRouterButton slim button" // eslint-disable-next-line react/jsx-no-bind
       ,
       onClick: e => this.toggleAllMessages(messagesToShow)
@@ -1919,35 +1821,35 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
 
     switch (section) {
       case "wnpanel":
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement((react__WEBPACK_IMPORTED_MODULE_3___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h2", null, "What's New Panel"), this.renderWNPTests());
+        return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h2", null, "What's New Panel"), this.renderWNPTests());
 
       case "targeting":
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement((react__WEBPACK_IMPORTED_MODULE_3___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h2", null, "Targeting Utilities"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+        return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h2", null, "Targeting Utilities"), /*#__PURE__*/external_React_default().createElement("button", {
           className: "button",
           onClick: this.expireCache
         }, "Expire Cache"), " ", "(This expires the cache in ASR Targeting for bookmarks and top sites)", this.renderTargetingParameters(), this.renderAttributionParamers());
 
       case "groups":
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement((react__WEBPACK_IMPORTED_MODULE_3___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h2", null, "Message Groups"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+        return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h2", null, "Message Groups"), /*#__PURE__*/external_React_default().createElement("button", {
           className: "button",
           onClick: this.resetGroups
-        }, "Reset group impressions"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("table", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("thead", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tr", {
+        }, "Reset group impressions"), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("thead", null, /*#__PURE__*/external_React_default().createElement("tr", {
           className: "message-item"
-        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, "Enabled"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, "Impressions count"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, "Custom frequency"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, "User preferences"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("tbody", null, this.state.groups && this.state.groups.map(({
+        }, /*#__PURE__*/external_React_default().createElement("td", null, "Enabled"), /*#__PURE__*/external_React_default().createElement("td", null, "Impressions count"), /*#__PURE__*/external_React_default().createElement("td", null, "Custom frequency"), /*#__PURE__*/external_React_default().createElement("td", null, "User preferences"))), /*#__PURE__*/external_React_default().createElement("tbody", null, this.state.groups && this.state.groups.map(({
           id,
           enabled,
           frequency,
           userPreferences = []
-        }, index) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(Row, {
+        }, index) => /*#__PURE__*/external_React_default().createElement(Row, {
           key: id
-        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(TogglePrefCheckbox, {
+        }, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement(TogglePrefCheckbox, {
           checked: enabled,
           pref: id,
           disabled: true
-        })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, this._getGroupImpressionsCount(id, frequency)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, JSON.stringify(frequency, null, 2)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("td", null, userPreferences.join(", ")))))), this.renderMessageGroupsFilter(), this.renderMessagesByGroup());
+        })), /*#__PURE__*/external_React_default().createElement("td", null, this._getGroupImpressionsCount(id, frequency)), /*#__PURE__*/external_React_default().createElement("td", null, JSON.stringify(frequency, null, 2)), /*#__PURE__*/external_React_default().createElement("td", null, userPreferences.join(", ")))))), this.renderMessageGroupsFilter(), this.renderMessagesByGroup());
 
       case "ds":
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement((react__WEBPACK_IMPORTED_MODULE_3___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h2", null, "Discovery Stream"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(DiscoveryStreamAdmin, {
+        return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h2", null, "Discovery Stream"), /*#__PURE__*/external_React_default().createElement(DiscoveryStreamAdmin, {
           state: {
             DiscoveryStream: this.props.DiscoveryStream,
             Personalization: this.props.Personalization
@@ -1957,48 +1859,48 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_3___default().P
         }));
 
       case "errors":
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement((react__WEBPACK_IMPORTED_MODULE_3___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h2", null, "ASRouter Errors"), this.renderErrors());
+        return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h2", null, "ASRouter Errors"), this.renderErrors());
 
       default:
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement((react__WEBPACK_IMPORTED_MODULE_3___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h2", null, "Message Providers", " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+        return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h2", null, "Message Providers", " ", /*#__PURE__*/external_React_default().createElement("button", {
           title: "Restore all provider settings that ship with Firefox",
           className: "button",
           onClick: this.resetPref
-        }, "Restore default prefs")), this.state.providers ? this.renderProviders() : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h2", null, "Messages"), this.renderMessageFilter(), this.renderMessages());
+        }, "Restore default prefs")), this.state.providers ? this.renderProviders() : null, /*#__PURE__*/external_React_default().createElement("h2", null, "Messages"), this.renderMessageFilter(), this.renderMessages());
     }
   }
 
   render() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: `asrouter-admin ${this.props.collapsed ? "collapsed" : "expanded"}`
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("aside", {
+    }, /*#__PURE__*/external_React_default().createElement("aside", {
       className: "sidebar"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("ul", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("li", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("a", {
+    }, /*#__PURE__*/external_React_default().createElement("ul", null, /*#__PURE__*/external_React_default().createElement("li", null, /*#__PURE__*/external_React_default().createElement("a", {
       href: "#devtools"
-    }, "General")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("li", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("a", {
+    }, "General")), /*#__PURE__*/external_React_default().createElement("li", null, /*#__PURE__*/external_React_default().createElement("a", {
       href: "#devtools-wnpanel"
-    }, "What's New Panel")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("li", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("a", {
+    }, "What's New Panel")), /*#__PURE__*/external_React_default().createElement("li", null, /*#__PURE__*/external_React_default().createElement("a", {
       href: "#devtools-targeting"
-    }, "Targeting")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("li", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("a", {
+    }, "Targeting")), /*#__PURE__*/external_React_default().createElement("li", null, /*#__PURE__*/external_React_default().createElement("a", {
       href: "#devtools-groups"
-    }, "Message Groups")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("li", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("a", {
+    }, "Message Groups")), /*#__PURE__*/external_React_default().createElement("li", null, /*#__PURE__*/external_React_default().createElement("a", {
       href: "#devtools-ds"
-    }, "Discovery Stream")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("li", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("a", {
+    }, "Discovery Stream")), /*#__PURE__*/external_React_default().createElement("li", null, /*#__PURE__*/external_React_default().createElement("a", {
       href: "#devtools-errors"
-    }, "Errors")))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("main", {
+    }, "Errors")))), /*#__PURE__*/external_React_default().createElement("main", {
       className: "main-panel"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("h1", null, "AS Router Admin"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("p", {
+    }, /*#__PURE__*/external_React_default().createElement("h1", null, "AS Router Admin"), /*#__PURE__*/external_React_default().createElement("p", {
       className: "helpLink"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", {
+    }, /*#__PURE__*/external_React_default().createElement("span", {
       className: "icon icon-small-spacer icon-info"
-    }), " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", null, "Need help using these tools? Check out our", " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("a", {
+    }), " ", /*#__PURE__*/external_React_default().createElement("span", null, "Need help using these tools? Check out our", " ", /*#__PURE__*/external_React_default().createElement("a", {
       target: "blank",
       href: "https://firefox-source-docs.mozilla.org/browser/components/newtab/content-src/asrouter/docs/debugging-docs.html"
     }, "documentation"))), this.getSection()));
   }
 
 }
-class CollapseToggle extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureComponent) {
+class CollapseToggle extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.onCollapseToggle = this.onCollapseToggle.bind(this);
@@ -2039,7 +1941,7 @@ class CollapseToggle extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureC
 
   componentWillUnmount() {
     __webpack_require__.g.document.body.classList.remove("no-scroll");
-    _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__.ASRouterUtils.removeListener(this.onMessageFromParent);
+    ASRouterUtils.removeListener(this.onMessageFromParent);
   }
 
   render() {
@@ -2051,744 +1953,1115 @@ class CollapseToggle extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureC
     } = this;
     const isCollapsed = this.state.collapsed || !renderAdmin;
     const label = `${isCollapsed ? "Expand" : "Collapse"} devtools`;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement((react__WEBPACK_IMPORTED_MODULE_3___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("a", {
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("a", {
       href: "#devtools",
       title: label,
       "aria-label": label,
       className: `asrouter-toggle ${isCollapsed ? "collapsed" : "expanded"}`,
       onClick: this.renderAdmin ? this.onCollapseToggle : null
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", {
+    }, /*#__PURE__*/external_React_default().createElement("span", {
       className: "icon icon-devtools"
-    })), renderAdmin ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(ASRouterAdminInner, _extends({}, props, {
+    })), renderAdmin ? /*#__PURE__*/external_React_default().createElement(ASRouterAdminInner, _extends({}, props, {
       collapsed: this.state.collapsed
     })) : null);
   }
 
 }
 
-const _ASRouterAdmin = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(_SimpleHashRouter__WEBPACK_IMPORTED_MODULE_4__.SimpleHashRouter, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(CollapseToggle, props));
+const _ASRouterAdmin = props => /*#__PURE__*/external_React_default().createElement(SimpleHashRouter, null, /*#__PURE__*/external_React_default().createElement(CollapseToggle, props));
 
-const ASRouterAdmin = (0,react_redux__WEBPACK_IMPORTED_MODULE_2__.connect)(state => ({
+const ASRouterAdmin = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   Sections: state.Sections,
   DiscoveryStream: state.DiscoveryStream,
   Personalization: state.Personalization,
   Prefs: state.Prefs
 }))(_ASRouterAdmin);
+;// CONCATENATED MODULE: ./node_modules/fluent/src/types.js
+/* global Intl */
 
-/***/ }),
-/* 4 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/**
+ * The `FluentType` class is the base of Fluent's type system.
+ *
+ * Fluent types wrap JavaScript values and store additional configuration for
+ * them, which can then be used in the `toString` method together with a proper
+ * `Intl` formatter.
+ */
+class FluentType {
+  /**
+   * Create an `FluentType` instance.
+   *
+   * @param   {Any}    value - JavaScript value to wrap.
+   * @param   {Object} opts  - Configuration.
+   * @returns {FluentType}
+   */
+  constructor(value, opts) {
+    this.value = value;
+    this.opts = opts;
+  }
+  /**
+   * Unwrap the raw value stored by this `FluentType`.
+   *
+   * @returns {Any}
+   */
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ASRouterUtils": () => (/* binding */ ASRouterUtils)
-/* harmony export */ });
-/* harmony import */ var common_ActorConstants_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5);
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+  valueOf() {
+    return this.value;
+  }
+  /**
+   * Format this instance of `FluentType` to a string.
+   *
+   * Formatted values are suitable for use outside of the `FluentBundle`.
+   * This method can use `Intl` formatters memoized by the `FluentBundle`
+   * instance passed as an argument.
+   *
+   * @param   {FluentBundle} [bundle]
+   * @returns {string}
+   */
 
 
-const ASRouterUtils = {
-  addListener(listener) {
-    if (__webpack_require__.g.ASRouterAddParentListener) {
-      __webpack_require__.g.ASRouterAddParentListener(listener);
-    }
-  },
+  toString() {
+    throw new Error("Subclasses of FluentType must implement toString.");
+  }
 
-  removeListener(listener) {
-    if (__webpack_require__.g.ASRouterRemoveParentListener) {
-      __webpack_require__.g.ASRouterRemoveParentListener(listener);
-    }
-  },
-
-  sendMessage(action) {
-    if (__webpack_require__.g.ASRouterMessage) {
-      return __webpack_require__.g.ASRouterMessage(action);
-    }
-
-    throw new Error(`Unexpected call:\n${JSON.stringify(action, null, 3)}`);
-  },
-
-  blockById(id, options) {
-    return ASRouterUtils.sendMessage({
-      type: common_ActorConstants_jsm__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.BLOCK_MESSAGE_BY_ID,
-      data: {
-        id,
-        ...options
-      }
-    });
-  },
-
-  modifyMessageJson(content) {
-    return ASRouterUtils.sendMessage({
-      type: common_ActorConstants_jsm__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.MODIFY_MESSAGE_JSON,
-      data: {
-        content
-      }
-    });
-  },
-
-  executeAction(button_action) {
-    return ASRouterUtils.sendMessage({
-      type: common_ActorConstants_jsm__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.USER_ACTION,
-      data: button_action
-    });
-  },
-
-  unblockById(id) {
-    return ASRouterUtils.sendMessage({
-      type: common_ActorConstants_jsm__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.UNBLOCK_MESSAGE_BY_ID,
-      data: {
-        id
-      }
-    });
-  },
-
-  blockBundle(bundle) {
-    return ASRouterUtils.sendMessage({
-      type: common_ActorConstants_jsm__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.BLOCK_BUNDLE,
-      data: {
-        bundle
-      }
-    });
-  },
-
-  unblockBundle(bundle) {
-    return ASRouterUtils.sendMessage({
-      type: common_ActorConstants_jsm__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.UNBLOCK_BUNDLE,
-      data: {
-        bundle
-      }
-    });
-  },
-
-  overrideMessage(id) {
-    return ASRouterUtils.sendMessage({
-      type: common_ActorConstants_jsm__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.OVERRIDE_MESSAGE,
-      data: {
-        id
-      }
-    });
-  },
-
-  sendTelemetry(ping) {
-    return ASRouterUtils.sendMessage(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__.actionCreators.ASRouterUserEvent(ping));
-  },
-
-  getPreviewEndpoint() {
-    if (__webpack_require__.g.document && __webpack_require__.g.document.location && __webpack_require__.g.document.location.href.includes("endpoint")) {
-      const params = new URLSearchParams(__webpack_require__.g.document.location.href.slice(__webpack_require__.g.document.location.href.indexOf("endpoint")));
-
-      try {
-        const endpoint = new URL(params.get("endpoint"));
-        return {
-          url: endpoint.href,
-          snippetId: params.get("snippetId"),
-          theme: this.getPreviewTheme(),
-          dir: this.getPreviewDir()
-        };
-      } catch (e) {}
-    }
-
+}
+class FluentNone extends FluentType {
+  valueOf() {
     return null;
-  },
-
-  getPreviewTheme() {
-    return new URLSearchParams(__webpack_require__.g.document.location.href.slice(__webpack_require__.g.document.location.href.indexOf("theme"))).get("theme");
-  },
-
-  getPreviewDir() {
-    return new URLSearchParams(__webpack_require__.g.document.location.href.slice(__webpack_require__.g.document.location.href.indexOf("dir"))).get("dir");
   }
 
-};
-
-/***/ }),
-/* 5 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "MESSAGE_TYPE_LIST": () => (/* binding */ MESSAGE_TYPE_LIST),
-/* harmony export */   "MESSAGE_TYPE_HASH": () => (/* binding */ MESSAGE_TYPE_HASH)
-/* harmony export */ });
-/* vim: set ts=2 sw=2 sts=2 et tw=80: */
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-const MESSAGE_TYPE_LIST = ["BLOCK_MESSAGE_BY_ID", "USER_ACTION", "IMPRESSION", "TRIGGER", "NEWTAB_MESSAGE_REQUEST", // PB is Private Browsing
-"PBNEWTAB_MESSAGE_REQUEST", "DOORHANGER_TELEMETRY", "TOOLBAR_BADGE_TELEMETRY", "TOOLBAR_PANEL_TELEMETRY", "MOMENTS_PAGE_TELEMETRY", "INFOBAR_TELEMETRY", "SPOTLIGHT_TELEMETRY", "AS_ROUTER_TELEMETRY_USER_EVENT", // Admin types
-"ADMIN_CONNECT_STATE", "UNBLOCK_MESSAGE_BY_ID", "UNBLOCK_ALL", "BLOCK_BUNDLE", "UNBLOCK_BUNDLE", "DISABLE_PROVIDER", "ENABLE_PROVIDER", "EVALUATE_JEXL_EXPRESSION", "EXPIRE_QUERY_CACHE", "FORCE_ATTRIBUTION", "FORCE_WHATSNEW_PANEL", "CLOSE_WHATSNEW_PANEL", "OVERRIDE_MESSAGE", "MODIFY_MESSAGE_JSON", "RESET_PROVIDER_PREF", "SET_PROVIDER_USER_PREF", "RESET_GROUPS_STATE"];
-const MESSAGE_TYPE_HASH = MESSAGE_TYPE_LIST.reduce((hash, value) => {
-  hash[value] = value;
-  return hash;
-}, {});
-
-/***/ }),
-/* 6 */
-/***/ ((module) => {
-
-module.exports = ReactRedux;
-
-/***/ }),
-/* 7 */
-/***/ ((module) => {
-
-module.exports = React;
-
-/***/ }),
-/* 8 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "SimpleHashRouter": () => (/* binding */ SimpleHashRouter)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-class SimpleHashRouter extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.onHashChange = this.onHashChange.bind(this);
-    this.state = {
-      hash: __webpack_require__.g.location.hash
-    };
-  }
-
-  onHashChange() {
-    this.setState({
-      hash: __webpack_require__.g.location.hash
-    });
-  }
-
-  componentWillMount() {
-    __webpack_require__.g.addEventListener("hashchange", this.onHashChange);
-  }
-
-  componentWillUnmount() {
-    __webpack_require__.g.removeEventListener("hashchange", this.onHashChange);
-  }
-
-  render() {
-    const [, ...routes] = this.state.hash.split("-");
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().cloneElement(this.props.children, {
-      location: {
-        hash: this.state.hash,
-        routes
-      }
-    });
+  toString() {
+    return `{${this.value || "???"}}`;
   }
 
 }
-
-/***/ }),
-/* 9 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ASRouterUISurface": () => (/* binding */ ASRouterUISurface)
-/* harmony export */ });
-/* harmony import */ var common_ActorConstants_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5);
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1);
-/* harmony import */ var _asrouter_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(4);
-/* harmony import */ var _rich_text_strings__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(10);
-/* harmony import */ var _components_ImpressionsWrapper_ImpressionsWrapper__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(18);
-/* harmony import */ var fluent_react__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(19);
-/* harmony import */ var content_src_lib_constants__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(35);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(36);
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var _templates_template_manifest__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(37);
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-
-
-
-
-
-
-
-const TEMPLATES_BELOW_SEARCH = ["simple_below_search_snippet"]; // Note: nextProps/prevProps refer to props passed to <ImpressionsWrapper />, not <ASRouterUISurface />
-
-function shouldSendImpressionOnUpdate(nextProps, prevProps) {
-  return nextProps.message.id && (!prevProps.message || prevProps.message.id !== nextProps.message.id);
-}
-
-class ASRouterUISurface extends (react__WEBPACK_IMPORTED_MODULE_7___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.sendClick = this.sendClick.bind(this);
-    this.sendImpression = this.sendImpression.bind(this);
-    this.sendUserActionTelemetry = this.sendUserActionTelemetry.bind(this);
-    this.onUserAction = this.onUserAction.bind(this);
-    this.fetchFlowParams = this.fetchFlowParams.bind(this);
-    this.onBlockSelected = this.onBlockSelected.bind(this);
-    this.onBlockById = this.onBlockById.bind(this);
-    this.onDismiss = this.onDismiss.bind(this);
-    this.onMessageFromParent = this.onMessageFromParent.bind(this);
-    this.state = {
-      message: {}
-    };
-
-    if (props.document) {
-      this.footerPortal = props.document.getElementById("footer-asrouter-container");
-    }
+class FluentNumber extends FluentType {
+  constructor(value, opts) {
+    super(parseFloat(value), opts);
   }
 
-  async fetchFlowParams(params = {}) {
-    let result = {};
-    const {
-      fxaEndpoint
-    } = this.props;
-
-    if (!fxaEndpoint) {
-      const err = "Tried to fetch flow params before fxaEndpoint pref was ready";
-      console.error(err); // eslint-disable-line no-console
-    }
-
+  toString(bundle) {
     try {
-      const urlObj = new URL(fxaEndpoint);
-      urlObj.pathname = "metrics-flow";
-      Object.keys(params).forEach(key => {
-        urlObj.searchParams.append(key, params[key]);
-      });
-      const response = await fetch(urlObj.toString(), {
-        credentials: "omit"
-      });
+      const nf = bundle._memoizeIntlObject(Intl.NumberFormat, this.opts);
 
-      if (response.status === 200) {
-        const {
-          deviceId,
-          flowId,
-          flowBeginTime
-        } = await response.json();
-        result = {
-          deviceId,
-          flowId,
-          flowBeginTime
-        };
-      } else {
-        console.error("Non-200 response", response); // eslint-disable-line no-console
-      }
-    } catch (error) {
-      console.error(error); // eslint-disable-line no-console
+      return nf.format(this.value);
+    } catch (e) {
+      // XXX Report the error.
+      return this.value;
     }
-
-    return result;
-  }
-
-  sendUserActionTelemetry(extraProps = {}) {
-    const {
-      message
-    } = this.state;
-    const eventType = `${message.provider}_user_event`;
-    const source = extraProps.id;
-    delete extraProps.id;
-    _asrouter_utils__WEBPACK_IMPORTED_MODULE_2__.ASRouterUtils.sendTelemetry({
-      source,
-      message_id: message.id,
-      action: eventType,
-      ...extraProps
-    });
-  }
-
-  sendImpression(extraProps) {
-    if (this.state.message.provider === "preview") {
-      return Promise.resolve();
-    }
-
-    this.sendUserActionTelemetry({
-      event: "IMPRESSION",
-      ...extraProps
-    });
-    return _asrouter_utils__WEBPACK_IMPORTED_MODULE_2__.ASRouterUtils.sendMessage({
-      type: common_ActorConstants_jsm__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.IMPRESSION,
-      data: this.state.message
-    });
-  } // If link has a `metric` data attribute send it as part of the `event_context`
-  // telemetry field which can have arbitrary values.
-  // Used for router messages with links as part of the content.
-
-
-  sendClick(event) {
-    const {
-      dataset
-    } = event.target;
-    const metric = {
-      event_context: dataset.metric,
-      // Used for the `source` of the event. Needed to differentiate
-      // from other snippet or onboarding events that may occur.
-      id: "NEWTAB_FOOTER_BAR_CONTENT"
-    };
-    const {
-      entrypoint_name,
-      entrypoint_value
-    } = dataset; // Assign the snippet referral for the action
-
-    const entrypoint = entrypoint_name ? new URLSearchParams([[entrypoint_name, entrypoint_value]]).toString() : entrypoint_value;
-    const action = {
-      type: dataset.action,
-      data: {
-        args: dataset.args,
-        ...(entrypoint && {
-          entrypoint
-        })
-      }
-    };
-
-    if (action.type) {
-      _asrouter_utils__WEBPACK_IMPORTED_MODULE_2__.ASRouterUtils.executeAction(action);
-    }
-
-    if (!this.state.message.content.do_not_autoblock && !dataset.do_not_autoblock) {
-      this.onBlockById(this.state.message.id);
-    }
-
-    if (this.state.message.provider !== "preview") {
-      this.sendUserActionTelemetry({
-        event: "CLICK_BUTTON",
-        ...metric
-      });
-    }
-  }
-
-  onBlockSelected(options) {
-    return this.onBlockById(this.state.message.id, { ...options,
-      campaign: this.state.message.campaign
-    });
-  }
-
-  onBlockById(id, options) {
-    return _asrouter_utils__WEBPACK_IMPORTED_MODULE_2__.ASRouterUtils.blockById(id, options).then(clearAll => {
-      if (clearAll) {
-        this.setState({
-          message: {}
-        });
-      }
-    });
-  }
-
-  onDismiss() {
-    this.clearMessage(this.state.message.id);
-  } // Blocking a snippet by id blocks the entire campaign
-  // so when clearing we use the two values interchangeably
-
-
-  clearMessage(idOrCampaign) {
-    if (idOrCampaign === this.state.message.id || idOrCampaign === this.state.message.campaign) {
-      this.setState({
-        message: {}
-      });
-    }
-  }
-
-  clearProvider(id) {
-    if (this.state.message.provider === id) {
-      this.setState({
-        message: {}
-      });
-    }
-  }
-
-  onMessageFromParent({
-    type,
-    data
-  }) {
-    // These only exists due to onPrefChange events in ASRouter
-    switch (type) {
-      case "ClearMessages":
-        {
-          data.forEach(id => this.clearMessage(id));
-          break;
-        }
-
-      case "ClearProviders":
-        {
-          data.forEach(id => this.clearProvider(id));
-          break;
-        }
-
-      case "EnterSnippetsPreviewMode":
-        {
-          this.props.dispatch({
-            type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__.actionTypes.SNIPPETS_PREVIEW_MODE
-          });
-          break;
-        }
-    }
-  }
-
-  requestMessage(endpoint) {
-    _asrouter_utils__WEBPACK_IMPORTED_MODULE_2__.ASRouterUtils.sendMessage({
-      type: "NEWTAB_MESSAGE_REQUEST",
-      data: {
-        endpoint
-      }
-    }).then(state => this.setState(state));
-  }
-
-  componentWillMount() {
-    const endpoint = _asrouter_utils__WEBPACK_IMPORTED_MODULE_2__.ASRouterUtils.getPreviewEndpoint();
-
-    if (endpoint && endpoint.theme === "dark") {
-      __webpack_require__.g.window.dispatchEvent(new CustomEvent("LightweightTheme:Set", {
-        detail: {
-          data: content_src_lib_constants__WEBPACK_IMPORTED_MODULE_6__.NEWTAB_DARK_THEME
-        }
-      }));
-    }
-
-    if (endpoint && endpoint.dir === "rtl") {
-      //Set `dir = rtl` on the HTML
-      this.props.document.dir = "rtl";
-    }
-
-    _asrouter_utils__WEBPACK_IMPORTED_MODULE_2__.ASRouterUtils.addListener(this.onMessageFromParent);
-    this.requestMessage(endpoint);
-  }
-
-  componentWillUnmount() {
-    _asrouter_utils__WEBPACK_IMPORTED_MODULE_2__.ASRouterUtils.removeListener(this.onMessageFromParent);
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.adminContent && JSON.stringify(prevProps.adminContent) !== JSON.stringify(this.props.adminContent)) {
-      this.updateContent();
-    }
-
-    if (prevState.message.id !== this.state.message.id) {
-      const main = __webpack_require__.g.window.document.querySelector("main");
-
-      if (main) {
-        if (this.state.message.id) {
-          main.classList.add("has-snippet");
-        } else {
-          main.classList.remove("has-snippet");
-        }
-      }
-    }
-  }
-
-  updateContent() {
-    this.setState({ ...this.props.adminContent
-    });
-  }
-
-  async getMonitorUrl({
-    url,
-    flowRequestParams = {}
-  }) {
-    const flowValues = await this.fetchFlowParams(flowRequestParams); // Note that flowParams are actually added dynamically on the page
-
-    const urlObj = new URL(url);
-    ["deviceId", "flowId", "flowBeginTime"].forEach(key => {
-      if (key in flowValues) {
-        urlObj.searchParams.append(key, flowValues[key]);
-      }
-    });
-    return urlObj.toString();
-  }
-
-  async onUserAction(action) {
-    switch (action.type) {
-      // This needs to be handled locally because its
-      case "ENABLE_FIREFOX_MONITOR":
-        const url = await this.getMonitorUrl(action.data.args);
-        _asrouter_utils__WEBPACK_IMPORTED_MODULE_2__.ASRouterUtils.executeAction({
-          type: "OPEN_URL",
-          data: {
-            args: url
-          }
-        });
-        break;
-
-      default:
-        _asrouter_utils__WEBPACK_IMPORTED_MODULE_2__.ASRouterUtils.executeAction(action);
-    }
-  }
-
-  renderSnippets() {
-    const {
-      message
-    } = this.state;
-
-    if (!_templates_template_manifest__WEBPACK_IMPORTED_MODULE_9__.SnippetsTemplates[message.template]) {
-      return null;
-    }
-
-    const SnippetComponent = _templates_template_manifest__WEBPACK_IMPORTED_MODULE_9__.SnippetsTemplates[message.template];
-    const {
-      content
-    } = message;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default().createElement(_components_ImpressionsWrapper_ImpressionsWrapper__WEBPACK_IMPORTED_MODULE_4__.ImpressionsWrapper, {
-      id: "NEWTAB_FOOTER_BAR",
-      message: this.state.message,
-      sendImpression: this.sendImpression,
-      shouldSendImpressionOnUpdate: shouldSendImpressionOnUpdate // This helps with testing
-      ,
-      document: this.props.document
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default().createElement(fluent_react__WEBPACK_IMPORTED_MODULE_5__.LocalizationProvider, {
-      bundles: (0,_rich_text_strings__WEBPACK_IMPORTED_MODULE_3__.generateBundles)(content)
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default().createElement(SnippetComponent, _extends({}, this.state.message, {
-      UISurface: "NEWTAB_FOOTER_BAR",
-      onBlock: this.onBlockSelected,
-      onDismiss: this.onDismiss,
-      onAction: this.onUserAction,
-      sendClick: this.sendClick,
-      sendUserActionTelemetry: this.sendUserActionTelemetry
-    }))));
-  }
-
-  renderPreviewBanner() {
-    if (this.state.message.provider !== "preview") {
-      return null;
-    }
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default().createElement("div", {
-      className: "snippets-preview-banner"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default().createElement("span", {
-      className: "icon icon-small-spacer icon-info"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default().createElement("span", null, "Preview Purposes Only"));
-  }
-
-  render() {
-    const {
-      message
-    } = this.state;
-
-    if (!message.id) {
-      return null;
-    }
-
-    const shouldRenderBelowSearch = TEMPLATES_BELOW_SEARCH.includes(message.template);
-    return shouldRenderBelowSearch ?
-    /*#__PURE__*/
-    // Render special below search snippets in place;
-    react__WEBPACK_IMPORTED_MODULE_7___default().createElement("div", {
-      className: "below-search-snippet-wrapper"
-    }, this.renderSnippets()) :
-    /*#__PURE__*/
-    // For regular snippets etc. we should render everything in our footer
-    // container.
-    react_dom__WEBPACK_IMPORTED_MODULE_8___default().createPortal( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default().createElement((react__WEBPACK_IMPORTED_MODULE_7___default().Fragment), null, this.renderPreviewBanner(), this.renderSnippets()), this.footerPortal);
   }
 
 }
-ASRouterUISurface.defaultProps = {
-  document: __webpack_require__.g.document
-};
+class FluentDateTime extends FluentType {
+  constructor(value, opts) {
+    super(new Date(value), opts);
+  }
 
-/***/ }),
-/* 10 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+  toString(bundle) {
+    try {
+      const dtf = bundle._memoizeIntlObject(Intl.DateTimeFormat, this.opts);
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "RICH_TEXT_KEYS": () => (/* binding */ RICH_TEXT_KEYS),
-/* harmony export */   "generateBundles": () => (/* binding */ generateBundles)
-/* harmony export */ });
-/* harmony import */ var fluent__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(11);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/**
- * Properties that allow rich text MUST be added to this list.
- *   key: the localization_id that should be used
- *   value: a property or array of properties on the message.content object
- */
-
-const RICH_TEXT_CONFIG = {
-  text: ["text", "scene1_text"],
-  success_text: "success_text",
-  error_text: "error_text",
-  scene2_text: "scene2_text",
-  amo_html: "amo_html",
-  privacy_html: "scene2_privacy_html",
-  disclaimer_html: "scene2_disclaimer_html"
-};
-const RICH_TEXT_KEYS = Object.keys(RICH_TEXT_CONFIG);
-/**
- * Generates an array of messages suitable for fluent's localization provider
- * including all needed strings for rich text.
- * @param {object} content A .content object from an ASR message (i.e. message.content)
- * @returns {FluentBundle[]} A array containing the fluent message context
- */
-
-function generateBundles(content) {
-  const bundle = new fluent__WEBPACK_IMPORTED_MODULE_0__.FluentBundle("en-US");
-  RICH_TEXT_KEYS.forEach(key => {
-    const attrs = RICH_TEXT_CONFIG[key];
-    const attrsToTry = Array.isArray(attrs) ? [...attrs] : [attrs];
-    let string = "";
-
-    while (!string && attrsToTry.length) {
-      const attr = attrsToTry.pop();
-      string = content[attr];
+      return dtf.format(this.value);
+    } catch (e) {
+      // XXX Report the error.
+      return this.value;
     }
+  }
 
-    bundle.addMessages(`${key} = ${string}`);
-  });
-  return [bundle];
 }
-
-/***/ }),
-/* 11 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "FluentBundle": () => (/* reexport safe */ _bundle_js__WEBPACK_IMPORTED_MODULE_0__["default"]),
-/* harmony export */   "FluentResource": () => (/* reexport safe */ _resource_js__WEBPACK_IMPORTED_MODULE_1__["default"]),
-/* harmony export */   "FluentError": () => (/* reexport safe */ _error_js__WEBPACK_IMPORTED_MODULE_2__["default"]),
-/* harmony export */   "FluentType": () => (/* reexport safe */ _types_js__WEBPACK_IMPORTED_MODULE_3__.FluentType),
-/* harmony export */   "FluentNumber": () => (/* reexport safe */ _types_js__WEBPACK_IMPORTED_MODULE_3__.FluentNumber),
-/* harmony export */   "FluentDateTime": () => (/* reexport safe */ _types_js__WEBPACK_IMPORTED_MODULE_3__.FluentDateTime)
-/* harmony export */ });
-/* harmony import */ var _bundle_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(12);
-/* harmony import */ var _resource_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(16);
-/* harmony import */ var _error_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(17);
-/* harmony import */ var _types_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(14);
-/*
- * @module fluent
+;// CONCATENATED MODULE: ./node_modules/fluent/src/builtins.js
+/**
  * @overview
  *
- * `fluent` is a JavaScript implementation of Project Fluent, a localization
- * framework designed to unleash the expressive power of the natural language.
+ * The FTL resolver ships with a number of functions built-in.
  *
+ * Each function take two arguments:
+ *   - args - an array of positional args
+ *   - opts - an object of key-value args
+ *
+ * Arguments to functions are guaranteed to already be instances of
+ * `FluentType`.  Functions must return `FluentType` objects as well.
  */
 
 
+function merge(argopts, opts) {
+  return Object.assign({}, argopts, values(opts));
+}
+
+function values(opts) {
+  const unwrapped = {};
+
+  for (const [name, opt] of Object.entries(opts)) {
+    unwrapped[name] = opt.valueOf();
+  }
+
+  return unwrapped;
+}
+
+function NUMBER([arg], opts) {
+  if (arg instanceof FluentNone) {
+    return arg;
+  }
+
+  if (arg instanceof FluentNumber) {
+    return new FluentNumber(arg.valueOf(), merge(arg.opts, opts));
+  }
+
+  return new FluentNone("NUMBER()");
+}
+function DATETIME([arg], opts) {
+  if (arg instanceof FluentNone) {
+    return arg;
+  }
+
+  if (arg instanceof FluentDateTime) {
+    return new FluentDateTime(arg.valueOf(), merge(arg.opts, opts));
+  }
+
+  return new FluentNone("DATETIME()");
+}
+;// CONCATENATED MODULE: ./node_modules/fluent/src/resolver.js
+/* global Intl */
+
+/**
+ * @overview
+ *
+ * The role of the Fluent resolver is to format a translation object to an
+ * instance of `FluentType` or an array of instances.
+ *
+ * Translations can contain references to other messages or variables,
+ * conditional logic in form of select expressions, traits which describe their
+ * grammatical features, and can use Fluent builtins which make use of the
+ * `Intl` formatters to format numbers, dates, lists and more into the
+ * bundle's language. See the documentation of the Fluent syntax for more
+ * information.
+ *
+ * In case of errors the resolver will try to salvage as much of the
+ * translation as possible.  In rare situations where the resolver didn't know
+ * how to recover from an error it will return an instance of `FluentNone`.
+ *
+ * All expressions resolve to an instance of `FluentType`. The caller should
+ * use the `toString` method to convert the instance to a native value.
+ *
+ * All functions in this file pass around a special object called `scope`.
+ * This object stores a set of elements used by all resolve functions:
+ *
+ *  * {FluentBundle} bundle
+ *      bundle for which the given resolution is happening
+ *  * {Object} args
+ *      list of developer provided arguments that can be used
+ *  * {Array} errors
+ *      list of errors collected while resolving
+ *  * {WeakSet} dirty
+ *      Set of patterns already encountered during this resolution.
+ *      This is used to prevent cyclic resolutions.
+ */
+
+ // Prevent expansion of too long placeables.
+
+const MAX_PLACEABLE_LENGTH = 2500; // Unicode bidi isolation characters.
+
+const FSI = "\u2068";
+const PDI = "\u2069"; // Helper: match a variant key to the given selector.
+
+function match(bundle, selector, key) {
+  if (key === selector) {
+    // Both are strings.
+    return true;
+  } // XXX Consider comparing options too, e.g. minimumFractionDigits.
 
 
+  if (key instanceof FluentNumber && selector instanceof FluentNumber && key.value === selector.value) {
+    return true;
+  }
 
-/***/ }),
-/* 12 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+  if (selector instanceof FluentNumber && typeof key === "string") {
+    let category = bundle._memoizeIntlObject(Intl.PluralRules, selector.opts).select(selector.value);
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ FluentBundle)
-/* harmony export */ });
-/* harmony import */ var _resolver_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13);
-/* harmony import */ var _resource_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(16);
+    if (key === category) {
+      return true;
+    }
+  }
+
+  return false;
+} // Helper: resolve the default variant from a list of variants.
+
+
+function getDefault(scope, variants, star) {
+  if (variants[star]) {
+    return Type(scope, variants[star]);
+  }
+
+  scope.errors.push(new RangeError("No default"));
+  return new FluentNone();
+} // Helper: resolve arguments to a call expression.
+
+
+function getArguments(scope, args) {
+  const positional = [];
+  const named = {};
+
+  for (const arg of args) {
+    if (arg.type === "narg") {
+      named[arg.name] = Type(scope, arg.value);
+    } else {
+      positional.push(Type(scope, arg));
+    }
+  }
+
+  return [positional, named];
+} // Resolve an expression to a Fluent type.
+
+
+function Type(scope, expr) {
+  // A fast-path for strings which are the most common case. Since they
+  // natively have the `toString` method they can be used as if they were
+  // a FluentType instance without incurring the cost of creating one.
+  if (typeof expr === "string") {
+    return scope.bundle._transform(expr);
+  } // A fast-path for `FluentNone` which doesn't require any additional logic.
+
+
+  if (expr instanceof FluentNone) {
+    return expr;
+  } // The Runtime AST (Entries) encodes patterns (complex strings with
+  // placeables) as Arrays.
+
+
+  if (Array.isArray(expr)) {
+    return Pattern(scope, expr);
+  }
+
+  switch (expr.type) {
+    case "str":
+      return expr.value;
+
+    case "num":
+      return new FluentNumber(expr.value, {
+        minimumFractionDigits: expr.precision
+      });
+
+    case "var":
+      return VariableReference(scope, expr);
+
+    case "mesg":
+      return MessageReference(scope, expr);
+
+    case "term":
+      return TermReference(scope, expr);
+
+    case "func":
+      return FunctionReference(scope, expr);
+
+    case "select":
+      return SelectExpression(scope, expr);
+
+    case undefined:
+      {
+        // If it's a node with a value, resolve the value.
+        if (expr.value !== null && expr.value !== undefined) {
+          return Type(scope, expr.value);
+        }
+
+        scope.errors.push(new RangeError("No value"));
+        return new FluentNone();
+      }
+
+    default:
+      return new FluentNone();
+  }
+} // Resolve a reference to a variable.
+
+
+function VariableReference(scope, {
+  name
+}) {
+  if (!scope.args || !scope.args.hasOwnProperty(name)) {
+    if (scope.insideTermReference === false) {
+      scope.errors.push(new ReferenceError(`Unknown variable: ${name}`));
+    }
+
+    return new FluentNone(`$${name}`);
+  }
+
+  const arg = scope.args[name]; // Return early if the argument already is an instance of FluentType.
+
+  if (arg instanceof FluentType) {
+    return arg;
+  } // Convert the argument to a Fluent type.
+
+
+  switch (typeof arg) {
+    case "string":
+      return arg;
+
+    case "number":
+      return new FluentNumber(arg);
+
+    case "object":
+      if (arg instanceof Date) {
+        return new FluentDateTime(arg);
+      }
+
+    default:
+      scope.errors.push(new TypeError(`Unsupported variable type: ${name}, ${typeof arg}`));
+      return new FluentNone(`$${name}`);
+  }
+} // Resolve a reference to another message.
+
+
+function MessageReference(scope, {
+  name,
+  attr
+}) {
+  const message = scope.bundle._messages.get(name);
+
+  if (!message) {
+    const err = new ReferenceError(`Unknown message: ${name}`);
+    scope.errors.push(err);
+    return new FluentNone(name);
+  }
+
+  if (attr) {
+    const attribute = message.attrs && message.attrs[attr];
+
+    if (attribute) {
+      return Type(scope, attribute);
+    }
+
+    scope.errors.push(new ReferenceError(`Unknown attribute: ${attr}`));
+    return new FluentNone(`${name}.${attr}`);
+  }
+
+  return Type(scope, message);
+} // Resolve a call to a Term with key-value arguments.
+
+
+function TermReference(scope, {
+  name,
+  attr,
+  args
+}) {
+  const id = `-${name}`;
+
+  const term = scope.bundle._terms.get(id);
+
+  if (!term) {
+    const err = new ReferenceError(`Unknown term: ${id}`);
+    scope.errors.push(err);
+    return new FluentNone(id);
+  } // Every TermReference has its own args.
+
+
+  const [, keyargs] = getArguments(scope, args);
+  const local = { ...scope,
+    args: keyargs,
+    insideTermReference: true
+  };
+
+  if (attr) {
+    const attribute = term.attrs && term.attrs[attr];
+
+    if (attribute) {
+      return Type(local, attribute);
+    }
+
+    scope.errors.push(new ReferenceError(`Unknown attribute: ${attr}`));
+    return new FluentNone(`${id}.${attr}`);
+  }
+
+  return Type(local, term);
+} // Resolve a call to a Function with positional and key-value arguments.
+
+
+function FunctionReference(scope, {
+  name,
+  args
+}) {
+  // Some functions are built-in. Others may be provided by the runtime via
+  // the `FluentBundle` constructor.
+  const func = scope.bundle._functions[name] || builtins_namespaceObject[name];
+
+  if (!func) {
+    scope.errors.push(new ReferenceError(`Unknown function: ${name}()`));
+    return new FluentNone(`${name}()`);
+  }
+
+  if (typeof func !== "function") {
+    scope.errors.push(new TypeError(`Function ${name}() is not callable`));
+    return new FluentNone(`${name}()`);
+  }
+
+  try {
+    return func(...getArguments(scope, args));
+  } catch (e) {
+    // XXX Report errors.
+    return new FluentNone(`${name}()`);
+  }
+} // Resolve a select expression to the member object.
+
+
+function SelectExpression(scope, {
+  selector,
+  variants,
+  star
+}) {
+  let sel = Type(scope, selector);
+
+  if (sel instanceof FluentNone) {
+    const variant = getDefault(scope, variants, star);
+    return Type(scope, variant);
+  } // Match the selector against keys of each variant, in order.
+
+
+  for (const variant of variants) {
+    const key = Type(scope, variant.key);
+
+    if (match(scope.bundle, sel, key)) {
+      return Type(scope, variant);
+    }
+  }
+
+  const variant = getDefault(scope, variants, star);
+  return Type(scope, variant);
+} // Resolve a pattern (a complex string with placeables).
+
+
+function Pattern(scope, ptn) {
+  if (scope.dirty.has(ptn)) {
+    scope.errors.push(new RangeError("Cyclic reference"));
+    return new FluentNone();
+  } // Tag the pattern as dirty for the purpose of the current resolution.
+
+
+  scope.dirty.add(ptn);
+  const result = []; // Wrap interpolations with Directional Isolate Formatting characters
+  // only when the pattern has more than one element.
+
+  const useIsolating = scope.bundle._useIsolating && ptn.length > 1;
+
+  for (const elem of ptn) {
+    if (typeof elem === "string") {
+      result.push(scope.bundle._transform(elem));
+      continue;
+    }
+
+    const part = Type(scope, elem).toString(scope.bundle);
+
+    if (useIsolating) {
+      result.push(FSI);
+    }
+
+    if (part.length > MAX_PLACEABLE_LENGTH) {
+      scope.errors.push(new RangeError("Too many characters in placeable " + `(${part.length}, max allowed is ${MAX_PLACEABLE_LENGTH})`));
+      result.push(part.slice(MAX_PLACEABLE_LENGTH));
+    } else {
+      result.push(part);
+    }
+
+    if (useIsolating) {
+      result.push(PDI);
+    }
+  }
+
+  scope.dirty.delete(ptn);
+  return result.join("");
+}
+/**
+ * Format a translation into a string.
+ *
+ * @param   {FluentBundle} bundle
+ *    A FluentBundle instance which will be used to resolve the
+ *    contextual information of the message.
+ * @param   {Object}         args
+ *    List of arguments provided by the developer which can be accessed
+ *    from the message.
+ * @param   {Object}         message
+ *    An object with the Message to be resolved.
+ * @param   {Array}          errors
+ *    An error array that any encountered errors will be appended to.
+ * @returns {FluentType}
+ */
+
+
+function resolve(bundle, args, message, errors = []) {
+  const scope = {
+    bundle,
+    args,
+    errors,
+    dirty: new WeakSet(),
+    // TermReferences are resolved in a new scope.
+    insideTermReference: false
+  };
+  return Type(scope, message).toString(bundle);
+}
+;// CONCATENATED MODULE: ./node_modules/fluent/src/error.js
+class FluentError extends Error {}
+;// CONCATENATED MODULE: ./node_modules/fluent/src/resource.js
+ // This regex is used to iterate through the beginnings of messages and terms.
+// With the /m flag, the ^ matches at the beginning of every line.
+
+const RE_MESSAGE_START = /^(-?[a-zA-Z][\w-]*) *= */mg; // Both Attributes and Variants are parsed in while loops. These regexes are
+// used to break out of them.
+
+const RE_ATTRIBUTE_START = /\.([a-zA-Z][\w-]*) *= */y;
+const RE_VARIANT_START = /\*?\[/y;
+const RE_NUMBER_LITERAL = /(-?[0-9]+(?:\.([0-9]+))?)/y;
+const RE_IDENTIFIER = /([a-zA-Z][\w-]*)/y;
+const RE_REFERENCE = /([$-])?([a-zA-Z][\w-]*)(?:\.([a-zA-Z][\w-]*))?/y;
+const RE_FUNCTION_NAME = /^[A-Z][A-Z0-9_-]*$/; // A "run" is a sequence of text or string literal characters which don't
+// require any special handling. For TextElements such special characters are: {
+// (starts a placeable), and line breaks which require additional logic to check
+// if the next line is indented. For StringLiterals they are: \ (starts an
+// escape sequence), " (ends the literal), and line breaks which are not allowed
+// in StringLiterals. Note that string runs may be empty; text runs may not.
+
+const RE_TEXT_RUN = /([^{}\n\r]+)/y;
+const RE_STRING_RUN = /([^\\"\n\r]*)/y; // Escape sequences.
+
+const RE_STRING_ESCAPE = /\\([\\"])/y;
+const RE_UNICODE_ESCAPE = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{6})/y; // Used for trimming TextElements and indents.
+
+const RE_LEADING_NEWLINES = /^\n+/;
+const RE_TRAILING_SPACES = / +$/; // Used in makeIndent to strip spaces from blank lines and normalize CRLF to LF.
+
+const RE_BLANK_LINES = / *\r?\n/g; // Used in makeIndent to measure the indentation.
+
+const RE_INDENT = /( *)$/; // Common tokens.
+
+const TOKEN_BRACE_OPEN = /{\s*/y;
+const TOKEN_BRACE_CLOSE = /\s*}/y;
+const TOKEN_BRACKET_OPEN = /\[\s*/y;
+const TOKEN_BRACKET_CLOSE = /\s*] */y;
+const TOKEN_PAREN_OPEN = /\s*\(\s*/y;
+const TOKEN_ARROW = /\s*->\s*/y;
+const TOKEN_COLON = /\s*:\s*/y; // Note the optional comma. As a deviation from the Fluent EBNF, the parser
+// doesn't enforce commas between call arguments.
+
+const TOKEN_COMMA = /\s*,?\s*/y;
+const TOKEN_BLANK = /\s+/y; // Maximum number of placeables in a single Pattern to protect against Quadratic
+// Blowup attacks. See https://msdn.microsoft.com/en-us/magazine/ee335713.aspx.
+
+const MAX_PLACEABLES = 100;
+/**
+ * Fluent Resource is a structure storing a map of parsed localization entries.
+ */
+
+class FluentResource extends Map {
+  /**
+   * Create a new FluentResource from Fluent code.
+   */
+  static fromString(source) {
+    RE_MESSAGE_START.lastIndex = 0;
+    let resource = new this();
+    let cursor = 0; // Iterate over the beginnings of messages and terms to efficiently skip
+    // comments and recover from errors.
+
+    while (true) {
+      let next = RE_MESSAGE_START.exec(source);
+
+      if (next === null) {
+        break;
+      }
+
+      cursor = RE_MESSAGE_START.lastIndex;
+
+      try {
+        resource.set(next[1], parseMessage());
+      } catch (err) {
+        if (err instanceof FluentError) {
+          // Don't report any Fluent syntax errors. Skip directly to the
+          // beginning of the next message or term.
+          continue;
+        }
+
+        throw err;
+      }
+    }
+
+    return resource; // The parser implementation is inlined below for performance reasons.
+    // The parser focuses on minimizing the number of false negatives at the
+    // expense of increasing the risk of false positives. In other words, it
+    // aims at parsing valid Fluent messages with a success rate of 100%, but it
+    // may also parse a few invalid messages which the reference parser would
+    // reject. The parser doesn't perform any validation and may produce entries
+    // which wouldn't make sense in the real world. For best results users are
+    // advised to validate translations with the fluent-syntax parser
+    // pre-runtime.
+    // The parser makes an extensive use of sticky regexes which can be anchored
+    // to any offset of the source string without slicing it. Errors are thrown
+    // to bail out of parsing of ill-formed messages.
+
+    function test(re) {
+      re.lastIndex = cursor;
+      return re.test(source);
+    } // Advance the cursor by the char if it matches. May be used as a predicate
+    // (was the match found?) or, if errorClass is passed, as an assertion.
+
+
+    function consumeChar(char, errorClass) {
+      if (source[cursor] === char) {
+        cursor++;
+        return true;
+      }
+
+      if (errorClass) {
+        throw new errorClass(`Expected ${char}`);
+      }
+
+      return false;
+    } // Advance the cursor by the token if it matches. May be used as a predicate
+    // (was the match found?) or, if errorClass is passed, as an assertion.
+
+
+    function consumeToken(re, errorClass) {
+      if (test(re)) {
+        cursor = re.lastIndex;
+        return true;
+      }
+
+      if (errorClass) {
+        throw new errorClass(`Expected ${re.toString()}`);
+      }
+
+      return false;
+    } // Execute a regex, advance the cursor, and return all capture groups.
+
+
+    function match(re) {
+      re.lastIndex = cursor;
+      let result = re.exec(source);
+
+      if (result === null) {
+        throw new FluentError(`Expected ${re.toString()}`);
+      }
+
+      cursor = re.lastIndex;
+      return result;
+    } // Execute a regex, advance the cursor, and return the capture group.
+
+
+    function match1(re) {
+      return match(re)[1];
+    }
+
+    function parseMessage() {
+      let value = parsePattern();
+      let attrs = parseAttributes();
+
+      if (attrs === null) {
+        if (value === null) {
+          throw new FluentError("Expected message value or attributes");
+        }
+
+        return value;
+      }
+
+      return {
+        value,
+        attrs
+      };
+    }
+
+    function parseAttributes() {
+      let attrs = {};
+
+      while (test(RE_ATTRIBUTE_START)) {
+        let name = match1(RE_ATTRIBUTE_START);
+        let value = parsePattern();
+
+        if (value === null) {
+          throw new FluentError("Expected attribute value");
+        }
+
+        attrs[name] = value;
+      }
+
+      return Object.keys(attrs).length > 0 ? attrs : null;
+    }
+
+    function parsePattern() {
+      // First try to parse any simple text on the same line as the id.
+      if (test(RE_TEXT_RUN)) {
+        var first = match1(RE_TEXT_RUN);
+      } // If there's a placeable on the first line, parse a complex pattern.
+
+
+      if (source[cursor] === "{" || source[cursor] === "}") {
+        // Re-use the text parsed above, if possible.
+        return parsePatternElements(first ? [first] : [], Infinity);
+      } // RE_TEXT_VALUE stops at newlines. Only continue parsing the pattern if
+      // what comes after the newline is indented.
+
+
+      let indent = parseIndent();
+
+      if (indent) {
+        if (first) {
+          // If there's text on the first line, the blank block is part of the
+          // translation content in its entirety.
+          return parsePatternElements([first, indent], indent.length);
+        } // Otherwise, we're dealing with a block pattern, i.e. a pattern which
+        // starts on a new line. Discrad the leading newlines but keep the
+        // inline indent; it will be used by the dedentation logic.
+
+
+        indent.value = trim(indent.value, RE_LEADING_NEWLINES);
+        return parsePatternElements([indent], indent.length);
+      }
+
+      if (first) {
+        // It was just a simple inline text after all.
+        return trim(first, RE_TRAILING_SPACES);
+      }
+
+      return null;
+    } // Parse a complex pattern as an array of elements.
+
+
+    function parsePatternElements(elements = [], commonIndent) {
+      let placeableCount = 0;
+
+      while (true) {
+        if (test(RE_TEXT_RUN)) {
+          elements.push(match1(RE_TEXT_RUN));
+          continue;
+        }
+
+        if (source[cursor] === "{") {
+          if (++placeableCount > MAX_PLACEABLES) {
+            throw new FluentError("Too many placeables");
+          }
+
+          elements.push(parsePlaceable());
+          continue;
+        }
+
+        if (source[cursor] === "}") {
+          throw new FluentError("Unbalanced closing brace");
+        }
+
+        let indent = parseIndent();
+
+        if (indent) {
+          elements.push(indent);
+          commonIndent = Math.min(commonIndent, indent.length);
+          continue;
+        }
+
+        break;
+      }
+
+      let lastIndex = elements.length - 1; // Trim the trailing spaces in the last element if it's a TextElement.
+
+      if (typeof elements[lastIndex] === "string") {
+        elements[lastIndex] = trim(elements[lastIndex], RE_TRAILING_SPACES);
+      }
+
+      let baked = [];
+
+      for (let element of elements) {
+        if (element.type === "indent") {
+          // Dedent indented lines by the maximum common indent.
+          element = element.value.slice(0, element.value.length - commonIndent);
+        } else if (element.type === "str") {
+          // Optimize StringLiterals into their value.
+          element = element.value;
+        }
+
+        if (element) {
+          baked.push(element);
+        }
+      }
+
+      return baked;
+    }
+
+    function parsePlaceable() {
+      consumeToken(TOKEN_BRACE_OPEN, FluentError);
+      let selector = parseInlineExpression();
+
+      if (consumeToken(TOKEN_BRACE_CLOSE)) {
+        return selector;
+      }
+
+      if (consumeToken(TOKEN_ARROW)) {
+        let variants = parseVariants();
+        consumeToken(TOKEN_BRACE_CLOSE, FluentError);
+        return {
+          type: "select",
+          selector,
+          ...variants
+        };
+      }
+
+      throw new FluentError("Unclosed placeable");
+    }
+
+    function parseInlineExpression() {
+      if (source[cursor] === "{") {
+        // It's a nested placeable.
+        return parsePlaceable();
+      }
+
+      if (test(RE_REFERENCE)) {
+        let [, sigil, name, attr = null] = match(RE_REFERENCE);
+
+        if (sigil === "$") {
+          return {
+            type: "var",
+            name
+          };
+        }
+
+        if (consumeToken(TOKEN_PAREN_OPEN)) {
+          let args = parseArguments();
+
+          if (sigil === "-") {
+            // A parameterized term: -term(...).
+            return {
+              type: "term",
+              name,
+              attr,
+              args
+            };
+          }
+
+          if (RE_FUNCTION_NAME.test(name)) {
+            return {
+              type: "func",
+              name,
+              args
+            };
+          }
+
+          throw new FluentError("Function names must be all upper-case");
+        }
+
+        if (sigil === "-") {
+          // A non-parameterized term: -term.
+          return {
+            type: "term",
+            name,
+            attr,
+            args: []
+          };
+        }
+
+        return {
+          type: "mesg",
+          name,
+          attr
+        };
+      }
+
+      return parseLiteral();
+    }
+
+    function parseArguments() {
+      let args = [];
+
+      while (true) {
+        switch (source[cursor]) {
+          case ")":
+            // End of the argument list.
+            cursor++;
+            return args;
+
+          case undefined:
+            // EOF
+            throw new FluentError("Unclosed argument list");
+        }
+
+        args.push(parseArgument()); // Commas between arguments are treated as whitespace.
+
+        consumeToken(TOKEN_COMMA);
+      }
+    }
+
+    function parseArgument() {
+      let expr = parseInlineExpression();
+
+      if (expr.type !== "mesg") {
+        return expr;
+      }
+
+      if (consumeToken(TOKEN_COLON)) {
+        // The reference is the beginning of a named argument.
+        return {
+          type: "narg",
+          name: expr.name,
+          value: parseLiteral()
+        };
+      } // It's a regular message reference.
+
+
+      return expr;
+    }
+
+    function parseVariants() {
+      let variants = [];
+      let count = 0;
+      let star;
+
+      while (test(RE_VARIANT_START)) {
+        if (consumeChar("*")) {
+          star = count;
+        }
+
+        let key = parseVariantKey();
+        let value = parsePattern();
+
+        if (value === null) {
+          throw new FluentError("Expected variant value");
+        }
+
+        variants[count++] = {
+          key,
+          value
+        };
+      }
+
+      if (count === 0) {
+        return null;
+      }
+
+      if (star === undefined) {
+        throw new FluentError("Expected default variant");
+      }
+
+      return {
+        variants,
+        star
+      };
+    }
+
+    function parseVariantKey() {
+      consumeToken(TOKEN_BRACKET_OPEN, FluentError);
+      let key = test(RE_NUMBER_LITERAL) ? parseNumberLiteral() : match1(RE_IDENTIFIER);
+      consumeToken(TOKEN_BRACKET_CLOSE, FluentError);
+      return key;
+    }
+
+    function parseLiteral() {
+      if (test(RE_NUMBER_LITERAL)) {
+        return parseNumberLiteral();
+      }
+
+      if (source[cursor] === "\"") {
+        return parseStringLiteral();
+      }
+
+      throw new FluentError("Invalid expression");
+    }
+
+    function parseNumberLiteral() {
+      let [, value, fraction = ""] = match(RE_NUMBER_LITERAL);
+      let precision = fraction.length;
+      return {
+        type: "num",
+        value: parseFloat(value),
+        precision
+      };
+    }
+
+    function parseStringLiteral() {
+      consumeChar("\"", FluentError);
+      let value = "";
+
+      while (true) {
+        value += match1(RE_STRING_RUN);
+
+        if (source[cursor] === "\\") {
+          value += parseEscapeSequence();
+          continue;
+        }
+
+        if (consumeChar("\"")) {
+          return {
+            type: "str",
+            value
+          };
+        } // We've reached an EOL of EOF.
+
+
+        throw new FluentError("Unclosed string literal");
+      }
+    } // Unescape known escape sequences.
+
+
+    function parseEscapeSequence() {
+      if (test(RE_STRING_ESCAPE)) {
+        return match1(RE_STRING_ESCAPE);
+      }
+
+      if (test(RE_UNICODE_ESCAPE)) {
+        let [, codepoint4, codepoint6] = match(RE_UNICODE_ESCAPE);
+        let codepoint = parseInt(codepoint4 || codepoint6, 16);
+        return codepoint <= 0xD7FF || 0xE000 <= codepoint // It's a Unicode scalar value.
+        ? String.fromCodePoint(codepoint) // Lonely surrogates can cause trouble when the parsing result is
+        // saved using UTF-8. Use U+FFFD REPLACEMENT CHARACTER instead.
+        : "�";
+      }
+
+      throw new FluentError("Unknown escape sequence");
+    } // Parse blank space. Return it if it looks like indent before a pattern
+    // line. Skip it othwerwise.
+
+
+    function parseIndent() {
+      let start = cursor;
+      consumeToken(TOKEN_BLANK); // Check the first non-blank character after the indent.
+
+      switch (source[cursor]) {
+        case ".":
+        case "[":
+        case "*":
+        case "}":
+        case undefined:
+          // EOF
+          // A special character. End the Pattern.
+          return false;
+
+        case "{":
+          // Placeables don't require indentation (in EBNF: block-placeable).
+          // Continue the Pattern.
+          return makeIndent(source.slice(start, cursor));
+      } // If the first character on the line is not one of the special characters
+      // listed above, it's a regular text character. Check if there's at least
+      // one space of indent before it.
+
+
+      if (source[cursor - 1] === " ") {
+        // It's an indented text character (in EBNF: indented-char). Continue
+        // the Pattern.
+        return makeIndent(source.slice(start, cursor));
+      } // A not-indented text character is likely the identifier of the next
+      // message. End the Pattern.
+
+
+      return false;
+    } // Trim blanks in text according to the given regex.
+
+
+    function trim(text, re) {
+      return text.replace(re, "");
+    } // Normalize a blank block and extract the indent details.
+
+
+    function makeIndent(blank) {
+      let value = blank.replace(RE_BLANK_LINES, "\n");
+      let length = RE_INDENT.exec(blank)[1].length;
+      return {
+        type: "indent",
+        value,
+        length
+      };
+    }
+  }
+
+}
+;// CONCATENATED MODULE: ./node_modules/fluent/src/bundle.js
 
 
 /**
@@ -2922,7 +3195,7 @@ class FluentBundle {
 
 
   addMessages(source, options) {
-    const res = _resource_js__WEBPACK_IMPORTED_MODULE_1__["default"].fromString(source);
+    const res = FluentResource.fromString(source);
     return this.addResource(res, options);
   }
   /**
@@ -3035,7 +3308,7 @@ class FluentBundle {
       return this._transform(message.value);
     }
 
-    return (0,_resolver_js__WEBPACK_IMPORTED_MODULE_0__["default"])(this, args, message, errors);
+    return resolve(this, args, message, errors);
   }
 
   _memoizeIntlObject(ctor, opts) {
@@ -3052,1152 +3325,64 @@ class FluentBundle {
   }
 
 }
-
-/***/ }),
-/* 13 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ resolve)
-/* harmony export */ });
-/* harmony import */ var _types_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(14);
-/* harmony import */ var _builtins_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(15);
-/* global Intl */
-
-/**
+;// CONCATENATED MODULE: ./node_modules/fluent/src/index.js
+/*
+ * @module fluent
  * @overview
  *
- * The role of the Fluent resolver is to format a translation object to an
- * instance of `FluentType` or an array of instances.
+ * `fluent` is a JavaScript implementation of Project Fluent, a localization
+ * framework designed to unleash the expressive power of the natural language.
  *
- * Translations can contain references to other messages or variables,
- * conditional logic in form of select expressions, traits which describe their
- * grammatical features, and can use Fluent builtins which make use of the
- * `Intl` formatters to format numbers, dates, lists and more into the
- * bundle's language. See the documentation of the Fluent syntax for more
- * information.
- *
- * In case of errors the resolver will try to salvage as much of the
- * translation as possible.  In rare situations where the resolver didn't know
- * how to recover from an error it will return an instance of `FluentNone`.
- *
- * All expressions resolve to an instance of `FluentType`. The caller should
- * use the `toString` method to convert the instance to a native value.
- *
- * All functions in this file pass around a special object called `scope`.
- * This object stores a set of elements used by all resolve functions:
- *
- *  * {FluentBundle} bundle
- *      bundle for which the given resolution is happening
- *  * {Object} args
- *      list of developer provided arguments that can be used
- *  * {Array} errors
- *      list of errors collected while resolving
- *  * {WeakSet} dirty
- *      Set of patterns already encountered during this resolution.
- *      This is used to prevent cyclic resolutions.
- */
-
- // Prevent expansion of too long placeables.
-
-const MAX_PLACEABLE_LENGTH = 2500; // Unicode bidi isolation characters.
-
-const FSI = "\u2068";
-const PDI = "\u2069"; // Helper: match a variant key to the given selector.
-
-function match(bundle, selector, key) {
-  if (key === selector) {
-    // Both are strings.
-    return true;
-  } // XXX Consider comparing options too, e.g. minimumFractionDigits.
-
-
-  if (key instanceof _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNumber && selector instanceof _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNumber && key.value === selector.value) {
-    return true;
-  }
-
-  if (selector instanceof _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNumber && typeof key === "string") {
-    let category = bundle._memoizeIntlObject(Intl.PluralRules, selector.opts).select(selector.value);
-
-    if (key === category) {
-      return true;
-    }
-  }
-
-  return false;
-} // Helper: resolve the default variant from a list of variants.
-
-
-function getDefault(scope, variants, star) {
-  if (variants[star]) {
-    return Type(scope, variants[star]);
-  }
-
-  scope.errors.push(new RangeError("No default"));
-  return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone();
-} // Helper: resolve arguments to a call expression.
-
-
-function getArguments(scope, args) {
-  const positional = [];
-  const named = {};
-
-  for (const arg of args) {
-    if (arg.type === "narg") {
-      named[arg.name] = Type(scope, arg.value);
-    } else {
-      positional.push(Type(scope, arg));
-    }
-  }
-
-  return [positional, named];
-} // Resolve an expression to a Fluent type.
-
-
-function Type(scope, expr) {
-  // A fast-path for strings which are the most common case. Since they
-  // natively have the `toString` method they can be used as if they were
-  // a FluentType instance without incurring the cost of creating one.
-  if (typeof expr === "string") {
-    return scope.bundle._transform(expr);
-  } // A fast-path for `FluentNone` which doesn't require any additional logic.
-
-
-  if (expr instanceof _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone) {
-    return expr;
-  } // The Runtime AST (Entries) encodes patterns (complex strings with
-  // placeables) as Arrays.
-
-
-  if (Array.isArray(expr)) {
-    return Pattern(scope, expr);
-  }
-
-  switch (expr.type) {
-    case "str":
-      return expr.value;
-
-    case "num":
-      return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNumber(expr.value, {
-        minimumFractionDigits: expr.precision
-      });
-
-    case "var":
-      return VariableReference(scope, expr);
-
-    case "mesg":
-      return MessageReference(scope, expr);
-
-    case "term":
-      return TermReference(scope, expr);
-
-    case "func":
-      return FunctionReference(scope, expr);
-
-    case "select":
-      return SelectExpression(scope, expr);
-
-    case undefined:
-      {
-        // If it's a node with a value, resolve the value.
-        if (expr.value !== null && expr.value !== undefined) {
-          return Type(scope, expr.value);
-        }
-
-        scope.errors.push(new RangeError("No value"));
-        return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone();
-      }
-
-    default:
-      return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone();
-  }
-} // Resolve a reference to a variable.
-
-
-function VariableReference(scope, {
-  name
-}) {
-  if (!scope.args || !scope.args.hasOwnProperty(name)) {
-    if (scope.insideTermReference === false) {
-      scope.errors.push(new ReferenceError(`Unknown variable: ${name}`));
-    }
-
-    return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone(`$${name}`);
-  }
-
-  const arg = scope.args[name]; // Return early if the argument already is an instance of FluentType.
-
-  if (arg instanceof _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentType) {
-    return arg;
-  } // Convert the argument to a Fluent type.
-
-
-  switch (typeof arg) {
-    case "string":
-      return arg;
-
-    case "number":
-      return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNumber(arg);
-
-    case "object":
-      if (arg instanceof Date) {
-        return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentDateTime(arg);
-      }
-
-    default:
-      scope.errors.push(new TypeError(`Unsupported variable type: ${name}, ${typeof arg}`));
-      return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone(`$${name}`);
-  }
-} // Resolve a reference to another message.
-
-
-function MessageReference(scope, {
-  name,
-  attr
-}) {
-  const message = scope.bundle._messages.get(name);
-
-  if (!message) {
-    const err = new ReferenceError(`Unknown message: ${name}`);
-    scope.errors.push(err);
-    return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone(name);
-  }
-
-  if (attr) {
-    const attribute = message.attrs && message.attrs[attr];
-
-    if (attribute) {
-      return Type(scope, attribute);
-    }
-
-    scope.errors.push(new ReferenceError(`Unknown attribute: ${attr}`));
-    return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone(`${name}.${attr}`);
-  }
-
-  return Type(scope, message);
-} // Resolve a call to a Term with key-value arguments.
-
-
-function TermReference(scope, {
-  name,
-  attr,
-  args
-}) {
-  const id = `-${name}`;
-
-  const term = scope.bundle._terms.get(id);
-
-  if (!term) {
-    const err = new ReferenceError(`Unknown term: ${id}`);
-    scope.errors.push(err);
-    return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone(id);
-  } // Every TermReference has its own args.
-
-
-  const [, keyargs] = getArguments(scope, args);
-  const local = { ...scope,
-    args: keyargs,
-    insideTermReference: true
-  };
-
-  if (attr) {
-    const attribute = term.attrs && term.attrs[attr];
-
-    if (attribute) {
-      return Type(local, attribute);
-    }
-
-    scope.errors.push(new ReferenceError(`Unknown attribute: ${attr}`));
-    return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone(`${id}.${attr}`);
-  }
-
-  return Type(local, term);
-} // Resolve a call to a Function with positional and key-value arguments.
-
-
-function FunctionReference(scope, {
-  name,
-  args
-}) {
-  // Some functions are built-in. Others may be provided by the runtime via
-  // the `FluentBundle` constructor.
-  const func = scope.bundle._functions[name] || _builtins_js__WEBPACK_IMPORTED_MODULE_1__[name];
-
-  if (!func) {
-    scope.errors.push(new ReferenceError(`Unknown function: ${name}()`));
-    return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone(`${name}()`);
-  }
-
-  if (typeof func !== "function") {
-    scope.errors.push(new TypeError(`Function ${name}() is not callable`));
-    return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone(`${name}()`);
-  }
-
-  try {
-    return func(...getArguments(scope, args));
-  } catch (e) {
-    // XXX Report errors.
-    return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone(`${name}()`);
-  }
-} // Resolve a select expression to the member object.
-
-
-function SelectExpression(scope, {
-  selector,
-  variants,
-  star
-}) {
-  let sel = Type(scope, selector);
-
-  if (sel instanceof _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone) {
-    const variant = getDefault(scope, variants, star);
-    return Type(scope, variant);
-  } // Match the selector against keys of each variant, in order.
-
-
-  for (const variant of variants) {
-    const key = Type(scope, variant.key);
-
-    if (match(scope.bundle, sel, key)) {
-      return Type(scope, variant);
-    }
-  }
-
-  const variant = getDefault(scope, variants, star);
-  return Type(scope, variant);
-} // Resolve a pattern (a complex string with placeables).
-
-
-function Pattern(scope, ptn) {
-  if (scope.dirty.has(ptn)) {
-    scope.errors.push(new RangeError("Cyclic reference"));
-    return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone();
-  } // Tag the pattern as dirty for the purpose of the current resolution.
-
-
-  scope.dirty.add(ptn);
-  const result = []; // Wrap interpolations with Directional Isolate Formatting characters
-  // only when the pattern has more than one element.
-
-  const useIsolating = scope.bundle._useIsolating && ptn.length > 1;
-
-  for (const elem of ptn) {
-    if (typeof elem === "string") {
-      result.push(scope.bundle._transform(elem));
-      continue;
-    }
-
-    const part = Type(scope, elem).toString(scope.bundle);
-
-    if (useIsolating) {
-      result.push(FSI);
-    }
-
-    if (part.length > MAX_PLACEABLE_LENGTH) {
-      scope.errors.push(new RangeError("Too many characters in placeable " + `(${part.length}, max allowed is ${MAX_PLACEABLE_LENGTH})`));
-      result.push(part.slice(MAX_PLACEABLE_LENGTH));
-    } else {
-      result.push(part);
-    }
-
-    if (useIsolating) {
-      result.push(PDI);
-    }
-  }
-
-  scope.dirty.delete(ptn);
-  return result.join("");
-}
-/**
- * Format a translation into a string.
- *
- * @param   {FluentBundle} bundle
- *    A FluentBundle instance which will be used to resolve the
- *    contextual information of the message.
- * @param   {Object}         args
- *    List of arguments provided by the developer which can be accessed
- *    from the message.
- * @param   {Object}         message
- *    An object with the Message to be resolved.
- * @param   {Array}          errors
- *    An error array that any encountered errors will be appended to.
- * @returns {FluentType}
  */
 
 
-function resolve(bundle, args, message, errors = []) {
-  const scope = {
-    bundle,
-    args,
-    errors,
-    dirty: new WeakSet(),
-    // TermReferences are resolved in a new scope.
-    insideTermReference: false
-  };
-  return Type(scope, message).toString(bundle);
-}
 
-/***/ }),
-/* 14 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "FluentType": () => (/* binding */ FluentType),
-/* harmony export */   "FluentNone": () => (/* binding */ FluentNone),
-/* harmony export */   "FluentNumber": () => (/* binding */ FluentNumber),
-/* harmony export */   "FluentDateTime": () => (/* binding */ FluentDateTime)
-/* harmony export */ });
-/* global Intl */
+;// CONCATENATED MODULE: ./content-src/asrouter/rich-text-strings.js
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * The `FluentType` class is the base of Fluent's type system.
- *
- * Fluent types wrap JavaScript values and store additional configuration for
- * them, which can then be used in the `toString` method together with a proper
- * `Intl` formatter.
+ * Properties that allow rich text MUST be added to this list.
+ *   key: the localization_id that should be used
+ *   value: a property or array of properties on the message.content object
  */
-class FluentType {
-  /**
-   * Create an `FluentType` instance.
-   *
-   * @param   {Any}    value - JavaScript value to wrap.
-   * @param   {Object} opts  - Configuration.
-   * @returns {FluentType}
-   */
-  constructor(value, opts) {
-    this.value = value;
-    this.opts = opts;
-  }
-  /**
-   * Unwrap the raw value stored by this `FluentType`.
-   *
-   * @returns {Any}
-   */
 
-
-  valueOf() {
-    return this.value;
-  }
-  /**
-   * Format this instance of `FluentType` to a string.
-   *
-   * Formatted values are suitable for use outside of the `FluentBundle`.
-   * This method can use `Intl` formatters memoized by the `FluentBundle`
-   * instance passed as an argument.
-   *
-   * @param   {FluentBundle} [bundle]
-   * @returns {string}
-   */
-
-
-  toString() {
-    throw new Error("Subclasses of FluentType must implement toString.");
-  }
-
-}
-class FluentNone extends FluentType {
-  valueOf() {
-    return null;
-  }
-
-  toString() {
-    return `{${this.value || "???"}}`;
-  }
-
-}
-class FluentNumber extends FluentType {
-  constructor(value, opts) {
-    super(parseFloat(value), opts);
-  }
-
-  toString(bundle) {
-    try {
-      const nf = bundle._memoizeIntlObject(Intl.NumberFormat, this.opts);
-
-      return nf.format(this.value);
-    } catch (e) {
-      // XXX Report the error.
-      return this.value;
-    }
-  }
-
-}
-class FluentDateTime extends FluentType {
-  constructor(value, opts) {
-    super(new Date(value), opts);
-  }
-
-  toString(bundle) {
-    try {
-      const dtf = bundle._memoizeIntlObject(Intl.DateTimeFormat, this.opts);
-
-      return dtf.format(this.value);
-    } catch (e) {
-      // XXX Report the error.
-      return this.value;
-    }
-  }
-
-}
-
-/***/ }),
-/* 15 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "NUMBER": () => (/* binding */ NUMBER),
-/* harmony export */   "DATETIME": () => (/* binding */ DATETIME)
-/* harmony export */ });
-/* harmony import */ var _types_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(14);
+const RICH_TEXT_CONFIG = {
+  text: ["text", "scene1_text"],
+  success_text: "success_text",
+  error_text: "error_text",
+  scene2_text: "scene2_text",
+  amo_html: "amo_html",
+  privacy_html: "scene2_privacy_html",
+  disclaimer_html: "scene2_disclaimer_html"
+};
+const RICH_TEXT_KEYS = Object.keys(RICH_TEXT_CONFIG);
 /**
- * @overview
- *
- * The FTL resolver ships with a number of functions built-in.
- *
- * Each function take two arguments:
- *   - args - an array of positional args
- *   - opts - an object of key-value args
- *
- * Arguments to functions are guaranteed to already be instances of
- * `FluentType`.  Functions must return `FluentType` objects as well.
+ * Generates an array of messages suitable for fluent's localization provider
+ * including all needed strings for rich text.
+ * @param {object} content A .content object from an ASR message (i.e. message.content)
+ * @returns {FluentBundle[]} A array containing the fluent message context
  */
 
+function generateBundles(content) {
+  const bundle = new FluentBundle("en-US");
+  RICH_TEXT_KEYS.forEach(key => {
+    const attrs = RICH_TEXT_CONFIG[key];
+    const attrsToTry = Array.isArray(attrs) ? [...attrs] : [attrs];
+    let string = "";
 
-function merge(argopts, opts) {
-  return Object.assign({}, argopts, values(opts));
+    while (!string && attrsToTry.length) {
+      const attr = attrsToTry.pop();
+      string = content[attr];
+    }
+
+    bundle.addMessages(`${key} = ${string}`);
+  });
+  return [bundle];
 }
-
-function values(opts) {
-  const unwrapped = {};
-
-  for (const [name, opt] of Object.entries(opts)) {
-    unwrapped[name] = opt.valueOf();
-  }
-
-  return unwrapped;
-}
-
-function NUMBER([arg], opts) {
-  if (arg instanceof _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone) {
-    return arg;
-  }
-
-  if (arg instanceof _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNumber) {
-    return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNumber(arg.valueOf(), merge(arg.opts, opts));
-  }
-
-  return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone("NUMBER()");
-}
-function DATETIME([arg], opts) {
-  if (arg instanceof _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone) {
-    return arg;
-  }
-
-  if (arg instanceof _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentDateTime) {
-    return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentDateTime(arg.valueOf(), merge(arg.opts, opts));
-  }
-
-  return new _types_js__WEBPACK_IMPORTED_MODULE_0__.FluentNone("DATETIME()");
-}
-
-/***/ }),
-/* 16 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ FluentResource)
-/* harmony export */ });
-/* harmony import */ var _error_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(17);
- // This regex is used to iterate through the beginnings of messages and terms.
-// With the /m flag, the ^ matches at the beginning of every line.
-
-const RE_MESSAGE_START = /^(-?[a-zA-Z][\w-]*) *= */mg; // Both Attributes and Variants are parsed in while loops. These regexes are
-// used to break out of them.
-
-const RE_ATTRIBUTE_START = /\.([a-zA-Z][\w-]*) *= */y;
-const RE_VARIANT_START = /\*?\[/y;
-const RE_NUMBER_LITERAL = /(-?[0-9]+(?:\.([0-9]+))?)/y;
-const RE_IDENTIFIER = /([a-zA-Z][\w-]*)/y;
-const RE_REFERENCE = /([$-])?([a-zA-Z][\w-]*)(?:\.([a-zA-Z][\w-]*))?/y;
-const RE_FUNCTION_NAME = /^[A-Z][A-Z0-9_-]*$/; // A "run" is a sequence of text or string literal characters which don't
-// require any special handling. For TextElements such special characters are: {
-// (starts a placeable), and line breaks which require additional logic to check
-// if the next line is indented. For StringLiterals they are: \ (starts an
-// escape sequence), " (ends the literal), and line breaks which are not allowed
-// in StringLiterals. Note that string runs may be empty; text runs may not.
-
-const RE_TEXT_RUN = /([^{}\n\r]+)/y;
-const RE_STRING_RUN = /([^\\"\n\r]*)/y; // Escape sequences.
-
-const RE_STRING_ESCAPE = /\\([\\"])/y;
-const RE_UNICODE_ESCAPE = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{6})/y; // Used for trimming TextElements and indents.
-
-const RE_LEADING_NEWLINES = /^\n+/;
-const RE_TRAILING_SPACES = / +$/; // Used in makeIndent to strip spaces from blank lines and normalize CRLF to LF.
-
-const RE_BLANK_LINES = / *\r?\n/g; // Used in makeIndent to measure the indentation.
-
-const RE_INDENT = /( *)$/; // Common tokens.
-
-const TOKEN_BRACE_OPEN = /{\s*/y;
-const TOKEN_BRACE_CLOSE = /\s*}/y;
-const TOKEN_BRACKET_OPEN = /\[\s*/y;
-const TOKEN_BRACKET_CLOSE = /\s*] */y;
-const TOKEN_PAREN_OPEN = /\s*\(\s*/y;
-const TOKEN_ARROW = /\s*->\s*/y;
-const TOKEN_COLON = /\s*:\s*/y; // Note the optional comma. As a deviation from the Fluent EBNF, the parser
-// doesn't enforce commas between call arguments.
-
-const TOKEN_COMMA = /\s*,?\s*/y;
-const TOKEN_BLANK = /\s+/y; // Maximum number of placeables in a single Pattern to protect against Quadratic
-// Blowup attacks. See https://msdn.microsoft.com/en-us/magazine/ee335713.aspx.
-
-const MAX_PLACEABLES = 100;
-/**
- * Fluent Resource is a structure storing a map of parsed localization entries.
- */
-
-class FluentResource extends Map {
-  /**
-   * Create a new FluentResource from Fluent code.
-   */
-  static fromString(source) {
-    RE_MESSAGE_START.lastIndex = 0;
-    let resource = new this();
-    let cursor = 0; // Iterate over the beginnings of messages and terms to efficiently skip
-    // comments and recover from errors.
-
-    while (true) {
-      let next = RE_MESSAGE_START.exec(source);
-
-      if (next === null) {
-        break;
-      }
-
-      cursor = RE_MESSAGE_START.lastIndex;
-
-      try {
-        resource.set(next[1], parseMessage());
-      } catch (err) {
-        if (err instanceof _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
-          // Don't report any Fluent syntax errors. Skip directly to the
-          // beginning of the next message or term.
-          continue;
-        }
-
-        throw err;
-      }
-    }
-
-    return resource; // The parser implementation is inlined below for performance reasons.
-    // The parser focuses on minimizing the number of false negatives at the
-    // expense of increasing the risk of false positives. In other words, it
-    // aims at parsing valid Fluent messages with a success rate of 100%, but it
-    // may also parse a few invalid messages which the reference parser would
-    // reject. The parser doesn't perform any validation and may produce entries
-    // which wouldn't make sense in the real world. For best results users are
-    // advised to validate translations with the fluent-syntax parser
-    // pre-runtime.
-    // The parser makes an extensive use of sticky regexes which can be anchored
-    // to any offset of the source string without slicing it. Errors are thrown
-    // to bail out of parsing of ill-formed messages.
-
-    function test(re) {
-      re.lastIndex = cursor;
-      return re.test(source);
-    } // Advance the cursor by the char if it matches. May be used as a predicate
-    // (was the match found?) or, if errorClass is passed, as an assertion.
-
-
-    function consumeChar(char, errorClass) {
-      if (source[cursor] === char) {
-        cursor++;
-        return true;
-      }
-
-      if (errorClass) {
-        throw new errorClass(`Expected ${char}`);
-      }
-
-      return false;
-    } // Advance the cursor by the token if it matches. May be used as a predicate
-    // (was the match found?) or, if errorClass is passed, as an assertion.
-
-
-    function consumeToken(re, errorClass) {
-      if (test(re)) {
-        cursor = re.lastIndex;
-        return true;
-      }
-
-      if (errorClass) {
-        throw new errorClass(`Expected ${re.toString()}`);
-      }
-
-      return false;
-    } // Execute a regex, advance the cursor, and return all capture groups.
-
-
-    function match(re) {
-      re.lastIndex = cursor;
-      let result = re.exec(source);
-
-      if (result === null) {
-        throw new _error_js__WEBPACK_IMPORTED_MODULE_0__["default"](`Expected ${re.toString()}`);
-      }
-
-      cursor = re.lastIndex;
-      return result;
-    } // Execute a regex, advance the cursor, and return the capture group.
-
-
-    function match1(re) {
-      return match(re)[1];
-    }
-
-    function parseMessage() {
-      let value = parsePattern();
-      let attrs = parseAttributes();
-
-      if (attrs === null) {
-        if (value === null) {
-          throw new _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]("Expected message value or attributes");
-        }
-
-        return value;
-      }
-
-      return {
-        value,
-        attrs
-      };
-    }
-
-    function parseAttributes() {
-      let attrs = {};
-
-      while (test(RE_ATTRIBUTE_START)) {
-        let name = match1(RE_ATTRIBUTE_START);
-        let value = parsePattern();
-
-        if (value === null) {
-          throw new _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]("Expected attribute value");
-        }
-
-        attrs[name] = value;
-      }
-
-      return Object.keys(attrs).length > 0 ? attrs : null;
-    }
-
-    function parsePattern() {
-      // First try to parse any simple text on the same line as the id.
-      if (test(RE_TEXT_RUN)) {
-        var first = match1(RE_TEXT_RUN);
-      } // If there's a placeable on the first line, parse a complex pattern.
-
-
-      if (source[cursor] === "{" || source[cursor] === "}") {
-        // Re-use the text parsed above, if possible.
-        return parsePatternElements(first ? [first] : [], Infinity);
-      } // RE_TEXT_VALUE stops at newlines. Only continue parsing the pattern if
-      // what comes after the newline is indented.
-
-
-      let indent = parseIndent();
-
-      if (indent) {
-        if (first) {
-          // If there's text on the first line, the blank block is part of the
-          // translation content in its entirety.
-          return parsePatternElements([first, indent], indent.length);
-        } // Otherwise, we're dealing with a block pattern, i.e. a pattern which
-        // starts on a new line. Discrad the leading newlines but keep the
-        // inline indent; it will be used by the dedentation logic.
-
-
-        indent.value = trim(indent.value, RE_LEADING_NEWLINES);
-        return parsePatternElements([indent], indent.length);
-      }
-
-      if (first) {
-        // It was just a simple inline text after all.
-        return trim(first, RE_TRAILING_SPACES);
-      }
-
-      return null;
-    } // Parse a complex pattern as an array of elements.
-
-
-    function parsePatternElements(elements = [], commonIndent) {
-      let placeableCount = 0;
-
-      while (true) {
-        if (test(RE_TEXT_RUN)) {
-          elements.push(match1(RE_TEXT_RUN));
-          continue;
-        }
-
-        if (source[cursor] === "{") {
-          if (++placeableCount > MAX_PLACEABLES) {
-            throw new _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]("Too many placeables");
-          }
-
-          elements.push(parsePlaceable());
-          continue;
-        }
-
-        if (source[cursor] === "}") {
-          throw new _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]("Unbalanced closing brace");
-        }
-
-        let indent = parseIndent();
-
-        if (indent) {
-          elements.push(indent);
-          commonIndent = Math.min(commonIndent, indent.length);
-          continue;
-        }
-
-        break;
-      }
-
-      let lastIndex = elements.length - 1; // Trim the trailing spaces in the last element if it's a TextElement.
-
-      if (typeof elements[lastIndex] === "string") {
-        elements[lastIndex] = trim(elements[lastIndex], RE_TRAILING_SPACES);
-      }
-
-      let baked = [];
-
-      for (let element of elements) {
-        if (element.type === "indent") {
-          // Dedent indented lines by the maximum common indent.
-          element = element.value.slice(0, element.value.length - commonIndent);
-        } else if (element.type === "str") {
-          // Optimize StringLiterals into their value.
-          element = element.value;
-        }
-
-        if (element) {
-          baked.push(element);
-        }
-      }
-
-      return baked;
-    }
-
-    function parsePlaceable() {
-      consumeToken(TOKEN_BRACE_OPEN, _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]);
-      let selector = parseInlineExpression();
-
-      if (consumeToken(TOKEN_BRACE_CLOSE)) {
-        return selector;
-      }
-
-      if (consumeToken(TOKEN_ARROW)) {
-        let variants = parseVariants();
-        consumeToken(TOKEN_BRACE_CLOSE, _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]);
-        return {
-          type: "select",
-          selector,
-          ...variants
-        };
-      }
-
-      throw new _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]("Unclosed placeable");
-    }
-
-    function parseInlineExpression() {
-      if (source[cursor] === "{") {
-        // It's a nested placeable.
-        return parsePlaceable();
-      }
-
-      if (test(RE_REFERENCE)) {
-        let [, sigil, name, attr = null] = match(RE_REFERENCE);
-
-        if (sigil === "$") {
-          return {
-            type: "var",
-            name
-          };
-        }
-
-        if (consumeToken(TOKEN_PAREN_OPEN)) {
-          let args = parseArguments();
-
-          if (sigil === "-") {
-            // A parameterized term: -term(...).
-            return {
-              type: "term",
-              name,
-              attr,
-              args
-            };
-          }
-
-          if (RE_FUNCTION_NAME.test(name)) {
-            return {
-              type: "func",
-              name,
-              args
-            };
-          }
-
-          throw new _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]("Function names must be all upper-case");
-        }
-
-        if (sigil === "-") {
-          // A non-parameterized term: -term.
-          return {
-            type: "term",
-            name,
-            attr,
-            args: []
-          };
-        }
-
-        return {
-          type: "mesg",
-          name,
-          attr
-        };
-      }
-
-      return parseLiteral();
-    }
-
-    function parseArguments() {
-      let args = [];
-
-      while (true) {
-        switch (source[cursor]) {
-          case ")":
-            // End of the argument list.
-            cursor++;
-            return args;
-
-          case undefined:
-            // EOF
-            throw new _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]("Unclosed argument list");
-        }
-
-        args.push(parseArgument()); // Commas between arguments are treated as whitespace.
-
-        consumeToken(TOKEN_COMMA);
-      }
-    }
-
-    function parseArgument() {
-      let expr = parseInlineExpression();
-
-      if (expr.type !== "mesg") {
-        return expr;
-      }
-
-      if (consumeToken(TOKEN_COLON)) {
-        // The reference is the beginning of a named argument.
-        return {
-          type: "narg",
-          name: expr.name,
-          value: parseLiteral()
-        };
-      } // It's a regular message reference.
-
-
-      return expr;
-    }
-
-    function parseVariants() {
-      let variants = [];
-      let count = 0;
-      let star;
-
-      while (test(RE_VARIANT_START)) {
-        if (consumeChar("*")) {
-          star = count;
-        }
-
-        let key = parseVariantKey();
-        let value = parsePattern();
-
-        if (value === null) {
-          throw new _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]("Expected variant value");
-        }
-
-        variants[count++] = {
-          key,
-          value
-        };
-      }
-
-      if (count === 0) {
-        return null;
-      }
-
-      if (star === undefined) {
-        throw new _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]("Expected default variant");
-      }
-
-      return {
-        variants,
-        star
-      };
-    }
-
-    function parseVariantKey() {
-      consumeToken(TOKEN_BRACKET_OPEN, _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]);
-      let key = test(RE_NUMBER_LITERAL) ? parseNumberLiteral() : match1(RE_IDENTIFIER);
-      consumeToken(TOKEN_BRACKET_CLOSE, _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]);
-      return key;
-    }
-
-    function parseLiteral() {
-      if (test(RE_NUMBER_LITERAL)) {
-        return parseNumberLiteral();
-      }
-
-      if (source[cursor] === "\"") {
-        return parseStringLiteral();
-      }
-
-      throw new _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]("Invalid expression");
-    }
-
-    function parseNumberLiteral() {
-      let [, value, fraction = ""] = match(RE_NUMBER_LITERAL);
-      let precision = fraction.length;
-      return {
-        type: "num",
-        value: parseFloat(value),
-        precision
-      };
-    }
-
-    function parseStringLiteral() {
-      consumeChar("\"", _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]);
-      let value = "";
-
-      while (true) {
-        value += match1(RE_STRING_RUN);
-
-        if (source[cursor] === "\\") {
-          value += parseEscapeSequence();
-          continue;
-        }
-
-        if (consumeChar("\"")) {
-          return {
-            type: "str",
-            value
-          };
-        } // We've reached an EOL of EOF.
-
-
-        throw new _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]("Unclosed string literal");
-      }
-    } // Unescape known escape sequences.
-
-
-    function parseEscapeSequence() {
-      if (test(RE_STRING_ESCAPE)) {
-        return match1(RE_STRING_ESCAPE);
-      }
-
-      if (test(RE_UNICODE_ESCAPE)) {
-        let [, codepoint4, codepoint6] = match(RE_UNICODE_ESCAPE);
-        let codepoint = parseInt(codepoint4 || codepoint6, 16);
-        return codepoint <= 0xD7FF || 0xE000 <= codepoint // It's a Unicode scalar value.
-        ? String.fromCodePoint(codepoint) // Lonely surrogates can cause trouble when the parsing result is
-        // saved using UTF-8. Use U+FFFD REPLACEMENT CHARACTER instead.
-        : "�";
-      }
-
-      throw new _error_js__WEBPACK_IMPORTED_MODULE_0__["default"]("Unknown escape sequence");
-    } // Parse blank space. Return it if it looks like indent before a pattern
-    // line. Skip it othwerwise.
-
-
-    function parseIndent() {
-      let start = cursor;
-      consumeToken(TOKEN_BLANK); // Check the first non-blank character after the indent.
-
-      switch (source[cursor]) {
-        case ".":
-        case "[":
-        case "*":
-        case "}":
-        case undefined:
-          // EOF
-          // A special character. End the Pattern.
-          return false;
-
-        case "{":
-          // Placeables don't require indentation (in EBNF: block-placeable).
-          // Continue the Pattern.
-          return makeIndent(source.slice(start, cursor));
-      } // If the first character on the line is not one of the special characters
-      // listed above, it's a regular text character. Check if there's at least
-      // one space of indent before it.
-
-
-      if (source[cursor - 1] === " ") {
-        // It's an indented text character (in EBNF: indented-char). Continue
-        // the Pattern.
-        return makeIndent(source.slice(start, cursor));
-      } // A not-indented text character is likely the identifier of the next
-      // message. End the Pattern.
-
-
-      return false;
-    } // Trim blanks in text according to the given regex.
-
-
-    function trim(text, re) {
-      return text.replace(re, "");
-    } // Normalize a blank block and extract the indent details.
-
-
-    function makeIndent(blank) {
-      let value = blank.replace(RE_BLANK_LINES, "\n");
-      let length = RE_INDENT.exec(blank)[1].length;
-      return {
-        type: "indent",
-        value,
-        length
-      };
-    }
-  }
-
-}
-
-/***/ }),
-/* 17 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ FluentError)
-/* harmony export */ });
-class FluentError extends Error {}
-
-/***/ }),
-/* 18 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "VISIBLE": () => (/* binding */ VISIBLE),
-/* harmony export */   "VISIBILITY_CHANGE_EVENT": () => (/* binding */ VISIBILITY_CHANGE_EVENT),
-/* harmony export */   "ImpressionsWrapper": () => (/* binding */ ImpressionsWrapper)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+;// CONCATENATED MODULE: ./content-src/asrouter/components/ImpressionsWrapper/ImpressionsWrapper.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -4208,7 +3393,7 @@ const VISIBILITY_CHANGE_EVENT = "visibilitychange";
  * Component wrapper used to send telemetry pings on every impression.
  */
 
-class ImpressionsWrapper extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
+class ImpressionsWrapper extends (external_React_default()).PureComponent {
   // This sends an event when a user sees a set of new content. If content
   // changes while the page is hidden (i.e. preloaded or on a hidden tab),
   // only send the event if the page becomes visible again.
@@ -4265,268 +3450,10 @@ ImpressionsWrapper.defaultProps = {
   document: __webpack_require__.g.document,
   sendOnMount: true
 };
-
-/***/ }),
-/* 19 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "LocalizationProvider": () => (/* reexport safe */ _provider__WEBPACK_IMPORTED_MODULE_0__["default"]),
-/* harmony export */   "withLocalization": () => (/* reexport safe */ _with_localization__WEBPACK_IMPORTED_MODULE_1__["default"]),
-/* harmony export */   "Localized": () => (/* reexport safe */ _localized__WEBPACK_IMPORTED_MODULE_2__["default"]),
-/* harmony export */   "ReactLocalization": () => (/* reexport safe */ _localization__WEBPACK_IMPORTED_MODULE_3__["default"]),
-/* harmony export */   "isReactLocalization": () => (/* reexport safe */ _localization__WEBPACK_IMPORTED_MODULE_3__.isReactLocalization)
-/* harmony export */ });
-/* harmony import */ var _provider__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(20);
-/* harmony import */ var _with_localization__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(31);
-/* harmony import */ var _localized__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(32);
-/* harmony import */ var _localization__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(22);
-/*
- * @module fluent-react
- * @overview
- *
-
- * `fluent-react` provides React bindings for Fluent.  It takes advantage of
- * React's Components system and the virtual DOM.  Translations are exposed to
- * components via the provider pattern.
- *
- *     <LocalizationProvider bundles={…}>
- *         <Localized id="hello-world">
- *             <p>{'Hello, world!'}</p>
- *         </Localized>
- *     </LocalizationProvider>
- *
- * Consult the documentation of the `LocalizationProvider` and the `Localized`
- * components for more information.
- */
-
-
-
-
-
-/***/ }),
-/* 20 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ LocalizationProvider)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(21);
-/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _localization__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(22);
-/* harmony import */ var _markup__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(30);
-
-
-
-
-/*
- * The Provider component for the `ReactLocalization` class.
- *
- * Exposes a `ReactLocalization` instance to all descendants via React's
- * context feature.  It makes translations available to all localizable
- * elements in the descendant's render tree without the need to pass them
- * explicitly.
- *
- *     <LocalizationProvider bundles={…}>
- *         …
- *     </LocalizationProvider>
- *
- * The `LocalizationProvider` component takes one prop: `bundles`.  It should
- * be an iterable of `FluentBundle` instances in order of the user's
- * preferred languages.  The `FluentBundle` instances will be used by
- * `ReactLocalization` to format translations.  If a translation is missing in
- * one instance, `ReactLocalization` will fall back to the next one.
- */
-
-class LocalizationProvider extends react__WEBPACK_IMPORTED_MODULE_0__.Component {
-  constructor(props) {
-    super(props);
-    const {
-      bundles,
-      parseMarkup
-    } = props;
-
-    if (bundles === undefined) {
-      throw new Error("LocalizationProvider must receive the bundles prop.");
-    }
-
-    if (!bundles[Symbol.iterator]) {
-      throw new Error("The bundles prop must be an iterable.");
-    }
-
-    this.l10n = new _localization__WEBPACK_IMPORTED_MODULE_2__["default"](bundles);
-    this.parseMarkup = parseMarkup || (0,_markup__WEBPACK_IMPORTED_MODULE_3__["default"])();
-  }
-
-  getChildContext() {
-    return {
-      l10n: this.l10n,
-      parseMarkup: this.parseMarkup
-    };
-  }
-
-  componentWillReceiveProps(next) {
-    const {
-      bundles
-    } = next;
-
-    if (bundles !== this.props.bundles) {
-      this.l10n.setBundles(bundles);
-    }
-  }
-
-  render() {
-    return react__WEBPACK_IMPORTED_MODULE_0__.Children.only(this.props.children);
-  }
-
-}
-LocalizationProvider.childContextTypes = {
-  l10n: _localization__WEBPACK_IMPORTED_MODULE_2__.isReactLocalization,
-  parseMarkup: (prop_types__WEBPACK_IMPORTED_MODULE_1___default().func)
-};
-LocalizationProvider.propTypes = {
-  children: (prop_types__WEBPACK_IMPORTED_MODULE_1___default().element.isRequired),
-  bundles: isIterable,
-  parseMarkup: (prop_types__WEBPACK_IMPORTED_MODULE_1___default().func)
-};
-
-function isIterable(props, propName, componentName) {
-  const prop = props[propName];
-
-  if (Symbol.iterator in Object(prop)) {
-    return null;
-  }
-
-  return new Error(`The ${propName} prop supplied to ${componentName} must be an iterable.`);
-}
-
-/***/ }),
-/* 21 */
-/***/ ((module) => {
-
-module.exports = PropTypes;
-
-/***/ }),
-/* 22 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ ReactLocalization),
-/* harmony export */   "isReactLocalization": () => (/* binding */ isReactLocalization)
-/* harmony export */ });
-/* harmony import */ var fluent_sequence__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(23);
-/* harmony import */ var cached_iterable__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(26);
-
-
-/*
- * `ReactLocalization` handles translation formatting and fallback.
- *
- * The current negotiated fallback chain of languages is stored in the
- * `ReactLocalization` instance in form of an iterable of `FluentBundle`
- * instances.  This iterable is used to find the best existing translation for
- * a given identifier.
- *
- * `Localized` components must subscribe to the changes of the
- * `ReactLocalization`'s fallback chain.  When the fallback chain changes (the
- * `bundles` iterable is set anew), all subscribed compontent must relocalize.
- *
- * The `ReactLocalization` class instances are exposed to `Localized` elements
- * via the `LocalizationProvider` component.
- */
-
-class ReactLocalization {
-  constructor(bundles) {
-    this.bundles = cached_iterable__WEBPACK_IMPORTED_MODULE_1__.CachedSyncIterable.from(bundles);
-    this.subs = new Set();
-  }
-  /*
-   * Subscribe a `Localized` component to changes of `bundles`.
-   */
-
-
-  subscribe(comp) {
-    this.subs.add(comp);
-  }
-  /*
-   * Unsubscribe a `Localized` component from `bundles` changes.
-   */
-
-
-  unsubscribe(comp) {
-    this.subs.delete(comp);
-  }
-  /*
-   * Set a new `bundles` iterable and trigger the retranslation.
-   */
-
-
-  setBundles(bundles) {
-    this.bundles = cached_iterable__WEBPACK_IMPORTED_MODULE_1__.CachedSyncIterable.from(bundles); // Update all subscribed Localized components.
-
-    this.subs.forEach(comp => comp.relocalize());
-  }
-
-  getBundle(id) {
-    return (0,fluent_sequence__WEBPACK_IMPORTED_MODULE_0__.mapBundleSync)(this.bundles, id);
-  }
-  /*
-   * Find a translation by `id` and format it to a string using `args`.
-   */
-
-
-  getString(id, args, fallback) {
-    const bundle = this.getBundle(id);
-
-    if (bundle === null) {
-      return fallback || id;
-    }
-
-    const msg = bundle.getMessage(id);
-    return bundle.format(msg, args);
-  }
-
-}
-function isReactLocalization(props, propName) {
-  const prop = props[propName];
-
-  if (prop instanceof ReactLocalization) {
-    return null;
-  }
-
-  return new Error(`The ${propName} context field must be an instance of ReactLocalization.`);
-}
-
-/***/ }),
-/* 23 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "mapBundleSync": () => (/* reexport safe */ _map_sync__WEBPACK_IMPORTED_MODULE_0__["default"]),
-/* harmony export */   "mapBundleAsync": () => (/* reexport safe */ _map_async__WEBPACK_IMPORTED_MODULE_1__["default"])
-/* harmony export */ });
-/* harmony import */ var _map_sync__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(24);
-/* harmony import */ var _map_async__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(25);
-/*
- * @module fluent-sequence
- * @overview Manage ordered sequences of FluentBundles.
- */
-
-
-
-/***/ }),
-/* 24 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ mapBundleSync)
-/* harmony export */ });
+;// CONCATENATED MODULE: external "PropTypes"
+const external_PropTypes_namespaceObject = PropTypes;
+var external_PropTypes_default = /*#__PURE__*/__webpack_require__.n(external_PropTypes_namespaceObject);
+;// CONCATENATED MODULE: ./node_modules/fluent-sequence/src/map_sync.js
 /*
  * Synchronously map an identifier or an array of identifiers to the best
  * `FluentBundle` instance(s).
@@ -4555,15 +3482,7 @@ function getBundleForId(iterable, id) {
 
   return null;
 }
-
-/***/ }),
-/* 25 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ mapBundleAsync)
-/* harmony export */ });
+;// CONCATENATED MODULE: ./node_modules/fluent-sequence/src/map_async.js
 /*
  * Asynchronously map an identifier or an array of identifiers to the best
  * `FluentBundle` instance(s).
@@ -4600,31 +3519,36 @@ async function mapBundleAsync(iterable, ids) {
 
   return foundBundles;
 }
-
-/***/ }),
-/* 26 */
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "CachedSyncIterable": () => (/* reexport safe */ _cached_sync_iterable_mjs__WEBPACK_IMPORTED_MODULE_0__["default"]),
-/* harmony export */   "CachedAsyncIterable": () => (/* reexport safe */ _cached_async_iterable_mjs__WEBPACK_IMPORTED_MODULE_1__["default"])
-/* harmony export */ });
-/* harmony import */ var _cached_sync_iterable_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(27);
-/* harmony import */ var _cached_async_iterable_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(29);
+;// CONCATENATED MODULE: ./node_modules/fluent-sequence/src/index.js
+/*
+ * @module fluent-sequence
+ * @overview Manage ordered sequences of FluentBundles.
+ */
 
 
+;// CONCATENATED MODULE: ./node_modules/cached-iterable/src/cached_iterable.mjs
+/*
+ * Base CachedIterable class.
+ */
+class CachedIterable extends Array {
+    /**
+     * Create a `CachedIterable` instance from an iterable or, if another
+     * instance of `CachedIterable` is passed, return it without any
+     * modifications.
+     *
+     * @param {Iterable} iterable
+     * @returns {CachedIterable}
+     */
+    static from(iterable) {
+        if (iterable instanceof this) {
+            return iterable;
+        }
 
+        return new this(iterable);
+    }
+}
 
-/***/ }),
-/* 27 */
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ CachedSyncIterable)
-/* harmony export */ });
-/* harmony import */ var _cached_iterable_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(28);
+;// CONCATENATED MODULE: ./node_modules/cached-iterable/src/cached_sync_iterable.mjs
 
 
 /*
@@ -4633,7 +3557,7 @@ __webpack_require__.r(__webpack_exports__);
  * It can be used to iterate over an iterable many times without depleting the
  * iterable.
  */
-class CachedSyncIterable extends _cached_iterable_mjs__WEBPACK_IMPORTED_MODULE_0__["default"] {
+class CachedSyncIterable extends CachedIterable {
     /**
      * Create an `CachedSyncIterable` instance.
      *
@@ -4685,46 +3609,7 @@ class CachedSyncIterable extends _cached_iterable_mjs__WEBPACK_IMPORTED_MODULE_0
     }
 }
 
-
-/***/ }),
-/* 28 */
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ CachedIterable)
-/* harmony export */ });
-/*
- * Base CachedIterable class.
- */
-class CachedIterable extends Array {
-    /**
-     * Create a `CachedIterable` instance from an iterable or, if another
-     * instance of `CachedIterable` is passed, return it without any
-     * modifications.
-     *
-     * @param {Iterable} iterable
-     * @returns {CachedIterable}
-     */
-    static from(iterable) {
-        if (iterable instanceof this) {
-            return iterable;
-        }
-
-        return new this(iterable);
-    }
-}
-
-
-/***/ }),
-/* 29 */
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ CachedAsyncIterable)
-/* harmony export */ });
-/* harmony import */ var _cached_iterable_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(28);
+;// CONCATENATED MODULE: ./node_modules/cached-iterable/src/cached_async_iterable.mjs
 
 
 /*
@@ -4733,7 +3618,7 @@ __webpack_require__.r(__webpack_exports__);
  * It can be used to iterate over an iterable many times without depleting the
  * iterable.
  */
-class CachedAsyncIterable extends _cached_iterable_mjs__WEBPACK_IMPORTED_MODULE_0__["default"] {
+class CachedAsyncIterable extends CachedIterable {
     /**
      * Create an `CachedAsyncIterable` instance.
      *
@@ -4815,15 +3700,91 @@ class CachedAsyncIterable extends _cached_iterable_mjs__WEBPACK_IMPORTED_MODULE_
     }
 }
 
+;// CONCATENATED MODULE: ./node_modules/cached-iterable/src/index.mjs
 
-/***/ }),
-/* 30 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ createParseMarkup)
-/* harmony export */ });
+
+;// CONCATENATED MODULE: ./node_modules/fluent-react/src/localization.js
+
+
+/*
+ * `ReactLocalization` handles translation formatting and fallback.
+ *
+ * The current negotiated fallback chain of languages is stored in the
+ * `ReactLocalization` instance in form of an iterable of `FluentBundle`
+ * instances.  This iterable is used to find the best existing translation for
+ * a given identifier.
+ *
+ * `Localized` components must subscribe to the changes of the
+ * `ReactLocalization`'s fallback chain.  When the fallback chain changes (the
+ * `bundles` iterable is set anew), all subscribed compontent must relocalize.
+ *
+ * The `ReactLocalization` class instances are exposed to `Localized` elements
+ * via the `LocalizationProvider` component.
+ */
+
+class ReactLocalization {
+  constructor(bundles) {
+    this.bundles = CachedSyncIterable.from(bundles);
+    this.subs = new Set();
+  }
+  /*
+   * Subscribe a `Localized` component to changes of `bundles`.
+   */
+
+
+  subscribe(comp) {
+    this.subs.add(comp);
+  }
+  /*
+   * Unsubscribe a `Localized` component from `bundles` changes.
+   */
+
+
+  unsubscribe(comp) {
+    this.subs.delete(comp);
+  }
+  /*
+   * Set a new `bundles` iterable and trigger the retranslation.
+   */
+
+
+  setBundles(bundles) {
+    this.bundles = CachedSyncIterable.from(bundles); // Update all subscribed Localized components.
+
+    this.subs.forEach(comp => comp.relocalize());
+  }
+
+  getBundle(id) {
+    return mapBundleSync(this.bundles, id);
+  }
+  /*
+   * Find a translation by `id` and format it to a string using `args`.
+   */
+
+
+  getString(id, args, fallback) {
+    const bundle = this.getBundle(id);
+
+    if (bundle === null) {
+      return fallback || id;
+    }
+
+    const msg = bundle.getMessage(id);
+    return bundle.format(msg, args);
+  }
+
+}
+function isReactLocalization(props, propName) {
+  const prop = props[propName];
+
+  if (prop instanceof ReactLocalization) {
+    return null;
+  }
+
+  return new Error(`The ${propName} context field must be an instance of ReactLocalization.`);
+}
+;// CONCATENATED MODULE: ./node_modules/fluent-react/src/markup.js
 /* eslint-env browser */
 let cachedParseMarkup; // We use a function creator to make the reference to `document` lazy. At the
 // same time, it's eager enough to throw in <LocalizationProvider> as soon as
@@ -4847,22 +3808,96 @@ function createParseMarkup() {
 
   return cachedParseMarkup;
 }
+;// CONCATENATED MODULE: ./node_modules/fluent-react/src/provider.js
 
-/***/ }),
-/* 31 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ withLocalization)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _localization__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(22);
+
+
+/*
+ * The Provider component for the `ReactLocalization` class.
+ *
+ * Exposes a `ReactLocalization` instance to all descendants via React's
+ * context feature.  It makes translations available to all localizable
+ * elements in the descendant's render tree without the need to pass them
+ * explicitly.
+ *
+ *     <LocalizationProvider bundles={…}>
+ *         …
+ *     </LocalizationProvider>
+ *
+ * The `LocalizationProvider` component takes one prop: `bundles`.  It should
+ * be an iterable of `FluentBundle` instances in order of the user's
+ * preferred languages.  The `FluentBundle` instances will be used by
+ * `ReactLocalization` to format translations.  If a translation is missing in
+ * one instance, `ReactLocalization` will fall back to the next one.
+ */
+
+class LocalizationProvider extends external_React_namespaceObject.Component {
+  constructor(props) {
+    super(props);
+    const {
+      bundles,
+      parseMarkup
+    } = props;
+
+    if (bundles === undefined) {
+      throw new Error("LocalizationProvider must receive the bundles prop.");
+    }
+
+    if (!bundles[Symbol.iterator]) {
+      throw new Error("The bundles prop must be an iterable.");
+    }
+
+    this.l10n = new ReactLocalization(bundles);
+    this.parseMarkup = parseMarkup || createParseMarkup();
+  }
+
+  getChildContext() {
+    return {
+      l10n: this.l10n,
+      parseMarkup: this.parseMarkup
+    };
+  }
+
+  componentWillReceiveProps(next) {
+    const {
+      bundles
+    } = next;
+
+    if (bundles !== this.props.bundles) {
+      this.l10n.setBundles(bundles);
+    }
+  }
+
+  render() {
+    return external_React_namespaceObject.Children.only(this.props.children);
+  }
+
+}
+LocalizationProvider.childContextTypes = {
+  l10n: isReactLocalization,
+  parseMarkup: (external_PropTypes_default()).func
+};
+LocalizationProvider.propTypes = {
+  children: (external_PropTypes_default()).element.isRequired,
+  bundles: isIterable,
+  parseMarkup: (external_PropTypes_default()).func
+};
+
+function isIterable(props, propName, componentName) {
+  const prop = props[propName];
+
+  if (Symbol.iterator in Object(prop)) {
+    return null;
+  }
+
+  return new Error(`The ${propName} prop supplied to ${componentName} must be an iterable.`);
+}
+;// CONCATENATED MODULE: ./node_modules/fluent-react/src/with_localization.js
 
 
 function withLocalization(Inner) {
-  class WithLocalization extends react__WEBPACK_IMPORTED_MODULE_0__.Component {
+  class WithLocalization extends external_React_namespaceObject.Component {
     componentDidMount() {
       const {
         l10n
@@ -4910,7 +3945,7 @@ function withLocalization(Inner) {
     }
 
     render() {
-      return /*#__PURE__*/(0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Inner, Object.assign( // getString needs to be re-bound on updates to trigger a re-render
+      return /*#__PURE__*/(0,external_React_namespaceObject.createElement)(Inner, Object.assign( // getString needs to be re-bound on updates to trigger a re-render
       {
         getString: (...args) => this.getString(...args)
       }, this.props));
@@ -4920,7 +3955,7 @@ function withLocalization(Inner) {
 
   WithLocalization.displayName = `WithLocalization(${displayName(Inner)})`;
   WithLocalization.contextTypes = {
-    l10n: _localization__WEBPACK_IMPORTED_MODULE_1__.isReactLocalization
+    l10n: isReactLocalization
   };
   return WithLocalization;
 }
@@ -4928,21 +3963,50 @@ function withLocalization(Inner) {
 function displayName(component) {
   return component.displayName || component.name || "Component";
 }
+;// CONCATENATED MODULE: ./node_modules/fluent-react/vendor/omittedCloseTags.js
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in this directory.
+ */
+// For HTML, certain tags should omit their close tag. We keep a whitelist for
+// those special-case tags.
+var omittedCloseTags = {
+  area: true,
+  base: true,
+  br: true,
+  col: true,
+  embed: true,
+  hr: true,
+  img: true,
+  input: true,
+  keygen: true,
+  link: true,
+  meta: true,
+  param: true,
+  source: true,
+  track: true,
+  wbr: true // NOTE: menuitem's close tag should be omitted, but that causes problems.
 
-/***/ }),
-/* 32 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+};
+/* harmony default export */ const vendor_omittedCloseTags = (omittedCloseTags);
+;// CONCATENATED MODULE: ./node_modules/fluent-react/vendor/voidElementTags.js
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in this directory.
+ */
+ // For HTML, certain tags cannot have children. This has the same purpose as
+// `omittedCloseTags` except that `menuitem` should still have its closing tag.
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ Localized)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(21);
-/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _localization__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(22);
-/* harmony import */ var _vendor_voidElementTags__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(33);
+var voidElementTags = {
+  menuitem: true,
+  ...vendor_omittedCloseTags
+};
+/* harmony default export */ const vendor_voidElementTags = (voidElementTags);
+;// CONCATENATED MODULE: ./node_modules/fluent-react/src/localized.js
 
 
 
@@ -4962,7 +4026,7 @@ function toArguments(props) {
     if (propname.startsWith("$")) {
       const name = propname.substr(1);
       args[name] = propval;
-    } else if ( /*#__PURE__*/(0,react__WEBPACK_IMPORTED_MODULE_0__.isValidElement)(propval)) {
+    } else if ( /*#__PURE__*/(0,external_React_namespaceObject.isValidElement)(propval)) {
       // We'll try to match localNames of elements found in the translation with
       // names of elements passed as props. localNames are always lowercase.
       const name = propname.toLowerCase();
@@ -4996,7 +4060,7 @@ function toArguments(props) {
  */
 
 
-class Localized extends react__WEBPACK_IMPORTED_MODULE_0__.Component {
+class Localized extends external_React_namespaceObject.Component {
   componentDidMount() {
     const {
       l10n
@@ -5060,7 +4124,7 @@ class Localized extends react__WEBPACK_IMPORTED_MODULE_0__.Component {
     // markup (e.g. nothing or a fallback string) so just use the
     // formatted message value
 
-    if (! /*#__PURE__*/(0,react__WEBPACK_IMPORTED_MODULE_0__.isValidElement)(elem)) {
+    if (! /*#__PURE__*/(0,external_React_namespaceObject.isValidElement)(elem)) {
       return messageValue;
     } // The default is to forbid all message attributes. If the attrs prop exists
     // on the Localized instance, only set message attributes which have been
@@ -5081,21 +4145,21 @@ class Localized extends react__WEBPACK_IMPORTED_MODULE_0__.Component {
     // `dangerouslySetInnerHTML`" error.
 
 
-    if (elem.type in _vendor_voidElementTags__WEBPACK_IMPORTED_MODULE_3__["default"]) {
-      return /*#__PURE__*/(0,react__WEBPACK_IMPORTED_MODULE_0__.cloneElement)(elem, localizedProps);
+    if (elem.type in vendor_voidElementTags) {
+      return /*#__PURE__*/(0,external_React_namespaceObject.cloneElement)(elem, localizedProps);
     } // If the message has a null value, we're only interested in its attributes.
     // Do not pass the null value to cloneElement as it would nuke all children
     // of the wrapped component.
 
 
     if (messageValue === null) {
-      return /*#__PURE__*/(0,react__WEBPACK_IMPORTED_MODULE_0__.cloneElement)(elem, localizedProps);
+      return /*#__PURE__*/(0,external_React_namespaceObject.cloneElement)(elem, localizedProps);
     } // If the message value doesn't contain any markup nor any HTML entities,
     // insert it as the only child of the wrapped component.
 
 
     if (!reMarkup.test(messageValue)) {
-      return /*#__PURE__*/(0,react__WEBPACK_IMPORTED_MODULE_0__.cloneElement)(elem, localizedProps, messageValue);
+      return /*#__PURE__*/(0,external_React_namespaceObject.cloneElement)(elem, localizedProps, messageValue);
     } // If the message contains markup, parse it and try to match the children
     // found in the translation with the props passed to this Localized.
 
@@ -5116,7 +4180,7 @@ class Localized extends react__WEBPACK_IMPORTED_MODULE_0__.Component {
       // defined in the translation to prevent the "void element tags must not
       // have children" error.
 
-      if (sourceChild.type in _vendor_voidElementTags__WEBPACK_IMPORTED_MODULE_3__["default"]) {
+      if (sourceChild.type in vendor_voidElementTags) {
         return sourceChild;
       } // TODO Protect contents of elements wrapped in <Localized>
       // https://github.com/projectfluent/fluent.js/issues/184
@@ -5124,89 +4188,43 @@ class Localized extends react__WEBPACK_IMPORTED_MODULE_0__.Component {
       // https://github.com/projectfluent/fluent.js/issues/185
 
 
-      return /*#__PURE__*/(0,react__WEBPACK_IMPORTED_MODULE_0__.cloneElement)(sourceChild, null, childNode.textContent);
+      return /*#__PURE__*/(0,external_React_namespaceObject.cloneElement)(sourceChild, null, childNode.textContent);
     });
-    return /*#__PURE__*/(0,react__WEBPACK_IMPORTED_MODULE_0__.cloneElement)(elem, localizedProps, ...translatedChildren);
+    return /*#__PURE__*/(0,external_React_namespaceObject.cloneElement)(elem, localizedProps, ...translatedChildren);
   }
 
 }
 Localized.contextTypes = {
-  l10n: _localization__WEBPACK_IMPORTED_MODULE_2__.isReactLocalization,
-  parseMarkup: (prop_types__WEBPACK_IMPORTED_MODULE_1___default().func)
+  l10n: isReactLocalization,
+  parseMarkup: (external_PropTypes_default()).func
 };
 Localized.propTypes = {
-  children: (prop_types__WEBPACK_IMPORTED_MODULE_1___default().node)
+  children: (external_PropTypes_default()).node
 };
-
-/***/ }),
-/* 33 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var _omittedCloseTags__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(34);
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
+;// CONCATENATED MODULE: ./node_modules/fluent-react/src/index.js
+/*
+ * @module fluent-react
+ * @overview
  *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in this directory.
- */
- // For HTML, certain tags cannot have children. This has the same purpose as
-// `omittedCloseTags` except that `menuitem` should still have its closing tag.
 
-var voidElementTags = {
-  menuitem: true,
-  ..._omittedCloseTags__WEBPACK_IMPORTED_MODULE_0__["default"]
-};
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (voidElementTags);
-
-/***/ }),
-/* 34 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * `fluent-react` provides React bindings for Fluent.  It takes advantage of
+ * React's Components system and the virtual DOM.  Translations are exposed to
+ * components via the provider pattern.
  *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in this directory.
+ *     <LocalizationProvider bundles={…}>
+ *         <Localized id="hello-world">
+ *             <p>{'Hello, world!'}</p>
+ *         </Localized>
+ *     </LocalizationProvider>
+ *
+ * Consult the documentation of the `LocalizationProvider` and the `Localized`
+ * components for more information.
  */
-// For HTML, certain tags should omit their close tag. We keep a whitelist for
-// those special-case tags.
-var omittedCloseTags = {
-  area: true,
-  base: true,
-  br: true,
-  col: true,
-  embed: true,
-  hr: true,
-  img: true,
-  input: true,
-  keygen: true,
-  link: true,
-  meta: true,
-  param: true,
-  source: true,
-  track: true,
-  wbr: true // NOTE: menuitem's close tag should be omitted, but that causes problems.
 
-};
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (omittedCloseTags);
 
-/***/ }),
-/* 35 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "IS_NEWTAB": () => (/* binding */ IS_NEWTAB),
-/* harmony export */   "NEWTAB_DARK_THEME": () => (/* binding */ NEWTAB_DARK_THEME)
-/* harmony export */ });
+
+;// CONCATENATED MODULE: ./content-src/lib/constants.js
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5243,438 +4261,10 @@ const NEWTAB_DARK_THEME = {
     a: 1
   }
 };
-
-/***/ }),
-/* 36 */
-/***/ ((module) => {
-
-module.exports = ReactDOM;
-
-/***/ }),
-/* 37 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "SnippetsTemplates": () => (/* binding */ SnippetsTemplates)
-/* harmony export */ });
-/* harmony import */ var _EOYSnippet_EOYSnippet__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(38);
-/* harmony import */ var _FXASignupSnippet_FXASignupSnippet__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(45);
-/* harmony import */ var _NewsletterSnippet_NewsletterSnippet__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(47);
-/* harmony import */ var _SendToDeviceSnippet_SendToDeviceSnippet__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(48);
-/* harmony import */ var _SimpleBelowSearchSnippet_SimpleBelowSearchSnippet__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(50);
-/* harmony import */ var _SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(39);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-
-
- // Key names matching schema name of templates
-
-const SnippetsTemplates = {
-  simple_snippet: _SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_5__.SimpleSnippet,
-  newsletter_snippet: _NewsletterSnippet_NewsletterSnippet__WEBPACK_IMPORTED_MODULE_2__.NewsletterSnippet,
-  fxa_signup_snippet: _FXASignupSnippet_FXASignupSnippet__WEBPACK_IMPORTED_MODULE_1__.FXASignupSnippet,
-  send_to_device_snippet: _SendToDeviceSnippet_SendToDeviceSnippet__WEBPACK_IMPORTED_MODULE_3__.SendToDeviceSnippet,
-  send_to_device_scene2_snippet: _SendToDeviceSnippet_SendToDeviceSnippet__WEBPACK_IMPORTED_MODULE_3__.SendToDeviceScene2Snippet,
-  eoy_snippet: _EOYSnippet_EOYSnippet__WEBPACK_IMPORTED_MODULE_0__.EOYSnippet,
-  simple_below_search_snippet: _SimpleBelowSearchSnippet_SimpleBelowSearchSnippet__WEBPACK_IMPORTED_MODULE_4__.SimpleBelowSearchSnippet
-};
-
-/***/ }),
-/* 38 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "EOYSnippet": () => (/* binding */ EOYSnippet)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(39);
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-class EOYSnippetBase extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.handleSubmit = this.handleSubmit.bind(this);
-  }
-  /**
-   * setFrequencyValue - `frequency` form parameter value should be `monthly`
-   *                     if `monthly-checkbox` is selected or `single` otherwise
-   */
-
-
-  setFrequencyValue() {
-    const frequencyCheckbox = this.refs.form.querySelector("#monthly-checkbox");
-
-    if (frequencyCheckbox.checked) {
-      this.refs.form.querySelector("[name='frequency']").value = "monthly";
-    }
-  }
-
-  handleSubmit(event) {
-    event.preventDefault();
-    this.props.sendClick(event);
-    this.setFrequencyValue();
-
-    if (!this.props.content.do_not_autoblock) {
-      this.props.onBlock();
-    }
-
-    this.refs.form.submit();
-  }
-
-  renderDonations() {
-    const fieldNames = ["first", "second", "third", "fourth"];
-    const numberFormat = new Intl.NumberFormat(this.props.content.locale || navigator.language, {
-      style: "currency",
-      currency: this.props.content.currency_code,
-      minimumFractionDigits: 0
-    }); // Default to `second` button
-
-    const {
-      selected_button
-    } = this.props.content;
-    const btnStyle = {
-      color: this.props.content.button_color,
-      backgroundColor: this.props.content.button_background_color
-    };
-    const donationURLParams = [];
-    const paramsStartIndex = this.props.content.donation_form_url.indexOf("?");
-
-    for (const entry of new URLSearchParams(this.props.content.donation_form_url.slice(paramsStartIndex)).entries()) {
-      donationURLParams.push(entry);
-    }
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("form", {
-      className: "EOYSnippetForm",
-      action: this.props.content.donation_form_url,
-      method: this.props.form_method,
-      onSubmit: this.handleSubmit,
-      "data-metric": "EOYSnippetForm",
-      ref: "form"
-    }, donationURLParams.map(([key, value], idx) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
-      type: "hidden",
-      name: key,
-      value: value,
-      key: idx
-    })), fieldNames.map((field, idx) => {
-      const button_name = `donation_amount_${field}`;
-      const amount = this.props.content[button_name];
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), {
-        key: idx
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
-        type: "radio",
-        name: "amount",
-        value: amount,
-        id: field,
-        defaultChecked: button_name === selected_button
-      }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", {
-        htmlFor: field,
-        className: "donation-amount"
-      }, numberFormat.format(amount)));
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-      className: "monthly-checkbox-container"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
-      id: "monthly-checkbox",
-      type: "checkbox"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", {
-      htmlFor: "monthly-checkbox"
-    }, this.props.content.monthly_checkbox_label_text)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
-      type: "hidden",
-      name: "frequency",
-      value: "single"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
-      type: "hidden",
-      name: "currency",
-      value: this.props.content.currency_code
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
-      type: "hidden",
-      name: "presets",
-      value: fieldNames.map(field => this.props.content[`donation_amount_${field}`])
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-      style: btnStyle,
-      type: "submit",
-      className: "ASRouterButton primary donation-form-url"
-    }, this.props.content.button_label));
-  }
-
-  render() {
-    const textStyle = {
-      color: this.props.content.text_color,
-      backgroundColor: this.props.content.background_color
-    };
-    const customElement = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("em", {
-      style: {
-        backgroundColor: this.props.content.highlight_color
-      }
-    });
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_1__.SimpleSnippet, _extends({}, this.props, {
-      className: this.props.content.test,
-      customElements: {
-        em: customElement
-      },
-      textStyle: textStyle,
-      extraContent: this.renderDonations()
-    }));
-  }
-
-}
-
-const EOYSnippet = props => {
-  const extendedContent = {
-    monthly_checkbox_label_text: "Make my donation monthly",
-    locale: "en-US",
-    currency_code: "usd",
-    selected_button: "donation_amount_second",
-    ...props.content
-  };
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(EOYSnippetBase, _extends({}, props, {
-    content: extendedContent,
-    form_method: "GET"
-  }));
-};
-
-/***/ }),
-/* 39 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "SimpleSnippet": () => (/* binding */ SimpleSnippet)
-/* harmony export */ });
-/* harmony import */ var _components_Button_Button__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(40);
-/* harmony import */ var _components_ConditionalWrapper_ConditionalWrapper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(41);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _components_RichText_RichText__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(42);
-/* harmony import */ var _template_utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(43);
-/* harmony import */ var _components_SnippetBase_SnippetBase__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(44);
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-
-
-
-const DEFAULT_ICON_PATH = "chrome://branding/content/icon64.png"; // Alt text placeholder in case the prop from the server isn't available
-
-const ICON_ALT_TEXT = "";
-class SimpleSnippet extends (react__WEBPACK_IMPORTED_MODULE_2___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.onButtonClick = this.onButtonClick.bind(this);
-  }
-
-  onButtonClick() {
-    if (this.props.provider !== "preview") {
-      this.props.sendUserActionTelemetry({
-        event: "CLICK_BUTTON",
-        id: this.props.UISurface
-      });
-    }
-
-    const {
-      button_url,
-      button_entrypoint_value,
-      button_entrypoint_name
-    } = this.props.content; // If button_url is defined handle it as OPEN_URL action
-
-    const type = this.props.content.button_action || button_url && "OPEN_URL"; // Assign the snippet referral for the action
-
-    const entrypoint = button_entrypoint_name ? new URLSearchParams([[button_entrypoint_name, button_entrypoint_value]]).toString() : button_entrypoint_value;
-    this.props.onAction({
-      type,
-      data: {
-        args: this.props.content.button_action_args || button_url,
-        ...(entrypoint && {
-          entrypoint
-        })
-      }
-    });
-
-    if (!this.props.content.do_not_autoblock) {
-      this.props.onBlock();
-    }
-  }
-
-  _shouldRenderButton() {
-    return this.props.content.button_action || this.props.onButtonClick || this.props.content.button_url;
-  }
-
-  renderTitle() {
-    const {
-      title
-    } = this.props.content;
-    return title ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("h3", {
-      className: `title ${this._shouldRenderButton() ? "title-inline" : ""}`
-    }, this.renderTitleIcon(), " ", title) : null;
-  }
-
-  renderTitleIcon() {
-    const titleIconLight = (0,_template_utils__WEBPACK_IMPORTED_MODULE_4__.safeURI)(this.props.content.title_icon);
-    const titleIconDark = (0,_template_utils__WEBPACK_IMPORTED_MODULE_4__.safeURI)(this.props.content.title_icon_dark_theme || this.props.content.title_icon);
-
-    if (!titleIconLight) {
-      return null;
-    }
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement((react__WEBPACK_IMPORTED_MODULE_2___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", {
-      className: "titleIcon icon-light-theme",
-      style: {
-        backgroundImage: `url("${titleIconLight}")`
-      }
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", {
-      className: "titleIcon icon-dark-theme",
-      style: {
-        backgroundImage: `url("${titleIconDark}")`
-      }
-    }));
-  }
-
-  renderButton() {
-    const {
-      props
-    } = this;
-
-    if (!this._shouldRenderButton()) {
-      return null;
-    }
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(_components_Button_Button__WEBPACK_IMPORTED_MODULE_0__.Button, {
-      onClick: props.onButtonClick || this.onButtonClick,
-      color: props.content.button_color,
-      backgroundColor: props.content.button_background_color
-    }, props.content.button_label);
-  }
-
-  renderText() {
-    const {
-      props
-    } = this;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(_components_RichText_RichText__WEBPACK_IMPORTED_MODULE_3__.RichText, {
-      text: props.content.text,
-      customElements: this.props.customElements,
-      localization_id: "text",
-      links: props.content.links,
-      sendClick: props.sendClick
-    });
-  }
-
-  wrapSectionHeader(url) {
-    return function (children) {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("a", {
-        href: url
-      }, children);
-    };
-  }
-
-  wrapSnippetContent(children) {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-      className: "innerContentWrapper"
-    }, children);
-  }
-
-  renderSectionHeader() {
-    const {
-      props
-    } = this; // an icon and text must be specified to render the section header
-
-    if (props.content.section_title_icon && props.content.section_title_text) {
-      const sectionTitleIconLight = (0,_template_utils__WEBPACK_IMPORTED_MODULE_4__.safeURI)(props.content.section_title_icon);
-      const sectionTitleIconDark = (0,_template_utils__WEBPACK_IMPORTED_MODULE_4__.safeURI)(props.content.section_title_icon_dark_theme || props.content.section_title_icon);
-      const sectionTitleURL = props.content.section_title_url;
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-        className: "section-header"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("h3", {
-        className: "section-title"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(_components_ConditionalWrapper_ConditionalWrapper__WEBPACK_IMPORTED_MODULE_1__["default"], {
-        condition: sectionTitleURL,
-        wrap: this.wrapSectionHeader(sectionTitleURL)
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", {
-        className: "icon icon-small-spacer icon-light-theme",
-        style: {
-          backgroundImage: `url("${sectionTitleIconLight}")`
-        }
-      }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", {
-        className: "icon icon-small-spacer icon-dark-theme",
-        style: {
-          backgroundImage: `url("${sectionTitleIconDark}")`
-        }
-      }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", {
-        className: "section-title-text"
-      }, props.content.section_title_text))));
-    }
-
-    return null;
-  }
-
-  render() {
-    const {
-      props
-    } = this;
-    const sectionHeader = this.renderSectionHeader();
-    let className = "SimpleSnippet";
-
-    if (props.className) {
-      className += ` ${props.className}`;
-    }
-
-    if (props.content.tall) {
-      className += " tall";
-    }
-
-    if (sectionHeader) {
-      className += " has-section-header";
-    }
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-      className: "snippet-hover-wrapper"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(_components_SnippetBase_SnippetBase__WEBPACK_IMPORTED_MODULE_5__.SnippetBase, _extends({}, props, {
-      className: className,
-      textStyle: this.props.textStyle
-    }), sectionHeader, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(_components_ConditionalWrapper_ConditionalWrapper__WEBPACK_IMPORTED_MODULE_1__["default"], {
-      condition: sectionHeader,
-      wrap: this.wrapSnippetContent
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("img", {
-      src: (0,_template_utils__WEBPACK_IMPORTED_MODULE_4__.safeURI)(props.content.icon) || DEFAULT_ICON_PATH,
-      className: "icon icon-light-theme",
-      alt: props.content.icon_alt_text || ICON_ALT_TEXT
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("img", {
-      src: (0,_template_utils__WEBPACK_IMPORTED_MODULE_4__.safeURI)(props.content.icon_dark_theme || props.content.icon) || DEFAULT_ICON_PATH,
-      className: "icon icon-dark-theme",
-      alt: props.content.icon_alt_text || ICON_ALT_TEXT
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", null, this.renderTitle(), " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("p", {
-      className: "body"
-    }, this.renderText()), this.props.extraContent), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", null, this.renderButton()))));
-  }
-
-}
-
-/***/ }),
-/* 40 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Button": () => (/* binding */ Button)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+;// CONCATENATED MODULE: external "ReactDOM"
+const external_ReactDOM_namespaceObject = ReactDOM;
+var external_ReactDOM_default = /*#__PURE__*/__webpack_require__.n(external_ReactDOM_namespaceObject);
+;// CONCATENATED MODULE: ./content-src/asrouter/components/Button/Button.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5694,21 +4284,13 @@ const Button = props => {
     style.border = "0";
   }
 
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+  return /*#__PURE__*/external_React_default().createElement("button", {
     onClick: props.onClick,
     className: props.className || "ASRouterButton secondary",
     style: style
   }, props.children);
 };
-
-/***/ }),
-/* 41 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
+;// CONCATENATED MODULE: ./content-src/asrouter/components/ConditionalWrapper/ConditionalWrapper.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5719,23 +4301,29 @@ const ConditionalWrapper = ({
   children
 }) => condition && wrap ? wrap(children) : children;
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ConditionalWrapper);
+/* harmony default export */ const ConditionalWrapper_ConditionalWrapper = (ConditionalWrapper);
+;// CONCATENATED MODULE: ./content-src/asrouter/template-utils.js
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+function safeURI(url) {
+  if (!url) {
+    return "";
+  }
 
-/***/ }),
-/* 42 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+  const {
+    protocol
+  } = new URL(url);
+  const isAllowed = ["http:", "https:", "data:", "resource:", "chrome:"].includes(protocol);
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "convertLinks": () => (/* binding */ convertLinks),
-/* harmony export */   "RichText": () => (/* binding */ RichText)
-/* harmony export */ });
-/* harmony import */ var fluent_react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(19);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _rich_text_strings__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(10);
-/* harmony import */ var _template_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(43);
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+  if (!isAllowed) {
+    console.warn(`The protocol ${protocol} is not allowed for template URLs.`); // eslint-disable-line no-console
+  }
+
+  return isAllowed ? url : "";
+}
+;// CONCATENATED MODULE: ./content-src/asrouter/components/RichText/RichText.jsx
+function RichText_extends() { RichText_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return RichText_extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -5746,12 +4334,12 @@ function _extends() { _extends = Object.assign || function (target) { for (var i
  // Elements allowed in snippet content
 
 const ALLOWED_TAGS = {
-  b: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("b", null),
-  i: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("i", null),
-  u: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("u", null),
-  strong: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("strong", null),
-  em: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("em", null),
-  br: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("br", null)
+  b: /*#__PURE__*/external_React_default().createElement("b", null),
+  i: /*#__PURE__*/external_React_default().createElement("i", null),
+  u: /*#__PURE__*/external_React_default().createElement("u", null),
+  strong: /*#__PURE__*/external_React_default().createElement("strong", null),
+  em: /*#__PURE__*/external_React_default().createElement("em", null),
+  br: /*#__PURE__*/external_React_default().createElement("br", null)
 };
 /**
  * Transform an object (tag name: {url}) into (tag name: anchor) where the url
@@ -5765,13 +4353,13 @@ function convertLinks(links, sendClick, doNotAutoBlock, openNewWindow = false) {
         action
       } = links[linkTag]; // Setting the value to false will not include the attribute in the anchor
 
-      const url = action ? false : (0,_template_utils__WEBPACK_IMPORTED_MODULE_3__.safeURI)(links[linkTag].url);
+      const url = action ? false : safeURI(links[linkTag].url);
       acc[linkTag] =
       /*#__PURE__*/
       // eslint was getting a false positive caused by the dynamic injection
       // of content.
       // eslint-disable-next-line jsx-a11y/anchor-has-content
-      react__WEBPACK_IMPORTED_MODULE_1___default().createElement("a", {
+      external_React_default().createElement("a", {
         href: url,
         target: openNewWindow ? "_blank" : "",
         "data-metric": links[linkTag].metric,
@@ -5794,58 +4382,20 @@ function convertLinks(links, sendClick, doNotAutoBlock, openNewWindow = false) {
  */
 
 function RichText(props) {
-  if (!_rich_text_strings__WEBPACK_IMPORTED_MODULE_2__.RICH_TEXT_KEYS.includes(props.localization_id)) {
+  if (!RICH_TEXT_KEYS.includes(props.localization_id)) {
     throw new Error(`ASRouter: ${props.localization_id} is not a valid rich text property. If you want it to be processed, you need to add it to asrouter/rich-text-strings.js`);
   }
 
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(fluent_react__WEBPACK_IMPORTED_MODULE_0__.Localized, _extends({
+  return /*#__PURE__*/external_React_default().createElement(Localized, RichText_extends({
     id: props.localization_id
-  }, ALLOWED_TAGS, props.customElements, convertLinks(props.links, props.sendClick, props.doNotAutoBlock, props.openNewWindow)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", null, props.text));
+  }, ALLOWED_TAGS, props.customElements, convertLinks(props.links, props.sendClick, props.doNotAutoBlock, props.openNewWindow)), /*#__PURE__*/external_React_default().createElement("span", null, props.text));
 }
-
-/***/ }),
-/* 43 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "safeURI": () => (/* binding */ safeURI)
-/* harmony export */ });
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-function safeURI(url) {
-  if (!url) {
-    return "";
-  }
-
-  const {
-    protocol
-  } = new URL(url);
-  const isAllowed = ["http:", "https:", "data:", "resource:", "chrome:"].includes(protocol);
-
-  if (!isAllowed) {
-    console.warn(`The protocol ${protocol} is not allowed for template URLs.`); // eslint-disable-line no-console
-  }
-
-  return isAllowed ? url : "";
-}
-
-/***/ }),
-/* 44 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "SnippetBase": () => (/* binding */ SnippetBase)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+;// CONCATENATED MODULE: ./content-src/asrouter/components/SnippetBase/SnippetBase.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-class SnippetBase extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
+class SnippetBase extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.onBlockClicked = this.onBlockClicked.bind(this);
@@ -5912,18 +4462,18 @@ class SnippetBase extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComp
 
   renderDismissButton() {
     if (this.props.footerDismiss) {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+      return /*#__PURE__*/external_React_default().createElement("div", {
         className: "footer"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+      }, /*#__PURE__*/external_React_default().createElement("div", {
         className: "footer-content"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+      }, /*#__PURE__*/external_React_default().createElement("button", {
         className: "ASRouterButton secondary",
         onClick: this.onDismissClicked
       }, this.props.content.scene2_dismiss_button_text)));
     }
 
     const label = this.props.content.block_button_text || "Remove this";
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    return /*#__PURE__*/external_React_default().createElement("button", {
       className: "blockButton",
       title: label,
       "aria-label": label,
@@ -5940,79 +4490,372 @@ class SnippetBase extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComp
       blockButtonHover
     } = this.state;
     const containerClassName = `SnippetBaseContainer${props.className ? ` ${props.className}` : ""}${blockButtonHover ? " active" : ""}`;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: containerClassName,
       style: this.props.textStyle
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "innerWrapper"
     }, props.children), this.renderDismissButton());
   }
 
 }
-
-/***/ }),
-/* 45 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "FXASignupSnippet": () => (/* binding */ FXASignupSnippet)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _SubmitFormSnippet_SubmitFormSnippet_jsx__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(46);
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+;// CONCATENATED MODULE: ./content-src/asrouter/templates/SimpleSnippet/SimpleSnippet.jsx
+function SimpleSnippet_extends() { SimpleSnippet_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return SimpleSnippet_extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-const FXASignupSnippet = props => {
-  const userAgent = window.navigator.userAgent.match(/Firefox\/([0-9]+)\./);
-  const firefox_version = userAgent ? parseInt(userAgent[1], 10) : 0;
-  const extendedContent = {
-    scene1_button_label: "Learn more",
-    retry_button_label: "Try again",
-    scene2_email_placeholder_text: "Your email here",
-    scene2_button_label: "Sign me up",
-    scene2_dismiss_button_text: "Dismiss",
-    ...props.content,
-    hidden_inputs: {
-      action: "email",
-      context: "fx_desktop_v3",
-      entrypoint: "snippets",
-      utm_source: "snippet",
-      utm_content: firefox_version,
-      utm_campaign: props.content.utm_campaign,
-      utm_term: props.content.utm_term,
-      ...props.content.hidden_inputs
+
+
+
+
+const DEFAULT_ICON_PATH = "chrome://branding/content/icon64.png"; // Alt text placeholder in case the prop from the server isn't available
+
+const ICON_ALT_TEXT = "";
+class SimpleSnippet extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.onButtonClick = this.onButtonClick.bind(this);
+  }
+
+  onButtonClick() {
+    if (this.props.provider !== "preview") {
+      this.props.sendUserActionTelemetry({
+        event: "CLICK_BUTTON",
+        id: this.props.UISurface
+      });
     }
+
+    const {
+      button_url,
+      button_entrypoint_value,
+      button_entrypoint_name
+    } = this.props.content; // If button_url is defined handle it as OPEN_URL action
+
+    const type = this.props.content.button_action || button_url && "OPEN_URL"; // Assign the snippet referral for the action
+
+    const entrypoint = button_entrypoint_name ? new URLSearchParams([[button_entrypoint_name, button_entrypoint_value]]).toString() : button_entrypoint_value;
+    this.props.onAction({
+      type,
+      data: {
+        args: this.props.content.button_action_args || button_url,
+        ...(entrypoint && {
+          entrypoint
+        })
+      }
+    });
+
+    if (!this.props.content.do_not_autoblock) {
+      this.props.onBlock();
+    }
+  }
+
+  _shouldRenderButton() {
+    return this.props.content.button_action || this.props.onButtonClick || this.props.content.button_url;
+  }
+
+  renderTitle() {
+    const {
+      title
+    } = this.props.content;
+    return title ? /*#__PURE__*/external_React_default().createElement("h3", {
+      className: `title ${this._shouldRenderButton() ? "title-inline" : ""}`
+    }, this.renderTitleIcon(), " ", title) : null;
+  }
+
+  renderTitleIcon() {
+    const titleIconLight = safeURI(this.props.content.title_icon);
+    const titleIconDark = safeURI(this.props.content.title_icon_dark_theme || this.props.content.title_icon);
+
+    if (!titleIconLight) {
+      return null;
+    }
+
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("span", {
+      className: "titleIcon icon-light-theme",
+      style: {
+        backgroundImage: `url("${titleIconLight}")`
+      }
+    }), /*#__PURE__*/external_React_default().createElement("span", {
+      className: "titleIcon icon-dark-theme",
+      style: {
+        backgroundImage: `url("${titleIconDark}")`
+      }
+    }));
+  }
+
+  renderButton() {
+    const {
+      props
+    } = this;
+
+    if (!this._shouldRenderButton()) {
+      return null;
+    }
+
+    return /*#__PURE__*/external_React_default().createElement(Button, {
+      onClick: props.onButtonClick || this.onButtonClick,
+      color: props.content.button_color,
+      backgroundColor: props.content.button_background_color
+    }, props.content.button_label);
+  }
+
+  renderText() {
+    const {
+      props
+    } = this;
+    return /*#__PURE__*/external_React_default().createElement(RichText, {
+      text: props.content.text,
+      customElements: this.props.customElements,
+      localization_id: "text",
+      links: props.content.links,
+      sendClick: props.sendClick
+    });
+  }
+
+  wrapSectionHeader(url) {
+    return function (children) {
+      return /*#__PURE__*/external_React_default().createElement("a", {
+        href: url
+      }, children);
+    };
+  }
+
+  wrapSnippetContent(children) {
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: "innerContentWrapper"
+    }, children);
+  }
+
+  renderSectionHeader() {
+    const {
+      props
+    } = this; // an icon and text must be specified to render the section header
+
+    if (props.content.section_title_icon && props.content.section_title_text) {
+      const sectionTitleIconLight = safeURI(props.content.section_title_icon);
+      const sectionTitleIconDark = safeURI(props.content.section_title_icon_dark_theme || props.content.section_title_icon);
+      const sectionTitleURL = props.content.section_title_url;
+      return /*#__PURE__*/external_React_default().createElement("div", {
+        className: "section-header"
+      }, /*#__PURE__*/external_React_default().createElement("h3", {
+        className: "section-title"
+      }, /*#__PURE__*/external_React_default().createElement(ConditionalWrapper_ConditionalWrapper, {
+        condition: sectionTitleURL,
+        wrap: this.wrapSectionHeader(sectionTitleURL)
+      }, /*#__PURE__*/external_React_default().createElement("span", {
+        className: "icon icon-small-spacer icon-light-theme",
+        style: {
+          backgroundImage: `url("${sectionTitleIconLight}")`
+        }
+      }), /*#__PURE__*/external_React_default().createElement("span", {
+        className: "icon icon-small-spacer icon-dark-theme",
+        style: {
+          backgroundImage: `url("${sectionTitleIconDark}")`
+        }
+      }), /*#__PURE__*/external_React_default().createElement("span", {
+        className: "section-title-text"
+      }, props.content.section_title_text))));
+    }
+
+    return null;
+  }
+
+  render() {
+    const {
+      props
+    } = this;
+    const sectionHeader = this.renderSectionHeader();
+    let className = "SimpleSnippet";
+
+    if (props.className) {
+      className += ` ${props.className}`;
+    }
+
+    if (props.content.tall) {
+      className += " tall";
+    }
+
+    if (sectionHeader) {
+      className += " has-section-header";
+    }
+
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: "snippet-hover-wrapper"
+    }, /*#__PURE__*/external_React_default().createElement(SnippetBase, SimpleSnippet_extends({}, props, {
+      className: className,
+      textStyle: this.props.textStyle
+    }), sectionHeader, /*#__PURE__*/external_React_default().createElement(ConditionalWrapper_ConditionalWrapper, {
+      condition: sectionHeader,
+      wrap: this.wrapSnippetContent
+    }, /*#__PURE__*/external_React_default().createElement("img", {
+      src: safeURI(props.content.icon) || DEFAULT_ICON_PATH,
+      className: "icon icon-light-theme",
+      alt: props.content.icon_alt_text || ICON_ALT_TEXT
+    }), /*#__PURE__*/external_React_default().createElement("img", {
+      src: safeURI(props.content.icon_dark_theme || props.content.icon) || DEFAULT_ICON_PATH,
+      className: "icon icon-dark-theme",
+      alt: props.content.icon_alt_text || ICON_ALT_TEXT
+    }), /*#__PURE__*/external_React_default().createElement("div", null, this.renderTitle(), " ", /*#__PURE__*/external_React_default().createElement("p", {
+      className: "body"
+    }, this.renderText()), this.props.extraContent), /*#__PURE__*/external_React_default().createElement("div", null, this.renderButton()))));
+  }
+
+}
+;// CONCATENATED MODULE: ./content-src/asrouter/templates/EOYSnippet/EOYSnippet.jsx
+function EOYSnippet_extends() { EOYSnippet_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return EOYSnippet_extends.apply(this, arguments); }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+class EOYSnippetBase extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+  /**
+   * setFrequencyValue - `frequency` form parameter value should be `monthly`
+   *                     if `monthly-checkbox` is selected or `single` otherwise
+   */
+
+
+  setFrequencyValue() {
+    const frequencyCheckbox = this.refs.form.querySelector("#monthly-checkbox");
+
+    if (frequencyCheckbox.checked) {
+      this.refs.form.querySelector("[name='frequency']").value = "monthly";
+    }
+  }
+
+  handleSubmit(event) {
+    event.preventDefault();
+    this.props.sendClick(event);
+    this.setFrequencyValue();
+
+    if (!this.props.content.do_not_autoblock) {
+      this.props.onBlock();
+    }
+
+    this.refs.form.submit();
+  }
+
+  renderDonations() {
+    const fieldNames = ["first", "second", "third", "fourth"];
+    const numberFormat = new Intl.NumberFormat(this.props.content.locale || navigator.language, {
+      style: "currency",
+      currency: this.props.content.currency_code,
+      minimumFractionDigits: 0
+    }); // Default to `second` button
+
+    const {
+      selected_button
+    } = this.props.content;
+    const btnStyle = {
+      color: this.props.content.button_color,
+      backgroundColor: this.props.content.button_background_color
+    };
+    const donationURLParams = [];
+    const paramsStartIndex = this.props.content.donation_form_url.indexOf("?");
+
+    for (const entry of new URLSearchParams(this.props.content.donation_form_url.slice(paramsStartIndex)).entries()) {
+      donationURLParams.push(entry);
+    }
+
+    return /*#__PURE__*/external_React_default().createElement("form", {
+      className: "EOYSnippetForm",
+      action: this.props.content.donation_form_url,
+      method: this.props.form_method,
+      onSubmit: this.handleSubmit,
+      "data-metric": "EOYSnippetForm",
+      ref: "form"
+    }, donationURLParams.map(([key, value], idx) => /*#__PURE__*/external_React_default().createElement("input", {
+      type: "hidden",
+      name: key,
+      value: value,
+      key: idx
+    })), fieldNames.map((field, idx) => {
+      const button_name = `donation_amount_${field}`;
+      const amount = this.props.content[button_name];
+      return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, {
+        key: idx
+      }, /*#__PURE__*/external_React_default().createElement("input", {
+        type: "radio",
+        name: "amount",
+        value: amount,
+        id: field,
+        defaultChecked: button_name === selected_button
+      }), /*#__PURE__*/external_React_default().createElement("label", {
+        htmlFor: field,
+        className: "donation-amount"
+      }, numberFormat.format(amount)));
+    }), /*#__PURE__*/external_React_default().createElement("div", {
+      className: "monthly-checkbox-container"
+    }, /*#__PURE__*/external_React_default().createElement("input", {
+      id: "monthly-checkbox",
+      type: "checkbox"
+    }), /*#__PURE__*/external_React_default().createElement("label", {
+      htmlFor: "monthly-checkbox"
+    }, this.props.content.monthly_checkbox_label_text)), /*#__PURE__*/external_React_default().createElement("input", {
+      type: "hidden",
+      name: "frequency",
+      value: "single"
+    }), /*#__PURE__*/external_React_default().createElement("input", {
+      type: "hidden",
+      name: "currency",
+      value: this.props.content.currency_code
+    }), /*#__PURE__*/external_React_default().createElement("input", {
+      type: "hidden",
+      name: "presets",
+      value: fieldNames.map(field => this.props.content[`donation_amount_${field}`])
+    }), /*#__PURE__*/external_React_default().createElement("button", {
+      style: btnStyle,
+      type: "submit",
+      className: "ASRouterButton primary donation-form-url"
+    }, this.props.content.button_label));
+  }
+
+  render() {
+    const textStyle = {
+      color: this.props.content.text_color,
+      backgroundColor: this.props.content.background_color
+    };
+    const customElement = /*#__PURE__*/external_React_default().createElement("em", {
+      style: {
+        backgroundColor: this.props.content.highlight_color
+      }
+    });
+    return /*#__PURE__*/external_React_default().createElement(SimpleSnippet, EOYSnippet_extends({}, this.props, {
+      className: this.props.content.test,
+      customElements: {
+        em: customElement
+      },
+      textStyle: textStyle,
+      extraContent: this.renderDonations()
+    }));
+  }
+
+}
+
+const EOYSnippet = props => {
+  const extendedContent = {
+    monthly_checkbox_label_text: "Make my donation monthly",
+    locale: "en-US",
+    currency_code: "usd",
+    selected_button: "donation_amount_second",
+    ...props.content
   };
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SubmitFormSnippet_SubmitFormSnippet_jsx__WEBPACK_IMPORTED_MODULE_1__.SubmitFormSnippet, _extends({}, props, {
+  return /*#__PURE__*/external_React_default().createElement(EOYSnippetBase, EOYSnippet_extends({}, props, {
     content: extendedContent,
-    form_action: "https://accounts.firefox.com/",
     form_method: "GET"
   }));
 };
-
-/***/ }),
-/* 46 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "SubmitFormSnippet": () => (/* binding */ SubmitFormSnippet)
-/* harmony export */ });
-/* harmony import */ var _components_Button_Button__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(40);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _components_RichText_RichText__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(42);
-/* harmony import */ var _template_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(43);
-/* harmony import */ var _SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(39);
-/* harmony import */ var _components_SnippetBase_SnippetBase__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(44);
-/* harmony import */ var _components_ConditionalWrapper_ConditionalWrapper__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(41);
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+;// CONCATENATED MODULE: ./content-src/asrouter/templates/SubmitFormSnippet/SubmitFormSnippet.jsx
+function SubmitFormSnippet_extends() { SubmitFormSnippet_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return SubmitFormSnippet_extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -6025,8 +4868,8 @@ function _extends() { _extends = Object.assign || function (target) { for (var i
 
  // Alt text placeholder in case the prop from the server isn't available
 
-const ICON_ALT_TEXT = "";
-class SubmitFormSnippet extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureComponent) {
+const SubmitFormSnippet_ICON_ALT_TEXT = "";
+class SubmitFormSnippet extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.expandSnippet = this.expandSnippet.bind(this);
@@ -6154,7 +4997,7 @@ class SubmitFormSnippet extends (react__WEBPACK_IMPORTED_MODULE_1___default().Pu
       return null;
     }
 
-    return Object.keys(hidden_inputs).map((key, idx) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("input", {
+    return Object.keys(hidden_inputs).map((key, idx) => /*#__PURE__*/external_React_default().createElement("input", {
       key: idx,
       type: "hidden",
       name: key,
@@ -6171,9 +5014,9 @@ class SubmitFormSnippet extends (react__WEBPACK_IMPORTED_MODULE_1___default().Pu
       return null;
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("p", {
+    return /*#__PURE__*/external_React_default().createElement("p", {
       className: "disclaimerText"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_components_RichText_RichText__WEBPACK_IMPORTED_MODULE_2__.RichText, {
+    }, /*#__PURE__*/external_React_default().createElement(RichText, {
       text: content.scene2_disclaimer_html,
       localization_id: "disclaimer_html",
       links: content.links,
@@ -6192,16 +5035,16 @@ class SubmitFormSnippet extends (react__WEBPACK_IMPORTED_MODULE_1___default().Pu
       return null;
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("p", {
+    return /*#__PURE__*/external_React_default().createElement("p", {
       className: "privacyNotice"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("input", {
+    }, /*#__PURE__*/external_React_default().createElement("input", {
       type: "checkbox",
       id: "id_privacy",
       name: "privacy",
       required: "required"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("label", {
+    }), /*#__PURE__*/external_React_default().createElement("label", {
       htmlFor: "id_privacy"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_components_RichText_RichText__WEBPACK_IMPORTED_MODULE_2__.RichText, {
+    }, /*#__PURE__*/external_React_default().createElement(RichText, {
       text: content.scene2_privacy_html,
       localization_id: "privacy_html",
       links: content.links,
@@ -6223,13 +5066,13 @@ class SubmitFormSnippet extends (react__WEBPACK_IMPORTED_MODULE_1___default().Pu
       error_text: content.error_text
     };
     const retryButtonText = content.retry_button_label;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_components_SnippetBase_SnippetBase__WEBPACK_IMPORTED_MODULE_5__.SnippetBase, this.props, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement(SnippetBase, this.props, /*#__PURE__*/external_React_default().createElement("div", {
       className: "submissionStatus"
-    }, successTitle ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("h2", {
+    }, successTitle ? /*#__PURE__*/external_React_default().createElement("h2", {
       className: "submitStatusTitle"
-    }, successTitle) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("p", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_components_RichText_RichText__WEBPACK_IMPORTED_MODULE_2__.RichText, _extends({}, bodyText, {
+    }, successTitle) : null, /*#__PURE__*/external_React_default().createElement("p", null, /*#__PURE__*/external_React_default().createElement(RichText, SubmitFormSnippet_extends({}, bodyText, {
       localization_id: isSuccess ? "success_text" : "error_text"
-    })), isSuccess ? null : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_components_Button_Button__WEBPACK_IMPORTED_MODULE_0__.Button, {
+    })), isSuccess ? null : /*#__PURE__*/external_React_default().createElement(Button, {
       onClick: this.expandSnippet
     }, retryButtonText))));
   }
@@ -6245,7 +5088,7 @@ class SubmitFormSnippet extends (react__WEBPACK_IMPORTED_MODULE_1___default().Pu
 
   wrapSectionHeader(url) {
     return function (children) {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("a", {
+      return /*#__PURE__*/external_React_default().createElement("a", {
         href: url
       }, children);
     };
@@ -6253,7 +5096,7 @@ class SubmitFormSnippet extends (react__WEBPACK_IMPORTED_MODULE_1___default().Pu
 
   renderInput() {
     const placholder = this.props.content.scene2_email_placeholder_text || this.props.content.scene2_input_placeholder;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("input", {
+    return /*#__PURE__*/external_React_default().createElement("input", {
       ref: "mainInput",
       type: this.props.inputType || "email",
       className: `mainInput${this.state.submitAttempted ? "" : " clean"}`,
@@ -6265,12 +5108,12 @@ class SubmitFormSnippet extends (react__WEBPACK_IMPORTED_MODULE_1___default().Pu
   }
 
   renderForm() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("form", {
+    return /*#__PURE__*/external_React_default().createElement("form", {
       action: this.props.form_action,
       method: this.props.form_method,
       onSubmit: this.handleSubmit,
       ref: "form"
-    }, this.renderHiddenFormInputs(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", null, this.renderInput(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", {
+    }, this.renderHiddenFormInputs(), /*#__PURE__*/external_React_default().createElement("div", null, this.renderInput(), /*#__PURE__*/external_React_default().createElement("button", {
       type: "submit",
       className: "ASRouterButton primary",
       onClick: this.handleSubmitAttempt,
@@ -6287,16 +5130,16 @@ class SubmitFormSnippet extends (react__WEBPACK_IMPORTED_MODULE_1___default().Pu
       return null;
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: "scene2Icon"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("img", {
-      src: (0,_template_utils__WEBPACK_IMPORTED_MODULE_3__.safeURI)(content.scene2_icon),
+    }, /*#__PURE__*/external_React_default().createElement("img", {
+      src: safeURI(content.scene2_icon),
       className: "icon-light-theme",
-      alt: content.scene2_icon_alt_text || ICON_ALT_TEXT
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("img", {
-      src: (0,_template_utils__WEBPACK_IMPORTED_MODULE_3__.safeURI)(content.scene2_icon_dark_theme || content.scene2_icon),
+      alt: content.scene2_icon_alt_text || SubmitFormSnippet_ICON_ALT_TEXT
+    }), /*#__PURE__*/external_React_default().createElement("img", {
+      src: safeURI(content.scene2_icon_dark_theme || content.scene2_icon),
       className: "icon-dark-theme",
-      alt: content.scene2_icon_alt_text || ICON_ALT_TEXT
+      alt: content.scene2_icon_alt_text || SubmitFormSnippet_ICON_ALT_TEXT
     }));
   }
 
@@ -6305,14 +5148,14 @@ class SubmitFormSnippet extends (react__WEBPACK_IMPORTED_MODULE_1___default().Pu
       content
     } = this.props;
     const containerClass = `SubmitFormSnippet ${this.props.className}`;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_components_SnippetBase_SnippetBase__WEBPACK_IMPORTED_MODULE_5__.SnippetBase, _extends({}, this.props, {
+    return /*#__PURE__*/external_React_default().createElement(SnippetBase, SubmitFormSnippet_extends({}, this.props, {
       className: containerClass,
       footerDismiss: true
-    }), this.renderScene2Icon(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
+    }), this.renderScene2Icon(), /*#__PURE__*/external_React_default().createElement("div", {
       className: "message"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("p", null, content.scene2_title && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("h3", {
+    }, /*#__PURE__*/external_React_default().createElement("p", null, content.scene2_title && /*#__PURE__*/external_React_default().createElement("h3", {
       className: "scene2Title"
-    }, content.scene2_title), " ", content.scene2_text && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_components_RichText_RichText__WEBPACK_IMPORTED_MODULE_2__.RichText, {
+    }, content.scene2_title), " ", content.scene2_text && /*#__PURE__*/external_React_default().createElement(RichText, {
       scene2_text: content.scene2_text,
       localization_id: "scene2_text"
     }))), this.renderForm());
@@ -6324,27 +5167,27 @@ class SubmitFormSnippet extends (react__WEBPACK_IMPORTED_MODULE_1___default().Pu
     } = this; // an icon and text must be specified to render the section header
 
     if (props.content.section_title_icon && props.content.section_title_text) {
-      const sectionTitleIconLight = (0,_template_utils__WEBPACK_IMPORTED_MODULE_3__.safeURI)(props.content.section_title_icon);
-      const sectionTitleIconDark = (0,_template_utils__WEBPACK_IMPORTED_MODULE_3__.safeURI)(props.content.section_title_icon_dark_theme || props.content.section_title_icon);
+      const sectionTitleIconLight = safeURI(props.content.section_title_icon);
+      const sectionTitleIconDark = safeURI(props.content.section_title_icon_dark_theme || props.content.section_title_icon);
       const sectionTitleURL = props.content.section_title_url;
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
+      return /*#__PURE__*/external_React_default().createElement("div", {
         className: "section-header"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("h3", {
+      }, /*#__PURE__*/external_React_default().createElement("h3", {
         className: "section-title"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_components_ConditionalWrapper_ConditionalWrapper__WEBPACK_IMPORTED_MODULE_6__["default"], {
+      }, /*#__PURE__*/external_React_default().createElement(ConditionalWrapper_ConditionalWrapper, {
         wrap: this.wrapSectionHeader(sectionTitleURL),
         condition: sectionTitleURL
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", {
+      }, /*#__PURE__*/external_React_default().createElement("span", {
         className: "icon icon-small-spacer icon-light-theme",
         style: {
           backgroundImage: `url("${sectionTitleIconLight}")`
         }
-      }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", {
+      }), /*#__PURE__*/external_React_default().createElement("span", {
         className: "icon icon-small-spacer icon-dark-theme",
         style: {
           backgroundImage: `url("${sectionTitleIconDark}")`
         }
-      }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", {
+      }), /*#__PURE__*/external_React_default().createElement("span", {
         className: "section-title-text"
       }, props.content.section_title_text))));
     }
@@ -6357,13 +5200,13 @@ class SubmitFormSnippet extends (react__WEBPACK_IMPORTED_MODULE_1___default().Pu
       content
     } = this.props;
     const containerClass = `SubmitFormSnippet ${this.props.className} scene2Alt`;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_components_SnippetBase_SnippetBase__WEBPACK_IMPORTED_MODULE_5__.SnippetBase, _extends({}, this.props, {
+    return /*#__PURE__*/external_React_default().createElement(SnippetBase, SubmitFormSnippet_extends({}, this.props, {
       className: containerClass // Don't show bottom dismiss button
       ,
       footerDismiss: false
-    }), this.renderSectionHeader(), this.renderScene2Icon(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
+    }), this.renderSectionHeader(), this.renderScene2Icon(), /*#__PURE__*/external_React_default().createElement("div", {
       className: "message"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("p", null, content.scene2_text && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_components_RichText_RichText__WEBPACK_IMPORTED_MODULE_2__.RichText, {
+    }, /*#__PURE__*/external_React_default().createElement("p", null, content.scene2_text && /*#__PURE__*/external_React_default().createElement(RichText, {
       scene2_text: content.scene2_text,
       localization_id: "scene2_text"
     })), this.renderForm()));
@@ -6396,26 +5239,50 @@ class SubmitFormSnippet extends (react__WEBPACK_IMPORTED_MODULE_1___default().Pu
       return this.renderSignupView();
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_4__.SimpleSnippet, _extends({}, this.props, {
+    return /*#__PURE__*/external_React_default().createElement(SimpleSnippet, SubmitFormSnippet_extends({}, this.props, {
       content: content,
       onButtonClick: this.expandSnippet
     }));
   }
 
 }
+;// CONCATENATED MODULE: ./content-src/asrouter/templates/FXASignupSnippet/FXASignupSnippet.jsx
+function FXASignupSnippet_extends() { FXASignupSnippet_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return FXASignupSnippet_extends.apply(this, arguments); }
 
-/***/ }),
-/* 47 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "NewsletterSnippet": () => (/* binding */ NewsletterSnippet)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _SubmitFormSnippet_SubmitFormSnippet_jsx__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(46);
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+
+const FXASignupSnippet = props => {
+  const userAgent = window.navigator.userAgent.match(/Firefox\/([0-9]+)\./);
+  const firefox_version = userAgent ? parseInt(userAgent[1], 10) : 0;
+  const extendedContent = {
+    scene1_button_label: "Learn more",
+    retry_button_label: "Try again",
+    scene2_email_placeholder_text: "Your email here",
+    scene2_button_label: "Sign me up",
+    scene2_dismiss_button_text: "Dismiss",
+    ...props.content,
+    hidden_inputs: {
+      action: "email",
+      context: "fx_desktop_v3",
+      entrypoint: "snippets",
+      utm_source: "snippet",
+      utm_content: firefox_version,
+      utm_campaign: props.content.utm_campaign,
+      utm_term: props.content.utm_term,
+      ...props.content.hidden_inputs
+    }
+  };
+  return /*#__PURE__*/external_React_default().createElement(SubmitFormSnippet, FXASignupSnippet_extends({}, props, {
+    content: extendedContent,
+    form_action: "https://accounts.firefox.com/",
+    form_method: "GET"
+  }));
+};
+;// CONCATENATED MODULE: ./content-src/asrouter/templates/NewsletterSnippet/NewsletterSnippet.jsx
+function NewsletterSnippet_extends() { NewsletterSnippet_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return NewsletterSnippet_extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -6439,108 +5306,13 @@ const NewsletterSnippet = props => {
       ...props.content.hidden_inputs
     }
   };
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SubmitFormSnippet_SubmitFormSnippet_jsx__WEBPACK_IMPORTED_MODULE_1__.SubmitFormSnippet, _extends({}, props, {
+  return /*#__PURE__*/external_React_default().createElement(SubmitFormSnippet, NewsletterSnippet_extends({}, props, {
     content: extendedContent,
     form_action: "https://basket.mozilla.org/subscribe.json",
     form_method: "POST"
   }));
 };
-
-/***/ }),
-/* 48 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "SendToDeviceSnippet": () => (/* binding */ SendToDeviceSnippet),
-/* harmony export */   "SendToDeviceScene2Snippet": () => (/* binding */ SendToDeviceScene2Snippet)
-/* harmony export */ });
-/* harmony import */ var _isEmailOrPhoneNumber__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(49);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _SubmitFormSnippet_SubmitFormSnippet_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(46);
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-
-function validateInput(value, content) {
-  const type = (0,_isEmailOrPhoneNumber__WEBPACK_IMPORTED_MODULE_0__.isEmailOrPhoneNumber)(value, content);
-  return type ? "" : "Must be an email or a phone number.";
-}
-
-function processFormData(input, message) {
-  const {
-    content
-  } = message;
-  const type = content.include_sms ? (0,_isEmailOrPhoneNumber__WEBPACK_IMPORTED_MODULE_0__.isEmailOrPhoneNumber)(input.value, content) : "email";
-  const formData = new FormData();
-  let url;
-
-  if (type === "phone") {
-    url = "https://basket.mozilla.org/news/subscribe_sms/";
-    formData.append("mobile_number", input.value);
-    formData.append("msg_name", content.message_id_sms);
-    formData.append("country", content.country);
-  } else if (type === "email") {
-    url = "https://basket.mozilla.org/news/subscribe/";
-    formData.append("email", input.value);
-    formData.append("newsletters", content.message_id_email);
-    formData.append("source_url", encodeURIComponent(`https://snippets.mozilla.com/show/${message.id}`));
-  }
-
-  formData.append("lang", content.locale);
-  return {
-    formData,
-    url
-  };
-}
-
-function addDefaultValues(props) {
-  return { ...props,
-    content: {
-      scene1_button_label: "Learn more",
-      retry_button_label: "Try again",
-      scene2_dismiss_button_text: "Dismiss",
-      scene2_button_label: "Send",
-      scene2_input_placeholder: "Your email here",
-      locale: "en-US",
-      country: "us",
-      message_id_email: "",
-      include_sms: false,
-      ...props.content
-    }
-  };
-}
-
-const SendToDeviceSnippet = props => {
-  const propsWithDefaults = addDefaultValues(props);
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_SubmitFormSnippet_SubmitFormSnippet_jsx__WEBPACK_IMPORTED_MODULE_2__.SubmitFormSnippet, _extends({}, propsWithDefaults, {
-    form_method: "POST",
-    className: "send_to_device_snippet",
-    inputType: propsWithDefaults.content.include_sms ? "text" : "email",
-    validateInput: propsWithDefaults.content.include_sms ? validateInput : null,
-    processFormData: processFormData
-  }));
-};
-const SendToDeviceScene2Snippet = props => {
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(SendToDeviceSnippet, _extends({
-    expandedAlt: true
-  }, props));
-};
-
-/***/ }),
-/* 49 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "isEmailOrPhoneNumber": () => (/* binding */ isEmailOrPhoneNumber)
-/* harmony export */ });
+;// CONCATENATED MODULE: ./content-src/asrouter/templates/SendToDeviceSnippet/isEmailOrPhoneNumber.js
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6586,22 +5358,82 @@ function isEmailOrPhoneNumber(val, content) {
 
   return "";
 }
+;// CONCATENATED MODULE: ./content-src/asrouter/templates/SendToDeviceSnippet/SendToDeviceSnippet.jsx
+function SendToDeviceSnippet_extends() { SendToDeviceSnippet_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return SendToDeviceSnippet_extends.apply(this, arguments); }
 
-/***/ }),
-/* 50 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "SimpleBelowSearchSnippet": () => (/* binding */ SimpleBelowSearchSnippet)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _components_Button_Button__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(40);
-/* harmony import */ var _components_RichText_RichText__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(42);
-/* harmony import */ var _template_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(43);
-/* harmony import */ var _components_SnippetBase_SnippetBase__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(44);
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+
+
+
+function validateInput(value, content) {
+  const type = isEmailOrPhoneNumber(value, content);
+  return type ? "" : "Must be an email or a phone number.";
+}
+
+function processFormData(input, message) {
+  const {
+    content
+  } = message;
+  const type = content.include_sms ? isEmailOrPhoneNumber(input.value, content) : "email";
+  const formData = new FormData();
+  let url;
+
+  if (type === "phone") {
+    url = "https://basket.mozilla.org/news/subscribe_sms/";
+    formData.append("mobile_number", input.value);
+    formData.append("msg_name", content.message_id_sms);
+    formData.append("country", content.country);
+  } else if (type === "email") {
+    url = "https://basket.mozilla.org/news/subscribe/";
+    formData.append("email", input.value);
+    formData.append("newsletters", content.message_id_email);
+    formData.append("source_url", encodeURIComponent(`https://snippets.mozilla.com/show/${message.id}`));
+  }
+
+  formData.append("lang", content.locale);
+  return {
+    formData,
+    url
+  };
+}
+
+function addDefaultValues(props) {
+  return { ...props,
+    content: {
+      scene1_button_label: "Learn more",
+      retry_button_label: "Try again",
+      scene2_dismiss_button_text: "Dismiss",
+      scene2_button_label: "Send",
+      scene2_input_placeholder: "Your email here",
+      locale: "en-US",
+      country: "us",
+      message_id_email: "",
+      include_sms: false,
+      ...props.content
+    }
+  };
+}
+
+const SendToDeviceSnippet = props => {
+  const propsWithDefaults = addDefaultValues(props);
+  return /*#__PURE__*/external_React_default().createElement(SubmitFormSnippet, SendToDeviceSnippet_extends({}, propsWithDefaults, {
+    form_method: "POST",
+    className: "send_to_device_snippet",
+    inputType: propsWithDefaults.content.include_sms ? "text" : "email",
+    validateInput: propsWithDefaults.content.include_sms ? validateInput : null,
+    processFormData: processFormData
+  }));
+};
+const SendToDeviceScene2Snippet = props => {
+  return /*#__PURE__*/external_React_default().createElement(SendToDeviceSnippet, SendToDeviceSnippet_extends({
+    expandedAlt: true
+  }, props));
+};
+;// CONCATENATED MODULE: ./content-src/asrouter/templates/SimpleBelowSearchSnippet/SimpleBelowSearchSnippet.jsx
+function SimpleBelowSearchSnippet_extends() { SimpleBelowSearchSnippet_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return SimpleBelowSearchSnippet_extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -6611,10 +5443,10 @@ function _extends() { _extends = Object.assign || function (target) { for (var i
 
 
 
-const DEFAULT_ICON_PATH = "chrome://branding/content/icon64.png"; // Alt text placeholder in case the prop from the server isn't available
+const SimpleBelowSearchSnippet_DEFAULT_ICON_PATH = "chrome://branding/content/icon64.png"; // Alt text placeholder in case the prop from the server isn't available
 
-const ICON_ALT_TEXT = "";
-class SimpleBelowSearchSnippet extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
+const SimpleBelowSearchSnippet_ICON_ALT_TEXT = "";
+class SimpleBelowSearchSnippet extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.onButtonClick = this.onButtonClick.bind(this);
@@ -6624,7 +5456,7 @@ class SimpleBelowSearchSnippet extends (react__WEBPACK_IMPORTED_MODULE_0___defau
     const {
       props
     } = this;
-    return props.content.text ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_RichText_RichText__WEBPACK_IMPORTED_MODULE_2__.RichText, {
+    return props.content.text ? /*#__PURE__*/external_React_default().createElement(RichText, {
       text: props.content.text,
       customElements: this.props.customElements,
       localization_id: "text",
@@ -6637,9 +5469,9 @@ class SimpleBelowSearchSnippet extends (react__WEBPACK_IMPORTED_MODULE_0___defau
     const {
       title
     } = this.props.content;
-    return title ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", {
+    return title ? /*#__PURE__*/external_React_default().createElement("h3", {
       className: "title title-inline"
-    }, title, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("br", null)) : null;
+    }, title, /*#__PURE__*/external_React_default().createElement("br", null)) : null;
   }
 
   async onButtonClick() {
@@ -6680,7 +5512,7 @@ class SimpleBelowSearchSnippet extends (react__WEBPACK_IMPORTED_MODULE_0___defau
       return null;
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_Button_Button__WEBPACK_IMPORTED_MODULE_1__.Button, {
+    return /*#__PURE__*/external_React_default().createElement(Button, {
       onClick: props.onButtonClick || this.onButtonClick,
       color: props.content.button_color,
       backgroundColor: props.content.button_background_color
@@ -6703,46 +5535,437 @@ class SimpleBelowSearchSnippet extends (react__WEBPACK_IMPORTED_MODULE_0___defau
       containerName += " withButton";
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: containerName
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "snippet-hover-wrapper"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_SnippetBase_SnippetBase__WEBPACK_IMPORTED_MODULE_4__.SnippetBase, _extends({}, props, {
+    }, /*#__PURE__*/external_React_default().createElement(SnippetBase, SimpleBelowSearchSnippet_extends({}, props, {
       className: className,
       textStyle: this.props.textStyle
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
-      src: (0,_template_utils__WEBPACK_IMPORTED_MODULE_3__.safeURI)(props.content.icon) || DEFAULT_ICON_PATH,
+    }), /*#__PURE__*/external_React_default().createElement("img", {
+      src: safeURI(props.content.icon) || SimpleBelowSearchSnippet_DEFAULT_ICON_PATH,
       className: "icon icon-light-theme",
-      alt: props.content.icon_alt_text || ICON_ALT_TEXT
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
-      src: (0,_template_utils__WEBPACK_IMPORTED_MODULE_3__.safeURI)(props.content.icon_dark_theme || props.content.icon) || DEFAULT_ICON_PATH,
+      alt: props.content.icon_alt_text || SimpleBelowSearchSnippet_ICON_ALT_TEXT
+    }), /*#__PURE__*/external_React_default().createElement("img", {
+      src: safeURI(props.content.icon_dark_theme || props.content.icon) || SimpleBelowSearchSnippet_DEFAULT_ICON_PATH,
       className: "icon icon-dark-theme",
-      alt: props.content.icon_alt_text || ICON_ALT_TEXT
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+      alt: props.content.icon_alt_text || SimpleBelowSearchSnippet_ICON_ALT_TEXT
+    }), /*#__PURE__*/external_React_default().createElement("div", {
       className: "textContainer"
-    }, this.renderTitle(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", {
+    }, this.renderTitle(), /*#__PURE__*/external_React_default().createElement("p", {
       className: "body"
-    }, this.renderText()), this.props.extraContent), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }, this.renderText()), this.props.extraContent), /*#__PURE__*/external_React_default().createElement("div", {
       className: "buttonContainer"
     }, this.renderButton()))));
   }
 
 }
+;// CONCATENATED MODULE: ./content-src/asrouter/templates/template-manifest.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/***/ }),
-/* 51 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "_ConfirmDialog": () => (/* binding */ _ConfirmDialog),
-/* harmony export */   "ConfirmDialog": () => (/* binding */ ConfirmDialog)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
+
+
+
+ // Key names matching schema name of templates
+
+const SnippetsTemplates = {
+  simple_snippet: SimpleSnippet,
+  newsletter_snippet: NewsletterSnippet,
+  fxa_signup_snippet: FXASignupSnippet,
+  send_to_device_snippet: SendToDeviceSnippet,
+  send_to_device_scene2_snippet: SendToDeviceScene2Snippet,
+  eoy_snippet: EOYSnippet,
+  simple_below_search_snippet: SimpleBelowSearchSnippet
+};
+;// CONCATENATED MODULE: ./content-src/asrouter/asrouter-content.jsx
+function asrouter_content_extends() { asrouter_content_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return asrouter_content_extends.apply(this, arguments); }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+
+
+
+
+
+
+
+const TEMPLATES_BELOW_SEARCH = ["simple_below_search_snippet"]; // Note: nextProps/prevProps refer to props passed to <ImpressionsWrapper />, not <ASRouterUISurface />
+
+function shouldSendImpressionOnUpdate(nextProps, prevProps) {
+  return nextProps.message.id && (!prevProps.message || prevProps.message.id !== nextProps.message.id);
+}
+
+class ASRouterUISurface extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.sendClick = this.sendClick.bind(this);
+    this.sendImpression = this.sendImpression.bind(this);
+    this.sendUserActionTelemetry = this.sendUserActionTelemetry.bind(this);
+    this.onUserAction = this.onUserAction.bind(this);
+    this.fetchFlowParams = this.fetchFlowParams.bind(this);
+    this.onBlockSelected = this.onBlockSelected.bind(this);
+    this.onBlockById = this.onBlockById.bind(this);
+    this.onDismiss = this.onDismiss.bind(this);
+    this.onMessageFromParent = this.onMessageFromParent.bind(this);
+    this.state = {
+      message: {}
+    };
+
+    if (props.document) {
+      this.footerPortal = props.document.getElementById("footer-asrouter-container");
+    }
+  }
+
+  async fetchFlowParams(params = {}) {
+    let result = {};
+    const {
+      fxaEndpoint
+    } = this.props;
+
+    if (!fxaEndpoint) {
+      const err = "Tried to fetch flow params before fxaEndpoint pref was ready";
+      console.error(err); // eslint-disable-line no-console
+    }
+
+    try {
+      const urlObj = new URL(fxaEndpoint);
+      urlObj.pathname = "metrics-flow";
+      Object.keys(params).forEach(key => {
+        urlObj.searchParams.append(key, params[key]);
+      });
+      const response = await fetch(urlObj.toString(), {
+        credentials: "omit"
+      });
+
+      if (response.status === 200) {
+        const {
+          deviceId,
+          flowId,
+          flowBeginTime
+        } = await response.json();
+        result = {
+          deviceId,
+          flowId,
+          flowBeginTime
+        };
+      } else {
+        console.error("Non-200 response", response); // eslint-disable-line no-console
+      }
+    } catch (error) {
+      console.error(error); // eslint-disable-line no-console
+    }
+
+    return result;
+  }
+
+  sendUserActionTelemetry(extraProps = {}) {
+    const {
+      message
+    } = this.state;
+    const eventType = `${message.provider}_user_event`;
+    const source = extraProps.id;
+    delete extraProps.id;
+    ASRouterUtils.sendTelemetry({
+      source,
+      message_id: message.id,
+      action: eventType,
+      ...extraProps
+    });
+  }
+
+  sendImpression(extraProps) {
+    if (this.state.message.provider === "preview") {
+      return Promise.resolve();
+    }
+
+    this.sendUserActionTelemetry({
+      event: "IMPRESSION",
+      ...extraProps
+    });
+    return ASRouterUtils.sendMessage({
+      type: MESSAGE_TYPE_HASH.IMPRESSION,
+      data: this.state.message
+    });
+  } // If link has a `metric` data attribute send it as part of the `event_context`
+  // telemetry field which can have arbitrary values.
+  // Used for router messages with links as part of the content.
+
+
+  sendClick(event) {
+    const {
+      dataset
+    } = event.target;
+    const metric = {
+      event_context: dataset.metric,
+      // Used for the `source` of the event. Needed to differentiate
+      // from other snippet or onboarding events that may occur.
+      id: "NEWTAB_FOOTER_BAR_CONTENT"
+    };
+    const {
+      entrypoint_name,
+      entrypoint_value
+    } = dataset; // Assign the snippet referral for the action
+
+    const entrypoint = entrypoint_name ? new URLSearchParams([[entrypoint_name, entrypoint_value]]).toString() : entrypoint_value;
+    const action = {
+      type: dataset.action,
+      data: {
+        args: dataset.args,
+        ...(entrypoint && {
+          entrypoint
+        })
+      }
+    };
+
+    if (action.type) {
+      ASRouterUtils.executeAction(action);
+    }
+
+    if (!this.state.message.content.do_not_autoblock && !dataset.do_not_autoblock) {
+      this.onBlockById(this.state.message.id);
+    }
+
+    if (this.state.message.provider !== "preview") {
+      this.sendUserActionTelemetry({
+        event: "CLICK_BUTTON",
+        ...metric
+      });
+    }
+  }
+
+  onBlockSelected(options) {
+    return this.onBlockById(this.state.message.id, { ...options,
+      campaign: this.state.message.campaign
+    });
+  }
+
+  onBlockById(id, options) {
+    return ASRouterUtils.blockById(id, options).then(clearAll => {
+      if (clearAll) {
+        this.setState({
+          message: {}
+        });
+      }
+    });
+  }
+
+  onDismiss() {
+    this.clearMessage(this.state.message.id);
+  } // Blocking a snippet by id blocks the entire campaign
+  // so when clearing we use the two values interchangeably
+
+
+  clearMessage(idOrCampaign) {
+    if (idOrCampaign === this.state.message.id || idOrCampaign === this.state.message.campaign) {
+      this.setState({
+        message: {}
+      });
+    }
+  }
+
+  clearProvider(id) {
+    if (this.state.message.provider === id) {
+      this.setState({
+        message: {}
+      });
+    }
+  }
+
+  onMessageFromParent({
+    type,
+    data
+  }) {
+    // These only exists due to onPrefChange events in ASRouter
+    switch (type) {
+      case "ClearMessages":
+        {
+          data.forEach(id => this.clearMessage(id));
+          break;
+        }
+
+      case "ClearProviders":
+        {
+          data.forEach(id => this.clearProvider(id));
+          break;
+        }
+
+      case "EnterSnippetsPreviewMode":
+        {
+          this.props.dispatch({
+            type: actionTypes.SNIPPETS_PREVIEW_MODE
+          });
+          break;
+        }
+    }
+  }
+
+  requestMessage(endpoint) {
+    ASRouterUtils.sendMessage({
+      type: "NEWTAB_MESSAGE_REQUEST",
+      data: {
+        endpoint
+      }
+    }).then(state => this.setState(state));
+  }
+
+  componentWillMount() {
+    const endpoint = ASRouterUtils.getPreviewEndpoint();
+
+    if (endpoint && endpoint.theme === "dark") {
+      __webpack_require__.g.window.dispatchEvent(new CustomEvent("LightweightTheme:Set", {
+        detail: {
+          data: NEWTAB_DARK_THEME
+        }
+      }));
+    }
+
+    if (endpoint && endpoint.dir === "rtl") {
+      //Set `dir = rtl` on the HTML
+      this.props.document.dir = "rtl";
+    }
+
+    ASRouterUtils.addListener(this.onMessageFromParent);
+    this.requestMessage(endpoint);
+  }
+
+  componentWillUnmount() {
+    ASRouterUtils.removeListener(this.onMessageFromParent);
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.adminContent && JSON.stringify(prevProps.adminContent) !== JSON.stringify(this.props.adminContent)) {
+      this.updateContent();
+    }
+
+    if (prevState.message.id !== this.state.message.id) {
+      const main = __webpack_require__.g.window.document.querySelector("main");
+
+      if (main) {
+        if (this.state.message.id) {
+          main.classList.add("has-snippet");
+        } else {
+          main.classList.remove("has-snippet");
+        }
+      }
+    }
+  }
+
+  updateContent() {
+    this.setState({ ...this.props.adminContent
+    });
+  }
+
+  async getMonitorUrl({
+    url,
+    flowRequestParams = {}
+  }) {
+    const flowValues = await this.fetchFlowParams(flowRequestParams); // Note that flowParams are actually added dynamically on the page
+
+    const urlObj = new URL(url);
+    ["deviceId", "flowId", "flowBeginTime"].forEach(key => {
+      if (key in flowValues) {
+        urlObj.searchParams.append(key, flowValues[key]);
+      }
+    });
+    return urlObj.toString();
+  }
+
+  async onUserAction(action) {
+    switch (action.type) {
+      // This needs to be handled locally because its
+      case "ENABLE_FIREFOX_MONITOR":
+        const url = await this.getMonitorUrl(action.data.args);
+        ASRouterUtils.executeAction({
+          type: "OPEN_URL",
+          data: {
+            args: url
+          }
+        });
+        break;
+
+      default:
+        ASRouterUtils.executeAction(action);
+    }
+  }
+
+  renderSnippets() {
+    const {
+      message
+    } = this.state;
+
+    if (!SnippetsTemplates[message.template]) {
+      return null;
+    }
+
+    const SnippetComponent = SnippetsTemplates[message.template];
+    const {
+      content
+    } = message;
+    return /*#__PURE__*/external_React_default().createElement(ImpressionsWrapper, {
+      id: "NEWTAB_FOOTER_BAR",
+      message: this.state.message,
+      sendImpression: this.sendImpression,
+      shouldSendImpressionOnUpdate: shouldSendImpressionOnUpdate // This helps with testing
+      ,
+      document: this.props.document
+    }, /*#__PURE__*/external_React_default().createElement(LocalizationProvider, {
+      bundles: generateBundles(content)
+    }, /*#__PURE__*/external_React_default().createElement(SnippetComponent, asrouter_content_extends({}, this.state.message, {
+      UISurface: "NEWTAB_FOOTER_BAR",
+      onBlock: this.onBlockSelected,
+      onDismiss: this.onDismiss,
+      onAction: this.onUserAction,
+      sendClick: this.sendClick,
+      sendUserActionTelemetry: this.sendUserActionTelemetry
+    }))));
+  }
+
+  renderPreviewBanner() {
+    if (this.state.message.provider !== "preview") {
+      return null;
+    }
+
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: "snippets-preview-banner"
+    }, /*#__PURE__*/external_React_default().createElement("span", {
+      className: "icon icon-small-spacer icon-info"
+    }), /*#__PURE__*/external_React_default().createElement("span", null, "Preview Purposes Only"));
+  }
+
+  render() {
+    const {
+      message
+    } = this.state;
+
+    if (!message.id) {
+      return null;
+    }
+
+    const shouldRenderBelowSearch = TEMPLATES_BELOW_SEARCH.includes(message.template);
+    return shouldRenderBelowSearch ?
+    /*#__PURE__*/
+    // Render special below search snippets in place;
+    external_React_default().createElement("div", {
+      className: "below-search-snippet-wrapper"
+    }, this.renderSnippets()) :
+    /*#__PURE__*/
+    // For regular snippets etc. we should render everything in our footer
+    // container.
+    external_ReactDOM_default().createPortal( /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, this.renderPreviewBanner(), this.renderSnippets()), this.footerPortal);
+  }
+
+}
+ASRouterUISurface.defaultProps = {
+  document: __webpack_require__.g.document
+};
+;// CONCATENATED MODULE: ./content-src/components/ConfirmDialog/ConfirmDialog.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6769,7 +5992,7 @@ __webpack_require__.r(__webpack_exports__);
  * },
  */
 
-class _ConfirmDialog extends (react__WEBPACK_IMPORTED_MODULE_2___default().PureComponent) {
+class _ConfirmDialog extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this._handleCancelBtn = this._handleCancelBtn.bind(this);
@@ -6778,10 +6001,10 @@ class _ConfirmDialog extends (react__WEBPACK_IMPORTED_MODULE_2___default().PureC
 
   _handleCancelBtn() {
     this.props.dispatch({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DIALOG_CANCEL
+      type: actionTypes.DIALOG_CANCEL
     });
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
-      event: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DIALOG_CANCEL,
+    this.props.dispatch(actionCreators.UserEvent({
+      event: actionTypes.DIALOG_CANCEL,
       source: this.props.data.eventSource
     }));
   }
@@ -6797,7 +6020,7 @@ class _ConfirmDialog extends (react__WEBPACK_IMPORTED_MODULE_2___default().PureC
       return null;
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", null, message_body.map(msg => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("p", {
+    return /*#__PURE__*/external_React_default().createElement("span", null, message_body.map(msg => /*#__PURE__*/external_React_default().createElement("p", {
       key: msg,
       "data-l10n-id": msg
     })));
@@ -6808,24 +6031,24 @@ class _ConfirmDialog extends (react__WEBPACK_IMPORTED_MODULE_2___default().PureC
       return null;
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: "confirmation-dialog"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "modal-overlay",
       onClick: this._handleCancelBtn,
       role: "presentation"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
+    }), /*#__PURE__*/external_React_default().createElement("div", {
       className: "modal"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("section", {
+    }, /*#__PURE__*/external_React_default().createElement("section", {
       className: "modal-message"
-    }, this.props.data.icon && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", {
+    }, this.props.data.icon && /*#__PURE__*/external_React_default().createElement("span", {
       className: `icon icon-spacer icon-${this.props.data.icon}`
-    }), this._renderModalMessage()), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("section", {
+    }), this._renderModalMessage()), /*#__PURE__*/external_React_default().createElement("section", {
       className: "actions"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("button", {
+    }, /*#__PURE__*/external_React_default().createElement("button", {
       onClick: this._handleCancelBtn,
       "data-l10n-id": this.props.data.cancel_button_string_id
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("button", {
+    }), /*#__PURE__*/external_React_default().createElement("button", {
       className: "done",
       onClick: this._handleConfirmBtn,
       "data-l10n-id": this.props.data.confirm_button_string_id
@@ -6833,423 +6056,622 @@ class _ConfirmDialog extends (react__WEBPACK_IMPORTED_MODULE_2___default().PureC
   }
 
 }
-const ConfirmDialog = (0,react_redux__WEBPACK_IMPORTED_MODULE_1__.connect)(state => state.Dialog)(_ConfirmDialog);
+const ConfirmDialog = (0,external_ReactRedux_namespaceObject.connect)(state => state.Dialog)(_ConfirmDialog);
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSImage/DSImage.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/***/ }),
-/* 52 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+class DSImage extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.onOptimizedImageError = this.onOptimizedImageError.bind(this);
+    this.onNonOptimizedImageError = this.onNonOptimizedImageError.bind(this);
+    this.onLoad = this.onLoad.bind(this);
+    this.state = {
+      isLoaded: false,
+      optimizedImageFailed: false,
+      useTransition: false
+    };
+  }
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "isAllowedCSS": () => (/* binding */ isAllowedCSS),
-/* harmony export */   "_DiscoveryStreamBase": () => (/* binding */ _DiscoveryStreamBase),
-/* harmony export */   "DiscoveryStreamBase": () => (/* binding */ DiscoveryStreamBase)
-/* harmony export */ });
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_CardGrid_CardGrid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(53);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_CollectionCardGrid_CollectionCardGrid__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(69);
-/* harmony import */ var content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(71);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_DSMessage_DSMessage__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(74);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_DSPrivacyModal_DSPrivacyModal__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(75);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_DSSignup_DSSignup__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(77);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_DSTextPromo_DSTextPromo__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(78);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_Highlights_Highlights__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(79);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_HorizontalRule_HorizontalRule__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(97);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_Navigation_Navigation__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(98);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_PrivacyLink_PrivacyLink__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(99);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_12___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_12__);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_SectionTitle_SectionTitle__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(100);
-/* harmony import */ var content_src_lib_selectLayoutRender__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(101);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_TopSites_TopSites__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(102);
+  onIdleCallback() {
+    if (!this.state.isLoaded) {
+      this.setState({
+        useTransition: true
+      });
+    }
+  }
+
+  reformatImageURL(url, width, height) {
+    // Change the image URL to request a size tailored for the parent container width
+    // Also: force JPEG, quality 60, no upscaling, no EXIF data
+    // Uses Thumbor: https://thumbor.readthedocs.io/en/latest/usage.html
+    return `https://img-getpocket.cdn.mozilla.net/${width}x${height}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(url)}`;
+  }
+
+  componentDidMount() {
+    this.idleCallbackId = this.props.windowObj.requestIdleCallback(this.onIdleCallback.bind(this));
+  }
+
+  componentWillUnmount() {
+    if (this.idleCallbackId) {
+      this.props.windowObj.cancelIdleCallback(this.idleCallbackId);
+    }
+  }
+
+  render() {
+    let classNames = `ds-image
+      ${this.props.extraClassNames ? ` ${this.props.extraClassNames}` : ``}
+      ${this.state && this.state.useTransition ? ` use-transition` : ``}
+      ${this.state && this.state.isLoaded ? ` loaded` : ``}
+    `;
+    let img;
+
+    if (this.state) {
+      if (this.props.optimize && this.props.rawSource && !this.state.optimizedImageFailed) {
+        let baseSource = this.props.rawSource;
+        let sizeRules = [];
+        let srcSetRules = [];
+
+        for (let rule of this.props.sizes) {
+          let {
+            mediaMatcher,
+            width,
+            height
+          } = rule;
+          let sizeRule = `${mediaMatcher} ${width}px`;
+          sizeRules.push(sizeRule);
+          let srcSetRule = `${this.reformatImageURL(baseSource, width, height)} ${width}w`;
+          let srcSetRule2x = `${this.reformatImageURL(baseSource, width * 2, height * 2)} ${width * 2}w`;
+          srcSetRules.push(srcSetRule);
+          srcSetRules.push(srcSetRule2x);
+        }
+
+        if (this.props.sizes.length) {
+          // We have to supply a fallback in the very unlikely event that none of
+          // the media queries match. The smallest dimension was chosen arbitrarily.
+          sizeRules.push(`${this.props.sizes[this.props.sizes.length - 1].width}px`);
+        }
+
+        img = /*#__PURE__*/external_React_default().createElement("img", {
+          loading: "lazy",
+          alt: this.props.alt_text,
+          crossOrigin: "anonymous",
+          onLoad: this.onLoad,
+          onError: this.onOptimizedImageError,
+          sizes: sizeRules.join(","),
+          src: baseSource,
+          srcSet: srcSetRules.join(",")
+        });
+      } else if (!this.state.nonOptimizedImageFailed) {
+        img = /*#__PURE__*/external_React_default().createElement("img", {
+          loading: "lazy",
+          alt: this.props.alt_text,
+          crossOrigin: "anonymous",
+          onLoad: this.onLoad,
+          onError: this.onNonOptimizedImageError,
+          src: this.props.source
+        });
+      } else {
+        // Remove the img element if both sources fail. Render a placeholder instead.
+        img = /*#__PURE__*/external_React_default().createElement("div", {
+          className: "broken-image"
+        });
+      }
+    }
+
+    return /*#__PURE__*/external_React_default().createElement("picture", {
+      className: classNames
+    }, img);
+  }
+
+  onOptimizedImageError() {
+    // This will trigger a re-render and the unoptimized 450px image will be used as a fallback
+    this.setState({
+      optimizedImageFailed: true
+    });
+  }
+
+  onNonOptimizedImageError() {
+    this.setState({
+      nonOptimizedImageFailed: true
+    });
+  }
+
+  onLoad() {
+    this.setState({
+      isLoaded: true
+    });
+  }
+
+}
+DSImage.defaultProps = {
+  source: null,
+  // The current source style from Pocket API (always 450px)
+  rawSource: null,
+  // Unadulterated image URL to filter through Thumbor
+  extraClassNames: null,
+  // Additional classnames to append to component
+  optimize: true,
+  // Measure parent container to request exact sizes
+  alt_text: null,
+  windowObj: window,
+  // Added to support unit tests
+  sizes: []
+};
+;// CONCATENATED MODULE: ./content-src/components/ContextMenu/ContextMenu.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const ALLOWED_CSS_URL_PREFIXES = ["chrome://", "resource://", "https://img-getpocket.cdn.mozilla.net/"];
-const DUMMY_CSS_SELECTOR = "DUMMY#CSS.SELECTOR";
-/**
- * Validate a CSS declaration. The values are assumed to be normalized by CSSOM.
- */
-
-function isAllowedCSS(property, value) {
-  // Bug 1454823: INTERNAL properties, e.g., -moz-context-properties, are
-  // exposed but their values aren't resulting in getting nothing. Fortunately,
-  // we don't care about validating the values of the current set of properties.
-  if (value === undefined) {
-    return true;
-  } // Make sure all urls are of the allowed protocols/prefixes
-
-
-  const urls = value.match(/url\("[^"]+"\)/g);
-  return !urls || urls.every(url => ALLOWED_CSS_URL_PREFIXES.some(prefix => url.slice(5).startsWith(prefix)));
-}
-class _DiscoveryStreamBase extends (react__WEBPACK_IMPORTED_MODULE_12___default().PureComponent) {
+class ContextMenu extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
-    this.onStyleMount = this.onStyleMount.bind(this);
+    this.hideContext = this.hideContext.bind(this);
+    this.onShow = this.onShow.bind(this);
+    this.onClick = this.onClick.bind(this);
   }
 
-  onStyleMount(style) {
-    // Unmounting style gets rid of old styles, so nothing else to do
-    if (!style) {
+  hideContext() {
+    this.props.onUpdate(false);
+  }
+
+  onShow() {
+    if (this.props.onShow) {
+      this.props.onShow();
+    }
+  }
+
+  componentDidMount() {
+    this.onShow();
+    setTimeout(() => {
+      __webpack_require__.g.addEventListener("click", this.hideContext);
+    }, 0);
+  }
+
+  componentWillUnmount() {
+    __webpack_require__.g.removeEventListener("click", this.hideContext);
+  }
+
+  onClick(event) {
+    // Eat all clicks on the context menu so they don't bubble up to window.
+    // This prevents the context menu from closing when clicking disabled items
+    // or the separators.
+    event.stopPropagation();
+  }
+
+  render() {
+    // Disabling focus on the menu span allows the first tab to focus on the first menu item instead of the wrapper.
+    return (
+      /*#__PURE__*/
+      // eslint-disable-next-line jsx-a11y/interactive-supports-focus
+      external_React_default().createElement("span", {
+        className: "context-menu"
+      }, /*#__PURE__*/external_React_default().createElement("ul", {
+        role: "menu",
+        onClick: this.onClick,
+        onKeyDown: this.onClick,
+        className: "context-menu-list"
+      }, this.props.options.map((option, i) => option.type === "separator" ? /*#__PURE__*/external_React_default().createElement("li", {
+        key: i,
+        className: "separator",
+        role: "separator"
+      }) : option.type !== "empty" && /*#__PURE__*/external_React_default().createElement(ContextMenuItem, {
+        key: i,
+        option: option,
+        hideContext: this.hideContext,
+        keyboardAccess: this.props.keyboardAccess
+      }))))
+    );
+  }
+
+}
+class _ContextMenuItem extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.onClick = this.onClick.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
+    this.onKeyUp = this.onKeyUp.bind(this);
+    this.focusFirst = this.focusFirst.bind(this);
+  }
+
+  onClick(event) {
+    this.props.hideContext();
+    this.props.option.onClick(event);
+  } // Focus the first menu item if the menu was accessed via the keyboard.
+
+
+  focusFirst(button) {
+    if (this.props.keyboardAccess && button) {
+      button.focus();
+    }
+  } // This selects the correct node based on the key pressed
+
+
+  focusSibling(target, key) {
+    const parent = target.parentNode;
+    const closestSiblingSelector = key === "ArrowUp" ? "previousSibling" : "nextSibling";
+
+    if (!parent[closestSiblingSelector]) {
       return;
     }
 
-    const {
-      sheet
-    } = style;
-    const styles = JSON.parse(style.dataset.styles);
-    styles.forEach((row, rowIndex) => {
-      row.forEach((component, componentIndex) => {
-        // Nothing to do without optional styles overrides
-        if (!component) {
-          return;
-        }
-
-        Object.entries(component).forEach(([selectors, declarations]) => {
-          // Start with a dummy rule to validate declarations and selectors
-          sheet.insertRule(`${DUMMY_CSS_SELECTOR} {}`);
-          const [rule] = sheet.cssRules; // Validate declarations and remove any offenders. CSSOM silently
-          // discards invalid entries, so here we apply extra restrictions.
-
-          rule.style = declarations;
-          [...rule.style].forEach(property => {
-            const value = rule.style[property];
-
-            if (!isAllowedCSS(property, value)) {
-              console.error(`Bad CSS declaration ${property}: ${value}`); // eslint-disable-line no-console
-
-              rule.style.removeProperty(property);
-            }
-          }); // Set the actual desired selectors scoped to the component
-
-          const prefix = `.ds-layout > .ds-column:nth-child(${rowIndex + 1}) .ds-column-grid > :nth-child(${componentIndex + 1})`; // NB: Splitting on "," doesn't work with strings with commas, but
-          // we're okay with not supporting those selectors
-
-          rule.selectorText = selectors.split(",").map(selector => prefix + ( // Assume :pseudo-classes are for component instead of descendant
-          selector[0] === ":" ? "" : " ") + selector).join(","); // CSSOM silently ignores bad selectors, so we'll be noisy instead
-
-          if (rule.selectorText === DUMMY_CSS_SELECTOR) {
-            console.error(`Bad CSS selector ${selectors}`); // eslint-disable-line no-console
-          }
-        });
-      });
-    });
-  }
-
-  renderComponent(component, embedWidth) {
-    const ENGAGEMENT_LABEL_ENABLED = this.props.Prefs.values[`discoverystream.engagementLabelEnabled`];
-
-    switch (component.type) {
-      case "Highlights":
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement(content_src_components_DiscoveryStreamComponents_Highlights_Highlights__WEBPACK_IMPORTED_MODULE_8__.Highlights, null);
-
-      case "TopSites":
-        let promoAlignment;
-
-        if (component.spocs && component.spocs.positions && component.spocs.positions.length) {
-          promoAlignment = component.spocs.positions[0].index === 0 ? "left" : "right";
-        }
-
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement(content_src_components_DiscoveryStreamComponents_TopSites_TopSites__WEBPACK_IMPORTED_MODULE_15__.TopSites, {
-          header: component.header,
-          data: component.data,
-          promoAlignment: promoAlignment
-        });
-
-      case "TextPromo":
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement(content_src_components_DiscoveryStreamComponents_DSTextPromo_DSTextPromo__WEBPACK_IMPORTED_MODULE_7__.DSTextPromo, {
-          dispatch: this.props.dispatch,
-          type: component.type,
-          data: component.data
-        });
-
-      case "Signup":
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement(content_src_components_DiscoveryStreamComponents_DSSignup_DSSignup__WEBPACK_IMPORTED_MODULE_6__.DSSignup, {
-          dispatch: this.props.dispatch,
-          type: component.type,
-          data: component.data
-        });
-
-      case "Message":
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement(content_src_components_DiscoveryStreamComponents_DSMessage_DSMessage__WEBPACK_IMPORTED_MODULE_4__.DSMessage, {
-          title: component.header && component.header.title,
-          subtitle: component.header && component.header.subtitle,
-          link_text: component.header && component.header.link_text,
-          link_url: component.header && component.header.link_url,
-          icon: component.header && component.header.icon,
-          essentialReadsHeader: component.essentialReadsHeader,
-          editorsPicksHeader: component.editorsPicksHeader
-        });
-
-      case "SectionTitle":
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement(content_src_components_DiscoveryStreamComponents_SectionTitle_SectionTitle__WEBPACK_IMPORTED_MODULE_13__.SectionTitle, {
-          header: component.header
-        });
-
-      case "Navigation":
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement(content_src_components_DiscoveryStreamComponents_Navigation_Navigation__WEBPACK_IMPORTED_MODULE_10__.Navigation, {
-          dispatch: this.props.dispatch,
-          links: component.properties.links,
-          extraLinks: component.properties.extraLinks,
-          alignment: component.properties.alignment,
-          display_variant: component.properties.display_variant,
-          explore_topics: component.properties.explore_topics,
-          header: component.header,
-          locale: this.props.App.locale,
-          newFooterSection: component.newFooterSection,
-          privacyNoticeURL: component.properties.privacyNoticeURL
-        });
-
-      case "CollectionCardGrid":
-        const {
-          DiscoveryStream
-        } = this.props;
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement(content_src_components_DiscoveryStreamComponents_CollectionCardGrid_CollectionCardGrid__WEBPACK_IMPORTED_MODULE_1__.CollectionCardGrid, {
-          data: component.data,
-          feed: component.feed,
-          spocs: DiscoveryStream.spocs,
-          placement: component.placement,
-          border: component.properties.border,
-          type: component.type,
-          items: component.properties.items,
-          cta_variant: component.cta_variant,
-          pocket_button_enabled: component.pocketButtonEnabled,
-          display_engagement_labels: ENGAGEMENT_LABEL_ENABLED,
-          dismissible: this.props.DiscoveryStream.isCollectionDismissible,
-          dispatch: this.props.dispatch
-        });
-
-      case "CardGrid":
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement(content_src_components_DiscoveryStreamComponents_CardGrid_CardGrid__WEBPACK_IMPORTED_MODULE_0__.CardGrid, {
-          enable_video_playheads: !!component.properties.enable_video_playheads,
-          title: component.header && component.header.title,
-          display_variant: component.properties.display_variant,
-          data: component.data,
-          feed: component.feed,
-          widgets: component.widgets,
-          border: component.properties.border,
-          type: component.type,
-          dispatch: this.props.dispatch,
-          items: component.properties.items,
-          hybridLayout: component.properties.hybridLayout,
-          hideCardBackground: component.properties.hideCardBackground,
-          fourCardLayout: component.properties.fourCardLayout,
-          hideDescriptions: component.properties.hideDescriptions,
-          compactGrid: component.properties.compactGrid,
-          compactImages: component.properties.compactImages,
-          imageGradient: component.properties.imageGradient,
-          newSponsoredLabel: component.properties.newSponsoredLabel,
-          titleLines: component.properties.titleLines,
-          descLines: component.properties.descLines,
-          essentialReadsHeader: component.properties.essentialReadsHeader,
-          editorsPicksHeader: component.properties.editorsPicksHeader,
-          readTime: component.properties.readTime,
-          loadMore: component.loadMore,
-          lastCardMessageEnabled: component.lastCardMessageEnabled,
-          saveToPocketCard: component.saveToPocketCard,
-          cta_variant: component.cta_variant,
-          pocket_button_enabled: component.pocketButtonEnabled,
-          display_engagement_labels: ENGAGEMENT_LABEL_ENABLED
-        });
-
-      case "HorizontalRule":
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement(content_src_components_DiscoveryStreamComponents_HorizontalRule_HorizontalRule__WEBPACK_IMPORTED_MODULE_9__.HorizontalRule, null);
-
-      case "PrivacyLink":
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement(content_src_components_DiscoveryStreamComponents_PrivacyLink_PrivacyLink__WEBPACK_IMPORTED_MODULE_11__.PrivacyLink, {
-          properties: component.properties
-        });
-
-      default:
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement("div", null, component.type);
+    if (parent[closestSiblingSelector].firstElementChild) {
+      parent[closestSiblingSelector].firstElementChild.focus();
+    } else {
+      parent[closestSiblingSelector][closestSiblingSelector].firstElementChild.focus();
     }
   }
 
-  renderStyles(styles) {
-    // Use json string as both the key and styles to render so React knows when
-    // to unmount and mount a new instance for new styles.
-    const json = JSON.stringify(styles);
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement("style", {
-      key: json,
-      "data-styles": json,
-      ref: this.onStyleMount
-    });
+  onKeyDown(event) {
+    const {
+      option
+    } = this.props;
+
+    switch (event.key) {
+      case "Tab":
+        // tab goes down in context menu, shift + tab goes up in context menu
+        // if we're on the last item, one more tab will close the context menu
+        // similarly, if we're on the first item, one more shift + tab will close it
+        if (event.shiftKey && option.first || !event.shiftKey && option.last) {
+          this.props.hideContext();
+        }
+
+        break;
+
+      case "ArrowUp":
+      case "ArrowDown":
+        event.preventDefault();
+        this.focusSibling(event.target, event.key);
+        break;
+
+      case "Enter":
+      case " ":
+        event.preventDefault();
+        this.props.hideContext();
+        option.onClick();
+        break;
+
+      case "Escape":
+        this.props.hideContext();
+        break;
+    }
+  } // Prevents the default behavior of spacebar
+  // scrolling the page & auto-triggering buttons.
+
+
+  onKeyUp(event) {
+    if (event.key === " ") {
+      event.preventDefault();
+    }
   }
 
   render() {
     const {
-      locale
-    } = this.props; // Select layout render data by adding spocs and position to recommendations
-
-    const {
-      layoutRender
-    } = (0,content_src_lib_selectLayoutRender__WEBPACK_IMPORTED_MODULE_14__.selectLayoutRender)({
-      state: this.props.DiscoveryStream,
-      prefs: this.props.Prefs.values,
-      locale
-    });
-    const {
-      config
-    } = this.props.DiscoveryStream; // Allow rendering without extracting special components
-
-    if (!config.collapsible) {
-      return this.renderLayout(layoutRender);
-    } // Find the first component of a type and remove it from layout
-
-
-    const extractComponent = type => {
-      for (const [rowIndex, row] of Object.entries(layoutRender)) {
-        for (const [index, component] of Object.entries(row.components)) {
-          if (component.type === type) {
-            // Remove the row if it was the only component or the single item
-            if (row.components.length === 1) {
-              layoutRender.splice(rowIndex, 1);
-            } else {
-              row.components.splice(index, 1);
-            }
-
-            return component;
-          }
-        }
-      }
-
-      return null;
-    }; // Get "topstories" Section state for default values
-
-
-    const topStories = this.props.Sections.find(s => s.id === "topstories");
-
-    if (!topStories) {
-      return null;
-    } // Extract TopSites to render before the rest and Message to use for header
-
-
-    const topSites = extractComponent("TopSites");
-    const sponsoredCollection = extractComponent("CollectionCardGrid");
-    const message = extractComponent("Message") || {
-      header: {
-        link_text: topStories.learnMore.link.message,
-        link_url: topStories.learnMore.link.href,
-        title: topStories.title
-      }
-    };
-    const privacyLinkComponent = extractComponent("PrivacyLink");
-    let learnMore = {
-      link: {
-        href: message.header.link_url,
-        message: message.header.link_text
-      }
-    };
-    let sectionTitle = message.header.title;
-    let subTitle = ""; // If we're in one of these experiments, override the default message.
-    // For now this is English only.
-
-    if (message.essentialReadsHeader || message.editorsPicksHeader) {
-      learnMore = null;
-      subTitle = "Recommended By Pocket";
-
-      if (message.essentialReadsHeader) {
-        sectionTitle = "Today’s Essential Reads";
-      } else if (message.editorsPicksHeader) {
-        sectionTitle = "Editor’s Picks";
-      }
-    } // Render a DS-style TopSites then the rest if any in a collapsible section
-
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement((react__WEBPACK_IMPORTED_MODULE_12___default().Fragment), null, this.props.DiscoveryStream.isPrivacyInfoModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement(content_src_components_DiscoveryStreamComponents_DSPrivacyModal_DSPrivacyModal__WEBPACK_IMPORTED_MODULE_5__.DSPrivacyModal, {
-      dispatch: this.props.dispatch
-    }), topSites && this.renderLayout([{
-      width: 12,
-      components: [topSites]
-    }]), sponsoredCollection && this.renderLayout([{
-      width: 12,
-      components: [sponsoredCollection]
-    }]), !!layoutRender.length && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement(content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_2__.CollapsibleSection, {
-      className: "ds-layout",
-      collapsed: topStories.pref.collapsed,
-      dispatch: this.props.dispatch,
-      id: topStories.id,
-      isFixed: true,
-      learnMore: learnMore,
-      privacyNoticeURL: topStories.privacyNoticeURL,
-      showPrefName: topStories.pref.feed,
-      title: sectionTitle,
-      subTitle: subTitle,
-      eventSource: "CARDGRID"
-    }, this.renderLayout(layoutRender)), this.renderLayout([{
-      width: 12,
-      components: [{
-        type: "Highlights"
-      }]
-    }]), privacyLinkComponent && this.renderLayout([{
-      width: 12,
-      components: [privacyLinkComponent]
-    }]));
-  }
-
-  renderLayout(layoutRender) {
-    const styles = [];
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement("div", {
-      className: "discovery-stream ds-layout"
-    }, layoutRender.map((row, rowIndex) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement("div", {
-      key: `row-${rowIndex}`,
-      className: `ds-column ds-column-${row.width}`
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement("div", {
-      className: "ds-column-grid"
-    }, row.components.map((component, componentIndex) => {
-      if (!component) {
-        return null;
-      }
-
-      styles[rowIndex] = [...(styles[rowIndex] || []), component.styles];
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default().createElement("div", {
-        key: `component-${componentIndex}`
-      }, this.renderComponent(component, row.width));
-    })))), this.renderStyles(styles));
+      option
+    } = this.props;
+    return /*#__PURE__*/external_React_default().createElement("li", {
+      role: "presentation",
+      className: "context-menu-item"
+    }, /*#__PURE__*/external_React_default().createElement("button", {
+      className: option.disabled ? "disabled" : "",
+      role: "menuitem",
+      onClick: this.onClick,
+      onKeyDown: this.onKeyDown,
+      onKeyUp: this.onKeyUp,
+      ref: option.first ? this.focusFirst : null
+    }, /*#__PURE__*/external_React_default().createElement("span", {
+      "data-l10n-id": option.string_id || option.id
+    })));
   }
 
 }
-const DiscoveryStreamBase = (0,react_redux__WEBPACK_IMPORTED_MODULE_3__.connect)(state => ({
-  DiscoveryStream: state.DiscoveryStream,
-  Prefs: state.Prefs,
-  Sections: state.Sections,
-  document: __webpack_require__.g.document,
-  App: state.App
-}))(_DiscoveryStreamBase);
+const ContextMenuItem = (0,external_ReactRedux_namespaceObject.connect)(state => ({
+  Prefs: state.Prefs
+}))(_ContextMenuItem);
+;// CONCATENATED MODULE: ./content-src/lib/link-menu-options.js
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/***/ }),
-/* 53 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "CardGrid": () => (/* binding */ CardGrid)
-/* harmony export */ });
-/* harmony import */ var _DSCard_DSCard_jsx__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(54);
-/* harmony import */ var _DSEmptyState_DSEmptyState_jsx__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(67);
-/* harmony import */ var _TopicsWidget_TopicsWidget_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(68);
-/* harmony import */ var _FluentOrText_FluentOrText_jsx__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(66);
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(1);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_5__);
+const _OpenInPrivateWindow = site => ({
+  id: "newtab-menu-open-new-private-window",
+  icon: "new-window-private",
+  action: actionCreators.OnlyToMain({
+    type: actionTypes.OPEN_PRIVATE_WINDOW,
+    data: {
+      url: site.url,
+      referrer: site.referrer
+    }
+  }),
+  userEvent: "OPEN_PRIVATE_WINDOW"
+});
+/**
+ * List of functions that return items that can be included as menu options in a
+ * LinkMenu. All functions take the site as the first parameter, and optionally
+ * the index of the site.
+ */
+
+
+const LinkMenuOptions = {
+  Separator: () => ({
+    type: "separator"
+  }),
+  EmptyItem: () => ({
+    type: "empty"
+  }),
+  ShowPrivacyInfo: site => ({
+    id: "newtab-menu-show-privacy-info",
+    icon: "info",
+    action: {
+      type: actionTypes.SHOW_PRIVACY_INFO
+    },
+    userEvent: "SHOW_PRIVACY_INFO"
+  }),
+  AboutSponsored: site => ({
+    id: "newtab-menu-show-privacy-info",
+    icon: "info",
+    action: actionCreators.AlsoToMain({
+      type: actionTypes.ABOUT_SPONSORED_TOP_SITES
+    }),
+    userEvent: "TOPSITE_SPONSOR_INFO"
+  }),
+  RemoveBookmark: site => ({
+    id: "newtab-menu-remove-bookmark",
+    icon: "bookmark-added",
+    action: actionCreators.AlsoToMain({
+      type: actionTypes.DELETE_BOOKMARK_BY_ID,
+      data: site.bookmarkGuid
+    }),
+    userEvent: "BOOKMARK_DELETE"
+  }),
+  AddBookmark: site => ({
+    id: "newtab-menu-bookmark",
+    icon: "bookmark-hollow",
+    action: actionCreators.AlsoToMain({
+      type: actionTypes.BOOKMARK_URL,
+      data: {
+        url: site.url,
+        title: site.title,
+        type: site.type
+      }
+    }),
+    userEvent: "BOOKMARK_ADD"
+  }),
+  OpenInNewWindow: site => ({
+    id: "newtab-menu-open-new-window",
+    icon: "new-window",
+    action: actionCreators.AlsoToMain({
+      type: actionTypes.OPEN_NEW_WINDOW,
+      data: {
+        referrer: site.referrer,
+        typedBonus: site.typedBonus,
+        url: site.url
+      }
+    }),
+    userEvent: "OPEN_NEW_WINDOW"
+  }),
+  // This blocks the url for regular stories,
+  // but also sends a message to DiscoveryStream with flight_id.
+  // If DiscoveryStream sees this message for a flight_id
+  // it also blocks it on the flight_id.
+  BlockUrl: (site, index, eventSource) => {
+    return LinkMenuOptions.BlockUrls([site], index, eventSource);
+  },
+  // Same as BlockUrl, cept can work on an array of sites.
+  BlockUrls: (tiles, pos, eventSource) => ({
+    id: "newtab-menu-dismiss",
+    icon: "dismiss",
+    action: actionCreators.AlsoToMain({
+      type: actionTypes.BLOCK_URL,
+      data: tiles.map(site => ({
+        url: site.original_url || site.open_url || site.url,
+        // pocket_id is only for pocket stories being in highlights, and then dismissed.
+        pocket_id: site.pocket_id,
+        // used by PlacesFeed and TopSitesFeed for sponsored top sites blocking.
+        isSponsoredTopSite: site.sponsored_position,
+        ...(site.flight_id ? {
+          flight_id: site.flight_id
+        } : {})
+      }))
+    }),
+    impression: actionCreators.ImpressionStats({
+      source: eventSource,
+      block: 0,
+      tiles: tiles.map((site, index) => ({
+        id: site.guid,
+        pos: pos + index,
+        ...(site.shim && site.shim.delete ? {
+          shim: site.shim.delete
+        } : {})
+      }))
+    }),
+    userEvent: "BLOCK"
+  }),
+  // This is an option for web extentions which will result in remove items from
+  // memory and notify the web extenion, rather than using the built-in block list.
+  WebExtDismiss: (site, index, eventSource) => ({
+    id: "menu_action_webext_dismiss",
+    string_id: "newtab-menu-dismiss",
+    icon: "dismiss",
+    action: actionCreators.WebExtEvent(actionTypes.WEBEXT_DISMISS, {
+      source: eventSource,
+      url: site.url,
+      action_position: index
+    })
+  }),
+  DeleteUrl: (site, index, eventSource, isEnabled, siteInfo) => ({
+    id: "newtab-menu-delete-history",
+    icon: "delete",
+    action: {
+      type: actionTypes.DIALOG_OPEN,
+      data: {
+        onConfirm: [actionCreators.AlsoToMain({
+          type: actionTypes.DELETE_HISTORY_URL,
+          data: {
+            url: site.url,
+            pocket_id: site.pocket_id,
+            forceBlock: site.bookmarkGuid
+          }
+        }), actionCreators.UserEvent(Object.assign({
+          event: "DELETE",
+          source: eventSource,
+          action_position: index
+        }, siteInfo))],
+        eventSource,
+        body_string_id: ["newtab-confirm-delete-history-p1", "newtab-confirm-delete-history-p2"],
+        confirm_button_string_id: "newtab-topsites-delete-history-button",
+        cancel_button_string_id: "newtab-topsites-cancel-button",
+        icon: "modal-delete"
+      }
+    },
+    userEvent: "DIALOG_OPEN"
+  }),
+  ShowFile: site => ({
+    id: "newtab-menu-show-file",
+    icon: "search",
+    action: actionCreators.OnlyToMain({
+      type: actionTypes.SHOW_DOWNLOAD_FILE,
+      data: {
+        url: site.url
+      }
+    })
+  }),
+  OpenFile: site => ({
+    id: "newtab-menu-open-file",
+    icon: "open-file",
+    action: actionCreators.OnlyToMain({
+      type: actionTypes.OPEN_DOWNLOAD_FILE,
+      data: {
+        url: site.url
+      }
+    })
+  }),
+  CopyDownloadLink: site => ({
+    id: "newtab-menu-copy-download-link",
+    icon: "copy",
+    action: actionCreators.OnlyToMain({
+      type: actionTypes.COPY_DOWNLOAD_LINK,
+      data: {
+        url: site.url
+      }
+    })
+  }),
+  GoToDownloadPage: site => ({
+    id: "newtab-menu-go-to-download-page",
+    icon: "download",
+    action: actionCreators.OnlyToMain({
+      type: actionTypes.OPEN_LINK,
+      data: {
+        url: site.referrer
+      }
+    }),
+    disabled: !site.referrer
+  }),
+  RemoveDownload: site => ({
+    id: "newtab-menu-remove-download",
+    icon: "delete",
+    action: actionCreators.OnlyToMain({
+      type: actionTypes.REMOVE_DOWNLOAD_FILE,
+      data: {
+        url: site.url
+      }
+    })
+  }),
+  PinTopSite: (site, index) => ({
+    id: "newtab-menu-pin",
+    icon: "pin",
+    action: actionCreators.AlsoToMain({
+      type: actionTypes.TOP_SITES_PIN,
+      data: {
+        site,
+        index
+      }
+    }),
+    userEvent: "PIN"
+  }),
+  UnpinTopSite: site => ({
+    id: "newtab-menu-unpin",
+    icon: "unpin",
+    action: actionCreators.AlsoToMain({
+      type: actionTypes.TOP_SITES_UNPIN,
+      data: {
+        site: {
+          url: site.url
+        }
+      }
+    }),
+    userEvent: "UNPIN"
+  }),
+  SaveToPocket: (site, index, eventSource = "CARDGRID") => ({
+    id: "newtab-menu-save-to-pocket",
+    icon: "pocket-save",
+    action: actionCreators.AlsoToMain({
+      type: actionTypes.SAVE_TO_POCKET,
+      data: {
+        site: {
+          url: site.url,
+          title: site.title
+        }
+      }
+    }),
+    impression: actionCreators.ImpressionStats({
+      source: eventSource,
+      pocket: 0,
+      tiles: [{
+        id: site.guid,
+        pos: index,
+        ...(site.shim && site.shim.save ? {
+          shim: site.shim.save
+        } : {})
+      }]
+    }),
+    userEvent: "SAVE_TO_POCKET"
+  }),
+  DeleteFromPocket: site => ({
+    id: "newtab-menu-delete-pocket",
+    icon: "pocket-delete",
+    action: actionCreators.AlsoToMain({
+      type: actionTypes.DELETE_FROM_POCKET,
+      data: {
+        pocket_id: site.pocket_id
+      }
+    }),
+    userEvent: "DELETE_FROM_POCKET"
+  }),
+  ArchiveFromPocket: site => ({
+    id: "newtab-menu-archive-pocket",
+    icon: "pocket-archive",
+    action: actionCreators.AlsoToMain({
+      type: actionTypes.ARCHIVE_FROM_POCKET,
+      data: {
+        pocket_id: site.pocket_id
+      }
+    }),
+    userEvent: "ARCHIVE_FROM_POCKET"
+  }),
+  EditTopSite: (site, index) => ({
+    id: "newtab-menu-edit-topsites",
+    icon: "edit",
+    action: {
+      type: actionTypes.TOP_SITES_EDIT,
+      data: {
+        index
+      }
+    }
+  }),
+  CheckBookmark: site => site.bookmarkGuid ? LinkMenuOptions.RemoveBookmark(site) : LinkMenuOptions.AddBookmark(site),
+  CheckPinTopSite: (site, index) => site.isPinned ? LinkMenuOptions.UnpinTopSite(site) : LinkMenuOptions.PinTopSite(site, index),
+  CheckSavedToPocket: (site, index, source) => site.pocket_id ? LinkMenuOptions.DeleteFromPocket(site) : LinkMenuOptions.SaveToPocket(site, index, source),
+  CheckBookmarkOrArchive: site => site.pocket_id ? LinkMenuOptions.ArchiveFromPocket(site) : LinkMenuOptions.CheckBookmark(site),
+  CheckArchiveFromPocket: site => site.pocket_id ? LinkMenuOptions.ArchiveFromPocket(site) : LinkMenuOptions.EmptyItem(),
+  CheckDeleteFromPocket: site => site.pocket_id ? LinkMenuOptions.DeleteFromPocket(site) : LinkMenuOptions.EmptyItem(),
+  OpenInPrivateWindow: (site, index, eventSource, isEnabled) => isEnabled ? _OpenInPrivateWindow(site) : LinkMenuOptions.EmptyItem()
+};
+;// CONCATENATED MODULE: ./content-src/components/LinkMenu/LinkMenu.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7258,252 +6680,727 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+const DEFAULT_SITE_MENU_OPTIONS = ["CheckPinTopSite", "EditTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"];
+class _LinkMenu extends (external_React_default()).PureComponent {
+  getOptions() {
+    const {
+      props
+    } = this;
+    const {
+      site,
+      index,
+      source,
+      isPrivateBrowsingEnabled,
+      siteInfo,
+      platform
+    } = props; // Handle special case of default site
 
-class CardGrid extends (react__WEBPACK_IMPORTED_MODULE_5___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.state = {
-      moreLoaded: false
-    };
-    this.loadMoreClicked = this.loadMoreClicked.bind(this);
+    const propOptions = site.isDefault && !site.searchTopSite && !site.sponsored_position ? DEFAULT_SITE_MENU_OPTIONS : props.options;
+    const options = propOptions.map(o => LinkMenuOptions[o](site, index, source, isPrivateBrowsingEnabled, siteInfo, platform)).map(option => {
+      const {
+        action,
+        impression,
+        id,
+        type,
+        userEvent
+      } = option;
+
+      if (!type && id) {
+        option.onClick = (event = {}) => {
+          const {
+            ctrlKey,
+            metaKey,
+            shiftKey,
+            button
+          } = event; // Only send along event info if there's something non-default to send
+
+          if (ctrlKey || metaKey || shiftKey || button === 1) {
+            action.data = Object.assign({
+              event: {
+                ctrlKey,
+                metaKey,
+                shiftKey,
+                button
+              }
+            }, action.data);
+          }
+
+          props.dispatch(action);
+
+          if (userEvent) {
+            const userEventData = Object.assign({
+              event: userEvent,
+              source,
+              action_position: index
+            }, siteInfo);
+            props.dispatch(actionCreators.UserEvent(userEventData));
+          }
+
+          if (impression && props.shouldSendImpressionStats) {
+            props.dispatch(impression);
+          }
+        };
+      }
+
+      return option;
+    }); // This is for accessibility to support making each item tabbable.
+    // We want to know which item is the first and which item
+    // is the last, so we can close the context menu accordingly.
+
+    options[0].first = true;
+    options[options.length - 1].last = true;
+    return options;
   }
 
-  loadMoreClicked() {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_4__.actionCreators.UserEvent({
-      event: "CLICK",
-      source: "DS_LOAD_MORE_BUTTON"
-    }));
-    this.setState({
-      moreLoaded: true
+  render() {
+    return /*#__PURE__*/external_React_default().createElement(ContextMenu, {
+      onUpdate: this.props.onUpdate,
+      onShow: this.props.onShow,
+      options: this.getOptions(),
+      keyboardAccess: this.props.keyboardAccess
     });
   }
 
-  get showLoadMore() {
-    const {
-      loadMore,
-      data,
-      loadMoreThreshold
-    } = this.props;
-    return loadMore && data.recommendations.length > loadMoreThreshold && !this.state.moreLoaded;
+}
+
+const getState = state => ({
+  isPrivateBrowsingEnabled: state.Prefs.values.isPrivateBrowsingEnabled,
+  platform: state.Prefs.values.platform
+});
+
+const LinkMenu = (0,external_ReactRedux_namespaceObject.connect)(getState)(_LinkMenu);
+;// CONCATENATED MODULE: ./content-src/components/ContextMenu/ContextMenuButton.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+class ContextMenuButton extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      showContextMenu: false,
+      contextMenuKeyboard: false
+    };
+    this.onClick = this.onClick.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
+    this.onUpdate = this.onUpdate.bind(this);
   }
 
-  renderDSSubHeader(title) {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
-      className: "section-top-bar ds-sub-header"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("h3", {
-      className: "section-title-container"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("span", {
-      className: "section-title"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(_FluentOrText_FluentOrText_jsx__WEBPACK_IMPORTED_MODULE_3__.FluentOrText, {
-      message: title
-    }))));
+  openContextMenu(isKeyBoard, event) {
+    if (this.props.onUpdate) {
+      this.props.onUpdate(true);
+    }
+
+    this.setState({
+      showContextMenu: true,
+      contextMenuKeyboard: isKeyBoard
+    });
   }
 
-  renderCards() {
-    var _widgets$positions, _widgets$data;
+  onClick(event) {
+    event.preventDefault();
+    this.openContextMenu(false, event);
+  }
 
-    let {
-      items
-    } = this.props;
-    const {
-      hybridLayout,
-      hideCardBackground,
-      fourCardLayout,
-      hideDescriptions,
-      lastCardMessageEnabled,
-      saveToPocketCard,
-      loadMoreThreshold,
-      compactGrid,
-      compactImages,
-      imageGradient,
-      newSponsoredLabel,
-      titleLines,
-      descLines,
-      readTime,
-      essentialReadsHeader,
-      editorsPicksHeader,
-      widgets
-    } = this.props;
-    let showLastCardMessage = lastCardMessageEnabled;
+  onKeyDown(event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      this.openContextMenu(true, event);
+    }
+  }
 
-    if (this.showLoadMore) {
-      items = loadMoreThreshold; // We don't want to show this until after load more has been clicked.
-
-      showLastCardMessage = false;
+  onUpdate(showContextMenu) {
+    if (this.props.onUpdate) {
+      this.props.onUpdate(showContextMenu);
     }
 
-    const recs = this.props.data.recommendations.slice(0, items);
-    const cards = [];
-
-    for (let index = 0; index < items; index++) {
-      const rec = recs[index];
-      cards.push(!rec || rec.placeholder ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(_DSCard_DSCard_jsx__WEBPACK_IMPORTED_MODULE_0__.PlaceholderDSCard, {
-        key: `dscard-${index}`
-      }) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(_DSCard_DSCard_jsx__WEBPACK_IMPORTED_MODULE_0__.DSCard, {
-        key: `dscard-${rec.id}`,
-        pos: rec.pos,
-        flightId: rec.flight_id,
-        image_src: rec.image_src,
-        raw_image_src: rec.raw_image_src,
-        word_count: rec.word_count,
-        time_to_read: rec.time_to_read,
-        displayReadTime: readTime,
-        title: rec.title,
-        excerpt: rec.excerpt,
-        url: rec.url,
-        id: rec.id,
-        shim: rec.shim,
-        type: this.props.type,
-        context: rec.context,
-        sponsor: rec.sponsor,
-        sponsored_by_override: rec.sponsored_by_override,
-        dispatch: this.props.dispatch,
-        source: rec.domain,
-        pocket_id: rec.pocket_id,
-        context_type: rec.context_type,
-        bookmarkGuid: rec.bookmarkGuid,
-        engagement: rec.engagement,
-        pocket_button_enabled: this.props.pocket_button_enabled,
-        display_engagement_labels: this.props.display_engagement_labels,
-        hideDescriptions: hideDescriptions,
-        saveToPocketCard: saveToPocketCard,
-        compactImages: compactImages,
-        imageGradient: imageGradient,
-        newSponsoredLabel: newSponsoredLabel,
-        titleLines: titleLines,
-        descLines: descLines,
-        cta: rec.cta,
-        cta_variant: this.props.cta_variant,
-        is_video: this.props.enable_video_playheads && rec.is_video,
-        is_collection: this.props.is_collection
-      }));
-    } // If we have both header, inject the second one after the second row.
-    // For now this is English only.
-
-
-    if (essentialReadsHeader && editorsPicksHeader) {
-      // For 4 card row layouts, second row is 8 cards, and regular it is 6 cards.
-      if (fourCardLayout) {
-        cards.splice(8, 0, this.renderDSSubHeader("Editor’s Picks"));
-      } else {
-        cards.splice(6, 0, this.renderDSSubHeader("Editor’s Picks"));
-      }
-    } // Replace last card with "you are all caught up card"
-
-
-    if (showLastCardMessage) {
-      cards.splice(cards.length - 1, 1, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(_DSCard_DSCard_jsx__WEBPACK_IMPORTED_MODULE_0__.LastCardMessage, {
-        key: `dscard-last-${cards.length - 1}`
-      }));
-    }
-
-    if (widgets !== null && widgets !== void 0 && (_widgets$positions = widgets.positions) !== null && _widgets$positions !== void 0 && _widgets$positions.length && widgets !== null && widgets !== void 0 && (_widgets$data = widgets.data) !== null && _widgets$data !== void 0 && _widgets$data.length) {
-      let positionIndex = 0;
-
-      for (const widget of widgets.data) {
-        let widgetComponent = null;
-        const position = widgets.positions[positionIndex]; // Stop if we run out of positions to place widgets.
-
-        if (!position) {
-          break;
-        }
-
-        switch (widget === null || widget === void 0 ? void 0 : widget.type) {
-          case "TopicsWidget":
-            widgetComponent = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(_TopicsWidget_TopicsWidget_jsx__WEBPACK_IMPORTED_MODULE_2__.TopicsWidget, null);
-            break;
-        }
-
-        if (widgetComponent) {
-          // We found a widget, so up the position for next try.
-          positionIndex++; // We replace an existing card with the widget.
-
-          cards.splice(position.index, 1, widgetComponent);
-        }
-      }
-    } // Used for CSS overrides to default styling (eg: "hero")
-
-
-    const variantClass = this.props.display_variant ? `ds-card-grid-${this.props.display_variant}` : ``;
-    const hideCardBackgroundClass = hideCardBackground ? `ds-card-grid-hide-background` : ``;
-    const fourCardLayoutClass = fourCardLayout ? `ds-card-grid-four-card-variant` : ``;
-    const hideDescriptionsClassName = !hideDescriptions ? `ds-card-grid-include-descriptions` : ``;
-    const compactGridClassName = compactGrid ? `ds-card-grid-compact` : ``;
-    const hybridLayoutClassName = hybridLayout ? `ds-card-grid-hybrid-layout` : ``;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
-      className: `ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${hybridLayoutClassName} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`
-    }, cards);
+    this.setState({
+      showContextMenu
+    });
   }
 
   render() {
     const {
-      data
-    } = this.props; // Handle a render before feed has been fetched by displaying nothing
-
-    if (!data) {
-      return null;
-    } // Handle the case where a user has dismissed all recommendations
-
-
-    const isEmpty = data.recommendations.length === 0;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", null, this.props.title && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
-      className: "ds-header"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
-      className: "title"
-    }, this.props.title), this.props.context && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(_FluentOrText_FluentOrText_jsx__WEBPACK_IMPORTED_MODULE_3__.FluentOrText, {
-      message: this.props.context
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
-      className: "ds-context"
-    }))), isEmpty ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
-      className: "ds-card-grid empty"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(_DSEmptyState_DSEmptyState_jsx__WEBPACK_IMPORTED_MODULE_1__.DSEmptyState, {
-      status: data.status,
-      dispatch: this.props.dispatch,
-      feed: this.props.feed
-    })) : this.renderCards(), this.showLoadMore && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("button", {
-      className: "ASRouterButton primary ds-card-grid-load-more-button",
-      onClick: this.loadMoreClicked,
-      "data-l10n-id": "newtab-pocket-load-more-stories-button"
-    }));
+      tooltipArgs,
+      tooltip,
+      children,
+      refFunction
+    } = this.props;
+    const {
+      showContextMenu,
+      contextMenuKeyboard
+    } = this.state;
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("button", {
+      "aria-haspopup": "true",
+      "data-l10n-id": tooltip,
+      "data-l10n-args": tooltipArgs ? JSON.stringify(tooltipArgs) : null,
+      className: "context-menu-button icon",
+      onKeyDown: this.onKeyDown,
+      onClick: this.onClick,
+      ref: refFunction
+    }), showContextMenu ? /*#__PURE__*/external_React_default().cloneElement(children, {
+      keyboardAccess: contextMenuKeyboard,
+      onUpdate: this.onUpdate
+    }) : null);
   }
 
 }
-CardGrid.defaultProps = {
-  border: `border`,
-  items: 4,
-  // Number of stories to display
-  enable_video_playheads: false,
-  lastCardMessageEnabled: false,
-  saveToPocketCard: false,
-  loadMoreThreshold: 12
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+class DSLinkMenu extends (external_React_default()).PureComponent {
+  render() {
+    const {
+      index,
+      dispatch
+    } = this.props;
+    let pocketMenuOptions = [];
+
+    if (this.props.pocket_button_enabled) {
+      pocketMenuOptions = this.props.saveToPocketCard ? ["CheckDeleteFromPocket"] : ["CheckSavedToPocket"];
+    }
+
+    const TOP_STORIES_CONTEXT_MENU_OPTIONS = ["CheckBookmark", "CheckArchiveFromPocket", ...pocketMenuOptions, "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", ...(this.props.showPrivacyInfo ? ["ShowPrivacyInfo"] : [])];
+    const type = this.props.type || "DISCOVERY_STREAM";
+    const title = this.props.title || this.props.source;
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: "context-menu-position-container"
+    }, /*#__PURE__*/external_React_default().createElement(ContextMenuButton, {
+      tooltip: "newtab-menu-content-tooltip",
+      tooltipArgs: {
+        title
+      },
+      onUpdate: this.props.onMenuUpdate
+    }, /*#__PURE__*/external_React_default().createElement(LinkMenu, {
+      dispatch: dispatch,
+      index: index,
+      source: type.toUpperCase(),
+      onShow: this.props.onMenuShow,
+      options: TOP_STORIES_CONTEXT_MENU_OPTIONS,
+      shouldSendImpressionStats: true,
+      site: {
+        referrer: "https://getpocket.com/recommendations",
+        title: this.props.title,
+        type: this.props.type,
+        url: this.props.url,
+        guid: this.props.id,
+        pocket_id: this.props.pocket_id,
+        shim: this.props.shim,
+        bookmarkGuid: this.props.bookmarkGuid,
+        flight_id: this.props.flightId
+      }
+    })));
+  }
+
+}
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamImpressionStats/ImpressionStats.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+const ImpressionStats_VISIBLE = "visible";
+const ImpressionStats_VISIBILITY_CHANGE_EVENT = "visibilitychange"; // Per analytical requirement, we set the minimal intersection ratio to
+// 0.5, and an impression is identified when the wrapped item has at least
+// 50% visibility.
+//
+// This constant is exported for unit test
+
+const INTERSECTION_RATIO = 0.5;
+/**
+ * Impression wrapper for Discovery Stream related React components.
+ *
+ * It makses use of the Intersection Observer API to detect the visibility,
+ * and relies on page visibility to ensure the impression is reported
+ * only when the component is visible on the page.
+ *
+ * Note:
+ *   * This wrapper used to be used either at the individual card level,
+ *     or by the card container components.
+ *     It is now only used for individual card level.
+ *   * Each impression will be sent only once as soon as the desired
+ *     visibility is detected
+ *   * Batching is not yet implemented, hence it might send multiple
+ *     impression pings separately
+ */
+
+class ImpressionStats_ImpressionStats extends (external_React_default()).PureComponent {
+  // This checks if the given cards are the same as those in the last impression ping.
+  // If so, it should not send the same impression ping again.
+  _needsImpressionStats(cards) {
+    if (!this.impressionCardGuids || this.impressionCardGuids.length !== cards.length) {
+      return true;
+    }
+
+    for (let i = 0; i < cards.length; i++) {
+      if (cards[i].id !== this.impressionCardGuids[i]) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  _dispatchImpressionStats() {
+    const {
+      props
+    } = this;
+    const cards = props.rows;
+
+    if (this.props.flightId) {
+      this.props.dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.DISCOVERY_STREAM_SPOC_IMPRESSION,
+        data: {
+          flightId: this.props.flightId
+        }
+      }));
+    }
+
+    if (this._needsImpressionStats(cards)) {
+      props.dispatch(actionCreators.DiscoveryStreamImpressionStats({
+        source: props.source.toUpperCase(),
+        window_inner_width: window.innerWidth,
+        window_inner_height: window.innerHeight,
+        tiles: cards.map(link => ({
+          id: link.id,
+          pos: link.pos,
+          ...(link.shim ? {
+            shim: link.shim
+          } : {})
+        }))
+      }));
+      this.impressionCardGuids = cards.map(link => link.id);
+    }
+  } // This checks if the given cards are the same as those in the last loaded content ping.
+  // If so, it should not send the same loaded content ping again.
+
+
+  _needsLoadedContent(cards) {
+    if (!this.loadedContentGuids || this.loadedContentGuids.length !== cards.length) {
+      return true;
+    }
+
+    for (let i = 0; i < cards.length; i++) {
+      if (cards[i].id !== this.loadedContentGuids[i]) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  _dispatchLoadedContent() {
+    const {
+      props
+    } = this;
+    const cards = props.rows;
+
+    if (this._needsLoadedContent(cards)) {
+      props.dispatch(actionCreators.DiscoveryStreamLoadedContent({
+        source: props.source.toUpperCase(),
+        tiles: cards.map(link => ({
+          id: link.id,
+          pos: link.pos
+        }))
+      }));
+      this.loadedContentGuids = cards.map(link => link.id);
+    }
+  }
+
+  setImpressionObserverOrAddListener() {
+    const {
+      props
+    } = this;
+
+    if (!props.dispatch) {
+      return;
+    }
+
+    if (props.document.visibilityState === ImpressionStats_VISIBLE) {
+      // Send the loaded content ping once the page is visible.
+      this._dispatchLoadedContent();
+
+      this.setImpressionObserver();
+    } else {
+      // We should only ever send the latest impression stats ping, so remove any
+      // older listeners.
+      if (this._onVisibilityChange) {
+        props.document.removeEventListener(ImpressionStats_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+      }
+
+      this._onVisibilityChange = () => {
+        if (props.document.visibilityState === ImpressionStats_VISIBLE) {
+          // Send the loaded content ping once the page is visible.
+          this._dispatchLoadedContent();
+
+          this.setImpressionObserver();
+          props.document.removeEventListener(ImpressionStats_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+        }
+      };
+
+      props.document.addEventListener(ImpressionStats_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+    }
+  }
+  /**
+   * Set an impression observer for the wrapped component. It makes use of
+   * the Intersection Observer API to detect if the wrapped component is
+   * visible with a desired ratio, and only sends impression if that's the case.
+   *
+   * See more details about Intersection Observer API at:
+   * https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
+   */
+
+
+  setImpressionObserver() {
+    const {
+      props
+    } = this;
+
+    if (!props.rows.length) {
+      return;
+    }
+
+    this._handleIntersect = entries => {
+      if (entries.some(entry => entry.isIntersecting && entry.intersectionRatio >= INTERSECTION_RATIO)) {
+        this._dispatchImpressionStats();
+
+        this.impressionObserver.unobserve(this.refs.impression);
+      }
+    };
+
+    const options = {
+      threshold: INTERSECTION_RATIO
+    };
+    this.impressionObserver = new props.IntersectionObserver(this._handleIntersect, options);
+    this.impressionObserver.observe(this.refs.impression);
+  }
+
+  componentDidMount() {
+    if (this.props.rows.length) {
+      this.setImpressionObserverOrAddListener();
+    }
+  }
+
+  componentWillUnmount() {
+    if (this._handleIntersect && this.impressionObserver) {
+      this.impressionObserver.unobserve(this.refs.impression);
+    }
+
+    if (this._onVisibilityChange) {
+      this.props.document.removeEventListener(ImpressionStats_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+    }
+  }
+
+  render() {
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      ref: "impression",
+      className: "impression-observer"
+    }, this.props.children);
+  }
+
+}
+ImpressionStats_ImpressionStats.defaultProps = {
+  IntersectionObserver: __webpack_require__.g.IntersectionObserver,
+  document: __webpack_require__.g.document,
+  rows: [],
+  source: ""
 };
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/***/ }),
-/* 54 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "readTimeFromWordCount": () => (/* binding */ readTimeFromWordCount),
-/* harmony export */   "DSSource": () => (/* binding */ DSSource),
-/* harmony export */   "DefaultMeta": () => (/* binding */ DefaultMeta),
-/* harmony export */   "CTAButtonMeta": () => (/* binding */ CTAButtonMeta),
-/* harmony export */   "_DSCard": () => (/* binding */ _DSCard),
-/* harmony export */   "DSCard": () => (/* binding */ DSCard),
-/* harmony export */   "PlaceholderDSCard": () => (/* binding */ PlaceholderDSCard),
-/* harmony export */   "LastCardMessage": () => (/* binding */ LastCardMessage)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var _DSImage_DSImage_jsx__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(55);
-/* harmony import */ var _DSLinkMenu_DSLinkMenu__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(56);
-/* harmony import */ var _DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(61);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var _SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(62);
-/* harmony import */ var _DSContextFooter_DSContextFooter_jsx__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(63);
-/* harmony import */ var _FluentOrText_FluentOrText_jsx__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(66);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_8__);
+class SafeAnchor extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.onClick = this.onClick.bind(this);
+  }
+
+  onClick(event) {
+    // Use dispatch instead of normal link click behavior to include referrer
+    if (this.props.dispatch) {
+      event.preventDefault();
+      const {
+        altKey,
+        button,
+        ctrlKey,
+        metaKey,
+        shiftKey
+      } = event;
+      this.props.dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.OPEN_LINK,
+        data: {
+          event: {
+            altKey,
+            button,
+            ctrlKey,
+            metaKey,
+            shiftKey
+          },
+          referrer: "https://getpocket.com/recommendations",
+          // Use the anchor's url, which could have been cleaned up
+          url: event.currentTarget.href
+        }
+      }));
+    } // Propagate event if there's a handler
+
+
+    if (this.props.onLinkClick) {
+      this.props.onLinkClick(event);
+    }
+  }
+
+  safeURI(url) {
+    let protocol = null;
+
+    try {
+      protocol = new URL(url).protocol;
+    } catch (e) {
+      return "";
+    }
+
+    const isAllowed = ["http:", "https:"].includes(protocol);
+
+    if (!isAllowed) {
+      console.warn(`${url} is not allowed for anchor targets.`); // eslint-disable-line no-console
+
+      return "";
+    }
+
+    return url;
+  }
+
+  render() {
+    const {
+      url,
+      className
+    } = this.props;
+    return /*#__PURE__*/external_React_default().createElement("a", {
+      href: this.safeURI(url),
+      className: className,
+      onClick: this.onClick
+    }, this.props.children);
+  }
+
+}
+;// CONCATENATED MODULE: ./content-src/components/Card/types.js
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+const cardContextTypes = {
+  history: {
+    fluentID: "newtab-label-visited",
+    icon: "history-item"
+  },
+  removedBookmark: {
+    fluentID: "newtab-label-removed-bookmark",
+    icon: "bookmark-removed"
+  },
+  bookmark: {
+    fluentID: "newtab-label-bookmarked",
+    icon: "bookmark-added"
+  },
+  trending: {
+    fluentID: "newtab-label-recommended",
+    icon: "trending"
+  },
+  pocket: {
+    fluentID: "newtab-label-saved",
+    icon: "pocket"
+  },
+  download: {
+    fluentID: "newtab-label-download",
+    icon: "download"
+  }
+};
+;// CONCATENATED MODULE: external "ReactTransitionGroup"
+const external_ReactTransitionGroup_namespaceObject = ReactTransitionGroup;
+;// CONCATENATED MODULE: ./content-src/components/FluentOrText/FluentOrText.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * Set text on a child element/component depending on if the message is already
+ * translated plain text or a fluent id with optional args.
+ */
+
+class FluentOrText extends (external_React_default()).PureComponent {
+  render() {
+    // Ensure we have a single child to attach attributes
+    const {
+      children,
+      message
+    } = this.props;
+    const child = children ? external_React_default().Children.only(children) : /*#__PURE__*/external_React_default().createElement("span", null); // For a string message, just use it as the child's text
+
+    let grandChildren = message;
+    let extraProps; // Convert a message object to set desired fluent-dom attributes
+
+    if (typeof message === "object") {
+      const args = message.args || message.values;
+      extraProps = {
+        "data-l10n-args": args && JSON.stringify(args),
+        "data-l10n-id": message.id || message.string_id
+      }; // Use original children potentially with data-l10n-name attributes
+
+      grandChildren = child.props.children;
+    } // Add the message to the child via fluent attributes or text node
+
+
+    return /*#__PURE__*/external_React_default().cloneElement(child, extraProps, grandChildren);
+  }
+
+}
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSContextFooter/DSContextFooter.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+ // Animation time is mirrored in DSContextFooter.scss
+
+const ANIMATION_DURATION = 3000;
+const DSMessageLabel = props => {
+  const {
+    context,
+    context_type,
+    display_engagement_labels,
+    engagement
+  } = props;
+  const {
+    icon,
+    fluentID
+  } = cardContextTypes[context_type] || {};
+
+  if (!context && (context_type || display_engagement_labels && engagement)) {
+    return /*#__PURE__*/external_React_default().createElement(external_ReactTransitionGroup_namespaceObject.TransitionGroup, {
+      component: null
+    }, /*#__PURE__*/external_React_default().createElement(external_ReactTransitionGroup_namespaceObject.CSSTransition, {
+      key: fluentID,
+      timeout: ANIMATION_DURATION,
+      classNames: "story-animate"
+    }, engagement && !context_type ? /*#__PURE__*/external_React_default().createElement("div", {
+      className: "story-view-count"
+    }, engagement) : /*#__PURE__*/external_React_default().createElement(StatusMessage, {
+      icon: icon,
+      fluentID: fluentID
+    })));
+  }
+
+  return null;
+};
+const StatusMessage = ({
+  icon,
+  fluentID
+}) => /*#__PURE__*/external_React_default().createElement("div", {
+  className: "status-message"
+}, /*#__PURE__*/external_React_default().createElement("span", {
+  "aria-haspopup": "true",
+  className: `story-badge-icon icon icon-${icon}`
+}), /*#__PURE__*/external_React_default().createElement("div", {
+  className: "story-context-label",
+  "data-l10n-id": fluentID
+}));
+const SponsorLabel = ({
+  sponsored_by_override,
+  sponsor,
+  context,
+  newSponsoredLabel
+}) => {
+  const classList = `story-sponsored-label ${newSponsoredLabel || ""} clamp`; // If override is not false or an empty string.
+
+  if (sponsored_by_override) {
+    return /*#__PURE__*/external_React_default().createElement("p", {
+      className: classList
+    }, sponsored_by_override);
+  } else if (sponsored_by_override === "") {
+    // We specifically want to display nothing if the server returns an empty string.
+    // So the server can turn off the label.
+    // This is to support the use cases where the sponsored context is displayed elsewhere.
+    return null;
+  } else if (sponsor) {
+    return /*#__PURE__*/external_React_default().createElement("p", {
+      className: classList
+    }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
+      message: {
+        id: `newtab-label-sponsored-by`,
+        values: {
+          sponsor
+        }
+      }
+    }));
+  } else if (context) {
+    return /*#__PURE__*/external_React_default().createElement("p", {
+      className: classList
+    }, context);
+  }
+
+  return null;
+};
+class DSContextFooter extends (external_React_default()).PureComponent {
+  render() {
+    // display_engagement_labels is based on pref `browser.newtabpage.activity-stream.discoverystream.engagementLabelEnabled`
+    const {
+      context,
+      context_type,
+      engagement,
+      display_engagement_labels,
+      sponsor,
+      sponsored_by_override
+    } = this.props;
+    const sponsorLabel = SponsorLabel({
+      sponsored_by_override,
+      sponsor,
+      context
+    });
+    const dsMessageLabel = DSMessageLabel({
+      context,
+      context_type,
+      display_engagement_labels,
+      engagement
+    });
+
+    if (sponsorLabel || dsMessageLabel) {
+      return /*#__PURE__*/external_React_default().createElement("div", {
+        className: "story-footer"
+      }, sponsorLabel, dsMessageLabel);
+    }
+
+    return null;
+  }
+
+}
+const DSMessageFooter = props => {
+  const {
+    context,
+    context_type,
+    engagement,
+    display_engagement_labels,
+    saveToPocketCard
+  } = props;
+  const dsMessageLabel = DSMessageLabel({
+    context,
+    context_type,
+    engagement,
+    display_engagement_labels
+  }); // This case is specific and already displayed to the user elsewhere.
+
+  if (!dsMessageLabel || saveToPocketCard && context_type === "pocket") {
+    return null;
+  }
+
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    className: "story-footer"
+  }, dsMessageLabel);
+};
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSCard/DSCard.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7539,7 +7436,7 @@ const DSSource = ({
   if (newSponsoredLabel) {
     // If we can display something for spocs, do so.
     if (sponsored_by_override || sponsor || context) {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(_DSContextFooter_DSContextFooter_jsx__WEBPACK_IMPORTED_MODULE_6__.SponsorLabel, {
+      return /*#__PURE__*/external_React_default().createElement(SponsorLabel, {
         context: context,
         sponsor: sponsor,
         sponsored_by_override: sponsored_by_override,
@@ -7550,9 +7447,9 @@ const DSSource = ({
 
 
   if (timeToRead) {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("p", {
+    return /*#__PURE__*/external_React_default().createElement("p", {
       className: "source clamp time-to-read"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(_FluentOrText_FluentOrText_jsx__WEBPACK_IMPORTED_MODULE_7__.FluentOrText, {
+    }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
       message: {
         id: `newtab-label-source-read-time`,
         values: {
@@ -7564,7 +7461,7 @@ const DSSource = ({
   } // Otherwise display a default source.
 
 
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("p", {
+  return /*#__PURE__*/external_React_default().createElement("p", {
     className: "source clamp"
   }, source);
 }; // Default Meta that displays CTA as link if cta_variant in layout is set as "link"
@@ -7584,34 +7481,34 @@ const DefaultMeta = ({
   sponsor,
   sponsored_by_override,
   saveToPocketCard
-}) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+}) => /*#__PURE__*/external_React_default().createElement("div", {
   className: "meta"
-}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+}, /*#__PURE__*/external_React_default().createElement("div", {
   className: "info-wrap"
-}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(DSSource, {
+}, /*#__PURE__*/external_React_default().createElement(DSSource, {
   source: source,
   timeToRead: timeToRead,
   newSponsoredLabel: newSponsoredLabel,
   context: context,
   sponsor: sponsor,
   sponsored_by_override: sponsored_by_override
-}), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("header", {
+}), /*#__PURE__*/external_React_default().createElement("header", {
   title: title,
   className: "title clamp"
-}, title), excerpt && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("p", {
+}, title), excerpt && /*#__PURE__*/external_React_default().createElement("p", {
   className: "excerpt clamp"
-}, excerpt), cta_variant === "link" && cta && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+}, excerpt), cta_variant === "link" && cta && /*#__PURE__*/external_React_default().createElement("div", {
   role: "link",
   className: "cta-link icon icon-arrow",
   tabIndex: "0"
-}, cta)), !newSponsoredLabel && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(_DSContextFooter_DSContextFooter_jsx__WEBPACK_IMPORTED_MODULE_6__.DSContextFooter, {
+}, cta)), !newSponsoredLabel && /*#__PURE__*/external_React_default().createElement(DSContextFooter, {
   context_type: context_type,
   context: context,
   sponsor: sponsor,
   sponsored_by_override: sponsored_by_override,
   display_engagement_labels: display_engagement_labels,
   engagement: engagement
-}), newSponsoredLabel && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(_DSContextFooter_DSContextFooter_jsx__WEBPACK_IMPORTED_MODULE_6__.DSMessageFooter, {
+}), newSponsoredLabel && /*#__PURE__*/external_React_default().createElement(DSMessageFooter, {
   context_type: context_type,
   context: null,
   display_engagement_labels: display_engagement_labels,
@@ -7629,27 +7526,27 @@ const CTAButtonMeta = ({
   engagement,
   sponsor,
   sponsored_by_override
-}) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+}) => /*#__PURE__*/external_React_default().createElement("div", {
   className: "meta"
-}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+}, /*#__PURE__*/external_React_default().createElement("div", {
   className: "info-wrap"
-}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("p", {
+}, /*#__PURE__*/external_React_default().createElement("p", {
   className: "source clamp"
-}, context && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(_FluentOrText_FluentOrText_jsx__WEBPACK_IMPORTED_MODULE_7__.FluentOrText, {
+}, context && /*#__PURE__*/external_React_default().createElement(FluentOrText, {
   message: {
     id: `newtab-label-sponsored`,
     values: {
       sponsorOrSource: sponsor ? sponsor : source
     }
   }
-}), !context && (sponsor ? sponsor : source)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("header", {
+}), !context && (sponsor ? sponsor : source)), /*#__PURE__*/external_React_default().createElement("header", {
   title: title,
   className: "title clamp"
-}, title), excerpt && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("p", {
+}, title), excerpt && /*#__PURE__*/external_React_default().createElement("p", {
   className: "excerpt clamp"
-}, excerpt)), context && cta && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("button", {
+}, excerpt)), context && cta && /*#__PURE__*/external_React_default().createElement("button", {
   className: "button cta-button"
-}, cta), !context && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(_DSContextFooter_DSContextFooter_jsx__WEBPACK_IMPORTED_MODULE_6__.DSContextFooter, {
+}, cta), !context && /*#__PURE__*/external_React_default().createElement(DSContextFooter, {
   context_type: context_type,
   context: context,
   sponsor: sponsor,
@@ -7657,7 +7554,7 @@ const CTAButtonMeta = ({
   display_engagement_labels: display_engagement_labels,
   engagement: engagement
 }));
-class _DSCard extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponent) {
+class _DSCard extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.onLinkClick = this.onLinkClick.bind(this);
@@ -7707,7 +7604,7 @@ class _DSCard extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
 
   onLinkClick(event) {
     if (this.props.dispatch) {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
+      this.props.dispatch(actionCreators.UserEvent({
         event: "CLICK",
         source: this.props.is_video ? "CARDGRID_VIDEO" : this.props.type.toUpperCase(),
         action_position: this.props.pos,
@@ -7715,7 +7612,7 @@ class _DSCard extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
           card_type: this.props.flightId ? "spoc" : "organic"
         }
       }));
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.ImpressionStats({
+      this.props.dispatch(actionCreators.ImpressionStats({
         source: this.props.is_video ? "CARDGRID_VIDEO" : this.props.type.toUpperCase(),
         click: 0,
         window_inner_width: this.props.windowObj.innerWidth,
@@ -7733,8 +7630,8 @@ class _DSCard extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
 
   onSaveClick(event) {
     if (this.props.dispatch) {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SAVE_TO_POCKET,
+      this.props.dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.SAVE_TO_POCKET,
         data: {
           site: {
             url: this.props.url,
@@ -7742,12 +7639,12 @@ class _DSCard extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
           }
         }
       }));
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
+      this.props.dispatch(actionCreators.UserEvent({
         event: "SAVE_TO_POCKET",
         source: "CARDGRID_HOVER",
         action_position: this.props.pos
       }));
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.ImpressionStats({
+      this.props.dispatch(actionCreators.ImpressionStats({
         source: "CARDGRID_HOVER",
         pocket: 0,
         tiles: [{
@@ -7837,32 +7734,32 @@ class _DSCard extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
 
   render() {
     if (this.props.placeholder || !this.state.isSeen) {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+      return /*#__PURE__*/external_React_default().createElement("div", {
         className: "ds-card placeholder",
         ref: this.setPlaceholderRef
       });
     }
 
     if (this.props.lastCard) {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+      return /*#__PURE__*/external_React_default().createElement("div", {
         className: "ds-card last-card-message"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+      }, /*#__PURE__*/external_React_default().createElement("div", {
         className: "img-wrapper"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("picture", {
+      }, /*#__PURE__*/external_React_default().createElement("picture", {
         className: "ds-image img loaded"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("img", {
+      }, /*#__PURE__*/external_React_default().createElement("img", {
         "data-l10n-id": "newtab-pocket-last-card-image",
         className: "last-card-message-image",
         src: "chrome://activity-stream/content/data/content/assets/caught-up-illustration.svg",
         alt: "You\u2019re all caught up"
-      }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+      }))), /*#__PURE__*/external_React_default().createElement("div", {
         className: "meta"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+      }, /*#__PURE__*/external_React_default().createElement("div", {
         className: "info-wrap"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("header", {
+      }, /*#__PURE__*/external_React_default().createElement("header", {
         className: "title clamp",
         "data-l10n-id": "newtab-pocket-last-card-title"
-      }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("p", {
+      }), /*#__PURE__*/external_React_default().createElement("p", {
         className: "ds-last-card-desc",
         "data-l10n-id": "newtab-pocket-last-card-desc"
       }))));
@@ -7891,24 +7788,24 @@ class _DSCard extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
     const imageGradientClassName = imageGradient ? `ds-card-image-gradient` : ``;
     const titleLinesName = `ds-card-title-lines-${titleLines}`;
     const descLinesClassName = `ds-card-desc-lines-${descLines}`;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: `ds-card ${videoCardClassName} ${videoCardClassName} ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName}`,
       ref: this.setContextMenuButtonHostRef
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(_SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_5__.SafeAnchor, {
+    }, /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
       className: "ds-card-link",
       dispatch: this.props.dispatch,
       onLinkClick: !this.props.placeholder ? this.onLinkClick : undefined,
       url: this.props.url
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "img-wrapper"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(_DSImage_DSImage_jsx__WEBPACK_IMPORTED_MODULE_1__.DSImage, {
+    }, /*#__PURE__*/external_React_default().createElement(DSImage, {
       extraClassNames: "img",
       source: this.props.image_src,
       rawSource: this.props.raw_image_src,
       sizes: this.dsImageSizes
-    }), this.props.is_video && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    }), this.props.is_video && /*#__PURE__*/external_React_default().createElement("div", {
       className: "playhead"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("span", null, "Video Content"))), isButtonCTA ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(CTAButtonMeta, {
+    }, /*#__PURE__*/external_React_default().createElement("span", null, "Video Content"))), isButtonCTA ? /*#__PURE__*/external_React_default().createElement(CTAButtonMeta, {
       display_engagement_labels: this.props.display_engagement_labels,
       source: this.props.source,
       title: this.props.title,
@@ -7920,7 +7817,7 @@ class _DSCard extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
       cta: this.props.cta,
       sponsor: this.props.sponsor,
       sponsored_by_override: this.props.sponsored_by_override
-    }) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(DefaultMeta, {
+    }) : /*#__PURE__*/external_React_default().createElement(DefaultMeta, {
       display_engagement_labels: this.props.display_engagement_labels,
       source: this.props.source,
       title: this.props.title,
@@ -7935,7 +7832,7 @@ class _DSCard extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
       sponsor: this.props.sponsor,
       sponsored_by_override: this.props.sponsored_by_override,
       saveToPocketCard: saveToPocketCard
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(_DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_3__.ImpressionStats, {
+    }), /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
       flightId: this.props.flightId,
       rows: [{
         id: this.props.id,
@@ -7946,22 +7843,22 @@ class _DSCard extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
       }],
       dispatch: this.props.dispatch,
       source: this.props.is_video ? "CARDGRID_VIDEO" : this.props.type
-    })), saveToPocketCard && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    })), saveToPocketCard && /*#__PURE__*/external_React_default().createElement("div", {
       className: "card-stp-button-hover-background"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "card-stp-button-position-wrapper"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("button", {
+    }, /*#__PURE__*/external_React_default().createElement("button", {
       className: "card-stp-button",
       onClick: this.onSaveClick
-    }, this.props.context_type === "pocket" ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement((react__WEBPACK_IMPORTED_MODULE_4___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("span", {
+    }, this.props.context_type === "pocket" ? /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("span", {
       className: "story-badge-icon icon icon-pocket"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("span", {
+    }), /*#__PURE__*/external_React_default().createElement("span", {
       "data-l10n-id": "newtab-pocket-saved-to-pocket"
-    })) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement((react__WEBPACK_IMPORTED_MODULE_4___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("span", {
+    })) : /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("span", {
       className: "story-badge-icon icon icon-pocket-save"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("span", {
+    }), /*#__PURE__*/external_React_default().createElement("span", {
       "data-l10n-id": "newtab-pocket-save-to-pocket"
-    }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(_DSLinkMenu_DSLinkMenu__WEBPACK_IMPORTED_MODULE_2__.DSLinkMenu, {
+    }))), /*#__PURE__*/external_React_default().createElement(DSLinkMenu, {
       id: this.props.id,
       index: this.props.pos,
       dispatch: this.props.dispatch,
@@ -7978,7 +7875,7 @@ class _DSCard extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
       onMenuShow: this.onMenuShow,
       saveToPocketCard: saveToPocketCard,
       pocket_button_enabled: this.props.pocket_button_enabled
-    }))), !saveToPocketCard && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(_DSLinkMenu_DSLinkMenu__WEBPACK_IMPORTED_MODULE_2__.DSLinkMenu, {
+    }))), !saveToPocketCard && /*#__PURE__*/external_React_default().createElement(DSLinkMenu, {
       id: this.props.id,
       index: this.props.pos,
       dispatch: this.props.dispatch,
@@ -8003,1510 +7900,22 @@ _DSCard.defaultProps = {
   windowObj: window // Added to support unit tests
 
 };
-const DSCard = (0,react_redux__WEBPACK_IMPORTED_MODULE_8__.connect)(state => ({
+const DSCard = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   App: state.App
 }))(_DSCard);
-const PlaceholderDSCard = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(DSCard, {
+const PlaceholderDSCard = props => /*#__PURE__*/external_React_default().createElement(DSCard, {
   placeholder: true
 });
-const LastCardMessage = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(DSCard, {
+const LastCardMessage = props => /*#__PURE__*/external_React_default().createElement(DSCard, {
   lastCard: true
 });
-
-/***/ }),
-/* 55 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "DSImage": () => (/* binding */ DSImage)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-class DSImage extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.onOptimizedImageError = this.onOptimizedImageError.bind(this);
-    this.onNonOptimizedImageError = this.onNonOptimizedImageError.bind(this);
-    this.onLoad = this.onLoad.bind(this);
-    this.state = {
-      isLoaded: false,
-      optimizedImageFailed: false,
-      useTransition: false
-    };
-  }
-
-  onIdleCallback() {
-    if (!this.state.isLoaded) {
-      this.setState({
-        useTransition: true
-      });
-    }
-  }
-
-  reformatImageURL(url, width, height) {
-    // Change the image URL to request a size tailored for the parent container width
-    // Also: force JPEG, quality 60, no upscaling, no EXIF data
-    // Uses Thumbor: https://thumbor.readthedocs.io/en/latest/usage.html
-    return `https://img-getpocket.cdn.mozilla.net/${width}x${height}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(url)}`;
-  }
-
-  componentDidMount() {
-    this.idleCallbackId = this.props.windowObj.requestIdleCallback(this.onIdleCallback.bind(this));
-  }
-
-  componentWillUnmount() {
-    if (this.idleCallbackId) {
-      this.props.windowObj.cancelIdleCallback(this.idleCallbackId);
-    }
-  }
-
-  render() {
-    let classNames = `ds-image
-      ${this.props.extraClassNames ? ` ${this.props.extraClassNames}` : ``}
-      ${this.state && this.state.useTransition ? ` use-transition` : ``}
-      ${this.state && this.state.isLoaded ? ` loaded` : ``}
-    `;
-    let img;
-
-    if (this.state) {
-      if (this.props.optimize && this.props.rawSource && !this.state.optimizedImageFailed) {
-        let baseSource = this.props.rawSource;
-        let sizeRules = [];
-        let srcSetRules = [];
-
-        for (let rule of this.props.sizes) {
-          let {
-            mediaMatcher,
-            width,
-            height
-          } = rule;
-          let sizeRule = `${mediaMatcher} ${width}px`;
-          sizeRules.push(sizeRule);
-          let srcSetRule = `${this.reformatImageURL(baseSource, width, height)} ${width}w`;
-          let srcSetRule2x = `${this.reformatImageURL(baseSource, width * 2, height * 2)} ${width * 2}w`;
-          srcSetRules.push(srcSetRule);
-          srcSetRules.push(srcSetRule2x);
-        }
-
-        if (this.props.sizes.length) {
-          // We have to supply a fallback in the very unlikely event that none of
-          // the media queries match. The smallest dimension was chosen arbitrarily.
-          sizeRules.push(`${this.props.sizes[this.props.sizes.length - 1].width}px`);
-        }
-
-        img = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
-          loading: "lazy",
-          alt: this.props.alt_text,
-          crossOrigin: "anonymous",
-          onLoad: this.onLoad,
-          onError: this.onOptimizedImageError,
-          sizes: sizeRules.join(","),
-          src: baseSource,
-          srcSet: srcSetRules.join(",")
-        });
-      } else if (!this.state.nonOptimizedImageFailed) {
-        img = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
-          loading: "lazy",
-          alt: this.props.alt_text,
-          crossOrigin: "anonymous",
-          onLoad: this.onLoad,
-          onError: this.onNonOptimizedImageError,
-          src: this.props.source
-        });
-      } else {
-        // Remove the img element if both sources fail. Render a placeholder instead.
-        img = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-          className: "broken-image"
-        });
-      }
-    }
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("picture", {
-      className: classNames
-    }, img);
-  }
-
-  onOptimizedImageError() {
-    // This will trigger a re-render and the unoptimized 450px image will be used as a fallback
-    this.setState({
-      optimizedImageFailed: true
-    });
-  }
-
-  onNonOptimizedImageError() {
-    this.setState({
-      nonOptimizedImageFailed: true
-    });
-  }
-
-  onLoad() {
-    this.setState({
-      isLoaded: true
-    });
-  }
-
-}
-DSImage.defaultProps = {
-  source: null,
-  // The current source style from Pocket API (always 450px)
-  rawSource: null,
-  // Unadulterated image URL to filter through Thumbor
-  extraClassNames: null,
-  // Additional classnames to append to component
-  optimize: true,
-  // Measure parent container to request exact sizes
-  alt_text: null,
-  windowObj: window,
-  // Added to support unit tests
-  sizes: []
-};
-
-/***/ }),
-/* 56 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "DSLinkMenu": () => (/* binding */ DSLinkMenu)
-/* harmony export */ });
-/* harmony import */ var content_src_components_LinkMenu_LinkMenu__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(57);
-/* harmony import */ var content_src_components_ContextMenu_ContextMenuButton__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(60);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-
-class DSLinkMenu extends (react__WEBPACK_IMPORTED_MODULE_2___default().PureComponent) {
-  render() {
-    const {
-      index,
-      dispatch
-    } = this.props;
-    let pocketMenuOptions = [];
-
-    if (this.props.pocket_button_enabled) {
-      pocketMenuOptions = this.props.saveToPocketCard ? ["CheckDeleteFromPocket"] : ["CheckSavedToPocket"];
-    }
-
-    const TOP_STORIES_CONTEXT_MENU_OPTIONS = ["CheckBookmark", "CheckArchiveFromPocket", ...pocketMenuOptions, "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", ...(this.props.showPrivacyInfo ? ["ShowPrivacyInfo"] : [])];
-    const type = this.props.type || "DISCOVERY_STREAM";
-    const title = this.props.title || this.props.source;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-      className: "context-menu-position-container"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(content_src_components_ContextMenu_ContextMenuButton__WEBPACK_IMPORTED_MODULE_1__.ContextMenuButton, {
-      tooltip: "newtab-menu-content-tooltip",
-      tooltipArgs: {
-        title
-      },
-      onUpdate: this.props.onMenuUpdate
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(content_src_components_LinkMenu_LinkMenu__WEBPACK_IMPORTED_MODULE_0__.LinkMenu, {
-      dispatch: dispatch,
-      index: index,
-      source: type.toUpperCase(),
-      onShow: this.props.onMenuShow,
-      options: TOP_STORIES_CONTEXT_MENU_OPTIONS,
-      shouldSendImpressionStats: true,
-      site: {
-        referrer: "https://getpocket.com/recommendations",
-        title: this.props.title,
-        type: this.props.type,
-        url: this.props.url,
-        guid: this.props.id,
-        pocket_id: this.props.pocket_id,
-        shim: this.props.shim,
-        bookmarkGuid: this.props.bookmarkGuid,
-        flight_id: this.props.flightId
-      }
-    })));
-  }
-
-}
-
-/***/ }),
-/* 57 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "_LinkMenu": () => (/* binding */ _LinkMenu),
-/* harmony export */   "LinkMenu": () => (/* binding */ LinkMenu)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var content_src_components_ContextMenu_ContextMenu__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(58);
-/* harmony import */ var content_src_lib_link_menu_options__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(59);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_4__);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-
-
-const DEFAULT_SITE_MENU_OPTIONS = ["CheckPinTopSite", "EditTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"];
-class _LinkMenu extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponent) {
-  getOptions() {
-    const {
-      props
-    } = this;
-    const {
-      site,
-      index,
-      source,
-      isPrivateBrowsingEnabled,
-      siteInfo,
-      platform
-    } = props; // Handle special case of default site
-
-    const propOptions = site.isDefault && !site.searchTopSite && !site.sponsored_position ? DEFAULT_SITE_MENU_OPTIONS : props.options;
-    const options = propOptions.map(o => content_src_lib_link_menu_options__WEBPACK_IMPORTED_MODULE_3__.LinkMenuOptions[o](site, index, source, isPrivateBrowsingEnabled, siteInfo, platform)).map(option => {
-      const {
-        action,
-        impression,
-        id,
-        type,
-        userEvent
-      } = option;
-
-      if (!type && id) {
-        option.onClick = (event = {}) => {
-          const {
-            ctrlKey,
-            metaKey,
-            shiftKey,
-            button
-          } = event; // Only send along event info if there's something non-default to send
-
-          if (ctrlKey || metaKey || shiftKey || button === 1) {
-            action.data = Object.assign({
-              event: {
-                ctrlKey,
-                metaKey,
-                shiftKey,
-                button
-              }
-            }, action.data);
-          }
-
-          props.dispatch(action);
-
-          if (userEvent) {
-            const userEventData = Object.assign({
-              event: userEvent,
-              source,
-              action_position: index
-            }, siteInfo);
-            props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent(userEventData));
-          }
-
-          if (impression && props.shouldSendImpressionStats) {
-            props.dispatch(impression);
-          }
-        };
-      }
-
-      return option;
-    }); // This is for accessibility to support making each item tabbable.
-    // We want to know which item is the first and which item
-    // is the last, so we can close the context menu accordingly.
-
-    options[0].first = true;
-    options[options.length - 1].last = true;
-    return options;
-  }
-
-  render() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(content_src_components_ContextMenu_ContextMenu__WEBPACK_IMPORTED_MODULE_2__.ContextMenu, {
-      onUpdate: this.props.onUpdate,
-      onShow: this.props.onShow,
-      options: this.getOptions(),
-      keyboardAccess: this.props.keyboardAccess
-    });
-  }
-
-}
-
-const getState = state => ({
-  isPrivateBrowsingEnabled: state.Prefs.values.isPrivateBrowsingEnabled,
-  platform: state.Prefs.values.platform
-});
-
-const LinkMenu = (0,react_redux__WEBPACK_IMPORTED_MODULE_1__.connect)(getState)(_LinkMenu);
-
-/***/ }),
-/* 58 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ContextMenu": () => (/* binding */ ContextMenu),
-/* harmony export */   "_ContextMenuItem": () => (/* binding */ _ContextMenuItem),
-/* harmony export */   "ContextMenuItem": () => (/* binding */ ContextMenuItem)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_1__);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-class ContextMenu extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.hideContext = this.hideContext.bind(this);
-    this.onShow = this.onShow.bind(this);
-    this.onClick = this.onClick.bind(this);
-  }
-
-  hideContext() {
-    this.props.onUpdate(false);
-  }
-
-  onShow() {
-    if (this.props.onShow) {
-      this.props.onShow();
-    }
-  }
-
-  componentDidMount() {
-    this.onShow();
-    setTimeout(() => {
-      __webpack_require__.g.addEventListener("click", this.hideContext);
-    }, 0);
-  }
-
-  componentWillUnmount() {
-    __webpack_require__.g.removeEventListener("click", this.hideContext);
-  }
-
-  onClick(event) {
-    // Eat all clicks on the context menu so they don't bubble up to window.
-    // This prevents the context menu from closing when clicking disabled items
-    // or the separators.
-    event.stopPropagation();
-  }
-
-  render() {
-    // Disabling focus on the menu span allows the first tab to focus on the first menu item instead of the wrapper.
-    return (
-      /*#__PURE__*/
-      // eslint-disable-next-line jsx-a11y/interactive-supports-focus
-      react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
-        className: "context-menu"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("ul", {
-        role: "menu",
-        onClick: this.onClick,
-        onKeyDown: this.onClick,
-        className: "context-menu-list"
-      }, this.props.options.map((option, i) => option.type === "separator" ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", {
-        key: i,
-        className: "separator",
-        role: "separator"
-      }) : option.type !== "empty" && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(ContextMenuItem, {
-        key: i,
-        option: option,
-        hideContext: this.hideContext,
-        keyboardAccess: this.props.keyboardAccess
-      }))))
-    );
-  }
-
-}
-class _ContextMenuItem extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.onClick = this.onClick.bind(this);
-    this.onKeyDown = this.onKeyDown.bind(this);
-    this.onKeyUp = this.onKeyUp.bind(this);
-    this.focusFirst = this.focusFirst.bind(this);
-  }
-
-  onClick(event) {
-    this.props.hideContext();
-    this.props.option.onClick(event);
-  } // Focus the first menu item if the menu was accessed via the keyboard.
-
-
-  focusFirst(button) {
-    if (this.props.keyboardAccess && button) {
-      button.focus();
-    }
-  } // This selects the correct node based on the key pressed
-
-
-  focusSibling(target, key) {
-    const parent = target.parentNode;
-    const closestSiblingSelector = key === "ArrowUp" ? "previousSibling" : "nextSibling";
-
-    if (!parent[closestSiblingSelector]) {
-      return;
-    }
-
-    if (parent[closestSiblingSelector].firstElementChild) {
-      parent[closestSiblingSelector].firstElementChild.focus();
-    } else {
-      parent[closestSiblingSelector][closestSiblingSelector].firstElementChild.focus();
-    }
-  }
-
-  onKeyDown(event) {
-    const {
-      option
-    } = this.props;
-
-    switch (event.key) {
-      case "Tab":
-        // tab goes down in context menu, shift + tab goes up in context menu
-        // if we're on the last item, one more tab will close the context menu
-        // similarly, if we're on the first item, one more shift + tab will close it
-        if (event.shiftKey && option.first || !event.shiftKey && option.last) {
-          this.props.hideContext();
-        }
-
-        break;
-
-      case "ArrowUp":
-      case "ArrowDown":
-        event.preventDefault();
-        this.focusSibling(event.target, event.key);
-        break;
-
-      case "Enter":
-      case " ":
-        event.preventDefault();
-        this.props.hideContext();
-        option.onClick();
-        break;
-
-      case "Escape":
-        this.props.hideContext();
-        break;
-    }
-  } // Prevents the default behavior of spacebar
-  // scrolling the page & auto-triggering buttons.
-
-
-  onKeyUp(event) {
-    if (event.key === " ") {
-      event.preventDefault();
-    }
-  }
-
-  render() {
-    const {
-      option
-    } = this.props;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", {
-      role: "presentation",
-      className: "context-menu-item"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-      className: option.disabled ? "disabled" : "",
-      role: "menuitem",
-      onClick: this.onClick,
-      onKeyDown: this.onKeyDown,
-      onKeyUp: this.onKeyUp,
-      ref: option.first ? this.focusFirst : null
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
-      "data-l10n-id": option.string_id || option.id
-    })));
-  }
-
-}
-const ContextMenuItem = (0,react_redux__WEBPACK_IMPORTED_MODULE_1__.connect)(state => ({
-  Prefs: state.Prefs
-}))(_ContextMenuItem);
-
-/***/ }),
-/* 59 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "LinkMenuOptions": () => (/* binding */ LinkMenuOptions)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-const _OpenInPrivateWindow = site => ({
-  id: "newtab-menu-open-new-private-window",
-  icon: "new-window-private",
-  action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-    type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.OPEN_PRIVATE_WINDOW,
-    data: {
-      url: site.url,
-      referrer: site.referrer
-    }
-  }),
-  userEvent: "OPEN_PRIVATE_WINDOW"
-});
-/**
- * List of functions that return items that can be included as menu options in a
- * LinkMenu. All functions take the site as the first parameter, and optionally
- * the index of the site.
- */
-
-
-const LinkMenuOptions = {
-  Separator: () => ({
-    type: "separator"
-  }),
-  EmptyItem: () => ({
-    type: "empty"
-  }),
-  ShowPrivacyInfo: site => ({
-    id: "newtab-menu-show-privacy-info",
-    icon: "info",
-    action: {
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SHOW_PRIVACY_INFO
-    },
-    userEvent: "SHOW_PRIVACY_INFO"
-  }),
-  AboutSponsored: site => ({
-    id: "newtab-menu-show-privacy-info",
-    icon: "info",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.ABOUT_SPONSORED_TOP_SITES
-    }),
-    userEvent: "TOPSITE_SPONSOR_INFO"
-  }),
-  RemoveBookmark: site => ({
-    id: "newtab-menu-remove-bookmark",
-    icon: "bookmark-added",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DELETE_BOOKMARK_BY_ID,
-      data: site.bookmarkGuid
-    }),
-    userEvent: "BOOKMARK_DELETE"
-  }),
-  AddBookmark: site => ({
-    id: "newtab-menu-bookmark",
-    icon: "bookmark-hollow",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.BOOKMARK_URL,
-      data: {
-        url: site.url,
-        title: site.title,
-        type: site.type
-      }
-    }),
-    userEvent: "BOOKMARK_ADD"
-  }),
-  OpenInNewWindow: site => ({
-    id: "newtab-menu-open-new-window",
-    icon: "new-window",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.OPEN_NEW_WINDOW,
-      data: {
-        referrer: site.referrer,
-        typedBonus: site.typedBonus,
-        url: site.url
-      }
-    }),
-    userEvent: "OPEN_NEW_WINDOW"
-  }),
-  // This blocks the url for regular stories,
-  // but also sends a message to DiscoveryStream with flight_id.
-  // If DiscoveryStream sees this message for a flight_id
-  // it also blocks it on the flight_id.
-  BlockUrl: (site, index, eventSource) => {
-    return LinkMenuOptions.BlockUrls([site], index, eventSource);
-  },
-  // Same as BlockUrl, cept can work on an array of sites.
-  BlockUrls: (tiles, pos, eventSource) => ({
-    id: "newtab-menu-dismiss",
-    icon: "dismiss",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.BLOCK_URL,
-      data: tiles.map(site => ({
-        url: site.original_url || site.open_url || site.url,
-        // pocket_id is only for pocket stories being in highlights, and then dismissed.
-        pocket_id: site.pocket_id,
-        // used by PlacesFeed and TopSitesFeed for sponsored top sites blocking.
-        isSponsoredTopSite: site.sponsored_position,
-        ...(site.flight_id ? {
-          flight_id: site.flight_id
-        } : {})
-      }))
-    }),
-    impression: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.ImpressionStats({
-      source: eventSource,
-      block: 0,
-      tiles: tiles.map((site, index) => ({
-        id: site.guid,
-        pos: pos + index,
-        ...(site.shim && site.shim.delete ? {
-          shim: site.shim.delete
-        } : {})
-      }))
-    }),
-    userEvent: "BLOCK"
-  }),
-  // This is an option for web extentions which will result in remove items from
-  // memory and notify the web extenion, rather than using the built-in block list.
-  WebExtDismiss: (site, index, eventSource) => ({
-    id: "menu_action_webext_dismiss",
-    string_id: "newtab-menu-dismiss",
-    icon: "dismiss",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.WebExtEvent(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.WEBEXT_DISMISS, {
-      source: eventSource,
-      url: site.url,
-      action_position: index
-    })
-  }),
-  DeleteUrl: (site, index, eventSource, isEnabled, siteInfo) => ({
-    id: "newtab-menu-delete-history",
-    icon: "delete",
-    action: {
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DIALOG_OPEN,
-      data: {
-        onConfirm: [common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-          type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DELETE_HISTORY_URL,
-          data: {
-            url: site.url,
-            pocket_id: site.pocket_id,
-            forceBlock: site.bookmarkGuid
-          }
-        }), common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent(Object.assign({
-          event: "DELETE",
-          source: eventSource,
-          action_position: index
-        }, siteInfo))],
-        eventSource,
-        body_string_id: ["newtab-confirm-delete-history-p1", "newtab-confirm-delete-history-p2"],
-        confirm_button_string_id: "newtab-topsites-delete-history-button",
-        cancel_button_string_id: "newtab-topsites-cancel-button",
-        icon: "modal-delete"
-      }
-    },
-    userEvent: "DIALOG_OPEN"
-  }),
-  ShowFile: site => ({
-    id: "newtab-menu-show-file",
-    icon: "search",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SHOW_DOWNLOAD_FILE,
-      data: {
-        url: site.url
-      }
-    })
-  }),
-  OpenFile: site => ({
-    id: "newtab-menu-open-file",
-    icon: "open-file",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.OPEN_DOWNLOAD_FILE,
-      data: {
-        url: site.url
-      }
-    })
-  }),
-  CopyDownloadLink: site => ({
-    id: "newtab-menu-copy-download-link",
-    icon: "copy",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.COPY_DOWNLOAD_LINK,
-      data: {
-        url: site.url
-      }
-    })
-  }),
-  GoToDownloadPage: site => ({
-    id: "newtab-menu-go-to-download-page",
-    icon: "download",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.OPEN_LINK,
-      data: {
-        url: site.referrer
-      }
-    }),
-    disabled: !site.referrer
-  }),
-  RemoveDownload: site => ({
-    id: "newtab-menu-remove-download",
-    icon: "delete",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.REMOVE_DOWNLOAD_FILE,
-      data: {
-        url: site.url
-      }
-    })
-  }),
-  PinTopSite: (site, index) => ({
-    id: "newtab-menu-pin",
-    icon: "pin",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.TOP_SITES_PIN,
-      data: {
-        site,
-        index
-      }
-    }),
-    userEvent: "PIN"
-  }),
-  UnpinTopSite: site => ({
-    id: "newtab-menu-unpin",
-    icon: "unpin",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.TOP_SITES_UNPIN,
-      data: {
-        site: {
-          url: site.url
-        }
-      }
-    }),
-    userEvent: "UNPIN"
-  }),
-  SaveToPocket: (site, index, eventSource = "CARDGRID") => ({
-    id: "newtab-menu-save-to-pocket",
-    icon: "pocket-save",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SAVE_TO_POCKET,
-      data: {
-        site: {
-          url: site.url,
-          title: site.title
-        }
-      }
-    }),
-    impression: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.ImpressionStats({
-      source: eventSource,
-      pocket: 0,
-      tiles: [{
-        id: site.guid,
-        pos: index,
-        ...(site.shim && site.shim.save ? {
-          shim: site.shim.save
-        } : {})
-      }]
-    }),
-    userEvent: "SAVE_TO_POCKET"
-  }),
-  DeleteFromPocket: site => ({
-    id: "newtab-menu-delete-pocket",
-    icon: "pocket-delete",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DELETE_FROM_POCKET,
-      data: {
-        pocket_id: site.pocket_id
-      }
-    }),
-    userEvent: "DELETE_FROM_POCKET"
-  }),
-  ArchiveFromPocket: site => ({
-    id: "newtab-menu-archive-pocket",
-    icon: "pocket-archive",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.ARCHIVE_FROM_POCKET,
-      data: {
-        pocket_id: site.pocket_id
-      }
-    }),
-    userEvent: "ARCHIVE_FROM_POCKET"
-  }),
-  EditTopSite: (site, index) => ({
-    id: "newtab-menu-edit-topsites",
-    icon: "edit",
-    action: {
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.TOP_SITES_EDIT,
-      data: {
-        index
-      }
-    }
-  }),
-  CheckBookmark: site => site.bookmarkGuid ? LinkMenuOptions.RemoveBookmark(site) : LinkMenuOptions.AddBookmark(site),
-  CheckPinTopSite: (site, index) => site.isPinned ? LinkMenuOptions.UnpinTopSite(site) : LinkMenuOptions.PinTopSite(site, index),
-  CheckSavedToPocket: (site, index, source) => site.pocket_id ? LinkMenuOptions.DeleteFromPocket(site) : LinkMenuOptions.SaveToPocket(site, index, source),
-  CheckBookmarkOrArchive: site => site.pocket_id ? LinkMenuOptions.ArchiveFromPocket(site) : LinkMenuOptions.CheckBookmark(site),
-  CheckArchiveFromPocket: site => site.pocket_id ? LinkMenuOptions.ArchiveFromPocket(site) : LinkMenuOptions.EmptyItem(),
-  CheckDeleteFromPocket: site => site.pocket_id ? LinkMenuOptions.DeleteFromPocket(site) : LinkMenuOptions.EmptyItem(),
-  OpenInPrivateWindow: (site, index, eventSource, isEnabled) => isEnabled ? _OpenInPrivateWindow(site) : LinkMenuOptions.EmptyItem()
-};
-
-/***/ }),
-/* 60 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ContextMenuButton": () => (/* binding */ ContextMenuButton)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-class ContextMenuButton extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.state = {
-      showContextMenu: false,
-      contextMenuKeyboard: false
-    };
-    this.onClick = this.onClick.bind(this);
-    this.onKeyDown = this.onKeyDown.bind(this);
-    this.onUpdate = this.onUpdate.bind(this);
-  }
-
-  openContextMenu(isKeyBoard, event) {
-    if (this.props.onUpdate) {
-      this.props.onUpdate(true);
-    }
-
-    this.setState({
-      showContextMenu: true,
-      contextMenuKeyboard: isKeyBoard
-    });
-  }
-
-  onClick(event) {
-    event.preventDefault();
-    this.openContextMenu(false, event);
-  }
-
-  onKeyDown(event) {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      this.openContextMenu(true, event);
-    }
-  }
-
-  onUpdate(showContextMenu) {
-    if (this.props.onUpdate) {
-      this.props.onUpdate(showContextMenu);
-    }
-
-    this.setState({
-      showContextMenu
-    });
-  }
-
-  render() {
-    const {
-      tooltipArgs,
-      tooltip,
-      children,
-      refFunction
-    } = this.props;
-    const {
-      showContextMenu,
-      contextMenuKeyboard
-    } = this.state;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-      "aria-haspopup": "true",
-      "data-l10n-id": tooltip,
-      "data-l10n-args": tooltipArgs ? JSON.stringify(tooltipArgs) : null,
-      className: "context-menu-button icon",
-      onKeyDown: this.onKeyDown,
-      onClick: this.onClick,
-      ref: refFunction
-    }), showContextMenu ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().cloneElement(children, {
-      keyboardAccess: contextMenuKeyboard,
-      onUpdate: this.onUpdate
-    }) : null);
-  }
-
-}
-
-/***/ }),
-/* 61 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "INTERSECTION_RATIO": () => (/* binding */ INTERSECTION_RATIO),
-/* harmony export */   "ImpressionStats": () => (/* binding */ ImpressionStats)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-const VISIBLE = "visible";
-const VISIBILITY_CHANGE_EVENT = "visibilitychange"; // Per analytical requirement, we set the minimal intersection ratio to
-// 0.5, and an impression is identified when the wrapped item has at least
-// 50% visibility.
-//
-// This constant is exported for unit test
-
-const INTERSECTION_RATIO = 0.5;
-/**
- * Impression wrapper for Discovery Stream related React components.
- *
- * It makses use of the Intersection Observer API to detect the visibility,
- * and relies on page visibility to ensure the impression is reported
- * only when the component is visible on the page.
- *
- * Note:
- *   * This wrapper used to be used either at the individual card level,
- *     or by the card container components.
- *     It is now only used for individual card level.
- *   * Each impression will be sent only once as soon as the desired
- *     visibility is detected
- *   * Batching is not yet implemented, hence it might send multiple
- *     impression pings separately
- */
-
-class ImpressionStats extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureComponent) {
-  // This checks if the given cards are the same as those in the last impression ping.
-  // If so, it should not send the same impression ping again.
-  _needsImpressionStats(cards) {
-    if (!this.impressionCardGuids || this.impressionCardGuids.length !== cards.length) {
-      return true;
-    }
-
-    for (let i = 0; i < cards.length; i++) {
-      if (cards[i].id !== this.impressionCardGuids[i]) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  _dispatchImpressionStats() {
-    const {
-      props
-    } = this;
-    const cards = props.rows;
-
-    if (this.props.flightId) {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_SPOC_IMPRESSION,
-        data: {
-          flightId: this.props.flightId
-        }
-      }));
-    }
-
-    if (this._needsImpressionStats(cards)) {
-      props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.DiscoveryStreamImpressionStats({
-        source: props.source.toUpperCase(),
-        window_inner_width: window.innerWidth,
-        window_inner_height: window.innerHeight,
-        tiles: cards.map(link => ({
-          id: link.id,
-          pos: link.pos,
-          ...(link.shim ? {
-            shim: link.shim
-          } : {})
-        }))
-      }));
-      this.impressionCardGuids = cards.map(link => link.id);
-    }
-  } // This checks if the given cards are the same as those in the last loaded content ping.
-  // If so, it should not send the same loaded content ping again.
-
-
-  _needsLoadedContent(cards) {
-    if (!this.loadedContentGuids || this.loadedContentGuids.length !== cards.length) {
-      return true;
-    }
-
-    for (let i = 0; i < cards.length; i++) {
-      if (cards[i].id !== this.loadedContentGuids[i]) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  _dispatchLoadedContent() {
-    const {
-      props
-    } = this;
-    const cards = props.rows;
-
-    if (this._needsLoadedContent(cards)) {
-      props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.DiscoveryStreamLoadedContent({
-        source: props.source.toUpperCase(),
-        tiles: cards.map(link => ({
-          id: link.id,
-          pos: link.pos
-        }))
-      }));
-      this.loadedContentGuids = cards.map(link => link.id);
-    }
-  }
-
-  setImpressionObserverOrAddListener() {
-    const {
-      props
-    } = this;
-
-    if (!props.dispatch) {
-      return;
-    }
-
-    if (props.document.visibilityState === VISIBLE) {
-      // Send the loaded content ping once the page is visible.
-      this._dispatchLoadedContent();
-
-      this.setImpressionObserver();
-    } else {
-      // We should only ever send the latest impression stats ping, so remove any
-      // older listeners.
-      if (this._onVisibilityChange) {
-        props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-      }
-
-      this._onVisibilityChange = () => {
-        if (props.document.visibilityState === VISIBLE) {
-          // Send the loaded content ping once the page is visible.
-          this._dispatchLoadedContent();
-
-          this.setImpressionObserver();
-          props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-        }
-      };
-
-      props.document.addEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-    }
-  }
-  /**
-   * Set an impression observer for the wrapped component. It makes use of
-   * the Intersection Observer API to detect if the wrapped component is
-   * visible with a desired ratio, and only sends impression if that's the case.
-   *
-   * See more details about Intersection Observer API at:
-   * https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
-   */
-
-
-  setImpressionObserver() {
-    const {
-      props
-    } = this;
-
-    if (!props.rows.length) {
-      return;
-    }
-
-    this._handleIntersect = entries => {
-      if (entries.some(entry => entry.isIntersecting && entry.intersectionRatio >= INTERSECTION_RATIO)) {
-        this._dispatchImpressionStats();
-
-        this.impressionObserver.unobserve(this.refs.impression);
-      }
-    };
-
-    const options = {
-      threshold: INTERSECTION_RATIO
-    };
-    this.impressionObserver = new props.IntersectionObserver(this._handleIntersect, options);
-    this.impressionObserver.observe(this.refs.impression);
-  }
-
-  componentDidMount() {
-    if (this.props.rows.length) {
-      this.setImpressionObserverOrAddListener();
-    }
-  }
-
-  componentWillUnmount() {
-    if (this._handleIntersect && this.impressionObserver) {
-      this.impressionObserver.unobserve(this.refs.impression);
-    }
-
-    if (this._onVisibilityChange) {
-      this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-    }
-  }
-
-  render() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
-      ref: "impression",
-      className: "impression-observer"
-    }, this.props.children);
-  }
-
-}
-ImpressionStats.defaultProps = {
-  IntersectionObserver: __webpack_require__.g.IntersectionObserver,
-  document: __webpack_require__.g.document,
-  rows: [],
-  source: ""
-};
-
-/***/ }),
-/* 62 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "SafeAnchor": () => (/* binding */ SafeAnchor)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-class SafeAnchor extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.onClick = this.onClick.bind(this);
-  }
-
-  onClick(event) {
-    // Use dispatch instead of normal link click behavior to include referrer
-    if (this.props.dispatch) {
-      event.preventDefault();
-      const {
-        altKey,
-        button,
-        ctrlKey,
-        metaKey,
-        shiftKey
-      } = event;
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.OPEN_LINK,
-        data: {
-          event: {
-            altKey,
-            button,
-            ctrlKey,
-            metaKey,
-            shiftKey
-          },
-          referrer: "https://getpocket.com/recommendations",
-          // Use the anchor's url, which could have been cleaned up
-          url: event.currentTarget.href
-        }
-      }));
-    } // Propagate event if there's a handler
-
-
-    if (this.props.onLinkClick) {
-      this.props.onLinkClick(event);
-    }
-  }
-
-  safeURI(url) {
-    let protocol = null;
-
-    try {
-      protocol = new URL(url).protocol;
-    } catch (e) {
-      return "";
-    }
-
-    const isAllowed = ["http:", "https:"].includes(protocol);
-
-    if (!isAllowed) {
-      console.warn(`${url} is not allowed for anchor targets.`); // eslint-disable-line no-console
-
-      return "";
-    }
-
-    return url;
-  }
-
-  render() {
-    const {
-      url,
-      className
-    } = this.props;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("a", {
-      href: this.safeURI(url),
-      className: className,
-      onClick: this.onClick
-    }, this.props.children);
-  }
-
-}
-
-/***/ }),
-/* 63 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "DSMessageLabel": () => (/* binding */ DSMessageLabel),
-/* harmony export */   "StatusMessage": () => (/* binding */ StatusMessage),
-/* harmony export */   "SponsorLabel": () => (/* binding */ SponsorLabel),
-/* harmony export */   "DSContextFooter": () => (/* binding */ DSContextFooter),
-/* harmony export */   "DSMessageFooter": () => (/* binding */ DSMessageFooter)
-/* harmony export */ });
-/* harmony import */ var _Card_types_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(64);
-/* harmony import */ var react_transition_group__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(65);
-/* harmony import */ var react_transition_group__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_transition_group__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _FluentOrText_FluentOrText_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(66);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_3__);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
- // Animation time is mirrored in DSContextFooter.scss
-
-const ANIMATION_DURATION = 3000;
-const DSMessageLabel = props => {
-  const {
-    context,
-    context_type,
-    display_engagement_labels,
-    engagement
-  } = props;
-  const {
-    icon,
-    fluentID
-  } = _Card_types_js__WEBPACK_IMPORTED_MODULE_0__.cardContextTypes[context_type] || {};
-
-  if (!context && (context_type || display_engagement_labels && engagement)) {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(react_transition_group__WEBPACK_IMPORTED_MODULE_1__.TransitionGroup, {
-      component: null
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(react_transition_group__WEBPACK_IMPORTED_MODULE_1__.CSSTransition, {
-      key: fluentID,
-      timeout: ANIMATION_DURATION,
-      classNames: "story-animate"
-    }, engagement && !context_type ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
-      className: "story-view-count"
-    }, engagement) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(StatusMessage, {
-      icon: icon,
-      fluentID: fluentID
-    })));
-  }
-
-  return null;
-};
-const StatusMessage = ({
-  icon,
-  fluentID
-}) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
-  className: "status-message"
-}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", {
-  "aria-haspopup": "true",
-  className: `story-badge-icon icon icon-${icon}`
-}), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
-  className: "story-context-label",
-  "data-l10n-id": fluentID
-}));
-const SponsorLabel = ({
-  sponsored_by_override,
-  sponsor,
-  context,
-  newSponsoredLabel
-}) => {
-  const classList = `story-sponsored-label ${newSponsoredLabel || ""} clamp`; // If override is not false or an empty string.
-
-  if (sponsored_by_override) {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("p", {
-      className: classList
-    }, sponsored_by_override);
-  } else if (sponsored_by_override === "") {
-    // We specifically want to display nothing if the server returns an empty string.
-    // So the server can turn off the label.
-    // This is to support the use cases where the sponsored context is displayed elsewhere.
-    return null;
-  } else if (sponsor) {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("p", {
-      className: classList
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(_FluentOrText_FluentOrText_jsx__WEBPACK_IMPORTED_MODULE_2__.FluentOrText, {
-      message: {
-        id: `newtab-label-sponsored-by`,
-        values: {
-          sponsor
-        }
-      }
-    }));
-  } else if (context) {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("p", {
-      className: classList
-    }, context);
-  }
-
-  return null;
-};
-class DSContextFooter extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureComponent) {
-  render() {
-    // display_engagement_labels is based on pref `browser.newtabpage.activity-stream.discoverystream.engagementLabelEnabled`
-    const {
-      context,
-      context_type,
-      engagement,
-      display_engagement_labels,
-      sponsor,
-      sponsored_by_override
-    } = this.props;
-    const sponsorLabel = SponsorLabel({
-      sponsored_by_override,
-      sponsor,
-      context
-    });
-    const dsMessageLabel = DSMessageLabel({
-      context,
-      context_type,
-      display_engagement_labels,
-      engagement
-    });
-
-    if (sponsorLabel || dsMessageLabel) {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
-        className: "story-footer"
-      }, sponsorLabel, dsMessageLabel);
-    }
-
-    return null;
-  }
-
-}
-const DSMessageFooter = props => {
-  const {
-    context,
-    context_type,
-    engagement,
-    display_engagement_labels,
-    saveToPocketCard
-  } = props;
-  const dsMessageLabel = DSMessageLabel({
-    context,
-    context_type,
-    engagement,
-    display_engagement_labels
-  }); // This case is specific and already displayed to the user elsewhere.
-
-  if (!dsMessageLabel || saveToPocketCard && context_type === "pocket") {
-    return null;
-  }
-
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
-    className: "story-footer"
-  }, dsMessageLabel);
-};
-
-/***/ }),
-/* 64 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "cardContextTypes": () => (/* binding */ cardContextTypes)
-/* harmony export */ });
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-const cardContextTypes = {
-  history: {
-    fluentID: "newtab-label-visited",
-    icon: "history-item"
-  },
-  removedBookmark: {
-    fluentID: "newtab-label-removed-bookmark",
-    icon: "bookmark-removed"
-  },
-  bookmark: {
-    fluentID: "newtab-label-bookmarked",
-    icon: "bookmark-added"
-  },
-  trending: {
-    fluentID: "newtab-label-recommended",
-    icon: "trending"
-  },
-  pocket: {
-    fluentID: "newtab-label-saved",
-    icon: "pocket"
-  },
-  download: {
-    fluentID: "newtab-label-download",
-    icon: "download"
-  }
-};
-
-/***/ }),
-/* 65 */
-/***/ ((module) => {
-
-module.exports = ReactTransitionGroup;
-
-/***/ }),
-/* 66 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "FluentOrText": () => (/* binding */ FluentOrText)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/**
- * Set text on a child element/component depending on if the message is already
- * translated plain text or a fluent id with optional args.
- */
-
-class FluentOrText extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
-  render() {
-    // Ensure we have a single child to attach attributes
-    const {
-      children,
-      message
-    } = this.props;
-    const child = children ? react__WEBPACK_IMPORTED_MODULE_0___default().Children.only(children) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null); // For a string message, just use it as the child's text
-
-    let grandChildren = message;
-    let extraProps; // Convert a message object to set desired fluent-dom attributes
-
-    if (typeof message === "object") {
-      const args = message.args || message.values;
-      extraProps = {
-        "data-l10n-args": args && JSON.stringify(args),
-        "data-l10n-id": message.id || message.string_id
-      }; // Use original children potentially with data-l10n-name attributes
-
-      grandChildren = child.props.children;
-    } // Add the message to the child via fluent attributes or text node
-
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().cloneElement(child, extraProps, grandChildren);
-  }
-
-}
-
-/***/ }),
-/* 67 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "DSEmptyState": () => (/* binding */ DSEmptyState)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-class DSEmptyState extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureComponent) {
+class DSEmptyState extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.onReset = this.onReset.bind(this);
@@ -9528,7 +7937,7 @@ class DSEmptyState extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureCom
         url
       } = feed;
       this.props.dispatch({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_FEED_UPDATE,
+        type: actionTypes.DISCOVERY_STREAM_FEED_UPDATE,
         data: {
           feed: { ...feed,
             data: { ...feed.data,
@@ -9547,8 +7956,8 @@ class DSEmptyState extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureCom
           waiting: false
         });
       }, 300);
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_RETRY_FEED,
+      this.props.dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.DISCOVERY_STREAM_RETRY_FEED,
         data: {
           feed
         }
@@ -9558,13 +7967,13 @@ class DSEmptyState extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureCom
 
   renderButton() {
     if (this.props.status === "waiting" || this.state.waiting) {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", {
+      return /*#__PURE__*/external_React_default().createElement("button", {
         className: "try-again-button waiting",
         "data-l10n-id": "newtab-discovery-empty-section-topstories-loading"
       });
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", {
+    return /*#__PURE__*/external_React_default().createElement("button", {
       className: "try-again-button",
       onClick: this.onReset,
       "data-l10n-id": "newtab-discovery-empty-section-topstories-try-again-button"
@@ -9573,62 +7982,38 @@ class DSEmptyState extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureCom
 
   renderState() {
     if (this.props.status === "waiting" || this.props.status === "failed") {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement((react__WEBPACK_IMPORTED_MODULE_1___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("h2", {
+      return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h2", {
         "data-l10n-id": "newtab-discovery-empty-section-topstories-timed-out"
       }), this.renderButton());
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement((react__WEBPACK_IMPORTED_MODULE_1___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("h2", {
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h2", {
       "data-l10n-id": "newtab-discovery-empty-section-topstories-header"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("p", {
+    }), /*#__PURE__*/external_React_default().createElement("p", {
       "data-l10n-id": "newtab-discovery-empty-section-topstories-content"
     }));
   }
 
   render() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: "section-empty-state"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "empty-state-message"
     }, this.renderState()));
   }
 
 }
-
-/***/ }),
-/* 68 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "TopicsWidget": () => (/* binding */ TopicsWidget)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/TopicsWidget/TopicsWidget.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function TopicsWidget(props) {
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+  return /*#__PURE__*/external_React_default().createElement("div", {
     className: "ds-topics-widget"
   });
 }
-
-/***/ }),
-/* 69 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "CollectionCardGrid": () => (/* binding */ CollectionCardGrid)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_CardGrid_CardGrid__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(53);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_DSDismiss_DSDismiss__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(70);
-/* harmony import */ var content_src_lib_link_menu_options__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(59);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_4__);
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9637,7 +8022,288 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-class CollectionCardGrid extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponent) {
+
+class CardGrid extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      moreLoaded: false
+    };
+    this.loadMoreClicked = this.loadMoreClicked.bind(this);
+  }
+
+  loadMoreClicked() {
+    this.props.dispatch(actionCreators.UserEvent({
+      event: "CLICK",
+      source: "DS_LOAD_MORE_BUTTON"
+    }));
+    this.setState({
+      moreLoaded: true
+    });
+  }
+
+  get showLoadMore() {
+    const {
+      loadMore,
+      data,
+      loadMoreThreshold
+    } = this.props;
+    return loadMore && data.recommendations.length > loadMoreThreshold && !this.state.moreLoaded;
+  }
+
+  renderDSSubHeader(title) {
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: "section-top-bar ds-sub-header"
+    }, /*#__PURE__*/external_React_default().createElement("h3", {
+      className: "section-title-container"
+    }, /*#__PURE__*/external_React_default().createElement("span", {
+      className: "section-title"
+    }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
+      message: title
+    }))));
+  }
+
+  renderCards() {
+    var _widgets$positions, _widgets$data;
+
+    let {
+      items
+    } = this.props;
+    const {
+      hybridLayout,
+      hideCardBackground,
+      fourCardLayout,
+      hideDescriptions,
+      lastCardMessageEnabled,
+      saveToPocketCard,
+      loadMoreThreshold,
+      compactGrid,
+      compactImages,
+      imageGradient,
+      newSponsoredLabel,
+      titleLines,
+      descLines,
+      readTime,
+      essentialReadsHeader,
+      editorsPicksHeader,
+      widgets
+    } = this.props;
+    let showLastCardMessage = lastCardMessageEnabled;
+
+    if (this.showLoadMore) {
+      items = loadMoreThreshold; // We don't want to show this until after load more has been clicked.
+
+      showLastCardMessage = false;
+    }
+
+    const recs = this.props.data.recommendations.slice(0, items);
+    const cards = [];
+
+    for (let index = 0; index < items; index++) {
+      const rec = recs[index];
+      cards.push(!rec || rec.placeholder ? /*#__PURE__*/external_React_default().createElement(PlaceholderDSCard, {
+        key: `dscard-${index}`
+      }) : /*#__PURE__*/external_React_default().createElement(DSCard, {
+        key: `dscard-${rec.id}`,
+        pos: rec.pos,
+        flightId: rec.flight_id,
+        image_src: rec.image_src,
+        raw_image_src: rec.raw_image_src,
+        word_count: rec.word_count,
+        time_to_read: rec.time_to_read,
+        displayReadTime: readTime,
+        title: rec.title,
+        excerpt: rec.excerpt,
+        url: rec.url,
+        id: rec.id,
+        shim: rec.shim,
+        type: this.props.type,
+        context: rec.context,
+        sponsor: rec.sponsor,
+        sponsored_by_override: rec.sponsored_by_override,
+        dispatch: this.props.dispatch,
+        source: rec.domain,
+        pocket_id: rec.pocket_id,
+        context_type: rec.context_type,
+        bookmarkGuid: rec.bookmarkGuid,
+        engagement: rec.engagement,
+        pocket_button_enabled: this.props.pocket_button_enabled,
+        display_engagement_labels: this.props.display_engagement_labels,
+        hideDescriptions: hideDescriptions,
+        saveToPocketCard: saveToPocketCard,
+        compactImages: compactImages,
+        imageGradient: imageGradient,
+        newSponsoredLabel: newSponsoredLabel,
+        titleLines: titleLines,
+        descLines: descLines,
+        cta: rec.cta,
+        cta_variant: this.props.cta_variant,
+        is_video: this.props.enable_video_playheads && rec.is_video,
+        is_collection: this.props.is_collection
+      }));
+    } // If we have both header, inject the second one after the second row.
+    // For now this is English only.
+
+
+    if (essentialReadsHeader && editorsPicksHeader) {
+      // For 4 card row layouts, second row is 8 cards, and regular it is 6 cards.
+      if (fourCardLayout) {
+        cards.splice(8, 0, this.renderDSSubHeader("Editor’s Picks"));
+      } else {
+        cards.splice(6, 0, this.renderDSSubHeader("Editor’s Picks"));
+      }
+    } // Replace last card with "you are all caught up card"
+
+
+    if (showLastCardMessage) {
+      cards.splice(cards.length - 1, 1, /*#__PURE__*/external_React_default().createElement(LastCardMessage, {
+        key: `dscard-last-${cards.length - 1}`
+      }));
+    }
+
+    if (widgets !== null && widgets !== void 0 && (_widgets$positions = widgets.positions) !== null && _widgets$positions !== void 0 && _widgets$positions.length && widgets !== null && widgets !== void 0 && (_widgets$data = widgets.data) !== null && _widgets$data !== void 0 && _widgets$data.length) {
+      let positionIndex = 0;
+
+      for (const widget of widgets.data) {
+        let widgetComponent = null;
+        const position = widgets.positions[positionIndex]; // Stop if we run out of positions to place widgets.
+
+        if (!position) {
+          break;
+        }
+
+        switch (widget === null || widget === void 0 ? void 0 : widget.type) {
+          case "TopicsWidget":
+            widgetComponent = /*#__PURE__*/external_React_default().createElement(TopicsWidget, null);
+            break;
+        }
+
+        if (widgetComponent) {
+          // We found a widget, so up the position for next try.
+          positionIndex++; // We replace an existing card with the widget.
+
+          cards.splice(position.index, 1, widgetComponent);
+        }
+      }
+    } // Used for CSS overrides to default styling (eg: "hero")
+
+
+    const variantClass = this.props.display_variant ? `ds-card-grid-${this.props.display_variant}` : ``;
+    const hideCardBackgroundClass = hideCardBackground ? `ds-card-grid-hide-background` : ``;
+    const fourCardLayoutClass = fourCardLayout ? `ds-card-grid-four-card-variant` : ``;
+    const hideDescriptionsClassName = !hideDescriptions ? `ds-card-grid-include-descriptions` : ``;
+    const compactGridClassName = compactGrid ? `ds-card-grid-compact` : ``;
+    const hybridLayoutClassName = hybridLayout ? `ds-card-grid-hybrid-layout` : ``;
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: `ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${hybridLayoutClassName} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`
+    }, cards);
+  }
+
+  render() {
+    const {
+      data
+    } = this.props; // Handle a render before feed has been fetched by displaying nothing
+
+    if (!data) {
+      return null;
+    } // Handle the case where a user has dismissed all recommendations
+
+
+    const isEmpty = data.recommendations.length === 0;
+    return /*#__PURE__*/external_React_default().createElement("div", null, this.props.title && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "ds-header"
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      className: "title"
+    }, this.props.title), this.props.context && /*#__PURE__*/external_React_default().createElement(FluentOrText, {
+      message: this.props.context
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      className: "ds-context"
+    }))), isEmpty ? /*#__PURE__*/external_React_default().createElement("div", {
+      className: "ds-card-grid empty"
+    }, /*#__PURE__*/external_React_default().createElement(DSEmptyState, {
+      status: data.status,
+      dispatch: this.props.dispatch,
+      feed: this.props.feed
+    })) : this.renderCards(), this.showLoadMore && /*#__PURE__*/external_React_default().createElement("button", {
+      className: "ASRouterButton primary ds-card-grid-load-more-button",
+      onClick: this.loadMoreClicked,
+      "data-l10n-id": "newtab-pocket-load-more-stories-button"
+    }));
+  }
+
+}
+CardGrid.defaultProps = {
+  border: `border`,
+  items: 4,
+  // Number of stories to display
+  enable_video_playheads: false,
+  lastCardMessageEnabled: false,
+  saveToPocketCard: false,
+  loadMoreThreshold: 12
+};
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSDismiss/DSDismiss.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+class DSDismiss extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.onDismissClick = this.onDismissClick.bind(this);
+    this.onHover = this.onHover.bind(this);
+    this.offHover = this.offHover.bind(this);
+    this.state = {
+      hovering: false
+    };
+  }
+
+  onDismissClick() {
+    if (this.props.onDismissClick) {
+      this.props.onDismissClick();
+    }
+  }
+
+  onHover() {
+    this.setState({
+      hovering: true
+    });
+  }
+
+  offHover() {
+    this.setState({
+      hovering: false
+    });
+  }
+
+  render() {
+    let className = `ds-dismiss
+      ${this.state.hovering ? ` hovering` : ``}
+      ${this.props.extraClasses ? ` ${this.props.extraClasses}` : ``}`;
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: className
+    }, this.props.children, /*#__PURE__*/external_React_default().createElement("button", {
+      className: "ds-dismiss-button",
+      "data-l10n-id": "newtab-dismiss-button-tooltip",
+      onHover: this.onHover,
+      onClick: this.onDismissClick,
+      onMouseEnter: this.onHover,
+      onMouseLeave: this.offHover
+    }, /*#__PURE__*/external_React_default().createElement("span", {
+      className: "icon icon-dismiss"
+    })));
+  }
+
+}
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/CollectionCardGrid/CollectionCardGrid.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+
+
+class CollectionCardGrid extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.onDismissClick = this.onDismissClick.bind(this);
@@ -9665,14 +8331,14 @@ class CollectionCardGrid extends (react__WEBPACK_IMPORTED_MODULE_4___default().P
         shim: item.shim,
         flight_id: item.flightId
       }));
-      const blockUrlOption = content_src_lib_link_menu_options__WEBPACK_IMPORTED_MODULE_3__.LinkMenuOptions.BlockUrls(spocsData, pos, source);
+      const blockUrlOption = LinkMenuOptions.BlockUrls(spocsData, pos, source);
       const {
         action,
         impression,
         userEvent
       } = blockUrlOption;
       this.props.dispatch(action);
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
+      this.props.dispatch(actionCreators.UserEvent({
         event: userEvent,
         source,
         action_position: pos
@@ -9748,9 +8414,9 @@ class CollectionCardGrid extends (react__WEBPACK_IMPORTED_MODULE_4___default().P
     // we use the type "COLLECTIONCARDGRID_CARD".
 
     const type = `${this.props.type}_card`;
-    const collectionGrid = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    const collectionGrid = /*#__PURE__*/external_React_default().createElement("div", {
       className: "ds-collection-card-grid"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(content_src_components_DiscoveryStreamComponents_CardGrid_CardGrid__WEBPACK_IMPORTED_MODULE_1__.CardGrid, {
+    }, /*#__PURE__*/external_React_default().createElement(CardGrid, {
       pocket_button_enabled: pocket_button_enabled,
       title: title,
       context: sponsoredByMessage,
@@ -9764,7 +8430,7 @@ class CollectionCardGrid extends (react__WEBPACK_IMPORTED_MODULE_4___default().P
     }));
 
     if (dismissible) {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(content_src_components_DiscoveryStreamComponents_DSDismiss_DSDismiss__WEBPACK_IMPORTED_MODULE_2__.DSDismiss, {
+      return /*#__PURE__*/external_React_default().createElement(DSDismiss, {
         onDismissClick: this.onDismissClick,
         extraClasses: `ds-dismiss-ds-collection`
       }, collectionGrid);
@@ -9774,85 +8440,104 @@ class CollectionCardGrid extends (react__WEBPACK_IMPORTED_MODULE_4___default().P
   }
 
 }
+;// CONCATENATED MODULE: ./content-src/components/A11yLinkButton/A11yLinkButton.jsx
+function A11yLinkButton_extends() { A11yLinkButton_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return A11yLinkButton_extends.apply(this, arguments); }
 
-/***/ }),
-/* 70 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "DSDismiss": () => (/* binding */ DSDismiss)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-class DSDismiss extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
+function A11yLinkButton(props) {
+  // function for merging classes, if necessary
+  let className = "a11y-link-button";
+
+  if (props.className) {
+    className += ` ${props.className}`;
+  }
+
+  return /*#__PURE__*/external_React_default().createElement("button", A11yLinkButton_extends({
+    type: "button"
+  }, props, {
+    className: className
+  }), props.children);
+}
+;// CONCATENATED MODULE: ./content-src/components/ErrorBoundary/ErrorBoundary.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+class ErrorBoundaryFallback extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
-    this.onDismissClick = this.onDismissClick.bind(this);
-    this.onHover = this.onHover.bind(this);
-    this.offHover = this.offHover.bind(this);
-    this.state = {
-      hovering: false
-    };
+    this.windowObj = this.props.windowObj || window;
+    this.onClick = this.onClick.bind(this);
   }
+  /**
+   * Since we only get here if part of the page has crashed, do a
+   * forced reload to give us the best chance at recovering.
+   */
 
-  onDismissClick() {
-    if (this.props.onDismissClick) {
-      this.props.onDismissClick();
-    }
-  }
 
-  onHover() {
-    this.setState({
-      hovering: true
-    });
-  }
-
-  offHover() {
-    this.setState({
-      hovering: false
-    });
+  onClick() {
+    this.windowObj.location.reload(true);
   }
 
   render() {
-    let className = `ds-dismiss
-      ${this.state.hovering ? ` hovering` : ``}
-      ${this.props.extraClasses ? ` ${this.props.extraClasses}` : ``}`;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    const defaultClass = "as-error-fallback";
+    let className;
+
+    if ("className" in this.props) {
+      className = `${this.props.className} ${defaultClass}`;
+    } else {
+      className = defaultClass;
+    } // "A11yLinkButton" to force normal link styling stuff (eg cursor on hover)
+
+
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: className
-    }, this.props.children, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-      className: "ds-dismiss-button",
-      "data-l10n-id": "newtab-dismiss-button-tooltip",
-      onHover: this.onHover,
-      onClick: this.onDismissClick,
-      onMouseEnter: this.onHover,
-      onMouseLeave: this.offHover
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
-      className: "icon icon-dismiss"
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      "data-l10n-id": "newtab-error-fallback-info"
+    }), /*#__PURE__*/external_React_default().createElement("span", null, /*#__PURE__*/external_React_default().createElement(A11yLinkButton, {
+      className: "reload-button",
+      onClick: this.onClick,
+      "data-l10n-id": "newtab-error-fallback-refresh-link"
     })));
   }
 
 }
+ErrorBoundaryFallback.defaultProps = {
+  className: "as-error-fallback"
+};
+class ErrorBoundary extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      hasError: false
+    };
+  }
 
-/***/ }),
-/* 71 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+  componentDidCatch(error, info) {
+    this.setState({
+      hasError: true
+    });
+  }
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "_CollapsibleSection": () => (/* binding */ _CollapsibleSection),
-/* harmony export */   "CollapsibleSection": () => (/* binding */ CollapsibleSection)
-/* harmony export */ });
-/* harmony import */ var content_src_components_ErrorBoundary_ErrorBoundary__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(72);
-/* harmony import */ var content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(66);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_3__);
+  render() {
+    if (!this.state.hasError) {
+      return this.props.children;
+    }
+
+    return /*#__PURE__*/external_React_default().createElement(this.props.FallbackComponent, {
+      className: this.props.className
+    });
+  }
+
+}
+ErrorBoundary.defaultProps = {
+  FallbackComponent: ErrorBoundaryFallback
+};
+;// CONCATENATED MODULE: ./content-src/components/CollapsibleSection/CollapsibleSection.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9865,7 +8550,7 @@ __webpack_require__.r(__webpack_exports__);
  * See bug 1727365 for follow-up work to simplify this component.
  */
 
-class _CollapsibleSection extends (react__WEBPACK_IMPORTED_MODULE_2___default().PureComponent) {
+class _CollapsibleSection extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.onBodyMount = this.onBodyMount.bind(this);
@@ -9941,34 +8626,34 @@ class _CollapsibleSection extends (react__WEBPACK_IMPORTED_MODULE_2___default().
     }
 
     const hasSubtitleClassName = subTitle ? `has-subtitle` : ``;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("section", {
+    return /*#__PURE__*/external_React_default().createElement("section", {
       className: `collapsible-section ${this.props.className}${active ? " active" : ""}` // Note: data-section-id is used for web extension api tests in mozilla central
       ,
       "data-section-id": id
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "section-top-bar"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("h3", {
+    }, /*#__PURE__*/external_React_default().createElement("h3", {
       className: `section-title-container ${hasSubtitleClassName}`,
       style: titleStyle
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", {
+    }, /*#__PURE__*/external_React_default().createElement("span", {
       className: "section-title"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_1__.FluentOrText, {
+    }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
       message: title
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", {
+    })), /*#__PURE__*/external_React_default().createElement("span", {
       className: "learn-more-link-wrapper"
-    }, learnMore && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", {
+    }, learnMore && /*#__PURE__*/external_React_default().createElement("span", {
       className: "learn-more-link"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_1__.FluentOrText, {
+    }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
       message: learnMore.link.message
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("a", {
+    }, /*#__PURE__*/external_React_default().createElement("a", {
       href: learnMore.link.href
-    })))), subTitle && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", {
+    })))), subTitle && /*#__PURE__*/external_React_default().createElement("span", {
       className: "section-sub-title"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_1__.FluentOrText, {
+    }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
       message: subTitle
-    })))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(content_src_components_ErrorBoundary_ErrorBoundary__WEBPACK_IMPORTED_MODULE_0__.ErrorBoundary, {
+    })))), /*#__PURE__*/external_React_default().createElement(ErrorBoundary, {
       className: "section-body-fallback"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       ref: this.onBodyMount,
       style: bodyStyle
     }, this.props.children)));
@@ -9982,264 +8667,46 @@ _CollapsibleSection.defaultProps = {
     visibilityState: "hidden"
   }
 };
-const CollapsibleSection = (0,react_redux__WEBPACK_IMPORTED_MODULE_3__.connect)(state => ({
+const CollapsibleSection = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   Prefs: state.Prefs
 }))(_CollapsibleSection);
-
-/***/ }),
-/* 72 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ErrorBoundaryFallback": () => (/* binding */ ErrorBoundaryFallback),
-/* harmony export */   "ErrorBoundary": () => (/* binding */ ErrorBoundary)
-/* harmony export */ });
-/* harmony import */ var content_src_components_A11yLinkButton_A11yLinkButton__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(73);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-class ErrorBoundaryFallback extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.windowObj = this.props.windowObj || window;
-    this.onClick = this.onClick.bind(this);
-  }
-  /**
-   * Since we only get here if part of the page has crashed, do a
-   * forced reload to give us the best chance at recovering.
-   */
-
-
-  onClick() {
-    this.windowObj.location.reload(true);
-  }
-
-  render() {
-    const defaultClass = "as-error-fallback";
-    let className;
-
-    if ("className" in this.props) {
-      className = `${this.props.className} ${defaultClass}`;
-    } else {
-      className = defaultClass;
-    } // "A11yLinkButton" to force normal link styling stuff (eg cursor on hover)
-
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
-      className: className
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
-      "data-l10n-id": "newtab-error-fallback-info"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(content_src_components_A11yLinkButton_A11yLinkButton__WEBPACK_IMPORTED_MODULE_0__.A11yLinkButton, {
-      className: "reload-button",
-      onClick: this.onClick,
-      "data-l10n-id": "newtab-error-fallback-refresh-link"
-    })));
-  }
-
-}
-ErrorBoundaryFallback.defaultProps = {
-  className: "as-error-fallback"
-};
-class ErrorBoundary extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.state = {
-      hasError: false
-    };
-  }
-
-  componentDidCatch(error, info) {
-    this.setState({
-      hasError: true
-    });
-  }
-
-  render() {
-    if (!this.state.hasError) {
-      return this.props.children;
-    }
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(this.props.FallbackComponent, {
-      className: this.props.className
-    });
-  }
-
-}
-ErrorBoundary.defaultProps = {
-  FallbackComponent: ErrorBoundaryFallback
-};
-
-/***/ }),
-/* 73 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "A11yLinkButton": () => (/* binding */ A11yLinkButton)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-function A11yLinkButton(props) {
-  // function for merging classes, if necessary
-  let className = "a11y-link-button";
-
-  if (props.className) {
-    className += ` ${props.className}`;
-  }
-
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", _extends({
-    type: "button"
-  }, props, {
-    className: className
-  }), props.children);
-}
-
-/***/ }),
-/* 74 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "DSMessage": () => (/* binding */ DSMessage)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(62);
-/* harmony import */ var content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(66);
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSMessage/DSMessage.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
 
-class DSMessage extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
+class DSMessage extends (external_React_default()).PureComponent {
   render() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: "ds-message"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("header", {
+    }, /*#__PURE__*/external_React_default().createElement("header", {
       className: "title"
-    }, this.props.icon && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }, this.props.icon && /*#__PURE__*/external_React_default().createElement("div", {
       className: "glyph",
       style: {
         backgroundImage: `url(${this.props.icon})`
       }
-    }), this.props.title && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
+    }), this.props.title && /*#__PURE__*/external_React_default().createElement("span", {
       className: "title-text"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_2__.FluentOrText, {
+    }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
       message: this.props.title
-    })), this.props.link_text && this.props.link_url && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_1__.SafeAnchor, {
+    })), this.props.link_text && this.props.link_url && /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
       className: "link",
       url: this.props.link_url
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_2__.FluentOrText, {
+    }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
       message: this.props.link_text
     }))));
   }
 
 }
-
-/***/ }),
-/* 75 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "DSPrivacyModal": () => (/* binding */ DSPrivacyModal)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1);
-/* harmony import */ var content_src_asrouter_components_ModalOverlay_ModalOverlay__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(76);
+;// CONCATENATED MODULE: ./content-src/asrouter/components/ModalOverlay/ModalOverlay.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-
-class DSPrivacyModal extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.closeModal = this.closeModal.bind(this);
-    this.onLearnLinkClick = this.onLearnLinkClick.bind(this);
-    this.onManageLinkClick = this.onManageLinkClick.bind(this);
-  }
-
-  onLearnLinkClick(event) {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__.actionCreators.UserEvent({
-      event: "CLICK_PRIVACY_INFO",
-      source: "DS_PRIVACY_MODAL"
-    }));
-  }
-
-  onManageLinkClick(event) {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__.actionCreators.OnlyToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__.actionTypes.SETTINGS_OPEN
-    }));
-  }
-
-  closeModal() {
-    this.props.dispatch({
-      type: `HIDE_PRIVACY_INFO`,
-      data: {}
-    });
-  }
-
-  render() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(content_src_asrouter_components_ModalOverlay_ModalOverlay__WEBPACK_IMPORTED_MODULE_2__.ModalOverlayWrapper, {
-      onClose: this.closeModal,
-      innerClassName: "ds-privacy-modal"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-      className: "privacy-notice"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", {
-      "data-l10n-id": "newtab-privacy-modal-header"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", {
-      "data-l10n-id": "newtab-privacy-modal-paragraph-2"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", {
-      className: "modal-link modal-link-privacy",
-      "data-l10n-id": "newtab-privacy-modal-link",
-      onClick: this.onLearnLinkClick,
-      href: "https://help.getpocket.com/article/1142-firefox-new-tab-recommendations-faq"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-      className: "modal-link modal-link-manage",
-      "data-l10n-id": "newtab-privacy-modal-button-manage",
-      onClick: this.onManageLinkClick
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("section", {
-      className: "actions"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-      className: "done",
-      type: "submit",
-      onClick: this.closeModal,
-      "data-l10n-id": "newtab-privacy-modal-button-done"
-    })));
-  }
-
-}
-
-/***/ }),
-/* 76 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ModalOverlayWrapper": () => (/* binding */ ModalOverlayWrapper)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-class ModalOverlayWrapper extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
+class ModalOverlayWrapper extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.onKeyDown = this.onKeyDown.bind(this);
@@ -10273,11 +8740,11 @@ class ModalOverlayWrapper extends (react__WEBPACK_IMPORTED_MODULE_0___default().
       className += ` ${props.innerClassName}`;
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: "modalOverlayOuter active",
       onKeyDown: this.onKeyDown,
       role: "presentation"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: className,
       "aria-labelledby": props.headerId,
       id: props.id,
@@ -10289,22 +8756,72 @@ class ModalOverlayWrapper extends (react__WEBPACK_IMPORTED_MODULE_0___default().
 ModalOverlayWrapper.defaultProps = {
   document: __webpack_require__.g.document
 };
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSPrivacyModal/DSPrivacyModal.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/***/ }),
-/* 77 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "DSSignup": () => (/* binding */ DSSignup)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var content_src_components_LinkMenu_LinkMenu__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(57);
-/* harmony import */ var content_src_components_ContextMenu_ContextMenuButton__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(60);
-/* harmony import */ var _DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(61);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var _SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(62);
+
+class DSPrivacyModal extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.closeModal = this.closeModal.bind(this);
+    this.onLearnLinkClick = this.onLearnLinkClick.bind(this);
+    this.onManageLinkClick = this.onManageLinkClick.bind(this);
+  }
+
+  onLearnLinkClick(event) {
+    this.props.dispatch(actionCreators.UserEvent({
+      event: "CLICK_PRIVACY_INFO",
+      source: "DS_PRIVACY_MODAL"
+    }));
+  }
+
+  onManageLinkClick(event) {
+    this.props.dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.SETTINGS_OPEN
+    }));
+  }
+
+  closeModal() {
+    this.props.dispatch({
+      type: `HIDE_PRIVACY_INFO`,
+      data: {}
+    });
+  }
+
+  render() {
+    return /*#__PURE__*/external_React_default().createElement(ModalOverlayWrapper, {
+      onClose: this.closeModal,
+      innerClassName: "ds-privacy-modal"
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      className: "privacy-notice"
+    }, /*#__PURE__*/external_React_default().createElement("h3", {
+      "data-l10n-id": "newtab-privacy-modal-header"
+    }), /*#__PURE__*/external_React_default().createElement("p", {
+      "data-l10n-id": "newtab-privacy-modal-paragraph-2"
+    }), /*#__PURE__*/external_React_default().createElement("a", {
+      className: "modal-link modal-link-privacy",
+      "data-l10n-id": "newtab-privacy-modal-link",
+      onClick: this.onLearnLinkClick,
+      href: "https://help.getpocket.com/article/1142-firefox-new-tab-recommendations-faq"
+    }), /*#__PURE__*/external_React_default().createElement("button", {
+      className: "modal-link modal-link-manage",
+      "data-l10n-id": "newtab-privacy-modal-button-manage",
+      onClick: this.onManageLinkClick
+    })), /*#__PURE__*/external_React_default().createElement("section", {
+      className: "actions"
+    }, /*#__PURE__*/external_React_default().createElement("button", {
+      className: "done",
+      type: "submit",
+      onClick: this.closeModal,
+      "data-l10n-id": "newtab-privacy-modal-button-done"
+    })));
+  }
+
+}
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSSignup/DSSignup.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10314,7 +8831,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-class DSSignup extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponent) {
+class DSSignup extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.state = {
@@ -10365,12 +8882,12 @@ class DSSignup extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureCompone
       const source = this.props.type.toUpperCase(); // Grab the first item in the array as we only have 1 spoc position.
 
       const [spoc] = data.spocs;
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
+      this.props.dispatch(actionCreators.UserEvent({
         event: "CLICK",
         source,
         action_position: 0
       }));
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.ImpressionStats({
+      this.props.dispatch(actionCreators.ImpressionStats({
         source,
         click: 0,
         tiles: [{
@@ -10407,18 +8924,18 @@ class DSSignup extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureCompone
     } = spoc;
     const SIGNUP_CONTEXT_MENU_OPTIONS = ["OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", ...(flight_id ? ["ShowPrivacyInfo"] : [])];
     const outerClassName = ["ds-signup", this.state.active && "active", this.state.lastItem && "last-item"].filter(v => v).join(" ");
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: outerClassName
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "ds-signup-content"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("span", {
+    }, /*#__PURE__*/external_React_default().createElement("span", {
       className: "icon icon-small-spacer icon-mail"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("span", null, title, " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(_SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_5__.SafeAnchor, {
+    }), /*#__PURE__*/external_React_default().createElement("span", null, title, " ", /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
       className: "ds-chevron-link",
       dispatch: dispatch,
       onLinkClick: this.onLinkClick,
       url: url
-    }, excerpt)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(_DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_3__.ImpressionStats, {
+    }, excerpt)), /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
       flightId: flight_id,
       rows: [{
         id,
@@ -10427,13 +8944,13 @@ class DSSignup extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureCompone
       }],
       dispatch: dispatch,
       source: type
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(content_src_components_ContextMenu_ContextMenuButton__WEBPACK_IMPORTED_MODULE_2__.ContextMenuButton, {
+    })), /*#__PURE__*/external_React_default().createElement(ContextMenuButton, {
       tooltip: "newtab-menu-content-tooltip",
       tooltipArgs: {
         title
       },
       onUpdate: this.onMenuButtonUpdate
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(content_src_components_LinkMenu_LinkMenu__WEBPACK_IMPORTED_MODULE_1__.LinkMenu, {
+    }, /*#__PURE__*/external_React_default().createElement(LinkMenu, {
       dispatch: dispatch,
       index: 0,
       source: type.toUpperCase(),
@@ -10457,23 +8974,7 @@ DSSignup.defaultProps = {
   windowObj: window // Added to support unit tests
 
 };
-
-/***/ }),
-/* 78 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "DSTextPromo": () => (/* binding */ DSTextPromo)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_DSDismiss_DSDismiss__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(70);
-/* harmony import */ var _DSImage_DSImage_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(55);
-/* harmony import */ var _DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(61);
-/* harmony import */ var content_src_lib_link_menu_options__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(59);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_5__);
-/* harmony import */ var _SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(62);
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSTextPromo/DSTextPromo.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10484,7 +8985,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-class DSTextPromo extends (react__WEBPACK_IMPORTED_MODULE_5___default().PureComponent) {
+class DSTextPromo extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.onLinkClick = this.onLinkClick.bind(this);
@@ -10500,12 +9001,12 @@ class DSTextPromo extends (react__WEBPACK_IMPORTED_MODULE_5___default().PureComp
       const source = this.props.type.toUpperCase(); // Grab the first item in the array as we only have 1 spoc position.
 
       const [spoc] = data.spocs;
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
+      this.props.dispatch(actionCreators.UserEvent({
         event: "CLICK",
         source,
         action_position: 0
       }));
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.ImpressionStats({
+      this.props.dispatch(actionCreators.ImpressionStats({
         source,
         click: 0,
         tiles: [{
@@ -10534,14 +9035,14 @@ class DSTextPromo extends (react__WEBPACK_IMPORTED_MODULE_5___default().PureComp
         guid: spoc.id,
         shim: spoc.shim
       };
-      const blockUrlOption = content_src_lib_link_menu_options__WEBPACK_IMPORTED_MODULE_4__.LinkMenuOptions.BlockUrl(spocData, index, source);
+      const blockUrlOption = LinkMenuOptions.BlockUrl(spocData, index, source);
       const {
         action,
         impression,
         userEvent
       } = blockUrlOption;
       this.props.dispatch(action);
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
+      this.props.dispatch(actionCreators.UserEvent({
         event: userEvent,
         source,
         action_position: index
@@ -10576,25 +9077,25 @@ class DSTextPromo extends (react__WEBPACK_IMPORTED_MODULE_5___default().PureComp
       id,
       shim
     } = spoc;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(content_src_components_DiscoveryStreamComponents_DSDismiss_DSDismiss__WEBPACK_IMPORTED_MODULE_1__.DSDismiss, {
+    return /*#__PURE__*/external_React_default().createElement(DSDismiss, {
       onDismissClick: this.onDismissClick,
       extraClasses: `ds-dismiss-ds-text-promo`
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "ds-text-promo"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(_DSImage_DSImage_jsx__WEBPACK_IMPORTED_MODULE_2__.DSImage, {
+    }, /*#__PURE__*/external_React_default().createElement(DSImage, {
       alt_text: alt_text,
       source: image_src,
       rawSource: raw_image_src
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
+    }), /*#__PURE__*/external_React_default().createElement("div", {
       className: "text"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("h3", null, `${title}\u2003`, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(_SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_6__.SafeAnchor, {
+    }, /*#__PURE__*/external_React_default().createElement("h3", null, `${title}\u2003`, /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
       className: "ds-chevron-link",
       dispatch: this.props.dispatch,
       onLinkClick: this.onLinkClick,
       url: url
-    }, cta)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("p", {
+    }, cta)), /*#__PURE__*/external_React_default().createElement("p", {
       className: "subtitle"
-    }, context)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(_DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_3__.ImpressionStats, {
+    }, context)), /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
       flightId: flight_id,
       rows: [{
         id,
@@ -10607,778 +9108,7 @@ class DSTextPromo extends (react__WEBPACK_IMPORTED_MODULE_5___default().PureComp
   }
 
 }
-
-/***/ }),
-/* 79 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "_Highlights": () => (/* binding */ _Highlights),
-/* harmony export */   "Highlights": () => (/* binding */ Highlights)
-/* harmony export */ });
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var content_src_components_Sections_Sections__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(80);
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-class _Highlights extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureComponent) {
-  render() {
-    const section = this.props.Sections.find(s => s.id === "highlights");
-
-    if (!section || !section.enabled) {
-      return null;
-    }
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
-      className: "ds-highlights sections-list"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(content_src_components_Sections_Sections__WEBPACK_IMPORTED_MODULE_2__.SectionIntl, _extends({}, section, {
-      isFixed: true
-    })));
-  }
-
-}
-const Highlights = (0,react_redux__WEBPACK_IMPORTED_MODULE_0__.connect)(state => ({
-  Sections: state.Sections
-}))(_Highlights);
-
-/***/ }),
-/* 80 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Section": () => (/* binding */ Section),
-/* harmony export */   "SectionIntl": () => (/* binding */ SectionIntl),
-/* harmony export */   "_Sections": () => (/* binding */ _Sections),
-/* harmony export */   "Sections": () => (/* binding */ Sections)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var content_src_components_Card_Card__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(81);
-/* harmony import */ var content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(71);
-/* harmony import */ var content_src_components_ComponentPerfTimer_ComponentPerfTimer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(83);
-/* harmony import */ var content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(66);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_5__);
-/* harmony import */ var content_src_components_MoreRecommendations_MoreRecommendations__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(85);
-/* harmony import */ var content_src_components_PocketLoggedInCta_PocketLoggedInCta__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(86);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var content_src_components_Topics_Topics__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(87);
-/* harmony import */ var content_src_components_TopSites_TopSites__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(88);
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-
-
-
-
-
-
-
-
-const VISIBLE = "visible";
-const VISIBILITY_CHANGE_EVENT = "visibilitychange";
-const CARDS_PER_ROW_DEFAULT = 3;
-const CARDS_PER_ROW_COMPACT_WIDE = 4;
-class Section extends (react__WEBPACK_IMPORTED_MODULE_8___default().PureComponent) {
-  get numRows() {
-    const {
-      rowsPref,
-      maxRows,
-      Prefs
-    } = this.props;
-    return rowsPref ? Prefs.values[rowsPref] : maxRows;
-  }
-
-  _dispatchImpressionStats() {
-    const {
-      props
-    } = this;
-    let cardsPerRow = CARDS_PER_ROW_DEFAULT;
-
-    if (props.compactCards && __webpack_require__.g.matchMedia(`(min-width: 1072px)`).matches) {
-      // If the section has compact cards and the viewport is wide enough, we show
-      // 4 columns instead of 3.
-      // $break-point-widest = 1072px (from _variables.scss)
-      cardsPerRow = CARDS_PER_ROW_COMPACT_WIDE;
-    }
-
-    const maxCards = cardsPerRow * this.numRows;
-    const cards = props.rows.slice(0, maxCards);
-
-    if (this.needsImpressionStats(cards)) {
-      props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.ImpressionStats({
-        source: props.eventSource,
-        tiles: cards.map(link => ({
-          id: link.guid
-        }))
-      }));
-      this.impressionCardGuids = cards.map(link => link.guid);
-    }
-  } // This sends an event when a user sees a set of new content. If content
-  // changes while the page is hidden (i.e. preloaded or on a hidden tab),
-  // only send the event if the page becomes visible again.
-
-
-  sendImpressionStatsOrAddListener() {
-    const {
-      props
-    } = this;
-
-    if (!props.shouldSendImpressionStats || !props.dispatch) {
-      return;
-    }
-
-    if (props.document.visibilityState === VISIBLE) {
-      this._dispatchImpressionStats();
-    } else {
-      // We should only ever send the latest impression stats ping, so remove any
-      // older listeners.
-      if (this._onVisibilityChange) {
-        props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-      } // When the page becomes visible, send the impression stats ping if the section isn't collapsed.
-
-
-      this._onVisibilityChange = () => {
-        if (props.document.visibilityState === VISIBLE) {
-          if (!this.props.pref.collapsed) {
-            this._dispatchImpressionStats();
-          }
-
-          props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-        }
-      };
-
-      props.document.addEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-    }
-  }
-
-  componentWillMount() {
-    this.sendNewTabRehydrated(this.props.initialized);
-  }
-
-  componentDidMount() {
-    if (this.props.rows.length && !this.props.pref.collapsed) {
-      this.sendImpressionStatsOrAddListener();
-    }
-  }
-
-  componentDidUpdate(prevProps) {
-    const {
-      props
-    } = this;
-    const isCollapsed = props.pref.collapsed;
-    const wasCollapsed = prevProps.pref.collapsed;
-
-    if ( // Don't send impression stats for the empty state
-    props.rows.length && ( // We only want to send impression stats if the content of the cards has changed
-    // and the section is not collapsed...
-    props.rows !== prevProps.rows && !isCollapsed || // or if we are expanding a section that was collapsed.
-    wasCollapsed && !isCollapsed)) {
-      this.sendImpressionStatsOrAddListener();
-    }
-  }
-
-  componentWillUpdate(nextProps) {
-    this.sendNewTabRehydrated(nextProps.initialized);
-  }
-
-  componentWillUnmount() {
-    if (this._onVisibilityChange) {
-      this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-    }
-  }
-
-  needsImpressionStats(cards) {
-    if (!this.impressionCardGuids || this.impressionCardGuids.length !== cards.length) {
-      return true;
-    }
-
-    for (let i = 0; i < cards.length; i++) {
-      if (cards[i].guid !== this.impressionCardGuids[i]) {
-        return true;
-      }
-    }
-
-    return false;
-  } // The NEW_TAB_REHYDRATED event is used to inform feeds that their
-  // data has been consumed e.g. for counting the number of tabs that
-  // have rendered that data.
-
-
-  sendNewTabRehydrated(initialized) {
-    if (initialized && !this.renderNotified) {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.NEW_TAB_REHYDRATED,
-        data: {}
-      }));
-      this.renderNotified = true;
-    }
-  }
-
-  render() {
-    const {
-      id,
-      eventSource,
-      title,
-      rows,
-      Pocket,
-      topics,
-      emptyState,
-      dispatch,
-      compactCards,
-      read_more_endpoint,
-      contextMenuOptions,
-      initialized,
-      learnMore,
-      pref,
-      privacyNoticeURL,
-      isFirst,
-      isLast
-    } = this.props;
-    const waitingForSpoc = id === "topstories" && this.props.Pocket.waitingForSpoc;
-    const maxCardsPerRow = compactCards ? CARDS_PER_ROW_COMPACT_WIDE : CARDS_PER_ROW_DEFAULT;
-    const {
-      numRows
-    } = this;
-    const maxCards = maxCardsPerRow * numRows;
-    const maxCardsOnNarrow = CARDS_PER_ROW_DEFAULT * numRows;
-    const {
-      pocketCta,
-      isUserLoggedIn
-    } = Pocket || {};
-    const {
-      useCta
-    } = pocketCta || {}; // Don't display anything until we have a definitve result from Pocket,
-    // to avoid a flash of logged out state while we render.
-
-    const isPocketLoggedInDefined = isUserLoggedIn === true || isUserLoggedIn === false;
-    const hasTopics = topics && !!topics.length;
-    const shouldShowPocketCta = id === "topstories" && useCta && isUserLoggedIn === false; // Show topics only for top stories and if it has loaded with topics.
-    // The classs .top-stories-bottom-container ensures content doesn't shift as things load.
-
-    const shouldShowTopics = id === "topstories" && hasTopics && (useCta && isUserLoggedIn === true || !useCta && isPocketLoggedInDefined); // We use topics to determine language support for read more.
-
-    const shouldShowReadMore = read_more_endpoint && hasTopics;
-    const realRows = rows.slice(0, maxCards); // The empty state should only be shown after we have initialized and there is no content.
-    // Otherwise, we should show placeholders.
-
-    const shouldShowEmptyState = initialized && !rows.length;
-    const cards = [];
-
-    if (!shouldShowEmptyState) {
-      for (let i = 0; i < maxCards; i++) {
-        const link = realRows[i]; // On narrow viewports, we only show 3 cards per row. We'll mark the rest as
-        // .hide-for-narrow to hide in CSS via @media query.
-
-        const className = i >= maxCardsOnNarrow ? "hide-for-narrow" : "";
-        let usePlaceholder = !link; // If we are in the third card and waiting for spoc,
-        // use the placeholder.
-
-        if (!usePlaceholder && i === 2 && waitingForSpoc) {
-          usePlaceholder = true;
-        }
-
-        cards.push(!usePlaceholder ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_Card_Card__WEBPACK_IMPORTED_MODULE_1__.Card, {
-          key: i,
-          index: i,
-          className: className,
-          dispatch: dispatch,
-          link: link,
-          contextMenuOptions: contextMenuOptions,
-          eventSource: eventSource,
-          shouldSendImpressionStats: this.props.shouldSendImpressionStats,
-          isWebExtension: this.props.isWebExtension
-        }) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_Card_Card__WEBPACK_IMPORTED_MODULE_1__.PlaceholderCard, {
-          key: i,
-          className: className
-        }));
-      }
-    }
-
-    const sectionClassName = ["section", compactCards ? "compact-cards" : "normal-cards"].join(" "); // <Section> <-- React component
-    // <section> <-- HTML5 element
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_ComponentPerfTimer_ComponentPerfTimer__WEBPACK_IMPORTED_MODULE_3__.ComponentPerfTimer, this.props, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_2__.CollapsibleSection, {
-      className: sectionClassName,
-      title: title,
-      id: id,
-      eventSource: eventSource,
-      collapsed: this.props.pref.collapsed,
-      showPrefName: pref && pref.feed || id,
-      privacyNoticeURL: privacyNoticeURL,
-      Prefs: this.props.Prefs,
-      isFixed: this.props.isFixed,
-      isFirst: isFirst,
-      isLast: isLast,
-      learnMore: learnMore,
-      dispatch: this.props.dispatch,
-      isWebExtension: this.props.isWebExtension
-    }, !shouldShowEmptyState && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("ul", {
-      className: "section-list",
-      style: {
-        padding: 0
-      }
-    }, cards), shouldShowEmptyState && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("div", {
-      className: "section-empty-state"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("div", {
-      className: "empty-state"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_4__.FluentOrText, {
-      message: emptyState.message
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("p", {
-      className: "empty-state-message"
-    })))), id === "topstories" && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("div", {
-      className: "top-stories-bottom-container"
-    }, shouldShowTopics && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("div", {
-      className: "wrapper-topics"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_Topics_Topics__WEBPACK_IMPORTED_MODULE_9__.Topics, {
-      topics: this.props.topics
-    })), shouldShowPocketCta && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("div", {
-      className: "wrapper-cta"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_PocketLoggedInCta_PocketLoggedInCta__WEBPACK_IMPORTED_MODULE_7__.PocketLoggedInCta, null)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("div", {
-      className: "wrapper-more-recommendations"
-    }, shouldShowReadMore && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_MoreRecommendations_MoreRecommendations__WEBPACK_IMPORTED_MODULE_6__.MoreRecommendations, {
-      read_more_endpoint: read_more_endpoint
-    })))));
-  }
-
-}
-Section.defaultProps = {
-  document: __webpack_require__.g.document,
-  rows: [],
-  emptyState: {},
-  pref: {},
-  title: ""
-};
-const SectionIntl = (0,react_redux__WEBPACK_IMPORTED_MODULE_5__.connect)(state => ({
-  Prefs: state.Prefs,
-  Pocket: state.Pocket
-}))(Section);
-class _Sections extends (react__WEBPACK_IMPORTED_MODULE_8___default().PureComponent) {
-  renderSections() {
-    const sections = [];
-    const enabledSections = this.props.Sections.filter(section => section.enabled);
-    const {
-      sectionOrder,
-      "feeds.topsites": showTopSites
-    } = this.props.Prefs.values; // Enabled sections doesn't include Top Sites, so we add it if enabled.
-
-    const expectedCount = enabledSections.length + ~~showTopSites;
-
-    for (const sectionId of sectionOrder.split(",")) {
-      const commonProps = {
-        key: sectionId,
-        isFirst: sections.length === 0,
-        isLast: sections.length === expectedCount - 1
-      };
-
-      if (sectionId === "topsites" && showTopSites) {
-        sections.push( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(content_src_components_TopSites_TopSites__WEBPACK_IMPORTED_MODULE_10__.TopSites, commonProps));
-      } else {
-        const section = enabledSections.find(s => s.id === sectionId);
-
-        if (section) {
-          sections.push( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement(SectionIntl, _extends({}, section, commonProps)));
-        }
-      }
-    }
-
-    return sections;
-  }
-
-  render() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default().createElement("div", {
-      className: "sections-list"
-    }, this.renderSections());
-  }
-
-}
-const Sections = (0,react_redux__WEBPACK_IMPORTED_MODULE_5__.connect)(state => ({
-  Sections: state.Sections,
-  Prefs: state.Prefs
-}))(_Sections);
-
-/***/ }),
-/* 81 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "_Card": () => (/* binding */ _Card),
-/* harmony export */   "Card": () => (/* binding */ Card),
-/* harmony export */   "PlaceholderCard": () => (/* binding */ PlaceholderCard)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(64);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var content_src_components_ContextMenu_ContextMenuButton__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(60);
-/* harmony import */ var content_src_components_LinkMenu_LinkMenu__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(57);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_5__);
-/* harmony import */ var content_src_lib_screenshot_utils__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(82);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-
-
-
- // Keep track of pending image loads to only request once
-
-const gImageLoading = new Map();
-/**
- * Card component.
- * Cards are found within a Section component and contain information about a link such
- * as preview image, page title, page description, and some context about if the page
- * was visited, bookmarked, trending etc...
- * Each Section can make an unordered list of Cards which will create one instane of
- * this class. Each card will then get a context menu which reflects the actions that
- * can be done on this Card.
- */
-
-class _Card extends (react__WEBPACK_IMPORTED_MODULE_5___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.state = {
-      activeCard: null,
-      imageLoaded: false,
-      cardImage: null
-    };
-    this.onMenuButtonUpdate = this.onMenuButtonUpdate.bind(this);
-    this.onLinkClick = this.onLinkClick.bind(this);
-  }
-  /**
-   * Helper to conditionally load an image and update state when it loads.
-   */
-
-
-  async maybeLoadImage() {
-    // No need to load if it's already loaded or no image
-    const {
-      cardImage
-    } = this.state;
-
-    if (!cardImage) {
-      return;
-    }
-
-    const imageUrl = cardImage.url;
-
-    if (!this.state.imageLoaded) {
-      // Initialize a promise to share a load across multiple card updates
-      if (!gImageLoading.has(imageUrl)) {
-        const loaderPromise = new Promise((resolve, reject) => {
-          const loader = new Image();
-          loader.addEventListener("load", resolve);
-          loader.addEventListener("error", reject);
-          loader.src = imageUrl;
-        }); // Save and remove the promise only while it's pending
-
-        gImageLoading.set(imageUrl, loaderPromise);
-        loaderPromise.catch(ex => ex).then(() => gImageLoading.delete(imageUrl)).catch();
-      } // Wait for the image whether just started loading or reused promise
-
-
-      try {
-        await gImageLoading.get(imageUrl);
-      } catch (ex) {
-        // Ignore the failed image without changing state
-        return;
-      } // Only update state if we're still waiting to load the original image
-
-
-      if (content_src_lib_screenshot_utils__WEBPACK_IMPORTED_MODULE_6__.ScreenshotUtils.isRemoteImageLocal(this.state.cardImage, this.props.link.image) && !this.state.imageLoaded) {
-        this.setState({
-          imageLoaded: true
-        });
-      }
-    }
-  }
-  /**
-   * Helper to obtain the next state based on nextProps and prevState.
-   *
-   * NOTE: Rename this method to getDerivedStateFromProps when we update React
-   *       to >= 16.3. We will need to update tests as well. We cannot rename this
-   *       method to getDerivedStateFromProps now because there is a mismatch in
-   *       the React version that we are using for both testing and production.
-   *       (i.e. react-test-render => "16.3.2", react => "16.2.0").
-   *
-   * See https://github.com/airbnb/enzyme/blob/master/packages/enzyme-adapter-react-16/package.json#L43.
-   */
-
-
-  static getNextStateFromProps(nextProps, prevState) {
-    const {
-      image
-    } = nextProps.link;
-    const imageInState = content_src_lib_screenshot_utils__WEBPACK_IMPORTED_MODULE_6__.ScreenshotUtils.isRemoteImageLocal(prevState.cardImage, image);
-    let nextState = null; // Image is updating.
-
-    if (!imageInState && nextProps.link) {
-      nextState = {
-        imageLoaded: false
-      };
-    }
-
-    if (imageInState) {
-      return nextState;
-    } // Since image was updated, attempt to revoke old image blob URL, if it exists.
-
-
-    content_src_lib_screenshot_utils__WEBPACK_IMPORTED_MODULE_6__.ScreenshotUtils.maybeRevokeBlobObjectURL(prevState.cardImage);
-    nextState = nextState || {};
-    nextState.cardImage = content_src_lib_screenshot_utils__WEBPACK_IMPORTED_MODULE_6__.ScreenshotUtils.createLocalImageObject(image);
-    return nextState;
-  }
-
-  onMenuButtonUpdate(isOpen) {
-    if (isOpen) {
-      this.setState({
-        activeCard: this.props.index
-      });
-    } else {
-      this.setState({
-        activeCard: null
-      });
-    }
-  }
-  /**
-   * Report to telemetry additional information about the item.
-   */
-
-
-  _getTelemetryInfo() {
-    // Filter out "history" type for being the default
-    if (this.props.link.type !== "history") {
-      return {
-        value: {
-          card_type: this.props.link.type
-        }
-      };
-    }
-
-    return null;
-  }
-
-  onLinkClick(event) {
-    event.preventDefault();
-    const {
-      altKey,
-      button,
-      ctrlKey,
-      metaKey,
-      shiftKey
-    } = event;
-
-    if (this.props.link.type === "download") {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.OPEN_DOWNLOAD_FILE,
-        data: Object.assign(this.props.link, {
-          event: {
-            button,
-            ctrlKey,
-            metaKey,
-            shiftKey
-          }
-        })
-      }));
-    } else {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.OPEN_LINK,
-        data: Object.assign(this.props.link, {
-          event: {
-            altKey,
-            button,
-            ctrlKey,
-            metaKey,
-            shiftKey
-          }
-        })
-      }));
-    }
-
-    if (this.props.isWebExtension) {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.WebExtEvent(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.WEBEXT_CLICK, {
-        source: this.props.eventSource,
-        url: this.props.link.url,
-        action_position: this.props.index
-      }));
-    } else {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent(Object.assign({
-        event: "CLICK",
-        source: this.props.eventSource,
-        action_position: this.props.index
-      }, this._getTelemetryInfo())));
-
-      if (this.props.shouldSendImpressionStats) {
-        this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.ImpressionStats({
-          source: this.props.eventSource,
-          click: 0,
-          tiles: [{
-            id: this.props.link.guid,
-            pos: this.props.index
-          }]
-        }));
-      }
-    }
-  }
-
-  componentDidMount() {
-    this.maybeLoadImage();
-  }
-
-  componentDidUpdate() {
-    this.maybeLoadImage();
-  } // NOTE: Remove this function when we update React to >= 16.3 since React will
-  //       call getDerivedStateFromProps automatically. We will also need to
-  //       rename getNextStateFromProps to getDerivedStateFromProps.
-
-
-  componentWillMount() {
-    const nextState = _Card.getNextStateFromProps(this.props, this.state);
-
-    if (nextState) {
-      this.setState(nextState);
-    }
-  } // NOTE: Remove this function when we update React to >= 16.3 since React will
-  //       call getDerivedStateFromProps automatically. We will also need to
-  //       rename getNextStateFromProps to getDerivedStateFromProps.
-
-
-  componentWillReceiveProps(nextProps) {
-    const nextState = _Card.getNextStateFromProps(nextProps, this.state);
-
-    if (nextState) {
-      this.setState(nextState);
-    }
-  }
-
-  componentWillUnmount() {
-    content_src_lib_screenshot_utils__WEBPACK_IMPORTED_MODULE_6__.ScreenshotUtils.maybeRevokeBlobObjectURL(this.state.cardImage);
-  }
-
-  render() {
-    const {
-      index,
-      className,
-      link,
-      dispatch,
-      contextMenuOptions,
-      eventSource,
-      shouldSendImpressionStats
-    } = this.props;
-    const {
-      props
-    } = this;
-    const title = link.title || link.hostname;
-    const isContextMenuOpen = this.state.activeCard === index; // Display "now" as "trending" until we have new strings #3402
-
-    const {
-      icon,
-      fluentID
-    } = _types__WEBPACK_IMPORTED_MODULE_1__.cardContextTypes[link.type === "now" ? "trending" : link.type] || {};
-    const hasImage = this.state.cardImage || link.hasImage;
-    const imageStyle = {
-      backgroundImage: this.state.cardImage ? `url(${this.state.cardImage.url})` : "none"
-    };
-    const outerClassName = ["card-outer", className, isContextMenuOpen && "active", props.placeholder && "placeholder"].filter(v => v).join(" ");
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("li", {
-      className: outerClassName
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("a", {
-      href: link.type === "pocket" ? link.open_url : link.url,
-      onClick: !props.placeholder ? this.onLinkClick : undefined
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
-      className: "card"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
-      className: "card-preview-image-outer"
-    }, hasImage && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
-      className: `card-preview-image${this.state.imageLoaded ? " loaded" : ""}`,
-      style: imageStyle
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
-      className: "card-details"
-    }, link.type === "download" && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
-      className: "card-host-name alternate",
-      "data-l10n-id": "newtab-menu-open-file"
-    }), link.hostname && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
-      className: "card-host-name"
-    }, link.hostname.slice(0, 100), link.type === "download" && `  \u2014 ${link.description}`), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
-      className: ["card-text", icon ? "" : "no-context", link.description ? "" : "no-description", link.hostname ? "" : "no-host-name"].join(" ")
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("h4", {
-      className: "card-title",
-      dir: "auto"
-    }, link.title), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("p", {
-      className: "card-description",
-      dir: "auto"
-    }, link.description)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
-      className: "card-context"
-    }, icon && !link.context && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("span", {
-      "aria-haspopup": "true",
-      className: `card-context-icon icon icon-${icon}`
-    }), link.icon && link.context && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("span", {
-      "aria-haspopup": "true",
-      className: "card-context-icon icon",
-      style: {
-        backgroundImage: `url('${link.icon}')`
-      }
-    }), fluentID && !link.context && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
-      className: "card-context-label",
-      "data-l10n-id": fluentID
-    }), link.context && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
-      className: "card-context-label"
-    }, link.context))))), !props.placeholder && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(content_src_components_ContextMenu_ContextMenuButton__WEBPACK_IMPORTED_MODULE_3__.ContextMenuButton, {
-      tooltip: "newtab-menu-content-tooltip",
-      tooltipArgs: {
-        title
-      },
-      onUpdate: this.onMenuButtonUpdate
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(content_src_components_LinkMenu_LinkMenu__WEBPACK_IMPORTED_MODULE_4__.LinkMenu, {
-      dispatch: dispatch,
-      index: index,
-      source: eventSource,
-      options: link.contextMenuOptions || contextMenuOptions,
-      site: link,
-      siteInfo: this._getTelemetryInfo(),
-      shouldSendImpressionStats: shouldSendImpressionStats
-    })));
-  }
-
-}
-_Card.defaultProps = {
-  link: {}
-};
-const Card = (0,react_redux__WEBPACK_IMPORTED_MODULE_2__.connect)(state => ({
-  platform: state.Prefs.values.platform
-}))(_Card);
-const PlaceholderCard = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(Card, {
-  placeholder: true,
-  className: props.className
-});
-
-/***/ }),
-/* 82 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ScreenshotUtils": () => (/* binding */ ScreenshotUtils)
-/* harmony export */ });
+;// CONCATENATED MODULE: ./content-src/lib/screenshot-utils.js
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11439,19 +9169,449 @@ const ScreenshotUtils = {
   }
 
 };
+;// CONCATENATED MODULE: ./content-src/components/Card/Card.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/***/ }),
-/* 83 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ComponentPerfTimer": () => (/* binding */ ComponentPerfTimer)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var content_src_lib_perf_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(84);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
+
+
+
+
+ // Keep track of pending image loads to only request once
+
+const gImageLoading = new Map();
+/**
+ * Card component.
+ * Cards are found within a Section component and contain information about a link such
+ * as preview image, page title, page description, and some context about if the page
+ * was visited, bookmarked, trending etc...
+ * Each Section can make an unordered list of Cards which will create one instane of
+ * this class. Each card will then get a context menu which reflects the actions that
+ * can be done on this Card.
+ */
+
+class _Card extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      activeCard: null,
+      imageLoaded: false,
+      cardImage: null
+    };
+    this.onMenuButtonUpdate = this.onMenuButtonUpdate.bind(this);
+    this.onLinkClick = this.onLinkClick.bind(this);
+  }
+  /**
+   * Helper to conditionally load an image and update state when it loads.
+   */
+
+
+  async maybeLoadImage() {
+    // No need to load if it's already loaded or no image
+    const {
+      cardImage
+    } = this.state;
+
+    if (!cardImage) {
+      return;
+    }
+
+    const imageUrl = cardImage.url;
+
+    if (!this.state.imageLoaded) {
+      // Initialize a promise to share a load across multiple card updates
+      if (!gImageLoading.has(imageUrl)) {
+        const loaderPromise = new Promise((resolve, reject) => {
+          const loader = new Image();
+          loader.addEventListener("load", resolve);
+          loader.addEventListener("error", reject);
+          loader.src = imageUrl;
+        }); // Save and remove the promise only while it's pending
+
+        gImageLoading.set(imageUrl, loaderPromise);
+        loaderPromise.catch(ex => ex).then(() => gImageLoading.delete(imageUrl)).catch();
+      } // Wait for the image whether just started loading or reused promise
+
+
+      try {
+        await gImageLoading.get(imageUrl);
+      } catch (ex) {
+        // Ignore the failed image without changing state
+        return;
+      } // Only update state if we're still waiting to load the original image
+
+
+      if (ScreenshotUtils.isRemoteImageLocal(this.state.cardImage, this.props.link.image) && !this.state.imageLoaded) {
+        this.setState({
+          imageLoaded: true
+        });
+      }
+    }
+  }
+  /**
+   * Helper to obtain the next state based on nextProps and prevState.
+   *
+   * NOTE: Rename this method to getDerivedStateFromProps when we update React
+   *       to >= 16.3. We will need to update tests as well. We cannot rename this
+   *       method to getDerivedStateFromProps now because there is a mismatch in
+   *       the React version that we are using for both testing and production.
+   *       (i.e. react-test-render => "16.3.2", react => "16.2.0").
+   *
+   * See https://github.com/airbnb/enzyme/blob/master/packages/enzyme-adapter-react-16/package.json#L43.
+   */
+
+
+  static getNextStateFromProps(nextProps, prevState) {
+    const {
+      image
+    } = nextProps.link;
+    const imageInState = ScreenshotUtils.isRemoteImageLocal(prevState.cardImage, image);
+    let nextState = null; // Image is updating.
+
+    if (!imageInState && nextProps.link) {
+      nextState = {
+        imageLoaded: false
+      };
+    }
+
+    if (imageInState) {
+      return nextState;
+    } // Since image was updated, attempt to revoke old image blob URL, if it exists.
+
+
+    ScreenshotUtils.maybeRevokeBlobObjectURL(prevState.cardImage);
+    nextState = nextState || {};
+    nextState.cardImage = ScreenshotUtils.createLocalImageObject(image);
+    return nextState;
+  }
+
+  onMenuButtonUpdate(isOpen) {
+    if (isOpen) {
+      this.setState({
+        activeCard: this.props.index
+      });
+    } else {
+      this.setState({
+        activeCard: null
+      });
+    }
+  }
+  /**
+   * Report to telemetry additional information about the item.
+   */
+
+
+  _getTelemetryInfo() {
+    // Filter out "history" type for being the default
+    if (this.props.link.type !== "history") {
+      return {
+        value: {
+          card_type: this.props.link.type
+        }
+      };
+    }
+
+    return null;
+  }
+
+  onLinkClick(event) {
+    event.preventDefault();
+    const {
+      altKey,
+      button,
+      ctrlKey,
+      metaKey,
+      shiftKey
+    } = event;
+
+    if (this.props.link.type === "download") {
+      this.props.dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.OPEN_DOWNLOAD_FILE,
+        data: Object.assign(this.props.link, {
+          event: {
+            button,
+            ctrlKey,
+            metaKey,
+            shiftKey
+          }
+        })
+      }));
+    } else {
+      this.props.dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.OPEN_LINK,
+        data: Object.assign(this.props.link, {
+          event: {
+            altKey,
+            button,
+            ctrlKey,
+            metaKey,
+            shiftKey
+          }
+        })
+      }));
+    }
+
+    if (this.props.isWebExtension) {
+      this.props.dispatch(actionCreators.WebExtEvent(actionTypes.WEBEXT_CLICK, {
+        source: this.props.eventSource,
+        url: this.props.link.url,
+        action_position: this.props.index
+      }));
+    } else {
+      this.props.dispatch(actionCreators.UserEvent(Object.assign({
+        event: "CLICK",
+        source: this.props.eventSource,
+        action_position: this.props.index
+      }, this._getTelemetryInfo())));
+
+      if (this.props.shouldSendImpressionStats) {
+        this.props.dispatch(actionCreators.ImpressionStats({
+          source: this.props.eventSource,
+          click: 0,
+          tiles: [{
+            id: this.props.link.guid,
+            pos: this.props.index
+          }]
+        }));
+      }
+    }
+  }
+
+  componentDidMount() {
+    this.maybeLoadImage();
+  }
+
+  componentDidUpdate() {
+    this.maybeLoadImage();
+  } // NOTE: Remove this function when we update React to >= 16.3 since React will
+  //       call getDerivedStateFromProps automatically. We will also need to
+  //       rename getNextStateFromProps to getDerivedStateFromProps.
+
+
+  componentWillMount() {
+    const nextState = _Card.getNextStateFromProps(this.props, this.state);
+
+    if (nextState) {
+      this.setState(nextState);
+    }
+  } // NOTE: Remove this function when we update React to >= 16.3 since React will
+  //       call getDerivedStateFromProps automatically. We will also need to
+  //       rename getNextStateFromProps to getDerivedStateFromProps.
+
+
+  componentWillReceiveProps(nextProps) {
+    const nextState = _Card.getNextStateFromProps(nextProps, this.state);
+
+    if (nextState) {
+      this.setState(nextState);
+    }
+  }
+
+  componentWillUnmount() {
+    ScreenshotUtils.maybeRevokeBlobObjectURL(this.state.cardImage);
+  }
+
+  render() {
+    const {
+      index,
+      className,
+      link,
+      dispatch,
+      contextMenuOptions,
+      eventSource,
+      shouldSendImpressionStats
+    } = this.props;
+    const {
+      props
+    } = this;
+    const title = link.title || link.hostname;
+    const isContextMenuOpen = this.state.activeCard === index; // Display "now" as "trending" until we have new strings #3402
+
+    const {
+      icon,
+      fluentID
+    } = cardContextTypes[link.type === "now" ? "trending" : link.type] || {};
+    const hasImage = this.state.cardImage || link.hasImage;
+    const imageStyle = {
+      backgroundImage: this.state.cardImage ? `url(${this.state.cardImage.url})` : "none"
+    };
+    const outerClassName = ["card-outer", className, isContextMenuOpen && "active", props.placeholder && "placeholder"].filter(v => v).join(" ");
+    return /*#__PURE__*/external_React_default().createElement("li", {
+      className: outerClassName
+    }, /*#__PURE__*/external_React_default().createElement("a", {
+      href: link.type === "pocket" ? link.open_url : link.url,
+      onClick: !props.placeholder ? this.onLinkClick : undefined
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      className: "card"
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      className: "card-preview-image-outer"
+    }, hasImage && /*#__PURE__*/external_React_default().createElement("div", {
+      className: `card-preview-image${this.state.imageLoaded ? " loaded" : ""}`,
+      style: imageStyle
+    })), /*#__PURE__*/external_React_default().createElement("div", {
+      className: "card-details"
+    }, link.type === "download" && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "card-host-name alternate",
+      "data-l10n-id": "newtab-menu-open-file"
+    }), link.hostname && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "card-host-name"
+    }, link.hostname.slice(0, 100), link.type === "download" && `  \u2014 ${link.description}`), /*#__PURE__*/external_React_default().createElement("div", {
+      className: ["card-text", icon ? "" : "no-context", link.description ? "" : "no-description", link.hostname ? "" : "no-host-name"].join(" ")
+    }, /*#__PURE__*/external_React_default().createElement("h4", {
+      className: "card-title",
+      dir: "auto"
+    }, link.title), /*#__PURE__*/external_React_default().createElement("p", {
+      className: "card-description",
+      dir: "auto"
+    }, link.description)), /*#__PURE__*/external_React_default().createElement("div", {
+      className: "card-context"
+    }, icon && !link.context && /*#__PURE__*/external_React_default().createElement("span", {
+      "aria-haspopup": "true",
+      className: `card-context-icon icon icon-${icon}`
+    }), link.icon && link.context && /*#__PURE__*/external_React_default().createElement("span", {
+      "aria-haspopup": "true",
+      className: "card-context-icon icon",
+      style: {
+        backgroundImage: `url('${link.icon}')`
+      }
+    }), fluentID && !link.context && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "card-context-label",
+      "data-l10n-id": fluentID
+    }), link.context && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "card-context-label"
+    }, link.context))))), !props.placeholder && /*#__PURE__*/external_React_default().createElement(ContextMenuButton, {
+      tooltip: "newtab-menu-content-tooltip",
+      tooltipArgs: {
+        title
+      },
+      onUpdate: this.onMenuButtonUpdate
+    }, /*#__PURE__*/external_React_default().createElement(LinkMenu, {
+      dispatch: dispatch,
+      index: index,
+      source: eventSource,
+      options: link.contextMenuOptions || contextMenuOptions,
+      site: link,
+      siteInfo: this._getTelemetryInfo(),
+      shouldSendImpressionStats: shouldSendImpressionStats
+    })));
+  }
+
+}
+_Card.defaultProps = {
+  link: {}
+};
+const Card = (0,external_ReactRedux_namespaceObject.connect)(state => ({
+  platform: state.Prefs.values.platform
+}))(_Card);
+const PlaceholderCard = props => /*#__PURE__*/external_React_default().createElement(Card, {
+  placeholder: true,
+  className: props.className
+});
+;// CONCATENATED MODULE: ./content-src/lib/perf-service.js
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+let usablePerfObj = window.performance;
+function _PerfService(options) {
+  // For testing, so that we can use a fake Window.performance object with
+  // known state.
+  if (options && options.performanceObj) {
+    this._perf = options.performanceObj;
+  } else {
+    this._perf = usablePerfObj;
+  }
+}
+_PerfService.prototype = {
+  /**
+   * Calls the underlying mark() method on the appropriate Window.performance
+   * object to add a mark with the given name to the appropriate performance
+   * timeline.
+   *
+   * @param  {String} name  the name to give the current mark
+   * @return {void}
+   */
+  mark: function mark(str) {
+    this._perf.mark(str);
+  },
+
+  /**
+   * Calls the underlying getEntriesByName on the appropriate Window.performance
+   * object.
+   *
+   * @param  {String} name
+   * @param  {String} type eg "mark"
+   * @return {Array}       Performance* objects
+   */
+  getEntriesByName: function getEntriesByName(name, type) {
+    return this._perf.getEntriesByName(name, type);
+  },
+
+  /**
+   * The timeOrigin property from the appropriate performance object.
+   * Used to ensure that timestamps from the add-on code and the content code
+   * are comparable.
+   *
+   * @note If this is called from a context without a window
+   * (eg a JSM in chrome), it will return the timeOrigin of the XUL hidden
+   * window, which appears to be the first created window (and thus
+   * timeOrigin) in the browser.  Note also, however, there is also a private
+   * hidden window, presumably for private browsing, which appears to be
+   * created dynamically later.  Exactly how/when that shows up needs to be
+   * investigated.
+   *
+   * @return {Number} A double of milliseconds with a precision of 0.5us.
+   */
+  get timeOrigin() {
+    return this._perf.timeOrigin;
+  },
+
+  /**
+   * Returns the "absolute" version of performance.now(), i.e. one that
+   * should ([bug 1401406](https://bugzilla.mozilla.org/show_bug.cgi?id=1401406)
+   * be comparable across both chrome and content.
+   *
+   * @return {Number}
+   */
+  absNow: function absNow() {
+    return this.timeOrigin + this._perf.now();
+  },
+
+  /**
+   * This returns the absolute startTime from the most recent performance.mark()
+   * with the given name.
+   *
+   * @param  {String} name  the name to lookup the start time for
+   *
+   * @return {Number}       the returned start time, as a DOMHighResTimeStamp
+   *
+   * @throws {Error}        "No Marks with the name ..." if none are available
+   *
+   * @note Always surround calls to this by try/catch.  Otherwise your code
+   * may fail when the `privacy.resistFingerprinting` pref is true.  When
+   * this pref is set, all attempts to get marks will likely fail, which will
+   * cause this method to throw.
+   *
+   * See [bug 1369303](https://bugzilla.mozilla.org/show_bug.cgi?id=1369303)
+   * for more info.
+   */
+  getMostRecentAbsMarkStartByName(name) {
+    let entries = this.getEntriesByName(name, "mark");
+
+    if (!entries.length) {
+      throw new Error(`No marks with the name ${name}`);
+    }
+
+    let mostRecentEntry = entries[entries.length - 1];
+    return this._perf.timeOrigin + mostRecentEntry.startTime;
+  }
+
+};
+const perfService = new _PerfService();
+;// CONCATENATED MODULE: ./content-src/components/ComponentPerfTimer/ComponentPerfTimer.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11461,11 +9621,11 @@ __webpack_require__.r(__webpack_exports__);
 // from custom sections from showing up or from topstories.
 
 const RECORDED_SECTIONS = ["highlights", "topsites"];
-class ComponentPerfTimer extends (react__WEBPACK_IMPORTED_MODULE_2___default().Component) {
+class ComponentPerfTimer extends (external_React_default()).Component {
   constructor(props) {
     super(props); // Just for test dependency injection:
 
-    this.perfSvc = this.props.perfSvc || content_src_lib_perf_service__WEBPACK_IMPORTED_MODULE_1__.perfService;
+    this.perfSvc = this.props.perfSvc || perfService;
     this._sendBadStateEvent = this._sendBadStateEvent.bind(this);
     this._sendPaintedEvent = this._sendPaintedEvent.bind(this);
     this._reportMissingData = false;
@@ -11574,8 +9734,8 @@ class ComponentPerfTimer extends (react__WEBPACK_IMPORTED_MODULE_2___default().C
       const firstRenderKey = `${this.props.id}_first_render_ts`; // value has to be Int32.
 
       const value = parseInt(this.perfSvc.getMostRecentAbsMarkStartByName(dataReadyKey) - this.perfSvc.getMostRecentAbsMarkStartByName(firstRenderKey), 10);
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SAVE_SESSION_PERF_DATA,
+      this.props.dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.SAVE_SESSION_PERF_DATA,
         // highlights_data_late_by_ms, topsites_data_late_by_ms.
         data: {
           [`${this.props.id}_data_late_by_ms`]: value
@@ -11599,8 +9759,8 @@ class ComponentPerfTimer extends (react__WEBPACK_IMPORTED_MODULE_2___default().C
     try {
       const data = {};
       data[key] = this.perfSvc.getMostRecentAbsMarkStartByName(key);
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SAVE_SESSION_PERF_DATA,
+      this.props.dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.SAVE_SESSION_PERF_DATA,
         data
       }));
     } catch (ex) {// If this failed, it's likely because the `privacy.resistFingerprinting`
@@ -11620,140 +9780,19 @@ class ComponentPerfTimer extends (react__WEBPACK_IMPORTED_MODULE_2___default().C
   }
 
 }
-
-/***/ }),
-/* 84 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "_PerfService": () => (/* binding */ _PerfService),
-/* harmony export */   "perfService": () => (/* binding */ perfService)
-/* harmony export */ });
+;// CONCATENATED MODULE: ./content-src/components/MoreRecommendations/MoreRecommendations.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-let usablePerfObj = window.performance;
-function _PerfService(options) {
-  // For testing, so that we can use a fake Window.performance object with
-  // known state.
-  if (options && options.performanceObj) {
-    this._perf = options.performanceObj;
-  } else {
-    this._perf = usablePerfObj;
-  }
-}
-_PerfService.prototype = {
-  /**
-   * Calls the underlying mark() method on the appropriate Window.performance
-   * object to add a mark with the given name to the appropriate performance
-   * timeline.
-   *
-   * @param  {String} name  the name to give the current mark
-   * @return {void}
-   */
-  mark: function mark(str) {
-    this._perf.mark(str);
-  },
-
-  /**
-   * Calls the underlying getEntriesByName on the appropriate Window.performance
-   * object.
-   *
-   * @param  {String} name
-   * @param  {String} type eg "mark"
-   * @return {Array}       Performance* objects
-   */
-  getEntriesByName: function getEntriesByName(name, type) {
-    return this._perf.getEntriesByName(name, type);
-  },
-
-  /**
-   * The timeOrigin property from the appropriate performance object.
-   * Used to ensure that timestamps from the add-on code and the content code
-   * are comparable.
-   *
-   * @note If this is called from a context without a window
-   * (eg a JSM in chrome), it will return the timeOrigin of the XUL hidden
-   * window, which appears to be the first created window (and thus
-   * timeOrigin) in the browser.  Note also, however, there is also a private
-   * hidden window, presumably for private browsing, which appears to be
-   * created dynamically later.  Exactly how/when that shows up needs to be
-   * investigated.
-   *
-   * @return {Number} A double of milliseconds with a precision of 0.5us.
-   */
-  get timeOrigin() {
-    return this._perf.timeOrigin;
-  },
-
-  /**
-   * Returns the "absolute" version of performance.now(), i.e. one that
-   * should ([bug 1401406](https://bugzilla.mozilla.org/show_bug.cgi?id=1401406)
-   * be comparable across both chrome and content.
-   *
-   * @return {Number}
-   */
-  absNow: function absNow() {
-    return this.timeOrigin + this._perf.now();
-  },
-
-  /**
-   * This returns the absolute startTime from the most recent performance.mark()
-   * with the given name.
-   *
-   * @param  {String} name  the name to lookup the start time for
-   *
-   * @return {Number}       the returned start time, as a DOMHighResTimeStamp
-   *
-   * @throws {Error}        "No Marks with the name ..." if none are available
-   *
-   * @note Always surround calls to this by try/catch.  Otherwise your code
-   * may fail when the `privacy.resistFingerprinting` pref is true.  When
-   * this pref is set, all attempts to get marks will likely fail, which will
-   * cause this method to throw.
-   *
-   * See [bug 1369303](https://bugzilla.mozilla.org/show_bug.cgi?id=1369303)
-   * for more info.
-   */
-  getMostRecentAbsMarkStartByName(name) {
-    let entries = this.getEntriesByName(name, "mark");
-
-    if (!entries.length) {
-      throw new Error(`No marks with the name ${name}`);
-    }
-
-    let mostRecentEntry = entries[entries.length - 1];
-    return this._perf.timeOrigin + mostRecentEntry.startTime;
-  }
-
-};
-const perfService = new _PerfService();
-
-/***/ }),
-/* 85 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "MoreRecommendations": () => (/* binding */ MoreRecommendations)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-class MoreRecommendations extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
+class MoreRecommendations extends (external_React_default()).PureComponent {
   render() {
     const {
       read_more_endpoint
     } = this.props;
 
     if (read_more_endpoint) {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", {
+      return /*#__PURE__*/external_React_default().createElement("a", {
         className: "more-recommendations",
         href: read_more_endpoint,
         "data-l10n-id": "newtab-pocket-more-recommendations"
@@ -11764,89 +9803,65 @@ class MoreRecommendations extends (react__WEBPACK_IMPORTED_MODULE_0___default().
   }
 
 }
-
-/***/ }),
-/* 86 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "_PocketLoggedInCta": () => (/* binding */ _PocketLoggedInCta),
-/* harmony export */   "PocketLoggedInCta": () => (/* binding */ PocketLoggedInCta)
-/* harmony export */ });
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
+;// CONCATENATED MODULE: ./content-src/components/PocketLoggedInCta/PocketLoggedInCta.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-class _PocketLoggedInCta extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureComponent) {
+class _PocketLoggedInCta extends (external_React_default()).PureComponent {
   render() {
     const {
       pocketCta
     } = this.props.Pocket;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", {
+    return /*#__PURE__*/external_React_default().createElement("span", {
       className: "pocket-logged-in-cta"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("a", {
+    }, /*#__PURE__*/external_React_default().createElement("a", {
       className: "pocket-cta-button",
       href: pocketCta.ctaUrl ? pocketCta.ctaUrl : "https://getpocket.com/"
-    }, pocketCta.ctaButton ? pocketCta.ctaButton : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", {
+    }, pocketCta.ctaButton ? pocketCta.ctaButton : /*#__PURE__*/external_React_default().createElement("span", {
       "data-l10n-id": "newtab-pocket-cta-button"
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("a", {
+    })), /*#__PURE__*/external_React_default().createElement("a", {
       href: pocketCta.ctaUrl ? pocketCta.ctaUrl : "https://getpocket.com/"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", {
+    }, /*#__PURE__*/external_React_default().createElement("span", {
       className: "cta-text"
-    }, pocketCta.ctaText ? pocketCta.ctaText : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", {
+    }, pocketCta.ctaText ? pocketCta.ctaText : /*#__PURE__*/external_React_default().createElement("span", {
       "data-l10n-id": "newtab-pocket-cta-text"
     }))));
   }
 
 }
-const PocketLoggedInCta = (0,react_redux__WEBPACK_IMPORTED_MODULE_0__.connect)(state => ({
+const PocketLoggedInCta = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   Pocket: state.Pocket
 }))(_PocketLoggedInCta);
-
-/***/ }),
-/* 87 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Topic": () => (/* binding */ Topic),
-/* harmony export */   "Topics": () => (/* binding */ Topics)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+;// CONCATENATED MODULE: ./content-src/components/Topics/Topics.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-class Topic extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
+class Topic extends (external_React_default()).PureComponent {
   render() {
     const {
       url,
       name
     } = this.props;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", {
+    return /*#__PURE__*/external_React_default().createElement("li", null, /*#__PURE__*/external_React_default().createElement("a", {
       key: name,
       href: url
     }, name));
   }
 
 }
-class Topics extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
+class Topics extends (external_React_default()).PureComponent {
   render() {
     const {
       topics
     } = this.props;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
+    return /*#__PURE__*/external_React_default().createElement("span", {
       className: "topics"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
+    }, /*#__PURE__*/external_React_default().createElement("span", {
       "data-l10n-id": "newtab-pocket-read-more"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("ul", null, topics && topics.map(t => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(Topic, {
+    }), /*#__PURE__*/external_React_default().createElement("ul", null, topics && topics.map(t => /*#__PURE__*/external_React_default().createElement(Topic, {
       key: t.name,
       url: t.url,
       name: t.name
@@ -11854,245 +9869,7 @@ class Topics extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent
   }
 
 }
-
-/***/ }),
-/* 88 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "_TopSites": () => (/* binding */ _TopSites),
-/* harmony export */   "TopSites": () => (/* binding */ TopSites)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(89);
-/* harmony import */ var content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(71);
-/* harmony import */ var content_src_components_ComponentPerfTimer_ComponentPerfTimer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(83);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var _asrouter_components_ModalOverlay_ModalOverlay__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(76);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_6__);
-/* harmony import */ var _SearchShortcutsForm__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(90);
-/* harmony import */ var common_Reducers_jsm__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(91);
-/* harmony import */ var _TopSiteForm__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(93);
-/* harmony import */ var _TopSite__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(95);
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-
-
-
-
-
-
-
-
-
-function topSiteIconType(link) {
-  if (link.customScreenshotURL) {
-    return "custom_screenshot";
-  }
-
-  if (link.tippyTopIcon || link.faviconRef === "tippytop") {
-    return "tippytop";
-  }
-
-  if (link.faviconSize >= _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__.MIN_RICH_FAVICON_SIZE) {
-    return "rich_icon";
-  }
-
-  if (link.screenshot) {
-    return "screenshot";
-  }
-
-  return "no_image";
-}
-/**
- * Iterates through TopSites and counts types of images.
- * @param acc Accumulator for reducer.
- * @param topsite Entry in TopSites.
- */
-
-
-function countTopSitesIconsTypes(topSites) {
-  const countTopSitesTypes = (acc, link) => {
-    acc[topSiteIconType(link)]++;
-    return acc;
-  };
-
-  return topSites.reduce(countTopSitesTypes, {
-    custom_screenshot: 0,
-    screenshot: 0,
-    tippytop: 0,
-    rich_icon: 0,
-    no_image: 0
-  });
-}
-
-class _TopSites extends (react__WEBPACK_IMPORTED_MODULE_6___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    this.onEditFormClose = this.onEditFormClose.bind(this);
-    this.onSearchShortcutsFormClose = this.onSearchShortcutsFormClose.bind(this);
-  }
-  /**
-   * Dispatch session statistics about the quality of TopSites icons and pinned count.
-   */
-
-
-  _dispatchTopSitesStats() {
-    const topSites = this._getVisibleTopSites().filter(topSite => topSite !== null && topSite !== undefined);
-
-    const topSitesIconsStats = countTopSitesIconsTypes(topSites);
-    const topSitesPinned = topSites.filter(site => !!site.isPinned).length;
-    const searchShortcuts = topSites.filter(site => !!site.searchTopSite).length; // Dispatch telemetry event with the count of TopSites images types.
-
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SAVE_SESSION_PERF_DATA,
-      data: {
-        topsites_icon_stats: topSitesIconsStats,
-        topsites_pinned: topSitesPinned,
-        topsites_search_shortcuts: searchShortcuts
-      }
-    }));
-  }
-  /**
-   * Return the TopSites that are visible based on prefs and window width.
-   */
-
-
-  _getVisibleTopSites() {
-    // We hide 2 sites per row when not in the wide layout.
-    let sitesPerRow = common_Reducers_jsm__WEBPACK_IMPORTED_MODULE_8__.TOP_SITES_MAX_SITES_PER_ROW; // $break-point-widest = 1072px (from _variables.scss)
-
-    if (!__webpack_require__.g.matchMedia(`(min-width: 1072px)`).matches) {
-      sitesPerRow -= 2;
-    }
-
-    return this.props.TopSites.rows.slice(0, this.props.TopSitesRows * sitesPerRow);
-  }
-
-  componentDidUpdate() {
-    this._dispatchTopSitesStats();
-  }
-
-  componentDidMount() {
-    this._dispatchTopSitesStats();
-  }
-
-  onEditFormClose() {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
-      source: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__.TOP_SITES_SOURCE,
-      event: "TOP_SITES_EDIT_CLOSE"
-    }));
-    this.props.dispatch({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.TOP_SITES_CANCEL_EDIT
-    });
-  }
-
-  onSearchShortcutsFormClose() {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
-      source: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__.TOP_SITES_SOURCE,
-      event: "SEARCH_EDIT_CLOSE"
-    }));
-    this.props.dispatch({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL
-    });
-  }
-
-  render() {
-    const {
-      props
-    } = this;
-    const {
-      editForm,
-      showSearchShortcutsForm
-    } = props.TopSites;
-    const extraMenuOptions = ["AddTopSite"];
-    const colors = props.Prefs.values["newNewtabExperience.colors"];
-
-    if (props.Prefs.values["improvesearch.topSiteSearchShortcuts"]) {
-      extraMenuOptions.push("AddSearchShortcut");
-    }
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_6___default().createElement(content_src_components_ComponentPerfTimer_ComponentPerfTimer__WEBPACK_IMPORTED_MODULE_3__.ComponentPerfTimer, {
-      id: "topsites",
-      initialized: props.TopSites.initialized,
-      dispatch: props.dispatch
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_6___default().createElement(content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_2__.CollapsibleSection, {
-      className: "top-sites",
-      id: "topsites",
-      title: props.title || {
-        id: "newtab-section-header-topsites"
-      },
-      hideTitle: true,
-      extraMenuOptions: extraMenuOptions,
-      showPrefName: "feeds.topsites",
-      eventSource: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__.TOP_SITES_SOURCE,
-      collapsed: false,
-      isFixed: props.isFixed,
-      isFirst: props.isFirst,
-      isLast: props.isLast,
-      dispatch: props.dispatch
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_6___default().createElement(_TopSite__WEBPACK_IMPORTED_MODULE_10__.TopSiteList, {
-      TopSites: props.TopSites,
-      TopSitesRows: props.TopSitesRows,
-      dispatch: props.dispatch,
-      topSiteIconType: topSiteIconType,
-      colors: colors
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_6___default().createElement("div", {
-      className: "edit-topsites-wrapper"
-    }, editForm && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_6___default().createElement("div", {
-      className: "edit-topsites"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_6___default().createElement(_asrouter_components_ModalOverlay_ModalOverlay__WEBPACK_IMPORTED_MODULE_5__.ModalOverlayWrapper, {
-      unstyled: true,
-      onClose: this.onEditFormClose,
-      innerClassName: "modal"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_6___default().createElement(_TopSiteForm__WEBPACK_IMPORTED_MODULE_9__.TopSiteForm, _extends({
-      site: props.TopSites.rows[editForm.index],
-      onClose: this.onEditFormClose,
-      dispatch: this.props.dispatch
-    }, editForm)))), showSearchShortcutsForm && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_6___default().createElement("div", {
-      className: "edit-search-shortcuts"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_6___default().createElement(_asrouter_components_ModalOverlay_ModalOverlay__WEBPACK_IMPORTED_MODULE_5__.ModalOverlayWrapper, {
-      unstyled: true,
-      onClose: this.onSearchShortcutsFormClose,
-      innerClassName: "modal"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_6___default().createElement(_SearchShortcutsForm__WEBPACK_IMPORTED_MODULE_7__.SearchShortcutsForm, {
-      TopSites: props.TopSites,
-      onClose: this.onSearchShortcutsFormClose,
-      dispatch: this.props.dispatch
-    }))))));
-  }
-
-}
-const TopSites = (0,react_redux__WEBPACK_IMPORTED_MODULE_4__.connect)((state, props) => ({
-  // For SPOC Experiment only, take TopSites from DiscoveryStream TopSites that takes in SPOC Data
-  TopSites: props.TopSitesWithSpoc || state.TopSites,
-  Prefs: state.Prefs,
-  TopSitesRows: state.Prefs.values.topSitesRows
-}))(_TopSites);
-
-/***/ }),
-/* 89 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "TOP_SITES_SOURCE": () => (/* binding */ TOP_SITES_SOURCE),
-/* harmony export */   "TOP_SITES_CONTEXT_MENU_OPTIONS": () => (/* binding */ TOP_SITES_CONTEXT_MENU_OPTIONS),
-/* harmony export */   "TOP_SITES_SPOC_CONTEXT_MENU_OPTIONS": () => (/* binding */ TOP_SITES_SPOC_CONTEXT_MENU_OPTIONS),
-/* harmony export */   "TOP_SITES_SPONSORED_POSITION_CONTEXT_MENU_OPTIONS": () => (/* binding */ TOP_SITES_SPONSORED_POSITION_CONTEXT_MENU_OPTIONS),
-/* harmony export */   "TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS": () => (/* binding */ TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS),
-/* harmony export */   "MIN_RICH_FAVICON_SIZE": () => (/* binding */ MIN_RICH_FAVICON_SIZE),
-/* harmony export */   "MIN_SMALL_FAVICON_SIZE": () => (/* binding */ MIN_SMALL_FAVICON_SIZE)
-/* harmony export */ });
+;// CONCATENATED MODULE: ./content-src/components/TopSites/TopSitesConstants.js
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12106,27 +9883,14 @@ const TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS = ["CheckPinTopSite", "Sep
 const MIN_RICH_FAVICON_SIZE = 96; // minimum size necessary to show any icon
 
 const MIN_SMALL_FAVICON_SIZE = 16;
-
-/***/ }),
-/* 90 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "SelectableSearchShortcut": () => (/* binding */ SelectableSearchShortcut),
-/* harmony export */   "SearchShortcutsForm": () => (/* binding */ SearchShortcutsForm)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _TopSitesConstants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(89);
+;// CONCATENATED MODULE: ./content-src/components/TopSites/SearchShortcutsForm.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
 
-class SelectableSearchShortcut extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureComponent) {
+class SelectableSearchShortcut extends (external_React_default()).PureComponent {
   render() {
     const {
       shortcut,
@@ -12135,35 +9899,35 @@ class SelectableSearchShortcut extends (react__WEBPACK_IMPORTED_MODULE_1___defau
     const imageStyle = {
       backgroundImage: `url("${shortcut.tippyTopIcon}")`
     };
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: "top-site-outer search-shortcut"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("input", {
+    }, /*#__PURE__*/external_React_default().createElement("input", {
       type: "checkbox",
       id: shortcut.keyword,
       name: shortcut.keyword,
       checked: selected,
       onChange: this.props.onChange
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("label", {
+    }), /*#__PURE__*/external_React_default().createElement("label", {
       htmlFor: shortcut.keyword
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "top-site-inner"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("span", null, /*#__PURE__*/external_React_default().createElement("div", {
       className: "tile"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "top-site-icon rich-icon",
       style: imageStyle,
       "data-fallback": "@"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
+    }), /*#__PURE__*/external_React_default().createElement("div", {
       className: "top-site-icon search-topsite"
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
+    })), /*#__PURE__*/external_React_default().createElement("div", {
       className: "title"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", {
+    }, /*#__PURE__*/external_React_default().createElement("span", {
       dir: "auto"
     }, shortcut.keyword))))));
   }
 
 }
-class SearchShortcutsForm extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureComponent) {
+class SearchShortcutsForm extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.handleChange = this.handleChange.bind(this);
@@ -12231,8 +9995,8 @@ class SearchShortcutsForm extends (react__WEBPACK_IMPORTED_MODULE_1___default().
       }
     }); // Tell the feed to do the work.
 
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.UPDATE_PINNED_SEARCH_SHORTCUTS,
+    this.props.dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.UPDATE_PINNED_SEARCH_SHORTCUTS,
       data: {
         addedShortcuts: pinQueue,
         deletedShortcuts: unpinQueue
@@ -12240,8 +10004,8 @@ class SearchShortcutsForm extends (react__WEBPACK_IMPORTED_MODULE_1___default().
     })); // Send the Telemetry pings.
 
     pinQueue.forEach(shortcut => {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
-        source: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_2__.TOP_SITES_SOURCE,
+      this.props.dispatch(actionCreators.UserEvent({
+        source: TOP_SITES_SOURCE,
         event: "SEARCH_EDIT_ADD",
         value: {
           search_vendor: shortcut.searchVendor
@@ -12249,8 +10013,8 @@ class SearchShortcutsForm extends (react__WEBPACK_IMPORTED_MODULE_1___default().
       }));
     });
     unpinQueue.forEach(shortcut => {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
-        source: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_2__.TOP_SITES_SOURCE,
+      this.props.dispatch(actionCreators.UserEvent({
+        source: TOP_SITES_SOURCE,
         event: "SEARCH_EDIT_DELETE",
         value: {
           search_vendor: shortcut.searchVendor
@@ -12270,26 +10034,26 @@ class SearchShortcutsForm extends (react__WEBPACK_IMPORTED_MODULE_1___default().
   }
 
   render() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("form", {
+    return /*#__PURE__*/external_React_default().createElement("form", {
       className: "topsite-form"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "search-shortcuts-container"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("h3", {
+    }, /*#__PURE__*/external_React_default().createElement("h3", {
       className: "section-title grey-title",
       "data-l10n-id": "newtab-topsites-add-search-engine-header"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", null, this.state.shortcuts.map(shortcut => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(SelectableSearchShortcut, {
+    }), /*#__PURE__*/external_React_default().createElement("div", null, this.state.shortcuts.map(shortcut => /*#__PURE__*/external_React_default().createElement(SelectableSearchShortcut, {
       key: shortcut.keyword,
       shortcut: shortcut,
       selected: shortcut.isSelected,
       onChange: this.handleChange
-    })))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("section", {
+    })))), /*#__PURE__*/external_React_default().createElement("section", {
       className: "actions"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", {
+    }, /*#__PURE__*/external_React_default().createElement("button", {
       className: "cancel",
       type: "button",
       onClick: this.onCancelButtonClick,
       "data-l10n-id": "newtab-topsites-cancel-button"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", {
+    }), /*#__PURE__*/external_React_default().createElement("button", {
       className: "done",
       type: "submit",
       onClick: this.onSaveButtonClick,
@@ -12298,21 +10062,50 @@ class SearchShortcutsForm extends (react__WEBPACK_IMPORTED_MODULE_1___default().
   }
 
 }
+;// CONCATENATED MODULE: ./common/Dedupe.jsm
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+class Dedupe {
+  constructor(createKey) {
+    this.createKey = createKey || this.defaultCreateKey;
+  }
 
-/***/ }),
-/* 91 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+  defaultCreateKey(item) {
+    return item;
+  }
+  /**
+   * Dedupe any number of grouped elements favoring those from earlier groups.
+   *
+   * @param {Array} groups Contains an arbitrary number of arrays of elements.
+   * @returns {Array} A matching array of each provided group deduped.
+   */
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "TOP_SITES_DEFAULT_ROWS": () => (/* binding */ TOP_SITES_DEFAULT_ROWS),
-/* harmony export */   "TOP_SITES_MAX_SITES_PER_ROW": () => (/* binding */ TOP_SITES_MAX_SITES_PER_ROW),
-/* harmony export */   "INITIAL_STATE": () => (/* binding */ INITIAL_STATE),
-/* harmony export */   "insertPinned": () => (/* binding */ insertPinned),
-/* harmony export */   "reducers": () => (/* binding */ reducers)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var common_Dedupe_jsm__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(92);
+
+  group(...groups) {
+    const globalKeys = new Set();
+    const result = [];
+
+    for (const values of groups) {
+      const valueMap = new Map();
+
+      for (const value of values) {
+        const key = this.createKey(value);
+
+        if (!globalKeys.has(key) && !valueMap.has(key)) {
+          valueMap.set(key, value);
+        }
+      }
+
+      result.push(valueMap);
+      valueMap.forEach((value, key) => globalKeys.add(key));
+    }
+
+    return result.map(m => Array.from(m.values()));
+  }
+
+}
+;// CONCATENATED MODULE: ./common/Reducers.jsm
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12323,7 +10116,7 @@ __webpack_require__.r(__webpack_exports__);
 const TOP_SITES_DEFAULT_ROWS = 1;
 const TOP_SITES_MAX_SITES_PER_ROW = 8;
 const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
-const dedupe = new common_Dedupe_jsm__WEBPACK_IMPORTED_MODULE_1__.Dedupe(site => site && site.url);
+const dedupe = new Dedupe(site => site && site.url);
 const INITIAL_STATE = {
   App: {
     // Have we received real data from the app yet?
@@ -12409,7 +10202,7 @@ const INITIAL_STATE = {
 
 function App(prevState = INITIAL_STATE.App, action) {
   switch (action.type) {
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.INIT:
+    case actionTypes.INIT:
       return Object.assign({}, prevState, action.data || {}, {
         initialized: true
       });
@@ -12421,7 +10214,7 @@ function App(prevState = INITIAL_STATE.App, action) {
 
 function ASRouter(prevState = INITIAL_STATE.ASRouter, action) {
   switch (action.type) {
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.AS_ROUTER_INITIALIZED:
+    case actionTypes.AS_ROUTER_INITIALIZED:
       return { ...action.data,
         initialized: true
       };
@@ -12476,7 +10269,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
   let newRows;
 
   switch (action.type) {
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.TOP_SITES_UPDATED:
+    case actionTypes.TOP_SITES_UPDATED:
       if (!action.data || !action.data.links) {
         return prevState;
       }
@@ -12488,12 +10281,12 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         pref: action.data.pref
       } : {});
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.TOP_SITES_PREFS_UPDATED:
+    case actionTypes.TOP_SITES_PREFS_UPDATED:
       return Object.assign({}, prevState, {
         pref: action.data.pref
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.TOP_SITES_EDIT:
+    case actionTypes.TOP_SITES_EDIT:
       return Object.assign({}, prevState, {
         editForm: {
           index: action.data.index,
@@ -12501,22 +10294,22 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         }
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.TOP_SITES_CANCEL_EDIT:
+    case actionTypes.TOP_SITES_CANCEL_EDIT:
       return Object.assign({}, prevState, {
         editForm: null
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL:
+    case actionTypes.TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL:
       return Object.assign({}, prevState, {
         showSearchShortcutsForm: true
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL:
+    case actionTypes.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL:
       return Object.assign({}, prevState, {
         showSearchShortcutsForm: false
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PREVIEW_RESPONSE:
+    case actionTypes.PREVIEW_RESPONSE:
       if (!prevState.editForm || action.data.url !== prevState.editForm.previewUrl) {
         return prevState;
       }
@@ -12529,7 +10322,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         }
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PREVIEW_REQUEST:
+    case actionTypes.PREVIEW_REQUEST:
       if (!prevState.editForm) {
         return prevState;
       }
@@ -12542,7 +10335,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         }
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PREVIEW_REQUEST_CANCEL:
+    case actionTypes.PREVIEW_REQUEST_CANCEL:
       if (!prevState.editForm) {
         return prevState;
       }
@@ -12554,7 +10347,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         }
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SCREENSHOT_UPDATED:
+    case actionTypes.SCREENSHOT_UPDATED:
       newRows = prevState.rows.map(row => {
         if (row && row.url === action.data.url) {
           hasMatch = true;
@@ -12569,7 +10362,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         rows: newRows
       }) : prevState;
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PLACES_BOOKMARK_ADDED:
+    case actionTypes.PLACES_BOOKMARK_ADDED:
       if (!action.data) {
         return prevState;
       }
@@ -12594,7 +10387,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         rows: newRows
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PLACES_BOOKMARKS_REMOVED:
+    case actionTypes.PLACES_BOOKMARKS_REMOVED:
       if (!action.data) {
         return prevState;
       }
@@ -12614,7 +10407,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         rows: newRows
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PLACES_LINKS_DELETED:
+    case actionTypes.PLACES_LINKS_DELETED:
       if (!action.data) {
         return prevState;
       }
@@ -12624,12 +10417,12 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         rows: newRows
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.UPDATE_SEARCH_SHORTCUTS:
+    case actionTypes.UPDATE_SEARCH_SHORTCUTS:
       return { ...prevState,
         searchShortcuts: action.data.searchShortcuts
       };
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SNIPPETS_PREVIEW_MODE:
+    case actionTypes.SNIPPETS_PREVIEW_MODE:
       return { ...prevState,
         rows: []
       };
@@ -12641,18 +10434,18 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
 
 function Dialog(prevState = INITIAL_STATE.Dialog, action) {
   switch (action.type) {
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DIALOG_OPEN:
+    case actionTypes.DIALOG_OPEN:
       return Object.assign({}, prevState, {
         visible: true,
         data: action.data
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DIALOG_CANCEL:
+    case actionTypes.DIALOG_CANCEL:
       return Object.assign({}, prevState, {
         visible: false
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DELETE_HISTORY_URL:
+    case actionTypes.DELETE_HISTORY_URL:
       return Object.assign({}, INITIAL_STATE.Dialog);
 
     default:
@@ -12664,13 +10457,13 @@ function Prefs(prevState = INITIAL_STATE.Prefs, action) {
   let newValues;
 
   switch (action.type) {
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PREFS_INITIAL_VALUES:
+    case actionTypes.PREFS_INITIAL_VALUES:
       return Object.assign({}, prevState, {
         initialized: true,
         values: action.data
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PREF_CHANGED:
+    case actionTypes.PREF_CHANGED:
       newValues = Object.assign({}, prevState.values);
       newValues[action.data.name] = action.data.value;
       return Object.assign({}, prevState, {
@@ -12687,10 +10480,10 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
   let newState;
 
   switch (action.type) {
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SECTION_DEREGISTER:
+    case actionTypes.SECTION_DEREGISTER:
       return prevState.filter(section => section.id !== action.data);
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SECTION_REGISTER:
+    case actionTypes.SECTION_REGISTER:
       // If section exists in prevState, update it
       newState = prevState.map(section => {
         if (section && section.id === action.data.id) {
@@ -12715,7 +10508,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
 
       return newState;
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SECTION_UPDATE:
+    case actionTypes.SECTION_UPDATE:
       newState = prevState.map(section => {
         if (section && section.id === action.data.id) {
           // If the action is updating rows, we should consider initialized to be true.
@@ -12768,7 +10561,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
       });
       return newState;
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SECTION_UPDATE_CARD:
+    case actionTypes.SECTION_UPDATE_CARD:
       return prevState.map(section => {
         if (section && section.id === action.data.id && section.rows) {
           const newRows = section.rows.map(card => {
@@ -12786,7 +10579,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         return section;
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PLACES_BOOKMARK_ADDED:
+    case actionTypes.PLACES_BOOKMARK_ADDED:
       if (!action.data) {
         return prevState;
       }
@@ -12812,7 +10605,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         })
       }));
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PLACES_SAVED_TO_POCKET:
+    case actionTypes.PLACES_SAVED_TO_POCKET:
       if (!action.data) {
         return prevState;
       }
@@ -12832,7 +10625,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         })
       }));
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PLACES_BOOKMARKS_REMOVED:
+    case actionTypes.PLACES_BOOKMARKS_REMOVED:
       if (!action.data) {
         return prevState;
       }
@@ -12857,7 +10650,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         })
       }));
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PLACES_LINKS_DELETED:
+    case actionTypes.PLACES_LINKS_DELETED:
       if (!action.data) {
         return prevState;
       }
@@ -12866,7 +10659,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         rows: section.rows.filter(site => !action.data.urls.includes(site.url))
       }));
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PLACES_LINK_BLOCKED:
+    case actionTypes.PLACES_LINK_BLOCKED:
       if (!action.data) {
         return prevState;
       }
@@ -12875,13 +10668,13 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         rows: section.rows.filter(site => site.url !== action.data.url)
       }));
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DELETE_FROM_POCKET:
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.ARCHIVE_FROM_POCKET:
+    case actionTypes.DELETE_FROM_POCKET:
+    case actionTypes.ARCHIVE_FROM_POCKET:
       return prevState.map(section => Object.assign({}, section, {
         rows: section.rows.filter(site => site.pocket_id !== action.data.pocket_id)
       }));
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SNIPPETS_PREVIEW_MODE:
+    case actionTypes.SNIPPETS_PREVIEW_MODE:
       return prevState.map(section => ({ ...section,
         rows: []
       }));
@@ -12893,22 +10686,22 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
 
 function Snippets(prevState = INITIAL_STATE.Snippets, action) {
   switch (action.type) {
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SNIPPETS_DATA:
+    case actionTypes.SNIPPETS_DATA:
       return Object.assign({}, prevState, {
         initialized: true
       }, action.data);
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SNIPPET_BLOCKED:
+    case actionTypes.SNIPPET_BLOCKED:
       return Object.assign({}, prevState, {
         blockList: prevState.blockList.concat(action.data)
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SNIPPETS_BLOCKLIST_CLEARED:
+    case actionTypes.SNIPPETS_BLOCKLIST_CLEARED:
       return Object.assign({}, prevState, {
         blockList: []
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SNIPPETS_RESET:
+    case actionTypes.SNIPPETS_RESET:
       return INITIAL_STATE.Snippets;
 
     default:
@@ -12918,17 +10711,17 @@ function Snippets(prevState = INITIAL_STATE.Snippets, action) {
 
 function Pocket(prevState = INITIAL_STATE.Pocket, action) {
   switch (action.type) {
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.POCKET_WAITING_FOR_SPOC:
+    case actionTypes.POCKET_WAITING_FOR_SPOC:
       return { ...prevState,
         waitingForSpoc: action.data
       };
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.POCKET_LOGGED_IN:
+    case actionTypes.POCKET_LOGGED_IN:
       return { ...prevState,
         isUserLoggedIn: !!action.data
       };
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.POCKET_CTA:
+    case actionTypes.POCKET_CTA:
       return { ...prevState,
         pocketCta: {
           ctaButton: action.data.cta_button,
@@ -12943,14 +10736,14 @@ function Pocket(prevState = INITIAL_STATE.Pocket, action) {
   }
 }
 
-function Personalization(prevState = INITIAL_STATE.Personalization, action) {
+function Reducers_Personalization(prevState = INITIAL_STATE.Personalization, action) {
   switch (action.type) {
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED:
+    case actionTypes.DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED:
       return { ...prevState,
         lastUpdated: action.data.lastUpdated
       };
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_PERSONALIZATION_INIT:
+    case actionTypes.DISCOVERY_STREAM_PERSONALIZATION_INIT:
       return { ...prevState,
         initialized: true
       };
@@ -13012,47 +10805,47 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
   });
 
   switch (action.type) {
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_CONFIG_CHANGE: // Fall through to a separate action is so it doesn't trigger a listener update on init
+    case actionTypes.DISCOVERY_STREAM_CONFIG_CHANGE: // Fall through to a separate action is so it doesn't trigger a listener update on init
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_CONFIG_SETUP:
+    case actionTypes.DISCOVERY_STREAM_CONFIG_SETUP:
       return { ...prevState,
         config: action.data || {}
       };
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_LAYOUT_UPDATE:
+    case actionTypes.DISCOVERY_STREAM_LAYOUT_UPDATE:
       return { ...prevState,
         lastUpdated: action.data.lastUpdated || null,
         layout: action.data.layout || []
       };
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE:
+    case actionTypes.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE:
       return { ...prevState,
         isCollectionDismissible: action.data.value
       };
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.HIDE_PRIVACY_INFO:
+    case actionTypes.HIDE_PRIVACY_INFO:
       return { ...prevState,
         isPrivacyInfoModalVisible: false
       };
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SHOW_PRIVACY_INFO:
+    case actionTypes.SHOW_PRIVACY_INFO:
       return { ...prevState,
         isPrivacyInfoModalVisible: true
       };
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_LAYOUT_RESET:
+    case actionTypes.DISCOVERY_STREAM_LAYOUT_RESET:
       return { ...INITIAL_STATE.DiscoveryStream,
         config: prevState.config
       };
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_FEEDS_UPDATE:
+    case actionTypes.DISCOVERY_STREAM_FEEDS_UPDATE:
       return { ...prevState,
         feeds: { ...prevState.feeds,
           loaded: true
         }
       };
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_FEED_UPDATE:
+    case actionTypes.DISCOVERY_STREAM_FEED_UPDATE:
       const newData = {};
       newData[action.data.url] = action.data.feed;
       return { ...prevState,
@@ -13063,28 +10856,28 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         }
       };
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_SPOCS_CAPS:
+    case actionTypes.DISCOVERY_STREAM_SPOCS_CAPS:
       return { ...prevState,
         spocs: { ...prevState.spocs,
           frequency_caps: [...prevState.spocs.frequency_caps, ...action.data]
         }
       };
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_SPOCS_ENDPOINT:
+    case actionTypes.DISCOVERY_STREAM_SPOCS_ENDPOINT:
       return { ...prevState,
         spocs: { ...INITIAL_STATE.DiscoveryStream.spocs,
           spocs_endpoint: action.data.url || INITIAL_STATE.DiscoveryStream.spocs.spocs_endpoint
         }
       };
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_SPOCS_PLACEMENTS:
+    case actionTypes.DISCOVERY_STREAM_SPOCS_PLACEMENTS:
       return { ...prevState,
         spocs: { ...prevState.spocs,
           placements: action.data.placements || INITIAL_STATE.DiscoveryStream.spocs.placements
         }
       };
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_SPOCS_UPDATE:
+    case actionTypes.DISCOVERY_STREAM_SPOCS_UPDATE:
       if (action.data) {
         return { ...prevState,
           spocs: { ...prevState.spocs,
@@ -13097,17 +10890,17 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
 
       return prevState;
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_SPOC_BLOCKED:
+    case actionTypes.DISCOVERY_STREAM_SPOC_BLOCKED:
       return { ...prevState,
         spocs: { ...prevState.spocs,
           blocked: [...prevState.spocs.blocked, action.data.url]
         }
       };
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISCOVERY_STREAM_LINK_BLOCKED:
+    case actionTypes.DISCOVERY_STREAM_LINK_BLOCKED:
       return isNotReady() ? prevState : nextState(items => items.filter(item => item.url !== action.data.url));
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PLACES_SAVED_TO_POCKET:
+    case actionTypes.PLACES_SAVED_TO_POCKET:
       const addPocketInfo = item => {
         if (item.url === action.data.url) {
           return Object.assign({}, item, {
@@ -13122,11 +10915,11 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
 
       return isNotReady() ? prevState : nextState(items => items.map(addPocketInfo));
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DELETE_FROM_POCKET:
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.ARCHIVE_FROM_POCKET:
+    case actionTypes.DELETE_FROM_POCKET:
+    case actionTypes.ARCHIVE_FROM_POCKET:
       return isNotReady() ? prevState : nextState(items => items.filter(item => item.pocket_id !== action.data.pocket_id));
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PLACES_BOOKMARK_ADDED:
+    case actionTypes.PLACES_BOOKMARK_ADDED:
       const updateBookmarkInfo = item => {
         if (item.url === action.data.url) {
           const {
@@ -13147,7 +10940,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
 
       return isNotReady() ? prevState : nextState(items => items.map(updateBookmarkInfo));
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PLACES_BOOKMARKS_REMOVED:
+    case actionTypes.PLACES_BOOKMARKS_REMOVED:
       const removeBookmarkInfo = item => {
         if (action.data.urls.includes(item.url)) {
           const newSite = Object.assign({}, item);
@@ -13167,7 +10960,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
 
       return isNotReady() ? prevState : nextState(items => items.map(removeBookmarkInfo));
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PREF_CHANGED:
+    case actionTypes.PREF_CHANGED:
       if (action.data.name === PREF_COLLECTION_DISMISSIBLE) {
         return { ...prevState,
           isCollectionDismissible: action.data.value
@@ -13183,17 +10976,17 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
 
 function Search(prevState = INITIAL_STATE.Search, action) {
   switch (action.type) {
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISABLE_SEARCH:
+    case actionTypes.DISABLE_SEARCH:
       return Object.assign({ ...prevState,
         disable: true
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.FAKE_FOCUS_SEARCH:
+    case actionTypes.FAKE_FOCUS_SEARCH:
       return Object.assign({ ...prevState,
         fakeFocus: true
       });
 
-    case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SHOW_SEARCH:
+    case actionTypes.SHOW_SEARCH:
       return Object.assign({ ...prevState,
         disable: false,
         fakeFocus: false
@@ -13213,386 +11006,16 @@ var reducers = {
   Dialog,
   Sections,
   Pocket,
-  Personalization,
+  Personalization: Reducers_Personalization,
   DiscoveryStream,
   Search
 };
-
-/***/ }),
-/* 92 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Dedupe": () => (/* binding */ Dedupe)
-/* harmony export */ });
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-class Dedupe {
-  constructor(createKey) {
-    this.createKey = createKey || this.defaultCreateKey;
-  }
-
-  defaultCreateKey(item) {
-    return item;
-  }
-  /**
-   * Dedupe any number of grouped elements favoring those from earlier groups.
-   *
-   * @param {Array} groups Contains an arbitrary number of arrays of elements.
-   * @returns {Array} A matching array of each provided group deduped.
-   */
-
-
-  group(...groups) {
-    const globalKeys = new Set();
-    const result = [];
-
-    for (const values of groups) {
-      const valueMap = new Map();
-
-      for (const value of values) {
-        const key = this.createKey(value);
-
-        if (!globalKeys.has(key) && !valueMap.has(key)) {
-          valueMap.set(key, value);
-        }
-      }
-
-      result.push(valueMap);
-      valueMap.forEach((value, key) => globalKeys.add(key));
-    }
-
-    return result.map(m => Array.from(m.values()));
-  }
-
-}
-
-/***/ }),
-/* 93 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "TopSiteForm": () => (/* binding */ TopSiteForm)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var content_src_components_A11yLinkButton_A11yLinkButton__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(73);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _TopSitesConstants__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(89);
-/* harmony import */ var _TopSiteFormInput__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(94);
-/* harmony import */ var _TopSite__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(95);
+;// CONCATENATED MODULE: ./content-src/components/TopSites/TopSiteFormInput.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-
-
-
-
-class TopSiteForm extends (react__WEBPACK_IMPORTED_MODULE_2___default().PureComponent) {
-  constructor(props) {
-    super(props);
-    const {
-      site
-    } = props;
-    this.state = {
-      label: site ? site.label || site.hostname : "",
-      url: site ? site.url : "",
-      validationError: false,
-      customScreenshotUrl: site ? site.customScreenshotURL : "",
-      showCustomScreenshotForm: site ? site.customScreenshotURL : false
-    };
-    this.onClearScreenshotInput = this.onClearScreenshotInput.bind(this);
-    this.onLabelChange = this.onLabelChange.bind(this);
-    this.onUrlChange = this.onUrlChange.bind(this);
-    this.onCancelButtonClick = this.onCancelButtonClick.bind(this);
-    this.onClearUrlClick = this.onClearUrlClick.bind(this);
-    this.onDoneButtonClick = this.onDoneButtonClick.bind(this);
-    this.onCustomScreenshotUrlChange = this.onCustomScreenshotUrlChange.bind(this);
-    this.onPreviewButtonClick = this.onPreviewButtonClick.bind(this);
-    this.onEnableScreenshotUrlForm = this.onEnableScreenshotUrlForm.bind(this);
-    this.validateUrl = this.validateUrl.bind(this);
-  }
-
-  onLabelChange(event) {
-    this.setState({
-      label: event.target.value
-    });
-  }
-
-  onUrlChange(event) {
-    this.setState({
-      url: event.target.value,
-      validationError: false
-    });
-  }
-
-  onClearUrlClick() {
-    this.setState({
-      url: "",
-      validationError: false
-    });
-  }
-
-  onEnableScreenshotUrlForm() {
-    this.setState({
-      showCustomScreenshotForm: true
-    });
-  }
-
-  _updateCustomScreenshotInput(customScreenshotUrl) {
-    this.setState({
-      customScreenshotUrl,
-      validationError: false
-    });
-    this.props.dispatch({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PREVIEW_REQUEST_CANCEL
-    });
-  }
-
-  onCustomScreenshotUrlChange(event) {
-    this._updateCustomScreenshotInput(event.target.value);
-  }
-
-  onClearScreenshotInput() {
-    this._updateCustomScreenshotInput("");
-  }
-
-  onCancelButtonClick(ev) {
-    ev.preventDefault();
-    this.props.onClose();
-  }
-
-  onDoneButtonClick(ev) {
-    ev.preventDefault();
-
-    if (this.validateForm()) {
-      const site = {
-        url: this.cleanUrl(this.state.url)
-      };
-      const {
-        index
-      } = this.props;
-
-      if (this.state.label !== "") {
-        site.label = this.state.label;
-      }
-
-      if (this.state.customScreenshotUrl) {
-        site.customScreenshotURL = this.cleanUrl(this.state.customScreenshotUrl);
-      } else if (this.props.site && this.props.site.customScreenshotURL) {
-        // Used to flag that previously cached screenshot should be removed
-        site.customScreenshotURL = null;
-      }
-
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.TOP_SITES_PIN,
-        data: {
-          site,
-          index
-        }
-      }));
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
-        source: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_3__.TOP_SITES_SOURCE,
-        event: "TOP_SITES_EDIT",
-        action_position: index
-      }));
-      this.props.onClose();
-    }
-  }
-
-  onPreviewButtonClick(event) {
-    event.preventDefault();
-
-    if (this.validateForm()) {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PREVIEW_REQUEST,
-        data: {
-          url: this.cleanUrl(this.state.customScreenshotUrl)
-        }
-      }));
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
-        source: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_3__.TOP_SITES_SOURCE,
-        event: "PREVIEW_REQUEST"
-      }));
-    }
-  }
-
-  cleanUrl(url) {
-    // If we are missing a protocol, prepend http://
-    if (!url.startsWith("http:") && !url.startsWith("https:")) {
-      return `http://${url}`;
-    }
-
-    return url;
-  }
-
-  _tryParseUrl(url) {
-    try {
-      return new URL(url);
-    } catch (e) {
-      return null;
-    }
-  }
-
-  validateUrl(url) {
-    const validProtocols = ["http:", "https:"];
-
-    const urlObj = this._tryParseUrl(url) || this._tryParseUrl(this.cleanUrl(url));
-
-    return urlObj && validProtocols.includes(urlObj.protocol);
-  }
-
-  validateCustomScreenshotUrl() {
-    const {
-      customScreenshotUrl
-    } = this.state;
-    return !customScreenshotUrl || this.validateUrl(customScreenshotUrl);
-  }
-
-  validateForm() {
-    const validate = this.validateUrl(this.state.url) && this.validateCustomScreenshotUrl();
-
-    if (!validate) {
-      this.setState({
-        validationError: true
-      });
-    }
-
-    return validate;
-  }
-
-  _renderCustomScreenshotInput() {
-    const {
-      customScreenshotUrl
-    } = this.state;
-    const requestFailed = this.props.previewResponse === "";
-    const validationError = this.state.validationError && !this.validateCustomScreenshotUrl() || requestFailed; // Set focus on error if the url field is valid or when the input is first rendered and is empty
-
-    const shouldFocus = validationError && this.validateUrl(this.state.url) || !customScreenshotUrl;
-    const isLoading = this.props.previewResponse === null && customScreenshotUrl && this.props.previewUrl === this.cleanUrl(customScreenshotUrl);
-
-    if (!this.state.showCustomScreenshotForm) {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(content_src_components_A11yLinkButton_A11yLinkButton__WEBPACK_IMPORTED_MODULE_1__.A11yLinkButton, {
-        onClick: this.onEnableScreenshotUrlForm,
-        className: "enable-custom-image-input",
-        "data-l10n-id": "newtab-topsites-use-image-link"
-      });
-    }
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-      className: "custom-image-input-container"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(_TopSiteFormInput__WEBPACK_IMPORTED_MODULE_4__.TopSiteFormInput, {
-      errorMessageId: requestFailed ? "newtab-topsites-image-validation" : "newtab-topsites-url-validation",
-      loading: isLoading,
-      onChange: this.onCustomScreenshotUrlChange,
-      onClear: this.onClearScreenshotInput,
-      shouldFocus: shouldFocus,
-      typeUrl: true,
-      value: customScreenshotUrl,
-      validationError: validationError,
-      titleId: "newtab-topsites-image-url-label",
-      placeholderId: "newtab-topsites-url-input"
-    }));
-  }
-
-  render() {
-    const {
-      customScreenshotUrl
-    } = this.state;
-    const requestFailed = this.props.previewResponse === ""; // For UI purposes, editing without an existing link is "add"
-
-    const showAsAdd = !this.props.site;
-    const previous = this.props.site && this.props.site.customScreenshotURL || "";
-    const changed = customScreenshotUrl && this.cleanUrl(customScreenshotUrl) !== previous; // Preview mode if changes were made to the custom screenshot URL and no preview was received yet
-    // or the request failed
-
-    const previewMode = changed && !this.props.previewResponse;
-    const previewLink = Object.assign({}, this.props.site);
-
-    if (this.props.previewResponse) {
-      previewLink.screenshot = this.props.previewResponse;
-      previewLink.customScreenshotURL = this.props.previewUrl;
-    } // Handles the form submit so an enter press performs the correct action
-
-
-    const onSubmit = previewMode ? this.onPreviewButtonClick : this.onDoneButtonClick;
-    const addTopsitesHeaderL10nId = "newtab-topsites-add-shortcut-header";
-    const editTopsitesHeaderL10nId = "newtab-topsites-edit-shortcut-header";
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("form", {
-      className: "topsite-form",
-      onSubmit: onSubmit
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-      className: "form-input-container"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("h3", {
-      className: "section-title grey-title",
-      "data-l10n-id": showAsAdd ? addTopsitesHeaderL10nId : editTopsitesHeaderL10nId
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-      className: "fields-and-preview"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-      className: "form-wrapper"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(_TopSiteFormInput__WEBPACK_IMPORTED_MODULE_4__.TopSiteFormInput, {
-      onChange: this.onLabelChange,
-      value: this.state.label,
-      titleId: "newtab-topsites-title-label",
-      placeholderId: "newtab-topsites-title-input"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(_TopSiteFormInput__WEBPACK_IMPORTED_MODULE_4__.TopSiteFormInput, {
-      onChange: this.onUrlChange,
-      shouldFocus: this.state.validationError && !this.validateUrl(this.state.url),
-      value: this.state.url,
-      onClear: this.onClearUrlClick,
-      validationError: this.state.validationError && !this.validateUrl(this.state.url),
-      titleId: "newtab-topsites-url-label",
-      typeUrl: true,
-      placeholderId: "newtab-topsites-url-input",
-      errorMessageId: "newtab-topsites-url-validation"
-    }), this._renderCustomScreenshotInput()), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(_TopSite__WEBPACK_IMPORTED_MODULE_5__.TopSiteLink, {
-      link: previewLink,
-      defaultStyle: requestFailed,
-      title: this.state.label
-    }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("section", {
-      className: "actions"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("button", {
-      className: "cancel",
-      type: "button",
-      onClick: this.onCancelButtonClick,
-      "data-l10n-id": "newtab-topsites-cancel-button"
-    }), previewMode ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("button", {
-      className: "done preview",
-      type: "submit",
-      "data-l10n-id": "newtab-topsites-preview-button"
-    }) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("button", {
-      className: "done",
-      type: "submit",
-      "data-l10n-id": showAsAdd ? "newtab-topsites-add-button" : "newtab-topsites-save-button"
-    })));
-  }
-
-}
-TopSiteForm.defaultProps = {
-  site: null,
-  index: -1
-};
-
-/***/ }),
-/* 94 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "TopSiteFormInput": () => (/* binding */ TopSiteFormInput)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-class TopSiteFormInput extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
+class TopSiteFormInput extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.state = {
@@ -13649,13 +11072,13 @@ class TopSiteFormInput extends (react__WEBPACK_IMPORTED_MODULE_0___default().Pur
     const showClearButton = this.props.value && this.props.onClear;
 
     if (this.props.loading) {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+      return /*#__PURE__*/external_React_default().createElement("div", {
         className: "loading-container"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+      }, /*#__PURE__*/external_React_default().createElement("div", {
         className: "loading-animation"
       }));
     } else if (showClearButton) {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+      return /*#__PURE__*/external_React_default().createElement("button", {
         type: "button",
         className: "icon icon-clear-input icon-button-style",
         onClick: this.props.onClear,
@@ -13673,11 +11096,11 @@ class TopSiteFormInput extends (react__WEBPACK_IMPORTED_MODULE_0___default().Pur
     const {
       validationError
     } = this.state;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
+    return /*#__PURE__*/external_React_default().createElement("label", null, /*#__PURE__*/external_React_default().createElement("span", {
       "data-l10n-id": this.props.titleId
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }), /*#__PURE__*/external_React_default().createElement("div", {
       className: `field ${typeUrl ? "url" : ""}${validationError ? " invalid" : ""}`
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+    }, /*#__PURE__*/external_React_default().createElement("input", {
       type: "text",
       value: this.props.value,
       ref: this.onMount,
@@ -13687,7 +11110,7 @@ class TopSiteFormInput extends (react__WEBPACK_IMPORTED_MODULE_0___default().Pur
       ,
       autoFocus: this.props.shouldFocus,
       disabled: this.props.loading
-    }), this.renderLoadingOrCloseButton(), validationError && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("aside", {
+    }), this.renderLoadingOrCloseButton(), validationError && /*#__PURE__*/external_React_default().createElement("aside", {
       className: "error-tooltip",
       "data-l10n-id": this.props.errorMessageId
     })));
@@ -13699,29 +11122,135 @@ TopSiteFormInput.defaultProps = {
   value: "",
   validationError: false
 };
+;// CONCATENATED MODULE: ./content-src/components/TopSites/TopSiteImpressionWrapper.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/***/ }),
-/* 95 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "TopSiteLink": () => (/* binding */ TopSiteLink),
-/* harmony export */   "TopSite": () => (/* binding */ TopSite),
-/* harmony export */   "TopSitePlaceholder": () => (/* binding */ TopSitePlaceholder),
-/* harmony export */   "TopSiteList": () => (/* binding */ TopSiteList)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(89);
-/* harmony import */ var content_src_components_LinkMenu_LinkMenu__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(57);
-/* harmony import */ var _DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(61);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var content_src_lib_screenshot_utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(82);
-/* harmony import */ var common_Reducers_jsm__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(91);
-/* harmony import */ var content_src_components_ContextMenu_ContextMenuButton__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(60);
-/* harmony import */ var _TopSiteImpressionWrapper__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(96);
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+const TopSiteImpressionWrapper_VISIBLE = "visible";
+const TopSiteImpressionWrapper_VISIBILITY_CHANGE_EVENT = "visibilitychange"; // Per analytical requirement, we set the minimal intersection ratio to
+// 0.5, and an impression is identified when the wrapped item has at least
+// 50% visibility.
+//
+// This constant is exported for unit test
+
+const TopSiteImpressionWrapper_INTERSECTION_RATIO = 0.5;
+/**
+ * Impression wrapper for a TopSite tile.
+ *
+ * It makses use of the Intersection Observer API to detect the visibility,
+ * and relies on page visibility to ensure the impression is reported
+ * only when the component is visible on the page.
+ */
+
+class TopSiteImpressionWrapper extends (external_React_default()).PureComponent {
+  _dispatchImpressionStats() {
+    const {
+      tile
+    } = this.props;
+    this.props.dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.TOP_SITES_IMPRESSION_STATS,
+      data: {
+        type: "impression",
+        ...tile
+      }
+    }));
+  }
+
+  setImpressionObserverOrAddListener() {
+    const {
+      props
+    } = this;
+
+    if (!props.dispatch) {
+      return;
+    }
+
+    if (props.document.visibilityState === TopSiteImpressionWrapper_VISIBLE) {
+      this.setImpressionObserver();
+    } else {
+      // We should only ever send the latest impression stats ping, so remove any
+      // older listeners.
+      if (this._onVisibilityChange) {
+        props.document.removeEventListener(TopSiteImpressionWrapper_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+      }
+
+      this._onVisibilityChange = () => {
+        if (props.document.visibilityState === TopSiteImpressionWrapper_VISIBLE) {
+          this.setImpressionObserver();
+          props.document.removeEventListener(TopSiteImpressionWrapper_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+        }
+      };
+
+      props.document.addEventListener(TopSiteImpressionWrapper_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+    }
+  }
+  /**
+   * Set an impression observer for the wrapped component. It makes use of
+   * the Intersection Observer API to detect if the wrapped component is
+   * visible with a desired ratio, and only sends impression if that's the case.
+   *
+   * See more details about Intersection Observer API at:
+   * https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
+   */
+
+
+  setImpressionObserver() {
+    const {
+      props
+    } = this;
+
+    if (!props.tile) {
+      return;
+    }
+
+    this._handleIntersect = entries => {
+      if (entries.some(entry => entry.isIntersecting && entry.intersectionRatio >= TopSiteImpressionWrapper_INTERSECTION_RATIO)) {
+        this._dispatchImpressionStats();
+
+        this.impressionObserver.unobserve(this.refs.topsite_impression_wrapper);
+      }
+    };
+
+    const options = {
+      threshold: TopSiteImpressionWrapper_INTERSECTION_RATIO
+    };
+    this.impressionObserver = new props.IntersectionObserver(this._handleIntersect, options);
+    this.impressionObserver.observe(this.refs.topsite_impression_wrapper);
+  }
+
+  componentDidMount() {
+    if (this.props.tile) {
+      this.setImpressionObserverOrAddListener();
+    }
+  }
+
+  componentWillUnmount() {
+    if (this._handleIntersect && this.impressionObserver) {
+      this.impressionObserver.unobserve(this.refs.topsite_impression_wrapper);
+    }
+
+    if (this._onVisibilityChange) {
+      this.props.document.removeEventListener(TopSiteImpressionWrapper_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+    }
+  }
+
+  render() {
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      ref: "topsite_impression_wrapper",
+      className: "topsite-impression-observer"
+    }, this.props.children);
+  }
+
+}
+TopSiteImpressionWrapper.defaultProps = {
+  IntersectionObserver: __webpack_require__.g.IntersectionObserver,
+  document: __webpack_require__.g.document,
+  tile: null
+};
+;// CONCATENATED MODULE: ./content-src/components/TopSites/TopSite.jsx
+function TopSite_extends() { TopSite_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return TopSite_extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -13737,7 +11266,7 @@ function _extends() { _extends = Object.assign || function (target) { for (var i
 
 const SPOC_TYPE = "SPOC";
 const NEWTAB_SOURCE = "newtab";
-class TopSiteLink extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponent) {
+class TopSiteLink extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.state = {
@@ -13823,16 +11352,16 @@ class TopSiteLink extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComp
     const {
       screenshot
     } = nextProps.link;
-    const imageInState = content_src_lib_screenshot_utils__WEBPACK_IMPORTED_MODULE_5__.ScreenshotUtils.isRemoteImageLocal(prevState.screenshotImage, screenshot);
+    const imageInState = ScreenshotUtils.isRemoteImageLocal(prevState.screenshotImage, screenshot);
 
     if (imageInState) {
       return null;
     } // Since image was updated, attempt to revoke old image blob URL, if it exists.
 
 
-    content_src_lib_screenshot_utils__WEBPACK_IMPORTED_MODULE_5__.ScreenshotUtils.maybeRevokeBlobObjectURL(prevState.screenshotImage);
+    ScreenshotUtils.maybeRevokeBlobObjectURL(prevState.screenshotImage);
     return {
-      screenshotImage: content_src_lib_screenshot_utils__WEBPACK_IMPORTED_MODULE_5__.ScreenshotUtils.createLocalImageObject(screenshot)
+      screenshotImage: ScreenshotUtils.createLocalImageObject(screenshot)
     };
   } // NOTE: Remove this function when we update React to >= 16.3 since React will
   //       call getDerivedStateFromProps automatically. We will also need to
@@ -13859,7 +11388,7 @@ class TopSiteLink extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComp
   }
 
   componentWillUnmount() {
-    content_src_lib_screenshot_utils__WEBPACK_IMPORTED_MODULE_5__.ScreenshotUtils.maybeRevokeBlobObjectURL(this.state.screenshotImage);
+    ScreenshotUtils.maybeRevokeBlobObjectURL(this.state.screenshotImage);
   }
 
   onKeyPress(event) {
@@ -13941,14 +11470,14 @@ class TopSiteLink extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComp
         backgroundColor: link.backgroundColor,
         backgroundImage: hasScreenshotImage ? `url(${this.state.screenshotImage.url})` : `url(${spocImgURL})`
       };
-    } else if (tippyTopIcon || faviconSize >= _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__.MIN_RICH_FAVICON_SIZE) {
+    } else if (tippyTopIcon || faviconSize >= MIN_RICH_FAVICON_SIZE) {
       // styles and class names for top sites with rich icons
       imageClassName = "top-site-icon rich-icon";
       imageStyle = {
         backgroundColor: link.backgroundColor,
         backgroundImage: `url(${tippyTopIcon || link.favicon})`
       };
-    } else if (faviconSize >= _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__.MIN_SMALL_FAVICON_SIZE) {
+    } else if (faviconSize >= MIN_SMALL_FAVICON_SIZE) {
       showSmallFavicon = true;
       smallFaviconStyle = {
         backgroundImage: `url(${link.favicon})`
@@ -13996,51 +11525,51 @@ class TopSiteLink extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComp
       };
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("li", _extends({
+    return /*#__PURE__*/external_React_default().createElement("li", TopSite_extends({
       className: topSiteOuterClassName,
       onDrop: this.onDragEvent,
       onDragOver: this.onDragEvent,
       onDragEnter: this.onDragEvent,
       onDragLeave: this.onDragEvent
-    }, draggableProps), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    }, draggableProps), /*#__PURE__*/external_React_default().createElement("div", {
       className: "background"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    }), /*#__PURE__*/external_React_default().createElement("div", {
       className: "top-site-inner"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("a", {
+    }, /*#__PURE__*/external_React_default().createElement("a", {
       className: "top-site-button",
       href: link.searchTopSite ? undefined : link.url,
       tabIndex: "0",
       onKeyPress: this.onKeyPress,
       onClick: onClick,
       draggable: true
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "tile",
       "aria-hidden": true
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: selectedColor ? "icon-wrapper letter-fallback" : "icon-wrapper",
       "data-fallback": letterFallback,
       style: selectedColor ? {
         backgroundColor: selectedColor
       } : {}
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: imageClassName,
       style: imageStyle
-    }), showSmallFavicon && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    }), showSmallFavicon && /*#__PURE__*/external_React_default().createElement("div", {
       className: "top-site-icon default-icon",
       "data-fallback": smallFaviconStyle ? "" : letterFallback,
       style: smallFaviconStyle
-    })), link.searchTopSite && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    })), link.searchTopSite && /*#__PURE__*/external_React_default().createElement("div", {
       className: "top-site-icon search-topsite"
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    })), /*#__PURE__*/external_React_default().createElement("div", {
       className: `title${link.isPinned ? " has-icon pinned" : ""}${link.type === SPOC_TYPE || link.show_sponsored_label ? " sponsored" : ""}`
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("span", {
+    }, /*#__PURE__*/external_React_default().createElement("span", {
       dir: "auto"
-    }, link.isPinned && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", {
+    }, link.isPinned && /*#__PURE__*/external_React_default().createElement("div", {
       className: "icon icon-pin-small"
-    }), title || /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("br", null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("span", {
+    }), title || /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("span", {
       className: "sponsored-label",
       "data-l10n-id": "newtab-topsite-sponsored"
-    })))), children, link.type === SPOC_TYPE ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(_DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_3__.ImpressionStats, {
+    })))), children, link.type === SPOC_TYPE ? /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
       flightId: link.flightId,
       rows: [{
         id: link.id,
@@ -14048,8 +11577,8 @@ class TopSiteLink extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComp
         shim: link.shim && link.shim.impression
       }],
       dispatch: this.props.dispatch,
-      source: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__.TOP_SITES_SOURCE
-    }) : null, link.sponsored_position ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(_TopSiteImpressionWrapper__WEBPACK_IMPORTED_MODULE_8__.TopSiteImpressionWrapper, {
+      source: TOP_SITES_SOURCE
+    }) : null, link.sponsored_position ? /*#__PURE__*/external_React_default().createElement(TopSiteImpressionWrapper, {
       tile: {
         position: this.props.index + 1,
         tile_id: link.sponsored_tile_id || -1,
@@ -14067,7 +11596,7 @@ TopSiteLink.defaultProps = {
   link: {},
   isDraggable: true
 };
-class TopSite extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponent) {
+class TopSite extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.state = {
@@ -14106,9 +11635,9 @@ class TopSite extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
   }
 
   userEvent(event) {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent(Object.assign({
+    this.props.dispatch(actionCreators.UserEvent(Object.assign({
       event,
-      source: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__.TOP_SITES_SOURCE,
+      source: TOP_SITES_SOURCE,
       action_position: this.props.index
     }, this._getTelemetryInfo())));
   }
@@ -14127,8 +11656,8 @@ class TopSite extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
     } = event;
 
     if (!this.props.link.searchTopSite) {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.OPEN_LINK,
+      this.props.dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.OPEN_LINK,
         data: Object.assign(this.props.link, {
           event: {
             altKey,
@@ -14141,8 +11670,8 @@ class TopSite extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
       })); // Fire off a spoc specific impression.
 
       if (this.props.link.type === SPOC_TYPE) {
-        this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.ImpressionStats({
-          source: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__.TOP_SITES_SOURCE,
+        this.props.dispatch(actionCreators.ImpressionStats({
+          source: TOP_SITES_SOURCE,
           click: 0,
           tiles: [{
             id: this.props.link.id,
@@ -14153,8 +11682,8 @@ class TopSite extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
       }
 
       if (this.props.link.sendAttributionRequest) {
-        this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-          type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.PARTNER_LINK_ATTRIBUTION,
+        this.props.dispatch(actionCreators.OnlyToMain({
+          type: actionTypes.PARTNER_LINK_ATTRIBUTION,
           data: {
             targetURL: this.props.link.url,
             source: "newtab"
@@ -14164,8 +11693,8 @@ class TopSite extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
 
       if (this.props.link.sponsored_position) {
         const title = this.props.link.label || this.props.link.hostname;
-        this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-          type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.TOP_SITES_IMPRESSION_STATS,
+        this.props.dispatch(actionCreators.OnlyToMain({
+          type: actionTypes.TOP_SITES_IMPRESSION_STATS,
           data: {
             type: "click",
             position: this.props.index + 1,
@@ -14177,8 +11706,8 @@ class TopSite extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
         }));
       }
     } else {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.FILL_SEARCH_TERM,
+      this.props.dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.FILL_SEARCH_TERM,
         data: {
           label: this.props.link.label
         }
@@ -14206,27 +11735,27 @@ class TopSite extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
     let menuOptions;
 
     if (link.sponsored_position) {
-      menuOptions = _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__.TOP_SITES_SPONSORED_POSITION_CONTEXT_MENU_OPTIONS;
+      menuOptions = TOP_SITES_SPONSORED_POSITION_CONTEXT_MENU_OPTIONS;
     } else if (link.searchTopSite) {
-      menuOptions = _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__.TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS;
+      menuOptions = TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS;
     } else if (link.type === SPOC_TYPE) {
-      menuOptions = _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__.TOP_SITES_SPOC_CONTEXT_MENU_OPTIONS;
+      menuOptions = TOP_SITES_SPOC_CONTEXT_MENU_OPTIONS;
     } else {
-      menuOptions = _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__.TOP_SITES_CONTEXT_MENU_OPTIONS;
+      menuOptions = TOP_SITES_CONTEXT_MENU_OPTIONS;
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(TopSiteLink, _extends({}, props, {
+    return /*#__PURE__*/external_React_default().createElement(TopSiteLink, TopSite_extends({}, props, {
       onClick: this.onLinkClick,
       onDragEvent: this.props.onDragEvent,
       className: `${props.className || ""}${isContextMenuOpen ? " active" : ""}`,
       title: title
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(content_src_components_ContextMenu_ContextMenuButton__WEBPACK_IMPORTED_MODULE_7__.ContextMenuButton, {
+    }), /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement(ContextMenuButton, {
       tooltip: "newtab-menu-content-tooltip",
       tooltipArgs: {
         title
       },
       onUpdate: this.onMenuUpdate
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(content_src_components_LinkMenu_LinkMenu__WEBPACK_IMPORTED_MODULE_2__.LinkMenu, {
+    }, /*#__PURE__*/external_React_default().createElement(LinkMenu, {
       dispatch: props.dispatch,
       index: props.index,
       onUpdate: this.onMenuUpdate,
@@ -14234,7 +11763,7 @@ class TopSite extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponen
       site: link,
       shouldSendImpressionStats: link.type === SPOC_TYPE,
       siteInfo: this._getTelemetryInfo(),
-      source: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__.TOP_SITES_SOURCE
+      source: TOP_SITES_SOURCE
     }))));
   }
 
@@ -14245,7 +11774,7 @@ TopSite.defaultProps = {
   onActivate() {}
 
 };
-class TopSitePlaceholder extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponent) {
+class TopSitePlaceholder extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.onEditButtonClick = this.onEditButtonClick.bind(this);
@@ -14253,7 +11782,7 @@ class TopSitePlaceholder extends (react__WEBPACK_IMPORTED_MODULE_4___default().P
 
   onEditButtonClick() {
     this.props.dispatch({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.TOP_SITES_EDIT,
+      type: actionTypes.TOP_SITES_EDIT,
       data: {
         index: this.props.index
       }
@@ -14261,10 +11790,10 @@ class TopSitePlaceholder extends (react__WEBPACK_IMPORTED_MODULE_4___default().P
   }
 
   render() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(TopSiteLink, _extends({}, this.props, {
+    return /*#__PURE__*/external_React_default().createElement(TopSiteLink, TopSite_extends({}, this.props, {
       className: `placeholder ${this.props.className || ""}`,
       isDraggable: false
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("button", {
+    }), /*#__PURE__*/external_React_default().createElement("button", {
       "aria-haspopup": "true",
       className: "context-menu-button edit-button icon",
       "data-l10n-id": "newtab-menu-topsites-placeholder-tooltip",
@@ -14273,7 +11802,7 @@ class TopSitePlaceholder extends (react__WEBPACK_IMPORTED_MODULE_4___default().P
   }
 
 }
-class TopSiteList extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComponent) {
+class TopSiteList extends (external_React_default()).PureComponent {
   static get DEFAULT_STATE() {
     return {
       activeIndex: null,
@@ -14304,9 +11833,9 @@ class TopSiteList extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComp
   }
 
   userEvent(event, index) {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
+    this.props.dispatch(actionCreators.UserEvent({
       event,
-      source: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__.TOP_SITES_SOURCE,
+      source: TOP_SITES_SOURCE,
       action_position: index
     }));
   }
@@ -14348,8 +11877,8 @@ class TopSiteList extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComp
       case "drop":
         if (index !== this.state.draggedIndex) {
           this.dropped = true;
-          this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-            type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.TOP_SITES_INSERT,
+          this.props.dispatch(actionCreators.AlsoToMain({
+            type: actionTypes.TOP_SITES_INSERT,
             data: {
               site: {
                 url: this.state.draggedSite.url,
@@ -14374,7 +11903,7 @@ class TopSiteList extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComp
   _getTopSites() {
     // Make a copy of the sites to truncate or extend to desired length
     let topSites = this.props.TopSites.rows.slice();
-    topSites.length = this.props.TopSitesRows * common_Reducers_jsm__WEBPACK_IMPORTED_MODULE_6__.TOP_SITES_MAX_SITES_PER_ROW;
+    topSites.length = this.props.TopSitesRows * TOP_SITES_MAX_SITES_PER_ROW;
     return topSites;
   }
   /**
@@ -14473,7 +12002,7 @@ class TopSiteList extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComp
         slotProps.className = "hide-for-narrow";
       }
 
-      topSitesUI.push(!link ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(TopSitePlaceholder, _extends({}, slotProps, commonProps)) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement(TopSite, _extends({
+      topSitesUI.push(!link ? /*#__PURE__*/external_React_default().createElement(TopSitePlaceholder, TopSite_extends({}, slotProps, commonProps)) : /*#__PURE__*/external_React_default().createElement(TopSite, TopSite_extends({
         link: link,
         activeIndex: this.state.activeIndex,
         onActivate: this.onActivate
@@ -14482,189 +12011,888 @@ class TopSiteList extends (react__WEBPACK_IMPORTED_MODULE_4___default().PureComp
       })));
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default().createElement("ul", {
+    return /*#__PURE__*/external_React_default().createElement("ul", {
       className: `top-sites-list${this.state.draggedSite ? " dnd-active" : ""}`
     }, topSitesUI);
   }
 
 }
-
-/***/ }),
-/* 96 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "INTERSECTION_RATIO": () => (/* binding */ INTERSECTION_RATIO),
-/* harmony export */   "TopSiteImpressionWrapper": () => (/* binding */ TopSiteImpressionWrapper)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
+;// CONCATENATED MODULE: ./content-src/components/TopSites/TopSiteForm.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-const VISIBLE = "visible";
-const VISIBILITY_CHANGE_EVENT = "visibilitychange"; // Per analytical requirement, we set the minimal intersection ratio to
-// 0.5, and an impression is identified when the wrapped item has at least
-// 50% visibility.
-//
-// This constant is exported for unit test
 
-const INTERSECTION_RATIO = 0.5;
-/**
- * Impression wrapper for a TopSite tile.
- *
- * It makses use of the Intersection Observer API to detect the visibility,
- * and relies on page visibility to ensure the impression is reported
- * only when the component is visible on the page.
- */
 
-class TopSiteImpressionWrapper extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureComponent) {
-  _dispatchImpressionStats() {
+
+
+class TopSiteForm extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
     const {
-      tile
-    } = this.props;
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.TOP_SITES_IMPRESSION_STATS,
-      data: {
-        type: "impression",
-        ...tile
+      site
+    } = props;
+    this.state = {
+      label: site ? site.label || site.hostname : "",
+      url: site ? site.url : "",
+      validationError: false,
+      customScreenshotUrl: site ? site.customScreenshotURL : "",
+      showCustomScreenshotForm: site ? site.customScreenshotURL : false
+    };
+    this.onClearScreenshotInput = this.onClearScreenshotInput.bind(this);
+    this.onLabelChange = this.onLabelChange.bind(this);
+    this.onUrlChange = this.onUrlChange.bind(this);
+    this.onCancelButtonClick = this.onCancelButtonClick.bind(this);
+    this.onClearUrlClick = this.onClearUrlClick.bind(this);
+    this.onDoneButtonClick = this.onDoneButtonClick.bind(this);
+    this.onCustomScreenshotUrlChange = this.onCustomScreenshotUrlChange.bind(this);
+    this.onPreviewButtonClick = this.onPreviewButtonClick.bind(this);
+    this.onEnableScreenshotUrlForm = this.onEnableScreenshotUrlForm.bind(this);
+    this.validateUrl = this.validateUrl.bind(this);
+  }
+
+  onLabelChange(event) {
+    this.setState({
+      label: event.target.value
+    });
+  }
+
+  onUrlChange(event) {
+    this.setState({
+      url: event.target.value,
+      validationError: false
+    });
+  }
+
+  onClearUrlClick() {
+    this.setState({
+      url: "",
+      validationError: false
+    });
+  }
+
+  onEnableScreenshotUrlForm() {
+    this.setState({
+      showCustomScreenshotForm: true
+    });
+  }
+
+  _updateCustomScreenshotInput(customScreenshotUrl) {
+    this.setState({
+      customScreenshotUrl,
+      validationError: false
+    });
+    this.props.dispatch({
+      type: actionTypes.PREVIEW_REQUEST_CANCEL
+    });
+  }
+
+  onCustomScreenshotUrlChange(event) {
+    this._updateCustomScreenshotInput(event.target.value);
+  }
+
+  onClearScreenshotInput() {
+    this._updateCustomScreenshotInput("");
+  }
+
+  onCancelButtonClick(ev) {
+    ev.preventDefault();
+    this.props.onClose();
+  }
+
+  onDoneButtonClick(ev) {
+    ev.preventDefault();
+
+    if (this.validateForm()) {
+      const site = {
+        url: this.cleanUrl(this.state.url)
+      };
+      const {
+        index
+      } = this.props;
+
+      if (this.state.label !== "") {
+        site.label = this.state.label;
       }
+
+      if (this.state.customScreenshotUrl) {
+        site.customScreenshotURL = this.cleanUrl(this.state.customScreenshotUrl);
+      } else if (this.props.site && this.props.site.customScreenshotURL) {
+        // Used to flag that previously cached screenshot should be removed
+        site.customScreenshotURL = null;
+      }
+
+      this.props.dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.TOP_SITES_PIN,
+        data: {
+          site,
+          index
+        }
+      }));
+      this.props.dispatch(actionCreators.UserEvent({
+        source: TOP_SITES_SOURCE,
+        event: "TOP_SITES_EDIT",
+        action_position: index
+      }));
+      this.props.onClose();
+    }
+  }
+
+  onPreviewButtonClick(event) {
+    event.preventDefault();
+
+    if (this.validateForm()) {
+      this.props.dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.PREVIEW_REQUEST,
+        data: {
+          url: this.cleanUrl(this.state.customScreenshotUrl)
+        }
+      }));
+      this.props.dispatch(actionCreators.UserEvent({
+        source: TOP_SITES_SOURCE,
+        event: "PREVIEW_REQUEST"
+      }));
+    }
+  }
+
+  cleanUrl(url) {
+    // If we are missing a protocol, prepend http://
+    if (!url.startsWith("http:") && !url.startsWith("https:")) {
+      return `http://${url}`;
+    }
+
+    return url;
+  }
+
+  _tryParseUrl(url) {
+    try {
+      return new URL(url);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  validateUrl(url) {
+    const validProtocols = ["http:", "https:"];
+
+    const urlObj = this._tryParseUrl(url) || this._tryParseUrl(this.cleanUrl(url));
+
+    return urlObj && validProtocols.includes(urlObj.protocol);
+  }
+
+  validateCustomScreenshotUrl() {
+    const {
+      customScreenshotUrl
+    } = this.state;
+    return !customScreenshotUrl || this.validateUrl(customScreenshotUrl);
+  }
+
+  validateForm() {
+    const validate = this.validateUrl(this.state.url) && this.validateCustomScreenshotUrl();
+
+    if (!validate) {
+      this.setState({
+        validationError: true
+      });
+    }
+
+    return validate;
+  }
+
+  _renderCustomScreenshotInput() {
+    const {
+      customScreenshotUrl
+    } = this.state;
+    const requestFailed = this.props.previewResponse === "";
+    const validationError = this.state.validationError && !this.validateCustomScreenshotUrl() || requestFailed; // Set focus on error if the url field is valid or when the input is first rendered and is empty
+
+    const shouldFocus = validationError && this.validateUrl(this.state.url) || !customScreenshotUrl;
+    const isLoading = this.props.previewResponse === null && customScreenshotUrl && this.props.previewUrl === this.cleanUrl(customScreenshotUrl);
+
+    if (!this.state.showCustomScreenshotForm) {
+      return /*#__PURE__*/external_React_default().createElement(A11yLinkButton, {
+        onClick: this.onEnableScreenshotUrlForm,
+        className: "enable-custom-image-input",
+        "data-l10n-id": "newtab-topsites-use-image-link"
+      });
+    }
+
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: "custom-image-input-container"
+    }, /*#__PURE__*/external_React_default().createElement(TopSiteFormInput, {
+      errorMessageId: requestFailed ? "newtab-topsites-image-validation" : "newtab-topsites-url-validation",
+      loading: isLoading,
+      onChange: this.onCustomScreenshotUrlChange,
+      onClear: this.onClearScreenshotInput,
+      shouldFocus: shouldFocus,
+      typeUrl: true,
+      value: customScreenshotUrl,
+      validationError: validationError,
+      titleId: "newtab-topsites-image-url-label",
+      placeholderId: "newtab-topsites-url-input"
     }));
   }
 
-  setImpressionObserverOrAddListener() {
+  render() {
+    const {
+      customScreenshotUrl
+    } = this.state;
+    const requestFailed = this.props.previewResponse === ""; // For UI purposes, editing without an existing link is "add"
+
+    const showAsAdd = !this.props.site;
+    const previous = this.props.site && this.props.site.customScreenshotURL || "";
+    const changed = customScreenshotUrl && this.cleanUrl(customScreenshotUrl) !== previous; // Preview mode if changes were made to the custom screenshot URL and no preview was received yet
+    // or the request failed
+
+    const previewMode = changed && !this.props.previewResponse;
+    const previewLink = Object.assign({}, this.props.site);
+
+    if (this.props.previewResponse) {
+      previewLink.screenshot = this.props.previewResponse;
+      previewLink.customScreenshotURL = this.props.previewUrl;
+    } // Handles the form submit so an enter press performs the correct action
+
+
+    const onSubmit = previewMode ? this.onPreviewButtonClick : this.onDoneButtonClick;
+    const addTopsitesHeaderL10nId = "newtab-topsites-add-shortcut-header";
+    const editTopsitesHeaderL10nId = "newtab-topsites-edit-shortcut-header";
+    return /*#__PURE__*/external_React_default().createElement("form", {
+      className: "topsite-form",
+      onSubmit: onSubmit
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      className: "form-input-container"
+    }, /*#__PURE__*/external_React_default().createElement("h3", {
+      className: "section-title grey-title",
+      "data-l10n-id": showAsAdd ? addTopsitesHeaderL10nId : editTopsitesHeaderL10nId
+    }), /*#__PURE__*/external_React_default().createElement("div", {
+      className: "fields-and-preview"
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      className: "form-wrapper"
+    }, /*#__PURE__*/external_React_default().createElement(TopSiteFormInput, {
+      onChange: this.onLabelChange,
+      value: this.state.label,
+      titleId: "newtab-topsites-title-label",
+      placeholderId: "newtab-topsites-title-input"
+    }), /*#__PURE__*/external_React_default().createElement(TopSiteFormInput, {
+      onChange: this.onUrlChange,
+      shouldFocus: this.state.validationError && !this.validateUrl(this.state.url),
+      value: this.state.url,
+      onClear: this.onClearUrlClick,
+      validationError: this.state.validationError && !this.validateUrl(this.state.url),
+      titleId: "newtab-topsites-url-label",
+      typeUrl: true,
+      placeholderId: "newtab-topsites-url-input",
+      errorMessageId: "newtab-topsites-url-validation"
+    }), this._renderCustomScreenshotInput()), /*#__PURE__*/external_React_default().createElement(TopSiteLink, {
+      link: previewLink,
+      defaultStyle: requestFailed,
+      title: this.state.label
+    }))), /*#__PURE__*/external_React_default().createElement("section", {
+      className: "actions"
+    }, /*#__PURE__*/external_React_default().createElement("button", {
+      className: "cancel",
+      type: "button",
+      onClick: this.onCancelButtonClick,
+      "data-l10n-id": "newtab-topsites-cancel-button"
+    }), previewMode ? /*#__PURE__*/external_React_default().createElement("button", {
+      className: "done preview",
+      type: "submit",
+      "data-l10n-id": "newtab-topsites-preview-button"
+    }) : /*#__PURE__*/external_React_default().createElement("button", {
+      className: "done",
+      type: "submit",
+      "data-l10n-id": showAsAdd ? "newtab-topsites-add-button" : "newtab-topsites-save-button"
+    })));
+  }
+
+}
+TopSiteForm.defaultProps = {
+  site: null,
+  index: -1
+};
+;// CONCATENATED MODULE: ./content-src/components/TopSites/TopSites.jsx
+function TopSites_extends() { TopSites_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return TopSites_extends.apply(this, arguments); }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+
+
+
+
+
+
+
+
+
+function topSiteIconType(link) {
+  if (link.customScreenshotURL) {
+    return "custom_screenshot";
+  }
+
+  if (link.tippyTopIcon || link.faviconRef === "tippytop") {
+    return "tippytop";
+  }
+
+  if (link.faviconSize >= MIN_RICH_FAVICON_SIZE) {
+    return "rich_icon";
+  }
+
+  if (link.screenshot) {
+    return "screenshot";
+  }
+
+  return "no_image";
+}
+/**
+ * Iterates through TopSites and counts types of images.
+ * @param acc Accumulator for reducer.
+ * @param topsite Entry in TopSites.
+ */
+
+
+function countTopSitesIconsTypes(topSites) {
+  const countTopSitesTypes = (acc, link) => {
+    acc[topSiteIconType(link)]++;
+    return acc;
+  };
+
+  return topSites.reduce(countTopSitesTypes, {
+    custom_screenshot: 0,
+    screenshot: 0,
+    tippytop: 0,
+    rich_icon: 0,
+    no_image: 0
+  });
+}
+
+class _TopSites extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.onEditFormClose = this.onEditFormClose.bind(this);
+    this.onSearchShortcutsFormClose = this.onSearchShortcutsFormClose.bind(this);
+  }
+  /**
+   * Dispatch session statistics about the quality of TopSites icons and pinned count.
+   */
+
+
+  _dispatchTopSitesStats() {
+    const topSites = this._getVisibleTopSites().filter(topSite => topSite !== null && topSite !== undefined);
+
+    const topSitesIconsStats = countTopSitesIconsTypes(topSites);
+    const topSitesPinned = topSites.filter(site => !!site.isPinned).length;
+    const searchShortcuts = topSites.filter(site => !!site.searchTopSite).length; // Dispatch telemetry event with the count of TopSites images types.
+
+    this.props.dispatch(actionCreators.AlsoToMain({
+      type: actionTypes.SAVE_SESSION_PERF_DATA,
+      data: {
+        topsites_icon_stats: topSitesIconsStats,
+        topsites_pinned: topSitesPinned,
+        topsites_search_shortcuts: searchShortcuts
+      }
+    }));
+  }
+  /**
+   * Return the TopSites that are visible based on prefs and window width.
+   */
+
+
+  _getVisibleTopSites() {
+    // We hide 2 sites per row when not in the wide layout.
+    let sitesPerRow = TOP_SITES_MAX_SITES_PER_ROW; // $break-point-widest = 1072px (from _variables.scss)
+
+    if (!__webpack_require__.g.matchMedia(`(min-width: 1072px)`).matches) {
+      sitesPerRow -= 2;
+    }
+
+    return this.props.TopSites.rows.slice(0, this.props.TopSitesRows * sitesPerRow);
+  }
+
+  componentDidUpdate() {
+    this._dispatchTopSitesStats();
+  }
+
+  componentDidMount() {
+    this._dispatchTopSitesStats();
+  }
+
+  onEditFormClose() {
+    this.props.dispatch(actionCreators.UserEvent({
+      source: TOP_SITES_SOURCE,
+      event: "TOP_SITES_EDIT_CLOSE"
+    }));
+    this.props.dispatch({
+      type: actionTypes.TOP_SITES_CANCEL_EDIT
+    });
+  }
+
+  onSearchShortcutsFormClose() {
+    this.props.dispatch(actionCreators.UserEvent({
+      source: TOP_SITES_SOURCE,
+      event: "SEARCH_EDIT_CLOSE"
+    }));
+    this.props.dispatch({
+      type: actionTypes.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL
+    });
+  }
+
+  render() {
+    const {
+      props
+    } = this;
+    const {
+      editForm,
+      showSearchShortcutsForm
+    } = props.TopSites;
+    const extraMenuOptions = ["AddTopSite"];
+    const colors = props.Prefs.values["newNewtabExperience.colors"];
+
+    if (props.Prefs.values["improvesearch.topSiteSearchShortcuts"]) {
+      extraMenuOptions.push("AddSearchShortcut");
+    }
+
+    return /*#__PURE__*/external_React_default().createElement(ComponentPerfTimer, {
+      id: "topsites",
+      initialized: props.TopSites.initialized,
+      dispatch: props.dispatch
+    }, /*#__PURE__*/external_React_default().createElement(CollapsibleSection, {
+      className: "top-sites",
+      id: "topsites",
+      title: props.title || {
+        id: "newtab-section-header-topsites"
+      },
+      hideTitle: true,
+      extraMenuOptions: extraMenuOptions,
+      showPrefName: "feeds.topsites",
+      eventSource: TOP_SITES_SOURCE,
+      collapsed: false,
+      isFixed: props.isFixed,
+      isFirst: props.isFirst,
+      isLast: props.isLast,
+      dispatch: props.dispatch
+    }, /*#__PURE__*/external_React_default().createElement(TopSiteList, {
+      TopSites: props.TopSites,
+      TopSitesRows: props.TopSitesRows,
+      dispatch: props.dispatch,
+      topSiteIconType: topSiteIconType,
+      colors: colors
+    }), /*#__PURE__*/external_React_default().createElement("div", {
+      className: "edit-topsites-wrapper"
+    }, editForm && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "edit-topsites"
+    }, /*#__PURE__*/external_React_default().createElement(ModalOverlayWrapper, {
+      unstyled: true,
+      onClose: this.onEditFormClose,
+      innerClassName: "modal"
+    }, /*#__PURE__*/external_React_default().createElement(TopSiteForm, TopSites_extends({
+      site: props.TopSites.rows[editForm.index],
+      onClose: this.onEditFormClose,
+      dispatch: this.props.dispatch
+    }, editForm)))), showSearchShortcutsForm && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "edit-search-shortcuts"
+    }, /*#__PURE__*/external_React_default().createElement(ModalOverlayWrapper, {
+      unstyled: true,
+      onClose: this.onSearchShortcutsFormClose,
+      innerClassName: "modal"
+    }, /*#__PURE__*/external_React_default().createElement(SearchShortcutsForm, {
+      TopSites: props.TopSites,
+      onClose: this.onSearchShortcutsFormClose,
+      dispatch: this.props.dispatch
+    }))))));
+  }
+
+}
+const TopSites_TopSites = (0,external_ReactRedux_namespaceObject.connect)((state, props) => ({
+  // For SPOC Experiment only, take TopSites from DiscoveryStream TopSites that takes in SPOC Data
+  TopSites: props.TopSitesWithSpoc || state.TopSites,
+  Prefs: state.Prefs,
+  TopSitesRows: state.Prefs.values.topSitesRows
+}))(_TopSites);
+;// CONCATENATED MODULE: ./content-src/components/Sections/Sections.jsx
+function Sections_extends() { Sections_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return Sections_extends.apply(this, arguments); }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+
+
+
+
+
+
+
+
+const Sections_VISIBLE = "visible";
+const Sections_VISIBILITY_CHANGE_EVENT = "visibilitychange";
+const CARDS_PER_ROW_DEFAULT = 3;
+const CARDS_PER_ROW_COMPACT_WIDE = 4;
+class Section extends (external_React_default()).PureComponent {
+  get numRows() {
+    const {
+      rowsPref,
+      maxRows,
+      Prefs
+    } = this.props;
+    return rowsPref ? Prefs.values[rowsPref] : maxRows;
+  }
+
+  _dispatchImpressionStats() {
+    const {
+      props
+    } = this;
+    let cardsPerRow = CARDS_PER_ROW_DEFAULT;
+
+    if (props.compactCards && __webpack_require__.g.matchMedia(`(min-width: 1072px)`).matches) {
+      // If the section has compact cards and the viewport is wide enough, we show
+      // 4 columns instead of 3.
+      // $break-point-widest = 1072px (from _variables.scss)
+      cardsPerRow = CARDS_PER_ROW_COMPACT_WIDE;
+    }
+
+    const maxCards = cardsPerRow * this.numRows;
+    const cards = props.rows.slice(0, maxCards);
+
+    if (this.needsImpressionStats(cards)) {
+      props.dispatch(actionCreators.ImpressionStats({
+        source: props.eventSource,
+        tiles: cards.map(link => ({
+          id: link.guid
+        }))
+      }));
+      this.impressionCardGuids = cards.map(link => link.guid);
+    }
+  } // This sends an event when a user sees a set of new content. If content
+  // changes while the page is hidden (i.e. preloaded or on a hidden tab),
+  // only send the event if the page becomes visible again.
+
+
+  sendImpressionStatsOrAddListener() {
     const {
       props
     } = this;
 
-    if (!props.dispatch) {
+    if (!props.shouldSendImpressionStats || !props.dispatch) {
       return;
     }
 
-    if (props.document.visibilityState === VISIBLE) {
-      this.setImpressionObserver();
+    if (props.document.visibilityState === Sections_VISIBLE) {
+      this._dispatchImpressionStats();
     } else {
       // We should only ever send the latest impression stats ping, so remove any
       // older listeners.
       if (this._onVisibilityChange) {
-        props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-      }
+        props.document.removeEventListener(Sections_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+      } // When the page becomes visible, send the impression stats ping if the section isn't collapsed.
+
 
       this._onVisibilityChange = () => {
-        if (props.document.visibilityState === VISIBLE) {
-          this.setImpressionObserver();
-          props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+        if (props.document.visibilityState === Sections_VISIBLE) {
+          if (!this.props.pref.collapsed) {
+            this._dispatchImpressionStats();
+          }
+
+          props.document.removeEventListener(Sections_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
         }
       };
 
-      props.document.addEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+      props.document.addEventListener(Sections_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
     }
   }
-  /**
-   * Set an impression observer for the wrapped component. It makes use of
-   * the Intersection Observer API to detect if the wrapped component is
-   * visible with a desired ratio, and only sends impression if that's the case.
-   *
-   * See more details about Intersection Observer API at:
-   * https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
-   */
 
-
-  setImpressionObserver() {
-    const {
-      props
-    } = this;
-
-    if (!props.tile) {
-      return;
-    }
-
-    this._handleIntersect = entries => {
-      if (entries.some(entry => entry.isIntersecting && entry.intersectionRatio >= INTERSECTION_RATIO)) {
-        this._dispatchImpressionStats();
-
-        this.impressionObserver.unobserve(this.refs.topsite_impression_wrapper);
-      }
-    };
-
-    const options = {
-      threshold: INTERSECTION_RATIO
-    };
-    this.impressionObserver = new props.IntersectionObserver(this._handleIntersect, options);
-    this.impressionObserver.observe(this.refs.topsite_impression_wrapper);
+  componentWillMount() {
+    this.sendNewTabRehydrated(this.props.initialized);
   }
 
   componentDidMount() {
-    if (this.props.tile) {
-      this.setImpressionObserverOrAddListener();
+    if (this.props.rows.length && !this.props.pref.collapsed) {
+      this.sendImpressionStatsOrAddListener();
     }
   }
 
+  componentDidUpdate(prevProps) {
+    const {
+      props
+    } = this;
+    const isCollapsed = props.pref.collapsed;
+    const wasCollapsed = prevProps.pref.collapsed;
+
+    if ( // Don't send impression stats for the empty state
+    props.rows.length && ( // We only want to send impression stats if the content of the cards has changed
+    // and the section is not collapsed...
+    props.rows !== prevProps.rows && !isCollapsed || // or if we are expanding a section that was collapsed.
+    wasCollapsed && !isCollapsed)) {
+      this.sendImpressionStatsOrAddListener();
+    }
+  }
+
+  componentWillUpdate(nextProps) {
+    this.sendNewTabRehydrated(nextProps.initialized);
+  }
+
   componentWillUnmount() {
-    if (this._handleIntersect && this.impressionObserver) {
-      this.impressionObserver.unobserve(this.refs.topsite_impression_wrapper);
+    if (this._onVisibilityChange) {
+      this.props.document.removeEventListener(Sections_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+    }
+  }
+
+  needsImpressionStats(cards) {
+    if (!this.impressionCardGuids || this.impressionCardGuids.length !== cards.length) {
+      return true;
     }
 
-    if (this._onVisibilityChange) {
-      this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+    for (let i = 0; i < cards.length; i++) {
+      if (cards[i].guid !== this.impressionCardGuids[i]) {
+        return true;
+      }
+    }
+
+    return false;
+  } // The NEW_TAB_REHYDRATED event is used to inform feeds that their
+  // data has been consumed e.g. for counting the number of tabs that
+  // have rendered that data.
+
+
+  sendNewTabRehydrated(initialized) {
+    if (initialized && !this.renderNotified) {
+      this.props.dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.NEW_TAB_REHYDRATED,
+        data: {}
+      }));
+      this.renderNotified = true;
     }
   }
 
   render() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
-      ref: "topsite_impression_wrapper",
-      className: "topsite-impression-observer"
-    }, this.props.children);
+    const {
+      id,
+      eventSource,
+      title,
+      rows,
+      Pocket,
+      topics,
+      emptyState,
+      dispatch,
+      compactCards,
+      read_more_endpoint,
+      contextMenuOptions,
+      initialized,
+      learnMore,
+      pref,
+      privacyNoticeURL,
+      isFirst,
+      isLast
+    } = this.props;
+    const waitingForSpoc = id === "topstories" && this.props.Pocket.waitingForSpoc;
+    const maxCardsPerRow = compactCards ? CARDS_PER_ROW_COMPACT_WIDE : CARDS_PER_ROW_DEFAULT;
+    const {
+      numRows
+    } = this;
+    const maxCards = maxCardsPerRow * numRows;
+    const maxCardsOnNarrow = CARDS_PER_ROW_DEFAULT * numRows;
+    const {
+      pocketCta,
+      isUserLoggedIn
+    } = Pocket || {};
+    const {
+      useCta
+    } = pocketCta || {}; // Don't display anything until we have a definitve result from Pocket,
+    // to avoid a flash of logged out state while we render.
+
+    const isPocketLoggedInDefined = isUserLoggedIn === true || isUserLoggedIn === false;
+    const hasTopics = topics && !!topics.length;
+    const shouldShowPocketCta = id === "topstories" && useCta && isUserLoggedIn === false; // Show topics only for top stories and if it has loaded with topics.
+    // The classs .top-stories-bottom-container ensures content doesn't shift as things load.
+
+    const shouldShowTopics = id === "topstories" && hasTopics && (useCta && isUserLoggedIn === true || !useCta && isPocketLoggedInDefined); // We use topics to determine language support for read more.
+
+    const shouldShowReadMore = read_more_endpoint && hasTopics;
+    const realRows = rows.slice(0, maxCards); // The empty state should only be shown after we have initialized and there is no content.
+    // Otherwise, we should show placeholders.
+
+    const shouldShowEmptyState = initialized && !rows.length;
+    const cards = [];
+
+    if (!shouldShowEmptyState) {
+      for (let i = 0; i < maxCards; i++) {
+        const link = realRows[i]; // On narrow viewports, we only show 3 cards per row. We'll mark the rest as
+        // .hide-for-narrow to hide in CSS via @media query.
+
+        const className = i >= maxCardsOnNarrow ? "hide-for-narrow" : "";
+        let usePlaceholder = !link; // If we are in the third card and waiting for spoc,
+        // use the placeholder.
+
+        if (!usePlaceholder && i === 2 && waitingForSpoc) {
+          usePlaceholder = true;
+        }
+
+        cards.push(!usePlaceholder ? /*#__PURE__*/external_React_default().createElement(Card, {
+          key: i,
+          index: i,
+          className: className,
+          dispatch: dispatch,
+          link: link,
+          contextMenuOptions: contextMenuOptions,
+          eventSource: eventSource,
+          shouldSendImpressionStats: this.props.shouldSendImpressionStats,
+          isWebExtension: this.props.isWebExtension
+        }) : /*#__PURE__*/external_React_default().createElement(PlaceholderCard, {
+          key: i,
+          className: className
+        }));
+      }
+    }
+
+    const sectionClassName = ["section", compactCards ? "compact-cards" : "normal-cards"].join(" "); // <Section> <-- React component
+    // <section> <-- HTML5 element
+
+    return /*#__PURE__*/external_React_default().createElement(ComponentPerfTimer, this.props, /*#__PURE__*/external_React_default().createElement(CollapsibleSection, {
+      className: sectionClassName,
+      title: title,
+      id: id,
+      eventSource: eventSource,
+      collapsed: this.props.pref.collapsed,
+      showPrefName: pref && pref.feed || id,
+      privacyNoticeURL: privacyNoticeURL,
+      Prefs: this.props.Prefs,
+      isFixed: this.props.isFixed,
+      isFirst: isFirst,
+      isLast: isLast,
+      learnMore: learnMore,
+      dispatch: this.props.dispatch,
+      isWebExtension: this.props.isWebExtension
+    }, !shouldShowEmptyState && /*#__PURE__*/external_React_default().createElement("ul", {
+      className: "section-list",
+      style: {
+        padding: 0
+      }
+    }, cards), shouldShowEmptyState && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "section-empty-state"
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      className: "empty-state"
+    }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
+      message: emptyState.message
+    }, /*#__PURE__*/external_React_default().createElement("p", {
+      className: "empty-state-message"
+    })))), id === "topstories" && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "top-stories-bottom-container"
+    }, shouldShowTopics && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "wrapper-topics"
+    }, /*#__PURE__*/external_React_default().createElement(Topics, {
+      topics: this.props.topics
+    })), shouldShowPocketCta && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "wrapper-cta"
+    }, /*#__PURE__*/external_React_default().createElement(PocketLoggedInCta, null)), /*#__PURE__*/external_React_default().createElement("div", {
+      className: "wrapper-more-recommendations"
+    }, shouldShowReadMore && /*#__PURE__*/external_React_default().createElement(MoreRecommendations, {
+      read_more_endpoint: read_more_endpoint
+    })))));
   }
 
 }
-TopSiteImpressionWrapper.defaultProps = {
-  IntersectionObserver: __webpack_require__.g.IntersectionObserver,
+Section.defaultProps = {
   document: __webpack_require__.g.document,
-  tile: null
+  rows: [],
+  emptyState: {},
+  pref: {},
+  title: ""
 };
+const SectionIntl = (0,external_ReactRedux_namespaceObject.connect)(state => ({
+  Prefs: state.Prefs,
+  Pocket: state.Pocket
+}))(Section);
+class _Sections extends (external_React_default()).PureComponent {
+  renderSections() {
+    const sections = [];
+    const enabledSections = this.props.Sections.filter(section => section.enabled);
+    const {
+      sectionOrder,
+      "feeds.topsites": showTopSites
+    } = this.props.Prefs.values; // Enabled sections doesn't include Top Sites, so we add it if enabled.
 
-/***/ }),
-/* 97 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+    const expectedCount = enabledSections.length + ~~showTopSites;
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "HorizontalRule": () => (/* binding */ HorizontalRule)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+    for (const sectionId of sectionOrder.split(",")) {
+      const commonProps = {
+        key: sectionId,
+        isFirst: sections.length === 0,
+        isLast: sections.length === expectedCount - 1
+      };
+
+      if (sectionId === "topsites" && showTopSites) {
+        sections.push( /*#__PURE__*/external_React_default().createElement(TopSites_TopSites, commonProps));
+      } else {
+        const section = enabledSections.find(s => s.id === sectionId);
+
+        if (section) {
+          sections.push( /*#__PURE__*/external_React_default().createElement(SectionIntl, Sections_extends({}, section, commonProps)));
+        }
+      }
+    }
+
+    return sections;
+  }
+
+  render() {
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: "sections-list"
+    }, this.renderSections());
+  }
+
+}
+const Sections_Sections = (0,external_ReactRedux_namespaceObject.connect)(state => ({
+  Sections: state.Sections,
+  Prefs: state.Prefs
+}))(_Sections);
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/Highlights/Highlights.jsx
+function Highlights_extends() { Highlights_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return Highlights_extends.apply(this, arguments); }
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-class HorizontalRule extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
+
+
+class _Highlights extends (external_React_default()).PureComponent {
   render() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("hr", {
+    const section = this.props.Sections.find(s => s.id === "highlights");
+
+    if (!section || !section.enabled) {
+      return null;
+    }
+
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: "ds-highlights sections-list"
+    }, /*#__PURE__*/external_React_default().createElement(SectionIntl, Highlights_extends({}, section, {
+      isFixed: true
+    })));
+  }
+
+}
+const Highlights = (0,external_ReactRedux_namespaceObject.connect)(state => ({
+  Sections: state.Sections
+}))(_Highlights);
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/HorizontalRule/HorizontalRule.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+class HorizontalRule extends (external_React_default()).PureComponent {
+  render() {
+    return /*#__PURE__*/external_React_default().createElement("hr", {
       className: "ds-hr"
     });
   }
 
 }
-
-/***/ }),
-/* 98 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Topic": () => (/* binding */ Topic),
-/* harmony export */   "Navigation": () => (/* binding */ Navigation)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(62);
-/* harmony import */ var content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(66);
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/Navigation/Navigation.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14672,7 +12900,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-class Topic extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureComponent) {
+class Navigation_Topic extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.onLinkClick = this.onLinkClick.bind(this);
@@ -14680,7 +12908,7 @@ class Topic extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureComponent)
 
   onLinkClick(event) {
     if (this.props.dispatch) {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
+      this.props.dispatch(actionCreators.UserEvent({
         event: "CLICK",
         source: "POPULAR_TOPICS",
         action_position: 0,
@@ -14696,7 +12924,7 @@ class Topic extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureComponent)
       url,
       name
     } = this.props;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_2__.SafeAnchor, {
+    return /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
       onLinkClick: this.onLinkClick,
       className: this.props.className,
       url: url
@@ -14704,7 +12932,7 @@ class Topic extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureComponent)
   }
 
 }
-class Navigation extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureComponent) {
+class Navigation extends (external_React_default()).PureComponent {
   render() {
     let links = this.props.links || [];
     const alignment = this.props.alignment || "centered";
@@ -14729,86 +12957,64 @@ class Navigation extends (react__WEBPACK_IMPORTED_MODULE_1___default().PureCompo
       }
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: className
-    }, title && english ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_3__.FluentOrText, {
+    }, title && english ? /*#__PURE__*/external_React_default().createElement(FluentOrText, {
       message: title
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", {
+    }, /*#__PURE__*/external_React_default().createElement("span", {
       className: "ds-navigation-header"
-    })) : null, english ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("ul", null, links && links.map(t => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("li", {
+    })) : null, english ? /*#__PURE__*/external_React_default().createElement("ul", null, links && links.map(t => /*#__PURE__*/external_React_default().createElement("li", {
       key: t.name
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(Topic, {
+    }, /*#__PURE__*/external_React_default().createElement(Navigation_Topic, {
       url: t.url,
       name: t.name,
       dispatch: this.props.dispatch
-    })))) : null, !newFooterSection ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_2__.SafeAnchor, {
+    })))) : null, !newFooterSection ? /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
       className: "ds-navigation-privacy",
       url: privacyNotice.url
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_3__.FluentOrText, {
+    }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
       message: privacyNotice.title
-    })) : null, newFooterSection ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", {
+    })) : null, newFooterSection ? /*#__PURE__*/external_React_default().createElement("div", {
       className: "ds-navigation-family"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", {
+    }, /*#__PURE__*/external_React_default().createElement("span", {
       className: "icon firefox-logo"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", null, "|"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", {
+    }), /*#__PURE__*/external_React_default().createElement("span", null, "|"), /*#__PURE__*/external_React_default().createElement("span", {
       className: "icon pocket-logo"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", {
+    }), /*#__PURE__*/external_React_default().createElement("span", {
       className: "ds-navigation-family-message",
       "data-l10n-id": "newtab-pocket-pocket-firefox-family"
     })) : null);
   }
 
 }
-
-/***/ }),
-/* 99 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "PrivacyLink": () => (/* binding */ PrivacyLink)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(62);
-/* harmony import */ var content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(66);
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/PrivacyLink/PrivacyLink.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
 
-class PrivacyLink extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
+class PrivacyLink extends (external_React_default()).PureComponent {
   render() {
     const {
       properties
     } = this.props;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: "ds-privacy-link"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_1__.SafeAnchor, {
+    }, /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
       url: properties.url
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_2__.FluentOrText, {
+    }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
       message: properties.title
     })));
   }
 
 }
-
-/***/ }),
-/* 100 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "SectionTitle": () => (/* binding */ SectionTitle)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/SectionTitle/SectionTitle.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-class SectionTitle extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
+class SectionTitle extends (external_React_default()).PureComponent {
   render() {
     const {
       header: {
@@ -14816,25 +13022,17 @@ class SectionTitle extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
         subtitle
       }
     } = this.props;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: "ds-section-title"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "title"
-    }, title), subtitle ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }, title), subtitle ? /*#__PURE__*/external_React_default().createElement("div", {
       className: "subtitle"
     }, subtitle) : null);
   }
 
 }
-
-/***/ }),
-/* 101 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "selectLayoutRender": () => (/* binding */ selectLayoutRender)
-/* harmony export */ });
+;// CONCATENATED MODULE: ./content-src/lib/selectLayoutRender.js
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15050,22 +13248,7 @@ const selectLayoutRender = ({
     layoutRender
   };
 };
-
-/***/ }),
-/* 102 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "_TopSites": () => (/* binding */ _TopSites),
-/* harmony export */   "TopSites": () => (/* binding */ TopSites)
-/* harmony export */ });
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var content_src_components_TopSites_TopSites__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(88);
-/* harmony import */ var common_Reducers_jsm__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(91);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_3__);
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/TopSites/TopSites.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15073,7 +13256,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-class _TopSites extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureComponent) {
+class TopSites_TopSites_TopSites extends (external_React_default()).PureComponent {
   // Find a SPOC that doesn't already exist in User's TopSites
   getFirstAvailableSpoc(topSites, data) {
     const {
@@ -15098,13 +13281,13 @@ class _TopSites extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureCompon
     } // The row isn't full so we can push it to the end of the row.
 
 
-    if (topSites.length < common_Reducers_jsm__WEBPACK_IMPORTED_MODULE_2__.TOP_SITES_MAX_SITES_PER_ROW) {
+    if (topSites.length < TOP_SITES_MAX_SITES_PER_ROW) {
       return -1;
     } // If the row is full, we can check the row first for unpinned topsites to replace.
     // Else we can check after the row. This behavior is how unpinned topsites move while drag and drop.
 
 
-    let endOfRow = common_Reducers_jsm__WEBPACK_IMPORTED_MODULE_2__.TOP_SITES_MAX_SITES_PER_ROW - 1;
+    let endOfRow = TOP_SITES_MAX_SITES_PER_ROW - 1;
 
     for (let i = endOfRow; i >= 0; i--) {
       if (!topSites[i] || !topSites[i].isPinned) {
@@ -15189,9 +13372,9 @@ class _TopSites extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureCompon
       TopSites
     } = this.props;
     const TopSitesWithSpoc = TopSites && data && promoAlignment ? this.insertSpocContent(TopSites, data, promoAlignment) : null;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: `ds-top-sites ${TopSitesWithSpoc ? "top-sites-spoc" : ""}`
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(content_src_components_TopSites_TopSites__WEBPACK_IMPORTED_MODULE_1__.TopSites, {
+    }, /*#__PURE__*/external_React_default().createElement(TopSites_TopSites, {
       isFixed: true,
       title: header.title,
       TopSitesWithSpoc: TopSitesWithSpoc
@@ -15199,27 +13382,10 @@ class _TopSites extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureCompon
   }
 
 }
-const TopSites = (0,react_redux__WEBPACK_IMPORTED_MODULE_0__.connect)(state => ({
+const DiscoveryStreamComponents_TopSites_TopSites_TopSites = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   TopSites: state.TopSites
-}))(_TopSites);
-
-/***/ }),
-/* 103 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "_CustomizeMenu": () => (/* binding */ _CustomizeMenu),
-/* harmony export */   "CustomizeMenu": () => (/* binding */ CustomizeMenu)
-/* harmony export */ });
-/* harmony import */ var content_src_components_CustomizeMenu_BackgroundsSection_BackgroundsSection__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(104);
-/* harmony import */ var content_src_components_CustomizeMenu_ContentSection_ContentSection__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(105);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var react_transition_group__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(65);
-/* harmony import */ var react_transition_group__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react_transition_group__WEBPACK_IMPORTED_MODULE_4__);
+}))(TopSites_TopSites_TopSites);
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamBase/DiscoveryStreamBase.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15228,113 +13394,394 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-class _CustomizeMenu extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureComponent) {
+
+
+
+
+
+
+
+
+
+
+
+const ALLOWED_CSS_URL_PREFIXES = ["chrome://", "resource://", "https://img-getpocket.cdn.mozilla.net/"];
+const DUMMY_CSS_SELECTOR = "DUMMY#CSS.SELECTOR";
+/**
+ * Validate a CSS declaration. The values are assumed to be normalized by CSSOM.
+ */
+
+function isAllowedCSS(property, value) {
+  // Bug 1454823: INTERNAL properties, e.g., -moz-context-properties, are
+  // exposed but their values aren't resulting in getting nothing. Fortunately,
+  // we don't care about validating the values of the current set of properties.
+  if (value === undefined) {
+    return true;
+  } // Make sure all urls are of the allowed protocols/prefixes
+
+
+  const urls = value.match(/url\("[^"]+"\)/g);
+  return !urls || urls.every(url => ALLOWED_CSS_URL_PREFIXES.some(prefix => url.slice(5).startsWith(prefix)));
+}
+class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
-    this.onEntered = this.onEntered.bind(this);
-    this.onExited = this.onExited.bind(this);
+    this.onStyleMount = this.onStyleMount.bind(this);
   }
 
-  onEntered() {
-    if (this.closeButton) {
-      this.closeButton.focus();
+  onStyleMount(style) {
+    // Unmounting style gets rid of old styles, so nothing else to do
+    if (!style) {
+      return;
+    }
+
+    const {
+      sheet
+    } = style;
+    const styles = JSON.parse(style.dataset.styles);
+    styles.forEach((row, rowIndex) => {
+      row.forEach((component, componentIndex) => {
+        // Nothing to do without optional styles overrides
+        if (!component) {
+          return;
+        }
+
+        Object.entries(component).forEach(([selectors, declarations]) => {
+          // Start with a dummy rule to validate declarations and selectors
+          sheet.insertRule(`${DUMMY_CSS_SELECTOR} {}`);
+          const [rule] = sheet.cssRules; // Validate declarations and remove any offenders. CSSOM silently
+          // discards invalid entries, so here we apply extra restrictions.
+
+          rule.style = declarations;
+          [...rule.style].forEach(property => {
+            const value = rule.style[property];
+
+            if (!isAllowedCSS(property, value)) {
+              console.error(`Bad CSS declaration ${property}: ${value}`); // eslint-disable-line no-console
+
+              rule.style.removeProperty(property);
+            }
+          }); // Set the actual desired selectors scoped to the component
+
+          const prefix = `.ds-layout > .ds-column:nth-child(${rowIndex + 1}) .ds-column-grid > :nth-child(${componentIndex + 1})`; // NB: Splitting on "," doesn't work with strings with commas, but
+          // we're okay with not supporting those selectors
+
+          rule.selectorText = selectors.split(",").map(selector => prefix + ( // Assume :pseudo-classes are for component instead of descendant
+          selector[0] === ":" ? "" : " ") + selector).join(","); // CSSOM silently ignores bad selectors, so we'll be noisy instead
+
+          if (rule.selectorText === DUMMY_CSS_SELECTOR) {
+            console.error(`Bad CSS selector ${selectors}`); // eslint-disable-line no-console
+          }
+        });
+      });
+    });
+  }
+
+  renderComponent(component, embedWidth) {
+    const ENGAGEMENT_LABEL_ENABLED = this.props.Prefs.values[`discoverystream.engagementLabelEnabled`];
+
+    switch (component.type) {
+      case "Highlights":
+        return /*#__PURE__*/external_React_default().createElement(Highlights, null);
+
+      case "TopSites":
+        let promoAlignment;
+
+        if (component.spocs && component.spocs.positions && component.spocs.positions.length) {
+          promoAlignment = component.spocs.positions[0].index === 0 ? "left" : "right";
+        }
+
+        return /*#__PURE__*/external_React_default().createElement(DiscoveryStreamComponents_TopSites_TopSites_TopSites, {
+          header: component.header,
+          data: component.data,
+          promoAlignment: promoAlignment
+        });
+
+      case "TextPromo":
+        return /*#__PURE__*/external_React_default().createElement(DSTextPromo, {
+          dispatch: this.props.dispatch,
+          type: component.type,
+          data: component.data
+        });
+
+      case "Signup":
+        return /*#__PURE__*/external_React_default().createElement(DSSignup, {
+          dispatch: this.props.dispatch,
+          type: component.type,
+          data: component.data
+        });
+
+      case "Message":
+        return /*#__PURE__*/external_React_default().createElement(DSMessage, {
+          title: component.header && component.header.title,
+          subtitle: component.header && component.header.subtitle,
+          link_text: component.header && component.header.link_text,
+          link_url: component.header && component.header.link_url,
+          icon: component.header && component.header.icon,
+          essentialReadsHeader: component.essentialReadsHeader,
+          editorsPicksHeader: component.editorsPicksHeader
+        });
+
+      case "SectionTitle":
+        return /*#__PURE__*/external_React_default().createElement(SectionTitle, {
+          header: component.header
+        });
+
+      case "Navigation":
+        return /*#__PURE__*/external_React_default().createElement(Navigation, {
+          dispatch: this.props.dispatch,
+          links: component.properties.links,
+          extraLinks: component.properties.extraLinks,
+          alignment: component.properties.alignment,
+          display_variant: component.properties.display_variant,
+          explore_topics: component.properties.explore_topics,
+          header: component.header,
+          locale: this.props.App.locale,
+          newFooterSection: component.newFooterSection,
+          privacyNoticeURL: component.properties.privacyNoticeURL
+        });
+
+      case "CollectionCardGrid":
+        const {
+          DiscoveryStream
+        } = this.props;
+        return /*#__PURE__*/external_React_default().createElement(CollectionCardGrid, {
+          data: component.data,
+          feed: component.feed,
+          spocs: DiscoveryStream.spocs,
+          placement: component.placement,
+          border: component.properties.border,
+          type: component.type,
+          items: component.properties.items,
+          cta_variant: component.cta_variant,
+          pocket_button_enabled: component.pocketButtonEnabled,
+          display_engagement_labels: ENGAGEMENT_LABEL_ENABLED,
+          dismissible: this.props.DiscoveryStream.isCollectionDismissible,
+          dispatch: this.props.dispatch
+        });
+
+      case "CardGrid":
+        return /*#__PURE__*/external_React_default().createElement(CardGrid, {
+          enable_video_playheads: !!component.properties.enable_video_playheads,
+          title: component.header && component.header.title,
+          display_variant: component.properties.display_variant,
+          data: component.data,
+          feed: component.feed,
+          widgets: component.widgets,
+          border: component.properties.border,
+          type: component.type,
+          dispatch: this.props.dispatch,
+          items: component.properties.items,
+          hybridLayout: component.properties.hybridLayout,
+          hideCardBackground: component.properties.hideCardBackground,
+          fourCardLayout: component.properties.fourCardLayout,
+          hideDescriptions: component.properties.hideDescriptions,
+          compactGrid: component.properties.compactGrid,
+          compactImages: component.properties.compactImages,
+          imageGradient: component.properties.imageGradient,
+          newSponsoredLabel: component.properties.newSponsoredLabel,
+          titleLines: component.properties.titleLines,
+          descLines: component.properties.descLines,
+          essentialReadsHeader: component.properties.essentialReadsHeader,
+          editorsPicksHeader: component.properties.editorsPicksHeader,
+          readTime: component.properties.readTime,
+          loadMore: component.loadMore,
+          lastCardMessageEnabled: component.lastCardMessageEnabled,
+          saveToPocketCard: component.saveToPocketCard,
+          cta_variant: component.cta_variant,
+          pocket_button_enabled: component.pocketButtonEnabled,
+          display_engagement_labels: ENGAGEMENT_LABEL_ENABLED
+        });
+
+      case "HorizontalRule":
+        return /*#__PURE__*/external_React_default().createElement(HorizontalRule, null);
+
+      case "PrivacyLink":
+        return /*#__PURE__*/external_React_default().createElement(PrivacyLink, {
+          properties: component.properties
+        });
+
+      default:
+        return /*#__PURE__*/external_React_default().createElement("div", null, component.type);
     }
   }
 
-  onExited() {
-    if (this.openButton) {
-      this.openButton.focus();
-    }
+  renderStyles(styles) {
+    // Use json string as both the key and styles to render so React knows when
+    // to unmount and mount a new instance for new styles.
+    const json = JSON.stringify(styles);
+    return /*#__PURE__*/external_React_default().createElement("style", {
+      key: json,
+      "data-styles": json,
+      ref: this.onStyleMount
+    });
   }
 
   render() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("span", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(react_transition_group__WEBPACK_IMPORTED_MODULE_4__.CSSTransition, {
-      timeout: 300,
-      classNames: "personalize-animate",
-      in: !this.props.showing,
-      appear: true
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
-      className: "icon icon-settings personalize-button",
-      onClick: () => this.props.onOpen(),
-      "data-l10n-id": "newtab-personalize-icon-label",
-      ref: c => this.openButton = c
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(react_transition_group__WEBPACK_IMPORTED_MODULE_4__.CSSTransition, {
-      timeout: 250,
-      classNames: "customize-animate",
-      in: this.props.showing,
-      onEntered: this.onEntered,
-      onExited: this.onExited,
-      appear: true
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
-      className: "customize-menu",
-      role: "dialog",
-      "data-l10n-id": "newtab-personalize-dialog-label"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
-      onClick: () => this.props.onClose(),
-      className: "close-button",
-      "data-l10n-id": "newtab-custom-close-button",
-      ref: c => this.closeButton = c
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(content_src_components_CustomizeMenu_BackgroundsSection_BackgroundsSection__WEBPACK_IMPORTED_MODULE_0__.BackgroundsSection, null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement(content_src_components_CustomizeMenu_ContentSection_ContentSection__WEBPACK_IMPORTED_MODULE_1__.ContentSection, {
-      openPreferences: this.props.openPreferences,
-      setPref: this.props.setPref,
-      enabledSections: this.props.enabledSections,
-      pocketRegion: this.props.pocketRegion,
-      mayHaveSponsoredTopSites: this.props.mayHaveSponsoredTopSites,
-      mayHaveSponsoredStories: this.props.DiscoveryStream.config.show_spocs,
+    const {
+      locale
+    } = this.props; // Select layout render data by adding spocs and position to recommendations
+
+    const {
+      layoutRender
+    } = selectLayoutRender({
+      state: this.props.DiscoveryStream,
+      prefs: this.props.Prefs.values,
+      locale
+    });
+    const {
+      config
+    } = this.props.DiscoveryStream; // Allow rendering without extracting special components
+
+    if (!config.collapsible) {
+      return this.renderLayout(layoutRender);
+    } // Find the first component of a type and remove it from layout
+
+
+    const extractComponent = type => {
+      for (const [rowIndex, row] of Object.entries(layoutRender)) {
+        for (const [index, component] of Object.entries(row.components)) {
+          if (component.type === type) {
+            // Remove the row if it was the only component or the single item
+            if (row.components.length === 1) {
+              layoutRender.splice(rowIndex, 1);
+            } else {
+              row.components.splice(index, 1);
+            }
+
+            return component;
+          }
+        }
+      }
+
+      return null;
+    }; // Get "topstories" Section state for default values
+
+
+    const topStories = this.props.Sections.find(s => s.id === "topstories");
+
+    if (!topStories) {
+      return null;
+    } // Extract TopSites to render before the rest and Message to use for header
+
+
+    const topSites = extractComponent("TopSites");
+    const sponsoredCollection = extractComponent("CollectionCardGrid");
+    const message = extractComponent("Message") || {
+      header: {
+        link_text: topStories.learnMore.link.message,
+        link_url: topStories.learnMore.link.href,
+        title: topStories.title
+      }
+    };
+    const privacyLinkComponent = extractComponent("PrivacyLink");
+    let learnMore = {
+      link: {
+        href: message.header.link_url,
+        message: message.header.link_text
+      }
+    };
+    let sectionTitle = message.header.title;
+    let subTitle = ""; // If we're in one of these experiments, override the default message.
+    // For now this is English only.
+
+    if (message.essentialReadsHeader || message.editorsPicksHeader) {
+      learnMore = null;
+      subTitle = "Recommended By Pocket";
+
+      if (message.essentialReadsHeader) {
+        sectionTitle = "Today’s Essential Reads";
+      } else if (message.editorsPicksHeader) {
+        sectionTitle = "Editor’s Picks";
+      }
+    } // Render a DS-style TopSites then the rest if any in a collapsible section
+
+
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, this.props.DiscoveryStream.isPrivacyInfoModalVisible && /*#__PURE__*/external_React_default().createElement(DSPrivacyModal, {
       dispatch: this.props.dispatch
-    }))));
+    }), topSites && this.renderLayout([{
+      width: 12,
+      components: [topSites]
+    }]), sponsoredCollection && this.renderLayout([{
+      width: 12,
+      components: [sponsoredCollection]
+    }]), !!layoutRender.length && /*#__PURE__*/external_React_default().createElement(CollapsibleSection, {
+      className: "ds-layout",
+      collapsed: topStories.pref.collapsed,
+      dispatch: this.props.dispatch,
+      id: topStories.id,
+      isFixed: true,
+      learnMore: learnMore,
+      privacyNoticeURL: topStories.privacyNoticeURL,
+      showPrefName: topStories.pref.feed,
+      title: sectionTitle,
+      subTitle: subTitle,
+      eventSource: "CARDGRID"
+    }, this.renderLayout(layoutRender)), this.renderLayout([{
+      width: 12,
+      components: [{
+        type: "Highlights"
+      }]
+    }]), privacyLinkComponent && this.renderLayout([{
+      width: 12,
+      components: [privacyLinkComponent]
+    }]));
+  }
+
+  renderLayout(layoutRender) {
+    const styles = [];
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: "discovery-stream ds-layout"
+    }, layoutRender.map((row, rowIndex) => /*#__PURE__*/external_React_default().createElement("div", {
+      key: `row-${rowIndex}`,
+      className: `ds-column ds-column-${row.width}`
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      className: "ds-column-grid"
+    }, row.components.map((component, componentIndex) => {
+      if (!component) {
+        return null;
+      }
+
+      styles[rowIndex] = [...(styles[rowIndex] || []), component.styles];
+      return /*#__PURE__*/external_React_default().createElement("div", {
+        key: `component-${componentIndex}`
+      }, this.renderComponent(component, row.width));
+    })))), this.renderStyles(styles));
   }
 
 }
-const CustomizeMenu = (0,react_redux__WEBPACK_IMPORTED_MODULE_2__.connect)(state => ({
-  DiscoveryStream: state.DiscoveryStream
-}))(_CustomizeMenu);
-
-/***/ }),
-/* 104 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "BackgroundsSection": () => (/* binding */ BackgroundsSection)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+const DiscoveryStreamBase = (0,external_ReactRedux_namespaceObject.connect)(state => ({
+  DiscoveryStream: state.DiscoveryStream,
+  Prefs: state.Prefs,
+  Sections: state.Sections,
+  document: __webpack_require__.g.document,
+  App: state.App
+}))(_DiscoveryStreamBase);
+;// CONCATENATED MODULE: ./content-src/components/CustomizeMenu/BackgroundsSection/BackgroundsSection.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-class BackgroundsSection extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
+class BackgroundsSection extends (external_React_default()).PureComponent {
   render() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null);
+    return /*#__PURE__*/external_React_default().createElement("div", null);
   }
 
 }
-
-/***/ }),
-/* 105 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ContentSection": () => (/* binding */ ContentSection)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1);
+;// CONCATENATED MODULE: ./content-src/components/CustomizeMenu/ContentSection/ContentSection.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-class ContentSection extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
+class ContentSection extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.onPreferenceSelect = this.onPreferenceSelect.bind(this);
   }
 
   inputUserEvent(eventSource, status) {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__.actionCreators.UserEvent({
+    this.props.dispatch(actionCreators.UserEvent({
       event: "PREF_CHANGED",
       source: eventSource,
       value: {
@@ -15371,14 +13818,14 @@ class ContentSection extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureC
       showSponsoredPocketEnabled,
       topSitesRowsCount
     } = this.props.enabledSections;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: "home-section"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       id: "shortcuts-section",
       className: "section"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", {
+    }, /*#__PURE__*/external_React_default().createElement("label", {
       className: "switch"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+    }, /*#__PURE__*/external_React_default().createElement("input", {
       id: "shortcuts-toggle",
       checked: topSitesEnabled,
       type: "checkbox",
@@ -15387,24 +13834,24 @@ class ContentSection extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureC
       "aria-labelledby": "custom-shortcuts-title",
       "aria-describedby": "custom-shortcuts-subtitle",
       eventSource: "TOP_SITES"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
+    }), /*#__PURE__*/external_React_default().createElement("span", {
       className: "slider",
       role: "presentation"
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", {
+    })), /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("h2", {
       id: "custom-shortcuts-title",
       className: "title"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", {
+    }, /*#__PURE__*/external_React_default().createElement("label", {
       htmlFor: "shortcuts-toggle",
       "data-l10n-id": "newtab-custom-shortcuts-title"
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", {
+    })), /*#__PURE__*/external_React_default().createElement("p", {
       id: "custom-shortcuts-subtitle",
       className: "subtitle",
       "data-l10n-id": "newtab-custom-shortcuts-subtitle"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }), /*#__PURE__*/external_React_default().createElement("div", {
       className: `more-info-top-wrapper ${topSitesEnabled ? "" : "shrink"}`
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: `more-information ${topSitesEnabled ? "expand" : "shrink"}`
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("select", {
+    }, /*#__PURE__*/external_React_default().createElement("select", {
       id: "row-selector",
       className: "selector",
       name: "row-count",
@@ -15413,26 +13860,26 @@ class ContentSection extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureC
       onChange: this.onPreferenceSelect,
       disabled: !topSitesEnabled,
       "aria-labelledby": "custom-shortcuts-title"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", {
+    }, /*#__PURE__*/external_React_default().createElement("option", {
       value: "1",
       "data-l10n-id": "newtab-custom-row-selector",
       "data-l10n-args": "{\"num\": 1}"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", {
+    }), /*#__PURE__*/external_React_default().createElement("option", {
       value: "2",
       "data-l10n-id": "newtab-custom-row-selector",
       "data-l10n-args": "{\"num\": 2}"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", {
+    }), /*#__PURE__*/external_React_default().createElement("option", {
       value: "3",
       "data-l10n-id": "newtab-custom-row-selector",
       "data-l10n-args": "{\"num\": 3}"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", {
+    }), /*#__PURE__*/external_React_default().createElement("option", {
       value: "4",
       "data-l10n-id": "newtab-custom-row-selector",
       "data-l10n-args": "{\"num\": 4}"
-    })), this.props.mayHaveSponsoredTopSites && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    })), this.props.mayHaveSponsoredTopSites && /*#__PURE__*/external_React_default().createElement("div", {
       className: "check-wrapper",
       role: "presentation"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+    }, /*#__PURE__*/external_React_default().createElement("input", {
       id: "sponsored-shortcuts",
       className: "sponsored-checkbox",
       disabled: !topSitesEnabled,
@@ -15441,16 +13888,16 @@ class ContentSection extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureC
       onChange: this.onPreferenceSelect,
       preference: "showSponsoredTopSites",
       eventSource: "SPONSORED_TOP_SITES"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", {
+    }), /*#__PURE__*/external_React_default().createElement("label", {
       className: "sponsored",
       htmlFor: "sponsored-shortcuts",
       "data-l10n-id": "newtab-custom-sponsored-sites"
-    })))))), this.props.pocketRegion && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    })))))), this.props.pocketRegion && /*#__PURE__*/external_React_default().createElement("div", {
       id: "pocket-section",
       className: "section"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", {
+    }, /*#__PURE__*/external_React_default().createElement("label", {
       className: "switch"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+    }, /*#__PURE__*/external_React_default().createElement("input", {
       id: "pocket-toggle",
       checked: pocketEnabled,
       type: "checkbox",
@@ -15459,27 +13906,27 @@ class ContentSection extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureC
       "aria-labelledby": "custom-pocket-title",
       "aria-describedby": "custom-pocket-subtitle",
       eventSource: "TOP_STORIES"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
+    }), /*#__PURE__*/external_React_default().createElement("span", {
       className: "slider",
       role: "presentation"
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", {
+    })), /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("h2", {
       id: "custom-pocket-title",
       className: "title"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", {
+    }, /*#__PURE__*/external_React_default().createElement("label", {
       htmlFor: "pocket-toggle",
       "data-l10n-id": "newtab-custom-pocket-title"
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", {
+    })), /*#__PURE__*/external_React_default().createElement("p", {
       id: "custom-pocket-subtitle",
       className: "subtitle",
       "data-l10n-id": "newtab-custom-pocket-subtitle"
-    }), this.props.mayHaveSponsoredStories && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }), this.props.mayHaveSponsoredStories && /*#__PURE__*/external_React_default().createElement("div", {
       className: `more-info-pocket-wrapper ${pocketEnabled ? "" : "shrink"}`
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: `more-information ${pocketEnabled ? "expand" : "shrink"}`
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "check-wrapper",
       role: "presentation"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+    }, /*#__PURE__*/external_React_default().createElement("input", {
       id: "sponsored-pocket",
       className: "sponsored-checkbox",
       disabled: !pocketEnabled,
@@ -15488,16 +13935,16 @@ class ContentSection extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureC
       onChange: this.onPreferenceSelect,
       preference: "showSponsored",
       eventSource: "POCKET_SPOCS"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", {
+    }), /*#__PURE__*/external_React_default().createElement("label", {
       className: "sponsored",
       htmlFor: "sponsored-pocket",
       "data-l10n-id": "newtab-custom-pocket-sponsored"
-    })))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    })))))), /*#__PURE__*/external_React_default().createElement("div", {
       id: "recent-section",
       className: "section"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", {
+    }, /*#__PURE__*/external_React_default().createElement("label", {
       className: "switch"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+    }, /*#__PURE__*/external_React_default().createElement("input", {
       id: "highlights-toggle",
       checked: highlightsEnabled,
       type: "checkbox",
@@ -15506,23 +13953,23 @@ class ContentSection extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureC
       eventSource: "HIGHLIGHTS",
       "aria-labelledby": "custom-recent-title",
       "aria-describedby": "custom-recent-subtitle"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
+    }), /*#__PURE__*/external_React_default().createElement("span", {
       className: "slider",
       role: "presentation"
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", {
+    })), /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("h2", {
       id: "custom-recent-title",
       className: "title"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", {
+    }, /*#__PURE__*/external_React_default().createElement("label", {
       htmlFor: "highlights-toggle",
       "data-l10n-id": "newtab-custom-recent-title"
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", {
+    })), /*#__PURE__*/external_React_default().createElement("p", {
       id: "custom-recent-subtitle",
       className: "subtitle",
       "data-l10n-id": "newtab-custom-recent-subtitle"
-    }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
+    }))), /*#__PURE__*/external_React_default().createElement("span", {
       className: "divider",
       role: "separator"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    }), /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("button", {
       id: "settings-link",
       className: "external-link",
       onClick: this.props.openPreferences,
@@ -15531,22 +13978,77 @@ class ContentSection extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureC
   }
 
 }
+;// CONCATENATED MODULE: ./content-src/components/CustomizeMenu/CustomizeMenu.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/***/ }),
-/* 106 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "_Search": () => (/* binding */ _Search),
-/* harmony export */   "Search": () => (/* binding */ Search)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var content_src_lib_constants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(35);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_3__);
+
+
+
+class _CustomizeMenu extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.onEntered = this.onEntered.bind(this);
+    this.onExited = this.onExited.bind(this);
+  }
+
+  onEntered() {
+    if (this.closeButton) {
+      this.closeButton.focus();
+    }
+  }
+
+  onExited() {
+    if (this.openButton) {
+      this.openButton.focus();
+    }
+  }
+
+  render() {
+    return /*#__PURE__*/external_React_default().createElement("span", null, /*#__PURE__*/external_React_default().createElement(external_ReactTransitionGroup_namespaceObject.CSSTransition, {
+      timeout: 300,
+      classNames: "personalize-animate",
+      in: !this.props.showing,
+      appear: true
+    }, /*#__PURE__*/external_React_default().createElement("button", {
+      className: "icon icon-settings personalize-button",
+      onClick: () => this.props.onOpen(),
+      "data-l10n-id": "newtab-personalize-icon-label",
+      ref: c => this.openButton = c
+    })), /*#__PURE__*/external_React_default().createElement(external_ReactTransitionGroup_namespaceObject.CSSTransition, {
+      timeout: 250,
+      classNames: "customize-animate",
+      in: this.props.showing,
+      onEntered: this.onEntered,
+      onExited: this.onExited,
+      appear: true
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      className: "customize-menu",
+      role: "dialog",
+      "data-l10n-id": "newtab-personalize-dialog-label"
+    }, /*#__PURE__*/external_React_default().createElement("button", {
+      onClick: () => this.props.onClose(),
+      className: "close-button",
+      "data-l10n-id": "newtab-custom-close-button",
+      ref: c => this.closeButton = c
+    }), /*#__PURE__*/external_React_default().createElement(BackgroundsSection, null), /*#__PURE__*/external_React_default().createElement(ContentSection, {
+      openPreferences: this.props.openPreferences,
+      setPref: this.props.setPref,
+      enabledSections: this.props.enabledSections,
+      pocketRegion: this.props.pocketRegion,
+      mayHaveSponsoredTopSites: this.props.mayHaveSponsoredTopSites,
+      mayHaveSponsoredStories: this.props.DiscoveryStream.config.show_spocs,
+      dispatch: this.props.dispatch
+    }))));
+  }
+
+}
+const CustomizeMenu = (0,external_ReactRedux_namespaceObject.connect)(state => ({
+  DiscoveryStream: state.DiscoveryStream
+}))(_CustomizeMenu);
+;// CONCATENATED MODULE: ./content-src/components/Search/Search.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15554,13 +14056,13 @@ __webpack_require__.r(__webpack_exports__);
 /* globals ContentSearchUIController, ContentSearchHandoffUIController */
 
 
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+function Search_extends() { Search_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return Search_extends.apply(this, arguments); }
 
 
 
 
 
-class _Search extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureComponent) {
+class _Search extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.onSearchClick = this.onSearchClick.bind(this);
@@ -15575,7 +14077,7 @@ class _Search extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureComponen
   handleEvent(event) {
     // Also track search events with our own telemetry
     if (event.detail.type === "Search") {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
+      this.props.dispatch(actionCreators.UserEvent({
         event: "SEARCH"
       }));
     }
@@ -15586,22 +14088,22 @@ class _Search extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureComponen
   }
 
   doSearchHandoff(text) {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.OnlyToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.HANDOFF_SEARCH_TO_AWESOMEBAR,
+    this.props.dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.HANDOFF_SEARCH_TO_AWESOMEBAR,
       data: {
         text
       }
     }));
     this.props.dispatch({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.FAKE_FOCUS_SEARCH
+      type: actionTypes.FAKE_FOCUS_SEARCH
     });
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.UserEvent({
+    this.props.dispatch(actionCreators.UserEvent({
       event: "SEARCH_HANDOFF"
     }));
 
     if (text) {
       this.props.dispatch({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.DISABLE_SEARCH
+        type: actionTypes.DISABLE_SEARCH
       });
     }
   }
@@ -15640,13 +14142,13 @@ class _Search extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureComponen
       // can add the appropriate telemetry probes for search. Without the correct
       // name, certain tests like browser_UsageTelemetry_content.js will fail
       // (See github ticket #2348 for more details)
-      const healthReportKey = content_src_lib_constants__WEBPACK_IMPORTED_MODULE_2__.IS_NEWTAB ? "newtab" : "abouthome"; // The "searchSource" needs to be "newtab" or "homepage" and is sent with
+      const healthReportKey = IS_NEWTAB ? "newtab" : "abouthome"; // The "searchSource" needs to be "newtab" or "homepage" and is sent with
       // the search data and acts as context for the search request (See
       // nsISearchEngine.getSubmission). It is necessary so that search engine
       // plugins can correctly atribute referrals. (See github ticket #3321 for
       // more details)
 
-      const searchSource = content_src_lib_constants__WEBPACK_IMPORTED_MODULE_2__.IS_NEWTAB ? "newtab" : "homepage"; // gContentSearchController needs to exist as a global so that tests for
+      const searchSource = IS_NEWTAB ? "newtab" : "homepage"; // gContentSearchController needs to exist as a global so that tests for
       // the existing about:home can find it; and so it allows these tests to pass.
       // In the future, when activity stream is default about:home, this can be renamed
 
@@ -15704,38 +14206,38 @@ class _Search extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureComponen
 
   render() {
     const wrapperClassName = ["search-wrapper", this.props.disable && "search-disabled", this.props.fakeFocus && "fake-focus"].filter(v => v).join(" ");
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: wrapperClassName
-    }, this.props.showLogo && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
+    }, this.props.showLogo && /*#__PURE__*/external_React_default().createElement("div", {
       className: "logo-and-wordmark"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "logo"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
+    }), /*#__PURE__*/external_React_default().createElement("div", {
       className: "wordmark"
-    })), !this.props.handoffEnabled && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
+    })), !this.props.handoffEnabled && /*#__PURE__*/external_React_default().createElement("div", {
       className: "search-inner-wrapper"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("input", {
+    }, /*#__PURE__*/external_React_default().createElement("input", {
       id: "newtab-search-text",
       "data-l10n-id": "newtab-search-box-input",
       maxLength: "256",
       ref: this.onInputMount,
       type: "search"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", {
+    }), /*#__PURE__*/external_React_default().createElement("button", {
       id: "searchSubmit",
       className: "search-button",
       "data-l10n-id": "newtab-search-box-search-button",
       onClick: this.onSearchClick
-    })), this.props.handoffEnabled && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
+    })), this.props.handoffEnabled && /*#__PURE__*/external_React_default().createElement("div", {
       className: "search-inner-wrapper"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("button", _extends({
+    }, /*#__PURE__*/external_React_default().createElement("button", Search_extends({
       className: "search-handoff-button"
     }, this.getHandoffInputL10nAttributes(), {
       ref: this.onSearchHandoffButtonMount,
       onClick: this.onSearchHandoffClick,
       tabIndex: "-1"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", _extends({
+    }), /*#__PURE__*/external_React_default().createElement("div", Search_extends({
       className: "fake-textbox"
-    }, this.getHandoffTextL10nAttributes())), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("input", {
+    }, this.getHandoffTextL10nAttributes())), /*#__PURE__*/external_React_default().createElement("input", {
       type: "search",
       className: "fake-editable",
       tabIndex: "-1",
@@ -15743,64 +14245,334 @@ class _Search extends (react__WEBPACK_IMPORTED_MODULE_3___default().PureComponen
       onDrop: this.onSearchHandoffDrop,
       onPaste: this.onSearchHandoffPaste,
       ref: this.onInputMountHandoff
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default().createElement("div", {
+    }), /*#__PURE__*/external_React_default().createElement("div", {
       className: "fake-caret"
     }))));
   }
 
 }
-const Search = (0,react_redux__WEBPACK_IMPORTED_MODULE_1__.connect)(state => ({
+const Search_Search = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   Prefs: state.Prefs
 }))(_Search);
-
-/***/ }),
-/* 107 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Background": () => (/* binding */ Background)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+;// CONCATENATED MODULE: ./content-src/components/Background/Background.jsx
 
 const imgLength = 100;
 function Background(props) {
-  const [imgSrc] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(`chrome://browser/skin/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`);
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+  const [imgSrc] = (0,external_React_namespaceObject.useState)(`chrome://browser/skin/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`);
+  return /*#__PURE__*/external_React_default().createElement("div", {
     id: "background_back",
     className: props.className
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+  }, /*#__PURE__*/external_React_default().createElement("div", {
     id: "background",
     style: {
       "--background-url": `url(${imgSrc})`
     }
   }));
 }
+;// CONCATENATED MODULE: ./content-src/components/Base/Base.jsx
+function Base_extends() { Base_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return Base_extends.apply(this, arguments); }
 
-/***/ }),
-/* 108 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "DetectUserSessionStart": () => (/* binding */ DetectUserSessionStart)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var content_src_lib_perf_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(84);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-const VISIBLE = "visible";
-const VISIBILITY_CHANGE_EVENT = "visibilitychange";
+
+
+
+
+
+
+
+
+
+
+const PrefsButton = ({
+  onClick,
+  icon
+}) => /*#__PURE__*/external_React_default().createElement("div", {
+  className: "prefs-button"
+}, /*#__PURE__*/external_React_default().createElement("button", {
+  className: `icon ${icon || "icon-settings"}`,
+  onClick: onClick,
+  "data-l10n-id": "newtab-settings-button"
+})); // Returns a function will not be continuously triggered when called. The
+// function will be triggered if called again after `wait` milliseconds.
+
+function debounce(func, wait) {
+  let timer;
+  return (...args) => {
+    if (timer) {
+      return;
+    }
+
+    let wakeUp = () => {
+      timer = null;
+    };
+
+    timer = setTimeout(wakeUp, wait);
+    func.apply(this, args);
+  };
+}
+
+class _Base extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      message: {}
+    };
+    this.notifyContent = this.notifyContent.bind(this);
+  }
+
+  notifyContent(state) {
+    this.setState(state);
+  }
+
+  componentWillUnmount() {
+    this.updateTheme();
+  }
+
+  componentWillUpdate() {
+    this.updateTheme();
+  }
+
+  updateTheme() {
+    const bodyClassName = ["activity-stream", // If we skipped the about:welcome overlay and removed the CSS classes
+    // we don't want to add them back to the Activity Stream view
+    document.body.classList.contains("inline-onboarding") ? "inline-onboarding" : ""].filter(v => v).join(" ");
+    __webpack_require__.g.document.body.className = bodyClassName;
+  }
+
+  render() {
+    const {
+      props
+    } = this;
+    const {
+      App
+    } = props;
+    const isDevtoolsEnabled = props.Prefs.values["asrouter.devtoolsEnabled"];
+
+    if (!App.initialized) {
+      return null;
+    }
+
+    return /*#__PURE__*/external_React_default().createElement(ErrorBoundary, {
+      className: "base-content-fallback"
+    }, /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement(BaseContent, Base_extends({}, this.props, {
+      adminContent: this.state
+    })), isDevtoolsEnabled ? /*#__PURE__*/external_React_default().createElement(ASRouterAdmin, {
+      notifyContent: this.notifyContent
+    }) : null));
+  }
+
+}
+class BaseContent extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.openPreferences = this.openPreferences.bind(this);
+    this.openCustomizationMenu = this.openCustomizationMenu.bind(this);
+    this.closeCustomizationMenu = this.closeCustomizationMenu.bind(this);
+    this.handleOnKeyDown = this.handleOnKeyDown.bind(this);
+    this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
+    this.setPref = this.setPref.bind(this);
+    this.state = {
+      fixedSearch: false,
+      customizeMenuVisible: false
+    };
+  }
+
+  componentDidMount() {
+    var _document$querySelect;
+
+    __webpack_require__.g.addEventListener("scroll", this.onWindowScroll);
+    __webpack_require__.g.addEventListener("keydown", this.handleOnKeyDown);
+    (_document$querySelect = document.querySelector(".darkreader")) === null || _document$querySelect === void 0 ? void 0 : _document$querySelect.remove();
+  }
+
+  componentWillUnmount() {
+    __webpack_require__.g.removeEventListener("scroll", this.onWindowScroll);
+    __webpack_require__.g.removeEventListener("keydown", this.handleOnKeyDown);
+  }
+
+  onWindowScroll() {
+    const prefs = this.props.Prefs.values;
+    const SCROLL_THRESHOLD = prefs["logowordmark.alwaysVisible"] ? 179 : 34;
+
+    if (__webpack_require__.g.scrollY > SCROLL_THRESHOLD && !this.state.fixedSearch) {
+      this.setState({
+        fixedSearch: true
+      });
+    } else if (__webpack_require__.g.scrollY <= SCROLL_THRESHOLD && this.state.fixedSearch) {
+      this.setState({
+        fixedSearch: false
+      });
+    }
+  }
+
+  openPreferences() {
+    this.props.dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.SETTINGS_OPEN
+    }));
+    this.props.dispatch(actionCreators.UserEvent({
+      event: "OPEN_NEWTAB_PREFS"
+    }));
+  }
+
+  openCustomizationMenu() {
+    this.setState({
+      customizeMenuVisible: true
+    });
+    this.props.dispatch(actionCreators.UserEvent({
+      event: "SHOW_PERSONALIZE"
+    }));
+  }
+
+  closeCustomizationMenu() {
+    if (this.state.customizeMenuVisible) {
+      this.setState({
+        customizeMenuVisible: false
+      });
+      this.props.dispatch(actionCreators.UserEvent({
+        event: "HIDE_PERSONALIZE"
+      }));
+    }
+  }
+
+  handleOnKeyDown(e) {
+    if (e.key === "Escape") {
+      this.closeCustomizationMenu();
+    }
+  }
+
+  setPref(pref, value) {
+    this.props.dispatch(actionCreators.SetPref(pref, value));
+  }
+
+  render() {
+    const {
+      props
+    } = this;
+    const {
+      App
+    } = props;
+    const {
+      initialized
+    } = App;
+    const prefs = props.Prefs.values;
+    const isDiscoveryStream = props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
+    let filteredSections = props.Sections.filter(section => section.id !== "topstories");
+    const pocketEnabled = prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
+    const noSectionsEnabled = !prefs["feeds.topsites"] && !pocketEnabled && filteredSections.filter(section => section.enabled).length === 0;
+    const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
+    const showCustomizationMenu = this.state.customizeMenuVisible;
+    const enabledSections = {
+      topSitesEnabled: prefs["feeds.topsites"],
+      pocketEnabled: prefs["feeds.section.topstories"],
+      highlightsEnabled: prefs["feeds.section.highlights"],
+      showSponsoredTopSitesEnabled: prefs.showSponsoredTopSites,
+      showSponsoredPocketEnabled: prefs.showSponsored,
+      topSitesRowsCount: prefs.topSitesRows
+    };
+    const pocketRegion = prefs["feeds.system.topstories"];
+    const {
+      mayHaveSponsoredTopSites
+    } = prefs;
+    const outerClassName = ["outer-wrapper", isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search", prefs["logowordmark.alwaysVisible"] && "visible-logo"].filter(v => v).join(" ");
+    const hasSnippet = prefs["feeds.snippets"] && this.props.adminContent && this.props.adminContent.message && this.props.adminContent.message.id;
+    let Background_ClassName = "";
+
+    switch (prefs["floorp.background.type"]) {
+      case 1:
+        Background_ClassName = "random_image";
+        break;
+
+      case 2:
+        Background_ClassName = "gradation";
+        break;
+
+      default:
+        Background_ClassName = "not_background";
+        break;
+    }
+
+    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement(Background, {
+      className: Background_ClassName
+    }), /*#__PURE__*/external_React_default().createElement(CustomizeMenu, {
+      onClose: this.closeCustomizationMenu,
+      onOpen: this.openCustomizationMenu,
+      openPreferences: this.openPreferences,
+      setPref: this.setPref,
+      enabledSections: enabledSections,
+      pocketRegion: pocketRegion,
+      mayHaveSponsoredTopSites: mayHaveSponsoredTopSites,
+      showing: showCustomizationMenu
+    }), /*#__PURE__*/external_React_default().createElement("div", {
+      className: outerClassName,
+      onClick: this.closeCustomizationMenu
+    }, /*#__PURE__*/external_React_default().createElement("main", {
+      className: hasSnippet ? "has-snippet" : ""
+    }, prefs.showSearch && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "non-collapsible-section"
+    }, /*#__PURE__*/external_React_default().createElement(ErrorBoundary, null, /*#__PURE__*/external_React_default().createElement(Search_Search, Base_extends({
+      showLogo: noSectionsEnabled || prefs["logowordmark.alwaysVisible"],
+      handoffEnabled: searchHandoffEnabled
+    }, props.Search)))), /*#__PURE__*/external_React_default().createElement(ASRouterUISurface, {
+      adminContent: this.props.adminContent,
+      appUpdateChannel: this.props.Prefs.values.appUpdateChannel,
+      fxaEndpoint: this.props.Prefs.values.fxa_endpoint,
+      dispatch: this.props.dispatch
+    }), /*#__PURE__*/external_React_default().createElement("div", {
+      className: `body-wrapper${initialized ? " on" : ""}`
+    }, isDiscoveryStream ? /*#__PURE__*/external_React_default().createElement(ErrorBoundary, {
+      className: "borderless-error"
+    }, /*#__PURE__*/external_React_default().createElement(DiscoveryStreamBase, {
+      locale: props.App.locale
+    })) : /*#__PURE__*/external_React_default().createElement(Sections_Sections, null)), /*#__PURE__*/external_React_default().createElement(ConfirmDialog, null))), /*#__PURE__*/external_React_default().createElement("div", {
+      id: "floorp"
+    }, /*#__PURE__*/external_React_default().createElement("a", {
+      class: "releasenote",
+      href: "https://support.ablaze.one",
+      target: "_blank"
+    }, "Support"), /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("a", {
+      class: "releasenote",
+      href: "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp",
+      target: "_blank"
+    }, "Release Note")), /*#__PURE__*/external_React_default().createElement("a", {
+      href: "https://unsplash.com/",
+      style: {
+        position: "fixed",
+        bottom: "1em",
+        left: "1em",
+        fontSize: "16px",
+        color: "#ffffff"
+      },
+      target: "_blank",
+      id: "unsplash"
+    }, "Unsplash"));
+  }
+
+}
+const Base = (0,external_ReactRedux_namespaceObject.connect)(state => ({
+  App: state.App,
+  Prefs: state.Prefs,
+  Sections: state.Sections,
+  DiscoveryStream: state.DiscoveryStream,
+  Search: state.Search
+}))(_Base);
+;// CONCATENATED MODULE: ./content-src/lib/detect-user-session-start.js
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+const detect_user_session_start_VISIBLE = "visible";
+const detect_user_session_start_VISIBILITY_CHANGE_EVENT = "visibilitychange";
 class DetectUserSessionStart {
   constructor(store, options = {}) {
     this._store = store; // Overrides for testing
 
     this.document = options.document || __webpack_require__.g.document;
-    this._perfService = options.perfService || content_src_lib_perf_service__WEBPACK_IMPORTED_MODULE_1__.perfService;
+    this._perfService = options.perfService || perfService;
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
   }
   /**
@@ -15812,13 +14584,13 @@ class DetectUserSessionStart {
 
 
   sendEventOrAddListener() {
-    if (this.document.visibilityState === VISIBLE) {
+    if (this.document.visibilityState === detect_user_session_start_VISIBLE) {
       // If the document is already visible, to the user, send a notification
       // immediately that a session has started.
       this._sendEvent();
     } else {
       // If the document is not visible, listen for when it does become visible.
-      this.document.addEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+      this.document.addEventListener(detect_user_session_start_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
     }
   }
   /**
@@ -15834,8 +14606,8 @@ class DetectUserSessionStart {
     try {
       let visibility_event_rcvd_ts = this._perfService.getMostRecentAbsMarkStartByName("visibility_event_rcvd_ts");
 
-      this._store.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SAVE_SESSION_PERF_DATA,
+      this._store.dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.SAVE_SESSION_PERF_DATA,
         data: {
           visibility_event_rcvd_ts
         }
@@ -15851,32 +14623,17 @@ class DetectUserSessionStart {
 
 
   _onVisibilityChange() {
-    if (this.document.visibilityState === VISIBLE) {
+    if (this.document.visibilityState === detect_user_session_start_VISIBLE) {
       this._sendEvent();
 
-      this.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+      this.document.removeEventListener(detect_user_session_start_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
     }
   }
 
 }
-
-/***/ }),
-/* 109 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "MERGE_STORE_ACTION": () => (/* binding */ MERGE_STORE_ACTION),
-/* harmony export */   "OUTGOING_MESSAGE_NAME": () => (/* binding */ OUTGOING_MESSAGE_NAME),
-/* harmony export */   "INCOMING_MESSAGE_NAME": () => (/* binding */ INCOMING_MESSAGE_NAME),
-/* harmony export */   "EARLY_QUEUED_ACTIONS": () => (/* binding */ EARLY_QUEUED_ACTIONS),
-/* harmony export */   "rehydrationMiddleware": () => (/* binding */ rehydrationMiddleware),
-/* harmony export */   "queueEarlyMessageMiddleware": () => (/* binding */ queueEarlyMessageMiddleware),
-/* harmony export */   "initStore": () => (/* binding */ initStore)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var redux__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(110);
-/* harmony import */ var redux__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(redux__WEBPACK_IMPORTED_MODULE_1__);
+;// CONCATENATED MODULE: external "Redux"
+const external_Redux_namespaceObject = Redux;
+;// CONCATENATED MODULE: ./content-src/lib/init-store.js
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15887,7 +14644,7 @@ __webpack_require__.r(__webpack_exports__);
 const MERGE_STORE_ACTION = "NEW_TAB_INITIAL_STATE";
 const OUTGOING_MESSAGE_NAME = "ActivityStream:ContentToMain";
 const INCOMING_MESSAGE_NAME = "ActivityStream:MainToContent";
-const EARLY_QUEUED_ACTIONS = [common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.SAVE_SESSION_PERF_DATA];
+const EARLY_QUEUED_ACTIONS = [actionTypes.SAVE_SESSION_PERF_DATA];
 /**
  * A higher-order function which returns a reducer that, on MERGE_STORE action,
  * will return the action.data object merged into the previous state.
@@ -15924,7 +14681,7 @@ function mergeStateReducer(mainReducer) {
 const messageMiddleware = store => next => action => {
   const skipLocal = action.meta && action.meta.skipLocal;
 
-  if (common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionUtils.isSendToMain(action)) {
+  if (actionUtils.isSendToMain(action)) {
     RPMSendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
   }
 
@@ -15952,7 +14709,7 @@ const rehydrationMiddleware = ({
     }
 
     const isMergeStoreAction = action.type === MERGE_STORE_ACTION;
-    const isRehydrationRequest = action.type === common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.NEW_TAB_STATE_REQUEST;
+    const isRehydrationRequest = action.type === actionTypes.NEW_TAB_STATE_REQUEST;
 
     if (isRehydrationRequest) {
       getState.didRequestInitialState = true;
@@ -15965,13 +14722,13 @@ const rehydrationMiddleware = ({
     } // If init happened after our request was made, we need to re-request
 
 
-    if (getState.didRequestInitialState && action.type === common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.INIT) {
-      return next(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.NEW_TAB_STATE_REQUEST
+    if (getState.didRequestInitialState && action.type === actionTypes.INIT) {
+      return next(actionCreators.AlsoToMain({
+        type: actionTypes.NEW_TAB_STATE_REQUEST
       }));
     }
 
-    if (common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionUtils.isBroadcastToContent(action) || common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionUtils.isSendToOneContent(action) || common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionUtils.isSendToPreloaded(action)) {
+    if (actionUtils.isBroadcastToContent(action) || actionUtils.isSendToOneContent(action) || actionUtils.isSendToPreloaded(action)) {
       // Note that actions received before didRehydrate will not be dispatched
       // because this could negatively affect preloading and the the state
       // will be replaced by rehydration anyway.
@@ -15999,7 +14756,7 @@ const queueEarlyMessageMiddleware = ({
   return next => action => {
     if (getState.receivedFromMain) {
       next(action);
-    } else if (common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionUtils.isFromMain(action)) {
+    } else if (actionUtils.isFromMain(action)) {
       next(action);
       getState.receivedFromMain = true; // Sending out all the early actions as main is ready now
 
@@ -16022,7 +14779,7 @@ const queueEarlyMessageMiddleware = ({
  */
 
 function initStore(reducers, initialState) {
-  const store = (0,redux__WEBPACK_IMPORTED_MODULE_1__.createStore)(mergeStateReducer((0,redux__WEBPACK_IMPORTED_MODULE_1__.combineReducers)(reducers)), initialState, __webpack_require__.g.RPMAddMessageListener && (0,redux__WEBPACK_IMPORTED_MODULE_1__.applyMiddleware)(queueEarlyMessageMiddleware, rehydrationMiddleware, messageMiddleware));
+  const store = (0,external_Redux_namespaceObject.createStore)(mergeStateReducer((0,external_Redux_namespaceObject.combineReducers)(reducers)), initialState, __webpack_require__.g.RPMAddMessageListener && (0,external_Redux_namespaceObject.applyMiddleware)(queueEarlyMessageMiddleware, rehydrationMiddleware, messageMiddleware));
 
   if (__webpack_require__.g.RPMAddMessageListener) {
     __webpack_require__.g.RPMAddMessageListener(INCOMING_MESSAGE_NAME, msg => {
@@ -16038,114 +14795,7 @@ function initStore(reducers, initialState) {
 
   return store;
 }
-
-/***/ }),
-/* 110 */
-/***/ ((module) => {
-
-module.exports = Redux;
-
-/***/ })
-/******/ 	]);
-/************************************************************************/
-/******/ 	// The module cache
-/******/ 	var __webpack_module_cache__ = {};
-/******/ 	
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-/******/ 		// Check if module is in cache
-/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
-/******/ 		if (cachedModule !== undefined) {
-/******/ 			return cachedModule.exports;
-/******/ 		}
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			// no module.id needed
-/******/ 			// no module.loaded needed
-/******/ 			exports: {}
-/******/ 		};
-/******/ 	
-/******/ 		// Execute the module function
-/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
-/******/ 	
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-/******/ 	
-/************************************************************************/
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	(() => {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__webpack_require__.n = (module) => {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				() => (module['default']) :
-/******/ 				() => (module);
-/******/ 			__webpack_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__webpack_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/global */
-/******/ 	(() => {
-/******/ 		__webpack_require__.g = (function() {
-/******/ 			if (typeof globalThis === 'object') return globalThis;
-/******/ 			try {
-/******/ 				return this || new Function('return this')();
-/******/ 			} catch (e) {
-/******/ 				if (typeof window === 'object') return window;
-/******/ 			}
-/******/ 		})();
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__webpack_require__.r = (exports) => {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/************************************************************************/
-var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
-(() => {
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "NewTab": () => (/* binding */ NewTab),
-/* harmony export */   "renderWithoutState": () => (/* binding */ renderWithoutState),
-/* harmony export */   "renderCache": () => (/* binding */ renderCache)
-/* harmony export */ });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var content_src_components_Base_Base__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2);
-/* harmony import */ var content_src_lib_detect_user_session_start__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(108);
-/* harmony import */ var content_src_lib_init_store__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(109);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(7);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_5__);
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(36);
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_6__);
-/* harmony import */ var common_Reducers_jsm__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(91);
+;// CONCATENATED MODULE: ./content-src/activity-stream.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16159,12 +14809,12 @@ __webpack_require__.r(__webpack_exports__);
 
 const NewTab = ({
   store
-}) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(react_redux__WEBPACK_IMPORTED_MODULE_4__.Provider, {
+}) => /*#__PURE__*/external_React_default().createElement(external_ReactRedux_namespaceObject.Provider, {
   store: store
-}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(content_src_components_Base_Base__WEBPACK_IMPORTED_MODULE_1__.Base, null));
+}, /*#__PURE__*/external_React_default().createElement(Base, null));
 function renderWithoutState() {
-  const store = (0,content_src_lib_init_store__WEBPACK_IMPORTED_MODULE_3__.initStore)(common_Reducers_jsm__WEBPACK_IMPORTED_MODULE_7__.reducers);
-  new content_src_lib_detect_user_session_start__WEBPACK_IMPORTED_MODULE_2__.DetectUserSessionStart(store).sendEventOrAddListener(); // If this document has already gone into the background by the time we've reached
+  const store = initStore(reducers);
+  new DetectUserSessionStart(store).sendEventOrAddListener(); // If this document has already gone into the background by the time we've reached
   // here, we can deprioritize requesting the initial state until the event loop
   // frees up. If, however, the visibility changes, we then send the request.
 
@@ -16178,8 +14828,8 @@ function renderWithoutState() {
       }
 
       didRequest = true;
-      store.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionCreators.AlsoToMain({
-        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__.actionTypes.NEW_TAB_STATE_REQUEST
+      store.dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.NEW_TAB_STATE_REQUEST
       }));
     }
   }
@@ -16193,19 +14843,17 @@ function renderWithoutState() {
     doRequest();
   }
 
-  react_dom__WEBPACK_IMPORTED_MODULE_6___default().hydrate( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(NewTab, {
+  external_ReactDOM_default().hydrate( /*#__PURE__*/external_React_default().createElement(NewTab, {
     store: store
   }), document.getElementById("root"));
 }
 function renderCache(initialState) {
-  const store = (0,content_src_lib_init_store__WEBPACK_IMPORTED_MODULE_3__.initStore)(common_Reducers_jsm__WEBPACK_IMPORTED_MODULE_7__.reducers, initialState);
-  new content_src_lib_detect_user_session_start__WEBPACK_IMPORTED_MODULE_2__.DetectUserSessionStart(store).sendEventOrAddListener();
-  react_dom__WEBPACK_IMPORTED_MODULE_6___default().hydrate( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement(NewTab, {
+  const store = initStore(reducers, initialState);
+  new DetectUserSessionStart(store).sendEventOrAddListener();
+  external_ReactDOM_default().hydrate( /*#__PURE__*/external_React_default().createElement(NewTab, {
     store: store
   }), document.getElementById("root"));
 }
-})();
-
 NewtabRenderUtils = __webpack_exports__;
 /******/ })()
 ;
