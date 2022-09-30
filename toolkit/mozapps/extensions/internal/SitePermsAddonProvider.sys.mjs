@@ -187,6 +187,163 @@ class SitePermsAddonWrapper {
   }
 }
 
+class SitePermsAddonInstalling extends SitePermsAddonWrapper {
+  #install = null;
+
+  /**
+   * @param {string} siteOrigin: The origin this addon is installed for
+   * @param {SitePermsAddonInstall} install: The SitePermsAddonInstall instance
+   *        calling this constructor.
+   */
+  constructor(siteOrigin, install) {
+    super(siteOrigin);
+    this.#install = install;
+  }
+
+  get sitePermissions() {
+    return Array.from(new Set([this.#install.newSitePerm]));
+  }
+
+  validInstallOrigins() {
+    // Always return true from here,
+    // actual checks are done from AddonManagerInternal.getSitePermsAddonInstallForWebpage
+    return true;
+  }
+}
+
+class SitePermsAddonInstall {
+  #listeners = new Set();
+  #installEvents = {
+    DOWNLOAD_ENDED: "onDownloadEnded",
+    INSTALL_CANCELLED: "onInstallCancelled",
+    INSTALL_ENDED: "onInstallEnded",
+    INSTALL_FAILED: "onInstallFailed",
+  };
+
+  /**
+   * @param {nsIPrincipal} installingPrincipal
+   * @param {String} sitePerm
+   */
+  constructor(installingPrincipal, sitePerm) {
+    this.principal = installingPrincipal;
+    this.newSitePerm = sitePerm;
+    this.state = lazy.AddonManager.STATE_DOWNLOADED;
+    this.addon = new SitePermsAddonInstalling(this.principal.siteOrigin, this);
+  }
+
+  get installTelemetryInfo() {
+    return this.addon.installTelemetryInfo;
+  }
+
+  async checkPrompt() {
+    // `promptHandler` can be set from `AddonManagerInternal.setupPromptHandler`
+    if (this.promptHandler) {
+      let info = {
+        // TODO: Investigate if we need to handle addon "update", i.e. granting new
+        // gated permission on an origin other permissions were already granted for (Bug 1790778).
+        existingAddon: null,
+        addon: this.addon,
+        icon: "chrome://mozapps/skin/extensions/category-sitepermission.svg",
+        // Used in AMTelemetry to detect the install flow related to this prompt.
+        install: this,
+      };
+
+      try {
+        await this.promptHandler(info);
+      } catch (err) {
+        if (this.error < 0) {
+          this.state = lazy.AddonManager.STATE_INSTALL_FAILED;
+          // In some cases onOperationCancelled is called during failures
+          // to install/uninstall/enable/disable addons.  We may need to
+          // do that here in the future.
+          this.#callInstallListeners(this.#installEvents.INSTALL_FAILED);
+        } else {
+          this.cancel();
+        }
+        return;
+      }
+    }
+
+    this.state = lazy.AddonManager.STATE_PROMPTS_DONE;
+    this.install();
+  }
+
+  install() {
+    if (this.state === lazy.AddonManager.STATE_PROMPTS_DONE) {
+      lazy.AddonManagerPrivate.callAddonListeners("onInstalling", this.addon);
+      Services.perms.addFromPrincipal(
+        this.principal,
+        this.newSitePerm,
+        Services.perms.ALLOW_ACTION
+      );
+      this.state = lazy.AddonManager.STATE_INSTALLED;
+      this.#callInstallListeners(this.#installEvents.INSTALL_ENDED);
+      lazy.AddonManagerPrivate.callAddonListeners("onInstalled", this.addon);
+      this.addon.install = null;
+      return;
+    }
+
+    if (this.state !== lazy.AddonManager.STATE_DOWNLOADED) {
+      this.state = lazy.AddonManager.STATE_INSTALL_FAILED;
+      this.#callInstallListeners(this.#installEvents.INSTALL_FAILED);
+      return;
+    }
+
+    this.#callInstallListeners(this.#installEvents.DOWNLOAD_ENDED);
+    this.checkPrompt();
+  }
+
+  cancel() {
+    this.state = lazy.AddonManager.STATE_CANCELLED;
+    this.#callInstallListeners(this.#installEvents.INSTALL_CANCELLED);
+  }
+
+  /**
+   * Add a listener for the install events
+   *
+   * @param {Object} listener
+   * @param {Function} [listener.onDownloadEnded]
+   * @param {Function} [listener.onInstallCancelled]
+   * @param {Function} [listener.onInstallEnded]
+   * @param {Function} [listener.onInstallFailed]
+   */
+  addListener(listener) {
+    this.#listeners.add(listener);
+  }
+
+  /**
+   * Remove a listener
+   *
+   * @param {Object} listener: The same object reference that was used for `addListener`
+   */
+  removeListener(listener) {
+    this.#listeners.delete(listener);
+  }
+
+  /**
+   * Call the listeners callbacks for a given event.
+   *
+   * @param {String} eventName: The event to fire. Should be one of `this.#installEvents`
+   */
+  #callInstallListeners(eventName) {
+    if (!Object.values(this.#installEvents).includes(eventName)) {
+      console.warn(`Unknown "${eventName}" "event`);
+      return;
+    }
+
+    for (const listener of this.#listeners) {
+      try {
+        listener[eventName]?.(this);
+      } catch (e) {
+        console.warn(
+          `SitePermsAddonInstall threw exception when calling listener callback for event "${eventName}":`,
+          e
+        );
+      }
+    }
+  }
+}
+
 const SitePermsAddonProvider = {
   get name() {
     return "SitePermsAddonProvider";
@@ -317,6 +474,17 @@ const SitePermsAddonProvider = {
 
     await this.lazyInit();
     return Array.from(this.wrappersMapByOrigin.values());
+  },
+
+  /**
+   * Create and return a SitePermsAddonInstall instance for a permission on a given principal
+   *
+   * @param {nsIPrincipal} installingPrincipal
+   * @param {String} sitePerm
+   * @returns {SitePermsAddonInstall}
+   */
+  getSitePermsAddonInstallForWebpage(installingPrincipal, sitePerm) {
+    return new SitePermsAddonInstall(installingPrincipal, sitePerm);
   },
 
   get isEnabled() {
