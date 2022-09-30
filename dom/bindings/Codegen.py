@@ -12357,11 +12357,6 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider, isMember=False
             jsConversion=jsConversion,
         )
 
-        if ownsMembers:
-            handleType = "JS::Handle<JS::Value>"
-        else:
-            handleType = "JS::MutableHandle<JS::Value>"
-
         needCallContext = idlTypeNeedsCallContext(type)
         if needCallContext:
             cxType = "BindingCallContext&"
@@ -12373,7 +12368,7 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider, isMember=False
                 "bool",
                 [
                     Argument(cxType, "cx"),
-                    Argument(handleType, "value"),
+                    Argument("JS::Handle<JS::Value>", "value"),
                     Argument("bool&", "tryNext"),
                     Argument("bool", "passedToJSImpl", default="false"),
                 ],
@@ -12398,7 +12393,7 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider, isMember=False
                     "bool",
                     [
                         Argument("JSContext*", "cx_"),
-                        Argument(handleType, "value"),
+                        Argument("JS::Handle<JS::Value>", "value"),
                         Argument("bool&", "tryNext"),
                         Argument("bool", "passedToJSImpl", default="false"),
                     ],
@@ -12674,18 +12669,13 @@ def getUnionInitMethods(type, isOwningUnion=False):
         conversion=string.Template(template).substitute(replacements),
     )
 
-    if isOwningUnion:
-        handleType = "JS::Handle<JS::Value>"
-    else:
-        handleType = "JS::MutableHandle<JS::Value>"
-
     return [
         ClassMethod(
             "Init",
             "bool",
             [
                 Argument("BindingCallContext&", "cx"),
-                Argument(handleType, "value"),
+                Argument("JS::Handle<JS::Value>", "value"),
                 Argument("const char*", "sourceDescription", default='"Value"'),
                 Argument("bool", "passedToJSImpl", default="false"),
             ],
@@ -12697,7 +12687,7 @@ def getUnionInitMethods(type, isOwningUnion=False):
             "bool",
             [
                 Argument("JSContext*", "cx_"),
-                Argument(handleType, "value"),
+                Argument("JS::Handle<JS::Value>", "value"),
                 Argument("const char*", "sourceDescription", default='"Value"'),
                 Argument("bool", "passedToJSImpl", default="false"),
             ],
