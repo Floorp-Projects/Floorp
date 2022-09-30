@@ -124,7 +124,10 @@ class HTMLEditor final : public EditorBase,
   // nsISelectionListener overrides
   NS_DECL_NSISELECTIONLISTENER
 
-  HTMLEditor();
+  /**
+   * @param aDocument   The document whose content will be editable.
+   */
+  explicit HTMLEditor(const Document& aDocument);
 
   /**
    * @param aDocument   The document whose content will be editable.
@@ -4484,7 +4487,7 @@ class HTMLEditor final : public EditorBase,
 
   // Whether use Blink/WebKit compatible joining nodes and split a node
   // direction or Gecko's traditional direction.
-  bool mUseGeckoTraditionalJoinSplitBehavior = true;
+  bool mUseGeckoTraditionalJoinSplitBehavior;
 
   // resizing
   bool mIsObjectResizingEnabled;

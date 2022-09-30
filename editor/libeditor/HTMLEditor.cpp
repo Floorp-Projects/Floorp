@@ -155,9 +155,26 @@ HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
 HTMLEditor::InitializeInsertingElement HTMLEditor::DoNothingForNewElement =
     [](HTMLEditor&, Element&, const EditorDOMPoint&) { return NS_OK; };
 
-HTMLEditor::HTMLEditor()
+static bool ShouldUseTraditionalJoinSplitDirection(const Document& aDocument) {
+  if (nsIPrincipal* principal = aDocument.GetPrincipalForPrefBasedHacks()) {
+    if (principal->IsURIInPrefList("editor.join_split_direction."
+                                   "force_use_traditional_direction")) {
+      return true;
+    }
+    if (principal->IsURIInPrefList("editor.join_split_direction."
+                                   "force_use_compatible_direction")) {
+      return false;
+    }
+  }
+  return !StaticPrefs::
+      editor_join_split_direction_compatible_with_the_other_browsers();
+}
+
+HTMLEditor::HTMLEditor(const Document& aDocument)
     : EditorBase(EditorBase::EditorType::HTML),
       mCRInParagraphCreatesParagraph(false),
+      mUseGeckoTraditionalJoinSplitBehavior(
+          ShouldUseTraditionalJoinSplitDirection(aDocument)),
       mIsObjectResizingEnabled(
           StaticPrefs::editor_resizing_enabled_by_default()),
       mIsResizing(false),
