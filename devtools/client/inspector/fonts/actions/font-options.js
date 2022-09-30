@@ -6,7 +6,7 @@
 
 const {
   UPDATE_PREVIEW_TEXT,
-} = require("devtools/client/inspector/fonts/actions/index");
+} = require("resource://devtools/client/inspector/fonts/actions/index.js");
 
 module.exports = {
   /**

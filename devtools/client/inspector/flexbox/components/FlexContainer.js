@@ -9,9 +9,9 @@ const {
   createRef,
   Fragment,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 loader.lazyRequireGetter(
   this,
@@ -19,12 +19,12 @@ loader.lazyRequireGetter(
   "devtools/client/inspector/shared/node-reps"
 );
 
-const Types = require("devtools/client/inspector/flexbox/types");
+const Types = require("resource://devtools/client/inspector/flexbox/types.js");
 
 const {
   highlightNode,
   unhighlightNode,
-} = require("devtools/client/inspector/boxmodel/actions/box-model-highlighter");
+} = require("resource://devtools/client/inspector/boxmodel/actions/box-model-highlighter.js");
 
 class FlexContainer extends PureComponent {
   static get propTypes() {

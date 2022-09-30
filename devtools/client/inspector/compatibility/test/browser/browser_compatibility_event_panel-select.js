@@ -11,7 +11,7 @@ const TEST_ANOTHER_URI = "<body></body>";
 const {
   COMPATIBILITY_UPDATE_SELECTED_NODE_START,
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_START,
-} = require("devtools/client/inspector/compatibility/actions/index");
+} = require("resource://devtools/client/inspector/compatibility/actions/index.js");
 
 add_task(async function() {
   info(

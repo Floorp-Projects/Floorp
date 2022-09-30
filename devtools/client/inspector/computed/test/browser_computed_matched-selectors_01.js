@@ -5,7 +5,9 @@
 
 // Checking selector counts, matched rules and titles in the computed-view.
 
-const { PropertyView } = require("devtools/client/inspector/computed/computed");
+const {
+  PropertyView,
+} = require("resource://devtools/client/inspector/computed/computed.js");
 const TEST_URI = URL_ROOT + "doc_matched_selectors.html";
 
 add_task(async function() {

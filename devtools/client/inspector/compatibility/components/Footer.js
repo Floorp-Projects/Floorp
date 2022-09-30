@@ -4,20 +4,22 @@
 
 "use strict";
 
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
 
 const {
   updateSettingsVisibility,
-} = require("devtools/client/inspector/compatibility/actions/compatibility");
+} = require("resource://devtools/client/inspector/compatibility/actions/compatibility.js");
 
 const SETTINGS_ICON = "chrome://devtools/skin/images/settings.svg";
 

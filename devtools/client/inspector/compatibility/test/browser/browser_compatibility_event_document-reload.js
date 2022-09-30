@@ -34,7 +34,7 @@ const TEST_DATA_ALL = [
 const {
   COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE,
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_FAILURE,
-} = require("devtools/client/inspector/compatibility/actions/index");
+} = require("resource://devtools/client/inspector/compatibility/actions/index.js");
 
 add_task(async function() {
   const tab = await addTab(

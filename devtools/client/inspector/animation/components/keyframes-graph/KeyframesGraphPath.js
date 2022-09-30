@@ -7,26 +7,26 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const ReactDOM = require("resource://devtools/client/shared/vendor/react-dom.js");
 
 const ColorPath = createFactory(
-  require("devtools/client/inspector/animation/components/keyframes-graph/ColorPath")
+  require("resource://devtools/client/inspector/animation/components/keyframes-graph/ColorPath.js")
 );
 const DiscretePath = createFactory(
-  require("devtools/client/inspector/animation/components/keyframes-graph/DiscretePath")
+  require("resource://devtools/client/inspector/animation/components/keyframes-graph/DiscretePath.js")
 );
 const DistancePath = createFactory(
-  require("devtools/client/inspector/animation/components/keyframes-graph/DistancePath")
+  require("resource://devtools/client/inspector/animation/components/keyframes-graph/DistancePath.js")
 );
 
 const {
   DEFAULT_EASING_HINT_STROKE_WIDTH,
   DEFAULT_GRAPH_HEIGHT,
   DEFAULT_KEYFRAMES_GRAPH_DURATION,
-} = require("devtools/client/inspector/animation/utils/graph-helper");
+} = require("resource://devtools/client/inspector/animation/utils/graph-helper.js");
 
 class KeyframesGraphPath extends PureComponent {
   static get propTypes() {

@@ -7,21 +7,21 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 const BoxModelInfo = createFactory(
-  require("devtools/client/inspector/boxmodel/components/BoxModelInfo")
+  require("resource://devtools/client/inspector/boxmodel/components/BoxModelInfo.js")
 );
 const BoxModelMain = createFactory(
-  require("devtools/client/inspector/boxmodel/components/BoxModelMain")
+  require("resource://devtools/client/inspector/boxmodel/components/BoxModelMain.js")
 );
 const BoxModelProperties = createFactory(
-  require("devtools/client/inspector/boxmodel/components/BoxModelProperties")
+  require("resource://devtools/client/inspector/boxmodel/components/BoxModelProperties.js")
 );
 
-const Types = require("devtools/client/inspector/boxmodel/types");
+const Types = require("resource://devtools/client/inspector/boxmodel/types.js");
 
 class BoxModel extends PureComponent {
   static get propTypes() {

@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
+const {
+  getStr,
+} = require("resource://devtools/client/inspector/layout/utils/l10n.js");
 
 // Test the specific max-clamping scenario where an item wants to grow a certain amount
 // but its max-size prevents it from growing that much.

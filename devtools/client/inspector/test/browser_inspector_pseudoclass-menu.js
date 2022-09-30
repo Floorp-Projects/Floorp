@@ -5,7 +5,9 @@
 // Test that the inspector has the correct pseudo-class locking menu items and
 // that these items actually work
 
-const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
+const {
+  PSEUDO_CLASSES,
+} = require("resource://devtools/shared/css/constants.js");
 const TEST_URI =
   "data:text/html;charset=UTF-8," +
   "pseudo-class lock node menu tests" +

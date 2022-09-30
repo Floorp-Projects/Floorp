@@ -7,15 +7,15 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 const TickLabels = createFactory(
-  require("devtools/client/inspector/animation/components/TickLabels")
+  require("resource://devtools/client/inspector/animation/components/TickLabels.js")
 );
 const TickLines = createFactory(
-  require("devtools/client/inspector/animation/components/TickLines")
+  require("resource://devtools/client/inspector/animation/components/TickLines.js")
 );
 
 /**

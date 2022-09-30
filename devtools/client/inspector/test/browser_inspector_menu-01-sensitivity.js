@@ -255,7 +255,7 @@ const TEST_CASES = [
   },
 ];
 
-var clipboard = require("devtools/shared/platform/clipboard");
+var clipboard = require("resource://devtools/shared/platform/clipboard.js");
 registerCleanupFunction(() => {
   clipboard.copyString("");
   clipboard = null;

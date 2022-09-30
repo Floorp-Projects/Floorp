@@ -7,23 +7,23 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 const AnimatedPropertyList = createFactory(
-  require("devtools/client/inspector/animation/components/AnimatedPropertyList")
+  require("resource://devtools/client/inspector/animation/components/AnimatedPropertyList.js")
 );
 const KeyframesProgressBar = createFactory(
-  require("devtools/client/inspector/animation/components/KeyframesProgressBar")
+  require("resource://devtools/client/inspector/animation/components/KeyframesProgressBar.js")
 );
 const ProgressInspectionPanel = createFactory(
-  require("devtools/client/inspector/animation/components/ProgressInspectionPanel")
+  require("resource://devtools/client/inspector/animation/components/ProgressInspectionPanel.js")
 );
 
 const {
   getFormatStr,
-} = require("devtools/client/inspector/animation/utils/l10n");
+} = require("resource://devtools/client/inspector/animation/utils/l10n.js");
 
 class AnimatedPropertyListContainer extends PureComponent {
   static get propTypes() {

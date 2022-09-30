@@ -4,10 +4,10 @@
 
 "use strict";
 
-const { generateUUID } = require("devtools/shared/generate-uuid");
+const { generateUUID } = require("resource://devtools/shared/generate-uuid.js");
 const {
   COMPATIBILITY_TOOLTIP_MESSAGE,
-} = require("devtools/client/inspector/rules/constants");
+} = require("resource://devtools/client/inspector/rules/constants.js");
 
 loader.lazyRequireGetter(
   this,

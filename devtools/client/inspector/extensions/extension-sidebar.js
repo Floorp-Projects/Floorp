@@ -7,17 +7,19 @@
 const {
   createElement,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const EventEmitter = require("devtools/shared/event-emitter");
-const { Provider } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const {
+  Provider,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
-const extensionsSidebarReducer = require("devtools/client/inspector/extensions/reducers/sidebar");
+const extensionsSidebarReducer = require("resource://devtools/client/inspector/extensions/reducers/sidebar.js");
 const {
   default: objectInspectorReducer,
-} = require("devtools/client/shared/components/object-inspector/reducer");
+} = require("resource://devtools/client/shared/components/object-inspector/reducer.js");
 
 const ExtensionSidebarComponent = createFactory(
-  require("devtools/client/inspector/extensions/components/ExtensionSidebar")
+  require("resource://devtools/client/inspector/extensions/components/ExtensionSidebar.js")
 );
 
 const {
@@ -25,7 +27,7 @@ const {
   updateObjectTreeView,
   updateExpressionResultView,
   removeExtensionSidebar,
-} = require("devtools/client/inspector/extensions/actions/sidebar");
+} = require("resource://devtools/client/inspector/extensions/actions/sidebar.js");
 
 /**
  * ExtensionSidebar instances represents Inspector sidebars installed by add-ons

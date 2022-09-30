@@ -6,7 +6,7 @@
 /* import-globals-from helper_diff.js */
 "use strict";
 
-const beautify = require("devtools/shared/jsbeautify/beautify");
+const beautify = require("resource://devtools/shared/jsbeautify/beautify.js");
 
 loadHelperScript("helper_diff.js");
 

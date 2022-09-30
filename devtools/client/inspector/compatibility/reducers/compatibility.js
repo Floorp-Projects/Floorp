@@ -27,7 +27,7 @@ const {
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_SUCCESS,
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_FAILURE,
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE,
-} = require("devtools/client/inspector/compatibility/actions/index");
+} = require("resource://devtools/client/inspector/compatibility/actions/index.js");
 
 const INITIAL_STATE = {
   defaultTargetBrowsers: [],

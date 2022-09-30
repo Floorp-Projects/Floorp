@@ -11,7 +11,7 @@ const { shallow } = require("enzyme");
 const React = require("react");
 
 const NodePane = React.createFactory(
-  require("devtools/client/inspector/compatibility/components/NodePane")
+  require("resource://devtools/client/inspector/compatibility/components/NodePane.js")
 );
 
 describe("NodePane component", () => {

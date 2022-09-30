@@ -11,7 +11,7 @@ const { shallow } = require("enzyme");
 const React = require("react");
 
 const UnsupportedBrowserList = React.createFactory(
-  require("devtools/client/inspector/compatibility/components/UnsupportedBrowserList")
+  require("resource://devtools/client/inspector/compatibility/components/UnsupportedBrowserList.js")
 );
 
 describe("UnsupportedBrowserList component", () => {

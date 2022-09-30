@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const asyncStorage = require("devtools/shared/async-storage");
+const asyncStorage = require("resource://devtools/shared/async-storage.js");
 
 Services.prefs.setIntPref("devtools.toolbox.footer.height", 350);
 registerCleanupFunction(async function() {

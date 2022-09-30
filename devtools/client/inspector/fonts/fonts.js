@@ -4,37 +4,41 @@
 
 "use strict";
 
-const { gDevTools } = require("devtools/client/framework/devtools");
-const { getColor } = require("devtools/client/shared/theme");
+const {
+  gDevTools,
+} = require("resource://devtools/client/framework/devtools.js");
+const { getColor } = require("resource://devtools/client/shared/theme.js");
 const {
   createFactory,
   createElement,
-} = require("devtools/client/shared/vendor/react");
-const { Provider } = require("devtools/client/shared/vendor/react-redux");
-const { debounce } = require("devtools/shared/debounce");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  Provider,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
+const { debounce } = require("resource://devtools/shared/debounce.js");
 const {
   style: { ELEMENT_STYLE },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 const FontsApp = createFactory(
-  require("devtools/client/inspector/fonts/components/FontsApp")
+  require("resource://devtools/client/inspector/fonts/components/FontsApp.js")
 );
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const INSPECTOR_L10N = new LocalizationHelper(
   "devtools/client/locales/inspector.properties"
 );
 
 const {
   parseFontVariationAxes,
-} = require("devtools/client/inspector/fonts/utils/font-utils");
+} = require("resource://devtools/client/inspector/fonts/utils/font-utils.js");
 
-const fontDataReducer = require("devtools/client/inspector/fonts/reducers/fonts");
-const fontEditorReducer = require("devtools/client/inspector/fonts/reducers/font-editor");
-const fontOptionsReducer = require("devtools/client/inspector/fonts/reducers/font-options");
+const fontDataReducer = require("resource://devtools/client/inspector/fonts/reducers/fonts.js");
+const fontEditorReducer = require("resource://devtools/client/inspector/fonts/reducers/font-editor.js");
+const fontOptionsReducer = require("resource://devtools/client/inspector/fonts/reducers/font-options.js");
 const {
   updateFonts,
-} = require("devtools/client/inspector/fonts/actions/fonts");
+} = require("resource://devtools/client/inspector/fonts/actions/fonts.js");
 const {
   applyInstance,
   resetFontEditor,
@@ -42,10 +46,10 @@ const {
   updateAxis,
   updateFontEditor,
   updateFontProperty,
-} = require("devtools/client/inspector/fonts/actions/font-editor");
+} = require("resource://devtools/client/inspector/fonts/actions/font-editor.js");
 const {
   updatePreviewText,
-} = require("devtools/client/inspector/fonts/actions/font-options");
+} = require("resource://devtools/client/inspector/fonts/actions/font-options.js");
 
 const FONT_PROPERTIES = [
   "font-family",

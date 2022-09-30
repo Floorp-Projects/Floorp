@@ -4,10 +4,10 @@
 
 "use strict";
 
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const ComputedStylePath = require("devtools/client/inspector/animation/components/keyframes-graph/ComputedStylePath");
+const ComputedStylePath = require("resource://devtools/client/inspector/animation/components/keyframes-graph/ComputedStylePath.js");
 
 class DiscretePath extends ComputedStylePath {
   static get propTypes() {

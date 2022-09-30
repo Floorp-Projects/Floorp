@@ -4,23 +4,25 @@
 
 "use strict";
 
-const flags = require("devtools/shared/flags");
-const { l10n } = require("devtools/shared/inspector/css-logic");
+const flags = require("resource://devtools/shared/flags.js");
+const { l10n } = require("resource://devtools/shared/inspector/css-logic.js");
 const {
   style: { ELEMENT_STYLE },
-} = require("devtools/shared/constants");
-const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
-const OutputParser = require("devtools/client/shared/output-parser");
-const { PrefObserver } = require("devtools/client/shared/prefs");
-const ElementStyle = require("devtools/client/inspector/rules/models/element-style");
-const RuleEditor = require("devtools/client/inspector/rules/views/rule-editor");
-const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overlay");
+} = require("resource://devtools/shared/constants.js");
+const {
+  PSEUDO_CLASSES,
+} = require("resource://devtools/shared/css/constants.js");
+const OutputParser = require("resource://devtools/client/shared/output-parser.js");
+const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
+const ElementStyle = require("resource://devtools/client/inspector/rules/models/element-style.js");
+const RuleEditor = require("resource://devtools/client/inspector/rules/views/rule-editor.js");
+const TooltipsOverlay = require("resource://devtools/client/inspector/shared/tooltips-overlay.js");
 const {
   createChild,
   promiseWarn,
-} = require("devtools/client/inspector/shared/utils");
-const { debounce } = require("devtools/shared/debounce");
-const EventEmitter = require("devtools/shared/event-emitter");
+} = require("resource://devtools/client/inspector/shared/utils.js");
+const { debounce } = require("resource://devtools/shared/debounce.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const DOUBLESPACE = "  ";
 
 loader.lazyRequireGetter(

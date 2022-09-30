@@ -4,14 +4,14 @@
 
 "use strict";
 
-const ClassList = require("devtools/client/inspector/rules/models/class-list");
+const ClassList = require("resource://devtools/client/inspector/rules/models/class-list.js");
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/inspector.properties"
 );
-const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
-const { debounce } = require("devtools/shared/debounce");
+const AutocompletePopup = require("resource://devtools/client/shared/autocomplete-popup.js");
+const { debounce } = require("resource://devtools/shared/debounce.js");
 
 /**
  * This UI widget shows a textfield and a series of checkboxes in the rule-view. It is

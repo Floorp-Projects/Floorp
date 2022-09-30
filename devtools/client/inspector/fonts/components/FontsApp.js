@@ -7,19 +7,21 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 const FontEditor = createFactory(
-  require("devtools/client/inspector/fonts/components/FontEditor")
+  require("resource://devtools/client/inspector/fonts/components/FontEditor.js")
 );
 const FontOverview = createFactory(
-  require("devtools/client/inspector/fonts/components/FontOverview")
+  require("resource://devtools/client/inspector/fonts/components/FontOverview.js")
 );
 
-const Types = require("devtools/client/inspector/fonts/types");
+const Types = require("resource://devtools/client/inspector/fonts/types.js");
 
 class FontsApp extends PureComponent {
   static get propTypes() {

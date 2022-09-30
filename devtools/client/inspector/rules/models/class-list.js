@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 // This serves as a local cache for the classes applied to each of the node we care about
 // here.

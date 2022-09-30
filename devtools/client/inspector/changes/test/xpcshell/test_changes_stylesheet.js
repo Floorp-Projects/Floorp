@@ -8,7 +8,7 @@
 
 const {
   getChangesStylesheet,
-} = require("devtools/client/inspector/changes/selectors/changes");
+} = require("resource://devtools/client/inspector/changes/selectors/changes.js");
 
 const { CHANGES_STATE } = require("resource://test/mocks");
 

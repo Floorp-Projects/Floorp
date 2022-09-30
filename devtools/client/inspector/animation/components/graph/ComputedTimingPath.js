@@ -4,14 +4,14 @@
 
 "use strict";
 
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 const {
   createSummaryGraphPathStringFunction,
   SummaryGraphHelper,
-} = require("devtools/client/inspector/animation/utils/graph-helper");
-const TimingPath = require("devtools/client/inspector/animation/components/graph/TimingPath");
+} = require("resource://devtools/client/inspector/animation/utils/graph-helper.js");
+const TimingPath = require("resource://devtools/client/inspector/animation/components/graph/TimingPath.js");
 
 class ComputedTimingPath extends TimingPath {
   static get propTypes() {

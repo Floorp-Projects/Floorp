@@ -6,7 +6,7 @@
 
 const {
   UPDATE_FONTS,
-} = require("devtools/client/inspector/fonts/actions/index");
+} = require("resource://devtools/client/inspector/fonts/actions/index.js");
 
 const INITIAL_FONT_DATA = {
   // All fonts on the current page.

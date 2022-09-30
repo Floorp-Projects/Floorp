@@ -11,7 +11,7 @@ const { shallow } = require("enzyme");
 const React = require("react");
 
 const NodeList = React.createFactory(
-  require("devtools/client/inspector/compatibility/components/NodeList")
+  require("resource://devtools/client/inspector/compatibility/components/NodeList.js")
 );
 
 describe("NodeList component", () => {

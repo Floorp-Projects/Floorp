@@ -4,9 +4,9 @@
 
 "use strict";
 
-const SlottedNodeEditor = require("devtools/client/inspector/markup/views/slotted-node-editor");
-const MarkupContainer = require("devtools/client/inspector/markup/views/markup-container");
-const { extend } = require("devtools/shared/extend");
+const SlottedNodeEditor = require("resource://devtools/client/inspector/markup/views/slotted-node-editor.js");
+const MarkupContainer = require("resource://devtools/client/inspector/markup/views/markup-container.js");
+const { extend } = require("resource://devtools/shared/extend.js");
 
 function SlottedNodeContainer(markupView, node) {
   MarkupContainer.prototype.initialize.call(

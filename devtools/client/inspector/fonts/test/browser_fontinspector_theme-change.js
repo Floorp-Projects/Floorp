@@ -6,7 +6,10 @@ requestLongerTimeout(2);
 
 // Test that the preview images are updated when the theme changes.
 
-const { getTheme, setTheme } = require("devtools/client/shared/theme");
+const {
+  getTheme,
+  setTheme,
+} = require("resource://devtools/client/shared/theme.js");
 
 const TEST_URI = URL_ROOT + "doc_browser_fontinspector.html";
 const originalTheme = getTheme();

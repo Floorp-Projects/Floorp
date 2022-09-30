@@ -4,10 +4,12 @@
 
 "use strict";
 
-const MarkupContainer = require("devtools/client/inspector/markup/views/markup-container");
-const ElementEditor = require("devtools/client/inspector/markup/views/element-editor");
-const { ELEMENT_NODE } = require("devtools/shared/dom-node-constants");
-const { extend } = require("devtools/shared/extend");
+const MarkupContainer = require("resource://devtools/client/inspector/markup/views/markup-container.js");
+const ElementEditor = require("resource://devtools/client/inspector/markup/views/element-editor.js");
+const {
+  ELEMENT_NODE,
+} = require("resource://devtools/shared/dom-node-constants.js");
+const { extend } = require("resource://devtools/shared/extend.js");
 
 loader.lazyRequireGetter(
   this,

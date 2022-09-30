@@ -8,7 +8,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_edit.html";
 const {
   DEFAULT_VALUE_SUMMARY_LENGTH,
-} = require("devtools/server/actors/inspector/walker");
+} = require("resource://devtools/server/actors/inspector/walker.js");
 
 add_task(async function() {
   const { inspector } = await openInspectorForURL(TEST_URL);

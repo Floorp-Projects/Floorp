@@ -4,10 +4,12 @@
 
 "use strict";
 
-const { getStr } = require("devtools/client/inspector/fonts/utils/l10n");
+const {
+  getStr,
+} = require("resource://devtools/client/inspector/fonts/utils/l10n.js");
 const {
   parseFontVariationAxes,
-} = require("devtools/client/inspector/fonts/utils/font-utils");
+} = require("resource://devtools/client/inspector/fonts/utils/font-utils.js");
 
 const {
   APPLY_FONT_VARIATION_INSTANCE,
@@ -17,7 +19,7 @@ const {
   UPDATE_EDITOR_STATE,
   UPDATE_PROPERTY_VALUE,
   UPDATE_WARNING_MESSAGE,
-} = require("devtools/client/inspector/fonts/actions/index");
+} = require("resource://devtools/client/inspector/fonts/actions/index.js");
 
 const CUSTOM_INSTANCE_NAME = getStr("fontinspector.customInstanceName");
 

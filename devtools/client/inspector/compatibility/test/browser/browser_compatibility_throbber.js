@@ -23,7 +23,7 @@ const TEST_URI = `
 
 const {
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_START,
-} = require("devtools/client/inspector/compatibility/actions/index");
+} = require("resource://devtools/client/inspector/compatibility/actions/index.js");
 
 add_task(async function() {
   const tab = await addTab(

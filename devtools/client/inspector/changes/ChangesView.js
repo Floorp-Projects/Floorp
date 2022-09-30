@@ -7,8 +7,10 @@
 const {
   createFactory,
   createElement,
-} = require("devtools/client/shared/vendor/react");
-const { Provider } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  Provider,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 loader.lazyRequireGetter(
   this,
@@ -21,17 +23,17 @@ loader.lazyRequireGetter(
   "devtools/shared/platform/clipboard"
 );
 
-const changesReducer = require("devtools/client/inspector/changes/reducers/changes");
+const changesReducer = require("resource://devtools/client/inspector/changes/reducers/changes.js");
 const {
   getChangesStylesheet,
-} = require("devtools/client/inspector/changes/selectors/changes");
+} = require("resource://devtools/client/inspector/changes/selectors/changes.js");
 const {
   resetChanges,
   trackChange,
-} = require("devtools/client/inspector/changes/actions/changes");
+} = require("resource://devtools/client/inspector/changes/actions/changes.js");
 
 const ChangesApp = createFactory(
-  require("devtools/client/inspector/changes/components/ChangesApp")
+  require("resource://devtools/client/inspector/changes/components/ChangesApp.js")
 );
 
 class ChangesView {

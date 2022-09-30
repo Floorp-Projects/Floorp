@@ -4,23 +4,26 @@
 
 "use strict";
 
-const flags = require("devtools/shared/flags");
-const ToolDefinitions = require("devtools/client/definitions").Tools;
-const CssLogic = require("devtools/shared/inspector/css-logic");
+const flags = require("resource://devtools/shared/flags.js");
+const ToolDefinitions = require("resource://devtools/client/definitions.js")
+  .Tools;
+const CssLogic = require("resource://devtools/shared/inspector/css-logic.js");
 const {
   style: { ELEMENT_STYLE },
-} = require("devtools/shared/constants");
-const OutputParser = require("devtools/client/shared/output-parser");
-const { PrefObserver } = require("devtools/client/shared/prefs");
-const { createChild } = require("devtools/client/inspector/shared/utils");
+} = require("resource://devtools/shared/constants.js");
+const OutputParser = require("resource://devtools/client/shared/output-parser.js");
+const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
+const {
+  createChild,
+} = require("resource://devtools/client/inspector/shared/utils.js");
 const {
   VIEW_NODE_SELECTOR_TYPE,
   VIEW_NODE_PROPERTY_TYPE,
   VIEW_NODE_VALUE_TYPE,
   VIEW_NODE_IMAGE_URL_TYPE,
   VIEW_NODE_FONT_TYPE,
-} = require("devtools/client/inspector/shared/node-types");
-const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overlay");
+} = require("resource://devtools/client/inspector/shared/node-types.js");
+const TooltipsOverlay = require("resource://devtools/client/inspector/shared/tooltips-overlay.js");
 
 loader.lazyRequireGetter(
   this,
@@ -46,7 +49,7 @@ loader.lazyRequireGetter(
 
 const STYLE_INSPECTOR_PROPERTIES =
   "devtools/shared/locales/styleinspector.properties";
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 
 const FILTER_CHANGED_TIMEOUT = 150;

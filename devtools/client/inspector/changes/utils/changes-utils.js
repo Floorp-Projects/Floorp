@@ -7,7 +7,7 @@
 const {
   getFormatStr,
   getStr,
-} = require("devtools/client/inspector/changes/utils/l10n");
+} = require("resource://devtools/client/inspector/changes/utils/l10n.js");
 
 /**
  * Get a human-friendly style source path to display in the Changes panel.

@@ -28,7 +28,7 @@ const PASTE_ADJACENT_HTML_DATA = [
   },
 ];
 
-var clipboard = require("devtools/shared/platform/clipboard");
+var clipboard = require("resource://devtools/shared/platform/clipboard.js");
 registerCleanupFunction(() => {
   clipboard = null;
 });

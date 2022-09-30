@@ -11,7 +11,7 @@ const PASTE_AS_LAST_CHILD =
   '<circle xmlns="http://www.w3.org/2000/svg" cx="42" cy="42" r="15"/>';
 
 add_task(async function() {
-  const clipboard = require("devtools/shared/platform/clipboard");
+  const clipboard = require("resource://devtools/shared/platform/clipboard.js");
 
   const { inspector } = await openInspectorForURL(TEST_URL);
 

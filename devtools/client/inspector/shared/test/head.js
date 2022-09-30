@@ -10,11 +10,15 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-var { CssRuleView } = require("devtools/client/inspector/rules/rules");
+var {
+  CssRuleView,
+} = require("resource://devtools/client/inspector/rules/rules.js");
 var {
   getInplaceEditorForSpan: inplaceEditor,
-} = require("devtools/client/shared/inplace-editor");
-const { getColor: getThemeColor } = require("devtools/client/shared/theme");
+} = require("resource://devtools/client/shared/inplace-editor.js");
+const {
+  getColor: getThemeColor,
+} = require("resource://devtools/client/shared/theme.js");
 
 const TEST_URL_ROOT =
   "http://example.com/browser/devtools/client/inspector/shared/test/";

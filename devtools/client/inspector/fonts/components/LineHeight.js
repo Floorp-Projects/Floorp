@@ -7,18 +7,20 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 const FontPropertyValue = createFactory(
-  require("devtools/client/inspector/fonts/components/FontPropertyValue")
+  require("resource://devtools/client/inspector/fonts/components/FontPropertyValue.js")
 );
 
-const { getStr } = require("devtools/client/inspector/fonts/utils/l10n");
+const {
+  getStr,
+} = require("resource://devtools/client/inspector/fonts/utils/l10n.js");
 const {
   getUnitFromValue,
   getStepForUnit,
-} = require("devtools/client/inspector/fonts/utils/font-utils");
+} = require("resource://devtools/client/inspector/fonts/utils/font-utils.js");
 
 class LineHeight extends PureComponent {
   static get propTypes() {

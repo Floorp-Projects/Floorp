@@ -7,7 +7,7 @@
 
 const {
   updateTargetBrowsers,
-} = require("devtools/client/inspector/compatibility/actions/compatibility");
+} = require("resource://devtools/client/inspector/compatibility/actions/compatibility.js");
 
 const TEST_URI = `
   <style>

@@ -4,9 +4,9 @@
 
 "use strict";
 
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const NegativePath = require("devtools/client/inspector/animation/components/graph/NegativePath");
+const NegativePath = require("resource://devtools/client/inspector/animation/components/graph/NegativePath.js");
 
 class NegativeDelayPath extends NegativePath {
   getClassName() {

@@ -7,7 +7,7 @@
 
 var {
   style: { ELEMENT_STYLE },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 const TEST_URI = `
   <div id="test2" style="color: red">

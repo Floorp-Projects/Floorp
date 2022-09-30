@@ -7,22 +7,22 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { KeyCodes } = require("devtools/client/shared/keycodes");
-const { LocalizationHelper } = require("devtools/shared/l10n");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const { KeyCodes } = require("resource://devtools/client/shared/keycodes.js");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 
 const BoxModelEditable = createFactory(
-  require("devtools/client/inspector/boxmodel/components/BoxModelEditable")
+  require("resource://devtools/client/inspector/boxmodel/components/BoxModelEditable.js")
 );
 
-const Types = require("devtools/client/inspector/boxmodel/types");
+const Types = require("resource://devtools/client/inspector/boxmodel/types.js");
 
 const {
   highlightSelectedNode,
   unhighlightNode,
-} = require("devtools/client/inspector/boxmodel/actions/box-model-highlighter");
+} = require("resource://devtools/client/inspector/boxmodel/actions/box-model-highlighter.js");
 
 const SHARED_STRINGS_URI = "devtools/client/locales/shared.properties";
 const SHARED_L10N = new LocalizationHelper(SHARED_STRINGS_URI);

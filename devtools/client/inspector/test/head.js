@@ -23,7 +23,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const INSPECTOR_L10N = new LocalizationHelper(
   "devtools/client/locales/inspector.properties"
 );
@@ -1451,7 +1451,9 @@ async function getAllAdjustedQuadsForContentPageElement(
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/loader/Loader.jsm"
       );
-      const { getAdjustedQuads } = require("devtools/shared/layout/utils");
+      const {
+        getAdjustedQuads,
+      } = require("resource://devtools/shared/layout/utils.js");
 
       const node = content.document.querySelector(_selector);
 

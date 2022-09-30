@@ -3,7 +3,7 @@
 
 "use strict";
 
-const asyncStorage = require("devtools/shared/async-storage");
+const asyncStorage = require("resource://devtools/shared/async-storage.js");
 
 // Test that the flexbox highlighter color change in the color picker is committed when
 // RETURN is pressed.

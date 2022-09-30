@@ -4,12 +4,16 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
+const {
+  PureComponent,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  getStr,
+} = require("resource://devtools/client/inspector/layout/utils/l10n.js");
 
-const Types = require("devtools/client/inspector/flexbox/types");
+const Types = require("resource://devtools/client/inspector/flexbox/types.js");
 
 const getFlexibilityReasons = ({
   lineGrowthState,

@@ -7,16 +7,16 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { LocalizationHelper } = require("devtools/shared/l10n");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 
 const ComputedProperty = createFactory(
-  require("devtools/client/inspector/boxmodel/components/ComputedProperty")
+  require("resource://devtools/client/inspector/boxmodel/components/ComputedProperty.js")
 );
 
-const Types = require("devtools/client/inspector/boxmodel/types");
+const Types = require("resource://devtools/client/inspector/boxmodel/types.js");
 
 const BOXMODEL_STRINGS_URI = "devtools/client/locales/boxmodel.properties";
 const BOXMODEL_L10N = new LocalizationHelper(BOXMODEL_STRINGS_URI);

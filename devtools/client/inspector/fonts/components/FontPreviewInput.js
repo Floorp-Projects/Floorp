@@ -7,12 +7,14 @@
 const {
   createRef,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const Types = require("devtools/client/inspector/fonts/types");
-const { getStr } = require("devtools/client/inspector/fonts/utils/l10n");
+const Types = require("resource://devtools/client/inspector/fonts/types.js");
+const {
+  getStr,
+} = require("resource://devtools/client/inspector/fonts/utils/l10n.js");
 
 const PREVIEW_TEXT_MAX_LENGTH = 30;
 

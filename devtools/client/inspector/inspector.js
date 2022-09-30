@@ -4,12 +4,12 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
-const flags = require("devtools/shared/flags");
-const { executeSoon } = require("devtools/shared/DevToolsUtils");
-const { Toolbox } = require("devtools/client/framework/toolbox");
-const createStore = require("devtools/client/inspector/store");
-const InspectorStyleChangeTracker = require("devtools/client/inspector/shared/style-change-tracker");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const flags = require("resource://devtools/shared/flags.js");
+const { executeSoon } = require("resource://devtools/shared/DevToolsUtils.js");
+const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
+const createStore = require("resource://devtools/client/inspector/store.js");
+const InspectorStyleChangeTracker = require("resource://devtools/client/inspector/shared/style-change-tracker.js");
 
 // Use privileged promise in panel documents to prevent having them to freeze
 // during toolbox destruction. See bug 1402779.
@@ -66,13 +66,16 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(this, "debounce", "devtools/shared/debounce", true);
 
-const { LocalizationHelper, localizeMarkup } = require("devtools/shared/l10n");
+const {
+  LocalizationHelper,
+  localizeMarkup,
+} = require("resource://devtools/shared/l10n.js");
 const INSPECTOR_L10N = new LocalizationHelper(
   "devtools/client/locales/inspector.properties"
 );
 const {
   FluentL10n,
-} = require("devtools/client/shared/fluent-l10n/fluent-l10n");
+} = require("resource://devtools/client/shared/fluent-l10n/fluent-l10n.js");
 
 // Sidebar dimensions
 const INITIAL_SIDEBAR_SIZE = 350;
@@ -1111,7 +1114,7 @@ Inspector.prototype = {
       case "boxmodel":
         // box-model isn't a panel on its own, it used to, now it is being used by
         // the layout view which retrieves an instance via getPanel.
-        const BoxModel = require("devtools/client/inspector/boxmodel/box-model");
+        const BoxModel = require("resource://devtools/client/inspector/boxmodel/box-model.js");
         panel = new BoxModel(this, this.panelWin);
         break;
       case "changesview":
@@ -1147,7 +1150,7 @@ Inspector.prototype = {
       case "ruleview":
         const {
           RuleViewTool,
-        } = require("devtools/client/inspector/rules/rules");
+        } = require("resource://devtools/client/inspector/rules/rules.js");
         panel = new RuleViewTool(this, this.panelWin);
         break;
       default:

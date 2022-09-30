@@ -7,21 +7,21 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 const CurrentTimeLabel = createFactory(
-  require("devtools/client/inspector/animation/components/CurrentTimeLabel")
+  require("resource://devtools/client/inspector/animation/components/CurrentTimeLabel.js")
 );
 const PauseResumeButton = createFactory(
-  require("devtools/client/inspector/animation/components/PauseResumeButton")
+  require("resource://devtools/client/inspector/animation/components/PauseResumeButton.js")
 );
 const PlaybackRateSelector = createFactory(
-  require("devtools/client/inspector/animation/components/PlaybackRateSelector")
+  require("resource://devtools/client/inspector/animation/components/PlaybackRateSelector.js")
 );
 const RewindButton = createFactory(
-  require("devtools/client/inspector/animation/components/RewindButton")
+  require("resource://devtools/client/inspector/animation/components/RewindButton.js")
 );
 
 class AnimationToolbar extends PureComponent {

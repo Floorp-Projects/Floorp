@@ -13,11 +13,11 @@ Services.scriptloader.loadSubScript(
 const {
   COMPATIBILITY_UPDATE_SELECTED_NODE_COMPLETE,
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE,
-} = require("devtools/client/inspector/compatibility/actions/index");
+} = require("resource://devtools/client/inspector/compatibility/actions/index.js");
 
 const {
   toCamelCase,
-} = require("devtools/client/inspector/compatibility/utils/cases");
+} = require("resource://devtools/client/inspector/compatibility/utils/cases.js");
 
 async function openCompatibilityView() {
   info("Open the compatibility view");

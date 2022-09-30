@@ -4,14 +4,18 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {
+  PureComponent,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 const {
   getFormatStr,
-} = require("devtools/client/inspector/animation/utils/l10n");
+} = require("resource://devtools/client/inspector/animation/utils/l10n.js");
 
 const PLAYBACK_RATES = [0.1, 0.25, 0.5, 1, 2, 5, 10];
 

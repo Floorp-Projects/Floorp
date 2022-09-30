@@ -4,19 +4,21 @@
 
 "use strict";
 
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 const AnimationDetailHeader = createFactory(
-  require("devtools/client/inspector/animation/components/AnimationDetailHeader")
+  require("resource://devtools/client/inspector/animation/components/AnimationDetailHeader.js")
 );
 const AnimatedPropertyListContainer = createFactory(
-  require("devtools/client/inspector/animation/components/AnimatedPropertyListContainer")
+  require("resource://devtools/client/inspector/animation/components/AnimatedPropertyListContainer.js")
 );
 
 class AnimationDetailContainer extends PureComponent {

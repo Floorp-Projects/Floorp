@@ -4,16 +4,18 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  PureComponent,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 const {
   createPathSegments,
   DEFAULT_DURATION_RESOLUTION,
   getPreferredProgressThresholdByKeyframes,
   toPathString,
-} = require("devtools/client/inspector/animation/utils/graph-helper");
+} = require("resource://devtools/client/inspector/animation/utils/graph-helper.js");
 
 /*
  * This class is an abstraction for computed style path of keyframes.

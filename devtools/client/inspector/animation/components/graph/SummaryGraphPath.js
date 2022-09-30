@@ -7,26 +7,26 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const ReactDOM = require("resource://devtools/client/shared/vendor/react-dom.js");
 
 const ComputedTimingPath = createFactory(
-  require("devtools/client/inspector/animation/components/graph/ComputedTimingPath")
+  require("resource://devtools/client/inspector/animation/components/graph/ComputedTimingPath.js")
 );
 const EffectTimingPath = createFactory(
-  require("devtools/client/inspector/animation/components/graph/EffectTimingPath")
+  require("resource://devtools/client/inspector/animation/components/graph/EffectTimingPath.js")
 );
 const NegativeDelayPath = createFactory(
-  require("devtools/client/inspector/animation/components/graph/NegativeDelayPath")
+  require("resource://devtools/client/inspector/animation/components/graph/NegativeDelayPath.js")
 );
 const NegativeEndDelayPath = createFactory(
-  require("devtools/client/inspector/animation/components/graph/NegativeEndDelayPath")
+  require("resource://devtools/client/inspector/animation/components/graph/NegativeEndDelayPath.js")
 );
 const {
   DEFAULT_GRAPH_HEIGHT,
-} = require("devtools/client/inspector/animation/utils/graph-helper");
+} = require("resource://devtools/client/inspector/animation/utils/graph-helper.js");
 
 // Minimum opacity for semitransparent fill color for keyframes's easing graph.
 const MIN_KEYFRAMES_EASING_OPACITY = 0.5;

@@ -7,16 +7,18 @@
 const {
   createRef,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const { KeyCodes } = require("devtools/client/shared/keycodes");
+const { KeyCodes } = require("resource://devtools/client/shared/keycodes.js");
 
-const { getStr } = require("devtools/client/inspector/animation/utils/l10n");
+const {
+  getStr,
+} = require("resource://devtools/client/inspector/animation/utils/l10n.js");
 const {
   hasRunningAnimation,
-} = require("devtools/client/inspector/animation/utils/utils");
+} = require("resource://devtools/client/inspector/animation/utils/utils.js");
 
 class PauseResumeButton extends PureComponent {
   static get propTypes() {

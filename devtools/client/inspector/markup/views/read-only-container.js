@@ -4,9 +4,9 @@
 
 "use strict";
 
-const ReadOnlyEditor = require("devtools/client/inspector/markup/views/read-only-editor");
-const MarkupContainer = require("devtools/client/inspector/markup/views/markup-container");
-const { extend } = require("devtools/shared/extend");
+const ReadOnlyEditor = require("resource://devtools/client/inspector/markup/views/read-only-editor.js");
+const MarkupContainer = require("resource://devtools/client/inspector/markup/views/markup-container.js");
+const { extend } = require("resource://devtools/shared/extend.js");
 
 /**
  * An implementation of MarkupContainer for Pseudo Elements,

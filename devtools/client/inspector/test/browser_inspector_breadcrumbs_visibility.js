@@ -5,7 +5,7 @@
 // Test that the start and end buttons on the breadcrumb trail bring the right
 // crumbs into the visible area, for both LTR and RTL
 
-const { Toolbox } = require("devtools/client/framework/toolbox");
+const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
 const TEST_URI = URL_ROOT + "doc_inspector_breadcrumbs_visibility.html";
 const NODE_ONE = "div#aVeryLongIdToExceedTheBreadcrumbTruncationLimit";
