@@ -34,41 +34,60 @@ add_task(async function aria_attributes() {
 });
 
 add_task(async function load_opens_new_tab() {
-  let win = await BrowserTestUtils.openNewBrowserWindow();
-  await openFirefoxViewTab(win);
-  win.gURLBar.focus();
-  win.gURLBar.value = "https://example.com";
-  let newTabOpened = BrowserTestUtils.waitForEvent(
-    win.gBrowser.tabContainer,
-    "TabOpen"
-  );
-  EventUtils.synthesizeKey("KEY_Enter", {}, win);
-  info(
-    "Waiting for new tab to open from the address bar in the Firefox View tab"
-  );
-  await newTabOpened;
-  assertFirefoxViewTab(win);
-  isnot(
-    win.gBrowser.tabContainer.selectedIndex,
-    0,
-    "Firefox View tab is not selected anymore (new tab opened in the foreground)"
-  );
-  await BrowserTestUtils.closeWindow(win);
+  await withFirefoxView({}, async browser => {
+    let win = browser.ownerGlobal;
+    ok(win.FirefoxViewHandler.tab.selected, "Firefox View tab is selected");
+    win.gURLBar.focus();
+    win.gURLBar.value = "https://example.com";
+    let newTabOpened = BrowserTestUtils.waitForEvent(
+      win.gBrowser.tabContainer,
+      "TabOpen"
+    );
+    EventUtils.synthesizeKey("KEY_Enter", {}, win);
+    info(
+      "Waiting for new tab to open from the address bar in the Firefox View tab"
+    );
+    await newTabOpened;
+    assertFirefoxViewTab(win);
+    ok(
+      !win.FirefoxViewHandler.tab.selected,
+      "Firefox View tab is not selected anymore (new tab opened in the foreground)"
+    );
+  });
+});
+
+add_task(async function homepage_new_tab() {
+  await withFirefoxView({}, async browser => {
+    let win = browser.ownerGlobal;
+    ok(win.FirefoxViewHandler.tab.selected, "Firefox View tab is selected");
+    let newTabOpened = BrowserTestUtils.waitForEvent(
+      win.gBrowser.tabContainer,
+      "TabOpen"
+    );
+    win.BrowserHome();
+    info("Waiting for BrowserHome() to open a new tab");
+    await newTabOpened;
+    assertFirefoxViewTab(win);
+    ok(
+      !win.FirefoxViewHandler.tab.selected,
+      "Firefox View tab is not selected anymore (home page opened in the foreground)"
+    );
+  });
 });
 
 add_task(async function number_tab_select_shortcut() {
-  let win = await BrowserTestUtils.openNewBrowserWindow();
-  await openFirefoxViewTab(win);
-  EventUtils.synthesizeKey(
-    "1",
-    AppConstants.MOZ_WIDGET_GTK ? { altKey: true } : { accelKey: true },
-    win
-  );
-  ok(
-    !win.FirefoxViewHandler.tab.selected,
-    "Number shortcut to select the first tab skipped the Firefox View tab"
-  );
-  await BrowserTestUtils.closeWindow(win);
+  await withFirefoxView({}, async browser => {
+    let win = browser.ownerGlobal;
+    EventUtils.synthesizeKey(
+      "1",
+      AppConstants.MOZ_WIDGET_GTK ? { altKey: true } : { accelKey: true },
+      win
+    );
+    ok(
+      !win.FirefoxViewHandler.tab.selected,
+      "Number shortcut to select the first tab skipped the Firefox View tab"
+    );
+  });
 });
 
 add_task(async function accel_w_behavior() {

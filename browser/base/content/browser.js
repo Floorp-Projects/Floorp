@@ -2800,8 +2800,11 @@ function BrowserHome(aEvent) {
   var urls;
   var notifyObservers;
 
-  // Home page should open in a new tab when current tab is an app tab
-  if (where == "current" && gBrowser && gBrowser.selectedTab.pinned) {
+  // Don't load the home page in pinned or hidden tabs (e.g. Firefox View).
+  if (
+    where == "current" &&
+    (gBrowser?.selectedTab.pinned || gBrowser?.selectedTab.hidden)
+  ) {
     where = "tab";
   }
 
