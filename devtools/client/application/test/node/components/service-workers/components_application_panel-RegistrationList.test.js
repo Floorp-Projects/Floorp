@@ -11,10 +11,10 @@ const { createFactory } = require("react");
 const {
   SINGLE_WORKER_DEFAULT_DOMAIN_LIST,
   MULTIPLE_WORKER_LIST,
-} = require("devtools/client/application/test/node/fixtures/data/constants");
+} = require("resource://devtools/client/application/test/node/fixtures/data/constants.js");
 
 const RegistrationList = createFactory(
-  require("devtools/client/application/src/components/service-workers/RegistrationList")
+  require("resource://devtools/client/application/src/components/service-workers/RegistrationList.js")
 );
 
 /**

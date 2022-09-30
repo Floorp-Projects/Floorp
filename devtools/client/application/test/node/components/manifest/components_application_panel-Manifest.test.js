@@ -8,7 +8,7 @@ const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 
 const Manifest = createFactory(
-  require("devtools/client/application/src/components/manifest/Manifest")
+  require("resource://devtools/client/application/src/components/manifest/Manifest.js")
 );
 
 const {
@@ -19,7 +19,7 @@ const {
   MANIFEST_URL_MEMBERS,
   MANIFEST_NO_ISSUES,
   MANIFEST_WITH_ISSUES,
-} = require("devtools/client/application/test/node/fixtures/data/constants");
+} = require("resource://devtools/client/application/test/node/fixtures/data/constants.js");
 
 /*
  * Test for Manifest component

@@ -4,21 +4,23 @@
 
 "use strict";
 
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const { main } = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  main,
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
 const PageSwitcher = createFactory(
-  require("devtools/client/application/src/components/routing/PageSwitcher")
+  require("resource://devtools/client/application/src/components/routing/PageSwitcher.js")
 );
 const Sidebar = createFactory(
-  require("devtools/client/application/src/components/routing/Sidebar")
+  require("resource://devtools/client/application/src/components/routing/Sidebar.js")
 );
 
 /**

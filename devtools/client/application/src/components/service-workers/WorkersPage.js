@@ -7,19 +7,21 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   section,
-} = require("devtools/client/shared/vendor/react-dom-factories");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
-const Types = require("devtools/client/application/src/types/index");
+const Types = require("resource://devtools/client/application/src/types/index.js");
 const RegistrationList = createFactory(
-  require("devtools/client/application/src/components/service-workers/RegistrationList")
+  require("resource://devtools/client/application/src/components/service-workers/RegistrationList.js")
 );
 const RegistrationListEmpty = createFactory(
-  require("devtools/client/application/src/components/service-workers/RegistrationListEmpty")
+  require("resource://devtools/client/application/src/components/service-workers/RegistrationListEmpty.js")
 );
 
 class WorkersPage extends PureComponent {

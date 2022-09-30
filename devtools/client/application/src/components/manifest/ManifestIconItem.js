@@ -7,21 +7,23 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   br,
   code,
   img,
   span,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
-const { l10n } = require("devtools/client/application/src/modules/l10n");
+const {
+  l10n,
+} = require("resource://devtools/client/application/src/modules/l10n.js");
 
-const Types = require("devtools/client/application/src/types/index");
+const Types = require("resource://devtools/client/application/src/types/index.js");
 const ManifestItem = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestItem")
+  require("resource://devtools/client/application/src/components/manifest/ManifestItem.js")
 );
 
 /**

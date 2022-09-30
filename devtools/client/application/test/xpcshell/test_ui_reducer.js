@@ -5,12 +5,12 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const {
   updateSelectedPage,
-} = require("devtools/client/application/src/actions/ui.js");
+} = require("resource://devtools/client/application/src/actions/ui.js");
 
 const {
   uiReducer,
   UiState,
-} = require("devtools/client/application/src/reducers/ui-state.js");
+} = require("resource://devtools/client/application/src/reducers/ui-state.js");
 
 add_task(async function() {
   info("Test ui reducer: UPDATE_SELECTED_PAGE action");

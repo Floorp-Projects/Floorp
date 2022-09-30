@@ -5,24 +5,26 @@
 
 const {
   MANIFEST_NO_ISSUES,
-} = require("devtools/client/application/test/node/fixtures/data/constants");
+} = require("resource://devtools/client/application/test/node/fixtures/data/constants.js");
 
-const { setupStore } = require("devtools/client/application/test/node/helpers");
+const {
+  setupStore,
+} = require("resource://devtools/client/application/test/node/helpers.js");
 
 const {
   ManifestDevToolsError,
   services,
-} = require("devtools/client/application/src/modules/application-services");
+} = require("resource://devtools/client/application/src/modules/application-services.js");
 
 const {
   FETCH_MANIFEST_FAILURE,
   FETCH_MANIFEST_START,
   FETCH_MANIFEST_SUCCESS,
-} = require("devtools/client/application/src/constants");
+} = require("resource://devtools/client/application/src/constants.js");
 
 const {
   fetchManifest,
-} = require("devtools/client/application/src/actions/manifest");
+} = require("resource://devtools/client/application/src/actions/manifest.js");
 
 describe("Manifest actions: fetchManifest", () => {
   it("dispatches a START - SUCCESS sequence when fetching is OK", async () => {

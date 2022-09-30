@@ -8,7 +8,7 @@ const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 
 const RegistrationListEmpty = createFactory(
-  require("devtools/client/application/src/components/service-workers/RegistrationListEmpty")
+  require("resource://devtools/client/application/src/components/service-workers/RegistrationListEmpty.js")
 );
 
 /**

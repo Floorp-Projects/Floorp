@@ -8,7 +8,7 @@ const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 
 const ManifestColorItem = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestColorItem")
+  require("resource://devtools/client/application/src/components/manifest/ManifestColorItem.js")
 );
 
 /*

@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { UPDATE_DOMAIN } = require("devtools/client/application/src/constants");
+const {
+  UPDATE_DOMAIN,
+} = require("resource://devtools/client/application/src/constants.js");
 
 function updateDomain(url) {
   return {

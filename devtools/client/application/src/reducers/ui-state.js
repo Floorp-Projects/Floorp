@@ -7,7 +7,7 @@
 const {
   DEFAULT_PAGE,
   UPDATE_SELECTED_PAGE,
-} = require("devtools/client/application/src/constants");
+} = require("resource://devtools/client/application/src/constants.js");
 
 function UiState() {
   return {

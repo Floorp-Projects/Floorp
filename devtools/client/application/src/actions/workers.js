@@ -9,7 +9,7 @@ const {
   UNREGISTER_WORKER,
   UPDATE_CAN_DEBUG_WORKERS,
   UPDATE_WORKERS,
-} = require("devtools/client/application/src/constants");
+} = require("resource://devtools/client/application/src/constants.js");
 
 function startWorker(worker) {
   const { registrationFront } = worker;

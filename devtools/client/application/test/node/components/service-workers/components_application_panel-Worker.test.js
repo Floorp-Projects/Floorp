@@ -7,16 +7,18 @@
 const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 // Import test helpers
-const { setupStore } = require("devtools/client/application/test/node/helpers");
+const {
+  setupStore,
+} = require("resource://devtools/client/application/test/node/helpers.js");
 
 const {
   WORKER_RUNNING,
   WORKER_STOPPED,
   WORKER_WAITING,
-} = require("devtools/client/application/test/node/fixtures/data/constants");
+} = require("resource://devtools/client/application/test/node/fixtures/data/constants.js");
 
 const Worker = createFactory(
-  require("devtools/client/application/src/components/service-workers/Worker")
+  require("resource://devtools/client/application/src/components/service-workers/Worker.js")
 );
 
 describe("Worker", () => {

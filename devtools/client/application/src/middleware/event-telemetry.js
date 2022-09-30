@@ -8,7 +8,7 @@ const {
   START_WORKER,
   UNREGISTER_WORKER,
   UPDATE_SELECTED_PAGE,
-} = require("devtools/client/application/src/constants.js");
+} = require("resource://devtools/client/application/src/constants.js");
 
 function eventTelemetryMiddleware(telemetry, sessionId) {
   function recordEvent(method, details = {}) {

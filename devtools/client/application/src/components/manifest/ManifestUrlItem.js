@@ -7,12 +7,14 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const { div } = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  div,
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const Types = require("devtools/client/application/src/types/index");
+const Types = require("resource://devtools/client/application/src/types/index.js");
 const ManifestItem = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestItem")
+  require("resource://devtools/client/application/src/components/manifest/ManifestItem.js")
 );
 
 /**

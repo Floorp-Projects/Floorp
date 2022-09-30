@@ -9,14 +9,14 @@ const {
   FETCH_MANIFEST_SUCCESS,
   RESET_MANIFEST,
   MANIFEST_MEMBER_VALUE_TYPES,
-} = require("devtools/client/application/src/constants.js");
+} = require("resource://devtools/client/application/src/constants.js");
 
 const { ICON, COLOR, STRING, URL } = MANIFEST_MEMBER_VALUE_TYPES;
 
 const {
   manifestReducer,
   ManifestState,
-} = require("devtools/client/application/src/reducers/manifest-state.js");
+} = require("resource://devtools/client/application/src/reducers/manifest-state.js");
 
 const MANIFEST_PROCESSING = [
   // empty manifest

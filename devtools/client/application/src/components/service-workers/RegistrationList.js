@@ -4,12 +4,14 @@
 
 "use strict";
 
-const { openTrustedLink } = require("devtools/client/shared/link");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  openTrustedLink,
+} = require("resource://devtools/client/shared/link.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   a,
   article,
@@ -17,14 +19,14 @@ const {
   h1,
   p,
   ul,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
 
-const Types = require("devtools/client/application/src/types/index");
+const Types = require("resource://devtools/client/application/src/types/index.js");
 const Registration = createFactory(
-  require("devtools/client/application/src/components/service-workers/Registration")
+  require("resource://devtools/client/application/src/components/service-workers/Registration.js")
 );
 
 /**

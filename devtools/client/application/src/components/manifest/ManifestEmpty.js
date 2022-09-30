@@ -4,12 +4,12 @@
 
 "use strict";
 
-const { openDocLink } = require("devtools/client/shared/link");
+const { openDocLink } = require("resource://devtools/client/shared/link.js");
 
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   a,
   article,
@@ -18,9 +18,9 @@ const {
   h1,
   img,
   p,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
 
 const DOC_URL =

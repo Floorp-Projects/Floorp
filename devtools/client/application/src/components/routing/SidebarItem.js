@@ -7,23 +7,27 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   img,
   li,
   span,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const Actions = require("devtools/client/application/src/actions/index");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const Actions = require("resource://devtools/client/application/src/actions/index.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
 
-const { PAGE_TYPES } = require("devtools/client/application/src/constants");
-const Types = require("devtools/client/application/src/types/index");
+const {
+  PAGE_TYPES,
+} = require("resource://devtools/client/application/src/constants.js");
+const Types = require("resource://devtools/client/application/src/types/index.js");
 
 const ICONS = {
   [PAGE_TYPES.MANIFEST]:

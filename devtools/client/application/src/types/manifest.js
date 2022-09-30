@@ -4,14 +4,14 @@
 
 "use strict";
 
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 const {
   MANIFEST_ISSUE_LEVELS,
-} = require("devtools/client/application/src/constants");
+} = require("resource://devtools/client/application/src/constants.js");
 const {
   MANIFEST_MEMBER_VALUE_TYPES,
-} = require("devtools/client/application/src/constants");
+} = require("resource://devtools/client/application/src/constants.js");
 
 const manifestIssue = {
   level: PropTypes.oneOf(Object.values(MANIFEST_ISSUE_LEVELS)).isRequired,

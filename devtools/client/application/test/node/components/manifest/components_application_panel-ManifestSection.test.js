@@ -6,10 +6,13 @@
 // Import libs
 const { shallow } = require("enzyme");
 const { createFactory } = require("react");
-const { td, tr } = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  td,
+  tr,
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 const ManifestSection = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestSection")
+  require("resource://devtools/client/application/src/components/manifest/ManifestSection.js")
 );
 
 /*

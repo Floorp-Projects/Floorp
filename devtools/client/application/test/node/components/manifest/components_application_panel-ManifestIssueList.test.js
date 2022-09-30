@@ -8,7 +8,7 @@ const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 
 const ManifestIssueList = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestIssueList")
+  require("resource://devtools/client/application/src/components/manifest/ManifestIssueList.js")
 );
 
 /*

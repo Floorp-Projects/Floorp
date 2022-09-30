@@ -8,13 +8,17 @@ const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 
 // Import setupStore with imported & combined reducers
-const { setupStore } = require("devtools/client/application/test/node/helpers");
+const {
+  setupStore,
+} = require("resource://devtools/client/application/test/node/helpers.js");
 
 const PageSwitcher = createFactory(
-  require("devtools/client/application/src/components/routing/PageSwitcher")
+  require("resource://devtools/client/application/src/components/routing/PageSwitcher.js")
 );
 
-const { PAGE_TYPES } = require("devtools/client/application/src/constants");
+const {
+  PAGE_TYPES,
+} = require("resource://devtools/client/application/src/constants.js");
 
 /**
  * Test for workerListEmpty.js component

@@ -4,19 +4,21 @@
 
 "use strict";
 
-const { combineReducers } = require("devtools/client/shared/vendor/redux");
+const {
+  combineReducers,
+} = require("resource://devtools/client/shared/vendor/redux.js");
 const {
   workersReducer,
-} = require("devtools/client/application/src/reducers/workers-state");
+} = require("resource://devtools/client/application/src/reducers/workers-state.js");
 const {
   pageReducer,
-} = require("devtools/client/application/src/reducers/page-state");
+} = require("resource://devtools/client/application/src/reducers/page-state.js");
 const {
   uiReducer,
-} = require("devtools/client/application/src/reducers/ui-state");
+} = require("resource://devtools/client/application/src/reducers/ui-state.js");
 const {
   manifestReducer,
-} = require("devtools/client/application/src/reducers/manifest-state");
+} = require("resource://devtools/client/application/src/reducers/manifest-state.js");
 
 module.exports = combineReducers({
   manifest: manifestReducer,

@@ -6,17 +6,17 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const {
   updateCanDebugWorkers,
   updateWorkers,
-} = require("devtools/client/application/src/actions/workers.js");
+} = require("resource://devtools/client/application/src/actions/workers.js");
 
 const {
   START_WORKER,
   UNREGISTER_WORKER,
-} = require("devtools/client/application/src/constants.js");
+} = require("resource://devtools/client/application/src/constants.js");
 
 const {
   workersReducer,
   WorkersState,
-} = require("devtools/client/application/src/reducers/workers-state.js");
+} = require("resource://devtools/client/application/src/reducers/workers-state.js");
 
 add_task(async function() {
   info("Test workers reducer: UPDATE_CAN_DEBUG_WORKERS action");
