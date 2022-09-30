@@ -288,10 +288,10 @@ function showSidebarNodes(sidebar_mode) { /* Managers - 0; TST - 1  webpanel - 2
     if (document.getElementById("sidebar2style")){document.getElementById("sidebar2style").remove()}
     var Tag = document.createElement("style")
     if (sidebar_mode == 0) { 
-        sbar_css = "#TST{max-height:0 !important;}#sidebar2-reload,#sidebar2-forward,#sidebar2-back{display:none !important;}"
+        sbar_css = "#TST{max-height:0 !important;}#sidebar2-reload, #sidebar2-go-index, #sidebar2-forward,#sidebar2-back{display:none !important;}"
     }
     else if(sidebar_mode == 1){
-        sbar_css = "#sidebar2{max-height:0 !important;}#sidebar2-reload,#sidebar2-forward,#sidebar2-back{display:none !important;}"
+        sbar_css = "#sidebar2{max-height:0 !important;}#sidebar2-reload,#sidebar2-go-index, #sidebar2-forward,#sidebar2-back{display:none !important;}"
     }
     else{
       sbar_css = "#TST, #sidebar2{max-height:0 !important;}"
