@@ -4902,68 +4902,119 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   // Fix the child before mutation observer may touch the DOM tree.
   nsIContent* firstChildOfRightNode = aStartOfRightNode.GetChild();
   IgnoredErrorResult error;
-  parent->InsertBefore(aNewNode, aStartOfRightNode.GetContainer(), error);
+  parent->InsertBefore(aNewNode,
+                       aDirection == SplitNodeDirection::LeftNodeIsNewOne
+                           ? aStartOfRightNode.GetContainer()
+                           : aStartOfRightNode.GetContainer()->GetNextSibling(),
+                       error);
   if (MOZ_UNLIKELY(error.Failed())) {
     NS_WARNING("nsINode::InsertBefore() failed");
     return SplitNodeResult(error.StealNSResult());
   }
 
-  // At this point, the existing right node has all the children.  Move all
-  // the children which are before aStartOfRightNode.
-  if (!aStartOfRightNode.IsStartOfContainer()) {
-    // If it's a text node, just shuffle around some text
-    Text* rightAsText = aStartOfRightNode.GetContainerAs<Text>();
-    Text* leftAsText = aNewNode.GetAsText();
-    if (rightAsText && leftAsText) {
-      // Fix right node
-      nsAutoString leftText;
-      IgnoredErrorResult ignoredError;
-      rightAsText->SubstringData(0, aStartOfRightNode.Offset(), leftText,
-                                 ignoredError);
-      NS_WARNING_ASSERTION(!ignoredError.Failed(),
+  MOZ_DIAGNOSTIC_ASSERT_IF(aStartOfRightNode.IsInTextNode(), aNewNode.IsText());
+  MOZ_DIAGNOSTIC_ASSERT_IF(!aStartOfRightNode.IsInTextNode(),
+                           !aNewNode.IsText());
+
+  // If we are splitting a text node, we need to move its some data to the
+  // new text node.
+  if (aStartOfRightNode.IsInTextNode()) {
+    if (!(aDirection == SplitNodeDirection::LeftNodeIsNewOne &&
+          aStartOfRightNode.IsStartOfContainer()) &&
+        !(aDirection == SplitNodeDirection::RightNodeIsNewOne &&
+          aStartOfRightNode.IsEndOfContainer())) {
+      Text* originalTextNode = aStartOfRightNode.ContainerAs<Text>();
+      Text* newTextNode = aNewNode.AsText();
+      nsAutoString movingText;
+      const uint32_t cutStartOffset =
+          aDirection == SplitNodeDirection::LeftNodeIsNewOne
+              ? 0u
+              : aStartOfRightNode.Offset();
+      const uint32_t cutLength =
+          aDirection == SplitNodeDirection::LeftNodeIsNewOne
+              ? aStartOfRightNode.Offset()
+              : originalTextNode->Length() - aStartOfRightNode.Offset();
+      IgnoredErrorResult error;
+      originalTextNode->SubstringData(cutStartOffset, cutLength, movingText,
+                                      error);
+      NS_WARNING_ASSERTION(!error.Failed(),
                            "Text::SubstringData() failed, but ignored");
-      ignoredError.SuppressException();
+      error.SuppressException();
 
       // XXX This call may destroy us.
-      DoDeleteText(MOZ_KnownLive(*rightAsText), 0, aStartOfRightNode.Offset(),
-                   ignoredError);
-      NS_WARNING_ASSERTION(!ignoredError.Failed(),
+      DoDeleteText(MOZ_KnownLive(*originalTextNode), cutStartOffset, cutLength,
+                   error);
+      NS_WARNING_ASSERTION(!error.Failed(),
                            "EditorBase::DoDeleteText() failed, but ignored");
-      ignoredError.SuppressException();
+      error.SuppressException();
 
-      // Fix left node
       // XXX This call may destroy us.
-      DoSetText(MOZ_KnownLive(*leftAsText), leftText, ignoredError);
-      NS_WARNING_ASSERTION(!ignoredError.Failed(),
+      DoSetText(MOZ_KnownLive(*newTextNode), movingText, error);
+      NS_WARNING_ASSERTION(!error.Failed(),
                            "EditorBase::DoSetText() failed, but ignored");
-    } else {
-      MOZ_DIAGNOSTIC_ASSERT(!rightAsText && !leftAsText);
-      // Otherwise it's an interior node, so shuffle around the children. Go
-      // through list backwards so deletes don't interfere with the iteration.
-      if (!firstChildOfRightNode) {
-        // XXX Why do we ignore an error while moving nodes from the right node
-        //     to the left node?
-        IgnoredErrorResult ignoredError;
-        MoveAllChildren(*aStartOfRightNode.GetContainer(),
-                        EditorRawDOMPoint(&aNewNode, 0u), ignoredError);
-        NS_WARNING_ASSERTION(
-            !ignoredError.Failed(),
-            "HTMLEditor::MoveAllChildren() failed, but ignored");
-      } else if (NS_WARN_IF(aStartOfRightNode.GetContainer() !=
-                            firstChildOfRightNode->GetParentNode())) {
-        // firstChildOfRightNode has been moved by mutation observer.
-        // In this case, we what should we do?  Use offset?  But we cannot
-        // check if the offset is still expected.
-      } else {
-        // XXX Why do we ignore an error while moving nodes from the right node
-        //     to the left node?
-        IgnoredErrorResult ignoredError;
-        MovePreviousSiblings(*firstChildOfRightNode,
-                             EditorRawDOMPoint(&aNewNode, 0u), ignoredError);
-        NS_WARNING_ASSERTION(
-            !ignoredError.Failed(),
-            "HTMLEditor::MovePreviousSiblings() failed, but ignored");
-      }
+    }
+  }
+  // If the node has been moved to different parent, we should do nothing
+  // since web apps should handle eventhing in such case.
+  else if (firstChildOfRightNode &&
+           aStartOfRightNode.GetContainer() !=
+               firstChildOfRightNode->GetParentNode()) {
+    NS_WARNING(
+        "The web app interupped us and touched the DOM tree, we stopped "
+        "splitting anything");
+  } else if (aDirection == SplitNodeDirection::LeftNodeIsNewOne) {
+    // If Splitting at end of container which is not a text node, we need to
+    // move all children if the left node is new one.  Otherwise, nothing to do.
+    if (!firstChildOfRightNode) {
+      // XXX Why do we ignore an error while moving nodes from the right
+      //     node to the left node?
+      IgnoredErrorResult error;
+      MoveAllChildren(*aStartOfRightNode.GetContainer(),
+                      EditorRawDOMPoint(&aNewNode, 0u), error);
+      NS_WARNING_ASSERTION(!error.Failed(),
+                           "HTMLEditor::MoveAllChildren() failed, but ignored");
+    }
+    // If the left node is new one and splitting middle of it, we need to
+    // previous siblings of the given point to the new left node.
+    else if (firstChildOfRightNode->GetPreviousSibling()) {
+      // XXX Why do we ignore an error while moving nodes from the right node
+      //     to the left node?
+      IgnoredErrorResult error;
+      MovePreviousSiblings(*firstChildOfRightNode,
+                           EditorRawDOMPoint(&aNewNode, 0u), error);
+      NS_WARNING_ASSERTION(
+          !error.Failed(),
+          "HTMLEditor::MovePreviousSiblings() failed, but ignored");
+    }
+  } else {
+    MOZ_ASSERT(aDirection == SplitNodeDirection::RightNodeIsNewOne);
+    // If the right node is new one and there is no children or splitting at
+    // end of the node, we need to do nothing.
+    if (!firstChildOfRightNode) {
+      // Do nothing.
+    }
+    // If the right node is new one and splitting at start of the container,
+    // we need to move all children to the new right node.
+    else if (!firstChildOfRightNode->GetPreviousSibling()) {
+      // XXX Why do we ignore an error while moving nodes from the right
+      //     node to the left node?
+      IgnoredErrorResult error;
+      MoveAllChildren(*aStartOfRightNode.GetContainer(),
+                      EditorRawDOMPoint(&aNewNode, 0u), error);
+      NS_WARNING_ASSERTION(!error.Failed(),
+                           "HTMLEditor::MoveAllChildren() failed, but ignored");
+    }
+    // If the right node is new one and splitting at middle of the node, we need
+    // to move inclusive next siblings of the split point to the new right node.
+    else {
+      // XXX Why do we ignore an error while moving nodes from the right node
+      //     to the left node?
+      IgnoredErrorResult error;
+      MoveInclusiveNextSiblings(*firstChildOfRightNode,
+                                EditorRawDOMPoint(&aNewNode, 0u), error);
+      NS_WARNING_ASSERTION(
+          !error.Failed(),
+          "HTMLEditor::MoveInclusiveNextSiblings() failed, but ignored");
     }
   }
 
@@ -5075,8 +5126,12 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
           NS_WARN_IF(parent !=
                      aStartOfRightNode.GetContainer()->GetParentNode()) ||
           NS_WARN_IF(parent != aNewNode.GetParentNode()) ||
-          NS_WARN_IF(aNewNode.GetNextSibling() !=
-                     aStartOfRightNode.GetContainer()))) {
+          (aDirection == SplitNodeDirection::LeftNodeIsNewOne &&
+           NS_WARN_IF(aNewNode.GetNextSibling() !=
+                      aStartOfRightNode.GetContainer())) ||
+          (aDirection == SplitNodeDirection::RightNodeIsNewOne &&
+           NS_WARN_IF(aNewNode.GetPreviousSibling() !=
+                      aStartOfRightNode.GetContainer())))) {
     return SplitNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
