@@ -7,53 +7,53 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 loader.lazyGetter(this, "ColumnData", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/messages/ColumnData")
+    require("resource://devtools/client/netmonitor/src/components/messages/ColumnData.js")
   );
 });
 loader.lazyGetter(this, "ColumnEventName", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/messages/ColumnEventName")
+    require("resource://devtools/client/netmonitor/src/components/messages/ColumnEventName.js")
   );
 });
 loader.lazyGetter(this, "ColumnFinBit", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/messages/ColumnFinBit")
+    require("resource://devtools/client/netmonitor/src/components/messages/ColumnFinBit.js")
   );
 });
 loader.lazyGetter(this, "ColumnLastEventId", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/messages/ColumnLastEventId")
+    require("resource://devtools/client/netmonitor/src/components/messages/ColumnLastEventId.js")
   );
 });
 loader.lazyGetter(this, "ColumnMaskBit", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/messages/ColumnMaskBit")
+    require("resource://devtools/client/netmonitor/src/components/messages/ColumnMaskBit.js")
   );
 });
 loader.lazyGetter(this, "ColumnOpCode", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/messages/ColumnOpCode")
+    require("resource://devtools/client/netmonitor/src/components/messages/ColumnOpCode.js")
   );
 });
 loader.lazyGetter(this, "ColumnRetry", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/messages/ColumnRetry")
+    require("resource://devtools/client/netmonitor/src/components/messages/ColumnRetry.js")
   );
 });
 loader.lazyGetter(this, "ColumnSize", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/messages/ColumnSize")
+    require("resource://devtools/client/netmonitor/src/components/messages/ColumnSize.js")
   );
 });
 loader.lazyGetter(this, "ColumnTime", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/messages/ColumnTime")
+    require("resource://devtools/client/netmonitor/src/components/messages/ColumnTime.js")
   );
 });
 

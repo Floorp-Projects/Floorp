@@ -7,41 +7,45 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
-const { PANELS } = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
+const {
+  PANELS,
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 // Components
 const Tabbar = createFactory(
-  require("devtools/client/shared/components/tabs/TabBar")
+  require("resource://devtools/client/shared/components/tabs/TabBar.js")
 );
 const TabPanel = createFactory(
-  require("devtools/client/shared/components/tabs/Tabs").TabPanel
+  require("resource://devtools/client/shared/components/tabs/Tabs.js").TabPanel
 );
 const CookiesPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/request-details/CookiesPanel")
+  require("resource://devtools/client/netmonitor/src/components/request-details/CookiesPanel.js")
 );
 const HeadersPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/request-details/HeadersPanel")
+  require("resource://devtools/client/netmonitor/src/components/request-details/HeadersPanel.js")
 );
 const RequestPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/request-details/RequestPanel")
+  require("resource://devtools/client/netmonitor/src/components/request-details/RequestPanel.js")
 );
 const CachePanel = createFactory(
-  require("devtools/client/netmonitor/src/components/request-details/CachePanel")
+  require("resource://devtools/client/netmonitor/src/components/request-details/CachePanel.js")
 );
 const ResponsePanel = createFactory(
-  require("devtools/client/netmonitor/src/components/request-details/ResponsePanel")
+  require("resource://devtools/client/netmonitor/src/components/request-details/ResponsePanel.js")
 );
 const SecurityPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/request-details/SecurityPanel")
+  require("resource://devtools/client/netmonitor/src/components/request-details/SecurityPanel.js")
 );
 const StackTracePanel = createFactory(
-  require("devtools/client/netmonitor/src/components/request-details/StackTracePanel")
+  require("resource://devtools/client/netmonitor/src/components/request-details/StackTracePanel.js")
 );
 const TimingsPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/request-details/TimingsPanel")
+  require("resource://devtools/client/netmonitor/src/components/request-details/TimingsPanel.js")
 );
 
 const COLLAPSE_DETAILS_PANE = L10N.getStr("collapseDetailsPane");

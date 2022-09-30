@@ -13,7 +13,9 @@
 
 "use strict";
 
-const { gDevTools } = require("devtools/client/framework/devtools");
+const {
+  gDevTools,
+} = require("resource://devtools/client/framework/devtools.js");
 
 /**
  * Opens given request in a new tab.

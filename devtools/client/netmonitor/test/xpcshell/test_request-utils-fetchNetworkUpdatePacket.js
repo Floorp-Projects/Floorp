@@ -11,7 +11,7 @@ const { require } = ChromeUtils.import(
 );
 const {
   fetchNetworkUpdatePacket,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 
 function run_test() {
   let fetchedNetworkUpdateTypes = [];

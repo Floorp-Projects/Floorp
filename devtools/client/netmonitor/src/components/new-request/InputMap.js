@@ -4,10 +4,15 @@
 
 "use strict";
 
-const { Component, createRef } = require("devtools/client/shared/vendor/react");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  Component,
+  createRef,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const { div, input, textarea, button } = dom;
 
 const CUSTOM_NEW_REQUEST_INPUT_NAME = L10N.getStr(

@@ -7,17 +7,19 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const { td } = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  td,
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   getFormattedIPAndPort,
-} = require("devtools/client/netmonitor/src/utils/format-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/format-utils.js");
 const {
   propertiesEqual,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 const SecurityState = createFactory(
-  require("devtools/client/netmonitor/src/components/SecurityState")
+  require("resource://devtools/client/netmonitor/src/components/SecurityState.js")
 );
 
 const UPDATED_DOMAIN_PROPS = ["remoteAddress", "securityState", "urlDetails"];

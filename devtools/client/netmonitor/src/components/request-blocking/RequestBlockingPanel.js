@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   button,
   div,
@@ -14,16 +16,20 @@ const {
   li,
   span,
   ul,
-} = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
-const Actions = require("devtools/client/netmonitor/src/actions/index");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
-const { PANELS } = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
+const Actions = require("resource://devtools/client/netmonitor/src/actions/index.js");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
+const {
+  PANELS,
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
-const RequestBlockingContextMenu = require("devtools/client/netmonitor/src/widgets/RequestBlockingContextMenu");
+const RequestBlockingContextMenu = require("resource://devtools/client/netmonitor/src/widgets/RequestBlockingContextMenu.js");
 
 const ENABLE_BLOCKING_LABEL = L10N.getStr(
   "netmonitor.actionbar.enableBlocking"

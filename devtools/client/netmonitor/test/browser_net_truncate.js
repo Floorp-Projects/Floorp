@@ -15,7 +15,9 @@ add_task(async function() {
 
   info("Starting test... ");
 
-  const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+  const {
+    L10N,
+  } = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 
   const { document } = monitor.panelWin;
 

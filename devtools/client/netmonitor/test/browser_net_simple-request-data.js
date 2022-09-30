@@ -13,7 +13,9 @@ function test() {
   // number of response headers will vary depending on the platform.
   Services.prefs.setBoolPref("network.tcp.tcp_fastopen_enable", false);
 
-  const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+  const {
+    L10N,
+  } = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 
   initNetMonitor(SIMPLE_SJS, { requestCount: 1 }).then(
     async ({ tab, monitor }) => {

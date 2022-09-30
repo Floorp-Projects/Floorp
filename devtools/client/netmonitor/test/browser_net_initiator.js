@@ -4,7 +4,7 @@
 "use strict";
 const {
   getUrlBaseName,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 /**
  * Tests if request initiator is reported correctly.
  */

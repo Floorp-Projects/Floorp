@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { WorkerDispatcher } = require("devtools/client/shared/worker-utils");
+const {
+  WorkerDispatcher,
+} = require("resource://devtools/client/shared/worker-utils.js");
 
 let startArgs;
 let dispatcher;

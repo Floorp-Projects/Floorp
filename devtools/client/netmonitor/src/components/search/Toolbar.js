@@ -7,22 +7,24 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
 const {
   FILTER_SEARCH_DELAY,
-} = require("devtools/client/netmonitor/src/constants");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const Actions = require("devtools/client/netmonitor/src/actions/index");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n.js");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const Actions = require("resource://devtools/client/netmonitor/src/actions/index.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 const { button, span, div } = dom;
 
 // Components
 const SearchBox = createFactory(
-  require("devtools/client/shared/components/SearchBox")
+  require("resource://devtools/client/shared/components/SearchBox.js")
 );
 
 /**

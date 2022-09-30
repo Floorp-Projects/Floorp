@@ -7,38 +7,38 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
 
 // Components
 loader.lazyGetter(this, "AppErrorBoundary", function() {
   return createFactory(
-    require("devtools/client/shared/components/AppErrorBoundary")
+    require("resource://devtools/client/shared/components/AppErrorBoundary.js")
   );
 });
 loader.lazyGetter(this, "MonitorPanel", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/MonitorPanel")
+    require("resource://devtools/client/netmonitor/src/components/MonitorPanel.js")
   );
 });
 loader.lazyGetter(this, "StatisticsPanel", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/StatisticsPanel")
+    require("resource://devtools/client/netmonitor/src/components/StatisticsPanel.js")
   );
 });
 loader.lazyGetter(this, "DropHarHandler", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/DropHarHandler")
+    require("resource://devtools/client/netmonitor/src/components/DropHarHandler.js")
   );
 });
 
 // Localized strings for (devtools/client/locales/en-US/startup.properties)
 loader.lazyGetter(this, "L10N", function() {
-  const { LocalizationHelper } = require("devtools/shared/l10n");
+  const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
   return new LocalizationHelper("devtools/client/locales/startup.properties");
 });
 

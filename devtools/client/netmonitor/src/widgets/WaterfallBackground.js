@@ -4,11 +4,11 @@
 
 "use strict";
 
-const { getColor } = require("devtools/client/shared/theme");
-const { colorUtils } = require("devtools/shared/css/color");
+const { getColor } = require("resource://devtools/client/shared/theme.js");
+const { colorUtils } = require("resource://devtools/shared/css/color.js");
 const {
   REQUESTS_WATERFALL,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const STATE_KEYS = [

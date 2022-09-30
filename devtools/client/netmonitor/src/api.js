@@ -4,23 +4,29 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
-const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
-const { Connector } = require("devtools/client/netmonitor/src/connector/index");
+const {
+  bindActionCreators,
+} = require("resource://devtools/client/shared/vendor/redux.js");
+const {
+  Connector,
+} = require("resource://devtools/client/netmonitor/src/connector/index.js");
 const {
   configureStore,
-} = require("devtools/client/netmonitor/src/create-store");
-const { EVENTS } = require("devtools/client/netmonitor/src/constants");
-const Actions = require("devtools/client/netmonitor/src/actions/index");
+} = require("resource://devtools/client/netmonitor/src/create-store.js");
+const {
+  EVENTS,
+} = require("resource://devtools/client/netmonitor/src/constants.js");
+const Actions = require("resource://devtools/client/netmonitor/src/actions/index.js");
 
 // Telemetry
-const Telemetry = require("devtools/client/shared/telemetry");
+const Telemetry = require("resource://devtools/client/shared/telemetry.js");
 
 const {
   getDisplayedRequestById,
   getSortedRequests,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 
 /**
  * API object for NetMonitor panel (like a facade). This object can be
@@ -92,7 +98,7 @@ NetMonitorAPI.prototype = {
   async getHar() {
     const {
       HarExporter,
-    } = require("devtools/client/netmonitor/src/har/har-exporter");
+    } = require("resource://devtools/client/netmonitor/src/har/har-exporter.js");
     const state = this.store.getState();
 
     const options = {
@@ -114,7 +120,7 @@ NetMonitorAPI.prototype = {
 
     const {
       HarExporter,
-    } = require("devtools/client/netmonitor/src/har/har-exporter");
+    } = require("resource://devtools/client/netmonitor/src/har/har-exporter.js");
 
     const connector = await this.getHarExportConnector();
     const request = getDisplayedRequestById(

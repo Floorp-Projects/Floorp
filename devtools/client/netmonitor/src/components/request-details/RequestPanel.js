@@ -7,40 +7,42 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 const {
   fetchNetworkUpdatePacket,
   parseFormData,
   parseJSON,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 const {
   sortObjectKeys,
-} = require("devtools/client/netmonitor/src/utils/sort-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/sort-utils.js");
 const {
   FILTER_SEARCH_DELAY,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 const {
   updateFormDataSections,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
-const Actions = require("devtools/client/netmonitor/src/actions/index");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
+const Actions = require("resource://devtools/client/netmonitor/src/actions/index.js");
 
 // Components
 const PropertiesView = createFactory(
-  require("devtools/client/netmonitor/src/components/request-details/PropertiesView")
+  require("resource://devtools/client/netmonitor/src/components/request-details/PropertiesView.js")
 );
 const SearchBox = createFactory(
-  require("devtools/client/shared/components/SearchBox")
+  require("resource://devtools/client/shared/components/SearchBox.js")
 );
 
 loader.lazyGetter(this, "SourcePreview", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/previews/SourcePreview")
+    require("resource://devtools/client/netmonitor/src/components/previews/SourcePreview.js")
   );
 });
 

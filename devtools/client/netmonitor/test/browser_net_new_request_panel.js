@@ -3,7 +3,7 @@
 
 "use strict";
 
-const asyncStorage = require("devtools/shared/async-storage");
+const asyncStorage = require("resource://devtools/shared/async-storage.js");
 
 /**
  * Test if the New Request panel shows up as a expected when opened from the toolbar

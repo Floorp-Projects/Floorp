@@ -6,7 +6,7 @@
 
 const {
   processNetworkUpdates,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 const {
   ADD_REQUEST,
   SET_EVENT_STREAM_FLAG,
@@ -21,7 +21,7 @@ const {
   SEND_CUSTOM_REQUEST,
   SET_RECORDING_STATE,
   UPDATE_REQUEST,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 /**
  * This structure stores list of all HTTP requests received

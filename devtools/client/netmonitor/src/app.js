@@ -4,24 +4,28 @@
 
 "use strict";
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   render,
   unmountComponentAtNode,
-} = require("devtools/client/shared/vendor/react-dom");
+} = require("resource://devtools/client/shared/vendor/react-dom.js");
 const Provider = createFactory(
-  require("devtools/client/shared/vendor/react-redux").Provider
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
 );
 const App = createFactory(
-  require("devtools/client/netmonitor/src/components/App")
+  require("resource://devtools/client/netmonitor/src/components/App.js")
 );
-const { EVENTS } = require("devtools/client/netmonitor/src/constants");
+const {
+  EVENTS,
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 const {
   getDisplayedRequestById,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 
-const SearchWorker = require("devtools/client/netmonitor/src/workers/search/index");
+const SearchWorker = require("resource://devtools/client/netmonitor/src/workers/search/index.js");
 const SEARCH_WORKER_URL =
   "resource://devtools/client/netmonitor/src/workers/search/worker.js";
 

@@ -12,11 +12,11 @@ const {
   SEND_CUSTOM_REQUEST,
   ENABLE_PERSISTENT_LOGS,
   MSG_SELECT,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 const {
   CHANGE_NETWORK_THROTTLING,
-} = require("devtools/client/shared/components/throttling/actions");
+} = require("resource://devtools/client/shared/components/throttling/actions.js");
 
 /**
  * Event telemetry middleware is responsible for logging

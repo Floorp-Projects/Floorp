@@ -4,10 +4,11 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { div } = dom;
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 /*
  * Response preview component
@@ -51,7 +52,7 @@ class HTMLPreview extends Component {
   }
 
   render() {
-    return div({ className: "html-preview", ref: "container" });
+    return dom.div({ className: "html-preview", ref: "container" });
   }
 }
 

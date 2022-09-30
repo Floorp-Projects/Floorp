@@ -8,13 +8,15 @@ const {
   ACTIVITY_TYPE,
   EVENTS,
   TEST_EVENTS,
-} = require("devtools/client/netmonitor/src/constants");
-const FirefoxDataProvider = require("devtools/client/netmonitor/src/connector/firefox-data-provider");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
+const FirefoxDataProvider = require("resource://devtools/client/netmonitor/src/connector/firefox-data-provider.js");
 const {
   getDisplayedTimingMarker,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 
-const { TYPES } = require("devtools/shared/commands/resource/resource-command");
+const {
+  TYPES,
+} = require("resource://devtools/shared/commands/resource/resource-command.js");
 
 // Network throttling
 loader.lazyRequireGetter(

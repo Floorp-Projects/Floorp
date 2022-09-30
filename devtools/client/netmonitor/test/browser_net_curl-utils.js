@@ -7,7 +7,10 @@
  * Tests Curl Utils functionality.
  */
 
-const { Curl, CurlUtils } = require("devtools/client/shared/curl");
+const {
+  Curl,
+  CurlUtils,
+} = require("resource://devtools/client/shared/curl.js");
 
 add_task(async function() {
   const { tab, monitor } = await initNetMonitor(HTTPS_CURL_UTILS_URL, {

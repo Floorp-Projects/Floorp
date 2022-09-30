@@ -3,17 +3,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-const { gDevTools } = require("devtools/client/framework/devtools");
-const { Component } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+const {
+  gDevTools,
+} = require("resource://devtools/client/framework/devtools.js");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 
 const {
   div,
   img,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const { getColor } = require("devtools/client/shared/theme");
+const { getColor } = require("resource://devtools/client/shared/theme.js");
 
 const FONT_NAME = L10N.getStr("netmonitor.response.name");
 const FONT_MIME_TYPE = L10N.getStr("netmonitor.response.mime");

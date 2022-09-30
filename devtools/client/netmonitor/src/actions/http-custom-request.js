@@ -10,24 +10,24 @@ const {
   PANELS,
   RIGHT_CLICK_REQUEST,
   PRESELECT_REQUEST,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 const {
   selectRequest,
-} = require("devtools/client/netmonitor/src/actions/selection");
+} = require("resource://devtools/client/netmonitor/src/actions/selection.js");
 
 const {
   openNetworkDetails,
-} = require("devtools/client/netmonitor/src/actions/ui");
+} = require("resource://devtools/client/netmonitor/src/actions/ui.js");
 
 const {
   getRequestById,
   getRequestByChannelId,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 
 const {
   fetchNetworkUpdatePacket,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 
 /**
  * Open the entire HTTP Custom Request panel

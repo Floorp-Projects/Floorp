@@ -4,10 +4,12 @@
 
 "use strict";
 
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 const {
   contextMenuFormatters,
-} = require("devtools/client/netmonitor/src/utils/context-menu-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/context-menu-utils.js");
 
 loader.lazyRequireGetter(
   this,

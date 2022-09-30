@@ -6,9 +6,9 @@
 
 const {
   parseWampArray,
-} = require("devtools/client/netmonitor/src/components/messages/parsers/wamp/arrayParser.js");
-const msgpack = require("devtools/client/netmonitor/src/components/messages/msgpack.js");
-const cbor = require("devtools/client/netmonitor/src/components/messages/cbor.js");
+} = require("resource://devtools/client/netmonitor/src/components/messages/parsers/wamp/arrayParser.js");
+const msgpack = require("resource://devtools/client/netmonitor/src/components/messages/msgpack.js");
+const cbor = require("resource://devtools/client/netmonitor/src/components/messages/cbor.js");
 
 class WampSerializer {
   deserializeMessage(payload) {

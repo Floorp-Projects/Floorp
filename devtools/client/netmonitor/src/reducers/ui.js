@@ -25,7 +25,7 @@ const {
   MIN_COLUMN_WIDTH,
   SET_COLUMNS_WIDTH,
   SET_HEADERS_URL_PREVIEW_EXPANDED,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 const cols = {
   status: true,

@@ -8,7 +8,9 @@
  * for raw payloads with content-type headers attached to the upload stream.
  */
 add_task(async function() {
-  const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+  const {
+    L10N,
+  } = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 
   const { tab, monitor } = await initNetMonitor(POST_RAW_WITH_HEADERS_URL, {
     requestCount: 1,

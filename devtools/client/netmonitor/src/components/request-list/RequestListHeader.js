@@ -8,36 +8,38 @@ const {
   createRef,
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
 const {
   getTheme,
   addThemeObserver,
   removeThemeObserver,
-} = require("devtools/client/shared/theme");
-const Actions = require("devtools/client/netmonitor/src/actions/index");
+} = require("resource://devtools/client/shared/theme.js");
+const Actions = require("resource://devtools/client/netmonitor/src/actions/index.js");
 const {
   HEADERS,
   REQUESTS_WATERFALL,
   MIN_COLUMN_WIDTH,
   DEFAULT_COLUMN_WIDTH,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 const {
   getColumns,
   getWaterfallScale,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 const {
   getFormattedTime,
-} = require("devtools/client/netmonitor/src/utils/format-utils");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
-const RequestListHeaderContextMenu = require("devtools/client/netmonitor/src/widgets/RequestListHeaderContextMenu");
-const WaterfallBackground = require("devtools/client/netmonitor/src/widgets/WaterfallBackground");
+} = require("resource://devtools/client/netmonitor/src/utils/format-utils.js");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
+const RequestListHeaderContextMenu = require("resource://devtools/client/netmonitor/src/widgets/RequestListHeaderContextMenu.js");
+const WaterfallBackground = require("resource://devtools/client/netmonitor/src/widgets/WaterfallBackground.js");
 const Draggable = createFactory(
-  require("devtools/client/shared/components/splitter/Draggable")
+  require("resource://devtools/client/shared/components/splitter/Draggable.js")
 );
 
 const { div, button } = dom;

@@ -8,32 +8,34 @@ const {
   Component,
   createRef,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const { div, span } = dom;
-const Actions = require("devtools/client/netmonitor/src/actions/index");
-const { PANELS } = require("devtools/client/netmonitor/src/constants");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const Actions = require("resource://devtools/client/netmonitor/src/actions/index.js");
+const {
+  PANELS,
+} = require("resource://devtools/client/netmonitor/src/constants.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
-const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
+const TreeViewClass = require("resource://devtools/client/shared/components/tree/TreeView.js");
 const TreeView = createFactory(TreeViewClass);
 const LabelCell = createFactory(
-  require("devtools/client/shared/components/tree/LabelCell")
+  require("resource://devtools/client/shared/components/tree/LabelCell.js")
 );
 const {
   SearchProvider,
-} = require("devtools/client/netmonitor/src/components/search/search-provider");
+} = require("resource://devtools/client/netmonitor/src/components/search/search-provider.js");
 const Toolbar = createFactory(
-  require("devtools/client/netmonitor/src/components/search/Toolbar")
+  require("resource://devtools/client/netmonitor/src/components/search/Toolbar.js")
 );
 const StatusBar = createFactory(
-  require("devtools/client/netmonitor/src/components/search/StatusBar")
+  require("resource://devtools/client/netmonitor/src/components/search/StatusBar.js")
 );
 const {
   limitTooltipLength,
-} = require("devtools/client/netmonitor/src/utils/tooltips");
+} = require("resource://devtools/client/netmonitor/src/utils/tooltips.js");
 // There are two levels in the search panel tree hierarchy:
 // 0: Resource - represents the source request object
 // 1: Search Result - represents a match coming from the parent resource

@@ -8,37 +8,39 @@ const {
   Component,
   createRef,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const { div } = dom;
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
-const Actions = require("devtools/client/netmonitor/src/actions/index");
-const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
+const Actions = require("resource://devtools/client/netmonitor/src/actions/index.js");
+const {
+  findDOMNode,
+} = require("resource://devtools/client/shared/vendor/react-dom.js");
 const {
   getSelectedMessage,
   isSelectedMessageVisible,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 
 // Components
 const SplitBox = createFactory(
-  require("devtools/client/shared/components/splitter/SplitBox")
+  require("resource://devtools/client/shared/components/splitter/SplitBox.js")
 );
 const MessageListContent = createFactory(
-  require("devtools/client/netmonitor/src/components/messages/MessageListContent")
+  require("resource://devtools/client/netmonitor/src/components/messages/MessageListContent.js")
 );
 const Toolbar = createFactory(
-  require("devtools/client/netmonitor/src/components/messages/Toolbar")
+  require("resource://devtools/client/netmonitor/src/components/messages/Toolbar.js")
 );
 const StatusBar = createFactory(
-  require("devtools/client/netmonitor/src/components/messages/StatusBar")
+  require("resource://devtools/client/netmonitor/src/components/messages/StatusBar.js")
 );
 
 loader.lazyGetter(this, "MessagePayload", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/messages/MessagePayload")
+    require("resource://devtools/client/netmonitor/src/components/messages/MessagePayload.js")
   );
 });
 

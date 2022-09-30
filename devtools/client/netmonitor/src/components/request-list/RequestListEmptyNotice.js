@@ -7,22 +7,26 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
-const Actions = require("devtools/client/netmonitor/src/actions/index");
-const { ACTIVITY_TYPE } = require("devtools/client/netmonitor/src/constants");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
+const Actions = require("resource://devtools/client/netmonitor/src/actions/index.js");
+const {
+  ACTIVITY_TYPE,
+} = require("resource://devtools/client/netmonitor/src/constants.js");
+const {
+  L10N,
+} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
 const {
   getPerformanceAnalysisURL,
-} = require("devtools/client/netmonitor/src/utils/doc-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/doc-utils.js");
 
 // Components
 const MDNLink = createFactory(
-  require("devtools/client/shared/components/MdnLink")
+  require("resource://devtools/client/shared/components/MdnLink.js")
 );
 
 const { button, div, span } = dom;

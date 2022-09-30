@@ -5,18 +5,20 @@
 "use strict";
 
 const appInfo = Services.appinfo;
-const { LocalizationHelper } = require("devtools/shared/l10n");
-const { CurlUtils } = require("devtools/client/shared/curl");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
+const { CurlUtils } = require("resource://devtools/client/shared/curl.js");
 const {
   getFormDataSections,
   getUrlQuery,
   parseQueryString,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 const {
   buildHarLog,
-} = require("devtools/client/netmonitor/src/har/har-builder-utils");
+} = require("resource://devtools/client/netmonitor/src/har/har-builder-utils.js");
 const L10N = new LocalizationHelper("devtools/client/locales/har.properties");
-const { TIMING_KEYS } = require("devtools/client/netmonitor/src/constants");
+const {
+  TIMING_KEYS,
+} = require("resource://devtools/client/netmonitor/src/constants.js");
 
 /**
  * This object is responsible for building HAR file. See HAR spec:

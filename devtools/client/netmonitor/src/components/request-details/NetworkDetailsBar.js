@@ -4,26 +4,28 @@
 
 "use strict";
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
-const Actions = require("devtools/client/netmonitor/src/actions/index");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
+const Actions = require("resource://devtools/client/netmonitor/src/actions/index.js");
 const {
   getSelectedRequest,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 
 // Components
 loader.lazyGetter(this, "CustomRequestPanel", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/CustomRequestPanel")
+    require("resource://devtools/client/netmonitor/src/components/CustomRequestPanel.js")
   );
 });
 loader.lazyGetter(this, "TabboxPanel", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/TabboxPanel")
+    require("resource://devtools/client/netmonitor/src/components/TabboxPanel.js")
   );
 });
 

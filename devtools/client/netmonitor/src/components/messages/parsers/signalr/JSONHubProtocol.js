@@ -13,8 +13,8 @@
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const IHubProtocol = require("devtools/client/netmonitor/src/components/messages/parsers/signalr/IHubProtocol");
-const TextMessageFormat = require("devtools/client/netmonitor/src/components/messages/parsers/signalr/TextMessageFormat");
+const IHubProtocol = require("resource://devtools/client/netmonitor/src/components/messages/parsers/signalr/IHubProtocol.js");
+const TextMessageFormat = require("resource://devtools/client/netmonitor/src/components/messages/parsers/signalr/TextMessageFormat.js");
 /** Implements the JSON Hub Protocol. */
 class JsonHubProtocol {
   /** Creates an array of {@link @microsoft/signalr.HubMessage} objects from the specified serialized representation.

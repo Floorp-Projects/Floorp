@@ -4,16 +4,18 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const Editor = require("devtools/client/shared/sourceeditor/editor");
+} = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const Editor = require("resource://devtools/client/shared/sourceeditor/editor.js");
 const {
   setTargetSearchResult,
-} = require("devtools/client/netmonitor/src/actions/search");
+} = require("resource://devtools/client/netmonitor/src/actions/search.js");
 const { div } = dom;
 
 /**

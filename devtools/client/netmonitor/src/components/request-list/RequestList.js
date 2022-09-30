@@ -4,24 +4,26 @@
 
 "use strict";
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const { div } = dom;
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 // Components
 const StatusBar = createFactory(
-  require("devtools/client/netmonitor/src/components/StatusBar")
+  require("resource://devtools/client/netmonitor/src/components/StatusBar.js")
 );
 
 loader.lazyGetter(this, "RequestListContent", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/request-list/RequestListContent")
+    require("resource://devtools/client/netmonitor/src/components/request-list/RequestListContent.js")
   );
 });
 loader.lazyGetter(this, "RequestListEmptyNotice", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/request-list/RequestListEmptyNotice")
+    require("resource://devtools/client/netmonitor/src/components/request-list/RequestListEmptyNotice.js")
   );
 });
 
