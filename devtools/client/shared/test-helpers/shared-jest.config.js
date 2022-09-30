@@ -14,27 +14,29 @@ module.exports = {
     "^devtools/shared/generate-uuid": `${fixturesDir}/generate-uuid`,
     "^devtools/shared/DevToolsUtils": `${fixturesDir}/devtools-utils`,
     // This is needed for the Debugger, for some reason
-    "shared/DevToolsUtils$": `${fixturesDir}/devtools-utils`,
+    "shared/DevToolsUtils": `${fixturesDir}/devtools-utils`,
 
     // Mocks only used by node tests.
     "Services-mock": `${fixturesDir}/Services`,
     "ChromeUtils-mock": `${fixturesDir}/ChromeUtils`,
 
     "^promise": `${fixturesDir}/promise`,
-    "^devtools/client/shared/fluent-l10n/fluent-l10n$": `${fixturesDir}/fluent-l10n`,
-    "^devtools/client/shared/unicode-url": `${fixturesDir}/unicode-url`,
+    "^resource://devtools/client/shared/fluent-l10n/fluent-l10n.js": `${fixturesDir}/fluent-l10n`,
+    "^resource://devtools/client/shared/unicode-url.js": `${fixturesDir}/unicode-url`,
     // This is needed for the Debugger, for some reason
     "client/shared/unicode-url$": `${fixturesDir}/unicode-url`,
     "^devtools/client/shared/telemetry": `${fixturesDir}/telemetry`,
+    "^resource://devtools/client/shared/telemetry": `${fixturesDir}/telemetry`,
     // This is needed for the Debugger, for some reason
     "client/shared/telemetry$": `${fixturesDir}/telemetry`,
     "devtools/shared/plural-form$": `${fixturesDir}/plural-form`,
     // Sometimes returning an empty object is enough
-    "^devtools/client/shared/link": `${fixturesDir}/empty-module`,
+    "^resource://devtools/client/shared/link": `${fixturesDir}/empty-module`,
     "^devtools/shared/flags": `${fixturesDir}/empty-module`,
     "^devtools/shared/layout/utils": `${fixturesDir}/empty-module`,
     "^devtools/client/shared/components/tree/TreeView": `${fixturesDir}/empty-module`,
     // Map all require("devtools/...") to the real devtools root.
-    "^devtools\\/(.*)": `${__dirname}/../../../$1`,
+    "^devtools/(.*)": `${__dirname}/../../../$1`,
+    "^resource://devtools/(.*)": `${__dirname}/../../../$1`,
   },
 };

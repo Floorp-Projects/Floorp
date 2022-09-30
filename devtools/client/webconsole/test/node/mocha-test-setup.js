@@ -125,6 +125,15 @@ global.document.nodePrincipal = {
 // Point to vendored-in files and mocks when needed.
 const requireHacker = require("require-hacker");
 requireHacker.global_hook("default", (path, module) => {
+  // Once all modules in devtools/ folder are using absolute URI,
+  // we might drop this two path.replace and change the keys of `paths`
+  // to mention full URLs and include .js suffix.
+  if (path.startsWith("resource://devtools/")) {
+    path = path.replace("resource://", "");
+  }
+  if (path.endsWith(".js")) {
+    path = path.replace(".js", "");
+  }
   const paths = {
     // For Enzyme
     "react-dom": () => getModule("devtools/client/shared/vendor/react-dom"),
