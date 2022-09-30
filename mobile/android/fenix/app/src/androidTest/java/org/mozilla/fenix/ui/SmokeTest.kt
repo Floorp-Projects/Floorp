@@ -879,7 +879,6 @@ class SmokeTest {
         mDevice.pressBack()
     }
 
-    @Ignore("Failing: https://github.com/mozilla-mobile/fenix/issues/26884")
     @Test
     fun copyTextTest() {
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -899,7 +898,6 @@ class SmokeTest {
         }
     }
 
-    @Ignore("Failing: https://github.com/mozilla-mobile/fenix/issues/26884")
     @Test
     fun selectAllAndCopyTextTest() {
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
