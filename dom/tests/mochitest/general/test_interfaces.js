@@ -3,6 +3,13 @@
 // This is a list of all interfaces that are exposed to every webpage.
 // Please only add things to this list with great care and proper review
 // from the associated module peers.
+//
+// The test is supposed to check whether our actual exposure behavior
+// matches what we expect, with the latter expressed in terms of outside
+// observables like type of build (nightly, release), platform, secure
+// context, etc. Testing based on prefs is thus the wrong check, as this
+// means we'd also have to test whether the pref value matches what we
+// expect in terms of outside observables.
 
 // This file lists global interfaces we want exposed and verifies they
 // are what we intend. Each entry in the arrays below can either be a
@@ -669,9 +676,7 @@ var interfaceNamesInGlobalScope = [
   {
     name: "InstallTrigger",
     insecureContext: true,
-    disabled: !SpecialPowers.Services.prefs.getBoolPref(
-      "extensions.InstallTrigger.enabled"
-    ),
+    disabled: isEarlyBetaOrEarlier,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "IntersectionObserver", insecureContext: true },
