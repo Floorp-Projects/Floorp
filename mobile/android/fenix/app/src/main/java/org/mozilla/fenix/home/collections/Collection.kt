@@ -35,6 +35,7 @@ import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
+import org.mozilla.fenix.R
 import org.mozilla.fenix.R.drawable
 import org.mozilla.fenix.R.string
 import org.mozilla.fenix.compose.list.ExpandableListHeader
@@ -64,7 +65,7 @@ private val expandedCollectionShape = RoundedCornerShape(topStart = 8.dp, topEnd
  * @param onCollectionMenuOpened Invoked when the user clicks to open a menu for the collection.
  */
 @Composable
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 fun Collection(
     collection: TabCollection,
     expanded: Boolean,
@@ -79,7 +80,14 @@ fun Collection(
     Card(
         modifier = Modifier
             .semantics(mergeDescendants = true) {}
-            .clickable { onToggleCollectionExpanded(collection, !isExpanded) }
+            .clickable(
+                onClickLabel = if (isExpanded) {
+                    stringResource(R.string.a11y_action_label_collapse)
+                } else {
+                    stringResource(R.string.a11y_action_label_expand)
+                },
+                onClick = { onToggleCollectionExpanded(collection, !isExpanded) },
+            )
             .height(48.dp),
         shape = if (isExpanded) expandedCollectionShape else collapsedCollectionShape,
         backgroundColor = FirefoxTheme.colors.layer2,
