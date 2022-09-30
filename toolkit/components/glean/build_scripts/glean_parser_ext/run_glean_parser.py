@@ -101,22 +101,21 @@ def parse_with_options(input_files, options):
 DEPS_LEN = 16
 
 
-def main(output_fd, *args):
-    args = args[DEPS_LEN:]
+def main(cpp_fd, *args):
+    def open_output(filename):
+        return FileAvoidWrite(os.path.join(os.path.dirname(cpp_fd.name), filename))
+
+    [js_h_path, rust_path] = args[-2:]
+    args = args[DEPS_LEN:-2]
     all_objs, options = parse(args)
-    rust.output_rust(all_objs, output_fd, options)
 
+    cpp.output_cpp(all_objs, cpp_fd, options)
 
-def cpp_metrics(output_fd, *args):
-    args = args[DEPS_LEN:]
-    all_objs, options = parse(args)
-    cpp.output_cpp(all_objs, output_fd, options)
+    with open_output(js_h_path) as js_fd:
+        js.output_js(all_objs, js_fd, options)
 
-
-def js_metrics(output_fd, *args):
-    args = args[DEPS_LEN:]
-    all_objs, options = parse(args)
-    js.output_js(all_objs, output_fd, options)
+    with open_output(rust_path) as rust_fd:
+        rust.output_rust(all_objs, rust_fd, options)
 
 
 def gifft_map(output_fd, *args):
