@@ -12,6 +12,7 @@
 #include "nsICookieJarSettings.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
+#include "nsIInterceptionInfo.h"
 #include "nsIOutputStream.h"
 #include "nsIFileChannel.h"
 #include "nsIHttpChannel.h"
@@ -21,6 +22,7 @@
 #include "nsIUploadChannel2.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPipe.h"
+#include "nsIRedirectHistoryEntry.h"
 
 #include "nsContentPolicyUtils.h"
 #include "nsDataHandler.h"
@@ -38,6 +40,7 @@
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/PreloaderBase.h"
+#include "mozilla/net/InterceptionInfo.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/StaticPrefs_browser.h"
@@ -645,6 +648,33 @@ nsresult FetchDriver::HttpFetch(
     nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
     rv = loadInfo->SetLoadingEmbedderPolicy(mRequest->GetEmbedderPolicy());
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // If the fetch is created by FetchEvent.request or NavigationPreload request,
+  // corresponding InterceptedHttpChannel information need to propagte to the
+  // channel of the fetch.
+  if (mRequest->GetInterceptionTriggeringPrincipalInfo()) {
+    auto principalOrErr = mozilla::ipc::PrincipalInfoToPrincipal(
+        *(mRequest->GetInterceptionTriggeringPrincipalInfo().get()));
+    if (!principalOrErr.isErr()) {
+      nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
+
+      nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>> redirectChain;
+      if (!mRequest->InterceptionRedirectChain().IsEmpty()) {
+        for (const RedirectHistoryEntryInfo& entryInfo :
+             mRequest->InterceptionRedirectChain()) {
+          nsCOMPtr<nsIRedirectHistoryEntry> entry =
+              mozilla::ipc::RHEntryInfoToRHEntry(entryInfo);
+          redirectChain.AppendElement(entry);
+        }
+      }
+
+      nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
+      MOZ_ASSERT(loadInfo);
+      loadInfo->SetInterceptionInfo(new mozilla::net::InterceptionInfo(
+          principal, mRequest->InterceptionContentPolicyType(), redirectChain,
+          mRequest->InterceptionFromThirdParty()));
+    }
   }
 
   if (mDocument && mDocument->GetEmbedderElement() &&
