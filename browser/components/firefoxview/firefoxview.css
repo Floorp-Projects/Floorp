@@ -8,7 +8,6 @@
   --content-area-padding-block: 16px;
   --header-spacing: 40px;
   --footer-spacing: 80px;
-  --card-border-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
 
   --success-fill-color: #2AC3A2;
   --success-background-color: #87FFD1;
@@ -55,6 +54,9 @@ body {
   --fxview-element-active-color: color-mix(in srgb, var(--fxview-background-color) 80%, currentColor);
   --fxview-element-hover-text-color: var(--newtab-text-primary-color);
   --fxview-contrast-border: color-mix(in hsl, currentColor 45%, transparent);
+  --fxview-extra-contrast-border: color-mix(in hsl, currentColor 85%, transparent);
+  --in-content-zap-gradient: linear-gradient(var(--fxview-extra-contrast-border), var(--fxview-extra-contrast-border));
+  --card-border-zap-gradient: var(--in-content-zap-gradient);
   --fxview-text-secondary-color: color-mix(in srgb, currentColor 80%, transparent);
   --newtab-background-color-secondary: #FFF;
   --colorways-no-collection-notice-bg-color: transparent;
@@ -72,6 +74,10 @@ body {
   margin-inline: auto;
   background-color: var(--fxview-background-color);
   color: var(--newtab-text-primary-color);
+}
+
+body:not([lwt-newtab]) {
+  --in-content-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
 }
 
 @media (prefers-color-scheme: dark) {

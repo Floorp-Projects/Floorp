@@ -423,6 +423,26 @@ function _getContentProperties(doc, active, data) {
       properties[property] = _cssColorToRGBA(doc, data[property]);
     }
   }
+  if (data.experimental) {
+    for (const property in data.experimental.colors) {
+      if (lazy.ThemeContentPropertyList.includes(property)) {
+        properties[property] = _cssColorToRGBA(
+          doc,
+          data.experimental.colors[property]
+        );
+      }
+    }
+    for (const property in data.experimental.images) {
+      if (lazy.ThemeContentPropertyList.includes(property)) {
+        properties[property] = `url(${data.experimental.images[property]})`;
+      }
+    }
+    for (const property in data.experimental.properties) {
+      if (lazy.ThemeContentPropertyList.includes(property)) {
+        properties[property] = data.experimental.properties[property];
+      }
+    }
+  }
   return properties;
 }
 
