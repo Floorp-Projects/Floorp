@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { splitMethod } = ChromeUtils.import(
-  "chrome://remote/content/webdriver-bidi/WebDriverBiDiConnection.jsm"
+const { splitMethod } = ChromeUtils.importESModule(
+  "chrome://remote/content/webdriver-bidi/WebDriverBiDiConnection.sys.mjs"
 );
 
 add_test(function test_Connection_splitMethod() {

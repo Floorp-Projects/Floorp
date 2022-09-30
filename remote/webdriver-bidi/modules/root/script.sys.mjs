@@ -2,17 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["script"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { Module } = ChromeUtils.importESModule(
-  "chrome://remote/content/shared/messagehandler/Module.sys.mjs"
-);
+import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys.mjs";
 
 const lazy = {};
 
@@ -21,14 +11,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
+  RealmType: "chrome://remote/content/webdriver-bidi/Realm.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
-  RealmType: "chrome://remote/content/webdriver-bidi/Realm.jsm",
 });
 
 class ScriptModule extends Module {
@@ -522,4 +509,4 @@ class ScriptModule extends Module {
   }
 }
 
-const script = ScriptModule;
+export const script = ScriptModule;

@@ -2,18 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = [
-  "deserialize",
-  "OwnershipModel",
-  "serialize",
-  "stringify",
-];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -37,7 +26,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
  * @readonly
  * @enum {OwnershipModel}
  **/
-const OwnershipModel = {
+export const OwnershipModel = {
   None: "none",
   Root: "root",
 };
@@ -201,7 +190,7 @@ function deserializeKeyValueList(realm, serializedKeyValueList) {
  *
  * @return {Object} Deserialized representation of the value.
  */
-function deserialize(realm, serializedValue) {
+export function deserialize(realm, serializedValue) {
   const { handle, type, value } = serializedValue;
 
   // With a handle present deserialize as remote reference.
@@ -458,7 +447,7 @@ function serializeMapping(
  *
  * @return {Object} Serialized representation of the value.
  */
-function serialize(
+export function serialize(
   value,
   maxDepth,
   ownershipType,
@@ -639,7 +628,7 @@ function setInternalIdsIfNeeded(serializationInternalMap, remoteValue, object) {
  *
  * @return {string} String representation of the value.
  */
-function stringify(obj) {
+export function stringify(obj) {
   let text;
   try {
     text =

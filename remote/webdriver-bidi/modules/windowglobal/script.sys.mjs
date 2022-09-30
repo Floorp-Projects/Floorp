@@ -2,31 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["script"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { Module } = ChromeUtils.importESModule(
-  "chrome://remote/content/shared/messagehandler/Module.sys.mjs"
-);
+import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  deserialize: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   getFramesFromStack: "chrome://remote/content/shared/Stack.sys.mjs",
   isChromeFrame: "chrome://remote/content/shared/Stack.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  deserialize: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
-  serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
-  stringify: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
-  WindowRealm: "chrome://remote/content/webdriver-bidi/Realm.jsm",
+  serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
+  stringify: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
+  WindowRealm: "chrome://remote/content/webdriver-bidi/Realm.sys.mjs",
 });
 
 /**
@@ -354,4 +341,4 @@ class ScriptModule extends Module {
   }
 }
 
-const script = ScriptModule;
+export const script = ScriptModule;

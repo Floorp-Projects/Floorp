@@ -2,17 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["splitMethod", "WebDriverBiDiConnection"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { WebSocketConnection } = ChromeUtils.importESModule(
-  "chrome://remote/content/shared/WebSocketConnection.sys.mjs"
-);
+import { WebSocketConnection } from "chrome://remote/content/shared/WebSocketConnection.sys.mjs";
 
 const lazy = {};
 
@@ -27,7 +19,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.Log.get(lazy.Log.TYPES.WEBDRIVER_BIDI)
 );
 
-class WebDriverBiDiConnection extends WebSocketConnection {
+export class WebDriverBiDiConnection extends WebSocketConnection {
   /**
    * @param {WebSocket} webSocket
    *     The WebSocket server connection to wrap.
@@ -194,7 +186,7 @@ class WebDriverBiDiConnection extends WebSocketConnection {
  *     Object with the module ("session") and command ("subscribe")
  *     as properties.
  */
-function splitMethod(method) {
+export function splitMethod(method) {
   const parts = method.split(".");
 
   if (parts.length != 2 || !parts[0].length || !parts[1].length) {

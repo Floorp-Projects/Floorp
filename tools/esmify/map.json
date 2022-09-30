@@ -123,32 +123,6 @@
     "remote/cdp/targets/Target.jsm",
   "chrome://remote/content/cdp/targets/TargetList.jsm":
     "remote/cdp/targets/TargetList.jsm",
-  "chrome://remote/content/webdriver-bidi/NewSessionHandler.jsm":
-    "remote/webdriver-bidi/NewSessionHandler.jsm",
-  "chrome://remote/content/webdriver-bidi/RemoteValue.jsm":
-    "remote/webdriver-bidi/RemoteValue.jsm",
-  "chrome://remote/content/webdriver-bidi/WebDriverBiDi.jsm":
-    "remote/webdriver-bidi/WebDriverBiDi.jsm",
-  "chrome://remote/content/webdriver-bidi/WebDriverBiDiConnection.jsm":
-    "remote/webdriver-bidi/WebDriverBiDiConnection.jsm",
-  "chrome://remote/content/webdriver-bidi/modules/ModuleRegistry.jsm":
-    "remote/webdriver-bidi/modules/ModuleRegistry.jsm",
-  "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.jsm":
-    "remote/webdriver-bidi/modules/root/browsingContext.jsm",
-  "chrome://remote/content/webdriver-bidi/modules/root/log.jsm":
-    "remote/webdriver-bidi/modules/root/log.jsm",
-  "chrome://remote/content/webdriver-bidi/modules/root/script.jsm":
-    "remote/webdriver-bidi/modules/root/script.jsm",
-  "chrome://remote/content/webdriver-bidi/modules/root/session.jsm":
-    "remote/webdriver-bidi/modules/root/session.jsm",
-  "chrome://remote/content/webdriver-bidi/modules/windowglobal-in-root/log.jsm":
-    "remote/webdriver-bidi/modules/windowglobal-in-root/log.jsm",
-  "chrome://remote/content/webdriver-bidi/modules/windowglobal/browsingContext.jsm":
-    "remote/webdriver-bidi/modules/windowglobal/browsingContext.jsm",
-  "chrome://remote/content/webdriver-bidi/modules/windowglobal/log.jsm":
-    "remote/webdriver-bidi/modules/windowglobal/log.jsm",
-  "chrome://remote/content/webdriver-bidi/modules/windowglobal/script.jsm":
-    "remote/webdriver-bidi/modules/windowglobal/script.jsm",
   "resource:///actors/ASRouterChild.jsm":
     "browser/components/newtab/actors/ASRouterChild.jsm",
   "resource:///actors/ASRouterParent.jsm":

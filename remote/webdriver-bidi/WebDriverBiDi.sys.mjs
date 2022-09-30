@@ -2,25 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["WebDriverBiDi"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
-  WebDriverSession: "chrome://remote/content/shared/webdriver/Session.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
   WebDriverNewSessionHandler:
-    "chrome://remote/content/webdriver-bidi/NewSessionHandler.jsm",
+    "chrome://remote/content/webdriver-bidi/NewSessionHandler.sys.mjs",
+  WebDriverSession: "chrome://remote/content/shared/webdriver/Session.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
@@ -33,7 +24,7 @@ XPCOMUtils.defineLazyGetter(lazy, "textEncoder", () => new TextEncoder());
  *
  * @see https://w3c.github.io/webdriver-bidi
  */
-class WebDriverBiDi {
+export class WebDriverBiDi {
   /**
    * Creates a new instance of the WebDriverBiDi class.
    *
