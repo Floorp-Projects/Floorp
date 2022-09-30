@@ -45,8 +45,8 @@ class AudioStreamTrack : public MediaStreamTrack {
  private:
   // Track CrossGraphPort per AudioOutput key. This is required in order to
   // redirect all AudioOutput requests (add, remove, set volume) to the
-  // receiver track which, belonging to the remote graph. MainThread only.
-  nsClassHashtable<nsPtrHashKey<void>, UniquePtr<CrossGraphPort>> mCrossGraphs;
+  // receiver track, which belongs to the remote graph. MainThread only.
+  nsClassHashtable<nsPtrHashKey<void>, CrossGraphPort> mCrossGraphs;
 };
 
 }  // namespace mozilla::dom
