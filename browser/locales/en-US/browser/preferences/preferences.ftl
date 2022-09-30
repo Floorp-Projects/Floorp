@@ -1632,9 +1632,9 @@ how-to-disable-ntbg = To apply this setting, press "Ctrl + Shift + R" on the { -
 
 ## DualTheme
 dualtheme-enable =
- .label = Enable dual themes
+ .label = Enable Dual Theme
 
-newtab-background = { -brand-short-name } Home`s Background
+newtab-background = { -brand-short-name } Home Background
 
 newtab-background-random-image =
     .label = Random Images from Unsplash
