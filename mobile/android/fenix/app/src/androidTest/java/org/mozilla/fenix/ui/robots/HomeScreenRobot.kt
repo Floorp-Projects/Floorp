@@ -11,6 +11,7 @@ import android.widget.EditText
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
@@ -131,6 +132,44 @@ class HomeScreenRobot {
     fun verifyYourPrivacyText() = assertYourPrivacyText()
     fun verifyPrivacyNoticeButton() = assertPrivacyNoticeButton()
     fun verifyStartBrowsingButton() = assertStartBrowsingButton()
+
+    // Upgrading users onboarding dialog
+    fun verifyUpgradingUserOnboardingFirstScreen(testRule: ComposeTestRule) {
+        testRule.also {
+            it.onNodeWithText(getStringResource(R.string.onboarding_home_welcome_title_2))
+                .assertIsDisplayed()
+
+            it.onNodeWithText(getStringResource(R.string.onboarding_home_welcome_description))
+                .assertIsDisplayed()
+
+            it.onNodeWithText(getStringResource(R.string.onboarding_home_get_started_button))
+                .assertIsDisplayed()
+        }
+    }
+
+    fun clickGetStartedButton(testRule: ComposeTestRule) =
+        testRule.onNodeWithText(getStringResource(R.string.onboarding_home_get_started_button)).performClick()
+
+    fun verifyUpgradingUserOnboardingSecondScreen(testRule: ComposeTestRule) {
+        testRule.also {
+            it.onNodeWithText(getStringResource(R.string.onboarding_home_sync_title_3))
+                .assertIsDisplayed()
+
+            it.onNodeWithText(getStringResource(R.string.onboarding_home_sync_description))
+                .assertIsDisplayed()
+
+            it.onNodeWithText(getStringResource(R.string.onboarding_home_sign_in_button))
+                .assertIsDisplayed()
+
+            it.onNodeWithText(getStringResource(R.string.onboarding_home_skip_button))
+                .assertIsDisplayed()
+        }
+    }
+
+    fun clickSkipButton(testRule: ComposeTestRule) =
+        testRule
+            .onNodeWithText(getStringResource(R.string.onboarding_home_skip_button))
+            .performClick()
 
     fun verifyPrivateSessionMessage() = assertPrivateSessionMessage()
 
@@ -352,6 +391,16 @@ class HomeScreenRobot {
 
             SearchRobot().interact()
             return SearchRobot.Transition()
+        }
+
+        fun clickUpgradingUserOnboardingSignInButton(
+            testRule: ComposeTestRule,
+            interact: SyncSignInRobot.() -> Unit,
+        ): SyncSignInRobot.Transition {
+            testRule.onNodeWithText("Sign in").performClick()
+
+            SyncSignInRobot().interact()
+            return SyncSignInRobot.Transition()
         }
 
         fun togglePrivateBrowsingMode() {
