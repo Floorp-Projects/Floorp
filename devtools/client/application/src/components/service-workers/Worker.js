@@ -7,10 +7,12 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 const {
   a,
@@ -18,25 +20,29 @@ const {
   p,
   section,
   span,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const { getUnicodeUrlPath } = require("devtools/client/shared/unicode-url");
+const {
+  getUnicodeUrlPath,
+} = require("resource://devtools/client/shared/unicode-url.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
-const { l10n } = require("devtools/client/application/src/modules/l10n");
+const {
+  l10n,
+} = require("resource://devtools/client/application/src/modules/l10n.js");
 
 const {
   services,
-} = require("devtools/client/application/src/modules/application-services");
-const Types = require("devtools/client/application/src/types/index");
+} = require("resource://devtools/client/application/src/modules/application-services.js");
+const Types = require("resource://devtools/client/application/src/types/index.js");
 
 const {
   startWorker,
-} = require("devtools/client/application/src/actions/workers");
+} = require("resource://devtools/client/application/src/actions/workers.js");
 
 const UIButton = createFactory(
-  require("devtools/client/application/src/components/ui/UIButton")
+  require("resource://devtools/client/application/src/components/ui/UIButton.js")
 );
 
 /**

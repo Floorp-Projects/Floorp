@@ -8,7 +8,7 @@ const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 
 const ManifestEmpty = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestEmpty")
+  require("resource://devtools/client/application/src/components/manifest/ManifestEmpty.js")
 );
 
 /**

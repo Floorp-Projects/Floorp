@@ -12,34 +12,44 @@ const require = BrowserLoader({
   window,
 }).require;
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   render,
   unmountComponentAtNode,
-} = require("devtools/client/shared/vendor/react-dom");
+} = require("resource://devtools/client/shared/vendor/react-dom.js");
 const Provider = createFactory(
-  require("devtools/client/shared/vendor/react-redux").Provider
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
 );
-const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
-const { l10n } = require("devtools/client/application/src/modules/l10n");
+const {
+  bindActionCreators,
+} = require("resource://devtools/client/shared/vendor/redux.js");
+const {
+  l10n,
+} = require("resource://devtools/client/application/src/modules/l10n.js");
 
 const {
   configureStore,
-} = require("devtools/client/application/src/create-store");
-const actions = require("devtools/client/application/src/actions/index");
+} = require("resource://devtools/client/application/src/create-store.js");
+const actions = require("resource://devtools/client/application/src/actions/index.js");
 
-const { WorkersListener } = require("devtools/client/shared/workers-listener");
-const Telemetry = require("devtools/client/shared/telemetry");
+const {
+  WorkersListener,
+} = require("resource://devtools/client/shared/workers-listener.js");
+const Telemetry = require("resource://devtools/client/shared/telemetry.js");
 
 const {
   services,
-} = require("devtools/client/application/src/modules/application-services");
+} = require("resource://devtools/client/application/src/modules/application-services.js");
 
 const App = createFactory(
-  require("devtools/client/application/src/components/App")
+  require("resource://devtools/client/application/src/components/App.js")
 );
 
-const { safeAsyncMethod } = require("devtools/shared/async-utils");
+const {
+  safeAsyncMethod,
+} = require("resource://devtools/shared/async-utils.js");
 
 /**
  * Global Application object in this panel. This object is expected by panel.js and is

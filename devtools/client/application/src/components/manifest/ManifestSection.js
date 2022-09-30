@@ -4,12 +4,14 @@
 
 "use strict";
 
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  PureComponent,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   h2,
   section,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 /**
  * A section of a manifest in the form of a captioned table.

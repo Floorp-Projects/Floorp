@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { thunk } = require("devtools/client/shared/redux/middleware/thunk.js");
+const {
+  thunk,
+} = require("resource://devtools/client/shared/redux/middleware/thunk.js");
 const configureStore = require("redux-mock-store").default;
 
 /**

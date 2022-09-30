@@ -8,12 +8,12 @@ const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 
 // Import & init localization
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
 // Import component
 const App = createFactory(
-  require("devtools/client/application/src/components/App")
+  require("resource://devtools/client/application/src/components/App.js")
 );
 
 describe("App", () => {

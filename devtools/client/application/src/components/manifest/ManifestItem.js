@@ -4,13 +4,15 @@
 
 "use strict";
 
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  PureComponent,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   tr,
   td,
   th,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 /**
  * This component displays a key-value data pair from a manifest

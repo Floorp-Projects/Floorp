@@ -8,7 +8,7 @@ const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 
 const ManifestUrlItem = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestUrlItem")
+  require("resource://devtools/client/application/src/components/manifest/ManifestUrlItem.js")
 );
 
 /*

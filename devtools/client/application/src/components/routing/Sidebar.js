@@ -7,20 +7,24 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   aside,
   ul,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 const SidebarItem = createFactory(
-  require("devtools/client/application/src/components/routing/SidebarItem")
+  require("resource://devtools/client/application/src/components/routing/SidebarItem.js")
 );
 
-const Types = require("devtools/client/application/src/types/index");
-const { PAGE_TYPES } = require("devtools/client/application/src/constants");
+const Types = require("resource://devtools/client/application/src/types/index.js");
+const {
+  PAGE_TYPES,
+} = require("resource://devtools/client/application/src/constants.js");
 
 class Sidebar extends PureComponent {
   static get propTypes() {

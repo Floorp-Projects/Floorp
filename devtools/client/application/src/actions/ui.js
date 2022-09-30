@@ -6,7 +6,7 @@
 
 const {
   UPDATE_SELECTED_PAGE,
-} = require("devtools/client/application/src/constants");
+} = require("resource://devtools/client/application/src/constants.js");
 
 function updateSelectedPage(selectedPage) {
   return {

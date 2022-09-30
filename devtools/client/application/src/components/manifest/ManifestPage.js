@@ -4,27 +4,29 @@
 
 "use strict";
 
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   section,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
-const Types = require("devtools/client/application/src/types/index");
+const Types = require("resource://devtools/client/application/src/types/index.js");
 
 const ManifestLoader = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestLoader")
+  require("resource://devtools/client/application/src/components/manifest/ManifestLoader.js")
 );
 const Manifest = createFactory(
-  require("devtools/client/application/src/components/manifest/Manifest")
+  require("resource://devtools/client/application/src/components/manifest/Manifest.js")
 );
 const ManifestEmpty = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestEmpty")
+  require("resource://devtools/client/application/src/components/manifest/ManifestEmpty.js")
 );
 
 class ManifestPage extends PureComponent {

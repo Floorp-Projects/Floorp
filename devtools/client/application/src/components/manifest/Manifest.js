@@ -7,44 +7,46 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   article,
   h1,
   table,
   tbody,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
-const { l10n } = require("devtools/client/application/src/modules/l10n");
+const {
+  l10n,
+} = require("resource://devtools/client/application/src/modules/l10n.js");
 
 const ManifestColorItem = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestColorItem")
+  require("resource://devtools/client/application/src/components/manifest/ManifestColorItem.js")
 );
 const ManifestIconItem = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestIconItem")
+  require("resource://devtools/client/application/src/components/manifest/ManifestIconItem.js")
 );
 const ManifestUrlItem = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestUrlItem")
+  require("resource://devtools/client/application/src/components/manifest/ManifestUrlItem.js")
 );
 const ManifestItem = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestItem")
+  require("resource://devtools/client/application/src/components/manifest/ManifestItem.js")
 );
 const ManifestIssueList = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestIssueList")
+  require("resource://devtools/client/application/src/components/manifest/ManifestIssueList.js")
 );
 const ManifestSection = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestSection")
+  require("resource://devtools/client/application/src/components/manifest/ManifestSection.js")
 );
 const ManifestJsonLink = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestJsonLink")
+  require("resource://devtools/client/application/src/components/manifest/ManifestJsonLink.js")
 );
 
 const {
   MANIFEST_MEMBER_VALUE_TYPES,
-} = require("devtools/client/application/src/constants");
-const Types = require("devtools/client/application/src/types/index");
+} = require("resource://devtools/client/application/src/constants.js");
+const Types = require("resource://devtools/client/application/src/types/index.js");
 
 /**
  * A canonical manifest, splitted in different sections
