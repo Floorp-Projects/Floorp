@@ -73,12 +73,11 @@ class CrossGraphPort final {
   static UniquePtr<CrossGraphPort> Connect(
       const RefPtr<dom::AudioStreamTrack>& aStreamTrack, AudioDeviceInfo* aSink,
       nsPIDOMWindowInner* aWindow);
-  ~CrossGraphPort() = default;
+  ~CrossGraphPort();
 
   void AddAudioOutput(void* aKey);
   void RemoveAudioOutput(void* aKey);
   void SetAudioOutputVolume(void* aKey, float aVolume);
-  void Destroy();
 
   RefPtr<GenericPromise> EnsureConnected();
 
