@@ -94,7 +94,7 @@ async function setTreeStyleTabURL() {
 function setSidebarMode() {
   if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
     const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-    const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT - 1) /* Get sidebar_id */
+    const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT) /* Get sidebar_id */
     const sidebar2elem = document.getElementById("sidebar2");
     const panelWidth = Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${modeValuePref}`, undefined);
   
@@ -192,26 +192,26 @@ function setCustomURLFavicon(sbar_id) {
 
 function backSidebarSite() {
   const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-  const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT - 1);
+  const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT);
 
   document.getElementById(`webpanel${webpanel_id}`).goBack();  //戻る
 }
 function forwardSidebarSite() {
   const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-  const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT - 1);
+  const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT);
 
   document.getElementById(`webpanel${webpanel_id}`).goForward();  //進む
 }
 function reloadSidebarSite() {
   const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-  const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT - 1);
+  const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT);
 
   document.getElementById(`webpanel${webpanel_id}`).reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);  //リロード
 }
 
 function goIndexSidebarSite() {
   const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-  const webpanel_id = modeValuePref - 4;
+  const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT);
 
   document.getElementById(`webpanel${webpanel_id}`).gotoIndex();  //ホーム
 }
@@ -238,7 +238,7 @@ function setDynamicSidebarMode(sbar_id){
 }
 
 function setSidebarIconView() {
-  for (let sbar_id = 1; sbar_id <= DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT; sbar_id++) {
+  for (let sbar_id = 0; sbar_id <= DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT; sbar_id++) {
     var sbar_url = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${sbar_id}`, undefined)
     document.getElementById(`select-CustomURL${sbar_id}`).hidden = (sbar_url != "") ? false : true
   }
@@ -265,7 +265,7 @@ function removeAttributeSelectedNode(){
 
 
 function setAllfavicons() {
-  for (let sbar_id = 1; sbar_id <= DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT; sbar_id++) {
+  for (let sbar_id = 0; sbar_id <= DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT; sbar_id++) {
     var sbar_favicon = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${sbar_id}`)
     document.getElementById(`select-CustomURL${sbar_id}`).style.listStyleImage = `url(http://www.google.com/s2/favicons?domain=${sbar_favicon}`;
   }
@@ -282,7 +282,7 @@ function showSidebarNodes(sidebar_mode) { /* Managers - 0; TST - 1  webpanel - 2
     var sbar_css = ""
     let webpanels = document.getElementsByClassName("webpanels");
     const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-    const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT - 1)
+    const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT);
     const selectedwebpanel = document.getElementById(`webpanel${webpanel_id}`);
 
     if (document.getElementById("sidebar2style")){document.getElementById("sidebar2style").remove()}

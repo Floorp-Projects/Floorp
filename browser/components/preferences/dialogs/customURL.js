@@ -14,7 +14,7 @@ function onSiteDelete() {
 function onLoad() {
     let elem = document.getElementsByClassName("URLBox");
     for (let i = 0; i < elem.length; i++) {
-        var num = i + 1;
+        var num = i;
         var url = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${num}`, undefined);
         elem[i].value = url;
     }
@@ -36,7 +36,7 @@ function onunload() {
                 box_value = `https://${box_value}`;
             }
         }
-        var num = i + 1;
+        var num = i;
         Services.prefs.setStringPref(`floorp.browser.sidebar2.customurl${num}`, box_value);
     }
 }

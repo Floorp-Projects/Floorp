@@ -3870,4 +3870,4 @@ window.setTimeout(function(){
       { features: "resizable=true" }
     );
   }, false);
-}, 3000);
+}, 1000);

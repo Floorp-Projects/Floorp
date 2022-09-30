@@ -8,11 +8,11 @@ if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
      setSidebarMode();
  })};
 
-const DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT = 5 /* Static sidebar modes, that are unchangable by user. Starts from 1 */
-const DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT = 20 /* CustomURL modes, that are editable by user. Starts from 1 */
+const DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT = 5 /* Static sidebar modes, that are unchangable by user. Starts from 0 */
+const DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT = 19 /* CustomURL modes, that are editable by user. Starts from 0 */
  
  if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
-    for (let sbar_id = 1; sbar_id <= DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT; sbar_id++) {
+    for (let sbar_id = 0; sbar_id <= DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT; sbar_id++) {
 		Services.prefs.addObserver(`floorp.browser.sidebar2.customurl${sbar_id}`, function() {
             setSidebarMode()
             setCustomURLFavicon(sbar_id)

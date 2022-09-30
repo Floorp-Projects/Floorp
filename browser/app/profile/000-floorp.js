@@ -71,11 +71,14 @@ pref("floorp.memory.free.button", true);
 pref("floorp.entable.deepl.translate", false);
 pref("floorp.multitab.bottommode", false);
 
+
+//max is 20
 pref("floorp.browser.sidebar.right", true);// サイドバーの右側を表示
 pref("floorp.browser.sidebar.enable", true);// サイドバーを表示
 pref("floorp.browser.sidebar2.mode", 0);// サイドバーのモード
-pref("floorp.browser.sidebar2.customurl1", "https://freasearch.org");
-pref("floorp.browser.sidebar2.customurl2", "https://translate.google.com");
+pref("floorp.browser.sidebar2.customurl0", "https://freasearch.org");
+pref("floorp.browser.sidebar2.customurl1", "https://translate.google.com");
+pref("floorp.browser.sidebar2.customurl2", "");
 pref("floorp.browser.sidebar2.customurl3", "");
 pref("floorp.browser.sidebar2.customurl4", "");
 pref("floorp.browser.sidebar2.customurl5", "");
@@ -93,7 +96,6 @@ pref("floorp.browser.sidebar2.customurl16", "");
 pref("floorp.browser.sidebar2.customurl17", "");
 pref("floorp.browser.sidebar2.customurl18", "");
 pref("floorp.browser.sidebar2.customurl19", "");
-pref("floorp.browser.sidebar2.customurl20", "");
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
 //検索エンジン
