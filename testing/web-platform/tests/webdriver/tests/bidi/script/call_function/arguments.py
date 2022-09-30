@@ -42,25 +42,109 @@ async def test_default_arguments(bidi_session, top_context):
 
 
 @pytest.mark.asyncio
-async def test_remote_value_argument(bidi_session, top_context):
+@pytest.mark.parametrize(
+    "setup_expression, function_declaration, expected",
+    [
+        (
+            "Symbol('foo')",
+            "(symbol) => symbol.toString()",
+            {"type": "string", "value": "Symbol(foo)"},
+        ),
+        ("[1,2]", "(array) => array[0]", {"type": "number", "value": 1}),
+        (
+            "new RegExp('foo')",
+            "(regexp) => regexp.source",
+            {"type": "string", "value": "foo"},
+        ),
+        (
+            "new Date(1654004849000)",
+            "(date) => date.toISOString()",
+            {"type": "string", "value": "2022-05-31T13:47:29.000Z"},
+        ),
+        (
+            "new Map([['foo', 'bar']])",
+            "(map) => map.get('foo')",
+            {"type": "string", "value": "bar"},
+        ),
+        (
+            "new Set(['foo'])",
+            "(set) => set.has('foo')",
+            {"type": "boolean", "value": True},
+        ),
+        (
+            "{const weakMap = new WeakMap(); weakMap.set(weakMap, 'foo')}",
+            "(weakMap)=> weakMap.get(weakMap)",
+            {"type": "string", "value": "foo"},
+        ),
+        (
+            "{const weakSet = new WeakSet(); weakSet.add(weakSet)}",
+            "(weakSet)=> weakSet.has(weakSet)",
+            {"type": "boolean", "value": True},
+        ),
+        (
+            "new Error('error message')",
+            "(error) => error.message",
+            {"type": "string", "value": "error message"},
+        ),
+        (
+            "new SyntaxError('syntax error message')",
+            "(error) => error.message",
+            {"type": "string", "value": "syntax error message"},
+        ),
+        (
+            "new Promise((resolve) => resolve(3))",
+            "(promise) => promise",
+            {"type": "number", "value": 3},
+        ),
+        (
+            "new Int8Array(2)",
+            "(int8Array) => int8Array.length",
+            {"type": "number", "value": 2},
+        ),
+        (
+            "new ArrayBuffer(8)",
+            "(arrayBuffer) => arrayBuffer.byteLength",
+            {"type": "number", "value": 8},
+        ),
+        ("() => true", "(func) => func()", {"type": "boolean", "value": True}),
+        (
+            "(function() {return false;})",
+            "(func) => func()",
+            {"type": "boolean", "value": False},
+        ),
+        (
+             "window.foo = 3; window",
+            "(window) => window.foo",
+            {"type": "number", "value": 3},
+        ),
+        (
+            "({SOME_PROPERTY:'SOME_VALUE'})",
+            "(obj) => obj.SOME_PROPERTY",
+            {"type": "string", "value": "SOME_VALUE"},
+        ),
+    ],
+)
+async def test_remote_value_argument(
+    bidi_session, top_context, setup_expression, function_declaration, expected
+):
     remote_value_result = await bidi_session.script.evaluate(
-        expression="({SOME_PROPERTY:'SOME_VALUE'})",
+        expression=setup_expression,
         await_promise=False,
         result_ownership="root",
-        target=ContextTarget(top_context["context"]))
+        target=ContextTarget(top_context["context"]),
+    )
+    remote_value_handle = remote_value_result.get("handle")
 
-    remote_value_handle = remote_value_result["handle"]
+    assert isinstance(remote_value_handle, str)
 
     result = await bidi_session.script.call_function(
-        function_declaration="(obj)=>{return obj.SOME_PROPERTY;}",
-        arguments=[{
-            "handle": remote_value_handle}],
-        await_promise=False,
-        target=ContextTarget(top_context["context"]))
+        function_declaration=function_declaration,
+        arguments=[{"handle": remote_value_handle}],
+        await_promise=True if remote_value_result["type"] == "promise" else False,
+        target=ContextTarget(top_context["context"]),
+    )
 
-    assert result == {
-        "type": "string",
-        "value": "SOME_VALUE"}
+    assert result == expected
 
 
 @pytest.mark.asyncio
