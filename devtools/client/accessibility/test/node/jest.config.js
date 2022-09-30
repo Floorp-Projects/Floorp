@@ -11,7 +11,7 @@ module.exports = {
   ...sharedJestConfig,
   moduleNameMapper: {
     // This needs to be set before the other rules
-    "^devtools/shared/event-emitter": `${__dirname}/node_modules/devtools-modules/src/utils/event-emitter`,
+    "^resource://devtools/shared/event-emitter": `${__dirname}/node_modules/devtools-modules/src/utils/event-emitter`,
     ...sharedJestConfig.moduleNameMapper,
   },
   setupFiles: ["<rootDir>setup.js"],
