@@ -11,7 +11,7 @@ export function Converter() {
   );
   const {
     JsonViewService,
-  } = require("devtools/client/jsonview/converter-child");
+  } = require("resource://devtools/client/jsonview/converter-child.js");
 
   return JsonViewService.createInstance();
 }

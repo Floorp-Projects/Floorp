@@ -108,7 +108,7 @@ exports.menuitems = [
     oncommand() {
       const {
         BrowserConsoleManager,
-      } = require("devtools/client/webconsole/browser-console-manager");
+      } = require("resource://devtools/client/webconsole/browser-console-manager.js");
       BrowserConsoleManager.openBrowserConsoleOrFocus();
     },
     keyId: "browserConsole",

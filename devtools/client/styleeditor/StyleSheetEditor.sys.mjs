@@ -5,13 +5,13 @@
 const { require, loader } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
-const Editor = require("devtools/client/shared/sourceeditor/editor");
+const Editor = require("resource://devtools/client/shared/sourceeditor/editor.js");
 const {
   shortSource,
   prettifyCSS,
-} = require("devtools/shared/inspector/css-logic");
-const { throttle } = require("devtools/shared/throttle");
-const EventEmitter = require("devtools/shared/event-emitter");
+} = require("resource://devtools/shared/inspector/css-logic.js");
+const { throttle } = require("resource://devtools/shared/throttle.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 const lazy = {};
 

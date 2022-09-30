@@ -7,7 +7,7 @@
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-var EventEmitter = require("devtools/shared/event-emitter");
+var EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 var { StyleEditorUI } = ChromeUtils.import(
   "resource://devtools/client/styleeditor/StyleEditorUI.jsm"
