@@ -26,6 +26,7 @@
 #include "api/test/mock_video_encoder.h"
 #include "api/test/mock_video_encoder_factory.h"
 #include "api/units/data_rate.h"
+#include "api/units/time_delta.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/nv12_buffer.h"
@@ -9410,8 +9411,12 @@ TEST(VideoStreamEncoderFrameCadenceTest,
   // synchronized.
   EXPECT_CALL(mock_source, RequestRefreshFrame);
   video_stream_encoder->SendKeyFrame();
-  adapter_ptr->OnConstraintsChanged(VideoTrackSourceConstraints{0, 30});
-  factory.DepleteTaskQueues();
+  constexpr int kMaxFps = 30;
+  adapter_ptr->OnConstraintsChanged(VideoTrackSourceConstraints{0, kMaxFps});
+  factory.GetTimeController()->AdvanceTime(
+      TimeDelta::Seconds(1) *
+      FrameCadenceAdapterInterface::kOnDiscardedFrameRefreshFramePeriod /
+      kMaxFps);
 }
 
 }  // namespace webrtc
