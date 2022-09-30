@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { RecommendedPreferences } = ChromeUtils.import(
-  "chrome://remote/content/shared/RecommendedPreferences.jsm"
+const { RecommendedPreferences } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/RecommendedPreferences.sys.mjs"
 );
 
 const COMMON_PREF = "toolkit.startup.max_resumed_crashes";

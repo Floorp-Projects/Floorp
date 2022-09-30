@@ -12,10 +12,13 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  Log: "chrome://remote/content/shared/Log.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   HTTP_404: "chrome://remote/content/server/HTTPD.jsm",
   HTTP_505: "chrome://remote/content/server/HTTPD.jsm",
-  Log: "chrome://remote/content/shared/Log.jsm",
   Protocol: "chrome://remote/content/cdp/Protocol.jsm",
   RemoteAgentError: "chrome://remote/content/cdp/Error.jsm",
 });

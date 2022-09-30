@@ -3,11 +3,11 @@
 
 "use strict";
 
-const { RootMessageHandler } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/RootMessageHandler.jsm"
+const { RootMessageHandler } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/RootMessageHandler.sys.mjs"
 );
-const { WindowGlobalMessageHandler } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.jsm"
+const { WindowGlobalMessageHandler } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs"
 );
 
 // Test calling methods only implemented in the root version of a module.

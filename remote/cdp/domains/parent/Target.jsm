@@ -16,15 +16,18 @@ const { Domain } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
+  windowManager: "chrome://remote/content/shared/WindowManager.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.jsm",
 
   MainProcessTarget:
     "chrome://remote/content/cdp/targets/MainProcessTarget.jsm",
-  TabManager: "chrome://remote/content/shared/TabManager.jsm",
   TabSession: "chrome://remote/content/cdp/sessions/TabSession.jsm",
-  windowManager: "chrome://remote/content/shared/WindowManager.jsm",
 });
 
 let browserContextIds = 1;

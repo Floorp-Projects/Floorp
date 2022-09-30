@@ -3,14 +3,14 @@
 
 "use strict";
 
-const { MessageHandlerRegistry } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/MessageHandlerRegistry.jsm"
+const { MessageHandlerRegistry } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/MessageHandlerRegistry.sys.mjs"
 );
-const { RootMessageHandler } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/RootMessageHandler.jsm"
+const { RootMessageHandler } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/RootMessageHandler.sys.mjs"
 );
-const { SessionData } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.jsm"
+const { SessionData } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.sys.mjs"
 );
 
 const TEST_PAGE = "http://example.com/document-builder.sjs?html=tab";
@@ -246,8 +246,8 @@ function checkSessionDataItem(item, moduleName, category, contextType, value) {
 
 function getSessionDataFromContent() {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    const { readSessionData } = ChromeUtils.import(
-      "chrome://remote/content/shared/messagehandler/sessiondata/SessionDataReader.jsm"
+    const { readSessionData } = ChromeUtils.importESModule(
+      "chrome://remote/content/shared/messagehandler/sessiondata/SessionDataReader.sys.mjs"
     );
     return readSessionData();
   });

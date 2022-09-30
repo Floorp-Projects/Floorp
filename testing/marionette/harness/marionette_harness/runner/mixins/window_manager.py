@@ -96,8 +96,8 @@ class WindowManagerMixin(object):
             with self.marionette.using_context("chrome"):
                 return self.marionette.execute_script(
                     """
-                  const { windowManager } = ChromeUtils.import(
-                    "chrome://remote/content/shared/WindowManager.jsm"
+                  const { windowManager } = ChromeUtils.importESModule(
+                    "chrome://remote/content/shared/WindowManager.sys.mjs"
                   );
                   const win = windowManager.findWindowByHandle(arguments[0]).win;
                   return win.document.readyState == "complete";

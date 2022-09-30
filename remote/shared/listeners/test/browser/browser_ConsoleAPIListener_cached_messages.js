@@ -10,8 +10,8 @@ add_task(async function test_cached_messages() {
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
     const innerWindowId = content.windowGlobalChild.innerWindowId;
-    const { ConsoleAPIListener } = ChromeUtils.import(
-      "chrome://remote/content/shared/listeners/ConsoleAPIListener.jsm"
+    const { ConsoleAPIListener } = ChromeUtils.importESModule(
+      "chrome://remote/content/shared/listeners/ConsoleAPIListener.sys.mjs"
     );
 
     info("Log two messages before starting the ConsoleAPIListener");
@@ -67,8 +67,8 @@ add_task(async function test_cached_messages() {
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
     const innerWindowId = content.windowGlobalChild.innerWindowId;
-    const { ConsoleAPIListener } = ChromeUtils.import(
-      "chrome://remote/content/shared/listeners/ConsoleAPIListener.jsm"
+    const { ConsoleAPIListener } = ChromeUtils.importESModule(
+      "chrome://remote/content/shared/listeners/ConsoleAPIListener.sys.mjs"
     );
 
     info("Log a message before creating the ConsoleAPIListener");

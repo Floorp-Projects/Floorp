@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { getFramesFromStack, isChromeFrame } = ChromeUtils.import(
-  "chrome://remote/content/shared/Stack.jsm"
+const { getFramesFromStack, isChromeFrame } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/Stack.sys.mjs"
 );
 
 const sourceFrames = [

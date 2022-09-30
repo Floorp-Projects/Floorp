@@ -10,28 +10,28 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { Module } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/Module.jsm"
+const { Module } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/Module.sys.mjs"
 );
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AppInfo: "chrome://remote/content/shared/AppInfo.jsm",
-  assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
+  assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   BrowsingContextListener:
-    "chrome://remote/content/shared/listeners/BrowsingContextListener.jsm",
+    "chrome://remote/content/shared/listeners/BrowsingContextListener.sys.mjs",
   ContextDescriptorType:
-    "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
-  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
-  Log: "chrome://remote/content/shared/Log.jsm",
-  ProgressListener: "chrome://remote/content/shared/Navigate.jsm",
-  TabManager: "chrome://remote/content/shared/TabManager.jsm",
+    "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs",
+  error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  Log: "chrome://remote/content/shared/Log.sys.mjs",
+  ProgressListener: "chrome://remote/content/shared/Navigate.sys.mjs",
+  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   waitForInitialNavigationCompleted:
-    "chrome://remote/content/shared/Navigate.jsm",
+    "chrome://remote/content/shared/Navigate.sys.mjs",
   WindowGlobalMessageHandler:
-    "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.jsm",
-  windowManager: "chrome://remote/content/shared/WindowManager.jsm",
+    "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
+  windowManager: "chrome://remote/content/shared/WindowManager.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>

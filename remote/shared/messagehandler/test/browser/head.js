@@ -4,8 +4,8 @@
 
 "use strict";
 
-var { ContextDescriptorType } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/MessageHandler.jsm"
+var { ContextDescriptorType } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs"
 );
 
 var contextDescriptorAll = {
@@ -13,8 +13,8 @@ var contextDescriptorAll = {
 };
 
 function createRootMessageHandler(sessionId) {
-  const { RootMessageHandlerRegistry } = ChromeUtils.import(
-    "chrome://remote/content/shared/messagehandler/RootMessageHandlerRegistry.jsm"
+  const { RootMessageHandlerRegistry } = ChromeUtils.importESModule(
+    "chrome://remote/content/shared/messagehandler/RootMessageHandlerRegistry.sys.mjs"
   );
   return RootMessageHandlerRegistry.getOrCreateMessageHandler(sessionId);
 }

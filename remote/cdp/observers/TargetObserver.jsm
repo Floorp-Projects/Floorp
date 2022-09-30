@@ -12,10 +12,12 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  EventPromise: "chrome://remote/content/shared/Sync.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
-
-  EventPromise: "chrome://remote/content/shared/Sync.jsm",
 });
 
 // TODO(ato):

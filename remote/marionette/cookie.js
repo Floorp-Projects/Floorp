@@ -6,16 +6,12 @@
 
 const EXPORTED_SYMBOLS = ["cookie"];
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
-  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
-  pprint: "chrome://remote/content/shared/Format.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
+  error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  pprint: "chrome://remote/content/shared/Format.sys.mjs",
 });
 
 const IPV4_PORT_EXPR = /:\d+$/;

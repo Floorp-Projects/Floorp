@@ -169,7 +169,7 @@ remote/cdp/test/browser/chrome-remote-interface.js
 remote/marionette/atom.js
 
 # This file explicitly has a syntax error and cannot be parsed by eslint.
-remote/shared/messagehandler/test/browser/resources/modules/root/invalid.jsm
+remote/shared/messagehandler/test/browser/resources/modules/root/invalid.sys.mjs
 
 # services/ exclusions
 

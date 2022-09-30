@@ -12,13 +12,16 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
+  error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  Log: "chrome://remote/content/shared/Log.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   Command: "chrome://remote/content/marionette/message.js",
   DebuggerTransport: "chrome://remote/content/marionette/transport.js",
-  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   GeckoDriver: "chrome://remote/content/marionette/driver.js",
-  Log: "chrome://remote/content/shared/Log.jsm",
   MarionettePrefs: "chrome://remote/content/marionette/prefs.js",
   Message: "chrome://remote/content/marionette/message.js",
   Response: "chrome://remote/content/marionette/message.js",

@@ -4,11 +4,11 @@
 
 "use strict";
 
-const { Capabilities, Timeouts } = ChromeUtils.import(
-  "chrome://remote/content/shared/webdriver/Capabilities.jsm"
+const { Capabilities, Timeouts } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs"
 );
-const { WebDriverSession } = ChromeUtils.import(
-  "chrome://remote/content/shared/webdriver/Session.jsm"
+const { WebDriverSession } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/webdriver/Session.sys.mjs"
 );
 
 add_test(function test_WebDriverSession_ctor() {

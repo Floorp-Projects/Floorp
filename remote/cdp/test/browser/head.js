@@ -11,8 +11,8 @@ const { RemoteAgent } = ChromeUtils.import(
 const { RemoteAgentError } = ChromeUtils.import(
   "chrome://remote/content/cdp/Error.jsm"
 );
-const { TabManager } = ChromeUtils.import(
-  "chrome://remote/content/shared/TabManager.jsm"
+const { TabManager } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/TabManager.sys.mjs"
 );
 
 const TIMEOUT_MULTIPLIER = SpecialPowers.isDebugBuild ? 4 : 1;

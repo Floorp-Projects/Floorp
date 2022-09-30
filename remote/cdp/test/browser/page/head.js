@@ -17,8 +17,8 @@ const {
   setTimeout,
 } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-const { PollPromise } = ChromeUtils.import(
-  "chrome://remote/content/shared/Sync.jsm"
+const { PollPromise } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/Sync.sys.mjs"
 );
 
 const BASE_ORIGIN = "https://example.com";

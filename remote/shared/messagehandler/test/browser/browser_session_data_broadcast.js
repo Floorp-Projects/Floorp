@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { RootMessageHandler } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/RootMessageHandler.jsm"
+const { RootMessageHandler } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/RootMessageHandler.sys.mjs"
 );
 
 const TEST_PAGE = "https://example.com/document-builder.sjs?html=tab";

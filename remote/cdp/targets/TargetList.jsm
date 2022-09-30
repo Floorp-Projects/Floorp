@@ -12,11 +12,15 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
+
   MainProcessTarget:
     "chrome://remote/content/cdp/targets/MainProcessTarget.jsm",
-  TabManager: "chrome://remote/content/shared/TabManager.jsm",
   TabObserver: "chrome://remote/content/cdp/observers/TargetObserver.jsm",
   TabTarget: "chrome://remote/content/cdp/targets/TabTarget.jsm",
 });

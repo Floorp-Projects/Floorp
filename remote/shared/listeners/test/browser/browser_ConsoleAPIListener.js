@@ -115,8 +115,8 @@ function listenToConsoleAPIMessage() {
   info("Listen to a console api message in content");
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
     const innerWindowId = content.windowGlobalChild.innerWindowId;
-    const { ConsoleAPIListener } = ChromeUtils.import(
-      "chrome://remote/content/shared/listeners/ConsoleAPIListener.jsm"
+    const { ConsoleAPIListener } = ChromeUtils.importESModule(
+      "chrome://remote/content/shared/listeners/ConsoleAPIListener.sys.mjs"
     );
     const consoleAPIListener = new ConsoleAPIListener(innerWindowId);
     const onMessage = consoleAPIListener.once("message");

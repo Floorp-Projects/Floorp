@@ -6,23 +6,19 @@
 
 const EXPORTED_SYMBOLS = ["session"];
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { Module } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/Module.jsm"
+const { Module } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/Module.sys.mjs"
 );
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   ContextDescriptorType:
-    "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
-  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
+    "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs",
+  error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   RootMessageHandler:
-    "chrome://remote/content/shared/messagehandler/RootMessageHandler.jsm",
+    "chrome://remote/content/shared/messagehandler/RootMessageHandler.sys.mjs",
 });
 
 class SessionModule extends Module {

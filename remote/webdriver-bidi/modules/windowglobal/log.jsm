@@ -10,18 +10,21 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { Module } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/Module.jsm"
+const { Module } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/Module.sys.mjs"
 );
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
+ChromeUtils.defineESModuleGetters(lazy, {
   ConsoleAPIListener:
-    "chrome://remote/content/shared/listeners/ConsoleAPIListener.jsm",
+    "chrome://remote/content/shared/listeners/ConsoleAPIListener.sys.mjs",
   ConsoleListener:
-    "chrome://remote/content/shared/listeners/ConsoleListener.jsm",
-  isChromeFrame: "chrome://remote/content/shared/Stack.jsm",
+    "chrome://remote/content/shared/listeners/ConsoleListener.sys.mjs",
+  isChromeFrame: "chrome://remote/content/shared/Stack.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
   serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
 });

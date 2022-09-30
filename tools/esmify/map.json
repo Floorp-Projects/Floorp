@@ -21,8 +21,6 @@
     "accessible/tests/browser/Layout.jsm",
   "chrome://mochitests/content/browser/devtools/client/shared/sourceeditor/test/CodeMirrorTestActors.jsm":
     "devtools/client/shared/sourceeditor/test/CodeMirrorTestActors.jsm",
-  "chrome://mochitests/content/browser/remote/shared/messagehandler/test/browser/resources/modules/ModuleRegistry.jsm":
-    "remote/shared/messagehandler/test/browser/resources/modules/ModuleRegistry.jsm",
   "chrome://mochitests/content/chrome/docshell/test/chrome/DocShellHelpers.jsm":
     "docshell/test/chrome/DocShellHelpers.jsm",
   "chrome://mochitests/content/chrome/dom/console/tests/console.jsm":
@@ -188,73 +186,6 @@
     "remote/server/WebSocketHandshake.jsm",
   "chrome://remote/content/server/WebSocketTransport.jsm":
     "remote/server/WebSocketTransport.jsm",
-  "chrome://remote/content/shared/AppInfo.jsm": "remote/shared/AppInfo.jsm",
-  "chrome://remote/content/shared/Format.jsm": "remote/shared/Format.jsm",
-  "chrome://remote/content/shared/Log.jsm": "remote/shared/Log.jsm",
-  "chrome://remote/content/shared/MobileTabBrowser.jsm":
-    "remote/shared/MobileTabBrowser.jsm",
-  "chrome://remote/content/shared/Navigate.jsm": "remote/shared/Navigate.jsm",
-  "chrome://remote/content/shared/PDF.jsm": "remote/shared/PDF.jsm",
-  "chrome://remote/content/shared/RecommendedPreferences.jsm":
-    "remote/shared/RecommendedPreferences.jsm",
-  "chrome://remote/content/shared/Stack.jsm": "remote/shared/Stack.jsm",
-  "chrome://remote/content/shared/Sync.jsm": "remote/shared/Sync.jsm",
-  "chrome://remote/content/shared/TabManager.jsm":
-    "remote/shared/TabManager.jsm",
-  "chrome://remote/content/shared/WebSocketConnection.jsm":
-    "remote/shared/WebSocketConnection.jsm",
-  "chrome://remote/content/shared/WindowManager.jsm":
-    "remote/shared/WindowManager.jsm",
-  "chrome://remote/content/shared/listeners/BrowsingContextListener.jsm":
-    "remote/shared/listeners/BrowsingContextListener.jsm",
-  "chrome://remote/content/shared/listeners/ConsoleAPIListener.jsm":
-    "remote/shared/listeners/ConsoleAPIListener.jsm",
-  "chrome://remote/content/shared/listeners/ConsoleListener.jsm":
-    "remote/shared/listeners/ConsoleListener.jsm",
-  "chrome://remote/content/shared/listeners/LoadListener.jsm":
-    "remote/shared/listeners/LoadListener.jsm",
-  "chrome://remote/content/shared/messagehandler/Errors.jsm":
-    "remote/shared/messagehandler/Errors.jsm",
-  "chrome://remote/content/shared/messagehandler/EventsDispatcher.jsm":
-    "remote/shared/messagehandler/EventsDispatcher.jsm",
-  "chrome://remote/content/shared/messagehandler/MessageHandler.jsm":
-    "remote/shared/messagehandler/MessageHandler.jsm",
-  "chrome://remote/content/shared/messagehandler/MessageHandlerRegistry.jsm":
-    "remote/shared/messagehandler/MessageHandlerRegistry.jsm",
-  "chrome://remote/content/shared/messagehandler/Module.jsm":
-    "remote/shared/messagehandler/Module.jsm",
-  "chrome://remote/content/shared/messagehandler/ModuleCache.jsm":
-    "remote/shared/messagehandler/ModuleCache.jsm",
-  "chrome://remote/content/shared/messagehandler/RootMessageHandler.jsm":
-    "remote/shared/messagehandler/RootMessageHandler.jsm",
-  "chrome://remote/content/shared/messagehandler/RootMessageHandlerRegistry.jsm":
-    "remote/shared/messagehandler/RootMessageHandlerRegistry.jsm",
-  "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.jsm":
-    "remote/shared/messagehandler/WindowGlobalMessageHandler.jsm",
-  "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.jsm":
-    "remote/shared/messagehandler/sessiondata/SessionData.jsm",
-  "chrome://remote/content/shared/messagehandler/sessiondata/SessionDataReader.jsm":
-    "remote/shared/messagehandler/sessiondata/SessionDataReader.jsm",
-  "chrome://remote/content/shared/messagehandler/transports/FrameContextUtils.jsm":
-    "remote/shared/messagehandler/transports/FrameContextUtils.jsm",
-  "chrome://remote/content/shared/messagehandler/transports/FrameTransport.jsm":
-    "remote/shared/messagehandler/transports/FrameTransport.jsm",
-  "chrome://remote/content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameActor.jsm":
-    "remote/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameActor.jsm",
-  "chrome://remote/content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameChild.jsm":
-    "remote/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameChild.jsm",
-  "chrome://remote/content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameParent.jsm":
-    "remote/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameParent.jsm",
-  "chrome://remote/content/shared/webdriver/Assert.jsm":
-    "remote/shared/webdriver/Assert.jsm",
-  "chrome://remote/content/shared/webdriver/Capabilities.jsm":
-    "remote/shared/webdriver/Capabilities.jsm",
-  "chrome://remote/content/shared/webdriver/Errors.jsm":
-    "remote/shared/webdriver/Errors.jsm",
-  "chrome://remote/content/shared/webdriver/KeyData.jsm":
-    "remote/shared/webdriver/KeyData.jsm",
-  "chrome://remote/content/shared/webdriver/Session.jsm":
-    "remote/shared/webdriver/Session.jsm",
   "chrome://remote/content/webdriver-bidi/NewSessionHandler.jsm":
     "remote/webdriver-bidi/NewSessionHandler.jsm",
   "chrome://remote/content/webdriver-bidi/RemoteValue.jsm":
