@@ -14,6 +14,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/messagehandler/RootMessageHandler.sys.mjs",
   RootMessageHandlerRegistry:
     "chrome://remote/content/shared/messagehandler/RootMessageHandlerRegistry.sys.mjs",
+  WebSocketHandshake:
+    "chrome://remote/content/server/WebSocketHandshake.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -21,7 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   allowAllCerts: "chrome://remote/content/marionette/cert.js",
   WebDriverBiDiConnection:
     "chrome://remote/content/webdriver-bidi/WebDriverBiDiConnection.jsm",
-  WebSocketHandshake: "chrome://remote/content/server/WebSocketHandshake.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());

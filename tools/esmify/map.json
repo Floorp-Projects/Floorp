@@ -178,10 +178,6 @@
   "chrome://remote/content/marionette/sync.js": "remote/marionette/sync.js",
   "chrome://remote/content/marionette/transport.js":
     "remote/marionette/transport.js",
-  "chrome://remote/content/server/WebSocketHandshake.jsm":
-    "remote/server/WebSocketHandshake.jsm",
-  "chrome://remote/content/server/WebSocketTransport.jsm":
-    "remote/server/WebSocketTransport.jsm",
   "chrome://remote/content/webdriver-bidi/NewSessionHandler.jsm":
     "remote/webdriver-bidi/NewSessionHandler.jsm",
   "chrome://remote/content/webdriver-bidi/RemoteValue.jsm":

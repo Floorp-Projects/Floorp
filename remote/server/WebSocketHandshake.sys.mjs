@@ -2,17 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["WebSocketHandshake"];
-
 // This file is an XPCOM service-ified copy of ../devtools/server/socket/websocket-server.js.
 
-const CC = Components.Constructor;
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+const CC = Components.Constructor;
 
 const lazy = {};
 
@@ -320,4 +314,4 @@ async function upgrade(request, response) {
   return createWebSocket(transport, input, output);
 }
 
-const WebSocketHandshake = { upgrade };
+export const WebSocketHandshake = { upgrade };
