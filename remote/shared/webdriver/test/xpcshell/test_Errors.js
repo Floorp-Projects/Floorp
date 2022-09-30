@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { error } = ChromeUtils.import(
-  "chrome://remote/content/shared/webdriver/Errors.jsm"
+const { error } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/webdriver/Errors.sys.mjs"
 );
 
 function notok(condition) {

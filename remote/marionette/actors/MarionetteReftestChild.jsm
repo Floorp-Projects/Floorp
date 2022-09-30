@@ -12,8 +12,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Log: "chrome://remote/content/shared/Log.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  Log: "chrome://remote/content/shared/Log.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>

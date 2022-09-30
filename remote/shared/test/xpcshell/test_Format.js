@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { truncate, pprint } = ChromeUtils.import(
-  "chrome://remote/content/shared/Format.jsm"
+const { truncate, pprint } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/Format.sys.mjs"
 );
 
 const MAX_STRING_LENGTH = 250;

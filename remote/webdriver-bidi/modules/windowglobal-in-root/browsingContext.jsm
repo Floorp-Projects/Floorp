@@ -6,18 +6,14 @@
 
 const EXPORTED_SYMBOLS = ["browsingContext"];
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { Module } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/Module.jsm"
+const { Module } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/Module.sys.mjs"
 );
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  TabManager: "chrome://remote/content/shared/TabManager.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
 });
 
 class BrowsingContextModule extends Module {

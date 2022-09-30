@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { TabManager } = ChromeUtils.import(
-  "chrome://remote/content/shared/TabManager.jsm"
+const { TabManager } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/TabManager.sys.mjs"
 );
 
 const FRAME_URL = "https://example.com/document-builder.sjs?html=frame";

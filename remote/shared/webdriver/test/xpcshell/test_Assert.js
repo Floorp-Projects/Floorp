@@ -5,11 +5,11 @@
 "use strict";
 /* eslint-disable no-array-constructor, no-new-object */
 
-const { assert } = ChromeUtils.import(
-  "chrome://remote/content/shared/webdriver/Assert.jsm"
+const { assert } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/webdriver/Assert.sys.mjs"
 );
-const { error } = ChromeUtils.import(
-  "chrome://remote/content/shared/webdriver/Errors.jsm"
+const { error } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/webdriver/Errors.sys.mjs"
 );
 
 add_test(function test_session() {

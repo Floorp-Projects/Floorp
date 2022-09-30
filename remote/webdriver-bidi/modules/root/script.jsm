@@ -10,22 +10,25 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { Module } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/Module.jsm"
+const { Module } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/Module.sys.mjs"
 );
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   ContextDescriptorType:
-    "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
-  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
+    "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs",
+  error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
+  WindowGlobalMessageHandler:
+    "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
   RealmType: "chrome://remote/content/webdriver-bidi/Realm.jsm",
-  TabManager: "chrome://remote/content/shared/TabManager.jsm",
-  WindowGlobalMessageHandler:
-    "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.jsm",
 });
 
 class ScriptModule extends Module {

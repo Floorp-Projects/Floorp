@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { WindowGlobalMessageHandler } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.jsm"
+const { WindowGlobalMessageHandler } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs"
 );
 
 /**

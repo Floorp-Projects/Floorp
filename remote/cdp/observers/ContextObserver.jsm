@@ -31,10 +31,12 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  executeSoon: "chrome://remote/content/shared/Sync.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
-
-  executeSoon: "chrome://remote/content/shared/Sync.jsm",
 });
 
 class ContextObserver {

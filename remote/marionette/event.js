@@ -13,8 +13,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  keyData: "chrome://remote/content/shared/webdriver/KeyData.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  keyData: "chrome://remote/content/shared/webdriver/KeyData.sys.mjs",
 });
 
 /** Provides functionality for creating and sending DOM events. */

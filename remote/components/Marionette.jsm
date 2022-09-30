@@ -12,14 +12,18 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Deferred: "chrome://remote/content/shared/Sync.jsm",
-  EnvironmentPrefs: "chrome://remote/content/marionette/prefs.js",
-  Log: "chrome://remote/content/shared/Log.jsm",
-  MarionettePrefs: "chrome://remote/content/marionette/prefs.js",
-  Preferences: "resource://gre/modules/Preferences.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  Deferred: "chrome://remote/content/shared/Sync.sys.mjs",
+  Log: "chrome://remote/content/shared/Log.sys.mjs",
   RecommendedPreferences:
-    "chrome://remote/content/shared/RecommendedPreferences.jsm",
+    "chrome://remote/content/shared/RecommendedPreferences.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  Preferences: "resource://gre/modules/Preferences.jsm",
+
+  EnvironmentPrefs: "chrome://remote/content/marionette/prefs.js",
+  MarionettePrefs: "chrome://remote/content/marionette/prefs.js",
   TCPListener: "chrome://remote/content/marionette/server.js",
 });
 

@@ -16,6 +16,12 @@ const { Domain } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  PollPromise: "chrome://remote/content/shared/Sync.sys.mjs",
+  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
+  windowManager: "chrome://remote/content/shared/WindowManager.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   clearInterval: "resource://gre/modules/Timer.jsm",
   OS: "resource://gre/modules/osfile.jsm",
@@ -24,11 +30,8 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 
   DialogHandler:
     "chrome://remote/content/cdp/domains/parent/page/DialogHandler.jsm",
-  PollPromise: "chrome://remote/content/shared/Sync.jsm",
   streamRegistry: "chrome://remote/content/cdp/domains/parent/IO.jsm",
-  TabManager: "chrome://remote/content/shared/TabManager.jsm",
   UnsupportedError: "chrome://remote/content/cdp/Error.jsm",
-  windowManager: "chrome://remote/content/shared/WindowManager.jsm",
 });
 
 const MAX_CANVAS_DIMENSION = 32767;

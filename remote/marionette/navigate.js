@@ -12,16 +12,20 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  Log: "chrome://remote/content/shared/Log.sys.mjs",
+  PageLoadStrategy:
+    "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs",
+  ProgressListener: "chrome://remote/content/shared/Navigate.sys.mjs",
+  truncate: "chrome://remote/content/shared/Format.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   EventDispatcher:
     "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
-  Log: "chrome://remote/content/shared/Log.jsm",
   modal: "chrome://remote/content/marionette/modal.js",
-  PageLoadStrategy: "chrome://remote/content/shared/webdriver/Capabilities.jsm",
-  ProgressListener: "chrome://remote/content/shared/Navigate.jsm",
   TimedPromise: "chrome://remote/content/marionette/sync.js",
-  truncate: "chrome://remote/content/shared/Format.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>

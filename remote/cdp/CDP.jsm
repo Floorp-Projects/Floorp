@@ -12,11 +12,14 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  Log: "chrome://remote/content/shared/Log.sys.mjs",
+  RecommendedPreferences:
+    "chrome://remote/content/shared/RecommendedPreferences.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   JSONHandler: "chrome://remote/content/cdp/JSONHandler.jsm",
-  Log: "chrome://remote/content/shared/Log.jsm",
-  RecommendedPreferences:
-    "chrome://remote/content/shared/RecommendedPreferences.jsm",
   TargetList: "chrome://remote/content/cdp/targets/TargetList.jsm",
 });
 

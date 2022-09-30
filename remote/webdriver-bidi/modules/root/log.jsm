@@ -6,8 +6,8 @@
 
 const EXPORTED_SYMBOLS = ["log"];
 
-const { Module } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/Module.jsm"
+const { Module } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/Module.sys.mjs"
 );
 
 class LogModule extends Module {

@@ -36,8 +36,8 @@ function sendTestBroadcastCommand(
   contextDescriptor,
   rootMessageHandler
 ) {
-  const { WindowGlobalMessageHandler } = ChromeUtils.import(
-    "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.jsm"
+  const { WindowGlobalMessageHandler } = ChromeUtils.importESModule(
+    "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs"
   );
 
   info("Send a test broadcast command");

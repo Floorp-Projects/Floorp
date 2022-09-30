@@ -12,16 +12,19 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
+  assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
+  Log: "chrome://remote/content/shared/Log.sys.mjs",
+  print: "chrome://remote/content/shared/PDF.sys.mjs",
+  windowManager: "chrome://remote/content/shared/WindowManager.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
 
-  AppInfo: "chrome://remote/content/shared/AppInfo.jsm",
-  assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   capture: "chrome://remote/content/marionette/capture.js",
-  Log: "chrome://remote/content/shared/Log.jsm",
   navigate: "chrome://remote/content/marionette/navigate.js",
-  print: "chrome://remote/content/shared/PDF.jsm",
-  windowManager: "chrome://remote/content/shared/WindowManager.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>

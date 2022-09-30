@@ -10,16 +10,20 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { Module } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/Module.jsm"
+const { Module } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/Module.sys.mjs"
 );
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  getFramesFromStack: "chrome://remote/content/shared/Stack.sys.mjs",
+  isChromeFrame: "chrome://remote/content/shared/Stack.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   deserialize: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
-  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
-  getFramesFromStack: "chrome://remote/content/shared/Stack.jsm",
-  isChromeFrame: "chrome://remote/content/shared/Stack.jsm",
   serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
   stringify: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
   WindowRealm: "chrome://remote/content/webdriver-bidi/Realm.jsm",

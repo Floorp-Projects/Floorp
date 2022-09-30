@@ -10,16 +10,19 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { WebSocketConnection } = ChromeUtils.import(
-  "chrome://remote/content/shared/WebSocketConnection.jsm"
+const { WebSocketConnection } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/WebSocketConnection.sys.mjs"
 );
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
+  error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  Log: "chrome://remote/content/shared/Log.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
-  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
-  Log: "chrome://remote/content/shared/Log.jsm",
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
 });
 

@@ -16,10 +16,26 @@ const { element } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
+  assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
+  error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  EventPromise: "chrome://remote/content/shared/Sync.sys.mjs",
+  Log: "chrome://remote/content/shared/Log.sys.mjs",
+  pprint: "chrome://remote/content/shared/Format.sys.mjs",
+  print: "chrome://remote/content/shared/PDF.sys.mjs",
+  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
+  Timeouts: "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs",
+  UnhandledPromptBehavior:
+    "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs",
+  waitForInitialNavigationCompleted:
+    "chrome://remote/content/shared/Navigate.sys.mjs",
+  WebDriverSession: "chrome://remote/content/shared/webdriver/Session.sys.mjs",
+  windowManager: "chrome://remote/content/shared/WindowManager.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Addon: "chrome://remote/content/marionette/addon.js",
-  AppInfo: "chrome://remote/content/shared/AppInfo.jsm",
-  assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   atom: "chrome://remote/content/marionette/atom.js",
   browser: "chrome://remote/content/marionette/browser.js",
   capture: "chrome://remote/content/marionette/capture.js",
@@ -32,37 +48,24 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
   enableEventsActor:
     "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
-  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
-  EventPromise: "chrome://remote/content/shared/Sync.jsm",
   getMarionetteCommandsActorProxy:
     "chrome://remote/content/marionette/actors/MarionetteCommandsParent.jsm",
   IdlePromise: "chrome://remote/content/marionette/sync.js",
   l10n: "chrome://remote/content/marionette/l10n.js",
-  Log: "chrome://remote/content/shared/Log.jsm",
   Marionette: "chrome://remote/content/components/Marionette.jsm",
   MarionettePrefs: "chrome://remote/content/marionette/prefs.js",
   modal: "chrome://remote/content/marionette/modal.js",
   navigate: "chrome://remote/content/marionette/navigate.js",
   permissions: "chrome://remote/content/marionette/permissions.js",
-  pprint: "chrome://remote/content/shared/Format.jsm",
-  print: "chrome://remote/content/shared/PDF.jsm",
   reftest: "chrome://remote/content/marionette/reftest.js",
   registerCommandsActor:
     "chrome://remote/content/marionette/actors/MarionetteCommandsParent.jsm",
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
-  TabManager: "chrome://remote/content/shared/TabManager.jsm",
   TimedPromise: "chrome://remote/content/marionette/sync.js",
-  Timeouts: "chrome://remote/content/shared/webdriver/Capabilities.jsm",
-  UnhandledPromptBehavior:
-    "chrome://remote/content/shared/webdriver/Capabilities.jsm",
   unregisterCommandsActor:
     "chrome://remote/content/marionette/actors/MarionetteCommandsParent.jsm",
-  waitForInitialNavigationCompleted:
-    "chrome://remote/content/shared/Navigate.jsm",
   waitForObserverTopic: "chrome://remote/content/marionette/sync.js",
-  WebDriverSession: "chrome://remote/content/shared/webdriver/Session.jsm",
   WebReference: "chrome://remote/content/marionette/element.js",
-  windowManager: "chrome://remote/content/shared/WindowManager.jsm",
   WindowState: "chrome://remote/content/marionette/browser.js",
 });
 

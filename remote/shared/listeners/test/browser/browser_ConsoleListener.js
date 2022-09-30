@@ -100,8 +100,8 @@ function listenToConsoleMessage(level) {
     [level],
     async _level => {
       const innerWindowId = content.windowGlobalChild.innerWindowId;
-      const { ConsoleListener } = ChromeUtils.import(
-        "chrome://remote/content/shared/listeners/ConsoleListener.jsm"
+      const { ConsoleListener } = ChromeUtils.importESModule(
+        "chrome://remote/content/shared/listeners/ConsoleListener.sys.mjs"
       );
       const consoleListener = new ConsoleListener(innerWindowId);
       const onMessage = consoleListener.once(_level);

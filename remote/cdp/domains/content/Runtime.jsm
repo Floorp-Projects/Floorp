@@ -19,8 +19,11 @@ const { ContentProcessDomain } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  executeSoon: "chrome://remote/content/shared/Sync.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  executeSoon: "chrome://remote/content/shared/Sync.jsm",
   ExecutionContext:
     "chrome://remote/content/cdp/domains/content/runtime/ExecutionContext.jsm",
 });

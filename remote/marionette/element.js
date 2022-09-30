@@ -19,14 +19,17 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
+  error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  pprint: "chrome://remote/content/shared/Format.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ContentDOMReference: "resource://gre/modules/ContentDOMReference.jsm",
 
-  assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   atom: "chrome://remote/content/marionette/atom.js",
-  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   PollPromise: "chrome://remote/content/marionette/sync.js",
-  pprint: "chrome://remote/content/shared/Format.jsm",
 });
 
 const ORDERED_NODE_ITERATOR_TYPE = 5;

@@ -10,14 +10,17 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { WebSocketConnection } = ChromeUtils.import(
-  "chrome://remote/content/shared/WebSocketConnection.jsm"
+const { WebSocketConnection } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/WebSocketConnection.sys.mjs"
 );
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  Log: "chrome://remote/content/shared/Log.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Log: "chrome://remote/content/shared/Log.jsm",
   UnknownMethodError: "chrome://remote/content/cdp/Error.jsm",
 });
 

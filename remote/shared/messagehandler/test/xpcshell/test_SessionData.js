@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { ContextDescriptorType } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/MessageHandler.jsm"
+const { ContextDescriptorType } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs"
 );
-const { RootMessageHandler } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/RootMessageHandler.jsm"
+const { RootMessageHandler } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/RootMessageHandler.sys.mjs"
 );
-const { SessionData } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.jsm"
+const { SessionData } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.sys.mjs"
 );
 
 add_task(async function test_sessionData() {

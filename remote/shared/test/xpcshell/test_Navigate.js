@@ -7,7 +7,9 @@ const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const {
   ProgressListener,
   waitForInitialNavigationCompleted,
-} = ChromeUtils.import("chrome://remote/content/shared/Navigate.jsm");
+} = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/Navigate.sys.mjs"
+);
 
 const CURRENT_URI = Services.io.newURI("http://foo.bar/");
 const INITIAL_URI = Services.io.newURI("about:blank");

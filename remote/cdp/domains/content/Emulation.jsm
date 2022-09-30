@@ -6,18 +6,14 @@
 
 var EXPORTED_SYMBOLS = ["Emulation"];
 
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const { ContentProcessDomain } = ChromeUtils.import(
   "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm"
 );
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AnimationFramePromise: "chrome://remote/content/shared/Sync.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  AnimationFramePromise: "chrome://remote/content/shared/Sync.sys.mjs",
 });
 
 class Emulation extends ContentProcessDomain {

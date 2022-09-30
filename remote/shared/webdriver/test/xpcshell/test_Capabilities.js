@@ -8,11 +8,11 @@ const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
 
-const { AppInfo } = ChromeUtils.import(
-  "chrome://remote/content/shared/AppInfo.jsm"
+const { AppInfo } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/AppInfo.sys.mjs"
 );
-const { error } = ChromeUtils.import(
-  "chrome://remote/content/shared/webdriver/Errors.jsm"
+const { error } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/webdriver/Errors.sys.mjs"
 );
 const {
   Capabilities,
@@ -20,8 +20,8 @@ const {
   Proxy,
   Timeouts,
   UnhandledPromptBehavior,
-} = ChromeUtils.import(
-  "chrome://remote/content/shared/webdriver/Capabilities.jsm"
+} = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs"
 );
 
 add_test(function test_Timeouts_ctor() {

@@ -3,12 +3,12 @@
 
 "use strict";
 
-const { WebDriverSession } = ChromeUtils.import(
-  "chrome://remote/content/shared/webdriver/Session.jsm"
+const { WebDriverSession } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/webdriver/Session.sys.mjs"
 );
 
-const { error } = ChromeUtils.import(
-  "chrome://remote/content/shared/webdriver/Errors.jsm"
+const { error } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/webdriver/Errors.sys.mjs"
 );
 
 add_task(async function test_execute_missing_command_error() {

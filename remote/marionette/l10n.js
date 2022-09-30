@@ -23,8 +23,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "domParser", () => {

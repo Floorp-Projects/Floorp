@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { AppInfo } = ChromeUtils.import(
-  "chrome://remote/content/shared/AppInfo.jsm"
+const { AppInfo } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/AppInfo.sys.mjs"
 );
 
 // Minimal xpcshell tests for AppInfo; Services.appinfo.* is not available
