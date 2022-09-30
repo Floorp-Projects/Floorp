@@ -5,8 +5,10 @@
 
 const {
   fetchProperties,
-} = require("devtools/client/dom/content/actions/grips");
-const { Property } = require("devtools/client/dom/content/reducers/grips");
+} = require("resource://devtools/client/dom/content/actions/grips.js");
+const {
+  Property,
+} = require("resource://devtools/client/dom/content/reducers/grips.js");
 
 // Implementation
 function GripProvider(grips, dispatch) {

@@ -7,22 +7,22 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const SearchBox = createFactory(
-  require("devtools/client/shared/components/SearchBox")
+  require("resource://devtools/client/shared/components/SearchBox.js")
 );
 
-const { l10n } = require("devtools/client/dom/content/utils");
+const { l10n } = require("resource://devtools/client/dom/content/utils.js");
 
 // Actions
 const {
   fetchProperties,
-} = require("devtools/client/dom/content/actions/grips");
+} = require("resource://devtools/client/dom/content/actions/grips.js");
 const {
   setVisibilityFilter,
-} = require("devtools/client/dom/content/actions/filter");
+} = require("resource://devtools/client/dom/content/actions/filter.js");
 
 /**
  * This template is responsible for rendering a toolbar

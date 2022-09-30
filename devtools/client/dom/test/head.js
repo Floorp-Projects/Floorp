@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
 );
 
 // DOM panel actions.
-const constants = require("devtools/client/dom/content/constants");
+const constants = require("resource://devtools/client/dom/content/constants.js");
 
 // Uncomment this pref to dump all devtools emitted events to the console.
 // Services.prefs.setBoolPref("devtools.dom.enabled", true);

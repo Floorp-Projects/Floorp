@@ -9,18 +9,20 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 // DOM Panel
 const DomTree = createFactory(
-  require("devtools/client/dom/content/components/DomTree")
+  require("resource://devtools/client/dom/content/components/DomTree.js")
 );
 
 const MainToolbar = createFactory(
-  require("devtools/client/dom/content/components/MainToolbar")
+  require("resource://devtools/client/dom/content/components/MainToolbar.js")
 );
 // Shortcuts
 const { div } = dom;

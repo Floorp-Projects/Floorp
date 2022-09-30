@@ -10,23 +10,32 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 const TreeView = createFactory(
-  require("devtools/client/shared/components/tree/TreeView")
+  require("resource://devtools/client/shared/components/tree/TreeView.js")
 );
 // Reps
-const { REPS, MODE } = require("devtools/client/shared/components/reps/index");
+const {
+  REPS,
+  MODE,
+} = require("resource://devtools/client/shared/components/reps/index.js");
 const { Rep } = REPS;
 
 const Grip = REPS.Grip;
 // DOM Panel
-const { GripProvider } = require("devtools/client/dom/content/grip-provider");
+const {
+  GripProvider,
+} = require("resource://devtools/client/dom/content/grip-provider.js");
 
-const { DomDecorator } = require("devtools/client/dom/content/dom-decorator");
+const {
+  DomDecorator,
+} = require("resource://devtools/client/dom/content/dom-decorator.js");
 
 /**
  * Renders DOM panel tree.
