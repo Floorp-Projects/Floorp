@@ -96,12 +96,8 @@ function setSidebarMode() {
     const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
     const webpanel_id = modeValuePref - (DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT) /* Get sidebar_id */
     const sidebar2elem = document.getElementById("sidebar2");
-    const panelWidth = Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${modeValuePref}`, undefined);
-  
-    if(panelWidth !== "" || panelWidth !== undefined || panelWidth !== null){
-      document.getElementById("sidebar2-box").setAttribute("width", panelWidth);
-    }
-  
+    const wibpanel_usercontext = Services.prefs.getIntPref(`floorp.browser.sidebar2.customurl${webpanel_id}.usercontext`, undefined);
+
     switch (modeValuePref) {
       case 0:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
@@ -127,6 +123,7 @@ function setSidebarMode() {
         showSidebarNodes(2);
          if(document.getElementById(`webpanel${webpanel_id}`) == null){
           let browserManagerSidebarWebpanel = document.createXULElement("browser");
+          browserManagerSidebarWebpanel.setAttribute("usercontextid", wibpanel_usercontext);
           browserManagerSidebarWebpanel.setAttribute("xmlns", "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
           browserManagerSidebarWebpanel.setAttribute("id", `webpanel${webpanel_id}`);
           browserManagerSidebarWebpanel.setAttribute("class", "webpanels");
@@ -148,6 +145,8 @@ function setSidebarMode() {
           browserManagerSidebarWebpanel.setAttribute("src", Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${webpanel_id}`, undefined));
           document.getElementById("sidebar2-box").appendChild(browserManagerSidebarWebpanel);
         break;
+        }else{
+          document.getElementById(`webpanel${webpanel_id}`).setAttribute("src", Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${webpanel_id}`, undefined));
         }
     }
   }
@@ -187,7 +186,14 @@ function displayBrowserManagerSidebar() {
 
 function setCustomURLFavicon(sbar_id) {
     var sbar_url = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${sbar_id}`)
-    document.getElementById(`select-CustomURL${sbar_id}`).style.listStyleImage = `url(http://www.google.com/s2/favicons?domain=${sbar_url})`
+    document.getElementById(`select-CustomURL${sbar_id}`).style.listStyleImage = `url(http://www.google.com/s2/favicons?domain=${sbar_url})`;
+
+    const wibpanel_usercontext = Services.prefs.getIntPref(`floorp.browser.sidebar2.customurl${sbar_id}.usercontext`, undefined);
+    if(wibpanel_usercontext != 0){
+      document.getElementById(`select-CustomURL${sbar_id}`).style.border = `solid 0.1px var(--usercontext-color-${wibpanel_usercontext})`;
+    }else{
+      document.getElementById(`select-CustomURL${sbar_id}`).style.border = "";
+    }
 }
 
 function backSidebarSite() {
@@ -268,6 +274,13 @@ function setAllfavicons() {
   for (let sbar_id = 0; sbar_id <= DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT; sbar_id++) {
     var sbar_favicon = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${sbar_id}`)
     document.getElementById(`select-CustomURL${sbar_id}`).style.listStyleImage = `url(http://www.google.com/s2/favicons?domain=${sbar_favicon}`;
+
+    var wibpanel_usercontext = Services.prefs.getIntPref(`floorp.browser.sidebar2.customurl${sbar_id}.usercontext`, undefined);
+    if(wibpanel_usercontext != 0){
+      document.getElementById(`select-CustomURL${sbar_id}`).style.border = `solid 0.1px var(--usercontext-color-${wibpanel_usercontext})`;
+    }else{
+      document.getElementById(`select-CustomURL${sbar_id}`).style.border = "";
+    }
   }
 }
 

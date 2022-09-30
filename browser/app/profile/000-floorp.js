@@ -96,6 +96,29 @@ pref("floorp.browser.sidebar2.customurl16", "");
 pref("floorp.browser.sidebar2.customurl17", "");
 pref("floorp.browser.sidebar2.customurl18", "");
 pref("floorp.browser.sidebar2.customurl19", "");
+
+//container tab for sidebar2 webpanel
+pref("floorp.browser.sidebar2.customurl0.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl1.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl2.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl3.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl4.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl5.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl6.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl7.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl8.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl9.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl10.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl11.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl12.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl13.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl14.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl15.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl16.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl17.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl18.usercontext", 0);
+pref("floorp.browser.sidebar2.customurl19.usercontext", 0);
+
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
 //検索エンジン

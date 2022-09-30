@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+/* import-globals-from /toolkit/content/preferencesBindings.js */
+
 
 function onSiteDelete() {
     let URLBoxs = document.getElementsByClassName("URLBox");
@@ -40,3 +41,26 @@ function onunload() {
         Services.prefs.setStringPref(`floorp.browser.sidebar2.customurl${num}`, box_value);
     }
 }
+
+Preferences.addAll([
+    { id: "floorp.browser.sidebar2.customurl0.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl1.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl2.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl3.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl4.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl5.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl6.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl7.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl8.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl9.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl10.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl11.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl12.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl13.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl14.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl15.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl16.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl17.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl18.usercontext", type : "int"},
+    { id: "floorp.browser.sidebar2.customurl19.usercontext", type : "int"},
+]);
