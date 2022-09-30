@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { Session } = ChromeUtils.import(
-  "chrome://remote/content/cdp/sessions/Session.jsm"
+const { Session } = ChromeUtils.importESModule(
+  "chrome://remote/content/cdp/sessions/Session.sys.mjs"
 );
 
 const connection = {

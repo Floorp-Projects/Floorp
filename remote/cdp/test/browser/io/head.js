@@ -10,8 +10,8 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const { streamRegistry } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/parent/IO.jsm"
+const { streamRegistry } = ChromeUtils.importESModule(
+  "chrome://remote/content/cdp/domains/parent/IO.sys.mjs"
 );
 
 async function registerFileStream(contents, options = {}) {

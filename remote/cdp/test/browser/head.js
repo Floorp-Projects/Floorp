@@ -8,8 +8,8 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { RemoteAgent } = ChromeUtils.importESModule(
   "chrome://remote/content/components/RemoteAgent.sys.mjs"
 );
-const { RemoteAgentError } = ChromeUtils.import(
-  "chrome://remote/content/cdp/Error.jsm"
+const { RemoteAgentError } = ChromeUtils.importESModule(
+  "chrome://remote/content/cdp/Error.sys.mjs"
 );
 const { TabManager } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/TabManager.sys.mjs"

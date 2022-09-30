@@ -7,13 +7,13 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  CDP: "chrome://remote/content/cdp/CDP.sys.mjs",
   Deferred: "chrome://remote/content/shared/Sync.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   WebDriverBiDi: "chrome://remote/content/webdriver-bidi/WebDriverBiDi.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  CDP: "chrome://remote/content/cdp/CDP.jsm",
   HttpServer: "chrome://remote/content/server/HTTPD.jsm",
 });
 
