@@ -6,8 +6,8 @@
 
 "use strict";
 
-const CanvasUtils = require("devtools/client/memory/components/tree-map/canvas-utils");
-const DragZoom = require("devtools/client/memory/components/tree-map/drag-zoom");
+const CanvasUtils = require("resource://devtools/client/memory/components/tree-map/canvas-utils.js");
+const DragZoom = require("resource://devtools/client/memory/components/tree-map/drag-zoom.js");
 
 const TEST_URL = "data:text/html,<html><body></body></html>";
 const PIXEL_SCROLL_MODE = 0;

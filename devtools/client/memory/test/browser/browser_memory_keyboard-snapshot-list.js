@@ -5,11 +5,13 @@
 
 "use strict";
 
-const { viewState } = require("devtools/client/memory/constants");
+const { viewState } = require("resource://devtools/client/memory/constants.js");
 const {
   takeSnapshotAndCensus,
-} = require("devtools/client/memory/actions/snapshot");
-const { changeView } = require("devtools/client/memory/actions/view");
+} = require("resource://devtools/client/memory/actions/snapshot.js");
+const {
+  changeView,
+} = require("resource://devtools/client/memory/actions/view.js");
 
 const TEST_URL =
   "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";

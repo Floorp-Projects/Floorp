@@ -11,8 +11,8 @@
 const {
   snapshotState: states,
   treeMapState,
-} = require("devtools/client/memory/constants");
-const actions = require("devtools/client/memory/actions/snapshot");
+} = require("resource://devtools/client/memory/constants.js");
+const actions = require("resource://devtools/client/memory/actions/snapshot.js");
 
 add_task(async function() {
   const front = new StubbedMemoryFront();

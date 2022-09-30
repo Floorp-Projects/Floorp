@@ -9,15 +9,15 @@ const {
   censusState,
   viewState,
   individualsState,
-} = require("devtools/client/memory/constants");
+} = require("resource://devtools/client/memory/constants.js");
 const {
   fetchIndividuals,
   takeSnapshotAndCensus,
-} = require("devtools/client/memory/actions/snapshot");
+} = require("resource://devtools/client/memory/actions/snapshot.js");
 const {
   changeView,
   popViewAndRefresh,
-} = require("devtools/client/memory/actions/view");
+} = require("resource://devtools/client/memory/actions/view.js");
 
 const TEST_STATES = [
   individualsState.COMPUTING_DOMINATOR_TREE,

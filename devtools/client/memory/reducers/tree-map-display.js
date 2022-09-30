@@ -7,7 +7,7 @@
 const {
   actions,
   treeMapDisplays,
-} = require("devtools/client/memory/constants");
+} = require("resource://devtools/client/memory/constants.js");
 const DEFAULT_TREE_MAP_DISPLAY = treeMapDisplays.coarseType;
 
 const handlers = Object.create(null);

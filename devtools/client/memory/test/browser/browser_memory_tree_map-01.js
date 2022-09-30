@@ -6,7 +6,7 @@
 
 "use strict";
 
-const CanvasUtils = require("devtools/client/memory/components/tree-map/canvas-utils");
+const CanvasUtils = require("resource://devtools/client/memory/components/tree-map/canvas-utils.js");
 const D3_SCRIPT =
   '<script type="application/javascript" ' +
   'src="chrome://global/content/third_party/d3/d3.js">';

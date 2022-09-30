@@ -7,16 +7,21 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const Tree = createFactory(
-  require("devtools/client/shared/components/VirtualizedTree")
+  require("resource://devtools/client/shared/components/VirtualizedTree.js")
 );
 const CensusTreeItem = createFactory(
-  require("devtools/client/memory/components/CensusTreeItem")
+  require("resource://devtools/client/memory/components/CensusTreeItem.js")
 );
-const { TREE_ROW_HEIGHT } = require("devtools/client/memory/constants");
-const { censusModel, diffingModel } = require("devtools/client/memory/models");
+const {
+  TREE_ROW_HEIGHT,
+} = require("resource://devtools/client/memory/constants.js");
+const {
+  censusModel,
+  diffingModel,
+} = require("resource://devtools/client/memory/models.js");
 
 class Census extends Component {
   static get propTypes() {

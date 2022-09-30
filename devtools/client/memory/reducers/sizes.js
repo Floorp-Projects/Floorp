@@ -3,8 +3,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { actions } = require("devtools/client/memory/constants");
-const { immutableUpdate } = require("devtools/shared/DevToolsUtils");
+const { actions } = require("resource://devtools/client/memory/constants.js");
+const {
+  immutableUpdate,
+} = require("resource://devtools/shared/DevToolsUtils.js");
 
 const handlers = Object.create(null);
 

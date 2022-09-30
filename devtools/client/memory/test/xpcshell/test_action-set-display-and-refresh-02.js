@@ -8,14 +8,19 @@
  * displays.
  */
 
-const { censusState, viewState } = require("devtools/client/memory/constants");
+const {
+  censusState,
+  viewState,
+} = require("resource://devtools/client/memory/constants.js");
 const {
   setCensusDisplayAndRefresh,
-} = require("devtools/client/memory/actions/census-display");
+} = require("resource://devtools/client/memory/actions/census-display.js");
 const {
   takeSnapshotAndCensus,
-} = require("devtools/client/memory/actions/snapshot");
-const { changeView } = require("devtools/client/memory/actions/view");
+} = require("resource://devtools/client/memory/actions/snapshot.js");
+const {
+  changeView,
+} = require("resource://devtools/client/memory/actions/view.js");
 
 const CUSTOM = {
   displayName: "Custom",

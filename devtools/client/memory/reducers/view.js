@@ -3,8 +3,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { assert } = require("devtools/shared/DevToolsUtils");
-const { actions, viewState } = require("devtools/client/memory/constants");
+const { assert } = require("resource://devtools/shared/DevToolsUtils.js");
+const {
+  actions,
+  viewState,
+} = require("resource://devtools/client/memory/constants.js");
 
 const handlers = Object.create(null);
 

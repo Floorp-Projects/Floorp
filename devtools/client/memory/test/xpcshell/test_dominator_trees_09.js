@@ -11,14 +11,16 @@ const {
   viewState,
   labelDisplays,
   treeMapState,
-} = require("devtools/client/memory/constants");
+} = require("resource://devtools/client/memory/constants.js");
 const {
   setLabelDisplayAndRefresh,
-} = require("devtools/client/memory/actions/label-display");
-const { changeView } = require("devtools/client/memory/actions/view");
+} = require("resource://devtools/client/memory/actions/label-display.js");
+const {
+  changeView,
+} = require("resource://devtools/client/memory/actions/view.js");
 const {
   takeSnapshotAndCensus,
-} = require("devtools/client/memory/actions/snapshot");
+} = require("resource://devtools/client/memory/actions/snapshot.js");
 
 add_task(async function() {
   const front = new StubbedMemoryFront();

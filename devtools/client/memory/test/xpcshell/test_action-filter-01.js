@@ -5,7 +5,9 @@
 
 // Test setting the filter string.
 
-const { setFilterString } = require("devtools/client/memory/actions/filter");
+const {
+  setFilterString,
+} = require("resource://devtools/client/memory/actions/filter.js");
 
 add_task(async function() {
   const store = Store();

@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { drawText } = require("devtools/client/memory/components/tree-map/draw");
+const {
+  drawText,
+} = require("resource://devtools/client/memory/components/tree-map/draw.js");
 
 add_task(async function() {
   // Mock out the Canvas2dContext

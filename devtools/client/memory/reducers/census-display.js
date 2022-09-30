@@ -3,7 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { actions, censusDisplays } = require("devtools/client/memory/constants");
+const {
+  actions,
+  censusDisplays,
+} = require("resource://devtools/client/memory/constants.js");
 const DEFAULT_CENSUS_DISPLAY = censusDisplays.coarseType;
 
 const handlers = Object.create(null);

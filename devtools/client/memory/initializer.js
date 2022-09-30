@@ -9,14 +9,18 @@
 const {
   createFactory,
   createElement,
-} = require("devtools/client/shared/vendor/react");
-const ReactDOM = require("devtools/client/shared/vendor/react-dom");
-const { Provider } = require("devtools/client/shared/vendor/react-redux");
-const App = createFactory(require("devtools/client/memory/app"));
-const Store = require("devtools/client/memory/store");
-const { assert } = require("devtools/shared/DevToolsUtils");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const ReactDOM = require("resource://devtools/client/shared/vendor/react-dom.js");
+const {
+  Provider,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
+const App = createFactory(require("resource://devtools/client/memory/app.js"));
+const Store = require("resource://devtools/client/memory/store.js");
+const { assert } = require("resource://devtools/shared/DevToolsUtils.js");
 
-const { updateMemoryFront } = require("devtools/client/memory/actions/front");
+const {
+  updateMemoryFront,
+} = require("resource://devtools/client/memory/actions/front.js");
 
 // Shared variables used by several methods of this module.
 let root, store, unsubscribe;

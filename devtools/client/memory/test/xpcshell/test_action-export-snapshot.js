@@ -5,11 +5,16 @@
 
 // Test exporting a snapshot to a user specified location on disk.
 
-const { exportSnapshot } = require("devtools/client/memory/actions/io");
+const {
+  exportSnapshot,
+} = require("resource://devtools/client/memory/actions/io.js");
 const {
   takeSnapshotAndCensus,
-} = require("devtools/client/memory/actions/snapshot");
-const { actions, treeMapState } = require("devtools/client/memory/constants");
+} = require("resource://devtools/client/memory/actions/snapshot.js");
+const {
+  actions,
+  treeMapState,
+} = require("resource://devtools/client/memory/constants.js");
 
 add_task(async function() {
   const front = new StubbedMemoryFront();

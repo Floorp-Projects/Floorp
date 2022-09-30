@@ -9,11 +9,11 @@
  * formatPercent methods.
  */
 
-const utils = require("devtools/client/memory/utils");
+const utils = require("resource://devtools/client/memory/utils.js");
 const {
   snapshotState: states,
   viewState,
-} = require("devtools/client/memory/constants");
+} = require("resource://devtools/client/memory/constants.js");
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );

@@ -4,10 +4,12 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { L10N } = require("devtools/client/memory/utils");
-const models = require("devtools/client/memory/models");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const { L10N } = require("resource://devtools/client/memory/utils.js");
+const models = require("resource://devtools/client/memory/models.js");
 
 class CensusHeader extends Component {
   static get propTypes() {

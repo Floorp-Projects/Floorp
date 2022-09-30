@@ -4,18 +4,21 @@
 
 "use strict";
 
-const { assert, reportException } = require("devtools/shared/DevToolsUtils");
+const {
+  assert,
+  reportException,
+} = require("resource://devtools/shared/DevToolsUtils.js");
 const {
   actions,
   diffingState,
   viewState,
-} = require("devtools/client/memory/constants");
+} = require("resource://devtools/client/memory/constants.js");
 const {
   getSnapshot,
   censusIsUpToDate,
   snapshotIsDiffable,
   findSelectedSnapshot,
-} = require("devtools/client/memory/utils");
+} = require("resource://devtools/client/memory/utils.js");
 
 /**
  * Toggle diffing mode on or off.

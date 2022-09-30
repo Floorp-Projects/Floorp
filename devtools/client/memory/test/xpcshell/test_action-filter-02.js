@@ -5,15 +5,20 @@
 
 // Test that changing filter state properly refreshes the selected census.
 
-const { viewState, censusState } = require("devtools/client/memory/constants");
+const {
+  viewState,
+  censusState,
+} = require("resource://devtools/client/memory/constants.js");
 const {
   setFilterStringAndRefresh,
-} = require("devtools/client/memory/actions/filter");
+} = require("resource://devtools/client/memory/actions/filter.js");
 const {
   takeSnapshotAndCensus,
   selectSnapshotAndRefresh,
-} = require("devtools/client/memory/actions/snapshot");
-const { changeView } = require("devtools/client/memory/actions/view");
+} = require("resource://devtools/client/memory/actions/snapshot.js");
+const {
+  changeView,
+} = require("resource://devtools/client/memory/actions/view.js");
 
 add_task(async function() {
   const front = new StubbedMemoryFront();

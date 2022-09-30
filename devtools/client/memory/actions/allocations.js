@@ -6,7 +6,7 @@
 const {
   actions,
   ALLOCATION_RECORDING_OPTIONS,
-} = require("devtools/client/memory/constants");
+} = require("resource://devtools/client/memory/constants.js");
 
 exports.toggleRecordingAllocationStacks = function(commands) {
   return async function({ dispatch, getState }) {

@@ -7,16 +7,18 @@
 const {
   Component,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const Tree = createFactory(
-  require("devtools/client/shared/components/VirtualizedTree")
+  require("resource://devtools/client/shared/components/VirtualizedTree.js")
 );
 const DominatorTreeItem = createFactory(
-  require("devtools/client/memory/components/DominatorTreeItem")
+  require("resource://devtools/client/memory/components/DominatorTreeItem.js")
 );
-const { TREE_ROW_HEIGHT } = require("devtools/client/memory/constants");
-const models = require("devtools/client/memory/models");
+const {
+  TREE_ROW_HEIGHT,
+} = require("resource://devtools/client/memory/constants.js");
+const models = require("resource://devtools/client/memory/models.js");
 
 /**
  * The list of individuals in a census group.

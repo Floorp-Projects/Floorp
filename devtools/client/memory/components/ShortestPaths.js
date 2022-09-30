@@ -4,12 +4,16 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { isSavedFrame } = require("devtools/shared/DevToolsUtils");
-const { getSourceNames } = require("devtools/client/shared/source-utils");
-const { L10N } = require("devtools/client/memory/utils");
+const {
+  Component,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const { isSavedFrame } = require("resource://devtools/shared/DevToolsUtils.js");
+const {
+  getSourceNames,
+} = require("resource://devtools/client/shared/source-utils.js");
+const { L10N } = require("resource://devtools/client/memory/utils.js");
 
 const GRAPH_DEFAULTS = {
   translate: [20, 20],

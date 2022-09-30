@@ -3,10 +3,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { assert } = require("devtools/shared/DevToolsUtils");
-const { actions } = require("devtools/client/memory/constants");
-const { findSelectedSnapshot } = require("devtools/client/memory/utils");
-const refresh = require("devtools/client/memory/actions/refresh");
+const { assert } = require("resource://devtools/shared/DevToolsUtils.js");
+const { actions } = require("resource://devtools/client/memory/constants.js");
+const {
+  findSelectedSnapshot,
+} = require("resource://devtools/client/memory/utils.js");
+const refresh = require("resource://devtools/client/memory/actions/refresh.js");
 
 /**
  * Change the currently selected view.

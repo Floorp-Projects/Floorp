@@ -4,11 +4,11 @@
 
 "use strict";
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const STRINGS_URI = "devtools/client/locales/memory.properties";
 const L10N = (exports.L10N = new LocalizationHelper(STRINGS_URI));
 
-const { assert } = require("devtools/shared/DevToolsUtils");
+const { assert } = require("resource://devtools/shared/DevToolsUtils.js");
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
@@ -18,7 +18,7 @@ const CUSTOM_TREE_MAP_DISPLAY_PREF = "devtools.memory.custom-tree-map-displays";
 const BYTES = 1024;
 const KILOBYTES = Math.pow(BYTES, 2);
 const MEGABYTES = Math.pow(BYTES, 3);
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 const {
   snapshotState: states,
   diffingState,
@@ -26,7 +26,7 @@ const {
   treeMapState,
   dominatorTreeState,
   individualsState,
-} = require("devtools/client/memory/constants");
+} = require("resource://devtools/client/memory/constants.js");
 
 /**
  * Takes a snapshot object and returns the localized form of its timestamp to be

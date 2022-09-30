@@ -3,14 +3,19 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Immutable = require("devtools/client/shared/vendor/immutable");
-const { immutableUpdate, assert } = require("devtools/shared/DevToolsUtils");
+const Immutable = require("resource://devtools/client/shared/vendor/immutable.js");
+const {
+  immutableUpdate,
+  assert,
+} = require("resource://devtools/shared/DevToolsUtils.js");
 const {
   actions,
   diffingState,
   viewState,
-} = require("devtools/client/memory/constants");
-const { snapshotIsDiffable } = require("devtools/client/memory/utils");
+} = require("resource://devtools/client/memory/constants.js");
+const {
+  snapshotIsDiffable,
+} = require("resource://devtools/client/memory/utils.js");
 
 const handlers = Object.create(null);
 
