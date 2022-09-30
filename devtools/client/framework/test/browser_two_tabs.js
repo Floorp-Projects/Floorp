@@ -5,9 +5,15 @@
  * Check regression when opening two tabs
  */
 
-var { DevToolsServer } = require("devtools/server/devtools-server");
-var { DevToolsClient } = require("devtools/client/devtools-client");
-const { createCommandsDictionary } = require("devtools/shared/commands/index");
+var {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+var {
+  DevToolsClient,
+} = require("resource://devtools/client/devtools-client.js");
+const {
+  createCommandsDictionary,
+} = require("resource://devtools/shared/commands/index.js");
 
 const TAB_URL_1 = "data:text/html;charset=utf-8,foo";
 const TAB_URL_2 = "data:text/html;charset=utf-8,bar";

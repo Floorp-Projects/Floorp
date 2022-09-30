@@ -8,14 +8,14 @@
  */
 
 const renderer = require("react-test-renderer");
-const React = require("devtools/client/shared/vendor/react");
+const React = require("resource://devtools/client/shared/vendor/react.js");
 const DebugTargetInfo = React.createFactory(
-  require("devtools/client/framework/components/DebugTargetInfo")
+  require("resource://devtools/client/framework/components/DebugTargetInfo.js")
 );
 const {
   CONNECTION_TYPES,
-} = require("devtools/client/shared/remote-debugging/constants");
-const DESCRIPTOR_TYPES = require("devtools/client/fronts/descriptors/descriptor-types");
+} = require("resource://devtools/client/shared/remote-debugging/constants.js");
+const DESCRIPTOR_TYPES = require("resource://devtools/client/fronts/descriptors/descriptor-types.js");
 
 /**
  * Stub for the L10N property expected by the DebugTargetInfo component.

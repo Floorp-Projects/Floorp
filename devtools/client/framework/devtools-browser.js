@@ -18,12 +18,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://devtools/client/framework/browser-toolbox/Launcher.sys.mjs",
 });
 
-const { gDevTools } = require("devtools/client/framework/devtools");
+const {
+  gDevTools,
+} = require("resource://devtools/client/framework/devtools.js");
 const {
   getTheme,
   addThemeObserver,
   removeThemeObserver,
-} = require("devtools/client/shared/theme");
+} = require("resource://devtools/client/shared/theme.js");
 
 // Load toolbox lazily as it needs gDevTools to be fully initialized
 loader.lazyRequireGetter(
@@ -67,7 +69,7 @@ loader.lazyRequireGetter(
   true
 );
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"
 );
@@ -326,7 +328,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
       case "browserConsole":
         const {
           BrowserConsoleManager,
-        } = require("devtools/client/webconsole/browser-console-manager");
+        } = require("resource://devtools/client/webconsole/browser-console-manager.js");
         BrowserConsoleManager.openBrowserConsoleOrFocus();
         break;
       case "responsiveDesignMode":

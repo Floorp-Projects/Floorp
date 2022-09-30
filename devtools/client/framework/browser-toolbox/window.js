@@ -11,12 +11,14 @@ var { loader, require, DevToolsLoader } = ChromeUtils.import(
 // Require this module to setup core modules
 loader.require("devtools/client/framework/devtools-browser");
 
-var { gDevTools } = require("devtools/client/framework/devtools");
-var { Toolbox } = require("devtools/client/framework/toolbox");
-var { DevToolsClient } = require("devtools/client/devtools-client");
-var { PrefsHelper } = require("devtools/client/shared/prefs");
-const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
-const { LocalizationHelper } = require("devtools/shared/l10n");
+var { gDevTools } = require("resource://devtools/client/framework/devtools.js");
+var { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
+var {
+  DevToolsClient,
+} = require("resource://devtools/client/devtools-client.js");
+var { PrefsHelper } = require("resource://devtools/client/shared/prefs.js");
+const KeyShortcuts = require("resource://devtools/client/shared/key-shortcuts.js");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"
 );
@@ -32,7 +34,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const {
   CommandsFactory,
-} = require("devtools/shared/commands/commands-factory");
+} = require("resource://devtools/shared/commands/commands-factory.js");
 
 // Timeout to wait before we assume that a connect() timed out without an error.
 // In milliseconds. (With the Debugger pane open, this has been reported to last

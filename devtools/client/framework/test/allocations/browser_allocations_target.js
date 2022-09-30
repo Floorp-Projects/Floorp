@@ -13,7 +13,7 @@ const { require } = ChromeUtils.import(
 );
 const {
   CommandsFactory,
-} = require("devtools/shared/commands/commands-factory");
+} = require("resource://devtools/shared/commands/commands-factory.js");
 
 async function testScript(tab) {
   const commands = await CommandsFactory.forTab(tab);

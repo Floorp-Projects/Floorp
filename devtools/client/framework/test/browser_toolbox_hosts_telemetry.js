@@ -5,7 +5,7 @@
 
 "use strict";
 
-const { Toolbox } = require("devtools/client/framework/toolbox");
+const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 const { LEFT, RIGHT, BOTTOM, WINDOW } = Toolbox.HostType;
 
 const URL = "data:text/html;charset=utf8,browser_toolbox_hosts_telemetry.js";

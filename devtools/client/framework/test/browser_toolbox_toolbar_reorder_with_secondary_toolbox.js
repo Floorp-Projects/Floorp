@@ -9,7 +9,7 @@
 
 const {
   gDevToolsBrowser,
-} = require("devtools/client/framework/devtools-browser");
+} = require("resource://devtools/client/framework/devtools-browser.js");
 
 add_task(async function() {
   registerCleanupFunction(() => {

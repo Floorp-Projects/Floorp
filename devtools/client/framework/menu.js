@@ -4,8 +4,8 @@
 
 "use strict";
 
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const EventEmitter = require("devtools/shared/event-emitter");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 /**
  * A partial implementation of the Menu API provided by electron:

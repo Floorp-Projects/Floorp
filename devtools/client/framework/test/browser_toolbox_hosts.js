@@ -3,7 +3,7 @@
 
 "use strict";
 
-var { Toolbox } = require("devtools/client/framework/toolbox");
+var { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 var { LEFT, RIGHT, BOTTOM, WINDOW } = Toolbox.HostType;
 var toolbox;
 

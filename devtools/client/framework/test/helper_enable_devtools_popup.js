@@ -5,7 +5,7 @@
 
 /* import-globals-from ../../shared/test/shared-head.js */
 
-const { listenOnce } = require("devtools/shared/async-utils");
+const { listenOnce } = require("resource://devtools/shared/async-utils.js");
 
 /**
  * Helpers dedicated to the browser_enable_devtools_popup* tests.

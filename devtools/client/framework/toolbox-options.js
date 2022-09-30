@@ -4,9 +4,11 @@
 
 "use strict";
 
-const { gDevTools } = require("devtools/client/framework/devtools");
+const {
+  gDevTools,
+} = require("resource://devtools/client/framework/devtools.js");
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"
 );
@@ -79,7 +81,7 @@ function OptionsPanel(iframeWindow, toolbox, commands) {
 
   this._addListeners();
 
-  const EventEmitter = require("devtools/shared/event-emitter");
+  const EventEmitter = require("resource://devtools/shared/event-emitter.js");
   EventEmitter.decorate(this);
 }
 

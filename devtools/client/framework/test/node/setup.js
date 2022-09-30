@@ -6,5 +6,5 @@
 
 const {
   setMocksInGlobal,
-} = require("devtools/client/shared/test-helpers/shared-node-helpers");
+} = require("resource://devtools/client/shared/test-helpers/shared-node-helpers.js");
 setMocksInGlobal();

@@ -4,8 +4,8 @@
 
 "use strict";
 
-const Menu = require("devtools/client/framework/menu");
-const MenuItem = require("devtools/client/framework/menu-item");
+const Menu = require("resource://devtools/client/framework/menu.js");
+const MenuItem = require("resource://devtools/client/framework/menu-item.js");
 
 // This WeakMap will be used to know if strings have already been loaded in a given
 // window, which will be used as key.

@@ -4,7 +4,9 @@
 const TEST_URL = "data:text/html,test browsertoolbox host";
 
 add_task(async function() {
-  const { Toolbox } = require("devtools/client/framework/toolbox");
+  const {
+    Toolbox,
+  } = require("resource://devtools/client/framework/toolbox.js");
 
   const tab = await addTab(TEST_URL);
   const options = { doc: document };

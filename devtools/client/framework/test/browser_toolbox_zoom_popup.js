@@ -5,8 +5,10 @@
 
 // Test the popup menu position when zooming in the devtools panel.
 
-const { Toolbox } = require("devtools/client/framework/toolbox");
-const { getCurrentZoom } = require("devtools/shared/layout/utils");
+const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
+const {
+  getCurrentZoom,
+} = require("resource://devtools/shared/layout/utils.js");
 
 // Use a simple URL in order to prevent displacing the left position of the
 // frames menu.

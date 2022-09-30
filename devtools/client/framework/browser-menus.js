@@ -12,7 +12,7 @@
  * - devtools/client/definitions for tool-specifics entries
  */
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const MENUS_L10N = new LocalizationHelper(
   "devtools/client/locales/menus.properties"
 );
@@ -241,7 +241,7 @@ function addAllToolsToMenu(doc) {
 function addTopLevelItems(doc) {
   const menuItems = doc.createDocumentFragment();
 
-  const { menuitems } = require("devtools/client/menus");
+  const { menuitems } = require("resource://devtools/client/menus.js");
   for (const item of menuitems) {
     if (item.separator) {
       const separator = doc.createXULElement("menuseparator");

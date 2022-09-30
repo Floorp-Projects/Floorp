@@ -3,7 +3,7 @@
 
 requestLongerTimeout(5);
 
-var { Toolbox } = require("devtools/client/framework/toolbox");
+var { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
 const NAME_1 = "";
 const NAME_2 = "Toolbox test for title update";

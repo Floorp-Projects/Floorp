@@ -5,7 +5,7 @@
 
 // Test for the toolbox tabs rearrangement when the visibility of toolbox buttons were changed.
 
-const { Toolbox } = require("devtools/client/framework/toolbox");
+const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
 add_task(async function() {
   const tab = await addTab("about:blank");

@@ -5,7 +5,7 @@
 
 // Test that a button to access tools hidden by toolbar overflow is displayed when the
 // toolbar starts to present an overflow.
-const { Toolbox } = require("devtools/client/framework/toolbox");
+const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
 add_task(async function() {
   const tab = await addTab("about:blank");

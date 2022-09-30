@@ -4,11 +4,15 @@
 
 "use strict";
 
-const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DevToolsClient } = require("devtools/client/devtools-client");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+const {
+  DevToolsClient,
+} = require("resource://devtools/client/devtools-client.js");
 const {
   remoteClientManager,
-} = require("devtools/client/shared/remote-debugging/remote-client-manager");
+} = require("resource://devtools/client/shared/remote-debugging/remote-client-manager.js");
 
 /**
  * Construct a Target Descriptor for a given URL with various query parameters:

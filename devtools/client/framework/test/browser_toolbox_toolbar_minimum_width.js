@@ -8,7 +8,7 @@
 
 const SIDEBAR_WIDTH_PREF = "devtools.toolbox.sidebar.width";
 
-const { Toolbox } = require("devtools/client/framework/toolbox");
+const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
 add_task(async function(pickerEnable, commandsEnable) {
   // 74px is Chevron(26px) + Meatball(24px) + Close(24px)

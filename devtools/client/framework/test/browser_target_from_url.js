@@ -7,10 +7,12 @@ const TEST_URI =
 const { DevToolsLoader } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
-const { createCommandsDictionary } = require("devtools/shared/commands/index");
+const {
+  createCommandsDictionary,
+} = require("resource://devtools/shared/commands/index.js");
 const {
   descriptorFromURL,
-} = require("devtools/client/framework/descriptor-from-url");
+} = require("resource://devtools/client/framework/descriptor-from-url.js");
 
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 Services.prefs.setBoolPref("devtools.debugger.prompt-connection", false);

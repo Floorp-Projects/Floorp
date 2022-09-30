@@ -9,12 +9,12 @@
  * attribute set when the list of frames is opened.
  */
 
-var { Toolbox } = require("devtools/client/framework/toolbox");
+var { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 const URL =
   URL_ROOT_SSL + "browser_toolbox_window_title_frame_select_page.html";
 const IFRAME_URL =
   URL_ROOT_SSL + "browser_toolbox_window_title_changes_page.html";
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"
 );

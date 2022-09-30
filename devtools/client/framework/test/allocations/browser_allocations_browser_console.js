@@ -13,7 +13,7 @@ const { require } = ChromeUtils.import(
 );
 const {
   BrowserConsoleManager,
-} = require("devtools/client/webconsole/browser-console-manager");
+} = require("resource://devtools/client/webconsole/browser-console-manager.js");
 
 async function testScript() {
   // Open

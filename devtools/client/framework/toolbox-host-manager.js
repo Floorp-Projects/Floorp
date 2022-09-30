@@ -4,13 +4,13 @@
 
 "use strict";
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"
 );
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const Telemetry = require("devtools/client/shared/telemetry");
-const { DOMHelpers } = require("devtools/shared/dom-helpers");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
+const Telemetry = require("resource://devtools/client/shared/telemetry.js");
+const { DOMHelpers } = require("resource://devtools/shared/dom-helpers.js");
 
 // The min-width of toolbox and browser toolbox.
 const WIDTH_CHEVRON_AND_MEATBALL = 50;
