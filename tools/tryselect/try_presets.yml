@@ -190,6 +190,20 @@ webrender:
         - "!talos !raptor !shippable !asan '-qr"
         - "^webrender-"
 
+webrender-reftests:
+    selector: fuzzy
+    description: >-
+        Runs the reftests relevant to WebRender.
+    query:
+        - "!talos !raptor !shippable !asan !nofis 'reftest"
+
+webrender-reftests-linux:
+    selector: fuzzy
+    description: >-
+        Runs the reftests relevant to WebRender on linux only.
+    query:
+        - "!talos !raptor !shippable !asan !nofis 'linux 'reftest"
+
 webrender-perf:
     selector: fuzzy
     description: >-
