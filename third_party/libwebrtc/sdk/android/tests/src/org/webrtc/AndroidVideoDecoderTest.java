@@ -283,7 +283,7 @@ public class AndroidVideoDecoderTest {
             /* presentationTimeUs= */ anyLong(),
             /* flags= */ eq(0));
 
-    ByteBuffer inputBuffer = fakeMediaCodecWrapper.getInputBuffers()[indexCaptor.getValue()];
+    ByteBuffer inputBuffer = fakeMediaCodecWrapper.getInputBuffer(indexCaptor.getValue());
     CodecTestHelper.assertEqualContents(
         ENCODED_TEST_DATA, inputBuffer, offsetCaptor.getValue(), sizeCaptor.getValue());
   }

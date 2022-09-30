@@ -216,7 +216,7 @@ public class HardwareVideoEncoderTest {
     verify(fakeMediaCodecWrapper)
         .queueInputBuffer(indexCaptor.capture(), offsetCaptor.capture(), sizeCaptor.capture(),
             anyLong(), anyInt());
-    ByteBuffer buffer = fakeMediaCodecWrapper.getInputBuffers()[indexCaptor.getValue()];
+    ByteBuffer buffer = fakeMediaCodecWrapper.getInputBuffer(indexCaptor.getValue());
     CodecTestHelper.assertEqualContents(
         i420, buffer, offsetCaptor.getValue(), sizeCaptor.getValue());
   }
