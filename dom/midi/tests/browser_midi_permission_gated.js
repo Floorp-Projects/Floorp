@@ -420,6 +420,29 @@ add_task(async function testRequestMIDIAccessLocalhost() {
   );
 });
 
+add_task(async function testDisabledRequestMIDIAccessFile() {
+  let dir = getChromeDir(getResolvedURI(gTestPath));
+  dir.append("blank.html");
+  const fileSchemeTestUri = Services.io.newFileURI(dir).spec;
+
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, fileSchemeTestUri);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+  info("Check that requestMIDIAccess isn't set on navigator on file scheme");
+  const isRequestMIDIAccessDefined = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => {
+      return "requestMIDIAccess" in content.wrappedJSObject.navigator;
+    }
+  );
+  is(
+    isRequestMIDIAccessDefined,
+    false,
+    "navigator.requestMIDIAccess is not defined on file scheme"
+  );
+});
+
 async function waitForInstallDialog(id = "addon-webext-permissions") {
   let panel = await waitForNotification(id);
   return panel.childNodes[0];
