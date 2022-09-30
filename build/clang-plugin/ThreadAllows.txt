@@ -1,3 +1,41 @@
+# This file is ingested by `ThreadAllows.py` to produce a list of thread names
+# which our clang plugin will allow to be used with `NS_NewNamedThread`.
+#
+# Permitted thread names are a maximum of 15 characters in length, and must be
+# string literals at their point-of-use in the code -- i.e., in the invocation
+# of `NS_NewNamedThread`.
+#
+# Within this file, each permitted thread name is on a separate line. Comments
+# begin with `#`, as seen here. Leading and trailing whitespace, trailing
+# comments, and blank lines are ignored, and may be used freely.
+#
+# Please explain the addition of any new thread names in comments, preferably
+# with a pointer to a relevant bug. (Do not add thread names only used in tests
+# to this file; instead, add the test file to `ThreadFileAllows.txt`.)
+
+######
+# Gecko/Firefox thread names
+#
+# (None documented yet -- but see "Unsorted thread names", below.)
+
+######
+# Thunderbird-only thread names
+IMAP
+
+######
+# Other
+Checker Test  # used only as part of tests for the thread-checker itself
+
+######
+# Unsorted thread names
+#
+# Thread names below this point are grandfathered in. Please do not add new
+# thread names to this list -- and please remove any that you can, whether by
+# documenting and moving them or by confirming that they are no longer required.
+#
+# In particular, if a thread name is only used for testing, please consider
+# moving its declarator to `ThreadFileAllows.txt`.
+
 ApplyUpdates
 AsyncShutdownPr
 AsyncShutdownWt
@@ -16,7 +54,6 @@ Cameras IPC
 CanvasRenderer
 ChainedPipePump
 ChainedPipeRecv
-Checker Test
 Compositor
 Cookie
 CrashRep Inject
@@ -37,7 +74,6 @@ GeckoProfGTest
 GraphRunner
 HTML5 Parser
 ICS parser
-IMAP
 IPC Launch
 IPCFuzzLoop
 IPDL Background

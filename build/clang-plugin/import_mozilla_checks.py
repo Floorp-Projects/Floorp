@@ -103,7 +103,9 @@ def generate_thread_allows(mozilla_path, module_path):
     names = os.path.join(mozilla_path, "../../build/clang-plugin/ThreadAllows.txt")
     files = os.path.join(mozilla_path, "../../build/clang-plugin/ThreadFileAllows.txt")
     with open(os.path.join(module_path, "ThreadAllows.h"), "w") as f:
-        f.write(ThreadAllows.generate_allows({files, names}))
+        f.write(
+            ThreadAllows.generate_allows(allowed_names=[names], allowed_files=[files])
+        )
 
 
 def do_import(mozilla_path, clang_tidy_path, import_options):
