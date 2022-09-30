@@ -59,10 +59,18 @@ MIDIPermissionRequest::GetTypes(nsIArray** aTypes) {
 
 NS_IMETHODIMP
 MIDIPermissionRequest::Cancel() {
-  mPromise->MaybeRejectWithSecurityError(
-      "WebMIDI requires a site permission add-on to activate — see "
-      "https://extensionworkshop.com/documentation/publish/"
-      "site-permission-add-on/ for details.");
+  if (StaticPrefs::dom_sitepermsaddon_provider_enabled()) {
+    mPromise->MaybeRejectWithSecurityError(
+        "WebMIDI requires a site permission add-on to activate");
+  } else {
+    // This message is used for the initial XPIProvider-based implementation
+    // of Site Permissions.
+    // It should be removed as part of Bug 1789718.
+    mPromise->MaybeRejectWithSecurityError(
+        "WebMIDI requires a site permission add-on to activate — see "
+        "https://extensionworkshop.com/documentation/publish/"
+        "site-permission-add-on/ for details.");
+  }
   return NS_OK;
 }
 
@@ -109,9 +117,20 @@ MIDIPermissionRequest::Run() {
     return NS_OK;
   }
 
-  // If the add-on is not installed, auto-deny (except for localhost).
+  // If the add-on is not installed, and sitepermsaddon provider not enabled,
+  // auto-deny (except for localhost).
   if (StaticPrefs::dom_webmidi_gated() &&
+      !StaticPrefs::dom_sitepermsaddon_provider_enabled() &&
       !nsContentUtils::HasSitePerm(mPrincipal, kPermName) &&
+      !mPrincipal->GetIsLoopbackHost()) {
+    Cancel();
+    return NS_OK;
+  }
+
+  // If sitepermsaddon provider is enabled and user denied install,
+  // auto-deny (except for localhost, where we use a regular permission flow).
+  if (StaticPrefs::dom_sitepermsaddon_provider_enabled() &&
+      nsContentUtils::IsSitePermDeny(mPrincipal, "install"_ns) &&
       !mPrincipal->GetIsLoopbackHost()) {
     Cancel();
     return NS_OK;
