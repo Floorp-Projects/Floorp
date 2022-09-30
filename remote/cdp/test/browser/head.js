@@ -5,8 +5,8 @@
 
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-const { RemoteAgent } = ChromeUtils.import(
-  "chrome://remote/content/components/RemoteAgent.jsm"
+const { RemoteAgent } = ChromeUtils.importESModule(
+  "chrome://remote/content/components/RemoteAgent.sys.mjs"
 );
 const { RemoteAgentError } = ChromeUtils.import(
   "chrome://remote/content/cdp/Error.jsm"

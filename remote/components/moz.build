@@ -11,7 +11,7 @@ XPIDL_SOURCES += [
 
 XPCOM_MANIFESTS += ["components.conf"]
 
-with Files("Marionette.jsm"):
+with Files("Marionette.sys.mjs"):
     BUG_COMPONENT = ("Testing", "Marionette")
 with Files("nsIMarionette.idl"):
     BUG_COMPONENT = ("Testing", "Marionette")

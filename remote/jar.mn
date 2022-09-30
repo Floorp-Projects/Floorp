@@ -4,8 +4,8 @@
 
 remote.jar:
 % content remote %content/
-  content/components/Marionette.jsm (components/Marionette.jsm)
-  content/components/RemoteAgent.jsm (components/RemoteAgent.jsm)
+  content/components/Marionette.sys.mjs (components/Marionette.sys.mjs)
+  content/components/RemoteAgent.sys.mjs (components/RemoteAgent.sys.mjs)
 
   # transport layer (http / websocket)
   content/server/HTTPD.jsm (../netwerk/test/httpserver/httpd.js)

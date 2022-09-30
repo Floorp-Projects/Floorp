@@ -27,8 +27,8 @@ class TestCommandLineArguments(MarionetteTestCase):
         with self.marionette.using_context("chrome"):
             bidi_enabled = self.marionette.execute_script(
                 """
-              const { RemoteAgent } = ChromeUtils.import(
-                "chrome://remote/content/components/RemoteAgent.jsm"
+              const { RemoteAgent } = ChromeUtils.importESModule(
+                "chrome://remote/content/components/RemoteAgent.sys.mjs"
               );
               return !!RemoteAgent.webDriverBiDi;
             """

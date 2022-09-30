@@ -123,10 +123,6 @@
     "remote/cdp/targets/Target.jsm",
   "chrome://remote/content/cdp/targets/TargetList.jsm":
     "remote/cdp/targets/TargetList.jsm",
-  "chrome://remote/content/components/Marionette.jsm":
-    "remote/components/Marionette.jsm",
-  "chrome://remote/content/components/RemoteAgent.jsm":
-    "remote/components/RemoteAgent.jsm",
   "chrome://remote/content/marionette/PerTestCoverageUtils.jsm":
     "tools/code-coverage/PerTestCoverageUtils.jsm",
   "chrome://remote/content/marionette/accessibility.js":

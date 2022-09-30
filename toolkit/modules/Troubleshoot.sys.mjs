@@ -991,8 +991,8 @@ if (AppConstants.MOZ_SANDBOX) {
 
 if (AppConstants.ENABLE_WEBDRIVER) {
   dataProviders.remoteAgent = function remoteAgent(done) {
-    const { RemoteAgent } = ChromeUtils.import(
-      "chrome://remote/content/components/RemoteAgent.jsm"
+    const { RemoteAgent } = ChromeUtils.importESModule(
+      "chrome://remote/content/components/RemoteAgent.sys.mjs"
     );
     const { running, scheme, host, port } = RemoteAgent;
     let url = "";

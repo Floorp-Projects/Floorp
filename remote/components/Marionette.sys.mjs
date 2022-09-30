@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["Marionette", "MarionetteFactory"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -311,7 +305,7 @@ class MarionetteContentProcess {
   }
 }
 
-var Marionette;
+export var Marionette;
 if (isRemote) {
   Marionette = new MarionetteContentProcess();
 } else {
@@ -319,6 +313,6 @@ if (isRemote) {
 }
 
 // This is used by the XPCOM codepath which expects a constructor
-const MarionetteFactory = function() {
+export const MarionetteFactory = function() {
   return Marionette;
 };

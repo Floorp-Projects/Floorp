@@ -16,10 +16,13 @@ const { Target } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  RemoteAgent: "chrome://remote/content/components/RemoteAgent.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   MainProcessSession:
     "chrome://remote/content/cdp/sessions/MainProcessSession.jsm",
-  RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
 });
 
 /**
