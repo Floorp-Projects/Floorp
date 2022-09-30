@@ -9,7 +9,7 @@ const {
   addDevice,
   addDeviceType,
   updateDeviceDisplayed,
-} = require("devtools/client/responsive/actions/devices");
+} = require("resource://devtools/client/responsive/actions/devices.js");
 
 add_task(async function() {
   const store = Store();

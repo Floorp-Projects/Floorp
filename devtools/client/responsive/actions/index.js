@@ -8,11 +8,11 @@
 // central list of constants makes it easy to see all possible action names at
 // a glance. Please add a comment with each new action type.
 
-const { createEnum } = require("devtools/client/shared/enum");
+const { createEnum } = require("resource://devtools/client/shared/enum.js");
 
 const {
   CHANGE_NETWORK_THROTTLING,
-} = require("devtools/client/shared/components/throttling/actions");
+} = require("resource://devtools/client/shared/components/throttling/actions.js");
 
 createEnum(
   [

@@ -9,16 +9,20 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const { getFormatStr } = require("devtools/client/responsive/utils/l10n");
-const { parseUserAgent } = require("devtools/client/responsive/utils/ua");
-const Types = require("devtools/client/responsive/types");
+const {
+  getFormatStr,
+} = require("resource://devtools/client/responsive/utils/l10n.js");
+const {
+  parseUserAgent,
+} = require("resource://devtools/client/responsive/utils/ua.js");
+const Types = require("resource://devtools/client/responsive/types.js");
 
 const DeviceInfo = createFactory(
-  require("devtools/client/responsive/components/DeviceInfo")
+  require("resource://devtools/client/responsive/components/DeviceInfo.js")
 );
 
 class Device extends PureComponent {

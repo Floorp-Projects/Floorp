@@ -9,23 +9,25 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 const DeviceForm = createFactory(
-  require("devtools/client/responsive/components/DeviceForm")
+  require("resource://devtools/client/responsive/components/DeviceForm.js")
 );
 const DeviceList = createFactory(
-  require("devtools/client/responsive/components/DeviceList")
+  require("resource://devtools/client/responsive/components/DeviceList.js")
 );
 
 const {
   getFormatStr,
   getStr,
-} = require("devtools/client/responsive/utils/l10n");
-const { getDeviceString } = require("devtools/client/shared/devices");
-const Types = require("devtools/client/responsive/types");
+} = require("resource://devtools/client/responsive/utils/l10n.js");
+const {
+  getDeviceString,
+} = require("resource://devtools/client/shared/devices.js");
+const Types = require("resource://devtools/client/responsive/types.js");
 
 class DeviceModal extends PureComponent {
   static get propTypes() {

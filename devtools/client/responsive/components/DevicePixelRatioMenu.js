@@ -6,15 +6,17 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  PureComponent,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 const {
   getStr,
   getFormatStr,
-} = require("devtools/client/responsive/utils/l10n");
-const Types = require("devtools/client/responsive/types");
+} = require("resource://devtools/client/responsive/utils/l10n.js");
+const Types = require("resource://devtools/client/responsive/types.js");
 
 loader.lazyRequireGetter(
   this,

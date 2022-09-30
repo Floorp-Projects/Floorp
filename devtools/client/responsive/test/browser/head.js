@@ -20,19 +20,21 @@ Services.scriptloader.loadSubScript(
 
 const {
   _loadPreferredDevices,
-} = require("devtools/client/responsive/actions/devices");
-const { getStr } = require("devtools/client/responsive/utils/l10n");
+} = require("resource://devtools/client/responsive/actions/devices.js");
+const {
+  getStr,
+} = require("resource://devtools/client/responsive/utils/l10n.js");
 const {
   getTopLevelWindow,
-} = require("devtools/client/responsive/utils/window");
+} = require("resource://devtools/client/responsive/utils/window.js");
 const {
   addDevice,
   removeDevice,
   removeLocalDevices,
-} = require("devtools/client/shared/devices");
-const { KeyCodes } = require("devtools/client/shared/keycodes");
-const asyncStorage = require("devtools/shared/async-storage");
-const localTypes = require("devtools/client/responsive/types");
+} = require("resource://devtools/client/shared/devices.js");
+const { KeyCodes } = require("resource://devtools/client/shared/keycodes.js");
+const asyncStorage = require("resource://devtools/shared/async-storage.js");
+const localTypes = require("resource://devtools/client/responsive/types.js");
 
 loader.lazyRequireGetter(
   this,

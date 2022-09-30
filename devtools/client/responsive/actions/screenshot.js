@@ -9,9 +9,9 @@
 const {
   TAKE_SCREENSHOT_START,
   TAKE_SCREENSHOT_END,
-} = require("devtools/client/responsive/actions/index");
+} = require("resource://devtools/client/responsive/actions/index.js");
 
-const message = require("devtools/client/responsive/utils/message");
+const message = require("resource://devtools/client/responsive/utils/message.js");
 
 const animationFrame = () =>
   new Promise(resolve => {

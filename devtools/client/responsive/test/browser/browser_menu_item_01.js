@@ -7,7 +7,9 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,";
 
-const { startup } = require("devtools/client/responsive/utils/window");
+const {
+  startup,
+} = require("resource://devtools/client/responsive/utils/window.js");
 
 const activateTab = tab =>
   new Promise(resolve => {

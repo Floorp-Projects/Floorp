@@ -13,7 +13,9 @@ function getServerConnections(browser) {
     const { require } = ChromeUtils.import(
       "resource://devtools/shared/loader/Loader.jsm"
     );
-    const { DevToolsServer } = require("devtools/server/devtools-server");
+    const {
+      DevToolsServer,
+    } = require("resource://devtools/server/devtools-server.js");
     if (!DevToolsServer._connections) {
       return 0;
     }

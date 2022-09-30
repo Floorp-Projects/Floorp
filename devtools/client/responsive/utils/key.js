@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { KeyCodes } = require("devtools/client/shared/keycodes");
+const { KeyCodes } = require("resource://devtools/client/shared/keycodes.js");
 
 /**
  * Helper to check if the provided key matches one of the expected keys.

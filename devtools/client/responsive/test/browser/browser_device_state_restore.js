@@ -26,13 +26,13 @@ const TEST_DEVICE = {
 // Add the device to the list
 const {
   updatePreferredDevices,
-} = require("devtools/client/responsive/actions/devices");
+} = require("resource://devtools/client/responsive/actions/devices.js");
 updatePreferredDevices({
   added: [TEST_DEVICE.name],
   removed: [],
 });
 
-const Types = require("devtools/client/responsive/types");
+const Types = require("resource://devtools/client/responsive/types.js");
 
 addRDMTask(
   TEST_URL,

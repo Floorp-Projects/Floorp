@@ -9,22 +9,26 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 const Toolbar = createFactory(
-  require("devtools/client/responsive/components/Toolbar")
+  require("resource://devtools/client/responsive/components/Toolbar.js")
 );
 
 loader.lazyGetter(this, "DeviceModal", () =>
-  createFactory(require("devtools/client/responsive/components/DeviceModal"))
+  createFactory(
+    require("resource://devtools/client/responsive/components/DeviceModal.js")
+  )
 );
 
 const {
   changeNetworkThrottling,
-} = require("devtools/client/shared/components/throttling/actions");
+} = require("resource://devtools/client/shared/components/throttling/actions.js");
 const {
   addCustomDevice,
   editCustomDevice,
@@ -32,10 +36,10 @@ const {
   updateDeviceDisplayed,
   updateDeviceModal,
   updatePreferredDevices,
-} = require("devtools/client/responsive/actions/devices");
+} = require("resource://devtools/client/responsive/actions/devices.js");
 const {
   takeScreenshot,
-} = require("devtools/client/responsive/actions/screenshot");
+} = require("resource://devtools/client/responsive/actions/screenshot.js");
 const {
   changeUserAgent,
   toggleLeftAlignment,
@@ -43,7 +47,7 @@ const {
   toggleReloadOnUserAgent,
   toggleTouchSimulation,
   toggleUserAgentInput,
-} = require("devtools/client/responsive/actions/ui");
+} = require("resource://devtools/client/responsive/actions/ui.js");
 const {
   changeDevice,
   changePixelRatio,
@@ -51,12 +55,12 @@ const {
   removeDeviceAssociation,
   resizeViewport,
   rotateViewport,
-} = require("devtools/client/responsive/actions/viewports");
+} = require("resource://devtools/client/responsive/actions/viewports.js");
 const {
   getOrientation,
-} = require("devtools/client/responsive/utils/orientation");
+} = require("resource://devtools/client/responsive/utils/orientation.js");
 
-const Types = require("devtools/client/responsive/types");
+const Types = require("resource://devtools/client/responsive/types.js");
 
 class App extends PureComponent {
   static get propTypes() {

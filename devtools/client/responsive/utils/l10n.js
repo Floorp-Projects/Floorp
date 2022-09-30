@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const STRINGS_URI = "devtools/client/locales/responsive.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 

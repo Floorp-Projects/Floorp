@@ -5,7 +5,9 @@
 
 // Test adding a new device type.
 
-const { addDeviceType } = require("devtools/client/responsive/actions/devices");
+const {
+  addDeviceType,
+} = require("resource://devtools/client/responsive/actions/devices.js");
 
 add_task(async function() {
   const store = Store();

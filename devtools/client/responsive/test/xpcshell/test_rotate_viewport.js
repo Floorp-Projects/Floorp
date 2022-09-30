@@ -8,7 +8,7 @@
 const {
   addViewport,
   rotateViewport,
-} = require("devtools/client/responsive/actions/viewports");
+} = require("resource://devtools/client/responsive/actions/viewports.js");
 
 add_task(async function() {
   const store = Store();

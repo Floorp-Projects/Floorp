@@ -7,21 +7,25 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const { hr } = dom;
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const { getStr } = require("devtools/client/responsive/utils/l10n");
-const { parseUserAgent } = require("devtools/client/responsive/utils/ua");
-const Types = require("devtools/client/responsive/types");
+const {
+  getStr,
+} = require("resource://devtools/client/responsive/utils/l10n.js");
+const {
+  parseUserAgent,
+} = require("resource://devtools/client/responsive/utils/ua.js");
+const Types = require("resource://devtools/client/responsive/types.js");
 
 const MenuButton = createFactory(
-  require("devtools/client/shared/components/menu/MenuButton")
+  require("resource://devtools/client/shared/components/menu/MenuButton.js")
 );
 
 loader.lazyGetter(this, "MenuItem", () => {
-  const menuItemClass = require("devtools/client/shared/components/menu/MenuItem");
+  const menuItemClass = require("resource://devtools/client/shared/components/menu/MenuItem.js");
   const menuItem = createFactory(menuItemClass);
   menuItem.DUMMY_ICON = menuItemClass.DUMMY_ICON;
   return menuItem;
@@ -29,7 +33,7 @@ loader.lazyGetter(this, "MenuItem", () => {
 
 loader.lazyGetter(this, "MenuList", () => {
   return createFactory(
-    require("devtools/client/shared/components/menu/MenuList")
+    require("resource://devtools/client/shared/components/menu/MenuList.js")
   );
 });
 
