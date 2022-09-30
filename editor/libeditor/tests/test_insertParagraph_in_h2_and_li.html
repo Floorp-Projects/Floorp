@@ -34,45 +34,41 @@ SimpleTest.waitForFocus(runTests);
 const CARET_BEGIN  = 0;
 const CARET_MIDDLE = 1;
 const CARET_END    = 2;
+const isTraditionalSplitDirection =!SpecialPowers.getBoolPref(
+  "editor.join_split_direction.compatible_with_the_other_browsers"
+);
 
 function split(element, caretPos, nbKeyPresses) {
   // put the caret on the requested position
-  var sel = window.getSelection();
-  var len = element.textContent.length;
-  var pos = -1;
-  switch (caretPos) {
-    case CARET_BEGIN:
-      pos = 0;
-      break;
-    case CARET_MIDDLE:
-      pos = Math.floor(len / 2);
-      break;
-    case CARET_END:
-      pos = len;
-      break;
-  }
-  sel.collapse(element.firstChild, pos);
+  const offset = (() => {
+    switch (caretPos) {
+      case CARET_BEGIN:
+        return 0;
+      case CARET_MIDDLE:
+        return Math.floor(element.textContent.length / 2);
+      case CARET_END:
+        return element.textContent.length;
+    }
+    return 0;
+  })();
+  getSelection().collapse(element.firstChild, offset);
 
   // simulates a [Return] keypress
-  for (var i = 0; i < nbKeyPresses; i++)
+  for (let i = 0; i < nbKeyPresses; i++) {
     synthesizeKey("KEY_Enter");
+  }
 }
 
 function undo(nbKeyPresses) {
-  for (var i = 0; i < nbKeyPresses; i++)
-    document.execCommand("Undo", false, null);
-}
-
-function SameTypeAsPreviousSibling(element) {
-  var sibling = element.previousSibling;
-  while (sibling && sibling.nodeType != Node.ELEMENT_NODE) {
-    sibling = element.previousSibling;
+  for (let i = 0; i < nbKeyPresses; i++) {
+    document.execCommand("Undo");
   }
-  return (element.nodeName == sibling.nodeName);
 }
 
-function isType(element, type) {
-  return element.nodeName.toLowerCase() == type;
+function getNewElement(element) {
+  return isTraditionalSplitDirection
+    ? element.previousElementSibling
+    : element.nextElementSibling;
 }
 
 function runTests() {
@@ -84,57 +80,87 @@ function runTests() {
 
   // beginning of selection: split current node
   split(header, CARET_BEGIN, 1);
-  ok(SameTypeAsPreviousSibling(header),
+  is(
+    getNewElement(header)?.nodeName,
+    header.nodeName,
     "Pressing [Return] at the beginning of a header " +
-    "should create another header.");
+    "should create another header."
+  );
   split(ulItem, CARET_BEGIN, 2);
-  ok(SameTypeAsPreviousSibling(ulItem),
+  is(
+    getNewElement(ulItem)?.nodeName,
+    ulItem.nodeName,
     "Pressing [Return] at the beginning of an unordered list item " +
-    "should create another list item.");
+    "should create another list item."
+  );
   split(olItem, CARET_BEGIN, 2);
-  ok(SameTypeAsPreviousSibling(olItem),
+  is(
+    getNewElement(olItem)?.nodeName,
+    olItem.nodeName,
     "Pressing [Return] at the beginning of an ordered list item " +
-    "should create another list item.");
+    "should create another list item."
+  );
   undo(3);
 
   // middle of selection: split current node
   split(header, CARET_MIDDLE, 1);
-  ok(SameTypeAsPreviousSibling(header),
+  is(
+    getNewElement(header)?.nodeName,
+    header.nodeName,
     "Pressing [Return] at the middle of a header " +
-    "should create another header.");
+    "should create another header."
+  );
   split(ulItem, CARET_MIDDLE, 2);
-  ok(SameTypeAsPreviousSibling(ulItem),
+  is(
+    getNewElement(ulItem)?.nodeName,
+    ulItem.nodeName,
     "Pressing [Return] at the middle of an unordered list item " +
-    "should create another list item.");
+    "should create another list item."
+  );
   split(olItem, CARET_MIDDLE, 2);
-  ok(SameTypeAsPreviousSibling(olItem),
+  is(
+    getNewElement(olItem)?.nodeName,
+    olItem.nodeName,
     "Pressing [Return] at the middle of an ordered list item " +
-    "should create another list item.");
+    "should create another list item."
+  );
   undo(3);
 
   // end of selection: create a new div/paragraph
-  function testEndOfSelection(expected) {
+  function testEndOfSelection(expected, defaultParagraphSeparator) {
     split(header, CARET_END, 1);
-    ok(isType(content.querySelector("h2+*"), expected),
-      "Pressing [Return] at the end of a header " +
-      "should create a new " + expected);
+    is(
+      content.querySelector("h2+*")?.nodeName,
+      expected.toUpperCase(),
+      `Pressing [Return] at the end of a header should create a new <${
+        expected
+      }> (defaultParagraphSeparator: <${defaultParagraphSeparator}>)`
+    );
     split(ulItem, CARET_END, 2);
-    ok(isType(content.querySelector("ul+*"), expected),
-      "Pressing [Return] twice at the end of an unordered list item " +
-      "should create a new " + expected);
+    is(
+      content.querySelector("ul+*")?.nodeName,
+      expected.toUpperCase(),
+      `Pressing [Return] twice at the end of an unordered list item should create a new <${
+        expected
+      }> (defaultParagraphSeparator: <${defaultParagraphSeparator}>)`
+    );
     split(olItem, CARET_END, 2);
-    ok(isType(content.querySelector("ol+*"), expected),
-      "Pressing [Return] twice at the end of an ordered list item " +
-      "should create a new " + expected);
+    is(
+      content.querySelector("ol+*")?.nodeName,
+      expected.toUpperCase(),
+      `Pressing [Return] twice at the end of an ordered list item should create a new <${
+        expected
+      }> (defaultParagraphSeparator: <${defaultParagraphSeparator}>)`
+    );
     undo(3);
   }
 
   document.execCommand("defaultParagraphSeparator", false, "div");
-  testEndOfSelection("div");
+  testEndOfSelection("div", "div");
   document.execCommand("defaultParagraphSeparator", false, "p");
-  testEndOfSelection("p");
+  testEndOfSelection("p", "p");
   document.execCommand("defaultParagraphSeparator", false, "br");
-  testEndOfSelection("p");
+  testEndOfSelection("p", "br");
 
   // done
   SimpleTest.finish();
