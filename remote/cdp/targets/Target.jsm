@@ -12,9 +12,13 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  WebSocketHandshake:
+    "chrome://remote/content/server/WebSocketHandshake.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   CDPConnection: "chrome://remote/content/cdp/CDPConnection.jsm",
-  WebSocketHandshake: "chrome://remote/content/server/WebSocketHandshake.jsm",
 });
 
 /**

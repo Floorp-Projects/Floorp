@@ -12,10 +12,14 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  WebSocketHandshake:
+    "chrome://remote/content/server/WebSocketHandshake.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   WebDriverBiDiConnection:
     "chrome://remote/content/webdriver-bidi/WebDriverBiDiConnection.jsm",
-  WebSocketHandshake: "chrome://remote/content/server/WebSocketHandshake.jsm",
 });
 
 /**

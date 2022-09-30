@@ -9,8 +9,8 @@ remote.jar:
 
   # transport layer (http / websocket)
   content/server/HTTPD.jsm (../netwerk/test/httpserver/httpd.js)
-  content/server/WebSocketHandshake.jsm (server/WebSocketHandshake.jsm)
-  content/server/WebSocketTransport.jsm (server/WebSocketTransport.jsm)
+  content/server/WebSocketHandshake.sys.mjs (server/WebSocketHandshake.sys.mjs)
+  content/server/WebSocketTransport.sys.mjs (server/WebSocketTransport.sys.mjs)
 
   # shared modules (all protocols)
   content/shared/AppInfo.sys.mjs (shared/AppInfo.sys.mjs)

@@ -10,10 +10,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   truncate: "chrome://remote/content/shared/Format.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  WebSocketTransport: "chrome://remote/content/server/WebSocketTransport.jsm",
+  WebSocketTransport:
+    "chrome://remote/content/server/WebSocketTransport.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());

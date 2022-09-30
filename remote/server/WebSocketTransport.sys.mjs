@@ -4,13 +4,7 @@
 
 // This is an XPCOM service-ified copy of ../devtools/shared/transport/websocket-transport.js.
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["WebSocketTransport"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -18,7 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 });
 
-function WebSocketTransport(socket) {
+export function WebSocketTransport(socket) {
   lazy.EventEmitter.decorate(this);
 
   this.active = false;
