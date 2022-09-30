@@ -212,7 +212,7 @@ export class BaseContent extends React.PureComponent {
       this.props.adminContent.message.id;
 
     let Background_ClassName = ""
-    switch (prefs["background.type"]) {
+    switch (prefs["floorp.background.type"]) {
       case 1:
         Background_ClassName = "random_image"
         break;
