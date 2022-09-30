@@ -81,7 +81,7 @@ void CrossGraphPort::SetAudioOutputVolume(void* aKey, float aVolume) {
   mReceiver->SetAudioOutputVolume(aKey, aVolume);
 }
 
-void CrossGraphPort::Destroy() {
+CrossGraphPort::~CrossGraphPort() {
   mTransmitter->Destroy();
   mReceiver->Destroy();
   mTransmitterPort->Destroy();
