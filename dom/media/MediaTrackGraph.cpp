@@ -862,7 +862,9 @@ void MediaTrackGraphImpl::UnregisterAudioOutput(MediaTrack* aTrack,
                                                 void* aKey) {
   MOZ_ASSERT(OnGraphThreadOrNotRunning());
 
-  mAudioOutputs.RemoveElement(TrackAndKey{aTrack, aKey});
+  DebugOnly<bool> removed =
+      mAudioOutputs.RemoveElement(TrackAndKey{aTrack, aKey});
+  MOZ_ASSERT(removed, "Audio output not found");
 }
 
 void MediaTrackGraphImpl::CloseAudioInput(DeviceInputTrack* aTrack) {
