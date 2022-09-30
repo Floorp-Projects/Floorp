@@ -196,11 +196,12 @@ void IPDLUnitTestChild::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-void IPDLTestHelper::TestWrapper(bool aCrossProcess) {
+void IPDLTestHelper::TestWrapper() {
   // Create the host and start the test actor with it.
   RefPtr<IPDLUnitTestParent> host =
-      aCrossProcess ? IPDLUnitTestParent::CreateCrossProcess()
-                    : IPDLUnitTestParent::CreateCrossThread();
+      GetTestMode() == TestMode::CrossProcess
+          ? IPDLUnitTestParent::CreateCrossProcess()
+          : IPDLUnitTestParent::CreateCrossThread();
   ASSERT_TRUE(host);
   if (!host->Start(GetName(), GetActor())) {
     FAIL();
