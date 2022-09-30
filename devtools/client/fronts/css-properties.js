@@ -7,8 +7,10 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  cssPropertiesSpec,
+} = require("resource://devtools/shared/specs/css-properties.js");
 
 loader.lazyRequireGetter(
   this,

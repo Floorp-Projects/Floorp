@@ -4,11 +4,13 @@
 
 "use strict";
 
-const { addonsSpec } = require("devtools/shared/specs/addon/addons");
+const {
+  addonsSpec,
+} = require("resource://devtools/shared/specs/addon/addons.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 class AddonsFront extends FrontClassWithSpec(addonsSpec) {
   constructor(client, targetFront, parentFront) {

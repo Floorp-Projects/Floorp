@@ -5,12 +5,12 @@
 
 const {
   serviceWorkerRegistrationSpec,
-} = require("devtools/shared/specs/worker/service-worker-registration");
+} = require("resource://devtools/shared/specs/worker/service-worker-registration.js");
 const {
   FrontClassWithSpec,
   registerFront,
   types,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 class ServiceWorkerRegistrationFront extends FrontClassWithSpec(
   serviceWorkerRegistrationSpec

@@ -7,10 +7,10 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 const {
   threadConfigurationSpec,
-} = require("devtools/shared/specs/thread-configuration");
+} = require("resource://devtools/shared/specs/thread-configuration.js");
 
 /**
  * The ThreadConfigurationFront/Actor should be used to maintain thread settings

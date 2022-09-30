@@ -7,8 +7,10 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { compatibilitySpec } = require("devtools/shared/specs/compatibility");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  compatibilitySpec,
+} = require("resource://devtools/shared/specs/compatibility.js");
 
 class CompatibilityFront extends FrontClassWithSpec(compatibilitySpec) {}
 

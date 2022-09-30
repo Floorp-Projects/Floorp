@@ -7,8 +7,10 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { responsiveSpec } = require("devtools/shared/specs/responsive");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  responsiveSpec,
+} = require("resource://devtools/shared/specs/responsive.js");
 
 /**
  * The corresponding Front object for the Responsive actor.

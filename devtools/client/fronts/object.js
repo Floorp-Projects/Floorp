@@ -4,12 +4,14 @@
 
 "use strict";
 
-const { objectSpec } = require("devtools/shared/specs/object");
+const { objectSpec } = require("resource://devtools/shared/specs/object.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { LongStringFront } = require("devtools/client/fronts/string");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  LongStringFront,
+} = require("resource://devtools/client/fronts/string.js");
 
 /**
  * A ObjectFront is used as a front end for the ObjectActor that is

@@ -7,8 +7,8 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { perfSpec } = require("devtools/shared/specs/perf");
+} = require("resource://devtools/shared/protocol.js");
+const { perfSpec } = require("resource://devtools/shared/specs/perf.js");
 
 class PerfFront extends FrontClassWithSpec(perfSpec) {
   constructor(client, targetFront, parentFront) {

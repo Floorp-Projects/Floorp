@@ -3,15 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { DevToolsServer } = require("devtools/server/devtools-server");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
 const {
   longStringSpec,
   SimpleStringFront,
-} = require("devtools/shared/specs/string");
+} = require("resource://devtools/shared/specs/string.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 class LongStringFront extends FrontClassWithSpec(longStringSpec) {
   destroy() {

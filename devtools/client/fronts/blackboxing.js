@@ -7,8 +7,10 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { blackboxingSpec } = require("devtools/shared/specs/blackboxing");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  blackboxingSpec,
+} = require("resource://devtools/shared/specs/blackboxing.js");
 
 class BlackboxingFront extends FrontClassWithSpec(blackboxingSpec) {}
 

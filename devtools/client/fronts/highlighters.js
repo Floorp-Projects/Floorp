@@ -7,9 +7,13 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { customHighlighterSpec } = require("devtools/shared/specs/highlighters");
-const { safeAsyncMethod } = require("devtools/shared/async-utils");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  customHighlighterSpec,
+} = require("resource://devtools/shared/specs/highlighters.js");
+const {
+  safeAsyncMethod,
+} = require("resource://devtools/shared/async-utils.js");
 
 class CustomHighlighterFront extends FrontClassWithSpec(customHighlighterSpec) {
   constructor(client, targetFront, parentFront) {

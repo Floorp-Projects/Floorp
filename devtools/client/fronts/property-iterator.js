@@ -7,13 +7,13 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 const {
   propertyIteratorSpec,
-} = require("devtools/shared/specs/property-iterator");
+} = require("resource://devtools/shared/specs/property-iterator.js");
 const {
   getAdHocFrontOrPrimitiveGrip,
-} = require("devtools/client/fronts/object");
+} = require("resource://devtools/client/fronts/object.js");
 
 /**
  * A PropertyIteratorFront provides a way to access to property names and

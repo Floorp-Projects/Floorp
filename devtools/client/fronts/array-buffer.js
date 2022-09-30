@@ -4,11 +4,13 @@
 
 "use strict";
 
-const { arrayBufferSpec } = require("devtools/shared/specs/array-buffer");
+const {
+  arrayBufferSpec,
+} = require("resource://devtools/shared/specs/array-buffer.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 /**
  * A ArrayBufferClient provides a way to access ArrayBuffer from the

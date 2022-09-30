@@ -7,11 +7,13 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  webconsoleSpec,
+} = require("resource://devtools/shared/specs/webconsole.js");
 const {
   getAdHocFrontOrPrimitiveGrip,
-} = require("devtools/client/fronts/object");
+} = require("resource://devtools/client/fronts/object.js");
 
 /**
  * A WebConsoleFront is used as a front end for the WebConsoleActor that is

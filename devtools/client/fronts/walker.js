@@ -8,9 +8,11 @@ const {
   FrontClassWithSpec,
   types,
   registerFront,
-} = require("devtools/shared/protocol.js");
-const { walkerSpec } = require("devtools/shared/specs/walker");
-const { safeAsyncMethod } = require("devtools/shared/async-utils");
+} = require("resource://devtools/shared/protocol.js");
+const { walkerSpec } = require("resource://devtools/shared/specs/walker.js");
+const {
+  safeAsyncMethod,
+} = require("resource://devtools/shared/async-utils.js");
 
 /**
  * Client side of the DOM walker.

@@ -7,8 +7,10 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { pageStyleSpec } = require("devtools/shared/specs/page-style");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  pageStyleSpec,
+} = require("resource://devtools/shared/specs/page-style.js");
 
 /**
  * PageStyleFront, the front object for the PageStyleActor

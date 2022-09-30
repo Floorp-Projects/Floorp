@@ -7,8 +7,11 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { childSpecs, storageSpec } = require("devtools/shared/specs/storage");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  childSpecs,
+  storageSpec,
+} = require("resource://devtools/shared/specs/storage.js");
 
 for (const childSpec of Object.values(childSpecs)) {
   class ChildStorageFront extends FrontClassWithSpec(childSpec) {

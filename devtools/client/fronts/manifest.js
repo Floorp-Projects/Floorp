@@ -7,8 +7,10 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { manifestSpec } = require("devtools/shared/specs/manifest");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  manifestSpec,
+} = require("resource://devtools/shared/specs/manifest.js");
 
 class ManifestFront extends FrontClassWithSpec(manifestSpec) {
   constructor(client) {

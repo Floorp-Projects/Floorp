@@ -6,12 +6,12 @@
 
 const {
   webExtensionInspectedWindowSpec,
-} = require("devtools/shared/specs/addon/webextension-inspected-window");
+} = require("resource://devtools/shared/specs/addon/webextension-inspected-window.js");
 
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 /**
  * The corresponding Front object for the WebExtensionInspectedWindowActor.

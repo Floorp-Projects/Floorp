@@ -7,13 +7,13 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 const {
   privatePropertiesIteratorSpec,
-} = require("devtools/shared/specs/private-properties-iterator");
+} = require("resource://devtools/shared/specs/private-properties-iterator.js");
 const {
   getAdHocFrontOrPrimitiveGrip,
-} = require("devtools/client/fronts/object");
+} = require("resource://devtools/client/fronts/object.js");
 
 class PrivatePropertiesIteratorFront extends FrontClassWithSpec(
   privatePropertiesIteratorSpec

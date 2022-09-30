@@ -12,13 +12,13 @@
 
 "use strict";
 
-const { getCSSLexer } = require("devtools/shared/css/lexer");
+const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
 const {
   COMMENT_PARSING_HEURISTIC_BYPASS_CHAR,
   escapeCSSComment,
   parseNamedDeclarations,
   unescapeCSSComment,
-} = require("devtools/shared/css/parsing-utils");
+} = require("resource://devtools/shared/css/parsing-utils.js");
 
 loader.lazyRequireGetter(
   this,

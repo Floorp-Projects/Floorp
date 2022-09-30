@@ -5,12 +5,14 @@
 
 const {
   windowGlobalTargetSpec,
-} = require("devtools/shared/specs/targets/window-global");
+} = require("resource://devtools/shared/specs/targets/window-global.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { TargetMixin } = require("devtools/client/fronts/targets/target-mixin");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  TargetMixin,
+} = require("resource://devtools/client/fronts/targets/target-mixin.js");
 
 class WindowGlobalTargetFront extends TargetMixin(
   FrontClassWithSpec(windowGlobalTargetSpec)

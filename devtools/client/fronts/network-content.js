@@ -7,8 +7,10 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { networkContentSpec } = require("devtools/shared/specs/network-content");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  networkContentSpec,
+} = require("resource://devtools/shared/specs/network-content.js");
 
 class NetworkContentFront extends FrontClassWithSpec(networkContentSpec) {
   constructor(client, targetFront, parentFront) {

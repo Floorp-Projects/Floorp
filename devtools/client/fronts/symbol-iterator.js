@@ -7,11 +7,13 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { symbolIteratorSpec } = require("devtools/shared/specs/symbol-iterator");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  symbolIteratorSpec,
+} = require("resource://devtools/shared/specs/symbol-iterator.js");
 const {
   getAdHocFrontOrPrimitiveGrip,
-} = require("devtools/client/fronts/object");
+} = require("resource://devtools/client/fronts/object.js");
 
 /**
  * A SymbolIteratorFront is used as a front end for the SymbolIterator that is

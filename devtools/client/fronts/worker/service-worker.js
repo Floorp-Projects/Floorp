@@ -5,12 +5,12 @@
 
 const {
   serviceWorkerSpec,
-} = require("devtools/shared/specs/worker/service-worker");
+} = require("resource://devtools/shared/specs/worker/service-worker.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { LocalizationHelper } = require("devtools/shared/l10n");
+} = require("resource://devtools/shared/protocol.js");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 
 const L10N = new LocalizationHelper(
   "devtools/client/locales/debugger.properties"

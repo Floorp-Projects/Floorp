@@ -4,11 +4,11 @@
 
 "use strict";
 
-const { memorySpec } = require("devtools/shared/specs/memory");
+const { memorySpec } = require("resource://devtools/shared/specs/memory.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 const lazy = {};
 ChromeUtils.defineModuleGetter(

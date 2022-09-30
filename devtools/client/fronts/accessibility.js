@@ -7,15 +7,15 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol.js");
+} = require("resource://devtools/shared/protocol.js");
 const {
   accessibleSpec,
   accessibleWalkerSpec,
   accessibilitySpec,
   parentAccessibilitySpec,
   simulatorSpec,
-} = require("devtools/shared/specs/accessibility");
-const events = require("devtools/shared/event-emitter");
+} = require("resource://devtools/shared/specs/accessibility.js");
+const events = require("resource://devtools/shared/event-emitter.js");
 const BROWSER_TOOLBOX_FISSION_ENABLED = Services.prefs.getBoolPref(
   "devtools.browsertoolbox.fission",
   false

@@ -4,11 +4,11 @@
 
 "use strict";
 
-const { deviceSpec } = require("devtools/shared/specs/device");
+const { deviceSpec } = require("resource://devtools/shared/specs/device.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 class DeviceFront extends FrontClassWithSpec(deviceSpec) {
   constructor(client, targetFront, parentFront) {

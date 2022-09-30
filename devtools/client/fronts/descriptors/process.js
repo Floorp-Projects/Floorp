@@ -5,21 +5,21 @@
 
 const {
   processDescriptorSpec,
-} = require("devtools/shared/specs/descriptors/process");
+} = require("resource://devtools/shared/specs/descriptors/process.js");
 const {
   WindowGlobalTargetFront,
-} = require("devtools/client/fronts/targets/window-global");
+} = require("resource://devtools/client/fronts/targets/window-global.js");
 const {
   ContentProcessTargetFront,
-} = require("devtools/client/fronts/targets/content-process");
+} = require("resource://devtools/client/fronts/targets/content-process.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 const {
   DescriptorMixin,
-} = require("devtools/client/fronts/descriptors/descriptor-mixin");
-const DESCRIPTOR_TYPES = require("devtools/client/fronts/descriptors/descriptor-types");
+} = require("resource://devtools/client/fronts/descriptors/descriptor-mixin.js");
+const DESCRIPTOR_TYPES = require("resource://devtools/client/fronts/descriptors/descriptor-types.js");
 
 class ProcessDescriptorFront extends DescriptorMixin(
   FrontClassWithSpec(processDescriptorSpec)

@@ -4,11 +4,13 @@
 
 "use strict";
 
-const { screenshotSpec } = require("devtools/shared/specs/screenshot");
+const {
+  screenshotSpec,
+} = require("resource://devtools/shared/specs/screenshot.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 class ScreenshotFront extends FrontClassWithSpec(screenshotSpec) {
   constructor(client, targetFront, parentFront) {
