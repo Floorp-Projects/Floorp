@@ -6,11 +6,11 @@
 
 const {
   screenshotContentSpec,
-} = require("devtools/shared/specs/screenshot-content");
+} = require("resource://devtools/shared/specs/screenshot-content.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 class ScreenshotContentFront extends FrontClassWithSpec(screenshotContentSpec) {
   constructor(client, targetFront, parentFront) {

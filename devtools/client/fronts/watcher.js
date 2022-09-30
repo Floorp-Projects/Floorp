@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { watcherSpec } = require("devtools/shared/specs/watcher");
+const { watcherSpec } = require("resource://devtools/shared/specs/watcher.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 loader.lazyRequireGetter(
   this,

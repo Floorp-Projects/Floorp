@@ -7,11 +7,11 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 const {
   animationPlayerSpec,
   animationsSpec,
-} = require("devtools/shared/specs/animation");
+} = require("resource://devtools/shared/specs/animation.js");
 
 class AnimationPlayerFront extends FrontClassWithSpec(animationPlayerSpec) {
   constructor(conn, targetFront, parentFront) {

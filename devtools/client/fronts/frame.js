@@ -4,11 +4,11 @@
 
 "use strict";
 
-const { frameSpec } = require("devtools/shared/specs/frame");
+const { frameSpec } = require("resource://devtools/shared/specs/frame.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 class FrameFront extends FrontClassWithSpec(frameSpec) {
   form(json) {

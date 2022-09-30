@@ -7,8 +7,10 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { mediaRuleSpec } = require("devtools/shared/specs/media-rule");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  mediaRuleSpec,
+} = require("resource://devtools/shared/specs/media-rule.js");
 
 /**
  * Corresponding client-side front for a MediaRuleActor.

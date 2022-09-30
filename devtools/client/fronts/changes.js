@@ -7,8 +7,8 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { changesSpec } = require("devtools/shared/specs/changes");
+} = require("resource://devtools/shared/protocol.js");
+const { changesSpec } = require("resource://devtools/shared/specs/changes.js");
 
 /**
  * ChangesFront, the front object for the ChangesActor

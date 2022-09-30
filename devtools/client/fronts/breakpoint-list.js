@@ -7,8 +7,10 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { breakpointListSpec } = require("devtools/shared/specs/breakpoint-list");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  breakpointListSpec,
+} = require("resource://devtools/shared/specs/breakpoint-list.js");
 
 class BreakpointListFront extends FrontClassWithSpec(breakpointListSpec) {}
 

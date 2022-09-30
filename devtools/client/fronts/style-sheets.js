@@ -7,8 +7,10 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { styleSheetsSpec } = require("devtools/shared/specs/style-sheets");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  styleSheetsSpec,
+} = require("resource://devtools/shared/specs/style-sheets.js");
 
 /**
  * The corresponding Front object for the StyleSheetsActor.

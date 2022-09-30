@@ -4,12 +4,14 @@
 
 "use strict";
 
-const { sourceSpec } = require("devtools/shared/specs/source");
+const { sourceSpec } = require("resource://devtools/shared/specs/source.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { ArrayBufferFront } = require("devtools/client/fronts/array-buffer");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  ArrayBufferFront,
+} = require("resource://devtools/client/fronts/array-buffer.js");
 
 /**
  * A SourceFront provides a way to access the source text of a script.

@@ -5,11 +5,11 @@
 
 const {
   pushSubscriptionSpec,
-} = require("devtools/shared/specs/worker/push-subscription");
+} = require("resource://devtools/shared/specs/worker/push-subscription.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 class PushSubscriptionFront extends FrontClassWithSpec(pushSubscriptionSpec) {
   get endpoint() {

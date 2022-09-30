@@ -7,8 +7,10 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
-const { networkParentSpec } = require("devtools/shared/specs/network-parent");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  networkParentSpec,
+} = require("resource://devtools/shared/specs/network-parent.js");
 
 /**
  * Client side for the network actor, used for managing network requests.

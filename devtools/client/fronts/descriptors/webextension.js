@@ -5,15 +5,15 @@
 
 const {
   webExtensionDescriptorSpec,
-} = require("devtools/shared/specs/descriptors/webextension");
+} = require("resource://devtools/shared/specs/descriptors/webextension.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 const {
   DescriptorMixin,
-} = require("devtools/client/fronts/descriptors/descriptor-mixin");
-const DESCRIPTOR_TYPES = require("devtools/client/fronts/descriptors/descriptor-types");
+} = require("resource://devtools/client/fronts/descriptors/descriptor-mixin.js");
+const DESCRIPTOR_TYPES = require("resource://devtools/client/fronts/descriptors/descriptor-types.js");
 loader.lazyRequireGetter(
   this,
   "WindowGlobalTargetFront",

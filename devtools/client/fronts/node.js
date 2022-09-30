@@ -8,9 +8,14 @@ const {
   FrontClassWithSpec,
   types,
   registerFront,
-} = require("devtools/shared/protocol.js");
-const { nodeSpec, nodeListSpec } = require("devtools/shared/specs/node");
-const { SimpleStringFront } = require("devtools/client/fronts/string");
+} = require("resource://devtools/shared/protocol.js");
+const {
+  nodeSpec,
+  nodeListSpec,
+} = require("resource://devtools/shared/specs/node.js");
+const {
+  SimpleStringFront,
+} = require("resource://devtools/client/fronts/string.js");
 
 loader.lazyRequireGetter(
   this,
@@ -582,7 +587,9 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
       console.warn("Tried to use rawNode on a remote connection.");
       return null;
     }
-    const { DevToolsServer } = require("devtools/server/devtools-server");
+    const {
+      DevToolsServer,
+    } = require("resource://devtools/server/devtools-server.js");
     const actor = DevToolsServer.searchAllConnectionsForActor(this.actorID);
     if (!actor) {
       // Can happen if we try to get the raw node for an already-expired

@@ -3,8 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { tabDescriptorSpec } = require("devtools/shared/specs/descriptors/tab");
-const DESCRIPTOR_TYPES = require("devtools/client/fronts/descriptors/descriptor-types");
+const {
+  tabDescriptorSpec,
+} = require("resource://devtools/shared/specs/descriptors/tab.js");
+const DESCRIPTOR_TYPES = require("resource://devtools/client/fronts/descriptors/descriptor-types.js");
 
 loader.lazyRequireGetter(
   this,
@@ -21,10 +23,10 @@ loader.lazyRequireGetter(
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 const {
   DescriptorMixin,
-} = require("devtools/client/fronts/descriptors/descriptor-mixin");
+} = require("resource://devtools/client/fronts/descriptors/descriptor-mixin.js");
 
 const SERVER_TARGET_SWITCHING_ENABLED_PREF =
   "devtools.target-switching.server.enabled";

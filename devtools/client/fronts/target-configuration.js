@@ -7,10 +7,10 @@
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 const {
   targetConfigurationSpec,
-} = require("devtools/shared/specs/target-configuration");
+} = require("resource://devtools/shared/specs/target-configuration.js");
 
 /**
  * The TargetConfigurationFront/Actor should be used to populate the DevTools server

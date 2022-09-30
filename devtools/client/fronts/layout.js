@@ -4,17 +4,19 @@
 
 "use strict";
 
-const { safeAsyncMethod } = require("devtools/shared/async-utils");
+const {
+  safeAsyncMethod,
+} = require("resource://devtools/shared/async-utils.js");
 const {
   FrontClassWithSpec,
   registerFront,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 const {
   flexboxSpec,
   flexItemSpec,
   gridSpec,
   layoutSpec,
-} = require("devtools/shared/specs/layout");
+} = require("resource://devtools/shared/specs/layout.js");
 
 class FlexboxFront extends FrontClassWithSpec(flexboxSpec) {
   form(form) {
