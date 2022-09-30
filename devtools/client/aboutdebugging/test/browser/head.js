@@ -31,19 +31,19 @@ registerCleanupFunction(async function() {
   try {
     const {
       adbAddon,
-    } = require("devtools/client/shared/remote-debugging/adb/adb-addon");
+    } = require("resource://devtools/client/shared/remote-debugging/adb/adb-addon.js");
     await adbAddon.uninstall();
   } catch (e) {
     // Will throw if the addon is already uninstalled, ignore exceptions here.
   }
   const {
     adbProcess,
-  } = require("devtools/client/shared/remote-debugging/adb/adb-process");
+  } = require("resource://devtools/client/shared/remote-debugging/adb/adb-process.js");
   await adbProcess.kill();
 
   const {
     remoteClientManager,
-  } = require("devtools/client/shared/remote-debugging/remote-client-manager");
+  } = require("resource://devtools/client/shared/remote-debugging/remote-client-manager.js");
   await remoteClientManager.removeAllClients();
 });
 
@@ -88,7 +88,7 @@ async function openAboutDevtoolsToolbox(
 
   const {
     DEBUG_TARGETS,
-  } = require("devtools/client/aboutdebugging/src/constants");
+  } = require("resource://devtools/client/aboutdebugging/src/constants.js");
   const isWebExtension = target.dataset.qaTargetType == DEBUG_TARGETS.EXTENSION;
 
   const inspectButton = target.querySelector(".qa-debug-target-inspect-button");

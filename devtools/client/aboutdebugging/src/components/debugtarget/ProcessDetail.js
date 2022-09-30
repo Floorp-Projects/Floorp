@@ -4,9 +4,11 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+const {
+  PureComponent,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const Types = require("resource://devtools/client/aboutdebugging/src/types/index.js");
 
 /**
  * This component displays detail information for a process.

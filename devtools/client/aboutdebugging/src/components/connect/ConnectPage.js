@@ -7,16 +7,18 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
 
-const { USB_STATES } = require("devtools/client/aboutdebugging/src/constants");
+const {
+  USB_STATES,
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
+const Actions = require("resource://devtools/client/aboutdebugging/src/actions/index.js");
 
 loader.lazyRequireGetter(
   this,
@@ -26,26 +28,26 @@ loader.lazyRequireGetter(
 );
 
 const Link = createFactory(
-  require("devtools/client/shared/vendor/react-router-dom").Link
+  require("resource://devtools/client/shared/vendor/react-router-dom.js").Link
 );
 const ConnectSection = createFactory(
-  require("devtools/client/aboutdebugging/src/components/connect/ConnectSection")
+  require("resource://devtools/client/aboutdebugging/src/components/connect/ConnectSection.js")
 );
 const ConnectSteps = createFactory(
-  require("devtools/client/aboutdebugging/src/components/connect/ConnectSteps")
+  require("resource://devtools/client/aboutdebugging/src/components/connect/ConnectSteps.js")
 );
 const NetworkLocationsForm = createFactory(
-  require("devtools/client/aboutdebugging/src/components/connect/NetworkLocationsForm")
+  require("resource://devtools/client/aboutdebugging/src/components/connect/NetworkLocationsForm.js")
 );
 const NetworkLocationsList = createFactory(
-  require("devtools/client/aboutdebugging/src/components/connect/NetworkLocationsList")
+  require("resource://devtools/client/aboutdebugging/src/components/connect/NetworkLocationsList.js")
 );
 
 const {
   PAGE_TYPES,
   RUNTIMES,
-} = require("devtools/client/aboutdebugging/src/constants");
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
+const Types = require("resource://devtools/client/aboutdebugging/src/types/index.js");
 
 const USB_ICON_SRC =
   "chrome://devtools/skin/images/aboutdebugging-usb-icon.svg";

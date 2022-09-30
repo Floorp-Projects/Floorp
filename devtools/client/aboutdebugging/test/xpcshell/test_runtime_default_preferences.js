@@ -4,7 +4,7 @@ const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 const {
   setDefaultPreferencesIfNeeded,
   PREFERENCE_TYPES,
-} = require("devtools/client/aboutdebugging/src/modules/runtime-default-preferences");
+} = require("resource://devtools/client/aboutdebugging/src/modules/runtime-default-preferences.js");
 
 const CHAR_PREF = "some.char.pref";
 const BOOL_PREF = "some.bool.pref";

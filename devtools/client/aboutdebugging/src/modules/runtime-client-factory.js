@@ -6,17 +6,23 @@
 
 const {
   prepareTCPConnection,
-} = require("devtools/client/shared/remote-debugging/adb/commands/index");
-const { DevToolsClient } = require("devtools/client/devtools-client");
-const { DevToolsServer } = require("devtools/server/devtools-server");
+} = require("resource://devtools/client/shared/remote-debugging/adb/commands/index.js");
+const {
+  DevToolsClient,
+} = require("resource://devtools/client/devtools-client.js");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
 const {
   ClientWrapper,
-} = require("devtools/client/aboutdebugging/src/modules/client-wrapper");
+} = require("resource://devtools/client/aboutdebugging/src/modules/client-wrapper.js");
 const {
   remoteClientManager,
-} = require("devtools/client/shared/remote-debugging/remote-client-manager");
+} = require("resource://devtools/client/shared/remote-debugging/remote-client-manager.js");
 
-const { RUNTIMES } = require("devtools/client/aboutdebugging/src/constants");
+const {
+  RUNTIMES,
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
 async function createLocalClient() {
   DevToolsServer.init();

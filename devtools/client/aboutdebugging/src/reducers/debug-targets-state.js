@@ -15,7 +15,7 @@ const {
   TERMINATE_EXTENSION_BGSCRIPT_FAILURE,
   TERMINATE_EXTENSION_BGSCRIPT_START,
   UNWATCH_RUNTIME_SUCCESS,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
 function DebugTargetsState() {
   return {

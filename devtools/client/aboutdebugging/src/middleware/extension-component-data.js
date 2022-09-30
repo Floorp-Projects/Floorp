@@ -7,12 +7,12 @@
 const {
   DEBUG_TARGETS,
   REQUEST_EXTENSIONS_SUCCESS,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
 const {
   getExtensionUuid,
   parseFileUri,
-} = require("devtools/client/aboutdebugging/src/modules/extensions-helper");
+} = require("resource://devtools/client/aboutdebugging/src/modules/extensions-helper.js");
 
 /**
  * This middleware converts extensions object that get from DevToolsClient.listAddons()

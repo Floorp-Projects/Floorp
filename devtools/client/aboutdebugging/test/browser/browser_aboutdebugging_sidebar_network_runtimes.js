@@ -3,7 +3,7 @@
 
 "use strict";
 
-const networkLocationsModule = require("devtools/client/aboutdebugging/src/modules/network-locations.js");
+const networkLocationsModule = require("resource://devtools/client/aboutdebugging/src/modules/network-locations.js");
 
 /**
  * Test the sidebar is updated correctly when network runtimes are added/removed.

@@ -7,37 +7,41 @@
 const {
   applyMiddleware,
   createStore,
-} = require("devtools/client/shared/vendor/redux");
-const { thunk } = require("devtools/client/shared/redux/middleware/thunk.js");
+} = require("resource://devtools/client/shared/vendor/redux.js");
+const {
+  thunk,
+} = require("resource://devtools/client/shared/redux/middleware/thunk.js");
 const {
   waitUntilService,
-} = require("devtools/client/shared/redux/middleware/wait-service.js");
+} = require("resource://devtools/client/shared/redux/middleware/wait-service.js");
 
-const rootReducer = require("devtools/client/aboutdebugging/src/reducers/index");
+const rootReducer = require("resource://devtools/client/aboutdebugging/src/reducers/index.js");
 const {
   DebugTargetsState,
-} = require("devtools/client/aboutdebugging/src/reducers/debug-targets-state");
+} = require("resource://devtools/client/aboutdebugging/src/reducers/debug-targets-state.js");
 const {
   RuntimesState,
-} = require("devtools/client/aboutdebugging/src/reducers/runtimes-state");
+} = require("resource://devtools/client/aboutdebugging/src/reducers/runtimes-state.js");
 const {
   UiState,
-} = require("devtools/client/aboutdebugging/src/reducers/ui-state");
-const debugTargetListenerMiddleware = require("devtools/client/aboutdebugging/src/middleware/debug-target-listener");
-const errorLoggingMiddleware = require("devtools/client/aboutdebugging/src/middleware/error-logging");
-const eventRecordingMiddleware = require("devtools/client/aboutdebugging/src/middleware/event-recording");
-const extensionComponentDataMiddleware = require("devtools/client/aboutdebugging/src/middleware/extension-component-data");
-const processComponentDataMiddleware = require("devtools/client/aboutdebugging/src/middleware/process-component-data");
-const tabComponentDataMiddleware = require("devtools/client/aboutdebugging/src/middleware/tab-component-data");
-const workerComponentDataMiddleware = require("devtools/client/aboutdebugging/src/middleware/worker-component-data");
+} = require("resource://devtools/client/aboutdebugging/src/reducers/ui-state.js");
+const debugTargetListenerMiddleware = require("resource://devtools/client/aboutdebugging/src/middleware/debug-target-listener.js");
+const errorLoggingMiddleware = require("resource://devtools/client/aboutdebugging/src/middleware/error-logging.js");
+const eventRecordingMiddleware = require("resource://devtools/client/aboutdebugging/src/middleware/event-recording.js");
+const extensionComponentDataMiddleware = require("resource://devtools/client/aboutdebugging/src/middleware/extension-component-data.js");
+const processComponentDataMiddleware = require("resource://devtools/client/aboutdebugging/src/middleware/process-component-data.js");
+const tabComponentDataMiddleware = require("resource://devtools/client/aboutdebugging/src/middleware/tab-component-data.js");
+const workerComponentDataMiddleware = require("resource://devtools/client/aboutdebugging/src/middleware/worker-component-data.js");
 const {
   getDebugTargetCollapsibilities,
-} = require("devtools/client/aboutdebugging/src/modules/debug-target-collapsibilities");
+} = require("resource://devtools/client/aboutdebugging/src/modules/debug-target-collapsibilities.js");
 const {
   getNetworkLocations,
-} = require("devtools/client/aboutdebugging/src/modules/network-locations");
+} = require("resource://devtools/client/aboutdebugging/src/modules/network-locations.js");
 
-const { PREFERENCES } = require("devtools/client/aboutdebugging/src/constants");
+const {
+  PREFERENCES,
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
 function configureStore() {
   const initialState = {

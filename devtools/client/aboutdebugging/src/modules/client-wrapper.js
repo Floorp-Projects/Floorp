@@ -6,13 +6,15 @@
 
 const {
   checkVersionCompatibility,
-} = require("devtools/client/shared/remote-debugging/version-checker");
+} = require("resource://devtools/client/shared/remote-debugging/version-checker.js");
 
 const {
   RUNTIME_PREFERENCE,
-} = require("devtools/client/aboutdebugging/src/constants");
-const { WorkersListener } = require("devtools/client/shared/workers-listener");
-const RootResourceCommand = require("devtools/shared/commands/root-resource/root-resource-command");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
+const {
+  WorkersListener,
+} = require("resource://devtools/client/shared/workers-listener.js");
+const RootResourceCommand = require("resource://devtools/shared/commands/root-resource/root-resource-command.js");
 
 const PREF_TYPES = {
   BOOL: "BOOL",

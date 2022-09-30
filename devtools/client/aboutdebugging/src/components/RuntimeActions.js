@@ -7,20 +7,22 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
 
 const ConnectionPromptSetting = createFactory(
-  require("devtools/client/aboutdebugging/src/components/ConnectionPromptSetting")
+  require("resource://devtools/client/aboutdebugging/src/components/ConnectionPromptSetting.js")
 );
 
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
-const { RUNTIMES } = require("devtools/client/aboutdebugging/src/constants");
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+const Actions = require("resource://devtools/client/aboutdebugging/src/actions/index.js");
+const {
+  RUNTIMES,
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
+const Types = require("resource://devtools/client/aboutdebugging/src/types/index.js");
 
 class RuntimeActions extends PureComponent {
   static get propTypes() {

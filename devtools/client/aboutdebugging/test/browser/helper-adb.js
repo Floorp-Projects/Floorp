@@ -9,7 +9,7 @@ async function checkAdbNotRunning() {
   info("Check if ADB is already running before the test starts");
   const {
     check,
-  } = require("devtools/client/shared/remote-debugging/adb/adb-running-checker");
+  } = require("resource://devtools/client/shared/remote-debugging/adb/adb-running-checker.js");
   const isAdbAlreadyRunning = await check();
   if (isAdbAlreadyRunning) {
     throw new Error(
@@ -25,10 +25,10 @@ async function waitForAdbStart() {
   info("Wait for ADB to start");
   const {
     adbProcess,
-  } = require("devtools/client/shared/remote-debugging/adb/adb-process");
+  } = require("resource://devtools/client/shared/remote-debugging/adb/adb-process.js");
   const {
     check,
-  } = require("devtools/client/shared/remote-debugging/adb/adb-running-checker");
+  } = require("resource://devtools/client/shared/remote-debugging/adb/adb-running-checker.js");
   return asyncWaitUntil(async () => {
     const isProcessReady = adbProcess.ready;
     const isRunning = await check();
@@ -43,13 +43,13 @@ async function stopAdbProcess() {
   info("Attempt to stop ADB");
   const {
     adbProcess,
-  } = require("devtools/client/shared/remote-debugging/adb/adb-process");
+  } = require("resource://devtools/client/shared/remote-debugging/adb/adb-process.js");
   await adbProcess.stop();
 
   info("Wait for ADB to stop");
   const {
     check,
-  } = require("devtools/client/shared/remote-debugging/adb/adb-running-checker");
+  } = require("resource://devtools/client/shared/remote-debugging/adb/adb-running-checker.js");
   return asyncWaitUntil(async () => {
     const isProcessReady = adbProcess.ready;
     const isRunning = await check();

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const Telemetry = require("devtools/client/shared/telemetry");
+const Telemetry = require("resource://devtools/client/shared/telemetry.js");
 loader.lazyGetter(this, "telemetry", () => new Telemetry());
 // This is a unique id that should be submitted with all about:debugging events.
 loader.lazyGetter(this, "sessionId", () =>
@@ -24,13 +24,13 @@ const {
   SHOW_PROFILER_DIALOG,
   TELEMETRY_RECORD,
   UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
 const {
   findRuntimeById,
   getAllRuntimes,
   getCurrentRuntime,
-} = require("devtools/client/aboutdebugging/src/modules/runtimes-state-helper");
+} = require("resource://devtools/client/aboutdebugging/src/modules/runtimes-state-helper.js");
 
 function recordEvent(method, details) {
   // Add the session id to the event details.

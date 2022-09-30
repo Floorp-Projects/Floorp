@@ -4,29 +4,31 @@
 
 "use strict";
 
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
+const Actions = require("resource://devtools/client/aboutdebugging/src/actions/index.js");
 
 const {
   getAllRuntimes,
   getCurrentRuntime,
   findRuntimeById,
-} = require("devtools/client/aboutdebugging/src/modules/runtimes-state-helper");
+} = require("resource://devtools/client/aboutdebugging/src/modules/runtimes-state-helper.js");
 
-const { l10n } = require("devtools/client/aboutdebugging/src/modules/l10n");
+const {
+  l10n,
+} = require("resource://devtools/client/aboutdebugging/src/modules/l10n.js");
 const {
   setDefaultPreferencesIfNeeded,
   DEFAULT_PREFERENCES,
-} = require("devtools/client/aboutdebugging/src/modules/runtime-default-preferences");
+} = require("resource://devtools/client/aboutdebugging/src/modules/runtime-default-preferences.js");
 const {
   createClientForRuntime,
-} = require("devtools/client/aboutdebugging/src/modules/runtime-client-factory");
+} = require("resource://devtools/client/aboutdebugging/src/modules/runtime-client-factory.js");
 const {
   isSupportedDebugTargetPane,
-} = require("devtools/client/aboutdebugging/src/modules/debug-target-support");
+} = require("resource://devtools/client/aboutdebugging/src/modules/debug-target-support.js");
 
 const {
   remoteClientManager,
-} = require("devtools/client/shared/remote-debugging/remote-client-manager");
+} = require("resource://devtools/client/shared/remote-debugging/remote-client-manager.js");
 
 const {
   CONNECT_RUNTIME_CANCEL,
@@ -52,7 +54,7 @@ const {
   WATCH_RUNTIME_FAILURE,
   WATCH_RUNTIME_START,
   WATCH_RUNTIME_SUCCESS,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
 const CONNECTION_TIMING_OUT_DELAY = 3000;
 const CONNECTION_CANCEL_DELAY = 13000;

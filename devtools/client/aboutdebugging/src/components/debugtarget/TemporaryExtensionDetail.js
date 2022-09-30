@@ -7,21 +7,21 @@
 const {
   createFactory,
   PureComponent,
-} = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
 
 const ExtensionDetail = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/ExtensionDetail")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/ExtensionDetail.js")
 );
 const FieldPair = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/FieldPair")
+  require("resource://devtools/client/aboutdebugging/src/components/debugtarget/FieldPair.js")
 );
 
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+const Types = require("resource://devtools/client/aboutdebugging/src/types/index.js");
 
 const TEMP_ID_DOC_URL =
   "https://developer.mozilla.org/Add-ons/WebExtensions/WebExtensions_and_the_Add-on_ID";
