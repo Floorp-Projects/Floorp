@@ -25,8 +25,11 @@ void AudioStreamTrack::RemoveAudioOutput(void* aKey) {
   if (Ended()) {
     return;
   }
-  if (CrossGraphPort* cgm = mCrossGraphs.Get(aKey)) {
-    cgm->RemoveAudioOutput(aKey);
+  if (auto entry = mCrossGraphs.Lookup(aKey)) {
+    // The audio output for this track is directed to a non-default device.
+    // The CrossGraphPort for this output is no longer required so remove it.
+    entry.Data()->Destroy();
+    entry.Remove();
     return;
   }
   mTrack->RemoveAudioOutput(aKey);
@@ -69,8 +72,10 @@ void AudioStreamTrack::SetReadyState(MediaStreamTrackState aState) {
 }
 
 RefPtr<GenericPromise> AudioStreamTrack::SetAudioOutputDevice(
-    void* key, AudioDeviceInfo* aSink) {
+    void* aKey, AudioDeviceInfo* aSink) {
   MOZ_ASSERT(aSink);
+  MOZ_ASSERT(!mCrossGraphs.Get(aKey),
+             "A previous audio output for this aKey should have been removed");
 
   if (Ended()) {
     return GenericPromise::CreateAndResolve(true, __func__);
@@ -80,25 +85,15 @@ RefPtr<GenericPromise> AudioStreamTrack::SetAudioOutputDevice(
       CrossGraphPort::Connect(this, aSink, mWindow);
   if (!manager) {
     // We are setting the default output device.
-    auto entry = mCrossGraphs.Lookup(key);
-    if (entry) {
-      // There is an existing non-default output device for this track. Remove
-      // it.
-      entry.Data()->Destroy();
-      entry.Remove();
-    }
     return GenericPromise::CreateAndResolve(true, __func__);
   }
 
   // We are setting a non-default output device.
-  UniquePtr<CrossGraphPort>& crossGraphPtr = mCrossGraphs.LookupOrInsert(key);
-  if (crossGraphPtr) {
-    // This key already has a non-default output device set. Destroy it.
-    crossGraphPtr->Destroy();
-  }
-
-  crossGraphPtr = std::move(manager);
-  return crossGraphPtr->EnsureConnected();
+  const UniquePtr<CrossGraphPort>& crossGraph = mCrossGraphs.WithEntryHandle(
+      aKey, [&manager](auto entry) -> UniquePtr<CrossGraphPort>& {
+        return entry.Insert(std::move(manager));
+      });
+  return crossGraph->EnsureConnected();
 }
 
 }  // namespace mozilla::dom
