@@ -335,7 +335,7 @@ rebuild-css =
     .accesskey = R
 
 make-browsercss-file =
-    .label = Make browser css file
+    .label = Create browser CSS file
     .accesskey = M
 
 open-css-folder =
@@ -349,10 +349,10 @@ edit-userContentCss-editor =
     .label = Edit userContent.css file
 
 test-chrome-css =
-    .label = Test chrome CSS
+    .label = Test userChrome.css
     .accesskey = C
 test-content-css =
-    .label = Test content CSS
+    .label = Test userContent.css
     .accesskey = W
 
 not-found-editor-path = Editor path not found
