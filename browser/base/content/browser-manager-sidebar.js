@@ -22,7 +22,6 @@ const DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT = 19 /* CustomURL modes, that are e
 
     for (let webpanel_id = 0; webpanel_id <= DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT; webpanel_id++) {
 		Services.prefs.addObserver(`floorp.browser.sidebar2.customurl${webpanel_id}.usercontext`, function() {
-            console.log(`floorp.browser.sidebar2.customurl${webpanel_id}.usercontext`)
             let userContextChnagedWebpanel = document.getElementById(`webpanel${webpanel_id}`);
 
         if(userContextChnagedWebpanel!= null) {
