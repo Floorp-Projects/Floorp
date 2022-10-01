@@ -1576,7 +1576,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsXULScrollFrame)
 
 nsXULScrollFrame::nsXULScrollFrame(ComputedStyle* aStyle,
                                    nsPresContext* aPresContext, bool aIsRoot)
-    : nsBoxFrame(aStyle, aPresContext, kClassID),
+    : nsBoxFrame(aStyle, aPresContext, kClassID, aIsRoot),
       mHelper(ALLOW_THIS_IN_INITIALIZER_LIST(this), aIsRoot) {
   SetXULLayoutManager(nullptr);
 }

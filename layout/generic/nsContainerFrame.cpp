@@ -810,7 +810,7 @@ void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
 
   nsSize minSize(0, 0);
   nsSize maxSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-  if (rootFrame->IsXULBoxFrame()) {
+  if (rootElement->IsXULElement()) {
     nsBoxLayoutState aState(aPresContext, aRC);
     minSize = rootFrame->GetXULMinSize(aState);
     maxSize = rootFrame->GetXULMaxSize(aState);

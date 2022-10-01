@@ -23,6 +23,7 @@ UNIFIED_SOURCES += [
     "nsBoxFrame.cpp",
     "nsBoxLayout.cpp",
     "nsBoxLayoutState.cpp",
+    "nsDocElementBoxFrame.cpp",
     "nsImageBoxFrame.cpp",
     "nsLeafBoxFrame.cpp",
     "nsMenuBarFrame.cpp",
