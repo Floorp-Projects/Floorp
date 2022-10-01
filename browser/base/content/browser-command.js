@@ -150,7 +150,7 @@ function setSidebarMode() {
           browserManagerSidebarWebpanel.setAttribute("src", Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${webpanel_id}`, undefined));
           document.getElementById("sidebar2-box").appendChild(browserManagerSidebarWebpanel);
         break;
-        }else{
+        } else {
           document.getElementById(`webpanel${webpanel_id}`).setAttribute("src", Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${webpanel_id}`, undefined));
         }
     }
@@ -307,11 +307,9 @@ function showSidebarNodes(sidebar_mode) { /* Managers - 0; TST - 1  webpanel - 2
     var Tag = document.createElement("style")
     if (sidebar_mode == 0) { 
         sbar_css = "#TST{max-height:0 !important;}#sidebar2-reload, #sidebar2-go-index, #sidebar2-forward,#sidebar2-back{display:none !important;}"
-    }
-    else if(sidebar_mode == 1){
+    } else if(sidebar_mode == 1){
         sbar_css = "#sidebar2{max-height:0 !important;}#sidebar2-reload,#sidebar2-go-index, #sidebar2-forward,#sidebar2-back{display:none !important;}"
-    }
-    else{
+    } else {
       sbar_css = "#TST, #sidebar2{max-height:0 !important;}"
     }
 
@@ -335,9 +333,7 @@ function showSidebarNodes(sidebar_mode) { /* Managers - 0; TST - 1  webpanel - 2
       for (let i = 0; i < needLoadedWebpanel.length; i++) {
         needLoadedWebpanel[i].disabled = true;
       }
-   }
-   else
-    {
+   } else {
       for (let i = 0; i < needLoadedWebpanel.length; i++) {
         needLoadedWebpanel[i].disabled = false;
       }
@@ -358,7 +354,7 @@ function UnloadWebpanel() {
  function muteSidebar(){
     if(contextWebpanel.audioMuted == false){
       contextWebpanel.mute();
-    }else{
+    } else {
      contextWebpanel.unmute();
    }  
   }
@@ -400,8 +396,7 @@ function setBrowserDesign() {
         Tag.setAttribute("id", "browserdesgin");
         Tag.innerText = ThemeCSS.PhotonUI;
         document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-      }
-      else {
+      } else {
         var Tag = document.createElement('style')
         Tag.setAttribute("id", "browserdesgin");
         Tag.innerText = ThemeCSS.PhotonUIMultitab;

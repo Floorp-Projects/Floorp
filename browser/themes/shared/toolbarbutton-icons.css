@@ -512,7 +512,7 @@ toolbarbutton.bookmark-item {
   border-radius: 4px;
   color: inherit;
   fill: currentColor;
-  margin: 1px 3px 5px 3px;
+  margin: 1px 3px 5px 2px;
   padding: 11px 10px 10px 11px;
   scale: 1.0;
 }
@@ -619,7 +619,7 @@ toolbarbutton.bookmark-item {
 
 #select-TST {
   list-style-image: url("chrome://browser/skin/TST-dark.svg");
-  padding: 11px 7px 11px 8px !important;
+  padding: 11px 7px 11px 9.5px !important;
 }
 
 @media (-moz-platform: linux) {
