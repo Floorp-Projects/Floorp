@@ -51,7 +51,7 @@
 // Allows to get something non-default for the preferred sample-rate, to allow
 // troubleshooting in the field and testing.
 #define PREF_CUBEB_FORCE_SAMPLE_RATE "media.cubeb.force_sample_rate"
-#define PREF_CUBEB_LOGGING_LEVEL "media.cubeb.logging_level"
+#define PREF_CUBEB_LOGGING_LEVEL "logging.cubeb"
 // Hidden pref used by tests to force failure to obtain cubeb context
 #define PREF_CUBEB_FORCE_NULL_CONTEXT "media.cubeb.force_null_context"
 #define PREF_CUBEB_OUTPUT_VOICE_ROUTING "media.cubeb.output_voice_routing"
@@ -253,18 +253,14 @@ void PrefChanged(const char* aPref, void* aClosure) {
     StaticMutexAutoLock lock(sMutex);
     sCubebForcedSampleRate = Preferences::GetUint(aPref);
   } else if (strcmp(aPref, PREF_CUBEB_LOGGING_LEVEL) == 0) {
-    nsAutoCString value;
-    Preferences::GetCString(aPref, value);
-    LogModule* cubebLog = LogModule::Get("cubeb");
-    if (value.EqualsLiteral("verbose")) {
+    LogLevel value =
+        ToLogLevel(Preferences::GetInt(aPref, 0 /* LogLevel::Disabled */));
+    if (value == LogLevel::Verbose) {
       cubeb_set_log_callback(CUBEB_LOG_VERBOSE, CubebLogCallback);
-      cubebLog->SetLevel(LogLevel::Verbose);
-    } else if (value.EqualsLiteral("normal")) {
+    } else if (value == LogLevel::Debug) {
       cubeb_set_log_callback(CUBEB_LOG_NORMAL, CubebLogCallback);
-      cubebLog->SetLevel(LogLevel::Error);
-    } else if (value.IsEmpty()) {
+    } else if (value == LogLevel::Disabled) {
       cubeb_set_log_callback(CUBEB_LOG_DISABLED, nullptr);
-      cubebLog->SetLevel(LogLevel::Disabled);
     }
   } else if (strcmp(aPref, PREF_CUBEB_BACKEND) == 0) {
     StaticMutexAutoLock lock(sMutex);
@@ -376,8 +372,7 @@ bool InitPreferredSampleRate() {
     return false;
   }
   uint32_t rate;
-  if (cubeb_get_preferred_sample_rate(context, &rate) !=
-      CUBEB_OK) {
+  if (cubeb_get_preferred_sample_rate(context, &rate) != CUBEB_OK) {
     return false;
   }
   sPreferredSampleRate = rate;
