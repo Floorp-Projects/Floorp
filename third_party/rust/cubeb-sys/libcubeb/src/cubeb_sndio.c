@@ -6,6 +6,7 @@
  */
 #include "cubeb-internal.h"
 #include "cubeb/cubeb.h"
+#include "cubeb_tracing.h"
 #include <assert.h>
 #include <dlfcn.h>
 #include <inttypes.h>
@@ -161,10 +162,14 @@ sndio_mainloop(void * arg)
   size_t pstart = 0, pend = 0, rstart = 0, rend = 0;
   long nfr;
 
+  CUBEB_REGISTER_THREAD("cubeb rendering thread");
+
   nfds = WRAP(sio_nfds)(s->hdl);
   pfds = calloc(nfds, sizeof(struct pollfd));
-  if (pfds == NULL)
+  if (pfds == NULL) {
+    CUBEB_UNREGISTER_THREAD();
     return NULL;
+  }
 
   DPR("sndio_mainloop()\n");
   s->state_cb(s, s->arg, CUBEB_STATE_STARTED);
@@ -172,6 +177,7 @@ sndio_mainloop(void * arg)
   if (!WRAP(sio_start)(s->hdl)) {
     pthread_mutex_unlock(&s->mtx);
     free(pfds);
+    CUBEB_UNREGISTER_THREAD();
     return NULL;
   }
   DPR("sndio_mainloop(), started\n");
@@ -300,6 +306,7 @@ sndio_mainloop(void * arg)
   pthread_mutex_unlock(&s->mtx);
   s->state_cb(s, s->arg, state);
   free(pfds);
+  CUBEB_UNREGISTER_THREAD();
   return NULL;
 }
 
@@ -362,8 +369,10 @@ static void
 sndio_destroy(cubeb * context)
 {
   DPR("sndio_destroy()\n");
+#ifndef DISABLE_LIBSNDIO_DLOPEN
   if (context->libsndio)
     dlclose(context->libsndio);
+#endif
   free(context);
 }
 

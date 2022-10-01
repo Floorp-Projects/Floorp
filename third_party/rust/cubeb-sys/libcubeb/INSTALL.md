@@ -1,13 +1,12 @@
 # Build instructions for libcubeb
 
-You must have CMake v3.1 or later installed.
+You must have CMake v3.14 or later installed.
 
 1. `git clone --recursive https://github.com/mozilla/cubeb.git`
-2. `mkdir cubeb-build`
-3. `cd cubeb-build`
-4. `cmake ../cubeb`
-5. `cmake --build .`
-6. `ctest`
+2. `cd cubeb`
+3. `cmake -B ./build .`
+4. `cmake --build ./build`
+5. `cd build && ctest`
 
 # Windows build notes
 

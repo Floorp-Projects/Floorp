@@ -371,6 +371,7 @@ if(DOXYGEN_FOUND)
     ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/docs/Doxyfile
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/docs
     COMMENT "Generating API documentation with Doxygen" VERBATIM)
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/docs/html/ TYPE DOC)
 endif()
 
 if(BUILD_TESTS)
@@ -382,7 +383,6 @@ if(BUILD_TESTS)
     target_link_libraries(test_${NAME} PRIVATE cubeb gtest_main)
     add_test(${NAME} test_${NAME} --gtest_death_test_style=threadsafe)
     add_sanitizers(test_${NAME})
-    install(TARGETS test_${NAME})
   endmacro(cubeb_add_test)
 
   cubeb_add_test(sanity)
@@ -397,7 +397,6 @@ if(BUILD_TESTS)
   target_link_libraries(test_resampler PRIVATE cubeb gtest_main speex)
   add_test(resampler test_resampler)
   add_sanitizers(test_resampler)
-  install(TARGETS test_resampler)
 
   cubeb_add_test(duplex)
 
