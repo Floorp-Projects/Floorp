@@ -4,11 +4,6 @@
 
 /* Tests for handling of the preferences 'dirty' flag (bug 985998) */
 
-const PREF_INVALID = 0;
-const PREF_BOOL = 128;
-const PREF_INT = 64;
-const PREF_STRING = 32;
-
 function run_test() {
   const ps = Services.prefs;
 
