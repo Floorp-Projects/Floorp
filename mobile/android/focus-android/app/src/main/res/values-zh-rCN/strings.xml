@@ -120,7 +120,7 @@
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
          Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">私密搜索</string>
+    <string name="text_selection_search_action">隐私搜索</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
@@ -504,12 +504,22 @@
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
     <string name="onboarding_first_screen_title">欢迎使用 %1$s</string>
 
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">快速，隐私，高效率。</string>
+
     <!-- New Onboarding flow first screen button label-->
     <string name="onboarding_first_screen_button_text">开始使用</string>
 
     <!-- Onboarding second screen: Title -->
     <!-- %1$s will be replaced by the app short name(Focus) -->
     <string name="onboarding_second_screen_title">%1$s 与其他浏览器不同</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">隐私保护考量，我们会在您关闭应用程序时，自动清除浏览记录。</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">将 %1$s 设为默认浏览器，保护您的数据安全。</string>
 
     <!-- New Onboarding flow second screen make Focus default browser button label-->
     <string name="onboarding_second_screen_default_browser_button_text">设为默认浏览器</string>
@@ -1035,8 +1045,20 @@ The new line here must be kept as the second half of the string is clickable for
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">搜索小部件</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
     <string name="promote_search_widget_dialog_title">浏览历史已清除！🎉</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
-    </resources>
+    <string name="promote_search_widget_dialog_subtitle">开始隐私浏览吧。想更快发起搜索，下次可以直接点按主屏幕上的 %1$s 小部件。</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">将小部件添加至主屏幕</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">小部件已添加至主屏幕</string>
+</resources>

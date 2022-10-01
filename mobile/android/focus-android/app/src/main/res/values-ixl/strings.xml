@@ -183,8 +183,16 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">Unq´a atinb´ale´ uve´ pal chit asa´ata´</string>
 
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">La ooypisa u %s aq´al uva´ ankuxhe´ la b´anon tuch u 450 URLs uva´ pal chit qilata´ tulaj unq´a k´uchb´al tetze´.</string>
+
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">Tetz unq´a atinb´ale´ uve´ tuk aaq´ku´</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">La ooypisa aq´al uva´ ankuxh u %s la b´anon tuch unq´a URLs uve´ ni chit asa´.</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">Tilpu isuuchil unq´a atinb´ale´</string>
@@ -195,11 +203,20 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Aq\' ve\'t unq\'a URL uve\' b\'anel ve\'t tuche\'</string>
 
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Tachul unq´a aq´one´ uve´ ankuxhe´ kat b´anon tuche´:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Aq´ku´ u URL</string>
+
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Aq\' ve\'t unq\'a URL uve\' b\'anel ve\'t tuche\'</string>
 
     <!-- Label for the button to quick add custom autocomplete URLs. -->
     <string name="custom_autocomplete_quick_add">Aq\' ve\'t unq\'a URL uve\' b\'anel ve\'t tuche\'</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Aq´ku´ u chukb´al tetze´ aq´al uva´ ankuxhe´ la b´anon tuche´</string>
 
     <!-- Preference category for settings about cookies and site data -->
     <string name="preference_category_cookies">Cookies as tachul tu tatinb\'ale\'</string>
