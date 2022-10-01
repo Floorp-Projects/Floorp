@@ -180,12 +180,6 @@ module.exports = {
       // dependencies of bug 1612907.
       files: testPaths.xpcshell.map(path => `${path}test*.js`),
       excludedFiles: [
-        // These are suitable as good first bugs, take one or two related lines
-        // per bug.
-        "extensions/permissions/**",
-        "toolkit/crashreporter/test/unit/test_crash_AsyncShutdown.js",
-        "toolkit/mozapps/update/tests/unit_aus_update/testConstants.js",
-
         // These are more complicated bugs which may require some in-depth
         // investigation or different solutions. They are also likely to be
         // a reasonable size.

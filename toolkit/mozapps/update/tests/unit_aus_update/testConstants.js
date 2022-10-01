@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const REL_PATH_DATA = "";
 const URL_HOST = "http://127.0.0.1:8888";
 const URL_PATH_UPDATE_XML = "/" + REL_PATH_DATA + "app_update.sjs";

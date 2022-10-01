@@ -7,7 +7,6 @@
 // to import modules into each function.
 
 function setup_crash() {
-  /* global AsyncShutdown */
   const { AsyncShutdown } = ChromeUtils.import(
     "resource://gre/modules/AsyncShutdown.jsm"
   );
