@@ -10,6 +10,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 var ioService = Services.io;
 
+// This is used in async_load_tests.js
+// eslint-disable-next-line no-unused-vars
 XPCOMUtils.defineLazyGetter(this, "uri", function() {
   return ioService.newURI(
     "http://localhost:" +

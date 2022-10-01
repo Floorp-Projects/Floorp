@@ -183,7 +183,6 @@ module.exports = {
         // These are suitable as good first bugs, take one or two related lines
         // per bug.
         "extensions/permissions/**",
-        "image/test/unit/**",
         "modules/libjar/zipwriter/test/unit/test_alignment.js",
         "modules/libjar/zipwriter/test/unit/test_bug419769_2.js",
         "modules/libjar/zipwriter/test/unit/test_storedata.js",
