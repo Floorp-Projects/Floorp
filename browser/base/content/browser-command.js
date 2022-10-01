@@ -97,6 +97,11 @@ function setSidebarMode() {
     const webpanel_id = modeValuePref - DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT /* Get sidebar_id */
     const sidebar2elem = document.getElementById("sidebar2");
     const wibpanel_usercontext = Services.prefs.getIntPref(`floorp.browser.sidebar2.customurl${webpanel_id}.usercontext`, undefined);
+    const panelWidth = Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${modeValuePref}`, undefined);
+
+    if(panelWidth !== "" || panelWidth !== undefined || panelWidth !== null){
+      document.getElementById("sidebar2-box").setAttribute("width", panelWidth);
+    }
 
     switch (modeValuePref) {
       case 0:
