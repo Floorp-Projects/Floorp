@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const DATA = "ZIP WRITER TEST DATA";
-
 var TESTS = [];
 
 function build_tests() {

@@ -5,7 +5,6 @@
 
 const DATA = "ZIP WRITER TEST DATA";
 const FILENAME = "test_data.txt";
-const CRC = 0xe6164331;
 const time = 1199145600000; // Jan 1st 2008
 
 var TESTS = [
