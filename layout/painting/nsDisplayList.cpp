@@ -837,12 +837,12 @@ void nsDisplayListBuilder::MarkFrameForDisplayIfVisible(
 void nsDisplayListBuilder::SetGlassDisplayItem(nsDisplayItem* aItem) {
   // Web pages or extensions could trigger the "Multiple glass backgrounds
   // found?" warning by using -moz-appearance:win-borderless-glass etc on their
-  // own elements (as long as they are DocElementBoxFrames, which is rare as
-  // each xul doc only gets one near the root). We only care about first one,
-  // since that will be the background of the root window.
+  // own elements (as long as they are root frames, which is rare as each doc
+  // only gets one near the root). We only care about the first one, since that
+  // will be the background of the root window.
 
   if (IsPartialUpdate()) {
-    if (aItem->Frame()->IsDocElementBoxFrame()) {
+    if (aItem->Frame()->Style()->IsRootElementStyle()) {
 #ifdef DEBUG
       if (mHasGlassItemDuringPartial) {
         NS_WARNING("Multiple glass backgrounds found?");
@@ -856,7 +856,7 @@ void nsDisplayListBuilder::SetGlassDisplayItem(nsDisplayItem* aItem) {
     return;
   }
 
-  if (aItem->Frame()->IsDocElementBoxFrame()) {
+  if (aItem->Frame()->Style()->IsRootElementStyle()) {
 #ifdef DEBUG
     if (mGlassDisplayItem) {
       NS_WARNING("Multiple glass backgrounds found?");
