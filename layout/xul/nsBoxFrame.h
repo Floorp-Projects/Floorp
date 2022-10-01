@@ -29,8 +29,11 @@ class DrawTarget;
 }  // namespace gfx
 }  // namespace mozilla
 
-nsContainerFrame* NS_NewBoxFrame(mozilla::PresShell* aPresShell,
-                                 mozilla::ComputedStyle* aStyle);
+nsIFrame* NS_NewBoxFrame(mozilla::PresShell* aPresShell,
+                         mozilla::ComputedStyle* aStyle, bool aIsRoot,
+                         nsBoxLayout* aLayoutManager);
+nsIFrame* NS_NewBoxFrame(mozilla::PresShell* aPresShell,
+                         mozilla::ComputedStyle* aStyle);
 
 class nsBoxFrame : public nsContainerFrame {
  protected:
@@ -42,8 +45,11 @@ class nsBoxFrame : public nsContainerFrame {
   NS_DECL_QUERYFRAME
 #endif
 
-  friend nsContainerFrame* NS_NewBoxFrame(mozilla::PresShell* aPresShell,
-                                          ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewBoxFrame(mozilla::PresShell* aPresShell,
+                                  ComputedStyle* aStyle, bool aIsRoot,
+                                  nsBoxLayout* aLayoutManager);
+  friend nsIFrame* NS_NewBoxFrame(mozilla::PresShell* aPresShell,
+                                  ComputedStyle* aStyle);
 
   // gets the rect inside our border and debug border. If you wish to paint
   // inside a box call this method to get the rect so you don't draw on the
@@ -144,10 +150,11 @@ class nsBoxFrame : public nsContainerFrame {
 
  private:
   explicit nsBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-      : nsBoxFrame(aStyle, aPresContext, kClassID) {}
+      : nsBoxFrame(aStyle, aPresContext, kClassID, false, nullptr) {}
 
  protected:
-  nsBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID);
+  nsBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID,
+             bool aIsRoot = false, nsBoxLayout* aLayoutManager = nullptr);
   virtual ~nsBoxFrame();
 
   virtual bool GetInitialEqualSize(bool& aEqualSize);
