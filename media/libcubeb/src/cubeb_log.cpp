@@ -16,8 +16,8 @@
 #include <time.h>
 #endif
 
-cubeb_log_level g_cubeb_log_level;
-cubeb_log_callback g_cubeb_log_callback;
+std::atomic<cubeb_log_level> g_cubeb_log_level;
+std::atomic<cubeb_log_callback> g_cubeb_log_callback;
 
 /** The maximum size of a log message, after having been formatted. */
 const size_t CUBEB_LOG_MESSAGE_MAX_SIZE = 256;
@@ -74,7 +74,7 @@ public:
       while (true) {
         cubeb_log_message msg;
         while (msg_queue.dequeue(&msg, 1)) {
-          LOG_INTERNAL_NO_FORMAT(CUBEB_LOG_NORMAL, "%s", msg.get());
+          cubeb_log_internal_no_format(msg.get());
         }
 #ifdef _WIN32
         Sleep(CUBEB_LOG_BATCH_PRINT_INTERVAL_MS);
@@ -109,11 +109,25 @@ private:
 };
 
 void
+cubeb_log_internal(char const * file, uint32_t line, char const * fmt, ...)
+{
+  va_list args;
+  va_start(args, fmt);
+  char msg[CUBEB_LOG_MESSAGE_MAX_SIZE];
+  vsnprintf(msg, CUBEB_LOG_MESSAGE_MAX_SIZE, fmt, args);
+  g_cubeb_log_callback.load()("%s:%d:%s", file, line, msg);
+  va_end(args);
+}
+
+void
+cubeb_log_internal_no_format(const char * msg)
+{
+  g_cubeb_log_callback.load()(msg);
+}
+
+void
 cubeb_async_log(char const * fmt, ...)
 {
-  if (!g_cubeb_log_callback) {
-    return;
-  }
   // This is going to copy a 256 bytes array around, which is fine.
   // We don't want to allocate memory here, because this is made to
   // be called from a real-time callback.
@@ -132,4 +146,23 @@ cubeb_async_log_reset_threads(void)
     return;
   }
   cubeb_async_logger::get().reset_producer_thread();
+}
+
+void
+cubeb_log_set(cubeb_log_level log_level, cubeb_log_callback log_callback)
+{
+  g_cubeb_log_level = log_level;
+  g_cubeb_log_callback = log_callback;
+}
+
+cubeb_log_level
+cubeb_log_get_level()
+{
+  return g_cubeb_log_level;
+}
+
+cubeb_log_callback
+cubeb_log_get_callback()
+{
+  return g_cubeb_log_callback;
 }
