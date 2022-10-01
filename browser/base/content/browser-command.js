@@ -195,9 +195,9 @@ function setCustomURLFavicon(sbar_id) {
 
     const wibpanel_usercontext = Services.prefs.getIntPref(`floorp.browser.sidebar2.customurl${sbar_id}.usercontext`, undefined);
     if(wibpanel_usercontext != 0){
-      document.getElementById(`select-CustomURL${sbar_id}`).style.border = `solid 0.1px var(--usercontext-color-${wibpanel_usercontext})`;
+      document.getElementById(`select-CustomURL${sbar_id}`).style.borderLeft = `solid 2px var(--usercontext-color-${wibpanel_usercontext})`;
     }else{
-      document.getElementById(`select-CustomURL${sbar_id}`).style.border = "";
+      document.getElementById(`select-CustomURL${sbar_id}`).style.borderLeft = "";
     }
 }
 
@@ -282,9 +282,9 @@ function setAllfavicons() {
 
     var wibpanel_usercontext = Services.prefs.getIntPref(`floorp.browser.sidebar2.customurl${sbar_id}.usercontext`, undefined);
     if(wibpanel_usercontext != 0){
-      document.getElementById(`select-CustomURL${sbar_id}`).style.border = `solid 0.1px var(--usercontext-color-${wibpanel_usercontext})`;
+      document.getElementById(`select-CustomURL${sbar_id}`).style.borderLeft = `solid 2px var(--usercontext-color-${wibpanel_usercontext})`;
     }else{
-      document.getElementById(`select-CustomURL${sbar_id}`).style.border = "";
+      document.getElementById(`select-CustomURL${sbar_id}`).style.borderLeft = "";
     }
   }
 }
