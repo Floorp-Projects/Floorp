@@ -34,6 +34,7 @@ vendoring:
     - src/cubeb_kai.c
     - src/cubeb_osx_run_loop.cpp
     - src/cubeb_pulse.c
+    - src/cubeb_tracing.h
     - subprojects
     - tools
   keep:
@@ -44,5 +45,6 @@ vendoring:
     - src/cubeb-jni-instances.h
     - src/cubeb_assert.h
     - src/cubeb_osx_run_loop.c
+    - src/cubeb_tracing.h
     - src/moz.build
 
