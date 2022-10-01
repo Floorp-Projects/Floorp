@@ -6036,6 +6036,87 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "contain-intrinsic-block-size": {
+    "isInherited": false,
+    "subproperties": [
+      "contain-intrinsic-block-size"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "revert-layer",
+      "unset"
+    ]
+  },
+  "contain-intrinsic-height": {
+    "isInherited": false,
+    "subproperties": [
+      "contain-intrinsic-height"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "revert-layer",
+      "unset"
+    ]
+  },
+  "contain-intrinsic-inline-size": {
+    "isInherited": false,
+    "subproperties": [
+      "contain-intrinsic-inline-size"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "revert-layer",
+      "unset"
+    ]
+  },
+  "contain-intrinsic-size": {
+    "isInherited": false,
+    "subproperties": [
+      "contain-intrinsic-width",
+      "contain-intrinsic-height"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "revert-layer",
+      "unset"
+    ]
+  },
+  "contain-intrinsic-width": {
+    "isInherited": false,
+    "subproperties": [
+      "contain-intrinsic-width"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "revert-layer",
+      "unset"
+    ]
+  },
   "content": {
     "isInherited": false,
     "subproperties": [

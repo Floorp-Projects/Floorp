@@ -7936,7 +7936,7 @@
 # Whether the `contain-intrinsic-size` CSS property is enabled
 - name: layout.css.contain-intrinsic-size.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   rust: true
 
