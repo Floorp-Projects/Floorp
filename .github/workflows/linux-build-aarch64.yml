@@ -14,10 +14,11 @@ jobs:
         sudo rm -rf /usr/share/dotnet
         sudo rm -rf /usr/local/lib/android
         sudo rm -rf /opt/ghc
+        
     - name: Prepare cross compiler
       run: |
         sudo apt -y install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
-	      rustup target add aarch64-unknown-linux-gnu
+        rustup target add aarch64-unknown-linux-gnu
 
 
     - name: Add swap file
