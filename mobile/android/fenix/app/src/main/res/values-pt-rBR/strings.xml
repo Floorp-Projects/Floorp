@@ -56,7 +56,7 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">O %1$s limpa o histórico de pesquisa e navegação de abas privativas quando você as fecha ou sai do aplicativo. Apesar disso não tornar você anônimo em sites ou no seu provedor de internet, facilita manter o que você faz online privativo de qualquer outra pessoa que use este dispositivo.</string>
     <string name="private_browsing_common_myths">
-       Mitos comuns sobre navegação privativa
+       Lendas comuns sobre navegação privativa
     </string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
@@ -394,8 +394,6 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personalizar</string>
     <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Sincronize favoritos, histórico e muito mais com sua Conta Firefox</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Entre para sincronizar abas, favoritos, senhas e muito mais.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Conta Firefox</string>
@@ -591,8 +589,6 @@
     <string name="preference_experiments_summary_2">Permitir que a Mozilla instale e execute estudos</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Ativar a sincronização</string>
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">Sincronize e salve seus dados</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -809,9 +805,6 @@
     <string name="delete_from_history">Excluir do histórico</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (modo privativo)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Outras abas</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1220,8 +1213,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Sair</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Isso excluirá todos os seus dados de navegação.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Intervalo de tempo a excluir</string>
     <!-- Body text of a delete browsing data dialog. -->
