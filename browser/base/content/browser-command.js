@@ -235,17 +235,26 @@ function sidebarSiteAction(action){
 4 - TreeStyleTab
 */ 
 function setStaticSidebarMode(sbar_id) { 
-    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", sbar_id);
-    displayBrowserManagerSidebar()
-    setSelectedPanel()
+    if(Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined) != sbar_id || document.getElementById("sidebar-splitter2").getAttribute("hidden") == "true"){
+      Services.prefs.setIntPref("floorp.browser.sidebar2.mode", sbar_id);
+      displayBrowserManagerSidebar();
+      setSelectedPanel();
+    } else {
+      changeSidebarVisibility();
+    }
 } 
 
 /* From 0 to 19 - CustomURLSetter. 20 URLs in total.*/
 function setDynamicSidebarMode(sbar_id){
-    let custom_url_id = sbar_id + DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT /* Hack to start from 0, yet maintain compatibility with the previous solution. eg: If 0, than 5. If 1, than 6  */
+  let custom_url_id = sbar_id + DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT /* Hack to start from 0, yet maintain compatibility with the previous solution. eg: If 0, than 5. If 1, than 6  */
+
+  if(Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined) != custom_url_id || document.getElementById("sidebar-splitter2").getAttribute("hidden") == "true"){
     Services.prefs.setIntPref("floorp.browser.sidebar2.mode", custom_url_id);
     displayBrowserManagerSidebar();
     setSelectedPanel();
+  } else {
+    changeSidebarVisibility();
+  }
 }
 
 function setSidebarIconView() {
