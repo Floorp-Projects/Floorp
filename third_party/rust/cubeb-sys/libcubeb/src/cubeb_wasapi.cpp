@@ -30,6 +30,7 @@
 #include "cubeb_mixer.h"
 #include "cubeb_resampler.h"
 #include "cubeb_strings.h"
+#include "cubeb_tracing.h"
 #include "cubeb_utils.h"
 
 // Windows 10 exposes the IAudioClient3 interface to create low-latency streams.
@@ -221,6 +222,11 @@ private:
   com_heap_ptr<wchar_t> render_comms_id;
   com_heap_ptr<wchar_t> capture_console_id;
   com_heap_ptr<wchar_t> capture_comms_id;
+};
+
+struct AutoRegisterThread {
+  AutoRegisterThread(const char * name) { CUBEB_REGISTER_THREAD(name); }
+  ~AutoRegisterThread() { CUBEB_UNREGISTER_THREAD(); }
 };
 
 int
@@ -463,6 +469,7 @@ public:
 private:
   static unsigned int __stdcall thread_proc(LPVOID args)
   {
+    AutoRegisterThread raii("WASAPI device notification thread");
     XASSERT(args);
     auto mdn = static_cast<monitor_device_notifications *>(args);
     mdn->notification_thread_loop();
@@ -1337,6 +1344,8 @@ handle_emergency_bailout(cubeb_stream * stm)
 
 static unsigned int __stdcall wasapi_stream_render_loop(LPVOID stream)
 {
+  AutoRegisterThread raii("cubeb rendering thread");
+
   cubeb_stream * stm = static_cast<cubeb_stream *>(stream);
 
   bool is_playing = true;

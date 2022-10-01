@@ -23,7 +23,6 @@
 #endif
 #include "android/cubeb-output-latency.h"
 #include "cubeb-internal.h"
-#include "cubeb-sles.h"
 #include "cubeb/cubeb.h"
 #include "cubeb_android.h"
 #include "cubeb_array_queue.h"
@@ -728,14 +727,14 @@ opensl_init(cubeb ** context, char const * context_name)
   const SLEngineOption opt[] = {{SL_ENGINEOPTION_THREADSAFE, SL_BOOLEAN_TRUE}};
 
   SLresult res;
-  res = cubeb_get_sles_engine(&ctx->engObj, 1, opt, 0, NULL, NULL);
+  res = f_slCreateEngine(&ctx->engObj, 1, opt, 0, NULL, NULL);
 
   if (res != SL_RESULT_SUCCESS) {
     opensl_destroy(ctx);
     return CUBEB_ERROR;
   }
 
-  res = cubeb_realize_sles_engine(ctx->engObj);
+  res = (*ctx->engObj)->Realize(ctx->engObj, SL_BOOLEAN_FALSE);
   if (res != SL_RESULT_SUCCESS) {
     opensl_destroy(ctx);
     return CUBEB_ERROR;
@@ -796,10 +795,12 @@ opensl_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
 static void
 opensl_destroy(cubeb * ctx)
 {
-  if (ctx->outmixObj)
+  if (ctx->outmixObj) {
     (*ctx->outmixObj)->Destroy(ctx->outmixObj);
-  if (ctx->engObj)
-    cubeb_destroy_sles_engine(&ctx->engObj);
+  }
+  if (ctx->engObj) {
+    (*ctx->engObj)->Destroy(ctx->engObj);
+  }
   dlclose(ctx->lib);
   if (ctx->p_output_latency_function)
     cubeb_output_latency_unload_method(ctx->p_output_latency_function);

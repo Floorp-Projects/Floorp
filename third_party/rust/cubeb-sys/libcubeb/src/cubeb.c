@@ -632,14 +632,14 @@ cubeb_enumerate_devices(cubeb * context, cubeb_device_type devtype,
   int rv;
   if ((devtype & (CUBEB_DEVICE_TYPE_INPUT | CUBEB_DEVICE_TYPE_OUTPUT)) == 0)
     return CUBEB_ERROR_INVALID_PARAMETER;
-  if (collection == NULL)
+  if (context == NULL || collection == NULL)
     return CUBEB_ERROR_INVALID_PARAMETER;
   if (!context->ops->enumerate_devices)
     return CUBEB_ERROR_NOT_SUPPORTED;
 
   rv = context->ops->enumerate_devices(context, devtype, collection);
 
-  if (g_cubeb_log_callback) {
+  if (cubeb_log_get_callback()) {
     for (size_t i = 0; i < collection->count; i++) {
       log_device(&collection->device[i]);
     }
@@ -701,21 +701,11 @@ cubeb_set_log_callback(cubeb_log_level log_level,
     return CUBEB_ERROR_INVALID_PARAMETER;
   }
 
-  if (g_cubeb_log_callback && log_callback) {
+  if (cubeb_log_get_callback() && log_callback) {
     return CUBEB_ERROR_NOT_SUPPORTED;
   }
 
-  g_cubeb_log_callback = log_callback;
-  g_cubeb_log_level = log_level;
-
-  // Logging a message here allows to initialize the asynchronous logger from a
-  // thread that is not the audio rendering thread, and especially to not
-  // initialize it the first time we find a verbose log, which is often in the
-  // audio rendering callback, that runs from the audio rendering thread, and
-  // that is high priority, and that we don't want to block.
-  if (log_level >= CUBEB_LOG_VERBOSE) {
-    ALOGV("Starting cubeb log");
-  }
+  cubeb_log_set(log_level, log_callback);
 
   return CUBEB_OK;
 }

@@ -3,59 +3,100 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details.
 
-/// Annotates input buffer string with logging information.
-/// Returns result as a ffi::CStr for use with native cubeb logging functions.
-pub fn cubeb_log_internal_buf_fmt<'a>(
-    buf: &'a mut [u8; 1024],
+/// Maximum length in bytes for a log message.
+/// Longer messages are silently truncated.  See `write_str`.
+const LOG_LIMIT: usize = 1024;
+
+struct StaticCString<const N: usize> {
+    buf: [std::mem::MaybeUninit<u8>; N],
+    len: usize,
+}
+
+impl<const N: usize> StaticCString<N> {
+    fn new() -> Self {
+        StaticCString {
+            buf: unsafe { std::mem::MaybeUninit::uninit().assume_init() },
+            len: 0,
+        }
+    }
+
+    fn as_cstr(&self) -> &std::ffi::CStr {
+        unsafe {
+            std::ffi::CStr::from_bytes_with_nul_unchecked(std::slice::from_raw_parts(
+                self.buf.as_ptr().cast::<u8>(),
+                self.len,
+            ))
+        }
+    }
+}
+
+impl<const N: usize> std::fmt::Write for StaticCString<N> {
+    fn write_str(&mut self, s: &str) -> std::fmt::Result {
+        use std::convert::TryInto;
+        let s = s.as_bytes();
+        let end = s.len().min(N.checked_sub(1).unwrap() - self.len);
+        debug_assert_eq!(s.len(), end, "message truncated");
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                s[..end].as_ptr(),
+                self.buf
+                    .as_mut_ptr()
+                    .cast::<u8>()
+                    .offset(self.len.try_into().unwrap()),
+                end,
+            )
+        };
+        self.len += end;
+        self.buf[self.len].write(0);
+        Ok(())
+    }
+}
+
+/// Formats `$file:line: $msg\n` into an on-stack buffer of size `LOG_LIMIT`,
+/// then calls `log_callback` with a pointer to the formatted message.
+pub fn cubeb_log_internal_buf_fmt(
+    log_callback: unsafe extern "C" fn(*const i8, ...),
     file: &str,
     line: u32,
-    msg: &str,
-) -> &'a std::ffi::CStr {
-    use std::io::Write;
+    msg: std::fmt::Arguments,
+) {
     let filename = std::path::Path::new(file)
         .file_name()
         .unwrap()
         .to_str()
         .unwrap();
-    // 2 for ':', 1 for ' ', 1 for '\n', and 1 for converting `line!()` to number of digits
-    let len = filename.len() + ((line as f32).log10().trunc() as usize) + msg.len() + 5;
-    debug_assert!(len < buf.len(), "log will be truncated");
-    let _ = writeln!(&mut buf[..], "{}:{}: {}", filename, line, msg);
-    let last = std::cmp::min(len, buf.len() - 1);
-    buf[last] = 0;
-    let cstr = unsafe { std::ffi::CStr::from_bytes_with_nul_unchecked(&buf[..=last]) };
-    cstr
+    let mut buf = StaticCString::<LOG_LIMIT>::new();
+    let _ = std::fmt::write(&mut buf, format_args!("{}:{}: {}\n", filename, line, msg));
+    unsafe {
+        log_callback(buf.as_cstr().as_ptr());
+    };
 }
 
 #[macro_export]
 macro_rules! cubeb_log_internal {
     ($log_callback: expr, $level: expr, $fmt: expr, $($arg: expr),+) => {
-        cubeb_log_internal!($log_callback, $level, format!($fmt, $($arg),*));
-    };
-    ($log_callback: expr, $level: expr, $msg: expr) => {
         #[allow(unused_unsafe)]
         unsafe {
-            if $level <= $crate::ffi::g_cubeb_log_level.into() {
+            if $level <= $crate::ffi::cubeb_log_get_level().into() {
                 if let Some(log_callback) = $log_callback {
-                    let mut buf = [0u8; 1024];
-                    log_callback(
-                        $crate::log::cubeb_log_internal_buf_fmt(&mut buf, file!(), line!(), &$msg)
-                            .as_ptr(),
-                    );
+                    $crate::log::cubeb_log_internal_buf_fmt(log_callback, file!(), line!(), format_args!($fmt, $($arg),+));
                 }
             }
         }
+    };
+    ($log_callback: expr, $level: expr, $msg: expr) => {
+        cubeb_log_internal!($log_callback, $level, "{}", $msg);
     };
 }
 
 #[macro_export]
 macro_rules! cubeb_log {
-    ($($arg: expr),+) => (cubeb_log_internal!($crate::ffi::g_cubeb_log_callback, $crate::LogLevel::Normal, $($arg),+));
+    ($($arg: expr),+) => (cubeb_log_internal!($crate::ffi::cubeb_log_get_callback(), $crate::LogLevel::Normal, $($arg),+));
 }
 
 #[macro_export]
 macro_rules! cubeb_logv {
-    ($($arg: expr),+) => (cubeb_log_internal!($crate::ffi::g_cubeb_log_callback, $crate::LogLevel::Verbose, $($arg),+));
+    ($($arg: expr),+) => (cubeb_log_internal!($crate::ffi::cubeb_log_get_callback(), $crate::LogLevel::Verbose, $($arg),+));
 }
 
 #[macro_export]

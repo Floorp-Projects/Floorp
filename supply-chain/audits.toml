@@ -244,7 +244,25 @@ notes = """
 Mozilla-developed package.
 """
 
+[[audits.cubeb]]
+who = "Matthew Gregan <kinetik@flim.org>"
+criteria = "safe-to-deploy"
+delta = "0.10.1 -> 0.10.2"
+
 [[audits.cubeb-backend]]
+who = "Matthew Gregan <kinetik@flim.org>"
+criteria = "safe-to-deploy"
+version = "0.10.1"
+notes = """
+Mozilla-developed package.
+"""
+
+[[audits.cubeb-backend]]
+who = "Matthew Gregan <kinetik@flim.org>"
+criteria = "safe-to-deploy"
+delta = "0.10.1 -> 0.10.2"
+
+[[audits.cubeb-core]]
 who = "Matthew Gregan <kinetik@flim.org>"
 criteria = "safe-to-deploy"
 version = "0.10.1"
@@ -255,10 +273,7 @@ Mozilla-developed package.
 [[audits.cubeb-core]]
 who = "Matthew Gregan <kinetik@flim.org>"
 criteria = "safe-to-deploy"
-version = "0.10.1"
-notes = """
-Mozilla-developed package.
-"""
+delta = "0.10.1 -> 0.10.2"
 
 [[audits.cubeb-sys]]
 who = "Matthew Gregan <kinetik@flim.org>"
@@ -267,6 +282,11 @@ version = "0.10.1"
 notes = """
 Mozilla-developed package.
 """
+
+[[audits.cubeb-sys]]
+who = "Matthew Gregan <kinetik@flim.org>"
+criteria = "safe-to-deploy"
+delta = "0.10.1 -> 0.10.2"
 
 [[audits.d3d12]]
 who = "Jim Blandy <jimb@red-bean.com>"
