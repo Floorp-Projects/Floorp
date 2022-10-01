@@ -201,30 +201,30 @@ function setCustomURLFavicon(sbar_id) {
     }
 }
 
-function backSidebarSite() {
-  const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-  const webpanel_id = modeValuePref - DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT;
-
-  document.getElementById(`webpanel${webpanel_id}`).goBack();  //戻る
-}
-function forwardSidebarSite() {
-  const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-  const webpanel_id = modeValuePref - DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT;
-
-  document.getElementById(`webpanel${webpanel_id}`).goForward();  //進む
-}
-function reloadSidebarSite() {
-  const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-  const webpanel_id = modeValuePref - DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT;
-
-  document.getElementById(`webpanel${webpanel_id}`).reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);  //リロード
-}
-
-function goIndexSidebarSite() {
-  const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-  const webpanel_id = modeValuePref - DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT;
-
-  document.getElementById(`webpanel${webpanel_id}`).gotoIndex();  //ホーム
+/* Function responsible for action on the sidebar
+	0 - Back
+	1 - Forward
+	2 - Reload
+	3 - Goto Index
+*/
+function sidebarSiteAction(action){
+  const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined)
+  const webpanel_id = modeValuePref - DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT
+  let webpanel = document.getElementById(`webpanel${webpanel_id}`)
+  switch (action) {
+    case 0:
+		webpanel.goBack() /* Go backwards */
+		break
+	case 1:
+		webpanel.goForward() /* Go forward */
+		break
+	case 2:
+		webpanel.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE) /* Reload */
+		break;
+	case 3:
+		webpanel.gotoIndex() /* Goto Index */
+		break
+  }
 }
 
 /* From 0 to 4 - StaticModeSetter. 5 modes, start from 0
