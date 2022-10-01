@@ -4084,10 +4084,6 @@ static void WorkerMain(UniquePtr<WorkerInput> input) {
   JS::SetHostCleanupFinalizationRegistryCallback(
       cx, ShellCleanupFinalizationRegistryCallback, sc);
 
-  if (fuzzingSafe) {
-    JS_SetGCParameter(cx, JSGC_BALANCED_HEAP_LIMITS_ENABLED, false);
-  }
-
   if (!JS::InitSelfHostedCode(cx)) {
     return;
   }
@@ -11133,10 +11129,6 @@ static int Shell(JSContext* cx, OptionParser* op) {
   } else {
     fuzzingSafe =
         (getenv("MOZ_FUZZING_SAFE") && getenv("MOZ_FUZZING_SAFE")[0] != '0');
-  }
-
-  if (fuzzingSafe) {
-    JS_SetGCParameter(cx, JSGC_BALANCED_HEAP_LIMITS_ENABLED, false);
   }
 
 #ifdef DEBUG
