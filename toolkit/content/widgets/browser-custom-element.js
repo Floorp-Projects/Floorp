@@ -11,33 +11,23 @@
     "resource://gre/modules/AppConstants.jsm"
   );
 
-  const { BrowserUtils } = ChromeUtils.importESModule(
-    "resource://gre/modules/BrowserUtils.sys.mjs"
-  );
-
   const { XPCOMUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/XPCOMUtils.sys.mjs"
   );
 
-  let LazyModules = {};
+  let lazy = {};
 
-  ChromeUtils.defineModuleGetter(
-    LazyModules,
-    "E10SUtils",
-    "resource://gre/modules/E10SUtils.jsm"
-  );
+  ChromeUtils.defineESModuleGetters(lazy, {
+    BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+    Finder: "resource://gre/modules/Finder.sys.mjs",
+    FinderParent: "resource://gre/modules/FinderParent.sys.mjs",
+  });
 
-  ChromeUtils.defineModuleGetter(
-    LazyModules,
-    "RemoteWebNavigation",
-    "resource://gre/modules/RemoteWebNavigation.jsm"
-  );
-
-  ChromeUtils.defineModuleGetter(
-    LazyModules,
-    "PopupBlocker",
-    "resource://gre/actors/PopupBlockingParent.jsm"
-  );
+  XPCOMUtils.defineLazyModuleGetters(lazy, {
+    PopupBlocker: "resource://gre/actors/PopupBlockingParent.jsm",
+    RemoteWebNavigation: "resource://gre/modules/RemoteWebNavigation.jsm",
+    SelectParentHelper: "resource://gre/actors/SelectParent.jsm",
+  });
 
   let lazyPrefs = {};
   XPCOMUtils.defineLazyPreferenceGetter(
@@ -45,8 +35,7 @@
     "unloadTimeoutMs",
     "dom.beforeunload_timeout_ms"
   );
-
-  Object.defineProperty(LazyModules, "ProcessHangMonitor", {
+  Object.defineProperty(lazy, "ProcessHangMonitor", {
     configurable: true,
     get() {
       // Import if we can - this is a browser/ module so it may not be
@@ -56,7 +45,8 @@
       const kURL = "resource:///modules/ProcessHangMonitor.jsm";
       if (Cu.isModuleLoaded(kURL)) {
         let { ProcessHangMonitor } = ChromeUtils.import(kURL);
-        Object.defineProperty(LazyModules, "ProcessHangMonitor", {
+        // eslint-disable-next-line mozilla/valid-lazy
+        Object.defineProperty(lazy, "ProcessHangMonitor", {
           value: ProcessHangMonitor,
         });
         return ProcessHangMonitor;
@@ -66,13 +56,14 @@
   });
 
   // Get SessionStore module in the same as ProcessHangMonitor above.
-  Object.defineProperty(LazyModules, "SessionStore", {
+  Object.defineProperty(lazy, "SessionStore", {
     configurable: true,
     get() {
       const kURL = "resource:///modules/sessionstore/SessionStore.jsm";
       if (Cu.isModuleLoaded(kURL)) {
         let { SessionStore } = ChromeUtils.import(kURL);
-        Object.defineProperty(LazyModules, "SessionStore", {
+        // eslint-disable-next-line mozilla/valid-lazy
+        Object.defineProperty(lazy, "SessionStore", {
           value: SessionStore,
         });
         return SessionStore;
@@ -120,7 +111,7 @@
       this.lastURI = null;
 
       XPCOMUtils.defineLazyGetter(this, "popupBlocker", () => {
-        return new LazyModules.PopupBlocker(this);
+        return new lazy.PopupBlocker(this);
       });
 
       this.addEventListener(
@@ -482,10 +473,7 @@
     get finder() {
       if (this.isRemoteBrowser) {
         if (!this._remoteFinder) {
-          let { FinderParent } = ChromeUtils.importESModule(
-            "resource://gre/modules/FinderParent.sys.mjs"
-          );
-          this._remoteFinder = new FinderParent(this);
+          this._remoteFinder = new lazy.FinderParent(this);
         }
         return this._remoteFinder;
       }
@@ -494,10 +482,7 @@
           return null;
         }
 
-        let { Finder } = ChromeUtils.importESModule(
-          "resource://gre/modules/Finder.sys.mjs"
-        );
-        this._finder = new Finder(this.docShell);
+        this._finder = new lazy.Finder(this.docShell);
       }
       return this._finder;
     }
@@ -743,7 +728,8 @@
     }
 
     goBack(
-      requireUserInteraction = BrowserUtils.navigationRequireUserInteraction
+      requireUserInteraction = lazy.BrowserUtils
+        .navigationRequireUserInteraction
     ) {
       var webNavigation = this.webNavigation;
       if (webNavigation.canGoBack) {
@@ -754,7 +740,8 @@
     }
 
     goForward(
-      requireUserInteraction = BrowserUtils.navigationRequireUserInteraction
+      requireUserInteraction = lazy.BrowserUtils
+        .navigationRequireUserInteraction
     ) {
       var webNavigation = this.webNavigation;
       if (webNavigation.canGoForward) {
@@ -864,7 +851,7 @@
     onPageHide(aEvent) {
       // If we're browsing from the tab crashed UI to a URI that keeps
       // this browser non-remote, we'll handle that here.
-      LazyModules.SessionStore?.maybeExitCrashedState(this);
+      lazy.SessionStore?.maybeExitCrashedState(this);
 
       if (!this.docShell || !this.fastFind) {
         return;
@@ -977,7 +964,7 @@
          * the <browser> element may not be initialized yet.
          */
 
-        this._remoteWebNavigation = new LazyModules.RemoteWebNavigation(this);
+        this._remoteWebNavigation = new lazy.RemoteWebNavigation(this);
 
         // Initialize contentPrincipal to the about:blank principal for this loadcontext
         let aboutBlank = Services.io.newURI("about:blank");
@@ -1050,14 +1037,12 @@
       // non-remote browser for a remote one doesn't cause the pagehide event
       // to be fired. Previously, we used to do this in the frame script's
       // unload handler.
-      LazyModules.SessionStore?.maybeExitCrashedState(this);
+      lazy.SessionStore?.maybeExitCrashedState(this);
 
       // Make sure that any open select is closed.
       let menulist = document.getElementById("ContentSelectDropdown");
       if (menulist?.open) {
-        let resourcePath = "resource://gre/actors/SelectParent.jsm";
-        let { SelectParentHelper } = ChromeUtils.import(resourcePath);
-        SelectParentHelper.hide(menulist, this);
+        lazy.SelectParentHelper.hide(menulist, this);
       }
 
       this.resetFields();
@@ -1190,11 +1175,11 @@
     }
 
     createAboutBlankContentViewer(aPrincipal, aPartitionedPrincipal) {
-      let principal = BrowserUtils.principalWithMatchingOA(
+      let principal = lazy.BrowserUtils.principalWithMatchingOA(
         aPrincipal,
         this.contentPrincipal
       );
-      let partitionedPrincipal = BrowserUtils.principalWithMatchingOA(
+      let partitionedPrincipal = lazy.BrowserUtils.principalWithMatchingOA(
         aPartitionedPrincipal,
         this.contentPartitionedPrincipal
       );
@@ -1658,10 +1643,9 @@
         }
 
         // Don't bother asking if this browser is hung:
-        let { ProcessHangMonitor } = LazyModules;
         if (
-          ProcessHangMonitor?.findActiveReport(this) ||
-          ProcessHangMonitor?.findPausedReport(this)
+          lazy.ProcessHangMonitor?.findActiveReport(this) ||
+          lazy.ProcessHangMonitor?.findPausedReport(this)
         ) {
           return { permitUnload: true };
         }
