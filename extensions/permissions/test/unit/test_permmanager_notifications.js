@@ -12,10 +12,6 @@ function run_test() {
   test_generator.next();
 }
 
-function continue_test() {
-  do_run_generator(test_generator);
-}
-
 function* do_run_test() {
   let pm = Services.perms;
   let now = Number(Date.now());
