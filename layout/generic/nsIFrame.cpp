@@ -8306,14 +8306,17 @@ nsresult nsIFrame::GetChildFrameContainingOffset(int32_t inContentOffset,
 // aOutSideLimit != 0 means ignore aLineStart, instead work from
 // the end (if > 0) or beginning (if < 0).
 //
-nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
-                                                  nsPeekOffsetStruct* aPos,
-                                                  nsIFrame* aBlockFrame,
-                                                  int32_t aLineStart,
-                                                  int8_t aOutSideLimit) {
-  // magic numbers aLineStart will be -1 for end of block 0 will be start of
-  // block
-  if (!aBlockFrame || !aPos) return NS_ERROR_NULL_POINTER;
+static nsresult GetNextPrevLineFromBlockFrame(nsPeekOffsetStruct* aPos,
+                                              nsIFrame* aBlockFrame,
+                                              int32_t aLineStart,
+                                              int8_t aOutSideLimit) {
+  MOZ_ASSERT(aPos);
+  MOZ_ASSERT(aBlockFrame);
+
+  nsPresContext* pc = aBlockFrame->PresContext();
+
+  // magic numbers: aLineStart will be -1 for end of block, 0 will be start of
+  // block.
 
   aPos->mResultFrame = nullptr;
   aPos->mResultContent = nullptr;
@@ -8327,14 +8330,14 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
   }
   int32_t searchingLine = aLineStart;
   int32_t countLines = it->GetNumLines();
-  if (aOutSideLimit > 0)  // start at end
+  if (aOutSideLimit > 0) {  // start at end
     searchingLine = countLines;
-  else if (aOutSideLimit < 0)  // start at beginning
-    searchingLine = -1;        //"next" will be 0
-  else if ((aPos->mDirection == eDirPrevious && searchingLine == 0) ||
-           (aPos->mDirection == eDirNext &&
-            searchingLine >= (countLines - 1))) {
-    // we need to jump to new block frame.
+  } else if (aOutSideLimit < 0) {  // start at beginning
+    searchingLine = -1;            //"next" will be 0
+  } else if ((aPos->mDirection == eDirPrevious && searchingLine == 0) ||
+             (aPos->mDirection == eDirNext &&
+              searchingLine >= (countLines - 1))) {
+    // Not found.
     return NS_ERROR_FAILURE;
   }
   nsIFrame* resultFrame = nullptr;
@@ -8371,7 +8374,7 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         return NS_ERROR_FAILURE;
       }
     }
-    GetLastLeaf(&lastFrame);
+    nsIFrame::GetLastLeaf(&lastFrame);
 
     if (aPos->mDirection == eDirNext) {
       nearStoppingFrame = firstFrame;
@@ -8403,16 +8406,18 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
       result = NS_ERROR_FAILURE;
 
       nsCOMPtr<nsIFrameEnumerator> frameTraversal;
-      result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
-                                    aPresContext, resultFrame, ePostOrder,
+      result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), pc,
+                                    resultFrame, ePostOrder,
                                     false,  // aVisual
                                     aPos->mScrollViewStop,
                                     false,  // aFollowOOFs
                                     false   // aSkipPopupChecks
       );
-      if (NS_FAILED(result)) return result;
+      if (NS_FAILED(result)) {
+        return result;
+      }
 
-      auto FoundValidFrame = [aPos](const ContentOffsets& aOffsets,
+      auto FoundValidFrame = [aPos](const nsIFrame::ContentOffsets& aOffsets,
                                     const nsIFrame* aFrame) {
         if (!aOffsets.content) {
           return false;
@@ -8447,10 +8452,7 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         // special check. if we allow non-text selection then we can allow a hit
         // location to fall before a table. otherwise there is no way to get and
         // click signal to fall before a table (it being a line iterator itself)
-        mozilla::PresShell* presShell = aPresContext->GetPresShell();
-        if (!presShell) {
-          return NS_ERROR_FAILURE;
-        }
+        mozilla::PresShell* presShell = pc->PresShell();
         int16_t isEditor = presShell->GetSelectionFlags();
         isEditor = isEditor == nsISelectionDisplay::DISPLAY_ALL;
         if (isEditor) {
@@ -8484,7 +8486,7 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
           nsView* view;
           nsPoint offset;
           resultFrame->GetOffsetFromView(offset, &view);
-          ContentOffsets offsets =
+          nsIFrame::ContentOffsets offsets =
               resultFrame->GetContentOffsetsFromPoint(point - offset);
           aPos->mResultContent = offsets.content;
           aPos->mContentOffset = offsets.offset;
@@ -8496,20 +8498,24 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         }
 
         if (aPos->mDirection == eDirPrevious &&
-            (resultFrame == farStoppingFrame))
+            resultFrame == farStoppingFrame) {
           break;
-        if (aPos->mDirection == eDirNext && (resultFrame == nearStoppingFrame))
+        }
+        if (aPos->mDirection == eDirNext && resultFrame == nearStoppingFrame) {
           break;
+        }
         // always try previous on THAT line if that fails go the other way
         resultFrame = frameTraversal->Traverse(/* aForward = */ false);
-        if (!resultFrame) return NS_ERROR_FAILURE;
+        if (!resultFrame) {
+          return NS_ERROR_FAILURE;
+        }
       }
 
       if (!found) {
         resultFrame = storeOldResultFrame;
 
-        result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
-                                      aPresContext, resultFrame, eLeaf,
+        result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), pc,
+                                      resultFrame, eLeaf,
                                       false,  // aVisual
                                       aPos->mScrollViewStop,
                                       false,  // aFollowOOFs
@@ -8521,7 +8527,7 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         nsView* view;
         nsPoint offset;
         resultFrame->GetOffsetFromView(offset, &view);
-        ContentOffsets offsets =
+        nsIFrame::ContentOffsets offsets =
             resultFrame->GetContentOffsetsFromPoint(point - offset);
         aPos->mResultContent = offsets.content;
         aPos->mContentOffset = offsets.offset;
@@ -8942,84 +8948,77 @@ nsresult nsIFrame::PeekOffsetForLine(nsPeekOffsetStruct* aPos) {
       return NS_ERROR_FAILURE;
     }
 
-    int edgeCase = 0;  // no edge case. this should look at thisLine
+    int8_t edgeCase = 0;  // no edge case. This should look at thisLine
 
-    bool doneLooping = false;  // tells us when no more block frames hit.
-    // this part will find a frame or a block frame. if it's a block frame
+    // this part will find a frame or a block frame. If it's a block frame
     // it will "drill down" to find a viable frame or it will return an
     // error.
     nsIFrame* lastFrame = this;
 
     // inner loop - crawling the frames within a specific block subtree
-    do {
-      result = nsIFrame::GetNextPrevLineFromeBlockFrame(
-          PresContext(), aPos, blockFrame, thisLine,
-          edgeCase);  // start from thisLine
-
+    while (true) {
+      result =
+          GetNextPrevLineFromBlockFrame(aPos, blockFrame, thisLine, edgeCase);
       // we came back to same spot! keep going
       if (NS_SUCCEEDED(result) &&
           (!aPos->mResultFrame || aPos->mResultFrame == lastFrame)) {
         aPos->mResultFrame = nullptr;
+        lastFrame = nullptr;
         if (aPos->mDirection == eDirPrevious) {
           thisLine--;
         } else {
           thisLine++;
         }
-      } else {               // if failure or success with different frame.
-        doneLooping = true;  // do not continue with while loop
+        continue;
+      }
+
+      if (NS_FAILED(result)) {
+        break;
       }
 
       lastFrame = aPos->mResultFrame;  // set last frame
+      /* SPECIAL CHECK FOR NAVIGATION INTO FRAMES WITHOUT LINE ITERATOR
+       * when we hit a frame which doesn't have line iterator, we need to
+       * drill down and find a child with the line iterator to prevent the
+       * crawling process to prematurely finish
+       *
+       * So far known cases are:
+       * 1) table wrapper (drill down into table row group)
+       * 2) table cell (drill down into its only anon child)
+       * See
+       * https://bugzilla.mozilla.org/show_bug.cgi?id=1216483
+       * https://bugzilla.mozilla.org/show_bug.cgi?id=1475232
+       */
+      bool shouldDrillIntoChildren =
+          aPos->mResultFrame->IsTableWrapperFrame() ||
+          aPos->mResultFrame->IsTableCellFrame() ||
+          aPos->mResultFrame->IsFlexContainerFrame() ||
+          aPos->mResultFrame->IsGridContainerFrame();
 
-      // make sure block element is not the same as the one we had before
-      if (NS_SUCCEEDED(result) && aPos->mResultFrame &&
-          blockFrame != aPos->mResultFrame) {
-        /* SPECIAL CHECK FOR NAVIGATION INTO FRAMES WITHOUT LINE ITERATOR
-         * when we hit a frame which doesn't have line iterator, we need to
-         * drill down and find a child with the line iterator to prevent the
-         * crawling process to prematurely finish
-         *
-         * So far known cases are:
-         * 1) table wrapper (drill down into table row group)
-         * 2) table cell (drill down into its content)
-         * 3) flex/grid container which don't provide line iterator
-         *    (drill down into its content)
-         * See
-         * https://bugzilla.mozilla.org/show_bug.cgi?id=1216483
-         * https://bugzilla.mozilla.org/show_bug.cgi?id=1475232
-         */
-        bool shouldDrillIntoChildren =
-            aPos->mResultFrame->IsTableWrapperFrame() ||
-            aPos->mResultFrame->IsTableCellFrame() ||
-            aPos->mResultFrame->IsFlexContainerFrame() ||
-            aPos->mResultFrame->IsGridContainerFrame();
-
-        if (shouldDrillIntoChildren) {
-          nsIFrame* child = GetFirstSelectableDescendantWithLineIterator(
-              aPos->mResultFrame, aPos->mForceEditableRegion);
-          if (child) {
-            aPos->mResultFrame = child;
-          }
+      if (shouldDrillIntoChildren) {
+        nsIFrame* child = GetFirstSelectableDescendantWithLineIterator(
+            aPos->mResultFrame, aPos->mForceEditableRegion);
+        if (child) {
+          aPos->mResultFrame = child;
         }
-
-        if (!aPos->mResultFrame->CanProvideLineIterator()) {
-          // no more selectable content at this level
-          break;
-        }
-
-        // we've struck another block element with selectable content!
-        doneLooping = false;
-        if (aPos->mDirection == eDirPrevious) {
-          edgeCase = 1;  // far edge, search from end backwards
-        } else {
-          edgeCase = -1;  // near edge search from beginning onwards
-        }
-        thisLine = 0;  // this line means nothing now.
-        // everything else means something so keep looking "inside" the
-        // block
-        blockFrame = aPos->mResultFrame;
       }
-    } while (!doneLooping);
+
+      if (!aPos->mResultFrame->CanProvideLineIterator()) {
+        // no more selectable content at this level
+        break;
+      }
+
+      // we've struck another block element with selectable content!
+      if (aPos->mDirection == eDirPrevious) {
+        edgeCase = 1;  // far edge, search from end backwards
+      } else {
+        edgeCase = -1;  // near edge search from beginning onwards
+      }
+      thisLine = 0;  // this line means nothing now.
+      // everything else means something so keep looking "inside" the
+      // block
+      blockFrame = aPos->mResultFrame;
+    }
   }
   return result;
 }
@@ -9042,7 +9041,7 @@ nsresult nsIFrame::PeekOffsetForLineEdge(nsPeekOffsetStruct* aPos) {
   }
 
   nsIFrame* baseFrame = nullptr;
-  bool endOfLine = (eSelectEndLine == aPos->mAmount);
+  bool endOfLine = eSelectEndLine == aPos->mAmount;
 
   if (aPos->mVisual && PresContext()->BidiEnabled()) {
     nsIFrame* firstFrame;
