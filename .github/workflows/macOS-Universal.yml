@@ -145,13 +145,13 @@ jobs:
     - name: Package
       run: |       
         ./mach python ./toolkit/mozapps/installer/unify.py ./obj-x86_64-apple-darwin/dist/${{ github.event.repository.name }}/${{ github.event.repository.name }}.app ./obj-aarch64-apple-darwin/dist/${{ github.event.repository.name }}/${{ github.event.repository.name }}.app
-        ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/Floorp target.dmg
+        ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/Floorp floorp-macOS-universal.dmg
 
     - name: Publish
       uses: actions/upload-artifact@v3
       with:
         name: Universal-Artifact
-        path: target.dmg
+        path: floorp-macOS-universal.dmg
   cleanup:
     needs: integration
     runs-on: ubuntu-latest

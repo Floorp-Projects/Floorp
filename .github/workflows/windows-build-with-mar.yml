@@ -1,4 +1,4 @@
-name: Windows x64 Build
+name: Windows x64 with mar Build
 
 on: workflow_dispatch
 
