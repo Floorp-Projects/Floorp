@@ -14,6 +14,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/HashTable.h"
 #include "nsContainerFrame.h"
+#include "nsILineIterator.h"
 
 namespace mozilla {
 class PresShell;
@@ -89,7 +90,8 @@ struct ComputedGridLineInfo {
 };
 }  // namespace mozilla
 
-class nsGridContainerFrame final : public nsContainerFrame {
+class nsGridContainerFrame final : public nsContainerFrame,
+                                   public nsILineIterator {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsGridContainerFrame)
   NS_DECL_QUERYFRAME
@@ -637,6 +639,19 @@ class nsGridContainerFrame final : public nsContainerFrame {
     Key mKey;
     nscoord mBSize;
   };
+
+  bool CanProvideLineIterator() const final { return true; }
+  nsILineIterator* GetLineIterator() final { return this; }
+  int32_t GetNumLines() const final;
+  bool GetDirection() final;
+  mozilla::Result<LineInfo, nsresult> GetLine(int32_t aLineNumber) final;
+  int32_t FindLineContaining(nsIFrame* aFrame, int32_t aStartLine = 0) final;
+  NS_IMETHOD FindFrameAt(int32_t aLineNumber, nsPoint aPos,
+                         nsIFrame** aFrameFound, bool* aPosIsBeforeFirstFrame,
+                         bool* aPosIsAfterLastFrame) final;
+  NS_IMETHOD CheckLineOrder(int32_t aLine, bool* aIsReordered,
+                            nsIFrame** aFirstVisual,
+                            nsIFrame** aLastVisual) final;
 };
 
 #endif /* nsGridContainerFrame_h___ */

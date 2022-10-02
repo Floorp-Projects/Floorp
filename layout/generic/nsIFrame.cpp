@@ -8977,23 +8977,20 @@ nsresult nsIFrame::PeekOffsetForLine(nsPeekOffsetStruct* aPos) {
       }
 
       lastFrame = aPos->mResultFrame;  // set last frame
-      /* SPECIAL CHECK FOR NAVIGATION INTO FRAMES WITHOUT LINE ITERATOR
+      /* SPECIAL CHECK FOR NAVIGATION INTO TABLES
        * when we hit a frame which doesn't have line iterator, we need to
        * drill down and find a child with the line iterator to prevent the
-       * crawling process to prematurely finish
+       * crawling process to prematurely finish. Note that this is only sound if
+       * we're guaranteed to not have multiple children implementing
+       * LineIterator.
        *
        * So far known cases are:
        * 1) table wrapper (drill down into table row group)
        * 2) table cell (drill down into its only anon child)
-       * See
-       * https://bugzilla.mozilla.org/show_bug.cgi?id=1216483
-       * https://bugzilla.mozilla.org/show_bug.cgi?id=1475232
        */
-      bool shouldDrillIntoChildren =
+      const bool shouldDrillIntoChildren =
           aPos->mResultFrame->IsTableWrapperFrame() ||
-          aPos->mResultFrame->IsTableCellFrame() ||
-          aPos->mResultFrame->IsFlexContainerFrame() ||
-          aPos->mResultFrame->IsGridContainerFrame();
+          aPos->mResultFrame->IsTableCellFrame();
 
       if (shouldDrillIntoChildren) {
         nsIFrame* child = GetFirstSelectableDescendantWithLineIterator(
@@ -10540,8 +10537,9 @@ nsIFrame::RefreshSizeCache(nsBoxLayoutState& aState) {
     // ok we need the max ascent of the items on the line. So to do this
     // ask the block for its line iterator. Get the max ascent.
     AutoAssertNoDomMutations guard;
-    nsILineIterator* lines = GetLineIterator();
-    if (lines) {
+    if (IsBlockFrameOrSubclass()) {
+      nsILineIterator* lines = GetLineIterator();
+      MOZ_ASSERT(lines);
       metrics->mBlockMinSize.height = 0;
       int32_t lineCount = lines->GetNumLines();
       for (int32_t i = 0; i < lineCount; ++i) {

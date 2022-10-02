@@ -14,6 +14,7 @@
 #include "mozilla/dom/FlexBinding.h"
 #include "mozilla/UniquePtr.h"
 #include "nsContainerFrame.h"
+#include "nsILineIterator.h"
 
 namespace mozilla {
 class LogicalPoint;
@@ -118,7 +119,8 @@ class MOZ_STACK_CLASS FlexboxAxisInfo final {
  * layout here as well (since that's what the -webkit versions are aliased to)
  * -- but only inside of a "display:-webkit-{inline-}box" container.)
  */
-class nsFlexContainerFrame final : public nsContainerFrame {
+class nsFlexContainerFrame final : public nsContainerFrame,
+                                   public nsILineIterator {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsFlexContainerFrame)
   NS_DECL_QUERYFRAME
@@ -273,6 +275,19 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * Callback for nsIFrame::MarkIntrinsicISizesDirty() on a flex item.
    */
   static void MarkCachedFlexMeasurementsDirty(nsIFrame* aItemFrame);
+
+  bool CanProvideLineIterator() const final { return true; }
+  nsILineIterator* GetLineIterator() final { return this; }
+  int32_t GetNumLines() const final;
+  bool GetDirection() final;
+  mozilla::Result<LineInfo, nsresult> GetLine(int32_t aLineNumber) final;
+  int32_t FindLineContaining(nsIFrame* aFrame, int32_t aStartLine = 0) final;
+  NS_IMETHOD FindFrameAt(int32_t aLineNumber, nsPoint aPos,
+                         nsIFrame** aFrameFound, bool* aPosIsBeforeFirstFrame,
+                         bool* aPosIsAfterLastFrame) final;
+  NS_IMETHOD CheckLineOrder(int32_t aLine, bool* aIsReordered,
+                            nsIFrame** aFirstVisual,
+                            nsIFrame** aLastVisual) final;
 
  protected:
   // Protected constructor & destructor

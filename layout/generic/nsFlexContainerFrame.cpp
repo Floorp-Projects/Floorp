@@ -5778,3 +5778,105 @@ nscoord nsFlexContainerFrame::GetPrefISize(gfxContext* aRenderingContext) {
 
   return mCachedPrefISize;
 }
+
+int32_t nsFlexContainerFrame::GetNumLines() const {
+  // TODO(emilio, bug 1793251): Treating all row oriented frames as single-lines
+  // might not be great for flex-wrap'd containers, consider trying to do
+  // better? We probably would need to persist more stuff than we do after
+  // layout.
+  return FlexboxAxisInfo(this).mIsRowOriented ? 1 : mFrames.GetLength();
+}
+
+bool nsFlexContainerFrame::GetDirection() {
+  FlexboxAxisInfo info(this);
+  if (info.mIsRowOriented) {
+    const bool isRtl = StyleVisibility()->mDirection == StyleDirection::Rtl;
+    return info.mIsMainAxisReversed != isRtl;
+  }
+  return false;
+}
+
+Result<nsILineIterator::LineInfo, nsresult> nsFlexContainerFrame::GetLine(
+    int32_t aLineNumber) {
+  if (aLineNumber < 0 || aLineNumber >= GetNumLines()) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  FlexboxAxisInfo info(this);
+  LineInfo lineInfo;
+  if (info.mIsRowOriented) {
+    lineInfo.mLineBounds = GetRect();
+    lineInfo.mFirstFrameOnLine = mFrames.FirstChild();
+    // This isn't quite ideal for multi-line row flexbox, see bug 1793251.
+    lineInfo.mNumFramesOnLine = mFrames.GetLength();
+  } else {
+    // TODO(emilio, bug 1793322): Deal with column-reverse (mIsMainAxisReversed)
+    nsIFrame* f = mFrames.FrameAt(aLineNumber);
+    lineInfo.mLineBounds = f->GetRect();
+    lineInfo.mFirstFrameOnLine = f;
+    lineInfo.mNumFramesOnLine = 1;
+  }
+  return lineInfo;
+}
+
+int32_t nsFlexContainerFrame::FindLineContaining(nsIFrame* aFrame,
+                                                 int32_t aStartLine) {
+  const int32_t index = mFrames.IndexOf(aFrame);
+  if (index < 0) {
+    return -1;
+  }
+  const FlexboxAxisInfo info(this);
+  if (info.mIsRowOriented) {
+    return 0;
+  }
+  if (index < aStartLine) {
+    return -1;
+  }
+  return index;
+}
+
+NS_IMETHODIMP
+nsFlexContainerFrame::CheckLineOrder(int32_t aLine, bool* aIsReordered,
+                                     nsIFrame** aFirstVisual,
+                                     nsIFrame** aLastVisual) {
+  *aIsReordered = false;
+  *aFirstVisual = nullptr;
+  *aLastVisual = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFlexContainerFrame::FindFrameAt(int32_t aLineNumber, nsPoint aPos,
+                                  nsIFrame** aFrameFound,
+                                  bool* aPosIsBeforeFirstFrame,
+                                  bool* aPosIsAfterLastFrame) {
+  const auto wm = GetWritingMode();
+  const LogicalPoint pos(wm, aPos, GetSize());
+  const FlexboxAxisInfo info(this);
+
+  *aFrameFound = nullptr;
+  *aPosIsBeforeFirstFrame = true;
+  *aPosIsAfterLastFrame = false;
+
+  if (!info.mIsRowOriented) {
+    nsIFrame* f = mFrames.FrameAt(aLineNumber);
+    if (!f) {
+      return NS_OK;
+    }
+
+    auto rect = f->GetLogicalRect(wm, GetSize());
+    *aFrameFound = f;
+    *aPosIsBeforeFirstFrame = pos.I(wm) < rect.IStart(wm);
+    *aPosIsAfterLastFrame = pos.I(wm) > rect.IEnd(wm);
+    return NS_OK;
+  }
+
+  LineFrameFinder finder(aPos, GetSize(), GetWritingMode(), GetDirection());
+  for (nsIFrame* f : mFrames) {
+    finder.Scan(f);
+    if (finder.IsDone()) {
+      break;
+    }
+  }
+  finder.Finish(aFrameFound, aPosIsBeforeFirstFrame, aPosIsAfterLastFrame);
+  return NS_OK;
+}
