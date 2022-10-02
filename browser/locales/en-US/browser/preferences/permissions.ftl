@@ -2,9 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-permissions-window =
+permissions-window2 =
     .title = Exceptions
-    .style = width: 45em
+    .style = min-width: 45em
 
 permissions-close-key =
     .key = w
@@ -88,58 +88,58 @@ permissions-invalid-uri-label = Please enter a valid hostname
 
 ## Exceptions - Tracking Protection
 
-permissions-exceptions-etp-window =
+permissions-exceptions-etp-window2 =
     .title = Exceptions for Enhanced Tracking Protection
-    .style = { permissions-window.style }
+    .style = { permissions-window2.style }
 permissions-exceptions-etp-desc = You’ve turned off protections on these websites.
 
 ## Exceptions - Cookies
 
-permissions-exceptions-cookie-window =
+permissions-exceptions-cookie-window2 =
     .title = Exceptions - Cookies and Site Data
-    .style = { permissions-window.style }
+    .style = { permissions-window2.style }
 permissions-exceptions-cookie-desc = You can specify which websites are always or never allowed to use cookies and site data.  Type the exact address of the site you want to manage and then click Block, Allow for Session, or Allow.
 
 ## Exceptions - HTTPS-Only Mode
 
-permissions-exceptions-https-only-window =
+permissions-exceptions-https-only-window2 =
     .title = Exceptions - HTTPS-Only Mode
-    .style = { permissions-window.style }
+    .style = { permissions-window2.style }
 permissions-exceptions-https-only-desc = You can turn off HTTPS-Only Mode for specific websites. { -brand-short-name } won’t attempt to upgrade the connection to secure HTTPS for those sites. Exceptions do not apply to private windows.
 
 ## Exceptions - Pop-ups
 
-permissions-exceptions-popup-window =
+permissions-exceptions-popup-window2 =
     .title = Allowed Websites - Pop-ups
-    .style = { permissions-window.style }
+    .style = { permissions-window2.style }
 permissions-exceptions-popup-desc = You can specify which websites are allowed to open pop-up windows. Type the exact address of the site you want to allow and then click Allow.
 
 ## Exceptions - Saved Logins
 
-permissions-exceptions-saved-logins-window =
+permissions-exceptions-saved-logins-window2 =
     .title = Exceptions - Saved Logins
-    .style = { permissions-window.style }
+    .style = { permissions-window2.style }
 permissions-exceptions-saved-logins-desc = Logins for the following websites will not be saved
 
 ## Exceptions - Add-ons
 
-permissions-exceptions-addons-window =
+permissions-exceptions-addons-window2 =
     .title = Allowed Websites - Add-ons Installation
-    .style = { permissions-window.style }
+    .style = { permissions-window2.style }
 permissions-exceptions-addons-desc = You can specify which websites are allowed to install add-ons. Type the exact address of the site you want to allow and then click Allow.
 
 ## Site Permissions - Autoplay
 
-permissions-site-autoplay-window =
+permissions-site-autoplay-window2 =
     .title = Settings - Autoplay
-    .style = { permissions-window.style }
+    .style = { permissions-window2.style }
 permissions-site-autoplay-desc = You can manage the sites that do not follow your default autoplay settings here.
 
 ## Site Permissions - Notifications
 
-permissions-site-notification-window =
+permissions-site-notification-window2 =
     .title = Settings - Notification Permissions
-    .style = { permissions-window.style }
+    .style = { permissions-window2.style }
 permissions-site-notification-desc = The following websites have requested to send you notifications. You can specify which websites are allowed to send you notifications. You can also block new requests asking to allow notifications.
 permissions-site-notification-disable-label =
     .label = Block new requests asking to allow notifications
@@ -147,9 +147,9 @@ permissions-site-notification-disable-desc = This will prevent any websites not 
 
 ## Site Permissions - Location
 
-permissions-site-location-window =
+permissions-site-location-window2 =
     .title = Settings - Location Permissions
-    .style = { permissions-window.style }
+    .style = { permissions-window2.style }
 permissions-site-location-desc = The following websites have requested to access your location. You can specify which websites are allowed to access your location. You can also block new requests asking to access your location.
 permissions-site-location-disable-label =
     .label = Block new requests asking to access your location
@@ -157,9 +157,9 @@ permissions-site-location-disable-desc = This will prevent any websites not list
 
 ## Site Permissions - Virtual Reality
 
-permissions-site-xr-window =
+permissions-site-xr-window2 =
     .title = Settings - Virtual Reality Permissions
-    .style = { permissions-window.style }
+    .style = { permissions-window2.style }
 permissions-site-xr-desc = The following websites have requested to access your virtual reality devices. You can specify which websites are allowed to access your virtual reality devices. You can also block new requests asking to access your virtual reality devices.
 permissions-site-xr-disable-label =
     .label = Block new requests asking to access your virtual reality devices
@@ -167,9 +167,9 @@ permissions-site-xr-disable-desc = This will prevent any websites not listed abo
 
 ## Site Permissions - Camera
 
-permissions-site-camera-window =
+permissions-site-camera-window2 =
     .title = Settings - Camera Permissions
-    .style = { permissions-window.style }
+    .style = { permissions-window2.style }
 permissions-site-camera-desc = The following websites have requested to access your camera. You can specify which websites are allowed to access your camera. You can also block new requests asking to access your camera.
 permissions-site-camera-disable-label =
     .label = Block new requests asking to access your camera
@@ -177,9 +177,9 @@ permissions-site-camera-disable-desc = This will prevent any websites not listed
 
 ## Site Permissions - Microphone
 
-permissions-site-microphone-window =
+permissions-site-microphone-window2 =
     .title = Settings - Microphone Permissions
-    .style = { permissions-window.style }
+    .style = { permissions-window2.style }
 permissions-site-microphone-desc = The following websites have requested to access your microphone. You can specify which websites are allowed to access your microphone. You can also block new requests asking to access your microphone.
 permissions-site-microphone-disable-label =
     .label = Block new requests asking to access your microphone

@@ -8,27 +8,27 @@ var { AppConstants } = ChromeUtils.import(
 
 const permissionExceptionsL10n = {
   trackingprotection: {
-    window: "permissions-exceptions-etp-window",
+    window: "permissions-exceptions-etp-window2",
     description: "permissions-exceptions-etp-desc",
   },
   cookie: {
-    window: "permissions-exceptions-cookie-window",
+    window: "permissions-exceptions-cookie-window2",
     description: "permissions-exceptions-cookie-desc",
   },
   popup: {
-    window: "permissions-exceptions-popup-window",
+    window: "permissions-exceptions-popup-window2",
     description: "permissions-exceptions-popup-desc",
   },
   "login-saving": {
-    window: "permissions-exceptions-saved-logins-window",
+    window: "permissions-exceptions-saved-logins-window2",
     description: "permissions-exceptions-saved-logins-desc",
   },
   "https-only-load-insecure": {
-    window: "permissions-exceptions-https-only-window",
+    window: "permissions-exceptions-https-only-window2",
     description: "permissions-exceptions-https-only-desc",
   },
   install: {
-    window: "permissions-exceptions-addons-window",
+    window: "permissions-exceptions-addons-window2",
     description: "permissions-exceptions-addons-desc",
   },
 };

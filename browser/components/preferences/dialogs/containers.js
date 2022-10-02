@@ -14,11 +14,11 @@ function setTitle() {
 
   let winElem = document.documentElement;
   if (params.userContextId) {
-    document.l10n.setAttributes(winElem, "containers-window-update-settings", {
+    document.l10n.setAttributes(winElem, "containers-window-update-settings2", {
       name: params.identity.name,
     });
   } else {
-    document.l10n.setAttributes(winElem, "containers-window-new");
+    document.l10n.setAttributes(winElem, "containers-window-new2");
   }
 }
 setTitle();
