@@ -45,6 +45,6 @@ test(() => {
   assert_equals(selection.focusNode, one.childNodes[0]);
   assert_equals(selection.focusOffset, 2);
 
-  assert_equals(selection.toString(), "e\n\nTwo\n\nTh");
+  assert_equals(selection.toString(), "e\n\nTwo\n\nTh".replaceAll("\r\n", "\n"));
 }, "backward");
 </script>
