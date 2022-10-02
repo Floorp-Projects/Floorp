@@ -31,3 +31,10 @@ opacity: 0.8 !important;
 .gradation > #background{
   background: linear-gradient(to right, #d76f3d 0%, #56009c 100%) !important;
 }
+
+#background_back{
+  position: fixed;
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
