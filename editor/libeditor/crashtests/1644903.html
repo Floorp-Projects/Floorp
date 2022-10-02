@@ -4,8 +4,9 @@ window.onload = () => {
 }
 function onToggle() {
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <body> (at the text node after the <iframe>).
-  getSelection().collapse(document.body, document.body.childNodes.length);
+  // text node at end of the <details> (<p> is closed before the <details>).
+  const details = document.querySelector("details");
+  getSelection().collapse(details.lastChild, details.lastChild.length);
   const link = document.querySelector("link");
   document.execCommand("delete");
   document.querySelector("iframe").contentDocument.adoptNode(link);
@@ -15,3 +16,4 @@ function onToggle() {
 <link item="">
 <details open ontoggle="onToggle()">
 <iframe></iframe>
+</details></body>

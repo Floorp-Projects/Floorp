@@ -1,14 +1,13 @@
 <script>
 function onLoad() {
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <dialog> which is the deepest last child of the <body>.
-  getSelection().collapse(
-    document.querySelector("dialog"),
-    document.querySelector("dialog").childNodes.length
-  );
+  // text node in the <dialog> which is the deepest last child of the <body>.
+  const dialog = document.querySelector("dialog");
+  getSelection().collapse(dialog.lastChild, dialog.lastChild.length);
   document.execCommand("insertImage", false, "o")
 }
 </script>
 <body onload="onLoad()">
 <meter contenteditable>
 <dialog>
+</dialog></meter></body>

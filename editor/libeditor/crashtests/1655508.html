@@ -3,8 +3,11 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <body> (at the text node after the <h3>).
-  getSelection().collapse(document.body, document.body.childNodes.length);
+  // text node at end of the <body> (end of the text node after the <h3>).
+  getSelection().collapse(
+    document.body.lastChild,
+    document.body.lastChild.length
+  );
   const textarea = document.querySelector("textarea");
   const abbr = document.querySelector("abbr");
   let node;

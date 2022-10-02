@@ -4,8 +4,9 @@
 document.addEventListener('DOMContentLoaded', () => {
   const code = document.querySelector("code[contenteditable=false]");
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <code> which is the last inline container of the <body>.
-  getSelection().collapse(code, code.childNodes.length);
+  // last text node in the <code> which is the last inline container of the
+  // <body>.
+  getSelection().collapse(code.lastChild, code.lastChild.length);
   code.querySelector("br").contentEditable = true;
   document.execCommand("indent");
 });

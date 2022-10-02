@@ -2,12 +2,10 @@
 var count = 0;
 function onLoad() {
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <s> which is the deepest last child (and a container) of the <body> (i.e.,
-  // at the the text node after the last comment node).
-  getSelection().collapse(
-    document.querySelector("s"),
-    document.querySelector("s").childNodes.length
-  );
+  // text node in the <s> which is the deepest last child (and a container) of
+  // the <body> (i.e., end of the the text node after the last comment node).
+  const s = document.querySelector("s");
+  getSelection().collapse(s.lastChild, s.lastChild.length);
   document.execCommand("delete");
 }
 

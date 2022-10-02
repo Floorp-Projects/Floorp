@@ -5,14 +5,13 @@ body { display: contents }
 <script>
 function onLoad() {
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <th> which is the deepest last child of the <body>.
-  getSelection().collapse(
-    document.querySelector("th"),
-    document.querySelector("th").childNodes.length
-  );
+  // text node in the <th> which is the deepest last child of the <body>.
+  const th =  document.querySelector("th");
+  getSelection().collapse(th.lastChild, th.lastChild.length);
   document.execCommand("enableInlineTableEditing");
 }
 </script>
 <body onload="onLoad()">
 <table contenteditable>
 <th>
+</th></table></body>

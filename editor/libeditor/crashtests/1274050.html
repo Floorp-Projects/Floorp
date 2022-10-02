@@ -4,8 +4,11 @@
 <script>
 window.onload = function() {
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <body>, i.e., at the text node after the <table>.
-  getSelection().collapse(document.body, document.body.childNodes.length);
+  // text node at end of the <body>.
+  getSelection().collapse(
+    document.body.lastChild,
+    document.body.lastChild.length
+  );
   document.execCommand("styleWithCSS", false, false);
   document.designMode = "on";
   document.execCommand("insertUnorderedList");

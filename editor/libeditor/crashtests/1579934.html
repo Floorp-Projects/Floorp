@@ -12,11 +12,10 @@ function onLoad() {
 
 function onToggle() {
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <button> which is the deepest last child of the <body>.
-  getSelection().collapse(
-    document.querySelector("button"),
-    document.querySelector("button").childNodes.length
-  );
+  // text node node in the <button> which is the deepest last child of the
+  // <body>.
+  const button = document.querySelector("button");
+  getSelection().collapse(button.lastChild, button.lastChild.length);
   document.querySelector("form").reset();
 }
 </script>

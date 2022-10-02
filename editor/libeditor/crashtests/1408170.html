@@ -19,11 +19,9 @@ function onToggle1() {
 
 function onToggle2() {
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <summary> which is the last child of the <body>.
-  getSelection().collapse(
-    document.querySelector("summary"),
-    document.querySelector("summary").childNodes.length
-  );
+  // text node in the <summary> which is the last child of the <body>.
+  const summary = document.querySelector("summary");
+  getSelection().collapse(summary.firstChild, summary.firstChild.length);
   try {
     document.querySelector("label").appendChild(
       document.querySelector("font")
@@ -39,3 +37,4 @@ function onToggle2() {
 <details ontoggle="onToggle1()" open>
 <font dir="rtl">
 <summary>
+</details></font></summary></body>

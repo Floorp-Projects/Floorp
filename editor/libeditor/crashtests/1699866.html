@@ -2,8 +2,8 @@
 window.onload = () => {
   const font = document.querySelector("font");
   // For emulating traditional behavior, collapse Selection to end of the
-  // <font>.
-  getSelection().collapse(font, font.childNodes.length);
+  // text node in the <font>.
+  getSelection().collapse(font.lastChild, font.lastChild.length);
   const meta = document.querySelector("meta");
   meta.style.setProperty(
     "text-decoration",
@@ -19,3 +19,4 @@ window.onload = () => {
 a
 <meta></meta>
 <font>
+</font></ins></body>
