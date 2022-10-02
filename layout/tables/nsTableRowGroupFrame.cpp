@@ -1742,10 +1742,6 @@ nsTableRowGroupFrame::FindFrameAt(int32_t aLineNumber, nsPoint aPos,
   nsTableFrame* table = GetTableFrame();
   nsTableCellMap* cellMap = table->GetCellMap();
 
-  WritingMode wm = table->GetWritingMode();
-  nsSize containerSize = table->GetSize();
-  LogicalPoint pos(wm, aPos, containerSize);
-
   *aFrameFound = nullptr;
   *aPosIsBeforeFirstFrame = true;
   *aPosIsAfterLastFrame = false;
@@ -1766,58 +1762,20 @@ nsTableRowGroupFrame::FindFrameAt(int32_t aLineNumber, nsPoint aPos,
     }
   }
   NS_ASSERTION(frame, "cellmap is lying");
-  bool isRTL = (StyleDirection::Rtl == table->StyleVisibility()->mDirection);
+  bool isRTL = StyleDirection::Rtl == table->StyleVisibility()->mDirection;
 
-  nsIFrame* closestFromStart = nullptr;
-  nsIFrame* closestFromEnd = nullptr;
+  LineFrameFinder finder(aPos, table->GetSize(), table->GetWritingMode(),
+                         isRTL);
+
   int32_t n = numCells;
-  nsIFrame* firstFrame = frame;
   while (n--) {
-    LogicalRect rect = frame->GetLogicalRect(wm, containerSize);
-    if (rect.ISize(wm) > 0) {
-      // If pos.I() is inside this frame - this is it
-      if (rect.IStart(wm) <= pos.I(wm) && rect.IEnd(wm) > pos.I(wm)) {
-        closestFromStart = closestFromEnd = frame;
-        break;
-      }
-      if (rect.IStart(wm) < pos.I(wm)) {
-        if (!closestFromStart ||
-            rect.IEnd(wm) >
-                closestFromStart->GetLogicalRect(wm, containerSize).IEnd(wm))
-          closestFromStart = frame;
-      } else {
-        if (!closestFromEnd ||
-            rect.IStart(wm) <
-                closestFromEnd->GetLogicalRect(wm, containerSize).IStart(wm))
-          closestFromEnd = frame;
-      }
+    finder.Scan(frame);
+    if (finder.IsDone()) {
+      break;
     }
     frame = frame->GetNextSibling();
   }
-  if (!closestFromStart && !closestFromEnd) {
-    // All frames were zero-width. Just take the first one.
-    closestFromStart = closestFromEnd = firstFrame;
-  }
-  *aPosIsBeforeFirstFrame = isRTL ? !closestFromEnd : !closestFromStart;
-  *aPosIsAfterLastFrame = isRTL ? !closestFromStart : !closestFromEnd;
-  if (closestFromStart == closestFromEnd) {
-    *aFrameFound = closestFromStart;
-  } else if (!closestFromStart) {
-    *aFrameFound = closestFromEnd;
-  } else if (!closestFromEnd) {
-    *aFrameFound = closestFromStart;
-  } else {  // we're between two frames
-    nscoord delta =
-        closestFromEnd->GetLogicalRect(wm, containerSize).IStart(wm) -
-        closestFromStart->GetLogicalRect(wm, containerSize).IEnd(wm);
-    if (pos.I(wm) <
-        closestFromStart->GetLogicalRect(wm, containerSize).IEnd(wm) +
-            delta / 2) {
-      *aFrameFound = closestFromStart;
-    } else {
-      *aFrameFound = closestFromEnd;
-    }
-  }
+  finder.Finish(aFrameFound, aPosIsBeforeFirstFrame, aPosIsAfterLastFrame);
   return NS_OK;
 }
 

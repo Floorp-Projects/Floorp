@@ -607,63 +607,21 @@ nsLineIterator::FindFrameAt(int32_t aLineNumber, nsPoint aPos,
     return NS_OK;
   }
 
-  if (line->ISize() == 0 && line->BSize() == 0) return NS_ERROR_FAILURE;
+  if (line->ISize() == 0 && line->BSize() == 0) {
+    return NS_ERROR_FAILURE;
+  }
 
-  nsIFrame* frame = line->mFirstChild;
-  nsIFrame* closestFromStart = nullptr;
-  nsIFrame* closestFromEnd = nullptr;
-
-  WritingMode wm = line->mWritingMode;
-  nsSize containerSize = line->mContainerSize;
-
-  LogicalPoint pos(wm, aPos, containerSize);
-
+  LineFrameFinder finder(aPos, line->mContainerSize, line->mWritingMode,
+                         mRightToLeft);
   int32_t n = line->GetChildCount();
+  nsIFrame* frame = line->mFirstChild;
   while (n--) {
-    LogicalRect rect = frame->GetLogicalRect(wm, containerSize);
-    if (rect.ISize(wm) > 0) {
-      // If pos.I() is inside this frame - this is it
-      if (rect.IStart(wm) <= pos.I(wm) && rect.IEnd(wm) > pos.I(wm)) {
-        closestFromStart = closestFromEnd = frame;
-        break;
-      }
-      if (rect.IStart(wm) < pos.I(wm)) {
-        if (!closestFromStart ||
-            rect.IEnd(wm) >
-                closestFromStart->GetLogicalRect(wm, containerSize).IEnd(wm))
-          closestFromStart = frame;
-      } else {
-        if (!closestFromEnd ||
-            rect.IStart(wm) <
-                closestFromEnd->GetLogicalRect(wm, containerSize).IStart(wm))
-          closestFromEnd = frame;
-      }
+    finder.Scan(frame);
+    if (finder.IsDone()) {
+      break;
     }
     frame = frame->GetNextSibling();
   }
-  if (!closestFromStart && !closestFromEnd) {
-    // All frames were zero-width. Just take the first one.
-    closestFromStart = closestFromEnd = line->mFirstChild;
-  }
-  *aPosIsBeforeFirstFrame = mRightToLeft ? !closestFromEnd : !closestFromStart;
-  *aPosIsAfterLastFrame = mRightToLeft ? !closestFromStart : !closestFromEnd;
-  if (closestFromStart == closestFromEnd) {
-    *aFrameFound = closestFromStart;
-  } else if (!closestFromStart) {
-    *aFrameFound = closestFromEnd;
-  } else if (!closestFromEnd) {
-    *aFrameFound = closestFromStart;
-  } else {  // we're between two frames
-    nscoord delta =
-        closestFromEnd->GetLogicalRect(wm, containerSize).IStart(wm) -
-        closestFromStart->GetLogicalRect(wm, containerSize).IEnd(wm);
-    if (pos.I(wm) <
-        closestFromStart->GetLogicalRect(wm, containerSize).IEnd(wm) +
-            delta / 2) {
-      *aFrameFound = closestFromStart;
-    } else {
-      *aFrameFound = closestFromEnd;
-    }
-  }
+  finder.Finish(aFrameFound, aPosIsBeforeFirstFrame, aPosIsAfterLastFrame);
   return NS_OK;
 }
