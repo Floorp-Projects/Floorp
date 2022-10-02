@@ -279,6 +279,10 @@
     <string name="onboarding_home_welcome_title_2">Wilujeng sumping di internét anu leuwih pribadi</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Leuwih warnaan. Pripasi leuwih hadé. Komitmen anu sarua pikeun jalma batan bati.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Luncat tina telepon ka laptop jeung sabalikna</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">Ngagilirkeun layar leuwih babari ti nu atos-atos</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Mitembeyan</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
