@@ -10,11 +10,10 @@ function onLoadOfStyle() {
   document.execCommand("delete");
   document.querySelector("details").contentEditable = "true";
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <style>.
-  getSelection().collapse(
-    document.querySelector("style"),
-    document.querySelector("style").childNodes.length
-  );
+  // text node at end of the <style> (end of the text node after the comment
+  // node).
+  const style = document.querySelector("style");
+  getSelection().collapse(style.lastChild, style.lastChild.length);
   document.querySelector("input").select();
 }
 </script>
@@ -26,3 +25,4 @@ function onLoadOfStyle() {
 <input contenteditable="false">
 <style onload="onLoadOfStyle()">
 <!-- x -->
+</style></p></details></body>

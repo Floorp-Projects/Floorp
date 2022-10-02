@@ -2,9 +2,9 @@
 function onLoad() {
   const pre = document.querySelector("pre[contenteditable]");
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <pre> which is the deepest last child  of the <body>, i.e., at the text
-  // node after the <input>.
-  getSelection().collapse(pre, pre.childNodes.length);
+  // text node at end of the <pre> which is the deepest last child  of the
+  // <body>, i.e., end of the text node after the <input>.
+  getSelection().collapse(pre.lastChild, pre.lastChild.length);
   document.querySelector("li").setAttribute("contenteditable", "true");
   pre.addEventListener("DOMNodeRemoved", onDOMNodeRemoved);
   pre.appendChild(
@@ -24,3 +24,4 @@ function onDOMNodeRemoved() {
 A
 <pre contenteditable>
 <input autofocus>
+</pre></li></body>

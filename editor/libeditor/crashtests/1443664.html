@@ -4,10 +4,12 @@ input:focus { counter-increment: c; }
 <script>
 function onLoad() {
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <body>, i.e., at the text node after the <input contenteditable>.
+  // text node at end of the <body>, i.e., end of the text node after the
+  // <input contenteditable>.
   getSelection().collapse(document.body, document.body.childNodes.length);
   document.querySelector("input[type=number][contenteditable]").select();
 }
 </script>
 <body onload="onLoad()">
 <input type="number" contenteditable>
+</body>

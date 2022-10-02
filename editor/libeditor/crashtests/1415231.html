@@ -1,11 +1,9 @@
 <script>
 function onLoad() {
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <option> which is the last child of the <body>.
-  getSelection().collapse(
-    document.querySelector("option"),
-    document.querySelector("option").childNodes.length
-  );
+  // text node in the <option> which is in the last child of the <body>.
+  const option = document.querySelector("option");
+  getSelection().collapse(option.firstChild, option.firstChild.length);
   document.querySelector("ins").addEventListener(
     "DOMNodeRemoved",
     onDOMNodeRemoved
@@ -25,3 +23,4 @@ function onDOMNodeRemoved() {
 <shadow>
 <ins>
 <option>
+</li></shadow></ins></option></body>

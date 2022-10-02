@@ -1,11 +1,10 @@
 <script>
 function onLoad() {
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <dd contenteditable> which is the last child of the <body>.
-  getSelection().collapse(
-    document.querySelector("dd[contenteditable]"),
-    document.querySelector("dd[contenteditable]").childNodes.length
-  );
+  // text node which is the last child of the <dd contenteditable> which is the
+  // last child of the <body>.
+  const dd = document.querySelector("dd[contenteditable]");
+  getSelection().collapse(dd.lastChild, dd.lastChild.length);
   document.execCommand("justifyFull");
   document.execCommand("selectAll");
   window.top.addEventListener("DOMNodeRemoved", () => {
@@ -17,3 +16,4 @@ function onLoad() {
 <body onload="onLoad()">
 <dd contenteditable>A
 <!-- A -->
+</dd></body>

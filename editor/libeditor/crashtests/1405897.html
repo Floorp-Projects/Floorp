@@ -4,20 +4,20 @@
 <script>
 function onLoad() {
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <iframe> which is the last child of the <body>.  Note that <iframe> is
-  // treated as a container in HTMLEditor.
-  getSelection().collapse(document.body, document.body.childNodes.length);
+  // text node in the <iframe> which is the last child of the <body>.  Note that
+  // <iframe> is treated as a container in HTMLEditor.
+  const iframe = document.querySelector("iframe");
+  getSelection().collapse(iframe.firstChild, iframe.firstChild.length);
   document.querySelector("del").addEventListener("DOMSubtreeModified", () => {
     document.execCommand("italic");
     document.execCommand("selectAll");
   });
-  document.querySelector("a[contenteditable]").replaceChild(
-    document.querySelector("iframe"),
-    document.querySelector("a[contenteditable]").childNodes[0]
-  );
+  const anchor = document.querySelector("a[contenteditable]");
+  anchor.replaceChild(iframe, anchor.childNodes[0]);
 }
 </script>
 <body onload="onLoad()">
 <a contenteditable>
 <del>
 <iframe>
+</body>

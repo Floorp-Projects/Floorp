@@ -5,8 +5,11 @@
 document.addEventListener('DOMContentLoaded', () => {
   const table = document.querySelector("table");
   // For emulating traditional behavior, collapse Selection to end of the
-  // <table>.
-  getSelection().collapse(table, table.childNodes.length);
+  // text node after the <p> (<table> does not close the <p>).
+  getSelection().collapse(
+    document.body.lastChild,
+    document.body.lastChild.length
+  );
   const paragraph = document.querySelector("p");
   document.documentElement.contentEditable = true;
   getSelection().setBaseAndExtent(document, 0, document.documentElement, 1);
@@ -24,4 +27,5 @@ document.addEventListener('DOMContentLoaded', () => {
         </table>
     </del>
 </p>
+</body>
 </html>

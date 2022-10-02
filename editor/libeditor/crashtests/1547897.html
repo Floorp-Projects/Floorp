@@ -3,8 +3,11 @@
 <script>
 function onLoad() {
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <body> (at the text node after the <p hidden>).
-  getSelection().collapse(document.body, document.body.childNodes.length);
+  // last text node of the <body> (end of the text node after the <p hidden>).
+  getSelection().collapse(
+    document.body.lastChild,
+    document.body.lastChild.length
+  );
   getSelection().setPosition(
     document.querySelector("hr"),
     0

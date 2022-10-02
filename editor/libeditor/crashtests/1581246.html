@@ -1,11 +1,12 @@
 <script>
 function onLoad() {
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <textarea> which is the last child of the <body>.
-  getSelection().collapse(
-    document.querySelector("textarea"),
-    document.querySelector("textarea").childNodes.length
-  );
+  // text node in the <textarea> which is the last child of the <body>.
+  // However, it may be omitted by the parser.  Therefore, this test tries to
+  // check the text node, but if it does not exist, uses the <textarea>.
+  const textarea = document.querySelector("textarea");
+  const textareaOrTextNode = textarea.lastChild ? textarea.lastChild : textarea;
+  getSelection().collapse(textareaOrTextNode, textareaOrTextNode.length);
   document.querySelector("script").appendChild(
     document.querySelector("li[contenteditable=false]")
   );
@@ -17,3 +18,4 @@ function onLoad() {
 <ul contenteditable>
 <li contenteditable="false">
 <textarea autofocus>
+</textarea>></li></ul></body>

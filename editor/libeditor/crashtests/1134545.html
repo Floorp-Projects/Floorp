@@ -4,8 +4,11 @@
 <script>
 function onLoad() {
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <body>, i.e., at the text node after the <div contenteditable>.
-  getSelection().collapse(document.body, document.body.childNodes.length);
+  // text at end of the <body>.
+  getSelection().collapse(
+    document.body.lastChild,
+    document.body.lastChild.length
+  );
   const textNode = document.createTextNode(" ");
   const editingHost = document.querySelector("div[contenteditable]");
   editingHost.appendChild(textNode);

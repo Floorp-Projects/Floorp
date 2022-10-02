@@ -2,9 +2,9 @@
 function onLoad() {
   const dd = document.querySelector("dd[contenteditable]");
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <dd contenteditable> which is the deepest last child of the <body> (at the
-  // text node after the <template>).
-  getSelection().collapse(dd, dd.childNodes.length);
+  // text node at end of the <dd contenteditable> which is the deepest last
+  // child of the <body> (end of the text node after the <template>).
+  getSelection().collapse(dd.lastChild, dd.lastChild.length);
   getSelection().setPosition(
     document.querySelector("template")
   );
@@ -18,3 +18,4 @@ function onLoad() {
 <body onload="onLoad()">
 <dd contenteditable>
 <template></template>
+</dd></body>

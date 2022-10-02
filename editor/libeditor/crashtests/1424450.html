@@ -2,10 +2,11 @@
 function onLoad() {
   const feComponentTransfer = document.querySelector("feComponentTransfer");
   // For emulating the traditional behavior, collapse Selection to end of the
-  // <feComponentTransfer> which is the deepest last child of the <body>.
+  // text node in the <feComponentTransfer> which is the deepest last child of
+  // the <body>.
   getSelection().collapse(
-    feComponentTransfer,
-    feComponentTransfer.childNodes.length
+    feComponentTransfer.firstChild,
+    feComponentTransfer.firstChild.length
   );
   getSelection().setPosition(
     document.querySelector("pre[contenteditable]"),
@@ -47,3 +48,4 @@ function onBegin() {
 </use>
 <font-face-uri/>
 <feComponentTransfer>
+</feComponentTransfer></svg></a></pre></body>
