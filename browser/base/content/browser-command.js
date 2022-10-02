@@ -390,14 +390,12 @@ function setBrowserDesign() {
       var Tag = document.createElement("style");
       Tag.setAttribute("id", "browserdesgin");
       document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-      Services.prefs.setIntPref("browser.uidensity", 0);
       break;
     case 2:
       var Tag = document.createElement('style');
       Tag.setAttribute("id", "browserdesgin");
       Tag.innerText = ThemeCSS.ProtonfixUI;
       document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-      Services.prefs.setIntPref("browser.uidensity", 1);
       break;
     case 3:
       if (!Services.prefs.getBoolPref("floorp.enable.multitab", false)) {
