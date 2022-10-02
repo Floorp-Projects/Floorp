@@ -3791,12 +3791,6 @@ class nsIFrame : public nsQueryFrame {
   static void GetLastLeaf(nsIFrame** aFrame);
   static void GetFirstLeaf(nsIFrame** aFrame);
 
-  static nsresult GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
-                                                 nsPeekOffsetStruct* aPos,
-                                                 nsIFrame* aBlockFrame,
-                                                 int32_t aLineStart,
-                                                 int8_t aOutSideLimit);
-
   struct SelectablePeekReport {
     /** the previous/next selectable leaf frame */
     nsIFrame* mFrame = nullptr;
