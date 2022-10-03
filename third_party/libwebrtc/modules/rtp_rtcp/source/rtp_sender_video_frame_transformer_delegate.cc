@@ -14,9 +14,9 @@
 #include <vector>
 
 #include "absl/memory/memory.h"
+#include "api/task_queue/to_queued_task.h"
 #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
 #include "modules/rtp_rtcp/source/rtp_sender_video.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 
 namespace webrtc {
 namespace {

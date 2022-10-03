@@ -582,6 +582,8 @@ if (current_os == "linux" || is_android) {
       "../../api:libjingle_peerconnection_api",
       "../../api:scoped_refptr",
       "../../api:sequence_checker",
+      "../../api/task_queue:pending_task_safety_flag",
+      "../../api/task_queue:to_queued_task",
       "../../rtc_base",
       "../../rtc_base:checks",
       "../../rtc_base:ip_address",
@@ -590,8 +592,6 @@ if (current_os == "linux" || is_android) {
       "../../rtc_base:refcount",
       "../../rtc_base:stringutils",
       "../../rtc_base:threading",
-      "../../rtc_base/task_utils:pending_task_safety_flag",
-      "../../rtc_base/task_utils:to_queued_task",
       "../../system_wrappers:field_trial",
       "../../system_wrappers:metrics",
     ]
@@ -675,6 +675,7 @@ if (current_os == "linux" || is_android) {
       "../../api:media_stream_interface",
       "../../api:sequence_checker",
       "../../api/task_queue",
+      "../../api/task_queue:to_queued_task",
       "../../api/video:encoded_image",
       "../../api/video:render_resolution",
       "../../api/video:video_frame",
@@ -699,7 +700,6 @@ if (current_os == "linux" || is_android) {
       "../../rtc_base:timestamp_aligner",
       "../../rtc_base:timeutils",
       "../../rtc_base/synchronization:mutex",
-      "../../rtc_base/task_utils:to_queued_task",
       "//third_party/libyuv",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]

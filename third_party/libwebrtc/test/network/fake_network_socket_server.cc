@@ -17,9 +17,9 @@
 
 #include "absl/algorithm/container.h"
 #include "api/scoped_refptr.h"
+#include "api/task_queue/pending_task_safety_flag.h"
+#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 
 namespace webrtc {

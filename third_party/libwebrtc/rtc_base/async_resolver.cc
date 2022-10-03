@@ -34,11 +34,11 @@
 #endif  // defined(WEBRTC_POSIX) && !defined(__native_client__)
 
 #include "api/task_queue/task_queue_base.h"
+#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/task_queue.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"  // for signal_with_thread...
 
 #if defined(WEBRTC_MAC) || defined(WEBRTC_IOS)

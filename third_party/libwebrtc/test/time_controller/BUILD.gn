@@ -30,6 +30,7 @@ rtc_library("time_controller") {
     "../../api:time_controller",
     "../../api/task_queue",
     "../../api/task_queue:default_task_queue_factory",
+    "../../api/task_queue:to_queued_task",
     "../../api/units:time_delta",
     "../../api/units:timestamp",
     "../../modules:module_api",
@@ -42,7 +43,6 @@ rtc_library("time_controller") {
     "../../rtc_base:rtc_event",
     "../../rtc_base/synchronization:mutex",
     "../../rtc_base/synchronization:yield_policy",
-    "../../rtc_base/task_utils:to_queued_task",
     "../../system_wrappers",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
@@ -60,6 +60,7 @@ if (rtc_include_tests) {
       ":time_controller",
       "../:test_support",
       "../../api:time_controller",
+      "../../api/task_queue:to_queued_task",
       "../../api/units:time_delta",
       "../../rtc_base",
       "../../rtc_base:location",
@@ -69,7 +70,6 @@ if (rtc_include_tests) {
       "../../rtc_base:threading",
       "../../rtc_base/synchronization:mutex",
       "../../rtc_base/task_utils:repeating_task",
-      "../../rtc_base/task_utils:to_queued_task",
     ]
   }
 }

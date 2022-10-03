@@ -11,12 +11,12 @@
 #include <memory>
 #include <vector>
 
+#include "api/task_queue/to_queued_task.h"
 #include "api/test/time_controller.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/event.h"
 #include "rtc_base/location.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "test/gmock.h"

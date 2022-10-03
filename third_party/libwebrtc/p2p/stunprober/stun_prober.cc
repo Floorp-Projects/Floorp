@@ -17,13 +17,13 @@
 #include <utility>
 
 #include "api/packet_socket_factory.h"
+#include "api/task_queue/to_queued_task.h"
 #include "api/transport/stun.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/async_resolver_interface.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
 

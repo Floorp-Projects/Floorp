@@ -20,6 +20,7 @@
 
 #include "absl/types/optional.h"
 #include "api/field_trials_view.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/video/encoded_image.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "api/video/video_bitrate_allocator.h"
@@ -36,7 +37,6 @@
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_queue.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/task_utils/repeating_task.h"
 #include "rtc_base/thread_annotations.h"
 #include "video/send_statistics_proxy.h"

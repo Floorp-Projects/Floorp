@@ -31,6 +31,7 @@
 #include "api/function_view.h"
 #include "api/task_queue/queued_task.h"
 #include "api/task_queue/task_queue_base.h"
+#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/deprecated/recursive_critical_section.h"
 #include "rtc_base/location.h"
@@ -38,7 +39,6 @@
 #include "rtc_base/platform_thread_types.h"
 #include "rtc_base/socket_server.h"
 #include "rtc_base/system/rtc_export.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/thread_message.h"
 

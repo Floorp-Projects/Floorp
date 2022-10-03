@@ -18,10 +18,10 @@
 
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "p2p/base/port.h"
 #include "p2p/base/stun_request.h"
 #include "rtc_base/async_packet_socket.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 
 namespace cricket {
 

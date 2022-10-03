@@ -15,6 +15,7 @@
 
 #include "absl/strings/string_view.h"
 #include "api/rtc_event_log/rtc_event.h"
+#include "api/task_queue/to_queued_task.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/video/video_codec_constants.h"
 #include "api/video/video_timing.h"
@@ -36,7 +37,6 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/rate_limiter.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"

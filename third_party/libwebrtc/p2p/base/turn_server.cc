@@ -18,6 +18,7 @@
 #include "absl/memory/memory.h"
 #include "api/array_view.h"
 #include "api/packet_socket_factory.h"
+#include "api/task_queue/to_queued_task.h"
 #include "api/transport/stun.h"
 #include "p2p/base/async_stun_tcp_socket.h"
 #include "rtc_base/byte_buffer.h"
@@ -27,7 +28,6 @@
 #include "rtc_base/message_digest.h"
 #include "rtc_base/socket_adapters.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 
 namespace cricket {

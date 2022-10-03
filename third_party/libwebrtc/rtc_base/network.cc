@@ -30,6 +30,7 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
+#include "api/task_queue/to_queued_task.h"
 #include "api/transport/field_trial_based_config.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -39,7 +40,6 @@
 #include "rtc_base/string_encode.h"
 #include "rtc_base/string_utils.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 
 namespace rtc {

@@ -24,6 +24,7 @@
 #include "api/array_view.h"
 #include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/transport/field_trial_based_config.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/mdns_responder_interface.h"
@@ -32,7 +33,6 @@
 #include "rtc_base/network_monitor_factory.h"
 #include "rtc_base/socket_factory.h"
 #include "rtc_base/system/rtc_export.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread_annotations.h"
 

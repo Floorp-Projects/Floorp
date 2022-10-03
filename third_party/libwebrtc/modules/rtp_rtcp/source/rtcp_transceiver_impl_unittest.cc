@@ -16,6 +16,7 @@
 
 #include "absl/memory/memory.h"
 #include "api/rtp_headers.h"
+#include "api/task_queue/to_queued_task.h"
 #include "api/test/create_time_controller.h"
 #include "api/test/time_controller.h"
 #include "api/units/data_rate.h"
@@ -28,7 +29,6 @@
 #include "modules/rtp_rtcp/source/rtcp_packet/bye.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/compound_packet.h"
 #include "modules/rtp_rtcp/source/time_util.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "system_wrappers/include/clock.h"
 #include "test/gmock.h"
 #include "test/gtest.h"

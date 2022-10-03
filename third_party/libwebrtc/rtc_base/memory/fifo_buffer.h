@@ -13,10 +13,10 @@
 
 #include <memory>
 
+#include "api/task_queue/pending_task_safety_flag.h"
+#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/stream.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 
 namespace rtc {
 

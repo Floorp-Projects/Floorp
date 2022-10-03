@@ -20,8 +20,8 @@
 #include "api/task_queue/queued_task.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
+#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/system/rtc_export.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace rtc {

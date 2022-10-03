@@ -11,7 +11,7 @@
 #include "sdk/objc/native/src/objc_network_monitor.h"
 #include "absl/strings/string_view.h"
 
-#include "rtc_base/task_utils/to_queued_task.h"
+#include "api/task_queue/to_queued_task.h"
 
 #include <algorithm>
 

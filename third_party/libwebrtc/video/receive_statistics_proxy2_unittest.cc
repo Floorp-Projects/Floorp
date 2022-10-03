@@ -18,11 +18,11 @@
 
 #include "absl/types/optional.h"
 #include "api/scoped_refptr.h"
+#include "api/task_queue/to_queued_task.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_frame_buffer.h"
 #include "api/video/video_rotation.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 #include "system_wrappers/include/metrics.h"
 #include "test/gtest.h"

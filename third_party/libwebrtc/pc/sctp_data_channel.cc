@@ -15,6 +15,7 @@
 #include <string>
 #include <utility>
 
+#include "api/task_queue/to_queued_task.h"
 #include "media/sctp/sctp_transport_internal.h"
 #include "pc/proxy.h"
 #include "pc/sctp_utils.h"
@@ -22,7 +23,6 @@
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/system/unused.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 
 namespace webrtc {

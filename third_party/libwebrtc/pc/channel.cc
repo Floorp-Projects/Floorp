@@ -19,6 +19,8 @@
 #include "absl/strings/string_view.h"
 #include "api/rtp_parameters.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/pending_task_safety_flag.h"
+#include "api/task_queue/to_queued_task.h"
 #include "api/units/timestamp.h"
 #include "media/base/codec.h"
 #include "media/base/rid_description.h"
@@ -32,8 +34,6 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/strings/string_format.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/trace_event.h"
 
 namespace cricket {

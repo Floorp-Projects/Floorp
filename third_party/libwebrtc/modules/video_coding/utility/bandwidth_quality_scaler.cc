@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "api/task_queue/to_queued_task.h"
 #include "api/video/video_adaptation_reason.h"
 #include "api/video_codecs/video_encoder.h"
 #include "rtc_base/checks.h"
@@ -22,7 +23,6 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/exp_filter.h"
 #include "rtc_base/task_queue.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/weak_ptr.h"
 

@@ -19,6 +19,7 @@
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/task_queue/task_queue_base.h"
+#include "api/task_queue/to_queued_task.h"
 #include "api/test/create_network_emulation_manager.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/units/time_delta.h"
@@ -34,7 +35,6 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/strings/string_format.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/time_utils.h"
 #include "test/gmock.h"
 

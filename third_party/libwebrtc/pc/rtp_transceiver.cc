@@ -21,6 +21,7 @@
 #include "api/peer_connection_interface.h"
 #include "api/rtp_parameters.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/to_queued_task.h"
 #include "media/base/codec.h"
 #include "media/base/media_constants.h"
 #include "media/base/media_engine.h"
@@ -30,7 +31,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 
 namespace webrtc {
