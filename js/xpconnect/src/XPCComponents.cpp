@@ -2557,7 +2557,14 @@ nsXPCComponents_Utils::GetLoadedESModules(
 NS_IMETHODIMP
 nsXPCComponents_Utils::GetModuleImportStack(const nsACString& aLocation,
                                             nsACString& aRetval) {
-  return mozJSModuleLoader::Get()->GetModuleImportStack(aLocation, aRetval);
+  nsresult rv =
+      mozJSModuleLoader::Get()->GetModuleImportStack(aLocation, aRetval);
+  // Fallback the query to the DevTools loader if not found in the shared loader
+  if (rv == NS_ERROR_FAILURE && mozJSModuleLoader::GetDevToolsLoader()) {
+    return mozJSModuleLoader::GetDevToolsLoader()->GetModuleImportStack(
+        aLocation, aRetval);
+  }
+  return rv;
 }
 
 /***************************************************************************/
