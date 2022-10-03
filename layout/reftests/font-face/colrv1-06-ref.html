@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<meta charset=utf-8>
+<title>COLRv1 font test: radial gradient variations</title>
+<style>
+@font-face {
+  font-family: CAhem;
+  src: url("CAhem.ttf");
+}
+p { margin: 0; }
+span { font: 120px/1 CAhem; }
+.a { font-variation-settings: "GRX0" 500, "GRR0" 50, "GRX1" 900, "GRR1" 150, "COL1" 0, "COL2" 0.5, "COL3" 1.0; }
+.e1 { font-variation-settings: "GRX0" 700, "GRR0" 100, "GRX1" 1000, "GRR1" 175, "COL1" 2.0, "COL2" 2.0, "COL3" 1.99; }
+.f { font-variation-settings: "GRX0" 500, "GRR0" 50, "GRX1" 900, "GRR1" 150, "COL1" 0.5, "COL2" 1.0, "COL3" 1.5; }
+</style>
+
+<p>All four lines should show the same set of gradients:</p>
+<div>
+  <div><span class=a>@#$</div>
+  <div><span class=a>@#$</div>
+  <div><span class=a>@#$</div>
+  <div><span class=a>@#$</div>
+</div>
+
+<p>Same again, but the leftmost gradient should be solid blue:</p>
+<div>
+  <div><span class=a><span class=e1>@</span>#$</div>
+</div>
+
+<p>And with the gradients shifted a half-cycle to the right:</p>
+<div>
+  <div><span class=f><span class=e1>@</span>#$</div>
+</div>
