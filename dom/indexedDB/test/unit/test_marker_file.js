@@ -49,6 +49,7 @@ function createTestingEnvironment(markerFileOnly = false) {
  * marker-file, a databse file, and a directory exist in current idb directory.
  */
 
+/* exported testSteps */
 async function testSteps() {
   SpecialPowers.setBoolPref("dom.quotaManager.testing", true);
 

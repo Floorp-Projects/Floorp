@@ -3,6 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/* exported testGenerator, disableWorkerTest */
 var disableWorkerTest = "Need a way to set temporary prefs from a worker";
 
 var testGenerator = testSteps();

@@ -62,6 +62,7 @@ function* testSteps() {
   finishTest();
 }
 
+/* exported setup */
 async function setup(isXOrigin) {
   // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
   // Acquire storage access permission here so that the iframe has

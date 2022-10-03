@@ -3,6 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/* exported testGenerator */
 var testGenerator = testSteps();
 
 function generateKey() {

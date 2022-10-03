@@ -6,6 +6,7 @@
 
 var self = this;
 
+/* exported testGenerator */
 var testGenerator = testSteps();
 
 function* testSteps() {

@@ -33,6 +33,7 @@ function createTestingEnvironment() {
  * This test verifies unexpected directories won't block idb's initialization.
  */
 
+/* exported testSteps */
 async function testSteps() {
   info("Verifying open shouldn't be blocked by unexpected files");
 

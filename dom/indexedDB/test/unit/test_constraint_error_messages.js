@@ -3,6 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/* exported testSteps */
 async function testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const objectStoreName = "foo";

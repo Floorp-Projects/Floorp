@@ -5,6 +5,7 @@
 
 /* import-globals-from ../file.js */
 
+/* exported testGenerator, disableWorkerTest */
 var disableWorkerTest = "FileHandle doesn't work in workers yet";
 
 var testGenerator = testSteps();
