@@ -558,7 +558,12 @@ constexpr const char* kFrameBufferFieldTrial = "WebRTC-FrameBuffer3";
 
 FrameBufferArm ParseFrameBufferFieldTrial(const FieldTrialsView& field_trials) {
   webrtc::FieldTrialEnum<FrameBufferArm> arm(
+#if defined(WEBRTC_MOZILLA_BUILD)
+      // keep FrameBuffer2 as default until we implement FrameBuffer3::Start
+      "arm", FrameBufferArm::kFrameBuffer2,
+#else
       "arm", FrameBufferArm::kFrameBuffer3,
+#endif
       {
           {"FrameBuffer2", FrameBufferArm::kFrameBuffer2},
           {"FrameBuffer3", FrameBufferArm::kFrameBuffer3},
