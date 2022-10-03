@@ -233,6 +233,9 @@ class ScreenshotTest : BaseSessionTest() {
     @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
     @Test(expected = IllegalStateException::class)
     fun capturePixelsAfterGpuProcessCrash() {
+        // Bug 1754570 - temporarily disable the test
+        assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
+
         // We need the GPU process for this test
         assumeTrue(sessionRule.usingGpuProcess())
 
