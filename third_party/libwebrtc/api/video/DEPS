@@ -14,6 +14,10 @@ specific_include_rules = {
     "+rtc_base/memory/aligned_malloc.h",
   ],
 
+  "i210_buffer\.h": [
+    "+rtc_base/memory/aligned_malloc.h",
+  ],
+
   "i420_buffer\.h": [
     "+rtc_base/memory/aligned_malloc.h",
   ],
