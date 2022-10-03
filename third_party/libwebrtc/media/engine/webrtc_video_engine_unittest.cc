@@ -6152,7 +6152,7 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesDecodeStatsCorrectly) {
   stats.frames_rendered = 13;
   stats.frames_decoded = 14;
   stats.qp_sum = 15;
-  stats.total_decode_time_ms = 16;
+  stats.total_decode_time = webrtc::TimeDelta::Millis(16);
   stats.total_assembly_time = webrtc::TimeDelta::Millis(4);
   stats.frames_assembled_from_multiple_packets = 2;
   stream->SetStats(stats);
@@ -6182,7 +6182,7 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesDecodeStatsCorrectly) {
   EXPECT_EQ(rtc::checked_cast<unsigned int>(stats.frame_counts.key_frames),
             info.receivers[0].key_frames_decoded);
   EXPECT_EQ(stats.qp_sum, info.receivers[0].qp_sum);
-  EXPECT_EQ(stats.total_decode_time_ms, info.receivers[0].total_decode_time_ms);
+  EXPECT_EQ(stats.total_decode_time, info.receivers[0].total_decode_time);
   EXPECT_EQ(stats.total_assembly_time, info.receivers[0].total_assembly_time);
   EXPECT_EQ(stats.frames_assembled_from_multiple_packets,
             info.receivers[0].frames_assembled_from_multiple_packets);

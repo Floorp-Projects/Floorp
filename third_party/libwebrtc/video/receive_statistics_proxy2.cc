@@ -829,7 +829,7 @@ void ReceiveStatisticsProxy::OnCname(uint32_t ssrc, absl::string_view cname) {
 
 void ReceiveStatisticsProxy::OnDecodedFrame(const VideoFrame& frame,
                                             absl::optional<uint8_t> qp,
-                                            int32_t decode_time_ms,
+                                            TimeDelta decode_time,
                                             VideoContentType content_type) {
   webrtc::TimeDelta processing_delay = webrtc::TimeDelta::Millis(0);
   webrtc::Timestamp current_time = clock_->CurrentTime();
@@ -854,17 +854,17 @@ void ReceiveStatisticsProxy::OnDecodedFrame(const VideoFrame& frame,
   // "com.apple.coremedia.decompressionsession.clientcallback"
   VideoFrameMetaData meta(frame, current_time);
   worker_thread_->PostTask(
-      ToQueuedTask(task_safety_, [meta, qp, decode_time_ms, processing_delay,
+      ToQueuedTask(task_safety_, [meta, qp, decode_time, processing_delay,
                                   assembly_time, content_type, this]() {
-        OnDecodedFrame(meta, qp, decode_time_ms, processing_delay,
-                       assembly_time, content_type);
+        OnDecodedFrame(meta, qp, decode_time, processing_delay, assembly_time,
+                       content_type);
       }));
 }
 
 void ReceiveStatisticsProxy::OnDecodedFrame(
     const VideoFrameMetaData& frame_meta,
     absl::optional<uint8_t> qp,
-    int32_t decode_time_ms,
+    TimeDelta decode_time,
     webrtc::TimeDelta processing_delay,
     webrtc::TimeDelta assembly_time,
     VideoContentType content_type) {
@@ -904,9 +904,9 @@ void ReceiveStatisticsProxy::OnDecodedFrame(
         << "QP sum was already set and no QP was given for a frame.";
     stats_.qp_sum.reset();
   }
-  decode_time_counter_.Add(decode_time_ms);
-  stats_.decode_ms = decode_time_ms;
-  stats_.total_decode_time_ms += decode_time_ms;
+  decode_time_counter_.Add(decode_time.ms());
+  stats_.decode_ms = decode_time.ms();
+  stats_.total_decode_time += decode_time;
   stats_.total_processing_delay += processing_delay;
   stats_.total_assembly_time += assembly_time;
   if (!assembly_time.IsZero()) {
@@ -914,7 +914,7 @@ void ReceiveStatisticsProxy::OnDecodedFrame(
   }
   if (enable_decode_time_histograms_) {
     UpdateDecodeTimeHistograms(frame_meta.width, frame_meta.height,
-                               decode_time_ms);
+                               decode_time.ms());
   }
 
   last_content_type_ = content_type;

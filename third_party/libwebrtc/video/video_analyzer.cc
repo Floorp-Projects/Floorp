@@ -496,9 +496,8 @@ void VideoAnalyzer::PollStats() {
     // `total_decode_time_ms` gives a good estimate of the mean decode time,
     // `decode_ms` is used to keep track of the standard deviation.
     if (receive_stats.frames_decoded > 0)
-      mean_decode_time_ms_ =
-          static_cast<double>(receive_stats.total_decode_time_ms) /
-          receive_stats.frames_decoded;
+      mean_decode_time_ms_ = receive_stats.total_decode_time.ms<double>() /
+                             receive_stats.frames_decoded;
     if (receive_stats.decode_ms > 0)
       decode_time_ms_.AddSample(receive_stats.decode_ms);
     if (receive_stats.max_decode_ms > 0)
