@@ -493,32 +493,63 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Ongi etorri %1$s(e)ra!</string>
+    <string moz:removedIn="106" name="onboarding_title">Ongi etorri %1$s(e)ra!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Itxi</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Ongi etorri %1$s(e)ra!</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Azkarra. Pribatua. Distraziorik gabea.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Hasi erabiltzen</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s ez da beste nabigatzaileak bezalakoa</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Pribatutasun handiagorako, zure historia garbitzen dugu aplikazioa ixten duzunean.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Lehenetsi %1$s, irekitako lotura bakoitzarekin zure datuak babesteko.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Ezarri nabigatzaile lehenetsi gisa</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Saltatu</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Hurrengo mailako nabigatze pribatua, zuk nahi duzunean</string>
+    <string moz:removedIn="106" name="onboarding_description">Hurrengo mailako nabigatze pribatua, zuk nahi duzunean</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Ezkutukoak eta ikusezinak bat egiten dutenean</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Ezkutukoak eta ikusezinak bat egiten dutenean</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">Pribatutasunari lehentasuna ematen dion eta jarraipenaren babes indartsua eta cookien berezko babesa duen nabigatzailea da %s.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">Pribatutasunari lehentasuna ematen dion eta jarraipenaren babes indartsua eta cookien berezko babesa duen nabigatzailea da %s.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Nabigatu inoiz gertatu izan ez balitz bezala</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Nabigatu inoiz gertatu izan ez balitz bezala</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Behin sakatuta, zure nabigatze-historia eta cookieak ezabatu egiten dira — eragotzi egiten da halaber iragarkiek zu zelatatzea.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Behin sakatuta, zure nabigatze-historia eta cookieak ezabatu egiten dira — eragotzi egiten da halaber iragarkiek zu zelatatzea.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Egoera guztietarako pribatutasuna</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Egoera guztietarako pribatutasuna</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Zure nabigatze-beharrak aldatuko balira, erraza da zure pribatutasun-ezarpenak neurrira doitzea.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Zure nabigatze-beharrak aldatuko balira, erraza da zure pribatutasun-ezarpenak neurrira doitzea.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Hasi nabigatzen</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Hasi nabigatzen</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Indartu zure pribatutasuna</string>
@@ -975,7 +1006,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Badirudi gune honek zure jarraipena egin nahi zuela. Egin klik babesaren ikonoan gunearen ezarpenak eta jarraipenaren blokeoaren estatistikak ikusteko.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Badirudi gune honek zure jarraipena egin nahi zuela. Egin klik babesaren ikonoan gunearen ezarpenak eta jarraipenaren blokeoaren estatistikak ikusteko.</string>
+    <string name="cfr_for_toolbar_shield_icon2">Harrapatu dugu! Gunek honek zu espiatzea galarazi dugu. Sakatu edonoiz babesaren ikonoa ikusteko zer ari garen blokeatzen.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Itxi laster-leihoa</string>
 
@@ -991,4 +1024,28 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Ezabatu saio honetako zure datu pertsonalak, nabigatze-historia eta gehiago zakarrontziaren botoia sakatuta. Proba ezazu!</string>
     <string name="cfr_for_toolbar_delete_icon2">Sakatu hemen dena zakarrontzira botatzeko — historia, cookieak, dena — eta hasi berriro zerotik fitxa berri batean.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Itxi</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Bilaketa widgeta</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Nabigatze-historia garbituta! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Zure nabigatze pribatuaren menpe utziko dugu, baina hurrengoan azkarrago has zaitezke zure hasierako pantailan %1$s widgeta erabiliz.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Gehitu widgeta hasierako pantailan</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Widgeta hasierako pantailan gehitu da</string>
 </resources>

@@ -511,6 +511,17 @@
     <!-- New Onboarding flow first screen button label-->
     <string name="onboarding_first_screen_button_text">Начать</string>
 
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s не похож на другие браузеры</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Мы удаляем вашу историю, когда вы закрываете приложение, для повышения приватности.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Используйте %1$s по умолчанию, чтобы защитить свои данные при открытии каждой ссылки.</string>
+
     <!-- New Onboarding flow second screen make Focus default browser button label-->
     <string name="onboarding_second_screen_default_browser_button_text">Установить браузером по умолчанию</string>
 
@@ -1034,6 +1045,10 @@ The new line here must be kept as the second half of the string is clickable for
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Мы оставим вас в приватном просмотре, но в следующий раз можно войти в него быстрее с помощью виджета %1$s на Домашнем экране.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
     <string name="promote_search_widget_button_text">Добавить виджет на домашний экран</string>
 
     !-- This is te text of the snackbar that appears after the search widget was added successfully
