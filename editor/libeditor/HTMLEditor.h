@@ -914,7 +914,7 @@ class HTMLEditor final : public EditorBase,
    * @param aAttribute  Attribute name if aProperty has some styles like
    *                    nsGkAtoms::font.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitRangeOffResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<SplitRangeOffResult, nsresult>
   SplitAncestorStyledInlineElementsAtRangeEdges(const EditorDOMRange& aRange,
                                                 nsAtom* aProperty,
                                                 nsAtom* aAttribute);

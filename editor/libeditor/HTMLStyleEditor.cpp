@@ -943,12 +943,13 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNode(
   return pointToPutCaret;
 }
 
-SplitRangeOffResult HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges(
+Result<SplitRangeOffResult, nsresult>
+HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges(
     const EditorDOMRange& aRange, nsAtom* aProperty, nsAtom* aAttribute) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (NS_WARN_IF(!aRange.IsPositioned())) {
-    return SplitRangeOffResult(NS_ERROR_FAILURE);
+    return Err(NS_ERROR_FAILURE);
   }
 
   EditorDOMRange range(aRange);
@@ -978,7 +979,7 @@ SplitRangeOffResult HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges(
     return result;
   }();
   if (resultAtStart.isErr()) {
-    return SplitRangeOffResult(resultAtStart.unwrapErr());
+    return Err(resultAtStart.unwrapErr());
   }
 
   // second verse, same as the first...
@@ -1007,7 +1008,7 @@ SplitRangeOffResult HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges(
   }();
   if (resultAtEnd.isErr()) {
     resultAtStart.IgnoreCaretPointSuggestion();
-    return SplitRangeOffResult(resultAtEnd.unwrapErr());
+    return Err(resultAtEnd.unwrapErr());
   }
 
   return SplitRangeOffResult(std::move(range), std::move(resultAtStart),
@@ -2276,11 +2277,11 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
 
       // Remove this style from ancestors of our range endpoints, splitting
       // them as appropriate
-      SplitRangeOffResult splitRangeOffResult =
+      Result<SplitRangeOffResult, nsresult> splitRangeOffResult =
           SplitAncestorStyledInlineElementsAtRangeEdges(
               EditorDOMRange(range), styleToRemove.mHTMLProperty,
               styleToRemove.mAttribute);
-      if (splitRangeOffResult.isErr()) {
+      if (MOZ_UNLIKELY(splitRangeOffResult.isErr())) {
         NS_WARNING(
             "HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges() "
             "failed");
@@ -2288,13 +2289,14 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
       }
       // There is AutoTransactionsConserveSelection, so we don't need to
       // update selection here.
-      splitRangeOffResult.IgnoreCaretPointSuggestion();
+      splitRangeOffResult.inspect().IgnoreCaretPointSuggestion();
 
       // XXX Modifying `range` means that we may modify ranges in `Selection`.
       //     Is this intentional?  Note that the range may be not in
       //     `Selection` too.  It seems that at least one of them is not
       //     an unexpected case.
-      const EditorDOMRange& splitRange = splitRangeOffResult.RangeRef();
+      const EditorDOMRange& splitRange =
+          splitRangeOffResult.inspect().RangeRef();
       if (NS_WARN_IF(!splitRange.IsPositioned())) {
         continue;
       }

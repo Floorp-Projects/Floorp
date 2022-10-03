@@ -864,23 +864,10 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
 /*****************************************************************************
  * SplitRangeOffResult class is a simple class for methods which splits
  * specific ancestor elements at 2 DOM points.
- * TODO: Perhaps, we can make this inherits mozilla::Result for guaranteeing
- *       same API.  Then, changing to/from Result<*, nsresult> can be easier.
- *       For now, we should give same API name rather than same as
- *       mozilla::ErrorResult.
  *****************************************************************************/
 class MOZ_STACK_CLASS SplitRangeOffResult final {
  public:
-  // FYI: NS_SUCCEEDED and NS_FAILED contain MOZ_(UN)LIKELY so that isOk() and
-  //      isErr() must not required to wrap with them.
-  bool isOk() const { return NS_SUCCEEDED(mRv); }
-  bool isErr() const { return NS_FAILED(mRv); }
-  constexpr nsresult inspectErr() const { return mRv; }
-  constexpr nsresult unwrapErr() const { return inspectErr(); }
   constexpr bool Handled() const { return mHandled; }
-  constexpr bool EditorDestroyed() const {
-    return MOZ_UNLIKELY(mRv == NS_ERROR_EDITOR_DESTROYED);
-  }
 
   /**
    * The start boundary is at the right of split at split point.  The end
@@ -945,7 +932,6 @@ class MOZ_STACK_CLASS SplitRangeOffResult final {
                       SplitNodeResult&& aSplitNodeResultAtStart,
                       SplitNodeResult&& aSplitNodeResultAtEnd)
       : mRange(std::move(aTrackedRange)),
-        mRv(NS_OK),
         mHandled(aSplitNodeResultAtStart.Handled() ||
                  aSplitNodeResultAtEnd.Handled()) {
     MOZ_ASSERT(mRange.StartRef().IsSet());
@@ -961,10 +947,6 @@ class MOZ_STACK_CLASS SplitRangeOffResult final {
         mCaretPoint, {SuggestCaret::OnlyIfHasSuggestion});
     splitNodeResultAtEnd.MoveCaretPointTo(mCaretPoint,
                                           {SuggestCaret::OnlyIfHasSuggestion});
-  }
-
-  explicit SplitRangeOffResult(nsresult aRv) : mRv(aRv), mHandled(false) {
-    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mRv));
   }
 
   SplitRangeOffResult(const SplitRangeOffResult& aOther) = delete;
@@ -984,8 +966,6 @@ class MOZ_STACK_CLASS SplitRangeOffResult final {
   // The point which is a good point to put caret from point of view the
   // splitter.
   EditorDOMPoint mCaretPoint;
-
-  nsresult mRv;
 
   bool mHandled;
   bool mutable mHandledCaretPoint = false;
