@@ -12,6 +12,7 @@
 
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "api/task_queue/to_queued_task.h"
 #include "api/transport/field_trial_based_config.h"
@@ -106,21 +107,25 @@ ConnectionContext::ConnectionContext(
           MaybeCreateSctpFactory(std::move(dependencies->sctp_factory),
                                  network_thread(),
                                  *trials_.get())) {
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   signaling_thread_->AllowInvokesToThread(worker_thread());
   signaling_thread_->AllowInvokesToThread(network_thread_);
   worker_thread_->AllowInvokesToThread(network_thread_);
-  if (network_thread_->IsCurrent()) {
-    // TODO(https://crbug.com/webrtc/12802) switch to DisallowAllInvokes
-    network_thread_->AllowInvokesToThread(network_thread_);
-  } else {
-    network_thread_->PostTask(ToQueuedTask([thread = network_thread_] {
-      thread->DisallowBlockingCalls();
-      // TODO(https://crbug.com/webrtc/12802) switch to DisallowAllInvokes
-      thread->AllowInvokesToThread(thread);
-    }));
+  if (!network_thread_->IsCurrent()) {
+    // network_thread_->IsCurrent() == true means signaling_thread_ is
+    // network_thread_. In this case, no further action is required as
+    // signaling_thread_ can already invoke network_thread_.
+    network_thread_->PostTask(ToQueuedTask(
+        [thread = network_thread_, worker_thread = worker_thread_.get()] {
+          thread->DisallowBlockingCalls();
+          thread->DisallowAllInvokes();
+          if (worker_thread == thread) {
+            // In this case, worker_thread_ == network_thread_
+            thread->AllowInvokesToThread(thread);
+          }
+        }));
   }
 
-  RTC_DCHECK_RUN_ON(signaling_thread_);
   rtc::InitRandom(rtc::Time32());
 
   rtc::SocketFactory* socket_factory = dependencies->socket_factory;
