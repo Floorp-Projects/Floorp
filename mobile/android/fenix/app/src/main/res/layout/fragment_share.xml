@@ -35,16 +35,16 @@
         app:layout_constraintBottom_toBottomOf="parent">
 
         <FrameLayout
-            android:id="@+id/appsShareLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent" />
-
-        <FrameLayout
             android:id="@+id/devicesShareLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_constraintBottom_toTopOf="@id/divider_line" />
+
+        <FrameLayout
+            android:id="@+id/appsShareLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/divider_line" />
 
         <View
             android:id="@+id/divider_line"
@@ -53,6 +53,23 @@
             android:layout_marginTop="8dp"
             android:background="?borderPrimary"
             app:layout_constraintBottom_toTopOf="@id/appsShareLayout" />
+
+        <View
+            android:id="@+id/divider_line_apps_share_and_pdf_section"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:background="?borderPrimary"
+            app:layout_constraintTop_toBottomOf="@id/appsShareLayout" />
+
+        <androidx.compose.ui.platform.ComposeView
+            android:visibility="gone"
+            android:id="@+id/save_pdf"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/divider_line_apps_share_and_pdf_section" />
 
         <androidx.constraintlayout.widget.Group
             android:id="@+id/devicesShareGroup"

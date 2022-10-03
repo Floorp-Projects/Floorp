@@ -118,4 +118,9 @@ object FeatureFlags {
      * Enables the wallpaper v2 enhancements.
      */
     const val wallpaperV2Enabled = true
+
+    /**
+     * Enables the save to PDF feature.
+     */
+    val saveToPDF = Config.channel.isNightlyOrDebug
 }

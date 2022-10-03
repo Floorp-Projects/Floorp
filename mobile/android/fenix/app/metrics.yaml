@@ -449,6 +449,22 @@ events:
     notification_emails:
       - android-probes@mozilla.com
     expires: 113
+  save_to_pdf_tapped:
+    type: event
+    description: |
+      A user tapped the save to pdf option in the share sheet.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/3709
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/27257
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 122
+    metadata:
+      tags:
+        - Sharing
 
 onboarding:
   syn_cfr_shown:

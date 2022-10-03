@@ -583,6 +583,7 @@ class DefaultSessionControlController(
 
     private fun showShareFragment(shareSubject: String, data: List<ShareData>) {
         val directions = HomeFragmentDirections.actionGlobalShareFragment(
+            sessionId = store.state.selectedTabId,
             shareSubject = shareSubject,
             data = data.toTypedArray(),
         )

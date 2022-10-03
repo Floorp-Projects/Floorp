@@ -623,6 +623,7 @@ class DefaultBrowserToolbarMenuControllerTest {
             navController.navigate(
                 directionsEq(
                     NavGraphDirections.actionGlobalShareFragment(
+                        sessionId = browserStore.state.selectedTabId,
                         data = arrayOf(ShareData(url = "https://mozilla.org", title = "Mozilla")),
                         showPage = true,
                     ),
@@ -656,6 +657,7 @@ class DefaultBrowserToolbarMenuControllerTest {
             navController.navigate(
                 directionsEq(
                     NavGraphDirections.actionGlobalShareFragment(
+                        sessionId = browserStore.state.selectedTabId,
                         data = arrayOf(ShareData(url = "https://mozilla.org", title = "Mozilla")),
                         showPage = true,
                     ),

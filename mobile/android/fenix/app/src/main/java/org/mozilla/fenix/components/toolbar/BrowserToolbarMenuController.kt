@@ -211,6 +211,7 @@ class DefaultBrowserToolbarMenuController(
             }
             is ToolbarMenu.Item.Share -> {
                 val directions = NavGraphDirections.actionGlobalShareFragment(
+                    sessionId = currentSession?.id,
                     data = arrayOf(
                         ShareData(
                             url = getProperUrl(currentSession),

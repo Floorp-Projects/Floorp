@@ -68,4 +68,11 @@ class ShareInteractorTest {
 
         verify { controller.handleShareToApp(app) }
     }
+
+    @Test
+    fun `WHEN onSaveToPDF is call THEN call handleSaveToPDF`() {
+        interactor.onSaveToPDF("tabID")
+
+        verify { controller.handleSaveToPDF("tabID") }
+    }
 }

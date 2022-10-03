@@ -29,9 +29,11 @@ import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.TabData
 import mozilla.components.feature.accounts.push.SendTabUseCases
+import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.share.RecentAppsStorage
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.ktx.kotlin.isExtensionUrl
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
@@ -47,6 +49,11 @@ interface ShareController {
     fun handleReauth()
     fun handleShareClosed()
     fun handleShareToApp(app: AppShareOption)
+
+    /**
+     * Handles when a save to PDF action was requested.
+     */
+    fun handleSaveToPDF(tabId: String?)
     fun handleAddNewDevice()
     fun handleShareToDevice(device: Device)
     fun handleShareToAllDevices(devices: List<Device>)
@@ -68,12 +75,13 @@ interface ShareController {
  * @param navController - [NavController] used for navigation.
  * @param dismiss - callback signalling sharing can be closed.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 class DefaultShareController(
     private val context: Context,
     private val shareSubject: String?,
     private val shareData: List<ShareData>,
     private val sendTabUseCases: SendTabUseCases,
+    private val saveToPdfUseCase: SessionUseCases.SaveToPdfUseCase,
     private val snackbar: FenixSnackbar,
     private val navController: NavController,
     private val recentAppsStorage: RecentAppsStorage,
@@ -128,6 +136,12 @@ class DefaultShareController(
             }
         }
         dismiss(result)
+    }
+
+    override fun handleSaveToPDF(tabId: String?) {
+        Events.saveToPdfTapped.record(NoExtras())
+        handleShareClosed()
+        saveToPdfUseCase.invoke(tabId)
     }
 
     override fun handleAddNewDevice() {
