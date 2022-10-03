@@ -1678,9 +1678,8 @@ void nsTableRowGroupFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
 // nsILineIterator methods
 int32_t nsTableRowGroupFrame::GetNumLines() const { return GetRowCount(); }
 
-bool nsTableRowGroupFrame::GetDirection() {
-  return (StyleDirection::Rtl ==
-          GetTableFrame()->StyleVisibility()->mDirection);
+bool nsTableRowGroupFrame::IsLineIteratorFlowRTL() {
+  return StyleDirection::Rtl == GetTableFrame()->StyleVisibility()->mDirection;
 }
 
 Result<nsILineIterator::LineInfo, nsresult> nsTableRowGroupFrame::GetLine(
