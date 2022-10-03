@@ -33,16 +33,16 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: "Update GV (On Main)"
-        uses: mozilla-mobile/relbot@1.0.0
-        if: github.repository == 'mozilla-mobile/android-components'
+        uses: mozilla-mobile/relbot@2.0.0
+        if: github.repository == 'mozilla-mobile/firefox-android'
         with:
           project: android-components
           command: update-main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "Update GV (On Releases)"
-        uses: mozilla-mobile/relbot@1.0.0
-        if: github.repository == 'mozilla-mobile/android-components'
+        uses: mozilla-mobile/relbot@2.0.0
+        if: github.repository == 'mozilla-mobile/firefox-android'
         with:
           project: android-components
           command: update-releases

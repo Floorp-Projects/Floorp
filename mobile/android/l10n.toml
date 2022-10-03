@@ -125,5 +125,5 @@ branches = [
 [env]
 
 [[paths]]
-  reference = "components/**/src/main/res/values/strings.xml"
-  l10n = "components/**/src/main/res/values-{android_locale}/strings.xml"
+  reference = "android-components/components/**/src/main/res/values/strings.xml"
+  l10n = "android-components/components/**/src/main/res/values-{android_locale}/strings.xml"

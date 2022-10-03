@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 #
-# This workflow triggers if .buildconfig.yml is changed on any of the
+# This workflow triggers if android-components/.buildconfig.yml is changed on any of the
 # release branches. It will ask the relbot action to create a release.
 #
 # Currently relbot has a hard-coded "current A-C" version; there is no
@@ -23,7 +23,7 @@ on:
     branches:
       - 'releases/**'
     paths:
-      - '.buildconfig.yml'
+      - 'android-components/.buildconfig.yml'
 
 jobs:
   main:
@@ -31,8 +31,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: "Create Release"
-        uses: mozilla-mobile/relbot@1.0.0
-        if: github.repository == 'mozilla-mobile/android-components'
+        uses: mozilla-mobile/relbot@2.0.0
+        if: github.repository == 'mozilla-mobile/firefox-android'
         with:
           project: android-components
           command: create-releases
