@@ -429,12 +429,13 @@ interaction.flushEventLoop = async function(el) {
 };
 
 /**
- * If <var>el<var> is a textual form control and no previous
- * selection state exists, move the caret to the end of the form control.
+ * If <var>el<var> is a textual form control, or is contenteditable,
+ * and no previous selection state exists, move the caret to the end
+ * of the form control.
  *
- * The element has to be a <code>&lt;input type=text&gt;</code>
- * or <code>&lt;textarea&gt;</code> element for the cursor to move
- * be moved.
+ * The element has to be a <code>&lt;input type=text&gt;</code> or
+ * <code>&lt;textarea&gt;</code> element, or have the contenteditable
+ * attribute set, for the cursor to be moved.
  *
  * @param {Element} el
  *     Element to potential move the caret in.
@@ -452,6 +453,9 @@ interaction.moveCaretToEnd = function(el) {
       let len = el.value.length;
       el.setSelectionRange(len, len);
     }
+  } else if (el.isContentEditable) {
+    let selection = getWindow(el).getSelection();
+    selection.setPosition(el, el.childNodes.length);
   }
 };
 
@@ -494,8 +498,7 @@ interaction.isKeyboardInteractable = function(el) {
     return true;
   }
 
-  el.focus();
-  return el === win.document.activeElement;
+  return Services.focus.elementIsFocusable(el, 0);
 };
 
 /**
@@ -611,8 +614,10 @@ async function webdriverSendKeysToElement(
 ) {
   const win = getWindow(el);
 
-  if (el.type != "file" || strictFileInteractability) {
+  if (el.type !== "file" || strictFileInteractability) {
     let containerEl = lazy.element.getContainer(el);
+
+    lazy.element.scrollIntoView(containerEl);
 
     // TODO: Wait for element to be keyboard-interactible
     if (!interaction.isKeyboardInteractable(containerEl)) {
@@ -620,13 +625,16 @@ async function webdriverSendKeysToElement(
         lazy.pprint`Element ${el} is not reachable by keyboard`
       );
     }
+
+    if (win.document.activeElement !== containerEl) {
+      containerEl.focus();
+      // This validates the correct element types internally
+      interaction.moveCaretToEnd(containerEl);
+    }
   }
 
   let acc = await a11y.getAccessible(el, true);
   a11y.assertActionable(acc, el);
-
-  el.focus();
-  interaction.moveCaretToEnd(el);
 
   if (el.type == "file") {
     let paths = value.split("\n");
