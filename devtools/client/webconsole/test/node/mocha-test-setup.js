@@ -50,18 +50,18 @@ global.loader = {
   lazyRequireGetter: (context, names, path, destruct) => {
     const excluded = [
       "Debugger",
-      "devtools/shared/event-emitter",
-      "devtools/client/shared/autocomplete-popup",
-      "devtools/client/framework/devtools",
-      "devtools/client/shared/keycodes",
-      "devtools/client/shared/sourceeditor/editor",
-      "devtools/client/shared/telemetry",
-      "devtools/client/shared/screenshot",
-      "devtools/client/shared/focus",
-      "devtools/shared/commands/target/legacy-target-watchers/legacy-processes-watcher",
-      "devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher",
-      "devtools/shared/commands/target/legacy-target-watchers/legacy-sharedworkers-watcher",
-      "devtools/shared/commands/target/legacy-target-watchers/legacy-serviceworkers-watcher",
+      "resource://devtools/shared/event-emitter.js",
+      "resource://devtools/client/shared/autocomplete-popup.js",
+      "resource://devtools/client/framework/devtools.js",
+      "resource://devtools/client/shared/keycodes.js",
+      "resource://devtools/client/shared/sourceeditor/editor.js",
+      "resource://devtools/client/shared/telemetry.js",
+      "resource://devtools/client/shared/screenshot.js",
+      "resource://devtools/client/shared/focus.js",
+      "resource://devtools/shared/commands/target/legacy-target-watchers/legacy-processes-watcher.js",
+      "resource://devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher.js",
+      "resource://devtools/shared/commands/target/legacy-target-watchers/legacy-sharedworkers-watcher.js",
+      "resource://devtools/shared/commands/target/legacy-target-watchers/legacy-serviceworkers-watcher.js",
     ];
     if (!excluded.includes(path)) {
       if (!Array.isArray(names)) {
