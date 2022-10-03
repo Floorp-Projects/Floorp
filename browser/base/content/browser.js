@@ -33,6 +33,8 @@ ChromeUtils.defineESModuleGetters(this, {
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
   SubDialog: "resource://gre/modules/SubDialog.sys.mjs",
   SubDialogManager: "resource://gre/modules/SubDialog.sys.mjs",
+  TabsSetupFlowManager:
+    "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
   UrlbarInput: "resource:///modules/UrlbarInput.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
@@ -9998,9 +10000,37 @@ var FirefoxViewHandler = {
         break;
     }
   },
+  _closeDeviceConnectedTab() {
+    if (!TabsSetupFlowManager.didFxaTabOpen) {
+      return;
+    }
+    // close the tab left behind after a user pairs a device and
+    // is redirected back to the Firefox View tab
+    const fxaRoot = Services.prefs.getCharPref(
+      "identity.fxaccounts.remote.root"
+    );
+    const fxDeviceConnectedTab = gBrowser.tabs.find(tab =>
+      tab.linkedBrowser.currentURI.displaySpec.startsWith(
+        `${fxaRoot}pair/auth/complete`
+      )
+    );
+
+    if (!fxDeviceConnectedTab) {
+      return;
+    }
+
+    if (gBrowser.tabs.length <= 2) {
+      // if its the only tab besides the Firefox View tab,
+      // open a new tab first so the browser doesn't close
+      gBrowser.addTrustedTab("about:newtab");
+    }
+    gBrowser.removeTab(fxDeviceConnectedTab);
+    TabsSetupFlowManager.didFxaTabOpen = false;
+  },
   _onTabForegrounded() {
     if (this.tab?.selected) {
       this.SyncedTabs.syncTabs();
+      this._closeDeviceConnectedTab();
       Services.obs.notifyObservers(
         null,
         "firefoxview-notification-dot-update",
