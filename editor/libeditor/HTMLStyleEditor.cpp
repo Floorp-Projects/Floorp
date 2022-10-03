@@ -271,20 +271,20 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
       if (range.InSameContainer() && range.StartRef().IsInTextNode()) {
         // MOZ_KnownLive(...ContainerAs<Text>()) because of grabbed by `range`.
         // MOZ_KnownLive(styleToSet.*) due to bug 1622253.
-        SplitRangeOffFromNodeResult wrapTextInStyledElementResult =
-            SetInlinePropertyOnTextNode(
+        Result<SplitRangeOffFromNodeResult, nsresult>
+            wrapTextInStyledElementResult = SetInlinePropertyOnTextNode(
                 MOZ_KnownLive(*range.StartRef().ContainerAs<Text>()),
                 range.StartRef().Offset(), range.EndRef().Offset(),
                 MOZ_KnownLive(styleToSet.HTMLPropertyRef()),
                 MOZ_KnownLive(styleToSet.mAttribute),
                 styleToSet.mAttributeValue);
-        if (wrapTextInStyledElementResult.isErr()) {
+        if (MOZ_UNLIKELY(wrapTextInStyledElementResult.isErr())) {
           NS_WARNING("HTMLEditor::SetInlinePropertyOnTextNode() failed");
           return wrapTextInStyledElementResult.unwrapErr();
         }
         // There is AutoTransactionsConserveSelection, so we don't need to
         // update selection here.
-        wrapTextInStyledElementResult.IgnoreCaretPointSuggestion();
+        wrapTextInStyledElementResult.inspect().IgnoreCaretPointSuggestion();
         continue;
       }
 
@@ -318,21 +318,21 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
                                          EditorType::HTML)) {
         // MOZ_KnownLive(...ContainerAs<Text>()) because of grabbed by `range`.
         // MOZ_KnownLive(styleToSet.*) due to bug 1622253.
-        SplitRangeOffFromNodeResult wrapTextInStyledElementResult =
-            SetInlinePropertyOnTextNode(
+        Result<SplitRangeOffFromNodeResult, nsresult>
+            wrapTextInStyledElementResult = SetInlinePropertyOnTextNode(
                 MOZ_KnownLive(*range.StartRef().ContainerAs<Text>()),
                 range.StartRef().Offset(),
                 range.StartRef().ContainerAs<Text>()->TextDataLength(),
                 MOZ_KnownLive(styleToSet.HTMLPropertyRef()),
                 MOZ_KnownLive(styleToSet.mAttribute),
                 styleToSet.mAttributeValue);
-        if (wrapTextInStyledElementResult.isErr()) {
+        if (MOZ_UNLIKELY(wrapTextInStyledElementResult.isErr())) {
           NS_WARNING("HTMLEditor::SetInlinePropertyOnTextNode() failed");
           return wrapTextInStyledElementResult.unwrapErr();
         }
         // There is AutoTransactionsConserveSelection, so we don't need to
         // update selection here.
-        wrapTextInStyledElementResult.IgnoreCaretPointSuggestion();
+        wrapTextInStyledElementResult.inspect().IgnoreCaretPointSuggestion();
       }
 
       // Then, apply new style to all nodes in the range entirely.
@@ -357,20 +357,20 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
                                          EditorType::HTML)) {
         // MOZ_KnownLive(...ContainerAs<Text>()) because of grabbed by `range`.
         // MOZ_KnownLive(styleToSet.mAttribute) due to bug 1622253.
-        SplitRangeOffFromNodeResult wrapTextInStyledElementResult =
-            SetInlinePropertyOnTextNode(
+        Result<SplitRangeOffFromNodeResult, nsresult>
+            wrapTextInStyledElementResult = SetInlinePropertyOnTextNode(
                 MOZ_KnownLive(*range.EndRef().ContainerAs<Text>()), 0,
                 range.EndRef().Offset(),
                 MOZ_KnownLive(styleToSet.HTMLPropertyRef()),
                 MOZ_KnownLive(styleToSet.mAttribute),
                 styleToSet.mAttributeValue);
-        if (wrapTextInStyledElementResult.isErr()) {
+        if (MOZ_UNLIKELY(wrapTextInStyledElementResult.isErr())) {
           NS_WARNING("HTMLEditor::SetInlinePropertyOnTextNode() failed");
           return wrapTextInStyledElementResult.unwrapErr();
         }
         // There is AutoTransactionsConserveSelection, so we don't need to
         // update selection here.
-        wrapTextInStyledElementResult.IgnoreCaretPointSuggestion();
+        wrapTextInStyledElementResult.inspect().IgnoreCaretPointSuggestion();
       }
     }
     MOZ_ASSERT(selectionRanges.HasSavedRanges());
@@ -470,9 +470,11 @@ Result<bool, nsresult> HTMLEditor::ElementIsGoodContainerForTheStyle(
                                                      *styledElement);
 }
 
-SplitRangeOffFromNodeResult HTMLEditor::SetInlinePropertyOnTextNode(
-    Text& aText, uint32_t aStartOffset, uint32_t aEndOffset, nsAtom& aProperty,
-    nsAtom* aAttribute, const nsAString& aValue) {
+Result<SplitRangeOffFromNodeResult, nsresult>
+HTMLEditor::SetInlinePropertyOnTextNode(Text& aText, uint32_t aStartOffset,
+                                        uint32_t aEndOffset, nsAtom& aProperty,
+                                        nsAtom* aAttribute,
+                                        const nsAString& aValue) {
   if (!aText.GetParentNode() ||
       !HTMLEditUtils::CanNodeContain(*aText.GetParentNode(), aProperty)) {
     return SplitRangeOffFromNodeResult(nullptr, &aText, nullptr);
@@ -491,11 +493,10 @@ SplitRangeOffFromNodeResult HTMLEditor::SetInlinePropertyOnTextNode(
     Result<bool, nsresult> isComputedCSSEquivalentToHTMLInlineStyleOrError =
         CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
             *this, aText, &aProperty, aAttribute, value);
-    if (isComputedCSSEquivalentToHTMLInlineStyleOrError.isErr()) {
+    if (MOZ_UNLIKELY(isComputedCSSEquivalentToHTMLInlineStyleOrError.isErr())) {
       NS_WARNING(
           "CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet() failed");
-      return SplitRangeOffFromNodeResult(
-          isComputedCSSEquivalentToHTMLInlineStyleOrError.unwrapErr());
+      return isComputedCSSEquivalentToHTMLInlineStyleOrError.propagateErr();
     }
     if (isComputedCSSEquivalentToHTMLInlineStyleOrError.unwrap()) {
       return SplitRangeOffFromNodeResult(nullptr, &aText, nullptr);
@@ -526,7 +527,7 @@ SplitRangeOffFromNodeResult HTMLEditor::SetInlinePropertyOnTextNode(
     return splitNodeResult;
   }();
   if (MOZ_UNLIKELY(splitAtEndResult.isErr())) {
-    return SplitRangeOffFromNodeResult(splitAtEndResult.unwrapErr());
+    return Err(splitAtEndResult.unwrapErr());
   }
   EditorDOMPoint pointToPutCaret = splitAtEndResult.UnwrapCaretPoint();
   SplitNodeResult splitAtStartResult = [&]() MOZ_CAN_RUN_SCRIPT {
@@ -552,7 +553,7 @@ SplitRangeOffFromNodeResult HTMLEditor::SetInlinePropertyOnTextNode(
     return splitNodeResult;
   }();
   if (MOZ_UNLIKELY(splitAtStartResult.isErr())) {
-    return SplitRangeOffFromNodeResult(splitAtStartResult.unwrapErr());
+    return Err(splitAtStartResult.unwrapErr());
   }
   if (splitAtStartResult.HasCaretPointSuggestion()) {
     pointToPutCaret = splitAtStartResult.UnwrapCaretPoint();
@@ -593,7 +594,7 @@ SplitRangeOffFromNodeResult HTMLEditor::SetInlinePropertyOnTextNode(
           element, &aProperty, aAttribute, &aValue);
       if (MOZ_UNLIKELY(result.isErr())) {
         NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
-        return SplitRangeOffFromNodeResult(result.unwrapErr());
+        return result.propagateErr();
       }
       if (result.inspect()) {
         // Previous sib is already right kind of inline node; slide this over
@@ -602,7 +603,7 @@ SplitRangeOffFromNodeResult HTMLEditor::SetInlinePropertyOnTextNode(
                                          element);
         if (MOZ_UNLIKELY(moveTextNodeResult.isErr())) {
           NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
-          return SplitRangeOffFromNodeResult(moveTextNodeResult.unwrapErr());
+          return moveTextNodeResult.propagateErr();
         }
         MoveNodeResult unwrappedMoveTextNodeResult =
             moveTextNodeResult.unwrap();
@@ -621,7 +622,7 @@ SplitRangeOffFromNodeResult HTMLEditor::SetInlinePropertyOnTextNode(
           element, &aProperty, aAttribute, &aValue);
       if (MOZ_UNLIKELY(result.isErr())) {
         NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
-        return SplitRangeOffFromNodeResult(result.unwrapErr());
+        return result.propagateErr();
       }
       if (result.inspect()) {
         // Following sib is already right kind of inline node; slide this over
@@ -630,7 +631,7 @@ SplitRangeOffFromNodeResult HTMLEditor::SetInlinePropertyOnTextNode(
                                     EditorDOMPoint(sibling, 0u));
         if (MOZ_UNLIKELY(moveTextNodeResult.isErr())) {
           NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
-          return SplitRangeOffFromNodeResult(moveTextNodeResult.unwrapErr());
+          return moveTextNodeResult.propagateErr();
         }
         MoveNodeResult unwrappedMoveTextNodeResult =
             moveTextNodeResult.unwrap();
@@ -648,7 +649,7 @@ SplitRangeOffFromNodeResult HTMLEditor::SetInlinePropertyOnTextNode(
       MOZ_KnownLive(*middleTextNode), aProperty, aAttribute, aValue);
   if (MOZ_UNLIKELY(setStyleResult.isErr())) {
     NS_WARNING("HTMLEditor::SetInlinePropertyOnNode() failed");
-    return SplitRangeOffFromNodeResult(setStyleResult.unwrapErr());
+    return setStyleResult.propagateErr();
   }
   return SplitRangeOffFromNodeResult(leftTextNode, middleTextNode,
                                      rightTextNode, setStyleResult.unwrap());
@@ -2455,28 +2456,30 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
           uint32_t endOffset = content == splitRange.EndRef().GetContainer()
                                    ? splitRange.EndRef().Offset()
                                    : content->Length();
-          SplitRangeOffFromNodeResult wrapTextInStyledElementResult =
-              SetInlinePropertyOnTextNode(
+          Result<SplitRangeOffFromNodeResult, nsresult>
+              wrapTextInStyledElementResult = SetInlinePropertyOnTextNode(
                   MOZ_KnownLive(*content->AsText()), startOffset, endOffset,
                   *styleToRemove.mHTMLProperty, styleToRemove.mAttribute,
                   u"-moz-editor-invert-value"_ns);
-          if (wrapTextInStyledElementResult.isErr()) {
+          if (MOZ_UNLIKELY(wrapTextInStyledElementResult.isErr())) {
             NS_WARNING(
                 "HTMLEditor::SetInlinePropertyOnTextNode(-moz-editor-invert-"
                 "value) failed");
             return wrapTextInStyledElementResult.unwrapErr();
           }
+          SplitRangeOffFromNodeResult unwrappedWrapTextInStyledElementResult =
+              wrapTextInStyledElementResult.unwrap();
           // There is AutoTransactionsConserveSelection, so we don't need to
           // update selection here.
-          wrapTextInStyledElementResult.IgnoreCaretPointSuggestion();
+          unwrappedWrapTextInStyledElementResult.IgnoreCaretPointSuggestion();
           // If we've split the content, let's swap content in
           // arrayOfContentsToInvertStyle with the text node which is applied
           // the style.
           if (isCSSInvertibleStyle) {
-            MOZ_ASSERT(
-                wrapTextInStyledElementResult.GetMiddleContentAs<Text>());
-            if (Text* textNode =
-                    wrapTextInStyledElementResult.GetMiddleContentAs<Text>()) {
+            MOZ_ASSERT(unwrappedWrapTextInStyledElementResult
+                           .GetMiddleContentAs<Text>());
+            if (Text* textNode = unwrappedWrapTextInStyledElementResult
+                                     .GetMiddleContentAs<Text>()) {
               if (textNode != content) {
                 arrayOfContentsToInvertStyle.ReplaceElementAt(
                     arrayOfContentsToInvertStyle.Length() - 1,
@@ -2519,12 +2522,12 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
         }
         // MOZ_KnownLive because 'leafTextNodes' is guaranteed to
         // keep it alive.
-        SplitRangeOffFromNodeResult wrapTextInStyledElementResult =
-            SetInlinePropertyOnTextNode(
+        Result<SplitRangeOffFromNodeResult, nsresult>
+            wrapTextInStyledElementResult = SetInlinePropertyOnTextNode(
                 MOZ_KnownLive(textNode), 0, textNode->TextLength(),
                 *styleToRemove.mHTMLProperty, styleToRemove.mAttribute,
                 u"-moz-editor-invert-value"_ns);
-        if (wrapTextInStyledElementResult.isErr()) {
+        if (MOZ_UNLIKELY(wrapTextInStyledElementResult.isErr())) {
           NS_WARNING(
               "HTMLEditor::SetInlinePropertyOnTextNode(-moz-editor-invert-"
               "value) failed");
@@ -2532,7 +2535,7 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
         }
         // There is AutoTransactionsConserveSelection, so we don't need to
         // update selection here.
-        wrapTextInStyledElementResult.IgnoreCaretPointSuggestion();
+        wrapTextInStyledElementResult.inspect().IgnoreCaretPointSuggestion();
       }  // for-loop of leafTextNodes
     }    // for-loop of selectionRanges
     MOZ_ASSERT(selectionRanges.HasSavedRanges());
