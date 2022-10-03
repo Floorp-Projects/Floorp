@@ -47,8 +47,9 @@ if (typeof module == "object") {
     const { loader } = ChromeUtils.import(
       "resource://devtools/shared/loader/Loader.jsm"
     );
-    return loader.require("devtools/server/actors/utils/event-breakpoints")
-      .validateEventBreakpoint;
+    return loader.require(
+      "resource://devtools/server/actors/utils/event-breakpoints.js"
+    ).validateEventBreakpoint;
   });
 }
 

@@ -134,10 +134,10 @@ export class BrowserToolboxLauncher extends EventEmitter {
     // invisible to the debugger (unlike the usual loader settings).
     this.#loader = useDistinctSystemPrincipalLoader(this);
     const { DevToolsServer } = this.#loader.require(
-      "devtools/server/devtools-server"
+      "resource://devtools/server/devtools-server.js"
     );
     const { SocketListener } = this.#loader.require(
-      "devtools/shared/security/socket"
+      "resource://devtools/shared/security/socket.js"
     );
     this.#devToolsServer = DevToolsServer;
     dumpn("Created a separate loader instance for the DevToolsServer.");

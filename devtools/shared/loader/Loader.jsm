@@ -139,7 +139,7 @@ function DevToolsLoader({
 
   // Fetch custom pseudo modules and globals
   const { modules, globals } = this.require(
-    "devtools/shared/loader/builtin-modules"
+    "resource://devtools/shared/loader/builtin-modules.js"
   );
 
   // Register custom pseudo modules to the current loader instance

@@ -397,7 +397,7 @@ async function openProfilerDialog(client, doc) {
 function getThisFirefoxString(aboutDebuggingWindow) {
   const loader = aboutDebuggingWindow.getBrowserLoaderForWindow();
   const { l10n } = loader.require(
-    "devtools/client/aboutdebugging/src/modules/l10n"
+    "resource://devtools/client/aboutdebugging/src/modules/l10n.js"
   );
   return l10n.getString("about-debugging-this-firefox-runtime-name");
 }

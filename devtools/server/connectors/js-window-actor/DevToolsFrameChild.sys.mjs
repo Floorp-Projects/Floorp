@@ -322,11 +322,11 @@ export class DevToolsFrameChild extends JSWindowActorChild {
         : Loader;
     }
     const { DevToolsServer } = this.loader.require(
-      "devtools/server/devtools-server"
+      "resource://devtools/server/devtools-server.js"
     );
 
     const { WindowGlobalTargetActor } = this.loader.require(
-      "devtools/server/actors/targets/window-global"
+      "resource://devtools/server/actors/targets/window-global.js"
     );
 
     DevToolsServer.init();

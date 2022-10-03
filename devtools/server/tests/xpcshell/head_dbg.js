@@ -41,7 +41,7 @@ const {
   DevToolsServer,
 } = require("resource://devtools/server/devtools-server.js");
 const { DevToolsServer: WorkerDevToolsServer } = worker.require(
-  "devtools/server/devtools-server"
+  "resource://devtools/server/devtools-server.js"
 );
 const {
   DevToolsClient,

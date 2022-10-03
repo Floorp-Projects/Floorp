@@ -39,7 +39,7 @@ if (DEBUG_ALLOCATIONS) {
   });
 
   const { allocationTracker } = loader.require(
-    "devtools/shared/test-helpers/allocation-tracker"
+    "resource://devtools/shared/test-helpers/allocation-tracker.js"
   );
   const tracker = allocationTracker({ watchAllGlobals: true });
   registerCleanupFunction(() => {

@@ -994,10 +994,10 @@ DevToolsStartup.prototype = {
       // settings).
       const serverLoader = useDistinctSystemPrincipalLoader(this);
       const { DevToolsServer: devToolsServer } = serverLoader.require(
-        "devtools/server/devtools-server"
+        "resource://devtools/server/devtools-server.js"
       );
       const { SocketListener } = serverLoader.require(
-        "devtools/shared/security/socket"
+        "resource://devtools/shared/security/socket.js"
       );
       devToolsServer.init();
 

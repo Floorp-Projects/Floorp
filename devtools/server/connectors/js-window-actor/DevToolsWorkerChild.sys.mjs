@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyGetter(lazy, "Loader", () =>
 );
 
 XPCOMUtils.defineLazyGetter(lazy, "DevToolsUtils", () =>
-  lazy.Loader.require("devtools/shared/DevToolsUtils")
+  lazy.Loader.require("resource://devtools/shared/DevToolsUtils.js")
 );
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   SessionDataHelpers:
@@ -267,7 +267,7 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
 
   _createConnection(forwardingPrefix) {
     const { DevToolsServer } = lazy.Loader.require(
-      "devtools/server/devtools-server"
+      "resource://devtools/server/devtools-server.js"
     );
 
     DevToolsServer.init();
@@ -322,7 +322,7 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
 
     // Create the actual worker target actor, in the worker thread.
     const { connectToWorker } = lazy.Loader.require(
-      "devtools/server/connectors/worker-connector"
+      "resource://devtools/server/connectors/worker-connector.js"
     );
 
     const onConnectToWorker = connectToWorker(

@@ -16,7 +16,7 @@ add_task(function() {
     const loader = new DevToolsLoader();
 
     const ref = Cu.getWeakReference(
-      loader.require("devtools/shared/event-emitter")
+      loader.require("resource://devtools/shared/event-emitter.js")
     );
 
     loader.destroy();
