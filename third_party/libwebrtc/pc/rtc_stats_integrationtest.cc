@@ -799,6 +799,7 @@ class RTCStatsReportVerifier {
                                         *inbound_stream.media_type == "audio");
     verifier.TestMemberIsOptionalIDReference(
         inbound_stream.remote_id, RTCRemoteOutboundRtpStreamStats::kType);
+    verifier.TestMemberIsDefined(inbound_stream.mid);
     verifier.TestMemberIsDefined(inbound_stream.track_identifier);
     if (inbound_stream.kind.is_defined() &&
         *inbound_stream.media_type == "video") {
@@ -926,6 +927,7 @@ class RTCStatsReportVerifier {
       const RTCOutboundRTPStreamStats& outbound_stream) {
     RTCStatsVerifier verifier(report_.get(), &outbound_stream);
     VerifyRTCRTPStreamStats(outbound_stream, verifier);
+    verifier.TestMemberIsDefined(outbound_stream.mid);
     if (outbound_stream.kind.is_defined() &&
         *outbound_stream.media_type == "video") {
       verifier.TestMemberIsIDReference(outbound_stream.media_source_id,

@@ -452,6 +452,7 @@ class RTC_EXPORT RTCInboundRTPStreamStats final
   // TODO(https://crbug.com/webrtc/14174): Implement trackIdentifier and kind.
 
   RTCStatsMember<std::string> track_identifier;
+  RTCStatsMember<std::string> mid;
   RTCStatsMember<std::string> remote_id;
   RTCStatsMember<uint32_t> packets_received;
   RTCStatsMember<uint64_t> fec_packets_received;
@@ -515,6 +516,7 @@ class RTC_EXPORT RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
 
   RTCStatsMember<std::string> media_source_id;
   RTCStatsMember<std::string> remote_id;
+  RTCStatsMember<std::string> mid;
   RTCStatsMember<std::string> rid;
   RTCStatsMember<uint32_t> packets_sent;
   RTCStatsMember<uint64_t> retransmitted_packets_sent;
