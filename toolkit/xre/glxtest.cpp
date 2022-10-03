@@ -336,12 +336,10 @@ static void get_pci_status() {
   pci_init(pacc);
   pci_scan_bus(pacc);
 
-  int count = 0;
   for (pci_dev* dev = pacc->devices; dev; dev = dev->next) {
     pci_fill_info(dev, PCI_FILL_IDENT | PCI_FILL_CLASS);
     if (dev->device_class >> 8 == PCI_BASE_CLASS_DISPLAY && dev->vendor_id &&
         dev->device_id) {
-      ++count;
       record_value("PCI_VENDOR_ID\n0x%04x\nPCI_DEVICE_ID\n0x%04x\n",
                    dev->vendor_id, dev->device_id);
     }
