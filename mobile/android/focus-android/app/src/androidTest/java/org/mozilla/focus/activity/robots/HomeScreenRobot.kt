@@ -30,6 +30,8 @@ class HomeScreenRobot {
 
     fun skipFirstRun() = onView(withId(R.id.skip)).perform(click())
 
+    fun closeOnboarding() = onboardingCloseButton.clickAndWaitForNewWindow(waitingTime)
+
     fun verifyOnboardingFirstSlide() {
         firstSlide.check(matches(isDisplayed()))
     }
