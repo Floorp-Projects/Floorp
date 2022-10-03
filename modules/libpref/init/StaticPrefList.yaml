@@ -5845,7 +5845,7 @@
 
 - name: gfx.font_rendering.colr_v1.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: gfx.font_rendering.opentype_svg.enabled
