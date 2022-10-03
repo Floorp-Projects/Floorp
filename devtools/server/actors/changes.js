@@ -4,9 +4,9 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
-const { changesSpec } = require("devtools/shared/specs/changes");
-const TrackChangeEmitter = require("devtools/server/actors/utils/track-change-emitter");
+const protocol = require("resource://devtools/shared/protocol.js");
+const { changesSpec } = require("resource://devtools/shared/specs/changes.js");
+const TrackChangeEmitter = require("resource://devtools/server/actors/utils/track-change-emitter.js");
 
 /**
  * The ChangesActor stores a stack of changes made by devtools on

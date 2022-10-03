@@ -6,15 +6,18 @@
 
 const {
   setBreakpointAtEntryPoints,
-} = require("devtools/server/actors/breakpoint");
-const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
-const { sourceSpec } = require("devtools/shared/specs/source");
+} = require("resource://devtools/server/actors/breakpoint.js");
+const {
+  ActorClassWithSpec,
+  Actor,
+} = require("resource://devtools/shared/protocol.js");
+const { sourceSpec } = require("resource://devtools/shared/specs/source.js");
 const {
   getSourcemapBaseURL,
-} = require("devtools/server/actors/utils/source-map-utils");
+} = require("resource://devtools/server/actors/utils/source-map-utils.js");
 const {
   getDebuggerSourceURL,
-} = require("devtools/server/actors/utils/source-url");
+} = require("resource://devtools/server/actors/utils/source-url.js");
 
 loader.lazyRequireGetter(
   this,

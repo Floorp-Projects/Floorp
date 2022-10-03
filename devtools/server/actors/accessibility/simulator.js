@@ -4,11 +4,16 @@
 
 "use strict";
 
-const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
-const { simulatorSpec } = require("devtools/shared/specs/accessibility");
+const {
+  Actor,
+  ActorClassWithSpec,
+} = require("resource://devtools/shared/protocol.js");
+const {
+  simulatorSpec,
+} = require("resource://devtools/shared/specs/accessibility.js");
 const {
   simulation: { COLOR_TRANSFORMATION_MATRICES },
-} = require("devtools/server/actors/accessibility/constants");
+} = require("resource://devtools/server/actors/accessibility/constants.js");
 
 /**
  * The SimulatorActor is responsible for setting color matrices

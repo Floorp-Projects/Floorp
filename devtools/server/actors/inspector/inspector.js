@@ -51,10 +51,14 @@
  */
 
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-const protocol = require("devtools/shared/protocol");
-const { LongStringActor } = require("devtools/server/actors/string");
+const protocol = require("resource://devtools/shared/protocol.js");
+const {
+  LongStringActor,
+} = require("resource://devtools/server/actors/string.js");
 
-const { inspectorSpec } = require("devtools/shared/specs/inspector");
+const {
+  inspectorSpec,
+} = require("resource://devtools/shared/specs/inspector.js");
 
 loader.lazyRequireGetter(
   this,

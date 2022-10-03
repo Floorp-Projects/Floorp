@@ -6,7 +6,7 @@
 
 const {
   wildcardToRegExp,
-} = require("devtools/server/actors/network-monitor/utils/wildcard-to-regexp");
+} = require("resource://devtools/server/actors/network-monitor/utils/wildcard-to-regexp.js");
 
 loader.lazyRequireGetter(
   this,

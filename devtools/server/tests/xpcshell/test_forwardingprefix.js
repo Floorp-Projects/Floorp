@@ -5,7 +5,7 @@
 
 /* Exercise prefix-based forwarding of packets to other transports. */
 
-const { RootActor } = require("devtools/server/actors/root");
+const { RootActor } = require("resource://devtools/server/actors/root.js");
 
 var gMainConnection, gMainTransport;
 var gSubconnection1, gSubconnection2;
@@ -176,7 +176,7 @@ function TestForwardPrefix12OnlyRoot() {
 // the reply-sending code attaches the replying actor's name to the packet,
 // so simply matching the 'from' field in the reply ensures that we heard
 // from the right actor.
-const { Actor } = require("devtools/shared/protocol/Actor");
+const { Actor } = require("resource://devtools/shared/protocol/Actor.js");
 class EchoActor extends Actor {
   constructor(conn) {
     super(conn);

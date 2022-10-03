@@ -4,10 +4,13 @@
 
 "use strict";
 
-const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
+const {
+  Actor,
+  ActorClassWithSpec,
+} = require("resource://devtools/shared/protocol.js");
 const {
   parentAccessibilitySpec,
-} = require("devtools/shared/specs/accessibility");
+} = require("resource://devtools/shared/specs/accessibility.js");
 
 const PREF_ACCESSIBILITY_FORCE_DISABLED = "accessibility.force_disabled";
 

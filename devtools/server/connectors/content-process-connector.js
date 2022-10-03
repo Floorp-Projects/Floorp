@@ -4,11 +4,11 @@
 
 "use strict";
 
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 var { dumpn } = DevToolsUtils;
 var {
   createContentProcessSessionContext,
-} = require("devtools/server/actors/watcher/session-context");
+} = require("resource://devtools/server/actors/watcher/session-context.js");
 
 loader.lazyRequireGetter(
   this,

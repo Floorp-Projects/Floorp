@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { waitForTick } = require("devtools/shared/DevToolsUtils");
+const { waitForTick } = require("resource://devtools/shared/DevToolsUtils.js");
 
 /**
  * Test that setting pauseOnExceptions to true and then to false will not cause

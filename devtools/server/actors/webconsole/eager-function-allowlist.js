@@ -4,7 +4,7 @@
 
 "use strict";
 
-const idlPureAllowlist = require("devtools/server/actors/webconsole/webidl-pure-allowlist");
+const idlPureAllowlist = require("resource://devtools/server/actors/webconsole/webidl-pure-allowlist.js");
 
 // TODO: Bug 1616013 - Move more of these to be part of the pure list.
 const customEagerFunctions = {

@@ -23,7 +23,7 @@ const {
       },
     },
   },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 add_task(async function() {
   const {

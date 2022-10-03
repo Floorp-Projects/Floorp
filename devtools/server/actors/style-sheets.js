@@ -4,9 +4,13 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
-const { LongStringActor } = require("devtools/server/actors/string");
-const { styleSheetsSpec } = require("devtools/shared/specs/style-sheets");
+const protocol = require("resource://devtools/shared/protocol.js");
+const {
+  LongStringActor,
+} = require("resource://devtools/server/actors/string.js");
+const {
+  styleSheetsSpec,
+} = require("resource://devtools/shared/specs/style-sheets.js");
 const InspectorUtils = require("InspectorUtils");
 
 loader.lazyRequireGetter(

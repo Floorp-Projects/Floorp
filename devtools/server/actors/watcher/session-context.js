@@ -28,8 +28,8 @@
 //   An object keyed by resource type, whose value indicates if we have watcher support
 //   for the resource.
 
-const Targets = require("devtools/server/actors/targets/index");
-const Resources = require("devtools/server/actors/resources/index");
+const Targets = require("resource://devtools/server/actors/targets/index.js");
+const Resources = require("resource://devtools/server/actors/resources/index.js");
 
 const SESSION_TYPES = {
   ALL: "all",

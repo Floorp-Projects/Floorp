@@ -6,10 +6,12 @@
 
 // Test the accessible highlighter's infobar content.
 
-const { truncateString } = require("devtools/shared/inspector/utils");
+const {
+  truncateString,
+} = require("resource://devtools/shared/inspector/utils.js");
 const {
   MAX_STRING_LENGTH,
-} = require("devtools/server/actors/highlighters/utils/accessibility");
+} = require("resource://devtools/server/actors/highlighters/utils/accessibility.js");
 
 add_task(async function() {
   const {

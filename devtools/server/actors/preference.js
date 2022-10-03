@@ -4,8 +4,10 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
-const { preferenceSpec } = require("devtools/shared/specs/preference");
+const protocol = require("resource://devtools/shared/protocol.js");
+const {
+  preferenceSpec,
+} = require("resource://devtools/shared/specs/preference.js");
 
 const { PREF_STRING, PREF_INT, PREF_BOOL } = Services.prefs;
 

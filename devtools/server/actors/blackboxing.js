@@ -4,8 +4,13 @@
 
 "use strict";
 
-const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
-const { blackboxingSpec } = require("devtools/shared/specs/blackboxing");
+const {
+  ActorClassWithSpec,
+  Actor,
+} = require("resource://devtools/shared/protocol.js");
+const {
+  blackboxingSpec,
+} = require("resource://devtools/shared/specs/blackboxing.js");
 const {
   SessionDataHelpers,
 } = require("resource://devtools/server/actors/watcher/SessionDataHelpers.jsm");

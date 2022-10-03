@@ -12,16 +12,16 @@
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  */
 
-const protocol = require("devtools/shared/protocol");
+const protocol = require("resource://devtools/shared/protocol.js");
 const {
   webExtensionDescriptorSpec,
-} = require("devtools/shared/specs/descriptors/webextension");
+} = require("resource://devtools/shared/specs/descriptors/webextension.js");
 const {
   connectToFrame,
-} = require("devtools/server/connectors/frame-connector");
+} = require("resource://devtools/server/connectors/frame-connector.js");
 const {
   createWebExtensionSessionContext,
-} = require("devtools/server/actors/watcher/session-context");
+} = require("resource://devtools/server/actors/watcher/session-context.js");
 
 const lazy = {};
 ChromeUtils.defineModuleGetter(

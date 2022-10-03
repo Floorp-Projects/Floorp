@@ -4,9 +4,9 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
-const { symbolIteratorSpec } = require("devtools/shared/specs/symbol-iterator");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const protocol = require("resource://devtools/shared/protocol.js");
+const { symbolIteratorSpec } = require("resource://devtools/shared/specs/symbol-iterator.js");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 
 /**
  * Creates an actor to iterate over an object's symbols.

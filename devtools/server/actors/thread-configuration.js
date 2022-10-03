@@ -4,10 +4,13 @@
 
 "use strict";
 
-const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
+const {
+  ActorClassWithSpec,
+  Actor,
+} = require("resource://devtools/shared/protocol.js");
 const {
   threadConfigurationSpec,
-} = require("devtools/shared/specs/thread-configuration");
+} = require("resource://devtools/shared/specs/thread-configuration.js");
 const {
   SessionDataHelpers,
 } = require("resource://devtools/server/actors/watcher/SessionDataHelpers.jsm");

@@ -8,15 +8,17 @@
 // error packets.
 /* eslint-disable no-throw-literal */
 
-const { Pool } = require("devtools/shared/protocol");
+const { Pool } = require("resource://devtools/shared/protocol.js");
 const {
   LazyPool,
   createExtraActors,
-} = require("devtools/shared/protocol/lazy-pool");
-const { DevToolsServer } = require("devtools/server/devtools-server");
-const protocol = require("devtools/shared/protocol");
-const { rootSpec } = require("devtools/shared/specs/root");
-const Resources = require("devtools/server/actors/resources/index");
+} = require("resource://devtools/shared/protocol/lazy-pool.js");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+const protocol = require("resource://devtools/shared/protocol.js");
+const { rootSpec } = require("resource://devtools/shared/specs/root.js");
+const Resources = require("resource://devtools/server/actors/resources/index.js");
 
 loader.lazyRequireGetter(
   this,

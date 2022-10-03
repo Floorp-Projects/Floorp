@@ -4,8 +4,10 @@
 
 "use strict";
 
-const { executeSoon } = require("devtools/shared/DevToolsUtils");
-const { delimitedRead } = require("devtools/shared/transport/stream-utils");
+const { executeSoon } = require("resource://devtools/shared/DevToolsUtils.js");
+const {
+  delimitedRead,
+} = require("resource://devtools/shared/transport/stream-utils.js");
 const CryptoHash = Components.Constructor(
   "@mozilla.org/security/hash;1",
   "nsICryptoHash",

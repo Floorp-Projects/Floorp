@@ -5,7 +5,7 @@
 "use strict";
 
 const Debugger = require("Debugger");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 
 const lazy = {};
 ChromeUtils.defineModuleGetter(

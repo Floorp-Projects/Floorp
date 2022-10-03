@@ -7,7 +7,7 @@
 
 var gClient, gActorId;
 
-const { Actor } = require("devtools/shared/protocol/Actor");
+const { Actor } = require("resource://devtools/shared/protocol/Actor.js");
 
 class TestActor extends Actor {
   constructor(conn) {

@@ -19,10 +19,10 @@ add_task(async function() {
     );
     const {
       HighlighterEnvironment,
-    } = require("devtools/server/actors/highlighters");
+    } = require("resource://devtools/server/actors/highlighters.js");
     const {
       CanvasFrameAnonymousContentHelper,
-    } = require("devtools/server/actors/highlighters/utils/markup");
+    } = require("resource://devtools/server/actors/highlighters/utils/markup.js");
     let doc = content.document;
 
     const nodeBuilder = () => {

@@ -14,17 +14,19 @@
 // error packets.
 /* eslint-disable no-throw-literal */
 
-const { DevToolsServer } = require("devtools/server/devtools-server");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const protocol = require("devtools/shared/protocol");
+const protocol = require("resource://devtools/shared/protocol.js");
 const {
   workerDescriptorSpec,
-} = require("devtools/shared/specs/descriptors/worker");
+} = require("resource://devtools/shared/specs/descriptors/worker.js");
 const {
   createWorkerSessionContext,
-} = require("devtools/server/actors/watcher/session-context");
+} = require("resource://devtools/server/actors/watcher/session-context.js");
 
 loader.lazyRequireGetter(
   this,

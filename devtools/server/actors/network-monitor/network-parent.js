@@ -4,13 +4,18 @@
 
 "use strict";
 
-const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
-const { networkParentSpec } = require("devtools/shared/specs/network-parent");
+const {
+  ActorClassWithSpec,
+  Actor,
+} = require("resource://devtools/shared/protocol.js");
+const {
+  networkParentSpec,
+} = require("resource://devtools/shared/specs/network-parent.js");
 
 const {
   TYPES: { NETWORK_EVENT },
   getResourceWatcher,
-} = require("devtools/server/actors/resources/index");
+} = require("resource://devtools/server/actors/resources/index.js");
 
 /**
  * This actor manages all network functionality running

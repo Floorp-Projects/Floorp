@@ -7,7 +7,7 @@
 const {
   ANIMATION_TYPES,
   AnimationPlayerActor,
-} = require("devtools/server/actors/animation");
+} = require("resource://devtools/server/actors/animation.js");
 
 function run_test() {
   // Mock a window with just the properties the AnimationPlayerActor uses.

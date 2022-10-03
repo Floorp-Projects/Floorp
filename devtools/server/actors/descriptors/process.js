@@ -21,16 +21,21 @@
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  */
 
-const { DevToolsServer } = require("devtools/server/devtools-server");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
 
 const {
   createBrowserSessionContext,
   createContentProcessSessionContext,
-} = require("devtools/server/actors/watcher/session-context");
-const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
+} = require("resource://devtools/server/actors/watcher/session-context.js");
+const {
+  ActorClassWithSpec,
+  Actor,
+} = require("resource://devtools/shared/protocol.js");
 const {
   processDescriptorSpec,
-} = require("devtools/shared/specs/descriptors/process");
+} = require("resource://devtools/shared/specs/descriptors/process.js");
 
 loader.lazyRequireGetter(
   this,

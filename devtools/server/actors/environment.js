@@ -3,9 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
-const { createValueGrip } = require("devtools/server/actors/object/utils");
-const { environmentSpec } = require("devtools/shared/specs/environment");
+const {
+  ActorClassWithSpec,
+  Actor,
+} = require("resource://devtools/shared/protocol.js");
+const {
+  createValueGrip,
+} = require("resource://devtools/server/actors/object/utils.js");
+const {
+  environmentSpec,
+} = require("resource://devtools/shared/specs/environment.js");
 
 /**
  * Creates an EnvironmentActor. EnvironmentActors are responsible for listing

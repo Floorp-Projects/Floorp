@@ -4,9 +4,16 @@
 
 "use strict";
 
-const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
-const { webSocketSpec } = require("devtools/shared/specs/websocket");
-const { LongStringActor } = require("devtools/server/actors/string");
+const {
+  Actor,
+  ActorClassWithSpec,
+} = require("resource://devtools/shared/protocol.js");
+const {
+  webSocketSpec,
+} = require("resource://devtools/shared/specs/websocket.js");
+const {
+  LongStringActor,
+} = require("resource://devtools/server/actors/string.js");
 
 const webSocketEventService = Cc[
   "@mozilla.org/websocketevent/service;1"

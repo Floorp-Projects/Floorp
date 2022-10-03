@@ -4,13 +4,15 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
-const { walkerSpec } = require("devtools/shared/specs/walker");
-const { LongStringActor } = require("devtools/server/actors/string");
+const protocol = require("resource://devtools/shared/protocol.js");
+const { walkerSpec } = require("resource://devtools/shared/specs/walker.js");
+const {
+  LongStringActor,
+} = require("resource://devtools/server/actors/string.js");
 const InspectorUtils = require("InspectorUtils");
 const {
   EXCLUDED_LISTENER,
-} = require("devtools/server/actors/inspector/constants");
+} = require("resource://devtools/server/actors/inspector/constants.js");
 
 loader.lazyRequireGetter(
   this,

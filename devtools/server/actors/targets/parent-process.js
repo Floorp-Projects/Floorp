@@ -13,20 +13,22 @@
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  */
 
-const { DevToolsServer } = require("devtools/server/devtools-server");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
 const {
   getChildDocShells,
   WindowGlobalTargetActor,
   windowGlobalTargetPrototype,
-} = require("devtools/server/actors/targets/window-global");
-const makeDebugger = require("devtools/server/actors/utils/make-debugger");
+} = require("resource://devtools/server/actors/targets/window-global.js");
+const makeDebugger = require("resource://devtools/server/actors/utils/make-debugger.js");
 
-const { extend } = require("devtools/shared/extend");
+const { extend } = require("resource://devtools/shared/extend.js");
 const {
   parentProcessTargetSpec,
-} = require("devtools/shared/specs/targets/parent-process");
-const Targets = require("devtools/server/actors/targets/index");
-const TargetActorMixin = require("devtools/server/actors/targets/target-actor-mixin");
+} = require("resource://devtools/shared/specs/targets/parent-process.js");
+const Targets = require("resource://devtools/server/actors/targets/index.js");
+const TargetActorMixin = require("resource://devtools/server/actors/targets/target-actor-mixin.js");
 
 /**
  * Protocol.js expects only the prototype object, and does not maintain the prototype

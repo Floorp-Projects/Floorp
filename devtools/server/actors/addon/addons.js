@@ -7,11 +7,13 @@
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
-const protocol = require("devtools/shared/protocol");
+const protocol = require("resource://devtools/shared/protocol.js");
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
-const { addonsSpec } = require("devtools/shared/specs/addon/addons");
+const {
+  addonsSpec,
+} = require("resource://devtools/shared/specs/addon/addons.js");
 
 // This actor is not used by DevTools, but is relied on externally by
 // webext-run and the Firefox VS-Code plugin. see bug #1578108
@@ -38,8 +40,10 @@ const AddonsActor = protocol.ActorClassWithSpec(addonsSpec, {
     // about:debugging is only using this API when debugging its own firefox instance,
     // so for now, there is no chance of calling this on Android.
     if (openDevTools) {
-      // eslint-disable-next-line mozilla/reject-some-requires
-      const { gDevTools } = require("devtools/client/framework/devtools");
+      const {
+        gDevTools,
+        // eslint-disable-next-line mozilla/reject-some-requires
+      } = require("resource://devtools/client/framework/devtools.js");
       gDevTools.showToolboxForWebExtension(addon.id);
     }
 

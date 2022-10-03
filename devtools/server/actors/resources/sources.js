@@ -6,10 +6,12 @@
 
 const {
   TYPES: { SOURCE },
-} = require("devtools/server/actors/resources/index");
-const Targets = require("devtools/server/actors/targets/index");
+} = require("resource://devtools/server/actors/resources/index.js");
+const Targets = require("resource://devtools/server/actors/targets/index.js");
 
-const { STATES: THREAD_STATES } = require("devtools/server/actors/thread");
+const {
+  STATES: THREAD_STATES,
+} = require("resource://devtools/server/actors/thread.js");
 
 /**
  * Start watching for all JS sources related to a given Target Actor.

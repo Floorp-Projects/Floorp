@@ -6,16 +6,18 @@
 
 const {
   AutoRefreshHighlighter,
-} = require("devtools/server/actors/highlighters/auto-refresh");
+} = require("resource://devtools/server/actors/highlighters/auto-refresh.js");
 const {
   CanvasFrameAnonymousContentHelper,
   getComputedStyle,
-} = require("devtools/server/actors/highlighters/utils/markup");
+} = require("resource://devtools/server/actors/highlighters/utils/markup.js");
 const {
   setIgnoreLayoutChanges,
   getAdjustedQuads,
-} = require("devtools/shared/layout/utils");
-const { getCSSStyleRules } = require("devtools/shared/inspector/css-logic");
+} = require("resource://devtools/shared/layout/utils.js");
+const {
+  getCSSStyleRules,
+} = require("resource://devtools/shared/inspector/css-logic.js");
 
 const GEOMETRY_LABEL_SIZE = 6;
 

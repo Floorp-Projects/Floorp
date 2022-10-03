@@ -24,9 +24,9 @@
  *   These dedicated classes are used by the LayoutChangesObserver.
  */
 
-const protocol = require("devtools/shared/protocol");
-const EventEmitter = require("devtools/shared/event-emitter");
-const { reflowSpec } = require("devtools/shared/specs/reflow");
+const protocol = require("resource://devtools/shared/protocol.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const { reflowSpec } = require("resource://devtools/shared/specs/reflow.js");
 
 /**
  * The reflow actor tracks reflows and emits events about them.

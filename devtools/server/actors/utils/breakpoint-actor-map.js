@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { BreakpointActor } = require("devtools/server/actors/breakpoint");
+const {
+  BreakpointActor,
+} = require("resource://devtools/server/actors/breakpoint.js");
 
 /**
  * A BreakpointActorMap is a map from locations to instances of BreakpointActor.

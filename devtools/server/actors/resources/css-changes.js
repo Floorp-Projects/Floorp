@@ -6,8 +6,8 @@
 
 const {
   TYPES: { CSS_CHANGE },
-} = require("devtools/server/actors/resources/index");
-const TrackChangeEmitter = require("devtools/server/actors/utils/track-change-emitter");
+} = require("resource://devtools/server/actors/resources/index.js");
+const TrackChangeEmitter = require("resource://devtools/server/actors/utils/track-change-emitter.js");
 
 /**
  * Start watching for all css changes related to a given Target Actor.

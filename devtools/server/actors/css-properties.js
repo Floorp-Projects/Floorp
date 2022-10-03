@@ -4,10 +4,12 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
+const protocol = require("resource://devtools/shared/protocol.js");
 const { ActorClassWithSpec, Actor } = protocol;
-const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
-const { cssColors } = require("devtools/shared/css/color-db");
+const {
+  cssPropertiesSpec,
+} = require("resource://devtools/shared/specs/css-properties.js");
+const { cssColors } = require("resource://devtools/shared/css/color-db.js");
 const InspectorUtils = require("InspectorUtils");
 
 loader.lazyRequireGetter(

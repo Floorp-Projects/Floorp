@@ -5,7 +5,7 @@
 "use strict";
 
 const InspectorUtils = require("InspectorUtils");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 /**
  * The CustomElementWatcher can be used to be notified if a custom element definition

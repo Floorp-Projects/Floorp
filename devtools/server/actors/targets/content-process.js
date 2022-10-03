@@ -11,21 +11,23 @@
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  */
 
-const { ThreadActor } = require("devtools/server/actors/thread");
-const { WebConsoleActor } = require("devtools/server/actors/webconsole");
-const makeDebugger = require("devtools/server/actors/utils/make-debugger");
-const { Pool } = require("devtools/shared/protocol");
-const { assert } = require("devtools/shared/DevToolsUtils");
+const { ThreadActor } = require("resource://devtools/server/actors/thread.js");
+const {
+  WebConsoleActor,
+} = require("resource://devtools/server/actors/webconsole.js");
+const makeDebugger = require("resource://devtools/server/actors/utils/make-debugger.js");
+const { Pool } = require("resource://devtools/shared/protocol.js");
+const { assert } = require("resource://devtools/shared/DevToolsUtils.js");
 const {
   SourcesManager,
-} = require("devtools/server/actors/utils/sources-manager");
-const { Actor } = require("devtools/shared/protocol");
+} = require("resource://devtools/server/actors/utils/sources-manager.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   contentProcessTargetSpec,
-} = require("devtools/shared/specs/targets/content-process");
-const Targets = require("devtools/server/actors/targets/index");
-const Resources = require("devtools/server/actors/resources/index");
-const TargetActorMixin = require("devtools/server/actors/targets/target-actor-mixin");
+} = require("resource://devtools/shared/specs/targets/content-process.js");
+const Targets = require("resource://devtools/server/actors/targets/index.js");
+const Resources = require("resource://devtools/server/actors/resources/index.js");
+const TargetActorMixin = require("resource://devtools/server/actors/targets/target-actor-mixin.js");
 const { TargetActorRegistry } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs"
 );

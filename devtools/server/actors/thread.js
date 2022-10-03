@@ -9,25 +9,32 @@
 /* eslint-disable no-throw-literal */
 
 const DebuggerNotificationObserver = require("DebuggerNotificationObserver");
-const { Pool } = require("devtools/shared/protocol/Pool");
-const { createValueGrip } = require("devtools/server/actors/object/utils");
-const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const { Pool } = require("resource://devtools/shared/protocol/Pool.js");
+const {
+  createValueGrip,
+} = require("resource://devtools/server/actors/object/utils.js");
+const {
+  ActorClassWithSpec,
+  Actor,
+} = require("resource://devtools/shared/protocol.js");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 const Debugger = require("Debugger");
 const { assert, dumpn, reportException } = DevToolsUtils;
-const { threadSpec } = require("devtools/shared/specs/thread");
+const { threadSpec } = require("resource://devtools/shared/specs/thread.js");
 const {
   getAvailableEventBreakpoints,
   eventBreakpointForNotification,
   eventsRequireNotifications,
   firstStatementBreakpointId,
   makeEventBreakpointMessage,
-} = require("devtools/server/actors/utils/event-breakpoints");
+} = require("resource://devtools/server/actors/utils/event-breakpoints.js");
 const {
   WatchpointMap,
-} = require("devtools/server/actors/utils/watchpoint-map");
+} = require("resource://devtools/server/actors/utils/watchpoint-map.js");
 
-const { logEvent } = require("devtools/server/actors/utils/logEvent");
+const {
+  logEvent,
+} = require("resource://devtools/server/actors/utils/logEvent.js");
 
 loader.lazyRequireGetter(
   this,

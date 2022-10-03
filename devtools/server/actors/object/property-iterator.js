@@ -4,11 +4,11 @@
 
 "use strict";
 
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const protocol = require("devtools/shared/protocol");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
+const protocol = require("resource://devtools/shared/protocol.js");
 const {
   propertyIteratorSpec,
-} = require("devtools/shared/specs/property-iterator");
+} = require("resource://devtools/shared/specs/property-iterator.js");
 loader.lazyRequireGetter(
   this,
   "ObjectUtils",

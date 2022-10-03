@@ -4,11 +4,13 @@
 
 "use strict";
 
-const { LongStringActor } = require("devtools/server/actors/string");
+const {
+  LongStringActor,
+} = require("resource://devtools/server/actors/string.js");
 
 const {
   TYPES: { WEBSOCKET },
-} = require("devtools/server/actors/resources/index");
+} = require("resource://devtools/server/actors/resources/index.js");
 
 const webSocketEventService = Cc[
   "@mozilla.org/websocketevent/service;1"

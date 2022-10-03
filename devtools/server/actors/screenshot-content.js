@@ -3,12 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
+const {
+  Actor,
+  ActorClassWithSpec,
+} = require("resource://devtools/shared/protocol.js");
 const {
   screenshotContentSpec,
-} = require("devtools/shared/specs/screenshot-content");
+} = require("resource://devtools/shared/specs/screenshot-content.js");
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const STRINGS_URI = "devtools/shared/locales/screenshot.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 loader.lazyRequireGetter(

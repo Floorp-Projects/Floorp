@@ -4,12 +4,20 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
-const { LongStringActor } = require("devtools/server/actors/string");
-const { DevToolsServer } = require("devtools/server/devtools-server");
-const { isWindowIncluded } = require("devtools/shared/layout/utils");
-const specs = require("devtools/shared/specs/storage");
-const { parseItemValue } = require("devtools/shared/storage/utils");
+const protocol = require("resource://devtools/shared/protocol.js");
+const {
+  LongStringActor,
+} = require("resource://devtools/server/actors/string.js");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+const {
+  isWindowIncluded,
+} = require("resource://devtools/shared/layout/utils.js");
+const specs = require("resource://devtools/shared/specs/storage.js");
+const {
+  parseItemValue,
+} = require("resource://devtools/shared/storage/utils.js");
 loader.lazyGetter(this, "ExtensionProcessScript", () => {
   return ChromeUtils.import("resource://gre/modules/ExtensionProcessScript.jsm")
     .ExtensionProcessScript;

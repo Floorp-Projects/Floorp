@@ -12,7 +12,9 @@ const _SUPPORT_STATE = {
   UNSUPPORTED_PREFIX_NEEDED: "UNSUPPORTED_PREFIX_NEEDED",
 };
 
-const { COMPATIBILITY_ISSUE_TYPE } = require("devtools/shared/constants");
+const {
+  COMPATIBILITY_ISSUE_TYPE,
+} = require("resource://devtools/shared/constants.js");
 
 /**
  * A class with methods used to query the MDN compatibility data for CSS properties and

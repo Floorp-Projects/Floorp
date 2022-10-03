@@ -272,7 +272,7 @@ add_task(async function testLongValue() {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/loader/Loader.jsm"
       );
-      const WalkerActor = require("devtools/server/actors/inspector/walker");
+      const WalkerActor = require("resource://devtools/server/actors/inspector/walker.js");
       WalkerActor.setValueSummaryLength(
         WalkerActor.DEFAULT_VALUE_SUMMARY_LENGTH
       );
@@ -287,7 +287,7 @@ add_task(async function testLongValue() {
         "resource://devtools/shared/loader/Loader.jsm"
       );
       const testSummaryLength = 10;
-      const WalkerActor = require("devtools/server/actors/inspector/walker");
+      const WalkerActor = require("resource://devtools/server/actors/inspector/walker.js");
 
       WalkerActor.setValueSummaryLength(testSummaryLength);
       return content.document.getElementById("longstring").firstChild.nodeValue;

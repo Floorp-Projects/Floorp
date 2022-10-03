@@ -4,20 +4,24 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
-const { getCSSLexer } = require("devtools/shared/css/lexer");
-const { LongStringActor } = require("devtools/server/actors/string");
+const protocol = require("resource://devtools/shared/protocol.js");
+const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
+const {
+  LongStringActor,
+} = require("resource://devtools/server/actors/string.js");
 const InspectorUtils = require("InspectorUtils");
-const TrackChangeEmitter = require("devtools/server/actors/utils/track-change-emitter");
+const TrackChangeEmitter = require("resource://devtools/server/actors/utils/track-change-emitter.js");
 
-const { pageStyleSpec } = require("devtools/shared/specs/page-style");
+const {
+  pageStyleSpec,
+} = require("resource://devtools/shared/specs/page-style.js");
 const {
   style: { ELEMENT_STYLE },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 const {
   hasStyleSheetWatcherSupportForTarget,
-} = require("devtools/server/actors/utils/stylesheets-manager");
+} = require("resource://devtools/server/actors/utils/stylesheets-manager.js");
 
 loader.lazyRequireGetter(
   this,

@@ -7,23 +7,23 @@
 const {
   CanvasFrameAnonymousContentHelper,
   getComputedStyle,
-} = require("devtools/server/actors/highlighters/utils/markup");
+} = require("resource://devtools/server/actors/highlighters/utils/markup.js");
 const {
   setIgnoreLayoutChanges,
   getCurrentZoom,
   getAdjustedQuads,
   getFrameOffsets,
-} = require("devtools/shared/layout/utils");
+} = require("resource://devtools/shared/layout/utils.js");
 const {
   AutoRefreshHighlighter,
-} = require("devtools/server/actors/highlighters/auto-refresh");
+} = require("resource://devtools/server/actors/highlighters/auto-refresh.js");
 const {
   getDistance,
   clickedOnEllipseEdge,
   distanceToLine,
   projection,
   clickedOnPoint,
-} = require("devtools/server/actors/utils/shapes-utils");
+} = require("resource://devtools/server/actors/utils/shapes-utils.js");
 const {
   identity,
   apply,
@@ -33,9 +33,11 @@ const {
   rotate,
   changeMatrixBase,
   getBasis,
-} = require("devtools/shared/layout/dom-matrix-2d");
-const EventEmitter = require("devtools/shared/event-emitter");
-const { getCSSStyleRules } = require("devtools/shared/inspector/css-logic");
+} = require("resource://devtools/shared/layout/dom-matrix-2d.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const {
+  getCSSStyleRules,
+} = require("resource://devtools/shared/inspector/css-logic.js");
 
 const BASE_MARKER_SIZE = 5;
 // the width of the area around highlighter lines that can be clicked, in px

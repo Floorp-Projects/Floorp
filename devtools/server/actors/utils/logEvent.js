@@ -4,11 +4,13 @@
 
 "use strict";
 
-const { formatDisplayName } = require("devtools/server/actors/frame");
+const {
+  formatDisplayName,
+} = require("resource://devtools/server/actors/frame.js");
 const {
   TYPES,
   getResourceWatcher,
-} = require("devtools/server/actors/resources/index");
+} = require("resource://devtools/server/actors/resources/index.js");
 
 // Get a string message to display when a frame evaluation throws.
 function getThrownMessage(completion) {

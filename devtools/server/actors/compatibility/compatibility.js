@@ -4,12 +4,14 @@
 
 "use strict";
 
-var protocol = require("devtools/shared/protocol");
-const { compatibilitySpec } = require("devtools/shared/specs/compatibility");
+var protocol = require("resource://devtools/shared/protocol.js");
+const {
+  compatibilitySpec,
+} = require("resource://devtools/shared/specs/compatibility.js");
 
 loader.lazyGetter(this, "mdnCompatibility", () => {
-  const MDNCompatibility = require("devtools/server/actors/compatibility/lib/MDNCompatibility");
-  const cssPropertiesCompatData = require("devtools/shared/compatibility/dataset/css-properties.json");
+  const MDNCompatibility = require("resource://devtools/server/actors/compatibility/lib/MDNCompatibility.js");
+  const cssPropertiesCompatData = require("resource://devtools/shared/compatibility/dataset/css-properties.json");
   return new MDNCompatibility(cssPropertiesCompatData);
 });
 

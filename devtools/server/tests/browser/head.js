@@ -12,11 +12,15 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const { DevToolsClient } = require("devtools/client/devtools-client");
+const {
+  DevToolsClient,
+} = require("resource://devtools/client/devtools-client.js");
 const {
   ActorRegistry,
-} = require("devtools/server/actors/utils/actor-registry");
-const { DevToolsServer } = require("devtools/server/devtools-server");
+} = require("resource://devtools/server/actors/utils/actor-registry.js");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
 
 const PATH = "browser/devtools/server/tests/browser/";
 const TEST_DOMAIN = "http://test1.example.org";

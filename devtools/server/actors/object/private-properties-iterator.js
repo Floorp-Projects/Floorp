@@ -4,11 +4,11 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
+const protocol = require("resource://devtools/shared/protocol.js");
 const {
   privatePropertiesIteratorSpec,
-} = require("devtools/shared/specs/private-properties-iterator");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+} = require("resource://devtools/shared/specs/private-properties-iterator.js");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 
 /**
  * Creates an actor to iterate over an object's private properties.

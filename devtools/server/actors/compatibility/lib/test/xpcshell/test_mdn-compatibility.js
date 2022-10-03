@@ -4,9 +4,11 @@
 
 // Test for the MDN compatibility diagnosis module.
 
-const { COMPATIBILITY_ISSUE_TYPE } = require("devtools/shared/constants");
-const MDNCompatibility = require("devtools/server/actors/compatibility/lib/MDNCompatibility");
-const cssPropertiesCompatData = require("devtools/shared/compatibility/dataset/css-properties.json");
+const {
+  COMPATIBILITY_ISSUE_TYPE,
+} = require("resource://devtools/shared/constants.js");
+const MDNCompatibility = require("resource://devtools/server/actors/compatibility/lib/MDNCompatibility.js");
+const cssPropertiesCompatData = require("resource://devtools/shared/compatibility/dataset/css-properties.json");
 
 const mdnCompatibility = new MDNCompatibility(cssPropertiesCompatData);
 

@@ -6,13 +6,13 @@
 
 const {
   TYPES: { REFLOW },
-} = require("devtools/server/actors/resources/index");
-const Targets = require("devtools/server/actors/targets/index");
+} = require("resource://devtools/server/actors/resources/index.js");
+const Targets = require("resource://devtools/server/actors/targets/index.js");
 
 const {
   getLayoutChangesObserver,
   releaseLayoutChangesObserver,
-} = require("devtools/server/actors/reflow");
+} = require("resource://devtools/server/actors/reflow.js");
 
 class ReflowWatcher {
   /**

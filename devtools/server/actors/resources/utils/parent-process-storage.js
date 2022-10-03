@@ -4,8 +4,10 @@
 
 "use strict";
 
-const { storageTypePool } = require("devtools/server/actors/storage");
-const EventEmitter = require("devtools/shared/event-emitter");
+const {
+  storageTypePool,
+} = require("resource://devtools/server/actors/storage.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const {
   getAllBrowsingContextsForContext,
   isWindowGlobalPartOfContext,

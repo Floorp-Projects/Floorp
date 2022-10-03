@@ -5,7 +5,7 @@
 
 const {
   getTextAtLineColumn,
-} = require("devtools/server/actors/utils/style-utils");
+} = require("resource://devtools/server/actors/utils/style-utils.js");
 
 const TEST_DATA = [
   {

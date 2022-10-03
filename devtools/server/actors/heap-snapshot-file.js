@@ -4,11 +4,11 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
+const protocol = require("resource://devtools/shared/protocol.js");
 
 const {
   heapSnapshotFileSpec,
-} = require("devtools/shared/specs/heap-snapshot-file");
+} = require("resource://devtools/shared/specs/heap-snapshot-file.js");
 
 loader.lazyRequireGetter(
   this,

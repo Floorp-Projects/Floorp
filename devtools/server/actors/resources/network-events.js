@@ -4,14 +4,14 @@
 
 "use strict";
 
-const { Pool } = require("devtools/shared/protocol/Pool");
+const { Pool } = require("resource://devtools/shared/protocol/Pool.js");
 const { isWindowGlobalPartOfContext } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs"
 );
 const { WatcherRegistry } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs"
 );
-const Targets = require("devtools/server/actors/targets/index");
+const Targets = require("resource://devtools/server/actors/targets/index.js");
 
 loader.lazyRequireGetter(
   this,

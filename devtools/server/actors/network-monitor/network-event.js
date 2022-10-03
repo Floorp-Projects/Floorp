@@ -4,9 +4,13 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
-const { networkEventSpec } = require("devtools/shared/specs/network-event");
-const { LongStringActor } = require("devtools/server/actors/string");
+const protocol = require("resource://devtools/shared/protocol.js");
+const {
+  networkEventSpec,
+} = require("resource://devtools/shared/specs/network-event.js");
+const {
+  LongStringActor,
+} = require("resource://devtools/server/actors/string.js");
 
 /**
  * Creates an actor for a network event.

@@ -6,10 +6,10 @@
 
 const {
   TYPES: { DOCUMENT_EVENT },
-} = require("devtools/server/actors/resources/index");
+} = require("resource://devtools/server/actors/resources/index.js");
 const {
   DocumentEventsListener,
-} = require("devtools/server/actors/webconsole/listeners/document-events");
+} = require("resource://devtools/server/actors/webconsole/listeners/document-events.js");
 
 class DocumentEventWatcher {
   #abortController = new AbortController();

@@ -4,25 +4,29 @@
 
 "use strict";
 
-const nsIConsoleListenerWatcher = require("devtools/server/actors/resources/utils/nsi-console-listener-watcher");
-const { DevToolsServer } = require("devtools/server/devtools-server");
-const ErrorDocs = require("devtools/server/actors/errordocs");
+const nsIConsoleListenerWatcher = require("resource://devtools/server/actors/resources/utils/nsi-console-listener-watcher.js");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+const ErrorDocs = require("resource://devtools/server/actors/errordocs.js");
 const {
   createStringGrip,
   makeDebuggeeValue,
   createValueGripForTarget,
-} = require("devtools/server/actors/object/utils");
+} = require("resource://devtools/server/actors/object/utils.js");
 const {
   getActorIdForInternalSourceId,
-} = require("devtools/server/actors/utils/dbg-source");
-const { WebConsoleUtils } = require("devtools/server/actors/webconsole/utils");
+} = require("resource://devtools/server/actors/utils/dbg-source.js");
+const {
+  WebConsoleUtils,
+} = require("resource://devtools/server/actors/webconsole/utils.js");
 
 const {
   TYPES: { ERROR_MESSAGE },
-} = require("devtools/server/actors/resources/index");
-const Targets = require("devtools/server/actors/targets/index");
+} = require("resource://devtools/server/actors/resources/index.js");
+const Targets = require("resource://devtools/server/actors/targets/index.js");
 
-const { MESSAGE_CATEGORY } = require("devtools/shared/constants");
+const { MESSAGE_CATEGORY } = require("resource://devtools/shared/constants.js");
 
 const PLATFORM_SPECIFIC_CATEGORIES = [
   "XPConnect JavaScript",

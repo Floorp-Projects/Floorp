@@ -6,10 +6,10 @@
 
 const {
   isNodeValid,
-} = require("devtools/server/actors/highlighters/utils/markup");
+} = require("resource://devtools/server/actors/highlighters/utils/markup.js");
 const {
   BoxModelHighlighter,
-} = require("devtools/server/actors/highlighters/box-model");
+} = require("resource://devtools/server/actors/highlighters/box-model.js");
 
 // How many maximum nodes can be highlighted at the same time by the SelectorHighlighter
 const MAX_HIGHLIGHTED_ELEMENTS = 100;

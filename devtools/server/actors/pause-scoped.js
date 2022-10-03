@@ -4,11 +4,13 @@
 
 "use strict";
 
-const { extend } = require("devtools/shared/extend");
-const { ObjectActorProto } = require("devtools/server/actors/object");
-const protocol = require("devtools/shared/protocol");
+const { extend } = require("resource://devtools/shared/extend.js");
+const {
+  ObjectActorProto,
+} = require("resource://devtools/server/actors/object.js");
+const protocol = require("resource://devtools/shared/protocol.js");
 const { ActorClassWithSpec } = protocol;
-const { objectSpec } = require("devtools/shared/specs/object");
+const { objectSpec } = require("resource://devtools/shared/specs/object.js");
 
 /**
  * Protocol.js expects only the prototype object, and does not maintain the prototype

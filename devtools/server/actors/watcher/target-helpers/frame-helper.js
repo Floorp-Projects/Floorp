@@ -10,7 +10,7 @@ const { WatcherRegistry } = ChromeUtils.importESModule(
 const { WindowGlobalLogger } = ChromeUtils.importESModule(
   "resource://devtools/server/connectors/js-window-actor/WindowGlobalLogger.sys.mjs"
 );
-const Targets = require("devtools/server/actors/targets/index");
+const Targets = require("resource://devtools/server/actors/targets/index.js");
 
 const browsingContextAttachedObserverByWatcher = new Map();
 

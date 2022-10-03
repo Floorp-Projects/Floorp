@@ -4,10 +4,12 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const Debugger = require("Debugger");
 
-const { reportException } = require("devtools/shared/DevToolsUtils");
+const {
+  reportException,
+} = require("resource://devtools/shared/DevToolsUtils.js");
 
 /**
  * Multiple actors that use a |Debugger| instance come in a few versions, each

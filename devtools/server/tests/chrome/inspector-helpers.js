@@ -9,14 +9,16 @@ const { require } = ChromeUtils.import(
 );
 const {
   CommandsFactory,
-} = require("devtools/shared/commands/commands-factory");
-const { DevToolsServer } = require("devtools/server/devtools-server");
+} = require("resource://devtools/shared/commands/commands-factory.js");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
 const { BrowserTestUtils } = ChromeUtils.import(
   "resource://testing-common/BrowserTestUtils.jsm"
 );
 const {
   DocumentWalker: _documentWalker,
-} = require("devtools/server/actors/inspector/document-walker");
+} = require("resource://devtools/server/actors/inspector/document-walker.js");
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);

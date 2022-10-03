@@ -4,13 +4,15 @@
 
 "use strict";
 
-const nsIConsoleListenerWatcher = require("devtools/server/actors/resources/utils/nsi-console-listener-watcher");
+const nsIConsoleListenerWatcher = require("resource://devtools/server/actors/resources/utils/nsi-console-listener-watcher.js");
 
 const {
   TYPES: { PLATFORM_MESSAGE },
-} = require("devtools/server/actors/resources/index");
+} = require("resource://devtools/server/actors/resources/index.js");
 
-const { createStringGrip } = require("devtools/server/actors/object/utils");
+const {
+  createStringGrip,
+} = require("resource://devtools/server/actors/object/utils.js");
 
 class PlatformMessageWatcher extends nsIConsoleListenerWatcher {
   shouldHandleTarget(targetActor) {
