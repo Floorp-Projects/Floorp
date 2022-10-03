@@ -172,7 +172,7 @@ void nsXPConnect::ReleaseXPConnectSingleton() {
     NS_RELEASE2(xpc, cnt);
   }
 
-  mozJSModuleLoader::Shutdown();
+  mozJSModuleLoader::ShutdownLoaders();
 }
 
 // static

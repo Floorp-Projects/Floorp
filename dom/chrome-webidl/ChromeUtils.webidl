@@ -446,7 +446,7 @@ partial namespace ChromeUtils {
    * the same file will not cause the module to be re-evaluated.
    */
   [Throws]
-  object importESModule(DOMString aResourceURI);
+  object importESModule(DOMString aResourceURI, optional ImportESModuleOptionsDictionary options = {});
 
   /**
    * Defines a property on the given target which lazily imports a JavaScript
@@ -916,6 +916,15 @@ dictionary CompileScriptOptionsDictionary {
    * should not be used when not absolutely necessary.
    */
   boolean hasReturnValue = false;
+};
+
+dictionary ImportESModuleOptionsDictionary {
+  /**
+   * If true, a distinct module loader will be used, in the system principal,
+   * but with a distinct global so that the DevTools can load a distinct set
+   * of modules and do not interfere with its debuggee.
+   */
+  boolean loadInDevToolsLoader;
 };
 
 /**

@@ -202,6 +202,7 @@ class ChromeUtils {
 
   static void ImportESModule(const GlobalObject& aGlobal,
                              const nsAString& aResourceURI,
+                             const ImportESModuleOptionsDictionary& aOptions,
                              JS::MutableHandle<JSObject*> aRetval,
                              ErrorResult& aRv);
 

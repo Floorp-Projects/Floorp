@@ -572,12 +572,30 @@ void ChromeUtils::Import(const GlobalObject& aGlobal,
   aRetval.set(exports);
 }
 
+static mozJSModuleLoader* GetContextualESLoader(
+    const Optional<bool>& aLoadInDevToolsLoader, JSObject* aGlobal) {
+  RefPtr devToolsModuleloader = mozJSModuleLoader::GetDevToolsLoader();
+  // We should load the module in the DevTools loader if:
+  // - ChromeUtils.importESModule's `loadInDevToolsLoader` option is true, or,
+  // - if the callsite is from a module loaded in the DevTools loader and
+  // `loadInDevToolsLoader` isn't an explicit false.
+  bool shouldUseDevToolsLoader =
+      (aLoadInDevToolsLoader.WasPassed() && aLoadInDevToolsLoader.Value()) ||
+      (devToolsModuleloader && !aLoadInDevToolsLoader.WasPassed() &&
+       devToolsModuleloader->IsLoaderGlobal(aGlobal));
+  if (shouldUseDevToolsLoader) {
+    return mozJSModuleLoader::GetOrCreateDevToolsLoader();
+  }
+  return mozJSModuleLoader::Get();
+}
+
 /* static */
-void ChromeUtils::ImportESModule(const GlobalObject& aGlobal,
-                                 const nsAString& aResourceURI,
-                                 JS::MutableHandle<JSObject*> aRetval,
-                                 ErrorResult& aRv) {
-  RefPtr moduleloader = mozJSModuleLoader::Get();
+void ChromeUtils::ImportESModule(
+    const GlobalObject& aGlobal, const nsAString& aResourceURI,
+    const ImportESModuleOptionsDictionary& aOptions,
+    JS::MutableHandle<JSObject*> aRetval, ErrorResult& aRv) {
+  RefPtr moduleloader =
+      GetContextualESLoader(aOptions.mLoadInDevToolsLoader, aGlobal.Get());
   MOZ_ASSERT(moduleloader);
 
   NS_ConvertUTF16toUTF8 registryLocation(aResourceURI);
@@ -605,6 +623,7 @@ void ChromeUtils::ImportESModule(const GlobalObject& aGlobal,
 }
 
 namespace module_getter {
+
 static const size_t SLOT_ID = 0;
 static const size_t SLOT_URI = 1;
 
@@ -649,7 +668,12 @@ static bool ModuleGetterImpl(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
   }
   nsDependentCString uri(bytes.get());
 
-  RefPtr moduleloader = mozJSModuleLoader::Get();
+  RefPtr moduleloader =
+      aType == ModuleType::JSM
+          ? mozJSModuleLoader::Get()
+          : GetContextualESLoader(
+                Optional<bool>(),
+                JS::GetNonCCWObjectGlobal(js::UncheckedUnwrap(thisObj)));
   MOZ_ASSERT(moduleloader);
 
   JS::Rooted<JS::Value> value(aCx);

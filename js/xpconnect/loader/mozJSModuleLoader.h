@@ -57,13 +57,16 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
   void FindTargetObject(JSContext* aCx, JS::MutableHandleObject aTargetObject);
 
   static void InitStatics();
-  static void Unload();
-  static void Shutdown();
+  static void UnloadLoaders();
+  static void ShutdownLoaders();
 
   static mozJSModuleLoader* Get() {
     MOZ_ASSERT(sSelf, "Should have already created the module loader");
     return sSelf;
   }
+
+  static mozJSModuleLoader* GetDevToolsLoader() { return sDevToolsLoader; }
+  static mozJSModuleLoader* GetOrCreateDevToolsLoader();
 
   nsresult ImportInto(const nsACString& aResourceURI,
                       JS::HandleValue aTargetObj, JSContext* aCx, uint8_t aArgc,
@@ -110,11 +113,13 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
   nsresult IsJSModuleLoaded(const nsACString& aResourceURI, bool* aRetval);
   nsresult IsESModuleLoaded(const nsACString& aResourceURI, bool* aRetval);
   bool IsLoaderGlobal(JSObject* aObj) { return mLoaderGlobal == aObj; }
+  bool IsDevToolsLoader() const { return this == sDevToolsLoader; }
 
   // Public methods for use from ComponentModuleLoader.
   static bool IsTrustedScheme(nsIURI* aURI);
   static nsresult LoadSingleModuleScript(
-      JSContext* aCx, JS::loader::ModuleLoadRequest* aRequest,
+      mozilla::loader::ComponentModuleLoader* aModuleLoader, JSContext* aCx,
+      JS::loader::ModuleLoadRequest* aRequest,
       JS::MutableHandleScript aScriptOut);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
@@ -129,11 +134,15 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
 
  private:
   static mozilla::StaticRefPtr<mozJSModuleLoader> sSelf;
+  static mozilla::StaticRefPtr<mozJSModuleLoader> sDevToolsLoader;
 
+  void Unload();
   void UnloadModules();
 
   void CreateLoaderGlobal(JSContext* aCx, const nsACString& aLocation,
                           JS::MutableHandleObject aGlobal);
+  void CreateDevToolsLoaderGlobal(JSContext* aCx, const nsACString& aLocation,
+                                  JS::MutableHandleObject aGlobal);
 
   bool CreateJSServices(JSContext* aCx);
 
