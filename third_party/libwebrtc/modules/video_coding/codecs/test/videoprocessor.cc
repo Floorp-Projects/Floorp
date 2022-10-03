@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "api/scoped_refptr.h"
+#include "api/task_queue/to_queued_task.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/video_bitrate_allocator_factory.h"
@@ -32,7 +33,6 @@
 #include "modules/video_coding/codecs/interface/common_constants.h"
 #include "modules/video_coding/include/video_error_codes.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/time_utils.h"
 #include "test/gtest.h"
 #include "third_party/libyuv/include/libyuv/compare.h"

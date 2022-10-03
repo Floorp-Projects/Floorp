@@ -19,10 +19,10 @@
 #include <memory>
 #include <string>
 
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/transport/stun.h"
 #include "api/units/time_delta.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 
 namespace cricket {
 

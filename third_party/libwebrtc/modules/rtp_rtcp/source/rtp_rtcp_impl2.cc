@@ -22,6 +22,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/to_queued_task.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
@@ -29,7 +30,6 @@
 #include "modules/rtp_rtcp/source/rtp_rtcp_config.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/ntp_time.h"
 

@@ -9,7 +9,8 @@
  */
 
 #include "p2p/base/regathering_controller.h"
-#include "rtc_base/task_utils/to_queued_task.h"
+
+#include "api/task_queue/to_queued_task.h"
 
 namespace webrtc {
 

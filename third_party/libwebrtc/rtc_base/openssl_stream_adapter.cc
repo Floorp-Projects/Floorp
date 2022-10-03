@@ -39,10 +39,10 @@
 #else
 #include "rtc_base/openssl_identity.h"
 #endif
+#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/openssl_utility.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/stream.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/field_trial.h"

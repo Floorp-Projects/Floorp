@@ -558,6 +558,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api:scoped_refptr",
       "../api:simulcast_test_fixture_api",
       "../api/task_queue:task_queue_test",
+      "../api/task_queue:to_queued_task",
       "../api/test/video:function_video_factory",
       "../api/video:encoded_image",
       "../api/video:video_frame",
@@ -577,7 +578,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:rtc_task_queue",
       "../rtc_base/synchronization:mutex",
       "../rtc_base/system:file_wrapper",
-      "../rtc_base/task_utils:to_queued_task",
       "pc/e2e:e2e_unittests",
       "peer_scenario/tests",
       "scenario:scenario_unittests",
@@ -873,9 +873,9 @@ rtc_library("run_loop") {
     "run_loop.h",
   ]
   deps = [
+    "../api/task_queue:to_queued_task",
     "../rtc_base:threading",
     "../rtc_base:timeutils",
-    "../rtc_base/task_utils:to_queued_task",
   ]
 }
 
@@ -917,6 +917,7 @@ rtc_library("test_common") {
     "../api/rtc_event_log",
     "../api/task_queue",
     "../api/task_queue:default_task_queue_factory",
+    "../api/task_queue:to_queued_task",
     "../api/test/video:function_video_factory",
     "../api/transport:field_trial_based_config",
     "../api/video:builtin_video_bitrate_allocator_factory",
@@ -941,7 +942,6 @@ rtc_library("test_common") {
     "../rtc_base:task_queue_for_test",
     "../rtc_base:threading",
     "../rtc_base:timeutils",
-    "../rtc_base/task_utils:to_queued_task",
     "../system_wrappers",
     "../system_wrappers:field_trial",
   ]

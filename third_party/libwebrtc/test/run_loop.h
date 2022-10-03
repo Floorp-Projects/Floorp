@@ -10,7 +10,7 @@
 #ifndef TEST_RUN_LOOP_H_
 #define TEST_RUN_LOOP_H_
 
-#include "rtc_base/task_utils/to_queued_task.h"
+#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/thread.h"
 
 namespace webrtc {

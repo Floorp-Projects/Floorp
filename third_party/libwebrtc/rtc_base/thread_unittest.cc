@@ -14,6 +14,7 @@
 
 #include "api/task_queue/task_queue_factory.h"
 #include "api/task_queue/task_queue_test.h"
+#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/async_invoker.h"
 #include "rtc_base/async_udp_socket.h"
 #include "rtc_base/atomic_ops.h"
@@ -25,7 +26,6 @@
 #include "rtc_base/physical_socket_server.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "test/testsupport/rtc_expect_death.h"
 

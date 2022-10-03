@@ -10,8 +10,8 @@
 
 #include "media/base/media_channel.h"
 
+#include "api/task_queue/to_queued_task.h"
 #include "media/base/rtp_utils.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 
 namespace cricket {
 using webrtc::FrameDecryptorInterface;

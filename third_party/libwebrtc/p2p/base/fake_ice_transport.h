@@ -19,10 +19,10 @@
 #include "absl/algorithm/container.h"
 #include "absl/types/optional.h"
 #include "api/ice_transport_interface.h"
+#include "api/task_queue/pending_task_safety_flag.h"
+#include "api/task_queue/to_queued_task.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "rtc_base/copy_on_write_buffer.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 
 namespace cricket {
 

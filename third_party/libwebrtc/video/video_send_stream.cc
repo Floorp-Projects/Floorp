@@ -13,6 +13,7 @@
 
 #include "api/array_view.h"
 #include "api/task_queue/task_queue_base.h"
+#include "api/task_queue/to_queued_task.h"
 #include "api/video/video_stream_encoder_settings.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 #include "modules/rtp_rtcp/source/rtp_header_extension_size.h"
@@ -20,7 +21,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "system_wrappers/include/clock.h"
 #include "video/adaptation/overuse_frame_detector.h"
 #include "video/frame_cadence_adapter.h"

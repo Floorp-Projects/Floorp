@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 
 #include <memory>
 
+#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/event.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/task_queue_for_test.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -120,9 +120,7 @@ TEST(PendingTaskSafetyFlagTest, PendingTaskDropped) {
       RTC_DCHECK(tq_main_);
       *stuff_done_ = false;
     }
-    ~Owner() {
-      RTC_DCHECK(tq_main_->IsCurrent());
-    }
+    ~Owner() { RTC_DCHECK(tq_main_->IsCurrent()); }
 
     void DoStuff() {
       RTC_DCHECK(!tq_main_->IsCurrent());

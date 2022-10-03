@@ -11,9 +11,9 @@
 
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
+#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/event.h"
 #include "rtc_base/ref_counter.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/time_utils.h"
 
 namespace webrtc {

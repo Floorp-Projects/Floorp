@@ -135,13 +135,13 @@ rtc_library("rtc_p2p") {
     "../rtc_base/system:no_unique_address",
 
     # Needed by pseudo_tcp, which should move to a separate target.
+    "../api/task_queue:pending_task_safety_flag",
+    "../api/task_queue:to_queued_task",
     "../rtc_base:safe_minmax",
     "../rtc_base:weak_ptr",
     "../rtc_base/network:sent_packet",
     "../rtc_base/synchronization:mutex",
     "../rtc_base/system:rtc_export",
-    "../rtc_base/task_utils:pending_task_safety_flag",
-    "../rtc_base/task_utils:to_queued_task",
     "../rtc_base/third_party/base64",
     "../rtc_base/third_party/sigslot",
     "../system_wrappers:metrics",
@@ -162,10 +162,10 @@ if (rtc_include_tests) {
     deps = [
       ":rtc_p2p",
       "../api:libjingle_peerconnection_api",
+      "../api/task_queue:pending_task_safety_flag",
+      "../api/task_queue:to_queued_task",
       "../rtc_base",
       "../rtc_base:copy_on_write_buffer",
-      "../rtc_base/task_utils:pending_task_safety_flag",
-      "../rtc_base/task_utils:to_queued_task",
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/algorithm:container",
@@ -311,6 +311,7 @@ rtc_library("p2p_server_utils") {
     "../api:array_view",
     "../api:packet_socket_factory",
     "../api:sequence_checker",
+    "../api/task_queue:to_queued_task",
     "../api/transport:stun_types",
     "../rtc_base",
     "../rtc_base:byte_buffer",
@@ -320,7 +321,6 @@ rtc_library("p2p_server_utils") {
     "../rtc_base:socket_address",
     "../rtc_base:stringutils",
     "../rtc_base:threading",
-    "../rtc_base/task_utils:to_queued_task",
     "../rtc_base/third_party/sigslot",
   ]
   absl_deps = [
@@ -340,6 +340,8 @@ rtc_library("libstunprober") {
     ":rtc_p2p",
     "../api:packet_socket_factory",
     "../api:sequence_checker",
+    "../api/task_queue:pending_task_safety_flag",
+    "../api/task_queue:to_queued_task",
     "../api/transport:stun_types",
     "../rtc_base",
     "../rtc_base:async_resolver_interface",
@@ -351,8 +353,6 @@ rtc_library("libstunprober") {
     "../rtc_base:threading",
     "../rtc_base:timeutils",
     "../rtc_base/system:rtc_export",
-    "../rtc_base/task_utils:pending_task_safety_flag",
-    "../rtc_base/task_utils:to_queued_task",
   ]
 }
 

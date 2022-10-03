@@ -39,6 +39,7 @@ rtc_library("resource_adaptation") {
     "../../api:sequence_checker",
     "../../api/adaptation:resource_adaptation_api",
     "../../api/task_queue:task_queue",
+    "../../api/task_queue:to_queued_task",
     "../../api/video:video_adaptation",
     "../../api/video:video_frame",
     "../../api/video:video_stream_encoder",
@@ -54,7 +55,6 @@ rtc_library("resource_adaptation") {
     "../../rtc_base/experiments:balanced_degradation_settings",
     "../../rtc_base/synchronization:mutex",
     "../../rtc_base/system:no_unique_address",
-    "../../rtc_base/task_utils:to_queued_task",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
@@ -121,8 +121,8 @@ if (rtc_include_tests) {
       "../../api:sequence_checker",
       "../../api/adaptation:resource_adaptation_api",
       "../../api/task_queue:task_queue",
+      "../../api/task_queue:to_queued_task",
       "../../api/video:video_stream_encoder",
-      "../../rtc_base/task_utils:to_queued_task",
       "../../test:test_support",
     ]
     absl_deps = [

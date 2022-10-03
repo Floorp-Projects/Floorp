@@ -13,8 +13,8 @@
 #include <memory>
 
 #include "api/task_queue/default_task_queue_factory.h"
+#include "api/task_queue/to_queued_task.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 #include "system_wrappers/include/metrics.h"
 #include "test/gmock.h"

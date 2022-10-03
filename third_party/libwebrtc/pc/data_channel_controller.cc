@@ -14,11 +14,11 @@
 
 #include "api/peer_connection_interface.h"
 #include "api/rtc_error.h"
+#include "api/task_queue/to_queued_task.h"
 #include "pc/peer_connection_internal.h"
 #include "pc/sctp_utils.h"
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 
 namespace webrtc {
 

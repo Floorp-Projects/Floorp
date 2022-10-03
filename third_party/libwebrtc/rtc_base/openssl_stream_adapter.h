@@ -27,11 +27,11 @@
 #else
 #include "rtc_base/openssl_identity.h"
 #endif
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/ssl_stream_adapter.h"
 #include "rtc_base/stream.h"
 #include "rtc_base/system/rtc_export.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/task_utils/repeating_task.h"
 
 namespace rtc {

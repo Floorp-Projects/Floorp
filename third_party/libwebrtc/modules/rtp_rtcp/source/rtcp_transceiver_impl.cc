@@ -16,6 +16,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
 #include "api/call/transport.h"
+#include "api/task_queue/to_queued_task.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -36,7 +37,6 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/divide_round.h"
 #include "rtc_base/task_utils/repeating_task.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {

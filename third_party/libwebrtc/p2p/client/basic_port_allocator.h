@@ -17,6 +17,7 @@
 
 #include "absl/strings/string_view.h"
 #include "api/field_trials_view.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/turn_customizer.h"
 #include "p2p/base/port_allocator.h"
 #include "p2p/client/relay_port_factory_interface.h"
@@ -25,7 +26,6 @@
 #include "rtc_base/memory/always_valid_pointer.h"
 #include "rtc_base/network.h"
 #include "rtc_base/system/rtc_export.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 

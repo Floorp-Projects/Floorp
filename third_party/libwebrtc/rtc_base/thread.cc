@@ -32,6 +32,7 @@
 
 #include "absl/algorithm/container.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/deprecated/recursive_critical_section.h"
@@ -39,7 +40,6 @@
 #include "rtc_base/internal/default_socket_server.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/null_socket_server.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
 

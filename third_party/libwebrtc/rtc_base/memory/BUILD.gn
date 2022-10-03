@@ -35,9 +35,9 @@ rtc_library("fifo_buffer") {
   deps = [
     "..:rtc_base",
     "..:threading",
+    "../../api/task_queue:pending_task_safety_flag",
+    "../../api/task_queue:to_queued_task",
     "../synchronization:mutex",
-    "../task_utils:pending_task_safety_flag",
-    "../task_utils:to_queued_task",
   ]
 }
 

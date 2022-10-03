@@ -10,8 +10,8 @@
 
 #include "test/run_loop.h"
 
+#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/task_queue.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "test/gtest.h"
 
 namespace webrtc {
