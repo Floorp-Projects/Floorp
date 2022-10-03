@@ -640,6 +640,7 @@ RTCSentRtpStreamStats::~RTCSentRtpStreamStats() {}
 // clang-format off
 WEBRTC_RTCSTATS_IMPL(
     RTCInboundRTPStreamStats, RTCReceivedRtpStreamStats, "inbound-rtp",
+    &track_identifier,
     &remote_id,
     &packets_received,
     &fec_packets_received,
@@ -688,6 +689,7 @@ RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(const std::string& id,
 RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(std::string&& id,
                                                    int64_t timestamp_us)
     : RTCReceivedRtpStreamStats(std::move(id), timestamp_us),
+      track_identifier("trackIdentifier"),
       remote_id("remoteId"),
       packets_received("packetsReceived"),
       fec_packets_received("fecPacketsReceived"),
@@ -732,6 +734,7 @@ RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(std::string&& id,
 RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(
     const RTCInboundRTPStreamStats& other)
     : RTCReceivedRtpStreamStats(other),
+      track_identifier(other.track_identifier),
       remote_id(other.remote_id),
       packets_received(other.packets_received),
       fec_packets_received(other.fec_packets_received),

@@ -799,6 +799,7 @@ class RTCStatsReportVerifier {
                                         *inbound_stream.media_type == "audio");
     verifier.TestMemberIsOptionalIDReference(
         inbound_stream.remote_id, RTCRemoteOutboundRtpStreamStats::kType);
+    verifier.TestMemberIsDefined(inbound_stream.track_identifier);
     if (inbound_stream.kind.is_defined() &&
         *inbound_stream.media_type == "video") {
       verifier.TestMemberIsNonNegative<uint64_t>(inbound_stream.qp_sum);

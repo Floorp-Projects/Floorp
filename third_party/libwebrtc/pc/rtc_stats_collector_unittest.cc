@@ -2098,6 +2098,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Audio) {
   expected_audio.ssrc = 1;
   expected_audio.media_type = "audio";
   expected_audio.kind = "audio";
+  expected_audio.track_identifier = "RemoteAudioTrackID";
   expected_audio.track_id = stats_of_track_type[0]->id();
   expected_audio.transport_id = "RTCTransport_TransportName_1";
   expected_audio.codec_id = "RTCCodec_AudioMid_Inbound_42";
@@ -2206,6 +2207,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
   expected_video.ssrc = 1;
   expected_video.media_type = "video";
   expected_video.kind = "video";
+  expected_video.track_identifier = "RemoteVideoTrackID";
   expected_video.track_id = IdForType<RTCMediaStreamTrackStats>(report.get());
   expected_video.transport_id = "RTCTransport_TransportName_1";
   expected_video.codec_id = "RTCCodec_VideoMid_Inbound_42";
