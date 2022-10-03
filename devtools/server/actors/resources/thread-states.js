@@ -6,12 +6,12 @@
 
 const {
   TYPES: { THREAD_STATE },
-} = require("devtools/server/actors/resources/index");
+} = require("resource://devtools/server/actors/resources/index.js");
 
 const {
   PAUSE_REASONS,
   STATES: THREAD_STATES,
-} = require("devtools/server/actors/thread");
+} = require("resource://devtools/server/actors/thread.js");
 
 // Possible values of breakpoint's resource's `state` attribute
 const STATES = {

@@ -3,7 +3,7 @@
 /* exported HelloActor */
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
+const protocol = require("resource://devtools/shared/protocol.js");
 
 const helloSpec = protocol.generateActorSpec({
   typeName: "helloActor",

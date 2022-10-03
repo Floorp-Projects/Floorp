@@ -7,16 +7,16 @@
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const protocol = require("devtools/shared/protocol");
+const protocol = require("resource://devtools/shared/protocol.js");
 const {
   serviceWorkerRegistrationSpec,
-} = require("devtools/shared/specs/worker/service-worker-registration");
+} = require("resource://devtools/shared/specs/worker/service-worker-registration.js");
 const {
   PushSubscriptionActor,
-} = require("devtools/server/actors/worker/push-subscription");
+} = require("resource://devtools/server/actors/worker/push-subscription.js");
 const {
   ServiceWorkerActor,
-} = require("devtools/server/actors/worker/service-worker");
+} = require("resource://devtools/server/actors/worker/service-worker.js");
 
 XPCOMUtils.defineLazyServiceGetter(
   this,

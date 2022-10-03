@@ -6,7 +6,7 @@
 
 const {
   TYPES: { DOCUMENT_EVENT },
-} = require("devtools/server/actors/resources/index");
+} = require("resource://devtools/server/actors/resources/index.js");
 const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
   "devtools.every-frame-target.enabled",
   false
@@ -16,7 +16,7 @@ const { getAllBrowsingContextsForContext } = ChromeUtils.importESModule(
 );
 const {
   WILL_NAVIGATE_TIME_SHIFT,
-} = require("devtools/server/actors/webconsole/listeners/document-events");
+} = require("resource://devtools/server/actors/webconsole/listeners/document-events.js");
 
 class ParentProcessDocumentEventWatcher {
   /**

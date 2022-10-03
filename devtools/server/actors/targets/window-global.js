@@ -21,15 +21,17 @@
  * debug a document living in the parent process.
  */
 
-var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var {
+  ActorRegistry,
+} = require("resource://devtools/server/actors/utils/actor-registry.js");
+var DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 var { assert } = DevToolsUtils;
 var {
   SourcesManager,
-} = require("devtools/server/actors/utils/sources-manager");
-var makeDebugger = require("devtools/server/actors/utils/make-debugger");
+} = require("resource://devtools/server/actors/utils/sources-manager.js");
+var makeDebugger = require("resource://devtools/server/actors/utils/make-debugger.js");
 const InspectorUtils = require("InspectorUtils");
-const Targets = require("devtools/server/actors/targets/index");
+const Targets = require("resource://devtools/server/actors/targets/index.js");
 const { TargetActorRegistry } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs"
 );
@@ -39,16 +41,16 @@ const { PrivateBrowsingUtils } = ChromeUtils.import(
 
 const EXTENSION_CONTENT_JSM = "resource://gre/modules/ExtensionContent.jsm";
 
-const { Actor, Pool } = require("devtools/shared/protocol");
+const { Actor, Pool } = require("resource://devtools/shared/protocol.js");
 const {
   LazyPool,
   createExtraActors,
-} = require("devtools/shared/protocol/lazy-pool");
+} = require("resource://devtools/shared/protocol/lazy-pool.js");
 const {
   windowGlobalTargetSpec,
-} = require("devtools/shared/specs/targets/window-global");
-const Resources = require("devtools/server/actors/resources/index");
-const TargetActorMixin = require("devtools/server/actors/targets/target-actor-mixin");
+} = require("resource://devtools/shared/specs/targets/window-global.js");
+const Resources = require("resource://devtools/server/actors/resources/index.js");
+const TargetActorMixin = require("resource://devtools/server/actors/targets/target-actor-mixin.js");
 
 loader.lazyRequireGetter(
   this,

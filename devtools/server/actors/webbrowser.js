@@ -4,9 +4,13 @@
 
 "use strict";
 
-var { DevToolsServer } = require("devtools/server/devtools-server");
-var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+var {
+  ActorRegistry,
+} = require("resource://devtools/server/actors/utils/actor-registry.js");
+var DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 
 loader.lazyRequireGetter(
   this,

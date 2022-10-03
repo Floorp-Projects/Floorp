@@ -4,10 +4,12 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
-const { Memory } = require("devtools/server/performance/memory");
-const { actorBridgeWithSpec } = require("devtools/server/actors/common");
-const { memorySpec } = require("devtools/shared/specs/memory");
+const protocol = require("resource://devtools/shared/protocol.js");
+const { Memory } = require("resource://devtools/server/performance/memory.js");
+const {
+  actorBridgeWithSpec,
+} = require("resource://devtools/server/actors/common.js");
+const { memorySpec } = require("resource://devtools/shared/specs/memory.js");
 loader.lazyRequireGetter(
   this,
   "StackFrameCache",

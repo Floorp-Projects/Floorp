@@ -17,7 +17,7 @@ const {
       [TEXT_LABEL]: { FRAME_NO_NAME },
     },
   },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 add_task(async function() {
   const {

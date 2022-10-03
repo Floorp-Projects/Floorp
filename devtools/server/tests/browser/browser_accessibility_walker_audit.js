@@ -6,7 +6,7 @@
 
 const {
   accessibility: { AUDIT_TYPE, ISSUE_TYPE, SCORES },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 // Checks for the AccessibleWalkerActor audit.
 add_task(async function() {

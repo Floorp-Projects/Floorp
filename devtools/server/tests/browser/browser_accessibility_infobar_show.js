@@ -19,10 +19,10 @@ add_task(async function() {
         );
         const {
           HighlighterEnvironment,
-        } = require("devtools/server/actors/highlighters");
+        } = require("resource://devtools/server/actors/highlighters.js");
         const {
           AccessibleHighlighter,
-        } = require("devtools/server/actors/highlighters/accessible");
+        } = require("resource://devtools/server/actors/highlighters/accessible.js");
 
         /**
          * Get whether or not infobar container is hidden.

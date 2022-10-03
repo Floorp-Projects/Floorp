@@ -14,7 +14,7 @@ const {
       CONTRAST_LOSS,
     },
   },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 /**
  * Constants used in accessibility actors.

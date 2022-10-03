@@ -4,15 +4,15 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const {
   getCurrentZoom,
   getWindowDimensions,
   setIgnoreLayoutChanges,
-} = require("devtools/shared/layout/utils");
+} = require("resource://devtools/shared/layout/utils.js");
 const {
   CanvasFrameAnonymousContentHelper,
-} = require("devtools/server/actors/highlighters/utils/markup");
+} = require("resource://devtools/server/actors/highlighters/utils/markup.js");
 
 // Hard coded value about the size of measuring tool label, in order to
 // position and flip it when is needed.

@@ -6,7 +6,7 @@
 
 const {
   TYPES: { STYLESHEET },
-} = require("devtools/server/actors/resources/index");
+} = require("resource://devtools/server/actors/resources/index.js");
 
 loader.lazyRequireGetter(
   this,

@@ -4,19 +4,23 @@
 
 "use strict";
 
-const { Actor } = require("devtools/shared/protocol");
-const { workerTargetSpec } = require("devtools/shared/specs/targets/worker");
+const { Actor } = require("resource://devtools/shared/protocol.js");
+const {
+  workerTargetSpec,
+} = require("resource://devtools/shared/specs/targets/worker.js");
 
-const { ThreadActor } = require("devtools/server/actors/thread");
-const { WebConsoleActor } = require("devtools/server/actors/webconsole");
-const Targets = require("devtools/server/actors/targets/index");
+const { ThreadActor } = require("resource://devtools/server/actors/thread.js");
+const {
+  WebConsoleActor,
+} = require("resource://devtools/server/actors/webconsole.js");
+const Targets = require("resource://devtools/server/actors/targets/index.js");
 
-const makeDebuggerUtil = require("devtools/server/actors/utils/make-debugger");
+const makeDebuggerUtil = require("resource://devtools/server/actors/utils/make-debugger.js");
 const {
   SourcesManager,
-} = require("devtools/server/actors/utils/sources-manager");
+} = require("resource://devtools/server/actors/utils/sources-manager.js");
 
-const TargetActorMixin = require("devtools/server/actors/targets/target-actor-mixin");
+const TargetActorMixin = require("resource://devtools/server/actors/targets/target-actor-mixin.js");
 
 exports.WorkerTargetActor = TargetActorMixin(
   Targets.TYPES.WORKER,

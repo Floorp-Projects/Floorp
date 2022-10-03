@@ -32,22 +32,30 @@ Services.prefs.setBoolPref("devtools.debugger.log", false);
 // Enable remote debugging for the relevant tests.
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
-const makeDebugger = require("devtools/server/actors/utils/make-debugger");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const makeDebugger = require("resource://devtools/server/actors/utils/make-debugger.js");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 const {
   ActorRegistry,
-} = require("devtools/server/actors/utils/actor-registry");
-const { DevToolsServer } = require("devtools/server/devtools-server");
+} = require("resource://devtools/server/actors/utils/actor-registry.js");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
 const { DevToolsServer: WorkerDevToolsServer } = worker.require(
   "devtools/server/devtools-server"
 );
-const { DevToolsClient } = require("devtools/client/devtools-client");
-const { ObjectFront } = require("devtools/client/fronts/object");
-const { LongStringFront } = require("devtools/client/fronts/string");
-const { createCommandsDictionary } = require("devtools/shared/commands/index");
+const {
+  DevToolsClient,
+} = require("resource://devtools/client/devtools-client.js");
+const { ObjectFront } = require("resource://devtools/client/fronts/object.js");
+const {
+  LongStringFront,
+} = require("resource://devtools/client/fronts/string.js");
+const {
+  createCommandsDictionary,
+} = require("resource://devtools/shared/commands/index.js");
 const {
   CommandsFactory,
-} = require("devtools/shared/commands/commands-factory");
+} = require("resource://devtools/shared/commands/commands-factory.js");
 
 const { addDebuggerToGlobal } = ChromeUtils.import(
   "resource://gre/modules/jsdebugger.jsm"

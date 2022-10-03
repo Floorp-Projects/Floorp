@@ -40,8 +40,10 @@ try {
     }
     const { require } = loader;
 
-    const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-    const { DevToolsServer } = require("devtools/server/devtools-server");
+    const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
+    const {
+      DevToolsServer,
+    } = require("resource://devtools/server/devtools-server.js");
 
     DevToolsServer.init();
     // We want a special server without any root actor and only target-scoped actors.
@@ -77,10 +79,10 @@ try {
       if (addonId) {
         const {
           WebExtensionTargetActor,
-        } = require("devtools/server/actors/targets/webextension");
+        } = require("resource://devtools/server/actors/targets/webextension.js");
         const {
           createWebExtensionSessionContext,
-        } = require("devtools/server/actors/watcher/session-context");
+        } = require("resource://devtools/server/actors/watcher/session-context.js");
         const { browsingContext } = docShell;
         actor = new WebExtensionTargetActor(conn, {
           addonId,
@@ -103,10 +105,10 @@ try {
       } else {
         const {
           WindowGlobalTargetActor,
-        } = require("devtools/server/actors/targets/window-global");
+        } = require("resource://devtools/server/actors/targets/window-global.js");
         const {
           createBrowserElementSessionContext,
-        } = require("devtools/server/actors/watcher/session-context");
+        } = require("resource://devtools/server/actors/watcher/session-context.js");
 
         const { docShell } = chromeGlobal;
         // For a script loaded via loadFrameScript, the global is the content

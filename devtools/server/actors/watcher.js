@@ -3,17 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-const protocol = require("devtools/shared/protocol");
-const { watcherSpec } = require("devtools/shared/specs/watcher");
+const protocol = require("resource://devtools/shared/protocol.js");
+const { watcherSpec } = require("resource://devtools/shared/specs/watcher.js");
 
-const Resources = require("devtools/server/actors/resources/index");
+const Resources = require("resource://devtools/server/actors/resources/index.js");
 const { TargetActorRegistry } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs"
 );
 const { WatcherRegistry } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs"
 );
-const Targets = require("devtools/server/actors/targets/index");
+const Targets = require("resource://devtools/server/actors/targets/index.js");
 const { getAllBrowsingContextsForContext } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs"
 );

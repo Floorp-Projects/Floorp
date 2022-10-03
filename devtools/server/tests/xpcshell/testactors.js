@@ -6,26 +6,30 @@
 const {
   LazyPool,
   createExtraActors,
-} = require("devtools/shared/protocol/lazy-pool");
-const { RootActor } = require("devtools/server/actors/root");
-const { ThreadActor } = require("devtools/server/actors/thread");
-const { DevToolsServer } = require("devtools/server/devtools-server");
+} = require("resource://devtools/shared/protocol/lazy-pool.js");
+const { RootActor } = require("resource://devtools/server/actors/root.js");
+const { ThreadActor } = require("resource://devtools/server/actors/thread.js");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
 const {
   ActorRegistry,
-} = require("devtools/server/actors/utils/actor-registry");
+} = require("resource://devtools/server/actors/utils/actor-registry.js");
 const {
   SourcesManager,
-} = require("devtools/server/actors/utils/sources-manager");
-const makeDebugger = require("devtools/server/actors/utils/make-debugger");
-const protocol = require("devtools/shared/protocol");
+} = require("resource://devtools/server/actors/utils/sources-manager.js");
+const makeDebugger = require("resource://devtools/server/actors/utils/make-debugger.js");
+const protocol = require("resource://devtools/shared/protocol.js");
 const {
   windowGlobalTargetSpec,
-} = require("devtools/shared/specs/targets/window-global");
-const { tabDescriptorSpec } = require("devtools/shared/specs/descriptors/tab");
-const Targets = require("devtools/server/actors/targets/index");
+} = require("resource://devtools/shared/specs/targets/window-global.js");
+const {
+  tabDescriptorSpec,
+} = require("resource://devtools/shared/specs/descriptors/tab.js");
+const Targets = require("resource://devtools/server/actors/targets/index.js");
 const {
   createContentProcessSessionContext,
-} = require("devtools/server/actors/watcher/session-context");
+} = require("resource://devtools/server/actors/watcher/session-context.js");
 
 var gTestGlobals = new Set();
 DevToolsServer.addTestGlobal = function(global) {

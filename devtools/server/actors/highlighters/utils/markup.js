@@ -10,8 +10,8 @@ const {
   getViewportDimensions,
   loadSheet,
   removeSheet,
-} = require("devtools/shared/layout/utils");
-const EventEmitter = require("devtools/shared/event-emitter");
+} = require("resource://devtools/shared/layout/utils.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const InspectorUtils = require("InspectorUtils");
 
 const lazyContainer = {};

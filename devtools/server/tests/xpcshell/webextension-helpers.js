@@ -18,7 +18,7 @@ const { ExtensionTestUtils } = ChromeUtils.import(
 
 const {
   CommandsFactory,
-} = require("devtools/shared/commands/commands-factory");
+} = require("resource://devtools/shared/commands/commands-factory.js");
 
 /**
  * Set up the equivalent of an `about:debugging` toolbox for a given extension, minus

@@ -4,8 +4,10 @@
 
 "use strict";
 
-const { reportException } = require("devtools/shared/DevToolsUtils");
-const { expectState } = require("devtools/server/actors/common");
+const {
+  reportException,
+} = require("resource://devtools/shared/DevToolsUtils.js");
+const { expectState } = require("resource://devtools/server/actors/common.js");
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 const lazy = {};

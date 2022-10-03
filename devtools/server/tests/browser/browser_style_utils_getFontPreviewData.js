@@ -16,7 +16,7 @@ add_task(async function() {
     );
     const {
       getFontPreviewData,
-    } = require("devtools/server/actors/utils/style-utils");
+    } = require("resource://devtools/server/actors/utils/style-utils.js");
 
     const font = Services.appinfo.OS === "WINNT" ? "Arial" : "Liberation Sans";
     let fontPreviewData = getFontPreviewData(font, content.document);

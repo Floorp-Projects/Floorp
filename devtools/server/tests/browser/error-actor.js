@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { Actor } = require("devtools/shared/protocol/Actor");
+const { Actor } = require("resource://devtools/shared/protocol/Actor.js");
 
 /**
  * Test actor designed to check that clients are properly notified of errors when calling

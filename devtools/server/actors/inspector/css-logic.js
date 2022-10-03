@@ -27,7 +27,7 @@
 
 "use strict";
 
-const nodeConstants = require("devtools/shared/dom-node-constants");
+const nodeConstants = require("resource://devtools/shared/dom-node-constants.js");
 const {
   getBindingElementAndPseudo,
   getCSSStyleRules,
@@ -39,7 +39,7 @@ const {
   shortSource,
   FILTER,
   STATUS,
-} = require("devtools/shared/inspector/css-logic");
+} = require("resource://devtools/shared/inspector/css-logic.js");
 const InspectorUtils = require("InspectorUtils");
 
 const COMPAREMODE = {

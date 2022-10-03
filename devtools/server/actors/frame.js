@@ -5,11 +5,16 @@
 "use strict";
 
 const Debugger = require("Debugger");
-const { assert } = require("devtools/shared/DevToolsUtils");
-const { Pool } = require("devtools/shared/protocol/Pool");
-const { createValueGrip } = require("devtools/server/actors/object/utils");
-const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
-const { frameSpec } = require("devtools/shared/specs/frame");
+const { assert } = require("resource://devtools/shared/DevToolsUtils.js");
+const { Pool } = require("resource://devtools/shared/protocol/Pool.js");
+const {
+  createValueGrip,
+} = require("resource://devtools/server/actors/object/utils.js");
+const {
+  ActorClassWithSpec,
+  Actor,
+} = require("resource://devtools/shared/protocol.js");
+const { frameSpec } = require("resource://devtools/shared/specs/frame.js");
 
 function formatDisplayName(frame) {
   if (frame.type === "call") {

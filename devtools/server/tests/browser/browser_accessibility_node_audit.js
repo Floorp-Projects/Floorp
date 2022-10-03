@@ -12,7 +12,7 @@
 
 const {
   accessibility: { AUDIT_TYPE, SCORES },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 const EMPTY_AUDIT = Object.keys(AUDIT_TYPE).reduce((audit, key) => {
   audit[key] = null;
   return audit;

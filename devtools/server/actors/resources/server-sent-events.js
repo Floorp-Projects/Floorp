@@ -4,11 +4,13 @@
 
 "use strict";
 
-const { LongStringActor } = require("devtools/server/actors/string");
+const {
+  LongStringActor,
+} = require("resource://devtools/server/actors/string.js");
 
 const {
   TYPES: { SERVER_SENT_EVENT },
-} = require("devtools/server/actors/resources/index");
+} = require("resource://devtools/server/actors/resources/index.js");
 
 const eventSourceEventService = Cc[
   "@mozilla.org/eventsourceevent/service;1"

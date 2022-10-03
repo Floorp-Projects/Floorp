@@ -4,9 +4,16 @@
 
 "use strict";
 
-const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
-const { eventSourceSpec } = require("devtools/shared/specs/eventsource");
-const { LongStringActor } = require("devtools/server/actors/string");
+const {
+  Actor,
+  ActorClassWithSpec,
+} = require("resource://devtools/shared/protocol.js");
+const {
+  eventSourceSpec,
+} = require("resource://devtools/shared/specs/eventsource.js");
+const {
+  LongStringActor,
+} = require("resource://devtools/server/actors/string.js");
 
 const eventSourceEventService = Cc[
   "@mozilla.org/eventsourceevent/service;1"

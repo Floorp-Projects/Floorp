@@ -44,7 +44,7 @@ const {
     },
     SCORES: { FAIL, WARNING },
   },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 // Specified by the author CSS rule type.
 const STYLE_RULE = 1;

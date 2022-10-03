@@ -15,7 +15,7 @@ const {
   accessibility: {
     SIMULATION_TYPE: { PROTANOPIA },
   },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 const {
   simulation: {
     COLOR_TRANSFORMATION_MATRICES: {
@@ -23,7 +23,7 @@ const {
       NONE: DEFAULT_MATRIX,
     },
   },
-} = require("devtools/server/actors/accessibility/constants");
+} = require("resource://devtools/server/actors/accessibility/constants.js");
 
 // Checks for the SimulatorActor
 

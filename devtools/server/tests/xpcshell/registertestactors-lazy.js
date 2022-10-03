@@ -9,7 +9,7 @@ var {
   ActorClassWithSpec,
   FrontClassWithSpec,
   generateActorSpec,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 const lazySpec = generateActorSpec({
   typeName: "lazy",

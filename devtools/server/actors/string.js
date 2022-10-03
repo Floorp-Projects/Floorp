@@ -4,10 +4,14 @@
 
 "use strict";
 
-var { DevToolsServer } = require("devtools/server/devtools-server");
+var {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
 
-var protocol = require("devtools/shared/protocol");
-const { longStringSpec } = require("devtools/shared/specs/string");
+var protocol = require("resource://devtools/shared/protocol.js");
+const {
+  longStringSpec,
+} = require("resource://devtools/shared/specs/string.js");
 
 exports.LongStringActor = protocol.ActorClassWithSpec(longStringSpec, {
   initialize(conn, str) {

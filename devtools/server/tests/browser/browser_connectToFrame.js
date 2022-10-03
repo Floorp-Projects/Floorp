@@ -9,7 +9,7 @@
 
 const {
   connectToFrame,
-} = require("devtools/server/connectors/frame-connector");
+} = require("resource://devtools/server/connectors/frame-connector.js");
 
 add_task(async function() {
   // Create a minimal browser with a message manager
@@ -28,14 +28,16 @@ add_task(async function() {
     const { require } = ChromeUtils.import(
       "resource://devtools/shared/loader/Loader.jsm"
     );
-    const { DevToolsServer } = require("devtools/server/devtools-server");
+    const {
+      DevToolsServer,
+    } = require("resource://devtools/server/devtools-server.js");
     const {
       ActorRegistry,
-    } = require("devtools/server/actors/utils/actor-registry");
+    } = require("resource://devtools/server/actors/utils/actor-registry.js");
 
     DevToolsServer.init();
 
-    const { Actor } = require("devtools/shared/protocol/Actor");
+    const { Actor } = require("resource://devtools/shared/protocol/Actor.js");
     class ConnectToFrameTestActor extends Actor {
       constructor(conn, tab) {
         super(conn);

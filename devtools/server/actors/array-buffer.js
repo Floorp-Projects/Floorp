@@ -4,8 +4,10 @@
 
 "use strict";
 
-var protocol = require("devtools/shared/protocol");
-const { arrayBufferSpec } = require("devtools/shared/specs/array-buffer");
+var protocol = require("resource://devtools/shared/protocol.js");
+const {
+  arrayBufferSpec,
+} = require("resource://devtools/shared/specs/array-buffer.js");
 
 /**
  * Creates an actor for the specified ArrayBuffer.

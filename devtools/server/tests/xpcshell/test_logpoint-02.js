@@ -7,7 +7,7 @@
  * Check that conditions are respected when specified in a logpoint.
  */
 
-const Resources = require("devtools/server/actors/resources/index");
+const Resources = require("resource://devtools/server/actors/resources/index.js");
 
 add_task(
   threadFrontTest(async ({ threadActor, threadFront, debuggee, client }) => {

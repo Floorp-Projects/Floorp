@@ -15,7 +15,7 @@ const {
   getCirclePath,
   getDecimalPrecision,
   getUnit,
-} = require("devtools/server/actors/highlighters/shapes");
+} = require("resource://devtools/server/actors/highlighters/shapes.js");
 
 function run_test() {
   test_split_coords();

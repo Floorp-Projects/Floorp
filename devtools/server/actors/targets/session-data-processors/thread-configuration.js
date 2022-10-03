@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { STATES: THREAD_STATES } = require("devtools/server/actors/thread");
+const {
+  STATES: THREAD_STATES,
+} = require("resource://devtools/server/actors/thread.js");
 
 module.exports = {
   async addSessionDataEntry(targetActor, entries, isDocumentCreation) {

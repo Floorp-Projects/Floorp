@@ -4,8 +4,13 @@
 
 "use strict";
 
-const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
-const { accessibilitySpec } = require("devtools/shared/specs/accessibility");
+const {
+  Actor,
+  ActorClassWithSpec,
+} = require("resource://devtools/shared/protocol.js");
+const {
+  accessibilitySpec,
+} = require("resource://devtools/shared/specs/accessibility.js");
 
 loader.lazyRequireGetter(
   this,

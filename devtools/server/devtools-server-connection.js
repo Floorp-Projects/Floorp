@@ -4,8 +4,8 @@
 
 "use strict";
 
-var { Pool } = require("devtools/shared/protocol");
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var { Pool } = require("resource://devtools/shared/protocol.js");
+var DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 var { dumpn } = DevToolsUtils;
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");

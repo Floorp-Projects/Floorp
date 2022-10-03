@@ -6,21 +6,30 @@
 
 "use strict";
 
-const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
-const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
+const {
+  ActorClassWithSpec,
+  Actor,
+} = require("resource://devtools/shared/protocol.js");
+const {
+  webconsoleSpec,
+} = require("resource://devtools/shared/specs/webconsole.js");
 
-const { DevToolsServer } = require("devtools/server/devtools-server");
-const { ThreadActor } = require("devtools/server/actors/thread");
-const { ObjectActor } = require("devtools/server/actors/object");
-const { LongStringActor } = require("devtools/server/actors/string");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+const { ThreadActor } = require("resource://devtools/server/actors/thread.js");
+const { ObjectActor } = require("resource://devtools/server/actors/object.js");
+const {
+  LongStringActor,
+} = require("resource://devtools/server/actors/string.js");
 const {
   createValueGrip,
   isArray,
   stringIsLong,
-} = require("devtools/server/actors/object/utils");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const ErrorDocs = require("devtools/server/actors/errordocs");
-const Targets = require("devtools/server/actors/targets/index");
+} = require("resource://devtools/server/actors/object/utils.js");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
+const ErrorDocs = require("resource://devtools/server/actors/errordocs.js");
+const Targets = require("resource://devtools/server/actors/targets/index.js");
 
 loader.lazyRequireGetter(
   this,

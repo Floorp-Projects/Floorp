@@ -4,11 +4,11 @@
 
 "use strict";
 
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 const { assert } = DevToolsUtils;
 
-const protocol = require("devtools/shared/protocol");
-const { objectSpec } = require("devtools/shared/specs/object");
+const protocol = require("resource://devtools/shared/protocol.js");
+const { objectSpec } = require("resource://devtools/shared/specs/object.js");
 
 loader.lazyRequireGetter(
   this,
@@ -58,7 +58,7 @@ const {
   isArray,
   isStorage,
   isTypedArray,
-} = require("devtools/server/actors/object/utils");
+} = require("resource://devtools/server/actors/object/utils.js");
 
 const proto = {
   /**

@@ -5,9 +5,14 @@
 "use strict";
 
 const InspectorUtils = require("InspectorUtils");
-const protocol = require("devtools/shared/protocol");
-const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
-const { nodeSpec, nodeListSpec } = require("devtools/shared/specs/node");
+const protocol = require("resource://devtools/shared/protocol.js");
+const {
+  PSEUDO_CLASSES,
+} = require("resource://devtools/shared/css/constants.js");
+const {
+  nodeSpec,
+  nodeListSpec,
+} = require("resource://devtools/shared/specs/node.js");
 
 loader.lazyRequireGetter(
   this,

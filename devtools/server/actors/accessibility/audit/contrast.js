@@ -57,7 +57,7 @@ const WORKER_URL = "resource://devtools/server/actors/accessibility/worker.js";
 const HIGHLIGHTED_PSEUDO_CLASS = ":-moz-devtools-highlighted";
 const {
   LARGE_TEXT: { BOLD_LARGE_TEXT_MIN_PIXELS, LARGE_TEXT_MIN_PIXELS },
-} = require("devtools/shared/accessibility");
+} = require("resource://devtools/shared/accessibility.js");
 
 loader.lazyGetter(this, "worker", () => new DevToolsWorker(WORKER_URL));
 

@@ -14,21 +14,26 @@
 
 const {
   connectToFrame,
-} = require("devtools/server/connectors/frame-connector");
+} = require("resource://devtools/server/connectors/frame-connector.js");
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
-const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
-const { tabDescriptorSpec } = require("devtools/shared/specs/descriptors/tab");
+const {
+  ActorClassWithSpec,
+  Actor,
+} = require("resource://devtools/shared/protocol.js");
+const {
+  tabDescriptorSpec,
+} = require("resource://devtools/shared/specs/descriptors/tab.js");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const {
   createBrowserElementSessionContext,
-} = require("devtools/server/actors/watcher/session-context");
+} = require("resource://devtools/server/actors/watcher/session-context.js");
 
 loader.lazyRequireGetter(
   this,

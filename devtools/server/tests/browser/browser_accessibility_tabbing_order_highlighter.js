@@ -19,10 +19,10 @@ add_task(async function() {
         );
         const {
           HighlighterEnvironment,
-        } = require("devtools/server/actors/highlighters");
+        } = require("resource://devtools/server/actors/highlighters.js");
         const {
           TabbingOrderHighlighter,
-        } = require("devtools/server/actors/highlighters/tabbing-order");
+        } = require("resource://devtools/server/actors/highlighters/tabbing-order.js");
 
         // Start testing. First, create highlighter environment and initialize.
         const env = new HighlighterEnvironment();

@@ -19,10 +19,10 @@ add_task(async function() {
         );
         const {
           HighlighterEnvironment,
-        } = require("devtools/server/actors/highlighters");
+        } = require("resource://devtools/server/actors/highlighters.js");
         const {
           NodeTabbingOrderHighlighter,
-        } = require("devtools/server/actors/highlighters/node-tabbing-order");
+        } = require("resource://devtools/server/actors/highlighters/node-tabbing-order.js");
 
         // Checks for updated content for an infobar.
         async function testShowHide(highlighter, node, index) {

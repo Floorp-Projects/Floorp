@@ -4,7 +4,7 @@
 
 "use strict";
 
-const Targets = require("devtools/server/actors/targets/index");
+const Targets = require("resource://devtools/server/actors/targets/index.js");
 
 const TYPES = {
   CONSOLE_MESSAGE: "console-message",

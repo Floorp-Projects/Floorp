@@ -4,15 +4,21 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
-const { LongStringActor } = require("devtools/server/actors/string");
-const { MediaRuleActor } = require("devtools/server/actors/media-rule");
-const { fetch } = require("devtools/shared/DevToolsUtils");
-const { styleSheetSpec } = require("devtools/shared/specs/style-sheet");
+const protocol = require("resource://devtools/shared/protocol.js");
+const {
+  LongStringActor,
+} = require("resource://devtools/server/actors/string.js");
+const {
+  MediaRuleActor,
+} = require("resource://devtools/server/actors/media-rule.js");
+const { fetch } = require("resource://devtools/shared/DevToolsUtils.js");
+const {
+  styleSheetSpec,
+} = require("resource://devtools/shared/specs/style-sheet.js");
 const InspectorUtils = require("InspectorUtils");
 const {
   getSourcemapBaseURL,
-} = require("devtools/server/actors/utils/source-map-utils");
+} = require("resource://devtools/server/actors/utils/source-map-utils.js");
 
 loader.lazyRequireGetter(
   this,

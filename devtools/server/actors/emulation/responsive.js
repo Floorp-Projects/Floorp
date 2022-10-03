@@ -4,8 +4,10 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
-const { responsiveSpec } = require("devtools/shared/specs/responsive");
+const protocol = require("resource://devtools/shared/protocol.js");
+const {
+  responsiveSpec,
+} = require("resource://devtools/shared/specs/responsive.js");
 
 /**
  * This actor overrides various browser features to simulate different environments to

@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { DevToolsServer } = require("devtools/server/devtools-server");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const { DevToolsServer } = require("resource://devtools/server/devtools-server.js");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 loader.lazyRequireGetter(
   this,
   "ObjectUtils",

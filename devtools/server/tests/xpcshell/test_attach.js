@@ -3,10 +3,10 @@
 
 "use strict";
 
-const { ThreadFront } = require("devtools/client/fronts/thread");
+const { ThreadFront } = require("resource://devtools/client/fronts/thread.js");
 const {
   WindowGlobalTargetFront,
-} = require("devtools/client/fronts/targets/window-global");
+} = require("resource://devtools/client/fronts/targets/window-global.js");
 
 /**
  * Very naive test that checks threadClearTest helper.

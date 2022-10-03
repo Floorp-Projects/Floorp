@@ -4,12 +4,16 @@
 
 "use strict";
 
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { getCurrentZoom } = require("devtools/shared/layout/utils");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
+const {
+  getCurrentZoom,
+} = require("resource://devtools/shared/layout/utils.js");
 const {
   moveInfobar,
-} = require("devtools/server/actors/highlighters/utils/markup");
-const { truncateString } = require("devtools/shared/inspector/utils");
+} = require("resource://devtools/server/actors/highlighters/utils/markup.js");
+const {
+  truncateString,
+} = require("resource://devtools/shared/inspector/utils.js");
 
 const STRINGS_URI = "devtools/shared/locales/accessibility.properties";
 loader.lazyRequireGetter(
@@ -59,7 +63,7 @@ const {
     },
     SCORES,
   },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 // Max string length for truncating accessible name values.
 const MAX_STRING_LENGTH = 50;

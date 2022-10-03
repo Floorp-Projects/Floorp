@@ -5,7 +5,9 @@
 
 // Check the output of getNodeCssIssues
 
-const { COMPATIBILITY_ISSUE_TYPE } = require("devtools/shared/constants");
+const {
+  COMPATIBILITY_ISSUE_TYPE,
+} = require("resource://devtools/shared/constants.js");
 const URL = MAIN_DOMAIN + "doc_compatibility.html";
 
 const CHROME_81 = {

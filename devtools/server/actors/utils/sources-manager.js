@@ -4,10 +4,12 @@
 
 "use strict";
 
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 const { assert, fetch } = DevToolsUtils;
-const EventEmitter = require("devtools/shared/event-emitter");
-const { SourceLocation } = require("devtools/server/actors/common");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const {
+  SourceLocation,
+} = require("resource://devtools/server/actors/common.js");
 
 loader.lazyRequireGetter(
   this,

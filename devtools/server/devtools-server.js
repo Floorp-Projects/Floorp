@@ -4,8 +4,10 @@
 
 "use strict";
 
-var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var {
+  ActorRegistry,
+} = require("resource://devtools/server/actors/utils/actor-registry.js");
+var DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 var { dumpn } = DevToolsUtils;
 
 loader.lazyRequireGetter(
@@ -132,7 +134,7 @@ var DevToolsServer = {
   },
 
   get protocol() {
-    return require("devtools/shared/protocol");
+    return require("resource://devtools/shared/protocol.js");
   },
 
   get initialized() {
@@ -208,7 +210,9 @@ var DevToolsServer = {
     }
 
     if (root) {
-      const { createRootActor } = require("devtools/server/actors/webbrowser");
+      const {
+        createRootActor,
+      } = require("resource://devtools/server/actors/webbrowser.js");
       this.setRootActor(createRootActor);
     }
 

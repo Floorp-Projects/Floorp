@@ -4,19 +4,21 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
-const { getCSSLexer } = require("devtools/shared/css/lexer");
+const protocol = require("resource://devtools/shared/protocol.js");
+const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
 const InspectorUtils = require("InspectorUtils");
-const TrackChangeEmitter = require("devtools/server/actors/utils/track-change-emitter");
+const TrackChangeEmitter = require("resource://devtools/server/actors/utils/track-change-emitter.js");
 const {
   getRuleText,
   getTextAtLineColumn,
-} = require("devtools/server/actors/utils/style-utils");
+} = require("resource://devtools/server/actors/utils/style-utils.js");
 
-const { styleRuleSpec } = require("devtools/shared/specs/style-rule");
+const {
+  styleRuleSpec,
+} = require("resource://devtools/shared/specs/style-rule.js");
 const {
   style: { ELEMENT_STYLE },
-} = require("devtools/shared/constants");
+} = require("resource://devtools/shared/constants.js");
 
 loader.lazyRequireGetter(
   this,

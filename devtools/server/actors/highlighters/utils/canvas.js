@@ -13,14 +13,14 @@ const {
   multiply,
   scale,
   translate,
-} = require("devtools/shared/layout/dom-matrix-2d");
+} = require("resource://devtools/shared/layout/dom-matrix-2d.js");
 const {
   getCurrentZoom,
   getViewportDimensions,
-} = require("devtools/shared/layout/utils");
+} = require("resource://devtools/shared/layout/utils.js");
 const {
   getComputedStyle,
-} = require("devtools/server/actors/highlighters/utils/markup");
+} = require("resource://devtools/server/actors/highlighters/utils/markup.js");
 
 // A set of utility functions for highlighters that render their content to a <canvas>
 // element.

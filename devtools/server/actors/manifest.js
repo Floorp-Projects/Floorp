@@ -4,8 +4,13 @@
 
 "use strict";
 
-const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
-const { manifestSpec } = require("devtools/shared/specs/manifest");
+const {
+  Actor,
+  ActorClassWithSpec,
+} = require("resource://devtools/shared/protocol.js");
+const {
+  manifestSpec,
+} = require("resource://devtools/shared/specs/manifest.js");
 
 const lazy = {};
 

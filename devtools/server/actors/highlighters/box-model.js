@@ -6,24 +6,26 @@
 
 const {
   AutoRefreshHighlighter,
-} = require("devtools/server/actors/highlighters/auto-refresh");
+} = require("resource://devtools/server/actors/highlighters/auto-refresh.js");
 const {
   CanvasFrameAnonymousContentHelper,
   getBindingElementAndPseudo,
   hasPseudoClassLock,
   isNodeValid,
   moveInfobar,
-} = require("devtools/server/actors/highlighters/utils/markup");
-const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
+} = require("resource://devtools/server/actors/highlighters/utils/markup.js");
+const {
+  PSEUDO_CLASSES,
+} = require("resource://devtools/shared/css/constants.js");
 const {
   getCurrentZoom,
   setIgnoreLayoutChanges,
-} = require("devtools/shared/layout/utils");
+} = require("resource://devtools/shared/layout/utils.js");
 const {
   getNodeDisplayName,
   getNodeGridFlexType,
-} = require("devtools/server/actors/inspector/utils");
-const nodeConstants = require("devtools/shared/dom-node-constants");
+} = require("resource://devtools/server/actors/inspector/utils.js");
+const nodeConstants = require("resource://devtools/shared/dom-node-constants.js");
 loader.lazyGetter(this, "HighlightersBundle", () => {
   return new Localization(["devtools/shared/highlighters.ftl"], true);
 });

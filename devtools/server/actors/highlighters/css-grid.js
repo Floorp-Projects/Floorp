@@ -6,7 +6,7 @@
 
 const {
   AutoRefreshHighlighter,
-} = require("devtools/server/actors/highlighters/auto-refresh");
+} = require("resource://devtools/server/actors/highlighters/auto-refresh.js");
 const {
   CANVAS_SIZE,
   DEFAULT_COLOR,
@@ -20,22 +20,22 @@ const {
   getPointsFromDiagonal,
   updateCanvasElement,
   updateCanvasPosition,
-} = require("devtools/server/actors/highlighters/utils/canvas");
+} = require("resource://devtools/server/actors/highlighters/utils/canvas.js");
 const {
   CanvasFrameAnonymousContentHelper,
   getComputedStyle,
   moveInfobar,
-} = require("devtools/server/actors/highlighters/utils/markup");
-const { apply } = require("devtools/shared/layout/dom-matrix-2d");
+} = require("resource://devtools/server/actors/highlighters/utils/markup.js");
+const { apply } = require("resource://devtools/shared/layout/dom-matrix-2d.js");
 const {
   getCurrentZoom,
   getDisplayPixelRatio,
   getWindowDimensions,
   setIgnoreLayoutChanges,
-} = require("devtools/shared/layout/utils");
+} = require("resource://devtools/shared/layout/utils.js");
 const {
   stringifyGridFragments,
-} = require("devtools/server/actors/utils/css-grid-utils");
+} = require("resource://devtools/server/actors/utils/css-grid-utils.js");
 loader.lazyGetter(this, "HighlightersBundle", () => {
   return new Localization(["devtools/shared/highlighters.ftl"], true);
 });

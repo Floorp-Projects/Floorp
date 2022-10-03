@@ -4,11 +4,13 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
+const protocol = require("resource://devtools/shared/protocol.js");
 
-const { DevToolsServer } = require("devtools/server/devtools-server");
-const { getSystemInfo } = require("devtools/shared/system");
-const { deviceSpec } = require("devtools/shared/specs/device");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+const { getSystemInfo } = require("resource://devtools/shared/system.js");
+const { deviceSpec } = require("resource://devtools/shared/specs/device.js");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );

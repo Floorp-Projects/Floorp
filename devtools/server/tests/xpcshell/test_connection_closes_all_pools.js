@@ -3,13 +3,13 @@
 
 "use strict";
 
-const { Pool } = require("devtools/shared/protocol/Pool");
+const { Pool } = require("resource://devtools/shared/protocol/Pool.js");
 const {
   DevToolsServerConnection,
-} = require("devtools/server/devtools-server-connection");
+} = require("resource://devtools/server/devtools-server-connection.js");
 const {
   LocalDebuggerTransport,
-} = require("devtools/shared/transport/local-transport");
+} = require("resource://devtools/shared/transport/local-transport.js");
 
 // Helper class to assert how many times a Pool was destroyed
 class FakeActor extends Pool {

@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { ActorClassWithSpec } = require("devtools/shared/protocol");
+const {
+  ActorClassWithSpec,
+} = require("resource://devtools/shared/protocol.js");
 
 loader.lazyRequireGetter(
   this,

@@ -25,10 +25,12 @@ add_task(async function() {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/loader/Loader.jsm"
       );
-      const { DevToolsServer } = require("devtools/server/devtools-server");
+      const {
+        DevToolsServer,
+      } = require("resource://devtools/server/devtools-server.js");
       const {
         DocumentWalker: _documentWalker,
-      } = require("devtools/server/actors/inspector/document-walker");
+      } = require("resource://devtools/server/actors/inspector/document-walker.js");
 
       // Convert actorID to current compartment string otherwise
       // searchAllConnectionsForActor is confused and won't find the actor.
@@ -38,7 +40,7 @@ add_task(async function() {
       const {
         WalkerSearch,
         WalkerIndex,
-      } = require("devtools/server/actors/utils/walker-search");
+      } = require("resource://devtools/server/actors/utils/walker-search.js");
 
       info("Testing basic index APIs exist.");
       const index = new WalkerIndex(walkerActor);

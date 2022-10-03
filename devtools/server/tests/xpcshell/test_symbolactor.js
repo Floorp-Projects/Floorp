@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { SymbolActor } = require("devtools/server/actors/object/symbol");
+const {
+  SymbolActor,
+} = require("resource://devtools/server/actors/object/symbol.js");
 
 function run_test() {
   test_SA_destroy();

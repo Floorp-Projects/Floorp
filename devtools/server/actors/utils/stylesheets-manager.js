@@ -4,13 +4,15 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
-const { fetch } = require("devtools/shared/DevToolsUtils");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const { fetch } = require("resource://devtools/shared/DevToolsUtils.js");
 const InspectorUtils = require("InspectorUtils");
 const {
   getSourcemapBaseURL,
-} = require("devtools/server/actors/utils/source-map-utils");
-const { TYPES } = require("devtools/server/actors/resources/index");
+} = require("resource://devtools/server/actors/utils/source-map-utils.js");
+const {
+  TYPES,
+} = require("resource://devtools/server/actors/resources/index.js");
 
 loader.lazyRequireGetter(
   this,

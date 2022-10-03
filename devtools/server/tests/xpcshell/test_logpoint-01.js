@@ -7,7 +7,7 @@
  * Check that logpoints generate console messages.
  */
 
-const Resources = require("devtools/server/actors/resources/index");
+const Resources = require("resource://devtools/server/actors/resources/index.js");
 
 add_task(
   threadFrontTest(async ({ threadActor, threadFront, debuggee, client }) => {

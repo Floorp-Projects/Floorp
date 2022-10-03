@@ -7,7 +7,7 @@
 
 const {
   BreakpointActorMap,
-} = require("devtools/server/actors/utils/breakpoint-actor-map");
+} = require("resource://devtools/server/actors/utils/breakpoint-actor-map.js");
 
 function run_test() {
   test_get_actor();

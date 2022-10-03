@@ -4,16 +4,19 @@
 
 "use strict";
 
-const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
+const {
+  Actor,
+  ActorClassWithSpec,
+} = require("resource://devtools/shared/protocol.js");
 const {
   flexboxSpec,
   flexItemSpec,
   gridSpec,
   layoutSpec,
-} = require("devtools/shared/specs/layout");
+} = require("resource://devtools/shared/specs/layout.js");
 const {
   getStringifiableFragments,
-} = require("devtools/server/actors/utils/css-grid-utils");
+} = require("resource://devtools/server/actors/utils/css-grid-utils.js");
 
 loader.lazyRequireGetter(
   this,

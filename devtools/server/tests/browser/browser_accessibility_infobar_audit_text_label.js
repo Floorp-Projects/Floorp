@@ -20,11 +20,13 @@ add_task(async function() {
         );
         const {
           HighlighterEnvironment,
-        } = require("devtools/server/actors/highlighters");
+        } = require("resource://devtools/server/actors/highlighters.js");
         const {
           AccessibleHighlighter,
-        } = require("devtools/server/actors/highlighters/accessible");
-        const { LocalizationHelper } = require("devtools/shared/l10n");
+        } = require("resource://devtools/server/actors/highlighters/accessible.js");
+        const {
+          LocalizationHelper,
+        } = require("resource://devtools/shared/l10n.js");
         const L10N = new LocalizationHelper(
           "devtools/shared/locales/accessibility.properties"
         );
@@ -41,7 +43,7 @@ add_task(async function() {
             },
             SCORES: { BEST_PRACTICES, FAIL, WARNING },
           },
-        } = require("devtools/shared/constants");
+        } = require("resource://devtools/shared/constants.js");
 
         /**
          * Checks for updated content for an infobar.
