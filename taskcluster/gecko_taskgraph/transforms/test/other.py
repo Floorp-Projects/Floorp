@@ -338,30 +338,35 @@ def setup_browsertime(config, tasks):
                 "linux64-chromedriver-103",
                 "linux64-chromedriver-104",
                 "linux64-chromedriver-105",
+                "linux64-chromedriver-106",
             ],
             "macosx.*": [
                 "mac64-chromedriver-102",
                 "mac64-chromedriver-103",
                 "mac64-chromedriver-104",
                 "mac64-chromedriver-105",
+                "mac64-chromedriver-106",
             ],
             "windows.*aarch64.*": [
                 "win32-chromedriver-102",
                 "win32-chromedriver-103",
                 "win32-chromedriver-104",
                 "win32-chromedriver-105",
+                "win32-chromedriver-106",
             ],
             "windows.*-32.*": [
                 "win32-chromedriver-102",
                 "win32-chromedriver-103",
                 "win32-chromedriver-104",
                 "win32-chromedriver-105",
+                "win32-chromedriver-106",
             ],
             "windows.*-64.*": [
                 "win32-chromedriver-102",
                 "win32-chromedriver-103",
                 "win32-chromedriver-104",
                 "win32-chromedriver-105",
+                "win32-chromedriver-106",
             ],
         }
 
