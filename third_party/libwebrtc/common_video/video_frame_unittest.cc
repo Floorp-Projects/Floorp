@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include "api/video/i010_buffer.h"
+#include "api/video/i210_buffer.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/i422_buffer.h"
 #include "api/video/i444_buffer.h"
@@ -44,6 +45,8 @@ SubSampling SubSamplingForType(VideoFrameBuffer::Type type) {
       return {.x = 1, .y = 1};
     case VideoFrameBuffer::Type::kI010:
       return {.x = 2, .y = 2};
+    case VideoFrameBuffer::Type::kI210:
+      return {.x = 2, .y = 1};
     default:
       return {};
   }
@@ -172,12 +175,24 @@ void CheckRotate(int width,
     int x = corners[j].x * (rotated_width - 1);
     int y = corners[j].y * (rotated_height - 1);
     EXPECT_EQ(colors[i].y, rotated.DataY()[x + y * rotated.StrideY()]);
-    EXPECT_EQ(colors[i].u,
-              rotated.DataU()[(x / plane_divider.x) +
-                              (y / plane_divider.y) * rotated.StrideU()]);
-    EXPECT_EQ(colors[i].v,
-              rotated.DataV()[(x / plane_divider.x) +
-                              (y / plane_divider.y) * rotated.StrideV()]);
+    if (rotated.type() == VideoFrameBuffer::Type::kI422 ||
+        rotated.type() == VideoFrameBuffer::Type::kI210) {
+      EXPECT_NEAR(colors[i].u,
+                  rotated.DataU()[(x / plane_divider.x) +
+                                  (y / plane_divider.y) * rotated.StrideU()],
+                  1);
+      EXPECT_NEAR(colors[i].v,
+                  rotated.DataV()[(x / plane_divider.x) +
+                                  (y / plane_divider.y) * rotated.StrideV()],
+                  1);
+    } else {
+      EXPECT_EQ(colors[i].u,
+                rotated.DataU()[(x / plane_divider.x) +
+                                (y / plane_divider.y) * rotated.StrideU()]);
+      EXPECT_EQ(colors[i].v,
+                rotated.DataV()[(x / plane_divider.x) +
+                                (y / plane_divider.y) * rotated.StrideV()]);
+    }
   }
 }
 
@@ -287,7 +302,8 @@ rtc::scoped_refptr<T> CreateAndFillBuffer() {
   if (buf->type() == VideoFrameBuffer::Type::kI444) {
     memset(buf->MutableDataU(), 2, 200);
     memset(buf->MutableDataV(), 3, 200);
-  } else if (buf->type() == VideoFrameBuffer::Type::kI422) {
+  } else if (buf->type() == VideoFrameBuffer::Type::kI422 ||
+             buf->type() == VideoFrameBuffer::Type::kI210) {
     memset(buf->MutableDataU(), 2, 100);
     memset(buf->MutableDataV(), 3, 100);
   } else {
@@ -368,8 +384,8 @@ REGISTER_TYPED_TEST_SUITE_P(TestPlanarYuvBuffer,
                             CropYNotCenter,
                             CropAndScale16x9);
 
-using TestTypesAll =
-    ::testing::Types<I420Buffer, I010Buffer, I444Buffer, I422Buffer>;
+using TestTypesAll = ::testing::
+    Types<I420Buffer, I010Buffer, I444Buffer, I422Buffer, I210Buffer>;
 INSTANTIATE_TYPED_TEST_SUITE_P(All, TestPlanarYuvBuffer, TestTypesAll);
 
 template <class T>
@@ -387,7 +403,7 @@ TYPED_TEST_P(TestPlanarYuvBufferScale, Scale) {
 
 REGISTER_TYPED_TEST_SUITE_P(TestPlanarYuvBufferScale, Scale);
 
-using TestTypesScale = ::testing::Types<I420Buffer, I010Buffer>;
+using TestTypesScale = ::testing::Types<I420Buffer, I010Buffer, I210Buffer>;
 INSTANTIATE_TYPED_TEST_SUITE_P(All, TestPlanarYuvBufferScale, TestTypesScale);
 
 template <class T>
@@ -411,8 +427,8 @@ TYPED_TEST_P(TestPlanarYuvBufferRotate, Rotates) {
 
 REGISTER_TYPED_TEST_SUITE_P(TestPlanarYuvBufferRotate, Rotates);
 
-using TestTypesRotate =
-    ::testing::Types<I420Buffer, I010Buffer, I444Buffer, I422Buffer>;
+using TestTypesRotate = ::testing::
+    Types<I420Buffer, I010Buffer, I444Buffer, I422Buffer, I210Buffer>;
 INSTANTIATE_TYPED_TEST_SUITE_P(Rotate,
                                TestPlanarYuvBufferRotate,
                                TestTypesRotate);

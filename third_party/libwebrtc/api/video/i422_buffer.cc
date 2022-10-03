@@ -31,129 +31,6 @@ namespace {
 int I422DataSize(int height, int stride_y, int stride_u, int stride_v) {
   return stride_y * height + stride_u * height + stride_v * height;
 }
-
-// TODO(sergio.garcia.murillo@gmail.com): Remove as soon it is available in
-// libyuv. Due to the rotate&scale required, this function may not be merged in
-// to libyuv inmediatelly.
-// https://bugs.chromium.org/p/libyuv/issues/detail?id=926
-int webrtcI422Rotate(const uint8_t* src_y,
-                     int src_stride_y,
-                     const uint8_t* src_u,
-                     int src_stride_u,
-                     const uint8_t* src_v,
-                     int src_stride_v,
-                     uint8_t* dst_y,
-                     int dst_stride_y,
-                     uint8_t* dst_u,
-                     int dst_stride_u,
-                     uint8_t* dst_v,
-                     int dst_stride_v,
-                     int width,
-                     int height,
-                     enum libyuv::RotationMode mode) {
-  int halfwidth = (width + 1) >> 1;
-  int halfheight = (height + 1) >> 1;
-  if (!src_y || !src_u || !src_v || width <= 0 || height == 0 || !dst_y ||
-      !dst_u || !dst_v) {
-    return -1;
-  }
-  // Negative height means invert the image.
-  if (height < 0) {
-    height = -height;
-    src_y = src_y + (height - 1) * src_stride_y;
-    src_u = src_u + (height - 1) * src_stride_u;
-    src_v = src_v + (height - 1) * src_stride_v;
-    src_stride_y = -src_stride_y;
-    src_stride_u = -src_stride_u;
-    src_stride_v = -src_stride_v;
-  }
-
-  switch (mode) {
-    case libyuv::kRotate0:
-      // copy frame
-      libyuv::CopyPlane(src_y, src_stride_y, dst_y, dst_stride_y, width,
-                        height);
-      libyuv::CopyPlane(src_u, src_stride_u, dst_u, dst_stride_u, halfwidth,
-                        height);
-      libyuv::CopyPlane(src_v, src_stride_v, dst_v, dst_stride_v, halfwidth,
-                        height);
-      return 0;
-    case libyuv::kRotate90:
-      // We need to rotate and rescale, we use plane Y as temporal storage.
-      libyuv::RotatePlane90(src_u, src_stride_u, dst_y, height, halfwidth,
-                            height);
-      libyuv::ScalePlane(dst_y, height, height, halfwidth, dst_u, halfheight,
-                         halfheight, width, libyuv::kFilterBilinear);
-      libyuv::RotatePlane90(src_v, src_stride_v, dst_y, height, halfwidth,
-                            height);
-      libyuv::ScalePlane(dst_y, height, height, halfwidth, dst_v, halfheight,
-                         halfheight, width, libyuv::kFilterLinear);
-      libyuv::RotatePlane90(src_y, src_stride_y, dst_y, dst_stride_y, width,
-                            height);
-      return 0;
-    case libyuv::kRotate270:
-      // We need to rotate and rescale, we use plane Y as temporal storage.
-      libyuv::RotatePlane270(src_u, src_stride_u, dst_y, height, halfwidth,
-                             height);
-      libyuv::ScalePlane(dst_y, height, height, halfwidth, dst_u, halfheight,
-                         halfheight, width, libyuv::kFilterBilinear);
-      libyuv::RotatePlane270(src_v, src_stride_v, dst_y, height, halfwidth,
-                             height);
-      libyuv::ScalePlane(dst_y, height, height, halfwidth, dst_v, halfheight,
-                         halfheight, width, libyuv::kFilterLinear);
-      libyuv::RotatePlane270(src_y, src_stride_y, dst_y, dst_stride_y, width,
-                             height);
-
-      return 0;
-    case libyuv::kRotate180:
-      libyuv::RotatePlane180(src_y, src_stride_y, dst_y, dst_stride_y, width,
-                             height);
-      libyuv::RotatePlane180(src_u, src_stride_u, dst_u, dst_stride_u,
-                             halfwidth, height);
-      libyuv::RotatePlane180(src_v, src_stride_v, dst_v, dst_stride_v,
-                             halfwidth, height);
-      return 0;
-    default:
-      break;
-  }
-  return -1;
-}
-
-// TODO(sergio.garcia.murillo@gmail.com): Remove this function with libyuv one
-// as soon as the dependency is updated.
-int webrtcI422Scale(const uint8_t* src_y,
-                    int src_stride_y,
-                    const uint8_t* src_u,
-                    int src_stride_u,
-                    const uint8_t* src_v,
-                    int src_stride_v,
-                    int src_width,
-                    int src_height,
-                    uint8_t* dst_y,
-                    int dst_stride_y,
-                    uint8_t* dst_u,
-                    int dst_stride_u,
-                    uint8_t* dst_v,
-                    int dst_stride_v,
-                    int dst_width,
-                    int dst_height,
-                    enum libyuv::FilterMode filtering) {
-  if (!src_y || !src_u || !src_v || src_width <= 0 || src_height == 0 ||
-      src_width > 32768 || src_height > 32768 || !dst_y || !dst_u || !dst_v ||
-      dst_width <= 0 || dst_height <= 0) {
-    return -1;
-  }
-  int src_halfwidth = (src_width + 1) >> 1;
-  int dst_halfwidth = (dst_width + 1) >> 1;
-
-  libyuv::ScalePlane(src_y, src_stride_y, src_width, src_height, dst_y,
-                     dst_stride_y, dst_width, dst_height, filtering);
-  libyuv::ScalePlane(src_u, src_stride_u, src_halfwidth, src_height, dst_u,
-                     dst_stride_u, dst_halfwidth, dst_height, filtering);
-  libyuv::ScalePlane(src_v, src_stride_v, src_halfwidth, src_height, dst_v,
-                     dst_stride_v, dst_halfwidth, dst_height, filtering);
-  return 0;
-}
 }  // namespace
 
 I422Buffer::I422Buffer(int width, int height)
@@ -257,7 +134,7 @@ rtc::scoped_refptr<I422Buffer> I422Buffer::Rotate(
       I422Buffer::Create(rotated_width, rotated_height);
 
   RTC_CHECK_EQ(0,
-               webrtcI422Rotate(
+               libyuv::I422Rotate(
                    src.DataY(), src.StrideY(), src.DataU(), src.StrideU(),
                    src.DataV(), src.StrideV(), buffer->MutableDataY(),
                    buffer->StrideY(), buffer->MutableDataU(), buffer->StrideU(),
@@ -343,11 +220,12 @@ void I422Buffer::CropAndScaleFrom(const I422BufferInterface& src,
       src.DataU() + src.StrideU() * uv_offset_y + uv_offset_x;
   const uint8_t* v_plane =
       src.DataV() + src.StrideV() * uv_offset_y + uv_offset_x;
+
   int res =
-      webrtcI422Scale(y_plane, src.StrideY(), u_plane, src.StrideU(), v_plane,
-                      src.StrideV(), crop_width, crop_height, MutableDataY(),
-                      StrideY(), MutableDataU(), StrideU(), MutableDataV(),
-                      StrideV(), width(), height(), libyuv::kFilterBox);
+      libyuv::I422Scale(y_plane, src.StrideY(), u_plane, src.StrideU(), v_plane,
+                        src.StrideV(), crop_width, crop_height, MutableDataY(),
+                        StrideY(), MutableDataU(), StrideU(), MutableDataV(),
+                        StrideV(), width(), height(), libyuv::kFilterBox);
 
   RTC_DCHECK_EQ(res, 0);
 }

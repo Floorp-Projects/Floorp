@@ -53,6 +53,7 @@ rtc_library("common_video") {
     "../api/video:video_bitrate_allocation",
     "../api/video:video_bitrate_allocator",
     "../api/video:video_frame",
+    "../api/video:video_frame_i010",
     "../api/video:video_rtp_headers",
     "../api/video_codecs:bitstream_parser_api",
     "../api/video_codecs:video_codecs_api",
