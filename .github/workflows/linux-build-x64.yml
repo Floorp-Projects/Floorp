@@ -52,10 +52,10 @@ jobs:
         AB_CD=multi ./mach package
 
         floorp_disp_ver=$(cat browser/config/version_display.txt)
-        mv ./obj-x86_64-pc-mingw32/dist/install/sea/floorp-*.en-US.linux-*.tar.bz2 ./obj-x86_64-pc-mingw32/dist/install/sea/floorp-${floorp_disp_ver}-linux-x64.tar.bz2
+        mv ./obj-x86_64-pc-linux-gnu/dist/*.tar.bz2 ./obj-x86_64-pc-linux-gnu/dist/floorp-${floorp_disp_ver}-linux-x86_64.tar.bz2
 
     - name: Publish
       uses: actions/upload-artifact@v1
       with:
         name: floorp-linux-x64
-        path: dist.zip
+        path: /home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/obj-x86_64-pc-linux-gnu/dist/*.tar.bz2
