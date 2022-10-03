@@ -1949,6 +1949,7 @@ void RTCStatsCollector::ProduceAudioRTPStreamStats_n(
               kReceiver,
               track_media_info_map.GetAttachmentIdByTrack(audio_track.get())
                   .value());
+      inbound_audio->track_identifier = audio_track->id();
     }
     inbound_audio->transport_id = transport_id;
     // Remote-outbound.
@@ -2043,10 +2044,10 @@ void RTCStatsCollector::ProduceVideoRTPStreamStats_n(
               kReceiver,
               track_media_info_map.GetAttachmentIdByTrack(video_track.get())
                   .value());
+      inbound_video->track_identifier = video_track->id();
     }
     inbound_video->transport_id = transport_id;
     report->AddStats(std::move(inbound_video));
-    // TODO(crbug.com/webrtc/12529): Add remote-outbound stats.
   }
   // Outbound
   std::map<std::string, RTCOutboundRTPStreamStats*> video_outbound_rtps;
