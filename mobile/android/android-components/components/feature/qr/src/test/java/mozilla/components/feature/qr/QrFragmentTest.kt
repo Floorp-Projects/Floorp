@@ -4,7 +4,9 @@
 
 package mozilla.components.feature.qr
 
+import android.Manifest.permission
 import android.content.Context
+import android.content.pm.PackageManager
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraDevice
@@ -12,6 +14,8 @@ import android.hardware.camera2.CameraManager
 import android.hardware.camera2.params.SessionConfiguration
 import android.media.Image
 import android.os.Build
+import android.os.Handler
+import android.os.HandlerThread
 import android.os.Looper.getMainLooper
 import android.util.Size
 import android.view.Display
@@ -37,7 +41,9 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -45,6 +51,7 @@ import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doNothing
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
@@ -53,6 +60,7 @@ import org.mockito.Mockito.`when`
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import java.nio.ByteBuffer
+import java.util.concurrent.ExecutorService
 
 @RunWith(AndroidJUnit4::class)
 class QrFragmentTest {
@@ -80,20 +88,29 @@ class QrFragmentTest {
     @Test
     fun `onResume opens camera, starts background thread and starts executor service`() {
         val qrFragment = spy(QrFragment.newInstance(mock()))
-        whenever(qrFragment.setUpCameraOutputs(anyInt(), anyInt())).then { }
+        val context: Context = mock()
+        doReturn(PackageManager.PERMISSION_GRANTED)
+            .`when`(context).checkPermission(eq(permission.CAMERA), anyInt(), anyInt())
+        doReturn(context).`when`(qrFragment).context
+        doNothing().`when`(qrFragment).startScanning()
 
-        qrFragment.textureView = mock()
-        qrFragment.cameraErrorView = mock()
-        qrFragment.customViewFinder = mock()
         qrFragment.onResume()
-        verify(qrFragment, never()).tryOpenCamera(anyInt(), anyInt(), anyBoolean())
 
-        whenever(qrFragment.textureView.isAvailable).thenReturn(true)
-        qrFragment.cameraId = "mockCamera"
+        verify(qrFragment).startScanning()
+    }
+
+    @Test
+    fun `onResume avoids starting scanning if the camera permission is missing`() {
+        val qrFragment = spy(QrFragment.newInstance(mock()))
+        val context: Context = mock()
+        doReturn(PackageManager.PERMISSION_DENIED)
+            .`when`(context).checkPermission(eq(permission.CAMERA), anyInt(), anyInt())
+        doReturn(context).`when`(qrFragment).context
+        doNothing().`when`(qrFragment).startScanning()
+
         qrFragment.onResume()
-        verify(qrFragment, times(2)).startBackgroundThread()
-        verify(qrFragment, times(2)).startExecutorService()
-        verify(qrFragment).tryOpenCamera(anyInt(), anyInt(), anyBoolean())
+
+        verify(qrFragment, never()).startScanning()
     }
 
     @Test
@@ -105,12 +122,15 @@ class QrFragmentTest {
         qrFragment.cameraErrorView = mock()
         qrFragment.customViewFinder = mock()
         whenever(qrFragment.textureView.isAvailable).thenReturn(true)
-        doNothing().`when`(qrFragment).startBackgroundThread()
+        doNothing().`when`(qrFragment).maybeStartBackgroundThread()
         doNothing().`when`(qrFragment).tryOpenCamera(anyInt(), anyInt(), anyBoolean())
+        val context: Context = mock()
+        doReturn(PackageManager.PERMISSION_GRANTED).`when`(context).checkSelfPermission(permission.CAMERA)
+        doReturn(context).`when`(qrFragment).context
 
         qrFragment.onResume()
 
-        verify(qrFragment, never()).startExecutorService()
+        verify(qrFragment, never()).maybeStartExecutorService()
     }
 
     @Test
@@ -142,7 +162,7 @@ class QrFragmentTest {
         val surface = mock<Surface>()
         val stateCallback = mock<CameraCaptureSession.StateCallback>()
 
-        doNothing().`when`(qrFragment).startExecutorService()
+        doNothing().`when`(qrFragment).maybeStartExecutorService()
         whenever(qrFragment.shouldStartExecutorService()).thenReturn(true)
 
         qrFragment.backgroundExecutor = mock()
@@ -528,15 +548,18 @@ class QrFragmentTest {
     }
 
     @Test
-    fun `tryOpenCamera opens camera if available`() {
+    fun `tryOpenCamera opens camera if available and hides the error message is shown`() {
         val qrFragment = spy(QrFragment.newInstance(mock()))
-
         qrFragment.textureView = mock()
         qrFragment.cameraErrorView = mock()
         qrFragment.customViewFinder = mock()
+        doNothing().`when`(qrFragment).openCamera(anyInt(), anyInt())
 
         qrFragment.tryOpenCamera(0, 0, skipCheck = true)
+
         verify(qrFragment).openCamera(0, 0)
+        verify(qrFragment.cameraErrorView).visibility = View.GONE
+        verify(qrFragment.customViewFinder).visibility = View.VISIBLE
     }
 
     @Test
@@ -686,5 +709,78 @@ class QrFragmentTest {
         mockManager.getDisplaySize()
 
         verify(mockDisplay, times(1)).getSize(any())
+    }
+
+    @Test
+    fun `maybeStartBackgroundThread does nothing if the thread already exists`() {
+        val qrFragment = QrFragment()
+        val existingBackgroundThread = HandlerThread("test").apply {
+            start() // need the thread to be "alive"
+        }
+        val existingBackgroundHandler: Handler = mock()
+        qrFragment.backgroundThread = existingBackgroundThread
+        qrFragment.backgroundHandler = existingBackgroundHandler
+
+        qrFragment.maybeStartBackgroundThread()
+
+        assertSame(existingBackgroundThread, qrFragment.backgroundThread)
+        assertSame(existingBackgroundHandler, qrFragment.backgroundHandler)
+    }
+
+    @Test
+    fun `maybeStartBackgroundThread creates and starts a new background thread and handler if doesn't already exist`() {
+        val qrFragment = QrFragment()
+        qrFragment.backgroundThread = null
+        qrFragment.backgroundHandler = null
+
+        qrFragment.maybeStartBackgroundThread()
+
+        assertNotNull(qrFragment.backgroundThread)
+        assertTrue(qrFragment.backgroundThread!!.isAlive)
+        assertNotNull(qrFragment.backgroundHandler)
+    }
+
+    @Test
+    fun `maybeStartExecutorService does nothing if the executor already exists`() {
+        val qrFragment = QrFragment()
+        val existingExecutorService: ExecutorService = mock()
+        qrFragment.backgroundExecutor = existingExecutorService
+
+        qrFragment.maybeStartExecutorService()
+
+        assertSame(existingExecutorService, qrFragment.backgroundExecutor)
+    }
+
+    @Test
+    fun `maybeStartExecutorService creates a new executor service if doesn't exist already`() {
+        val qrFragment = QrFragment()
+        qrFragment.backgroundExecutor = null
+
+        qrFragment.maybeStartExecutorService()
+
+        assertNotNull(null, qrFragment.backgroundExecutor)
+    }
+
+    @Test
+    fun `startScanning opens camera, starts background thread and starts executor service`() {
+        val qrFragment = spy(QrFragment.newInstance(mock()))
+        whenever(qrFragment.setUpCameraOutputs(anyInt(), anyInt())).then { }
+        val context: Context = mock()
+        doReturn(PackageManager.PERMISSION_GRANTED)
+            .`when`(context).checkPermission(eq(permission.CAMERA), anyInt(), anyInt())
+        doReturn(context).`when`(qrFragment).context
+
+        qrFragment.textureView = mock()
+        qrFragment.cameraErrorView = mock()
+        qrFragment.customViewFinder = mock()
+        qrFragment.startScanning()
+        verify(qrFragment, never()).tryOpenCamera(anyInt(), anyInt(), anyBoolean())
+
+        whenever(qrFragment.textureView.isAvailable).thenReturn(true)
+        qrFragment.cameraId = "mockCamera"
+        qrFragment.startScanning()
+        verify(qrFragment, times(2)).maybeStartBackgroundThread()
+        verify(qrFragment, times(2)).maybeStartExecutorService()
+        verify(qrFragment).tryOpenCamera(anyInt(), anyInt(), anyBoolean())
     }
 }

@@ -43,6 +43,13 @@ class QrFeature(
 ) : LifecycleAwareFeature, UserInteractionHandler, PermissionsFeature {
     private var containerViewId: Int = 0
 
+    private val qrFragment
+        get() = fragmentManager.findFragmentByTag(QR_FRAGMENT_TAG) as? QrFragment
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    val isScanInProgress
+        get() = qrFragment != null
+
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val scanCompleteListener: QrFragment.OnScanCompleteListener = object : QrFragment.OnScanCompleteListener {
         @MainThread
@@ -80,9 +87,12 @@ class QrFeature(
         this.containerViewId = containerViewId
 
         return if (context.isPermissionGranted(CAMERA)) {
-            fragmentManager.beginTransaction()
-                .add(containerViewId, QrFragment.newInstance(scanCompleteListener, scanMessage), QR_FRAGMENT_TAG)
-                .commit()
+            when (isScanInProgress) {
+                true -> qrFragment?.startScanning()
+                false -> fragmentManager.beginTransaction()
+                    .add(containerViewId, QrFragment.newInstance(scanCompleteListener, scanMessage), QR_FRAGMENT_TAG)
+                    .commit()
+            }
             true
         } else {
             onNeedToRequestPermissions(arrayOf(CAMERA))
@@ -97,6 +107,12 @@ class QrFeature(
     override fun onPermissionsResult(permissions: Array<String>, grantResults: IntArray) {
         if (context.isPermissionGranted(CAMERA)) {
             scan(containerViewId)
+        } else {
+            // It is possible that we started scanning then the user is will update
+            // the camera permission in Android settings.
+            // The client app is expected to ask again for the camera permission when the app is resumed
+            // and this request can be denied by the user so we should interrupt the in-progress scanning.
+            removeQrFragment()
         }
     }
 
@@ -106,11 +122,9 @@ class QrFeature(
      * @return true if the fragment was removed, otherwise false.
      */
     internal fun removeQrFragment(): Boolean {
-        with(fragmentManager) {
-            findFragmentByTag(QR_FRAGMENT_TAG)?.let {
-                beginTransaction().remove(it).commit()
-                return true
-            }
+        qrFragment?.let {
+            fragmentManager.beginTransaction().remove(it).commit()
+            return true
         }
         return false
     }

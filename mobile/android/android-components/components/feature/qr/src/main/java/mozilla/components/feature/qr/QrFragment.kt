@@ -15,6 +15,7 @@
 
 package mozilla.components.feature.qr
 
+import android.Manifest.permission
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.ImageFormat
@@ -63,6 +64,7 @@ import mozilla.components.feature.qr.views.AutoFitTextureView
 import mozilla.components.feature.qr.views.CustomViewFinder
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.hasCamera
+import mozilla.components.support.ktx.android.content.isPermissionGranted
 import java.io.Serializable
 import java.util.ArrayList
 import java.util.Collections
@@ -83,7 +85,7 @@ import kotlin.math.min
  * https://github.com/googlesamples/android-Camera2Basic
  * https://github.com/kismkof/camera2basic
  */
-@Suppress("LargeClass")
+@Suppress("LargeClass", "TooManyFunctions")
 class QrFragment : Fragment() {
     private val logger = Logger("mozac-qr")
 
@@ -179,8 +181,11 @@ class QrFragment : Fragment() {
      * An additional thread for running tasks that shouldn't block the UI.
      * A [Handler] for running tasks in the background.
      */
-    private var backgroundThread: HandlerThread? = null
-    private var backgroundHandler: Handler? = null
+    @VisibleForTesting
+    internal var backgroundThread: HandlerThread? = null
+
+    @VisibleForTesting
+    internal var backgroundHandler: Handler? = null
 
     @VisibleForTesting
     internal var backgroundExecutor: ExecutorService? = null
@@ -241,18 +246,11 @@ class QrFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        startBackgroundThread()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            startExecutorService()
-        }
-        // When the screen is turned off and turned back on, the SurfaceTexture is already
-        // available, and "onSurfaceTextureAvailable" will not be called. In that case, we can open
-        // a camera and start preview from here (otherwise, we wait until the surface is ready in
-        // the SurfaceTextureListener).
-        if (textureView.isAvailable) {
-            tryOpenCamera(textureView.width, textureView.height)
-        } else {
-            textureView.surfaceTextureListener = surfaceTextureListener
+
+        // It's possible that the Fragment is resumed to a scanning state
+        // while in the meantime the camera permission was removed. Avoid any issues.
+        if (requireContext().isPermissionGranted(permission.CAMERA)) {
+            startScanning()
         }
     }
 
@@ -270,10 +268,16 @@ class QrFragment : Fragment() {
         super.onStop()
     }
 
-    internal fun startBackgroundThread() {
-        backgroundThread = HandlerThread("CameraBackground").apply {
-            start()
-            backgroundHandler = Handler(this.looper)
+    internal fun maybeStartBackgroundThread() {
+        if (backgroundThread == null) {
+            backgroundThread = HandlerThread("CameraBackground")
+        }
+
+        backgroundThread?.let {
+            if (!it.isAlive) {
+                it.start()
+                backgroundHandler = Handler(it.looper)
+            }
         }
     }
 
@@ -288,13 +292,36 @@ class QrFragment : Fragment() {
         }
     }
 
-    internal fun startExecutorService() {
-        backgroundExecutor = Executors.newSingleThreadExecutor()
+    internal fun maybeStartExecutorService() {
+        if (backgroundExecutor == null) {
+            backgroundExecutor = Executors.newSingleThreadExecutor()
+        }
     }
 
     internal fun stopExecutorService() {
         backgroundExecutor?.shutdownNow()
         backgroundExecutor = null
+    }
+
+    /**
+     * Open the camera and start the qr scanning functionality.
+     * Assumes the camera permission is granted for the app.
+     * If any issues occur this will fail gracefully and show an error message.
+     */
+    fun startScanning() {
+        maybeStartBackgroundThread()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            maybeStartExecutorService()
+        }
+        // When the screen is turned off and turned back on, the SurfaceTexture is already
+        // available, and "onSurfaceTextureAvailable" will not be called. In that case, we can open
+        // a camera and start preview from here (otherwise, we wait until the surface is ready in
+        // the SurfaceTextureListener).
+        if (textureView.isAvailable) {
+            tryOpenCamera(textureView.width, textureView.height)
+        } else {
+            textureView.surfaceTextureListener = surfaceTextureListener
+        }
     }
 
     /**
@@ -386,6 +413,7 @@ class QrFragment : Fragment() {
         try {
             if (context?.hasCamera() == true || skipCheck) {
                 openCamera(width, height)
+                hideNoCameraAvailableError()
             } else {
                 showNoCameraAvailableError()
             }
@@ -397,6 +425,11 @@ class QrFragment : Fragment() {
     private fun showNoCameraAvailableError() {
         cameraErrorView.visibility = View.VISIBLE
         customViewFinder.visibility = View.GONE
+    }
+
+    private fun hideNoCameraAvailableError() {
+        cameraErrorView.visibility = View.GONE
+        customViewFinder.visibility = View.VISIBLE
     }
 
     /**
@@ -539,7 +572,7 @@ class QrFragment : Fragment() {
     ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             if (shouldStartExecutorService()) {
-                startExecutorService()
+                maybeStartExecutorService()
             }
             val sessionConfig = SessionConfiguration(
                 SessionConfiguration.SESSION_REGULAR,

@@ -24,8 +24,10 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.openMocks
 
@@ -47,6 +49,15 @@ class QrFeatureTest {
             whenever(transaction.remove(any()))
                 .thenReturn(transaction)
         }
+    }
+
+    fun `scanning is in progress if the scanning fragment is shown`() {
+        val feature = QrFeature(testContext, fragmentManager)
+
+        assertFalse(feature.isScanInProgress)
+
+        doReturn(mock<QrFragment>()).`when`(fragmentManager).findFragmentByTag(QR_FRAGMENT_TAG)
+        assertTrue(feature.isScanInProgress)
     }
 
     @Test
@@ -88,25 +99,42 @@ class QrFeatureTest {
     }
 
     @Test
+    fun `scan resumes qr fragment if permissions granted and scanning was already started`() {
+        grantPermission(CAMERA)
+        val feature = QrFeature(testContext, fragmentManager)
+        val qrFragment: QrFragment = mock()
+        doReturn(qrFragment).`when`(fragmentManager).findFragmentByTag(QR_FRAGMENT_TAG)
+
+        val scanResult = feature.scan()
+
+        assertTrue(scanResult)
+        verify(qrFragment).startScanning()
+    }
+
+    @Test
     fun `onPermissionsResult displays scanner only if permission granted`() {
         // Given
-        val feature = QrFeature(
-            testContext,
-            fragmentManager,
+        val feature = spy(
+            QrFeature(
+                testContext,
+                fragmentManager,
+            ),
         )
 
         // When
         resolvePermissionRequestFrom(feature) { PermissionResolution.DENIED }
 
         // Then
-        verify(fragmentManager, never()).beginTransaction()
+        verify(feature, never()).scan(anyInt())
+        verify(feature).removeQrFragment()
 
         // When
         grantPermission(CAMERA)
         resolvePermissionRequestFrom(feature) { PermissionResolution.GRANTED }
 
         // Then
-        verify(fragmentManager).beginTransaction()
+        verify(feature, times(1)).scan(anyInt())
+        verify(feature, times(1)).removeQrFragment()
     }
 
     @Test
