@@ -89,6 +89,17 @@ var W3CTest = {
           );
         },
       },
+      expectAssertions(min, max) {
+        parent.postMessage(
+          {
+            harnessType: "SimpleTest",
+            command: "expectAssertions",
+            applyOn: "runner",
+            params: [min, max],
+          },
+          "*"
+        );
+      },
     };
    }(),
 
