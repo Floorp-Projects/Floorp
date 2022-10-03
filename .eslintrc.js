@@ -156,35 +156,12 @@ module.exports = {
       },
     },
     {
-      // This section enables warning of no-unused-vars globally for all test*.js
+      // This section enables errors of no-unused-vars globally for all test*.js
       // files in xpcshell test paths.
-      // These are turned into errors with selected exclusions in the next
-      // section.
-      // Bug 1612907: This section should go away once the exclusions are removed
-      // from the following section.
+      // This is not done in the xpcshell-test configuration as we cannot pull
+      // in overrides from there. We should at some stage, aim to enable this
+      // for all files in xpcshell-tests.
       files: testPaths.xpcshell.map(path => `${path}test*.js`),
-      rules: {
-        // No declaring variables that are never used
-        "no-unused-vars": [
-          "warn",
-          {
-            args: "none",
-            vars: "all",
-          },
-        ],
-      },
-    },
-    {
-      // This section makes global issues with no-unused-vars be reported as
-      // errors - except for the excluded lists which are being fixed in the
-      // dependencies of bug 1612907.
-      files: testPaths.xpcshell.map(path => `${path}test*.js`),
-      excludedFiles: [
-        // These are more complicated bugs which may require some in-depth
-        // investigation or different solutions. They are also likely to be
-        // a reasonable size.
-        "dom/indexedDB/**",
-      ],
       rules: {
         // No declaring variables that are never used
         "no-unused-vars": [

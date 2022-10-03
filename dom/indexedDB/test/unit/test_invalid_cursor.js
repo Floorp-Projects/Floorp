@@ -3,6 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/* exported testGenerator, disableWorkerTest */
 var disableWorkerTest = "Need to implement a gc() function for worker tests";
 
 var testGenerator = testSteps();

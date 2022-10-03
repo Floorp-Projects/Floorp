@@ -3,6 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/* exported testGenerator */
 var testGenerator = testSteps();
 
 // helper function that ensures that ArrayBuffer instances are meaningfully

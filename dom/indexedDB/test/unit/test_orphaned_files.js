@@ -12,6 +12,7 @@
  * crashed.
  */
 
+/* exported testSteps */
 async function testSteps() {
   const name = "test_orphaned_files.js";
 

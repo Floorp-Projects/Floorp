@@ -5,6 +5,7 @@
 
 /* import-globals-from ../helpers.js */
 
+/* exported testSteps, disableWorkerTest */
 var disableWorkerTest = "FileHandle doesn't work in workers yet";
 
 async function testSteps() {

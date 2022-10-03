@@ -4,6 +4,7 @@
  */
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
+/* exported testGenerator */
 var testGenerator = testSteps();
 
 function* testSteps() {
