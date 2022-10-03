@@ -7,19 +7,19 @@
 loader.lazyRequireGetter(
   this,
   ["setIgnoreLayoutChanges", "getCurrentZoom"],
-  "devtools/shared/layout/utils",
+  "resource://devtools/shared/layout/utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "AutoRefreshHighlighter",
-  "devtools/server/actors/highlighters/auto-refresh",
+  "resource://devtools/server/actors/highlighters/auto-refresh.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   ["CanvasFrameAnonymousContentHelper"],
-  "devtools/server/actors/highlighters/utils/markup",
+  "resource://devtools/server/actors/highlighters/utils/markup.js",
   true
 );
 

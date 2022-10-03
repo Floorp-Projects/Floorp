@@ -19,7 +19,7 @@ const STRINGS_URI = "devtools/shared/locales/accessibility.properties";
 loader.lazyRequireGetter(
   this,
   "LocalizationHelper",
-  "devtools/shared/l10n",
+  "resource://devtools/shared/l10n.js",
   true
 );
 DevToolsUtils.defineLazyGetter(

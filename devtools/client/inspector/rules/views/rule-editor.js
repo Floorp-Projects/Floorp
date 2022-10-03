@@ -33,7 +33,12 @@ const {
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const CssLogic = require("resource://devtools/shared/inspector/css-logic.js");
 
-loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
+loader.lazyRequireGetter(
+  this,
+  "Tools",
+  "resource://devtools/client/definitions.js",
+  true
+);
 
 const STYLE_INSPECTOR_PROPERTIES =
   "devtools/shared/locales/styleinspector.properties";

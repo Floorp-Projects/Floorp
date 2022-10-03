@@ -11,7 +11,7 @@ const { customHighlighterSpec } = require("devtools/shared/specs/highlighters");
 loader.lazyRequireGetter(
   this,
   "isXUL",
-  "devtools/server/actors/highlighters/utils/markup",
+  "resource://devtools/server/actors/highlighters/utils/markup.js",
   true
 );
 

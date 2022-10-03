@@ -4,53 +4,58 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
+loader.lazyRequireGetter(
+  this,
+  "colorUtils",
+  "resource://devtools/shared/css/color.js",
+  true
+);
 loader.lazyRequireGetter(
   this,
   "CssLogic",
-  "devtools/server/actors/inspector/css-logic",
+  "resource://devtools/server/actors/inspector/css-logic.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "getCurrentZoom",
-  "devtools/shared/layout/utils",
+  "resource://devtools/shared/layout/utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "addPseudoClassLock",
-  "devtools/server/actors/highlighters/utils/markup",
+  "resource://devtools/server/actors/highlighters/utils/markup.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "removePseudoClassLock",
-  "devtools/server/actors/highlighters/utils/markup",
+  "resource://devtools/server/actors/highlighters/utils/markup.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "getContrastRatioAgainstBackground",
-  "devtools/shared/accessibility",
+  "resource://devtools/shared/accessibility.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "getTextProperties",
-  "devtools/shared/accessibility",
+  "resource://devtools/shared/accessibility.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "DevToolsWorker",
-  "devtools/shared/worker/worker",
+  "resource://devtools/shared/worker/worker.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "InspectorActorUtils",
-  "devtools/server/actors/inspector/utils"
+  "resource://devtools/server/actors/inspector/utils.js"
 );
 
 const WORKER_URL = "resource://devtools/server/actors/accessibility/worker.js";

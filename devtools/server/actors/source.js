@@ -22,20 +22,20 @@ const {
 loader.lazyRequireGetter(
   this,
   "ArrayBufferActor",
-  "devtools/server/actors/array-buffer",
+  "resource://devtools/server/actors/array-buffer.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "LongStringActor",
-  "devtools/server/actors/string",
+  "resource://devtools/server/actors/string.js",
   true
 );
 
 loader.lazyRequireGetter(
   this,
   "DevToolsUtils",
-  "devtools/shared/DevToolsUtils"
+  "resource://devtools/shared/DevToolsUtils.js"
 );
 
 const windowsDrive = /^([a-zA-Z]:)/;

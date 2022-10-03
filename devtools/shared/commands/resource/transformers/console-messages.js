@@ -8,7 +8,7 @@
 loader.lazyRequireGetter(
   this,
   "getAdHocFrontOrPrimitiveGrip",
-  "devtools/client/fronts/object",
+  "resource://devtools/client/fronts/object.js",
   true
 );
 

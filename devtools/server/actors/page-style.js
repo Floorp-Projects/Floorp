@@ -26,36 +26,36 @@ const {
 loader.lazyRequireGetter(
   this,
   "StyleRuleActor",
-  "devtools/server/actors/style-rule",
+  "resource://devtools/server/actors/style-rule.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "getFontPreviewData",
-  "devtools/server/actors/utils/style-utils",
+  "resource://devtools/server/actors/utils/style-utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "CssLogic",
-  "devtools/server/actors/inspector/css-logic",
+  "resource://devtools/server/actors/inspector/css-logic.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "SharedCssLogic",
-  "devtools/shared/inspector/css-logic"
+  "resource://devtools/shared/inspector/css-logic.js"
 );
 loader.lazyRequireGetter(
   this,
   "getDefinedGeometryProperties",
-  "devtools/server/actors/highlighters/geometry-editor",
+  "resource://devtools/server/actors/highlighters/geometry-editor.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "UPDATE_GENERAL",
-  "devtools/server/actors/style-sheet",
+  "resource://devtools/server/actors/style-sheet.js",
   true
 );
 

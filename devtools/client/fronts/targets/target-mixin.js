@@ -4,11 +4,16 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
+loader.lazyRequireGetter(
+  this,
+  "getFront",
+  "resource://devtools/shared/protocol.js",
+  true
+);
 loader.lazyRequireGetter(
   this,
   "getThreadOptions",
-  "devtools/client/shared/thread-utils",
+  "resource://devtools/client/shared/thread-utils.js",
   true
 );
 

@@ -16,7 +16,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "captureScreenshot",
-  "devtools/client/shared/screenshot",
+  "resource://devtools/client/shared/screenshot.js",
   true
 );
 

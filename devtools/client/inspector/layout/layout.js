@@ -26,7 +26,7 @@ const INSPECTOR_L10N = new LocalizationHelper(
 loader.lazyRequireGetter(
   this,
   "SwatchColorPickerTooltip",
-  "devtools/client/shared/widgets/tooltip/SwatchColorPickerTooltip"
+  "resource://devtools/client/shared/widgets/tooltip/SwatchColorPickerTooltip.js"
 );
 
 class LayoutView {

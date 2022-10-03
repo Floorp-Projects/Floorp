@@ -9,7 +9,7 @@ const { symbolSpec } = require("resource://devtools/shared/specs/symbol.js");
 loader.lazyRequireGetter(
   this,
   "createValueGrip",
-  "devtools/server/actors/object/utils",
+  "resource://devtools/server/actors/object/utils.js",
   true
 );
 

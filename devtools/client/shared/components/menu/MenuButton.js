@@ -21,21 +21,21 @@ const isMacOS = Services.appinfo.OS === "Darwin";
 loader.lazyRequireGetter(
   this,
   "HTMLTooltip",
-  "devtools/client/shared/widgets/tooltip/HTMLTooltip",
+  "resource://devtools/client/shared/widgets/tooltip/HTMLTooltip.js",
   true
 );
 
 loader.lazyRequireGetter(
   this,
   "focusableSelector",
-  "devtools/client/shared/focus",
+  "resource://devtools/client/shared/focus.js",
   true
 );
 
 loader.lazyRequireGetter(
   this,
   "createPortal",
-  "devtools/client/shared/vendor/react-dom",
+  "resource://devtools/client/shared/vendor/react-dom.js",
   true
 );
 

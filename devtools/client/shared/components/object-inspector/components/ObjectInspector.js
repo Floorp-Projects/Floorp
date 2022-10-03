@@ -16,7 +16,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "createStore",
-  "devtools/client/shared/redux/create-store"
+  "resource://devtools/client/shared/redux/create-store.js"
 );
 
 const actions = require("resource://devtools/client/shared/components/object-inspector/actions.js");

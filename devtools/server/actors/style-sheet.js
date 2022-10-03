@@ -23,18 +23,18 @@ const {
 loader.lazyRequireGetter(
   this,
   "CssLogic",
-  "devtools/shared/inspector/css-logic"
+  "resource://devtools/shared/inspector/css-logic.js"
 );
 loader.lazyRequireGetter(
   this,
   ["addPseudoClassLock", "removePseudoClassLock"],
-  "devtools/server/actors/highlighters/utils/markup",
+  "resource://devtools/server/actors/highlighters/utils/markup.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "loadSheet",
-  "devtools/shared/layout/utils",
+  "resource://devtools/shared/layout/utils.js",
   true
 );
 

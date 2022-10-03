@@ -10,13 +10,13 @@ const Telemetry = require("resource://devtools/client/shared/telemetry.js");
 loader.lazyRequireGetter(
   this,
   "AccessibilityProxy",
-  "devtools/client/accessibility/accessibility-proxy",
+  "resource://devtools/client/accessibility/accessibility-proxy.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "Picker",
-  "devtools/client/accessibility/picker",
+  "resource://devtools/client/accessibility/picker.js",
   true
 );
 const {

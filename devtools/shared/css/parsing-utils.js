@@ -16,7 +16,7 @@ const { getCSSLexer } = require("devtools/shared/css/lexer");
 loader.lazyRequireGetter(
   this,
   "CSS_ANGLEUNIT",
-  "devtools/shared/css/constants",
+  "resource://devtools/shared/css/constants.js",
   true
 );
 

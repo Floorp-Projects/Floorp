@@ -17,7 +17,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "TimeScale",
-  "devtools/client/inspector/animation/utils/timescale"
+  "resource://devtools/client/inspector/animation/utils/timescale.js"
 );
 
 const INITIAL_STATE = {

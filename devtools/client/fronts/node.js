@@ -20,7 +20,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "nodeConstants",
-  "devtools/shared/dom-node-constants"
+  "resource://devtools/shared/dom-node-constants.js"
 );
 
 const { XPCOMUtils } = ChromeUtils.importESModule(

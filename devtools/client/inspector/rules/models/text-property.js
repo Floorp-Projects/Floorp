@@ -12,14 +12,14 @@ const {
 loader.lazyRequireGetter(
   this,
   "escapeCSSComment",
-  "devtools/shared/css/parsing-utils",
+  "resource://devtools/shared/css/parsing-utils.js",
   true
 );
 
 loader.lazyRequireGetter(
   this,
   "getCSSVariables",
-  "devtools/client/inspector/rules/utils/utils",
+  "resource://devtools/client/inspector/rules/utils/utils.js",
   true
 );
 

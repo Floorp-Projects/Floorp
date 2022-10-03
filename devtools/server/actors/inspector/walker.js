@@ -31,11 +31,16 @@ loader.lazyRequireGetter(
     "isTemplateElement",
     "loadSheet",
   ],
-  "devtools/shared/layout/utils",
+  "resource://devtools/shared/layout/utils.js",
   true
 );
 
-loader.lazyRequireGetter(this, "throttle", "devtools/shared/throttle", true);
+loader.lazyRequireGetter(
+  this,
+  "throttle",
+  "resource://devtools/shared/throttle.js",
+  true
+);
 
 loader.lazyRequireGetter(
   this,
@@ -47,56 +52,56 @@ loader.lazyRequireGetter(
     "nodeDocument",
     "standardTreeWalkerFilter",
   ],
-  "devtools/server/actors/inspector/utils",
+  "resource://devtools/server/actors/inspector/utils.js",
   true
 );
 
 loader.lazyRequireGetter(
   this,
   "CustomElementWatcher",
-  "devtools/server/actors/inspector/custom-element-watcher",
+  "resource://devtools/server/actors/inspector/custom-element-watcher.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   ["DocumentWalker", "SKIP_TO_SIBLING"],
-  "devtools/server/actors/inspector/document-walker",
+  "resource://devtools/server/actors/inspector/document-walker.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   ["NodeActor", "NodeListActor"],
-  "devtools/server/actors/inspector/node",
+  "resource://devtools/server/actors/inspector/node.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "NodePicker",
-  "devtools/server/actors/inspector/node-picker",
+  "resource://devtools/server/actors/inspector/node-picker.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "LayoutActor",
-  "devtools/server/actors/layout",
+  "resource://devtools/server/actors/layout.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   ["getLayoutChangesObserver", "releaseLayoutChangesObserver"],
-  "devtools/server/actors/reflow",
+  "resource://devtools/server/actors/reflow.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "WalkerSearch",
-  "devtools/server/actors/utils/walker-search",
+  "resource://devtools/server/actors/utils/walker-search.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "hasStyleSheetWatcherSupportForTarget",
-  "devtools/server/actors/utils/stylesheets-manager",
+  "resource://devtools/server/actors/utils/stylesheets-manager.js",
   true
 );
 

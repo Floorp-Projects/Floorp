@@ -25,10 +25,15 @@ loader.lazyGetter(this, "MenuList", function() {
 loader.lazyRequireGetter(
   this,
   "openDocLink",
-  "devtools/client/shared/link",
+  "resource://devtools/client/shared/link.js",
   true
 );
-loader.lazyRequireGetter(this, "assert", "devtools/shared/DevToolsUtils", true);
+loader.lazyRequireGetter(
+  this,
+  "assert",
+  "resource://devtools/shared/DevToolsUtils.js",
+  true
+);
 
 const openDevToolsDocsLink = () => {
   openDocLink("https://firefox-source-docs.mozilla.org/devtools-user/");

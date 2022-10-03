@@ -19,7 +19,7 @@ const reducer = require("devtools/shared/commands/target/reducers/targets");
 loader.lazyRequireGetter(
   this,
   ["refreshTargets", "registerTarget", "unregisterTarget"],
-  "devtools/shared/commands/target/actions/targets",
+  "resource://devtools/shared/commands/target/actions/targets.js",
   true
 );
 
@@ -1179,22 +1179,22 @@ const LegacyTargetWatchers = {};
 loader.lazyRequireGetter(
   LegacyTargetWatchers,
   TargetCommand.TYPES.PROCESS,
-  "devtools/shared/commands/target/legacy-target-watchers/legacy-processes-watcher"
+  "resource://devtools/shared/commands/target/legacy-target-watchers/legacy-processes-watcher.js"
 );
 loader.lazyRequireGetter(
   LegacyTargetWatchers,
   TargetCommand.TYPES.WORKER,
-  "devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher"
+  "resource://devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher.js"
 );
 loader.lazyRequireGetter(
   LegacyTargetWatchers,
   TargetCommand.TYPES.SHARED_WORKER,
-  "devtools/shared/commands/target/legacy-target-watchers/legacy-sharedworkers-watcher"
+  "resource://devtools/shared/commands/target/legacy-target-watchers/legacy-sharedworkers-watcher.js"
 );
 loader.lazyRequireGetter(
   LegacyTargetWatchers,
   TargetCommand.TYPES.SERVICE_WORKER,
-  "devtools/shared/commands/target/legacy-target-watchers/legacy-serviceworkers-watcher"
+  "resource://devtools/shared/commands/target/legacy-target-watchers/legacy-serviceworkers-watcher.js"
 );
 
 module.exports = TargetCommand;

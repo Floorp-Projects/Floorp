@@ -19,7 +19,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "HarMenuUtils",
-  "devtools/client/netmonitor/src/har/har-menu-utils",
+  "resource://devtools/client/netmonitor/src/har/har-menu-utils.js",
   true
 );
 

@@ -16,7 +16,7 @@ const L10N = new LocalizationHelper(
 loader.lazyRequireGetter(
   this,
   "openDocLink",
-  "devtools/client/shared/link",
+  "resource://devtools/client/shared/link.js",
   true
 );
 

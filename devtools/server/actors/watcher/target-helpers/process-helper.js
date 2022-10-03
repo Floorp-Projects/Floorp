@@ -11,7 +11,7 @@ const { WatcherRegistry } = ChromeUtils.importESModule(
 loader.lazyRequireGetter(
   this,
   "ChildDebuggerTransport",
-  "devtools/shared/transport/child-transport",
+  "resource://devtools/shared/transport/child-transport.js",
   true
 );
 

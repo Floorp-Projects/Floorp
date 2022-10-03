@@ -7,7 +7,7 @@
 loader.lazyRequireGetter(
   this,
   "WebConsole",
-  "devtools/client/webconsole/webconsole"
+  "resource://devtools/client/webconsole/webconsole.js"
 );
 loader.lazyGetter(this, "EventEmitter", () =>
   require("resource://devtools/shared/event-emitter.js")

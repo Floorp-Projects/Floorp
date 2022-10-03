@@ -13,19 +13,19 @@ const TextProperty = require("resource://devtools/client/inspector/rules/models/
 loader.lazyRequireGetter(
   this,
   "getTargetBrowsers",
-  "devtools/client/inspector/shared/compatibility-user-settings",
+  "resource://devtools/client/inspector/shared/compatibility-user-settings.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "promiseWarn",
-  "devtools/client/inspector/shared/utils",
+  "resource://devtools/client/inspector/shared/utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "parseNamedDeclarations",
-  "devtools/shared/css/parsing-utils",
+  "resource://devtools/shared/css/parsing-utils.js",
   true
 );
 

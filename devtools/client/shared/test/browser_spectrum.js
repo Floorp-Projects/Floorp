@@ -15,7 +15,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "cssColors",
-  "devtools/shared/css/color-db",
+  "resource://devtools/shared/css/color-db.js",
   true
 );
 

@@ -7,7 +7,7 @@
 loader.lazyRequireGetter(
   this,
   ["loadSheet", "removeSheet"],
-  "devtools/shared/layout/utils",
+  "resource://devtools/shared/layout/utils.js",
   true
 );
 

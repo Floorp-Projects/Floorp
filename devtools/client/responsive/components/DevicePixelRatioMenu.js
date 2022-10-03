@@ -21,7 +21,7 @@ const Types = require("resource://devtools/client/responsive/types.js");
 loader.lazyRequireGetter(
   this,
   "showMenu",
-  "devtools/client/shared/components/menu/utils",
+  "resource://devtools/client/shared/components/menu/utils.js",
   true
 );
 

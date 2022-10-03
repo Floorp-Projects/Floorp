@@ -18,44 +18,48 @@ const {
 loader.lazyRequireGetter(
   this,
   "getContrastRatioFor",
-  "devtools/server/actors/accessibility/audit/contrast",
+  "resource://devtools/server/actors/accessibility/audit/contrast.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "auditKeyboard",
-  "devtools/server/actors/accessibility/audit/keyboard",
+  "resource://devtools/server/actors/accessibility/audit/keyboard.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "auditTextLabel",
-  "devtools/server/actors/accessibility/audit/text-label",
+  "resource://devtools/server/actors/accessibility/audit/text-label.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "isDefunct",
-  "devtools/server/actors/utils/accessibility",
+  "resource://devtools/server/actors/utils/accessibility.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "findCssSelector",
-  "devtools/shared/inspector/css-logic",
+  "resource://devtools/shared/inspector/css-logic.js",
   true
 );
-loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
+loader.lazyRequireGetter(
+  this,
+  "events",
+  "resource://devtools/shared/event-emitter.js"
+);
 loader.lazyRequireGetter(
   this,
   "getBounds",
-  "devtools/server/actors/highlighters/utils/accessibility",
+  "resource://devtools/server/actors/highlighters/utils/accessibility.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "isFrameWithChildTarget",
-  "devtools/shared/layout/utils",
+  "resource://devtools/shared/layout/utils.js",
   true
 );
 const lazy = {};

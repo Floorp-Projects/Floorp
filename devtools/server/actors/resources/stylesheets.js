@@ -11,7 +11,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "CssLogic",
-  "devtools/shared/inspector/css-logic"
+  "resource://devtools/shared/inspector/css-logic.js"
 );
 
 class StyleSheetWatcher {

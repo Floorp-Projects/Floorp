@@ -22,47 +22,47 @@ const TARGET_HELPERS = {};
 loader.lazyRequireGetter(
   TARGET_HELPERS,
   Targets.TYPES.FRAME,
-  "devtools/server/actors/watcher/target-helpers/frame-helper"
+  "resource://devtools/server/actors/watcher/target-helpers/frame-helper.js"
 );
 loader.lazyRequireGetter(
   TARGET_HELPERS,
   Targets.TYPES.PROCESS,
-  "devtools/server/actors/watcher/target-helpers/process-helper"
+  "resource://devtools/server/actors/watcher/target-helpers/process-helper.js"
 );
 loader.lazyRequireGetter(
   TARGET_HELPERS,
   Targets.TYPES.WORKER,
-  "devtools/server/actors/watcher/target-helpers/worker-helper"
+  "resource://devtools/server/actors/watcher/target-helpers/worker-helper.js"
 );
 
 loader.lazyRequireGetter(
   this,
   "NetworkParentActor",
-  "devtools/server/actors/network-monitor/network-parent",
+  "resource://devtools/server/actors/network-monitor/network-parent.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "BlackboxingActor",
-  "devtools/server/actors/blackboxing",
+  "resource://devtools/server/actors/blackboxing.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "BreakpointListActor",
-  "devtools/server/actors/breakpoint-list",
+  "resource://devtools/server/actors/breakpoint-list.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "TargetConfigurationActor",
-  "devtools/server/actors/target-configuration",
+  "resource://devtools/server/actors/target-configuration.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "ThreadConfigurationActor",
-  "devtools/server/actors/thread-configuration",
+  "resource://devtools/server/actors/thread-configuration.js",
   true
 );
 

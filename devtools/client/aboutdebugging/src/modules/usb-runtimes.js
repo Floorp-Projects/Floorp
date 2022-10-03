@@ -7,7 +7,7 @@
 loader.lazyRequireGetter(
   this,
   "adb",
-  "devtools/client/shared/remote-debugging/adb/adb",
+  "resource://devtools/client/shared/remote-debugging/adb/adb.js",
   true
 );
 

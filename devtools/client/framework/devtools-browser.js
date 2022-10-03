@@ -31,41 +31,41 @@ const {
 loader.lazyRequireGetter(
   this,
   "Toolbox",
-  "devtools/client/framework/toolbox",
+  "resource://devtools/client/framework/toolbox.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "DevToolsServer",
-  "devtools/server/devtools-server",
+  "resource://devtools/server/devtools-server.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "BrowserMenus",
-  "devtools/client/framework/browser-menus"
+  "resource://devtools/client/framework/browser-menus.js"
 );
 loader.lazyRequireGetter(
   this,
   "appendStyleSheet",
-  "devtools/client/shared/stylesheet-utils",
+  "resource://devtools/client/shared/stylesheet-utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "ResponsiveUIManager",
-  "devtools/client/responsive/manager"
+  "resource://devtools/client/responsive/manager.js"
 );
 loader.lazyRequireGetter(
   this,
   "toggleEnableDevToolsPopup",
-  "devtools/client/framework/enable-devtools-popup",
+  "resource://devtools/client/framework/enable-devtools-popup.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "CommandsFactory",
-  "devtools/shared/commands/commands-factory",
+  "resource://devtools/shared/commands/commands-factory.js",
   true
 );
 

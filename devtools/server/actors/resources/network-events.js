@@ -16,20 +16,20 @@ const Targets = require("resource://devtools/server/actors/targets/index.js");
 loader.lazyRequireGetter(
   this,
   "NetworkObserver",
-  "devtools/server/actors/network-monitor/network-observer",
+  "resource://devtools/server/actors/network-monitor/network-observer.js",
   true
 );
 
 loader.lazyRequireGetter(
   this,
   "NetworkUtils",
-  "devtools/server/actors/network-monitor/utils/network-utils"
+  "resource://devtools/server/actors/network-monitor/utils/network-utils.js"
 );
 
 loader.lazyRequireGetter(
   this,
   "NetworkEventActor",
-  "devtools/server/actors/network-monitor/network-event-actor",
+  "resource://devtools/server/actors/network-monitor/network-event-actor.js",
   true
 );
 

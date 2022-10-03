@@ -6,13 +6,13 @@
 loader.lazyRequireGetter(
   this,
   "generateUUID",
-  "devtools/shared/generate-uuid",
+  "resource://devtools/shared/generate-uuid.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   ["entries", "executeSoon", "toObject"],
-  "devtools/shared/DevToolsUtils",
+  "resource://devtools/shared/DevToolsUtils.js",
   true
 );
 

@@ -7,11 +7,15 @@
 const WebConsole = require("resource://devtools/client/webconsole/webconsole.js");
 const { Utils } = require("resource://devtools/client/webconsole/utils.js");
 
-loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
+loader.lazyRequireGetter(
+  this,
+  "Telemetry",
+  "resource://devtools/client/shared/telemetry.js"
+);
 loader.lazyRequireGetter(
   this,
   "BrowserConsoleManager",
-  "devtools/client/webconsole/browser-console-manager",
+  "resource://devtools/client/webconsole/browser-console-manager.js",
   true
 );
 

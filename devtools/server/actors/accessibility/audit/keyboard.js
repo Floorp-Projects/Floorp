@@ -7,25 +7,25 @@
 loader.lazyRequireGetter(
   this,
   "CssLogic",
-  "devtools/server/actors/inspector/css-logic",
+  "resource://devtools/server/actors/inspector/css-logic.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "getCSSStyleRules",
-  "devtools/shared/inspector/css-logic",
+  "resource://devtools/shared/inspector/css-logic.js",
   true
 );
 loader.lazyRequireGetter(this, "InspectorUtils", "InspectorUtils");
 loader.lazyRequireGetter(
   this,
   "nodeConstants",
-  "devtools/shared/dom-node-constants"
+  "resource://devtools/shared/dom-node-constants.js"
 );
 loader.lazyRequireGetter(
   this,
   ["isDefunct", "getAriaRoles"],
-  "devtools/server/actors/utils/accessibility",
+  "resource://devtools/server/actors/utils/accessibility.js",
   true
 );
 

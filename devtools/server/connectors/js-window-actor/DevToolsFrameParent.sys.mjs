@@ -15,7 +15,7 @@ const lazy = {};
 loader.lazyRequireGetter(
   lazy,
   "JsWindowActorTransport",
-  "devtools/shared/transport/js-window-actor-transport",
+  "resource://devtools/shared/transport/js-window-actor-transport.js",
   true
 );
 

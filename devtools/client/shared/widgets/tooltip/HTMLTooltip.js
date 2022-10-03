@@ -9,25 +9,25 @@ const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 loader.lazyRequireGetter(
   this,
   "focusableSelector",
-  "devtools/client/shared/focus",
+  "resource://devtools/client/shared/focus.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "TooltipToggle",
-  "devtools/client/shared/widgets/tooltip/TooltipToggle",
+  "resource://devtools/client/shared/widgets/tooltip/TooltipToggle.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "listenOnce",
-  "devtools/shared/async-utils",
+  "resource://devtools/shared/async-utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "DevToolsUtils",
-  "devtools/shared/DevToolsUtils"
+  "resource://devtools/shared/DevToolsUtils.js"
 );
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";

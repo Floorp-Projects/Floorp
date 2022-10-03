@@ -13,12 +13,12 @@ const {
 loader.lazyRequireGetter(
   this,
   "DevToolsUtils",
-  "devtools/shared/DevToolsUtils"
+  "resource://devtools/shared/DevToolsUtils.js"
 );
 loader.lazyRequireGetter(
   this,
   "HeapSnapshotFileUtils",
-  "devtools/shared/heapsnapshot/HeapSnapshotFileUtils"
+  "resource://devtools/shared/heapsnapshot/HeapSnapshotFileUtils.js"
 );
 
 /**

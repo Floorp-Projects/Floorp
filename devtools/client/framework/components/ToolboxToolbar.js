@@ -51,7 +51,7 @@ loader.lazyGetter(this, "ChromeDebugToolbar", () =>
 loader.lazyRequireGetter(
   this,
   "getUnicodeUrl",
-  "devtools/client/shared/unicode-url",
+  "resource://devtools/client/shared/unicode-url.js",
   true
 );
 

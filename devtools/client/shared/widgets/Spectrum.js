@@ -9,17 +9,22 @@ const {
   MultiLocalizationHelper,
 } = require("resource://devtools/shared/l10n.js");
 
-loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
+loader.lazyRequireGetter(
+  this,
+  "colorUtils",
+  "resource://devtools/shared/css/color.js",
+  true
+);
 loader.lazyRequireGetter(
   this,
   "labColors",
-  "devtools/shared/css/color-db",
+  "resource://devtools/shared/css/color-db.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   ["getTextProperties", "getContrastRatioAgainstBackground"],
-  "devtools/shared/accessibility",
+  "resource://devtools/shared/accessibility.js",
   true
 );
 

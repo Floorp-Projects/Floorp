@@ -20,13 +20,13 @@ const ZOOM_VALUE_PREF = "devtools.toolbox.zoomValue";
 loader.lazyRequireGetter(
   this,
   "Toolbox",
-  "devtools/client/framework/toolbox",
+  "resource://devtools/client/framework/toolbox.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "Hosts",
-  "devtools/client/framework/toolbox-hosts",
+  "resource://devtools/client/framework/toolbox-hosts.js",
   true
 );
 

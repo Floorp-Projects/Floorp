@@ -17,7 +17,7 @@ const L10N = new LocalizationHelper(STRINGS_URI);
 loader.lazyRequireGetter(
   this,
   ["getCurrentZoom", "getRect"],
-  "devtools/shared/layout/utils",
+  "resource://devtools/shared/layout/utils.js",
   true
 );
 

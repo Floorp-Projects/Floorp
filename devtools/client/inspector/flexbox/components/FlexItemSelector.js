@@ -17,7 +17,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "getNodeRep",
-  "devtools/client/inspector/shared/node-reps"
+  "resource://devtools/client/inspector/shared/node-reps.js"
 );
 
 const Types = require("resource://devtools/client/inspector/flexbox/types.js");
@@ -25,7 +25,7 @@ const Types = require("resource://devtools/client/inspector/flexbox/types.js");
 loader.lazyRequireGetter(
   this,
   "showMenu",
-  "devtools/client/shared/components/menu/utils",
+  "resource://devtools/client/shared/components/menu/utils.js",
   true
 );
 

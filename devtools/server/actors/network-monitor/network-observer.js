@@ -15,28 +15,28 @@ const DEBUG_PLATFORM_EVENTS = false;
 loader.lazyRequireGetter(
   this,
   "ChannelMap",
-  "devtools/server/actors/network-monitor/utils/channel-map",
+  "resource://devtools/server/actors/network-monitor/utils/channel-map.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "NetworkUtils",
-  "devtools/server/actors/network-monitor/utils/network-utils"
+  "resource://devtools/server/actors/network-monitor/utils/network-utils.js"
 );
 loader.lazyRequireGetter(
   this,
   "NetworkHelper",
-  "devtools/shared/webconsole/network-helper"
+  "resource://devtools/shared/webconsole/network-helper.js"
 );
 loader.lazyRequireGetter(
   this,
   "DevToolsUtils",
-  "devtools/shared/DevToolsUtils"
+  "resource://devtools/shared/DevToolsUtils.js"
 );
 loader.lazyRequireGetter(
   this,
   "NetworkThrottleManager",
-  "devtools/shared/webconsole/throttle",
+  "resource://devtools/shared/webconsole/throttle.js",
   true
 );
 loader.lazyServiceGetter(
@@ -48,7 +48,7 @@ loader.lazyServiceGetter(
 loader.lazyRequireGetter(
   this,
   "NetworkResponseListener",
-  "devtools/server/actors/network-monitor/network-response-listener",
+  "resource://devtools/server/actors/network-monitor/network-response-listener.js",
   true
 );
 

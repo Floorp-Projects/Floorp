@@ -23,7 +23,7 @@ const NO_THROTTLING_LABEL = L10N.getStr("responsive.noThrottling");
 loader.lazyRequireGetter(
   this,
   "showMenu",
-  "devtools/client/shared/components/menu/utils",
+  "resource://devtools/client/shared/components/menu/utils.js",
   true
 );
 

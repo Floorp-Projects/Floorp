@@ -9,7 +9,12 @@ const {
   registerFront,
 } = require("resource://devtools/shared/protocol.js");
 
-loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
+loader.lazyRequireGetter(
+  this,
+  "getFront",
+  "resource://devtools/shared/protocol.js",
+  true
+);
 
 class RootFront extends FrontClassWithSpec(rootSpec) {
   constructor(client, targetFront, parentFront) {

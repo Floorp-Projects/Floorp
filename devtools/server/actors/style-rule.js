@@ -23,42 +23,42 @@ const {
 loader.lazyRequireGetter(
   this,
   "CssLogic",
-  "devtools/server/actors/inspector/css-logic",
+  "resource://devtools/server/actors/inspector/css-logic.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "SharedCssLogic",
-  "devtools/shared/inspector/css-logic"
+  "resource://devtools/shared/inspector/css-logic.js"
 );
 loader.lazyRequireGetter(
   this,
   ["CSSRuleTypeName", "findCssSelector", "prettifyCSS"],
-  "devtools/shared/inspector/css-logic",
+  "resource://devtools/shared/inspector/css-logic.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "isCssPropertyKnown",
-  "devtools/server/actors/css-properties",
+  "resource://devtools/server/actors/css-properties.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "isPropertyUsed",
-  "devtools/server/actors/utils/inactive-property-helper",
+  "resource://devtools/server/actors/utils/inactive-property-helper.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "parseNamedDeclarations",
-  "devtools/shared/css/parsing-utils",
+  "resource://devtools/shared/css/parsing-utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   ["UPDATE_PRESERVING_RULES", "UPDATE_GENERAL"],
-  "devtools/server/actors/style-sheet",
+  "resource://devtools/server/actors/style-sheet.js",
   true
 );
 

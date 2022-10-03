@@ -23,7 +23,7 @@ const Types = require("resource://devtools/client/aboutdebugging/src/types/index
 loader.lazyRequireGetter(
   this,
   "ADB_ADDON_STATES",
-  "devtools/client/shared/remote-debugging/adb/adb-addon",
+  "resource://devtools/client/shared/remote-debugging/adb/adb-addon.js",
   true
 );
 

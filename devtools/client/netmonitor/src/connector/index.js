@@ -22,7 +22,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "throttlingProfiles",
-  "devtools/client/shared/components/throttling/profiles"
+  "resource://devtools/client/shared/components/throttling/profiles.js"
 );
 
 const DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF = "devtools.netmonitor.persistlog";

@@ -28,7 +28,7 @@ loader.lazyGetter(this, "MDNLink", function() {
 loader.lazyRequireGetter(
   this,
   "KeyShortcuts",
-  "devtools/client/shared/key-shortcuts"
+  "resource://devtools/client/shared/key-shortcuts.js"
 );
 
 class SearchBox extends PureComponent {

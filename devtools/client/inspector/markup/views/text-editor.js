@@ -15,19 +15,19 @@ const TextNode = createFactory(
 loader.lazyRequireGetter(
   this,
   "getAutocompleteMaxWidth",
-  "devtools/client/inspector/markup/utils",
+  "resource://devtools/client/inspector/markup/utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "getLongString",
-  "devtools/client/inspector/shared/utils",
+  "resource://devtools/client/inspector/shared/utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "InplaceEditor",
-  "devtools/client/shared/inplace-editor",
+  "resource://devtools/client/shared/inplace-editor.js",
   true
 );
 

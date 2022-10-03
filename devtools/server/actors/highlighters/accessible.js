@@ -23,7 +23,7 @@ const {
 loader.lazyRequireGetter(
   this,
   ["getBounds", "getBoundsXUL", "Infobar"],
-  "devtools/server/actors/highlighters/utils/accessibility",
+  "resource://devtools/server/actors/highlighters/utils/accessibility.js",
   true
 );
 

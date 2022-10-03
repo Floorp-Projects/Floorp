@@ -18,53 +18,58 @@ const Promise = require("Promise");
 loader.lazyRequireGetter(
   this,
   "HTMLBreadcrumbs",
-  "devtools/client/inspector/breadcrumbs",
+  "resource://devtools/client/inspector/breadcrumbs.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "KeyShortcuts",
-  "devtools/client/shared/key-shortcuts"
+  "resource://devtools/client/shared/key-shortcuts.js"
 );
 loader.lazyRequireGetter(
   this,
   "InspectorSearch",
-  "devtools/client/inspector/inspector-search",
+  "resource://devtools/client/inspector/inspector-search.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "ToolSidebar",
-  "devtools/client/inspector/toolsidebar",
+  "resource://devtools/client/inspector/toolsidebar.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "MarkupView",
-  "devtools/client/inspector/markup/markup"
+  "resource://devtools/client/inspector/markup/markup.js"
 );
 loader.lazyRequireGetter(
   this,
   "HighlightersOverlay",
-  "devtools/client/inspector/shared/highlighters-overlay"
+  "resource://devtools/client/inspector/shared/highlighters-overlay.js"
 );
 loader.lazyRequireGetter(
   this,
   "ExtensionSidebar",
-  "devtools/client/inspector/extensions/extension-sidebar"
+  "resource://devtools/client/inspector/extensions/extension-sidebar.js"
 );
 loader.lazyRequireGetter(
   this,
   "PICKER_TYPES",
-  "devtools/shared/picker-constants"
+  "resource://devtools/shared/picker-constants.js"
 );
 loader.lazyRequireGetter(
   this,
   "captureAndSaveScreenshot",
-  "devtools/client/shared/screenshot",
+  "resource://devtools/client/shared/screenshot.js",
   true
 );
-loader.lazyRequireGetter(this, "debounce", "devtools/shared/debounce", true);
+loader.lazyRequireGetter(
+  this,
+  "debounce",
+  "resource://devtools/shared/debounce.js",
+  true
+);
 
 const {
   LocalizationHelper,

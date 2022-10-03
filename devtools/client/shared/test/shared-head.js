@@ -77,23 +77,23 @@ const KeyShortcuts = require("resource://devtools/client/shared/key-shortcuts.js
 loader.lazyRequireGetter(
   this,
   "ResponsiveUIManager",
-  "devtools/client/responsive/manager"
+  "resource://devtools/client/responsive/manager.js"
 );
 loader.lazyRequireGetter(
   this,
   "localTypes",
-  "devtools/client/responsive/types"
+  "resource://devtools/client/responsive/types.js"
 );
 loader.lazyRequireGetter(
   this,
   "ResponsiveMessageHelper",
-  "devtools/client/responsive/utils/message"
+  "resource://devtools/client/responsive/utils/message.js"
 );
 
 loader.lazyRequireGetter(
   this,
   "FluentReact",
-  "devtools/client/shared/vendor/fluent-react"
+  "resource://devtools/client/shared/vendor/fluent-react.js"
 );
 
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));

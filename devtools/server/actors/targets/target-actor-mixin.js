@@ -11,13 +11,13 @@ const {
 loader.lazyRequireGetter(
   this,
   "SessionDataProcessors",
-  "devtools/server/actors/targets/session-data-processors/index",
+  "resource://devtools/server/actors/targets/session-data-processors/index.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "StyleSheetsManager",
-  "devtools/server/actors/utils/stylesheets-manager",
+  "resource://devtools/server/actors/utils/stylesheets-manager.js",
   true
 );
 

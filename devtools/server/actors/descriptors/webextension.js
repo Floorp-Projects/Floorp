@@ -37,7 +37,7 @@ ChromeUtils.defineModuleGetter(
 loader.lazyRequireGetter(
   this,
   "WatcherActor",
-  "devtools/server/actors/watcher",
+  "resource://devtools/server/actors/watcher.js",
   true
 );
 

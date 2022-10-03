@@ -47,19 +47,19 @@ const {
 loader.lazyRequireGetter(
   this,
   "adb",
-  "devtools/client/shared/remote-debugging/adb/adb",
+  "resource://devtools/client/shared/remote-debugging/adb/adb.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "adbAddon",
-  "devtools/client/shared/remote-debugging/adb/adb-addon",
+  "resource://devtools/client/shared/remote-debugging/adb/adb-addon.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "adbProcess",
-  "devtools/client/shared/remote-debugging/adb/adb-process",
+  "resource://devtools/client/shared/remote-debugging/adb/adb-process.js",
   true
 );
 

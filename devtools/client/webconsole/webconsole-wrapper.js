@@ -46,7 +46,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "Constants",
-  "devtools/client/webconsole/constants"
+  "resource://devtools/client/webconsole/constants.js"
 );
 
 // Localized strings for (devtools/client/locales/en-US/startup.properties)
@@ -59,13 +59,13 @@ loader.lazyGetter(this, "L10N", function() {
 loader.lazyRequireGetter(
   this,
   "FluentL10n",
-  "devtools/client/shared/fluent-l10n/fluent-l10n",
+  "resource://devtools/client/shared/fluent-l10n/fluent-l10n.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "LocalizationProvider",
-  "devtools/client/shared/vendor/fluent-react",
+  "resource://devtools/client/shared/vendor/fluent-react.js",
   true
 );
 

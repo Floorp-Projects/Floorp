@@ -7,7 +7,7 @@
 loader.lazyRequireGetter(
   this,
   "isWebRenderEnabled",
-  "devtools/server/actors/utils/accessibility",
+  "resource://devtools/server/actors/utils/accessibility.js",
   true
 );
 

@@ -23,7 +23,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "TabboxPanel",
-  "devtools/client/netmonitor/src/components/TabboxPanel"
+  "resource://devtools/client/netmonitor/src/components/TabboxPanel.js"
 );
 const {
   getHTTPStatusCodeURL,
@@ -34,7 +34,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "BLOCKED_REASON_MESSAGES",
-  "devtools/client/netmonitor/src/constants",
+  "resource://devtools/client/netmonitor/src/constants.js",
   true
 );
 

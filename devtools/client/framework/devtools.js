@@ -17,35 +17,39 @@ ChromeUtils.defineESModuleGetters(lazy, {
 loader.lazyRequireGetter(
   this,
   "TabDescriptorFactory",
-  "devtools/client/framework/tab-descriptor-factory",
+  "resource://devtools/client/framework/tab-descriptor-factory.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "CommandsFactory",
-  "devtools/shared/commands/commands-factory",
+  "resource://devtools/shared/commands/commands-factory.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "ToolboxHostManager",
-  "devtools/client/framework/toolbox-host-manager",
+  "resource://devtools/client/framework/toolbox-host-manager.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "BrowserConsoleManager",
-  "devtools/client/webconsole/browser-console-manager",
+  "resource://devtools/client/webconsole/browser-console-manager.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "Toolbox",
-  "devtools/client/framework/toolbox",
+  "resource://devtools/client/framework/toolbox.js",
   true
 );
 
-loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
+loader.lazyRequireGetter(
+  this,
+  "Telemetry",
+  "resource://devtools/client/shared/telemetry.js"
+);
 
 const {
   defaultTools: DefaultTools,

@@ -14,7 +14,7 @@ const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 loader.lazyRequireGetter(
   this,
   "getNodeRep",
-  "devtools/client/inspector/shared/node-reps"
+  "resource://devtools/client/inspector/shared/node-reps.js"
 );
 
 const {
