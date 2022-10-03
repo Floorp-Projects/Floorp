@@ -628,29 +628,17 @@ class MOZ_STACK_CLASS SplitNodeResult final {
  *****************************************************************************/
 class MOZ_STACK_CLASS JoinNodesResult final {
  public:
-  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
-  bool Failed() const { return NS_FAILED(mRv); }
-  nsresult Rv() const { return mRv; }
-  bool Handled() const { return Succeeded(); }
-  bool EditorDestroyed() const { return mRv == NS_ERROR_EDITOR_DESTROYED; }
-
   MOZ_KNOWN_LIVE nsIContent* ExistingContent() const {
-    MOZ_ASSERT(Succeeded());
     return mJoinedPoint.ContainerAs<nsIContent>();
   }
   template <typename EditorDOMPointType>
   EditorDOMPointType AtExistingContent() const {
-    MOZ_ASSERT(Succeeded());
     return EditorDOMPointType(mJoinedPoint.ContainerAs<nsIContent>());
   }
 
-  MOZ_KNOWN_LIVE nsIContent* RemovedContent() const {
-    MOZ_ASSERT(Succeeded());
-    return mRemovedContent;
-  }
+  MOZ_KNOWN_LIVE nsIContent* RemovedContent() const { return mRemovedContent; }
   template <typename EditorDOMPointType>
   EditorDOMPointType AtRemovedContent() const {
-    MOZ_ASSERT(Succeeded());
     if (mRemovedContent) {
       return EditorDOMPointType(mRemovedContent);
     }
@@ -659,8 +647,7 @@ class MOZ_STACK_CLASS JoinNodesResult final {
 
   template <typename EditorDOMPointType>
   EditorDOMPointType AtJoinedPoint() const {
-    MOZ_ASSERT(Succeeded());
-    return mJoinedPoint;
+    return mJoinedPoint.To<EditorDOMPointType>();
   }
 
   JoinNodesResult() = delete;
@@ -676,25 +663,18 @@ class MOZ_STACK_CLASS JoinNodesResult final {
    */
   JoinNodesResult(const EditorDOMPoint& aJoinedPoint,
                   nsIContent& aRemovedContent, JoinNodesDirection aDirection)
-      : mJoinedPoint(aJoinedPoint),
-        mRemovedContent(&aRemovedContent),
-        mRv(NS_OK) {
+      : mJoinedPoint(aJoinedPoint), mRemovedContent(&aRemovedContent) {
     MOZ_DIAGNOSTIC_ASSERT(aJoinedPoint.IsInContentNode());
   }
 
-  /**
-   * This constructor shouldn't be used by anybody except methods which
-   * use this as error result when it fails.
-   */
-  explicit JoinNodesResult(nsresult aRv) : mRv(aRv) {
-    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mRv));
-  }
+  JoinNodesResult(const JoinNodesResult& aOther) = delete;
+  JoinNodesResult& operator=(const JoinNodesResult& aOther) = delete;
+  JoinNodesResult(JoinNodesResult&& aOther) = default;
+  JoinNodesResult& operator=(JoinNodesResult&& aOther) = default;
 
  private:
   EditorDOMPoint mJoinedPoint;
-  nsCOMPtr<nsIContent> mRemovedContent;
-
-  nsresult mRv;
+  MOZ_KNOWN_LIVE nsCOMPtr<nsIContent> mRemovedContent;
 };
 
 /*****************************************************************************

@@ -737,14 +737,14 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
       // JoinNodesWithTransaction (DoJoinNodes) tries to collapse selection to
       // the joined point and we want to skip updating `Selection` here.
       AutoTransactionsConserveSelection dontChangeMySelection(*this);
-      JoinNodesResult joinNodesResult =
+      Result<JoinNodesResult, nsresult> joinNodesResult =
           JoinNodesWithTransaction(*previousSibling, *nextSibling);
-      if (joinNodesResult.Failed()) {
+      if (MOZ_UNLIKELY(joinNodesResult.isErr())) {
         NS_WARNING("HTMLEditor::JoinNodesWithTransaction() failed");
-        return Err(joinNodesResult.Rv());
+        return joinNodesResult.propagateErr();
       }
       // So, let's take it.
-      return joinNodesResult.AtJoinedPoint<EditorDOMPoint>();
+      return joinNodesResult.inspect().AtJoinedPoint<EditorDOMPoint>();
     }
   }
 

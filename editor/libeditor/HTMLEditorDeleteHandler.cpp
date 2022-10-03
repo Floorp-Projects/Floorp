@@ -4440,15 +4440,16 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
          HTMLEditUtils::CanContentsBeJoined(
              *leftContentToJoin, *rightContentToJoin, kCompareStyle)) {
     // Do the join
-    JoinNodesResult joinNodesResult = aHTMLEditor.JoinNodesWithTransaction(
-        *leftContentToJoin, *rightContentToJoin);
-    if (MOZ_UNLIKELY(joinNodesResult.Failed())) {
+    Result<JoinNodesResult, nsresult> joinNodesResult =
+        aHTMLEditor.JoinNodesWithTransaction(*leftContentToJoin,
+                                             *rightContentToJoin);
+    if (MOZ_UNLIKELY(joinNodesResult.isErr())) {
       NS_WARNING("HTMLEditor::JoinNodesWithTransaction() failed");
-      return Err(joinNodesResult.Rv());
+      return joinNodesResult.propagateErr();
     }
 
-    ret = joinNodesResult.AtJoinedPoint<EditorDOMPoint>();
-    if (MOZ_UNLIKELY(NS_WARN_IF(!ret.IsSet()))) {
+    ret = joinNodesResult.inspect().AtJoinedPoint<EditorDOMPoint>();
+    if (NS_WARN_IF(!ret.IsSet())) {
       return Err(NS_ERROR_FAILURE);
     }
 

@@ -4542,15 +4542,18 @@ nsresult HTMLEditor::CollapseAdjacentTextNodes(nsRange& aInRange) {
       continue;
     }
 
-    JoinNodesResult result = JoinNodesWithTransaction(
-        MOZ_KnownLive(*leftTextNode), MOZ_KnownLive(*rightTextNode));
-    if (MOZ_UNLIKELY(result.Failed())) {
+    Result<JoinNodesResult, nsresult> joinNodesResult =
+        JoinNodesWithTransaction(MOZ_KnownLive(*leftTextNode),
+                                 MOZ_KnownLive(*rightTextNode));
+    if (MOZ_UNLIKELY(joinNodesResult.isErr())) {
       NS_WARNING("HTMLEditor::JoinNodesWithTransaction() failed");
-      return result.Rv();
+      return joinNodesResult.unwrapErr();
     }
-    if (MOZ_LIKELY(result.RemovedContent() == leftTextNode)) {
+    if (MOZ_LIKELY(joinNodesResult.inspect().RemovedContent() ==
+                   leftTextNode)) {
       textNodes.RemoveElementAt(0u);
-    } else if (MOZ_LIKELY(result.RemovedContent() == rightTextNode)) {
+    } else if (MOZ_LIKELY(joinNodesResult.inspect().RemovedContent() ==
+                          rightTextNode)) {
       textNodes.RemoveElementAt(1u);
     } else {
       MOZ_ASSERT_UNREACHABLE(
@@ -5145,7 +5148,7 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
                          aDirection);
 }
 
-JoinNodesResult HTMLEditor::JoinNodesWithTransaction(
+Result<JoinNodesResult, nsresult> HTMLEditor::JoinNodesWithTransaction(
     nsIContent& aLeftContent, nsIContent& aRightContent) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(&aLeftContent != &aRightContent);
@@ -5157,47 +5160,47 @@ JoinNodesResult HTMLEditor::JoinNodesWithTransaction(
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eJoinNodes, nsIEditor::ePrevious, ignoredError);
   if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return JoinNodesResult(ignoredError.StealNSResult());
+    return Err(ignoredError.StealNSResult());
   }
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
       "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  if (MOZ_UNLIKELY(NS_WARN_IF(!aRightContent.GetParentNode()))) {
-    return JoinNodesResult(NS_ERROR_FAILURE);
+  if (NS_WARN_IF(!aRightContent.GetParentNode())) {
+    return Err(NS_ERROR_FAILURE);
   }
 
   RefPtr<JoinNodesTransaction> transaction =
       JoinNodesTransaction::MaybeCreate(*this, aLeftContent, aRightContent);
   if (MOZ_UNLIKELY(!transaction)) {
     NS_WARNING("JoinNodesTransaction::MaybeCreate() failed");
-    return JoinNodesResult(NS_ERROR_FAILURE);
+    return Err(NS_ERROR_FAILURE);
   }
 
   const nsresult rv = DoTransactionInternal(transaction);
   // FYI: Now, DidJoinNodesTransaction() must have been run if succeeded.
-  if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
-    return JoinNodesResult(NS_ERROR_EDITOR_DESTROYED);
+  if (NS_WARN_IF(Destroyed())) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
 
   // This shouldn't occur unless the cycle collector runs by chrome script
   // forcibly.
-  if (MOZ_UNLIKELY(NS_WARN_IF(!transaction->GetRemovedContent()) ||
-                   NS_WARN_IF(!transaction->GetExistingContent()))) {
-    return JoinNodesResult(NS_ERROR_UNEXPECTED);
+  if (NS_WARN_IF(!transaction->GetRemovedContent()) ||
+      NS_WARN_IF(!transaction->GetExistingContent())) {
+    return Err(NS_ERROR_UNEXPECTED);
   }
 
   // If joined node is moved to different place, offset may not have any
   // meaning.  In this case, the web app modified the DOM tree takes on the
   // responsibility for the remaning things.
-  if (MOZ_UNLIKELY(NS_WARN_IF(transaction->GetExistingContent()->GetParent() !=
-                              transaction->GetParentNode()))) {
-    return JoinNodesResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  if (NS_WARN_IF(transaction->GetExistingContent()->GetParent() !=
+                 transaction->GetParentNode())) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
-  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::DoTransactionInternal() failed");
-    return JoinNodesResult(rv);
+    return Err(rv);
   }
 
   return JoinNodesResult(transaction->CreateJoinedPoint<EditorDOMPoint>(),

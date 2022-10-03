@@ -8857,15 +8857,15 @@ nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
   // Separate join rules for differing blocks
   if (HTMLEditUtils::IsAnyListElement(&aNodeLeft) || aNodeLeft.IsText()) {
     // For lists, merge shallow (wouldn't want to combine list items)
-    JoinNodesResult joinNodesResult =
+    Result<JoinNodesResult, nsresult> joinNodesResult =
         JoinNodesWithTransaction(aNodeLeft, aNodeRight);
-    if (MOZ_UNLIKELY(joinNodesResult.Failed())) {
+    if (MOZ_UNLIKELY(joinNodesResult.isErr())) {
       NS_WARNING("HTMLEditor::JoinNodesWithTransaction failed");
-      return joinNodesResult.Rv();
+      return joinNodesResult.unwrapErr();
     }
     *aNewFirstChildOfRightNode =
-        joinNodesResult.AtJoinedPoint<EditorDOMPoint>();
-    return joinNodesResult.Rv();
+        joinNodesResult.inspect().AtJoinedPoint<EditorDOMPoint>();
+    return NS_OK;
   }
 
   // Remember the last left child, and first right child
@@ -8884,11 +8884,11 @@ nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
   }
 
   // For list items, divs, etc., merge smart
-  JoinNodesResult joinNodesResult =
+  Result<JoinNodesResult, nsresult> joinNodesResult =
       JoinNodesWithTransaction(aNodeLeft, aNodeRight);
-  if (MOZ_UNLIKELY(joinNodesResult.Failed())) {
+  if (MOZ_UNLIKELY(joinNodesResult.isErr())) {
     NS_WARNING("HTMLEditor::JoinNodesWithTransaction() failed");
-    return joinNodesResult.Rv();
+    return joinNodesResult.unwrapErr();
   }
 
   if ((lastEditableChildOfLeftContent->IsText() ||
@@ -8904,7 +8904,8 @@ nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
         "HTMLEditor::JoinNearestEditableNodesWithTransaction() failed");
     return rv;
   }
-  *aNewFirstChildOfRightNode = joinNodesResult.AtJoinedPoint<EditorDOMPoint>();
+  *aNewFirstChildOfRightNode =
+      joinNodesResult.inspect().AtJoinedPoint<EditorDOMPoint>();
   return NS_OK;
 }
 
