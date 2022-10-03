@@ -38,14 +38,9 @@ class nsILineIterator {
   virtual int32_t GetNumLines() const = 0;
 
   /**
-   * The prevailing direction of lines.
-   *
-   * @return true if the CSS direction property for the block is
-   *         "rtl", otherwise false
-   *
-   *XXX after bug 924851 change this to return a UBiDiDirection
+   * Returns whether our lines are rtl.
    */
-  virtual bool GetDirection() = 0;
+  virtual bool IsLineIteratorFlowRTL() = 0;
 
   struct LineInfo {
     /** The first frame on the line. */

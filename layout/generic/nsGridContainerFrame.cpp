@@ -9852,7 +9852,7 @@ nsGridContainerFrame* nsGridContainerFrame::GetGridFrameWithComputedInfo(
 // TODO: This is a rather dumb implementation of nsILineIterator, but it's
 // better than our pre-existing behavior. Ideally, we should probably use the
 // grid information to return a meaningful number of lines etc.
-bool nsGridContainerFrame::GetDirection() { return false; }
+bool nsGridContainerFrame::IsLineIteratorFlowRTL() { return false; }
 
 int32_t nsGridContainerFrame::GetNumLines() const {
   return mFrames.GetLength();

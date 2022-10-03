@@ -643,7 +643,7 @@ class nsGridContainerFrame final : public nsContainerFrame,
   bool CanProvideLineIterator() const final { return true; }
   nsILineIterator* GetLineIterator() final { return this; }
   int32_t GetNumLines() const final;
-  bool GetDirection() final;
+  bool IsLineIteratorFlowRTL() final;
   mozilla::Result<LineInfo, nsresult> GetLine(int32_t aLineNumber) final;
   int32_t FindLineContaining(nsIFrame* aFrame, int32_t aStartLine = 0) final;
   NS_IMETHOD FindFrameAt(int32_t aLineNumber, nsPoint aPos,

@@ -9272,7 +9272,7 @@ Result<bool, nsresult> nsIFrame::IsVisuallyAtLineEdge(
   nsIFrame* firstFrame;
   nsIFrame* lastFrame;
 
-  bool lineIsRTL = aLineIterator->GetDirection();
+  const bool lineIsRTL = aLineIterator->IsLineIteratorFlowRTL();
   bool isReordered;
 
   MOZ_TRY(aLineIterator->CheckLineOrder(aLine, &isReordered, &firstFrame,

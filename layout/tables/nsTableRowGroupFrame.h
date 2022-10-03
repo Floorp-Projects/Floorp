@@ -195,10 +195,8 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
    */
   int32_t GetNumLines() const final;
 
-  /** @see nsILineIterator.h GetDirection
-   * @return true if the table is rtl
-   */
-  bool GetDirection() final;
+  /** @see nsILineIterator.h IsLineIteratorFlowRTL */
+  bool IsLineIteratorFlowRTL() final;
 
   /** Return structural information about a line. */
   Result<LineInfo, nsresult> GetLine(int32_t aLineNumber) final;

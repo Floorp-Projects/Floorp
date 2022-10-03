@@ -5787,7 +5787,7 @@ int32_t nsFlexContainerFrame::GetNumLines() const {
   return FlexboxAxisInfo(this).mIsRowOriented ? 1 : mFrames.GetLength();
 }
 
-bool nsFlexContainerFrame::GetDirection() {
+bool nsFlexContainerFrame::IsLineIteratorFlowRTL() {
   FlexboxAxisInfo info(this);
   if (info.mIsRowOriented) {
     const bool isRtl = StyleVisibility()->mDirection == StyleDirection::Rtl;
@@ -5870,7 +5870,8 @@ nsFlexContainerFrame::FindFrameAt(int32_t aLineNumber, nsPoint aPos,
     return NS_OK;
   }
 
-  LineFrameFinder finder(aPos, GetSize(), GetWritingMode(), GetDirection());
+  LineFrameFinder finder(aPos, GetSize(), GetWritingMode(),
+                         IsLineIteratorFlowRTL());
   for (nsIFrame* f : mFrames) {
     finder.Scan(f);
     if (finder.IsDone()) {
