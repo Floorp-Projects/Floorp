@@ -402,15 +402,6 @@ enum class StylePositionProperty : uint8_t {
   Sticky,
 };
 
-// See nsStyleEffects.mClip, mClipFlags
-#define NS_STYLE_CLIP_AUTO 0x00
-#define NS_STYLE_CLIP_RECT 0x01
-#define NS_STYLE_CLIP_TYPE_MASK 0x0F
-#define NS_STYLE_CLIP_LEFT_AUTO 0x10
-#define NS_STYLE_CLIP_TOP_AUTO 0x20
-#define NS_STYLE_CLIP_RIGHT_AUTO 0x40
-#define NS_STYLE_CLIP_BOTTOM_AUTO 0x80
-
 // FRAME/FRAMESET/IFRAME specific values including backward compatibility.
 // Boolean values with the same meaning (e.g. 1 & yes) may need to be
 // distinguished for correct mode processing
