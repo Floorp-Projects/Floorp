@@ -59,7 +59,7 @@ class nsFontFaceLoader;
 //#define DEBUG_USERFONT_CACHE
 
 class gfxFontFaceBufferSource {
-  NS_INLINE_DECL_REFCOUNTING(gfxFontFaceBufferSource)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxFontFaceBufferSource)
  public:
   virtual void TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength) = 0;
 
