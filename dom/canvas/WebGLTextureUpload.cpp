@@ -764,9 +764,27 @@ static bool ValidateCompressedTexImageRestrictions(
   return true;
 }
 
-static bool ValidateTargetForFormat(const WebGLContext* webgl,
-                                    TexImageTarget target,
-                                    const webgl::FormatInfo* format) {
+static bool ValidateFormatAndSize(const WebGLContext* webgl,
+                                  TexImageTarget target,
+                                  const webgl::FormatInfo* format,
+                                  const uvec3& size) {
+  // Check if texture size will likely be rejected by the driver and give a more
+  // meaningful error message.
+  auto baseImageSize = CheckedInt<uint64_t>(format->estimatedBytesPerPixel) *
+                       (uint32_t)size.x * (uint32_t)size.y * (uint32_t)size.z;
+  if (target == LOCAL_GL_TEXTURE_CUBE_MAP) {
+    baseImageSize *= 6;
+  }
+  if (!baseImageSize.isValid() ||
+      baseImageSize.value() >
+          (uint64_t)StaticPrefs::webgl_max_size_per_texture_mib() *
+              (1024 * 1024)) {
+    webgl->ErrorOutOfMemory(
+        "Texture size too large; base image mebibytes > "
+        "webgl.max-size-per-texture-mib");
+    return false;
+  }
+
   // GLES 3.0.4 p127:
   // "Textures with a base internal format of DEPTH_COMPONENT or DEPTH_STENCIL
   // are supported by texture image specification commands only if `target` is
@@ -834,7 +852,7 @@ void WebGLTexture::TexStorage(TexTarget target, uint32_t levels,
   }
   auto dstFormat = dstUsage->format;
 
-  if (!ValidateTargetForFormat(mContext, testTarget, dstFormat)) return;
+  if (!ValidateFormatAndSize(mContext, testTarget, dstFormat, size)) return;
 
   if (dstFormat->compression) {
     if (!ValidateCompressedTexImageRestrictions(mContext, testTarget, 0,
@@ -1007,7 +1025,7 @@ void WebGLTexture::TexImage(uint32_t level, GLenum respecFormat,
     }
 
     const auto& dstFormat = dstUsage->format;
-    if (!ValidateTargetForFormat(mContext, imageTarget, dstFormat)) return;
+    if (!ValidateFormatAndSize(mContext, imageTarget, dstFormat, size)) return;
 
     if (!mContext->IsWebGL2() && dstFormat->d) {
       if (imageTarget != LOCAL_GL_TEXTURE_2D || blob->HasData() || level != 0) {
@@ -1200,7 +1218,8 @@ void WebGLTexture::CompressedTexImage(bool sub, GLenum imageTarget,
     }
     MOZ_ASSERT(imageInfo);
 
-    if (!ValidateTargetForFormat(mContext, imageTarget, usage->format)) return;
+    if (!ValidateFormatAndSize(mContext, imageTarget, usage->format, size))
+      return;
     if (!ValidateCompressedTexImageRestrictions(mContext, imageTarget, level,
                                                 usage->format, size)) {
       return;
@@ -1836,7 +1855,7 @@ void WebGLTexture::CopyTexImage(GLenum imageTarget, uint32_t level,
     dstUsage = ValidateCopyDestUsage(mContext, srcFormat, respecFormat);
     if (!dstUsage) return;
 
-    if (!ValidateTargetForFormat(mContext, imageTarget, dstUsage->format))
+    if (!ValidateFormatAndSize(mContext, imageTarget, dstUsage->format, size))
       return;
   } else {
     if (!ValidateTexImageSelection(imageTarget, level, dstOffset, size,

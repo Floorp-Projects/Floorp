@@ -13175,6 +13175,11 @@
   value: 300
   mirror: always
 
+- name: webgl.max-size-per-texture-mib
+  type: RelaxedAtomicUint32
+  value: 1024
+  mirror: always
+
 - name: webgl.max-warnings-per-context
   type: RelaxedAtomicUint32
   value: 32
