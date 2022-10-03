@@ -131,6 +131,15 @@ const startupPhases = {
       ignoreIfUnused: true,
       maxCount: 1,
     },
+    {
+      // bug 1784869
+      // We use Resume signal to propagate correct XWindow/wl_surface
+      // to EGL compositor.
+      name: "PCompositorBridge::Msg_Resume",
+      condition: LINUX,
+      ignoreIfUnused: true,
+      maxCount: 1,
+    },
   ],
 
   // We are at this phase once we are ready to handle user events.
