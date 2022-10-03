@@ -60,7 +60,7 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Дадайце цэтлік, каб адкрываць прыватныя карткі з галоўнага экрана.</string>
+    <string name="cfr_message">Дадайце цэтлік, каб адкрываць прыватныя карткі з хатняга экрана.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Дадаць цэтлік</string>
     <!-- Text for the negative button -->

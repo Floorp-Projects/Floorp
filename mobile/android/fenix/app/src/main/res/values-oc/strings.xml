@@ -1273,6 +1273,8 @@
     <string name="onboarding_account_sign_in_header">Tornatz ont èretz</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Importatz vòstres marcapaginas, vòstre istoric e vòstres senhals dins %1$s sus aqueste aparelh.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Sincronizacion d’onglets e de senhals demest aparelhs per passar d’un ecran a l’autre sens relambi.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Se connectar</string>
     <!-- Text for the button to manually sign into Firefox account. -->
