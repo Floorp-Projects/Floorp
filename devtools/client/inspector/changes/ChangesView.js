@@ -15,12 +15,12 @@ const {
 loader.lazyRequireGetter(
   this,
   "ChangesContextMenu",
-  "devtools/client/inspector/changes/ChangesContextMenu"
+  "resource://devtools/client/inspector/changes/ChangesContextMenu.js"
 );
 loader.lazyRequireGetter(
   this,
   "clipboardHelper",
-  "devtools/shared/platform/clipboard"
+  "resource://devtools/shared/platform/clipboard.js"
 );
 
 const changesReducer = require("resource://devtools/client/inspector/changes/reducers/changes.js");

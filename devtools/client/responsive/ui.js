@@ -16,31 +16,39 @@ const {
 loader.lazyRequireGetter(
   this,
   "throttlingProfiles",
-  "devtools/client/shared/components/throttling/profiles"
+  "resource://devtools/client/shared/components/throttling/profiles.js"
 );
 loader.lazyRequireGetter(
   this,
   "message",
-  "devtools/client/responsive/utils/message"
+  "resource://devtools/client/responsive/utils/message.js"
 );
 loader.lazyRequireGetter(
   this,
   "showNotification",
-  "devtools/client/responsive/utils/notification",
+  "resource://devtools/client/responsive/utils/notification.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "PriorityLevels",
-  "devtools/client/shared/components/NotificationBox",
+  "resource://devtools/client/shared/components/NotificationBox.js",
   true
 );
-loader.lazyRequireGetter(this, "l10n", "devtools/client/responsive/utils/l10n");
-loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
+loader.lazyRequireGetter(
+  this,
+  "l10n",
+  "resource://devtools/client/responsive/utils/l10n.js"
+);
+loader.lazyRequireGetter(
+  this,
+  "asyncStorage",
+  "resource://devtools/shared/async-storage.js"
+);
 loader.lazyRequireGetter(
   this,
   "captureAndSaveScreenshot",
-  "devtools/client/shared/screenshot",
+  "resource://devtools/client/shared/screenshot.js",
   true
 );
 

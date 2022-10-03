@@ -11,14 +11,14 @@ const { DevToolsLoader } = ChromeUtils.import(
 loader.lazyRequireGetter(
   this,
   "DevToolsServer",
-  "devtools/server/devtools-server",
+  "resource://devtools/server/devtools-server.js",
   true
 );
 // eslint-disable-next-line mozilla/reject-some-requires
 loader.lazyRequireGetter(
   this,
   "DevToolsClient",
-  "devtools/client/devtools-client",
+  "resource://devtools/client/devtools-client.js",
   true
 );
 

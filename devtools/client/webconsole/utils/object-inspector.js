@@ -25,20 +25,20 @@ loader.lazyGetter(this, "ObjectInspector", function() {
 loader.lazyRequireGetter(
   this,
   "SmartTrace",
-  "devtools/client/shared/components/SmartTrace"
+  "resource://devtools/client/shared/components/SmartTrace.js"
 );
 
 loader.lazyRequireGetter(
   this,
   "LongStringFront",
-  "devtools/client/fronts/string",
+  "resource://devtools/client/fronts/string.js",
   true
 );
 
 loader.lazyRequireGetter(
   this,
   "ObjectFront",
-  "devtools/client/fronts/object",
+  "resource://devtools/client/fronts/object.js",
   true
 );
 

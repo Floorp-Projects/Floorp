@@ -7,7 +7,7 @@
 loader.lazyRequireGetter(
   this,
   "CommandsFactory",
-  "devtools/shared/commands/commands-factory",
+  "resource://devtools/shared/commands/commands-factory.js",
   true
 );
 

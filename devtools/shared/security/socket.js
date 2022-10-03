@@ -12,34 +12,34 @@ var { dumpn } = DevToolsUtils;
 loader.lazyRequireGetter(
   this,
   "WebSocketServer",
-  "devtools/server/socket/websocket-server"
+  "resource://devtools/server/socket/websocket-server.js"
 );
 loader.lazyRequireGetter(
   this,
   "DebuggerTransport",
-  "devtools/shared/transport/transport",
+  "resource://devtools/shared/transport/transport.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "WebSocketDebuggerTransport",
-  "devtools/shared/transport/websocket-transport"
+  "resource://devtools/shared/transport/websocket-transport.js"
 );
 loader.lazyRequireGetter(
   this,
   "discovery",
-  "devtools/shared/discovery/discovery"
+  "resource://devtools/shared/discovery/discovery.js"
 );
 loader.lazyRequireGetter(
   this,
   "Authenticators",
-  "devtools/shared/security/auth",
+  "resource://devtools/shared/security/auth.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "AuthenticationResult",
-  "devtools/shared/security/auth",
+  "resource://devtools/shared/security/auth.js",
   true
 );
 const lazy = {};
@@ -49,7 +49,11 @@ ChromeUtils.defineModuleGetter(
   "resource://devtools/shared/security/DevToolsSocketStatus.jsm"
 );
 
-loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
+loader.lazyRequireGetter(
+  this,
+  "EventEmitter",
+  "resource://devtools/shared/event-emitter.js"
+);
 
 DevToolsUtils.defineLazyGetter(this, "nsFile", () => {
   return Components.Constructor(

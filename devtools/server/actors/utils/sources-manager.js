@@ -14,7 +14,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "SourceActor",
-  "devtools/server/actors/source",
+  "resource://devtools/server/actors/source.js",
   true
 );
 

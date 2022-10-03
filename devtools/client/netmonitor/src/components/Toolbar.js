@@ -38,7 +38,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "KeyShortcuts",
-  "devtools/client/shared/key-shortcuts"
+  "resource://devtools/client/shared/key-shortcuts.js"
 );
 
 // MDN
@@ -116,13 +116,13 @@ loader.lazyGetter(this, "MenuList", function() {
 loader.lazyRequireGetter(
   this,
   "HarMenuUtils",
-  "devtools/client/netmonitor/src/har/har-menu-utils",
+  "resource://devtools/client/netmonitor/src/har/har-menu-utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "copyString",
-  "devtools/shared/platform/clipboard",
+  "resource://devtools/shared/platform/clipboard.js",
   true
 );
 

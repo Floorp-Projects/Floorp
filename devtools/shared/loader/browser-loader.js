@@ -18,7 +18,7 @@ const lazy = {};
 loader.lazyRequireGetter(
   lazy,
   "getMockedModule",
-  "devtools/shared/loader/browser-loader-mocks",
+  "resource://devtools/shared/loader/browser-loader-mocks.js",
   {}
 );
 

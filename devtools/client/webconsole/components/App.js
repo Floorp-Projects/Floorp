@@ -10,7 +10,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "PropTypes",
-  "devtools/client/shared/vendor/react-prop-types"
+  "resource://devtools/client/shared/vendor/react-prop-types.js"
 );
 const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const {
@@ -64,7 +64,7 @@ loader.lazyGetter(this, "NotificationBox", () =>
 loader.lazyRequireGetter(
   this,
   ["getNotificationWithValue", "PriorityLevels"],
-  "devtools/client/shared/components/NotificationBox",
+  "resource://devtools/client/shared/components/NotificationBox.js",
   true
 );
 

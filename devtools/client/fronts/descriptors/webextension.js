@@ -17,7 +17,7 @@ const DESCRIPTOR_TYPES = require("resource://devtools/client/fronts/descriptors/
 loader.lazyRequireGetter(
   this,
   "WindowGlobalTargetFront",
-  "devtools/client/fronts/targets/window-global",
+  "resource://devtools/client/fronts/targets/window-global.js",
   true
 );
 

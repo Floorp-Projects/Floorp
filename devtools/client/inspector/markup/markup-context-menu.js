@@ -9,16 +9,20 @@ const {
 } = require("resource://devtools/shared/css/constants.js");
 const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 
-loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
+loader.lazyRequireGetter(
+  this,
+  "Menu",
+  "resource://devtools/client/framework/menu.js"
+);
 loader.lazyRequireGetter(
   this,
   "MenuItem",
-  "devtools/client/framework/menu-item"
+  "resource://devtools/client/framework/menu-item.js"
 );
 loader.lazyRequireGetter(
   this,
   "clipboardHelper",
-  "devtools/shared/platform/clipboard"
+  "resource://devtools/shared/platform/clipboard.js"
 );
 
 loader.lazyGetter(this, "TOOLBOX_L10N", function() {

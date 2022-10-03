@@ -15,18 +15,23 @@ const { openDocLink } = require("resource://devtools/client/shared/link.js");
 const {
   A11Y_CONTRAST_LEARN_MORE_LINK,
 } = require("resource://devtools/client/accessibility/constants.js");
-loader.lazyRequireGetter(this, "throttle", "devtools/shared/throttle", true);
+loader.lazyRequireGetter(
+  this,
+  "throttle",
+  "resource://devtools/shared/throttle.js",
+  true
+);
 
 loader.lazyRequireGetter(
   this,
   ["getFocusableElements", "wrapMoveFocus"],
-  "devtools/client/shared/focus",
+  "resource://devtools/client/shared/focus.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "PICKER_TYPES",
-  "devtools/shared/picker-constants"
+  "resource://devtools/shared/picker-constants.js"
 );
 
 const TELEMETRY_PICKER_EYEDROPPER_OPEN_COUNT =

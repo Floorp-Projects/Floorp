@@ -11,28 +11,28 @@ const { assert } = DevToolsUtils;
 loader.lazyRequireGetter(
   this,
   "LongStringActor",
-  "devtools/server/actors/string",
+  "resource://devtools/server/actors/string.js",
   true
 );
 
 loader.lazyRequireGetter(
   this,
   "symbolGrip",
-  "devtools/server/actors/object/symbol",
+  "resource://devtools/server/actors/object/symbol.js",
   true
 );
 
 loader.lazyRequireGetter(
   this,
   "ObjectActor",
-  "devtools/server/actors/object",
+  "resource://devtools/server/actors/object.js",
   true
 );
 
 loader.lazyRequireGetter(
   this,
   "EnvironmentActor",
-  "devtools/server/actors/environment",
+  "resource://devtools/server/actors/environment.js",
   true
 );
 

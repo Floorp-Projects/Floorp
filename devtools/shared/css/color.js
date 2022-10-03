@@ -10,13 +10,13 @@ const { cssColors } = require("devtools/shared/css/color-db");
 loader.lazyRequireGetter(
   this,
   "CSS_ANGLEUNIT",
-  "devtools/shared/css/constants",
+  "resource://devtools/shared/css/constants.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "getAngleValueInDegrees",
-  "devtools/shared/css/parsing-utils",
+  "resource://devtools/shared/css/parsing-utils.js",
   true
 );
 

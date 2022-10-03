@@ -7,12 +7,12 @@
 loader.lazyRequireGetter(
   this,
   "NetworkHelper",
-  "devtools/shared/webconsole/network-helper"
+  "resource://devtools/shared/webconsole/network-helper.js"
 );
 loader.lazyRequireGetter(
   this,
   "CacheEntry",
-  "devtools/shared/platform/cache-entry",
+  "resource://devtools/shared/platform/cache-entry.js",
   true
 );
 

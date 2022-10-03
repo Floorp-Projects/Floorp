@@ -31,22 +31,22 @@ const FrameView = createFactory(
 loader.lazyRequireGetter(
   this,
   "CollapseButton",
-  "devtools/client/webconsole/components/Output/CollapseButton"
+  "resource://devtools/client/webconsole/components/Output/CollapseButton.js"
 );
 loader.lazyRequireGetter(
   this,
   "MessageRepeat",
-  "devtools/client/webconsole/components/Output/MessageRepeat"
+  "resource://devtools/client/webconsole/components/Output/MessageRepeat.js"
 );
 loader.lazyRequireGetter(
   this,
   "PropTypes",
-  "devtools/client/shared/vendor/react-prop-types"
+  "resource://devtools/client/shared/vendor/react-prop-types.js"
 );
 loader.lazyRequireGetter(
   this,
   "SmartTrace",
-  "devtools/client/shared/components/SmartTrace"
+  "resource://devtools/client/shared/components/SmartTrace.js"
 );
 
 class Message extends Component {

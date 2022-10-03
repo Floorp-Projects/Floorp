@@ -20,7 +20,7 @@ loader.lazyGetter(this, "TextNode", function() {
 loader.lazyRequireGetter(
   this,
   "translateNodeFrontToGrip",
-  "devtools/client/inspector/shared/utils",
+  "resource://devtools/client/inspector/shared/utils.js",
   true
 );
 

@@ -13,31 +13,31 @@ const { objectSpec } = require("resource://devtools/shared/specs/object.js");
 loader.lazyRequireGetter(
   this,
   "PropertyIteratorActor",
-  "devtools/server/actors/object/property-iterator",
+  "resource://devtools/server/actors/object/property-iterator.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "SymbolIteratorActor",
-  "devtools/server/actors/object/symbol-iterator",
+  "resource://devtools/server/actors/object/symbol-iterator.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "PrivatePropertiesIteratorActor",
-  "devtools/server/actors/object/private-properties-iterator",
+  "resource://devtools/server/actors/object/private-properties-iterator.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "previewers",
-  "devtools/server/actors/object/previewers"
+  "resource://devtools/server/actors/object/previewers.js"
 );
 
 loader.lazyRequireGetter(
   this,
   "makeSideeffectFreeDebugger",
-  "devtools/server/actors/webconsole/eval-with-debugger",
+  "resource://devtools/server/actors/webconsole/eval-with-debugger.js",
   true
 );
 

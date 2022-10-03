@@ -16,13 +16,13 @@ const InspectorUtils = require("InspectorUtils");
 loader.lazyRequireGetter(
   this,
   "UPDATE_GENERAL",
-  "devtools/server/actors/style-sheet",
+  "resource://devtools/server/actors/style-sheet.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "hasStyleSheetWatcherSupportForTarget",
-  "devtools/server/actors/utils/stylesheets-manager",
+  "resource://devtools/server/actors/utils/stylesheets-manager.js",
   true
 );
 

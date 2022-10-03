@@ -12,7 +12,11 @@ const {
 
 const historyActions = require("resource://devtools/client/webconsole/actions/history.js");
 
-loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
+loader.lazyRequireGetter(
+  this,
+  "asyncStorage",
+  "resource://devtools/shared/async-storage.js"
+);
 
 /**
  * History persistence middleware is responsible for loading

@@ -25,7 +25,7 @@ const flags = require("resource://devtools/shared/flags.js");
 loader.lazyRequireGetter(
   this,
   "log",
-  "devtools/client/shared/redux/middleware/log",
+  "resource://devtools/client/shared/redux/middleware/log.js",
   true
 );
 

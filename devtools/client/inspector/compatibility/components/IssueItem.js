@@ -17,7 +17,7 @@ const Localized = createFactory(FluentReact.Localized);
 loader.lazyRequireGetter(
   this,
   "openDocLink",
-  "devtools/client/shared/link",
+  "resource://devtools/client/shared/link.js",
   true
 );
 
@@ -35,7 +35,7 @@ const NodePane = createFactory(
 loader.lazyRequireGetter(
   this,
   "toSnakeCase",
-  "devtools/client/inspector/compatibility/utils/cases",
+  "resource://devtools/client/inspector/compatibility/utils/cases.js",
   true
 );
 

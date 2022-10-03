@@ -17,29 +17,33 @@ const {
 loader.lazyRequireGetter(
   this,
   "parseURL",
-  "devtools/client/shared/source-utils",
+  "resource://devtools/client/shared/source-utils.js",
   true
 );
-loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
+loader.lazyRequireGetter(
+  this,
+  "asyncStorage",
+  "resource://devtools/shared/async-storage.js"
+);
 loader.lazyRequireGetter(
   this,
   "gridsReducer",
-  "devtools/client/inspector/grids/reducers/grids"
+  "resource://devtools/client/inspector/grids/reducers/grids.js"
 );
 loader.lazyRequireGetter(
   this,
   "highlighterSettingsReducer",
-  "devtools/client/inspector/grids/reducers/highlighter-settings"
+  "resource://devtools/client/inspector/grids/reducers/highlighter-settings.js"
 );
 loader.lazyRequireGetter(
   this,
   "flexboxReducer",
-  "devtools/client/inspector/flexbox/reducers/flexbox"
+  "resource://devtools/client/inspector/flexbox/reducers/flexbox.js"
 );
 loader.lazyRequireGetter(
   this,
   "deepEqual",
-  "devtools/shared/DevToolsUtils",
+  "resource://devtools/shared/DevToolsUtils.js",
   true
 );
 

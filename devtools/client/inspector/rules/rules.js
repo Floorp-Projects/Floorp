@@ -28,45 +28,45 @@ const DOUBLESPACE = "  ";
 loader.lazyRequireGetter(
   this,
   ["flashElementOn", "flashElementOff"],
-  "devtools/client/inspector/markup/utils",
+  "resource://devtools/client/inspector/markup/utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "ClassListPreviewer",
-  "devtools/client/inspector/rules/views/class-list-previewer"
+  "resource://devtools/client/inspector/rules/views/class-list-previewer.js"
 );
 loader.lazyRequireGetter(
   this,
   "getNodeInfo",
-  "devtools/client/inspector/rules/utils/utils",
+  "resource://devtools/client/inspector/rules/utils/utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "getNodeCompatibilityInfo",
-  "devtools/client/inspector/rules/utils/utils",
+  "resource://devtools/client/inspector/rules/utils/utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "StyleInspectorMenu",
-  "devtools/client/inspector/shared/style-inspector-menu"
+  "resource://devtools/client/inspector/shared/style-inspector-menu.js"
 );
 loader.lazyRequireGetter(
   this,
   "AutocompletePopup",
-  "devtools/client/shared/autocomplete-popup"
+  "resource://devtools/client/shared/autocomplete-popup.js"
 );
 loader.lazyRequireGetter(
   this,
   "KeyShortcuts",
-  "devtools/client/shared/key-shortcuts"
+  "resource://devtools/client/shared/key-shortcuts.js"
 );
 loader.lazyRequireGetter(
   this,
   "clipboardHelper",
-  "devtools/shared/platform/clipboard"
+  "resource://devtools/shared/platform/clipboard.js"
 );
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";

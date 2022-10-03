@@ -24,16 +24,21 @@ const SEPARATOR_GUID = "{9d414cc5-8319-0a04-0586-c0a6ae01670a}";
 loader.lazyRequireGetter(
   this,
   "TreeWidget",
-  "devtools/client/shared/widgets/TreeWidget",
+  "resource://devtools/client/shared/widgets/TreeWidget.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "TableWidget",
-  "devtools/client/shared/widgets/TableWidget",
+  "resource://devtools/client/shared/widgets/TableWidget.js",
   true
 );
-loader.lazyRequireGetter(this, "debounce", "devtools/shared/debounce", true);
+loader.lazyRequireGetter(
+  this,
+  "debounce",
+  "resource://devtools/shared/debounce.js",
+  true
+);
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,

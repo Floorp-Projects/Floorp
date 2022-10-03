@@ -18,32 +18,36 @@ const {
 loader.lazyRequireGetter(
   this,
   "AccessibleActor",
-  "devtools/server/actors/accessibility/accessible",
+  "resource://devtools/server/actors/accessibility/accessible.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   ["CustomHighlighterActor"],
-  "devtools/server/actors/highlighters",
+  "resource://devtools/server/actors/highlighters.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "DevToolsUtils",
-  "devtools/shared/DevToolsUtils"
+  "resource://devtools/shared/DevToolsUtils.js"
 );
-loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
+loader.lazyRequireGetter(
+  this,
+  "events",
+  "resource://devtools/shared/event-emitter.js"
+);
 loader.lazyRequireGetter(
   this,
   ["getCurrentZoom", "isWindowIncluded", "isFrameWithChildTarget"],
-  "devtools/shared/layout/utils",
+  "resource://devtools/shared/layout/utils.js",
   true
 );
 loader.lazyRequireGetter(this, "InspectorUtils", "InspectorUtils");
 loader.lazyRequireGetter(
   this,
   "isXUL",
-  "devtools/server/actors/highlighters/utils/markup",
+  "resource://devtools/server/actors/highlighters/utils/markup.js",
   true
 );
 loader.lazyRequireGetter(
@@ -53,13 +57,13 @@ loader.lazyRequireGetter(
     "loadSheetForBackgroundCalculation",
     "removeSheetForBackgroundCalculation",
   ],
-  "devtools/server/actors/utils/accessibility",
+  "resource://devtools/server/actors/utils/accessibility.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "accessibility",
-  "devtools/shared/constants",
+  "resource://devtools/shared/constants.js",
   true
 );
 

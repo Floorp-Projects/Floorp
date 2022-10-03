@@ -28,41 +28,41 @@ loader.lazyServiceGetter(
 loader.lazyRequireGetter(
   this,
   "messagesActions",
-  "devtools/client/webconsole/actions/messages"
+  "resource://devtools/client/webconsole/actions/messages.js"
 );
 loader.lazyRequireGetter(
   this,
   "historyActions",
-  "devtools/client/webconsole/actions/history"
+  "resource://devtools/client/webconsole/actions/history.js"
 );
 loader.lazyRequireGetter(
   this,
   "ConsoleCommand",
-  "devtools/client/webconsole/types",
+  "resource://devtools/client/webconsole/types.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "netmonitorBlockingActions",
-  "devtools/client/netmonitor/src/actions/request-blocking"
+  "resource://devtools/client/netmonitor/src/actions/request-blocking.js"
 );
 
 loader.lazyRequireGetter(
   this,
   ["saveScreenshot", "captureAndSaveScreenshot"],
-  "devtools/client/shared/screenshot",
+  "resource://devtools/client/shared/screenshot.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "createSimpleTableMessage",
-  "devtools/client/webconsole/utils/messages",
+  "resource://devtools/client/webconsole/utils/messages.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "getSelectedTarget",
-  "devtools/shared/commands/target/selectors/targets",
+  "resource://devtools/shared/commands/target/selectors/targets.js",
   true
 );
 

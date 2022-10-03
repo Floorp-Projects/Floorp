@@ -7,7 +7,7 @@
 loader.lazyRequireGetter(
   this,
   "CombinedProgress",
-  "devtools/client/accessibility/utils/audit",
+  "resource://devtools/client/accessibility/utils/audit.js",
   true
 );
 

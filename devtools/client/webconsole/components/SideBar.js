@@ -17,33 +17,33 @@ const GridElementWidthResizer = createFactory(
 loader.lazyRequireGetter(
   this,
   "dom",
-  "devtools/client/shared/vendor/react-dom-factories"
+  "resource://devtools/client/shared/vendor/react-dom-factories.js"
 );
 loader.lazyRequireGetter(
   this,
   "getObjectInspector",
-  "devtools/client/webconsole/utils/object-inspector",
+  "resource://devtools/client/webconsole/utils/object-inspector.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "actions",
-  "devtools/client/webconsole/actions/index"
+  "resource://devtools/client/webconsole/actions/index.js"
 );
 loader.lazyRequireGetter(
   this,
   "PropTypes",
-  "devtools/client/shared/vendor/react-prop-types"
+  "resource://devtools/client/shared/vendor/react-prop-types.js"
 );
 loader.lazyRequireGetter(
   this,
   "reps",
-  "devtools/client/shared/components/reps/index"
+  "resource://devtools/client/shared/components/reps/index.js"
 );
 loader.lazyRequireGetter(
   this,
   "l10n",
-  "devtools/client/webconsole/utils/messages",
+  "resource://devtools/client/webconsole/utils/messages.js",
   true
 );
 

@@ -8,17 +8,26 @@ const {
   CommandsFactory,
 } = require("resource://devtools/shared/commands/commands-factory.js");
 
-loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
-loader.lazyRequireGetter(this, "l10n", "devtools/client/webconsole/utils/l10n");
+loader.lazyRequireGetter(
+  this,
+  "Tools",
+  "resource://devtools/client/definitions.js",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "l10n",
+  "resource://devtools/client/webconsole/utils/l10n.js"
+);
 loader.lazyRequireGetter(
   this,
   "BrowserConsole",
-  "devtools/client/webconsole/browser-console"
+  "resource://devtools/client/webconsole/browser-console.js"
 );
 loader.lazyRequireGetter(
   this,
   "PREFS",
-  "devtools/client/webconsole/constants",
+  "resource://devtools/client/webconsole/constants.js",
   true
 );
 

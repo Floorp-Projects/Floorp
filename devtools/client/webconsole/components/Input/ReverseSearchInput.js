@@ -22,29 +22,29 @@ const {
 loader.lazyRequireGetter(
   this,
   "PropTypes",
-  "devtools/client/shared/vendor/react-prop-types"
+  "resource://devtools/client/shared/vendor/react-prop-types.js"
 );
 loader.lazyRequireGetter(
   this,
   "actions",
-  "devtools/client/webconsole/actions/index"
+  "resource://devtools/client/webconsole/actions/index.js"
 );
 loader.lazyRequireGetter(
   this,
   "l10n",
-  "devtools/client/webconsole/utils/messages",
+  "resource://devtools/client/webconsole/utils/messages.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "PluralForm",
-  "devtools/shared/plural-form",
+  "resource://devtools/shared/plural-form.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "KeyCodes",
-  "devtools/client/shared/keycodes",
+  "resource://devtools/client/shared/keycodes.js",
   true
 );
 

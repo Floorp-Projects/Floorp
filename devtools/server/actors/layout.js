@@ -21,37 +21,37 @@ const {
 loader.lazyRequireGetter(
   this,
   "CssLogic",
-  "devtools/server/actors/inspector/css-logic",
+  "resource://devtools/server/actors/inspector/css-logic.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "findGridParentContainerForNode",
-  "devtools/server/actors/inspector/utils",
+  "resource://devtools/server/actors/inspector/utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "getCSSStyleRules",
-  "devtools/shared/inspector/css-logic",
+  "resource://devtools/shared/inspector/css-logic.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "isCssPropertyKnown",
-  "devtools/server/actors/css-properties",
+  "resource://devtools/server/actors/css-properties.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "parseDeclarations",
-  "devtools/shared/css/parsing-utils",
+  "resource://devtools/shared/css/parsing-utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "nodeConstants",
-  "devtools/shared/dom-node-constants"
+  "resource://devtools/shared/dom-node-constants.js"
 );
 
 const SUBGRID_ENABLED = Services.prefs.getBoolPref(

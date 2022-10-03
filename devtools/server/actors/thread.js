@@ -39,43 +39,43 @@ const {
 loader.lazyRequireGetter(
   this,
   "EnvironmentActor",
-  "devtools/server/actors/environment",
+  "resource://devtools/server/actors/environment.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "BreakpointActorMap",
-  "devtools/server/actors/utils/breakpoint-actor-map",
+  "resource://devtools/server/actors/utils/breakpoint-actor-map.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "PauseScopedObjectActor",
-  "devtools/server/actors/pause-scoped",
+  "resource://devtools/server/actors/pause-scoped.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "EventLoop",
-  "devtools/server/actors/utils/event-loop",
+  "resource://devtools/server/actors/utils/event-loop.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   ["FrameActor", "getSavedFrameParent", "isValidSavedFrame"],
-  "devtools/server/actors/frame",
+  "resource://devtools/server/actors/frame.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "HighlighterEnvironment",
-  "devtools/server/actors/highlighters",
+  "resource://devtools/server/actors/highlighters.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "PausedDebuggerOverlay",
-  "devtools/server/actors/highlighters/paused-debugger",
+  "resource://devtools/server/actors/highlighters/paused-debugger.js",
   true
 );
 

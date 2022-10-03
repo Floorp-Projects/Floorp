@@ -10,7 +10,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 loader.lazyRequireGetter(
   this,
   "WorkerDescriptorActor",
-  "devtools/server/actors/descriptors/worker",
+  "resource://devtools/server/actors/descriptors/worker.js",
   true
 );
 

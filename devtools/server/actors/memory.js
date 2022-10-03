@@ -13,7 +13,7 @@ const { memorySpec } = require("resource://devtools/shared/specs/memory.js");
 loader.lazyRequireGetter(
   this,
   "StackFrameCache",
-  "devtools/server/actors/utils/stack",
+  "resource://devtools/server/actors/utils/stack.js",
   true
 );
 

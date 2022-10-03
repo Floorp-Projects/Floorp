@@ -11,7 +11,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "HarExporter",
-  "devtools/client/netmonitor/src/har/har-exporter",
+  "resource://devtools/client/netmonitor/src/har/har-exporter.js",
   true
 );
 

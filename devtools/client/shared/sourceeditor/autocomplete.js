@@ -9,13 +9,13 @@ const AutocompletePopup = require("resource://devtools/client/shared/autocomplet
 loader.lazyRequireGetter(
   this,
   "KeyCodes",
-  "devtools/client/shared/keycodes",
+  "resource://devtools/client/shared/keycodes.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "CSSCompleter",
-  "devtools/client/shared/sourceeditor/css-autocompleter"
+  "resource://devtools/client/shared/sourceeditor/css-autocompleter.js"
 );
 
 const autocompleteMap = new WeakMap();

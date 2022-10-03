@@ -52,7 +52,7 @@ const L10N = new LocalizationHelper(
 loader.lazyRequireGetter(
   this,
   "wasm",
-  "devtools/client/shared/sourceeditor/wasm"
+  "resource://devtools/client/shared/sourceeditor/wasm.js"
 );
 
 const { OS } = Services.appinfo;

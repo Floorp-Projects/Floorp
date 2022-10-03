@@ -4,7 +4,11 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "prompt", "devtools/shared/security/prompt");
+loader.lazyRequireGetter(
+  this,
+  "prompt",
+  "resource://devtools/shared/security/prompt.js"
+);
 
 /**
  * A simple enum-like object with keys mirrored to values.

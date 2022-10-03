@@ -10,7 +10,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 loader.lazyRequireGetter(
   this,
   "ServiceWorkerRegistrationActor",
-  "devtools/server/actors/worker/service-worker-registration",
+  "resource://devtools/server/actors/worker/service-worker-registration.js",
   true
 );
 

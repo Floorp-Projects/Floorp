@@ -9,7 +9,7 @@ var DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 loader.lazyRequireGetter(
   this,
   "MainThreadWorkerDebuggerTransport",
-  "devtools/shared/transport/worker-transport",
+  "resource://devtools/shared/transport/worker-transport.js",
   true
 );
 

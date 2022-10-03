@@ -28,14 +28,14 @@ const lazy = {};
 loader.lazyRequireGetter(
   lazy,
   "KeyCodes",
-  "devtools/client/shared/keycodes",
+  "resource://devtools/client/shared/keycodes.js",
   true
 );
 
 loader.lazyRequireGetter(
   lazy,
   "OriginalSource",
-  "devtools/client/styleeditor/original-source",
+  "resource://devtools/client/styleeditor/original-source.js",
   true
 );
 
@@ -52,18 +52,18 @@ ChromeUtils.defineModuleGetter(
 loader.lazyRequireGetter(
   lazy,
   "ResponsiveUIManager",
-  "devtools/client/responsive/manager"
+  "resource://devtools/client/responsive/manager.js"
 );
 loader.lazyRequireGetter(
   lazy,
   "openContentLink",
-  "devtools/client/shared/link",
+  "resource://devtools/client/shared/link.js",
   true
 );
 loader.lazyRequireGetter(
   lazy,
   "copyString",
-  "devtools/shared/platform/clipboard",
+  "resource://devtools/shared/platform/clipboard.js",
   true
 );
 

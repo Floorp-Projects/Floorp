@@ -14,18 +14,18 @@ const {
 loader.lazyRequireGetter(
   this,
   "EditingSession",
-  "devtools/client/inspector/boxmodel/utils/editing-session"
+  "resource://devtools/client/inspector/boxmodel/utils/editing-session.js"
 );
 loader.lazyRequireGetter(
   this,
   "InplaceEditor",
-  "devtools/client/shared/inplace-editor",
+  "resource://devtools/client/shared/inplace-editor.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "RulePreviewTooltip",
-  "devtools/client/shared/widgets/tooltip/RulePreviewTooltip"
+  "resource://devtools/client/shared/widgets/tooltip/RulePreviewTooltip.js"
 );
 
 const NUMERIC = /^-?[\d\.]+$/;

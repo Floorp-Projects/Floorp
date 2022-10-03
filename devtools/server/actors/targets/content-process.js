@@ -35,13 +35,13 @@ const { TargetActorRegistry } = ChromeUtils.importESModule(
 loader.lazyRequireGetter(
   this,
   "WorkerDescriptorActorList",
-  "devtools/server/actors/worker/worker-descriptor-actor-list",
+  "resource://devtools/server/actors/worker/worker-descriptor-actor-list.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "MemoryActor",
-  "devtools/server/actors/memory",
+  "resource://devtools/server/actors/memory.js",
   true
 );
 

@@ -23,7 +23,7 @@ const Resources = require("resource://devtools/server/actors/resources/index.js"
 loader.lazyRequireGetter(
   this,
   "ProcessDescriptorActor",
-  "devtools/server/actors/descriptors/process",
+  "resource://devtools/server/actors/descriptors/process.js",
   true
 );
 

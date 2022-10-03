@@ -17,27 +17,31 @@ const {
 loader.lazyRequireGetter(
   this,
   "Authentication",
-  "devtools/shared/security/auth"
+  "resource://devtools/shared/security/auth.js"
 );
 loader.lazyRequireGetter(
   this,
   "DebuggerSocket",
-  "devtools/shared/security/socket",
+  "resource://devtools/shared/security/socket.js",
   true
 );
-loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
+loader.lazyRequireGetter(
+  this,
+  "EventEmitter",
+  "resource://devtools/shared/event-emitter.js"
+);
 
 loader.lazyRequireGetter(
   this,
   ["createRootFront", "Front"],
-  "devtools/shared/protocol",
+  "resource://devtools/shared/protocol.js",
   true
 );
 
 loader.lazyRequireGetter(
   this,
   "ObjectFront",
-  "devtools/client/fronts/object",
+  "resource://devtools/client/fronts/object.js",
   true
 );
 

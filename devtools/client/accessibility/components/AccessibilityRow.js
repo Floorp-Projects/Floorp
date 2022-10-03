@@ -52,11 +52,15 @@ const {
   L10N,
 } = require("resource://devtools/client/accessibility/utils/l10n.js");
 
-loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
+loader.lazyRequireGetter(
+  this,
+  "Menu",
+  "resource://devtools/client/framework/menu.js"
+);
 loader.lazyRequireGetter(
   this,
   "MenuItem",
-  "devtools/client/framework/menu-item"
+  "resource://devtools/client/framework/menu-item.js"
 );
 
 const {

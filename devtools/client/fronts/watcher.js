@@ -12,19 +12,19 @@ const {
 loader.lazyRequireGetter(
   this,
   "WindowGlobalTargetFront",
-  "devtools/client/fronts/targets/window-global",
+  "resource://devtools/client/fronts/targets/window-global.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "ContentProcessTargetFront",
-  "devtools/client/fronts/targets/content-process",
+  "resource://devtools/client/fronts/targets/content-process.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "WorkerTargetFront",
-  "devtools/client/fronts/targets/worker",
+  "resource://devtools/client/fronts/targets/worker.js",
   true
 );
 

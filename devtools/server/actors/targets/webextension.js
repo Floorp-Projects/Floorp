@@ -32,7 +32,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "unwrapDebuggerObjectGlobal",
-  "devtools/server/actors/thread",
+  "resource://devtools/server/actors/thread.js",
   true
 );
 

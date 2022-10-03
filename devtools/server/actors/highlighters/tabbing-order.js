@@ -13,13 +13,13 @@ ChromeUtils.defineModuleGetter(
 loader.lazyRequireGetter(
   this,
   ["isFrameWithChildTarget", "isWindowIncluded"],
-  "devtools/shared/layout/utils",
+  "resource://devtools/shared/layout/utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "NodeTabbingOrderHighlighter",
-  "devtools/server/actors/highlighters/node-tabbing-order",
+  "resource://devtools/server/actors/highlighters/node-tabbing-order.js",
   true
 );
 

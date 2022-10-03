@@ -12,7 +12,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "ObjectUtils",
-  "devtools/server/actors/object/utils"
+  "resource://devtools/server/actors/object/utils.js"
 );
 
 /**

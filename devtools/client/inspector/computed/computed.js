@@ -28,22 +28,22 @@ const TooltipsOverlay = require("resource://devtools/client/inspector/shared/too
 loader.lazyRequireGetter(
   this,
   "StyleInspectorMenu",
-  "devtools/client/inspector/shared/style-inspector-menu"
+  "resource://devtools/client/inspector/shared/style-inspector-menu.js"
 );
 loader.lazyRequireGetter(
   this,
   "KeyShortcuts",
-  "devtools/client/shared/key-shortcuts"
+  "resource://devtools/client/shared/key-shortcuts.js"
 );
 loader.lazyRequireGetter(
   this,
   "clipboardHelper",
-  "devtools/shared/platform/clipboard"
+  "resource://devtools/shared/platform/clipboard.js"
 );
 loader.lazyRequireGetter(
   this,
   "openContentLink",
-  "devtools/client/shared/link",
+  "resource://devtools/client/shared/link.js",
   true
 );
 

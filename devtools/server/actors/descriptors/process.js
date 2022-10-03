@@ -40,25 +40,25 @@ const {
 loader.lazyRequireGetter(
   this,
   "ContentProcessTargetActor",
-  "devtools/server/actors/targets/content-process",
+  "resource://devtools/server/actors/targets/content-process.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "ParentProcessTargetActor",
-  "devtools/server/actors/targets/parent-process",
+  "resource://devtools/server/actors/targets/parent-process.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "connectToContentProcess",
-  "devtools/server/connectors/content-process-connector",
+  "resource://devtools/server/connectors/content-process-connector.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "WatcherActor",
-  "devtools/server/actors/watcher",
+  "resource://devtools/server/actors/watcher.js",
   true
 );
 

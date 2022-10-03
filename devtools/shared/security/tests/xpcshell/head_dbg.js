@@ -16,7 +16,7 @@ const { DevToolsClient } = require("devtools/client/devtools-client");
 loader.lazyRequireGetter(
   this,
   "SocketListener",
-  "devtools/shared/security/socket",
+  "resource://devtools/shared/security/socket.js",
   true
 );
 

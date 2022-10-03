@@ -82,7 +82,7 @@ loader.lazyGetter(
 loader.lazyRequireGetter(
   this,
   "ResponsiveUIManager",
-  "devtools/client/responsive/manager"
+  "resource://devtools/client/responsive/manager.js"
 );
 
 const lazy = {};
@@ -94,12 +94,12 @@ ChromeUtils.defineModuleGetter(
 loader.lazyRequireGetter(
   this,
   "DevToolsExperimentalPrefs",
-  "devtools/client/devtools-experimental-prefs"
+  "resource://devtools/client/devtools-experimental-prefs.js"
 );
 loader.lazyRequireGetter(
   this,
   "captureAndSaveScreenshot",
-  "devtools/client/shared/screenshot",
+  "resource://devtools/client/shared/screenshot.js",
   true
 );
 

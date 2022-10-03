@@ -6,45 +6,57 @@
 
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
-loader.lazyRequireGetter(this, "ResponsiveUI", "devtools/client/responsive/ui");
+loader.lazyRequireGetter(
+  this,
+  "ResponsiveUI",
+  "resource://devtools/client/responsive/ui.js"
+);
 loader.lazyRequireGetter(
   this,
   "startup",
-  "devtools/client/responsive/utils/window",
+  "resource://devtools/client/responsive/utils/window.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "showNotification",
-  "devtools/client/responsive/utils/notification",
+  "resource://devtools/client/responsive/utils/notification.js",
   true
 );
-loader.lazyRequireGetter(this, "l10n", "devtools/client/responsive/utils/l10n");
+loader.lazyRequireGetter(
+  this,
+  "l10n",
+  "resource://devtools/client/responsive/utils/l10n.js"
+);
 loader.lazyRequireGetter(
   this,
   "PriorityLevels",
-  "devtools/client/shared/components/NotificationBox",
+  "resource://devtools/client/shared/components/NotificationBox.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "TabDescriptorFactory",
-  "devtools/client/framework/tab-descriptor-factory",
+  "resource://devtools/client/framework/tab-descriptor-factory.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "gDevTools",
-  "devtools/client/framework/devtools",
+  "resource://devtools/client/framework/devtools.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "gDevToolsBrowser",
-  "devtools/client/framework/devtools-browser",
+  "resource://devtools/client/framework/devtools-browser.js",
   true
 );
-loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
+loader.lazyRequireGetter(
+  this,
+  "Telemetry",
+  "resource://devtools/client/shared/telemetry.js"
+);
 
 /**
  * ResponsiveUIManager is the external API for the browser UI, etc. to use when

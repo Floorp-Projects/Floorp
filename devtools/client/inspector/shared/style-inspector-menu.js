@@ -12,22 +12,26 @@ const {
   VIEW_NODE_LOCATION_TYPE,
 } = require("resource://devtools/client/inspector/shared/node-types.js");
 
-loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
+loader.lazyRequireGetter(
+  this,
+  "Menu",
+  "resource://devtools/client/framework/menu.js"
+);
 loader.lazyRequireGetter(
   this,
   "MenuItem",
-  "devtools/client/framework/menu-item"
+  "resource://devtools/client/framework/menu-item.js"
 );
 loader.lazyRequireGetter(
   this,
   "getRuleFromNode",
-  "devtools/client/inspector/rules/utils/utils",
+  "resource://devtools/client/inspector/rules/utils/utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "clipboardHelper",
-  "devtools/shared/platform/clipboard"
+  "resource://devtools/shared/platform/clipboard.js"
 );
 
 const STYLE_INSPECTOR_PROPERTIES =

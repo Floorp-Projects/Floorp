@@ -14,7 +14,7 @@ if (!isWorker) {
   loader.lazyRequireGetter(
     this,
     "getSyntaxTrees",
-    "devtools/shared/webconsole/parser-helper",
+    "resource://devtools/shared/webconsole/parser-helper.js",
     true
   );
 }
@@ -31,7 +31,7 @@ loader.lazyRequireGetter(
     "shouldInputBeAutocompleted",
     "shouldInputBeEagerlyEvaluated",
   ],
-  "devtools/shared/webconsole/analyze-input-string",
+  "resource://devtools/shared/webconsole/analyze-input-string.js",
   true
 );
 

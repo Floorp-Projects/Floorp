@@ -33,15 +33,15 @@ const {
 loader.lazyRequireGetter(
   this,
   "PropTypes",
-  "devtools/client/shared/vendor/react-prop-types"
+  "resource://devtools/client/shared/vendor/react-prop-types.js"
 );
 loader.lazyRequireGetter(
   this,
   "MessageContainer",
-  "devtools/client/webconsole/components/Output/MessageContainer",
+  "resource://devtools/client/webconsole/components/Output/MessageContainer.js",
   true
 );
-loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");
+loader.lazyRequireGetter(this, "flags", "resource://devtools/shared/flags.js");
 
 const {
   MESSAGE_TYPE,

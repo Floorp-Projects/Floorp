@@ -29,7 +29,7 @@ loader.lazyGetter(this, "MODE", function() {
 loader.lazyRequireGetter(
   this,
   "PropTypes",
-  "devtools/client/shared/vendor/react-prop-types"
+  "resource://devtools/client/shared/vendor/react-prop-types.js"
 );
 
 /**

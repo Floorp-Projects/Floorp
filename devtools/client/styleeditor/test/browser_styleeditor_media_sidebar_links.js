@@ -9,7 +9,7 @@
 loader.lazyRequireGetter(
   this,
   "ResponsiveUIManager",
-  "devtools/client/responsive/manager"
+  "resource://devtools/client/responsive/manager.js"
 );
 
 const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules.html";

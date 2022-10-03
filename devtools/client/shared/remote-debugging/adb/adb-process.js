@@ -14,13 +14,13 @@ const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 loader.lazyRequireGetter(
   this,
   "runCommand",
-  "devtools/client/shared/remote-debugging/adb/commands/index",
+  "resource://devtools/client/shared/remote-debugging/adb/commands/index.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "check",
-  "devtools/client/shared/remote-debugging/adb/adb-running-checker",
+  "resource://devtools/client/shared/remote-debugging/adb/adb-running-checker.js",
   true
 );
 

@@ -7,13 +7,13 @@ const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 loader.lazyRequireGetter(
   this,
   ["clearNamedTimeout", "setNamedTimeout"],
-  "devtools/client/shared/widgets/view-helpers",
+  "resource://devtools/client/shared/widgets/view-helpers.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "naturalSortCaseInsensitive",
-  "devtools/shared/natural-sort",
+  "resource://devtools/shared/natural-sort.js",
   true
 );
 const { KeyCodes } = require("resource://devtools/client/shared/keycodes.js");

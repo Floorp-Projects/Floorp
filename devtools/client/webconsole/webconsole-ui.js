@@ -30,13 +30,13 @@ ChromeUtils.defineModuleGetter(
 loader.lazyRequireGetter(
   this,
   "constants",
-  "devtools/client/webconsole/constants"
+  "resource://devtools/client/webconsole/constants.js"
 );
 
 loader.lazyRequireGetter(
   this,
   "START_IGNORE_ACTION",
-  "devtools/client/shared/redux/middleware/ignore",
+  "resource://devtools/client/shared/redux/middleware/ignore.js",
   true
 );
 const ZoomKeys = require("resource://devtools/client/shared/zoom-keys.js");

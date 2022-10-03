@@ -6,7 +6,7 @@
 loader.lazyRequireGetter(
   this,
   ["executeSoon", "isAsyncFunction", "reportException"],
-  "devtools/shared/DevToolsUtils",
+  "resource://devtools/shared/DevToolsUtils.js",
   true
 );
 

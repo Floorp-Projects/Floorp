@@ -55,13 +55,13 @@ const TargetActorMixin = require("resource://devtools/server/actors/targets/targ
 loader.lazyRequireGetter(
   this,
   ["ThreadActor", "unwrapDebuggerObjectGlobal"],
-  "devtools/server/actors/thread",
+  "resource://devtools/server/actors/thread.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "WorkerDescriptorActorList",
-  "devtools/server/actors/worker/worker-descriptor-actor-list",
+  "resource://devtools/server/actors/worker/worker-descriptor-actor-list.js",
   true
 );
 const lazy = {};
@@ -70,14 +70,14 @@ ChromeUtils.defineModuleGetter(lazy, "ExtensionContent", EXTENSION_CONTENT_JSM);
 loader.lazyRequireGetter(
   this,
   ["StyleSheetActor", "getSheetText"],
-  "devtools/server/actors/style-sheet",
+  "resource://devtools/server/actors/style-sheet.js",
   true
 );
 
 loader.lazyRequireGetter(
   this,
   "TouchSimulator",
-  "devtools/server/actors/emulation/touch-simulator",
+  "resource://devtools/server/actors/emulation/touch-simulator.js",
   true
 );
 

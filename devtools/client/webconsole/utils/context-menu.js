@@ -17,17 +17,22 @@ const {
 } = require("resource://devtools/client/webconsole/utils/messages.js");
 const actions = require("resource://devtools/client/webconsole/actions/index.js");
 
-loader.lazyRequireGetter(this, "saveAs", "devtools/shared/DevToolsUtils", true);
+loader.lazyRequireGetter(
+  this,
+  "saveAs",
+  "resource://devtools/shared/DevToolsUtils.js",
+  true
+);
 loader.lazyRequireGetter(
   this,
   "openContentLink",
-  "devtools/client/shared/link",
+  "resource://devtools/client/shared/link.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "getElementText",
-  "devtools/client/webconsole/utils/clipboard",
+  "resource://devtools/client/webconsole/utils/clipboard.js",
   true
 );
 

@@ -13,7 +13,7 @@ const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-t
 loader.lazyRequireGetter(
   this,
   "getNodeRep",
-  "devtools/client/inspector/shared/node-reps"
+  "resource://devtools/client/inspector/shared/node-reps.js"
 );
 
 const Types = require("resource://devtools/client/inspector/flexbox/types.js");

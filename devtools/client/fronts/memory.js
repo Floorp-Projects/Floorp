@@ -19,7 +19,7 @@ ChromeUtils.defineModuleGetter(
 loader.lazyRequireGetter(
   this,
   "HeapSnapshotFileUtils",
-  "devtools/shared/heapsnapshot/HeapSnapshotFileUtils"
+  "resource://devtools/shared/heapsnapshot/HeapSnapshotFileUtils.js"
 );
 
 class MemoryFront extends FrontClassWithSpec(memorySpec) {

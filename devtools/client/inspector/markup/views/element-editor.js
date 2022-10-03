@@ -24,7 +24,7 @@ loader.lazyRequireGetter(
     "getAutocompleteMaxWidth",
     "parseAttributeValues",
   ],
-  "devtools/client/inspector/markup/utils",
+  "resource://devtools/client/inspector/markup/utils.js",
   true
 );
 

@@ -8,11 +8,15 @@
  * not the default-enabled DevTools performance panel.
  */
 
-loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
+loader.lazyRequireGetter(
+  this,
+  "EventEmitter",
+  "resource://devtools/shared/event-emitter.js"
+);
 loader.lazyRequireGetter(
   this,
   "RecordingUtils",
-  "devtools/shared/performance-new/recording-utils"
+  "resource://devtools/shared/performance-new/recording-utils.js"
 );
 
 // Some platforms are built without the Gecko Profiler.

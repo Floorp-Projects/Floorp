@@ -25,57 +25,57 @@ const WalkerEventListener = require("resource://devtools/client/inspector/shared
 loader.lazyRequireGetter(
   this,
   ["createDOMMutationBreakpoint", "deleteDOMMutationBreakpoint"],
-  "devtools/client/framework/actions/index",
+  "resource://devtools/client/framework/actions/index.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "MarkupContextMenu",
-  "devtools/client/inspector/markup/markup-context-menu"
+  "resource://devtools/client/inspector/markup/markup-context-menu.js"
 );
 loader.lazyRequireGetter(
   this,
   "SlottedNodeContainer",
-  "devtools/client/inspector/markup/views/slotted-node-container"
+  "resource://devtools/client/inspector/markup/views/slotted-node-container.js"
 );
 loader.lazyRequireGetter(
   this,
   "getLongString",
-  "devtools/client/inspector/shared/utils",
+  "resource://devtools/client/inspector/shared/utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "openContentLink",
-  "devtools/client/shared/link",
+  "resource://devtools/client/shared/link.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "HTMLTooltip",
-  "devtools/client/shared/widgets/tooltip/HTMLTooltip",
+  "resource://devtools/client/shared/widgets/tooltip/HTMLTooltip.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "UndoStack",
-  "devtools/client/shared/undo",
+  "resource://devtools/client/shared/undo.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "clipboardHelper",
-  "devtools/shared/platform/clipboard"
+  "resource://devtools/shared/platform/clipboard.js"
 );
 loader.lazyRequireGetter(
   this,
   "beautify",
-  "devtools/shared/jsbeautify/beautify"
+  "resource://devtools/shared/jsbeautify/beautify.js"
 );
 loader.lazyRequireGetter(
   this,
   "getTabPrefs",
-  "devtools/shared/indentation",
+  "resource://devtools/shared/indentation.js",
   true
 );
 

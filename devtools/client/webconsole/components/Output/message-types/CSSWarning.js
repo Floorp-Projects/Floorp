@@ -22,7 +22,7 @@ const Message = createFactory(
 loader.lazyRequireGetter(
   this,
   "GripMessageBody",
-  "devtools/client/webconsole/components/Output/GripMessageBody"
+  "resource://devtools/client/webconsole/components/Output/GripMessageBody.js"
 );
 
 /**

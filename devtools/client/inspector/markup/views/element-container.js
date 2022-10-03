@@ -14,19 +14,19 @@ const { extend } = require("resource://devtools/shared/extend.js");
 loader.lazyRequireGetter(
   this,
   "EventTooltip",
-  "devtools/client/shared/widgets/tooltip/EventTooltipHelper",
+  "resource://devtools/client/shared/widgets/tooltip/EventTooltipHelper.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   ["setImageTooltip", "setBrokenImageTooltip"],
-  "devtools/client/shared/widgets/tooltip/ImageTooltipHelper",
+  "resource://devtools/client/shared/widgets/tooltip/ImageTooltipHelper.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "clipboardHelper",
-  "devtools/shared/platform/clipboard"
+  "resource://devtools/shared/platform/clipboard.js"
 );
 
 const PREVIEW_MAX_DIM_PREF = "devtools.inspector.imagePreviewTooltipSize";

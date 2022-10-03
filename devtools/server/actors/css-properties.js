@@ -15,7 +15,7 @@ const InspectorUtils = require("InspectorUtils");
 loader.lazyRequireGetter(
   this,
   "CSS_TYPES",
-  "devtools/shared/css/constants",
+  "resource://devtools/shared/css/constants.js",
   true
 );
 

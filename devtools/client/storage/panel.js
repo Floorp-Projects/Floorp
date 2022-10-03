@@ -6,7 +6,12 @@
 
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
-loader.lazyRequireGetter(this, "StorageUI", "devtools/client/storage/ui", true);
+loader.lazyRequireGetter(
+  this,
+  "StorageUI",
+  "resource://devtools/client/storage/ui.js",
+  true
+);
 
 class StoragePanel {
   constructor(panelWin, toolbox, commands) {

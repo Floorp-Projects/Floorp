@@ -8,7 +8,7 @@ const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants")
 loader.lazyRequireGetter(
   this,
   "DevToolsUtils",
-  "devtools/shared/DevToolsUtils"
+  "resource://devtools/shared/DevToolsUtils.js"
 );
 const lazy = {};
 ChromeUtils.defineModuleGetter(
@@ -27,7 +27,7 @@ const SHEET_TYPE = {
 loader.lazyRequireGetter(
   this,
   "setIgnoreLayoutChanges",
-  "devtools/server/actors/reflow",
+  "resource://devtools/server/actors/reflow.js",
   true
 );
 exports.setIgnoreLayoutChanges = (...args) =>

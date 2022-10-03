@@ -4,47 +4,56 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
-loader.lazyRequireGetter(this, "AsyncUtils", "devtools/shared/async-utils");
-loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");
+loader.lazyRequireGetter(
+  this,
+  "colorUtils",
+  "resource://devtools/shared/css/color.js",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "AsyncUtils",
+  "resource://devtools/shared/async-utils.js"
+);
+loader.lazyRequireGetter(this, "flags", "resource://devtools/shared/flags.js");
 loader.lazyRequireGetter(
   this,
   "DevToolsUtils",
-  "devtools/shared/DevToolsUtils"
+  "resource://devtools/shared/DevToolsUtils.js"
 );
 loader.lazyRequireGetter(
   this,
   "nodeFilterConstants",
-  "devtools/shared/dom-node-filter-constants"
+  "resource://devtools/shared/dom-node-filter-constants.js"
 );
 loader.lazyRequireGetter(
   this,
   ["isNativeAnonymous", "getAdjustedQuads"],
-  "devtools/shared/layout/utils",
+  "resource://devtools/shared/layout/utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "CssLogic",
-  "devtools/server/actors/inspector/css-logic",
+  "resource://devtools/server/actors/inspector/css-logic.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "getBackgroundFor",
-  "devtools/server/actors/accessibility/audit/contrast",
+  "resource://devtools/server/actors/accessibility/audit/contrast.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   ["loadSheetForBackgroundCalculation", "removeSheetForBackgroundCalculation"],
-  "devtools/server/actors/utils/accessibility",
+  "resource://devtools/server/actors/utils/accessibility.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "getTextProperties",
-  "devtools/shared/accessibility",
+  "resource://devtools/shared/accessibility.js",
   true
 );
 

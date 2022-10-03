@@ -27,7 +27,7 @@ const GripMessageBody = createFactory(
 loader.lazyRequireGetter(
   this,
   "PropTypes",
-  "devtools/client/shared/vendor/react-prop-types"
+  "resource://devtools/client/shared/vendor/react-prop-types.js"
 );
 
 const TABLE_ROW_MAX_ITEMS = 1000;

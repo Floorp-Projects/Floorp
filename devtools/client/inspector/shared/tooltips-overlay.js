@@ -21,43 +21,43 @@ const {
 loader.lazyRequireGetter(
   this,
   "getColor",
-  "devtools/client/shared/theme",
+  "resource://devtools/client/shared/theme.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "HTMLTooltip",
-  "devtools/client/shared/widgets/tooltip/HTMLTooltip",
+  "resource://devtools/client/shared/widgets/tooltip/HTMLTooltip.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   ["getImageDimensions", "setImageTooltip", "setBrokenImageTooltip"],
-  "devtools/client/shared/widgets/tooltip/ImageTooltipHelper",
+  "resource://devtools/client/shared/widgets/tooltip/ImageTooltipHelper.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "setVariableTooltip",
-  "devtools/client/shared/widgets/tooltip/VariableTooltipHelper",
+  "resource://devtools/client/shared/widgets/tooltip/VariableTooltipHelper.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "InactiveCssTooltipHelper",
-  "devtools/client/shared/widgets/tooltip/inactive-css-tooltip-helper",
+  "resource://devtools/client/shared/widgets/tooltip/inactive-css-tooltip-helper.js",
   false
 );
 loader.lazyRequireGetter(
   this,
   "CssCompatibilityTooltipHelper",
-  "devtools/client/shared/widgets/tooltip/css-compatibility-tooltip-helper",
+  "resource://devtools/client/shared/widgets/tooltip/css-compatibility-tooltip-helper.js",
   false
 );
 loader.lazyRequireGetter(
   this,
   "Telemetry",
-  "devtools/client/shared/telemetry",
+  "resource://devtools/client/shared/telemetry.js",
   false
 );
 

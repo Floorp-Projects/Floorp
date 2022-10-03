@@ -23,7 +23,7 @@ const {
 loader.lazyRequireGetter(
   this,
   ["getIndentationFromPrefs", "getIndentationFromString"],
-  "devtools/shared/indentation",
+  "resource://devtools/shared/indentation.js",
   true
 );
 

@@ -7,18 +7,18 @@
 loader.lazyRequireGetter(
   this,
   "ChannelEventSinkFactory",
-  "devtools/server/actors/network-monitor/channel-event-sink",
+  "resource://devtools/server/actors/network-monitor/channel-event-sink.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "NetworkUtils",
-  "devtools/server/actors/network-monitor/utils/network-utils"
+  "resource://devtools/server/actors/network-monitor/utils/network-utils.js"
 );
 loader.lazyRequireGetter(
   this,
   "WebConsoleUtils",
-  "devtools/server/actors/webconsole/utils",
+  "resource://devtools/server/actors/webconsole/utils.js",
   true
 );
 

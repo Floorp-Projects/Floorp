@@ -15,19 +15,19 @@ const {
 loader.lazyRequireGetter(
   this,
   "cssColors",
-  "devtools/shared/css/color-db",
+  "resource://devtools/shared/css/color-db.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "CSS_PROPERTIES_DB",
-  "devtools/shared/css/properties-db",
+  "resource://devtools/shared/css/properties-db.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "CSS_TYPES",
-  "devtools/shared/css/constants",
+  "resource://devtools/shared/css/constants.js",
   true
 );
 

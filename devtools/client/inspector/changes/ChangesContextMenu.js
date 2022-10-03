@@ -8,7 +8,7 @@ const Menu = require("resource://devtools/client/framework/menu.js");
 loader.lazyRequireGetter(
   this,
   "MenuItem",
-  "devtools/client/framework/menu-item"
+  "resource://devtools/client/framework/menu-item.js"
 );
 
 const {

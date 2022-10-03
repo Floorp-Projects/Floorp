@@ -13,19 +13,19 @@ const {
 loader.lazyRequireGetter(
   this,
   "promiseWarn",
-  "devtools/client/inspector/shared/utils",
+  "resource://devtools/client/inspector/shared/utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   ["parseDeclarations", "parseNamedDeclarations", "parseSingleValue"],
-  "devtools/shared/css/parsing-utils",
+  "resource://devtools/shared/css/parsing-utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "isCssVariable",
-  "devtools/client/fronts/css-properties",
+  "resource://devtools/client/fronts/css-properties.js",
   true
 );
 

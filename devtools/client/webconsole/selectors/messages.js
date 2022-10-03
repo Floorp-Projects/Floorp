@@ -6,7 +6,7 @@
 loader.lazyRequireGetter(
   this,
   ["getParentWarningGroupMessageId", "getWarningGroupType"],
-  "devtools/client/webconsole/utils/messages",
+  "resource://devtools/client/webconsole/utils/messages.js",
   true
 );
 

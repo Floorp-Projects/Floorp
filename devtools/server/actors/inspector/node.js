@@ -17,7 +17,7 @@ const {
 loader.lazyRequireGetter(
   this,
   ["getCssPath", "getXPath", "findCssSelector"],
-  "devtools/shared/inspector/css-logic",
+  "resource://devtools/shared/inspector/css-logic.js",
   true
 );
 
@@ -36,7 +36,7 @@ loader.lazyRequireGetter(
     "isShadowHost",
     "isShadowRoot",
   ],
-  "devtools/shared/layout/utils",
+  "resource://devtools/shared/layout/utils.js",
   true
 );
 
@@ -49,37 +49,37 @@ loader.lazyRequireGetter(
     "imageToImageData",
     "isNodeDead",
   ],
-  "devtools/server/actors/inspector/utils",
+  "resource://devtools/server/actors/inspector/utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "LongStringActor",
-  "devtools/server/actors/string",
+  "resource://devtools/server/actors/string.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "getFontPreviewData",
-  "devtools/server/actors/utils/style-utils",
+  "resource://devtools/server/actors/utils/style-utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "CssLogic",
-  "devtools/server/actors/inspector/css-logic",
+  "resource://devtools/server/actors/inspector/css-logic.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "EventCollector",
-  "devtools/server/actors/inspector/event-collector",
+  "resource://devtools/server/actors/inspector/event-collector.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "DOMHelpers",
-  "devtools/shared/dom-helpers",
+  "resource://devtools/shared/dom-helpers.js",
   true
 );
 

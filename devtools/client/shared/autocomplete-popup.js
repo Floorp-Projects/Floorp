@@ -9,10 +9,15 @@ const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 loader.lazyRequireGetter(
   this,
   "HTMLTooltip",
-  "devtools/client/shared/widgets/tooltip/HTMLTooltip",
+  "resource://devtools/client/shared/widgets/tooltip/HTMLTooltip.js",
   true
 );
-loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
+loader.lazyRequireGetter(
+  this,
+  "colorUtils",
+  "resource://devtools/shared/css/color.js",
+  true
+);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 let itemIdCounter = 0;

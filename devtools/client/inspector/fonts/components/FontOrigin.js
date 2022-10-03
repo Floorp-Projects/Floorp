@@ -13,7 +13,7 @@ const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-t
 loader.lazyRequireGetter(
   this,
   "clipboardHelper",
-  "devtools/shared/platform/clipboard"
+  "resource://devtools/shared/platform/clipboard.js"
 );
 
 const {

@@ -12,19 +12,19 @@ const {
 loader.lazyRequireGetter(
   this,
   "openContentLink",
-  "devtools/client/shared/link",
+  "resource://devtools/client/shared/link.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "features",
-  "devtools/client/debugger/src/utils/prefs",
+  "resource://devtools/client/debugger/src/utils/prefs.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "registerStoreObserver",
-  "devtools/client/shared/redux/subscriber",
+  "resource://devtools/client/shared/redux/subscriber.js",
   true
 );
 

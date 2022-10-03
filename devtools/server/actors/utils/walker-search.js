@@ -7,7 +7,7 @@
 loader.lazyRequireGetter(
   this,
   "isWhitespaceTextNode",
-  "devtools/server/actors/inspector/utils",
+  "resource://devtools/server/actors/inspector/utils.js",
   true
 );
 

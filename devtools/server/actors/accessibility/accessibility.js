@@ -15,19 +15,19 @@ const {
 loader.lazyRequireGetter(
   this,
   "AccessibleWalkerActor",
-  "devtools/server/actors/accessibility/walker",
+  "resource://devtools/server/actors/accessibility/walker.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "SimulatorActor",
-  "devtools/server/actors/accessibility/simulator",
+  "resource://devtools/server/actors/accessibility/simulator.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "isWebRenderEnabled",
-  "devtools/server/actors/utils/accessibility",
+  "resource://devtools/server/actors/utils/accessibility.js",
   true
 );
 

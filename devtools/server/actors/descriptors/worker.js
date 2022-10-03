@@ -31,7 +31,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "connectToWorker",
-  "devtools/server/connectors/worker-connector",
+  "resource://devtools/server/connectors/worker-connector.js",
   true
 );
 

@@ -20,14 +20,14 @@ if (typeof module == "object") {
   loader.lazyRequireGetter(
     lazy,
     "validateBreakpointLocation",
-    "devtools/shared/validate-breakpoint.jsm",
+    "resource://devtools/shared/validate-breakpoint.jsm",
     true
   );
 
   loader.lazyRequireGetter(
     lazy,
     "validateEventBreakpoint",
-    "devtools/server/actors/utils/event-breakpoints",
+    "resource://devtools/server/actors/utils/event-breakpoints.js",
     true
   );
 } else {

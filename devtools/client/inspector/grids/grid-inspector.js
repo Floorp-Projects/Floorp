@@ -23,16 +23,20 @@ const {
 loader.lazyRequireGetter(
   this,
   "compareFragmentsGeometry",
-  "devtools/client/inspector/grids/utils/utils",
+  "resource://devtools/client/inspector/grids/utils/utils.js",
   true
 );
 loader.lazyRequireGetter(
   this,
   "parseURL",
-  "devtools/client/shared/source-utils",
+  "resource://devtools/client/shared/source-utils.js",
   true
 );
-loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
+loader.lazyRequireGetter(
+  this,
+  "asyncStorage",
+  "resource://devtools/shared/async-storage.js"
+);
 
 const CSS_GRID_COUNT_HISTOGRAM_ID = "DEVTOOLS_NUMBER_OF_CSS_GRIDS_IN_A_PAGE";
 

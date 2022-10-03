@@ -9,7 +9,7 @@ const InspectorUtils = require("InspectorUtils");
 loader.lazyRequireGetter(
   this,
   "CssLogic",
-  "devtools/server/actors/inspector/css-logic",
+  "resource://devtools/server/actors/inspector/css-logic.js",
   true
 );
 
