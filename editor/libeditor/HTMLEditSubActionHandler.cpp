@@ -22,6 +22,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ContentIterator.h"
+#include "mozilla/HTMLEditHelpers.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MathAlgorithms.h"
@@ -5203,19 +5204,24 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleOutdentAtSelection(
   // HandleOutdentAtSelectionInternal() creates AutoSelectionRestorer.
   // Therefore, even if it returns NS_OK, the editor might have been destroyed
   // at restoring Selection.
-  SplitRangeOffFromNodeResult outdentResult =
+  Result<SplitRangeOffFromNodeResult, nsresult> outdentResult =
       HandleOutdentAtSelectionInternal(aEditingHost);
   if (NS_WARN_IF(Destroyed())) {
+    if (outdentResult.isOk()) {
+      outdentResult.inspect().IgnoreCaretPointSuggestion();
+    }
     return Err(NS_ERROR_EDITOR_DESTROYED);
   }
-  if (outdentResult.isErr()) {
+  if (MOZ_UNLIKELY(outdentResult.isErr())) {
     NS_WARNING("HTMLEditor::HandleOutdentAtSelectionInternal() failed");
-    return Err(outdentResult.unwrapErr());
+    return outdentResult.propagateErr();
   }
+  SplitRangeOffFromNodeResult unwrappedOutdentResult = outdentResult.unwrap();
 
   // Make sure selection didn't stick to last piece of content in old bq (only
   // a problem for collapsed selections)
-  if (!outdentResult.GetLeftContent() && !outdentResult.GetRightContent()) {
+  if (!unwrappedOutdentResult.GetLeftContent() &&
+      !unwrappedOutdentResult.GetRightContent()) {
     return EditActionResult::HandledResult();
   }
 
@@ -5224,7 +5230,7 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleOutdentAtSelection(
   }
 
   // Push selection past end of left element of last split indented element.
-  if (outdentResult.GetLeftContent()) {
+  if (unwrappedOutdentResult.GetLeftContent()) {
     const nsRange* firstRange = SelectionRef().GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return EditActionResult::HandledResult();
@@ -5233,12 +5239,13 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleOutdentAtSelection(
     if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
       return Err(NS_ERROR_FAILURE);
     }
-    if (atStartOfSelection.Container() == outdentResult.GetLeftContent() ||
+    if (atStartOfSelection.Container() ==
+            unwrappedOutdentResult.GetLeftContent() ||
         EditorUtils::IsDescendantOf(*atStartOfSelection.Container(),
-                                    *outdentResult.GetLeftContent())) {
+                                    *unwrappedOutdentResult.GetLeftContent())) {
       // Selection is inside the left node - push it past it.
       EditorRawDOMPoint afterRememberedLeftBQ(
-          EditorRawDOMPoint::After(*outdentResult.GetLeftContent()));
+          EditorRawDOMPoint::After(*unwrappedOutdentResult.GetLeftContent()));
       NS_WARNING_ASSERTION(
           afterRememberedLeftBQ.IsSet(),
           "Failed to set after remembered left blockquote element");
@@ -5253,7 +5260,7 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleOutdentAtSelection(
   }
   // And pull selection before beginning of right element of last split
   // indented element.
-  if (outdentResult.GetRightContent()) {
+  if (unwrappedOutdentResult.GetRightContent()) {
     const nsRange* firstRange = SelectionRef().GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return EditActionResult::HandledResult();
@@ -5262,11 +5269,14 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleOutdentAtSelection(
     if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
       return Err(NS_ERROR_FAILURE);
     }
-    if (atStartOfSelection.Container() == outdentResult.GetRightContent() ||
-        EditorUtils::IsDescendantOf(*atStartOfSelection.Container(),
-                                    *outdentResult.GetRightContent())) {
+    if (atStartOfSelection.Container() ==
+            unwrappedOutdentResult.GetRightContent() ||
+        EditorUtils::IsDescendantOf(
+            *atStartOfSelection.Container(),
+            *unwrappedOutdentResult.GetRightContent())) {
       // Selection is inside the right element - push it before it.
-      EditorRawDOMPoint atRememberedRightBQ(outdentResult.GetRightContent());
+      EditorRawDOMPoint atRememberedRightBQ(
+          unwrappedOutdentResult.GetRightContent());
       nsresult rv = CollapseSelectionTo(atRememberedRightBQ);
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
         return Err(NS_ERROR_EDITOR_DESTROYED);
@@ -5279,8 +5289,8 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleOutdentAtSelection(
   return EditActionResult::HandledResult();
 }
 
-SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
-    const Element& aEditingHost) {
+Result<SplitRangeOffFromNodeResult, nsresult>
+HTMLEditor::HandleOutdentAtSelectionInternal(const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   AutoSelectionRestorer restoreSelectionLater(*this);
@@ -5303,23 +5313,23 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
       NS_WARNING(
           "AutoRangeArray::CollectEditTargetNodes(EditSubAction::eOutdent, "
           "CollectNonEditableNodes::Yes) failed");
-      return SplitRangeOffFromNodeResult(rv);
+      return Err(rv);
     }
-    const Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
+    Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
         MaybeSplitElementsAtEveryBRElement(arrayOfContents,
                                            EditSubAction::eOutdent);
     if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
       NS_WARNING(
           "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
           "eOutdent) failed");
-      return SplitRangeOffFromNodeResult(splitAtBRElementsResult.inspectErr());
+      return splitAtBRElementsResult.propagateErr();
     }
     if (AllowsTransactionsToChangeSelection() &&
         splitAtBRElementsResult.inspect().IsSet()) {
       nsresult rv = CollapseSelectionTo(splitAtBRElementsResult.inspect());
       if (NS_FAILED(rv)) {
         NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-        return SplitRangeOffFromNodeResult(rv);
+        return Err(rv);
       }
     }
   }
@@ -5344,29 +5354,34 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
       if (indentedParentElement) {
         NS_WARNING_ASSERTION(indentedParentElement == content,
                              "Indented parent element is not the <blockquote>");
-        SplitRangeOffFromNodeResult outdentResult = OutdentPartOfBlock(
-            *indentedParentElement, *firstContentToBeOutdented,
-            *lastContentToBeOutdented, indentedParentIndentedWith,
-            aEditingHost);
-        if (outdentResult.isErr()) {
+        Result<SplitRangeOffFromNodeResult, nsresult> outdentResult =
+            OutdentPartOfBlock(*indentedParentElement,
+                               *firstContentToBeOutdented,
+                               *lastContentToBeOutdented,
+                               indentedParentIndentedWith, aEditingHost);
+        if (MOZ_UNLIKELY(outdentResult.isErr())) {
           NS_WARNING("HTMLEditor::OutdentPartOfBlock() failed");
           return outdentResult;
         }
-        leftContentOfLastOutdented = outdentResult.GetLeftContent();
-        middleContentOfLastOutdented = outdentResult.GetMiddleContent();
-        rightContentOfLastOutdented = outdentResult.GetRightContent();
+        SplitRangeOffFromNodeResult unwrappedOutdentResult =
+            outdentResult.unwrap();
+        unwrappedOutdentResult.IgnoreCaretPointSuggestion();
+        leftContentOfLastOutdented = unwrappedOutdentResult.UnwrapLeftContent();
+        middleContentOfLastOutdented =
+            unwrappedOutdentResult.UnwrapMiddleContent();
+        rightContentOfLastOutdented =
+            unwrappedOutdentResult.UnwrapRightContent();
         indentedParentElement = nullptr;
         firstContentToBeOutdented = nullptr;
         lastContentToBeOutdented = nullptr;
         indentedParentIndentedWith = BlockIndentedWith::HTML;
       }
-      const Result<EditorDOMPoint, nsresult> unwrapBlockquoteElementResult =
+      Result<EditorDOMPoint, nsresult> unwrapBlockquoteElementResult =
           RemoveBlockContainerWithTransaction(
               MOZ_KnownLive(*content->AsElement()));
       if (MOZ_UNLIKELY(unwrapBlockquoteElementResult.isErr())) {
         NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
-        return SplitRangeOffFromNodeResult(
-            unwrapBlockquoteElementResult.inspectErr());
+        return unwrapBlockquoteElementResult.propagateErr();
       }
       const EditorDOMPoint& pointToPutCaret =
           unwrapBlockquoteElementResult.inspect();
@@ -5374,7 +5389,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
         nsresult rv = CollapseSelectionTo(pointToPutCaret);
         if (NS_FAILED(rv)) {
           NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-          return SplitRangeOffFromNodeResult(rv);
+          return Err(rv);
         }
       }
       continue;
@@ -5386,13 +5401,13 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
       nsStaticAtom& marginProperty =
           MarginPropertyAtomForIndent(MOZ_KnownLive(content));
       if (NS_WARN_IF(Destroyed())) {
-        return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+        return Err(NS_ERROR_EDITOR_DESTROYED);
       }
       nsAutoString value;
       DebugOnly<nsresult> rvIgnored =
           CSSEditUtils::GetSpecifiedProperty(content, marginProperty, value);
       if (NS_WARN_IF(Destroyed())) {
-        return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+        return Err(NS_ERROR_EDITOR_DESTROYED);
       }
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
@@ -5408,7 +5423,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
         if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
           if (NS_WARN_IF(pointToPutCaretOrError.inspectErr() ==
                          NS_ERROR_EDITOR_DESTROYED)) {
-            return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+            return Err(NS_ERROR_EDITOR_DESTROYED);
           }
           NS_WARNING(
               "HTMLEditor::ChangeMarginStart(ChangeMargin::Decrease) failed, "
@@ -5418,7 +5433,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
           nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
           if (NS_FAILED(rv)) {
             NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-            return SplitRangeOffFromNodeResult(rv);
+            return Err(rv);
           }
         }
         continue;
@@ -5431,17 +5446,23 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
       // XXX I don't understand this sentence...  We may meet parent list
       //     element, no?
       if (indentedParentElement) {
-        SplitRangeOffFromNodeResult outdentResult = OutdentPartOfBlock(
-            *indentedParentElement, *firstContentToBeOutdented,
-            *lastContentToBeOutdented, indentedParentIndentedWith,
-            aEditingHost);
-        if (outdentResult.isErr()) {
+        Result<SplitRangeOffFromNodeResult, nsresult> outdentResult =
+            OutdentPartOfBlock(*indentedParentElement,
+                               *firstContentToBeOutdented,
+                               *lastContentToBeOutdented,
+                               indentedParentIndentedWith, aEditingHost);
+        if (MOZ_UNLIKELY(outdentResult.isErr())) {
           NS_WARNING("HTMLEditor::OutdentPartOfBlock() failed");
           return outdentResult;
         }
-        leftContentOfLastOutdented = outdentResult.GetLeftContent();
-        middleContentOfLastOutdented = outdentResult.GetMiddleContent();
-        rightContentOfLastOutdented = outdentResult.GetRightContent();
+        SplitRangeOffFromNodeResult unwrappedOutdentResult =
+            outdentResult.unwrap();
+        unwrappedOutdentResult.IgnoreCaretPointSuggestion();
+        leftContentOfLastOutdented = unwrappedOutdentResult.UnwrapLeftContent();
+        middleContentOfLastOutdented =
+            unwrappedOutdentResult.UnwrapMiddleContent();
+        rightContentOfLastOutdented =
+            unwrappedOutdentResult.UnwrapRightContent();
         indentedParentElement = nullptr;
         firstContentToBeOutdented = nullptr;
         lastContentToBeOutdented = nullptr;
@@ -5455,7 +5476,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
         NS_WARNING(
             "HTMLEditor::LiftUpListItemElement(LiftUpFromAllParentListElements:"
             ":No) failed");
-        return SplitRangeOffFromNodeResult(rv);
+        return Err(rv);
       }
       continue;
     }
@@ -5472,16 +5493,21 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
         lastContentToBeOutdented = content;
         continue;
       }
-      SplitRangeOffFromNodeResult outdentResult = OutdentPartOfBlock(
-          *indentedParentElement, *firstContentToBeOutdented,
-          *lastContentToBeOutdented, indentedParentIndentedWith, aEditingHost);
-      if (outdentResult.isErr()) {
+      Result<SplitRangeOffFromNodeResult, nsresult> outdentResult =
+          OutdentPartOfBlock(*indentedParentElement, *firstContentToBeOutdented,
+                             *lastContentToBeOutdented,
+                             indentedParentIndentedWith, aEditingHost);
+      if (MOZ_UNLIKELY(outdentResult.isErr())) {
         NS_WARNING("HTMLEditor::OutdentPartOfBlock() failed");
         return outdentResult;
       }
-      leftContentOfLastOutdented = outdentResult.GetLeftContent();
-      middleContentOfLastOutdented = outdentResult.GetMiddleContent();
-      rightContentOfLastOutdented = outdentResult.GetRightContent();
+      SplitRangeOffFromNodeResult unwrappedOutdentResult =
+          outdentResult.unwrap();
+      unwrappedOutdentResult.IgnoreCaretPointSuggestion();
+      leftContentOfLastOutdented = unwrappedOutdentResult.UnwrapLeftContent();
+      middleContentOfLastOutdented =
+          unwrappedOutdentResult.UnwrapMiddleContent();
+      rightContentOfLastOutdented = unwrappedOutdentResult.UnwrapRightContent();
       indentedParentElement = nullptr;
       firstContentToBeOutdented = nullptr;
       lastContentToBeOutdented = nullptr;
@@ -5514,16 +5540,16 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
       nsStaticAtom& marginProperty =
           MarginPropertyAtomForIndent(MOZ_KnownLive(content));
       if (NS_WARN_IF(Destroyed())) {
-        return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+        return Err(NS_ERROR_EDITOR_DESTROYED);
       }
       if (NS_WARN_IF(grandParentNode != parentContent->GetParentNode())) {
-        return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+        return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
       }
       nsAutoString value;
       DebugOnly<nsresult> rvIgnored = CSSEditUtils::GetSpecifiedProperty(
           *parentContent, marginProperty, value);
       if (NS_WARN_IF(Destroyed())) {
-        return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+        return Err(NS_ERROR_EDITOR_DESTROYED);
       }
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
@@ -5561,13 +5587,12 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
         continue;
       }
       // Just unwrap this sublist
-      const Result<EditorDOMPoint, nsresult> unwrapSubListElementResult =
+      Result<EditorDOMPoint, nsresult> unwrapSubListElementResult =
           RemoveBlockContainerWithTransaction(
               MOZ_KnownLive(*content->AsElement()));
       if (MOZ_UNLIKELY(unwrapSubListElementResult.isErr())) {
         NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
-        return SplitRangeOffFromNodeResult(
-            unwrapSubListElementResult.inspectErr());
+        return unwrapSubListElementResult.propagateErr();
       }
       const EditorDOMPoint& pointToPutCaret =
           unwrapSubListElementResult.inspect();
@@ -5577,7 +5602,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
       nsresult rv = CollapseSelectionTo(pointToPutCaret);
       if (NS_FAILED(rv)) {
         NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-        return SplitRangeOffFromNodeResult(rv);
+        return Err(rv);
       }
       continue;
     }
@@ -5598,7 +5623,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
             NS_WARNING(
                 "HTMLEditor::LiftUpListItemElement("
                 "LiftUpFromAllParentListElements::No) failed");
-            return SplitRangeOffFromNodeResult(rv);
+            return Err(rv);
           }
           continue;
         }
@@ -5615,8 +5640,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
               MoveNodeWithTransaction(*lastChildContent, afterCurrentList);
           if (MOZ_UNLIKELY(moveListElementResult.isErr())) {
             NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
-            return SplitRangeOffFromNodeResult(
-                moveListElementResult.unwrapErr());
+            return moveListElementResult.propagateErr();
           }
           nsresult rv = moveListElementResult.inspect().SuggestCaretPointTo(
               *this, {SuggestCaret::OnlyIfHasSuggestion,
@@ -5624,7 +5648,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
                       SuggestCaret::AndIgnoreTrivialError});
           if (NS_FAILED(rv)) {
             NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
-            return SplitRangeOffFromNodeResult(rv);
+            return Err(rv);
           }
           NS_WARNING_ASSERTION(
               rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
@@ -5637,17 +5661,16 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
         nsresult rv = DeleteNodeWithTransaction(*lastChildContent);
         if (NS_FAILED(rv)) {
           NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-          return SplitRangeOffFromNodeResult(rv);
+          return Err(rv);
         }
       }
       // Delete the now-empty list
-      const Result<EditorDOMPoint, nsresult> unwrapListElementResult =
+      Result<EditorDOMPoint, nsresult> unwrapListElementResult =
           RemoveBlockContainerWithTransaction(
               MOZ_KnownLive(*content->AsElement()));
       if (MOZ_UNLIKELY(unwrapListElementResult.isErr())) {
         NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
-        return SplitRangeOffFromNodeResult(
-            unwrapListElementResult.inspectErr());
+        return unwrapListElementResult.propagateErr();
       }
       const EditorDOMPoint& pointToPutCaret = unwrapListElementResult.inspect();
       if (!AllowsTransactionsToChangeSelection() || !pointToPutCaret.IsSet()) {
@@ -5656,7 +5679,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
       nsresult rv = CollapseSelectionTo(pointToPutCaret);
       if (NS_FAILED(rv)) {
         NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-        return SplitRangeOffFromNodeResult(rv);
+        return Err(rv);
       }
       continue;
     }
@@ -5668,7 +5691,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
         if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
           if (NS_WARN_IF(pointToPutCaretOrError.inspectErr() ==
                          NS_ERROR_EDITOR_DESTROYED)) {
-            return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+            return Err(NS_ERROR_EDITOR_DESTROYED);
           }
           NS_WARNING(
               "HTMLEditor::ChangeMarginStart(ChangeMargin::Decrease) failed, "
@@ -5678,7 +5701,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
           nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
           if (NS_FAILED(rv)) {
             NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-            return SplitRangeOffFromNodeResult(rv);
+            return Err(rv);
           }
         }
       }
@@ -5693,66 +5716,72 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
   }
 
   // We have a <blockquote> we haven't finished handling.
-  SplitRangeOffFromNodeResult outdentResult = OutdentPartOfBlock(
-      *indentedParentElement, *firstContentToBeOutdented,
-      *lastContentToBeOutdented, indentedParentIndentedWith, aEditingHost);
+  Result<SplitRangeOffFromNodeResult, nsresult> outdentResult =
+      OutdentPartOfBlock(*indentedParentElement, *firstContentToBeOutdented,
+                         *lastContentToBeOutdented, indentedParentIndentedWith,
+                         aEditingHost);
   NS_WARNING_ASSERTION(outdentResult.isOk(),
                        "HTMLEditor::OutdentPartOfBlock() failed");
   return outdentResult;
 }
 
-SplitRangeOffFromNodeResult
+Result<SplitRangeOffFromNodeResult, nsresult>
 HTMLEditor::RemoveBlockContainerElementWithTransactionBetween(
     Element& aBlockContainerElement, nsIContent& aStartOfRange,
     nsIContent& aEndOfRange) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   EditorDOMPoint pointToPutCaret;
-  SplitRangeOffFromNodeResult splitResult = SplitRangeOffFromBlock(
-      aBlockContainerElement, aStartOfRange, aEndOfRange);
-  if (splitResult.EditorDestroyed()) {
-    NS_WARNING("HTMLEditor::SplitRangeOffFromBlock() failed");
-    return splitResult;
-  }
-  if (splitResult.isOk()) {
-    splitResult.MoveCaretPointTo(pointToPutCaret,
-                                 {SuggestCaret::OnlyIfHasSuggestion});
-  } else {
+  Result<SplitRangeOffFromNodeResult, nsresult> splitResult =
+      SplitRangeOffFromBlock(aBlockContainerElement, aStartOfRange,
+                             aEndOfRange);
+  if (MOZ_UNLIKELY(splitResult.isErr())) {
+    if (splitResult.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
+      NS_WARNING("HTMLEditor::SplitRangeOffFromBlock() failed");
+      return splitResult;
+    }
     NS_WARNING(
         "HTMLEditor::SplitRangeOffFromBlock() failed, but might be ignored");
+    return SplitRangeOffFromNodeResult(nullptr, nullptr, nullptr);
   }
+  SplitRangeOffFromNodeResult unwrappedSplitResult = splitResult.unwrap();
+  unwrappedSplitResult.MoveCaretPointTo(pointToPutCaret,
+                                        {SuggestCaret::OnlyIfHasSuggestion});
 
   // Even if either split aBlockContainerElement or did not split it, we should
   // unwrap the right most element which is split from aBlockContainerElement
   // (or aBlockContainerElement itself if it was not split without errors).
-  if (Element* rightmostElement =
-          splitResult.GetRightmostContentAs<Element>()) {
-    MOZ_DIAGNOSTIC_ASSERT(splitResult.isOk());
-    MOZ_ASSERT_IF(
-        GetSplitNodeDirection() == SplitNodeDirection::LeftNodeIsNewOne,
-        rightmostElement == &aBlockContainerElement);
-    // MOZ_KnownLive(rightmostElement) because it's grabbed by splitResult.
+  Element* rightmostElement =
+      unwrappedSplitResult.GetRightmostContentAs<Element>();
+  MOZ_ASSERT(rightmostElement);
+  if (NS_WARN_IF(!rightmostElement)) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  MOZ_ASSERT_IF(GetSplitNodeDirection() == SplitNodeDirection::LeftNodeIsNewOne,
+                rightmostElement == &aBlockContainerElement);
+  {
+    // MOZ_KnownLive(rightmostElement) because it's grabbed by
+    // unwrappedSplitResult.
     Result<EditorDOMPoint, nsresult> unwrapBlockElementResult =
         RemoveBlockContainerWithTransaction(MOZ_KnownLive(*rightmostElement));
-    if (unwrapBlockElementResult.isErr()) {
+    if (MOZ_UNLIKELY(unwrapBlockElementResult.isErr())) {
       NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
-      return SplitRangeOffFromNodeResult(unwrapBlockElementResult.inspectErr());
+      return unwrapBlockElementResult.propagateErr();
     }
     if (unwrapBlockElementResult.inspect().IsSet()) {
       pointToPutCaret = unwrapBlockElementResult.unwrap();
     }
-  } else {
-    MOZ_DIAGNOSTIC_ASSERT(splitResult.isErr());
   }
 
-  return SplitRangeOffFromNodeResult(splitResult.GetLeftContent(), nullptr,
-                                     splitResult.GetRightContent(),
-                                     std::move(pointToPutCaret));
+  return SplitRangeOffFromNodeResult(
+      unwrappedSplitResult.GetLeftContent(), nullptr,
+      unwrappedSplitResult.GetRightContent(), std::move(pointToPutCaret));
 }
 
-SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
-    Element& aBlockElement, nsIContent& aStartOfMiddleElement,
-    nsIContent& aEndOfMiddleElement) {
+Result<SplitRangeOffFromNodeResult, nsresult>
+HTMLEditor::SplitRangeOffFromBlock(Element& aBlockElement,
+                                   nsIContent& aStartOfMiddleElement,
+                                   nsIContent& aEndOfMiddleElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // aStartOfMiddleElement and aEndOfMiddleElement must be exclusive
@@ -5767,7 +5796,7 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
       SplitAtEdges::eDoNotCreateEmptyContainer);
   if (splitAtStartResult.EditorDestroyed()) {
     NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed (at left)");
-    return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(
       splitAtStartResult.isOk(),
@@ -5789,7 +5818,7 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
                                    SplitAtEdges::eDoNotCreateEmptyContainer);
   if (splitAtEndResult.EditorDestroyed()) {
     NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed (at right)");
-    return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(
       splitAtEndResult.isOk(),
@@ -5820,86 +5849,77 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
                                      std::move(pointToPutCaret));
 }
 
-SplitRangeOffFromNodeResult HTMLEditor::OutdentPartOfBlock(
+Result<SplitRangeOffFromNodeResult, nsresult> HTMLEditor::OutdentPartOfBlock(
     Element& aBlockElement, nsIContent& aStartOfOutdent,
     nsIContent& aEndOfOutdent, BlockIndentedWith aBlockIndentedWith,
     const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  SplitRangeOffFromNodeResult splitResult =
+  Result<SplitRangeOffFromNodeResult, nsresult> splitResult =
       SplitRangeOffFromBlock(aBlockElement, aStartOfOutdent, aEndOfOutdent);
-  if (splitResult.EditorDestroyed()) {
+  if (MOZ_UNLIKELY(splitResult.isErr())) {
     NS_WARNING("HTMLEditor::SplitRangeOffFromBlock() failed");
-    return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+    return splitResult;
   }
 
-  if (!splitResult.GetMiddleContentAs<Element>()) {
+  SplitRangeOffFromNodeResult unwrappedSplitResult = splitResult.unwrap();
+  Element* middleElement = unwrappedSplitResult.GetMiddleContentAs<Element>();
+  if (MOZ_UNLIKELY(!middleElement)) {
     NS_WARNING(
         "HTMLEditor::SplitRangeOffFromBlock() didn't return middle content");
-    splitResult.IgnoreCaretPointSuggestion();
-    return SplitRangeOffFromNodeResult(NS_ERROR_FAILURE);
+    unwrappedSplitResult.IgnoreCaretPointSuggestion();
+    return Err(NS_ERROR_FAILURE);
   }
 
-  if (splitResult.isOk()) {
-    nsresult rv = splitResult.SuggestCaretPointTo(
-        *this, {SuggestCaret::OnlyIfHasSuggestion,
-                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("SplitRangeOffFromNodeResult::SuggestCaretPointTo() failed");
-      return SplitRangeOffFromNodeResult(rv);
-    }
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "SplitRangeOffFromNodeResult::SuggestCaretPointTo() "
-                         "failed, but ignored");
-  } else {
-    NS_WARNING(
-        "HTMLEditor::SplitRangeOffFromBlock() failed, but might be ignored");
+  nsresult rv = unwrappedSplitResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+              SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("SplitRangeOffFromNodeResult::SuggestCaretPointTo() failed");
+    return Err(rv);
   }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "SplitRangeOffFromNodeResult::SuggestCaretPointTo() "
+                       "failed, but ignored");
 
   if (aBlockIndentedWith == BlockIndentedWith::HTML) {
-    // MOZ_KnownLive: perhaps, it does not work with template methods.
+    // MOZ_KnownLive(middleElement) because of grabbed by unwrappedSplitResult.
     Result<EditorDOMPoint, nsresult> unwrapBlockElementResult =
-        RemoveBlockContainerWithTransaction(
-            MOZ_KnownLive(*splitResult.GetMiddleContentAs<Element>()));
+        RemoveBlockContainerWithTransaction(MOZ_KnownLive(*middleElement));
     if (MOZ_UNLIKELY(unwrapBlockElementResult.isErr())) {
       NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
-      return SplitRangeOffFromNodeResult(unwrapBlockElementResult.inspectErr());
+      return unwrapBlockElementResult.propagateErr();
     }
     const EditorDOMPoint& pointToPutCaret = unwrapBlockElementResult.inspect();
     if (AllowsTransactionsToChangeSelection() && pointToPutCaret.IsSet()) {
       nsresult rv = CollapseSelectionTo(pointToPutCaret);
       if (NS_FAILED(rv)) {
         NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-        return SplitRangeOffFromNodeResult(rv);
+        return Err(rv);
       }
     }
-    return SplitRangeOffFromNodeResult(splitResult.GetLeftContent(), nullptr,
-                                       splitResult.GetRightContent());
+    return SplitRangeOffFromNodeResult(unwrappedSplitResult.GetLeftContent(),
+                                       nullptr,
+                                       unwrappedSplitResult.GetRightContent());
   }
 
-  if (!splitResult.GetMiddleContentAs<Element>()) {
-    return splitResult;
-  }
-
-  // MOZ_KnownLive: perhaps, it does not work with template methods.
-  const Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
-      ChangeMarginStart(
-          MOZ_KnownLive(*splitResult.GetMiddleContentAs<Element>()),
-          ChangeMargin::Decrease, aEditingHost);
+  // MOZ_KnownLive(middleElement) because of grabbed by unwrappedSplitResult.
+  Result<EditorDOMPoint, nsresult> pointToPutCaretOrError = ChangeMarginStart(
+      MOZ_KnownLive(*middleElement), ChangeMargin::Decrease, aEditingHost);
   if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
     NS_WARNING("HTMLEditor::ChangeMarginStart(ChangeMargin::Decrease) failed");
-    return SplitRangeOffFromNodeResult(pointToPutCaretOrError.inspectErr());
+    return pointToPutCaretOrError.propagateErr();
   }
   if (AllowsTransactionsToChangeSelection() &&
       pointToPutCaretOrError.inspect().IsSet()) {
     nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
     if (NS_FAILED(rv)) {
       NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-      return SplitRangeOffFromNodeResult(rv);
+      return Err(rv);
     }
   }
-  return splitResult;
+  return unwrappedSplitResult;
 }
 
 Result<CreateElementResult, nsresult> HTMLEditor::ChangeListElementType(
@@ -8270,16 +8290,16 @@ HTMLEditor::RemoveBlockContainerElementsWithTransaction(
     if (HTMLEditUtils::IsFormatNode(content)) {
       // Process any partial progress saved
       if (blockElement) {
-        SplitRangeOffFromNodeResult unwrapBlockElementResult =
+        Result<SplitRangeOffFromNodeResult, nsresult> unwrapBlockElementResult =
             RemoveBlockContainerElementWithTransactionBetween(
                 *blockElement, *firstContent, *lastContent);
-        if (unwrapBlockElementResult.isErr()) {
+        if (MOZ_UNLIKELY(unwrapBlockElementResult.isErr())) {
           NS_WARNING(
               "HTMLEditor::RemoveBlockContainerElementWithTransactionBetween() "
               "failed");
-          return Err(unwrapBlockElementResult.unwrapErr());
+          return unwrapBlockElementResult.propagateErr();
         }
-        unwrapBlockElementResult.MoveCaretPointTo(
+        unwrapBlockElementResult.unwrap().MoveCaretPointTo(
             pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
         firstContent = lastContent = blockElement = nullptr;
       }
@@ -8307,16 +8327,16 @@ HTMLEditor::RemoveBlockContainerElementsWithTransaction(
         HTMLEditUtils::IsAnyListElement(content)) {
       // Process any partial progress saved
       if (blockElement) {
-        SplitRangeOffFromNodeResult unwrapBlockElementResult =
+        Result<SplitRangeOffFromNodeResult, nsresult> unwrapBlockElementResult =
             RemoveBlockContainerElementWithTransactionBetween(
                 *blockElement, *firstContent, *lastContent);
-        if (unwrapBlockElementResult.isErr()) {
+        if (MOZ_UNLIKELY(unwrapBlockElementResult.isErr())) {
           NS_WARNING(
               "HTMLEditor::RemoveBlockContainerElementWithTransactionBetween() "
               "failed");
-          return Err(unwrapBlockElementResult.unwrapErr());
+          return unwrapBlockElementResult.propagateErr();
         }
-        unwrapBlockElementResult.MoveCaretPointTo(
+        unwrapBlockElementResult.unwrap().MoveCaretPointTo(
             pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
         firstContent = lastContent = blockElement = nullptr;
       }
@@ -8350,16 +8370,16 @@ HTMLEditor::RemoveBlockContainerElementsWithTransaction(
         // Otherwise, we have progressed beyond end of blockElement, so let's
         // handle it now.  We need to remove the portion of blockElement that
         // contains [firstContent - lastContent].
-        SplitRangeOffFromNodeResult unwrapBlockElementResult =
+        Result<SplitRangeOffFromNodeResult, nsresult> unwrapBlockElementResult =
             RemoveBlockContainerElementWithTransactionBetween(
                 *blockElement, *firstContent, *lastContent);
-        if (unwrapBlockElementResult.isErr()) {
+        if (MOZ_UNLIKELY(unwrapBlockElementResult.isErr())) {
           NS_WARNING(
               "HTMLEditor::RemoveBlockContainerElementWithTransactionBetween() "
               "failed");
-          return Err(unwrapBlockElementResult.unwrapErr());
+          return unwrapBlockElementResult.propagateErr();
         }
-        unwrapBlockElementResult.MoveCaretPointTo(
+        unwrapBlockElementResult.unwrap().MoveCaretPointTo(
             pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
         firstContent = lastContent = blockElement = nullptr;
         // Fall out and handle content
@@ -8379,16 +8399,16 @@ HTMLEditor::RemoveBlockContainerElementsWithTransaction(
     if (blockElement) {
       // Some node that is already sans block style.  Skip over it and process
       // any partial progress saved.
-      SplitRangeOffFromNodeResult unwrapBlockElementResult =
+      Result<SplitRangeOffFromNodeResult, nsresult> unwrapBlockElementResult =
           RemoveBlockContainerElementWithTransactionBetween(
               *blockElement, *firstContent, *lastContent);
-      if (unwrapBlockElementResult.isErr()) {
+      if (MOZ_UNLIKELY(unwrapBlockElementResult.isErr())) {
         NS_WARNING(
             "HTMLEditor::RemoveBlockContainerElementWithTransactionBetween() "
             "failed");
-        return Err(unwrapBlockElementResult.unwrapErr());
+        return unwrapBlockElementResult.propagateErr();
       }
-      unwrapBlockElementResult.MoveCaretPointTo(
+      unwrapBlockElementResult.unwrap().MoveCaretPointTo(
           pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
       firstContent = lastContent = blockElement = nullptr;
       continue;
@@ -8396,16 +8416,16 @@ HTMLEditor::RemoveBlockContainerElementsWithTransaction(
   }
   // Process any partial progress saved
   if (blockElement) {
-    SplitRangeOffFromNodeResult unwrapBlockElementResult =
+    Result<SplitRangeOffFromNodeResult, nsresult> unwrapBlockElementResult =
         RemoveBlockContainerElementWithTransactionBetween(
             *blockElement, *firstContent, *lastContent);
-    if (unwrapBlockElementResult.isErr()) {
+    if (MOZ_UNLIKELY(unwrapBlockElementResult.isErr())) {
       NS_WARNING(
           "HTMLEditor::RemoveBlockContainerElementWithTransactionBetween() "
           "failed");
-      return Err(unwrapBlockElementResult.unwrapErr());
+      return unwrapBlockElementResult.propagateErr();
     }
-    unwrapBlockElementResult.MoveCaretPointTo(
+    unwrapBlockElementResult.unwrap().MoveCaretPointTo(
         pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
     firstContent = lastContent = blockElement = nullptr;
   }
