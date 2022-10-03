@@ -8,7 +8,6 @@
 #include "chrome/common/ipc_message.h"
 #include "chrome/common/ipc_message_utils.h"
 #include "mojo/core/ports/name.h"
-#include "mozilla/FOGIPC.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/ipc/ProtocolMessageUtils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
@@ -206,10 +205,6 @@ void NodeChannel::SendMessage(UniquePtr<IPC::Message> aMessage) {
   }
   aMessage->AssertAsLargeAsHeader();
 
-#ifdef NIGHTLY_BUILD
-  mozilla::glean::RecordIPCSentMessage(aMessage->type());
-#endif
-
   XRE_GetIOMessageLoop()->PostTask(
       NewRunnableMethod<StoreCopyPassByRRef<UniquePtr<IPC::Message>>>(
           "NodeChannel::DoSendMessage", this, &NodeChannel::DoSendMessage,
@@ -242,10 +237,6 @@ void NodeChannel::OnMessageReceived(UniquePtr<IPC::Message> aMessage) {
   if (mBlockSendRecv && !aMessage->IsFuzzMsg()) {
     return;
   }
-#endif
-
-#ifdef NIGHTLY_BUILD
-  mozilla::glean::RecordIPCReceivedMessage(aMessage->type());
 #endif
 
   IPC::MessageReader reader(*aMessage);

@@ -85,9 +85,6 @@ void AvailableMemoryChecker::Shutdown() {
     mTimer->Cancel();
   }
   Preferences::ClearUser("browser.low_commit_space_threshold_percent");
-  if (nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService()) {
-    obsSvc->NotifyObservers(nullptr, "user-interaction-inactive", nullptr);
-  }
 }
 
 // Timer callback to increase the pref threshold.

@@ -92,24 +92,6 @@ void TestTriggerMetrics(uint32_t processType,
  */
 void RecordThreadCpuUse(const nsACString& aThreadName, uint64_t aCpuTimeMs,
                         uint64_t aWakeCount);
-
-/**
- * This function records that an IPC message with the given type was sent by
- * this process. It is called by the IPC code on the IO thread when an IPC
- * message is being sent to another process.
- *
- * @param aMessageType The type of message which was sent by this process.
- */
-void RecordIPCSentMessage(uint32_t aMessageType);
-
-/**
- * This function records that an IPC message with the given type was received by
- * this process. It is called by the IPC code on the IO thread when an IPC
- * message is being received from another process.
- *
- * @param aMessageType The type of message which was received by this process.
- */
-void RecordIPCReceivedMessage(uint32_t aMessageType);
 #endif
 
 void RecordPowerMetrics();
