@@ -17,7 +17,7 @@ const { allocationTracker } = loader.require(
   "chrome://mochitests/content/browser/devtools/shared/test-helpers/allocation-tracker"
 );
 const TrackedObjects = loader.require(
-  "devtools/shared/test-helpers/tracked-objects.jsm"
+  "resource://devtools/shared/test-helpers/tracked-objects.jsm"
 );
 
 // This test record multiple times complete heap snapshot,

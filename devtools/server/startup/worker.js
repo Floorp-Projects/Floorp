@@ -48,9 +48,11 @@ this.rpc = function(method, ...params) {
 loadSubScript("resource://devtools/shared/loader/worker-loader.js");
 
 const { WorkerTargetActor } = worker.require(
-  "devtools/server/actors/targets/worker"
+  "resource://devtools/server/actors/targets/worker.js"
 );
-const { DevToolsServer } = worker.require("devtools/server/devtools-server");
+const { DevToolsServer } = worker.require(
+  "resource://devtools/server/devtools-server.js"
+);
 
 DevToolsServer.createRootActor = function() {
   throw new Error("Should never get here!");

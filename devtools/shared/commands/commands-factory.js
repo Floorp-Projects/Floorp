@@ -184,7 +184,7 @@ exports.CommandsFactory = {
       freshCompartment: true,
     });
     const { DevToolsServer: customDevToolsServer } = customLoader.require(
-      "devtools/server/devtools-server"
+      "resource://devtools/server/devtools-server.js"
     );
 
     customDevToolsServer.init();

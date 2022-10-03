@@ -19,7 +19,7 @@ let tracker;
     invisibleToDebugger: true,
   });
   const { allocationTracker } = loader.require(
-    "chrome://mochitests/content/browser/devtools/shared/test-helpers/allocation-tracker"
+    "chrome://mochitests/content/browser/devtools/shared/test-helpers/allocation-tracker.js"
   );
   tracker = allocationTracker({ watchDevToolsGlobals: true });
 }
@@ -93,7 +93,7 @@ async function startRecordingAllocations({
           invisibleToDebugger: true,
         });
         const { allocationTracker } = loader.require(
-          "chrome://mochitests/content/browser/devtools/shared/test-helpers/allocation-tracker"
+          "chrome://mochitests/content/browser/devtools/shared/test-helpers/allocation-tracker.js"
         );
         // We watch all globals in the content process, (instead of only DevTools global in parent process)
         // because we may easily leak web page objects, which aren't in DevTools global.

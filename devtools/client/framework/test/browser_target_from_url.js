@@ -80,8 +80,12 @@ add_task(async function() {
 async function setupDevToolsServer(webSocket) {
   info("Create a separate loader instance for the DevToolsServer.");
   const loader = new DevToolsLoader();
-  const { DevToolsServer } = loader.require("devtools/server/devtools-server");
-  const { SocketListener } = loader.require("devtools/shared/security/socket");
+  const { DevToolsServer } = loader.require(
+    "resource://devtools/server/devtools-server.js"
+  );
+  const { SocketListener } = loader.require(
+    "resource://devtools/shared/security/socket.js"
+  );
 
   DevToolsServer.init();
   DevToolsServer.registerAllActors();

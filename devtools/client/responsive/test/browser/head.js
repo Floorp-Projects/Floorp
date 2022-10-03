@@ -708,7 +708,7 @@ function testViewportDimensions(ui, w, h) {
 
 async function changeUserAgentInput(ui, value) {
   const { Simulate } = ui.toolWindow.require(
-    "devtools/client/shared/vendor/react-dom-test-utils"
+    "resource://devtools/client/shared/vendor/react-dom-test-utils.js"
   );
   const { document, store } = ui.toolWindow;
   const browser = ui.getViewportBrowser();
@@ -734,7 +734,7 @@ async function changeUserAgentInput(ui, value) {
  */
 function addDeviceInModal(ui, device) {
   const { Simulate } = ui.toolWindow.require(
-    "devtools/client/shared/vendor/react-dom-test-utils"
+    "resource://devtools/client/shared/vendor/react-dom-test-utils.js"
   );
   const { document, store } = ui.toolWindow;
 
@@ -777,7 +777,7 @@ function addDeviceInModal(ui, device) {
 
 async function editDeviceInModal(ui, device, newDevice) {
   const { Simulate } = ui.toolWindow.require(
-    "devtools/client/shared/vendor/react-dom-test-utils"
+    "resource://devtools/client/shared/vendor/react-dom-test-utils.js"
   );
   const { document, store } = ui.toolWindow;
 

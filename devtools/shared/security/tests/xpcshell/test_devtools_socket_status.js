@@ -80,7 +80,9 @@ function checkSocketStatus(expectedExcludeFalse, expectedExcludeTrue) {
 async function setupDevToolsServer({ fromBrowserToolbox }) {
   info("Create a separate loader instance for the DevToolsServer.");
   const loader = new DevToolsLoader();
-  const { DevToolsServer } = loader.require("devtools/server/devtools-server");
+  const { DevToolsServer } = loader.require(
+    "resource://devtools/server/devtools-server.js"
+  );
 
   DevToolsServer.init();
   DevToolsServer.registerAllActors();

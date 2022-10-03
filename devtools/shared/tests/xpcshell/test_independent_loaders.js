@@ -12,8 +12,8 @@ function run_test() {
   const loader1 = new DevToolsLoader();
   const loader2 = new DevToolsLoader();
 
-  const indent1 = loader1.require("devtools/shared/indentation");
-  const indent2 = loader2.require("devtools/shared/indentation");
+  const indent1 = loader1.require("resource://devtools/shared/indentation.js");
+  const indent2 = loader2.require("resource://devtools/shared/indentation.js");
 
   Assert.ok(indent1 !== indent2);
 

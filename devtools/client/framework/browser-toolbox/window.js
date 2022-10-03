@@ -9,7 +9,7 @@ var { loader, require, DevToolsLoader } = ChromeUtils.import(
 );
 
 // Require this module to setup core modules
-loader.require("devtools/client/framework/devtools-browser");
+loader.require("resource://devtools/client/framework/devtools-browser.js");
 
 var { gDevTools } = require("resource://devtools/client/framework/devtools.js");
 var { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
@@ -264,10 +264,10 @@ function installTestingServer() {
     invisibleToDebugger: true,
   });
   const { DevToolsServer } = testLoader.require(
-    "devtools/server/devtools-server"
+    "resource://devtools/server/devtools-server.js"
   );
   const { SocketListener } = testLoader.require(
-    "devtools/shared/security/socket"
+    "resource://devtools/shared/security/socket.js"
   );
 
   DevToolsServer.init();
