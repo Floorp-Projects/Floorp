@@ -166,81 +166,6 @@ rtc_library("video") {
   }
 }
 
-rtc_source_set("video_legacy") {
-  sources = [
-    "call_stats.cc",
-    "call_stats.h",
-    "receive_statistics_proxy.cc",
-    "receive_statistics_proxy.h",
-    "video_quality_observer.cc",
-    "video_quality_observer.h",
-  ]
-  deps = [
-    ":frame_dumping_decoder",
-    ":unique_timestamp_counter",
-    ":video",
-    "../api:array_view",
-    "../api:field_trials_view",
-    "../api:scoped_refptr",
-    "../api:sequence_checker",
-    "../api/crypto:frame_decryptor_interface",
-    "../api/task_queue",
-    "../api/transport:field_trial_based_config",
-    "../api/units:timestamp",
-    "../api/video:encoded_image",
-    "../api/video:recordable_encoded_frame",
-    "../api/video:video_frame",
-    "../api/video:video_rtp_headers",
-    "../call:call_interfaces",
-    "../call:rtp_interfaces",
-    "../call:rtp_receiver",  # For RtxReceiveStream.
-    "../call:video_stream_api",
-    "../common_video",
-    "../modules:module_api",
-    "../modules/pacing",
-    "../modules/remote_bitrate_estimator",
-    "../modules/rtp_rtcp",
-    "../modules/rtp_rtcp:rtp_rtcp_format",
-    "../modules/rtp_rtcp:rtp_rtcp_legacy",
-    "../modules/rtp_rtcp:rtp_video_header",
-    "../modules/utility",
-    "../modules/video_coding",
-    "../modules/video_coding:packet_buffer",
-    "../modules/video_coding:video_codec_interface",
-    "../modules/video_coding:video_coding_utility",
-    "../modules/video_coding/deprecated:nack_module",
-    "../rtc_base:checks",
-    "../rtc_base:histogram_percentile_counter",
-    "../rtc_base:location",
-    "../rtc_base:logging",
-    "../rtc_base:macromagic",
-    "../rtc_base:moving_max_counter",
-    "../rtc_base:platform_thread",
-    "../rtc_base:rate_statistics",
-    "../rtc_base:rate_tracker",
-    "../rtc_base:rtc_numerics",
-    "../rtc_base:rtc_task_queue",
-    "../rtc_base:sample_counter",
-    "../rtc_base:stringutils",
-    "../rtc_base:timeutils",
-    "../rtc_base/experiments:field_trial_parser",
-    "../rtc_base/experiments:keyframe_interval_settings_experiment",
-    "../rtc_base/synchronization:mutex",
-    "../rtc_base/system:no_unique_address",
-    "../rtc_base/task_utils:to_queued_task",
-    "../system_wrappers",
-    "../system_wrappers:field_trial",
-    "../system_wrappers:metrics",
-  ]
-  if (!build_with_mozilla) {
-    deps += [ "../media:rtc_media_base" ]
-  }
-  absl_deps = [
-    "//third_party/abseil-cpp/absl/algorithm:container",
-    "//third_party/abseil-cpp/absl/types:optional",
-  ]
-}
-
 rtc_library("video_stream_decoder_impl") {
   visibility = [ "*" ]
 
@@ -1000,41 +925,5 @@ if (rtc_include_tests) {
     if (!build_with_mozilla) {
       deps += [ "../media:rtc_media_base" ]
     }
-  }
-  rtc_library("video_legacy_tests") {
-    testonly = true
-    sources = [
-      "call_stats_unittest.cc",
-      "receive_statistics_proxy_unittest.cc",
-    ]
-    deps = [
-      ":video_legacy",
-      "../api:scoped_refptr",
-      "../api/video:video_frame",
-      "../api/video:video_frame_type",
-      "../api/video:video_rtp_headers",
-      "../call:mock_rtp_interfaces",
-      "../common_video",
-      "../media:rtc_media_base",
-      "../modules/rtp_rtcp",
-      "../modules/rtp_rtcp:rtp_rtcp_format",
-      "../modules/utility",
-      "../modules/video_coding",
-      "../modules/video_coding:video_codec_interface",
-      "../rtc_base:byte_buffer",
-      "../rtc_base:location",
-      "../rtc_base:logging",
-      "../rtc_base:rtc_event",
-      "../rtc_base/task_utils:to_queued_task",
-      "../system_wrappers",
-      "../system_wrappers:field_trial",
-      "../system_wrappers:metrics",
-      "../test:field_trial",
-      "../test:mock_frame_transformer",
-      "../test:mock_transport",
-      "../test:scoped_key_value_config",
-      "../test:test_support",
-    ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
 }
