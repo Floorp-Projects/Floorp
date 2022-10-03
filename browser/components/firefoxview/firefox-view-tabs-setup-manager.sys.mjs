@@ -74,6 +74,7 @@ export const TabsSetupFlowManager = new (class {
       lazy.gNetworkLinkService.isLinkUp;
     this.syncIsWorking = true;
     this.syncIsConnected = lazy.UIState.get().syncEnabled;
+    this.didFxaTabOpen = false;
 
     this.registerSetupState({
       uiStateIndex: 0,
@@ -525,6 +526,7 @@ export const TabsSetupFlowManager = new (class {
       "firefoxview"
     );
     openTabInWindow(window, url, true);
+    this.didFxaTabOpen = true;
     Services.telemetry.recordEvent("firefoxview", "fxa_continue", "sync", null);
   }
 
@@ -533,6 +535,7 @@ export const TabsSetupFlowManager = new (class {
       entrypoint: "fx-view",
     });
     openTabInWindow(window, url, true);
+    this.didFxaTabOpen = true;
     Services.telemetry.recordEvent("firefoxview", "fxa_mobile", "sync", null, {
       has_devices: this.secondaryDeviceConnected.toString(),
     });
