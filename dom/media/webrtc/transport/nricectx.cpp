@@ -820,6 +820,13 @@ nsresult NrIceCtx::SetProxyConfig(NrSocketProxyConfig&& config) {
   if (nat_) {
     nat_->set_proxy_config(proxy_config_);
   }
+
+  if (proxy_config_->GetForceProxy()) {
+    nr_ice_ctx_add_flags(ctx_, NR_ICE_CTX_FLAGS_ONLY_PROXY);
+  } else {
+    nr_ice_ctx_remove_flags(ctx_, NR_ICE_CTX_FLAGS_ONLY_PROXY);
+  }
+
   return NS_OK;
 }
 

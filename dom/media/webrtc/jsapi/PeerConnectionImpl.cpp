@@ -2254,6 +2254,16 @@ nsresult PeerConnectionImpl::SetConfiguration(
     mPrivacyRequested = Some(true);
   }
 
+  auto proxyConfig = GetProxyConfig();
+  if (proxyConfig) {
+    // Note that this could check if PrivacyRequested() is set on the PC and
+    // remove "webrtc" from the ALPN list.  But that would only work if the PC
+    // was constructed with a peerIdentity constraint, not when isolated
+    // streams are added.  If we ever need to signal to the proxy that the
+    // media is isolated, then we would need to restructure this code.
+    mTransportHandler->SetProxyConfig(std::move(*proxyConfig));
+  }
+
   // Store the configuration for about:webrtc
   StoreConfigurationForAboutWebrtc(aConfiguration);
   return NS_OK;
@@ -3749,16 +3759,6 @@ nsresult PeerConnectionImpl::SetTargetForDefaultLocalAddressLookup() {
 
 void PeerConnectionImpl::EnsureIceGathering(bool aDefaultRouteOnly,
                                             bool aObfuscateHostAddresses) {
-  auto proxyConfig = GetProxyConfig();
-  if (proxyConfig) {
-    // Note that this could check if PrivacyRequested() is set on the PC and
-    // remove "webrtc" from the ALPN list.  But that would only work if the PC
-    // was constructed with a peerIdentity constraint, not when isolated
-    // streams are added.  If we ever need to signal to the proxy that the
-    // media is isolated, then we would need to restructure this code.
-    mTransportHandler->SetProxyConfig(std::move(*proxyConfig));
-  }
-
   if (!mTargetForDefaultLocalAddressLookupIsSet) {
     nsresult rv = SetTargetForDefaultLocalAddressLookup();
     if (NS_FAILED(rv)) {
