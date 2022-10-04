@@ -166,22 +166,3 @@ should install:
     ac_add_options --with-macos-sdk=$HOME/.mozbuild/macos-sdk/MacOSX11.3.sdk
 
 5. Now, you should be able to successfully run ``./mach build``.
-
-
-"FileNotFoundError" with some stuff about _virtualenvs and site-packages
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You likely have Python 3.10 installed (Brew or XCode may have done this -- We're not sure how it happens). There is
-a bug in `virtualenv` that prevents us from even setting up the virtual environment.
-
-Uninstall it with the following:
-
-.. code-block:: shell
-
-    brew unlink python@3.10
-
-If you need Python 3.10, you can re-link it after the fact with
-
-.. code-block:: shell
-
-    brew link python@3.10

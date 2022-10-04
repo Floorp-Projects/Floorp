@@ -77,6 +77,21 @@ def main(args):
             """).strip())
         sys.exit(1)
 
+    if sys.version_info >= (3, 10) and sys.platform.startswith("darwin"):
+        version = f"{sys.version_info[0]}.{sys.version_info[1]}"
+        if f"python@{version}" in sys.executable:
+            print(dedent(f"""
+            You are using python {version} from homebrew.
+            There is a bug in virtualenv that prevents us from starting up mach in that situation.
+
+            Please uninstall it with the following and try again:
+              brew unlink python@{version}
+
+            If you need python {version} later, you can re-link it with:
+              brew link python@{version}
+            """).strip())
+            sys.exit(1)
+
     # XCode python sets __PYVENV_LAUNCHER__, which overrides the executable
     # used when a python subprocess is created. This is an issue when we want
     # to run using our virtualenv python executables.
