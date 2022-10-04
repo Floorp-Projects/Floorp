@@ -251,6 +251,10 @@ add_task(
         [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
         [AUTOFILL_CREDITCARDS_AVAILABLE_PREF, "on"],
         ["extensions.formautofill.creditCards.heuristics.testConfidence", "1"],
+        [
+          "extensions.formautofill.creditCards.heuristics.nameExpirySection.enabled",
+          true,
+        ],
       ],
     });
 
