@@ -15,6 +15,7 @@
 #include "mozilla/gfx/StackArray.h"
 #include "mozilla/layers/HelpersD3D11.h"
 #include "mozilla/layers/SyncObject.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/DCLayerTree.h"
 #include "mozilla/webrender/RenderThread.h"
@@ -581,7 +582,10 @@ bool RenderCompositorANGLE::WaitForGPU() {
   //   Wait for query #2.
   //
   // This ensures we're done reading textures before swapping buffers.
-  return WaitForPreviousGraphicsCommandsFinishedQuery();
+  if (!StaticPrefs::gfx_webrender_wait_gpu_finished_disabled_AtStartup()) {
+    return WaitForPreviousGraphicsCommandsFinishedQuery();
+  }
+  return true;
 }
 
 bool RenderCompositorANGLE::ResizeBufferIfNeeded() {
@@ -753,6 +757,7 @@ void RenderCompositorANGLE::InsertGraphicsCommandsFinishedWaitQuery(
   }
 
   mCtx->End(query);
+  mCtx->Flush();
   mWaitForPresentQueries.emplace(aFrameId, query);
 }
 
@@ -785,7 +790,8 @@ bool RenderCompositorANGLE::WaitForPreviousGraphicsCommandsFinishedQuery(
 RenderedFrameId RenderCompositorANGLE::GetLastCompletedFrameId() {
   while (!mWaitForPresentQueries.empty()) {
     auto queryPair = mWaitForPresentQueries.front();
-    if (mCtx->GetData(queryPair.second, nullptr, 0, 0) != S_OK) {
+    if (mCtx->GetData(queryPair.second, nullptr, 0,
+                      D3D11_ASYNC_GETDATA_DONOTFLUSH) != S_OK) {
       break;
     }
 
@@ -793,6 +799,10 @@ RenderedFrameId RenderCompositorANGLE::GetLastCompletedFrameId() {
     mLastCompletedFrameId = queryPair.first;
     mWaitForPresentQueries.pop();
   }
+
+  nsPrintfCString marker("Pending frames %u",
+                         (uint32_t)mWaitForPresentQueries.size());
+  PROFILER_MARKER_TEXT("GetLastCompletedFrameId", GRAPHICS, {}, marker);
 
   return mLastCompletedFrameId;
 }
