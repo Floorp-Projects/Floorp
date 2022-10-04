@@ -126,6 +126,7 @@ ol {
 
 .login-list-item:not(.selected):hover:active {
   background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-active);
 }
 
 .login-list-item.keyboard-selected {

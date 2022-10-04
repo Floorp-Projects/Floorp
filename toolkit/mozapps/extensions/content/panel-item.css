@@ -57,10 +57,11 @@ button:enabled:hover {
 
 button:enabled:hover:active {
   background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-active);
 }
 
 button:focus-visible {
-  outline-offset: -2px;
+  outline-offset: var(--in-content-focus-outline-inset);
 }
 
 button:disabled {

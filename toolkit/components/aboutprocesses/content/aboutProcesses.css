@@ -67,7 +67,6 @@ th, td {
   padding: 5px 10px;
   min-height: 16px;
   max-height: 2em;
-  color: var(--in-content-text-color);
   overflow: hidden;
   white-space: nowrap;
 }
@@ -101,10 +100,12 @@ td:first-child {
 }
 .profiler-icon:hover {
   background-color: var(--in-content-button-background-hover);
+  color: var(--in-content-button-text-color-hover);
 }
 
 .profiler-icon:hover:active {
   background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-active);
   fill-opacity: 1;
 }
 
@@ -170,7 +171,7 @@ tr[selected] > td {
 }
 
 /* Thread names can extend into the memory column. */
-.thread > :first-child{
+.thread > :first-child {
   grid-column: 1 / 3;
 }
 
@@ -197,9 +198,11 @@ tr[selected] > td {
 
 th.clickable:hover {
   background-color: var(--in-content-button-background-hover);
+  color: var(--in-content-button-text-color-hover);
 }
 th.clickable:hover:active {
   background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-active);
 }
 
 tr.process > td.type {
@@ -233,10 +236,12 @@ tr:is([selected], :hover):not(.killing) > .close-icon {
 
 .close-icon:hover {
   background-color: var(--in-content-button-background-hover);
+  color: var(--in-content-button-text-color-hover);
 }
 
 .close-icon:hover:active {
   background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-active);
 }
 
 /* column-name */

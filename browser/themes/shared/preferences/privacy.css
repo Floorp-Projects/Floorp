@@ -106,8 +106,6 @@
 }
 
 .arrowhead {
-  appearance: none;
-  border: none;
   border-radius: 2px;
   min-height: 20px;
   min-width: 20px;
@@ -120,11 +118,6 @@
 
 .arrowhead:not([disabled]):hover {
   cursor: pointer;
-  background-color: var(--in-content-button-background-hover);
-}
-
-.arrowhead:not([disabled]):hover:active {
-  background-color: var(--in-content-button-background-active);
 }
 
 .arrowhead.up {
