@@ -647,6 +647,7 @@ richlistbox {
 /*********** findbar ************/
 findbar {
   overflow-x: hidden;
+  contain: inline-size;
 }
 
 /* Some elements that in HTML blocks should be inline-level by default */

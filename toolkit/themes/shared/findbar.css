@@ -61,6 +61,7 @@ html|input.findbar-textbox {
   padding: 2px 5px;
   padding-inline-start: 8px;
   width: 18em;
+  box-sizing: border-box;
 }
 
 html|input.findbar-textbox:-moz-lwtheme {
