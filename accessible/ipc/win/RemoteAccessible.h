@@ -25,8 +25,7 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
                    DocAccessibleParent* aDoc, role aRole, AccType aType,
                    AccGenericType aGenericTypes, uint8_t aRoleMapEntryIndex)
       : RemoteAccessibleBase(aID, aParent, aDoc, aRole, aType, aGenericTypes,
-                             aRoleMapEntryIndex),
-        mSafeToRecurse(true) {
+                             aRoleMapEntryIndex) {
     MOZ_COUNT_CTOR(RemoteAccessible);
   }
 
@@ -57,7 +56,7 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
 
  private:
   RefPtr<IAccessible> mCOMProxy;
-  bool mSafeToRecurse;
+  bool mSafeToRecurse = true;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
