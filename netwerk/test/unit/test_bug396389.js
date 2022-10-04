@@ -22,10 +22,6 @@ var prefData = [
     name: "network.IDN_show_punycode",
     newVal: false,
   },
-  {
-    name: "network.IDN.whitelist.ch",
-    newVal: true,
-  },
 ];
 
 function run_test() {

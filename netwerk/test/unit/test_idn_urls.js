@@ -385,14 +385,12 @@ function run_test() {
     "network.IDN.restriction_profile",
     "moderate"
   );
-  var oldWhitelistCom = pbi.getBoolPref("network.IDN.whitelist.com", false);
   var idnService = Cc["@mozilla.org/network/idn-service;1"].getService(
     Ci.nsIIDNService
   );
 
   for (var i = 0; i < profiles.length; ++i) {
     pbi.setCharPref("network.IDN.restriction_profile", profiles[i]);
-    pbi.setBoolPref("network.IDN.whitelist.com", false);
 
     dump("testing " + profiles[i] + " profile");
 
@@ -434,6 +432,5 @@ function run_test() {
       }
     }
   }
-  pbi.setBoolPref("network.IDN.whitelist.com", oldWhitelistCom);
   pbi.setCharPref("network.IDN.restriction_profile", oldProfile);
 }
