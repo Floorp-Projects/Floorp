@@ -967,8 +967,7 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
   MOZ_ASSERT(!mRv.Failed(), "Who failed it and why?");
   mRv.MightThrowJSException();
   if (NS_FAILED(loadContext->mLoadResult)) {
-    nsAutoString url = NS_ConvertUTF8toUTF16(aRequest->mURL);
-    workerinternals::ReportLoadError(mRv, loadContext->mLoadResult, url);
+    ReportErrorToConsole(aRequest, loadContext->mLoadResult);
     return false;
   }
 
@@ -1067,6 +1066,12 @@ void WorkerScriptLoader::ShutdownScriptLoader(bool aResult, bool aMutedError) {
     // Allow worker shutdown.
     mWorkerRef = nullptr;
   }
+}
+
+void WorkerScriptLoader::ReportErrorToConsole(ScriptLoadRequest* aRequest,
+                                              nsresult aResult) const {
+  nsAutoString url = NS_ConvertUTF8toUTF16(aRequest->mURL);
+  workerinternals::ReportLoadError(mRv, aResult, url);
 }
 
 void WorkerScriptLoader::LogExceptionToConsole(JSContext* aCx,

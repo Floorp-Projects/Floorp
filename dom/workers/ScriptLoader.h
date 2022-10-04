@@ -253,11 +253,13 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
   }
 
   void ReportErrorToConsole(ScriptLoadRequest* aRequest,
-                            nsresult aResult) const override {}
+                            nsresult aResult) const override;
 
+  // Only used by import maps, crash if we get here.
   void ReportWarningToConsole(
       ScriptLoadRequest* aRequest, const char* aMessageName,
       const nsTArray<nsString>& aParams = nsTArray<nsString>()) const override {
+    MOZ_CRASH("Import maps have not been implemented for this context");
   }
 
   void LogExceptionToConsole(JSContext* aCx, WorkerPrivate* aWorkerPrivate);
