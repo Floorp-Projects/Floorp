@@ -20,10 +20,12 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/ImageBitmap.h"
+#include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Swizzle.h"
+#include "nsLayoutUtils.h"
 #include "nsIPrincipal.h"
 
 namespace mozilla::dom {
@@ -1100,10 +1102,54 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
 
 /* static */
 already_AddRefed<VideoFrame> VideoFrame::Constructor(
-    const GlobalObject& global, OffscreenCanvas& offscreenCanvas,
-    const VideoFrameInit& init, ErrorResult& aRv) {
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-  return nullptr;
+    const GlobalObject& aGlobal, OffscreenCanvas& aOffscreenCanvas,
+    const VideoFrameInit& aInit, ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  // Check the usability.
+  if (aOffscreenCanvas.Width() == 0) {
+    aRv.ThrowInvalidStateError("The canvas has a width of 0");
+    return nullptr;
+  }
+  if (aOffscreenCanvas.Height() == 0) {
+    aRv.ThrowInvalidStateError("The canvas has a height of 0");
+    return nullptr;
+  }
+
+  // If the origin of the OffscreenCanvas's image data is not same origin with
+  // the entry settings object's origin, then throw a SecurityError
+  // DOMException.
+  SurfaceFromElementResult res = nsLayoutUtils::SurfaceFromOffscreenCanvas(
+      &aOffscreenCanvas, nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE);
+  if (res.mIsWriteOnly) {
+    // Being write-only implies its image is cross-origin w/out CORS headers.
+    aRv.ThrowSecurityError("The canvas is not same-origin");
+    return nullptr;
+  }
+
+  RefPtr<gfx::SourceSurface> surface = res.GetSourceSurface();
+  if (NS_WARN_IF(!surface)) {
+    aRv.ThrowInvalidStateError("The canvas' surface acquisition failed");
+    return nullptr;
+  }
+
+  if (!aInit.mTimestamp.WasPassed()) {
+    aRv.ThrowTypeError("Missing timestamp");
+    return nullptr;
+  }
+
+  RefPtr<layers::SourceSurfaceImage> image =
+      new layers::SourceSurfaceImage(surface.get());
+  auto r = InitializeFrameWithResourceAndSize(global, aInit, image.forget());
+  if (r.isErr()) {
+    aRv.ThrowTypeError(r.unwrapErr());
+    return nullptr;
+  }
+  return r.unwrap();
 }
 
 /* static */
