@@ -898,19 +898,20 @@ Result<EditorDOMPoint, nsresult> AutoRangeArray::
 
     if (!atEnd.IsStartOfContainer() && !atEnd.IsEndOfContainer()) {
       // Split the text node.
-      SplitNodeResult splitAtEndResult =
+      Result<SplitNodeResult, nsresult> splitAtEndResult =
           aHTMLEditor.SplitNodeWithTransaction(atEnd);
-      if (splitAtEndResult.isErr()) {
+      if (MOZ_UNLIKELY(splitAtEndResult.isErr())) {
         NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-        return Err(splitAtEndResult.unwrapErr());
+        return splitAtEndResult.propagateErr();
       }
-      splitAtEndResult.MoveCaretPointTo(pointToPutCaret,
-                                        {SuggestCaret::OnlyIfHasSuggestion});
+      SplitNodeResult unwrappedSplitAtEndResult = splitAtEndResult.unwrap();
+      unwrappedSplitAtEndResult.MoveCaretPointTo(
+          pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
 
       // Correct the range.
       // The new end parent becomes the parent node of the text.
       MOZ_ASSERT(!range->IsInSelection());
-      range->SetEnd(splitAtEndResult.AtNextContent<EditorRawDOMPoint>()
+      range->SetEnd(unwrappedSplitAtEndResult.AtNextContent<EditorRawDOMPoint>()
                         .ToRawRangeBoundary(),
                     ignoredError);
       NS_WARNING_ASSERTION(!ignoredError.Failed(),

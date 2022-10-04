@@ -72,9 +72,9 @@ class SplitNodeTransaction final : public EditTransactionBase {
  protected:
   virtual ~SplitNodeTransaction() = default;
 
-  MOZ_CAN_RUN_SCRIPT SplitNodeResult
-  DoTransactionInternal(HTMLEditor& aHTMLEditor, nsIContent& aSplittingContent,
-                        nsIContent& aNewContent, uint32_t aSplitOffset);
+  MOZ_CAN_RUN_SCRIPT Result<SplitNodeResult, nsresult> DoTransactionInternal(
+      HTMLEditor& aHTMLEditor, nsIContent& aSplittingContent,
+      nsIContent& aNewContent, uint32_t aSplitOffset);
 
   RefPtr<HTMLEditor> mHTMLEditor;
 

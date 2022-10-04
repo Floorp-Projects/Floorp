@@ -162,6 +162,23 @@ nsresult SplitNodeResult::SuggestCaretPointTo(
              : rv;
 }
 
+bool SplitNodeResult::CopyCaretPointTo(
+    EditorDOMPoint& aPointToPutCaret, const HTMLEditor& aHTMLEditor,
+    const SuggestCaretOptions& aOptions) const {
+  MOZ_ASSERT(!aOptions.contains(SuggestCaret::AndIgnoreTrivialError));
+  mHandledCaretPoint = true;
+  if (aOptions.contains(SuggestCaret::OnlyIfHasSuggestion) &&
+      !mCaretPoint.IsSet()) {
+    return false;
+  }
+  if (aOptions.contains(SuggestCaret::OnlyIfTransactionsAllowedToDoIt) &&
+      !aHTMLEditor.AllowsTransactionsToChangeSelection()) {
+    return false;
+  }
+  aPointToPutCaret = mCaretPoint;
+  return true;
+}
+
 bool SplitNodeResult::MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
                                        const HTMLEditor& aHTMLEditor,
                                        const SuggestCaretOptions& aOptions) {
