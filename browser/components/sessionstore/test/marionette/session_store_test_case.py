@@ -89,7 +89,7 @@ class SessionStoreTestCase(WindowManagerMixin, MarionetteTestCase):
     def tearDown(self):
         try:
             # Create a fresh profile for subsequent tests.
-            self.marionette.restart(clean=True)
+            self.marionette.restart(in_app=False, clean=True)
         finally:
             super(SessionStoreTestCase, self).tearDown()
 
@@ -213,7 +213,7 @@ class SessionStoreTestCase(WindowManagerMixin, MarionetteTestCase):
 
     def close_all_tabs_and_restart(self):
         self.close_all_tabs()
-        self.marionette.quit(in_app=True, callback=self._close_tab_shortcut)
+        self.marionette.quit(callback=self._close_tab_shortcut)
         self.marionette.start_session()
 
     def simulate_os_shutdown(self):
@@ -399,7 +399,7 @@ class SessionStoreTestCase(WindowManagerMixin, MarionetteTestCase):
             ),
         )
 
-        self.marionette.quit(in_app=True, callback=lambda: self.simulate_os_shutdown())
+        self.marionette.quit(callback=lambda: self.simulate_os_shutdown())
 
         saved_args = self.marionette.instance.app_args
         try:

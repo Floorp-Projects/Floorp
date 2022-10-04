@@ -15,7 +15,7 @@ class TestEnforcePreferences(MarionetteTestCase):
         self.marionette.set_context("chrome")
 
     def tearDown(self):
-        self.marionette.restart(clean=True)
+        self.marionette.restart(in_app=False, clean=True)
 
         super(TestEnforcePreferences, self).tearDown()
 
@@ -45,7 +45,7 @@ class TestEnforcePreferences(MarionetteTestCase):
         self.enforce_prefs()
         self.assertTrue(self.marionette.get_pref("marionette.test.bool"))
 
-        self.marionette.restart(clean=True)
+        self.marionette.restart(in_app=False, clean=True)
         self.assertEqual(self.marionette.get_pref("marionette.test.bool"), None)
 
     def test_restart_preserves_requested_capabilities(self):
