@@ -49,6 +49,27 @@ class ModuleLoaderBase;
 class ModuleLoadRequest;
 class ModuleScript;
 
+/*
+ * [DOMDOC] Shared Classic/Module Script Methods
+ *
+ * The ScriptLoaderInterface defines the shared methods needed by both
+ * ScriptLoaders (loading classic scripts) and ModuleLoaders (loading module
+ * scripts). These include:
+ *
+ *     * Error Logging
+ *     * Generating the compile options
+ *     * Optional: Bytecode Encoding
+ *
+ * ScriptLoaderInterface does not provide any implementations.
+ * It enables the ModuleLoaderBase to reference back to the behavior implemented
+ * by a given ScriptLoader.
+ *
+ * Not all methods will be used by all ModuleLoaders. For example, Bytecode
+ * Encoding does not apply to workers, as we only work with source text there.
+ * Fully virtual methods are implemented by all.
+ *
+ */
+
 class ScriptLoaderInterface : public nsISupports {
  public:
   // alias common classes
