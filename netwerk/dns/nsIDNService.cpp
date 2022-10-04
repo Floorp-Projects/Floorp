@@ -75,7 +75,7 @@ static inline bool isOnlySafeChars(const nsString& in,
 //-----------------------------------------------------------------------------
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS(nsIDNService, nsIIDNService, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsIDNService, nsIIDNService)
 
 static const char* gCallbackPrefs[] = {
     NS_NET_PREF_EXTRAALLOWED,

@@ -8,7 +8,6 @@
 
 #include "nsIIDNService.h"
 #include "nsCOMPtr.h"
-#include "nsWeakReference.h"
 
 #include "mozilla/RWLock.h"
 #include "mozilla/intl/UnicodeScriptCodes.h"
@@ -24,8 +23,7 @@ class nsIPrefBranch;
 // nsIDNService
 //-----------------------------------------------------------------------------
 
-class nsIDNService final : public nsIIDNService,
-                           public nsSupportsWeakReference {
+class nsIDNService final : public nsIIDNService {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIIDNSERVICE
