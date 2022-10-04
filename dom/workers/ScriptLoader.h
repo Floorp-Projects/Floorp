@@ -248,9 +248,7 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
 
   nsresult FillCompileOptionsForRequest(
       JSContext* cx, ScriptLoadRequest* aRequest, JS::CompileOptions* aOptions,
-      JS::MutableHandle<JSScript*> aIntroductionScript) override {
-    return NS_OK;
-  }
+      JS::MutableHandle<JSScript*> aIntroductionScript) override;
 
   void ReportErrorToConsole(ScriptLoadRequest* aRequest,
                             nsresult aResult) const override;
