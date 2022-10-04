@@ -2945,6 +2945,12 @@
   value: true
   mirror: always
 
+# WebCodecs API
+- name: dom.media.webcodecs.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Number of seconds of very quiet or silent audio before considering the audio
 # inaudible.
 - name: dom.media.silence_duration_for_audibility
