@@ -2262,19 +2262,19 @@ void nsGenericHTMLElement::HandleKeyboardActivation(
   bool shouldActivate = false;
   switch (message) {
     case eKeyDown:
-      if (keyEvent->ShouldWorkAsSpaceKey()) {
+      if (keyEvent->mKeyCode == NS_VK_SPACE) {
         SetFlags(HTML_ELEMENT_ACTIVE_FOR_KEYBOARD);
       }
       return;
     case eKeyPress:
       shouldActivate = keyEvent->mKeyCode == NS_VK_RETURN;
-      if (keyEvent->ShouldWorkAsSpaceKey()) {
+      if (keyEvent->mKeyCode == NS_VK_SPACE) {
         // Consume 'space' key to prevent scrolling the page down.
         aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
       }
       break;
     case eKeyUp:
-      shouldActivate = keyEvent->ShouldWorkAsSpaceKey() &&
+      shouldActivate = keyEvent->mKeyCode == NS_VK_SPACE &&
                        HasFlag(HTML_ELEMENT_ACTIVE_FOR_KEYBOARD);
       if (shouldActivate) {
         UnsetFlags(HTML_ELEMENT_ACTIVE_FOR_KEYBOARD);
