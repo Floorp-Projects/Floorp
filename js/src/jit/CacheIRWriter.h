@@ -482,19 +482,21 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   }
 
   void callScriptedFunction(ObjOperandId callee, Int32OperandId argc,
-                            CallFlags flags) {
-    callScriptedFunction_(callee, argc, flags);
+                            CallFlags flags, uint32_t argcFixed) {
+    callScriptedFunction_(callee, argc, flags, argcFixed);
     trialInliningState_ = TrialInliningState::Candidate;
   }
 
   void callInlinedFunction(ObjOperandId callee, Int32OperandId argc,
-                           ICScript* icScript, CallFlags flags) {
-    callInlinedFunction_(callee, argc, icScript, flags);
+                           ICScript* icScript, CallFlags flags,
+                           uint32_t argcFixed) {
+    callInlinedFunction_(callee, argc, icScript, flags, argcFixed);
     trialInliningState_ = TrialInliningState::Inlined;
   }
 
   void callNativeFunction(ObjOperandId calleeId, Int32OperandId argc, JSOp op,
-                          JSFunction* calleeFunc, CallFlags flags) {
+                          JSFunction* calleeFunc, CallFlags flags,
+                          uint32_t argcFixed) {
     // Some native functions can be implemented faster if we know that
     // the return value is ignored.
     bool ignoresReturnValue =
@@ -513,28 +515,28 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
                           : calleeFunc->native();
     void* rawPtr = JS_FUNC_TO_DATA_PTR(void*, target);
     void* redirected = Simulator::RedirectNativeFunction(rawPtr, Args_General3);
-    callNativeFunction_(calleeId, argc, flags, redirected);
+    callNativeFunction_(calleeId, argc, flags, argcFixed, redirected);
 #else
     // If we are not running in the simulator, we generate different jitcode
     // to find the ignoresReturnValue version of a native function.
-    callNativeFunction_(calleeId, argc, flags, ignoresReturnValue);
+    callNativeFunction_(calleeId, argc, flags, argcFixed, ignoresReturnValue);
 #endif
   }
 
   void callDOMFunction(ObjOperandId calleeId, Int32OperandId argc,
                        ObjOperandId thisObjId, JSFunction* calleeFunc,
-                       CallFlags flags) {
+                       CallFlags flags, uint32_t argcFixed) {
 #ifdef JS_SIMULATOR
     void* rawPtr = JS_FUNC_TO_DATA_PTR(void*, calleeFunc->native());
     void* redirected = Simulator::RedirectNativeFunction(rawPtr, Args_General3);
-    callDOMFunction_(calleeId, argc, thisObjId, flags, redirected);
+    callDOMFunction_(calleeId, argc, thisObjId, flags, argcFixed, redirected);
 #else
-    callDOMFunction_(calleeId, argc, thisObjId, flags);
+    callDOMFunction_(calleeId, argc, thisObjId, flags, argcFixed);
 #endif
   }
 
   void callAnyNativeFunction(ObjOperandId calleeId, Int32OperandId argc,
-                             CallFlags flags) {
+                             CallFlags flags, uint32_t argcFixed) {
     MOZ_ASSERT(!flags.isSameRealm());
 #ifdef JS_SIMULATOR
     // The simulator requires native calls to be redirected to a
@@ -545,15 +547,15 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     JSNative target = CallAnyNative;
     void* rawPtr = JS_FUNC_TO_DATA_PTR(void*, target);
     void* redirected = Simulator::RedirectNativeFunction(rawPtr, Args_General3);
-    callNativeFunction_(calleeId, argc, flags, redirected);
+    callNativeFunction_(calleeId, argc, flags, argcFixed, redirected);
 #else
-    callNativeFunction_(calleeId, argc, flags,
+    callNativeFunction_(calleeId, argc, flags, argcFixed,
                         /* ignoresReturnValue = */ false);
 #endif
   }
 
   void callClassHook(ObjOperandId calleeId, Int32OperandId argc, JSNative hook,
-                     CallFlags flags) {
+                     CallFlags flags, uint32_t argcFixed) {
     MOZ_ASSERT(!flags.isSameRealm());
     void* target = JS_FUNC_TO_DATA_PTR(void*, hook);
 #ifdef JS_SIMULATOR
@@ -562,7 +564,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     // pointer in the stub and use that instead of the original one.
     target = Simulator::RedirectNativeFunction(target, Args_General3);
 #endif
-    callClassHook_(calleeId, argc, flags, target);
+    callClassHook_(calleeId, argc, flags, argcFixed, target);
   }
 
   void callScriptedGetterResult(ValOperandId receiver, JSFunction* getter,

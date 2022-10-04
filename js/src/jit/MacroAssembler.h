@@ -5283,7 +5283,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // on the stack, such that the JitFrameLayout would be correctly aligned on
   // the JitStackAlignment.
   void alignJitStackBasedOnNArgs(Register nargs, bool countIncludesThis);
-  void alignJitStackBasedOnNArgs(uint32_t argc);
+  void alignJitStackBasedOnNArgs(uint32_t argc, bool countIncludesThis);
 
   inline void assertStackAlignment(uint32_t alignment, int32_t offset = 0);
 
