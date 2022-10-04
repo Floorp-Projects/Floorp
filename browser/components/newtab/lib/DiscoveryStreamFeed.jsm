@@ -607,11 +607,27 @@ class DiscoveryStreamFeed {
         items = isBasicLayout ? 4 : 24;
       }
 
+      const spocAdTypes = pocketConfig.spocAdTypes
+        ?.split(",")
+        .map(item => parseInt(item, 10));
+      const spocZoneIds = pocketConfig.spocZoneIds
+        ?.split(",")
+        .map(item => parseInt(item, 10));
+      let spocPlacementData;
+
+      if (spocAdTypes?.length && spocZoneIds?.length) {
+        spocPlacementData = {
+          ad_types: spocAdTypes,
+          zone_ids: spocZoneIds,
+        };
+      }
+
       // Set a hardcoded layout if one is needed.
       // Changing values in this layout in memory object is unnecessary.
       layoutResp = getHardcodedLayout({
         items,
         sponsoredCollectionsEnabled,
+        spocPlacementData,
         spocPositions: this.parseGridPositions(
           pocketConfig.spocPositions?.split(`,`)
         ),
@@ -668,8 +684,8 @@ class DiscoveryStreamFeed {
             isStartup,
           },
         });
-        this.updatePlacements(sendUpdate, layoutResp.layout, isStartup);
       }
+      this.updatePlacements(sendUpdate, layoutResp.layout, isStartup);
     }
   }
 
@@ -2014,6 +2030,7 @@ class DiscoveryStreamFeed {
    NOTE: There is some branching logic in the template.
      `items` How many items to include in the primary card grid.
      `spocPositions` Changes the position of spoc cards.
+     `spocPlacementData` Used to set the spoc content.
      `sponsoredCollectionsEnabled` Tuns on and off the sponsored collection section.
      `hybridLayout` Changes cards to smaller more compact cards only for specific breakpoints.
      `hideCardBackground` Removes Pocket card background and borders.
@@ -2026,6 +2043,7 @@ class DiscoveryStreamFeed {
 getHardcodedLayout = ({
   items = 21,
   spocPositions = [1, 5, 7, 11, 18, 20],
+  spocPlacementData = { ad_types: [3617], zone_ids: [217758, 217995] },
   widgetPositions = [],
   widgetData = [],
   sponsoredCollectionsEnabled = false,
@@ -2130,8 +2148,8 @@ getHardcodedLayout = ({
           },
           placement: {
             name: "spocs",
-            ad_types: [3617],
-            zone_ids: [217758, 217995],
+            ad_types: spocPlacementData.ad_types,
+            zone_ids: spocPlacementData.zone_ids,
           },
           feed: {
             embed_reference: null,
