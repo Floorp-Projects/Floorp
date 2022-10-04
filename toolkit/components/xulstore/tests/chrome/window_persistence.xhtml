@@ -9,6 +9,7 @@
 
 <button id="button1" label="Button1" persist="value"/>
 <button id="button2" label="Button2" value="Normal" persist="value"/>
+<button id="button3" label="Button3" value="Normal" persist="hidden" hidden="true"/>
 
 <script>
 <![CDATA[
@@ -26,6 +27,7 @@ function runTest()
   var firstRun = window.arguments[0];
   var button1 = document.getElementById("button1");
   var button2 = document.getElementById("button2");
+  var button3 = document.getElementById("button3");
   if (firstRun) {
     button1.setAttribute("value", "Pressed");
     button2.removeAttribute("value");
@@ -37,19 +39,20 @@ function runTest()
     XULStore.persist(button2, "foo");
     is(XULStore.hasValue(URI, "button2", "foo"), false, "attribute removed");
 
+    button3.removeAttribute("hidden");
+
     window.close();
     window.arguments[1].windowOpened();
   }
   else {
     is(button1.getAttribute("value"), "Pressed",
        "Attribute set");
-    is(button2.hasAttribute("value"), true,
-       "Attribute cleared");
-    is(button2.getAttribute("value"), "",
+    is(button2.hasAttribute("value"), false,
        "Attribute cleared");
     is(button2.hasAttribute("foo"), false,
        "Attribute cleared");
-    is(button2.getAttribute("foo"), "",
+
+    is(button3.hasAttribute("hidden"), false,
        "Attribute cleared");
 
     window.close();

@@ -29,14 +29,13 @@ class XULPersist final : public nsStubDocumentObserver {
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
  protected:
-  void Persist(mozilla::dom::Element* aElement, int32_t aNameSpaceID,
-               nsAtom* aAttribute);
+  void Persist(mozilla::dom::Element* aElement, nsAtom* aAttribute);
 
  private:
   ~XULPersist();
   nsresult ApplyPersistentAttributes();
-  nsresult ApplyPersistentAttributesInternal();
   nsresult ApplyPersistentAttributesToElements(const nsAString& aID,
+                                               const nsAString& aDocURI,
                                                nsCOMArray<Element>& aElements);
 
 #ifndef MOZ_NEW_XULSTORE
