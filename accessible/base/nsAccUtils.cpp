@@ -473,6 +473,10 @@ Accessible* nsAccUtils::GetAccessibleByID(Accessible* aDoc, uint64_t aID) {
   }
   if (LocalAccessible* localAcc = aDoc->AsLocal()) {
     if (DocAccessible* doc = localAcc->AsDoc()) {
+      if (!aID) {
+        // GetAccessibleByUniqueID doesn't treat 0 as the document.
+        return aDoc;
+      }
       return doc->GetAccessibleByUniqueID(
           reinterpret_cast<void*>(static_cast<uintptr_t>(aID)));
     }
