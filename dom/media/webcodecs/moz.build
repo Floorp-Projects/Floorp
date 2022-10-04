@@ -6,10 +6,12 @@
 
 EXPORTS.mozilla.dom += [
     "VideoColorSpace.h",
+    "VideoFrame.h",
 ]
 
 UNIFIED_SOURCES += [
     "VideoColorSpace.cpp",
+    "VideoFrame.cpp",
 ]
 
 FINAL_LIBRARY = "xul"
