@@ -263,7 +263,8 @@ bool GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
     tex = OpenSharedTexture(d3d, handle);
   }
   if (!tex) {
-    MOZ_GL_ASSERT(mGL, false);  // Get a nullptr from OpenSharedResource.
+    gfxCriticalNote
+        << "Failed to open ID3D11Texture2D in GLBlitHelper::BlitDescriptor.";
     return false;
   }
   const RefPtr<ID3D11Texture2D> texList[2] = {tex, tex};
@@ -319,8 +320,7 @@ bool GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
 
   const auto& prog = GetDrawBlitProg(
       {kFragHeader_TexExt, {kFragSample_TwoPlane, kFragConvert_ColorMatrix}});
-  prog->Draw(baseArgs, &yuvArgs);
-  return true;
+  return prog->Draw(baseArgs, &yuvArgs);
 }
 
 bool GLBlitHelper::BlitDescriptor(
@@ -370,8 +370,7 @@ bool GLBlitHelper::BlitAngleYCbCr(const WindowsHandle (&handleList)[3],
 
   const auto& prog = GetDrawBlitProg(
       {kFragHeader_TexExt, {kFragSample_ThreePlane, kFragConvert_ColorMatrix}});
-  prog->Draw(baseArgs, &yuvArgs);
-  return true;
+  return prog->Draw(baseArgs, &yuvArgs);
 }
 
 }  // namespace gl
