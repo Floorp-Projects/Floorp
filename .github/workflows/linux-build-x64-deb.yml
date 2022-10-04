@@ -63,33 +63,41 @@ jobs:
         sudo dpkg-deb -b $DEBWORK
     - name: Compress artifacts
       run: |
-        sudo apt update
-        sudo apt install gzip gpg dpkg-dev
         export WORKDIR=`pwd`
         export DISPVER=`cat browser/config/version_display.txt`
         export DEBWORK=$WORKDIR/floorp-$DISPVER
+        echo "export end"
         sudo touch floorp-$DISPVER.deb
+        echo "touch end"
         sudo chmod +r floorp-$DISPVER.deb
+        echo "chmod end"
         zip -r dist.zip floorp-$DISPVER.deb
+        echo "compress end"
+    - name: Update PPA
+      run: |
+        echo "ppa start"
+        export DISPVER=`cat browser/config/version_display.txt`
         mkdir publish
         cd publish
         echo "${{ secrets.GPG_SEC }}" > Floorp_sec.asc
         gpg --import Floorp_sec.asc
-        echo "${{ secrets.FTP_INIT_SCRIPT }}" > init_script
-        ftp -n -p < init_script
+        echo "${{ secrets.FTP_INIT_SCRIPT }}" > init_script.txt
+        echo "upload start"
+        ftp -n -p < init_script.txt
         cp ../floorp-$DISPVER.deb ./
         dpkg-scanpackages --multiversion . > Packages
         gzip -k -f Packages
         apt-ftparchive release . > Release
         gpg --default-key "${{ secrets.GPG_SSB }}" -abs -o - Release > Release.gpg
         gpg --default-key "${{ secrets.GPG_SSB }}" --clearsign -o - Release > InRelease
-        echo "${{ secrets.FTP_FINISH_SCRIPT }}" > finish_script
-        ftp -n -p < finish_script
-        rm init_script finish_script Floorp_sec.asc
+        echo "${{ secrets.FTP_FINISH_SCRIPT }}" > finish_script.txt
+        ftp -n -p < finish_script.txt
+        rm init_script.txt finish_script.txt Floorp_sec.asc
         cd ../
-        
+
     - name: Publish
       uses: actions/upload-artifact@v1
       with:
         name: floorp-debian-amd64
         path: dist.zip
+
