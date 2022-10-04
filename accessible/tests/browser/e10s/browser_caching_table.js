@@ -206,6 +206,7 @@ addAccessibleTask(
 <table id="layout"><tr><td>a</td></tr></table>
 <table id="data"><tr><th>a</th></tr></table>
 <table id="mutate"><tr><td>a</td><td>b</td></tr></table>
+<div id="newTableContainer"></div>
   `,
   async function(browser, docAcc) {
     const layout = findAccessibleChildByID(docAcc, "layout");
@@ -214,6 +215,7 @@ addAccessibleTask(
     testAbsentAttrs(data, { "layout-guess": "true" });
     const mutate = findAccessibleChildByID(docAcc, "mutate");
     testAttrs(mutate, { "layout-guess": "true" }, true);
+
     info("mutate: Adding 5 rows");
     let reordered = waitForEvent(EVENT_REORDER, mutate);
     await invokeContentTask(browser, [], () => {
@@ -227,6 +229,35 @@ addAccessibleTask(
     });
     await reordered;
     testAbsentAttrs(mutate, { "layout-guess": "true" });
+
+    info("mutate: Removing 5 rows");
+    reordered = waitForEvent(EVENT_REORDER, mutate);
+    await invokeContentTask(browser, [], () => {
+      // Pause refresh driver so all the children removals below will
+      // be collated into the same tick and only one 'reorder' event will
+      // be dispatched.
+      content.windowUtils.advanceTimeAndRefresh(100);
+
+      let tBody = content.document.getElementById("mutate").tBodies[0];
+      for (let r = 0; r < 6; ++r) {
+        tBody.lastChild.remove();
+      }
+
+      // Resume refresh driver
+      content.windowUtils.restoreNormalRefresh();
+    });
+    await reordered;
+    testAttrs(mutate, { "layout-guess": "true" }, true);
+
+    info("mutate: Adding new table");
+    let shown = waitForEvent(EVENT_SHOW, "newTable");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById(
+        "newTableContainer"
+      ).innerHTML = `<table id="newTable"><tr><th>a</th></tr></table>`;
+    });
+    let newTable = (await shown).accessible;
+    testAbsentAttrs(newTable, { "layout-guess": "true" });
   },
   {
     chrome: true,
