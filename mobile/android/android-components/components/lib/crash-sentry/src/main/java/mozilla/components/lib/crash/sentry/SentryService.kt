@@ -126,7 +126,7 @@ class SentryService(
             // Disable uncaught non-native exceptions from being reported.
             // We already have our own uncaught exception handler [ExceptionHandler],
             // so we don't need Sentry's default one.
-            options.enableUncaughtExceptionHandler = false
+            options.setEnableUncaughtExceptionHandler(false)
             // Disable uncaught native exceptions from being reported.
             // Sentry don't have a way to disable uncaught native exceptions from being reported.
             // As a fallback we had to disable all native integrations.

@@ -30,7 +30,6 @@ buildscript {
     dependencies {
         classpath Dependencies.tools_androidgradle
         classpath Dependencies.tools_kotlingradle
-        classpath Dependencies.tools_androidmavenpublish
     }
 }
 

@@ -10,28 +10,28 @@ object Versions {
     const val kotlin = "1.6.10"
     const val coroutines = "1.6.1"
 
-    const val junit = "4.12"
-    const val robolectric = "4.8.1"
-    const val mockito = "3.11.2"
+    const val junit = "4.13.2"
+    const val robolectric = "4.9"
+    const val mockito = "3.12.4"
     const val maven_ant_tasks = "2.1.3"
 
+    // TO-DO: These could be kept in sync in the future
     const val mockwebserver = "3.10.0"
+    const val okhttp = "3.13.1"
 
     const val android_gradle_plugin = "7.3.0"
-    const val android_maven_publish_plugin = "3.6.2"
 
     // This has to be synced to the gradlew plugin version. See
     // http://googlesamples.github.io/android-custom-lint-rules/api-guide/example.md.html#example:samplelintcheckgithubproject/lintversion?
     const val lint = "30.3.0"
     const val detekt = "1.19.0"
 
-    const val sentry_legacy = "1.7.21"
-    const val sentry_latest = "5.7.3"
-    const val okhttp = "3.13.1"
-    const val zxing = "3.3.0"
-    const val jna = "5.8.0"
+    const val sentry_legacy = "1.7.30"
+    const val sentry_latest = "6.4.2"
+    const val zxing = "3.5.0"
+    const val jna = "5.12.1"
     const val disklrucache = "2.0.2"
-    const val leakcanary = "2.8.1"
+    const val leakcanary = "2.9.1"
 
     const val mozilla_appservices = "94.2.1"
 
@@ -149,7 +149,6 @@ object Dependencies {
 
     const val tools_androidgradle = "com.android.tools.build:gradle:${Versions.android_gradle_plugin}"
     const val tools_kotlingradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
-    const val tools_androidmavenpublish = "digital.wup:android-maven-publish:${Versions.android_maven_publish_plugin}"
 
     const val tools_lint = "com.android.tools.lint:lint:${Versions.lint}"
     const val tools_lintapi = "com.android.tools.lint:lint-api:${Versions.lint}"
