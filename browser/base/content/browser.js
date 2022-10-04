@@ -1688,8 +1688,8 @@ var gBrowserInit = {
         window.matchMedia("(-moz-windows-default-theme)").matches
       ) {
         let windowFrameColor = new Color(
-          ...ChromeUtils.import(
-            "resource:///modules/Windows8WindowFrameColor.jsm"
+          ...ChromeUtils.importESModule(
+            "resource:///modules/Windows8WindowFrameColor.sys.mjs"
           ).Windows8WindowFrameColor.get()
         );
         // Default to black for foreground text.

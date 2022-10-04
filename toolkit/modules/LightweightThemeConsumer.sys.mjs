@@ -10,16 +10,11 @@ const { AppConstants } = ChromeUtils.import(
 const lazy = {};
 // Get the theme variables from the app resource directory.
 // This allows per-app variables.
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ThemeContentPropertyList",
-  "resource:///modules/ThemeVariableMap.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ThemeVariableMap",
-  "resource:///modules/ThemeVariableMap.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  ThemeContentPropertyList: "resource:///modules/ThemeVariableMap.sys.mjs",
+  ThemeVariableMap: "resource:///modules/ThemeVariableMap.sys.mjs",
+});
+
 ChromeUtils.defineModuleGetter(
   lazy,
   "PrivateBrowsingUtils",

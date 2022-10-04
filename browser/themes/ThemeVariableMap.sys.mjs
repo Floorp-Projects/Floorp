@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["ThemeVariableMap", "ThemeContentPropertyList"];
-
-const ThemeVariableMap = [
+export const ThemeVariableMap = [
   [
     "--lwt-accent-color-inactive",
     {
@@ -180,7 +178,7 @@ const ThemeVariableMap = [
   ],
 ];
 
-const ThemeContentPropertyList = [
+export const ThemeContentPropertyList = [
   "ntp_background",
   "ntp_card_background",
   "ntp_text",
