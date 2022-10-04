@@ -932,12 +932,15 @@ var DownloadIntegration = {
   _getDirectory(name) {
     return Services.dirsvc.get(name, Ci.nsIFile).path;
   },
+
   /**
    * Initializes the DownloadSpamProtection instance.
    * This is used to observe and group multiple automatic downloads.
    */
   _initializeDownloadSpamProtection() {
-    this.downloadSpamProtection = new lazy.DownloadSpamProtection();
+    if (!this.downloadSpamProtection) {
+      this.downloadSpamProtection = new lazy.DownloadSpamProtection();
+    }
   },
 
   /**
@@ -1191,13 +1194,13 @@ var DownloadObserver = {
         }
         break;
       case "blocked-automatic-download":
-        if (
-          AppConstants.MOZ_BUILD_APP == "browser" &&
-          !DownloadIntegration.downloadSpamProtection
-        ) {
+        if (AppConstants.MOZ_BUILD_APP == "browser") {
           DownloadIntegration._initializeDownloadSpamProtection();
+          DownloadIntegration.downloadSpamProtection.update(
+            aData,
+            aSubject.topChromeWindow
+          );
         }
-        DownloadIntegration.downloadSpamProtection.update(aData);
         break;
     }
   },

@@ -40,10 +40,11 @@ add_setup(async function() {
     Services.perms.UNKNOWN_ACTION
   );
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.download.improvements_to_download_panel", true],
-      ["browser.download.always_ask_before_handling_new_types", false], // To avoid the saving dialog being shown
-      ["browser.download.enable_spam_prevention", true],
+    set: [["browser.download.enable_spam_prevention", true]],
+    clear: [
+      ["browser.download.improvements_to_download_panel"],
+      ["browser.download.alwaysOpenPanel"],
+      ["browser.download.always_ask_before_handling_new_types"],
     ],
   });
 
@@ -57,12 +58,19 @@ add_setup(async function() {
 add_task(async function check_download_spam_ui() {
   await task_resetState();
 
+  let browserWin = BrowserWindowTracker.getTopWindow();
   registerCleanupFunction(async () => {
-    BrowserWindowTracker.getTopWindow().DownloadsPanel.hidePanel();
-    DownloadIntegration.downloadSpamProtection.clearDownloadSpam(TEST_URI);
+    for (let win of [browserWin, browserWin2]) {
+      win.DownloadsPanel.hidePanel();
+      DownloadIntegration.downloadSpamProtection.removeDownloadSpamForWindow(
+        TEST_URI,
+        win
+      );
+    }
     let publicList = await Downloads.getList(Downloads.PUBLIC);
     await publicList.removeFinished();
     BrowserTestUtils.removeTab(newTab);
+    await BrowserTestUtils.closeWindow(browserWin2);
   });
   let observedBlockedDownloads = 0;
   let gotAllBlockedDownloads = TestUtils.topicObserved(
@@ -73,7 +81,7 @@ add_task(async function check_download_spam_ui() {
   );
 
   let newTab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
+    browserWin.gBrowser,
     TEST_PATH + "test_spammy_page.html"
   );
 
@@ -83,11 +91,11 @@ add_task(async function check_download_spam_ui() {
     newTab.linkedBrowser
   );
 
-  info("Waiting on all blocked downloads.");
+  info("Waiting on all blocked downloads");
   await gotAllBlockedDownloads;
 
-  let spamProtection = DownloadIntegration.downloadSpamProtection;
-  let spamList = spamProtection.spamList;
+  let { downloadSpamProtection } = DownloadIntegration;
+  let spamList = downloadSpamProtection.getSpamListForWindow(browserWin);
   is(
     spamList._downloads[0].blockedDownloadsCount,
     99,
@@ -103,7 +111,7 @@ add_task(async function check_download_spam_ui() {
     "Verdict is DownloadSpam"
   );
 
-  let browserWin = BrowserWindowTracker.getTopWindow();
+  browserWin.focus();
   await BrowserTestUtils.waitForPopupEvent(
     browserWin.DownloadsPanel.panel,
     "shown"
@@ -112,7 +120,7 @@ add_task(async function check_download_spam_ui() {
   ok(browserWin.DownloadsPanel.isPanelShowing, "Download panel should open");
   await Downloads.getList(Downloads.PUBLIC);
 
-  let listbox = document.getElementById("downloadsListBox");
+  let listbox = browserWin.document.getElementById("downloadsListBox");
   ok(listbox, "Download list box present");
 
   await TestUtils.waitForCondition(() => {
@@ -126,4 +134,94 @@ add_task(async function check_download_spam_ui() {
     : listbox.itemChildren[1];
 
   ok(spamElement.classList.contains("temporary-block"), "Download is blocked");
+
+  info("Testing spam protection in a second window");
+
+  browserWin.DownloadsPanel.hidePanel();
+  DownloadIntegration.downloadSpamProtection.removeDownloadSpamForWindow(
+    TEST_URI,
+    browserWin
+  );
+
+  ok(
+    !browserWin.DownloadsPanel.isPanelShowing,
+    "Download panel should be closed in first window"
+  );
+  is(
+    listbox.childElementCount,
+    1,
+    "First window's download list should have one item - the download that wasn't blocked"
+  );
+
+  let browserWin2 = await BrowserTestUtils.openNewBrowserWindow();
+  let observedBlockedDownloads2 = 0;
+  let gotAllBlockedDownloads2 = TestUtils.topicObserved(
+    "blocked-automatic-download",
+    () => {
+      return ++observedBlockedDownloads2 >= 100;
+    }
+  );
+
+  let newTab2 = await BrowserTestUtils.openNewForegroundTab(
+    browserWin2.gBrowser,
+    TEST_PATH + "test_spammy_page.html"
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "body",
+    {},
+    newTab2.linkedBrowser
+  );
+
+  info("Waiting on all blocked downloads in second window");
+  await gotAllBlockedDownloads2;
+
+  let spamList2 = downloadSpamProtection.getSpamListForWindow(browserWin2);
+  is(
+    spamList2._downloads[0].blockedDownloadsCount,
+    100,
+    "100 blocked downloads recorded in second window"
+  );
+  ok(
+    !spamList._downloads[0]?.blockedDownloadsCount,
+    "No blocked downloads in first window"
+  );
+
+  browserWin2.focus();
+  await BrowserTestUtils.waitForPopupEvent(
+    browserWin2.DownloadsPanel.panel,
+    "shown"
+  );
+
+  ok(
+    browserWin2.DownloadsPanel.isPanelShowing,
+    "Download panel should open in second window"
+  );
+
+  ok(
+    !browserWin.DownloadsPanel.isPanelShowing,
+    "Download panel should not open in first window"
+  );
+
+  let listbox2 = browserWin2.document.getElementById("downloadsListBox");
+  ok(listbox2, "Download list box present");
+
+  await TestUtils.waitForCondition(() => {
+    return (
+      listbox2.childElementCount == 2 && !listbox2.getAttribute("disabled")
+    );
+  }, "2 downloads = 1 allowed download from first window, and 1 for 100 downloads blocked in second window");
+
+  is(
+    listbox.childElementCount,
+    1,
+    "First window's download list should still have one item - the download that wasn't blocked"
+  );
+
+  let spamElement2 = listbox2.itemChildren[0].classList.contains(
+    "temporary-block"
+  )
+    ? listbox2.itemChildren[0]
+    : listbox2.itemChildren[1];
+
+  ok(spamElement2.classList.contains("temporary-block"), "Download is blocked");
 });
