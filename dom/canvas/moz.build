@@ -159,7 +159,6 @@ UNIFIED_SOURCES += [
     "WebGLTexture.cpp",
     "WebGLTextureUpload.cpp",
     "WebGLTransformFeedback.cpp",
-    "WebGLTypes.cpp",
     "WebGLValidateStrings.cpp",
     "WebGLVertexArray.cpp",
     "WebGLVertexArrayFake.cpp",

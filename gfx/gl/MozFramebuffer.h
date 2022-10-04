@@ -56,8 +56,7 @@ class MozFramebuffer final {
   const GLuint mColorName;
 
  public:
-  // Create a new RGBA8 framebuffer with the specified properties.
-  // samples:0 for texture, samples:1 is subtly-different 1xMSAA.
+  // Create a new framebuffer with the specified properties.
   static UniquePtr<MozFramebuffer> Create(GLContext* gl,
                                           const gfx::IntSize& size,
                                           uint32_t samples, bool depthStencil);

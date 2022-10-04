@@ -4049,35 +4049,6 @@ void webgl::TexUnpackBlobDesc::Shrink(const webgl::PackingInfo& pi) {
 
 // -
 
-// Because often you need a null-terminated copy for printf.
-inline std::string ToString(std::string_view s) { return std::string{s}; }
-
-std::string_view ToString(const layers::SurfaceDescriptor::Type t) {
-  switch (t) {
-#define _(X)                         \
-  case layers::SurfaceDescriptor::X: \
-    return #X;
-
-    _(T__None)
-    _(TSurfaceDescriptorBuffer)
-    _(TSurfaceDescriptorD3D10)
-    _(TSurfaceDescriptorDXGIYCbCr)
-    _(TSurfaceDescriptorDMABuf)
-    _(TSurfaceTextureDescriptor)
-    _(TSurfaceDescriptorAndroidHardwareBuffer)
-    _(TEGLImageDescriptor)
-    _(TSurfaceDescriptorMacIOSurface)
-    _(TSurfaceDescriptorSharedGLTexture)
-    _(TSurfaceDescriptorGPUVideo)
-    _(TSurfaceDescriptorRecorded)
-    _(TSurfaceDescriptorRemoteTexture)
-    _(TSurfaceDescriptorDcompSurface)
-    _(Tnull_t)
-#undef _
-  }
-  MOZ_ASSERT_UNREACHABLE();
-}
-
 void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
                                   GLint level, GLenum respecFormat,
                                   const ivec3& offset,
@@ -4275,8 +4246,7 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
       const bool canUploadViaSd = contextInfo.uploadableSdTypes[sdType];
       if (!canUploadViaSd) {
         const nsPrintfCString msg(
-            "Fast uploads for resource type %s not implemented.",
-            ToString(ToString(sdType)).c_str());
+            "Fast uploads for resource type %i not implemented.", int(sdType));
         return Some(ToString(msg));
       }
 

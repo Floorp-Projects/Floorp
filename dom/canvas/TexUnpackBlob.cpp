@@ -393,8 +393,8 @@ bool TexUnpackBlob::ConvertIfNeeded(
 
   if (srcFormat != dstFormat) {
     webgl->GeneratePerfWarning(
-        "Conversion requires pixel reformatting. (%s->%s)",
-        ToString(srcFormat).c_str(), ToString(dstFormat).c_str());
+        "Conversion requires pixel reformatting. (%u->%u)", uint32_t(srcFormat),
+        uint32_t(dstFormat));
   } else if (fnHasPremultMismatch()) {
     webgl->GeneratePerfWarning(
         "Conversion requires change in"
@@ -664,60 +664,47 @@ Maybe<std::string> BlitPreventReason(const int32_t level, const ivec3& offset,
   const auto& size = desc.size;
   const auto& unpacking = desc.unpacking;
 
-  if (size.z != 1) {
-    return Some(std::string("depth is not 1"));
-  }
-  if (offset.x != 0 || offset.y != 0 || offset.z != 0) {
-    return Some(std::string("x/y/zOffset is not 0"));
-  }
-
-  if (unpacking.skipPixels || unpacking.skipRows || unpacking.skipImages) {
-    return Some(std::string("non-zero UNPACK_SKIP_* not yet supported"));
-  }
-
-  const auto premultReason = [&]() -> const char* {
-    if (desc.srcAlphaType == gfxAlphaType::Opaque) return nullptr;
-
-    const bool srcIsPremult = (desc.srcAlphaType == gfxAlphaType::Premult);
-    const auto& dstIsPremult = unpacking.premultiplyAlpha;
-    if (srcIsPremult == dstIsPremult) return nullptr;
-
-    if (dstIsPremult) {
-      return "UNPACK_PREMULTIPLY_ALPHA_WEBGL is not true";
-    } else {
-      return "UNPACK_PREMULTIPLY_ALPHA_WEBGL is not false";
+  const auto ret = [&]() -> const char* {
+    if (size.z != 1) {
+      return "depth is not 1";
     }
+    if (offset.x != 0 || offset.y != 0 || offset.z != 0) {
+      return "x/y/zOffset is not 0";
+    }
+
+    if (unpacking.skipPixels || unpacking.skipRows || unpacking.skipImages) {
+      return "non-zero UNPACK_SKIP_* not yet supported";
+    }
+
+    const auto premultReason = [&]() -> const char* {
+      if (desc.srcAlphaType == gfxAlphaType::Opaque) return nullptr;
+
+      const bool srcIsPremult = (desc.srcAlphaType == gfxAlphaType::Premult);
+      const auto& dstIsPremult = unpacking.premultiplyAlpha;
+      if (srcIsPremult == dstIsPremult) return nullptr;
+
+      if (dstIsPremult) {
+        return "UNPACK_PREMULTIPLY_ALPHA_WEBGL is not true";
+      } else {
+        return "UNPACK_PREMULTIPLY_ALPHA_WEBGL is not false";
+      }
+    }();
+    if (premultReason) return premultReason;
+
+    if (pi.format != LOCAL_GL_RGBA) {
+      return "`format` is not RGBA";
+    }
+
+    if (pi.type != LOCAL_GL_UNSIGNED_BYTE) {
+      return "`type` is not UNSIGNED_BYTE";
+    }
+    return nullptr;
   }();
-  if (premultReason) return Some(std::string(premultReason));
-
-  // RGBA8 spec'd as renderable.
-  // RGB8 we can probably guarantee to be renderable, with an init-time test.
-  // RG8 (etc) via draw-to-RGBA8 then copyTexSubImage.
-
-  switch (pi.format) {
-    case LOCAL_GL_RGBA:
-    case LOCAL_GL_RGB:
-      break;
-    default:
-      return Some(std::string("`format` is ") + EnumString(pi.format) +
-                  ", not RGB/RGBA");
+  if (ret) {
+    return Some(std::string(ret));
   }
-
-  if (pi.type != LOCAL_GL_UNSIGNED_BYTE) {
-    // Eventually, we can upload other types, so long as we know that
-    // (RGBA, type) is renderable.
-    return Some(std::string("`type` is ") + EnumString(pi.type) +
-                ", not UNSIGNED_BYTE");
-  }
-
   return {};
 }
-
-}  // namespace webgl
-void CopyTexSubImage(gl::GLContext* gl, TexImageTarget target, GLint level,
-                     GLint xOffset, GLint yOffset, GLint zOffset, GLint x,
-                     GLint y, GLsizei width, GLsizei height);
-namespace webgl {
 
 bool TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec,
                                    WebGLTexture* tex, GLint level,
@@ -760,63 +747,19 @@ bool TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec,
     gl::ScopedFramebuffer scopedFB(gl);
     gl::ScopedBindFramebuffer bindFB(gl, scopedFB.FB());
 
-    MOZ_RELEASE_ASSERT(pi.type == LOCAL_GL_UNSIGNED_BYTE);
+    {
+      gl::GLContext::LocalErrorScope errorScope(*gl);
 
-    UniquePtr<gl::MozFramebuffer> intermediate;
-    auto blitDestTarget = target;
-    auto blitDestTex = tex->mGLName;
-    auto blitDestLevel = level;
+      gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                                LOCAL_GL_COLOR_ATTACHMENT0, target,
+                                tex->mGLName, level);
 
-    const auto AttachToFb = [&]() {
-      switch (blitDestTarget) {
-        case LOCAL_GL_TEXTURE_2D:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-          gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
-                                    LOCAL_GL_COLOR_ATTACHMENT0, blitDestTarget,
-                                    blitDestTex, blitDestLevel);
-          break;
-
-        case LOCAL_GL_TEXTURE_3D:
-        case LOCAL_GL_TEXTURE_2D_ARRAY:
-          gl->fFramebufferTextureLayer(LOCAL_GL_FRAMEBUFFER,
-                                       LOCAL_GL_COLOR_ATTACHMENT0, blitDestTex,
-                                       blitDestLevel, zOffset);
-          break;
-
-        default:
-          MOZ_ASSERT_UNREACHABLE("blitDestTarget");
-      }
-
-      const GLenum status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
-      if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-        MOZ_ASSERT(status == LOCAL_GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT);
-        return false;
-      }
-      return true;
-    };
-    auto fbOk = AttachToFb();
-    if (!fbOk) {
-      // If not renderable, create intermediate rgba8.
-      webgl->GeneratePerfWarning(
-          "Copying to (%s,%s) requires an intermediate RGBA8 renderable.",
-          EnumString(pi.format).c_str(), EnumString(pi.type).c_str());
-      intermediate = gl::MozFramebuffer::Create(gl, {size.x, size.y}, 0, false);
-      blitDestTarget = LOCAL_GL_TEXTURE_2D;
-      blitDestTex = intermediate->ColorTex();
-      blitDestLevel = 0;
-      fbOk = AttachToFb();
+      const auto err = errorScope.GetError();
+      MOZ_ALWAYS_TRUE(!err);
     }
-    MOZ_ASSERT(fbOk);
-    if (!fbOk) {
-      webgl->ErrorImplementationBug("Texture upload gpu-copy fastpath failed!");
-      tex->Truncate();
-      return false;
-    }
+
+    const GLenum status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+    MOZ_ALWAYS_TRUE(status == LOCAL_GL_FRAMEBUFFER_COMPLETE);
 
     const auto dstOrigin =
         (unpacking.flipY ? gl::OriginPos::TopLeft : gl::OriginPos::BottomLeft);
@@ -832,12 +775,6 @@ bool TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec,
       webgl->GenerateWarning(
           "Fast Tex(Sub)Image upload failed without recourse, clearing to "
           "[0.2, 0.0, 0.2, 1.0]. Please file a bug!");
-    }
-
-    if (intermediate) {
-      gl->fBindTexture(target, tex->mGLName);
-      CopyTexSubImage(gl, target, level, xOffset, yOffset, zOffset, 0, 0,
-                      size.x, size.y);
     }
   }
 

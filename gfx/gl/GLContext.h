@@ -580,10 +580,6 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
       mOldTop = mGL.GetError();
     }
 
-   private:
-    LocalErrorScope(const LocalErrorScope&) = default;
-
-   public:
     /// Never returns CONTEXT_LOST.
     GLenum GetError() {
       MOZ_ASSERT(!mHasBeenChecked);

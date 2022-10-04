@@ -691,9 +691,12 @@ GLenum DoCompressedTexSubImage(gl::GLContext* gl, TexImageTarget target,
   return errorScope.GetError();
 }
 
-void CopyTexSubImage(gl::GLContext* gl, TexImageTarget target, GLint level,
-                     GLint xOffset, GLint yOffset, GLint zOffset, GLint x,
-                     GLint y, GLsizei width, GLsizei height) {
+static inline GLenum DoCopyTexSubImage(gl::GLContext* gl, TexImageTarget target,
+                                       GLint level, GLint xOffset,
+                                       GLint yOffset, GLint zOffset, GLint x,
+                                       GLint y, GLsizei width, GLsizei height) {
+  gl::GLContext::LocalErrorScope errorScope(*gl);
+
   if (IsTarget3D(target)) {
     gl->fCopyTexSubImage3D(target.get(), level, xOffset, yOffset, zOffset, x, y,
                            width, height);
@@ -702,6 +705,8 @@ void CopyTexSubImage(gl::GLContext* gl, TexImageTarget target, GLint level,
     gl->fCopyTexSubImage2D(target.get(), level, xOffset, yOffset, x, y, width,
                            height);
   }
+
+  return errorScope.GetError();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1786,15 +1791,12 @@ static bool DoCopyTexOrSubImage(WebGLContext* webgl, bool isSubImage,
     const auto& srcFormat = srcUsage->format;
     ScopedCopyTexImageSource maybeSwizzle(webgl, srcTotalWidth, srcTotalHeight,
                                           srcFormat, dstUsage);
-    {
-      auto errorScope = gl::GLContext::LocalErrorScope(*gl);
-      CopyTexSubImage(gl, target, level, writeX, writeY, zOffset, readX, readY,
-                      rwWidth, rwHeight);
-      error = errorScope.GetError();
-    }
+
+    error = DoCopyTexSubImage(gl, target, level, writeX, writeY, zOffset, readX,
+                              readY, rwWidth, rwHeight);
     if (error) {
       errorText = nsPrintfCString(
-          "CopyTexSubImage(0x%04x, %i, %i,%i,%i, %i,%i, %u,%u) -> 0x%04x",
+          "DoCopyTexSubImage(0x%04x, %i, %i,%i,%i, %i,%i, %u,%u) -> 0x%04x",
           target.get(), level, writeX, writeY, zOffset, readX, readY, rwWidth,
           rwHeight, error);
       break;
