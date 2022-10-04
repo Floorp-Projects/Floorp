@@ -642,7 +642,7 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk& aChunk) {
   RefPtr<Image> img;
   if (aChunk.mFrame.GetForceBlack() || aChunk.IsNull()) {
     if (!mMuteFrame || mMuteFrame->GetSize() != intrinsicSize) {
-      mMuteFrame = VideoFrame::CreateBlackImage(intrinsicSize);
+      mMuteFrame = mozilla::VideoFrame::CreateBlackImage(intrinsicSize);
     }
     if (!mMuteFrame) {
       VP8LOG(LogLevel::Warning, "Failed to allocate black image of size %dx%d",
