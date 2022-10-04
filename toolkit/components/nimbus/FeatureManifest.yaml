@@ -275,6 +275,14 @@ pocketNewtab:
       type: string
       fallbackPref: browser.newtabpage.activity-stream.discoverystream.spoc-positions
       description: CSV string of spoc position indexes on newtab grid
+    spocAdTypes:
+      type: string
+      fallbackPref: browser.newtabpage.activity-stream.discoverystream.spocAdTypes
+      description: CSV string of data to set the spoc content.
+    spocZoneIds:
+      type: string
+      fallbackPref: browser.newtabpage.activity-stream.discoverystream.spocZoneIds
+      description: CSV string of data to set the spoc content.
     widgetPositions:
       type: string
       fallbackPref: browser.newtabpage.activity-stream.discoverystream.widget-positions
