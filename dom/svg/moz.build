@@ -21,14 +21,8 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.dom += [
-    "DOMSVGAnimatedNumber.h",
     "SVGAElement.h",
-    "SVGAnimatedLength.h",
-    "SVGAnimatedNumber.h",
-    "SVGAnimatedPreserveAspectRatio.h",
     "SVGAnimatedRect.h",
-    "SVGAnimatedString.h",
-    "SVGAnimatedTransformList.h",
     "SVGAnimateElement.h",
     "SVGAnimateMotionElement.h",
     "SVGAnimateTransformElement.h",
@@ -97,9 +91,7 @@ EXPORTS.mozilla.dom += [
     "SVGTextPathElement.h",
     "SVGTextPositioningElement.h",
     "SVGTitleElement.h",
-    "SVGTransform.h",
     "SVGTransformableElement.h",
-    "SVGTransformList.h",
     "SVGTSpanElement.h",
     "SVGUseElement.h",
     "SVGViewElement.h",

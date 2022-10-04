@@ -975,8 +975,6 @@ WEBIDL_FILES = [
     "URL.webidl",
     "URLSearchParams.webidl",
     "ValidityState.webidl",
-    "VideoColorSpace.webidl",
-    "VideoFrame.webidl",
     "VideoPlaybackQuality.webidl",
     "VideoTrack.webidl",
     "VideoTrackList.webidl",

@@ -50,7 +50,6 @@ DIRS += [
     "utils",
     "wave",
     "webaudio",
-    "webcodecs",
     "webm",
     "webrtc",
     "webspeech",

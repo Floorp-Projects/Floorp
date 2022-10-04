@@ -8,7 +8,7 @@
 #define DOM_SVG_SVGTRANSFORMLIST_H_
 
 #include "gfxMatrix.h"
-#include "mozilla/dom/SVGTransform.h"
+#include "SVGTransform.h"
 #include "nsTArray.h"
 
 namespace mozilla {
