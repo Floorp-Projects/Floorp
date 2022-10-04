@@ -15,6 +15,7 @@
 
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_accessibility.h"
@@ -632,7 +633,9 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   NS_ASSERTION(
       mDocument,
       "The document was shut down while refresh observer is attached!");
-  if (!mDocument) return;
+  if (!mDocument || ipc::ProcessChild::ExpectingShutdown()) {
+    return;
+  }
 
   // Wait until an update, we have started, or an interruptible reflow is
   // finished.
@@ -646,7 +649,7 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   // e.g. tab event and content event.
   if (WaitingForParent()) {
     mDocument->ParentDocument()->mNotificationController->WillRefresh(aTime);
-    if (!mDocument) {
+    if (!mDocument || ipc::ProcessChild::ExpectingShutdown()) {
       return;
     }
   }
@@ -676,6 +679,9 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
 #endif
 
     mDocument->DoInitialUpdate();
+    if (ipc::ProcessChild::ExpectingShutdown()) {
+      return;
+    }
 
     NS_ASSERTION(mContentInsertions.Count() == 0,
                  "Pending content insertions while initial accessible tree "
@@ -875,6 +881,10 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
     if (!mDocument) return;
   }
 
+  if (ipc::ProcessChild::ExpectingShutdown()) {
+    return;
+  }
+
   // If a generic notification occurs after this point then we may be allowed to
   // process it synchronously.  However we do not want to reenter if fireing
   // events causes script to run.
@@ -926,6 +936,10 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
 
   if (mDocument) {
     mDocument->ClearMovedAccessibles();
+  }
+
+  if (ipc::ProcessChild::ExpectingShutdown()) {
+    return;
   }
 
   ProcessEventQueue();

@@ -7,6 +7,7 @@
 #include "mozilla/a11y/DocAccessibleChildBase.h"
 #include "mozilla/a11y/CacheConstants.h"
 #include "mozilla/a11y/RemoteAccessible.h"
+#include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 
 #include "LocalAccessible-inl.h"
@@ -89,6 +90,9 @@ void DocAccessibleChildBase::InsertIntoIpcTree(LocalAccessible* aParent,
                      aSuppressShowEvent ||
                          StaticPrefs::accessibility_cache_enabled_AtStartup());
   SerializeTree(shownTree, data.NewTree());
+  if (ipc::ProcessChild::ExpectingShutdown()) {
+    return;
+  }
   MaybeSendShowEvent(data, false);
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     nsTArray<CacheData> cache(shownTree.Length());

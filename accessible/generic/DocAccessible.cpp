@@ -44,6 +44,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
@@ -1599,6 +1600,9 @@ void DocAccessible::DoInitialUpdate() {
     ParentDocument()->FireDelayedEvent(reorderEvent);
   }
 
+  if (ipc::ProcessChild::ExpectingShutdown()) {
+    return;
+  }
   if (IPCAccessibilityActive()) {
     DocAccessibleChild* ipcDoc = IPCDoc();
     MOZ_ASSERT(ipcDoc);
