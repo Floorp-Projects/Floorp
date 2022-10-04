@@ -20,6 +20,7 @@
 #include "mozilla/Maybe.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
+#include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsComboboxControlFrame.h"
@@ -576,7 +577,13 @@ void HTMLSelectElement::SetLength(uint32_t aLength, ErrorResult& aRv) {
     }
   } else if (aLength > curlen) {
     if (aLength > MAX_DYNAMIC_SELECT_LENGTH) {
-      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      nsAutoString strOptionsLength;
+      strOptionsLength.AppendInt(aLength);
+
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::warningFlag, "DOM"_ns, GetOwnerDocument(),
+          nsContentUtils::eDOM_PROPERTIES,
+          "SelectElementOptionsLengthAssignmentWarning", {strOptionsLength});
       return;
     }
 
