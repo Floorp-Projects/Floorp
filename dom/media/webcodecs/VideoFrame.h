@@ -61,7 +61,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   VideoFrame(nsIGlobalObject* aParent, const RefPtr<layers::Image>& aImage,
              const VideoPixelFormat& aFormat, gfx::IntSize aCodedSize,
              gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
-             Maybe<uint64_t>&& aDuration, int64_t aTimestamp,
+             Maybe<uint64_t>&& aDuration, Maybe<int64_t>&& aTimestamp,
              const VideoColorSpaceInit& aColorSpace);
 
   VideoFrame(const VideoFrame& aOther);
@@ -94,9 +94,9 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
                                                   ImageBitmap& aImageBitmap,
                                                   const VideoFrameInit& aInit,
                                                   ErrorResult& aRv);
-  static already_AddRefed<VideoFrame> Constructor(const GlobalObject& global,
-                                                  VideoFrame& videoFrame,
-                                                  const VideoFrameInit& init,
+  static already_AddRefed<VideoFrame> Constructor(const GlobalObject& aGlobal,
+                                                  VideoFrame& aVideoFrame,
+                                                  const VideoFrameInit& aInit,
                                                   ErrorResult& aRv);
   static already_AddRefed<VideoFrame> Constructor(
       const GlobalObject& aGlobal, const ArrayBufferView& aBufferView,
