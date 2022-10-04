@@ -797,7 +797,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
     CREATE_PATTERN,
     CREATE_IMAGEBITMAP,
     CAPTURE_STREAM,
-    CREATE_VIDEOFRAME,
   };
   void LogVisibility(CallerAPI aAPI);
 

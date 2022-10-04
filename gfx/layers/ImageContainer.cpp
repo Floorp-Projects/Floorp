@@ -684,8 +684,7 @@ bool RecyclingPlanarYCbCrImage::CopyData(const Data& aData) {
   auto cbcrSize = aData.CbCrDataSize();
   const auto checkedSize =
       CheckedInt<uint32_t>(aData.mCbCrStride) * cbcrSize.height * 2 +
-      CheckedInt<uint32_t>(aData.mYStride) * ySize.height *
-          (aData.mAlpha ? 2 : 1);
+      CheckedInt<uint32_t>(aData.mYStride) * ySize.height;
 
   if (!checkedSize.isValid()) return false;
 
@@ -698,7 +697,7 @@ bool RecyclingPlanarYCbCrImage::CopyData(const Data& aData) {
   // update buffer size
   mBufferSize = size;
 
-  mData = aData;  // mAlpha will be set if aData has it
+  mData = aData;
   mData.mYChannel = mBuffer.get();
   mData.mCbChannel = mData.mYChannel + mData.mYStride * ySize.height;
   mData.mCrChannel = mData.mCbChannel + mData.mCbCrStride * cbcrSize.height;
@@ -710,10 +709,6 @@ bool RecyclingPlanarYCbCrImage::CopyData(const Data& aData) {
             aData.mCbSkip);
   CopyPlane(mData.mCrChannel, aData.mCrChannel, cbcrSize, aData.mCbCrStride,
             aData.mCrSkip);
-  if (aData.mAlpha) {
-    CopyPlane(mData.mAlpha->mChannel, aData.mAlpha->mChannel, ySize,
-              aData.mYStride, aData.mYSkip);
-  }
 
   mSize = aData.mPictureRect.Size();
   mOrigin = aData.mPictureRect.TopLeft();
