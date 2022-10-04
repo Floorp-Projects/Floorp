@@ -1280,7 +1280,8 @@ class nsContextMenu {
     // screenshots (see Bug 1620992)
     let uri = this.contentData?.documentURIObject;
     let shouldShow =
-      !gScreenshots.shouldScreenshotsButtonBeDisabled(uri) &&
+      !screenshotsDisabled &&
+      (uri.scheme != "about" || uri.spec.startsWith("about:reader")) &&
       this.inTabBrowser &&
       !this.onTextInput &&
       !this.onLink &&
