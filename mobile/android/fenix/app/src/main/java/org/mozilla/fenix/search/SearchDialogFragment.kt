@@ -522,6 +522,12 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     override fun onResume() {
         super.onResume()
 
+        qrFeature.get()?.let {
+            if (it.isScanInProgress) {
+                it.scan(binding.searchWrapper.id)
+            }
+        }
+
         view?.post {
             // We delay querying the clipboard by posting this code to the main thread message queue,
             // because ClipboardManager will return null if the does app not have input focus yet.
