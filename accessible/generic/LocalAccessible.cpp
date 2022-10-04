@@ -869,7 +869,26 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
           ipcDoc->SendHideEvent(id, aEvent->IsFromUserInput());
           break;
 
+        case nsIAccessibleEvent::EVENT_INNER_REORDER:
         case nsIAccessibleEvent::EVENT_REORDER:
+          if (IsTable()) {
+            SendCache(CacheDomain::Table, CacheUpdateType::Update);
+          }
+
+#if defined(XP_WIN)
+          if (StaticPrefs::accessibility_cache_enabled_AtStartup() &&
+              HasOwnContent() && mContent->IsMathMLElement()) {
+            // For any change in a MathML subtree, update the innerHTML cache on
+            // the root math element.
+            for (LocalAccessible* acc = this; acc; acc = acc->LocalParent()) {
+              if (acc->HasOwnContent() &&
+                  acc->mContent->IsMathMLElement(nsGkAtoms::math)) {
+                mDoc->QueueCacheUpdate(acc, CacheDomain::InnerHTML);
+              }
+            }
+          }
+#endif  // defined(XP_WIN)
+
           // reorder events on the application acc aren't necessary to tell the
           // parent about new top level documents.
           if (!aEvent->GetAccessible()->IsApplication()) {
@@ -2474,27 +2493,7 @@ void LocalAccessible::BindToParent(LocalAccessible* aParent,
         table->GetHeaderCache().Clear();
       }
     }
-  } else if (IsTableRow() && aParent->IsTable() &&
-             StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    // This table might have previously been treated as a layout table. Now that
-    // a row has been added, it might have sufficient rows to be considered a
-    // data table.
-    mDoc->QueueCacheUpdate(aParent, CacheDomain::Table);
   }
-
-#if defined(XP_WIN)
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() &&
-      aParent->HasOwnContent() && aParent->mContent->IsMathMLElement()) {
-    // For any change in a MathML subtree, update the innerHTML cache on the
-    // root math element.
-    for (LocalAccessible* acc = aParent; acc; acc = acc->LocalParent()) {
-      if (acc->HasOwnContent() &&
-          acc->mContent->IsMathMLElement(nsGkAtoms::math)) {
-        mDoc->QueueCacheUpdate(acc, CacheDomain::InnerHTML);
-      }
-    }
-  }
-#endif  // defined(XP_WIN)
 }
 
 // LocalAccessible protected
