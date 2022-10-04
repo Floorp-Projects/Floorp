@@ -1462,13 +1462,6 @@ var TESTS = [
 
     let win = await BrowserTestUtils.openNewBrowserWindow();
     await SimpleTest.promiseFocus(win);
-    await new Promise(resolve => {
-      win.requestIdleCallback(resolve);
-    });
-    await TestUtils.waitForCondition(
-      () => win.gUnifiedExtensions._initialized,
-      "Wait gUnifiedExtensions to have been initialized"
-    );
 
     let progressPromise = waitForProgressNotification(
       false,
