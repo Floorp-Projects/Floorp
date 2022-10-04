@@ -64,7 +64,7 @@ You can use either desktop or mobile versions of Firefox as the server. Mobile i
 
 #### Debug targets:
 
-- On the Server Firefox, open a tab to [https://mdn.github.io/sw-test/](https://mdn.github.io/sw-test/)
+- On the Server Firefox, open a tab to [https://mdn.github.io/dom-examples/service-worker/simple-service-worker/](https://mdn.github.io/dom-examples/service-worker/simple-service-worker/)
 - On the Client Firefox, check in the Runtime Page for the Server Firefox that you can see the new tab as well as the corresponding service worker
 - On the Client Firefox, open the Profiler by clicking the Profile Performance button and record a short profile by clicking the Start, then the Stop button. Verify that the profiler opens a new tab with the recording.
 - On the Server Firefox, close the tab you just opened
