@@ -1276,12 +1276,8 @@ class nsContextMenu {
   }
 
   shouldShowTakeScreenshot() {
-    // About pages other than about:reader are not currently supported by
-    // screenshots (see Bug 1620992)
-    let uri = this.contentData?.documentURIObject;
     let shouldShow =
-      !screenshotsDisabled &&
-      (uri.scheme != "about" || uri.spec.startsWith("about:reader")) &&
+      !gScreenshots.shouldScreenshotsButtonBeDisabled() &&
       this.inTabBrowser &&
       !this.onTextInput &&
       !this.onLink &&
