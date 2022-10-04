@@ -8,6 +8,7 @@
 #define mozilla_dom_workers_scriptloader_h__
 
 #include "js/loader/ScriptLoadRequest.h"
+#include "js/loader/ModuleLoaderBase.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/Maybe.h"
@@ -116,7 +117,8 @@ class NetworkLoadHandler;
  *                                          +------------------------+
  */
 
-class WorkerScriptLoader final : public nsINamed {
+class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
+                           public nsINamed {
   friend class ScriptLoaderRunnable;
   friend class ScriptExecutorRunnable;
   friend class CachePromiseHandler;
@@ -124,16 +126,12 @@ class WorkerScriptLoader final : public nsINamed {
   friend class CacheCreator;
   friend class NetworkLoadHandler;
 
-  using ScriptLoadRequest = JS::loader::ScriptLoadRequest;
-  using ScriptLoadRequestList = JS::loader::ScriptLoadRequestList;
-  using ScriptFetchOptions = JS::loader::ScriptFetchOptions;
-
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
   UniquePtr<SerializedStackHolder> mOriginStack;
   nsString mOriginStackJSON;
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
-  JS::loader::ScriptLoadRequestList mLoadingRequests;
-  JS::loader::ScriptLoadRequestList mLoadedRequests;
+  ScriptLoadRequestList mLoadingRequests;
+  ScriptLoadRequestList mLoadedRequests;
   Maybe<ServiceWorkerDescriptor> mController;
   WorkerScriptType mWorkerScriptType;
   ErrorResult& mRv;
@@ -186,7 +184,7 @@ class WorkerScriptLoader final : public nsINamed {
   bool DispatchLoadScripts();
 
  protected:
-  nsIURI* GetBaseURI();
+  nsIURI* GetBaseURI() const override;
 
   nsIURI* GetInitialBaseURI();
 
@@ -247,6 +245,20 @@ class WorkerScriptLoader final : public nsINamed {
   void DispatchMaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
 
   bool EvaluateScript(JSContext* aCx, ScriptLoadRequest* aRequest);
+
+  nsresult FillCompileOptionsForRequest(
+      JSContext* cx, ScriptLoadRequest* aRequest, JS::CompileOptions* aOptions,
+      JS::MutableHandle<JSScript*> aIntroductionScript) override {
+    return NS_OK;
+  }
+
+  void ReportErrorToConsole(ScriptLoadRequest* aRequest,
+                            nsresult aResult) const override {}
+
+  void ReportWarningToConsole(
+      ScriptLoadRequest* aRequest, const char* aMessageName,
+      const nsTArray<nsString>& aParams = nsTArray<nsString>()) const override {
+  }
 
   void LogExceptionToConsole(JSContext* aCx, WorkerPrivate* aWorkerPrivate);
 

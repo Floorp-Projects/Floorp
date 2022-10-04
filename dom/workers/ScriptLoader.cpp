@@ -534,7 +534,7 @@ nsIURI* WorkerScriptLoader::GetInitialBaseURI() {
   return baseURI;
 }
 
-nsIURI* WorkerScriptLoader::GetBaseURI() {
+nsIURI* WorkerScriptLoader::GetBaseURI() const {
   MOZ_ASSERT(mWorkerRef);
   nsIURI* baseURI;
   baseURI = mWorkerRef->Private()->GetBaseURI();
