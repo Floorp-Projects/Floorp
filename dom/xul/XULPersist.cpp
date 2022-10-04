@@ -24,6 +24,11 @@ static bool IsRootElement(Element* aElement) {
   return aElement->OwnerDoc()->GetRootElement() == aElement;
 }
 
+// FIXME: This is a hack to differentiate "attribute is missing" from "attribute
+// is present but empty". Use a newline to avoid virtually all collisions.
+// Ideally the XUL store would be able to store this more reasonably.
+constexpr auto kMissingAttributeToken = u"-moz-missing\n"_ns;
+
 static bool ShouldPersistAttribute(Element* aElement, nsAtom* aAttribute) {
   if (IsRootElement(aElement)) {
     // This is not an element of the top document, its owner is
@@ -64,26 +69,26 @@ void XULPersist::AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
                                   const nsAttrValue* aOldValue) {
   NS_ASSERTION(aElement->OwnerDoc() == mDocument, "unexpected doc");
 
+  if (aNameSpaceID != kNameSpaceID_None) {
+    return;
+  }
+
   // See if there is anything we need to persist in the localstore.
-  //
-  // XXX Namespace handling broken :-(
   nsAutoString persist;
   // Persistence of attributes of xul:window is handled in AppWindow.
-  if (aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::persist, persist) &&
-      ShouldPersistAttribute(aElement, aAttribute) && !persist.IsEmpty() &&
+  if (aElement->GetAttr(nsGkAtoms::persist, persist) &&
+      ShouldPersistAttribute(aElement, aAttribute) &&
       // XXXldb This should check that it's a token, not just a substring.
       persist.Find(nsDependentAtomString(aAttribute)) >= 0) {
     // Might not need this, but be safe for now.
     nsCOMPtr<nsIDocumentObserver> kungFuDeathGrip(this);
-    nsContentUtils::AddScriptRunner(
-        NewRunnableMethod<Element*, int32_t, nsAtom*>(
-            "dom::XULPersist::Persist", this, &XULPersist::Persist, aElement,
-            kNameSpaceID_None, aAttribute));
+    nsContentUtils::AddScriptRunner(NewRunnableMethod<Element*, nsAtom*>(
+        "dom::XULPersist::Persist", this, &XULPersist::Persist, aElement,
+        aAttribute));
   }
 }
 
-void XULPersist::Persist(Element* aElement, int32_t aNameSpaceID,
-                         nsAtom* aAttribute) {
+void XULPersist::Persist(Element* aElement, nsAtom* aAttribute) {
   if (!mDocument) {
     return;
   }
@@ -103,37 +108,12 @@ void XULPersist::Persist(Element* aElement, int32_t aNameSpaceID,
 
   nsAutoString id;
 
-  aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
+  aElement->GetAttr(nsGkAtoms::id, id);
   nsAtomString attrstr(aAttribute);
-
-  nsAutoString valuestr;
-  aElement->GetAttr(kNameSpaceID_None, aAttribute, valuestr);
 
   nsAutoCString utf8uri;
   nsresult rv = mDocument->GetDocumentURI()->GetSpec(utf8uri);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-  NS_ConvertUTF8toUTF16 uri(utf8uri);
-
-  bool hasAttr;
-#ifdef MOZ_NEW_XULSTORE
-  rv = XULStore::HasValue(uri, id, attrstr, hasAttr);
-#else
-  rv = mLocalStore->HasValue(uri, id, attrstr, &hasAttr);
-#endif
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  if (hasAttr && valuestr.IsEmpty()) {
-#ifdef MOZ_NEW_XULSTORE
-    rv = XULStore::RemoveValue(uri, id, attrstr);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "value removed");
-#else
-    mLocalStore->RemoveValue(uri, id, attrstr);
-#endif
     return;
   }
 
@@ -143,6 +123,12 @@ void XULPersist::Persist(Element* aElement, int32_t aNameSpaceID,
             mDocument->GetAppWindowIfToplevelChrome()) {
       return;
     }
+  }
+
+  NS_ConvertUTF8toUTF16 uri(utf8uri);
+  nsAutoString valuestr;
+  if (!aElement->GetAttr(aAttribute, valuestr)) {
+    valuestr = kMissingAttributeToken;
   }
 
 #ifdef MOZ_NEW_XULSTORE
@@ -173,12 +159,6 @@ nsresult XULPersist::ApplyPersistentAttributes() {
   }
 #endif
 
-  ApplyPersistentAttributesInternal();
-
-  return NS_OK;
-}
-
-nsresult XULPersist::ApplyPersistentAttributesInternal() {
   nsCOMArray<Element> elements;
 
   nsAutoCString utf8uri;
@@ -231,7 +211,7 @@ nsresult XULPersist::ApplyPersistentAttributesInternal() {
       elements.AppendObject(element);
     }
 
-    rv = ApplyPersistentAttributesToElements(id, elements);
+    rv = ApplyPersistentAttributesToElements(id, uri, elements);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -241,21 +221,16 @@ nsresult XULPersist::ApplyPersistentAttributesInternal() {
 }
 
 nsresult XULPersist::ApplyPersistentAttributesToElements(
-    const nsAString& aID, nsCOMArray<Element>& aElements) {
-  nsAutoCString utf8uri;
-  nsresult rv = mDocument->GetDocumentURI()->GetSpec(utf8uri);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  NS_ConvertUTF8toUTF16 uri(utf8uri);
-
+    const nsAString& aID, const nsAString& aDocURI,
+    nsCOMArray<Element>& aElements) {
+  nsresult rv = NS_OK;
   // Get a list of attributes for which persisted values are available
 #ifdef MOZ_NEW_XULSTORE
   UniquePtr<XULStoreIterator> attrs;
-  rv = XULStore::GetAttrs(uri, aID, attrs);
+  rv = XULStore::GetAttrs(aDocURI, aID, attrs);
 #else
   nsCOMPtr<nsIStringEnumerator> attrs;
-  rv = mLocalStore->GetAttributeEnumerator(uri, aID, getter_AddRefs(attrs));
+  rv = mLocalStore->GetAttributeEnumerator(aDocURI, aID, getter_AddRefs(attrs));
 #endif
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -270,7 +245,7 @@ nsresult XULPersist::ApplyPersistentAttributesToElements(
     }
 
     nsAutoString value;
-    rv = XULStore::GetValue(uri, aID, attrstr, value);
+    rv = XULStore::GetValue(aDocURI, aID, attrstr, value);
 #else
   while (1) {
     bool hasmore = PR_FALSE;
@@ -310,7 +285,11 @@ nsresult XULPersist::ApplyPersistentAttributesToElements(
         }
       }
 
-      Unused << element->SetAttr(kNameSpaceID_None, attr, value, true);
+      if (value == kMissingAttributeToken) {
+        Unused << element->UnsetAttr(kNameSpaceID_None, attr, true);
+      } else {
+        Unused << element->SetAttr(kNameSpaceID_None, attr, value, true);
+      }
     }
   }
 
