@@ -93,6 +93,8 @@
     <string name="mozac_feature_prompts_nov">11 月</string>
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">12 月</string>
+    <!-- Title of the time picker dialog. -->
+    <string name="mozac_feature_prompts_set_time">设置时间</string>
     <!-- Option in expanded select login prompt that links to login settings -->
     <string name="mozac_feature_prompts_manage_logins">管理登录信息</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
