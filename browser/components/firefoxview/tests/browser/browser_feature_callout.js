@@ -242,6 +242,94 @@ add_task(async function feature_callout_only_highlights_existing_elements() {
   );
 });
 
+add_task(async function feature_callout_not_rendered_when_it_has_no_parent() {
+  await ASRouter.waitForInitialized;
+
+  // custom feature tour message with a parent selector that doesn't exist
+  let message = {
+    weight: 100,
+    id: "FIREFOX_VIEW_FEATURE_TOUR_1",
+    template: "feature_callout",
+    content: {
+      id: "FIREFOX_VIEW_FEATURE_TOUR",
+      template: "multistage",
+      backdrop: "transparent",
+      transitions: false,
+      disableHistoryUpdates: true,
+      screens: [
+        {
+          id: "FEATURE_CALLOUT_1",
+          parent_selector: "#no-element-with-this-id",
+          content: {
+            position: "callout",
+            arrow_position: "top",
+            title: {
+              string_id: "callout-firefox-view-tab-pickup-title",
+            },
+            subtitle: {
+              string_id: "callout-firefox-view-tab-pickup-subtitle",
+            },
+          },
+        },
+      ],
+    },
+    priority: 1,
+    targeting: 'source == "firefoxview"',
+    trigger: {
+      id: "featureCalloutCheck",
+    },
+    groups: [],
+    provider: "onboarding",
+  };
+  let previousMessages = ASRouter.state.messages;
+  ASRouter.setState({ messages: [message] });
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.firefox-view.feature-tour", getPrefValueByScreen(1)]],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+
+      const CONTAINER_NOT_CREATED_EVENT = [
+        [
+          "messaging_experiments",
+          "feature_callout",
+          "create_failed",
+          `${message.id}-${message.content.screens[0].parent_selector}`,
+        ],
+      ];
+      await TestUtils.waitForCondition(() => {
+        let events = Services.telemetry.snapshotEvents(
+          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+          false
+        ).parent;
+        return events && events.length >= 2;
+      }, "Waiting for container_not_created event");
+
+      TelemetryTestUtils.assertEvents(
+        CONTAINER_NOT_CREATED_EVENT,
+        { method: "feature_callout" },
+        { clear: true, process: "parent" }
+      );
+
+      ok(
+        !document.querySelector(`${calloutSelector}:not(.hidden)`),
+        "Feature Callout screen does not render if its parent element does not exist"
+      );
+
+      await clearAllParentTelemetryEvents();
+      await ASRouter.resetMessageState();
+      await ASRouter.setState({ messages: [...previousMessages] });
+    }
+  );
+});
+
 add_task(async function feature_callout_arrow_class_exists() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.firefox-view.feature-tour", defaultPrefValue]],
