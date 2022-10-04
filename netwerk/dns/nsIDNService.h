@@ -99,7 +99,6 @@ class nsIDNService final : public nsIIDNService,
   nsresult ACEtoUTF8(const nsACString& input, nsACString& _retval,
                      stringPrepFlag flag);
 
-  bool isInWhitelist(const nsACString& host);
   void prefsChanged(const char* pref);
 
   static void PrefChanged(const char* aPref, void* aSelf) {
@@ -167,8 +166,7 @@ class nsIDNService final : public nsIIDNService,
   mozilla::UniquePtr<mozilla::intl::IDNA> mIDNA;
 
   // We use this mutex to guard access to:
-  // |mIDNBlocklist|, |mShowPunycode|, |mRestrictionProfile|,
-  // |mIDNUseWhitelist|, |mIDNWhitelistPrefBranch|.
+  // |mIDNBlocklist|, |mShowPunycode|, |mRestrictionProfile|
   //
   // These members can only be updated on the main thread and
   // read on any thread. Therefore, acquiring the mutex is required
@@ -200,10 +198,6 @@ class nsIDNService final : public nsIIDNService,
   // guarded by mLock;
   restrictionProfile mRestrictionProfile MOZ_GUARDED_BY(mLock){
       eASCIIOnlyProfile};
-  // guarded by mLock;
-  nsCOMPtr<nsIPrefBranch> mIDNWhitelistPrefBranch MOZ_GUARDED_BY(mLock);
-  // guarded by mLock
-  bool mIDNUseWhitelist MOZ_GUARDED_BY(mLock) = false;
 };
 
 #endif  // nsIDNService_h__

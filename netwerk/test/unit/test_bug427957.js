@@ -24,9 +24,6 @@ function expected_fail(inputIDN) {
 }
 
 function run_test() {
-  // add an IDN whitelist pref
-  Services.prefs.setBoolPref("network.IDN.whitelist.com", true);
-
   idnService = Cc["@mozilla.org/network/idn-service;1"].getService(
     Ci.nsIIDNService
   );
