@@ -11,8 +11,6 @@ jobs:
 
     - name: Create environment
       run: |
-        sudo apt update
-        sudo apt install gzip gpg dpkg-dev
         export WORKDIR=`pwd`
         echo "Current Workdir: $WORKDIR"
         git clone https://github.com/floorp-projects/l10n-central.git
@@ -63,31 +61,13 @@ jobs:
         sudo dpkg-deb -b $DEBWORK
     - name: Compress artifacts
       run: |
-        sudo apt update
-        sudo apt install gzip gpg dpkg-dev
         export WORKDIR=`pwd`
         export DISPVER=`cat browser/config/version_display.txt`
         export DEBWORK=$WORKDIR/floorp-$DISPVER
         sudo touch floorp-$DISPVER.deb
         sudo chmod +r floorp-$DISPVER.deb
         zip -r dist.zip floorp-$DISPVER.deb
-        mkdir publish
-        cd publish
-        echo "${{ secrets.GPG_SEC }}" > Floorp_sec.asc
-        gpg --import Floorp_sec.asc
-        echo "${{ secrets.FTP_INIT_SCRIPT }}" > init_script
-        ftp -n -p < init_script
-        cp ../floorp-$DISPVER.deb ./
-        dpkg-scanpackages --multiversion . > Packages
-        gzip -k -f Packages
-        apt-ftparchive release . > Release
-        gpg --default-key "${{ secrets.GPG_SSB }}" -abs -o - Release > Release.gpg
-        gpg --default-key "${{ secrets.GPG_SSB }}" --clearsign -o - Release > InRelease
-        echo "${{ secrets.FTP_FINISH_SCRIPT }}" > finish_script
-        ftp -n -p < finish_script
-        rm init_script finish_script Floorp_sec.asc
-        cd ../
-        
+
     - name: Publish
       uses: actions/upload-artifact@v1
       with:
