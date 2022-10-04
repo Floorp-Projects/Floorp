@@ -9,6 +9,7 @@
 #include "nsIIDNService.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
+#include "nsThreadUtils.h"
 
 #include "mozilla/Mutex.h"
 #include "mozilla/intl/UnicodeScriptCodes.h"
@@ -166,7 +167,7 @@ class nsIDNService final : public nsIIDNService,
   mozilla::UniquePtr<mozilla::intl::IDNA> mIDNA;
 
   // We use this mutex to guard access to:
-  // |mIDNBlocklist|, |mShowPunycode|, |mRestrictionProfile|
+  // |mIDNBlocklist|, |mRestrictionProfile|
   //
   // These members can only be updated on the main thread and
   // read on any thread. Therefore, acquiring the mutex is required
@@ -175,15 +176,6 @@ class nsIDNService final : public nsIIDNService,
 
   // guarded by mLock
   nsTArray<mozilla::net::BlocklistRange> mIDNBlocklist MOZ_GUARDED_BY(mLock);
-
-  /**
-   * Flag set by the pref network.IDN_show_punycode. When it is true,
-   * IDNs containing non-ASCII characters are always displayed to the
-   * user in punycode
-   *
-   * guarded by mLock
-   */
-  bool mShowPunycode MOZ_GUARDED_BY(mLock) = false;
 
   /**
    * Restriction-level Detection profiles defined in UTR 39
