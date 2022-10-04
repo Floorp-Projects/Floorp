@@ -858,10 +858,7 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
     // HasLoadState(eTreeConstructed) is false.
     MOZ_ASSERT(ipcDoc);
     if (ipcDoc) {
-      uint64_t id = aEvent->GetAccessible()->IsDoc()
-                        ? 0
-                        : reinterpret_cast<uintptr_t>(
-                              aEvent->GetAccessible()->UniqueID());
+      uint64_t id = aEvent->GetAccessible()->ID();
 
       switch (aEvent->GetEventType()) {
         case nsIAccessibleEvent::EVENT_SHOW:
@@ -920,11 +917,8 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
         case nsIAccessibleEvent::EVENT_SELECTION_ADD:
         case nsIAccessibleEvent::EVENT_SELECTION_REMOVE: {
           AccSelChangeEvent* selEvent = downcast_accEvent(aEvent);
-          uint64_t widgetID =
-              selEvent->Widget()->IsDoc()
-                  ? 0
-                  : reinterpret_cast<uintptr_t>(selEvent->Widget()->UniqueID());
-          ipcDoc->SendSelectionEvent(id, widgetID, aEvent->GetEventType());
+          ipcDoc->SendSelectionEvent(id, selEvent->Widget()->ID(),
+                                     aEvent->GetEventType());
           break;
         }
         case nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED: {
@@ -932,14 +926,11 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
           LocalAccessible* position = vcEvent->NewAccessible();
           LocalAccessible* oldPosition = vcEvent->OldAccessible();
           ipcDoc->SendVirtualCursorChangeEvent(
-              id,
-              oldPosition ? reinterpret_cast<uintptr_t>(oldPosition->UniqueID())
-                          : 0,
+              id, oldPosition ? oldPosition->ID() : 0,
               vcEvent->OldStartOffset(), vcEvent->OldEndOffset(),
-              position ? reinterpret_cast<uintptr_t>(position->UniqueID()) : 0,
-              vcEvent->NewStartOffset(), vcEvent->NewEndOffset(),
-              vcEvent->Reason(), vcEvent->BoundaryType(),
-              vcEvent->IsFromUserInput());
+              position ? position->ID() : 0, vcEvent->NewStartOffset(),
+              vcEvent->NewEndOffset(), vcEvent->Reason(),
+              vcEvent->BoundaryType(), vcEvent->IsFromUserInput());
           break;
         }
 #if defined(XP_WIN)
@@ -985,14 +976,9 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
             const TextRange& range = ranges.ElementAt(i);
             LocalAccessible* start = range.StartContainer()->AsLocal();
             LocalAccessible* end = range.EndContainer()->AsLocal();
-            textRangeData.AppendElement(TextRangeData(
-                start->IsDoc() && start->AsDoc()->IPCDoc()
-                    ? 0
-                    : reinterpret_cast<uint64_t>(start->UniqueID()),
-                end->IsDoc() && end->AsDoc()->IPCDoc()
-                    ? 0
-                    : reinterpret_cast<uint64_t>(end->UniqueID()),
-                range.StartOffset(), range.EndOffset()));
+            textRangeData.AppendElement(TextRangeData(start->ID(), end->ID(),
+                                                      range.StartOffset(),
+                                                      range.EndOffset()));
           }
           ipcDoc->SendTextSelectionChangeEvent(id, textRangeData);
           break;
@@ -3120,8 +3106,7 @@ void LocalAccessible::SendCache(uint64_t aCacheDomain,
   RefPtr<AccAttributes> fields =
       BundleFieldsForCache(aCacheDomain, aUpdateType);
   nsTArray<CacheData> data;
-  data.AppendElement(
-      CacheData(IsDoc() ? 0 : reinterpret_cast<uint64_t>(UniqueID()), fields));
+  data.AppendElement(CacheData(ID(), fields));
   ipcDoc->SendCache(aUpdateType, data, true);
 }
 
@@ -3238,17 +3223,15 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
             LocalAccessible* child = acc->LocalChildAt(i);
             MOZ_ASSERT(child);
             if (inViewAccs.EnsureInserted(child)) {
-              viewportCache.AppendElement(
-                  child->IsDoc()
-                      ? 0
-                      : reinterpret_cast<uint64_t>(child->UniqueID()));
+              MOZ_ASSERT(!child->IsDoc());
+              viewportCache.AppendElement(child->ID());
             }
           }
         }
 
         if (inViewAccs.EnsureInserted(acc)) {
-          viewportCache.AppendElement(
-              acc->IsDoc() ? 0 : reinterpret_cast<uint64_t>(acc->UniqueID()));
+          MOZ_ASSERT(!acc->IsDoc());
+          viewportCache.AppendElement(acc->ID());
         }
       }
 
@@ -3599,7 +3582,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       }
 
       while (LocalAccessible* acc = rel.LocalNext()) {
-        ids.AppendElement(acc->IsDoc() ? 0 : acc->ID());
+        ids.AppendElement(acc->ID());
       }
       if (ids.Length()) {
         fields->SetAttribute(relAtom, std::move(ids));
