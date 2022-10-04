@@ -50,9 +50,9 @@
 
 body {
   --fxview-background-color: var(--newtab-background-color, var(--in-content-page-background));
-  --fxview-element-hover-color: color-mix(in srgb, var(--fxview-background-color) 90%, currentColor);
-  --fxview-element-active-color: color-mix(in srgb, var(--fxview-background-color) 80%, currentColor);
-  --fxview-element-hover-text-color: var(--newtab-text-primary-color);
+  --fxview-element-background-hover: color-mix(in srgb, var(--fxview-background-color) 90%, currentColor);
+  --fxview-element-background-active: color-mix(in srgb, var(--fxview-background-color) 80%, currentColor);
+  --fxview-text-color-hover: var(--newtab-text-primary-color);
   --fxview-contrast-border: color-mix(in hsl, currentColor 45%, transparent);
   --fxview-extra-contrast-border: color-mix(in hsl, currentColor 85%, transparent);
   --in-content-zap-gradient: linear-gradient(var(--fxview-extra-contrast-border), var(--fxview-extra-contrast-border));
@@ -62,9 +62,9 @@ body {
   --colorways-no-collection-notice-bg-color: transparent;
 
   /* ensure utility button hover states match those of the rest of the page */
-  --in-content-button-background-hover: var(--fxview-element-hover-color);
-  --in-content-button-background-active: var(--fxview-element-active-color);
-  --in-content-button-text-color-hover: var(--fxview-element-hover-text-color);
+  --in-content-button-background-hover: var(--fxview-element-background-hover);
+  --in-content-button-background-active: var(--fxview-element-background-active);
+  --in-content-button-text-color-hover: var(--fxview-text-color-hover);
 
   display: flex;
   justify-content: center;
@@ -82,17 +82,17 @@ body:not([lwt-newtab]) {
 
 @media (prefers-color-scheme: dark) {
   body {
-    --fxview-element-hover-color: color-mix(in srgb, var(--fxview-background-color) 80%, white);
-    --fxview-element-active-color: color-mix(in srgb, var(--fxview-background-color) 60%, white);
+    --fxview-element-background-hover: color-mix(in srgb, var(--fxview-background-color) 80%, white);
+    --fxview-element-background-active: color-mix(in srgb, var(--fxview-background-color) 60%, white);
     --newtab-background-color-secondary: #42414d;
   }
 }
 
 @media (prefers-contrast) {
   body {
-    --fxview-element-hover-color: ButtonText;
-    --fxview-element-active-color: ButtonText;
-    --fxview-element-hover-text-color: ButtonFace;
+    --fxview-element-background-hover: ButtonText;
+    --fxview-element-background-active: ButtonText;
+    --fxview-text-color-hover: ButtonFace;
   }
 }
 
@@ -439,12 +439,12 @@ details[open] > .page-section-header > .twisty {
 }
 
 .page-section-header:hover > .twisty {
-  background-color: var(--fxview-element-hover-color);
-  color: var(--fxview-element-hover-text-color);
+  background-color: var(--fxview-element-background-hover);
+  color: var(--fxview-text-color-hover);
 }
 
 .page-section-header:hover:active > .twisty {
-  background-color: var(--fxview-element-active-color);
+  background-color: var(--fxview-element-background-active);
 }
 
 .page-section-header > .section-description {
@@ -641,13 +641,13 @@ details[open] > .page-section-header > .twisty {
 }
 
 .closed-tab-li:hover {
-  background-color: var(--fxview-element-hover-color);
-  color: var(--fxview-element-hover-text-color);
+  background-color: var(--fxview-element-background-hover);
+  color: var(--fxview-text-color-hover);
 }
 
 .closed-tab-li:active {
-  background-color: var(--fxview-element-active-color);
-  color: var(--fxview-element-hover-text-color);
+  background-color: var(--fxview-element-background-active);
+  color: var(--fxview-text-color-hover);
 }
 
 .closed-tab-li:focus-visible {
