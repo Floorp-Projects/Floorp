@@ -137,6 +137,33 @@ pref("services.sync.telemetry.submissionInterval", "0", locked);
 pref("services.sync.prefs.sync.browser.startup.page", false, locked); // Firefox の自動復元機能を Firefox Sync で同期しないようにします。
 pref("services.sync.prefs.sync.browser.tabs.warnOnClose", false, locked); //たくさんのタブを閉じようとした際の警告表示を Firefox Sync で同期しないようにします。
 
+// 同期を有効にする
+pref("services.sync.prefs.sync.floorp.browser.sidebar.right", true);// サイドバーの右側を表示
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl0", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl1", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl2", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl3", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl4", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl5", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl6", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl7", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl8", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl9", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl10", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl11", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl12", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl13", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl14", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl15", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl16", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl17", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl18", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl19", true);
+pref("services.sync.prefs.sync.floorp.optimized.msbutton.ope", true); //サイドボタン付きマウス操作にブラウザーを最適化
+pref("services.sync.prefs.sync.floorp.optimized.verticaltab", true); //ツリー型垂直タブ等に最適化。8.7.2 からフォーカスした際の動作は別に
+pref("services.sync.prefs.sync.floorp.browser.user.interface", true);// Floorp 10 系以降のインターフェーステーマ設定
+pref("services.sync.prefs.sync.floorp.browser.tabbar.settings", true);// タブの設定
+
 pref("toolkit.legacyUserProfileCustomizations.stylesheets" ,true);
 
 //たくさん閉じようとしたときに警告
