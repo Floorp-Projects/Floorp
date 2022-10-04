@@ -1533,6 +1533,10 @@ add_task(async function() {
       ["extensions.InstallTriggerImpl.enabled", true],
       // Relax the user input requirements while running this test.
       ["xpinstall.userActivation.required", false],
+      // This is needed to allow most of the tests to pass no matter the value
+      // of this pref. In the future, we'll want to enable this pref by default
+      // and adjust the assertions on the anchor IDs.
+      ["extensions.unifiedExtensions.enabled", false],
     ],
   });
 

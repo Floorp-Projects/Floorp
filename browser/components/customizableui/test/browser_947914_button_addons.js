@@ -7,6 +7,17 @@
 var initialLocation = gBrowser.currentURI.spec;
 
 add_task(async function() {
+  if (
+    Services.prefs.getBoolPref("extensions.unifiedExtensions.enabled", false)
+  ) {
+    // When this pref is enabled, the "Add-ons and themes" button no longer
+    // exists so we cannot test it... In the future, we'll want to remove this
+    // test entirely since it won't be relevant when the unified extensions UI
+    // will be enabled on all channels.
+    ok(true, "Skip task because unifiedExtensions pref is enabled");
+    return;
+  }
+
   CustomizableUI.addWidgetToArea(
     "add-ons-button",
     CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
@@ -38,6 +49,14 @@ add_task(async function() {
 });
 
 add_task(async function asyncCleanup() {
+  if (
+    Services.prefs.getBoolPref("extensions.unifiedExtensions.enabled", false)
+  ) {
+    // The comment in the task above also applies here.
+    ok(true, "Skip task because unifiedExtensions pref is enabled");
+    return;
+  }
+
   CustomizableUI.reset();
   BrowserTestUtils.addTab(gBrowser, initialLocation);
   gBrowser.removeTab(gBrowser.selectedTab);
