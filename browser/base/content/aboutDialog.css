@@ -78,6 +78,14 @@
   margin: 0;
 }
 
+#rightBox {
+  /* We don't want this box to contribute arbitrarily to the intrinsic size of
+   * the dialog, so set the width to a reasonable size, but let it flex to take
+   * all available space. */
+  width: 500px;
+  -moz-box-flex: 1;
+}
+
 .update-throbber {
   width: 16px;
   min-height: 16px;
