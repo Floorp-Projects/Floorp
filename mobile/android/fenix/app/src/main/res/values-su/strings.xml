@@ -77,6 +77,12 @@
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Tutup</string>
 
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Pitur pripasi pangwedelna anu sakaligus meungpeuk palacak meuntas-loka.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Leuwih teleb ngeunaan Total Cookie Protection</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Butuh aksés kaméra. Buka setélan Android, toél idin, laju toél idinan.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -1238,6 +1244,10 @@
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Wilujeng sumping di %s!</string>
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">Wilujeng sumping di internét anu leuwih hadé</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">Panyungsi anu diwangun pikeun jalma, lain bati.</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Singkronkeun Firefox sakur parabot</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
@@ -1269,6 +1279,8 @@
     <string name="onboarding_toolbar_placement_description">Angger di handap, atawa pindahkeun ka luhur.</string>
     <!-- text for the privacy notice onboarding card header -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Salindungan anjeun</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">Anjeun ngadalikeun data anjeun</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Kami geus ngarancang %s sangkan anjeun bisa ngatur naon anu dibagikeun onlén jeung naon anu dibagikeun ka kami.</string>

@@ -1290,6 +1290,8 @@
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">ເຂັ້ມງວດ</string>
 
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">ປິດກັ້ນຕົວຕິດຕາມຫຼາຍຂຶ້ນເພື່ອໃຫ້ຫນ້າໂຫລດໄວຂຶ້ນ, ແຕ່ບາງຫນ້າທີ່ຢູ່ໃນຫນ້າອາດຈະພັງ.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">ເລືອກການຈັດວາງແຖບເຄື່ອງມືຂອງທ່ານ</string>
     <!-- text for the toolbar position card description -->
@@ -1864,6 +1866,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">ຮອດຂີດຈຳກັດທາງລັດແລ້ວ</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">ເພື່ອເພີ່ມທາງລັດໃໝ່, ເອົາອັນໃດອັນໜຶ່ງອອກ. ແຕະໃສ່ເວັບໄຊທ໌ຄ້າງໄວ້ ແລະເລືອກເອົາອອກ.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ໂອເຄ, ເຂົ້າໃຈແລ້ວ</string>
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
