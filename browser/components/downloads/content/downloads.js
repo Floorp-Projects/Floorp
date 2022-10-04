@@ -107,16 +107,10 @@ var DownloadsPanel = {
       "Attempting to initialize DownloadsPanel for a window."
     );
 
-    // Allow the download spam protection module to notify DownloadsView
-    // if it's been created.
-    if (
-      DownloadIntegration.downloadSpamProtection &&
-      !DownloadIntegration.downloadSpamProtection.spamList._views.has(
-        DownloadsView
-      )
-    ) {
-      DownloadIntegration.downloadSpamProtection.spamList.addView(
-        DownloadsView
+    if (DownloadIntegration.downloadSpamProtection) {
+      DownloadIntegration.downloadSpamProtection.register(
+        DownloadsView,
+        window
       );
     }
 
@@ -179,9 +173,7 @@ var DownloadsPanel = {
     this._unattachEventListeners();
 
     if (DownloadIntegration.downloadSpamProtection) {
-      DownloadIntegration.downloadSpamProtection.spamList.removeView(
-        DownloadsView
-      );
+      DownloadIntegration.downloadSpamProtection.unregister(window);
     }
 
     this._state = this.kStateUninitialized;
