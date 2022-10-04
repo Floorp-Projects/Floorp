@@ -7755,7 +7755,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       className: "card-stp-button-hover-background"
     }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "card-stp-button-position-wrapper"
-    }, !this.props.flightId && /*#__PURE__*/external_React_default().createElement("button", {
+    }, /*#__PURE__*/external_React_default().createElement("button", {
       className: "card-stp-button",
       onClick: this.onSaveClick
     }, this.props.context_type === "pocket" ? /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("span", {
@@ -8272,7 +8272,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
         context_type: rec.context_type,
         bookmarkGuid: rec.bookmarkGuid,
         is_collection: this.props.is_collection,
-        saveToPocketCard: saveToPocketCard
+        saveToPocketCard: saveToPocketCard && !rec.flight_id
       }));
     }
 
