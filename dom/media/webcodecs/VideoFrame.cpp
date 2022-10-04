@@ -65,6 +65,90 @@ GetSharedArrayBufferData(
 }
 
 /*
+ * The following are utilities to convert the VideoColorSpace's member values to
+ * gfx's values
+ */
+
+static gfx::YUVColorSpace ToColorSpace(VideoMatrixCoefficients aMatrix) {
+  switch (aMatrix) {
+    case VideoMatrixCoefficients::Rgb:
+      return gfx::YUVColorSpace::Identity;
+    case VideoMatrixCoefficients::Bt709:
+    case VideoMatrixCoefficients::Bt470bg:
+      return gfx::YUVColorSpace::BT709;
+    case VideoMatrixCoefficients::Smpte170m:
+      return gfx::YUVColorSpace::BT601;
+    case VideoMatrixCoefficients::EndGuard_:
+      break;
+  }
+  MOZ_ASSERT_UNREACHABLE("unsupported VideoMatrixCoefficients");
+  return gfx::YUVColorSpace::Default;
+}
+
+static gfx::TransferFunction ToTransferFunction(
+    VideoTransferCharacteristics aTransfer) {
+  switch (aTransfer) {
+    case VideoTransferCharacteristics::Bt709:
+    case VideoTransferCharacteristics::Smpte170m:
+      return gfx::TransferFunction::BT709;
+    case VideoTransferCharacteristics::Iec61966_2_1:
+      return gfx::TransferFunction::SRGB;
+    case VideoTransferCharacteristics::EndGuard_:
+      break;
+  }
+  MOZ_ASSERT_UNREACHABLE("unsupported VideoTransferCharacteristics");
+  return gfx::TransferFunction::Default;
+}
+
+/*
+ * The following are helpers to read the image data from the given buffer and
+ * the format. The data layout is illustrated in the comments for
+ * `VideoFrame::Format` below.
+ */
+
+static int32_t CeilingOfHalf(int32_t aValue) {
+  MOZ_ASSERT(aValue >= 0);
+  return aValue / 2 + (aValue % 2);
+}
+
+class I420BufferReader {
+ public:
+  I420BufferReader(const RangedPtr<uint8_t>& aPtr, int32_t aWidth,
+                   int32_t aHeight)
+      : mWidth(aWidth),
+        mHeight(aHeight),
+        mStrideY(aWidth),
+        mStrideU(CeilingOfHalf(aWidth)),
+        mStrideV(CeilingOfHalf(aWidth)),
+        mPtr(aPtr) {}
+
+  const uint8_t* DataY() const { return mPtr.get(); }
+  const uint8_t* DataU() const {
+    return &mPtr[CheckedInt<ptrdiff_t>(YByteSize().value()).value()];
+  }
+  const uint8_t* DataV() const {
+    return &mPtr[(CheckedInt<ptrdiff_t>(YByteSize().value()) +
+                  UByteSize().value())
+                     .value()];
+  }
+
+  const int32_t mWidth;
+  const int32_t mHeight;
+  const int32_t mStrideY;
+  const int32_t mStrideU;
+  const int32_t mStrideV;
+
+ protected:
+  CheckedInt<size_t> YByteSize() const {
+    return CheckedInt<size_t>(mStrideY) * mHeight;
+  }
+  CheckedInt<size_t> UByteSize() const {
+    return CheckedInt<size_t>(CeilingOfHalf(mHeight)) * mStrideU;
+  }
+  const RangedPtr<uint8_t> mPtr;
+};
+
+/*
  * The followings are helpers defined in
  * https://w3c.github.io/webcodecs/#videoframe-algorithms
  */
@@ -397,6 +481,25 @@ static Result<CombinedBufferLayout, nsCString> ParseVideoFrameCopyToOptions(
   return ComputeLayoutAndAllocationSize(parsedRect, aFormat, optLayout);
 }
 
+static bool IsYUVFormat(const VideoPixelFormat& aFormat) {
+  switch (aFormat) {
+    case VideoPixelFormat::I420:
+    case VideoPixelFormat::I420A:
+    case VideoPixelFormat::I422:
+    case VideoPixelFormat::I444:
+    case VideoPixelFormat::NV12:
+      return true;
+    case VideoPixelFormat::RGBA:
+    case VideoPixelFormat::RGBX:
+    case VideoPixelFormat::BGRA:
+    case VideoPixelFormat::BGRX:
+      return false;
+    case VideoPixelFormat::EndGuard_:
+      MOZ_ASSERT_UNREACHABLE("unsupported format");
+  }
+  return false;
+}
+
 // https://w3c.github.io/webcodecs/#videoframe-pick-color-space
 static VideoColorSpaceInit PickColorSpace(
     const VideoColorSpaceInit* aInitColorSpace,
@@ -404,7 +507,11 @@ static VideoColorSpaceInit PickColorSpace(
   VideoColorSpaceInit colorSpace;
   if (aInitColorSpace) {
     colorSpace = *aInitColorSpace;
-    // TODO: we MAY replace null members of aInitColorSpace with guessed values.
+    // By spec, we MAY replace null members of aInitColorSpace with guessed
+    // values so we can always use these in CreateYUVImageFromI420Buffer.
+    if (IsYUVFormat(aFormat) && !colorSpace.mMatrix.WasPassed()) {
+      colorSpace.mMatrix.Construct(VideoMatrixCoefficients::Bt709);
+    }
     return colorSpace;
   }
 
@@ -516,11 +623,54 @@ static Result<RefPtr<layers::Image>, nsCString> CreateRGBAImageFromBuffer(
   return CreateImageFromRawData(aSize, stride.value(), format, aPtr);
 }
 
-static Result<RefPtr<layers::Image>, nsCString> CreateImageFromBuffer(
-    const VideoFrame::Format& aFormat, const gfx::IntSize& aSize,
+static Result<RefPtr<layers::Image>, nsCString> CreateYUVImageFromI420Buffer(
+    const VideoColorSpaceInit& aColorSpace, const gfx::IntSize& aSize,
     const RangedPtr<uint8_t>& aPtr) {
+  I420BufferReader reader(aPtr, aSize.Width(), aSize.Height());
+
+  layers::PlanarYCbCrData data;
+  data.mPictureRect = gfx::IntRect(0, 0, reader.mWidth, reader.mHeight);
+
+  // Y plane.
+  data.mYChannel = const_cast<uint8_t*>(reader.DataY());
+  data.mYStride = reader.mStrideY;
+  data.mYSkip = 0;
+  // Cb plane.
+  data.mCbChannel = const_cast<uint8_t*>(reader.DataU());
+  data.mCbSkip = 0;
+  // Cr plane.
+  data.mCrChannel = const_cast<uint8_t*>(reader.DataV());
+  data.mCbSkip = 0;
+  // CbCr plane vector.
+  MOZ_RELEASE_ASSERT(reader.mStrideU == reader.mStrideV);
+  data.mCbCrStride = reader.mStrideU;
+  data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
+  // Color settings.
+  if (aColorSpace.mFullRange.WasPassed() && aColorSpace.mFullRange.Value()) {
+    data.mColorRange = gfx::ColorRange::FULL;
+  }
+  MOZ_RELEASE_ASSERT(aColorSpace.mMatrix.WasPassed());
+  data.mYUVColorSpace = ToColorSpace(aColorSpace.mMatrix.Value());
+  if (aColorSpace.mTransfer.WasPassed()) {
+    data.mTransferFunction = ToTransferFunction(aColorSpace.mTransfer.Value());
+  }
+  // TODO: take care of aColorSpace.mPrimaries.
+
+  RefPtr<layers::PlanarYCbCrImage> image =
+      new layers::RecyclingPlanarYCbCrImage(new layers::BufferRecycleBin());
+  if (!image->CopyData(data)) {
+    return Err(nsCString("Failed to create I420 image"));
+  }
+  // Manually cast type to make Result work.
+  return RefPtr<layers::Image>(image.forget());
+}
+
+static Result<RefPtr<layers::Image>, nsCString> CreateImageFromBuffer(
+    const VideoFrame::Format& aFormat, const VideoColorSpaceInit& aColorSpace,
+    const gfx::IntSize& aSize, const RangedPtr<uint8_t>& aPtr) {
   switch (aFormat.PixelFormat()) {
     case VideoPixelFormat::I420:
+      return CreateYUVImageFromI420Buffer(aColorSpace, aSize, aPtr);
     case VideoPixelFormat::I420A:
     case VideoPixelFormat::I422:
     case VideoPixelFormat::I444:
@@ -598,8 +748,12 @@ static Result<RefPtr<VideoFrame>, nsCString> CreateVideoFrameFromBuffer(
   Maybe<uint64_t> duration =
       aInit.mDuration.WasPassed() ? Some(aInit.mDuration.Value()) : Nothing();
 
+  VideoColorSpaceInit colorSpace = PickColorSpace(
+      aInit.mColorSpace.WasPassed() ? &aInit.mColorSpace.Value() : nullptr,
+      aInit.mFormat);
+
   RefPtr<layers::Image> data;
-  MOZ_TRY_VAR(data, CreateImageFromBuffer(format, codedSize, ptr));
+  MOZ_TRY_VAR(data, CreateImageFromBuffer(format, colorSpace, codedSize, ptr));
   MOZ_ASSERT(data);
   MOZ_ASSERT(data->GetSize() == codedSize);
 
@@ -609,10 +763,7 @@ static Result<RefPtr<VideoFrame>, nsCString> CreateVideoFrameFromBuffer(
   return MakeRefPtr<VideoFrame>(
       aGlobal, data, aInit.mFormat, codedSize, parsedRect,
       displaySize ? *displaySize : parsedRect.Size(), std::move(duration),
-      aInit.mTimestamp,
-      PickColorSpace(
-          aInit.mColorSpace.WasPassed() ? &aInit.mColorSpace.Value() : nullptr,
-          aInit.mFormat));
+      aInit.mTimestamp, colorSpace);
 }
 
 template <class T>
@@ -1206,25 +1357,7 @@ size_t VideoFrame::Format::SampleCount(const gfx::IntSize& aSize) const {
   return 0;
 }
 
-bool VideoFrame::Format::IsYUV() const {
-  switch (mFormat) {
-    case VideoPixelFormat::I420:
-    case VideoPixelFormat::I420A:
-    case VideoPixelFormat::I422:
-    case VideoPixelFormat::I444:
-    case VideoPixelFormat::NV12:
-      return true;
-    case VideoPixelFormat::RGBA:
-    case VideoPixelFormat::RGBX:
-    case VideoPixelFormat::BGRA:
-    case VideoPixelFormat::BGRX:
-      return false;
-    case VideoPixelFormat::EndGuard_:
-      break;
-  }
-  MOZ_ASSERT_UNREACHABLE("unsupported format");
-  return false;
-}
+bool VideoFrame::Format::IsYUV() const { return IsYUVFormat(mFormat); }
 
 /*
  * VideoFrame::Resource
@@ -1375,6 +1508,19 @@ bool VideoFrame::Resource::CopyTo(const Format::Plane& aPlane,
     }
 
     return false;
+  }
+
+  if (mImage->GetFormat() == ImageFormat::PLANAR_YCBCR) {
+    switch (aPlane) {
+      case Format::Plane::Y:
+        return copyPlane(mImage->AsPlanarYCbCrImage()->GetData()->mYChannel);
+      case Format::Plane::U:
+        return copyPlane(mImage->AsPlanarYCbCrImage()->GetData()->mCbChannel);
+      case Format::Plane::V:
+        return copyPlane(mImage->AsPlanarYCbCrImage()->GetData()->mCrChannel);
+      case Format::Plane::A:
+        MOZ_ASSERT_UNREACHABLE("invalid plane");
+    }
   }
 
   return false;
