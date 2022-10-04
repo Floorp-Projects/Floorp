@@ -531,22 +531,23 @@ Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
 #endif  // #ifdef DEBUG
 
     if (&aLeftContentInBlock != &aEditingHost) {
-      SplitNodeResult splitResult =
+      Result<SplitNodeResult, nsresult> splitNodeResult =
           aHTMLEditor.SplitAncestorStyledInlineElementsAt(
               pointToMoveFirstLineContent, nullptr, nullptr,
               HTMLEditor::SplitAtEdges::eDoNotCreateEmptyContainer);
-      if (splitResult.isErr()) {
+      if (MOZ_UNLIKELY(splitNodeResult.isErr())) {
         NS_WARNING("HTMLEditor::SplitAncestorStyledInlineElementsAt() failed");
-        return Err(splitResult.unwrapErr());
+        return splitNodeResult.propagateErr();
       }
-      nsresult rv = splitResult.SuggestCaretPointTo(
+      SplitNodeResult unwrappedSplitNodeResult = splitNodeResult.unwrap();
+      nsresult rv = unwrappedSplitNodeResult.SuggestCaretPointTo(
           aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
                         SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
       if (NS_FAILED(rv)) {
         NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
         return Err(rv);
       }
-      if (!splitResult.DidSplit()) {
+      if (!unwrappedSplitNodeResult.DidSplit()) {
         // If nothing was split, we should move the first line content to after
         // the parent inline elements.
         for (EditorDOMPoint parentPoint = pointToMoveFirstLineContent;
@@ -561,11 +562,11 @@ Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
             break;
           }
         }
-      } else if (splitResult.Handled()) {
+      } else if (unwrappedSplitNodeResult.Handled()) {
         // If se split something, we should move the first line contents before
         // the right elements.
         if (nsIContent* nextContentAtSplitPoint =
-                splitResult.GetNextContent()) {
+                unwrappedSplitNodeResult.GetNextContent()) {
           pointToMoveFirstLineContent.Set(nextContentAtSplitPoint);
           if (MOZ_UNLIKELY(!pointToMoveFirstLineContent.IsSet())) {
             NS_WARNING("Next node of split point was orphaned");
@@ -573,7 +574,7 @@ Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
           }
         } else {
           pointToMoveFirstLineContent =
-              splitResult.AtSplitPoint<EditorDOMPoint>();
+              unwrappedSplitNodeResult.AtSplitPoint<EditorDOMPoint>();
           if (MOZ_UNLIKELY(!pointToMoveFirstLineContent.IsSet())) {
             NS_WARNING("Split node was orphaned");
             return Err(NS_ERROR_NULL_POINTER);

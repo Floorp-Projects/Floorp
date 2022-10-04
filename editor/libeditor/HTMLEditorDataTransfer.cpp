@@ -757,31 +757,28 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
       !!HTMLEditor::GetLinkElement(pointToInsert.GetContainer());
 
   if (pointToInsert.IsInTextNode()) {
-    const SplitNodeResult splitNodeResult =
+    Result<SplitNodeResult, nsresult> splitNodeResult =
         mHTMLEditor.SplitNodeDeepWithTransaction(
             MOZ_KnownLive(*pointToInsert.ContainerAs<nsIContent>()),
             pointToInsert, SplitAtEdges::eAllowToCreateEmptyContainer);
-    if (splitNodeResult.isErr()) {
+    if (MOZ_UNLIKELY(splitNodeResult.isErr())) {
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
       return splitNodeResult.unwrapErr();
     }
-    nsresult rv = splitNodeResult.SuggestCaretPointTo(
+    nsresult rv = splitNodeResult.inspect().SuggestCaretPointTo(
         mHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
                       SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
     if (NS_FAILED(rv)) {
       NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
       return rv;
     }
-    pointToInsert = splitNodeResult.AtSplitPoint<EditorDOMPoint>();
+    pointToInsert = splitNodeResult.inspect().AtSplitPoint<EditorDOMPoint>();
     if (MOZ_UNLIKELY(!pointToInsert.IsSet())) {
       NS_WARNING(
           "HTMLEditor::SplitNodeDeepWithTransaction() didn't return split "
           "point");
       return NS_ERROR_FAILURE;
     }
-    // When adding caret suggestion to SplitNodeResult, here didn't change
-    // selection so that just ignore it.
-    splitNodeResult.IgnoreCaretPointSuggestion();
   }
 
   {  // Block only for AutoHTMLFragmentBoundariesFixer to hide it from the
@@ -1208,25 +1205,25 @@ nsresult HTMLEditor::HTMLWithContextInserter::MoveCaretOutsideOfLink(
   // above just placed selection inside that.  So we need to split it instead.
   // XXX Sounds like that it's not really expensive comparing with the reason
   //     to use SplitNodeDeepWithTransaction() here.
-  const SplitNodeResult splitLinkResult =
+  Result<SplitNodeResult, nsresult> splitLinkResult =
       mHTMLEditor.SplitNodeDeepWithTransaction(
           aLinkElement, aPointToPutCaret,
           SplitAtEdges::eDoNotCreateEmptyContainer);
-  if (splitLinkResult.EditorDestroyed()) {
+  if (MOZ_UNLIKELY(splitLinkResult.isErr())) {
+    if (splitLinkResult.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
+      NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     NS_WARNING(
-        "HTMLEditor::SplitNodeDeepWithTransaction() caused destroying the "
-        "editor");
-    return NS_ERROR_EDITOR_DESTROYED;
+        "HTMLEditor::SplitNodeDeepWithTransaction() failed, but ignored");
   }
 
   if (nsIContent* previousContentOfSplitPoint =
-          splitLinkResult.GetPreviousContent()) {
-    splitLinkResult.IgnoreCaretPointSuggestion();
+          splitLinkResult.inspect().GetPreviousContent()) {
+    splitLinkResult.inspect().IgnoreCaretPointSuggestion();
     nsresult rv = mHTMLEditor.CollapseSelectionTo(
         EditorRawDOMPoint::After(*previousContentOfSplitPoint));
-    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      NS_WARNING(
-          "EditorBase::CollapseSelectionTo() caused destroying the editor");
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(
@@ -1235,7 +1232,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::MoveCaretOutsideOfLink(
     return NS_OK;
   }
 
-  nsresult rv = splitLinkResult.SuggestCaretPointTo(
+  nsresult rv = splitLinkResult.inspect().SuggestCaretPointTo(
       mHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
                     SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),

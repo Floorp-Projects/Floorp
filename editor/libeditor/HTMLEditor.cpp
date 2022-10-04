@@ -2124,18 +2124,18 @@ HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
   if (pointToInsert != aPointToInsert) {
     // We need to split some levels above the original selection parent.
     MOZ_ASSERT(pointToInsert.GetChild());
-    const SplitNodeResult splitNodeResult =
+    Result<SplitNodeResult, nsresult> splitNodeResult =
         SplitNodeDeepWithTransaction(MOZ_KnownLive(*pointToInsert.GetChild()),
                                      aPointToInsert, aSplitAtEdges);
-    if (splitNodeResult.isErr()) {
+    if (MOZ_UNLIKELY(splitNodeResult.isErr())) {
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
-      return Err(splitNodeResult.unwrapErr());
+      return splitNodeResult.propagateErr();
     }
-    pointToInsert = splitNodeResult.AtSplitPoint<EditorDOMPoint>();
+    pointToInsert = splitNodeResult.inspect().AtSplitPoint<EditorDOMPoint>();
     MOZ_ASSERT(pointToInsert.IsSet());
     // Caret should be set by the caller of this method so that we don't
     // need to handle it here.
-    splitNodeResult.IgnoreCaretPointSuggestion();
+    splitNodeResult.inspect().IgnoreCaretPointSuggestion();
   }
 
   // Now we can insert the new node.
@@ -3885,13 +3885,13 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::PrepareToInsertBRElement(
   MOZ_DIAGNOSTIC_ASSERT(aPointToInsert.IsSetAndValid());
 
   // Unfortunately, we need to split the text node at the offset.
-  const SplitNodeResult splitTextNodeResult =
+  Result<SplitNodeResult, nsresult> splitTextNodeResult =
       SplitNodeWithTransaction(aPointToInsert);
-  if (splitTextNodeResult.isErr()) {
+  if (MOZ_UNLIKELY(splitTextNodeResult.isErr())) {
     NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-    return Err(splitTextNodeResult.unwrapErr());
+    return splitTextNodeResult.propagateErr();
   }
-  nsresult rv = splitTextNodeResult.SuggestCaretPointTo(
+  nsresult rv = splitTextNodeResult.inspect().SuggestCaretPointTo(
       *this, {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
   if (NS_FAILED(rv)) {
     NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
@@ -3899,7 +3899,8 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::PrepareToInsertBRElement(
   }
 
   // Insert new <br> before the right node.
-  auto atNextContent = splitTextNodeResult.AtNextContent<EditorDOMPoint>();
+  auto atNextContent =
+      splitTextNodeResult.inspect().AtNextContent<EditorDOMPoint>();
   if (MOZ_UNLIKELY(!atNextContent.IsSet())) {
     NS_WARNING("The next node seems not in the DOM tree");
     return Err(NS_ERROR_FAILURE);
@@ -4702,26 +4703,25 @@ HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
   return pointToPutCaret;  // May be unset
 }
 
-SplitNodeResult HTMLEditor::SplitNodeWithTransaction(
+Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeWithTransaction(
     const EditorDOMPoint& aStartOfRightNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (MOZ_UNLIKELY(NS_WARN_IF(!aStartOfRightNode.IsInContentNode()))) {
-    return SplitNodeResult(NS_ERROR_INVALID_ARG);
+  if (NS_WARN_IF(!aStartOfRightNode.IsInContentNode())) {
+    return Err(NS_ERROR_INVALID_ARG);
   }
   MOZ_ASSERT(aStartOfRightNode.IsSetAndValid());
 
-  if (MOZ_UNLIKELY(NS_WARN_IF(!HTMLEditUtils::IsSplittableNode(
-          *aStartOfRightNode.ContainerAs<nsIContent>())))) {
-    return SplitNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  if (NS_WARN_IF(!HTMLEditUtils::IsSplittableNode(
+          *aStartOfRightNode.ContainerAs<nsIContent>()))) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
   IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eSplitNode, nsIEditor::eNext, ignoredError);
-  if (MOZ_UNLIKELY(
-          NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED)))) {
-    return SplitNodeResult(NS_ERROR_EDITOR_DESTROYED);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
@@ -4733,17 +4733,17 @@ SplitNodeResult HTMLEditor::SplitNodeWithTransaction(
   if (NS_WARN_IF(Destroyed())) {
     NS_WARNING(
         "EditorBase::DoTransactionInternal() caused destroying the editor");
-    return SplitNodeResult(NS_ERROR_EDITOR_DESTROYED);
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::DoTransactionInternal() failed");
-    return SplitNodeResult(rv);
+    return Err(rv);
   }
 
   nsCOMPtr<nsIContent> newContent = transaction->GetNewContent();
   nsCOMPtr<nsIContent> splitContent = transaction->GetSplitContent();
   if (NS_WARN_IF(!newContent) || NS_WARN_IF(!splitContent)) {
-    return SplitNodeResult(NS_ERROR_FAILURE);
+    return Err(NS_ERROR_FAILURE);
   }
   TopLevelEditSubActionDataRef().DidSplitContent(
       *this, *splitContent, *newContent, transaction->GetSplitNodeDirection());
@@ -4752,22 +4752,22 @@ SplitNodeResult HTMLEditor::SplitNodeWithTransaction(
                          transaction->GetSplitNodeDirection());
 }
 
-SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
+Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeDeepWithTransaction(
     nsIContent& aMostAncestorToSplit,
-    const EditorDOMPoint& aStartOfDeepestRightNode,
+    const EditorDOMPoint& aDeepestStartOfRightNode,
     SplitAtEdges aSplitAtEdges) {
-  MOZ_ASSERT(aStartOfDeepestRightNode.IsSetAndValid());
+  MOZ_ASSERT(aDeepestStartOfRightNode.IsSetAndValid());
   MOZ_ASSERT(
-      aStartOfDeepestRightNode.GetContainer() == &aMostAncestorToSplit ||
-      EditorUtils::IsDescendantOf(*aStartOfDeepestRightNode.GetContainer(),
+      aDeepestStartOfRightNode.GetContainer() == &aMostAncestorToSplit ||
+      EditorUtils::IsDescendantOf(*aDeepestStartOfRightNode.GetContainer(),
                                   aMostAncestorToSplit));
 
-  if (NS_WARN_IF(!aStartOfDeepestRightNode.IsSet())) {
-    return SplitNodeResult(NS_ERROR_INVALID_ARG);
+  if (NS_WARN_IF(!aDeepestStartOfRightNode.IsSet())) {
+    return Err(NS_ERROR_INVALID_ARG);
   }
 
   nsCOMPtr<nsIContent> newLeftNodeOfMostAncestor;
-  EditorDOMPoint atStartOfRightNode(aStartOfDeepestRightNode);
+  EditorDOMPoint atStartOfRightNode(aDeepestStartOfRightNode);
   // lastResult is as explained by its name, the last result which may not be
   // split a node actually.
   SplitNodeResult lastResult =
@@ -4781,14 +4781,14 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
     auto* splittingContent = atStartOfRightNode.GetContainerAs<nsIContent>();
     if (NS_WARN_IF(!splittingContent)) {
       lastResult.IgnoreCaretPointSuggestion();
-      return SplitNodeResult(NS_ERROR_FAILURE);
+      return Err(NS_ERROR_FAILURE);
     }
     // If we meet an orphan node before meeting aMostAncestorToSplit, we need
     // to stop splitting.  This is a bug of the caller.
     if (NS_WARN_IF(splittingContent != &aMostAncestorToSplit &&
                    !atStartOfRightNode.GetContainerParentAs<nsIContent>())) {
       lastResult.IgnoreCaretPointSuggestion();
-      return SplitNodeResult(NS_ERROR_FAILURE);
+      return Err(NS_ERROR_FAILURE);
     }
     // If the container is not splitable node such as comment node, atomic
     // element, etc, we should keep it as-is, and try to split its parents.
@@ -4806,12 +4806,14 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
          !atStartOfRightNode.IsInTextNode()) ||
         (!atStartOfRightNode.IsStartOfContainer() &&
          !atStartOfRightNode.IsEndOfContainer())) {
-      lastResult = SplitNodeResult::MergeWithDeeperSplitNodeResult(
-          SplitNodeWithTransaction(atStartOfRightNode), lastResult);
-      if (lastResult.isErr()) {
-        NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-        return lastResult;
+      Result<SplitNodeResult, nsresult> splitNodeResult =
+          SplitNodeWithTransaction(atStartOfRightNode);
+      if (MOZ_UNLIKELY(splitNodeResult.isErr())) {
+        lastResult.IgnoreCaretPointSuggestion();
+        return splitNodeResult;
       }
+      lastResult = SplitNodeResult::MergeWithDeeperSplitNodeResult(
+          splitNodeResult.unwrap(), lastResult);
       MOZ_ASSERT(lastResult.HasCaretPointSuggestion());
       MOZ_ASSERT(lastResult.GetOriginalContent() == splittingContent);
       if (splittingContent == &aMostAncestorToSplit) {
@@ -4855,16 +4857,16 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
   // Not reached because while (true) loop never breaks.
 }
 
-SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
-                                        nsIContent& aNewNode,
-                                        SplitNodeDirection aDirection) {
+Result<SplitNodeResult, nsresult> HTMLEditor::DoSplitNode(
+    const EditorDOMPoint& aStartOfRightNode, nsIContent& aNewNode,
+    SplitNodeDirection aDirection) {
   // Ensure computing the offset if it's intialized with a child content node.
   Unused << aStartOfRightNode.Offset();
 
   // XXX Perhaps, aStartOfRightNode may be invalid if this is a redo
   //     operation after modifying DOM node with JS.
-  if (MOZ_UNLIKELY(NS_WARN_IF(!aStartOfRightNode.IsInContentNode()))) {
-    return SplitNodeResult(NS_ERROR_INVALID_ARG);
+  if (NS_WARN_IF(!aStartOfRightNode.IsInContentNode())) {
+    return Err(NS_ERROR_INVALID_ARG);
   }
   MOZ_ASSERT(aStartOfRightNode.IsSetAndValid());
 
@@ -4873,9 +4875,9 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   for (SelectionType selectionType : kPresentSelectionTypes) {
     SavedRange savingRange;
     savingRange.mSelection = GetSelection(selectionType);
-    if (MOZ_UNLIKELY(NS_WARN_IF(!savingRange.mSelection &&
-                                selectionType == SelectionType::eNormal))) {
-      return SplitNodeResult(NS_ERROR_FAILURE);
+    if (NS_WARN_IF(!savingRange.mSelection &&
+                   selectionType == SelectionType::eNormal)) {
+      return Err(NS_ERROR_FAILURE);
     }
     if (!savingRange.mSelection) {
       // For non-normal selections, skip over the non-existing ones.
@@ -4898,8 +4900,8 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   }
 
   nsCOMPtr<nsINode> parent = aStartOfRightNode.GetContainerParent();
-  if (MOZ_UNLIKELY(NS_WARN_IF(!parent))) {
-    return SplitNodeResult(NS_ERROR_FAILURE);
+  if (NS_WARN_IF(!parent)) {
+    return Err(NS_ERROR_FAILURE);
   }
 
   // Fix the child before mutation observer may touch the DOM tree.
@@ -4912,7 +4914,7 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
                        error);
   if (MOZ_UNLIKELY(error.Failed())) {
     NS_WARNING("nsINode::InsertBefore() failed");
-    return SplitNodeResult(error.StealNSResult());
+    return Err(error.StealNSResult());
   }
 
   MOZ_DIAGNOSTIC_ASSERT_IF(aStartOfRightNode.IsInTextNode(), aNewNode.IsText());
@@ -5039,7 +5041,7 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
       MOZ_KnownLive(savedRange.mSelection)->RemoveAllRanges(error);
       if (MOZ_UNLIKELY(error.Failed())) {
         NS_WARNING("Selection::RemoveAllRanges() failed");
-        return SplitNodeResult(error.StealNSResult());
+        return Err(error.StealNSResult());
       }
       previousSelection = savedRange.mSelection;
     }
@@ -5099,7 +5101,7 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
                         savedRange.mEndContainer, savedRange.mEndOffset, error);
     if (MOZ_UNLIKELY(error.Failed())) {
       NS_WARNING("nsRange::Create() failed");
-      return SplitNodeResult(error.StealNSResult());
+      return Err(error.StealNSResult());
     }
     // The `MOZ_KnownLive` annotation is only necessary because of a bug
     // (https://bugzilla.mozilla.org/show_bug.cgi?id=1622253) in the
@@ -5109,7 +5111,7 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
     if (MOZ_UNLIKELY(error.Failed())) {
       NS_WARNING(
           "Selection::AddRangeAndSelectFramesAndNotifyListeners() failed");
-      return SplitNodeResult(error.StealNSResult());
+      return Err(error.StealNSResult());
     }
   }
 
@@ -5125,17 +5127,15 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   // XXX We cannot check all descendants in the right node and the new left
   //     node for performance reason.  I think that if caller needs to access
   //     some of the descendants, they should check by themselves.
-  if (MOZ_UNLIKELY(
-          NS_WARN_IF(parent !=
-                     aStartOfRightNode.GetContainer()->GetParentNode()) ||
-          NS_WARN_IF(parent != aNewNode.GetParentNode()) ||
-          (aDirection == SplitNodeDirection::LeftNodeIsNewOne &&
-           NS_WARN_IF(aNewNode.GetNextSibling() !=
-                      aStartOfRightNode.GetContainer())) ||
-          (aDirection == SplitNodeDirection::RightNodeIsNewOne &&
-           NS_WARN_IF(aNewNode.GetPreviousSibling() !=
-                      aStartOfRightNode.GetContainer())))) {
-    return SplitNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  if (NS_WARN_IF(parent != aStartOfRightNode.GetContainer()->GetParentNode()) ||
+      NS_WARN_IF(parent != aNewNode.GetParentNode()) ||
+      (aDirection == SplitNodeDirection::LeftNodeIsNewOne &&
+       NS_WARN_IF(aNewNode.GetNextSibling() !=
+                  aStartOfRightNode.GetContainer())) ||
+      (aDirection == SplitNodeDirection::RightNodeIsNewOne &&
+       NS_WARN_IF(aNewNode.GetPreviousSibling() !=
+                  aStartOfRightNode.GetContainer()))) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
   DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjSplitNode(
@@ -5686,20 +5686,20 @@ nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
     return rv;
   }
 
-  const SplitNodeResult splitAtAnchorResult =
+  Result<SplitNodeResult, nsresult> splitAtAnchorResult =
       SplitNodeWithTransaction(atAnchor);
-  if (splitAtAnchorResult.isErr()) {
+  if (MOZ_UNLIKELY(splitAtAnchorResult.isErr())) {
     NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
     return splitAtAnchorResult.unwrapErr();
   }
 
-  const EditorRawDOMPoint& atRightContent =
-      splitAtAnchorResult.AtNextContent<EditorRawDOMPoint>();
+  splitAtAnchorResult.inspect().IgnoreCaretPointSuggestion();
+  const auto atRightContent =
+      splitAtAnchorResult.inspect().AtNextContent<EditorRawDOMPoint>();
   if (NS_WARN_IF(!atRightContent.IsSet())) {
     return NS_ERROR_FAILURE;
   }
   MOZ_ASSERT(atRightContent.IsSetAndValid());
-  splitAtAnchorResult.IgnoreCaretPointSuggestion();
   nsresult rv = CollapseSelectionTo(atRightContent);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::CollapseSelectionTo() failed");

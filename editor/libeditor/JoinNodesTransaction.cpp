@@ -187,15 +187,17 @@ NS_IMETHODIMP JoinNodesTransaction::UndoTransaction() {
   const OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
   const OwningNonNull<nsIContent> removedContent = *mRemovedContent;
 
-  const SplitNodeResult splitNodeResult =
+  Result<SplitNodeResult, nsresult> splitNodeResult =
       htmlEditor->DoSplitNode(CreateJoinedPoint<EditorDOMPoint>(),
                               removedContent, GetSplitNodeDirection());
-  NS_WARNING_ASSERTION(splitNodeResult.isOk(),
-                       "HTMLEditor::DoSplitNode() failed");
+  if (MOZ_UNLIKELY(splitNodeResult.isErr())) {
+    NS_WARNING("HTMLEditor::DoSplitNode() failed");
+    return splitNodeResult.unwrapErr();
+  }
   // When adding caret suggestion to SplitNodeResult, here didn't change
   // selection so that just ignore it.
-  splitNodeResult.IgnoreCaretPointSuggestion();
-  return splitNodeResult.unwrapErr();
+  splitNodeResult.inspect().IgnoreCaretPointSuggestion();
+  return NS_OK;
 }
 
 NS_IMETHODIMP JoinNodesTransaction::RedoTransaction() {

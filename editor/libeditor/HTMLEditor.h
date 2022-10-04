@@ -936,7 +936,7 @@ class HTMLEditor final : public EditorBase,
    *                            find inline elements to be split, Handled()
    *                            returns false.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitNodeResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<SplitNodeResult, nsresult>
   SplitAncestorStyledInlineElementsAt(const EditorDOMPoint& aPointToSplit,
                                       nsAtom* aProperty, nsAtom* aAttribute,
                                       SplitAtEdges aSplitAtEdges);
@@ -989,9 +989,9 @@ class HTMLEditor final : public EditorBase,
    * @param aDirection          Whether aNewNode will have previous or following
    *                            content of aStartOfRightNode.
    */
-  MOZ_CAN_RUN_SCRIPT SplitNodeResult
-  DoSplitNode(const EditorDOMPoint& aStartOfRightNode, nsIContent& aNewNode,
-              SplitNodeDirection aDirection);
+  MOZ_CAN_RUN_SCRIPT Result<SplitNodeResult, nsresult> DoSplitNode(
+      const EditorDOMPoint& aStartOfRightNode, nsIContent& aNewNode,
+      SplitNodeDirection aDirection);
 
   /**
    * DoJoinNodes() merges contents in aContentToRemove to aContentToKeep and
@@ -1337,7 +1337,7 @@ class HTMLEditor final : public EditorBase,
    * @return                            When succeeded, SplitPoint() returns
    *                                    the point to insert the element.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitNodeResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<SplitNodeResult, nsresult>
   MaybeSplitAncestorsForInsertWithTransaction(
       nsAtom& aTag, const EditorDOMPoint& aStartOfDeepestRightNode,
       const Element& aEditingHost);
@@ -1536,7 +1536,7 @@ class HTMLEditor final : public EditorBase,
    *                            the <br> element may be removed if it becomes
    *                            visible.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitNodeResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<SplitNodeResult, nsresult>
   SplitParagraphWithTransaction(Element& aParentDivOrP,
                                 const EditorDOMPoint& aStartOfRightNode,
                                 dom::HTMLBRElement* aMayBecomeVisibleBRElement);
@@ -1559,7 +1559,7 @@ class HTMLEditor final : public EditorBase,
    * @return                If the caller should default to inserting <br>
    *                        element, returns "not handled".
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitNodeResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<SplitNodeResult, nsresult>
   HandleInsertParagraphInParagraph(Element& aParentDivOrP,
                                    const EditorDOMPoint& aCandidatePointToSplit,
                                    const Element& aEditingHost);
@@ -2055,7 +2055,7 @@ class HTMLEditor final : public EditorBase,
    *                            next sibling.  And the point will be start
    *                            of the right node.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitNodeResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<SplitNodeResult, nsresult>
   SplitNodeWithTransaction(const EditorDOMPoint& aStartOfRightNode);
 
   /**
@@ -2075,7 +2075,7 @@ class HTMLEditor final : public EditorBase,
    *                                    be good to insert something if the
    *                                    caller want to do it.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitNodeResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<SplitNodeResult, nsresult>
   SplitNodeDeepWithTransaction(nsIContent& aMostAncestorToSplit,
                                const EditorDOMPoint& aDeepestStartOfRightNode,
                                SplitAtEdges aSplitAtEdges);
