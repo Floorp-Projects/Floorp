@@ -1568,6 +1568,7 @@ function runTest() {
   }, "exclude_animations_targeting_pseudo_elements");
 }
 
+W3CTest.runner.expectAssertions(0, 12); // bug 1189015
 setup({explicit_done: true});
 SpecialPowers.pushPrefEnv(
   {
