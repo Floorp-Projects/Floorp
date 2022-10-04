@@ -42,11 +42,13 @@
   --in-content-button-border-color-active: var(--in-content-button-border-color-hover);
   --in-content-primary-button-text-color: rgb(251,251,254);
   --in-content-primary-button-text-color-hover: var(--in-content-primary-button-text-color);
+  --in-content-primary-button-text-color-active: var(--in-content-primary-button-text-color);
   --in-content-primary-button-background: #0061e0;
   --in-content-primary-button-background-hover: #0250bb;
   --in-content-primary-button-background-active: #053e94;
   --in-content-primary-button-border-color: transparent;
   --in-content-primary-button-border-hover: transparent;
+  --in-content-primary-button-border-active: transparent;
   --in-content-danger-button-background: #e22850;
   --in-content-danger-button-background-hover: #c50042;
   --in-content-danger-button-background-active: #810220;
@@ -188,8 +190,8 @@
 @media (prefers-contrast) {
   :host,
   :root {
-    --in-content-page-color: WindowText;
-    --in-content-page-background: Window;
+    --in-content-page-color: CanvasText;
+    --in-content-page-background: Canvas;
     --in-content-deemphasized-text: GrayText;
 
     --in-content-box-background: -moz-Dialog;
@@ -203,8 +205,8 @@
     --in-content-item-selected-text: SelectedItemText;
     --in-content-icon-color: -moz-DialogText;
 
-    --in-content-accent-color: -moz-DialogText;
-    --in-content-accent-color-active: -moz-DialogText;
+    --in-content-accent-color: SelectedItem;
+    --in-content-accent-color-active: SelectedItem;
 
     --in-content-border-hover: ThreeDShadow;
     /* This is not great, but there is no suitable keyword for this.
@@ -218,23 +220,31 @@
     --in-content-link-color-active: -moz-nativehyperlinktext;
     --in-content-link-color-visited: -moz-nativehyperlinktext;
 
-    --in-content-button-text-color-hover: ButtonFace;
-    --in-content-button-background: ButtonFace;
     --in-content-button-text-color: ButtonText;
-    --in-content-button-background-hover: ButtonText;
-    --in-content-button-background-active: ButtonText;
+    --in-content-button-text-color-hover: SelectedItemText;
+    --in-content-button-text-color-active: SelectedItem;
+    --in-content-button-background: ButtonFace;
+    --in-content-button-background-hover: SelectedItem;
+    --in-content-button-background-active: SelectedItemText;
     --in-content-button-border-color: ButtonText;
+    --in-content-button-border-color-hover: SelectedItemText;
+    --in-content-button-border-color-active: SelectedItem;
 
     --in-content-primary-button-text-color: ButtonFace;
-    --in-content-primary-button-text-color-hover: ButtonText;
+    --in-content-primary-button-text-color-hover: SelectedItemText;
+    --in-content-primary-button-text-color-active: SelectedItem;
     --in-content-primary-button-background: ButtonText;
-    --in-content-primary-button-background-hover: ButtonFace;
-    --in-content-primary-button-background-active: ButtonFace;
-    --in-content-primary-button-border-hover: ButtonText;
+    --in-content-primary-button-background-hover: SelectedItem;
+    --in-content-primary-button-background-active: SelectedItemText;
+    --in-content-primary-button-border-color: ButtonFace;
+    --in-content-primary-button-border-hover: SelectedItemText;
+    --in-content-primary-button-border-active: SelectedItem;
 
     --in-content-danger-button-background: var(--in-content-primary-button-background);
     --in-content-danger-button-background-hover: var(--in-content-primary-button-background-hover);
     --in-content-danger-button-background-active: var(--in-content-primary-button-background-active);
+
+    --in-content-focus-outline-color: -moz-DialogText;
 
     --in-content-table-border-color: ThreeDDarkShadow;
     --in-content-table-background: -moz-Dialog;
@@ -324,15 +334,43 @@ xul|tab {
   color-scheme: unset;
 }
 
-xul|tab:hover {
+xul|tab:where(:hover) {
   border-bottom-color: var(--in-content-border-color);
   background-color: var(--in-content-button-background-hover);
   color: var(--in-content-button-text-color-hover);
 }
 
+xul|tab:where(:hover:active) {
+  background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-active);
+}
+
 xul|tab[selected] {
-  color: var(--in-content-accent-color) !important; /* override macOS tabbox.css */
+  color: var(--in-content-accent-color);
   border-bottom-color: currentColor;
+}
+
+xul|tab[selected]:hover {
+  background-color: var(--in-content-button-background-hover);
+}
+
+xul|tab[selected]:hover:active {
+  background-color: var(--in-content-button-background-active);
+}
+
+@media (prefers-contrast) {
+  xul|tab:hover,
+  xul|tab:hover:active {
+    border-bottom-color: currentColor;
+  }
+
+  xul|tab[selected]:hover {
+    color: var(--in-content-button-text-color-hover);
+  }
+
+  xul|tab[selected]:hover:active {
+    color: var(--in-content-button-text-color-active);
+  }
 }
 
 /* html buttons */
@@ -478,6 +516,8 @@ html|button.primary:enabled:hover:active,
 xul|button[default]:not([disabled="true"]):hover:active,
 xul|button.primary:not([disabled="true"]):hover:active {
   background-color: var(--in-content-primary-button-background-active);
+  color: var(--in-content-primary-button-text-color-active);
+  border-color: var(--in-content-primary-button-border-active);
 }
 
 @media not (prefers-contrast) {
@@ -501,8 +541,10 @@ xul|button.primary:not([disabled="true"]):hover:active {
   --in-content-focus-outline-color: var(--in-content-danger-button-background);
 }
 
-html|button.ghost-button {
-  background-color: transparent;
+@media not (prefers-contrast) {
+  html|button.ghost-button {
+    background-color: transparent;
+  }
 }
 
 html|button.ghost-button:not(.semi-transparent):enabled:hover {
@@ -512,6 +554,7 @@ html|button.ghost-button:not(.semi-transparent):enabled:hover {
 
 html|button.ghost-button:not(.semi-transparent):enabled:hover:active {
   background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-active);
 }
 
 html|button.ghost-button.icon-button {
@@ -792,6 +835,23 @@ xul|*.radio-check {
   flex-shrink: 0; /* avoid shrinking inside flex container */
 }
 
+@media (prefers-contrast) {
+  html|input[type="radio"],
+  xul|*.radio-check {
+    border-color: var(--in-content-button-border-color);
+  }
+
+  html|input[type="radio"]:enabled:hover,
+  xul|radio:not([disabled="true"]):hover > xul|*.radio-check {
+    border-color: var(--in-content-button-border-color-hover);
+  }
+
+  html|input[type="radio"]:enabled:hover:active,
+  xul|radio:not([disabled="true"]):hover:active > xul|*.radio-check {
+    border-color: var(--in-content-button-border-color-active);
+  }
+}
+
 html|input[type="radio"]:enabled:hover,
 xul|radio:not([disabled="true"]):hover > xul|*.radio-check {
   background-color: var(--in-content-button-background-hover);
@@ -801,6 +861,7 @@ xul|radio:not([disabled="true"]):hover > xul|*.radio-check {
 html|input[type="radio"]:enabled:hover:active,
 xul|radio:not([disabled="true"]):hover:active > xul|*.radio-check {
   background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-active);
 }
 
 html|input[type="radio"]:checked,
@@ -826,6 +887,8 @@ xul|radio:not([disabled="true"])[selected]:hover > xul|*.radio-check {
 html|input[type="radio"]:enabled:checked:hover:active,
 xul|radio:not([disabled="true"])[selected]:hover:active > xul|*.radio-check {
   background-color: var(--in-content-primary-button-background-active);
+  color: var(--in-content-primary-button-text-color-active);
+  border-color: var(--in-content-primary-button-border-active);
 }
 
 xul|*.radio-label-box {
@@ -872,6 +935,7 @@ html|*#categories {
 }
 
 #categories > .category {
+  border: 1px solid var(--in-content-primary-button-border-color);
   border-radius: 4px;
   min-height: 48px;
   appearance: none;
@@ -882,7 +946,7 @@ html|*#categories {
 }
 
 html|*#categories > html|*.category {
-  border: 0;
+  border: 1px solid var(--in-content-primary-button-border-color);
   background-color: initial;
   background-size: 24px;
   background-repeat: no-repeat;
@@ -903,25 +967,30 @@ html|*#categories > html|*.category:dir(rtl) {
 #categories > .category:hover {
   background-color: var(--in-content-button-background-hover);
   color: var(--in-content-button-text-color-hover);
+  border-color: var(--in-content-button-border-color-hover);
 }
 
 #categories > .category:hover:active {
   background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-active);
+  border-color: var(--in-content-button-border-color-active);
 }
 
-#categories > .category[selected],
-#categories > .category.selected {
-  color: var(--in-content-accent-color);
-}
+@media not (prefers-contrast) {
+  #categories > .category[selected],
+  #categories > .category.selected {
+    color: var(--in-content-accent-color);
+  }
 
-#categories > .category[selected]:not(:hover) {
-  /* override richlistitem selected style while letting hover style above apply */
-  background-color: transparent;
-}
+  #categories > .category[selected]:not(:hover) {
+    /* override richlistitem selected style while letting hover style above apply */
+    background-color: transparent;
+  }
 
-#categories > .category[selected]:hover:active,
-#categories > .category.selected:hover:active {
-  color: var(--in-content-accent-color-active);
+  #categories > .category[selected]:hover:active,
+  #categories > .category.selected:hover:active {
+    color: var(--in-content-accent-color-active);
+  }
 }
 
 @media (prefers-contrast) {
@@ -929,16 +998,16 @@ html|*#categories > html|*.category:dir(rtl) {
     /* The transition causes issues with the text getting a background while
      * transitioning and it looks weird. */
     transition: none;
+    /* We need a true transparent but in HCM this would compute to an actual color,
+     * so select the page's background color instead: */
+    border-color: var(--in-content-page-background);
   }
 
-  #categories > .category[selected]:hover,
-  #categories > .category[selected]:hover:active,
-  #categories > .category.selected:hover,
-  #categories > .category.selected:hover:active,
-  #categories > .category[selected]:not(:hover),
-  #categories > .category.selected:not(:hover) {
+  #categories > .category[selected],
+  #categories > .category.selected {
     background-color: var(--in-content-button-background-hover);
     color: var(--in-content-button-text-color-hover);
+    border-color: var(--in-content-button-border-color-hover);
   }
 }
 
@@ -1038,11 +1107,8 @@ xul|richlistbox {
 }
 
 xul|listheader {
-  border-bottom: none;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
-  padding-bottom: 1px;
-  box-shadow: inset 0 -1px var(--in-content-border-color);
   overflow: clip; /* Clip border-radius */
 }
 
@@ -1078,15 +1144,17 @@ xul|treechildren::-moz-tree-row(selected) {
   color: var(--in-content-item-selected-text);
 }
 
-xul|richlistbox:not(#categories) > xul|richlistitem[selected] {
-  /* Ensure buttons/menulists inside richlistitems (containers, applications) look OK */
-  --in-content-button-background: color-mix(in srgb, currentColor 15%, transparent);
-  --in-content-button-background-hover: color-mix(in srgb, currentColor 30%, transparent);
-  --in-content-button-background-active: color-mix(in srgb, currentColor 45%, transparent);
-  --in-content-button-text-color: var(--in-content-item-selected-text);
-  --in-content-button-text-color-hover: var(--in-content-item-selected-text);
-  --in-content-button-text-color-active: var(--in-content-button-text-color-hover);
-  --in-content-focus-outline-color: var(--in-content-item-selected-text);
+@media not (prefers-contrast) {
+  xul|richlistbox:not(#categories) > xul|richlistitem[selected] {
+    /* Ensure buttons/menulists inside richlistitems (containers, applications) look OK */
+    --in-content-button-background: color-mix(in srgb, currentColor 15%, transparent);
+    --in-content-button-background-hover: color-mix(in srgb, currentColor 30%, transparent);
+    --in-content-button-background-active: color-mix(in srgb, currentColor 45%, transparent);
+    --in-content-button-text-color: var(--in-content-item-selected-text);
+    --in-content-button-text-color-hover: var(--in-content-item-selected-text);
+    --in-content-button-text-color-active: var(--in-content-button-text-color-hover);
+    --in-content-focus-outline-color: var(--in-content-item-selected-text);
+  }
 }
 
 xul|richlistitem[selected] xul|menulist:focus-visible {
@@ -1148,6 +1216,7 @@ xul|treecolpicker:hover {
 xul|treecol:not([hideheader="true"], [sortable="false"]):hover:active,
 xul|treecolpicker:hover:active {
   background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-active);
 }
 
 xul|treecol:not([hideheader="true"], :first-child),
@@ -1155,6 +1224,13 @@ xul|treecolpicker {
   border-inline-start-width: 1px;
   border-inline-start-style: solid;
   border-image: linear-gradient(transparent 0%, transparent 20%, var(--in-content-box-border-color) 20%, var(--in-content-box-border-color) 80%, transparent 80%, transparent 100%) 1 1;
+}
+
+@media (prefers-contrast) {
+  xul|treecol:not([hideheader="true"], :first-child),
+  xul|treecolpicker {
+    --in-content-box-border-color: var(--in-content-button-border-color);
+  }
 }
 
 xul|treecol[sortDirection]:not([hideheader="true"]) > xul|*.treecol-sortdirection {
@@ -1289,9 +1365,18 @@ input[type="text"][warning]:enabled:not(:focus) {
 .sidebar-footer-link {
   height: 36px;
   cursor: default;
+  border: 1px solid var(--in-content-button-border-color);
   border-radius: 4px;
   display: flex;
   align-items: center;
+}
+
+@media (prefers-contrast) {
+  .sidebar-footer-link {
+    /* We need a true transparent but in HCM this would compute to an actual color,
+     * so select the page's background color instead: */
+    border-color: var(--in-content-page-background);
+  }
 }
 
 .sidebar-footer-link,
@@ -1309,11 +1394,13 @@ xul|*.sidebar-footer-link {
 .sidebar-footer-link:hover {
   background-color: var(--in-content-button-background-hover);
   color: var(--in-content-button-text-color-hover);
+  border-color: var(--in-content-button-border-color-hover);
 }
 
 .sidebar-footer-link:hover:active:not([disabled]) {
   background-color: var(--in-content-button-background-active);
-  color: var(--in-content-button-text-color-hover);
+  color: var(--in-content-button-text-color-active);
+  border-color: var(--in-content-button-border-color-active);
 }
 
 .sidebar-footer-link:focus-visible {
