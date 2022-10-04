@@ -34,7 +34,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 1);
     padding-top: 50%;
     pointer-events: none;
     background: $black-40;
-    border-radius: 8px;
+    border-radius: 8px 8px 0 0;
 
     .card-stp-button-position-wrapper {
       position: absolute;
