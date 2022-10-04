@@ -8776,9 +8776,11 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
     emitCalleeGuard(thisObjId, target);
 
     if (isScripted) {
-      writer.callScriptedFunction(thisObjId, argcId, targetFlags);
+      writer.callScriptedFunction(thisObjId, argcId, targetFlags,
+                                  ClampFixedArgc(argc_));
     } else {
-      writer.callNativeFunction(thisObjId, argcId, op_, target, targetFlags);
+      writer.callNativeFunction(thisObjId, argcId, op_, target, targetFlags,
+                                ClampFixedArgc(argc_));
     }
   } else {
     // Guard that |this| is a function.
@@ -8789,10 +8791,12 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
 
     if (isScripted) {
       writer.guardFunctionHasJitEntry(thisObjId, /*isConstructing =*/false);
-      writer.callScriptedFunction(thisObjId, argcId, targetFlags);
+      writer.callScriptedFunction(thisObjId, argcId, targetFlags,
+                                  ClampFixedArgc(argc_));
     } else {
       writer.guardFunctionHasNoJitEntry(thisObjId);
-      writer.callAnyNativeFunction(thisObjId, argcId, targetFlags);
+      writer.callAnyNativeFunction(thisObjId, argcId, targetFlags,
+                                   ClampFixedArgc(argc_));
     }
   }
 
@@ -9416,14 +9420,18 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   ObjOperandId thisObjId;
   std::tie(thisObjId, std::ignore) = emitFunApplyGuard(argcId, format);
 
+  // We always MaxUnrolledArgCopy here because the fixed argc is meaningless
+  // in a FunApply case.
+  uint32_t fixedArgc = MaxUnrolledArgCopy;
   if (mode_ == ICState::Mode::Specialized) {
     // Ensure that |this| is the expected target function.
     emitCalleeGuard(thisObjId, target);
 
     if (isScripted) {
-      writer.callScriptedFunction(thisObjId, argcId, targetFlags);
+      writer.callScriptedFunction(thisObjId, argcId, targetFlags, fixedArgc);
     } else {
-      writer.callNativeFunction(thisObjId, argcId, op_, target, targetFlags);
+      writer.callNativeFunction(thisObjId, argcId, op_, target, targetFlags,
+                                fixedArgc);
     }
   } else {
     // Guard that |this| is a function.
@@ -9435,11 +9443,11 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
     if (isScripted) {
       // Guard that function is scripted.
       writer.guardFunctionHasJitEntry(thisObjId, /*constructing =*/false);
-      writer.callScriptedFunction(thisObjId, argcId, targetFlags);
+      writer.callScriptedFunction(thisObjId, argcId, targetFlags, fixedArgc);
     } else {
       // Guard that function is native.
       writer.guardFunctionHasNoJitEntry(thisObjId);
-      writer.callAnyNativeFunction(thisObjId, argcId, targetFlags);
+      writer.callAnyNativeFunction(thisObjId, argcId, targetFlags, fixedArgc);
     }
   }
 
@@ -9577,8 +9585,8 @@ AttachDecision CallIRGenerator::tryAttachWasmCall(HandleFunction calleeFunc) {
     writer.guardWasmArg(argId, sig.args()[i].kind());
   }
 
-  writer.callWasmFunction(calleeObjId, argcId, flags, &funcExport,
-                          inst.object());
+  writer.callWasmFunction(calleeObjId, argcId, flags, ClampFixedArgc(argc_),
+                          &funcExport, inst.object());
   writer.returnFromIC();
 
   trackAttached("WasmCall");
@@ -10156,7 +10164,8 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
     }
   }
 
-  writer.callScriptedFunction(calleeObjId, argcId, flags);
+  writer.callScriptedFunction(calleeObjId, argcId, flags,
+                              ClampFixedArgc(argc_));
   writer.returnFromIC();
 
   if (isSpecialized) {
@@ -10217,13 +10226,15 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
 
     // Ensure callee matches this stub's callee
     writer.guardSpecificFunction(calleeObjId, calleeFunc);
-    writer.callDOMFunction(calleeObjId, argcId, thisObjId, calleeFunc, flags);
+    writer.callDOMFunction(calleeObjId, argcId, thisObjId, calleeFunc, flags,
+                           ClampFixedArgc(argc_));
 
     trackAttached("CallDOM");
   } else if (isSpecialized) {
     // Ensure callee matches this stub's callee
     writer.guardSpecificFunction(calleeObjId, calleeFunc);
-    writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc, flags);
+    writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc, flags,
+                              ClampFixedArgc(argc_));
 
     trackAttached("CallNative");
   } else {
@@ -10238,7 +10249,8 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
       // If callee is a class constructor, we have to throw.
       writer.guardNotClassConstructor(calleeObjId);
     }
-    writer.callAnyNativeFunction(calleeObjId, argcId, flags);
+    writer.callAnyNativeFunction(calleeObjId, argcId, flags,
+                                 ClampFixedArgc(argc_));
 
     trackAttached("CallAnyNative");
   }
@@ -10281,7 +10293,7 @@ AttachDecision CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
   // Ensure the callee's class matches the one in this stub.
   writer.guardAnyClass(calleeObjId, calleeObj->getClass());
 
-  writer.callClassHook(calleeObjId, argcId, hook, flags);
+  writer.callClassHook(calleeObjId, argcId, hook, flags, ClampFixedArgc(argc_));
   writer.returnFromIC();
 
   trackAttached("Call native func");

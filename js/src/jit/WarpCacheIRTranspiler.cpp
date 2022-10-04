@@ -4812,6 +4812,7 @@ bool WarpCacheIRTranspiler::emitFunApplyArgsObj(WrappedFunction* wrappedTarget,
 bool WarpCacheIRTranspiler::emitCallNativeFunction(ObjOperandId calleeId,
                                                    Int32OperandId argcId,
                                                    CallFlags flags,
+                                                   uint32_t argcFixed,
                                                    bool ignoresReturnValue) {
   // Instead of ignoresReturnValue we use CallInfo::ignoresReturnValue.
   return emitCallFunction(calleeId, argcId, mozilla::Nothing(), flags,
@@ -4821,7 +4822,8 @@ bool WarpCacheIRTranspiler::emitCallNativeFunction(ObjOperandId calleeId,
 bool WarpCacheIRTranspiler::emitCallDOMFunction(ObjOperandId calleeId,
                                                 Int32OperandId argcId,
                                                 ObjOperandId thisObjId,
-                                                CallFlags flags) {
+                                                CallFlags flags,
+                                                uint32_t argcFixed) {
   return emitCallFunction(calleeId, argcId, mozilla::Some(thisObjId), flags,
                           CallKind::DOM);
 }
@@ -4829,16 +4831,15 @@ bool WarpCacheIRTranspiler::emitCallDOMFunction(ObjOperandId calleeId,
 bool WarpCacheIRTranspiler::emitCallNativeFunction(ObjOperandId calleeId,
                                                    Int32OperandId argcId,
                                                    CallFlags flags,
+                                                   uint32_t argcFixed,
                                                    uint32_t targetOffset) {
   return emitCallFunction(calleeId, argcId, mozilla::Nothing(), flags,
                           CallKind::Native);
 }
 
-bool WarpCacheIRTranspiler::emitCallDOMFunction(ObjOperandId calleeId,
-                                                Int32OperandId argcId,
-                                                ObjOperandId thisObjId,
-                                                CallFlags flags,
-                                                uint32_t targetOffset) {
+bool WarpCacheIRTranspiler::emitCallDOMFunction(
+    ObjOperandId calleeId, Int32OperandId argcId, ObjOperandId thisObjId,
+    CallFlags flags, uint32_t argcFixed, uint32_t targetOffset) {
   return emitCallFunction(calleeId, argcId, mozilla::Some(thisObjId), flags,
                           CallKind::DOM);
 }
@@ -4846,7 +4847,8 @@ bool WarpCacheIRTranspiler::emitCallDOMFunction(ObjOperandId calleeId,
 
 bool WarpCacheIRTranspiler::emitCallScriptedFunction(ObjOperandId calleeId,
                                                      Int32OperandId argcId,
-                                                     CallFlags flags) {
+                                                     CallFlags flags,
+                                                     uint32_t argcFixed) {
   return emitCallFunction(calleeId, argcId, mozilla::Nothing(), flags,
                           CallKind::Scripted);
 }
@@ -4854,7 +4856,8 @@ bool WarpCacheIRTranspiler::emitCallScriptedFunction(ObjOperandId calleeId,
 bool WarpCacheIRTranspiler::emitCallInlinedFunction(ObjOperandId calleeId,
                                                     Int32OperandId argcId,
                                                     uint32_t icScriptOffset,
-                                                    CallFlags flags) {
+                                                    CallFlags flags,
+                                                    uint32_t argcFixed) {
   if (callInfo_->isInlined()) {
     // We are transpiling to generate the correct guards. We also
     // update the CallInfo to use the correct arguments. Code for the
@@ -4896,11 +4899,9 @@ bool WarpCacheIRTranspiler::emitCallInlinedFunction(ObjOperandId calleeId,
                           CallKind::Scripted);
 }
 
-bool WarpCacheIRTranspiler::emitCallWasmFunction(ObjOperandId calleeId,
-                                                 Int32OperandId argcId,
-                                                 CallFlags flags,
-                                                 uint32_t funcExportOffset,
-                                                 uint32_t instanceOffset) {
+bool WarpCacheIRTranspiler::emitCallWasmFunction(
+    ObjOperandId calleeId, Int32OperandId argcId, CallFlags flags,
+    uint32_t argcFixed, uint32_t funcExportOffset, uint32_t instanceOffset) {
   MDefinition* callee = getOperand(calleeId);
 #ifdef DEBUG
   MDefinition* argc = getOperand(argcId);
