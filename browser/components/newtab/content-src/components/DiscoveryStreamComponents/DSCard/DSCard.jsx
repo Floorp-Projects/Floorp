@@ -398,21 +398,19 @@ export class _DSCard extends React.PureComponent {
         {saveToPocketCard && (
           <div className="card-stp-button-hover-background">
             <div className="card-stp-button-position-wrapper">
-              {!this.props.flightId && (
-                <button className="card-stp-button" onClick={this.onSaveClick}>
-                  {this.props.context_type === "pocket" ? (
-                    <>
-                      <span className="story-badge-icon icon icon-pocket" />
-                      <span data-l10n-id="newtab-pocket-saved" />
-                    </>
-                  ) : (
-                    <>
-                      <span className="story-badge-icon icon icon-pocket-save" />
-                      <span data-l10n-id="newtab-pocket-save" />
-                    </>
-                  )}
-                </button>
-              )}
+              <button className="card-stp-button" onClick={this.onSaveClick}>
+                {this.props.context_type === "pocket" ? (
+                  <>
+                    <span className="story-badge-icon icon icon-pocket" />
+                    <span data-l10n-id="newtab-pocket-saved" />
+                  </>
+                ) : (
+                  <>
+                    <span className="story-badge-icon icon icon-pocket-save" />
+                    <span data-l10n-id="newtab-pocket-save" />
+                  </>
+                )}
+              </button>
               <DSLinkMenu
                 id={this.props.id}
                 index={this.props.pos}
