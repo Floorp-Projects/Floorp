@@ -13,7 +13,7 @@ class TestFissionAutostart(MarionetteTestCase):
                 sandbox="system",
             )
 
-        self.marionette.quit(in_app=True, callback=call_quit)
+        self.marionette.quit(callback=call_quit)
         self.assertEqual(self.marionette.instance.runner.returncode, 0)
 
     def test_exit_code(self):
@@ -27,5 +27,5 @@ class TestFissionAutostart(MarionetteTestCase):
                 sandbox="system",
             )
 
-        self.marionette.quit(in_app=True, callback=call_quit)
+        self.marionette.quit(callback=call_quit)
         self.assertEqual(self.marionette.instance.runner.returncode, 5)

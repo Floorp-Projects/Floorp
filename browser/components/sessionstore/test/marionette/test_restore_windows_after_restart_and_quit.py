@@ -34,7 +34,7 @@ class TestSessionStoreEnabledAllWindows(SessionStoreTestCase):
             self.all_windows, "Not all requested windows have been opened"
         )
 
-        self.marionette.quit(in_app=True)
+        self.marionette.quit()
         self.marionette.start_session()
         self.marionette.set_context("chrome")
 
@@ -56,7 +56,7 @@ class TestSessionStoreDisabled(SessionStoreTestCase):
             self.all_windows, "Not all requested windows have been opened"
         )
 
-        self.marionette.quit(in_app=True)
+        self.marionette.quit()
         self.marionette.start_session()
         self.marionette.set_context("chrome")
 

@@ -2754,7 +2754,8 @@ GeckoDriver.prototype.acceptConnections = function(cmd) {
  *     Dictionary containing information that explains the shutdown reason.
  *     The value for `cause` contains the shutdown kind like "shutdown" or
  *     "restart", while `forced` will indicate if it was a normal or forced
- *     shutdown of the application.
+ *     shutdown of the application. "in_app" is always set to indicate that
+ *     it is a shutdown triggered from within the application.
  *
  * @throws {InvalidArgumentError}
  *     If <var>flags</var> contains unknown or incompatible flags,
@@ -2835,6 +2836,7 @@ GeckoDriver.prototype.quit = async function(cmd) {
   return {
     cause: (await quitApplication).data,
     forced: cancelQuit.data,
+    in_app: true,
   };
 };
 

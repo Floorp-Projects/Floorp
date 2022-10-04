@@ -14,7 +14,7 @@ class ServiceWorkerAtStartupTestCase(MarionetteTestCase):
         self.install_service_worker()
 
     def tearDown(self):
-        self.marionette.restart(clean=True)
+        self.marionette.restart(in_app=False, clean=True)
         super(ServiceWorkerAtStartupTestCase, self).tearDown()
 
     def install_service_worker(self):
@@ -37,11 +37,11 @@ class ServiceWorkerAtStartupTestCase(MarionetteTestCase):
         )
 
         # Quit and start a new session to simulate a full browser restart
-        # (`self.marionette.restart(clean=False, in_app=True)` seems to not
+        # (`self.marionette.restart()` seems to not
         # be enough to simulate this scenario, because the service workers
         # are staying registered and they are not actually re-registered
         # from the list stored in the profile as this test needs).
-        self.marionette.quit(clean=False, in_app=True)
+        self.marionette.quit()
         self.marionette.start_session()
 
         Wait(self.marionette).until(

@@ -112,7 +112,7 @@ class TestMemoryUsage(AwsyTestCase):
         self._playback.start()
 
         # We need to reload after the mitmproxy cert is installed
-        self.marionette.restart(clean=False)
+        self.marionette.restart(in_app=False, clean=False)
 
         # Setup WebDriver capabilities that we need
         self.marionette.delete_session()

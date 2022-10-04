@@ -13,7 +13,7 @@ class ServiceWorkerAtShutdownTestCase(MarionetteTestCase):
         self.set_pref_to_delete_site_data_on_shutdown()
 
     def tearDown(self):
-        self.marionette.restart(clean=True)
+        self.marionette.restart(in_app=False, clean=True)
         super(ServiceWorkerAtShutdownTestCase, self).tearDown()
 
     def install_service_worker(self):
