@@ -177,46 +177,38 @@ function _positionCallout() {
     // while needed space should be the space necessary to fit the callout container
     top: {
       availableSpace:
-        document.body.offsetHeight -
+        document.documentElement.offsetHeight -
         getOffset(parentEl).top -
-        parentEl.offsetHeight +
-        overlap,
+        parentEl.offsetHeight,
       neededSpace: container.offsetHeight - overlap,
       position() {
         // Point to an element above the callout
         let containerTop =
           getOffset(parentEl).top + parentEl.offsetHeight - overlap;
-        container.style.top = `${Math.max(
-          container.offsetHeight - overlap,
-          containerTop
-        )}px`;
-        centerHorizontally(container, parentEl);
+        container.style.top = `${Math.max(0, containerTop)}px`;
         container.classList.add("arrow-top");
+        centerHorizontally(container, parentEl);
       },
     },
     bottom: {
-      availableSpace: getOffset(parentEl).top + overlap,
+      availableSpace: getOffset(parentEl).top,
       neededSpace: container.offsetHeight - overlap,
       position() {
         // Point to an element below the callout
         let containerTop =
           getOffset(parentEl).top - container.offsetHeight + overlap;
         container.style.top = `${Math.max(0, containerTop)}px`;
-        centerHorizontally(container, parentEl);
         container.classList.add("arrow-bottom");
+        centerHorizontally(container, parentEl);
       },
     },
     right: {
-      availableSpace: getOffset(parentEl).left + overlap,
+      availableSpace: getOffset(parentEl).left,
       neededSpace: container.offsetWidth - overlap,
       position() {
         // Point to an element to the right of the callout
         let containerLeft =
           getOffset(parentEl).left - container.offsetWidth + overlap;
-        if (RTL) {
-          // Account for cases where the document body may be narrow than the window
-          containerLeft -= window.innerWidth - document.body.offsetWidth;
-        }
         container.style.left = `${Math.max(0, containerLeft)}px`;
         container.style.top = `${getOffset(parentEl).top}px`;
         container.classList.add("arrow-inline-end");
@@ -224,18 +216,13 @@ function _positionCallout() {
     },
     left: {
       availableSpace:
-        document.body.offsetWidth - getOffset(parentEl).right + overlap,
+        document.documentElement.offsetWidth - getOffset(parentEl).right,
       neededSpace: container.offsetWidth - overlap,
       position() {
         // Point to an element to the left of the callout
         let containerLeft =
           getOffset(parentEl).left + parentEl.offsetWidth - overlap;
-        if (RTL) {
-          // Account for cases where the document body may be narrow than the window
-          containerLeft -= window.innerWidth - document.body.offsetWidth;
-        }
-        container.style.left = `${(container.offsetWidth - overlap,
-        containerLeft)}px`;
+        container.style.left = `${Math.max(0, containerLeft)}px`;
         container.style.top = `${getOffset(parentEl).top}px`;
         container.classList.add("arrow-inline-start");
       },
@@ -266,19 +253,27 @@ function _positionCallout() {
     if (calloutFits(position)) {
       return position;
     }
-    let newPosition = Object.keys(positioners)
+    let sortedPositions = Object.keys(positioners)
       .filter(p => p !== position)
-      .find(p => calloutFits(p));
+      .filter(calloutFits)
+      .sort((a, b) => {
+        return (
+          positioners[b].availableSpace - positioners[b].neededSpace >
+          positioners[a].availableSpace - positioners[a].neededSpace
+        );
+      });
     // If the callout doesn't fit in any position, use the configured one.
     // The callout will be adjusted to overlap the parent element so that
     // the former doesn't go off screen.
-    return newPosition || position;
+    return sortedPositions[0] || position;
   }
 
   function centerHorizontally() {
     let sideOffset = (parentEl.offsetWidth - container.offsetWidth) / 2;
     let containerSide = RTL
-      ? window.innerWidth - getOffset(parentEl).right + sideOffset
+      ? document.documentElement.offsetWidth -
+        getOffset(parentEl).right +
+        sideOffset
       : getOffset(parentEl).left + sideOffset;
     container.style[RTL ? "right" : "left"] = `${Math.max(containerSide, 0)}px`;
   }
@@ -295,7 +290,6 @@ function _positionCallout() {
 
 function _addPositionListeners() {
   if (!LISTENERS_REGISTERED) {
-    window.addEventListener("scroll", _positionCallout);
     window.addEventListener("resize", _positionCallout);
     LISTENERS_REGISTERED = true;
   }
@@ -303,7 +297,6 @@ function _addPositionListeners() {
 
 function _removePositionListeners() {
   if (LISTENERS_REGISTERED) {
-    window.removeEventListener("scroll", _positionCallout);
     window.removeEventListener("resize", _positionCallout);
     LISTENERS_REGISTERED = false;
   }
