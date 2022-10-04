@@ -226,6 +226,21 @@ class NV12BufferReader final : public YUVBufferReaderBase {
  * The followings are helpers defined in
  * https://w3c.github.io/webcodecs/#videoframe-algorithms
  */
+static bool IsSameOrigin(nsIGlobalObject* aGlobal, const VideoFrame& aFrame) {
+  MOZ_ASSERT(aGlobal);
+  MOZ_ASSERT(aFrame.GetParentObject());
+
+  nsIPrincipal* principalX = aGlobal->PrincipalOrNull();
+  nsIPrincipal* principalY = aFrame.GetParentObject()->PrincipalOrNull();
+
+  // If both of VideoFrames are created in worker, they are in the same origin
+  // domain.
+  if (!principalX) {
+    return !principalY;
+  }
+  // Otherwise, check their domains.
+  return principalX->Equals(principalY);
+}
 
 // A sub-helper to convert DOMRectInit to gfx::IntRect.
 static Result<gfx::IntRect, nsCString> ToIntRect(const DOMRectInit& aRectInit) {
@@ -938,7 +953,7 @@ static Result<RefPtr<VideoFrame>, nsCString> CreateVideoFrameFromBuffer(
   return MakeRefPtr<VideoFrame>(
       aGlobal, data, aInit.mFormat, codedSize, parsedRect,
       displaySize ? *displaySize : parsedRect.Size(), std::move(duration),
-      aInit.mTimestamp, colorSpace);
+      Some(aInit.mTimestamp), colorSpace);
 }
 
 template <class T>
@@ -1022,7 +1037,62 @@ InitializeFrameWithResourceAndSize(
   return MakeAndAddRef<VideoFrame>(aGlobal, image, format->PixelFormat(),
                                    image->GetSize(), visibleRect.value(),
                                    displaySize.value(), std::move(duration),
-                                   aInit.mTimestamp.Value(), colorSpace);
+                                   Some(aInit.mTimestamp.Value()), colorSpace);
+}
+
+// https://w3c.github.io/webcodecs/#videoframe-initialize-frame-from-other-frame
+struct VideoFrameData {
+  VideoFrameData(layers::Image* aImage, const VideoPixelFormat& aFormat,
+                 gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
+                 Maybe<uint64_t> aDuration, Maybe<int64_t> aTimestamp,
+                 const VideoColorSpaceInit& aColorSpace)
+      : mImage(aImage),
+        mFormat(aFormat),
+        mVisibleRect(aVisibleRect),
+        mDisplaySize(aDisplaySize),
+        mDuration(aDuration),
+        mTimestamp(aTimestamp),
+        mColorSpace(aColorSpace) {}
+
+  RefPtr<layers::Image> mImage;
+  VideoFrame::Format mFormat;
+  const gfx::IntRect mVisibleRect;
+  const gfx::IntSize mDisplaySize;
+  const Maybe<uint64_t> mDuration;
+  const Maybe<int64_t> mTimestamp;
+  const VideoColorSpaceInit mColorSpace;
+};
+static Result<already_AddRefed<VideoFrame>, nsCString>
+InitializeFrameFromOtherFrame(nsIGlobalObject* aGlobal, VideoFrameData&& aData,
+                              const VideoFrameInit& aInit) {
+  MOZ_ASSERT(aGlobal);
+  MOZ_ASSERT(aData.mImage);
+
+  if (aInit.mAlpha == AlphaOption::Discard) {
+    aData.mFormat.MakeOpaque();
+    // Keep the alpha data in image for now until it's being rendered.
+  }
+
+  Tuple<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>> init;
+  MOZ_TRY_VAR(init, ValidateVideoFrameInit(aInit, aData.mFormat,
+                                           aData.mImage->GetSize()));
+  Maybe<gfx::IntRect> visibleRect = Get<0>(init);
+  Maybe<gfx::IntSize> displaySize = Get<1>(init);
+
+  InitializeVisibleRectAndDisplaySize(visibleRect, displaySize,
+                                      aData.mVisibleRect, aData.mDisplaySize);
+
+  Maybe<uint64_t> duration = aInit.mDuration.WasPassed()
+                                 ? Some(aInit.mDuration.Value())
+                                 : aData.mDuration;
+  Maybe<int64_t> timestamp = aInit.mTimestamp.WasPassed()
+                                 ? Some(aInit.mTimestamp.Value())
+                                 : aData.mTimestamp;
+
+  return MakeAndAddRef<VideoFrame>(
+      aGlobal, aData.mImage, aData.mFormat.PixelFormat(),
+      aData.mImage->GetSize(), *visibleRect, *displaySize, std::move(duration),
+      std::move(timestamp), aData.mColorSpace);
 }
 
 /*
@@ -1033,7 +1103,7 @@ VideoFrame::VideoFrame(nsIGlobalObject* aParent,
                        const RefPtr<layers::Image>& aImage,
                        const VideoPixelFormat& aFormat, gfx::IntSize aCodedSize,
                        gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
-                       Maybe<uint64_t>&& aDuration, int64_t aTimestamp,
+                       Maybe<uint64_t>&& aDuration, Maybe<int64_t>&& aTimestamp,
                        const VideoColorSpaceInit& aColorSpace)
     : mParent(aParent),
       mResource(Some(Resource(aImage, VideoFrame::Format(aFormat)))),
@@ -1041,7 +1111,7 @@ VideoFrame::VideoFrame(nsIGlobalObject* aParent,
       mVisibleRect(aVisibleRect),
       mDisplaySize(aDisplaySize),
       mDuration(std::move(aDuration)),
-      mTimestamp(Some(aTimestamp)),
+      mTimestamp(std::move(aTimestamp)),
       mColorSpace(aColorSpace) {
   MOZ_ASSERT(mParent);
 }
@@ -1195,12 +1265,49 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
 }
 
 /* static */
-already_AddRefed<VideoFrame> VideoFrame::Constructor(const GlobalObject& global,
-                                                     VideoFrame& videoFrame,
-                                                     const VideoFrameInit& init,
-                                                     ErrorResult& aRv) {
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-  return nullptr;
+already_AddRefed<VideoFrame> VideoFrame::Constructor(
+    const GlobalObject& aGlobal, VideoFrame& aVideoFrame,
+    const VideoFrameInit& aInit, ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  // Check the usability.
+  // TODO: aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR) if this is _detached_ (bug
+  // 1774306).
+  if (!aVideoFrame.mResource) {
+    aRv.ThrowInvalidStateError(
+        "The VideoFrame is closed or no image found there");
+    return nullptr;
+  }
+  MOZ_ASSERT(aVideoFrame.mResource->mImage->GetSize() ==
+             aVideoFrame.mCodedSize);
+  MOZ_ASSERT(!aVideoFrame.mCodedSize.IsEmpty());
+  MOZ_ASSERT(!aVideoFrame.mVisibleRect.IsEmpty());
+  MOZ_ASSERT(!aVideoFrame.mDisplaySize.IsEmpty());
+
+  // If the origin of the VideoFrame is not same origin with the entry settings
+  // object's origin, then throw a SecurityError DOMException.
+  if (!IsSameOrigin(global.get(), aVideoFrame)) {
+    aRv.ThrowSecurityError("The VideoFrame is not same-origin");
+    return nullptr;
+  }
+
+  auto r = InitializeFrameFromOtherFrame(
+      global.get(),
+      VideoFrameData(aVideoFrame.mResource->mImage.get(),
+                     aVideoFrame.mResource->mFormat.PixelFormat(),
+                     aVideoFrame.mVisibleRect, aVideoFrame.mDisplaySize,
+                     aVideoFrame.mDuration, aVideoFrame.mTimestamp,
+                     aVideoFrame.mColorSpace),
+      aInit);
+  if (r.isErr()) {
+    aRv.ThrowTypeError(r.unwrapErr());
+    return nullptr;
+  }
+  return r.unwrap();
 }
 
 // The following constructors are defined in
