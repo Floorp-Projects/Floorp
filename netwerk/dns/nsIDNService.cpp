@@ -86,23 +86,18 @@ static const char* gCallbackPrefs[] = {
 
 nsresult nsIDNService::Init() {
   MOZ_ASSERT(NS_IsMainThread());
-  MutexSingleWriterAutoLock lock(mLock);
-
   Preferences::RegisterPrefixCallbacks(PrefChanged, gCallbackPrefs, this);
   prefsChanged(nullptr);
-  InitializeBlocklist(mIDNBlocklist);
 
   return NS_OK;
 }
 
 void nsIDNService::prefsChanged(const char* pref) {
   MOZ_ASSERT(NS_IsMainThread());
-  mLock.AssertCurrentThreadOwns();
+  AutoWriteLock lock(mLock);
 
-  if (pref && nsLiteralCString(NS_NET_PREF_EXTRAALLOWED).Equals(pref)) {
-    InitializeBlocklist(mIDNBlocklist);
-  }
-  if (pref && nsLiteralCString(NS_NET_PREF_EXTRABLOCKED).Equals(pref)) {
+  if (!pref || nsLiteralCString(NS_NET_PREF_EXTRAALLOWED).Equals(pref) ||
+      nsLiteralCString(NS_NET_PREF_EXTRABLOCKED).Equals(pref)) {
     InitializeBlocklist(mIDNBlocklist);
   }
   if (!pref || nsLiteralCString(NS_NET_PREF_IDNRESTRICTION).Equals(pref)) {
@@ -121,9 +116,8 @@ void nsIDNService::prefsChanged(const char* pref) {
   }
 }
 
-nsIDNService::nsIDNService() : mLock("IDNSService", this) {
+nsIDNService::nsIDNService() {
   MOZ_ASSERT(NS_IsMainThread());
-  mLock.AssertOnWritingThread();
 
   auto createResult =
       mozilla::intl::IDNA::TryCreate(kIDNA2008_DefaultProcessingType);
@@ -133,7 +127,6 @@ nsIDNService::nsIDNService() : mLock("IDNSService", this) {
 
 nsIDNService::~nsIDNService() {
   MOZ_ASSERT(NS_IsMainThread());
-  mLock.AssertOnWritingThread();
 
   Preferences::UnregisterPrefixCallbacks(PrefChanged, gCallbackPrefs, this);
 }
@@ -376,44 +369,9 @@ NS_IMETHODIMP nsIDNService::Normalize(const nsACString& input,
   return NS_OK;
 }
 
-namespace {
-
-template <typename T>
-class MOZ_CAPABILITY MOZ_STACK_CLASS MutexSettableAutoUnlock final {
- private:
-  T* mMutex = nullptr;
-
- public:
-  MutexSettableAutoUnlock() = default;
-
-  void Acquire(T& aMutex) MOZ_CAPABILITY_ACQUIRE(aMutex) {
-    MOZ_ASSERT(!mMutex);
-    mMutex = &aMutex;
-    aMutex.Lock();
-  }
-
-  // Since this is commonly used in "if (!NS_IsMainThread())", if we make
-  // this MOZ_CAPABILITY_RELEASE(mMutex) we'll generate warnings on each return.
-  // We may still get a warning at the end of a function using this
-  ~MutexSettableAutoUnlock() MOZ_CAPABILITY_ACQUIRE() {
-    if (mMutex) {
-      mMutex->Unlock();
-    }
-  }
-};
-
-}  // anonymous namespace
-
-// conditional locks blow threadsafety's mind
-NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(
-    const nsACString& input, bool* _isASCII,
-    nsACString& _retval) MOZ_NO_THREAD_SAFETY_ANALYSIS {
-  MutexSettableAutoUnlock<MutexSingleWriter> lock;
-  if (!NS_IsMainThread()) {
-    lock.Acquire(mLock);
-  }
-  mLock.AssertOnWritingThreadOrHeld();
-
+NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(const nsACString& input,
+                                                bool* _isASCII,
+                                                nsACString& _retval) {
   // If host is ACE, then convert to UTF-8 if the host is in the IDN whitelist.
   // Else, if host is already UTF-8, then make sure it is normalized per IDN.
 
@@ -657,11 +615,7 @@ nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out,
 }
 
 bool nsIDNService::isLabelSafe(const nsAString& label) {
-  if (!NS_IsMainThread()) {
-    mLock.AssertCurrentThreadOwns();
-  } else {
-    mLock.AssertOnWritingThread();
-  }
+  AutoReadLock lock(mLock);
 
   if (!isOnlySafeChars(PromiseFlatString(label), mIDNBlocklist)) {
     return false;
@@ -838,12 +792,6 @@ static const int32_t scriptComboTable[13][9] = {
     /* HNLT */ {CHNA, FAIL, FAIL, KORE, HNLT, JPAN, JPAN, HNLT, FAIL}};
 
 bool nsIDNService::illegalScriptCombo(Script script, int32_t& savedScript) {
-  if (!NS_IsMainThread()) {
-    mLock.AssertCurrentThreadOwns();
-  } else {
-    mLock.AssertOnWritingThread();
-  }
-
   if (savedScript == -1) {
     savedScript = findScriptIndex(script);
     return false;
