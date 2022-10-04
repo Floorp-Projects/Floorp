@@ -1949,7 +1949,7 @@ Maybe<HANDLE> GpuProcessD3D11TextureMap::GetSharedHandleOfCopiedTexture(
 
     auto it = textures->find(aTextureId);
     if (it == textures->end()) {
-      gfxCriticalNoteOnce << "Didn't find id in mD3D11TexturesById.";
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
       return Nothing();
     }
 

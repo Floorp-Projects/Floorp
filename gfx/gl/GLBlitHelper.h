@@ -161,8 +161,7 @@ class DrawBlitProg final {
     Maybe<gfx::YUVColorSpace> colorSpaceForMatrix;
   };
 
-  [[nodiscard]] bool Draw(const BaseArgs& args,
-                          const YUVArgs* argsYUV = nullptr) const;
+  void Draw(const BaseArgs& args, const YUVArgs* argsYUV = nullptr) const;
 };
 
 class ScopedSaveMultiTex final {

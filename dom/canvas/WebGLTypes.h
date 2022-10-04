@@ -209,8 +209,6 @@ enum class WebGLTexelFormat : uint8_t {
   BGRA8
 };
 
-std::string ToString(WebGLTexelFormat);
-
 enum class WebGLTexImageFunc : uint8_t {
   TexImage,
   TexSubImage,
