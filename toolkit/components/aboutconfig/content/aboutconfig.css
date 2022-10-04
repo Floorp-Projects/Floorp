@@ -287,21 +287,4 @@ td.cell-value > form > input[type="number"] {
   #prefs > tr.deleted:hover > th > span {
     color: inherit;
   }
-
-  td:is(.cell-edit, .cell-reset) > button:hover,
-  tr:hover > td > button.primary,
-  tr.deleted:hover input[type="radio"]:checked:not(:hover) {
-    border-color: ThreeDShadow;
-  }
-
-  .button-reset,
-  .button-delete {
-    color: inherit;
-    border-color: currentColor;
-  }
-
-  input[type="text"],
-  input[type="number"] {
-    color: -moz-FieldText;
-  }
 }

@@ -54,12 +54,12 @@
 
 .toggle-group-input:enabled + .toggle-group-label:hover:active {
   background-color: var(--in-content-button-background-active);
-  color: var(--in-content-button-text-color-hover);
+  color: var(--in-content-button-text-color-active);
 }
 
-.toggle-group-input:-moz-focusring + .toggle-group-label {
-  outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: 2px;
+.toggle-group-input:focus-visible + .toggle-group-label {
+  outline: var(--in-content-focus-outline);
+  outline-offset: var(--in-content-focus-outline-offset);
   z-index: 1;
 }
 
@@ -75,5 +75,5 @@
 
 .toggle-group-input:enabled:checked + .toggle-group-label:hover:active {
   background-color: var(--in-content-primary-button-background-active);
-  color: var(--in-content-primary-button-text-color-hover);
+  color: var(--in-content-primary-button-text-color-active);
 }

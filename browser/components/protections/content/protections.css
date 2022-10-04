@@ -271,21 +271,13 @@ a.hidden,
   background-position: center;
   background-repeat: no-repeat;
   -moz-context-properties: fill;
-  fill: var(--in-content-deemphasized-text);
+  fill: currentColor;
 
-  /* Override margin, padding, min-height and min-width set in common.inc.css */
+  /* Override margin, padding, min-height and min-width set in common-shared.css */
   padding: 0;
   margin: 0;
   min-width: 1px;
   min-height: 1px;
-}
-
-.exit-icon:enabled:hover {
-  background-color: var(--in-content-button-background);
-}
-
-.exit-icon:enabled:hover:active {
-  background-color: var(--in-content-button-background-hover);
 }
 
 .custom-not-blocking .content {
@@ -999,21 +991,11 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 .monitor-partial-breaches-link-wrapper,
 .monitor-breaches-link-wrapper {
   background-color: var(--in-content-primary-button-background);
-  border: 1px solid transparent;
-  border-radius: 2px;
+  border: 1px solid var(--in-content-primary-button-border-color);
+  border-radius: 4px;
   text-decoration: none;
   color: var(--in-content-primary-button-text-color);
   font-weight: 600;
-}
-
-#manage-protections:active,
-#sign-up-for-monitor-link:active,
-#get-proxy-extension-link:active,
-#get-vpn-link:active,
-#vpn-banner-link:active,
-#monitor-partial-breaches-link:active,
-#monitor-breaches-link:active {
-  background-color: var(--in-content-primary-button-background-active);
 }
 
 #manage-protections:hover,
@@ -1025,18 +1007,31 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 #monitor-breaches-link:hover {
   background-color: var(--in-content-primary-button-background-hover);
   color: var(--in-content-primary-button-text-color-hover);
+  border-color: var(--in-content-button-border-color-hover);
 }
 
-#manage-protections:focus,
-#sign-up-for-monitor-link:focus,
-#get-proxy-extension-link:focus,
-#get-vpn-link:focus,
-#vpn-banner-link:focus,
-#monitor-partial-breaches-link:focus,
-.monitor-block > a:focus,
-#monitor-breaches-link:focus {
-  outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: 2px;
+#manage-protections:hover:active,
+#sign-up-for-monitor-link:hover:active,
+#get-proxy-extension-link:hover:active,
+#get-vpn-link:hover:active,
+#vpn-banner-link:hover:active,
+#monitor-partial-breaches-link:hover:active,
+#monitor-breaches-link:hover:active {
+  background-color: var(--in-content-primary-button-background-active);
+  color: var(--in-content-primary-button-text-color-active);
+  border-color: var(--in-content-button-border-color-active);
+}
+
+#manage-protections:focus-visible,
+#sign-up-for-monitor-link:focus-visible,
+#get-proxy-extension-link:focus-visible,
+#get-vpn-link:focus-visible,
+#vpn-banner-link:focus-visible,
+#monitor-partial-breaches-link:focus-visible,
+.monitor-block > a:focus-visible,
+#monitor-breaches-link:focus-visible {
+  outline: var(--in-content-focus-outline);
+  outline-offset: var(--in-content-focus-outline-offset);
 }
 
 .monitor-card.loading::after,

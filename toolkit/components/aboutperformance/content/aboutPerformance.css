@@ -211,7 +211,7 @@ td {
 }
 #dispatch-thead > tr > td.clickable:hover:active {
   background-color: var(--in-content-button-background-active);
-  color: var(--in-content-button-text-color-hover);
+  color: var(--in-content-button-text-color-active);
 }
 
 .energy-impact {
