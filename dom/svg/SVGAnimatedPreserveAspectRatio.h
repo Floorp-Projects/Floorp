@@ -9,7 +9,7 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
-#include "SVGPreserveAspectRatio.h"
+#include "mozilla/SVGPreserveAspectRatio.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
