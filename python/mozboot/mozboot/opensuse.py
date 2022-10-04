@@ -7,6 +7,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 from mozboot.base import BaseBootstrapper, MERCURIAL_INSTALL_PROMPT
 from mozboot.linux_common import LinuxBootstrapper
 
+import distro
+import subprocess
+
 
 class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     """openSUSE experimental bootstrapper."""
@@ -24,7 +27,6 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "gcc-c++",
         "gtk3-devel",
         "dbus-1-glib-devel",
-        "gconf2-devel",
         "glibc-devel-static",
         "libstdc++-devel",
         "libXt-devel",
@@ -32,6 +34,10 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "libuuid-devel",
         "clang-devel",
         "patterns-gnome-devel_gnome",
+    ]
+
+    OPTIONAL_BROWSER_PACKAGES = [
+        "gconf2-devel",  # https://bugzilla.mozilla.org/show_bug.cgi?id=1779931
     ]
 
     BROWSER_GROUP_PACKAGES = ["devel_C_C++", "devel_gnome"]
@@ -47,7 +53,18 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
     def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
-        self.zypper_install(*self.BROWSER_PACKAGES)
+        packages_to_install = self.BROWSER_PACKAGES.copy()
+
+        for package in self.OPTIONAL_BROWSER_PACKAGES:
+            if self.zypper_can_install(package):
+                packages_to_install.append(package)
+            else:
+                print(
+                    f"WARNING! zypper cannot find a package for '{package}' for "
+                    f"{distro.name(True)}. It will not be automatically installed."
+                )
+
+        self.zypper_install(*packages_to_install)
 
     def install_browser_group_packages(self):
         self.ensure_browser_group_packages()
@@ -124,6 +141,12 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
     def zypper_install(self, *packages):
         self.zypper("install", *packages)
+
+    def zypper_can_install(self, package):
+        return (
+            subprocess.call(["zypper", "search", package], stdout=subprocess.DEVNULL)
+            == 0
+        )
 
     def zypper_update(self, *packages):
         self.zypper("update", *packages)
