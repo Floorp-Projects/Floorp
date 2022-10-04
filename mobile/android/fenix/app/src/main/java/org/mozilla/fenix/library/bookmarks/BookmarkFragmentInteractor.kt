@@ -41,6 +41,7 @@ class BookmarkFragmentInteractor(
     }
 
     override fun onSearch() {
+        BookmarksManagement.searchIconTapped.record(NoExtras())
         bookmarksController.handleSearch()
     }
 

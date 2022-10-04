@@ -9,13 +9,25 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.service.glean.testing.GleanTestRule
+import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
+@RunWith(FenixRobolectricTestRunner::class)
 class BookmarkSearchControllerTest {
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     @MockK(relaxed = true)
     private lateinit var activity: HomeActivity
@@ -63,6 +75,8 @@ class BookmarkSearchControllerTest {
         val url = "https://www.google.com/"
         val flags = EngineSession.LoadUrlFlags.none()
 
+        assertNull(BookmarksManagement.searchResultTapped.testGetValue())
+
         createController().handleUrlTapped(url, flags)
         createController().handleUrlTapped(url)
 
@@ -74,6 +88,8 @@ class BookmarkSearchControllerTest {
                 flags = flags,
             )
         }
+
+        assertNotNull(BookmarksManagement.searchResultTapped.testGetValue())
     }
 
     private fun createController(

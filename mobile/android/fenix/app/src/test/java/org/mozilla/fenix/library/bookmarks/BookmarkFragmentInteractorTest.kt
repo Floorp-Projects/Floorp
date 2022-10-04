@@ -222,10 +222,12 @@ class BookmarkFragmentInteractorTest {
 
     @Test
     fun `WHEN onSearch is called THEN call controller handleSearch`() {
+        assertNull(BookmarksManagement.searchIconTapped.testGetValue())
         interactor.onSearch()
 
         verify {
             bookmarkController.handleSearch()
         }
+        assertNotNull(BookmarksManagement.searchIconTapped.testGetValue())
     }
 }

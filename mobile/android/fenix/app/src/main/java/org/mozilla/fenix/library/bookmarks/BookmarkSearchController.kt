@@ -5,7 +5,9 @@
 package org.mozilla.fenix.library.bookmarks
 
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
+import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.HomeActivity
 
 /**
@@ -32,6 +34,7 @@ class BookmarkSearchDialogController(
     }
 
     override fun handleUrlTapped(url: String, flags: LoadUrlFlags) {
+        BookmarksManagement.searchResultTapped.record(NoExtras())
         clearToolbarFocus()
 
         activity.openToBrowserAndLoad(

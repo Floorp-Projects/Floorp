@@ -2696,6 +2696,39 @@ bookmarks_management:
     metadata:
       tags:
         - Bookmarks
+  search_icon_tapped:
+    type: event
+    description: |
+      A user tapped on the search icon in bookmarks management.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/27147
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/27268
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 120
+    metadata:
+      tags:
+        - Bookmarks
+  search_result_tapped:
+    type: event
+    description: |
+      A user tapped on the search result in bookmarks management.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/27147
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/27268
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 120
+    metadata:
+      tags:
+        - Bookmarks
+
 activation:
   identifier:
     type: string
