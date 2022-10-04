@@ -4740,15 +4740,15 @@ Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeWithTransaction(
     return Err(rv);
   }
 
-  nsCOMPtr<nsIContent> newContent = transaction->GetNewContent();
-  nsCOMPtr<nsIContent> splitContent = transaction->GetSplitContent();
+  nsIContent* newContent = transaction->GetNewContent();
+  nsIContent* splitContent = transaction->GetSplitContent();
   if (NS_WARN_IF(!newContent) || NS_WARN_IF(!splitContent)) {
     return Err(NS_ERROR_FAILURE);
   }
   TopLevelEditSubActionDataRef().DidSplitContent(
       *this, *splitContent, *newContent, transaction->GetSplitNodeDirection());
 
-  return SplitNodeResult(std::move(newContent), std::move(splitContent),
+  return SplitNodeResult(*newContent, *splitContent,
                          transaction->GetSplitNodeDirection());
 }
 

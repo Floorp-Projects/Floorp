@@ -448,15 +448,10 @@ bool EditorDOMPointBase<
 }
 
 /******************************************************************************
- * mozilla::CreateNodeResultBase
+ * mozilla::CaretPoint
  *****************************************************************************/
 
-NS_INSTANTIATE_CREATE_NODE_RESULT_CONST_METHOD(
-    nsresult, SuggestCaretPointTo, const EditorBase& aEditorBase,
-    const SuggestCaretOptions& aOptions)
-
-template <typename NodeType>
-nsresult CreateNodeResultBase<NodeType>::SuggestCaretPointTo(
+nsresult CaretPoint::SuggestCaretPointTo(
     const EditorBase& aEditorBase, const SuggestCaretOptions& aOptions) const {
   mHandledCaretPoint = true;
   if (!mCaretPoint.IsSet()) {
@@ -481,15 +476,26 @@ nsresult CreateNodeResultBase<NodeType>::SuggestCaretPointTo(
              : rv;
 }
 
-NS_INSTANTIATE_CREATE_NODE_RESULT_METHOD(bool, MoveCaretPointTo,
-                                         EditorDOMPoint& aPointToPutCaret,
-                                         const EditorBase& aEditorBase,
-                                         const SuggestCaretOptions& aOptions)
+bool CaretPoint::CopyCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                                  const EditorBase& aEditorBase,
+                                  const SuggestCaretOptions& aOptions) const {
+  MOZ_ASSERT(!aOptions.contains(SuggestCaret::AndIgnoreTrivialError));
+  mHandledCaretPoint = true;
+  if (aOptions.contains(SuggestCaret::OnlyIfHasSuggestion) &&
+      !mCaretPoint.IsSet()) {
+    return false;
+  }
+  if (aOptions.contains(SuggestCaret::OnlyIfTransactionsAllowedToDoIt) &&
+      !aEditorBase.AllowsTransactionsToChangeSelection()) {
+    return false;
+  }
+  aPointToPutCaret = mCaretPoint;
+  return true;
+}
 
-template <typename NodeType>
-bool CreateNodeResultBase<NodeType>::MoveCaretPointTo(
-    EditorDOMPoint& aPointToPutCaret, const EditorBase& aEditorBase,
-    const SuggestCaretOptions& aOptions) {
+bool CaretPoint::MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                                  const EditorBase& aEditorBase,
+                                  const SuggestCaretOptions& aOptions) {
   MOZ_ASSERT(!aOptions.contains(SuggestCaret::AndIgnoreTrivialError));
   mHandledCaretPoint = true;
   if (aOptions.contains(SuggestCaret::OnlyIfHasSuggestion) &&
