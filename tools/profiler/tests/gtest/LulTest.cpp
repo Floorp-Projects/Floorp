@@ -45,7 +45,7 @@ TEST(LulIntegration, unwind_consistency)
   int nTests = 0, nTestsPassed = 0;
   RunLulUnitTests(&nTests, &nTestsPassed, lul);
   EXPECT_TRUE(nTests == 6) << "Unexpected number of tests";
-  EXPECT_TRUE(nTestsPassed == nTests) << "Not all tests passed";
+  EXPECT_EQ(nTestsPassed, nTests) << "Not all tests passed";
 
   delete lul;
 }
