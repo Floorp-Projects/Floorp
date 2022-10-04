@@ -126,9 +126,9 @@ places-forget-about-this-site-confirmation-message =
 
 places-forget-about-this-site-forget = Forget
 
-places-library =
+places-library2 =
   .title = Library
-  .style = width:700px; height:500px;
+  .style = min-width:700px; min-height:500px;
 
 places-organize-button =
   .label = Organize
