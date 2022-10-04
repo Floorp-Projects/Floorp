@@ -13,6 +13,7 @@
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemSyncAccessHandleBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "private/pprio.h"
 
 namespace mozilla {
