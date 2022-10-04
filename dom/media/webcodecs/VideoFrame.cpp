@@ -18,8 +18,11 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/CanvasUtils.h"
 #include "mozilla/dom/DOMRect.h"
+#include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/ImageBitmap.h"
+#include "mozilla/dom/ImageUtils.h"
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -116,6 +119,26 @@ static Maybe<VideoPixelFormat> ToVideoPixelFormat(gfx::SurfaceFormat aFormat) {
     case gfx::SurfaceFormat::R8G8B8X8:
       return Some(VideoPixelFormat::RGBX);
     case gfx::SurfaceFormat::NV12:
+      return Some(VideoPixelFormat::NV12);
+    default:
+      break;
+  }
+  return Nothing();
+}
+
+static Maybe<VideoPixelFormat> ToVideoPixelFormat(ImageBitmapFormat aFormat) {
+  switch (aFormat) {
+    case ImageBitmapFormat::RGBA32:
+      return Some(VideoPixelFormat::RGBA);
+    case ImageBitmapFormat::BGRA32:
+      return Some(VideoPixelFormat::BGRA);
+    case ImageBitmapFormat::YUV444P:
+      return Some(VideoPixelFormat::I444);
+    case ImageBitmapFormat::YUV422P:
+      return Some(VideoPixelFormat::I422);
+    case ImageBitmapFormat::YUV420P:
+      return Some(VideoPixelFormat::I420);
+    case ImageBitmapFormat::YUV420SP_NV12:
       return Some(VideoPixelFormat::NV12);
     default:
       break;
@@ -240,6 +263,31 @@ static bool IsSameOrigin(nsIGlobalObject* aGlobal, const VideoFrame& aFrame) {
   }
   // Otherwise, check their domains.
   return principalX->Equals(principalY);
+}
+
+static bool IsSameOrigin(nsIGlobalObject* aGlobal,
+                         HTMLVideoElement& aVideoElement) {
+  MOZ_ASSERT(aGlobal);
+
+  // If CORS is in use, consider the video source is same-origin.
+  if (aVideoElement.GetCORSMode() != CORS_NONE) {
+    return true;
+  }
+
+  // Otherwise, check if video source has cross-origin redirect or not.
+  if (aVideoElement.HadCrossOriginRedirects()) {
+    return false;
+  }
+
+  // Finally, compare the VideoFrame's domain and video's one.
+  nsIPrincipal* principal = aGlobal->PrincipalOrNull();
+  nsCOMPtr<nsIPrincipal> elementPrincipal =
+      aVideoElement.GetCurrentVideoPrincipal();
+  // <video> cannot be created in worker, so it should have a valid principal.
+  if (NS_WARN_IF(!elementPrincipal) || !principal) {
+    return false;
+  }
+  return principal->Subsumes(elementPrincipal);
 }
 
 // A sub-helper to convert DOMRectInit to gfx::IntRect.
@@ -1164,10 +1212,57 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
 
 /* static */
 already_AddRefed<VideoFrame> VideoFrame::Constructor(
-    const GlobalObject& global, HTMLVideoElement& videoElement,
-    const VideoFrameInit& init, ErrorResult& aRv) {
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-  return nullptr;
+    const GlobalObject& aGlobal, HTMLVideoElement& aVideoElement,
+    const VideoFrameInit& aInit, ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  aVideoElement.LogVisibility(
+      mozilla::dom::HTMLVideoElement::CallerAPI::CREATE_VIDEOFRAME);
+
+  // Check the usability.
+  if (aVideoElement.NetworkState() == HTMLMediaElement_Binding::NETWORK_EMPTY) {
+    aRv.ThrowInvalidStateError("The video has not been initialized yet");
+    return nullptr;
+  }
+  if (aVideoElement.ReadyState() <= HTMLMediaElement_Binding::HAVE_METADATA) {
+    aRv.ThrowInvalidStateError("The video is not ready yet");
+    return nullptr;
+  }
+  RefPtr<layers::Image> image = aVideoElement.GetCurrentImage();
+  if (!image) {
+    aRv.ThrowInvalidStateError("The video doesn't have any image yet");
+    return nullptr;
+  }
+
+  // If the origin of HTMLVideoElement's image data is not same origin with the
+  // entry settings object's origin, then throw a SecurityError DOMException.
+  if (!IsSameOrigin(global.get(), aVideoElement)) {
+    aRv.ThrowSecurityError("The video is not same-origin");
+    return nullptr;
+  }
+
+  const ImageUtils imageUtils(image);
+  Maybe<VideoPixelFormat> format = ToVideoPixelFormat(imageUtils.GetFormat());
+  if (!format) {
+    aRv.ThrowTypeError("The video's image is in unsupported format");
+    return nullptr;
+  }
+
+  // TODO: Retrive/infer the duration, timestamp, and colorspace.
+  auto r = InitializeFrameFromOtherFrame(
+      global.get(),
+      VideoFrameData(image.get(), format.ref(), image->GetPictureRect(),
+                     image->GetSize(), Nothing(), Nothing(), {}),
+      aInit);
+  if (r.isErr()) {
+    aRv.ThrowTypeError(r.unwrapErr());
+    return nullptr;
+  }
+  return r.unwrap();
 }
 
 /* static */
