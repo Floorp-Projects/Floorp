@@ -494,32 +494,63 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Wilujeng sumping di %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">Wilujeng sumping di %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Tutup</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Wilujeng sumping di %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Gancang. Pribadi. Teu élodan.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Mitembeyan</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s teu kawas panyungsi lianna</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Kami mupus jujutan anjeun nalika aplikasi ditutup pikeun pripasi tambahan.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Jadikeun %1$s baku pikeun nangtayungan data anjeun ti unggal tutumbu anu dibuka.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Jadikeun panyungsi baku</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Liwat</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Nyungsi canggih luyu jeung kahayang</string>
+    <string moz:removedIn="106" name="onboarding_description">Nyungsi canggih luyu jeung kahayang</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Nalika nyaru tepung jeung nyamuni</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Nalika nyaru tepung jeung nyamuni</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s téh panyungsi anu ngaheulakeun pripasi kalayan panyalindungan palacak jeung réréméh anu wedel.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s téh panyungsi anu ngaheulakeun pripasi kalayan panyalindungan palacak jeung réréméh anu wedel.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Nyungsi kawas teu kungsi kajadian</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Nyungsi kawas teu kungsi kajadian</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Ngahapus jujutan nyungsi jeung réréméh sakali toél — sarta ngeureunan iklan nunutur anjeun.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Ngahapus jujutan nyungsi jeung réréméh sakali toél — sarta ngeureunan iklan nunutur anjeun.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Pripasi anu cocog pikeun sagala kaayaan</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Pripasi anu cocog pikeun sagala kaayaan</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Upama perlu dirobah, kari ngatur setélan pripasi nyungsi anjeun.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Upama perlu dirobah, kari ngatur setélan pripasi nyungsi anjeun.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Mitembeyan nyungsi</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Mitembeyan nyungsi</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Bedaskeun salindungan anjeun</string>
@@ -979,7 +1010,10 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Sigana ieu loka nyobaan ngalacak anjeun. Klik taméng pikeun setélan loka sarta statistik meungpeuk palacak.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Sigana ieu loka nyobaan ngalacak anjeun. Klik taméng pikeun setélan loka sarta statistik meungpeuk palacak.</string>
+
+    <string name="cfr_for_toolbar_shield_icon2">Beunang siah! Kami ngeureunan ieu loka tina moncorong anjeun. Toél taméng iraha baé pikeun nempo naon baé anu geus dipeungpeuk.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Tutup popup</string>
 
@@ -996,4 +1030,28 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Singkahkeun data pribadi anjeun, jujutan nyungsi jeung nu lianna ti ieu sési ku noél tombol wadah runtah. Mangga cobian!</string>
     <string name="cfr_for_toolbar_delete_icon2">Toél di dieu pikeun mupus sakabéhna — jujutan, réréméh, sadayana — sarta mitembeyan dina hiji tab anyar.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Tutup</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Paluruh wijet</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Data sungsian geus beresih! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Kami ninggalkeun anjeun dina ngalanglang nyamuni, tapi engké deui mah anjeun bisa ngamimitian leuwih gancang maké wijet %1$s dina layar Tepas.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Tambahkeun wijet ka layar tepas</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Wijet ditambahkeun kana layar tepas</string>
 </resources>
