@@ -314,6 +314,7 @@ const extraMochitestTestPaths = [
   "dom/media/mediasession/test/",
   "dom/media/mediasource/test/",
   "dom/media/test/",
+  "dom/media/webcodecs/test/",
   "dom/media/webspeech/recognition/test/",
   "dom/media/webspeech/synth/test/",
   "dom/messagechannel/tests/",
