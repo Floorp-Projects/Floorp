@@ -19,8 +19,8 @@ add_task(async function testScreenshotButtonDisabled() {
   await BrowserTestUtils.withNewTab("about:home", () => {
     Assert.equal(
       screenshotBtn.disabled,
-      true,
-      "Screenshots button is now disabled"
+      false,
+      "Screenshots button is still enabled on about pages"
     );
   });
 });
