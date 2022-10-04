@@ -547,6 +547,34 @@ XPCOMUtils.defineLazyPreferenceGetter(
   true
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gScreenshotsDisabled",
+  "extensions.screenshots.disabled",
+  false,
+  () => {
+    Services.obs.notifyObservers(
+      window,
+      "toggle-screenshot-disable",
+      gScreenshots.shouldScreenshotsButtonBeDisabled()
+    );
+  }
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gScreenshotsComponentEnabled",
+  "screenshots.browser.component.enabled",
+  false,
+  () => {
+    Services.obs.notifyObservers(
+      window,
+      "toggle-screenshot-disable",
+      gScreenshots.shouldScreenshotsButtonBeDisabled()
+    );
+  }
+);
+
 customElements.setElementCreationCallback("translation-notification", () => {
   Services.scriptloader.loadSubScript(
     "chrome://browser/content/translation-notification.js",
@@ -676,6 +704,25 @@ var gNavigatorBundle = {
   },
   getFormattedString(key, array) {
     return gBrowserBundle.formatStringFromName(key, array);
+  },
+};
+
+var gScreenshots = {
+  shouldScreenshotsButtonBeDisabled(uri) {
+    // About pages other than about:reader are not currently supported by
+    // the screenshots extension (see Bug 1620992).
+    let shouldBeDisabled;
+    if (uri) {
+      shouldBeDisabled =
+        gScreenshotsDisabled ||
+        (!gScreenshotsComponentEnabled &&
+          uri.scheme === "about" &&
+          !uri.spec.startsWith("about:reader"));
+    } else {
+      shouldBeDisabled = gScreenshotsDisabled || !gScreenshotsComponentEnabled;
+    }
+
+    return shouldBeDisabled;
   },
 };
 
@@ -5441,14 +5488,13 @@ var XULBrowserWindow = {
       closeOpenPanels("panel[locationspecific='true']");
     }
 
-    // About pages other than about:reader are not currently supported by
-    // screenshots (see Bug 1620992).
+    let screenshotsButtonsDisabled = gScreenshots.shouldScreenshotsButtonBeDisabled(
+      aLocationURI
+    );
     Services.obs.notifyObservers(
       window,
       "toggle-screenshot-disable",
-      (aLocationURI.scheme == "about" &&
-        !aLocationURI.spec.startsWith("about:reader")) ||
-        Services.prefs.getBoolPref("extensions.screenshots.disabled")
+      screenshotsButtonsDisabled
     );
 
     gPermissionPanel.onLocationChange();
