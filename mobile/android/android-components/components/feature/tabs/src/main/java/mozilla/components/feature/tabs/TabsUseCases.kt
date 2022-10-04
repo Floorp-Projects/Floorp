@@ -14,6 +14,7 @@ import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.UndoAction
 import mozilla.components.browser.state.selector.findNormalOrPrivateTabByUrl
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
@@ -465,12 +466,29 @@ class TabsUseCases(
         private val store: BrowserStore
     ) {
         /**
+         * Creates a duplicate of the currently selected tab (including history) and
+         * selects it if [selectNewTab] is true.
+         *
+         * @param selectNewTab Whether or not the duplicate tab should be selected.
+         * @return The ID of the duplicated tab, or null if there is no selected tab.
+         */
+        fun invoke(selectNewTab: Boolean): String? {
+            return store.state.selectedTab?.let {
+                this.invoke(it, selectNewTab)
+            }
+        }
+
+        /**
          * Creates a duplicate of [tab] (including history) and selects it if [selectNewTab] is true.
+         *
+         * @param tab The tab to duplicate.
+         * @param selectNewTab Whether or not the duplicate tab should be selected.
+         * @return The ID of the duplicated tab.
          */
         operator fun invoke(
             tab: TabSessionState,
             selectNewTab: Boolean = true
-        ) {
+        ): String {
             val duplicate = createTab(
                 url = tab.content.url,
                 private = tab.content.private,
@@ -485,6 +503,7 @@ class TabsUseCases(
                     select = selectNewTab
                 )
             )
+            return duplicate.id
         }
     }
 

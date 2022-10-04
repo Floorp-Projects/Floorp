@@ -12,6 +12,7 @@ import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.selector.findNormalOrPrivateTabByUrl
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.state.recover.toRecoverableTab
@@ -462,6 +463,15 @@ class TabsUseCasesTest {
         assertEquals(store.state.selectedTabId, tabID)
     }
 
+    private fun assertTabsDuplicates(tab: TabSessionState, dup: TabSessionState) {
+        assertEquals(tab.content.url, dup.content.url)
+        assertEquals(tab.content.private, dup.content.private)
+        assertEquals(tab.contextId, dup.contextId)
+        assertEquals(tab.engineState.engineSessionState, dup.engineState.engineSessionState)
+        assertNotEquals(tab.id, dup.id)
+        assertEquals(tab.id, dup.parentId)
+    }
+
     @Test
     fun `duplicateTab creates a duplicate of the given tab`() {
         store.dispatch(
@@ -477,20 +487,17 @@ class TabsUseCasesTest {
         ).joinBlocking()
 
         val tab = store.state.findTab("mozilla")!!
-        tabsUseCases.duplicateTab.invoke(tab)
+        val dupId = tabsUseCases.duplicateTab.invoke(tab)
         store.waitUntilIdle()
-        assertEquals(2, store.state.tabs.size)
 
+        assertEquals(2, store.state.tabs.size)
+        assertEquals(dupId, store.state.tabs[1].id)
         assertEquals("mozilla", store.state.tabs[0].id)
-        assertNotEquals("mozilla", store.state.tabs[1].id)
         assertFalse(store.state.tabs[0].content.private)
-        assertFalse(store.state.tabs[1].content.private)
         assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
-        assertEquals("https://www.mozilla.org", store.state.tabs[1].content.url)
         assertEquals(engineSessionState, store.state.tabs[0].engineState.engineSessionState)
-        assertEquals(engineSessionState, store.state.tabs[1].engineState.engineSessionState)
         assertNull(store.state.tabs[0].parentId)
-        assertEquals("mozilla", store.state.tabs[1].parentId)
+        assertTabsDuplicates(tab, store.state.tabs[1])
     }
 
     @Test
@@ -515,6 +522,30 @@ class TabsUseCasesTest {
         assertEquals(2, store.state.tabs.size)
         assertEquals("work", store.state.tabs[0].contextId)
         assertEquals("work", store.state.tabs[1].contextId)
+    }
+
+    @Test
+    fun `duplicateTab without tab argument uses the selected tab`() {
+        var tab = createTab(url = "https://www.mozilla.org")
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+        var dupId = tabsUseCases.duplicateTab.invoke(selectNewTab = true)!!
+        store.waitUntilIdle()
+
+        assertEquals(2, store.state.tabs.size)
+        assertNotNull(dupId)
+        var dup = store.state.findTab(dupId)!!
+        assertTabsDuplicates(tab, dup)
+        assertEquals(dup, store.state.selectedTab)
+
+        tab = dup
+        dupId = tabsUseCases.duplicateTab.invoke(selectNewTab = false)!!
+        store.waitUntilIdle()
+
+        assertEquals(3, store.state.tabs.size)
+        assertNotNull(dupId)
+        dup = store.state.findTab(dupId)!!
+        assertTabsDuplicates(tab, dup)
+        assertEquals(tab, store.state.selectedTab)
     }
 
     @Test
