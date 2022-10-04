@@ -1069,10 +1069,10 @@ struct PaintRadialGradient : public PaintPatternBase {
         // cone; all that will project into visible space is a single color.
         if (r1 < r2) {
           // Keep only the last color stop.
-          TruncateGradientStops(stopArray, 1.0f, 1.0f);
+          stopArray.RemoveElementsAt(0, stopArray.Length() - 1);
         } else {
           // Keep only the first color stop.
-          TruncateGradientStops(stopArray, 0.0f, 0.0f);
+          stopArray.RemoveElementsAt(1, stopArray.Length() - 1);
         }
       } else {
         // Truncate the gradient at the tip of the visible cone: find the color

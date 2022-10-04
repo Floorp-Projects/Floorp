@@ -12,6 +12,7 @@ span { font: 120px/1 CAhem; }
 .a { font-variation-settings: "GRX0" 500, "GRR0" 50, "GRX1" 900, "GRR1" 150, "COL1" 0, "COL2" 0.5, "COL3" 1.0; }
 .e1 { font-variation-settings: "GRX0" 700, "GRR0" 100, "GRX1" 1000, "GRR1" 175, "COL1" 2.0, "COL2" 2.0, "COL3" 1.99; }
 .f { font-variation-settings: "GRX0" 500, "GRR0" 50, "GRX1" 900, "GRR1" 150, "COL1" 0.5, "COL2" 1.0, "COL3" 1.5; }
+.g { font-variation-settings: "GRX0" 500, "GRR0" 50, "GRX1" 900, "GRR1" 150, "COL1" 0, "COL2" 1.0, "COL3" 1.0; }
 </style>
 
 <p>All four lines should show the same set of gradients:</p>
@@ -30,4 +31,9 @@ span { font: 120px/1 CAhem; }
 <p>And with the gradients shifted a half-cycle to the right:</p>
 <div>
   <div><span class=f><span class=e1>@</span>#$</div>
+</div>
+
+<p>Left glyph is solid blue; no blue in the repeating gradients:</p>
+<div>
+  <div><span class=g><span class=e1>@</span>#$</div>
 </div>
