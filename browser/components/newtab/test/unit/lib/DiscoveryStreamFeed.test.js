@@ -563,6 +563,28 @@ describe("DiscoveryStreamFeed", () => {
         { index: 4 },
       ]);
     });
+    it("should create a layout with spoc position data", async () => {
+      feed.config.hardcoded_layout = true;
+      feed.store = createStore(combineReducers(reducers), {
+        Prefs: {
+          values: {
+            pocketConfig: {
+              spocAdTypes: "1230",
+              spocZoneIds: "4560, 7890",
+            },
+          },
+        },
+      });
+
+      await feed.loadLayout(feed.store.dispatch);
+
+      const { layout } = feed.store.getState().DiscoveryStream;
+      assert.deepEqual(layout[0].components[2].placement.ad_types, [1230]);
+      assert.deepEqual(layout[0].components[2].placement.zone_ids, [
+        4560,
+        7890,
+      ]);
+    });
   });
 
   describe("#updatePlacements", () => {
