@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MainThreadUtils.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "nsIDNService.h"
 #include "nsReadableUtils.h"
@@ -86,7 +87,19 @@ static const char* gCallbackPrefs[] = {
 
 nsresult nsIDNService::Init() {
   MOZ_ASSERT(NS_IsMainThread());
+  // Take a strong reference for our listener with the preferences service,
+  // which we will release on shutdown.
+  // It's OK if we remove the observer a bit early, as it just means we won't
+  // respond to `network.IDN.extra_{allowed,blocked}_chars` and
+  // `network.IDN.restriction_profile` pref changes during shutdown.
   Preferences::RegisterPrefixCallbacks(PrefChanged, gCallbackPrefs, this);
+  RunOnShutdown(
+      [self = RefPtr{this}]() mutable {
+        Preferences::UnregisterPrefixCallbacks(PrefChanged, gCallbackPrefs,
+                                               self.get());
+        self = nullptr;
+      },
+      ShutdownPhase::XPCOMWillShutdown);
   prefsChanged(nullptr);
 
   return NS_OK;
@@ -125,11 +138,7 @@ nsIDNService::nsIDNService() {
   mIDNA = createResult.unwrap();
 }
 
-nsIDNService::~nsIDNService() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  Preferences::UnregisterPrefixCallbacks(PrefChanged, gCallbackPrefs, this);
-}
+nsIDNService::~nsIDNService() = default;
 
 nsresult nsIDNService::IDNA2008ToUnicode(const nsACString& input,
                                          nsAString& output) {
