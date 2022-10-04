@@ -79,8 +79,8 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
       const GlobalObject& aGlobal, HTMLImageElement& aImageElement,
       const VideoFrameInit& aInit, ErrorResult& aRv);
   static already_AddRefed<VideoFrame> Constructor(
-      const GlobalObject& global, SVGImageElement& svgImageElement,
-      const VideoFrameInit& init, ErrorResult& aRv);
+      const GlobalObject& aGlobal, SVGImageElement& aSVGImageElement,
+      const VideoFrameInit& aInit, ErrorResult& aRv);
   static already_AddRefed<VideoFrame> Constructor(
       const GlobalObject& global, HTMLCanvasElement& canvasElement,
       const VideoFrameInit& init, ErrorResult& aRv);
