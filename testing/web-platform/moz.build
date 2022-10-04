@@ -75,6 +75,12 @@ with Files("mozilla/tests/placeholder"):
 with Files("mozilla/tests/webdriver/**"):
     BUG_COMPONENT = ("Testing", "geckodriver")
 
+with Files("mozilla/tests/webdriver/bidi/**"):
+    BUG_COMPONENT = ("Remote Protocol", "WebDriver BiDi")
+
+with Files("mozilla/tests/webdriver/cdp/**"):
+    BUG_COMPONENT = ("Remote Protocol", "CDP")
+
 with Files("update/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
@@ -711,6 +717,9 @@ with Files("tests/webauthn/**"):
 
 with Files("tests/webdriver/**"):
     BUG_COMPONENT = ("Testing", "geckodriver")
+
+with Files("tests/webdriver/tests/bidi/**"):
+    BUG_COMPONENT = ("Remote Protocol", "WebDriver BiDi")
 
 with Files("tests/webgl/**"):
     BUG_COMPONENT = ("Core", "Graphics: CanvasWebGL")
