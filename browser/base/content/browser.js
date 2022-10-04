@@ -1725,6 +1725,8 @@ var gBrowserInit = {
 
     updateFxaToolbarMenu(gFxaToolbarEnabled, true);
 
+    gUnifiedExtensions.init();
+
     // Setting the focus will cause a style flush, it's preferable to call anything
     // that will modify the DOM from within this function before this call.
     this._setInitialFocus();
@@ -2343,11 +2345,6 @@ var gBrowserInit = {
     scheduleIdleTask(() => {
       // Initialize the Sync UI
       gSync.init();
-    });
-
-    scheduleIdleTask(() => {
-      // Initialize the unified extensions UI.
-      gUnifiedExtensions.init();
     });
 
     scheduleIdleTask(() => {
