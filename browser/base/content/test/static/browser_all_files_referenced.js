@@ -368,9 +368,7 @@ if (!isDevtools) {
 }
 
 if (AppConstants.MOZ_CODE_COVERAGE) {
-  whitelist.add(
-    "chrome://remote/content/marionette/PerTestCoverageUtils.sys.mjs"
-  );
+  whitelist.add("chrome://remote/content/marionette/PerTestCoverageUtils.jsm");
 }
 
 const gInterestingCategories = new Set([
