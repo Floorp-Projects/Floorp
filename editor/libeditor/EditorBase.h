@@ -2858,6 +2858,8 @@ class EditorBase : public nsIEditor,
   friend class AlignStateAtSelection;  // AutoEditActionDataSetter,
                                        // ToGenericNSResult
   friend class AutoRangeArray;  // IsSEditActionDataAvailable, SelectionRef
+  friend class CaretPoint;      // AllowsTransactionsToChangeSelection,
+                                // CollapseSelectionTo
   friend class CompositionTransaction;  // CollapseSelectionTo, DoDeleteText,
                                         // DoInsertText, DoReplaceText,
                                         // HideCaret, RangeupdaterRef
@@ -2889,9 +2891,6 @@ class EditorBase : public nsIEditor,
   friend class SplitNodeTransaction;    // ToGenericNSResult
   friend class WhiteSpaceVisibilityKeeper;  // AutoTransactionsConserveSelection
   friend class nsIEditor;                   // mIsHTMLEditorClass
-
-  template <typename NodeType>
-  friend class CreateNodeResultBase;  // CollapseSelectionTo
 };
 
 }  // namespace mozilla

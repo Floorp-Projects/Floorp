@@ -4632,20 +4632,16 @@ class HTMLEditor final : public EditorBase,
                                                // CollectNonEditableNodes
   friend class ListItemElementSelectionState;  // CollectEditTargetNodes,
                                                // CollectNonEditableNodes
-  friend class MoveNodeResult;       // AllowsTransactionsToChangeSelection,
-                                     // CollapseSelectionTo
   friend class MoveNodeTransaction;  // AllowsTransactionsToChangeSelection,
                                      // CollapseSelectionTo, MarkElementDirty,
                                      // RangeUpdaterRef
-  friend class ParagraphStateAtSelection;    // CollectChildren,
-                                             // CollectEditTargetNodes,
-                                             // CollectListChildren,
-                                             // CollectNonEditableNodes,
-                                             // CollectTableChildren
-  friend class SlurpBlobEventListener;       // BlobReader
-  friend class SplitNodeResult;              // CollapseSelectionTo
-  friend class SplitNodeTransaction;         // DoJoinNodes, DoSplitNode
-  friend class SplitRangeOffFromNodeResult;  // CollapseSelectionTo
+  friend class ParagraphStateAtSelection;  // CollectChildren,
+                                           // CollectEditTargetNodes,
+                                           // CollectListChildren,
+                                           // CollectNonEditableNodes,
+                                           // CollectTableChildren
+  friend class SlurpBlobEventListener;     // BlobReader
+  friend class SplitNodeTransaction;       // DoJoinNodes, DoSplitNode
   friend class TransactionManager;  // DidDoTransaction, DidRedoTransaction,
                                     // DidUndoTransaction
   friend class

@@ -31,6 +31,107 @@ namespace mozilla {
 
 enum class StyleWhiteSpace : uint8_t;
 
+enum class SuggestCaret {
+  // If specified, the method returns NS_OK when there is no recommended caret
+  // position.
+  OnlyIfHasSuggestion,
+  // If specified and if EditorBase::AllowsTransactionsToChangeSelection
+  // returns false, the method does nothing and returns NS_OK.
+  OnlyIfTransactionsAllowedToDoIt,
+  // If specified, the method returns
+  // NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR even if
+  // EditorBase::CollapseSelectionTo returns an error except when
+  // NS_ERROR_EDITOR_DESTROYED.
+  AndIgnoreTrivialError,
+};
+
+/******************************************************************************
+ * CaretPoint is a wrapper of EditorDOMPoint and provides a helper method to
+ * collapse Selection there, or move it to a local variable.  This is typically
+ * used as the ok type of Result or a base class of DoSomethingResult classes.
+ ******************************************************************************/
+class MOZ_STACK_CLASS CaretPoint {
+ public:
+  explicit CaretPoint(const EditorDOMPoint& aPointToPutCaret)
+      : mCaretPoint(aPointToPutCaret) {}
+  explicit CaretPoint(EditorDOMPoint&& aPointToPutCaret)
+      : mCaretPoint(std::move(aPointToPutCaret)) {}
+
+  CaretPoint(const CaretPoint&) = delete;
+  CaretPoint& operator=(const CaretPoint&) = delete;
+  CaretPoint(CaretPoint&&) = default;
+  CaretPoint& operator=(CaretPoint&&) = default;
+
+  /**
+   * Suggest caret position to aEditorBase.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SuggestCaretPointTo(
+      const EditorBase& aEditorBase, const SuggestCaretOptions& aOptions) const;
+
+  /**
+   * IgnoreCaretPointSuggestion() should be called if the method does not want
+   * to use caret position recommended by this instance.
+   */
+  void IgnoreCaretPointSuggestion() const { mHandledCaretPoint = true; }
+
+  bool HasCaretPointSuggestion() const { return mCaretPoint.IsSet(); }
+  constexpr const EditorDOMPoint& CaretPointRef() const { return mCaretPoint; }
+  constexpr EditorDOMPoint&& UnwrapCaretPoint() {
+    mHandledCaretPoint = true;
+    return std::move(mCaretPoint);
+  }
+  bool CopyCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                        const SuggestCaretOptions& aOptions) const {
+    MOZ_ASSERT(!aOptions.contains(SuggestCaret::AndIgnoreTrivialError));
+    MOZ_ASSERT(
+        !aOptions.contains(SuggestCaret::OnlyIfTransactionsAllowedToDoIt));
+    if (aOptions.contains(SuggestCaret::OnlyIfHasSuggestion) &&
+        !mCaretPoint.IsSet()) {
+      return false;
+    }
+    aPointToPutCaret = mCaretPoint;
+    return true;
+  }
+  bool MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                        const SuggestCaretOptions& aOptions) {
+    MOZ_ASSERT(!aOptions.contains(SuggestCaret::AndIgnoreTrivialError));
+    MOZ_ASSERT(
+        !aOptions.contains(SuggestCaret::OnlyIfTransactionsAllowedToDoIt));
+    if (aOptions.contains(SuggestCaret::OnlyIfHasSuggestion) &&
+        !mCaretPoint.IsSet()) {
+      return false;
+    }
+    aPointToPutCaret = UnwrapCaretPoint();
+    return true;
+  }
+  bool CopyCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                        const EditorBase& aEditorBase,
+                        const SuggestCaretOptions& aOptions) const;
+  bool MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                        const EditorBase& aEditorBase,
+                        const SuggestCaretOptions& aOptions);
+
+ protected:
+  constexpr bool CaretPointHandled() const { return mHandledCaretPoint; }
+
+  void SetCaretPoint(const EditorDOMPoint& aCaretPoint) {
+    mHandledCaretPoint = false;
+    mCaretPoint = aCaretPoint;
+  }
+  void SetCaretPoint(EditorDOMPoint&& aCaretPoint) {
+    mHandledCaretPoint = false;
+    mCaretPoint = std::move(aCaretPoint);
+  }
+
+  void UnmarkAsHandledCaretPoint() { mHandledCaretPoint = true; }
+
+  CaretPoint() = default;
+
+ private:
+  EditorDOMPoint mCaretPoint;
+  bool mutable mHandledCaretPoint = false;
+};
+
 /***************************************************************************
  * EditActionResult is useful to return the handling state of edit sub actions
  * without out params.
@@ -81,35 +182,8 @@ class MOZ_STACK_CLASS EditActionResult final {
  * CreateNodeResultBase is a simple class for CreateSomething() methods
  * which want to return new node.
  */
-
-#define NS_INSTANTIATE_CREATE_NODE_RESULT_METHOD(aResultType, aMethodName, \
-                                                 ...)                      \
-  template aResultType CreateContentResult::aMethodName(__VA_ARGS__);      \
-  template aResultType CreateElementResult::aMethodName(__VA_ARGS__);      \
-  template aResultType CreateTextResult::aMethodName(__VA_ARGS__);
-
-#define NS_INSTANTIATE_CREATE_NODE_RESULT_CONST_METHOD(aResultType,         \
-                                                       aMethodName, ...)    \
-  template aResultType CreateContentResult::aMethodName(__VA_ARGS__) const; \
-  template aResultType CreateElementResult::aMethodName(__VA_ARGS__) const; \
-  template aResultType CreateTextResult::aMethodName(__VA_ARGS__) const;
-
-enum class SuggestCaret {
-  // If specified, the method returns NS_OK when there is no recommended caret
-  // position.
-  OnlyIfHasSuggestion,
-  // If specified and if EditorBase::AllowsTransactionsToChangeSelection
-  // returns false, the method does nothing and returns NS_OK.
-  OnlyIfTransactionsAllowedToDoIt,
-  // If specified, the method returns
-  // NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR even if
-  // EditorBase::CollapseSelectionTo returns an error except when
-  // NS_ERROR_EDITOR_DESTROYED.
-  AndIgnoreTrivialError,
-};
-
 template <typename NodeType>
-class MOZ_STACK_CLASS CreateNodeResultBase final {
+class MOZ_STACK_CLASS CreateNodeResultBase final : public CaretPoint {
   using SelfType = CreateNodeResultBase<NodeType>;
 
  public:
@@ -117,76 +191,44 @@ class MOZ_STACK_CLASS CreateNodeResultBase final {
   NodeType* GetNewNode() const { return mNode; }
   RefPtr<NodeType> UnwrapNewNode() { return std::move(mNode); }
 
-  /**
-   * Suggest caret position to aEditorBase.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SuggestCaretPointTo(
-      const EditorBase& aEditorBase, const SuggestCaretOptions& aOptions) const;
-
-  /**
-   * IgnoreCaretPointSuggestion() should be called if the method does not want
-   * to use caret position recommended by this instance.
-   */
-  void IgnoreCaretPointSuggestion() const { mHandledCaretPoint = true; }
-
-  bool HasCaretPointSuggestion() const { return mCaretPoint.IsSet(); }
-  EditorDOMPoint&& UnwrapCaretPoint() {
-    mHandledCaretPoint = true;
-    return std::move(mCaretPoint);
-  }
-  bool MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
-                        const SuggestCaretOptions& aOptions) {
-    MOZ_ASSERT(!aOptions.contains(SuggestCaret::AndIgnoreTrivialError));
-    MOZ_ASSERT(
-        !aOptions.contains(SuggestCaret::OnlyIfTransactionsAllowedToDoIt));
-    if (aOptions.contains(SuggestCaret::OnlyIfHasSuggestion) &&
-        !mCaretPoint.IsSet()) {
-      return false;
-    }
-    aPointToPutCaret = UnwrapCaretPoint();
-    return true;
-  }
-  bool MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
-                        const EditorBase& aEditorBase,
-                        const SuggestCaretOptions& aOptions);
-
+  CreateNodeResultBase() = delete;
   explicit CreateNodeResultBase(NodeType& aNode) : mNode(&aNode) {}
   explicit CreateNodeResultBase(NodeType& aNode,
                                 const EditorDOMPoint& aCandidateCaretPoint)
-      : mNode(&aNode), mCaretPoint(aCandidateCaretPoint) {}
+      : CaretPoint(aCandidateCaretPoint), mNode(&aNode) {}
   explicit CreateNodeResultBase(NodeType& aNode,
                                 EditorDOMPoint&& aCandidateCaretPoint)
-      : mNode(&aNode), mCaretPoint(std::move(aCandidateCaretPoint)) {}
+      : CaretPoint(std::move(aCandidateCaretPoint)), mNode(&aNode) {}
 
   explicit CreateNodeResultBase(RefPtr<NodeType>&& aNode)
       : mNode(std::move(aNode)) {}
   explicit CreateNodeResultBase(RefPtr<NodeType>&& aNode,
                                 const EditorDOMPoint& aCandidateCaretPoint)
-      : mNode(std::move(aNode)), mCaretPoint(aCandidateCaretPoint) {
+      : CaretPoint(aCandidateCaretPoint), mNode(std::move(aNode)) {
     MOZ_ASSERT(mNode);
   }
   explicit CreateNodeResultBase(RefPtr<NodeType>&& aNode,
                                 EditorDOMPoint&& aCandidateCaretPoint)
-      : mNode(std::move(aNode)), mCaretPoint(std::move(aCandidateCaretPoint)) {
+      : CaretPoint(std::move(aCandidateCaretPoint)), mNode(std::move(aNode)) {
     MOZ_ASSERT(mNode);
   }
 
-  [[nodiscard]] static SelfType NotHandled() { return SelfType(); }
+  [[nodiscard]] static SelfType NotHandled() {
+    return SelfType(EditorDOMPoint());
+  }
   [[nodiscard]] static SelfType NotHandled(
       const EditorDOMPoint& aPointToPutCaret) {
-    SelfType result;
-    result.mCaretPoint = aPointToPutCaret;
+    SelfType result(aPointToPutCaret);
     return result;
   }
   [[nodiscard]] static SelfType NotHandled(EditorDOMPoint&& aPointToPutCaret) {
-    SelfType result;
-    result.mCaretPoint = std::move(aPointToPutCaret);
+    SelfType result(std::move(aPointToPutCaret));
     return result;
   }
 
 #ifdef DEBUG
   ~CreateNodeResultBase() {
-    MOZ_ASSERT(!mCaretPoint.IsSet() || mHandledCaretPoint);
+    MOZ_ASSERT(!HasCaretPointSuggestion() || CaretPointHandled());
   }
 #endif
 
@@ -196,11 +238,12 @@ class MOZ_STACK_CLASS CreateNodeResultBase final {
   SelfType& operator=(SelfType&& aOther) = default;
 
  private:
-  CreateNodeResultBase() = default;
+  explicit CreateNodeResultBase(const EditorDOMPoint& aCandidateCaretPoint)
+      : CaretPoint(aCandidateCaretPoint) {}
+  explicit CreateNodeResultBase(EditorDOMPoint&& aCandidateCaretPoint)
+      : CaretPoint(std::move(aCandidateCaretPoint)) {}
 
   RefPtr<NodeType> mNode;
-  EditorDOMPoint mCaretPoint;
-  bool mutable mHandledCaretPoint = false;
 };
 
 /***************************************************************************
