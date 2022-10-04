@@ -32,6 +32,8 @@ body {
   --toolbar-button-background-active: rgb(207, 207, 216);
   --toolbar-button-foreground-active: var(--primary-color);
   --toolbar-button-border: transparent;
+  --toolbar-button-border-hover: var(--toolbar-button-border);
+  --toolbar-button-border-active: var(--toolbar-button-border);
   --tooltip-background: var(--toolbar-button-background-active);
   --tooltip-foreground: var(--icon-fill);
   --tooltip-border: transparent;
@@ -48,6 +50,7 @@ body {
   --popup-button-border: var(--popup-border);
   --selected-background: rgba(0, 97, 224, 0.3);
   --selected-border: var(--primary-color);
+  --outline-focus-color: var(--primary-color);
   --font-value-background: rgb(240, 240, 244);
   --font-value-border: var(--grey-30);
   --icon-fill: rgb(91, 91, 102);
@@ -99,11 +102,13 @@ body.hcm {
   --toolbar-transparent-border: Canvas;
   --toolbar-box-shadow: Canvas;
   --toolbar-button-background: ButtonFace;
-  --toolbar-button-background-hover: ButtonText;
-  --toolbar-button-foreground-hover: ButtonFace;
-  --toolbar-button-background-active: SelectedItem;
-  --toolbar-button-foreground-active: SelectedItemText;
+  --toolbar-button-background-hover: SelectedItem;
+  --toolbar-button-foreground-hover: SelectedItemText;
+  --toolbar-button-background-active: SelectedItemText;
+  --toolbar-button-foreground-active: SelectedItem;
   --toolbar-button-border: ButtonText;
+  --toolbar-button-border-hover: SelectedItemText;
+  --toolbar-button-border-active: SelectedItem;
   --tooltip-background: Canvas;
   --tooltip-foreground: CanvasText;
   --tooltip-border: CanvasText;
@@ -118,6 +123,7 @@ body.hcm {
   --popup-button-background-active: ButtonText;
   --popup-button-border: ButtonText;
   --selected-background: Canvas;
+  --outline-focus-color: CanvasText;
   --font-value-background: Canvas;
   --font-value-border: CanvasText;
   --icon-fill: ButtonText;
@@ -371,9 +377,9 @@ button:disabled {
   background-repeat: no-repeat;
 }
 
-.toolbar-button:hover,
-.toolbar-button:focus-visible {
+.toolbar-button:hover {
   background-color: var(--toolbar-button-background-hover);
+  border-color: var(--toolbar-button-border-hover);
   fill: var(--toolbar-button-foreground-hover);
 }
 
@@ -381,7 +387,13 @@ button:disabled {
 .toolbar-button:hover:active {
   background-color: var(--toolbar-button-background-active);
   color: var(--toolbar-button-foreground-active);
+  border-color: var(--toolbar-button-border-active);
   fill: var(--toolbar-button-foreground-active);
+}
+
+.toolbar-button:focus-visible {
+  outline: 2px solid var(--outline-focus-color);
+  outline-offset: 2px;
 }
 
 .hover-label {
@@ -508,8 +520,7 @@ button:disabled {
   fill: var(--popup-button-foreground);
 }
 
-.buttonrow > button:enabled:hover,
-.buttonrow > button:enabled:focus-visible {
+.buttonrow > button:enabled:hover {
   background-color: var(--popup-button-background-hover);
   fill: var(--popup-button-foreground-hover);
 }
@@ -519,6 +530,7 @@ button:disabled {
 }
 
 .buttonrow > button:enabled:focus-visible {
+  outline: 2px solid var(--outline-focus-color);
   outline-offset: -2px;
 }
 

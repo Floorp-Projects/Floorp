@@ -71,11 +71,13 @@ body.hcm .narrate-word-highlight {
 
 body.hcm .speaking .narrate-toggle {
   background-color: var(--toolbar-button-background-active);
+  border-color: var(--toolbar-button-border-active);
 }
 
-body.hcm .speaking .narrate-toggle:hover {
-  background-color: var(--toolbar-button-foreground-active);
-  fill: var(--toolbar-button-background-active);
+body.hcm .speaking:not(.open) .narrate-toggle:hover {
+  background-color: var(--toolbar-button-background-hover);
+  border-color: var(--toolbar-button-border-hover);
+  fill: var(--toolbar-button-foreground-hover);
 }
 
 .narrate-dropdown > .dropdown-popup button {
@@ -83,8 +85,7 @@ body.hcm .speaking .narrate-toggle:hover {
   fill: var(--popup-button-foreground);
 }
 
-.narrate-dropdown > .dropdown-popup button:enabled:hover,
-.narrate-dropdown > .dropdown-popup button:enabled:focus-visible {
+.narrate-dropdown > .dropdown-popup button:enabled:hover {
   background-color: var(--popup-button-background-hover);
   color: var(--popup-button-foreground-hover);
   fill: var(--popup-button-foreground-hover);
@@ -95,6 +96,7 @@ body.hcm .speaking .narrate-toggle:hover {
 }
 
 .narrate-dropdown > .dropdown-popup button:enabled:focus-visible {
+  outline: 2px solid var(--outline-focus-color);
   outline-offset: -2px;
 }
 
@@ -181,7 +183,13 @@ body.hcm .speaking .narrate-toggle:hover {
   margin: 0 1px;
   flex-grow: 1;
   background-color: var(--popup-background);
+  border-radius: 2px;
   width: 148px;
+}
+
+.narrate-rate-input:focus-visible {
+  outline: 2px solid var(--outline-focus-color);
+  outline-offset: 2px;
 }
 
 .narrate-rate-input::-moz-range-track {
