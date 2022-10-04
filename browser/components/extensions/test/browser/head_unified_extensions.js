@@ -10,28 +10,15 @@
             openExtensionsPanel,
             openUnifiedExtensionsContextMenu,
             promiseDisableUnifiedExtensions,
-            promiseEnableUnifiedExtensions,
-            promiseUnifiedExtensionsInitialized,
+            promiseEnableUnifiedExtensions
 */
-
-const promiseUnifiedExtensionsInitialized = async win => {
-  await new Promise(resolve => {
-    win.requestIdleCallback(resolve);
-  });
-  await TestUtils.waitForCondition(
-    () => win.gUnifiedExtensions._initialized,
-    "Wait gUnifiedExtensions to have been initialized"
-  );
-};
 
 const promiseEnableUnifiedExtensions = async () => {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.unifiedExtensions.enabled", true]],
   });
 
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-  await promiseUnifiedExtensionsInitialized(win);
-  return win;
+  return BrowserTestUtils.openNewBrowserWindow();
 };
 
 const promiseDisableUnifiedExtensions = async () => {
@@ -39,9 +26,7 @@ const promiseDisableUnifiedExtensions = async () => {
     set: [["extensions.unifiedExtensions.enabled", false]],
   });
 
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-  await promiseUnifiedExtensionsInitialized(win);
-  return win;
+  return BrowserTestUtils.openNewBrowserWindow();
 };
 
 const getListView = win => {
