@@ -28,9 +28,9 @@ pippki-pw-change2empty-in-fips-mode = You are currently in FIPS mode. FIPS requi
 
 ## Reset Primary Password dialog
 
-reset-primary-password-window =
+reset-primary-password-window2 =
   .title = Reset Primary Password
-  .style = width: 40em
+  .style = min-width: 40em
 reset-password-button-label =
   .label = Reset
 reset-primary-password-text = If you reset your Primary Password, all your stored web and e-mail passwords, personal certificates, and private keys will be forgotten. Are you sure you want to reset your Primary Password?
@@ -40,9 +40,9 @@ pippki-reset-password-confirmation-message = Your Primary Password has been rese
 
 ## Downloading cert dialog
 
-download-cert-window =
+download-cert-window2 =
   .title = Downloading Certificate
-  .style = width: 46em
+  .style = min-width: 46em
 download-cert-message = You have been asked to trust a new Certificate Authority (CA).
 download-cert-trust-ssl =
   .label = Trust this CA to identify websites.

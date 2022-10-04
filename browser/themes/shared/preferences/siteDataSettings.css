@@ -30,7 +30,7 @@
  */
 #SiteDataRemoveSelectedDialog {
   padding: 16px;
-  width: 50px;
+  min-width: 50px;
 }
 
 #SiteDataRemoveSelectedDialog.single-entry {

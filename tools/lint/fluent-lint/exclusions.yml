@@ -103,8 +103,6 @@ ID02:
         - find
         - new-tab
         - share
-        # security/manager/locales/en-US/security/certificates/deviceManager.ftl
-        - devmgr
         # toolkit/locales/en-US/toolkit/about/aboutPerformance.ftl
         - type-tab
         - size-KB
