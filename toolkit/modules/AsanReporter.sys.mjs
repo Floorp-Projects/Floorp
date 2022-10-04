@@ -73,9 +73,10 @@ async function processDirectory() {
   const asanDumpDir = PathUtils.join(PathUtils.profileDir, "asan");
   const children = await IOUtils.getChildren(asanDumpDir);
 
-  const results = children.filter(
-    entry => entry.startsWith("ff_asan_log.") && !entry.includes("submitted")
-  );
+  const results = children.filter(function(path) {
+    const name = PathUtils.filename(path);
+    return name.startsWith("ff_asan_log.") && !name.includes("submitted");
+  });
 
   logger.info(`Processing ${results.length} reports...`);
   for (const result of results) {
