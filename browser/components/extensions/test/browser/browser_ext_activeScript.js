@@ -22,19 +22,26 @@ function makeRunAtScript(runAt) {
   `;
 }
 
-async function makeExtension(id, manifest_version, granted) {
+async function makeExtension({
+  id,
+  manifest_version = 3,
+  granted = [],
+  noStaticScript = false,
+}) {
   info(`Loading extension ` + JSON.stringify({ id, granted }));
 
   let manifest = {
     manifest_version,
     browser_specific_settings: { gecko: { id } },
     permissions: ["activeTab", "scripting"],
-    content_scripts: [
-      {
-        matches: ["*://*/*"],
-        js: ["static.js"],
-      },
-    ],
+    content_scripts: noStaticScript
+      ? []
+      : [
+          {
+            matches: ["*://*/*"],
+            js: ["static.js"],
+          },
+        ],
   };
 
   if (manifest_version === 3) {
@@ -140,7 +147,7 @@ async function makeExtension(id, manifest_version, granted) {
     },
   });
 
-  if (granted) {
+  if (granted?.length) {
     info("Granting initial permissions.");
     await ExtensionPermissions.add(id, { permissions: [], origins: granted });
   }
@@ -200,14 +207,30 @@ const verifyActionActiveScript = async ({
   withUnifiedExtensionsPanel = false,
 }) => {
   // Static MV2 extension content scripts are not affected.
-  let ext0 = await makeExtension("ext0@test", 2, ["*://example.com/*"]);
+  let ext0 = await makeExtension({
+    id: "ext0@test",
+    manifest_version: 2,
+    granted: ["*://example.com/*"],
+  });
 
-  let ext1 = await makeExtension("ext1@test", 3);
-  let ext2 = await makeExtension("ext2@test", 3, ["*://example.com/*"]);
-  let ext3 = await makeExtension("ext3@test", 3, ["*://mochi.test/*"]);
+  let ext1 = await makeExtension({ id: "ext1@test" });
+
+  let ext2 = await makeExtension({
+    id: "ext2@test",
+    granted: ["*://example.com/*"],
+  });
+
+  let ext3 = await makeExtension({
+    id: "ext3@test",
+    granted: ["*://mochi.test/*"],
+  });
 
   // Test run_at script ordering.
-  let ext4 = await makeExtension("ext4@test", 3);
+  let ext4 = await makeExtension({ id: "ext4@test" });
+
+  // Test without static scripts in the manifest, because they add optional
+  // permissions, and we specifically want to test activeTab without them.
+  let ext5 = await makeExtension({ id: "ext5@test", noStaticScript: true });
 
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     info("No content scripts run on top level about:blank.");
@@ -216,6 +239,7 @@ const verifyActionActiveScript = async ({
     await testActiveScript(ext2, 0, [], win, withUnifiedExtensionsPanel);
     await testActiveScript(ext3, 0, [], win, withUnifiedExtensionsPanel);
     await testActiveScript(ext4, 0, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext5, 0, [], win, withUnifiedExtensionsPanel);
   });
 
   let dynamicScript = {
@@ -234,6 +258,10 @@ const verifyActionActiveScript = async ({
   // Only ext3 will have a dynamic script, matching <all_urls> with allFrames.
   ext3.sendMessage("dynamic-script", dynamicScript);
   await ext3.awaitMessage("dynamic-script-done");
+
+  // ext5 will have only dynamic scripts and activeTab, so no host permissions.
+  ext5.sendMessage("dynamic-script", dynamicScript);
+  await ext5.awaitMessage("dynamic-script-done");
 
   let url =
     "https://example.com/browser/browser/components/extensions/test/browser/file_with_xorigin_frame.html";
@@ -290,6 +318,15 @@ const verifyActionActiveScript = async ({
       withUnifiedExtensionsPanel
     );
 
+    info("ext5 only has dynamic scripts that run with activeTab.");
+    await testActiveScript(
+      ext5,
+      2,
+      ["dynamic-frame@example.com", "dynamic-top@example.com"],
+      win,
+      withUnifiedExtensionsPanel
+    );
+
     // Navigate same-origin iframe to another page, activeScripts shouldn't run.
     let bc = browser.browsingContext.children[0].children[0];
     SpecialPowers.spawn(bc, [], () => {
@@ -312,6 +349,15 @@ const verifyActionActiveScript = async ({
       withUnifiedExtensionsPanel
     );
     await testActiveScript(ext4, 1, [], win, withUnifiedExtensionsPanel);
+
+    // ext5 dynamic allFrames script also runs in the new navigated page.
+    await testActiveScript(
+      ext5,
+      3,
+      ["dynamic-frame@example.com"],
+      win,
+      withUnifiedExtensionsPanel
+    );
   });
 
   // Register run_at content scripts in reverse order.
@@ -377,12 +423,22 @@ const verifyActionActiveScript = async ({
       withUnifiedExtensionsPanel
     );
 
+    info("ext5 dynamic scripts with activeTab should run when activated.");
+    await testActiveScript(
+      ext5,
+      1,
+      ["dynamic-top@mochi.test:8888"],
+      win,
+      withUnifiedExtensionsPanel
+    );
+
     info("Clicking all buttons again should not run content scripts.");
     await testActiveScript(ext0, 1, [], win, withUnifiedExtensionsPanel);
     await testActiveScript(ext1, 1, [], win, withUnifiedExtensionsPanel);
     await testActiveScript(ext2, 1, [], win, withUnifiedExtensionsPanel);
     await testActiveScript(ext3, 2, [], win, withUnifiedExtensionsPanel);
     await testActiveScript(ext4, 1, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext5, 1, [], win, withUnifiedExtensionsPanel);
   });
 
   await ext0.unload();
@@ -390,6 +446,7 @@ const verifyActionActiveScript = async ({
   await ext2.unload();
   await ext3.unload();
   await ext4.unload();
+  await ext5.unload();
 };
 
 add_task(async function test_action_activeScript() {
