@@ -461,8 +461,9 @@ export var PictureInPicture = {
     let features =
       `${PLAYER_FEATURES},top=${top},left=${left},outerWidth=${width},` +
       `outerHeight=${height}`;
+    let isPrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(parentWin);
 
-    if (lazy.PrivateBrowsingUtils.isWindowPrivate(parentWin)) {
+    if (isPrivate) {
       features += ",private";
     }
 
@@ -484,7 +485,9 @@ export var PictureInPicture = {
 
     pipWindow.windowUtils.setResizeMargin(RESIZE_MARGIN_PX);
 
-    if (Services.appinfo.OS == "WINNT") {
+    // If the window is Private the icon will have already been set when
+    // it was opened.
+    if (Services.appinfo.OS == "WINNT" && !isPrivate) {
       lazy.WindowsUIUtils.setWindowIconNoData(pipWindow);
     }
 
