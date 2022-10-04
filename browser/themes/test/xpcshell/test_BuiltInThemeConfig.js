@@ -3,8 +3,8 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { _applyColorwayConfig, BuiltInThemeConfig } = ChromeUtils.import(
-  "resource:///modules/BuiltInThemeConfig.jsm"
+const { _applyColorwayConfig, BuiltInThemeConfig } = ChromeUtils.importESModule(
+  "resource:///modules/BuiltInThemeConfig.sys.mjs"
 );
 
 add_task(async function test_importConfig() {

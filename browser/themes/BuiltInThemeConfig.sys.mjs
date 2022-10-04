@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["_applyColorwayConfig", "BuiltInThemeConfig"];
-
 /**
  * A Map of themes built in to the browser, alongwith a Map of collections those themes belong to. Params for the objects contained
  * within the map:
@@ -21,7 +17,7 @@ const EXPORTED_SYMBOLS = ["_applyColorwayConfig", "BuiltInThemeConfig"];
  * @param {string} [collection]
  *  The collection id that the theme is a part of. Optional.
  */
-const BuiltInThemeConfig = new Map([
+export const BuiltInThemeConfig = new Map([
   [
     "firefox-compact-light@mozilla.org",
     {
@@ -512,7 +508,7 @@ const ColorwayCollections = [
   },
 ];
 
-function _applyColorwayConfig(collections) {
+export function _applyColorwayConfig(collections) {
   const collectionsSorted = collections
     .map(({ expiry, ...rest }) => ({
       expiry: new Date(expiry),

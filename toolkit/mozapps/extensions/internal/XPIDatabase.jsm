@@ -50,17 +50,17 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   verifyBundleSignedState: "resource://gre/modules/addons/XPIInstall.jsm",
 });
 
-// WARNING: BuiltInThemes.jsm may be provided by the host application (e.g.
+// WARNING: BuiltInThemes.sys.mjs may be provided by the host application (e.g.
 // Firefox), or it might not exist at all. Use with caution, as we don't
-// want things to completely fall if that module can't be loaded.
+// want things to completely fail if that module can't be loaded.
 XPCOMUtils.defineLazyGetter(lazy, "BuiltInThemes", () => {
   try {
-    let { BuiltInThemes } = ChromeUtils.import(
-      "resource:///modules/BuiltInThemes.jsm"
+    let { BuiltInThemes } = ChromeUtils.importESModule(
+      "resource:///modules/BuiltInThemes.sys.mjs"
     );
     return BuiltInThemes;
   } catch (e) {
-    Cu.reportError(`Unable to load BuiltInThemes.jsm: ${e}`);
+    Cu.reportError(`Unable to load BuiltInThemes.sys.mjs: ${e}`);
   }
   return undefined;
 });
