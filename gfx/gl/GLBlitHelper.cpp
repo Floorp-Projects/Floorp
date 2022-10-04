@@ -488,7 +488,7 @@ DrawBlitProg::~DrawBlitProg() {
   gl->fDeleteProgram(mProg);
 }
 
-void DrawBlitProg::Draw(const BaseArgs& args,
+bool DrawBlitProg::Draw(const BaseArgs& args,
                         const YUVArgs* const argsYUV) const {
   const auto& gl = mParent.mGL;
 
@@ -546,6 +546,7 @@ void DrawBlitProg::Draw(const BaseArgs& args,
         default:
           gfxCriticalError()
               << "Bad mType_uColorMatrix: " << gfx::hexa(mType_uColorMatrix);
+          return false;
       }
     }
   }
@@ -581,22 +582,41 @@ void DrawBlitProg::Draw(const BaseArgs& args,
     gl->fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, false, 0, 0);
   }
 
-  gl->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
-
-  if (mParent.mQuadVAO) {
-    gl->fBindVertexArray(oldVAO);
-  } else {
-    if (vaa0Enabled) {
-      gl->fEnableVertexAttribArray(0);
+  const auto restore = MakeScopeExit([&]() {
+    if (mParent.mQuadVAO) {
+      gl->fBindVertexArray(oldVAO);
     } else {
-      gl->fDisableVertexAttribArray(0);
+      if (vaa0Enabled) {
+        gl->fEnableVertexAttribArray(0);
+      } else {
+        gl->fDisableVertexAttribArray(0);
+      }
+      // The current VERTEX_ARRAY_BINDING is not necessarily the same as the
+      // buffer set for vaa0Buffer.
+      const ScopedBindArrayBuffer bindVBO(gl, vaa0Buffer);
+      gl->fVertexAttribPointer(0, vaa0Size, vaa0Type, bool(vaa0Normalized),
+                               vaa0Stride, vaa0Pointer);
     }
-    // The current VERTEX_ARRAY_BINDING is not necessarily the same as the
-    // buffer set for vaa0Buffer.
-    const ScopedBindArrayBuffer bindVBO(gl, vaa0Buffer);
-    gl->fVertexAttribPointer(0, vaa0Size, vaa0Type, bool(vaa0Normalized),
-                             vaa0Stride, vaa0Pointer);
+  });
+
+  {
+    auto errorScope = GLContext::LocalErrorScope(*gl);
+
+    gl->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+
+    const auto err = errorScope.GetError();
+    if (err) {
+      MOZ_ASSERT(err ==
+                 LOCAL_GL_INVALID_OPERATION);  // ANGLE does this if we hand it
+                                               // an invalid share handle.
+      gfxCriticalNote << "glDrawArrays generated "
+                      << GLContext::GLErrorToString(err)
+                      << " in DrawBlitProg::Draw.";
+      return false;
+    }
   }
+
+  return true;
 }
 
 // --
@@ -980,6 +1000,11 @@ bool GLBlitHelper::Blit(const java::GeckoSurfaceTexture::Ref& surfaceTexture,
   const ScopedBindTexture savedTex(mGL, surfaceTexture->GetTexName(),
                                    LOCAL_GL_TEXTURE_EXTERNAL);
   surfaceTexture->UpdateTexImage();
+  const auto scopedRelease = MakeScopeExit([&]() {
+    if (surfaceTexture->IsSingleBuffer()) {
+      surfaceTexture->ReleaseTexImage();
+    }
+  });
   const auto transform3 = Mat3::I();
   const auto srcOrigin = OriginPos::TopLeft;
   const bool yFlip = (srcOrigin != destOrigin);
@@ -987,13 +1012,7 @@ bool GLBlitHelper::Blit(const java::GeckoSurfaceTexture::Ref& surfaceTexture,
       {kFragHeader_TexExt, {kFragSample_OnePlane, kFragConvert_None}});
   const DrawBlitProg::BaseArgs baseArgs = {transform3, yFlip, destSize,
                                            Nothing()};
-  prog->Draw(baseArgs, nullptr);
-
-  if (surfaceTexture->IsSingleBuffer()) {
-    surfaceTexture->ReleaseTexImage();
-  }
-
-  return true;
+  return prog->Draw(baseArgs, nullptr);
 }
 #endif
 
@@ -1129,8 +1148,7 @@ bool GLBlitHelper::BlitPlanarYCbCr(const PlanarYCbCrData& yuvData,
                                            yFlip, destSize, Nothing()};
   const DrawBlitProg::YUVArgs yuvArgs = {
       SubRectMat3(clipRect, uvTexSize, divisors), Some(yuvData.mYUVColorSpace)};
-  prog->Draw(baseArgs, &yuvArgs);
-  return true;
+  return prog->Draw(baseArgs, &yuvArgs);
 }
 
 // -------------------------------------
@@ -1275,8 +1293,7 @@ bool GLBlitHelper::BlitImage(MacIOSurface* const iosurf,
       kFragHeader_Tex2DRect,
       {fragSample, kFragConvert_ColorMatrix},
   });
-  prog->Draw(baseArgs, pYuvArgs);
-  return true;
+  return prog->Draw(baseArgs, pYuvArgs);
 }
 #endif
 
@@ -1315,7 +1332,7 @@ void GLBlitHelper::DrawBlitTextureToFramebuffer(const GLuint srcTex,
   const bool yFlip = false;
   const DrawBlitProg::BaseArgs baseArgs = {texMatrix0, yFlip, destSize,
                                            Nothing()};
-  prog->Draw(baseArgs);
+  (void)prog->Draw(baseArgs);
 }
 
 // -----------------------------------------------------------------------------
@@ -1515,9 +1532,7 @@ bool GLBlitHelper::Blit(DMABufSurface* surface, const gfx::IntSize& destSize,
 
   const auto& prog =
       GetDrawBlitProg({kFragHeader_Tex2D, {fragSample, fragConvert}});
-  prog->Draw(baseArgs, pYuvArgs);
-
-  return true;
+  return prog->Draw(baseArgs, pYuvArgs);
 }
 
 bool GLBlitHelper::BlitImage(layers::DMABUFSurfaceImage* srcImage,
