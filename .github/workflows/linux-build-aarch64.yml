@@ -58,11 +58,9 @@ jobs:
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
-
-        floorp_disp_ver=$(cat browser/config/version_display.txt)
-        mv ./obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2 ./obj-aarch64-unknown-linux-gnu/dist/floorp-${floorp_disp_ver}-linux-aarch64.tar.bz2
+        zip -r dist.zip obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2
     - name: Publish
       uses: actions/upload-artifact@v1
       with:
         name: floorp-linux-aarch64
-        path: /home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2
+        path: dist.zip
