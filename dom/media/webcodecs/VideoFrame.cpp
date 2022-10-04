@@ -17,6 +17,7 @@
 #include "mozilla/ResultVariant.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Tuple.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -131,6 +132,7 @@ class YUVBufferReaderBase {
   const RangedPtr<uint8_t> mPtr;
 };
 
+class I420ABufferReader;
 class I420BufferReader : public YUVBufferReaderBase {
  public:
   I420BufferReader(const RangedPtr<uint8_t>& aPtr, int32_t aWidth,
@@ -148,6 +150,7 @@ class I420BufferReader : public YUVBufferReaderBase {
                   UByteSize().value())
                      .value()];
   }
+  virtual I420ABufferReader* AsI420ABufferReader() { return nullptr; }
 
   const int32_t mStrideU;
   const int32_t mStrideV;
@@ -156,6 +159,30 @@ class I420BufferReader : public YUVBufferReaderBase {
   CheckedInt<size_t> UByteSize() const {
     return CheckedInt<size_t>(CeilingOfHalf(mHeight)) * mStrideU;
   }
+
+  CheckedInt<size_t> VSize() const {
+    return CheckedInt<size_t>(CeilingOfHalf(mHeight)) * mStrideV;
+  }
+};
+
+class I420ABufferReader final : public I420BufferReader {
+ public:
+  I420ABufferReader(const RangedPtr<uint8_t>& aPtr, int32_t aWidth,
+                    int32_t aHeight)
+      : I420BufferReader(aPtr, aWidth, aHeight), mStrideA(aWidth) {
+    MOZ_ASSERT(mStrideA == mStrideY);
+  }
+  virtual ~I420ABufferReader() = default;
+
+  const uint8_t* DataA() const {
+    return &mPtr[(CheckedInt<ptrdiff_t>(YByteSize().value()) +
+                  UByteSize().value() + VSize().value())
+                     .value()];
+  }
+
+  virtual I420ABufferReader* AsI420ABufferReader() override { return this; }
+
+  const int32_t mStrideA;
 };
 
 class NV12BufferReader final : public YUVBufferReaderBase {
@@ -651,25 +678,40 @@ static Result<RefPtr<layers::Image>, nsCString> CreateRGBAImageFromBuffer(
 static Result<RefPtr<layers::Image>, nsCString> CreateYUVImageFromBuffer(
     const VideoFrame::Format& aFormat, const VideoColorSpaceInit& aColorSpace,
     const gfx::IntSize& aSize, const RangedPtr<uint8_t>& aPtr) {
-  if (aFormat.PixelFormat() == VideoPixelFormat::I420) {
-    I420BufferReader reader(aPtr, aSize.Width(), aSize.Height());
+  if (aFormat.PixelFormat() == VideoPixelFormat::I420 ||
+      aFormat.PixelFormat() == VideoPixelFormat::I420A) {
+    UniquePtr<I420BufferReader> reader;
+    if (aFormat.PixelFormat() == VideoPixelFormat::I420) {
+      reader.reset(new I420BufferReader(aPtr, aSize.Width(), aSize.Height()));
+    } else {
+      reader.reset(new I420ABufferReader(aPtr, aSize.Width(), aSize.Height()));
+    }
 
     layers::PlanarYCbCrData data;
-    data.mPictureRect = gfx::IntRect(0, 0, reader.mWidth, reader.mHeight);
+    data.mPictureRect = gfx::IntRect(0, 0, reader->mWidth, reader->mHeight);
 
     // Y plane.
-    data.mYChannel = const_cast<uint8_t*>(reader.DataY());
-    data.mYStride = reader.mStrideY;
+    data.mYChannel = const_cast<uint8_t*>(reader->DataY());
+    data.mYStride = reader->mStrideY;
     data.mYSkip = 0;
     // Cb plane.
-    data.mCbChannel = const_cast<uint8_t*>(reader.DataU());
+    data.mCbChannel = const_cast<uint8_t*>(reader->DataU());
     data.mCbSkip = 0;
     // Cr plane.
-    data.mCrChannel = const_cast<uint8_t*>(reader.DataV());
+    data.mCrChannel = const_cast<uint8_t*>(reader->DataV());
     data.mCbSkip = 0;
+    // A plane.
+    if (aFormat.PixelFormat() == VideoPixelFormat::I420A) {
+      data.mAlpha.emplace();
+      data.mAlpha->mChannel =
+          const_cast<uint8_t*>(reader->AsI420ABufferReader()->DataA());
+      data.mAlpha->mSize = data.mPictureRect.Size();
+      // No values for mDepth and mPremultiplied.
+    }
+
     // CbCr plane vector.
-    MOZ_RELEASE_ASSERT(reader.mStrideU == reader.mStrideV);
-    data.mCbCrStride = reader.mStrideU;
+    MOZ_RELEASE_ASSERT(reader->mStrideU == reader->mStrideV);
+    data.mCbCrStride = reader->mStrideU;
     data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
     // Color settings.
     if (aColorSpace.mFullRange.WasPassed() && aColorSpace.mFullRange.Value()) {
@@ -686,7 +728,9 @@ static Result<RefPtr<layers::Image>, nsCString> CreateYUVImageFromBuffer(
     RefPtr<layers::PlanarYCbCrImage> image =
         new layers::RecyclingPlanarYCbCrImage(new layers::BufferRecycleBin());
     if (!image->CopyData(data)) {
-      return Err(nsCString("Failed to create I420 image"));
+      return Err(nsPrintfCString(
+          "Failed to create I420%s image",
+          (aFormat.PixelFormat() == VideoPixelFormat::I420A ? "A" : "")));
     }
     // Manually cast type to make Result work.
     return RefPtr<layers::Image>(image.forget());
@@ -739,9 +783,9 @@ static Result<RefPtr<layers::Image>, nsCString> CreateImageFromBuffer(
     const gfx::IntSize& aSize, const RangedPtr<uint8_t>& aPtr) {
   switch (aFormat.PixelFormat()) {
     case VideoPixelFormat::I420:
+    case VideoPixelFormat::I420A:
     case VideoPixelFormat::NV12:
       return CreateYUVImageFromBuffer(aFormat, aColorSpace, aSize, aPtr);
-    case VideoPixelFormat::I420A:
     case VideoPixelFormat::I422:
     case VideoPixelFormat::I444:
       // Not yet support for now.
@@ -1588,8 +1632,12 @@ bool VideoFrame::Resource::CopyTo(const Format::Plane& aPlane,
       case Format::Plane::V:
         return copyPlane(mImage->AsPlanarYCbCrImage()->GetData()->mCrChannel);
       case Format::Plane::A:
-        MOZ_ASSERT_UNREACHABLE("invalid plane");
+        MOZ_ASSERT(mFormat.PixelFormat() == VideoPixelFormat::I420A);
+        MOZ_ASSERT(mImage->AsPlanarYCbCrImage()->GetData()->mAlpha);
+        return copyPlane(
+            mImage->AsPlanarYCbCrImage()->GetData()->mAlpha->mChannel);
     }
+    MOZ_ASSERT_UNREACHABLE("invalid plane");
   }
 
   if (mImage->GetFormat() == ImageFormat::NV_IMAGE) {

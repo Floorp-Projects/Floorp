@@ -643,6 +643,14 @@ class AutoLockImage {
   AutoTArray<ImageContainer::OwningImage, 4> mImages;
 };
 
+// This type is currently only used for AVIF and WebCodecs therefore makes some
+// specific assumptions (e.g., Alpha's bpc and stride is equal to Y's one)
+struct PlanarAlphaData {
+  uint8_t* mChannel = nullptr;
+  gfx::IntSize mSize = gfx::IntSize(0, 0);
+  gfx::ColorDepth mDepth = gfx::ColorDepth::COLOR_8;
+  bool mPremultiplied = false;
+};
 struct PlanarYCbCrData {
   // Luminance buffer
   uint8_t* mYChannel = nullptr;
@@ -654,6 +662,8 @@ struct PlanarYCbCrData {
   int32_t mCbCrStride = 0;
   int32_t mCbSkip = 0;
   int32_t mCrSkip = 0;
+  // Alpha buffer and its metadata
+  Maybe<PlanarAlphaData> mAlpha = Nothing();
   // Picture region
   gfx::IntRect mPictureRect = gfx::IntRect(0, 0, 0, 0);
   StereoMode mStereoMode = StereoMode::MONO;
@@ -684,15 +694,6 @@ struct PlanarYCbCrData {
   }
 
   static Maybe<PlanarYCbCrData> From(const SurfaceDescriptorBuffer&);
-};
-
-// This type is currently only used for AVIF and therefore makes some
-// AVIF-specific assumptions (e.g., Alpha's bpc and stride is equal to Y's one)
-struct PlanarAlphaData {
-  uint8_t* mChannel = nullptr;
-  gfx::IntSize mSize = gfx::IntSize(0, 0);
-  gfx::ColorDepth mDepth = gfx::ColorDepth::COLOR_8;
-  bool mPremultiplied = false;
 };
 
 /****** Image subtypes for the different formats ******/

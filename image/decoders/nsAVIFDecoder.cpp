@@ -280,11 +280,10 @@ class AVIFParser {
   Maybe<Mp4parseAvifImage> mAvifImage;
 };
 
-// As well as Maybe<PlanarAlphaData>, add CICP values (either from the BMFF
-// container or the AV1 sequence header) which are used to create the
-// colorspace transform. CICP::MatrixCoefficients is only stored for the sake
-// of telemetry, since the relevant information for YUV -> RGB conversion is
-// stored in mYUVColorSpace.
+// CICP values (either from the BMFF container or the AV1 sequence header) are
+// used to create the colorspace transform. CICP::MatrixCoefficients is only
+// stored for the sake of telemetry, since the relevant information for YUV ->
+// RGB conversion is stored in mYUVColorSpace.
 //
 // There are three potential sources of color information for an AVIF:
 // 1. ICC profile via a ColourInformationBox (colr) defined in [ISOBMFF]
@@ -335,7 +334,6 @@ class AVIFParser {
 // [ITU-T H.273]: Rec. ITU-T H.273 (12/2016)
 //     <https://www.itu.int/rec/T-REC-H.273-201612-I/en>
 struct AVIFDecodedData : layers::PlanarYCbCrData {
-  Maybe<layers::PlanarAlphaData> mAlpha = Nothing();
   CICP::ColourPrimaries mColourPrimaries = CICP::CP_UNSPECIFIED;
   CICP::TransferCharacteristics mTransferCharacteristics = CICP::TC_UNSPECIFIED;
   CICP::MatrixCoefficients mMatrixCoefficients = CICP::MC_UNSPECIFIED;
