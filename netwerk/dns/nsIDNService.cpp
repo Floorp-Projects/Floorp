@@ -15,6 +15,7 @@
 #include "punycode.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/intl/FormatBuffer.h"
@@ -51,7 +52,6 @@ static const char kACEPrefix[] = "xn--";
 
 #define NS_NET_PREF_EXTRAALLOWED "network.IDN.extra_allowed_chars"
 #define NS_NET_PREF_EXTRABLOCKED "network.IDN.extra_blocked_chars"
-#define NS_NET_PREF_SHOWPUNYCODE "network.IDN_show_punycode"
 #define NS_NET_PREF_IDNRESTRICTION "network.IDN.restriction_profile"
 
 static inline bool isOnlySafeChars(const nsString& in,
@@ -80,7 +80,6 @@ NS_IMPL_ISUPPORTS(nsIDNService, nsIIDNService, nsISupportsWeakReference)
 static const char* gCallbackPrefs[] = {
     NS_NET_PREF_EXTRAALLOWED,
     NS_NET_PREF_EXTRABLOCKED,
-    NS_NET_PREF_SHOWPUNYCODE,
     NS_NET_PREF_IDNRESTRICTION,
     nullptr,
 };
@@ -105,12 +104,6 @@ void nsIDNService::prefsChanged(const char* pref) {
   }
   if (pref && nsLiteralCString(NS_NET_PREF_EXTRABLOCKED).Equals(pref)) {
     InitializeBlocklist(mIDNBlocklist);
-  }
-  if (!pref || nsLiteralCString(NS_NET_PREF_SHOWPUNYCODE).Equals(pref)) {
-    bool val;
-    if (NS_SUCCEEDED(Preferences::GetBool(NS_NET_PREF_SHOWPUNYCODE, &val))) {
-      mShowPunycode = val;
-    }
   }
   if (!pref || nsLiteralCString(NS_NET_PREF_IDNRESTRICTION).Equals(pref)) {
     nsAutoCString profile;
@@ -436,7 +429,7 @@ NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(
     _retval = input;
     ToLowerCase(_retval);
 
-    if (isACE && !mShowPunycode) {
+    if (isACE && !StaticPrefs::network_IDN_show_punycode()) {
       // ACEtoUTF8() can't fail, but might return the original ACE string
       nsAutoCString temp(_retval);
       // Convert from ACE to UTF8 only those labels which are considered safe
@@ -464,7 +457,7 @@ NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(
       return rv;
     }
 
-    if (mShowPunycode &&
+    if (StaticPrefs::network_IDN_show_punycode() &&
         NS_SUCCEEDED(UTF8toACE(_retval, _retval, eStringPrepIgnoreErrors))) {
       *_isASCII = true;
       return NS_OK;
