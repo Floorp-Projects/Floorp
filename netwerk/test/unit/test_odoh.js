@@ -267,3 +267,29 @@ add_task(test_ipv4_trr_fallback);
 add_task(test_no_retry_without_doh);
 
 add_task(test_connection_reuse_and_cycling).skip(); // Bug 1742743
+
+add_task(async function testODoHConfigNotAvailableInMode3() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref("network.trr.uri", "");
+
+  await ODoHConfigTestHTTP("https://failed_odoh_config.com", false);
+
+  // In mode 3, the DNS lookup should fail.
+  let { inStatus } = await new TRRDNSListener("test.example.com", {
+    expectedSuccess: false,
+  });
+
+  Assert.equal(inStatus, Cr.NS_ERROR_UNKNOWN_HOST);
+});
+
+add_task(async function testODoHConfigNotAvailableInMode2() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 2);
+  Services.prefs.setCharPref("network.trr.uri", "");
+
+  await ODoHConfigTestHTTP("https://failed_odoh_config_1.com", false);
+
+  // In mode 2, we fallback to native.
+  await new TRRDNSListener("test.example.com", "127.0.0.1");
+});

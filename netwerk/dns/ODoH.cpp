@@ -26,9 +26,15 @@ ODoH::Run() {
   }
 
   if (!gODoHService->ODoHConfigs()) {
-    LOG(("ODoH::Run ODoHConfigs is not available\n"));
-    if (NS_SUCCEEDED(gODoHService->UpdateODoHConfig())) {
+    LOG((
+        "ODoH::Run ODoHConfigs is not available mTriedDownloadODoHConfigs=%d\n",
+        mTriedDownloadODoHConfigs));
+    // Make this lookup fail if we don't have a valid ODoHConfig and we already
+    // tried before.
+    if (NS_SUCCEEDED(gODoHService->UpdateODoHConfig()) &&
+        !mTriedDownloadODoHConfigs) {
       gODoHService->AppendPendingODoHRequest(this);
+      mTriedDownloadODoHConfigs = true;
     } else {
       RecordReason(TRRSkippedReason::ODOH_UPDATE_KEY_FAILED);
       FailData(NS_ERROR_FAILURE);
