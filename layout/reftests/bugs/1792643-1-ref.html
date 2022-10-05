@@ -1,0 +1,36 @@
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Test for bug 1792643</title>
+  <style>
+    table {
+      width: 500px;
+    }
+
+    th {
+      background-color: green;
+    }
+
+    div {
+      width: 300px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <div>
+    <table>
+      <colgroup></colgroup>
+      <tr style="filter: hue-rotate(0);">
+        <th>foo</th>
+      </tr>
+      <tr style="will-change: transform;">
+        <th>bar</th>
+      </tr>
+    </table>
+  </div>
+</body>
+
+</html>
