@@ -210,9 +210,7 @@ ToolbarKeyboardNavigator = {
           let stopToolbar = allStops[earlierVisibleStopIndex].closest(
             "toolbar"
           );
-          if (
-            window.windowUtils.getBoundsWithoutFlushing(stopToolbar).height > 0
-          ) {
+          if (!stopToolbar.collapsed) {
             break;
           }
           earlierVisibleStopIndex--;
