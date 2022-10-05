@@ -82,7 +82,7 @@ class SitePermsAddonWrapper {
 
   get name() {
     // TODO: Localize this string (See Bug 1790313).
-    return `Site permissions for ${this.principal.host}`;
+    return `Site Permissions for ${this.principal.host}`;
   }
 
   get creator() {}
