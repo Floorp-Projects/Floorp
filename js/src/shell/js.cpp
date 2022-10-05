@@ -5044,11 +5044,13 @@ static bool InstantiateModuleStencilXDR(JSContext* cx, uint32_t argc,
     return false;
   }
   if (!succeeded) {
+    ec.clearAutoReport();
     JS_ReportErrorASCII(cx, "Decoding failure");
     return false;
   }
 
   if (!stencil.isModule()) {
+    ec.clearAutoReport();
     JS_ReportErrorASCII(cx,
                         "instantiateModuleStencilXDR: Module stencil expected");
     return false;
@@ -5532,6 +5534,7 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
             return false;
           }
           if (!stencil) {
+            ec.clearAutoReport();
             JS_ReportErrorASCII(cx, "SmooshMonkey failed to parse");
             return false;
           }
@@ -5680,14 +5683,14 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   bool succeeded = parser.parse();
-  if (cx->isExceptionPending()) {
+  if (ec.hadErrors()) {
     return false;
   }
 
   if (!succeeded && !parser.hadAbortedSyntaxParse()) {
     // If no exception is posted, either there was an OOM or a language
     // feature unhandled by the syntax parser was encountered.
-    MOZ_ASSERT(cx->runtime()->hadOutOfMemory);
+    MOZ_ASSERT(ec.hadOutOfMemory());
     return false;
   }
 
