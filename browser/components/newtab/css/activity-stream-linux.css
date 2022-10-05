@@ -3531,8 +3531,7 @@ main.has-snippet {
   opacity: 1;
 }
 .ds-image img,
-.ds-image .placeholder-image,
-.ds-image .broken-image {
+.ds-image .placeholder-image {
   background-color: var(--newtab-element-secondary-color);
   position: absolute;
   top: 0;
