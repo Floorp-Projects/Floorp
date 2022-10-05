@@ -112,6 +112,9 @@ pref("floorp.browser.sidebar2.customurl16.usercontext", 0);
 pref("floorp.browser.sidebar2.customurl17.usercontext", 0);
 pref("floorp.browser.sidebar2.customurl18.usercontext", 0);
 pref("floorp.browser.sidebar2.customurl19.usercontext", 0);
+pref("floorp.browser.sidebar2.width.mode0", 700);
+pref("floorp.browser.sidebar2.width.mode3",	415);
+pref("floorp.browser.sidebar2.width.mode4",	300);
 
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
