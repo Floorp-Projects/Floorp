@@ -4,7 +4,9 @@
 
 package org.mozilla.fenix.library.history
 
+import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.selection.SelectionInteractor
+import org.mozilla.fenix.GleanMetrics.History as GleanHistory
 
 /**
  * Interface for the HistoryInteractor. This interface is implemented by objects that want
@@ -86,6 +88,7 @@ class DefaultHistoryInteractor(
     }
 
     override fun onSearch() {
+        GleanHistory.searchIconTapped.record(NoExtras())
         historyController.handleSearch()
     }
 

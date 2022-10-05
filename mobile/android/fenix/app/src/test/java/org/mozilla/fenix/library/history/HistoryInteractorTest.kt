@@ -7,13 +7,25 @@ package org.mozilla.fenix.library.history
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verifyAll
+import mozilla.components.service.glean.testing.GleanTestRule
+import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.History as GleanHistory
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
+@RunWith(FenixRobolectricTestRunner::class) // For GleanTestRule
 class HistoryInteractorTest {
     private val historyItem = History.Regular(0, "title", "url", 0.toLong(), HistoryItemTimeGroup.timeGroupForTimestamp(0))
     val controller: HistoryController = mockk(relaxed = true)
     val interactor = DefaultHistoryInteractor(controller)
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     @Test
     fun onOpen() {
@@ -67,11 +79,13 @@ class HistoryInteractorTest {
 
     @Test
     fun onSearch() {
+        assertNull(GleanHistory.searchIconTapped.testGetValue())
         interactor.onSearch()
 
         verifyAll {
             controller.handleSearch()
         }
+        assertNotNull(GleanHistory.searchIconTapped.testGetValue())
     }
 
     @Test

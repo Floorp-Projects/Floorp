@@ -287,7 +287,6 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
             true
         }
         R.id.history_search -> {
-            GleanHistory.searchIconTapped.record(NoExtras())
             historyInteractor.onSearch()
             true
         }
