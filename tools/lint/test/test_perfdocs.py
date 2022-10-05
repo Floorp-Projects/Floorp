@@ -83,6 +83,22 @@ suites:
 """
 
 
+SAMPLE_METRICS_CONFIG = """
+name: raptor
+manifest: "None"{}
+static-only: False
+suites:
+    suite:
+        description: "Performance tests from the 'suite' folder."{}
+        tests:
+            Example: "Performance test Example from another_suite."
+    another_suite:
+        description: "Performance tests from the 'another_suite' folder."
+        tests:
+            Example: "Performance test Example from another_suite."
+"""
+
+
 SAMPLE_INI = """
 [Example]
 test_url = Example_url
@@ -262,26 +278,27 @@ def test_perfdocs_verifier_validate_yaml_pass(
     assert valid
 
 
-@mock.patch("perfdocs.verifier.jsonschema")
 @mock.patch("perfdocs.logger.PerfDocLogger")
-def test_perfdocs_verifier_invalid_yaml(
-    logger, jsonschema, structured_logger, perfdocs_sample
-):
+def test_perfdocs_verifier_invalid_yaml(logger, structured_logger, perfdocs_sample):
     top_dir = perfdocs_sample["top_dir"]
     yaml_path = perfdocs_sample["config"]
     setup_sample_logger(logger, structured_logger, top_dir)
 
     from perfdocs.verifier import Verifier
 
-    jsonschema.validate = mock.Mock(side_effect=Exception("Schema/ValidationError"))
     verifier = Verifier("top_dir")
+    with open(yaml_path, "r", newline="\n") as f:
+        lines = f.readlines()
+        print(lines)
+    with open(yaml_path, "w", newline="\n") as f:
+        f.write("\n".join(lines[2:]))
     valid = verifier.validate_yaml(yaml_path)
 
-    expected = ("YAML ValidationError: Schema/ValidationError", yaml_path)
+    expected = ("YAML ValidationError: 'name' is a required property\n", yaml_path)
     args, _ = logger.warning.call_args
 
     assert logger.warning.call_count == 1
-    assert args == expected
+    assert expected[0] in args[0]
     assert not valid
 
 
@@ -453,15 +470,251 @@ def test_perfdocs_verifier_file_invalidation(
 
     from perfdocs.verifier import Verifier
 
-    Verifier.validate_yaml = mock.Mock(return_value=False)
-    verifier = Verifier(top_dir)
-    with pytest.raises(Exception):
-        verifier.validate_tree()
+    with mock.patch("perfdocs.verifier.Verifier.validate_yaml", return_value=False):
+        verifier = Verifier(top_dir)
+        with pytest.raises(Exception):
+            verifier.validate_tree()
 
     # Check if "File validation error" log is called
     # and Called with a log inside perfdocs_tree().
     assert logger.log.call_count == 2
     assert len(logger.mock_calls) == 2
+
+
+@pytest.mark.parametrize(
+    "manifest, metric_definitions, expected",
+    [
+        [
+            SAMPLE_INI,
+            """
+metrics:
+    "FirstPaint":
+        aliases:
+            - fcp
+        description: "Example" """,
+            1,
+        ],
+        [
+            SAMPLE_METRICS_INI,
+            """
+metrics:
+    FirstPaint:
+        aliases:
+            - fcp
+        description: Example
+    SpeedIndex:
+        aliases:
+            - speedindex
+            - si
+        description: Example
+        """,
+            2,
+        ],
+    ],
+)
+@mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_verifier_nonexistent_documented_metrics(
+    logger, structured_logger, perfdocs_sample, manifest, metric_definitions, expected
+):
+    top_dir = perfdocs_sample["top_dir"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    with open(perfdocs_sample["config"], "w", newline="\n") as f:
+        f.write(SAMPLE_METRICS_CONFIG.format(metric_definitions, ""))
+    with open(perfdocs_sample["manifest"]["path"], "w", newline="\n") as f:
+        f.write(manifest)
+
+    sample_gatherer_result = {
+        "suite": {"Example": {}},
+        "another_suite": {"Example": {}},
+    }
+
+    from perfdocs.verifier import Verifier
+
+    with mock.patch("perfdocs.framework_gatherers.RaptorGatherer.get_test_list") as m:
+        m.return_value = sample_gatherer_result
+        verifier = Verifier(top_dir)
+        verifier.validate_tree()
+
+    assert len(logger.warning.call_args_list) == expected
+    for (args, _) in logger.warning.call_args_list:
+        assert "Cannot find documented metric" in args[0]
+        assert "being used" in args[0]
+
+
+@pytest.mark.parametrize(
+    "manifest, metric_definitions",
+    [
+        [
+            SAMPLE_INI,
+            """
+metrics:
+    "FirstPaint":
+        aliases:
+            - fcp
+        description: "Example" """,
+        ],
+        [
+            SAMPLE_METRICS_INI,
+            """
+metrics:
+    SpeedIndex:
+        aliases:
+            - speedindex
+            - si
+        description: Example
+        """,
+        ],
+    ],
+)
+@mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_verifier_undocumented_metrics(
+    logger, structured_logger, perfdocs_sample, manifest, metric_definitions
+):
+    top_dir = perfdocs_sample["top_dir"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    with open(perfdocs_sample["config"], "w", newline="\n") as f:
+        f.write(SAMPLE_METRICS_CONFIG.format(metric_definitions, ""))
+    with open(perfdocs_sample["manifest"]["path"], "w", newline="\n") as f:
+        f.write(manifest)
+
+    sample_gatherer_result = {
+        "suite": {"Example": {"metrics": ["fcp", "SpeedIndex"]}},
+        "another_suite": {"Example": {}},
+    }
+
+    from perfdocs.verifier import Verifier
+
+    with mock.patch("perfdocs.framework_gatherers.RaptorGatherer.get_test_list") as m:
+        m.return_value = sample_gatherer_result
+        verifier = Verifier(top_dir)
+        verifier.validate_tree()
+
+    assert len(logger.warning.call_args_list) == 1
+    for (args, _) in logger.warning.call_args_list:
+        assert "Missing description for the metric" in args[0]
+
+
+@pytest.mark.parametrize(
+    "manifest, metric_definitions, expected",
+    [
+        [
+            SAMPLE_INI,
+            """
+metrics:
+    "FirstPaint":
+        aliases:
+            - fcp
+            - SpeedIndex
+        description: "Example" """,
+            3,
+        ],
+        [
+            SAMPLE_METRICS_INI,
+            """
+metrics:
+    FirstPaint:
+        aliases:
+            - fcp
+        description: Example
+    SpeedIndex:
+        aliases:
+            - speedindex
+            - si
+        description: Example
+        """,
+            5,
+        ],
+    ],
+)
+@mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_verifier_duplicate_metrics(
+    logger, structured_logger, perfdocs_sample, manifest, metric_definitions, expected
+):
+    top_dir = perfdocs_sample["top_dir"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    with open(perfdocs_sample["config"], "w", newline="\n") as f:
+        indented_defs = "\n".join(
+            [(" " * 8) + metric_line for metric_line in metric_definitions.split("\n")]
+        )
+        f.write(SAMPLE_METRICS_CONFIG.format(metric_definitions, indented_defs))
+    with open(perfdocs_sample["manifest"]["path"], "w", newline="\n") as f:
+        f.write(manifest)
+
+    sample_gatherer_result = {
+        "suite": {"Example": {"metrics": ["fcp", "SpeedIndex"]}},
+        "another_suite": {"Example": {}},
+    }
+
+    from perfdocs.verifier import Verifier
+
+    with mock.patch("perfdocs.framework_gatherers.RaptorGatherer.get_test_list") as m:
+        m.return_value = sample_gatherer_result
+        verifier = Verifier(top_dir)
+        verifier.validate_tree()
+
+    assert len(logger.warning.call_args_list) == expected
+    for (args, _) in logger.warning.call_args_list:
+        assert "Duplicate definitions found for " in args[0]
+
+
+@pytest.mark.parametrize(
+    "manifest, metric_definitions",
+    [
+        [
+            SAMPLE_INI,
+            """
+metrics:
+    "FirstPaint":
+        aliases:
+            - fcp
+            - SpeedIndex
+        description: "Example" """,
+        ],
+        [
+            SAMPLE_METRICS_INI,
+            """
+metrics:
+    FirstPaint:
+        aliases:
+            - fcp
+        description: Example
+    SpeedIndex:
+        aliases:
+            - speedindex
+            - si
+        description: Example
+        """,
+        ],
+    ],
+)
+@mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_verifier_valid_metrics(
+    logger, structured_logger, perfdocs_sample, manifest, metric_definitions
+):
+    top_dir = perfdocs_sample["top_dir"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    with open(perfdocs_sample["config"], "w", newline="\n") as f:
+        f.write(SAMPLE_METRICS_CONFIG.format(metric_definitions, ""))
+    with open(perfdocs_sample["manifest"]["path"], "w", newline="\n") as f:
+        f.write(manifest)
+
+    sample_gatherer_result = {
+        "suite": {"Example": {"metrics": ["fcp", "SpeedIndex"]}},
+        "another_suite": {"Example": {}},
+    }
+
+    from perfdocs.verifier import Verifier
+
+    with mock.patch("perfdocs.framework_gatherers.RaptorGatherer.get_test_list") as m:
+        m.return_value = sample_gatherer_result
+        verifier = Verifier(top_dir)
+        verifier.validate_tree()
+
+    assert len(logger.warning.call_args_list) == 0
 
 
 @mock.patch("perfdocs.logger.PerfDocLogger")
@@ -490,7 +743,7 @@ def test_perfdocs_framework_gatherers(logger, structured_logger, perfdocs_sample
             fg._manifest_path = perfdocs_sample["manifest"]["path"]
             fg._get_subtests_from_ini = mock.Mock()
             fg._get_subtests_from_ini.return_value = {
-                "Example": perfdocs_sample["manifest"]
+                "Example": perfdocs_sample["manifest"],
             }
 
         if framework == "talos":
