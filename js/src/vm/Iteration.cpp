@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <new>
 
+#include "jsapi.h"
 #include "jstypes.h"
 
 #include "builtin/Array.h"
