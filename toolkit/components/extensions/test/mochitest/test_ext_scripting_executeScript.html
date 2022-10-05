@@ -99,6 +99,19 @@ add_task(async function test_executeScript_params_validation() {
           },
           expectedError: "Invalid frame IDs: [1, 2].",
         },
+        {
+          title: "throw non-structurally cloneable data in all frames",
+          executeScriptParams: {
+            target: {
+              tabId,
+              allFrames: true,
+            },
+            func: () => {
+              throw window;
+            },
+          },
+          expectedError: /Script '<anonymous code>' result is non-structured-clonable data/,
+        },
       ];
 
       for (const { title, executeScriptParams, expectedError } of TEST_CASES) {
@@ -1149,25 +1162,6 @@ add_task(async function test_executeScript_allFrames() {
             },
           ],
         },
-        {
-          title: "allFrames and runtime errors",
-          scriptingParams: {
-            target: { tabId, allFrames: true },
-            func: () => {
-              throw new Error(`Thrown at ${location.pathname.split("/").pop()}`);
-            },
-          },
-          expectedResults: [
-            {
-              frameId: frameIds[0],
-              error: { message: "Thrown at file_contains_iframe.html" },
-            },
-            {
-              frameId: frameIds[1],
-              error: { message: "Thrown at file_contains_img.html" },
-            },
-          ],
-        },
       ];
 
       for (const { title, scriptingParams, expectedResults } of TEST_CASES) {
@@ -1176,11 +1170,243 @@ add_task(async function test_executeScript_allFrames() {
         // the same order.
         results.sort((a, b) => a.frameId - b.frameId);
 
-        browser.test.assertEq(
-          JSON.stringify(expectedResults),
-          JSON.stringify(results),
+        browser.test.assertDeepEq(
+          expectedResults,
+          results,
           `${title} - got expected results`
         );
+
+        // Make sure the `error` prop is never set.
+        for (const result of results) {
+          browser.test.assertFalse(
+            "error" in result,
+            `${title} - expected error property to be unset`
+          );
+        }
+      }
+
+      browser.test.notifyPass("execute-script");
+    },
+  });
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_contains_iframe.html",
+    true
+  );
+
+  await extension.startup();
+  await extension.awaitFinish("execute-script");
+  await extension.unload();
+
+  await AppTestDelegate.removeTab(window, tab);
+});
+
+add_task(async function test_executeScript_runtime_errors() {
+  let extension = makeExtension({
+    manifest: {
+      permissions: ["scripting", "webNavigation"],
+    },
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      const tabId = tabs[0].id;
+      const frames = await browser.webNavigation.getAllFrames({ tabId });
+      // 1. Top-level frame that loads `file_contains_iframe.html`
+      // 2. Frame that loads `file_contains_img.html`
+      browser.test.assertEq(2, frames.length, "expected 2 frames");
+
+      const TEST_CASES = [
+        {
+          title: "reference error",
+          scriptingParams: {
+            target: { tabId },
+            func: () => {
+              // We do not define `e` on purpose.
+              // eslint-disable-next-line no-undef
+              return String(e);
+            },
+          },
+          expectedErrors: [
+            { type: "Error", stringRepr: "ReferenceError: e is not defined" },
+          ],
+        },
+        {
+          title: "eval error",
+          scriptingParams: {
+            target: { tabId },
+            func: () => {
+              // We use `eval()` on purpose.
+              // eslint-disable-next-line no-eval
+              eval("");
+            },
+          },
+          expectedErrors: [
+            { type: "Error", stringRepr: "EvalError: call to eval() blocked by CSP" },
+          ],
+        },
+        {
+          title: "errors thrown in allFrames",
+          scriptingParams: {
+            target: { tabId, allFrames: true },
+            func: () => {
+              throw new Error(`Thrown at ${location.pathname.split("/").pop()}`);
+            },
+          },
+          expectedErrors: [
+            { type: "Error", stringRepr: "Error: Thrown at file_contains_iframe.html" },
+            { type: "Error", stringRepr: "Error: Thrown at file_contains_img.html" },
+          ],
+        },
+        {
+          title: "custom error",
+          scriptingParams: {
+            target: { tabId },
+            func: () => {
+              class CustomError extends Error {
+                constructor(message) {
+                  super(message);
+
+                  this.name = 'CustomError';
+                }
+              }
+
+              throw new CustomError("a custom error message");
+            },
+          },
+          // See Bug 1556604 for why a custom (derived) error looks like a
+          // normal error object after cloning.
+          expectedErrors: [
+            { type: "Error", stringRepr: "Error: a custom error message" },
+          ],
+        },
+        {
+          title: "promise rejection with a string value",
+          scriptingParams: {
+            target: { tabId },
+            func: () => {
+              // eslint-disable-next-line no-throw-literal
+              throw 'an error message';
+            },
+          },
+          expectedErrors: [
+            { type: "String", stringRepr: "an error message" },
+          ],
+        },
+        {
+          title: "promise rejection with an error",
+          scriptingParams: {
+            target: { tabId },
+            func: () => {
+              throw new Error('ooops');
+            },
+          },
+          expectedErrors: [
+            { type: "Error", stringRepr: "Error: ooops" },
+          ],
+        },
+        {
+          title: "promise rejection with null",
+          scriptingParams: {
+            target: { tabId },
+            func: () => {
+              throw null; // eslint-disable-line no-throw-literal
+            },
+          },
+          expectedErrors: [
+            // This means we would receive `error: null`.
+            { type: "Null", stringRepr: "null" },
+          ],
+        },
+        {
+          title: "promise rejection with undefined",
+          scriptingParams: {
+            target: { tabId },
+            func: () => {
+              return new Promise((resolve, reject) => {
+                reject(undefined);
+              });
+            },
+          },
+          expectedErrors: [
+            // This means we would receive `error: undefined`.
+            { type: "Undefined", stringRepr: "undefined" },
+          ],
+        },
+        {
+          title: "promise rejection with empty string",
+          scriptingParams: {
+            target: { tabId },
+            func: () => {
+              throw ""; // eslint-disable-line no-throw-literal
+            },
+          },
+          expectedErrors: [
+            { type: "String", stringRepr: "" },
+          ],
+        },
+        {
+          title: "promise rejection with zero",
+          scriptingParams: {
+            target: { tabId },
+            func: () => {
+              throw 0; // eslint-disable-line no-throw-literal
+            },
+          },
+          expectedErrors: [
+            { type: "Number", stringRepr: "0" },
+          ],
+        },
+        {
+          title: "promise rejection with false",
+          scriptingParams: {
+            target: { tabId },
+            func: () => {
+              throw false; // eslint-disable-line no-throw-literal
+            },
+          },
+          expectedErrors: [
+            { type: "Boolean", stringRepr: "false" },
+          ],
+        },
+      ];
+
+      for (const { title, scriptingParams, expectedErrors } of TEST_CASES) {
+        const results = await browser.scripting.executeScript(scriptingParams);
+        // Sort injection results by frameId to always assert the results in
+        // the same order.
+        results.sort((a, b) => a.frameId - b.frameId);
+
+        browser.test.assertEq(
+          expectedErrors.length,
+          results.length,
+          `expected ${expectedErrors.length} results`
+        );
+
+        for (const [i, { type, stringRepr }] of expectedErrors.entries()) {
+          browser.test.assertTrue(
+            "error" in results[i],
+            `${title} - expected error property to be set`
+          );
+          browser.test.assertFalse(
+            "result" in results[i],
+            `${title} - expected result property to be unset`
+          );
+
+          const { frameId, error } = results[i];
+
+          browser.test.assertEq(
+            `[object ${type}]`,
+            Object.prototype.toString.call(error),
+            `${title} - expected instance of ${type} - ${frameId}`
+          );
+          browser.test.assertEq(
+            stringRepr,
+            String(error),
+            `${title} - got expected errors - ${frameId}`
+          );
+        }
       }
 
       browser.test.notifyPass("execute-script");
