@@ -906,7 +906,7 @@ class Chrome(ChromeChromiumBase):
         """chromedriver.storage.googleapis.com has a different filename for M1 binary,
         while the snapshot URL has a different directory but the same filename."""
         if self.platform == "Mac" and uname.machine == "arm64":
-            return "mac64_m1"
+            return "mac_arm64"
         return self._chromedriver_platform_string
 
     def _get_webdriver_url(self, version, revision=None):
