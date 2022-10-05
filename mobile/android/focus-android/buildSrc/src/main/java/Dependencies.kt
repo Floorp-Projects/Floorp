@@ -5,8 +5,8 @@
 object Versions {
     const val compose_version = "1.2.1"
     const val compose_compiler = "1.3.0"
-    const val leakcanary = "2.8.1"
-    const val sentry = "5.7.3"
+    const val leakcanary = "2.9.1"
+    const val sentry = "6.4.2"
 
     object AndroidX {
         const val activity_compose = "1.3.1"
@@ -37,7 +37,7 @@ object Versions {
 
     object Kotlin {
         const val version = "1.7.10"
-        const val coroutines = "1.6.0"
+        const val coroutines = "1.6.4"
     }
 
     object Gradle {
@@ -46,14 +46,14 @@ object Versions {
     }
 
     object Test {
-        const val robolectric = "4.8.1"
-        const val mockito = "3.11.0"
+        const val robolectric = "4.9"
+        const val mockito = "3.12.4"
         const val androidx_work = "2.7.1"
         const val junit = "5.8.2"
     }
 
     object Adjust {
-        const val adjust = "4.30.1"
+        const val adjust = "4.32.0"
         const val install_referrer = "2.2"
     }
 }

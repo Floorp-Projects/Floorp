@@ -4,7 +4,7 @@ import org.mozilla.focus.gradle.tasks.GithubDetailsTask
 
 buildscript {
     ext.espresso_version = '3.4.0'
-    ext.jna_version = "5.8.0"
+    ext.jna_version = "5.12.1"
     // Pinning the last working version of the service-telemetry component until we decide
     // what we want to do with telemetry in the app.
     ext.mozilla_components_version_telemetry = '57.0.9'
