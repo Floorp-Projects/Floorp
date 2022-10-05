@@ -6,6 +6,11 @@
 
 /* Scroll buttons */
 
+.menupopup-arrowscrollbox {
+  min-height: 0;
+  min-width: 0;
+}
+
 /* Hide arrow buttons when there's nothing to scroll in that direction */
 .menupopup-arrowscrollbox[scrolledtostart="true"]::part(scrollbutton-up),
 .menupopup-arrowscrollbox[scrolledtoend="true"]::part(scrollbutton-down) {
@@ -32,5 +37,5 @@
    * scrollbox so that nothing is shown behind the arrow button even if the
    * button is transparent.
    */
-  overflow: hidden;
+  overflow: clip;
 }
