@@ -31,7 +31,6 @@ pref("update.id.floorp", "linux");
 pref("floorp.browser.UserAgent", 0);
 
 //ブラウザーUIのカスタマイズ設定
-pref("floorp.hide.tabbrowser-tab.enable", false); //水平タブ削除
 pref("floorp.optimized.msbutton.ope", false); //サイドボタン付きマウス操作にブラウザーを最適化
 pref("floorp.optimized.verticaltab", false); //ツリー型垂直タブ等に最適化。8.7.2 からフォーカスした際の動作は別に
 pref("floorp.horizontal.tab.position.shift", false); //水平タブ位置移動
@@ -66,11 +65,6 @@ pref("privacy.restrict3rdpartystorage.rollout.enabledByDefault", true);
 pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
 //新しいタブの背景の設定
 pref("browser.newtabpage.activity-stream.floorp.background.type", 1);
-
-pref("floorp.memory.free.button", true);
-pref("floorp.entable.deepl.translate", false);
-pref("floorp.multitab.bottommode", false);
-
 
 //max is 20
 pref("floorp.browser.sidebar.right", true);// サイドバーの右側を表示
@@ -159,10 +153,29 @@ pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl16", true);
 pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl17", true);
 pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl18", true);
 pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl19", true);
-pref("services.sync.prefs.sync.floorp.optimized.msbutton.ope", true); //サイドボタン付きマウス操作にブラウザーを最適化
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl0.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl1.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl2.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl3.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl4.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl5.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl6.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl7.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl8.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl9.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl10.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl11.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl12.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl13.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl14.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl15.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl16.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl17.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl18.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl19.usercontext", true);
 pref("services.sync.prefs.sync.floorp.optimized.verticaltab", true); //ツリー型垂直タブ等に最適化。8.7.2 からフォーカスした際の動作は別に
-pref("services.sync.prefs.sync.floorp.browser.user.interface", true);// Floorp 10 系以降のインターフェーステーマ設定
 pref("services.sync.prefs.sync.floorp.browser.tabbar.settings", true);// タブの設定
+pref("services.sync.prefs.sync.floorp.material.effect.enable", false);//マテリアルモードの実装
 
 pref("toolkit.legacyUserProfileCustomizations.stylesheets" ,true);
 
