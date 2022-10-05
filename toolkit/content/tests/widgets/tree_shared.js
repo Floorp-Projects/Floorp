@@ -191,7 +191,7 @@ async function testtag_tree_treecolpicker(tree, expectedColumns, testid) {
       treecolpickerMenupopup.addEventListener("popupshown", resolve, {
         once: true,
       });
-      treecolpicker.querySelector("button").click();
+      treecolpicker.click();
     });
     let menuitems = treecolpicker.querySelectorAll("menuitem");
     // Ignore the last "Restore Column Order" menu in the count:

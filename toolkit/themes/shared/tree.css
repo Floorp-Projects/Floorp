@@ -27,7 +27,7 @@ treechildren::-moz-tree-row {
 
 treechildren::-moz-tree-row,
 treecol:not([hideheader="true"]),
-.tree-columnpicker-button {
+treecolpicker {
   min-height: max(24px, 1.3em);
 }
 
@@ -118,19 +118,22 @@ treechildren::-moz-tree-drop-feedback {
 /* ::::: tree columns ::::: */
 
 treecol,
-.tree-columnpicker-button {
+treecolpicker {
   appearance: auto;
   -moz-default-appearance: treeheadercell;
   -moz-box-align: center;
   -moz-box-pack: center;
   color: -moz-ColHeaderText;
   padding: 0 4px;
-  margin: 0;
 }
 
 treecol:where(:hover),
-.tree-columnpicker-button:where(:hover) {
+treecolpicker:where(:hover) {
   color: -moz-ColHeaderHoverText;
+}
+
+.treecol-image {
+  padding: 0 1px;
 }
 
 .treecol-text {
@@ -157,16 +160,10 @@ treechildren::-moz-tree-column(insertafter) {
 
 /* ::::: column picker :::::  */
 
-.tree-columnpicker-button {
+.tree-columnpicker-icon {
   list-style-image: url("chrome://global/skin/icons/columnpicker.svg");
   -moz-context-properties: fill;
   fill: currentColor;
-  min-width: 0;
-  padding: 1px 0;
-}
-
-.tree-columnpicker-button .button-text {
-  display: none;
 }
 
 /* ::::: tree icons ::::: */
@@ -250,7 +247,7 @@ html|input.tree-input {
 
   @media (prefers-color-scheme: dark) {
     treecol,
-    .tree-columnpicker-button {
+    treecolpicker {
       appearance: none;
       background-color: ButtonFace;
       color: ButtonText;
@@ -260,13 +257,11 @@ html|input.tree-input {
     treecol:where([ordinal="1"]) {
       border-inline-start: none;
     }
-    treecol:where(:hover),
-    .tree-columnpicker-button:where(:hover) {
+    :is(treecol, treecolpicker):where(:hover) {
       background-color: -moz-ButtonHoverFace;
       color: -moz-ButtonHoverText;
     }
-    treecol:where(:hover:active),
-    .tree-columnpicker-button:where(:hover:active) {
+    :is(treecol, treecolpicker):where(:hover:active) {
       background-color: -moz-ButtonActiveFace;
       color: -moz-ButtonActiveText;
     }
@@ -274,7 +269,7 @@ html|input.tree-input {
 
   @media (-moz-windows-classic) {
     treecol,
-    .tree-columnpicker-button {
+    treecolpicker {
       border: 1px solid;
       border-top-color: ThreeDHighlight;
       border-inline-end-color: ThreeDShadow;
@@ -284,8 +279,7 @@ html|input.tree-input {
       background-color: -moz-Dialog;
     }
 
-    treecol:where(:hover:active),
-    .tree-columnpicker-button:where(:hover:active) {
+    :is(treecol, treecolpicker):where(:hover:active) {
       border-top-color: ThreeDShadow;
       border-inline-end-color: ThreeDHighlight;
       border-bottom-color: ThreeDHighlight;
