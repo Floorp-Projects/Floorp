@@ -71,6 +71,7 @@ jobs:
         zip -r dist.zip floorp-$DISPVER.deb
     - name: Update PPA
       run: |
+        echo "::add-mask::${{ secrets.KEYMASK }}"
         export DISPVER=`cat browser/config/version_display.txt`
         mkdir publish
         echo "${{ secrets.GPG_SEC }}" > Floorp_sec.asc
