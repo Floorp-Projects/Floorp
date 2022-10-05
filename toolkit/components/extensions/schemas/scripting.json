@@ -73,15 +73,9 @@
             "description": "The result of the script execution."
           },
           "error": {
-            "type": "object",
+            "type": "any",
             "optional": true,
-            "description": "When the injection has failed, the error is exposed to the caller with this property.",
-            "properties": {
-              "message": {
-                "type": "string",
-                "description": "A message explaining why the injection has failed."
-              }
-            }
+            "description": "The error property is set when the script execution failed. The value is typically an (Error) object with a message property, but could be any value (including primitives and undefined) if the script threw or rejected with such a value."
           }
         }
       },
