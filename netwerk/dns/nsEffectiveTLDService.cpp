@@ -49,6 +49,7 @@ nsEffectiveTLDService::nsEffectiveTLDService()
 }
 
 nsresult nsEffectiveTLDService::Init() {
+  MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   obs->AddObserver(this, "public-suffix-list-updated", false);
 
