@@ -1303,6 +1303,40 @@ class nsIFrame : public nsQueryFrame {
   };
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(PageValuesProperty, PageValues)
 
+ private:
+  // The value that the CSS page-name "auto" keyword resolves to for children
+  // of this frame.
+  //
+  // A missing value for this property indicates that the auto value is the
+  // empty string, which is the default if no ancestors of a frame specify a
+  // page name. This avoids ever storing this property if the document doesn't
+  // use named pages.
+  //
+  // https://www.w3.org/TR/css-page-3/#using-named-pages
+  //
+  // Ideally this would be a const atom, but that isn't possible with the
+  // Release() call. This isn't too bad, since it's hidden behind constness-
+  // preserving getter/setter.
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(AutoPageValueProperty, nsAtom)
+
+ public:
+  // Get the value that the CSS page-name "auto" keyword resolves to for
+  // children of this frame.
+  // This is needed when propagating page-name values up the frame tree.
+  const nsAtom* GetAutoPageValue() const {
+    if (const nsAtom* const atom = GetProperty(AutoPageValueProperty())) {
+      return atom;
+    }
+    return nsGkAtoms::_empty;
+  }
+  void SetAutoPageValue(const nsAtom* aAtom) {
+    MOZ_ASSERT(aAtom, "Atom must not be null");
+    nsAtom* const atom = const_cast<nsAtom*>(aAtom);
+    if (atom != nsGkAtoms::_empty) {
+      SetProperty(AutoPageValueProperty(), do_AddRef(atom).take());
+    }
+  }
+
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(LineBaselineOffset, nscoord)
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(InvalidationRect, nsRect)

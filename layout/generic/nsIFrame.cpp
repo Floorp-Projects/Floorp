@@ -7965,20 +7965,22 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
     aTo += nsPrintfCString(" next-%s=%p", fluid ? "in-flow" : "continuation",
                            static_cast<void*>(GetNextContinuation()));
   }
+  if (const nsAtom* const autoPageValue =
+          GetProperty(AutoPageValueProperty())) {
+    aTo += " AutoPage=";
+    aTo += nsAtomCString(autoPageValue);
+  }
   if (const nsIFrame::PageValues* const pageValues =
           GetProperty(PageValuesProperty())) {
-    nsAutoCString name;
     aTo += " PageValues={";
     if (pageValues->mStartPageValue) {
-      pageValues->mStartPageValue->ToUTF8String(name);
-      aTo += name;
+      aTo += nsAtomCString(pageValues->mStartPageValue);
     } else {
       aTo += "<null>";
     }
     aTo += ", ";
     if (pageValues->mEndPageValue) {
-      pageValues->mEndPageValue->ToUTF8String(name);
-      aTo += name;
+      aTo += nsAtomCString(pageValues->mEndPageValue);
     } else {
       aTo += "<null>";
     }
