@@ -221,8 +221,10 @@ def perfdocs_sample():
     from test_perfdocs import (
         SAMPLE_TEST,
         SAMPLE_CONFIG,
+        SAMPLE_METRICS_CONFIG,
         DYNAMIC_SAMPLE_CONFIG,
         SAMPLE_INI,
+        SAMPLE_METRICS_INI,
         temp_dir,
         temp_file,
     )
@@ -247,21 +249,27 @@ def perfdocs_sample():
         ) as tmpexample1manifest, temp_file(
             "raptor_example2.ini", tempdir=raptor_another_suitedir, content=SAMPLE_INI
         ) as tmpexample2manifest, temp_file(
+            "raptor_example3.ini", tempdir=raptor_suitedir, content=SAMPLE_METRICS_INI
+        ) as tmpexample3manifest, temp_file(
             "perftest_sample.js", tempdir=suite_dir, content=SAMPLE_TEST
         ) as tmptest, temp_file(
             "config.yml", tempdir=perfdocs_dir, content=SAMPLE_CONFIG
         ) as tmpconfig, temp_file(
+            "config_metrics.yml", tempdir=perfdocs_dir, content=SAMPLE_METRICS_CONFIG
+        ) as tmpconfig_metrics, temp_file(
             "config_2.yml", tempdir=perfdocs_dir, content=DYNAMIC_SAMPLE_CONFIG
         ) as tmpconfig_2, temp_file(
             "index.rst", tempdir=perfdocs_dir, content="{documentation}"
         ) as tmpindex:
             yield {
                 "top_dir": tmpdir,
-                "manifest": tmpmanifest,
+                "manifest": {"path": tmpmanifest},
                 "example1_manifest": tmpexample1manifest,
                 "example2_manifest": tmpexample2manifest,
+                "example3_manifest": tmpexample3manifest,
                 "test": tmptest,
                 "config": tmpconfig,
+                "config_metrics": tmpconfig_metrics,
                 "config_2": tmpconfig_2,
                 "index": tmpindex,
             }
