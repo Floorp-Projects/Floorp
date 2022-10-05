@@ -75,7 +75,7 @@ add_task(async function() {
   Assert.equal(comAddon.type, SITEPERMS_ADDON_TYPE, "addon has expected type");
   Assert.equal(
     comAddon.name,
-    `Site Permissions for example.com`,
+    `Site permissions for example.com`,
     "addon has expected name"
   );
 
