@@ -1420,6 +1420,7 @@ nsCSSFrameConstructor::AutoFrameConstructionPageName::
   MOZ_ASSERT(mNameToRestore,
              "Page name should have been found by EnsureAutoPageName");
   MaybeApplyPageName(aState, aFrame->StylePage()->mPage);
+  aFrame->SetAutoPageValue(aState.mAutoPageNameValue);
   // Ensure that the PageValuesProperty field has been created.
   // Before layout.css.named_pages.enabled is prefed on by default, we should
   // investigate making this property optional, and have a missing property
