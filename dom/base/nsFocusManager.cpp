@@ -866,58 +866,47 @@ nsresult nsFocusManager::ContentRemoved(Document* aDocument,
   // shadow-including inclusive ancestor of the currently focused element,
   // reset the focus within that window.
   Element* content = window->GetFocusedElement();
-  if (!content) {
-    return NS_OK;
-  }
-  if (!nsContentUtils::ContentIsHostIncludingDescendantOf(content, aContent)) {
-    return NS_OK;
-  }
+  if (content &&
+      nsContentUtils::ContentIsHostIncludingDescendantOf(content, aContent)) {
+    window->SetFocusedElement(nullptr);
 
-  Element* newFocusedElement = [&]() -> Element* {
-    if (auto* sr = ShadowRoot::FromNode(aContent)) {
-      if (sr->IsUAWidget() && sr->Host()->IsHTMLElement(nsGkAtoms::input)) {
-        return sr->Host();
-      }
-    }
-    return nullptr;
-  }();
-
-  window->SetFocusedElement(newFocusedElement);
-
-  // if this window is currently focused, clear the global focused
-  // element as well, but don't fire any events.
-  if (window->GetBrowsingContext() == GetFocusedBrowsingContext()) {
-    mFocusedElement = newFocusedElement;
-  } else {
-    // Check if the node that was focused is an iframe or similar by looking
-    // if it has a subdocument. This would indicate that this focused iframe
-    // and its descendants will be going away. We will need to move the
-    // focus somewhere else, so just clear the focus in the toplevel window
-    // so that no element is focused.
-    //
-    // The Fission case is handled in FlushAndCheckIfFocusable().
-    if (Document* subdoc = aDocument->GetSubDocumentFor(content)) {
-      if (nsCOMPtr<nsIDocShell> docShell = subdoc->GetDocShell()) {
-        nsCOMPtr<nsPIDOMWindowOuter> childWindow = docShell->GetWindow();
-        if (childWindow &&
-            IsSameOrAncestor(childWindow, GetFocusedBrowsingContext())) {
-          if (XRE_IsParentProcess()) {
-            nsCOMPtr<nsPIDOMWindowOuter> activeWindow = mActiveWindow;
-            ClearFocus(activeWindow);
-          } else {
-            BrowsingContext* active = GetActiveBrowsingContext();
-            if (active) {
-              if (active->IsInProcess()) {
-                nsCOMPtr<nsPIDOMWindowOuter> activeWindow =
-                    active->GetDOMWindow();
-                ClearFocus(activeWindow);
-              } else {
-                mozilla::dom::ContentChild* contentChild =
-                    mozilla::dom::ContentChild::GetSingleton();
-                MOZ_ASSERT(contentChild);
-                contentChild->SendClearFocus(active);
-              }
-            }  // no else, because ClearFocus does nothing with nullptr
+    // if this window is currently focused, clear the global focused
+    // element as well, but don't fire any events.
+    if (window->GetBrowsingContext() == GetFocusedBrowsingContext()) {
+      mFocusedElement = nullptr;
+    } else {
+      // Check if the node that was focused is an iframe or similar by looking
+      // if it has a subdocument. This would indicate that this focused iframe
+      // and its descendants will be going away. We will need to move the
+      // focus somewhere else, so just clear the focus in the toplevel window
+      // so that no element is focused.
+      //
+      // The Fission case is handled in FlushAndCheckIfFocusable().
+      Document* subdoc = aDocument->GetSubDocumentFor(content);
+      if (subdoc) {
+        nsCOMPtr<nsIDocShell> docShell = subdoc->GetDocShell();
+        if (docShell) {
+          nsCOMPtr<nsPIDOMWindowOuter> childWindow = docShell->GetWindow();
+          if (childWindow &&
+              IsSameOrAncestor(childWindow, GetFocusedBrowsingContext())) {
+            if (XRE_IsParentProcess()) {
+              nsCOMPtr<nsPIDOMWindowOuter> activeWindow = mActiveWindow;
+              ClearFocus(activeWindow);
+            } else {
+              BrowsingContext* active = GetActiveBrowsingContext();
+              if (active) {
+                if (active->IsInProcess()) {
+                  nsCOMPtr<nsPIDOMWindowOuter> activeWindow =
+                      active->GetDOMWindow();
+                  ClearFocus(activeWindow);
+                } else {
+                  mozilla::dom::ContentChild* contentChild =
+                      mozilla::dom::ContentChild::GetSingleton();
+                  MOZ_ASSERT(contentChild);
+                  contentChild->SendClearFocus(active);
+                }
+              }  // no else, because ClearFocus does nothing with nullptr
+            }
           }
         }
       }
@@ -925,8 +914,10 @@ nsresult nsFocusManager::ContentRemoved(Document* aDocument,
 
     // Notify the editor in case we removed its ancestor limiter.
     if (content->IsEditable()) {
-      if (nsCOMPtr<nsIDocShell> docShell = aDocument->GetDocShell()) {
-        if (RefPtr<HTMLEditor> htmlEditor = docShell->GetHTMLEditor()) {
+      nsCOMPtr<nsIDocShell> docShell = aDocument->GetDocShell();
+      if (docShell) {
+        RefPtr<HTMLEditor> htmlEditor = docShell->GetHTMLEditor();
+        if (htmlEditor) {
           RefPtr<Selection> selection = htmlEditor->GetSelection();
           if (selection && selection->GetFrameSelection() &&
               content == selection->GetFrameSelection()->GetAncestorLimiter()) {
@@ -936,14 +927,8 @@ nsresult nsFocusManager::ContentRemoved(Document* aDocument,
       }
     }
 
-    if (!newFocusedElement) {
-      NotifyFocusStateChange(content, newFocusedElement, 0, /* aGettingFocus = */ false,
-                            false);
-    } else {
-      // We should already have the right state, which is managed by the <input>
-      // widget.
-      MOZ_ASSERT(newFocusedElement->State().HasState(ElementState::FOCUS));
-    }
+    NotifyFocusStateChange(content, nullptr, 0, /* aGettingFocus = */ false,
+                           false);
   }
 
   return NS_OK;
