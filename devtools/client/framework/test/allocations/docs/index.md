@@ -183,9 +183,9 @@ You can instruct the test helper to track a given object by doing this:
  1: // Let's say it is some code running from "my-module.js"
  2:
  3: // From a DevTools CommonJS module:
- 4: const { track } = require("devtools/shared/test-helpers/tracked-objects.jsm");
+ 4: const { track } = require("devtools/shared/test-helpers/tracked-objects.sys.mjs");
  5: // From anything else, JSM, XPCOM module,...:
- 6: const { track } = ChromeUtils.import("resource://devtools/shared/test-helpers/tracked-objects.jsm");
+ 6: const { track } = ChromeUtils.importESModule("resource://devtools/shared/test-helpers/tracked-objects.sys.mjs");
  7:
  8: const g = [];
  9: function someFunctionInDevToolsCalledBySomething() {

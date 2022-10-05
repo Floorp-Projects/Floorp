@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 // Test-only module in order to register objects later inspected by
 // the allocation tracker (in the same folder).
 //
@@ -12,15 +10,13 @@
 // Allocation tracker will then print detailed information
 // about why these objects are still allocated.
 
-var EXPORTED_SYMBOLS = ["track", "getAllNodeIds", "clear"];
-
 const objects = [];
 
 /**
  * Request to track why the given object is kept in memory,
  * later on, when retrieving all the watched object via getAllNodeIds.
  */
-function track(obj) {
+export function track(obj) {
   // We store a weak reference, so that we do force keeping the object in memory!!
   objects.push(Cu.getWeakReference(obj));
 }
@@ -30,7 +26,7 @@ function track(obj) {
  *
  * NodeId's are used by spidermonkey memory API to designates JS objects in head snapshots.
  */
-function getAllNodeIds() {
+export function getAllNodeIds() {
   // Filter out objects which have been freed already
   return (
     objects
@@ -46,6 +42,6 @@ function getAllNodeIds() {
 /**
  * Used by tests to clear all tracked objects
  */
-function clear() {
+export function clear() {
   objects.length = 0;
 }
