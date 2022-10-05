@@ -174,10 +174,7 @@ class JS_PUBLIC_API RealmCreationOptions {
 
   bool getStreamsEnabled() const { return streams_; }
   RealmCreationOptions& setStreamsEnabled(bool flag) {
-#ifdef MOZ_JS_STREAMS
-#  ifdef MOZ_DOM_STREAMS
-#    error "JS and DOM streams shouldn't be simultaneously configured"
-#  endif
+#ifndef MOZ_DOM_STREAMS
     streams_ = flag;
 #else
     MOZ_ASSERT(!streams_);
