@@ -43,11 +43,10 @@ loader.lazyRequireGetter(
   true
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DevToolsSocketStatus",
-  "resource://devtools/shared/security/DevToolsSocketStatus.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  DevToolsSocketStatus:
+    "resource://devtools/shared/security/DevToolsSocketStatus.sys.mjs",
+});
 
 loader.lazyRequireGetter(
   this,

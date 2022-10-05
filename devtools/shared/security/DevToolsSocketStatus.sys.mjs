@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * Singleton that should be updated whenever a socket is opened or closed for
  * incoming connections.
@@ -14,7 +12,7 @@
  * Currently observed by browser/base/content/browser.js in order to display
  * the "remote control" visual cue also used for Marionette and Remote Agent.
  */
-const DevToolsSocketStatus = {
+export const DevToolsSocketStatus = {
   _browserToolboxSockets: 0,
   _otherSockets: 0,
 
@@ -60,5 +58,3 @@ const DevToolsSocketStatus = {
     Services.obs.notifyObservers(this, "devtools-socket");
   },
 };
-
-var EXPORTED_SYMBOLS = ["DevToolsSocketStatus"];

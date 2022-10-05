@@ -6,8 +6,8 @@
 const { DevToolsLoader } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
-const { DevToolsSocketStatus } = ChromeUtils.import(
-  "resource://devtools/shared/security/DevToolsSocketStatus.jsm"
+const { DevToolsSocketStatus } = ChromeUtils.importESModule(
+  "resource://devtools/shared/security/DevToolsSocketStatus.sys.mjs"
 );
 
 add_task(async function() {
