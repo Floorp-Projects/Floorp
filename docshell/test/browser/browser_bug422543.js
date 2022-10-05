@@ -95,7 +95,7 @@ add_task(async function runTests() {
       let base = getRootDirectory(gTestPath).slice(0, -1);
       ChromeUtils.registerWindowActor(ACTOR, {
         child: {
-          moduleURI: `${base}/Bug422543Child.jsm`,
+          esModuleURI: `${base}/Bug422543Child.sys.mjs`,
         },
       });
 

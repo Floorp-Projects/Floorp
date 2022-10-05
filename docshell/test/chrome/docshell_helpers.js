@@ -23,8 +23,8 @@ const { BrowserTestUtils } = ChromeUtils.import(
 );
 
 const ACTOR_MODULE_URI =
-  "chrome://mochitests/content/chrome/docshell/test/chrome/DocShellHelpers.jsm";
-const { DocShellHelpersParent } = ChromeUtils.import(ACTOR_MODULE_URI);
+  "chrome://mochitests/content/chrome/docshell/test/chrome/DocShellHelpers.sys.mjs";
+const { DocShellHelpersParent } = ChromeUtils.importESModule(ACTOR_MODULE_URI);
 // Some functions assume chrome-harness.js has been loaded.
 /* import-globals-from ../../../testing/mochitest/chrome-harness.js */
 
@@ -216,10 +216,10 @@ function doPageNavigation(params) {
   if (useActor) {
     ChromeUtils.registerWindowActor("DocShellHelpers", {
       parent: {
-        moduleURI: ACTOR_MODULE_URI,
+        esModuleURI: ACTOR_MODULE_URI,
       },
       child: {
-        moduleURI: ACTOR_MODULE_URI,
+        esModuleURI: ACTOR_MODULE_URI,
         events: {
           pageshow: { createActor: true, capture: true },
           pagehide: { createActor: true, capture: true },

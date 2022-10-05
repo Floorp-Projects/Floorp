@@ -1,11 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
 http://creativecommons.org/publicdomain/zero/1.0/ */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["DocShellHelpersParent", "DocShellHelpersChild"];
-
-class DocShellHelpersParent extends JSWindowActorParent {
+export class DocShellHelpersParent extends JSWindowActorParent {
   static eventListener;
 
   // These static variables should be set when registering the actor
@@ -31,7 +27,7 @@ class DocShellHelpersParent extends JSWindowActorParent {
   }
 }
 
-class DocShellHelpersChild extends JSWindowActorChild {
+export class DocShellHelpersChild extends JSWindowActorChild {
   constructor() {
     super();
   }

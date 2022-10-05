@@ -125,6 +125,6 @@ LOCAL_INCLUDES += [
     "/tools/profiler",
 ]
 
-EXTRA_JS_MODULES += ["URIFixup.jsm"]
+EXTRA_JS_MODULES += ["URIFixup.sys.mjs"]
 
 include("/tools/fuzzing/libfuzzer-config.mozbuild")

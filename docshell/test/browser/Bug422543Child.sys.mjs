@@ -1,5 +1,3 @@
-var EXPORTED_SYMBOLS = ["Bug422543Child"];
-
 class SHistoryListener {
   constructor() {
     this.retval = true;
@@ -32,7 +30,7 @@ SHistoryListener.prototype.QueryInterface = ChromeUtils.generateQI([
 
 let listeners;
 
-class Bug422543Child extends JSWindowActorChild {
+export class Bug422543Child extends JSWindowActorChild {
   constructor() {
     super();
   }

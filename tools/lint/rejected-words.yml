@@ -86,7 +86,7 @@ avoid-blacklist-and-whitelist:
         - devtools/client/inspector/markup/test/lib_babel_6.21.0_min.js
         - devtools/client/inspector/markup/test/lib_react_dom_15.4.1.js
         - docshell/base/nsDocShell.cpp
-        - docshell/base/URIFixup.jsm
+        - docshell/base/URIFixup.sys.mjs
         - docshell/test/unit/test_URIFixup_info.js
         - dom/base/Document.cpp
         - dom/base/MaybeCrossOriginObject.cpp
