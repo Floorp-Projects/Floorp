@@ -180,7 +180,7 @@ class HgUtils(VCSUtils):
     def find_jsms(self, path):
         jsms = []
 
-        cmd = ["hg", "files", f"set:glob:{path}/**/*.jsm"]
+        cmd = ["hg", "files", f'set:glob:"{path}/**/*.jsm"']
         for line in self.run(cmd):
             jsm = pathlib.Path(line)
             if is_excluded_from_convert(jsm):
@@ -190,7 +190,7 @@ class HgUtils(VCSUtils):
         cmd = [
             "hg",
             "files",
-            f"set:grep('EXPORTED_SYMBOLS = \[') and glob:{path}/**/*.js",
+            f"set:grep('EXPORTED_SYMBOLS = \[') and glob:\"{path}/**/*.js\"",
         ]
         for line in self.run(cmd):
             jsm = pathlib.Path(line)
@@ -203,21 +203,21 @@ class HgUtils(VCSUtils):
     def find_all_jss(self, path):
         jss = []
 
-        cmd = ["hg", "files", f"set:glob:{path}/**/*.jsm"]
+        cmd = ["hg", "files", f'set:glob:"{path}/**/*.jsm"']
         for line in self.run(cmd):
             js = pathlib.Path(line)
             if is_excluded_from_imports(js):
                 continue
             jss.append(js)
 
-        cmd = ["hg", "files", f"set:glob:{path}/**/*.js"]
+        cmd = ["hg", "files", f'set:glob:"{path}/**/*.js"']
         for line in self.run(cmd):
             js = pathlib.Path(line)
             if is_excluded_from_imports(js):
                 continue
             jss.append(js)
 
-        cmd = ["hg", "files", f"set:glob:{path}/**/*.sys.mjs"]
+        cmd = ["hg", "files", f'set:glob:"{path}/**/*.sys.mjs"']
         for line in self.run(cmd):
             js = pathlib.Path(line)
             if is_excluded_from_imports(js):
