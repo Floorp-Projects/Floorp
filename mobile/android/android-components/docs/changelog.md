@@ -17,6 +17,9 @@ permalink: /changelog/
 * **nimbus-gradle-plugin**:
   * Updated the plugin to use the version of application services defined in the buildSrc Dependencies.
 
+* **browser-engine-gecko**:
+  * Canceling the "Open in app?" displays an empty page [#12894](https://github.com/mozilla-mobile/android-components/issues/12894)
+
 # 106.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v105.0.0..v106.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/153?closed=1)
