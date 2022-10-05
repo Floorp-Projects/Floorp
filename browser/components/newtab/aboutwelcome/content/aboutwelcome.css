@@ -223,7 +223,7 @@ html {
 }
 @media (prefers-contrast) {
   .onboardingContainer {
-    --mr-screen-background-color: #F8F6F4;
+    --mr-screen-background-color: windowframe;
   }
 }
 @media (prefers-contrast: more) {
