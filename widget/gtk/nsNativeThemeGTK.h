@@ -59,10 +59,9 @@ class nsNativeThemeGTK final : public mozilla::widget::Theme {
   enum class NonNative { No, Always, BecauseColorMismatch };
   NonNative IsWidgetNonNative(nsIFrame*, StyleAppearance);
 
-  NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                  StyleAppearance aAppearance,
-                                  mozilla::LayoutDeviceIntSize* aResult,
-                                  bool* aIsOverridable) override;
+  mozilla::LayoutDeviceIntSize GetMinimumWidgetSize(
+      nsPresContext* aPresContext, nsIFrame* aFrame,
+      StyleAppearance aAppearance) override;
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, StyleAppearance aAppearance,
                                 nsAtom* aAttribute, bool* aShouldRepaint,

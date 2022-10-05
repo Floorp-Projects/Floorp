@@ -291,14 +291,10 @@ nscoord nsComboboxControlFrame::DropDownButtonISize() {
     return 0;
   }
 
-  LayoutDeviceIntSize dropdownButtonSize;
-  bool canOverride = true;
-  nsPresContext* presContext = PresContext();
-  presContext->Theme()->GetMinimumWidgetSize(
-      presContext, this, StyleAppearance::MozMenulistArrowButton,
-      &dropdownButtonSize, &canOverride);
-
-  return presContext->DevPixelsToAppUnits(dropdownButtonSize.width);
+  nsPresContext* pc = PresContext();
+  LayoutDeviceIntSize dropdownButtonSize = pc->Theme()->GetMinimumWidgetSize(
+      pc, this, StyleAppearance::MozMenulistArrowButton);
+  return pc->DevPixelsToAppUnits(dropdownButtonSize.width);
 }
 
 int32_t nsComboboxControlFrame::CharCountOfLargestOptionForInflation() const {

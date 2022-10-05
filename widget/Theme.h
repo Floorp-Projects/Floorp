@@ -74,9 +74,8 @@ class Theme : protected nsNativeTheme, public nsITheme {
                         LayoutDeviceIntMargin* aResult) override;
   bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame*, StyleAppearance,
                          nsRect* aOverflowRect) override;
-  NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame*,
-                                  StyleAppearance, LayoutDeviceIntSize* aResult,
-                                  bool* aIsOverridable) override;
+  LayoutDeviceIntSize GetMinimumWidgetSize(nsPresContext*, nsIFrame*,
+                                           StyleAppearance) override;
   Transparency GetWidgetTransparency(nsIFrame*, StyleAppearance) override;
   NS_IMETHOD WidgetStateChanged(nsIFrame*, StyleAppearance, nsAtom* aAttribute,
                                 bool* aShouldRepaint,

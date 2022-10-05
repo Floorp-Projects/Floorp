@@ -18,10 +18,9 @@ class ThemeCocoa : public Theme {
   explicit ThemeCocoa(UniquePtr<ScrollbarDrawing>&& aScrollbarDrawing)
       : Theme(std::move(aScrollbarDrawing)) {}
 
-  NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                  StyleAppearance aAppearance,
-                                  mozilla::LayoutDeviceIntSize* aResult,
-                                  bool* aIsOverridable) override;
+  LayoutDeviceIntSize GetMinimumWidgetSize(
+      nsPresContext* aPresContext, nsIFrame* aFrame,
+      StyleAppearance aAppearance) override;
 
   ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame*,
                                                StyleAppearance) override;

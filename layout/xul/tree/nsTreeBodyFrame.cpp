@@ -1827,10 +1827,8 @@ nsITheme* nsTreeBodyFrame::GetTwistyRect(int32_t aRowIndex,
   }
 
   if (useTheme) {
-    LayoutDeviceIntSize minTwistySizePx;
-    bool canOverride = true;
-    theme->GetMinimumWidgetSize(aPresContext, this, appearance,
-                                &minTwistySizePx, &canOverride);
+    LayoutDeviceIntSize minTwistySizePx =
+        theme->GetMinimumWidgetSize(aPresContext, this, appearance);
 
     // GMWS() returns size in pixels, we need to convert it back to app units
     nsSize minTwistySize;
@@ -1839,8 +1837,9 @@ nsITheme* nsTreeBodyFrame::GetTwistyRect(int32_t aRowIndex,
     minTwistySize.height =
         aPresContext->DevPixelsToAppUnits(minTwistySizePx.height);
 
-    if (aTwistyRect.width < minTwistySize.width || !canOverride)
+    if (aTwistyRect.width < minTwistySize.width) {
       aTwistyRect.width = minTwistySize.width;
+    }
   }
 
   return useTheme ? theme : nullptr;

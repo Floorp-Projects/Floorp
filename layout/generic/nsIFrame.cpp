@@ -6524,24 +6524,21 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   }
 
   if (IsThemed(disp)) {
-    LayoutDeviceIntSize widget;
-    bool canOverride = true;
-    nsPresContext* presContext = PresContext();
-    presContext->Theme()->GetMinimumWidgetSize(
-        presContext, this, disp->EffectiveAppearance(), &widget, &canOverride);
+    nsPresContext* pc = PresContext();
+    LayoutDeviceIntSize widget = pc->Theme()->GetMinimumWidgetSize(
+        pc, this, disp->EffectiveAppearance());
 
     // Convert themed widget's physical dimensions to logical coords
-    LogicalSize size(aWM,
-                     nsSize(presContext->DevPixelsToAppUnits(widget.width),
-                            presContext->DevPixelsToAppUnits(widget.height)));
+    LogicalSize size(aWM, LayoutDeviceIntSize::ToAppUnits(
+                              widget, pc->AppUnitsPerDevPixel()));
 
     // GetMinimumWidgetSize() returns border-box; we need content-box.
     size -= aBorderPadding;
 
-    if (size.BSize(aWM) > result.BSize(aWM) || !canOverride) {
+    if (size.BSize(aWM) > result.BSize(aWM)) {
       result.BSize(aWM) = size.BSize(aWM);
     }
-    if (size.ISize(aWM) > result.ISize(aWM) || !canOverride) {
+    if (size.ISize(aWM) > result.ISize(aWM)) {
       result.ISize(aWM) = size.ISize(aWM);
     }
   }

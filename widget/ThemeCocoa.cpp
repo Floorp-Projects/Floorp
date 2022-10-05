@@ -14,21 +14,16 @@
 
 namespace mozilla::widget {
 
-NS_IMETHODIMP
-ThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                 StyleAppearance aAppearance,
-                                 LayoutDeviceIntSize* aResult,
-                                 bool* aIsOverridable) {
+LayoutDeviceIntSize ThemeCocoa::GetMinimumWidgetSize(
+    nsPresContext* aPresContext, nsIFrame* aFrame,
+    StyleAppearance aAppearance) {
   if (aAppearance == StyleAppearance::MozMenulistArrowButton) {
-    auto size = ScrollbarDrawingCocoa::GetScrollbarSize(
+    LayoutDeviceIntCoord size = ScrollbarDrawingCocoa::GetScrollbarSize(
         StyleScrollbarWidth::Auto, /* aOverlay = */ false,
         GetDPIRatio(aFrame, aAppearance));
-    aResult->SizeTo(size, size);
-    return NS_OK;
+    return {size, size};
   }
-
-  return Theme::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance, aResult,
-                                     aIsOverridable);
+  return Theme::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance);
 }
 
 nsITheme::ThemeGeometryType ThemeCocoa::ThemeGeometryTypeForWidget(
