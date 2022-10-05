@@ -13,8 +13,21 @@
 #ifndef MICRO_GECKO_PROFILER
 #define MICRO_GECKO_PROFILER
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void uprofiler_register_thread(const char* aName, void* aGuessStackTop);
 void uprofiler_unregister_thread();
+void uprofiler_simple_event_marker(const char* name, char phase, int num_args,
+                                   const char** arg_names,
+                                   const unsigned char* arg_types,
+                                   const unsigned long long* arg_values);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #ifdef __cplusplus
 struct AutoRegisterProfiler {
@@ -27,10 +40,5 @@ struct AutoRegisterProfiler {
   ~AutoRegisterProfiler() { uprofiler_unregister_thread(); }
 };
 #endif  // __cplusplus
-
-void uprofiler_simple_event_marker(const char* name, char phase, int num_args,
-                                   const char** arg_names,
-                                   const unsigned char* arg_types,
-                                   const unsigned long long* arg_values);
 
 #endif  // MICRO_GECKO_PROFILER
