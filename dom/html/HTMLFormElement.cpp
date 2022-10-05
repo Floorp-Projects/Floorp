@@ -267,18 +267,7 @@ void HTMLFormElement::MaybeReset(Element* aSubmitter) {
   }
 }
 
-void HTMLFormElement::Submit(ErrorResult& aRv) {
-  // Send the submit event
-  if (mPendingSubmission) {
-    // aha, we have a pending submission that was not flushed
-    // (this happens when form.submit() is called twice)
-    // we have to delete it and build a new one since values
-    // might have changed inbetween (we emulate IE here, that's all)
-    mPendingSubmission = nullptr;
-  }
-
-  aRv = DoSubmit();
-}
+void HTMLFormElement::Submit(ErrorResult& aRv) { aRv = DoSubmit(); }
 
 // https://html.spec.whatwg.org/multipage/forms.html#dom-form-requestsubmit
 void HTMLFormElement::RequestSubmit(nsGenericHTMLElement* aSubmitter,
@@ -704,8 +693,6 @@ nsresult HTMLFormElement::DoSubmit(Event* aEvent) {
 
 nsresult HTMLFormElement::BuildSubmission(HTMLFormSubmission** aFormSubmission,
                                           Event* aEvent) {
-  NS_ASSERTION(!mPendingSubmission, "tried to build two submissions!");
-
   // Get the submitter element
   nsGenericHTMLElement* submitter = nullptr;
   if (aEvent) {
@@ -753,7 +740,8 @@ nsresult HTMLFormElement::BuildSubmission(HTMLFormSubmission** aFormSubmission,
 
 nsresult HTMLFormElement::SubmitSubmission(
     HTMLFormSubmission* aFormSubmission) {
-  nsresult rv;
+  MOZ_ASSERT(!mDeferSubmission);
+  MOZ_ASSERT(!mPendingSubmission);
 
   nsCOMPtr<nsIURI> actionURI = aFormSubmission->GetActionURL();
   if (!actionURI) {
@@ -783,6 +771,7 @@ nsresult HTMLFormElement::SubmitSubmission(
   //
   // Notify observers of submit
   //
+  nsresult rv;
   bool cancelSubmit = false;
   if (mNotifiedObservers) {
     cancelSubmit = mNotifiedObserversResult;
@@ -1588,6 +1577,8 @@ void HTMLFormElement::OnSubmitClickBegin(Element* aOriginatingElement) {
 void HTMLFormElement::OnSubmitClickEnd() { mDeferSubmission = false; }
 
 void HTMLFormElement::FlushPendingSubmission() {
+  MOZ_ASSERT(!mDeferSubmission);
+
   if (mPendingSubmission) {
     // Transfer owning reference so that the submission doesn't get deleted
     // if we reenter

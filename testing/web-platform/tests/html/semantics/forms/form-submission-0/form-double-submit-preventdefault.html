@@ -34,5 +34,26 @@ promise_test(async () => {
   await loadPromise(iframe);
   assert_equals(getParamValue(iframe, "n1"), "v6");
 }, 'PreventDefaulting form onsubmit should allow submit() to succeed');
+
+promise_test(async () => {
+  let form = populateForm('<input type=submit><input name=n1 value=v1>');
+  let iframe = form.previousSibling;
+  let input = form['n1'];
+  let submitter = form.querySelector('input[type=submit]');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    input.value = 'v2';
+    form.submit();
+
+    input.value = 'v3';
+    form.remove();
+    form.submit();
+    document.body.insertBefore(form, iframe.nextSibling);
+    input.value = 'v4';
+  });
+  submitter.click();
+  await loadPromise(iframe);
+  assert_equals(getParamValue(iframe, "n1"), "v2");
+}, 'PreventDefaulting form onsubmit should allow submit() to succeed and the second submit() which is invalid should not supersede first one');
 </script>
 </body>
