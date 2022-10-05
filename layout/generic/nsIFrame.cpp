@@ -6525,7 +6525,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
 
   if (IsThemed(disp)) {
     nsPresContext* pc = PresContext();
-    LayoutDeviceIntSize widget = pc->Theme()->GetMinimumWidgetSize(
+    const LayoutDeviceIntSize widget = pc->Theme()->GetMinimumWidgetSize(
         pc, this, disp->EffectiveAppearance());
 
     // Convert themed widget's physical dimensions to logical coords
