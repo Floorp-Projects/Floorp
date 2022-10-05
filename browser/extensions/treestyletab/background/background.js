@@ -5,42 +5,42 @@
 */
 'use strict';
 
+import EventListenerManager from '/extlib/EventListenerManager.js';
+
 import {
   log as internalLogger,
   wait,
   configs,
   sanitizeForHTMLText
 } from '/common/common.js';
-
-import * as Constants from '/common/constants.js';
-import * as MetricsData from '/common/metrics-data.js';
 import * as ApiTabs from '/common/api-tabs.js';
+import * as Constants from '/common/constants.js';
+import * as ContextualIdentities from '/common/contextual-identities.js';
+import * as Dialog from '/common/dialog.js';
+import * as MetricsData from '/common/metrics-data.js';
+import * as Permissions from '/common/permissions.js';
+import * as SidebarConnection from '/common/sidebar-connection.js';
+import * as Sync from '/common/sync.js';
 import * as TabsStore from '/common/tabs-store.js';
 import * as TabsUpdate from '/common/tabs-update.js';
-import * as ContextualIdentities from '/common/contextual-identities.js';
-import * as Permissions from '/common/permissions.js';
 import * as TSTAPI from '/common/tst-api.js';
-import * as SidebarConnection from '/common/sidebar-connection.js';
-import * as Dialog from '/common/dialog.js';
+import * as UniqueId from '/common/unique-id.js';
 import '/common/bookmark.js'; // we need to load this once in the background page to register the global listener
-import * as Sync from '/common/sync.js';
 
 import Tab from '/common/Tab.js';
 import Window from '/common/Window.js';
 
 import * as ApiTabsListener from './api-tabs-listener.js';
-import * as Commands from './commands.js';
-import * as Tree from './tree.js';
-import * as TreeStructure from './tree-structure.js';
 import * as BackgroundCache from './background-cache.js';
-import * as TabContextMenu from './tab-context-menu.js';
+import * as Commands from './commands.js';
 import * as ContextMenu from './context-menu.js';
 import * as Migration from './migration.js';
+import * as TabContextMenu from './tab-context-menu.js';
+import * as Tree from './tree.js';
+import * as TreeStructure from './tree-structure.js';
 import './browser-action-menu.js';
-import './successor-tab.js';
 import './duplicated-tab-detection.js';
-
-import EventListenerManager from '/extlib/EventListenerManager.js';
+import './successor-tab.js';
 
 function log(...args) {
   internalLogger('background/background', ...args);
@@ -156,6 +156,7 @@ export async function init() {
   MetricsData.addAsync('init: initializing API for other addons', TSTAPI.initAsBackend());
 
   mInitialized = true;
+  UniqueId.readyToDetectDuplicatedTab();
   onReady.dispatch();
   BackgroundCache.activate();
   TreeStructure.startTracking();
@@ -178,7 +179,7 @@ async function notifyReadyToSidebars() {
     TabsUpdate.completeLoadingTabs(window.id); // failsafe
     log(`notifyReadyToSidebars: to ${window.id}`);
     promisedResults.push(browser.runtime.sendMessage({
-      type:     Constants.kCOMMAND_PING_TO_SIDEBAR,
+      type:     Constants.kCOMMAND_NOTIFY_BACKGROUND_READY,
       windowId: window.id,
       tabs:     window.export(true) // send tabs together to optimizie further initialization tasks in the sidebar
     }).catch(ApiTabs.createErrorSuppressor()));
@@ -189,12 +190,9 @@ async function notifyReadyToSidebars() {
 async function updatePanelUrl(theme) {
   const url = new URL(Constants.kSHORTHAND_URIS.tabbar);
   url.searchParams.set('style', configs.style);
+  url.searchParams.set('reloadMaskImage', !!configs.enableWorkaroundForBug1763420_reloadMaskImage);
   if (!theme)
     theme = await browser.theme.getCurrent();
-  if (theme.colors.frame)
-    url.searchParams.set('bgcolor', theme.colors.frame);
-  else if (mDarkModeMatchMedia.matches)
-    url.searchParams.set('bgcolor', '#2A2A2E' /* --in-content-page-background */);
   browser.sidebarAction.setPanel({ panel: url.href });
 /*
   const url = new URL(Constants.kSHORTHAND_URIS.tabbar);
@@ -380,12 +378,16 @@ async function updateInsertionPosition(tab) {
       tab.id,
       Constants.kPERSISTENT_INSERT_AFTER,
       prev.$TST.uniqueId.id
-    ).catch(ApiTabs.createErrorSuppressor());
+    ).catch(ApiTabs.createErrorSuppressor(
+      ApiTabs.handleMissingTabError // The tab can be closed while waiting.
+    ));
   else
     browser.sessions.removeTabValue(
       tab.id,
       Constants.kPERSISTENT_INSERT_AFTER
-    ).catch(ApiTabs.createErrorSuppressor());
+    ).catch(ApiTabs.createErrorSuppressor(
+      ApiTabs.handleMissingTabError // The tab can be closed while waiting.
+    ));
 
   const next = tab.hidden ? tab.$TST.unsafeNextTab : tab.$TST.nextTab;
   if (next)
@@ -393,12 +395,16 @@ async function updateInsertionPosition(tab) {
       tab.id,
       Constants.kPERSISTENT_INSERT_BEFORE,
       next.$TST.uniqueId.id
-    ).catch(ApiTabs.createErrorSuppressor());
+    ).catch(ApiTabs.createErrorSuppressor(
+      ApiTabs.handleMissingTabError // The tab can be closed while waiting.
+    ));
   else
     browser.sessions.removeTabValue(
       tab.id,
       Constants.kPERSISTENT_INSERT_BEFORE
-    ).catch(ApiTabs.createErrorSuppressor());
+    ).catch(ApiTabs.createErrorSuppressor(
+      ApiTabs.handleMissingTabError // The tab can be closed while waiting.
+    ));
 }
 
 
@@ -437,7 +443,9 @@ async function updateAncestors(tab) {
     tab.id,
     Constants.kPERSISTENT_ANCESTORS,
     ancestors
-  ).catch(ApiTabs.createErrorSuppressor());
+  ).catch(ApiTabs.createErrorSuppressor(
+    ApiTabs.handleMissingTabError // The tab can be closed while waiting.
+  ));
 }
 
 export function reserveToUpdateChildren(tabOrTabs) {
@@ -475,7 +483,9 @@ async function updateChildren(tab) {
     tab.id,
     Constants.kPERSISTENT_CHILDREN,
     children
-  ).catch(ApiTabs.createErrorSuppressor());
+  ).catch(ApiTabs.createErrorSuppressor(
+    ApiTabs.handleMissingTabError // The tab can be closed while waiting.
+  ));
 }
 
 function reserveToUpdateSubtreeCollapsed(tab) {
@@ -511,6 +521,9 @@ async function updateSubtreeCollapsed(tab) {
 }
 
 export async function confirmToCloseTabs(tabs, { windowId, configKey, messageKey, titleKey, minConfirmCount } = {}) {
+  if (!windowId)
+    windowId = tabs[0].windowId;
+
   const grantedIds = new Set(configs.grantedRemovingTabIds);
   let count = 0;
   const tabIds = [];
@@ -534,21 +547,14 @@ export async function confirmToCloseTabs(tabs, { windowId, configKey, messageKey
     return true;
   }
 
-  if (!windowId) {
-    const activeTabs = await browser.tabs.query({
-      active:   true,
-      windowId
-    }).catch(ApiTabs.createErrorHandler());
-    windowId = activeTabs[0].windowId;
-  }
-
   const win = await browser.windows.get(windowId);
   const listing = configs.warnOnCloseTabsWithListing ?
-    tabsToHTMLList(tabs, {
-      maxRows: configs.warnOnCloseTabsWithListingMaxRows,
+    Dialog.tabsToHTMLList(tabs, {
+      maxHeight: Math.round(win.height * 0.8),
       maxWidth: Math.round(win.width * 0.75)
     }) :
     '';
+
   const result = await Dialog.show(win, {
     content: `
       <div>${sanitizeForHTMLText(browser.i18n.getMessage(messageKey || 'warnOnCloseTabs_message', [count]))}</div>${listing}
@@ -559,7 +565,7 @@ export async function confirmToCloseTabs(tabs, { windowId, configKey, messageKey
     ],
     checkMessage: browser.i18n.getMessage('warnOnCloseTabs_warnAgain'),
     checked: true,
-    modal:   true, // for popup
+    modal:   !configs.debug, // for popup
     type:    'common-dialog', // for popup
     url:     '/resources/blank.html', // for popup, required on Firefox ESR68
     title:   browser.i18n.getMessage(titleKey || 'warnOnCloseTabs_title'), // for popup
@@ -591,39 +597,6 @@ export async function confirmToCloseTabs(tabs, { windowId, configKey, messageKey
 Commands.onTabsClosing.addListener((tabIds, options = {}) => {
   return confirmToCloseTabs(tabIds.map(Tab.get), options);
 });
-
-export function tabsToHTMLList(tabs, { maxRows, maxWidth }) {
-  const rootLevelOffset = tabs.map(tab => parseInt(tab.$TST.getAttribute(Constants.kLEVEL) || 0)).sort()[0];
-  return (
-    `<ul style="border: 1px inset;
-                display: flex;
-                flex-direction: column;
-                flex-grow: 1;
-                flex-shrink: 1;
-                margin: 0.5em 0;
-                min-height: ${(Math.max(1, maxRows || 0)) + 1}em;
-                max-height: ${(Math.max(1, maxRows || 0)) + 1}em;
-                max-width: ${maxWidth}px;
-                overflow: auto;
-                padding: 0.5em;">` +
-      tabs.map(tab => `<li style="align-items: center;
-                                  display: flex;
-                                  flex-direction: row;
-                                  padding-left: calc((${tab.$TST.getAttribute(Constants.kLEVEL)} - ${rootLevelOffset}) * 0.25em);"
-                           title="${sanitizeForHTMLText(tab.title)}"
-                          ><img style="display: flex;
-                                       max-height: 1em;
-                                       max-width: 1em;"
-                                alt=""
-                                src="${sanitizeForHTMLText(tab.favIconUrl || browser.extension.getURL('resources/icons/defaultFavicon.svg'))}"
-                               ><span style="margin-left: 0.25em;
-                                             overflow: hidden;
-                                             text-overflow: ellipsis;
-                                             white-space: nowrap;"
-                                     >${sanitizeForHTMLText(tab.title)}</span></li>`).join('') +
-      `</ul>`
-  );
-}
 
 function reserveToClearGrantedRemovingTabs() {
   const lastGranted = configs.grantedRemovingTabIds.join(',');
@@ -785,14 +758,17 @@ Tree.onDetached.addListener((tab, detachInfo) => {
 Tree.onSubtreeCollapsedStateChanging.addListener((tab, _info) => { reserveToUpdateSubtreeCollapsed(tab); });
 
 
+const BASE_ICONS = {
+  '16': '/resources/16x16.svg',
+  '20': '/resources/20x20.svg',
+  '24': '/resources/24x24.svg',
+  '32': '/resources/32x32.svg',
+};
 async function updateIconForBrowserTheme(theme) {
   // generate icons with theme specific color
-  const icons = {
-    '16': '/resources/16x16.svg',
-    '20': '/resources/20x20.svg',
-    '24': '/resources/24x24.svg',
-    '32': '/resources/32x32.svg',
-  };
+  const toolbarIcons = {};
+  const menuIcons    = {};
+  const sidebarIcons = {};
 
   switch (configs.iconColor) {
     case 'auto': {
@@ -801,60 +777,77 @@ async function updateIconForBrowserTheme(theme) {
         theme = await browser.theme.getCurrent(window.id);
       }
 
-      log('updateIconForBrowserTheme: colors: ', theme.colors);
+      log('updateIconForBrowserTheme: ', theme);
       if (theme.colors) {
-        const color = theme.colors.icons || theme.colors.tab_text || theme.colors.textcolor;
-        log(' => ', theme.colors);
-        await Promise.all(Array.from(Object.keys(icons), async size => {
+        const toolbarIconColor = theme.colors.icons || theme.colors.toolbar_text || theme.colors.tab_text || theme.colors.tab_background_text || theme.colors.bookmark_text || theme.colors.textcolor;
+        const menuIconColor    = theme.colors.popup_text || toolbarIconColor;
+        const sidebarIconColor = theme.colors.sidebar_text || toolbarIconColor;
+        log(' => ', { toolbarIconColor, menuIconColor, sidebarIconColor }, theme.colors);
+        await Promise.all(Array.from(Object.entries(BASE_ICONS), async ([size, url]) => {
           const request = new XMLHttpRequest();
           await new Promise((resolve, _reject) => {
-            request.open('GET', `/resources/${size}x${size}-dark.svg`, true);
+            request.open('GET', url, true);
             request.addEventListener('load', resolve, { once: true });
             request.overrideMimeType('text/plain');
             request.send(null);
           });
-          const source = request.responseText.replace(/fill:[^;]+;/, `fill: ${color};`);
-          icons[size] = `data:image/svg+xml,${escape(source)}#toolbar`;
+          const toolbarIconSource = request.responseText.replace(/transparent\s*\/\*\s*TO BE REPLACED WITH THEME COLOR\s*\*\//g, toolbarIconColor);
+          toolbarIcons[size] = `data:image/svg+xml,${escape(toolbarIconSource)}#toolbar-theme`;
+          const menuIconSource = request.responseText.replace(/transparent\s*\/\*\s*TO BE REPLACED WITH THEME COLOR\s*\*\//g, menuIconColor);
+          menuIcons[size] = `data:image/svg+xml,${escape(menuIconSource)}#default-theme`;
+          const sidebarIconSource = request.responseText.replace(/transparent\s*\/\*\s*TO BE REPLACED WITH THEME COLOR\s*\*\//g, sidebarIconColor);
+          sidebarIcons[size] = `data:image/svg+xml,${escape(sidebarIconSource)}#default-theme`;
         }));
       }
       else if (mDarkModeMatchMedia.matches) { // dark mode
-        for (const size of Object.keys(icons)) {
-          icons[size] = `/resources/${size}x${size}-dark.svg#toolbar`;
+        for (const [size, url] of Object.entries(BASE_ICONS)) {
+          toolbarIcons[size] = `${url}#toolbar-dark`;
+          menuIcons[size] = sidebarIcons[size] = `${url}#default-dark`;
+        }
+      }
+      else {
+        for (const [size, url] of Object.entries(BASE_ICONS)) {
+          toolbarIcons[size] = `${url}#toolbar-bright`;
+          menuIcons[size] = sidebarIcons[size] = `${url}#default-bright`;
         }
       }
     }; break;
 
     case 'bright':
-      for (const size of Object.keys(icons)) {
-        icons[size] = `/resources/${size}x${size}-light.svg#toolbar`;
+      for (const [size, url] of Object.entries(BASE_ICONS)) {
+        toolbarIcons[size] = `${url}#toolbar-bright`;
+        menuIcons[size] = sidebarIcons[size] = `${url}#default-bright`;
       }
       break;
 
     case 'dark':
-      for (const size of Object.keys(icons)) {
-        icons[size] = `/resources/${size}x${size}-dark.svg#toolbar`;
+      for (const [size, url] of Object.entries(BASE_ICONS)) {
+        toolbarIcons[size] = `${url}#toolbar-dark`;
+        menuIcons[size] = sidebarIcons[size] = `${url}#default-dark`;
       }
       break;
   }
 
-  log('updateIconForBrowserTheme: applying icons: ', icons);
+  log('updateIconForBrowserTheme: applying icons: ', {
+    toolbarIcons,
+    menuIcons,
+    sidebarIcons,
+  });
 
   await Promise.all([
-    ...ContextMenu.getItemIdsWithIcon().map(id => browser.menus.update(id, { icons })),
+    ...ContextMenu.getItemIdsWithIcon().map(id => browser.menus.update(id, { icons: menuIcons })),
     browser.menus.refresh().catch(ApiTabs.createErrorSuppressor()),
-    browser.browserAction.setIcon({ path: icons }),
-    browser.sidebarAction.setIcon({ path: icons }),
+    browser.browserAction.setIcon({ path: toolbarIcons }),
+    browser.sidebarAction.setIcon({ path: sidebarIcons }),
   ]);
 }
 
 browser.theme.onUpdated.addListener(updateInfo => {
   updateIconForBrowserTheme(updateInfo.theme);
-  updatePanelUrl(updateInfo.theme);
 });
 
 mDarkModeMatchMedia.addListener(async _event => {
   updateIconForBrowserTheme();
-  updatePanelUrl();
 });
 
 

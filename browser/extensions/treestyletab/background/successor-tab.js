@@ -10,11 +10,10 @@ import {
   dumpTab,
   configs
 } from '/common/common.js';
-
-import * as Constants from '/common/constants.js';
 import * as ApiTabs from '/common/api-tabs.js';
-import * as TabsStore from '/common/tabs-store.js';
+import * as Constants from '/common/constants.js';
 import * as SidebarConnection from '/common/sidebar-connection.js';
+import * as TabsStore from '/common/tabs-store.js';
 
 import Tab from '/common/Tab.js';
 
@@ -156,25 +155,32 @@ async function tryClearOwnerSuccessor(tab) {
   delete tab.$TST.lastSuccessorTabIdByOwner;
   const renewedTab = await browser.tabs.get(tab.id).catch(ApiTabs.createErrorHandler(ApiTabs.handleMissingTabError));
   if (!renewedTab ||
-      renewedTab.successorTabId != tab.lastSuccessorTabId)
+      renewedTab.successorTabId != tab.$TST.lastSuccessorTabId)
     return;
   log(`${dumpTab(tab)} is unprepared for "selectOwnerOnClose" behavior`);
   delete tab.$TST.lastSuccessorTabId;
   clearSuccessor(tab.id);
 }
 
-Tab.onActivated.addListener(async (tab, info = {}) => {
-  update(tab.id);
+Tab.onActivated.addListener(async (newActiveTab, info = {}) => {
+  update(newActiveTab.id);
   if (info.previousTabId) {
-    const previousTab = Tab.get(info.previousTabId);
-    if (previousTab) {
-      await tryClearOwnerSuccessor(previousTab);
-      const lastRelatedTab = previousTab.$TST.lastRelatedTab;
-      if (lastRelatedTab &&
-          lastRelatedTab.id != tab.id) {
-        log(`clear lastRelatedTabs for the window ${info.windowId} by tabs.onActivated on ${tab.id}`);
+    const oldActiveTab = Tab.get(info.previousTabId);
+    if (oldActiveTab) {
+      await tryClearOwnerSuccessor(oldActiveTab);
+      const lastRelatedTab = oldActiveTab.$TST.lastRelatedTab;
+      const newRelatedTabsCount = oldActiveTab.$TST.newRelatedTabsCount;
+      if (lastRelatedTab) {
+        log(`clear lastRelatedTabs for the window ${info.windowId} by tabs.onActivated on ${newActiveTab.id}`);
         TabsStore.windows.get(info.windowId).clearLastRelatedTabs();
-        await tryClearOwnerSuccessor(lastRelatedTab);
+        if (lastRelatedTab.id != newActiveTab.id) {
+          log(`non last-related-tab is activated: cancel "back to owner" behavior for ${lastRelatedTab.id}`);
+          await tryClearOwnerSuccessor(lastRelatedTab);
+        }
+      }
+      if (newRelatedTabsCount > 1) {
+        log(`multiple related tabs were opened: cancel "back to owner" behavior for ${newActiveTab.id}`);
+        await tryClearOwnerSuccessor(newActiveTab);
       }
     }
     update(info.previousTabId);

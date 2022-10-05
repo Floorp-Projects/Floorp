@@ -5,32 +5,33 @@
 */
 'use strict';
 
+import EventListenerManager from '/extlib/EventListenerManager.js';
+
 import {
   log as internalLogger,
   dumpTab,
   wait,
   countMatched,
   configs,
-  notify
+  notify,
+  getWindowParamsFromSource,
 } from '/common/common.js';
-import * as Constants from '/common/constants.js';
 import * as ApiTabs from '/common/api-tabs.js';
-import * as TabsStore from '/common/tabs-store.js';
-import * as TabsInternalOperation from '/common/tabs-internal-operation.js';
 import * as Bookmark from '/common/bookmark.js';
-import * as TreeBehavior from '/common/tree-behavior.js';
-import * as SidebarConnection from '/common/sidebar-connection.js';
+import * as Constants from '/common/constants.js';
 import * as ContextualIdentities from '/common/contextual-identities.js';
+import * as SidebarConnection from '/common/sidebar-connection.js';
 import * as Sync from '/common/sync.js';
+import * as TabsInternalOperation from '/common/tabs-internal-operation.js';
+import * as TabsStore from '/common/tabs-store.js';
+import * as TreeBehavior from '/common/tree-behavior.js';
 
 import Tab from '/common/Tab.js';
 
-import * as TabsOpen from './tabs-open.js';
-import * as TabsMove from './tabs-move.js';
 import * as TabsGroup from './tabs-group.js';
+import * as TabsMove from './tabs-move.js';
+import * as TabsOpen from './tabs-open.js';
 import * as Tree from './tree.js';
-
-import EventListenerManager from '/extlib/EventListenerManager.js';
 
 function log(...args) {
   internalLogger('background/commands', ...args);
@@ -139,11 +140,17 @@ export function expandAll(windowId) {
   }
 }
 
-export async function bookmarkTree(rootTabs, options = {}) {
+export async function bookmarkTree(rootTabs, { parentId, index, showDialog } = {}) {
   const tabs = uniqTabsAndDescendantsSet(rootTabs);
   if (tabs.length > 1 &&
       tabs[0].$TST.isGroupTab)
     tabs.shift();
+
+  const options = { parentId, index, showDialog };
+  const topLevelTabs = rootTabs.filter(tab => tab.$TST.ancestorIds.length == 0);
+  if (topLevelTabs.length == 1 &&
+      topLevelTabs[0].$TST.isGroupTab)
+    options.title = topLevelTabs[0].title;
 
   const tab = tabs[0];
   if (configs.showDialogInSidebar &&
@@ -165,11 +172,18 @@ export async function bookmarkTree(rootTabs, options = {}) {
 
 
 export async function openNewTabAs(options = {}) {
-  const currentTab = options.baseTab ||
-    Tab.get((await browser.tabs.query({
+  let activeTabs;
+  if (!options.baseTab) {
+    activeTabs = await browser.tabs.query({
       active:        true,
-      currentWindow: true
-    }).catch(ApiTabs.createErrorHandler()))[0].id);
+      currentWindow: true,
+    }).catch(ApiTabs.createErrorHandler());
+    if (activeTabs.length == 0)
+      activeTabs = await browser.tabs.query({
+        currentWindow: true,
+      }).catch(ApiTabs.createErrorHandler());
+  }
+  const activeTab = options.baseTab || Tab.get(activeTabs[0].id);
 
   let parent, insertBefore, insertAfter;
   let isOrphan = false;
@@ -180,11 +194,11 @@ export async function openNewTabAs(options = {}) {
 
     case Constants.kNEWTAB_OPEN_AS_ORPHAN:
       isOrphan    = true;
-      insertAfter = Tab.getLastTab(currentTab.windowId);
+      insertAfter = Tab.getLastTab(activeTab.windowId);
       break;
 
     case Constants.kNEWTAB_OPEN_AS_CHILD: {
-      parent = currentTab;
+      parent = activeTab;
       const refTabs = Tree.getReferenceTabsForNewChild(null, parent);
       insertBefore = refTabs.insertBefore;
       insertAfter  = refTabs.insertAfter;
@@ -193,15 +207,15 @@ export async function openNewTabAs(options = {}) {
     }; break;
 
     case Constants.kNEWTAB_OPEN_AS_SIBLING:
-      parent      = currentTab.$TST.parent;
+      parent      = activeTab.$TST.parent;
       insertAfter = parent && parent.$TST.lastDescendant;
       break;
 
     case Constants.kNEWTAB_OPEN_AS_NEXT_SIBLING_WITH_INHERITED_CONTAINER:
-      options.cookieStoreId = currentTab.cookieStoreId;
+      options.cookieStoreId = activeTab.cookieStoreId;
     case Constants.kNEWTAB_OPEN_AS_NEXT_SIBLING: {
-      parent       = currentTab.$TST.parent;
-      const refTabs = Tree.getReferenceTabsForNewNextSibling(currentTab, options);
+      parent       = activeTab.$TST.parent;
+      const refTabs = Tree.getReferenceTabsForNewNextSibling(activeTab, options);
       insertBefore = refTabs.insertBefore;
       insertAfter  = refTabs.insertAfter;
     }; break;
@@ -215,7 +229,7 @@ export async function openNewTabAs(options = {}) {
         break;
 
       case Constants.kCONTEXTUAL_IDENTITY_FROM_LAST_ACTIVE:
-        options.cookieStoreId = currentTab.cookieStoreId;
+        options.cookieStoreId = activeTab.cookieStoreId;
         break;
 
       default:
@@ -226,7 +240,7 @@ export async function openNewTabAs(options = {}) {
   TabsOpen.openNewTab({
     parent, insertBefore, insertAfter,
     isOrphan,
-    windowId:      currentTab.windowId,
+    windowId:      activeTab.windowId,
     inBackground:  !!options.inBackground,
     cookieStoreId: options.cookieStoreId
   });
@@ -276,7 +290,7 @@ export async function outdent(tab, options = {}) {
       broadcast: true,
     });
     const insertAfter = parent.$TST.lastDescendant || parent;
-    await TabsMove.moveTabAfter(tab, insertAfter, {
+    await Tree.moveTabSubtreeAfter(tab, insertAfter, {
       broadcast: true,
     });
   }
@@ -296,10 +310,10 @@ async function performTabsDragDrop(params = {}) {
     windowId:            params.windowId,
     destinationWindowId: params.destinationWindowId,
     action:              params.action,
-    allosedActions:      params.allosedActions
+    allowedActions:      params.allowedActions
   }));
 
-  if (!(params.allosedActions & Constants.kDRAG_BEHAVIOR_MOVE) &&
+  if (!(params.allowedActions & Constants.kDRAG_BEHAVIOR_MOVE) &&
       !params.duplicate) {
     log('not allowed action');
     return;
@@ -553,9 +567,11 @@ async function attachTabsWithStructure(tabs, parent, options = {}) {
       await Tree.attachTabTo(tab, parent, memberOptions);
     else
       await Tree.detachTab(tab, memberOptions);
+    // The tree can remain being collapsed by other addons like TST Lock Tree Collapsed.
+    const collapsed = parent && parent.$TST.subtreeCollapsed;
     return Tree.collapseExpandTabAndSubtree(tab, {
       ...memberOptions,
-      collapsed: false
+      collapsed,
     });
   }));
 }
@@ -747,10 +763,13 @@ export async function openTabInWindow(tab, options = {}) {
     return openTabsInWindow(Tab.getSelectedTabs(tab.windowId));
   }
   else {
-    const window = await browser.windows.create({
+    const sourceWindow = await browser.windows.get(tab.windowId);
+    const windowParams = {
+      //active: true,  // not supported in Firefox...
       tabId:     tab.id,
-      incognito: tab.incognito
-    }).catch(ApiTabs.createErrorHandler());
+      ...getWindowParamsFromSource(sourceWindow, options),
+    };
+    const window = await browser.windows.create(windowParams).catch(ApiTabs.createErrorHandler());
     return window.id;
   }
 }
@@ -980,17 +999,12 @@ export async function openBookmarksWithStructure(items, { activeIndex = 0, disca
 
   const lastItemIndicesWithLevel = new Map();
   let lastMaxLevel = 0;
-  const containerMatcher = new RegExp(`#${configs.containerRedirectKey}-(.+)$`);
   const structure = items.reduce((result, item, index) => {
-    // Respect container type stored by Container Bookmarks
-    // https://addons.mozilla.org/firefox/addon/container-bookmarks/
-    const matchedContainer = item.url.match(containerMatcher);
-    if (matchedContainer) {
-      const cookieStoreId = ContextualIdentities.getIdFromName(decodeURIComponent(matchedContainer[matchedContainer.length-1]));
-      if (cookieStoreId) {
-        item.cookieStoreId = cookieStoreId;
-        item.url = item.url.replace(containerMatcher, '');
-      }
+    const { cookieStoreId, url } = ContextualIdentities.getIdFromBookmark(item);
+    if (cookieStoreId) {
+      item.cookieStoreId = cookieStoreId;
+      if (url)
+        item.url = url;
     }
 
     let level = 0;
@@ -1021,7 +1035,11 @@ export async function openBookmarksWithStructure(items, { activeIndex = 0, disca
   const windowId = TabsStore.getCurrentWindowId() || (await browser.windows.getCurrent()).id;
   const tabs = await TabsOpen.openURIsInTabs(
     // we need to isolate it - unexpected parameter like "index" will break the behavior.
-    items.map(bookmark => ({ url: bookmark.url, title: bookmark.title })),
+    items.map(bookmark => ({
+      url:           bookmark.url,
+      title:         bookmark.title,
+      cookieStoreId: bookmark.cookieStoreId,
+    })),
     {
       windowId,
       isOrphan:     true,

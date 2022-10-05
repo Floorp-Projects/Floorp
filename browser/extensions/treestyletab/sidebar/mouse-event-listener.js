@@ -14,7 +14,7 @@
  * The Original Code is the Tree Style Tab.
  *
  * The Initial Developer of the Original Code is YUKI "Piro" Hiroshi.
- * Portions created by the Initial Developer are Copyright (C) 2011-2021
+ * Portions created by the Initial Developer are Copyright (C) 2011-2022
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): YUKI "Piro" Hiroshi <piro.outsider.reflex@gmail.com>
@@ -38,21 +38,26 @@ import {
   shouldApplyAnimation,
   isMacOS,
 } from '/common/common.js';
-import * as Constants from '/common/constants.js';
 import * as ApiTabs from '/common/api-tabs.js';
+import * as Constants from '/common/constants.js';
+import * as MetricsData from '/common/metrics-data.js';
 import * as TabsStore from '/common/tabs-store.js';
 import * as TreeBehavior from '/common/tree-behavior.js';
 import * as TSTAPI from '/common/tst-api.js';
-import * as MetricsData from '/common/metrics-data.js';
 
 import Tab from '/common/Tab.js';
 
 import * as BackgroundConnection from './background-connection.js';
-import * as Sidebar from './sidebar.js';
 import * as EventUtils from './event-utils.js';
 import * as DragAndDrop from './drag-and-drop.js';
-import * as TabContextMenu from './tab-context-menu.js';
 import * as Scroll from './scroll.js';
+import * as Sidebar from './sidebar.js';
+import * as TabContextMenu from './tab-context-menu.js';
+import * as TSTAPIFrontend from './tst-api-frontend.js';
+
+import { kTAB_CLOSE_BOX_ELEMENT_NAME } from './components/TabCloseBoxElement.js';
+import { kTAB_FAVICON_ELEMENT_NAME } from './components/TabFaviconElement.js';
+import { kTAB_TWISTY_ELEMENT_NAME } from './components/TabTwistyElement.js';
 
 function log(...args) {
   internalLogger('sidebar/mouse-event-listener', ...args);
@@ -63,6 +68,7 @@ let mTargetWindow;
 const mTabBar = document.querySelector('#tabbar');
 const mContextualIdentitySelector = document.getElementById(Constants.kCONTEXTUAL_IDENTITY_SELECTOR);
 const mNewTabActionSelector       = document.getElementById(Constants.kNEWTAB_ACTION_SELECTOR);
+const mRootClasses = document.documentElement.classList;
 
 let mHasMouseOverListeners = false;
 
@@ -84,7 +90,7 @@ Sidebar.onBuilt.addListener(async () => {
   browser.runtime.onMessage.addListener(onMessage);
   BackgroundConnection.onMessage.addListener(onBackgroundMessage);
 
-  if (!document.documentElement.classList.contains('incognito'))
+  if (!mRootClasses.contains('incognito'))
     mContextualIdentitySelector.ui = new MenuUI({
       root:       mContextualIdentitySelector,
       appearance: 'panel',
@@ -104,8 +110,33 @@ Sidebar.onReady.addListener(() => {
   updateSpecialEventListenersForAPIListeners();
 });
 
+Sidebar.onLayoutUpdated.addListener(() => {
+  updateSpecialEventListenersForAPIListeners();
+});
+
+TSTAPI.onRegistered.addListener(() => {
+  updateSpecialEventListenersForAPIListeners();
+});
+
+TSTAPI.onUnregistered.addListener(() => {
+  updateSpecialEventListenersForAPIListeners();
+});
+
+configs.$addObserver(changedKey => {
+  switch (changedKey) {
+    case 'shiftTabsForScrollbarDistance':
+    case 'shiftTabsForScrollbarOnlyOnHover':
+      updateSpecialEventListenersForAPIListeners();
+      break;
+  }
+});
+
 function updateSpecialEventListenersForAPIListeners() {
-  const shouldListenMouseMove = TSTAPI.hasListenerForMessageType(TSTAPI.kNOTIFY_TAB_MOUSEMOVE);
+  const shouldListenMouseMove = (
+    TSTAPI.hasListenerForMessageType(TSTAPI.kNOTIFY_TAB_MOUSEMOVE) ||
+    (configs.shiftTabsForScrollbarOnlyOnHover &&
+     mTabBar.classList.contains(Constants.kTABBAR_STATE_SCROLLBAR_AUTOHIDE))
+  );
   if (shouldListenMouseMove != onMouseMove.listening) {
     if (!onMouseMove.listening) {
       window.addEventListener('mousemove', onMouseMove, { capture: true, passive: true });
@@ -135,9 +166,38 @@ function updateSpecialEventListenersForAPIListeners() {
 
 /* handlers for DOM events */
 
+const mCloseBoxSizeBox = document.querySelector(`#dummy-tab ${kTAB_CLOSE_BOX_ELEMENT_NAME}`);
+const mFaviconSizeBox  = document.querySelector(`#dummy-tab ${kTAB_FAVICON_ELEMENT_NAME}`);
+const mTwistySizeBox   = document.querySelector(`#dummy-tab ${kTAB_TWISTY_ELEMENT_NAME}`);
+const mDistanceBox     = document.querySelector('#dummy-shift-tabs-for-scrollbar-distance-box');
+
 function onMouseMove(event) {
   const tab = EventUtils.getTabFromEvent(event);
-  if (tab) {
+  if (mTabBar.classList.contains(Constants.kTABBAR_STATE_SCROLLBAR_AUTOHIDE)) {
+    const onTabBar    = mTabBar.contains(event.target);
+    const tabbarRect  = mTabBar.getBoundingClientRect();
+    const twistyRect  = mTwistySizeBox.getBoundingClientRect();
+    const faviconRect = mFaviconSizeBox.getBoundingClientRect();
+    const closeRect   = mCloseBoxSizeBox.getBoundingClientRect();
+    const placeholderSizeRect = mDistanceBox.getBoundingClientRect();
+    const isRightSide = mRootClasses.contains('right');
+    const leftAreaSize = onTabBar &&(
+      isRightSide ? closeRect.width :
+        Math.max(twistyRect.right, faviconRect.right) - Math.min(twistyRect.left, faviconRect.left)
+    ) + placeholderSizeRect.width;
+    const rightAreaSize = onTabBar &&(
+      !isRightSide ? closeRect.width :
+        Math.max(twistyRect.right, faviconRect.right) - Math.min(twistyRect.left, faviconRect.left)
+    ) + placeholderSizeRect.width;
+    mRootClasses.toggle('on-scrollbar-area', (
+      onTabBar &&
+      isRightSide ? event.clientX >= tabbarRect.right - rightAreaSize :
+        event.clientX <= tabbarRect.left + leftAreaSize
+    ));
+  }
+
+  if (TSTAPI.hasListenerForMessageType(TSTAPI.kNOTIFY_TAB_MOUSEMOVE) &&
+      tab) {
     TSTAPI.sendMessage({
       type:     TSTAPI.kNOTIFY_TAB_MOUSEMOVE,
       tab:      new TSTAPI.TreeItem(tab),
@@ -242,8 +302,8 @@ function onMouseDown(event) {
   const tab = EventUtils.getTabFromEvent(event) || EventUtils.getTabFromTabbarEvent(event);
   log('onMouseDown: found target tab: ', tab, event);
 
-  const extraContentsInfo = getOriginalExtraContentsTarget(event);
-  const mousedownDetail   = getMouseEventDetail(event, tab);
+  const extraContentsInfo = TSTAPIFrontend.getOriginalExtraContentsTarget(event);
+  const mousedownDetail   = EventUtils.getMouseEventDetail(event, tab);
   mousedownDetail.$extraContentsInfo = extraContentsInfo;
   log('onMouseDown ', mousedownDetail);
 
@@ -274,7 +334,8 @@ function onMouseDown(event) {
       .catch(ApiTabs.createErrorHandler()),
     (async () => {
       log('Sending message to mousedown listeners ', { extraContentsInfo });
-      const allowed = await tryMouseOperationAllowedWithExtraContents(
+      const allowed = await TSTAPIFrontend.tryMouseOperationAllowedWithExtraContents(
+        TSTAPI.kNOTIFY_EXTRA_CONTENTS_MOUSEDOWN,
         apiEventType,
         mousedown,
         extraContentsInfo
@@ -355,105 +416,6 @@ function onMouseDown(event) {
 }
 onMouseDown = EventUtils.wrapWithErrorHandler(onMouseDown);
 
-function getMouseEventDetail(event, tab) {
-  return {
-    targetType:    getMouseEventTargetType(event),
-    tab:           tab && tab.id,
-    tabId:         tab && tab.id,
-    window:        mTargetWindow,
-    windowId:      mTargetWindow,
-    twisty:        EventUtils.isEventFiredOnTwisty(event),
-    soundButton:   EventUtils.isEventFiredOnSoundButton(event),
-    closebox:      EventUtils.isEventFiredOnClosebox(event),
-    button:        event.button,
-    ctrlKey:       event.ctrlKey,
-    shiftKey:      event.shiftKey,
-    altKey:        event.altKey,
-    metaKey:       event.metaKey,
-    isMiddleClick: EventUtils.isMiddleClick(event),
-    isAccelClick:  EventUtils.isAccelAction(event),
-    lastInnerScreenY: window.mozInnerScreenY
-  };
-}
-
-function getOriginalExtraContentsTarget(event) {
-  let target = event.originalTarget;
-  if (target && target.nodeType != Node.ELEMENT_NODE)
-    target = target.parentNode;
-
-  const extraContents = target.closest(`.extra-item`);
-  if (extraContents)
-    return {
-      owners: new Set([extraContents.dataset.owner]),
-      target: target.outerHTML
-    };
-
-  return {
-    owners: new Set(),
-    target: null
-  };
-}
-
-async function tryMouseOperationAllowedWithExtraContents(type, mousedown, extraContentsInfo) {
-  if (extraContentsInfo &&
-      extraContentsInfo.owners &&
-      extraContentsInfo.owners.size > 0) {
-    const allowed = await TSTAPI.tryOperationAllowed(
-      type,
-      {
-        ...mousedown.detail,
-        tab:                mousedown.treeItem,
-        originalTarget:     extraContentsInfo.target,
-        $extraContentsInfo: null
-      },
-      { tabProperties: ['tab'],
-        targets:       extraContentsInfo.owners }
-    );
-    if (!allowed)
-      return false;
-  }
-  const allowed = await TSTAPI.tryOperationAllowed(
-    type,
-    {
-      ...mousedown.detail,
-      tab:                mousedown.treeItem,
-      $extraContentsInfo: null
-    },
-    { tabProperties: ['tab'],
-      except:        extraContentsInfo && extraContentsInfo.owners }
-  );
-  if (!allowed)
-    return false;
-  return true;
-}
-
-function getMouseEventTargetType(event) {
-  if (event.target.closest('.rich-confirm, #blocking-screen'))
-    return 'outside';
-
-  if (EventUtils.getTabFromEvent(event))
-    return 'tab';
-
-  if (EventUtils.isEventFiredOnNewTabButton(event))
-    return 'newtabbutton';
-
-  if (EventUtils.isEventFiredOnMenuOrPanel(event) ||
-      EventUtils.isEventFiredOnAnchor(event))
-    return 'selector';
-
-  const allRange = document.createRange();
-  allRange.selectNodeContents(document.body);
-  const containerRect = allRange.getBoundingClientRect();
-  allRange.detach();
-  if (event.clientX < containerRect.left ||
-      event.clientX > containerRect.right ||
-      event.clientY < containerRect.top ||
-      event.clientY > containerRect.bottom)
-    return 'outside';
-
-  return 'blank';
-}
-
 let mLastMouseUpX = -1;
 let mLastMouseUpY = -1;
 let mLastMouseUpOnTab = -1;
@@ -486,11 +448,12 @@ async function onMouseUp(event) {
   if (tab) {
     const mouseupInfo = {
       ...lastMousedown,
-      detail:   getMouseEventDetail(event, tab),
+      detail:   EventUtils.getMouseEventDetail(event, tab),
       treeItem: new TSTAPI.TreeItem(tab)
     };
 
-    const mouseupAllowed = await tryMouseOperationAllowedWithExtraContents(
+    const mouseupAllowed = await TSTAPIFrontend.tryMouseOperationAllowedWithExtraContents(
+      TSTAPI.kNOTIFY_EXTRA_CONTENTS_MOUSEUP,
       TSTAPI.kNOTIFY_TAB_MOUSEUP,
       mouseupInfo,
       extraContentsInfo
@@ -500,7 +463,8 @@ async function onMouseUp(event) {
       return true;
     }
 
-    const clickAllowed = await tryMouseOperationAllowedWithExtraContents(
+    const clickAllowed = await TSTAPIFrontend.tryMouseOperationAllowedWithExtraContents(
+      TSTAPI.kNOTIFY_EXTRA_CONTENTS_CLICKED,
       TSTAPI.kNOTIFY_TAB_CLICKED,
       mouseupInfo,
       extraContentsInfo
@@ -516,7 +480,7 @@ async function onMouseUp(event) {
     promisedCanceled = lastMousedown.promisedMousedownNotified;
 
   if (lastMousedown.expired ||
-      lastMousedown.detail.targetType != getMouseEventTargetType(event) || // when the cursor was moved before mouseup
+      lastMousedown.detail.targetType != EventUtils.getEventTargetType(event) || // when the cursor was moved before mouseup
       (tab && tab != Tab.get(lastMousedown.detail.tab))) { // when the tab was already removed
     log(' => expired, different type, or different tab');
     return;
@@ -557,11 +521,12 @@ async function handleDefaultMouseUp({ lastMousedown, tab, event }) {
       log('onMouseUp: click on the new tab button');
       const mouseupInfo = {
         ...lastMousedown,
-        detail:   getMouseEventDetail(event),
+        detail:   EventUtils.getMouseEventDetail(event),
         treeItem: null,
       };
 
-      const mouseUpAllowed = await tryMouseOperationAllowedWithExtraContents(
+      const mouseUpAllowed = await TSTAPIFrontend.tryMouseOperationAllowedWithExtraContents(
+        TSTAPI.kNOTIFY_EXTRA_CONTENTS_MOUSEUP,
         TSTAPI.kNOTIFY_NEW_TAB_BUTTON_MOUSEUP,
         mouseupInfo,
         lastMousedown.detail.$extraContentsInfo
@@ -569,7 +534,8 @@ async function handleDefaultMouseUp({ lastMousedown, tab, event }) {
       if (!mouseUpAllowed)
         return;
 
-      const clickAllowed = await tryMouseOperationAllowedWithExtraContents(
+      const clickAllowed = await TSTAPIFrontend.tryMouseOperationAllowedWithExtraContents(
+        TSTAPI.kNOTIFY_EXTRA_CONTENTS_CLICKED,
         TSTAPI.kNOTIFY_NEW_TAB_BUTTON_CLICKED,
         mouseupInfo,
         lastMousedown.detail.$extraContentsInfo
@@ -603,34 +569,71 @@ async function handleDefaultMouseUp({ lastMousedown, tab, event }) {
       Math.abs(mLastMouseUpY - event.clientY) < configs.acceptableFlickerToIgnoreClickOnTabAndTabbar / 2)
     return;
 
-  log('onMouseUp: notify as a blank area click to other addons');
-  const mouseUpAllowed = await TSTAPI.tryOperationAllowed(
-    TSTAPI.kNOTIFY_TABBAR_MOUSEUP,
-    {
-      ...lastMousedown.detail,
-      window:             mTargetWindow,
-      windowId:           mTargetWindow,
-      tab:                lastMousedown.treeItem,
-      $extraContentsInfo: null
-    },
-    { tabProperties: ['tab'] }
-  );
-  if (!mouseUpAllowed)
-    return;
+  const onTabbarTop = EventUtils.isEventFiredOnTabbarTop(event);
+  const onTabbarBottom = EventUtils.isEventFiredOnTabbarBottom(event);
 
-  const clickAllowed = await TSTAPI.tryOperationAllowed(
-    TSTAPI.kNOTIFY_TABBAR_CLICKED,
-    {
-      ...lastMousedown.detail,
-      window:             mTargetWindow,
-      windowId:           mTargetWindow,
-      tab:                lastMousedown.treeItem,
-      $extraContentsInfo: null
-    },
-    { tabProperties: ['tab'] }
-  );
-  if (!clickAllowed)
-    return;
+  log('onMouseUp: notify as a blank area click to other addons');
+  if (onTabbarTop || onTabbarBottom) {
+    const allowed = await TSTAPIFrontend.tryMouseOperationAllowedWithExtraContents(
+      TSTAPI.kNOTIFY_EXTRA_CONTENTS_MOUSEUP,
+      TSTAPI.kNOTIFY_TABBAR_MOUSEUP,
+      {
+        ...lastMousedown,
+        detail:   EventUtils.getMouseEventDetail(event),
+        treeItem: null,
+        tab:      null,
+      },
+      lastMousedown.detail.$extraContentsInfo
+    );
+    if (!allowed)
+      return;
+  }
+  else {
+    const mouseUpAllowed = await TSTAPI.tryOperationAllowed(
+      TSTAPI.kNOTIFY_TABBAR_MOUSEUP,
+      {
+        ...lastMousedown.detail,
+        window:             mTargetWindow,
+        windowId:           mTargetWindow,
+        tab:                lastMousedown.treeItem,
+        $extraContentsInfo: null
+      },
+      { tabProperties: ['tab'] }
+    );
+    if (!mouseUpAllowed)
+      return;
+  }
+
+  if (onTabbarTop || onTabbarBottom) {
+    const allowed = await TSTAPIFrontend.tryMouseOperationAllowedWithExtraContents(
+      TSTAPI.kNOTIFY_EXTRA_CONTENTS_CLICKED,
+      TSTAPI.kNOTIFY_TABBAR_CLICKED,
+      {
+        ...lastMousedown,
+        detail:   EventUtils.getMouseEventDetail(event),
+        treeItem: null,
+        tab:      null,
+      },
+      lastMousedown.detail.$extraContentsInfo
+    );
+    if (!allowed)
+      return;
+  }
+  else {
+    const clickAllowed = await TSTAPI.tryOperationAllowed(
+      TSTAPI.kNOTIFY_TABBAR_CLICKED,
+      {
+        ...lastMousedown.detail,
+        window:             mTargetWindow,
+        windowId:           mTargetWindow,
+        tab:                lastMousedown.treeItem,
+        $extraContentsInfo: null
+      },
+      { tabProperties: ['tab'] }
+    );
+    if (!clickAllowed)
+      return;
+  }
 
   if (lastMousedown.detail.isMiddleClick) { // Ctrl-click does nothing on Firefox's tab bar!
     log('onMouseUp: default action for middle click on the blank area');
@@ -789,7 +792,7 @@ function updateMultiselectionByTabClick(tab, event) {
 
       // for better performance, we should not call browser.tabs.update() for each tab.
       const indices = mapAndFilter(highlightedTabIds,
-                                   id => id != activeTab.id && Tab.get(id).index || undefined);
+                                   id => id == activeTab.id ? undefined : Tab.get(id).index);
       if (highlightedTabIds.has(activeTab.id))
         indices.unshift(activeTab.index);
       browser.tabs.highlight({
@@ -860,7 +863,7 @@ function updateMultiselectionByTabClick(tab, event) {
 
       // for better performance, we should not call browser.tabs.update() for each tab.
       const indices = mapAndFilter(highlightedTabIds,
-                                   id => id != activeTab.id && Tab.get(id).index || undefined);
+                                   id => id == activeTab.id ? undefined : Tab.get(id).index);
       if (highlightedTabIds.has(activeTab.id))
         indices.unshift(activeTab.index);
       browser.tabs.highlight({
@@ -973,40 +976,24 @@ async function onDblClick(event) {
   if (livingTab &&
       !EventUtils.isEventFiredOnTwisty(event) &&
       !EventUtils.isEventFiredOnSoundButton(event)) {
-    const detail   = getMouseEventDetail(event, livingTab);
+    const detail   = EventUtils.getMouseEventDetail(event, livingTab);
     const treeItem = new TSTAPI.TreeItem(livingTab);
-    const extraContentsInfo = getOriginalExtraContentsTarget(event);
-    if (extraContentsInfo.owners) {
-      const allowed = await TSTAPI.tryOperationAllowed(
-        TSTAPI.kNOTIFY_TAB_DBLCLICKED,
-        {
-          ...detail,
-          tab:            treeItem,
-          originalTarget: extraContentsInfo.target
-        },
-        { tabProperties: ['tab'],
-          targets:       extraContentsInfo.owners }
-      );
-      if (!allowed)
-        return;
-    }
-    const allowed = await TSTAPI.tryOperationAllowed(
+    const extraContentsInfo = TSTAPIFrontend.getOriginalExtraContentsTarget(event);
+    const allowed = await TSTAPIFrontend.tryMouseOperationAllowedWithExtraContents(
+      TSTAPI.kNOTIFY_EXTRA_CONTENTS_DBLCLICKED,
       TSTAPI.kNOTIFY_TAB_DBLCLICKED,
-      {
-        ...detail,
-        tab: treeItem
-      },
-      { tabProperties: ['tab'],
-        except:        extraContentsInfo.owners }
+      { detail, treeItem },
+      extraContentsInfo
     );
     if (!allowed)
       return;
 
-    if (configs.treeDoubleClickBehavior != Constants.kTREE_DOUBLE_CLICK_BEHAVIOR_NONE) {
+    if (!EventUtils.isEventFiredOnClosebox(event) && // closebox action is already processed by onclick listener, so we should not handle it here!
+        configs.treeDoubleClickBehavior != Constants.kTREE_DOUBLE_CLICK_BEHAVIOR_NONE) {
       switch (configs.treeDoubleClickBehavior) {
         case Constants.kTREE_DOUBLE_CLICK_BEHAVIOR_TOGGLE_COLLAPSED:
-          event.stopPropagation();
-          event.preventDefault();
+          //event.stopPropagation();
+          //event.preventDefault();
           BackgroundConnection.sendMessage({
             type:            Constants.kCOMMAND_SET_SUBTREE_COLLAPSED_STATE,
             tabId:           livingTab.id,
@@ -1017,8 +1004,8 @@ async function onDblClick(event) {
           break;
 
         case Constants.kTREE_DOUBLE_CLICK_BEHAVIOR_CLOSE:
-          event.stopPropagation();
-          event.preventDefault();
+          //event.stopPropagation();
+          //event.preventDefault();
           const tabIds = [livingTab.id];
           Scroll.tryLockPosition(tabIds);
           BackgroundConnection.sendMessage({
@@ -1034,8 +1021,19 @@ async function onDblClick(event) {
   if (tab) // ignore dblclick on closing tab or something
     return;
 
-  event.stopPropagation();
-  event.preventDefault();
+  const detail            = EventUtils.getMouseEventDetail(event, null);
+  const extraContentsInfo = TSTAPIFrontend.getOriginalExtraContentsTarget(event);
+  const allowed           = await TSTAPIFrontend.tryMouseOperationAllowedWithExtraContents(
+    TSTAPI.kNOTIFY_EXTRA_CONTENTS_DBLCLICKED,
+    null,
+    { detail },
+    extraContentsInfo
+  );
+  if (!allowed)
+    return;
+
+  //event.stopPropagation();
+  //event.preventDefault();
   handleNewTabAction(event, {
     action: configs.autoAttachOnNewTabCommand
   });

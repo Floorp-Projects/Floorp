@@ -5,6 +5,9 @@
 */
 'use strict';
 
+import EventListenerManager from '/extlib/EventListenerManager.js';
+import { SequenceMatcher } from '/extlib/diff.js';
+
 import {
   log as internalLogger,
   wait,
@@ -12,12 +15,11 @@ import {
   shouldApplyAnimation
 } from '/common/common.js';
 
-import * as Constants from '/common/constants.js';
 import * as ApiTabs from '/common/api-tabs.js';
-import * as TabsStore from '/common/tabs-store.js';
+import * as Constants from '/common/constants.js';
 import * as TabsInternalOperation from '/common/tabs-internal-operation.js';
+import * as TabsStore from '/common/tabs-store.js';
 import * as TabsUpdate from '/common/tabs-update.js';
-import { SequenceMatcher } from '/extlib/diff.js';
 
 import Tab from '/common/Tab.js';
 import Window from '/common/Window.js';
@@ -25,10 +27,9 @@ import Window from '/common/Window.js';
 import * as BackgroundConnection from './background-connection.js';
 import * as CollapseExpand from './collapse-expand.js';
 
-import EventListenerManager from '/extlib/EventListenerManager.js';
-
 import {
   kTAB_ELEMENT_NAME,
+  kTAB_SUBSTANCE_ELEMENT_NAME,
   TabInvalidationTarget,
   TabUpdateTarget,
 } from './components/TabElement.js';
@@ -62,7 +63,8 @@ export function getTabFromDOMNode(node, options = {}) {
     return null;
   if (!(node instanceof Element))
     node = node.parentNode;
-  const tab = node && node.closest('.tab');
+  const tabSubstance = node && node.closest(kTAB_SUBSTANCE_ELEMENT_NAME);
+  const tab = tabSubstance && tabSubstance.closest(kTAB_ELEMENT_NAME);
   if (options.force)
     return tab && tab.apiTab;
   return TabsStore.ensureLivingTab(tab && tab.apiTab);
@@ -197,6 +199,7 @@ async function syncTabsOrder() {
 
   const DOMElementsOperations = (new SequenceMatcher(elementsOrder, internalOrder)).operations();
   log(`syncTabsOrder: rearrange `, { internalOrder:internalOrder.join(','), elementsOrder:elementsOrder.join(',') });
+  let modificationsCount = 0;
   for (const operation of DOMElementsOperations) {
     const [tag, fromStart, fromEnd, toStart, toEnd] = operation;
     log('syncTabsOrder: operation ', { tag, fromStart, fromEnd, toStart, toEnd });
@@ -215,9 +218,13 @@ async function syncTabsOrder() {
           if (tab)
             trackedWindow.element.insertBefore(tab.$TST.element, referenceTab && referenceTab.$TST.element || trackedWindow.element.lastChild);
         }
+        modificationsCount++;
         break;
     }
   }
+  if (modificationsCount == 0 &&
+      reserveToSyncTabsOrder.retryCount == 0)
+    return;
 
   // Tabs can be moved while processing by other addons like Simple Tab Groups,
   // so resync until they are completely synchronized.
@@ -302,7 +309,7 @@ export async function waitUntilNewTabIsMoved(tabId) {
   const timer = setTimeout(() => {
     if (mMovedNewTabResolvers.has(tabId))
       mMovedNewTabResolvers.get(tabId)();
-  }, Math.max(0, configs.autoGroupNewTabsTimeout));
+  }, Math.max(0, configs.tabBunchesDetectionTimeout));
   const promise = new Promise((resolve, _reject) => {
     mMovedNewTabResolvers.set(tabId, resolve);
   }).then(newIndex => {
@@ -323,7 +330,7 @@ function maybeNewTabIsMoved(tabId) {
     mAlreadyMovedNewTabs.add(tabId);
     setTimeout(() => {
       mAlreadyMovedNewTabs.delete(tabId);
-    }, Math.min(10 * 1000, configs.autoGroupNewTabsTimeout));
+    }, Math.min(10 * 1000, configs.tabBunchesDetectionTimeout));
   }
 }
 
@@ -459,7 +466,10 @@ async function activateRealActiveTab(windowId) {
   TabsInternalOperation.setTabActive(tab);
 }
 
+
 const BUFFER_KEY_PREFIX = 'sidebar-tab-';
+
+const mRemovedTabIdsNotifiedBeforeTracked = new Set();
 
 BackgroundConnection.onMessage.addListener(async message => {
   switch (message.type) {
@@ -495,6 +505,11 @@ BackgroundConnection.onMessage.addListener(async message => {
     case Constants.kCOMMAND_NOTIFY_TAB_CREATING: {
       const nativeTab = message.tab;
       nativeTab.reindexedBy = `creating (${nativeTab.index})`;
+
+      if (mRemovedTabIdsNotifiedBeforeTracked.has(nativeTab.id)) {
+        log(`ignore kCOMMAND_NOTIFY_TAB_CREATING for already closed tab: ${nativeTab.id}`);
+        return;
+      }
 
       // The "index" property of the tab was already updated by the background process
       // with other newly opened tabs. However, such other tabs are not tracked on
@@ -546,8 +561,10 @@ BackgroundConnection.onMessage.addListener(async message => {
       }
       await Tab.waitUntilTracked(message.tabId, { element: true });
       const tab = Tab.get(message.tabId);
-      if (!tab)
+      if (!tab) {
+        log(`ignore kCOMMAND_NOTIFY_TAB_CREATED for already closed tab: ${message.tabId}`);
         return;
+      }
       tab.$TST.addState(Constants.kTAB_STATE_ANIMATION_READY);
       tab.$TST.resolveOpened();
       if (message.maybeMoved)
@@ -726,8 +743,14 @@ BackgroundConnection.onMessage.addListener(async message => {
 
     case Constants.kCOMMAND_NOTIFY_TAB_REMOVING: {
       const tab = Tab.get(message.tabId);
-      if (!tab)
+      if (!tab) {
+        log(`ignore kCOMMAND_NOTIFY_TAB_REMOVING for already closed tab: ${message.tabId}`);
+        mRemovedTabIdsNotifiedBeforeTracked.add(message.tabId);
+        wait(10000).then(() => {
+          mRemovedTabIdsNotifiedBeforeTracked.delete(message.tabId);
+        });
         return;
+      }
       tab.$TST.parent = null;
       // remove from "highlighted tabs" cache immediately, to prevent misdetection for "multiple highlighted".
       TabsStore.removeHighlightedTab(tab);
@@ -745,8 +768,10 @@ BackgroundConnection.onMessage.addListener(async message => {
     case Constants.kCOMMAND_NOTIFY_TAB_REMOVED: {
       const tab = Tab.get(message.tabId);
       TabsStore.windows.get(message.windowId).detachTab(message.tabId);
-      if (!tab)
+      if (!tab) {
+        log(`ignore kCOMMAND_NOTIFY_TAB_REMOVED for already closed tab: ${message.tabId}`);
         return;
+      }
       if (tab.active) {
         // This should not, but sometimes happens on some edge cases for example:
         // https://github.com/piroor/treestyletab/issues/2385
@@ -932,13 +957,14 @@ BackgroundConnection.onMessage.addListener(async message => {
         return;
       // When a group tab is restored but pending, TST cannot update title of the tab itself.
       // For failsafe now we update the title based on its URL.
-      const uri = tab.url;
-      const parameters = uri.replace(/^[^\?]+/, '');
-      let title = parameters.match(/[&?]title=([^&;]*)/);
-      if (!title)
+      const uri = new URL(tab.url);
+      let title = uri.searchParams.get('title');
+      if (!title) {
+        const parameters = uri.replace(/^[^\?]+/, '');
         title = parameters.match(/^\?([^&;]*)/);
-      title = title && decodeURIComponent(title[1]) ||
-               browser.i18n.getMessage('groupTab_label_default');
+        title = title && decodeURIComponent(title[1]);
+      }
+      title = title || browser.i18n.getMessage('groupTab_label_default');
       tab.title = title;
       wait(0).then(() => {
         TabsUpdate.updateTab(tab, { title });

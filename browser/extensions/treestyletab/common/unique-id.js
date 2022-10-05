@@ -10,9 +10,9 @@ import {
   configs,
   wait,
 } from './common.js';
+import * as ApiTabs from './api-tabs.js';
 import * as Constants from './constants.js';
 import * as TabsStore from './tabs-store.js';
-import * as ApiTabs from './api-tabs.js';
 
 // eslint-disable-next-line no-unused-vars
 function log(...args) {
@@ -82,6 +82,12 @@ Yak
 Zapus
 `.toLowerCase().trim().split(/\s+/);
 
+let mReadyToDetectDuplicatedTab = false;
+
+export function readyToDetectDuplicatedTab() {
+  mReadyToDetectDuplicatedTab = true;
+}
+
 export async function request(tabOrId, options = {}) {
   if (typeof options != 'object')
     options = {};
@@ -101,8 +107,13 @@ export async function request(tabOrId, options = {}) {
   let originalTabId = null;
   let duplicated    = false;
   if (!options.forceNew) {
-    if (configs.delayForDuplicatedTabDetection > 0)
+    // https://github.com/piroor/treestyletab/issues/2845
+    // This delay may break initial restoration of tabs, so we should
+    // ignore it until all restoration processes are finished.
+    if (mReadyToDetectDuplicatedTab &&
+        configs.delayForDuplicatedTabDetection > 0)
       await wait(configs.delayForDuplicatedTabDetection);
+
     let oldId = await browser.sessions.getTabValue(tab.id, Constants.kPERSISTENT_ID).catch(ApiTabs.createErrorHandler());
     if (oldId && !oldId.tabId) // ignore broken information!
       oldId = null;

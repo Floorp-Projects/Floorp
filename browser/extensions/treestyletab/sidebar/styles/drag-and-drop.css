@@ -14,13 +14,13 @@ tab-item.dragging {
   opacity: 0.5 !important;
 }
 
-tab-item[data-drop-position="self"] {
+tab-item[data-drop-position="self"] tab-item-substance {
   outline: var(--tab-dropmarker-size) solid var(--tab-dropmarker) !important;
   outline-offset: calc(0px - var(--tab-dropmarker-size));
   -moz-outline-radius: calc(var(--tab-dropmarker-size) * 2);
 }
 
-tab-item[data-drop-position]:not([data-drop-position="self"])::before {
+tab-item[data-drop-position]:not([data-drop-position="self"]) tab-item-substance::before {
   content: "";
   display: block;
   max-height: var(--tab-dropmarker-size);
@@ -31,32 +31,32 @@ tab-item[data-drop-position]:not([data-drop-position="self"])::before {
   position: absolute;
   z-index: var(--tab-drop-marker-z-index);
 }
-tab-item[data-drop-position]:not([data-drop-position="self"]).faviconized::before {
+tab-item[data-drop-position]:not([data-drop-position="self"]).faviconized tab-item-substance::before {
   max-height: none;
   max-width: var(--tab-dropmarker-size);
   min-height: 0;
   min-width: var(--tab-dropmarker-size);
 }
 
-tab-item:not(.faviconized)[data-drop-position="before"]::before {
+tab-item:not(.faviconized)[data-drop-position="before"] tab-item-substance::before {
   left: 0;
   right: 0;
   top: 0;
 }
 
-tab-item:not(.faviconized)[data-drop-position="after"]::before {
+tab-item:not(.faviconized)[data-drop-position="after"] tab-item-substance::before {
   bottom: 0;
   left: 0;
   right: 0;
 }
 
-tab-item.faviconized[data-drop-position="before"]::before {
+tab-item.faviconized[data-drop-position="before"] tab-item-substance::before {
   bottom: 0;
   left: 0;
   top: 0;
 }
 
-tab-item.faviconized[data-drop-position="after"]::before {
+tab-item.faviconized[data-drop-position="after"] tab-item-substance::before {
   bottom: 0;
   right: 0;
   top: 0;

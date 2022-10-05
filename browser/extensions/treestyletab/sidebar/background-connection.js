@@ -5,6 +5,8 @@
 */
 'use strict';
 
+import EventListenerManager from '/extlib/EventListenerManager.js';
+
 import {
   log as internalLogger,
   mapAndFilterUniq,
@@ -13,8 +15,6 @@ import {
 import * as Constants from '/common/constants.js';
 import * as TabsStore from '/common/tabs-store.js';
 import * as TSTAPI from '/common/tst-api.js';
-
-import EventListenerManager from '/extlib/EventListenerManager.js';
 
 function log(...args) {
   internalLogger('sidebar/background-connection', ...args);

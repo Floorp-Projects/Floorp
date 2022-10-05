@@ -5,14 +5,14 @@
 */
 'use strict';
 
+import EventListenerManager from '/extlib/EventListenerManager.js';
+
 import {
   log as internalLogger,
   mapAndFilterUniq,
   configs
 } from './common.js';
 import * as Constants from './constants.js';
-
-import EventListenerManager from '/extlib/EventListenerManager.js';
 
 function log(...args) {
   internalLogger('common/sidebar-connection', ...args);

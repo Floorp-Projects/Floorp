@@ -4,12 +4,39 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
+import * as Constants from '/common/constants.js';
+
 export const kTAB_LABEL_ELEMENT_NAME = 'tab-label';
 
 const KLABEL_CLASS_NAME   = 'label';
 const kCONTENT_CLASS_NAME = `${KLABEL_CLASS_NAME}-content`;
 
 const kATTR_NAME_VALUE = 'value';
+
+//****************************************************************************
+// isRTL https://github.com/kavirajk/isRTL
+// The MIT License (MIT)
+// Copyright (c) 2013 dhilipsiva
+const rtlChars = [
+  /* arabic ranges*/
+  '\u0600-\u06FF',
+  '\u0750-\u077F',
+  '\uFB50-\uFDFF',
+  '\uFE70-\uFEFF',
+  /* hebrew range*/
+  '\u05D0-\u05FF'
+].join('');
+
+const reRTL = new RegExp(`[${rtlChars}]`, 'g');
+
+function isRTL(text) {
+  if (/^\s*\u200f[^\u200e]/.test(text)) // title starting with right-to-left-mark
+    return true;
+  const textCount = text.replace(/[0-9\s\\\/.,\-+="']/g, '').length; // remove multilengual characters from count
+  const rtlCount  = (text.match(reRTL) || []).length;
+  return rtlCount >= (textCount-rtlCount) && textCount > 0;
+};
+//****************************************************************************
 
 export class TabLabelElement extends HTMLElement {
   static define() {
@@ -33,6 +60,7 @@ export class TabLabelElement extends HTMLElement {
 
     if (this.initialized) {
       this._startListening();
+      this._applyAttributes();
       this.updateTextContent();
       return;
     }
@@ -60,6 +88,7 @@ export class TabLabelElement extends HTMLElement {
     content.classList.add(kCONTENT_CLASS_NAME);
 
     this._startListening();
+    this._applyAttributes();
     this.updateTextContent();
   }
 
@@ -87,11 +116,18 @@ export class TabLabelElement extends HTMLElement {
     }
   }
 
+  _applyAttributes() {
+    // for convenience on customization with custom user styles
+    this._content.setAttribute(Constants.kAPI_TAB_ID, this.getAttribute(Constants.kAPI_TAB_ID));
+    this._content.setAttribute(Constants.kAPI_WINDOW_ID, this.getAttribute(Constants.kAPI_WINDOW_ID));
+  }
+
   updateTextContent() {
     const content = this._content;
     if (!content)
       return;
     content.textContent = this.getAttribute(kATTR_NAME_VALUE) || '';
+    this.classList.toggle('rtl', isRTL(content.textContent));
   }
 
   updateOverflow() {

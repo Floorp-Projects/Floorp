@@ -9,7 +9,6 @@ import {
   log as internalLogger,
   configs
 } from '/common/common.js';
-
 import * as Constants from '/common/constants.js';
 import * as TabsStore from '/common/tabs-store.js';
 import * as TreeBehavior from '/common/tree-behavior.js';

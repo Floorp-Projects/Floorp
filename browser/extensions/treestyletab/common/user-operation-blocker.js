@@ -10,8 +10,8 @@ import {
   configs
 } from './common.js';
 import * as Constants from './constants.js';
-import * as TabsStore from './tabs-store.js';
 import * as SidebarConnection from './sidebar-connection.js';
+import * as TabsStore from './tabs-store.js';
 
 // eslint-disable-next-line no-unused-vars
 function log(...args) {

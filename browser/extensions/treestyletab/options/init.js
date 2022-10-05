@@ -10,6 +10,7 @@ import '/extlib/l10n.js';
 import RichConfirm from '/extlib/RichConfirm.js';
 
 import {
+  DEVICE_SPECIFIC_CONFIG_KEYS,
   log,
   wait,
   configs,
@@ -28,10 +29,26 @@ import * as ApiTabs from '/common/api-tabs.js';
 import * as Sync from '/common/sync.js';
 
 log.context = 'Options';
+
 const options = new Options(configs, {
   steps: {
     faviconizedTabScale: '0.01'
-  }
+  },
+  onImporting(values) {
+    for (const key of DEVICE_SPECIFIC_CONFIG_KEYS) {
+      if (JSON.stringify(configs[key]) != JSON.stringify(configs.$default[key]))
+        values[key] = configs[key];
+      else
+        delete values[key];
+    }
+    return values;
+  },
+  onExporting(values) {
+    for (const key of DEVICE_SPECIFIC_CONFIG_KEYS) {
+      delete values[key];
+    }
+    return values;
+  },
 });
 
 document.title = browser.i18n.getMessage('config_title');
@@ -238,6 +255,20 @@ async function onChangeBookmarkPermissionRequiredCheckboxState(event) {
   }, 100);
 }
 
+function updateCtrlTabSubItems(enabled) {
+  const elements = document.querySelectorAll('#ctrlTabSubItemsContainer label, #ctrlTabSubItemsContainer input, #ctrlTabSubItemsContainer select');
+  if (enabled) {
+    for (const element of elements) {
+      element.removeAttribute('disabled');
+    }
+  }
+  else {
+    for (const element of elements) {
+      element.setAttribute('disabled', true);
+    }
+  }
+}
+
 
 function reserveToSaveUserStyleRules() {
   if (reserveToSaveUserStyleRules.timer)
@@ -276,7 +307,8 @@ function getUserStyleRulesFieldTheme() {
 
 function applyUserStyleRulesFieldTheme() {
   const theme = getUserStyleRulesFieldTheme();
-  if (!document.querySelector(`link[href$="/extlib/codemirror-theme/${theme}.css"]`)) {
+  if (theme != 'default' &&
+      !document.querySelector(`link[href$="/extlib/codemirror-theme/${theme}.css"]`)) {
     const range = document.createRange();
     range.selectNodeContents(document.querySelector('head'));
     range.collapse(false);
@@ -322,7 +354,8 @@ async function updateBookmarksUI(enabled) {
         if (item.dataset.id)
           configs.defaultBookmarkParentId = item.dataset.id;
       },
-      rootItems: (await browser.bookmarks.getTree().catch(ApiTabs.createErrorHandler()))[0].children
+      rootItems: (await browser.bookmarks.getTree().catch(ApiTabs.createErrorHandler()))[0].children,
+      incrementalSearchTimeout: configs.incrementalSearchTimeout,
     });
   }
   else {
@@ -351,7 +384,7 @@ async function updateBookmarksUI(enabled) {
 }
 
 async function initOtherDevices() {
-  await Sync.ensureDeviceInfoInitialized();
+  await Sync.waitUntilDeviceInfoInitialized();
   const container = document.querySelector('#otherDevices');
   const range = document.createRange();
   range.selectNodeContents(container);
@@ -535,20 +568,67 @@ async function testDuplicatedTabDetection() {
   document.querySelector('#delayForDuplicatedTabDetection_testResult').textContent = browser.i18n.getMessage('config_delayForDuplicatedTabDetection_test_resultMessage', [successRate * 100]);
 }
 
+
 configs.$addObserver(onConfigChanged);
 window.addEventListener('DOMContentLoaded', async () => {
-  if (typeof browser.tabs.moveInSuccession == 'function')
-    document.documentElement.classList.add('successor-tab-support');
-  else
-    document.documentElement.classList.remove('successor-tab-support');
+  try {
+    document.documentElement.classList.toggle('successor-tab-support', typeof browser.tabs.moveInSuccession == 'function');
 
+    initAccesskeys();
+    initLogsButton();
+    initDuplicatedTabDetection();
+    initLinks();
+    initTheme();
+  }
+  catch(error) {
+    console.error(error);
+  }
+
+  await configs.$loaded;
+
+  let focusedItem;
+  try {
+    focusedItem = initFocusedItem();
+    initCollapsibleSections({ focusedItem });
+    initPermissionOptions();
+    initLogCheckboxes();
+    initPreviews();
+    initExternalAddons();
+    initSync();
+  }
+  catch(error) {
+    console.error(error);
+  }
+
+  try {
+    options.buildUIForAllConfigs(document.querySelector('#group-allConfigs'));
+    onConfigChanged('successorTabControlLevel');
+    onConfigChanged('showExpertOptions');
+    await wait(0);
+    onConfigChanged('parentTabOperationBehaviorMode');
+    onConfigChanged('autoAttachOnAnyOtherTrigger');
+    onConfigChanged('syncDeviceInfo');
+
+    if (focusedItem)
+      focusedItem.scrollIntoView({ block: 'start' });
+  }
+  catch(error) {
+    console.error(error);
+  }
+
+  document.documentElement.classList.add('initialized');
+}, { once: true });
+
+function initAccesskeys() {
   for (const label of document.querySelectorAll('.contextConfigs label')) {
     for (const child of label.childNodes) {
       if (child.nodeType == Node.TEXT_NODE)
         removeAccesskeyMark(child);
     }
   }
+}
 
+function initLogsButton() {
   const showLogsButton = document.getElementById('showLogsButton');
   showLogsButton.addEventListener('click', event => {
     if (event.button != 0)
@@ -560,7 +640,9 @@ window.addEventListener('DOMContentLoaded', async () => {
       return;
     showLogs();
   });
+}
 
+function initDuplicatedTabDetection() {
   const autoDetectDuplicatedTabDetectionDelayButton = document.getElementById('delayForDuplicatedTabDetection_autoDetectButton');
   autoDetectDuplicatedTabDetectionDelayButton.addEventListener('click', event => {
     if (event.button != 0)
@@ -584,8 +666,9 @@ window.addEventListener('DOMContentLoaded', async () => {
       return;
     testDuplicatedTabDetection();
   });
+}
 
-
+function initLinks() {
   document.getElementById('link-optionsPage-top').setAttribute('href', `${location.href.split('#')[0]}#!`);
   document.getElementById('link-optionsPage').setAttribute('href', `${location.href.split('#')[0]}#!`);
   document.getElementById('link-startupPage').setAttribute('href', Constants.kSHORTHAND_URIS.startup);
@@ -593,14 +676,16 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('link-tabbarPage').setAttribute('href', Constants.kSHORTHAND_URIS.tabbar);
   document.getElementById('link-runTests').setAttribute('href', Constants.kSHORTHAND_URIS.testRunner);
   document.getElementById('link-runBenchmark').setAttribute('href', `${Constants.kSHORTHAND_URIS.testRunner}?benchmark=true`);
+}
 
+function initTheme() {
   if (browser.theme && browser.theme.getCurrent) {
     browser.theme.getCurrent().then(updateThemeInformation);
     browser.theme.onUpdated.addListener(updateInfo => updateThemeInformation(updateInfo.theme));
   }
+}
 
-  await configs.$loaded;
-
+function initFocusedItem() {
   const focusedItem = document.querySelector(':target');
   for (const fieldset of document.querySelectorAll('fieldset.collapsible')) {
     if (configs.optionsExpandedGroups.includes(fieldset.id) ||
@@ -632,6 +717,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  return focusedItem;
+}
+
+function initCollapsibleSections({ focusedItem }) {
   for (const heading of document.querySelectorAll('body > section > h1')) {
     const section = heading.parentNode;
     section.style.maxHeight = `${heading.offsetHeight}px`;
@@ -647,13 +736,21 @@ window.addEventListener('DOMContentLoaded', async () => {
         configs.optionsExpandedSections = otherExpandedSections.concat([section.id]);
     });
   }
+}
 
+function initPermissionOptions() {
   Permissions.isGranted(Permissions.BOOKMARKS).then(granted => updateBookmarksUI(granted));
+  Permissions.isGranted(Permissions.ALL_URLS).then(granted => updateCtrlTabSubItems(granted));
 
   Permissions.bindToCheckbox(
     Permissions.ALL_URLS,
     document.querySelector('#allUrlsPermissionGranted_ctrlTabTracking'),
-    { onChanged: (granted) => configs.skipCollapsedTabsForTabSwitchingShortcuts = granted }
+    {
+      onChanged: (granted) => {
+        configs.skipCollapsedTabsForTabSwitchingShortcuts = granted;
+        updateCtrlTabSubItems(granted);
+      }
+    }
   );
   Permissions.bindToCheckbox(
     Permissions.BOOKMARKS,
@@ -671,7 +768,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     { onChanged: async (granted) => {
       if (granted) {
         // try to hide/show the tab to ensure the permission is really granted
-        const activeTabs = await browser.tabs.query({ active: true, currentWindow: true });
+        let activeTabs = await browser.tabs.query({ active: true, currentWindow: true });
+        if (activeTabs.length == 0)
+          activeTabs = await browser.tabs.query({ currentWindow: true });
         const tab = await browser.tabs.create({ active: false, windowId: activeTabs[0].windowId });
         await wait(200);
         let aborted = false;
@@ -703,7 +802,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   for (const checkbox of document.querySelectorAll('input[type="checkbox"].require-bookmarks-permission')) {
     checkbox.addEventListener('change', onChangeBookmarkPermissionRequiredCheckboxState);
   }
+}
 
+function initLogCheckboxes() {
   for (const checkbox of document.querySelectorAll('p input[type="checkbox"][id^="logFor-"]')) {
     checkbox.addEventListener('change', onChangeChildCheckbox);
     checkbox.checked = configs.logFor[checkbox.id.replace(/^logFor-/, '')];
@@ -712,7 +813,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     checkbox.checked = isAllChildrenChecked(checkbox);
     checkbox.addEventListener('change', onChangeParentCheckbox);
   }
+}
 
+function initPreviews() {
   for (const previewImage of document.querySelectorAll('select ~ .preview-image')) {
     const container = previewImage.parentNode;
     container.classList.add('has-preview-image');
@@ -738,77 +841,81 @@ window.addEventListener('DOMContentLoaded', async () => {
       container.dataset.value = select.dataset.value = select.value;
     });
   }
+}
 
-  browser.runtime.sendMessage({
+async function initExternalAddons() {
+  const addons = await browser.runtime.sendMessage({
     type: TSTAPI.kCOMMAND_GET_ADDONS
-  }).then(addons => {
-    const description = document.getElementById('externalAddonPermissionsGroupDescription');
-    const range = document.createRange();
-    range.selectNodeContents(description);
-    description.appendChild(range.createContextualFragment(browser.i18n.getMessage('config_externaladdonpermissions_description')));
-    range.detach();
-
-    const container = document.getElementById('externalAddonPermissions');
-    for (const addon of addons) {
-      if (addon.id == browser.runtime.id)
-        continue;
-      const row = document.createElement('tr');
-
-      const nameCell = row.appendChild(document.createElement('td'));
-      const nameLabel = nameCell.appendChild(document.createElement('label'));
-      nameLabel.appendChild(document.createTextNode(addon.label));
-      const controlledId = `api-permissions-${encodeURIComponent(addon.id)}`;
-      nameLabel.setAttribute('for', controlledId);
-
-      const incognitoCell = row.appendChild(document.createElement('td'));
-      const incognitoLabel = incognitoCell.appendChild(document.createElement('label'));
-      const incognitoCheckbox = incognitoLabel.appendChild(document.createElement('input'));
-      if (addon.permissions.length == 0)
-        incognitoCheckbox.setAttribute('id', controlledId);
-      incognitoCheckbox.setAttribute('type', 'checkbox');
-      incognitoCheckbox.checked = configs.incognitoAllowedExternalAddons.includes(addon.id);
-      incognitoCheckbox.addEventListener('change', () => {
-        const updatedValue = new Set(configs.incognitoAllowedExternalAddons);
-        if (incognitoCheckbox.checked)
-          updatedValue.add(addon.id);
-        else
-          updatedValue.delete(addon.id);
-        configs.incognitoAllowedExternalAddons = Array.from(updatedValue);
-        browser.runtime.sendMessage({
-          type: TSTAPI.kCOMMAND_NOTIFY_PERMISSION_CHANGED,
-          id:   addon.id
-        });
-      });
-
-      const permissionsCell = row.appendChild(document.createElement('td'));
-      if (addon.permissions.length > 0) {
-        const permissionsLabel = permissionsCell.appendChild(document.createElement('label'));
-        const permissionsCheckbox = permissionsLabel.appendChild(document.createElement('input'));
-        permissionsCheckbox.setAttribute('id', controlledId);
-        permissionsCheckbox.setAttribute('type', 'checkbox');
-        permissionsCheckbox.checked = addon.permissionsGranted;
-        permissionsCheckbox.addEventListener('change', () => {
-          browser.runtime.sendMessage({
-            type:        TSTAPI.kCOMMAND_SET_API_PERMISSION,
-            id:          addon.id,
-            permissions: permissionsCheckbox.checked ? addon.permissions : addon.permissions.map(permission => `!  ${permission}`)
-          });
-        });
-        const permissionNames = addon.permissions.map(permission => {
-          try {
-            return browser.i18n.getMessage(`api_requestedPermissions_type_${permission}`) || permission;
-          }
-          catch(_error) {
-            return permission;
-          }
-        }).join(', ');
-        permissionsLabel.appendChild(document.createTextNode(permissionNames));
-      }
-
-      container.appendChild(row);
-    }
   });
 
+  const description = document.getElementById('externalAddonPermissionsGroupDescription');
+  const range = document.createRange();
+  range.selectNodeContents(description);
+  description.appendChild(range.createContextualFragment(browser.i18n.getMessage('config_externaladdonpermissions_description')));
+  range.detach();
+
+  const container = document.getElementById('externalAddonPermissions');
+  for (const addon of addons) {
+    if (addon.id == browser.runtime.id)
+      continue;
+    const row = document.createElement('tr');
+
+    const nameCell = row.appendChild(document.createElement('td'));
+    const nameLabel = nameCell.appendChild(document.createElement('label'));
+    nameLabel.appendChild(document.createTextNode(addon.label));
+    const controlledId = `api-permissions-${encodeURIComponent(addon.id)}`;
+    nameLabel.setAttribute('for', controlledId);
+
+    const incognitoCell = row.appendChild(document.createElement('td'));
+    const incognitoLabel = incognitoCell.appendChild(document.createElement('label'));
+    const incognitoCheckbox = incognitoLabel.appendChild(document.createElement('input'));
+    if (addon.permissions.length == 0)
+      incognitoCheckbox.setAttribute('id', controlledId);
+    incognitoCheckbox.setAttribute('type', 'checkbox');
+    incognitoCheckbox.checked = configs.incognitoAllowedExternalAddons.includes(addon.id);
+    incognitoCheckbox.addEventListener('change', () => {
+      const updatedValue = new Set(configs.incognitoAllowedExternalAddons);
+      if (incognitoCheckbox.checked)
+        updatedValue.add(addon.id);
+      else
+        updatedValue.delete(addon.id);
+      configs.incognitoAllowedExternalAddons = Array.from(updatedValue);
+      browser.runtime.sendMessage({
+        type: TSTAPI.kCOMMAND_NOTIFY_PERMISSION_CHANGED,
+        id:   addon.id
+      });
+    });
+
+    const permissionsCell = row.appendChild(document.createElement('td'));
+    if (addon.permissions.length > 0) {
+      const permissionsLabel = permissionsCell.appendChild(document.createElement('label'));
+      const permissionsCheckbox = permissionsLabel.appendChild(document.createElement('input'));
+      permissionsCheckbox.setAttribute('id', controlledId);
+      permissionsCheckbox.setAttribute('type', 'checkbox');
+      permissionsCheckbox.checked = addon.permissionsGranted;
+      permissionsCheckbox.addEventListener('change', () => {
+        browser.runtime.sendMessage({
+          type:        TSTAPI.kCOMMAND_SET_API_PERMISSION,
+          id:          addon.id,
+          permissions: permissionsCheckbox.checked ? addon.permissions : addon.permissions.map(permission => `!  ${permission}`)
+        });
+      });
+      const permissionNames = addon.permissions.map(permission => {
+        try {
+          return browser.i18n.getMessage(`api_requestedPermissions_type_${permission}`) || permission;
+        }
+        catch(_error) {
+          return permission;
+        }
+      }).join(', ');
+      permissionsLabel.appendChild(document.createTextNode(permissionNames));
+    }
+
+    container.appendChild(row);
+  }
+}
+
+function initSync() {
   const deviceInfoNameField = document.querySelector('#syncDeviceInfoName');
   deviceInfoNameField.addEventListener('input', () => {
     if (deviceInfoNameField.$throttling)
@@ -821,6 +928,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       }));
     }, 250);
   });
+
   const deviceInfoIconRadiogroup = document.querySelector('#syncDeviceInfoIcon');
   deviceInfoIconRadiogroup.addEventListener('change', _event => {
     if (deviceInfoIconRadiogroup.$throttling)
@@ -834,7 +942,9 @@ window.addEventListener('DOMContentLoaded', async () => {
       }));
     }, 250);
   });
+
   initOtherDevices();
+
   const otherDevices = document.querySelector('#otherDevices');
   otherDevices.addEventListener('click', event => {
     if (event.target.localName != 'button')
@@ -849,21 +959,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     const item = event.target.closest('li');
     removeOtherDevice(item.id.replace(/^otherDevice:/, ''));
   });
-
-
-  options.buildUIForAllConfigs(document.querySelector('#group-allConfigs'));
-  onConfigChanged('successorTabControlLevel');
-  onConfigChanged('showExpertOptions');
-  await wait(0);
-  onConfigChanged('parentTabOperationBehaviorMode');
-  onConfigChanged('autoAttachOnAnyOtherTrigger');
-  onConfigChanged('syncDeviceInfo');
-
-  if (focusedItem)
-    focusedItem.scrollIntoView({ block: 'start' });
-
-  document.documentElement.classList.add('initialized');
-}, { once: true });
+}
 
 import('/extlib/codemirror.js').then(async () => {
   await Promise.all([

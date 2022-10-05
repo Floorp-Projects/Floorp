@@ -29,12 +29,64 @@ export async function getIndexes(...queriedTabIds) {
   return indexes.map(tab => tab ? tab.index : -1);
 }
 
+export async function blur(tab, unactivatableTabs = []) {
+  const unactivatableIndices  = Array.from(new Set([tab, ...unactivatableTabs].map(tab => tab.index)));
+  const minUnactivatableIndex = Math.min.apply(null, unactivatableIndices);
+  const maxUnactivatableIndex = Math.max.apply(null, unactivatableIndices);
+  const unactivatableTabById  = new Map();
+  for (const tab of unactivatableTabs) {
+    unactivatableTabById.set(tab.id, tab);
+  }
+
+  const allTabs     = await browser.tabs.query({ windowId: tab.windowId });
+  const unactivatableTabIds = new Set([tab.id, ...unactivatableTabs.map(tab => tab.id)]);
+  if (allTabs.length == unactivatableTabIds.size)
+    return; // there is no other focusible tab!
+
+  const restTabs    = allTabs.filter(tab => unactivatableTabIds.has(tab.id));
+  const middleTabs  = restTabs.filter(tab => tab.index > minUnactivatableIndex || tab.index < maxUnactivatableIndex);
+  const previousTab = minUnactivatableIndex > 0 && allTabs[minUnactivatableIndex - 1];
+  const nextTab     = maxUnactivatableIndex < allTabs.length - 1 && allTabs[maxUnactivatableIndex + 1];
+  const allTabById  = new Map();
+  for (const tab of allTabs) {
+    allTabById.set(tab.id, tab);
+  }
+
+  const scannedTabIds = new Set();
+  let successorTab = tab;
+  do {
+    if (scannedTabIds.has(successorTab.id))
+      break; // prevent infinite loop!
+    scannedTabIds.add(successorTab.id);
+    let nextSuccessorTab = unactivatableTabById.get(successorTab.successorTabId);
+    if (nextSuccessorTab) {
+      successorTab = nextSuccessorTab;
+      continue;
+    }
+    nextSuccessorTab = allTabById.get(successorTab.successorTabId) ||
+      nextTab ||
+      (middleTabs.length > 0 && middleTabs[0]) ||
+      previousTab ||
+      restTabs[0];
+    if (unactivatableTabById.has(nextSuccessorTab.id)) {
+      successorTab = nextSuccessorTab;
+      continue;
+    }
+    await browser.tabs.update(nextSuccessorTab.id, { active: true });
+    break;
+  }
+  while (successorTab);
+}
+
 // workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1394477 + fix pinned/unpinned status
 export async function safeMoveAcrossWindows(tabIds, moveOptions) {
   log('safeMoveAcrossWindows ', tabIds, moveOptions);
   if (!Array.isArray(tabIds))
     tabIds = [tabIds];
   const tabs = await Promise.all(tabIds.map(id => browser.tabs.get(id).catch(handleMissingTabError)));
+  const activeTab = tabs.find(tab => tab.active);
+  if (activeTab)
+    await blur(activeTab, tabs);
   const window = await browser.windows.get(moveOptions.windowId || tabs[0].windowId, { populate: true });
   return (await Promise.all(tabs.map(async (tab, index) => {
     try {

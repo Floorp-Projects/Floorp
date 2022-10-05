@@ -5,6 +5,9 @@
 */
 'use strict';
 
+import MenuUI from '/extlib/MenuUI.js';
+import RichConfirm from '/extlib/RichConfirm.js';
+
 import {
   log as internalLogger,
   configs,
@@ -15,15 +18,13 @@ import {
   sanitizeForHTMLText,
   isLinux,
 } from './common.js';
-import * as Permissions from './permissions.js';
 import * as ApiTabs from './api-tabs.js';
 import * as Constants from './constants.js';
-import * as UserOperationBlocker from './user-operation-blocker.js';
 import * as Dialog from './dialog.js';
-import Tab from '/common/Tab.js';
+import * as Permissions from './permissions.js';
+import * as UserOperationBlocker from './user-operation-blocker.js';
 
-import MenuUI from '/extlib/MenuUI.js';
-import RichConfirm from '/extlib/RichConfirm.js';
+import Tab from '/common/Tab.js';
 
 function log(...args) {
   internalLogger('common/bookmarks', ...args);
@@ -78,7 +79,7 @@ if (/^moz-extension:\/\/[^\/]+\/background\//.test(location.href)) {
   });
 }
 
-export async function bookmarkTab(tab, options = {}) {
+export async function bookmarkTab(tab, { parentId, showDialog } = {}) {
   try {
     if (!(await Permissions.isGranted(Permissions.BOOKMARKS)))
       throw new Error('not permitted');
@@ -92,14 +93,15 @@ export async function bookmarkTab(tab, options = {}) {
     return null;
   }
   const parent = (
-    (await getItemById(options.parentId || configs.defaultBookmarkParentId)) ||
+    (await getItemById(parentId || configs.defaultBookmarkParentId)) ||
     (await getItemById(configs.$defaults.defaultBookmarkParentId))
   );
 
   let title    = tab.title;
   let url      = tab.url;
-  let parentId = parent && parent.id;
-  if (options.showDialog) {
+  if (!parentId)
+    parentId = parent && parent.id;
+  if (showDialog) {
     const windowId = tab.windowId;
     const inSidebar = location.pathname.startsWith('/sidebar/');
     const divStyle = `
@@ -128,23 +130,23 @@ export async function bookmarkTab(tab, options = {}) {
     const dialogParams = {
       content: `
         <div style="${divStyle}"
-            ><label accesskey=${JSON.stringify(browser.i18n.getMessage('bookmarkDialog_title_accessKey'))}
+            ><label accesskey=${JSON.stringify(sanitizeForHTMLText(browser.i18n.getMessage('bookmarkDialog_title_accessKey')))}
                     style="${labelStyle}"
                    ><span style="${labelTextStyle}"
                          >${sanitizeForHTMLText(browser.i18n.getMessage('bookmarkDialog_title'))}</span
                    ><input type="text"
                            name="title"
                            style="${inputFieldStyle}"
-                           value=${JSON.stringify(title)}></label></div
+                           value=${JSON.stringify(sanitizeForHTMLText(title))}></label></div
        ><div style="${divStyle}"
-            ><label accesskey=${JSON.stringify(browser.i18n.getMessage('bookmarkDialog_url_accessKey'))}
+            ><label accesskey=${JSON.stringify(sanitizeForHTMLText(browser.i18n.getMessage('bookmarkDialog_url_accessKey')))}
                     style="${labelStyle}"
                    ><span style="${labelTextStyle}"
                          >${sanitizeForHTMLText(browser.i18n.getMessage('bookmarkDialog_url'))}</span
                    ><input type="text"
                            name="url"
                            style="${inputFieldStyle}"
-                           value=${JSON.stringify(url)}></label></div
+                           value=${JSON.stringify(sanitizeForHTMLText(url))}></label></div
        ><div style="${divStyle}; margin-bottom: 3em;"
             ><label style="${labelStyle}"
                    ><span style="${labelTextStyle}"
@@ -152,7 +154,7 @@ export async function bookmarkTab(tab, options = {}) {
                    ><span style="${buttonContainerStyle}"
                          ><button name="parentId">-</button></span></label></div>
       `.trim(),
-      async onShown(container, { MenuUI, initFolderChooser, animationDuration, parentId }) {
+      async onShown(container, { MenuUI, initFolderChooser, animationDuration, parentId, incrementalSearchTimeout }) {
         if (container.classList.contains('simulation'))
           return;
         MenuUI.init();
@@ -165,7 +167,8 @@ export async function bookmarkTab(tab, options = {}) {
           MenuUI,
           animationDuration,
           defaultItem,
-          rootItems
+          rootItems,
+          incrementalSearchTimeout,
         });
         container.querySelector('[name="title"]').select();
       },
@@ -173,7 +176,8 @@ export async function bookmarkTab(tab, options = {}) {
         MenuUI,
         initFolderChooser,
         animationDuration: getAnimationDuration(),
-        parentId
+        parentId,
+        incrementalSearchTimeout: configs.incrementalSearchTimeout,
       },
       buttons: [
         browser.i18n.getMessage('bookmarkDialog_accept'),
@@ -219,7 +223,7 @@ export async function bookmarkTab(tab, options = {}) {
   return item;
 }
 
-export async function bookmarkTabs(tabs, options = {}) {
+export async function bookmarkTabs(tabs, { parentId, index, showDialog, title } = {}) {
   try {
     if (!(await Permissions.isGranted(Permissions.BOOKMARKS)))
       throw new Error('not permitted');
@@ -234,22 +238,23 @@ export async function bookmarkTabs(tabs, options = {}) {
   }
   const now = new Date();
   const year = String(now.getFullYear());
-  const title = configs.bookmarkTreeFolderName
-    .replace(/%TITLE%/gi, tabs[0].title)
-    .replace(/%URL%/gi, tabs[0].url)
-    .replace(/%SHORT_?YEAR%/gi, year.substr(-2))
-    .replace(/%(FULL_?)?YEAR%/gi, year)
-    .replace(/%MONTH%/gi, String(now.getMonth() + 1).padStart(2, '0'))
-    .replace(/%DATE%/gi, String(now.getDate()).padStart(2, '0'));
+  if (!title)
+    title = configs.bookmarkTreeFolderName
+      .replace(/%TITLE%/gi, tabs[0].title)
+      .replace(/%URL%/gi, tabs[0].url)
+      .replace(/%SHORT_?YEAR%/gi, year.slice(-2))
+      .replace(/%(FULL_?)?YEAR%/gi, year)
+      .replace(/%MONTH%/gi, String(now.getMonth() + 1).padStart(2, '0'))
+      .replace(/%DATE%/gi, String(now.getDate()).padStart(2, '0'));
   const folderParams = {
     type: 'folder',
     title
   };
   let parent;
-  if (options.parentId) {
-    parent = await getItemById(options.parentId);
-    if ('index' in options)
-      folderParams.index = options.index;
+  if (parentId) {
+    parent = await getItemById(parentId);
+    if (index !== undefined)
+      folderParams.index = index;
   }
   else {
     parent = await getItemById(configs.defaultBookmarkParentId);
@@ -259,7 +264,7 @@ export async function bookmarkTabs(tabs, options = {}) {
   if (parent)
     folderParams.parentId = parent.id;
 
-  if (options.showDialog) {
+  if (showDialog) {
     const windowId = tabs[0].windowId;
     const inSidebar = location.pathname.startsWith('/sidebar/');
     const divStyle = `
@@ -288,14 +293,14 @@ export async function bookmarkTabs(tabs, options = {}) {
     const dialogParams = {
       content: `
         <div style="${divStyle}"
-            ><label accesskey=${JSON.stringify(browser.i18n.getMessage('bookmarkDialog_title_accessKey'))}
+            ><label accesskey=${JSON.stringify(sanitizeForHTMLText(browser.i18n.getMessage('bookmarkDialog_title_accessKey')))}
                     style="${labelStyle}"
                    ><span style="${labelTextStyle}"
                          >${sanitizeForHTMLText(browser.i18n.getMessage('bookmarkDialog_title'))}</span
                    ><input type="text"
                            name="title"
                            style="${inputFieldStyle}"
-                           value=${JSON.stringify(folderParams.title)}></label></div
+                           value=${JSON.stringify(sanitizeForHTMLText(folderParams.title))}></label></div
        ><div style="${divStyle}; margin-bottom: 3em;"
             ><label style="${labelStyle}"
                    ><span style="${labelTextStyle}"
@@ -303,7 +308,7 @@ export async function bookmarkTabs(tabs, options = {}) {
                    ><span style="${buttonContainerStyle}"
                          ><button name="parentId">-</button></span></label></div>
       `.trim(),
-      async onShown(container, { MenuUI, initFolderChooser, animationDuration, parentId }) {
+      async onShown(container, { MenuUI, initFolderChooser, animationDuration, parentId, incrementalSearchTimeout }) {
         if (container.classList.contains('simulation'))
           return;
         MenuUI.init();
@@ -316,7 +321,8 @@ export async function bookmarkTabs(tabs, options = {}) {
           MenuUI,
           animationDuration,
           defaultItem,
-          rootItems
+          rootItems,
+          incrementalSearchTimeout,
         });
         container.querySelector('[name="title"]').select();
       },
@@ -324,7 +330,8 @@ export async function bookmarkTabs(tabs, options = {}) {
         MenuUI,
         initFolderChooser,
         animationDuration: getAnimationDuration(),
-        parentId: folderParams.parentId
+        parentId: folderParams.parentId,
+        incrementalSearchTimeout: configs.incrementalSearchTimeout,
       },
       buttons: [
         browser.i18n.getMessage('bookmarkDialog_accept'),
@@ -470,7 +477,9 @@ export async function initFolderChooser(anchor, params = {}) {
       }
       range.detach();
     },
-    animationDuration: params.animationDuration || getAnimationDuration()
+    animationDuration: params.animationDuration || getAnimationDuration(),
+    incrementalSearch: true,
+    incrementalSearchTimeout: params.incrementalSearchTimeout,
   });
   anchor.addEventListener('click', () => {
     anchor.ui.open({

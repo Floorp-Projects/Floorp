@@ -8,7 +8,6 @@
 import {
   log as internalLogger,
 } from '/common/common.js';
-
 import * as ApiTabs from '/common/api-tabs.js';
 
 import Tab from '/common/Tab.js';

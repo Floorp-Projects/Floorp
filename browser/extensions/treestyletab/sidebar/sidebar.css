@@ -13,20 +13,3 @@
 @import url("styles/drag-and-drop.css");
 @import url("styles/highlighter.css");
 
-
-@media (min-width: 100px) {
-  .closebox {
-    position: relative;
-    right: 10px;
-  }
-}
-
-.sound-button{
-   position: absolute;
-}
-
-@media (max-width: 100px) {
-  .closebox {
-    display: none;
-  }
-}

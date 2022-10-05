@@ -15,14 +15,21 @@ import * as Constants from '/common/constants.js';
 import * as SidebarTabs from './sidebar-tabs.js';
 import * as Size from './size.js';
 
-import { kTAB_TWISTY_ELEMENT_NAME } from './components/TabTwistyElement.js';
 import { kTAB_CLOSE_BOX_ELEMENT_NAME } from './components/TabCloseBoxElement.js';
 import { kTAB_SOUND_BUTTON_ELEMENT_NAME } from './components/TabSoundButtonElement.js';
+import { kTAB_TWISTY_ELEMENT_NAME } from './components/TabTwistyElement.js';
 
 // eslint-disable-next-line no-unused-vars
 function log(...args) {
   internalLogger('sidebar/event-utils', ...args);
 }
+
+let mTargetWindow;
+
+export function setTargetWindowId(windowId) {
+  mTargetWindow = windowId;
+}
+
 
 export function isMiddleClick(event) {
   return event.button == 1;
@@ -44,14 +51,29 @@ export function isCopyAction(event) {
 }
 
 export function getElementTarget(eventOrTarget) {
-  const target = eventOrTarget instanceof Node ? eventOrTarget : eventOrTarget.target;
+  const target = eventOrTarget instanceof Node ?
+    eventOrTarget :
+    eventOrTarget.target;
   if (target.nodeType == Node.TEXT_NODE)
     return target.parentNode;
   return target instanceof Element ? target : null;
 }
 
 export function getElementOriginalTarget(eventOrTarget) {
-  const target = eventOrTarget instanceof Node ? eventOrTarget : eventOrTarget.originalTarget || eventOrTarget.target;
+  const target = eventOrTarget instanceof Node ?
+    eventOrTarget :
+    (event => {
+      try {
+        if (event.originalTarget &&
+            event.originalTarget.nodeType)
+          return event.originalTarget;
+      }
+      catch(_error) {
+        // Access to the origianlTarget can be restricted on some cases,
+        // ex. mousedown in extra contents of the new tab button. Why?
+      }
+      return event.explicitOriginalTarget || eventOrTarget.target;
+    })(eventOrTarget);
   if (target.nodeType == Node.TEXT_NODE)
     return target.parentNode;
   return target instanceof Element ? target : null;
@@ -94,6 +116,16 @@ export function isEventFiredOnAnchor(event) {
 export function isEventFiredOnClickable(event) {
   const target = getElementTarget(event);
   return target && target.closest && !!target.closest(`button, scrollbar, select`);
+}
+
+export function isEventFiredOnTabbarTop(event) {
+  const target = getElementTarget(event);
+  return target && target.closest && !!target.closest('#tabbar-top');
+}
+
+export function isEventFiredOnTabbarBottom(event) {
+  const target = getElementTarget(event);
+  return target && target.closest && !!target.closest('#tabbar-bottom');
 }
 
 
@@ -183,6 +215,72 @@ export function cancelHandleMousedown(button = null) {
     return true;
   }
   return false;
+}
+
+
+export function getEventDetail(event) {
+  return {
+    targetType: getEventTargetType(event),
+    window:     mTargetWindow,
+    windowId:   mTargetWindow,
+    ctrlKey:    event.ctrlKey,
+    shiftKey:   event.shiftKey,
+    altKey:     event.altKey,
+    metaKey:    event.metaKey,
+  };
+}
+
+export function getTabEventDetail(event, tab) {
+  return {
+    ...getEventDetail(event),
+    tab:   tab && tab.id,
+    tabId: tab && tab.id,
+  };
+}
+
+export function getMouseEventDetail(event, tab) {
+  return {
+    ...getTabEventDetail(event, tab),
+    twisty:        isEventFiredOnTwisty(event),
+    soundButton:   isEventFiredOnSoundButton(event),
+    closebox:      isEventFiredOnClosebox(event),
+    button:        event.button,
+    isMiddleClick: isMiddleClick(event),
+    isAccelClick:  isAccelAction(event),
+    lastInnerScreenY: window.mozInnerScreenY,
+  };
+}
+
+export function getEventTargetType(event) {
+  if (event.target.closest('.rich-confirm, #blocking-screen'))
+    return 'outside';
+
+  if (getTabFromEvent(event))
+    return 'tab';
+
+  if (isEventFiredOnNewTabButton(event))
+    return 'newtabbutton';
+
+  if (isEventFiredOnMenuOrPanel(event) ||
+      isEventFiredOnAnchor(event))
+    return 'selector';
+
+  if (isEventFiredOnTabbarTop(event))
+    return 'tabbar-top';
+  if (isEventFiredOnTabbarBottom(event))
+    return 'tabbar-bottom';
+
+  const allRange = document.createRange();
+  allRange.selectNodeContents(document.body);
+  const containerRect = allRange.getBoundingClientRect();
+  allRange.detach();
+  if (event.clientX < containerRect.left ||
+      event.clientX > containerRect.right ||
+      event.clientY < containerRect.top ||
+      event.clientY > containerRect.bottom)
+    return 'outside';
+
+  return 'blank';
 }
 
 

@@ -26,6 +26,8 @@
  * ***** END LICENSE BLOCK ******/
 'use strict';
 
+import EventListenerManager from '/extlib/EventListenerManager.js';
+
 import {
   log as internalLogger,
   wait,
@@ -34,22 +36,19 @@ import {
   shouldApplyAnimation
 } from '/common/common.js';
 
-import * as Constants from '/common/constants.js';
 import * as ApiTabs from '/common/api-tabs.js';
+import * as Constants from '/common/constants.js';
 import * as TabsStore from '/common/tabs-store.js';
 import * as TSTAPI from '/common/tst-api.js';
 
 import Tab from '/common/Tab.js';
 
-import * as Size from './size.js';
-import * as EventUtils from './event-utils.js';
 import * as BackgroundConnection from './background-connection.js';
-import * as SidebarTabs from './sidebar-tabs.js';
 import * as CollapseExpand from './collapse-expand.js';
-
+import * as EventUtils from './event-utils.js';
 import * as RestoringTabCount from './restoring-tab-count.js';
-
-import EventListenerManager from '/extlib/EventListenerManager.js';
+import * as SidebarTabs from './sidebar-tabs.js';
+import * as Size from './size.js';
 
 export const onPositionUnlocked = new EventListenerManager();
 
@@ -318,7 +317,7 @@ export async function scrollToTab(tab, options = {}) {
   // To retry "scroll to tab" behavior for such cases, we need to
   // keep "last scrolled-to tab" information until the tab is
   // actually moved.
-  await wait(configs.autoGroupNewTabsTimeout);
+  await wait(configs.tabBunchesDetectionTimeout);
   if (scrollToTab.stopped)
     return;
   const retryOptions = {
@@ -414,8 +413,13 @@ function cancelNotifyOutOfViewTab() {
 
 
 async function onWheel(event) {
+  // Ctrl-WheelScroll produces zoom-in/out on all platforms
+  // including macOS (not Meta-WheelScroll!).
+  // Pinch-in/out on macOS also produces zoom-in/out and
+  // it is cancelable via synthesized `wheel` event.
+  // (See also: https://bugzilla.mozilla.org/show_bug.cgi?id=1777199#c5 )
   if (!configs.zoomable &&
-      EventUtils.isAccelKeyPressed(event)) {
+      event.ctrlKey) {
     event.preventDefault();
     return;
   }
@@ -432,6 +436,7 @@ async function onWheel(event) {
   TSTAPI.notifyScrolled({
     tab,
     scrollContainer: mTabBar,
+    overflow: mTabBar.classList.contains(Constants.kTABBAR_STATE_OVERFLOW),
     event
   });
 }
@@ -548,6 +553,8 @@ async function onBackgroundMessage(message) {
       if (message.maybeMoved)
         await SidebarTabs.waitUntilNewTabIsMoved(message.tabId);
       const tab = Tab.get(message.tabId);
+      if (!tab) // it can be closed while waiting
+        break;
       const needToWaitForTreeExpansion = (
         !tab.active &&
         !Tab.getActiveTab(tab.windowId).pinned
@@ -601,6 +608,8 @@ async function onBackgroundMessage(message) {
     case Constants.kCOMMAND_NOTIFY_TAB_INTERNALLY_MOVED: {
       await Tab.waitUntilTracked(message.tabId, { element: true });
       const tab = Tab.get(message.tabId);
+      if (!tab) // it can be closed while waiting
+        break;
       if (!reReserveScrollingForTab(tab) &&
           tab.active)
         reserveToScrollToTab(tab);

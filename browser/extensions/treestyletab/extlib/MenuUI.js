@@ -56,6 +56,7 @@
     constructor(params = {}) {
       this.$lastHoverItem   = null;
       this.$lastFocusedItem = null;
+      this.$mouseDownFired  = false;
 
       this.root              = params.root;
       this.onCommand         = params.onCommand || (() => {});
@@ -65,6 +66,8 @@
       this.subMenuOpenDelay  = params.subMenuOpenDelay || 300;
       this.subMenuCloseDelay = params.subMenuCloseDelay || 300;
       this.appearance        = params.appearance || 'menu';
+      this.incrementalSearch = params.incrementalSearch || false;
+      this.incrementalSearchTimeout = params.incrementalSearchTimeout || 1000;
 
       this.$onBlur            = this.$onBlur.bind(this);
       this.$onMouseOver       = this.$onMouseOver.bind(this);
@@ -94,6 +97,9 @@
       this.$marker.classList.add('menu-ui-marker');
       this.$marker.classList.add(this.appearance);
       this.root.parentNode.insertBefore(this.$marker, this.root.nextSibling);
+
+      this.$lastKeyInputAt = -1;
+      this.$incrementalSearchString = '';
     }
 
     get opened() {
@@ -102,10 +108,14 @@
 
     $updateAccessKey(item) {
       const ACCESS_KEY_MATCHER = /(&([^\s]))/i;
+
       const title = item.getAttribute('title');
       if (title)
         item.setAttribute('title', title.replace(ACCESS_KEY_MATCHER, '$2'));
+
       const label = MenuUI.$evaluateXPath('child::text()', item, XPathResult.STRING_TYPE).stringValue;
+      item.dataset.lowerCasedText = label.toLowerCase();
+
       const matchedKey = label.match(ACCESS_KEY_MATCHER);
       if (matchedKey) {
         const textNode = MenuUI.$evaluateXPath(
@@ -364,6 +374,7 @@
       this.$mouseDownAfterOpen = false;
       this.$lastFocusedItem = null;
       this.$lastHoverItem = null;
+      this.$mouseDownFired = false;
       this.anchor = null;
       this.canceller = null;
       return new Promise((resolve, _reject) => {
@@ -496,6 +507,7 @@
       event.stopPropagation();
       event.preventDefault();
       this.$mouseDownAfterOpen = true;
+      this.$mouseDownFired = true;
     }
 
     $getEffectiveItem(node) {
@@ -527,7 +539,8 @@
         target.classList.contains('separator') ||
         target.classList.contains('has-submenu') ||
         target.classList.contains('disabled')) {
-        if (!event.target.closest(`#${this.root.id}`))
+        if (this.$mouseDownFired && // ignore "click" event triggered by a mousedown fired before the menu is opened (like long-press)
+            !event.target.closest(`#${this.root.id}`))
           return this.close();
         return;
       }
@@ -544,6 +557,31 @@
           return item;
       }
       return null;
+    }
+
+    $incrementalSearchNextFocusedItem(key) {
+      this.$incrementalSearchString += key.toLowerCase();
+      const current = this.$lastHoverItem || this.$lastFocusedItem || this.root.firstChild;
+      const condition = `starts-with(@data-lower-cased-text, "${this.$incrementalSearchString.replace(/"/g, '\\"')}")`;
+      if (this.$isItemMatches(current, condition))
+        return current;
+      const item = this.$getNextItem(current, condition);
+      return item;
+    }
+
+    $shouldSearchIncremental() {
+      if (!this.incrementalSearch)
+        return false;
+
+      const last = this.$lastKeyInputAt;
+      const now = this.$lastKeyInputAt = Date.now();
+      if (last < 0)
+        return true; // start
+
+      if (now - last > this.incrementalSearchTimeout)
+        this.$incrementalSearchString = '';
+
+      return true; // continue
     }
 
     $onKeyDown(event) {
@@ -615,8 +653,32 @@
             this.$digOut();
         }; break;
 
+        case 'BackSpace': {
+          if (this.$shouldSearchIncremental()) {
+            event.stopPropagation();
+            event.preventDefault();
+            this.$incrementalSearchString = this.$incrementalSearchString.slice(0, this.$incrementalSearchString.length - 1);
+            const item = this.$incrementalSearchNextFocusedItem('');
+            if (item) {
+              this.focusTo(item);
+              this.$setHover(null);
+            }
+          }
+        }; break;
+
         default:
           if (event.key.length == 1) {
+            if (this.$shouldSearchIncremental()) {
+              event.stopPropagation();
+              event.preventDefault();
+              const item = this.$incrementalSearchNextFocusedItem(event.key);
+              if (item) {
+                this.focusTo(item);
+                this.$setHover(null);
+              }
+              return;
+            }
+
             const item = this.$getNextFocusedItemByAccesskey(event.key);
             if (item) {
               this.focusTo(item);
@@ -644,13 +706,15 @@
         case 'End':
         case 'Enter':
         case 'Escape':
+        case 'Bakcspace':
           event.stopPropagation();
           event.preventDefault();
           return;
 
         default:
           if (event.key.length == 1 &&
-            this.$getNextFocusedItemByAccesskey(event.key)) {
+              (this.$shouldSearchIncremental() ||
+               this.$getNextFocusedItemByAccesskey(event.key))) {
             event.stopPropagation();
             event.preventDefault();
           }
@@ -666,16 +730,16 @@
           base,
           XPathResult.FIRST_ORDERED_NODE_TYPE
         ).singleNodeValue ||
-      MenuUI.$evaluateXPath(
-        `following-sibling::li[not(${MenuUI.$hasClass('separator')})]${extrcondition}[last()]`,
-        base,
-        XPathResult.FIRST_ORDERED_NODE_TYPE
-      ).singleNodeValue ||
-      MenuUI.$evaluateXPath(
-        `self::li[not(${MenuUI.$hasClass('separator')})]${extrcondition}`,
-        base,
-        XPathResult.FIRST_ORDERED_NODE_TYPE
-      ).singleNodeValue
+        MenuUI.$evaluateXPath(
+          `following-sibling::li[not(${MenuUI.$hasClass('separator')})]${extrcondition}[last()]`,
+          base,
+          XPathResult.FIRST_ORDERED_NODE_TYPE
+        ).singleNodeValue ||
+        MenuUI.$evaluateXPath(
+          `self::li[not(${MenuUI.$hasClass('separator')})]${extrcondition}`,
+          base,
+          XPathResult.FIRST_ORDERED_NODE_TYPE
+        ).singleNodeValue
       );
       if (window.getComputedStyle(item, null).display == 'none')
         return this.$getPreviousItem(item, condition);
@@ -690,20 +754,29 @@
           base,
           XPathResult.FIRST_ORDERED_NODE_TYPE
         ).singleNodeValue ||
-      MenuUI.$evaluateXPath(
-        `preceding-sibling::li[not(${MenuUI.$hasClass('separator')})]${extrcondition}[last()]`,
-        base,
-        XPathResult.FIRST_ORDERED_NODE_TYPE
-      ).singleNodeValue ||
-      MenuUI.$evaluateXPath(
-        `self::li[not(${MenuUI.$hasClass('separator')})]${extrcondition}`,
-        base,
-        XPathResult.FIRST_ORDERED_NODE_TYPE
-      ).singleNodeValue
+        MenuUI.$evaluateXPath(
+          `preceding-sibling::li[not(${MenuUI.$hasClass('separator')})]${extrcondition}[last()]`,
+          base,
+          XPathResult.FIRST_ORDERED_NODE_TYPE
+        ).singleNodeValue ||
+        MenuUI.$evaluateXPath(
+          `self::li[not(${MenuUI.$hasClass('separator')})]${extrcondition}`,
+          base,
+          XPathResult.FIRST_ORDERED_NODE_TYPE
+        ).singleNodeValue
       );
       if (item && window.getComputedStyle(item, null).display == 'none')
         return this.$getNextItem(item, condition);
       return item;
+    }
+
+    $isItemMatches(base, condition = '') {
+      const extrcondition = condition ? `[${condition}]` : '' ;
+      return !!MenuUI.$evaluateXPath(
+        `self::li[not(${MenuUI.$hasClass('separator')})]${extrcondition}`,
+        base,
+        XPathResult.FIRST_ORDERED_NODE_TYPE
+      ).singleNodeValue;
     }
 
     $advanceFocus(direction, lastFocused = null) {

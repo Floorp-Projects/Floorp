@@ -32,12 +32,11 @@ import {
   toLines,
   configs
 } from '/common/common.js';
-
-import * as Constants from '/common/constants.js';
 import * as ApiTabs from '/common/api-tabs.js';
-import * as TabsStore from '/common/tabs-store.js';
-import * as SidebarConnection from '/common/sidebar-connection.js';
+import * as Constants from '/common/constants.js';
 import { SequenceMatcher } from '/extlib/diff.js';
+import * as SidebarConnection from '/common/sidebar-connection.js';
+import * as TabsStore from '/common/tabs-store.js';
 
 import Tab from '/common/Tab.js';
 

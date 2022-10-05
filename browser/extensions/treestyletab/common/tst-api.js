@@ -14,7 +14,7 @@
  * The Original Code is the Tree Style Tab.
  *
  * The Initial Developer of the Original Code is YUKI "Piro" Hiroshi.
- * Portions created by the Initial Developer are Copyright (C) 2011-2021
+ * Portions created by the Initial Developer are Copyright (C) 2011-2022
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): YUKI "Piro" Hiroshi <piro.outsider.reflex@gmail.com>
@@ -26,8 +26,8 @@
  * ***** END LICENSE BLOCK ******/
 'use strict';
 
-import TabFavIconHelper from '/extlib/TabFavIconHelper.js';
 import EventListenerManager from '/extlib/EventListenerManager.js';
+import TabFavIconHelper from '/extlib/TabFavIconHelper.js';
 
 import {
   log as internalLogger,
@@ -35,10 +35,10 @@ import {
   configs,
   isLinux,
 } from './common.js';
-import * as Constants from './constants.js';
 import * as ApiTabs from '/common/api-tabs.js';
-import * as TabsStore from './tabs-store.js';
+import * as Constants from './constants.js';
 import * as SidebarConnection from './sidebar-connection.js';
+import * as TabsStore from './tabs-store.js';
 
 import Tab from './Tab.js';
 
@@ -77,6 +77,21 @@ export const kNOTIFY_TAB_MOUSEUP    = 'tab-mouseup';
 export const kNOTIFY_TABBAR_CLICKED = 'tabbar-clicked'; // for backward compatibility
 export const kNOTIFY_TABBAR_MOUSEDOWN = 'tabbar-mousedown';
 export const kNOTIFY_TABBAR_MOUSEUP = 'tabbar-mouseup';
+export const kNOTIFY_EXTRA_CONTENTS_CLICKED      = 'extra-contents-clicked';
+export const kNOTIFY_EXTRA_CONTENTS_DBLCLICKED   = 'extra-contents-dblclicked';
+export const kNOTIFY_EXTRA_CONTENTS_MOUSEDOWN    = 'extra-contents-mousedown';
+export const kNOTIFY_EXTRA_CONTENTS_MOUSEUP      = 'extra-contents-mouseup';
+export const kNOTIFY_EXTRA_CONTENTS_KEYDOWN      = 'extra-contents-keydown';
+export const kNOTIFY_EXTRA_CONTENTS_KEYUP        = 'extra-contents-keyup';
+export const kNOTIFY_EXTRA_CONTENTS_INPUT        = 'extra-contents-input';
+export const kNOTIFY_EXTRA_CONTENTS_CHANGE       = 'extra-contents-change';
+export const kNOTIFY_EXTRA_CONTENTS_COMPOSITIONSTART  = 'extra-contents-compositionstart';
+export const kNOTIFY_EXTRA_CONTENTS_COMPOSITIONUPDATE = 'extra-contents-compositionupdate';
+export const kNOTIFY_EXTRA_CONTENTS_COMPOSITIONEND    = 'extra-contents-compositionend';
+export const kNOTIFY_EXTRA_CONTENTS_FOCUS        = 'extra-contents-focus';
+export const kNOTIFY_EXTRA_CONTENTS_BLUR         = 'extra-contents-blur';
+export const kNOTIFY_TABBAR_OVERFLOW  = 'tabbar-overflow';
+export const kNOTIFY_TABBAR_UNDERFLOW = 'tabbar-underflow';
 export const kNOTIFY_NEW_TAB_BUTTON_CLICKED   = 'new-tab-button-clicked';
 export const kNOTIFY_NEW_TAB_BUTTON_MOUSEDOWN = 'new-tab-button-mousedown';
 export const kNOTIFY_NEW_TAB_BUTTON_MOUSEUP   = 'new-tab-button-mouseup';
@@ -95,6 +110,7 @@ export const kNOTIFY_TREE_COLLAPSED_STATE_CHANGED = 'tree-collapsed-state-change
 export const kNOTIFY_NATIVE_TAB_DRAGSTART = 'native-tab-dragstart';
 export const kNOTIFY_NATIVE_TAB_DRAGEND   = 'native-tab-dragend';
 export const kNOTIFY_PERMISSIONS_CHANGED = 'permissions-changed';
+export const kNOTIFY_NEW_TAB_PROCESSED = 'new-tab-processed';
 export const kSTART_CUSTOM_DRAG     = 'start-custom-drag';
 export const kNOTIFY_TRY_MOVE_FOCUS_FROM_COLLAPSING_TREE = 'try-move-focus-from-collapsing-tree';
 export const kNOTIFY_TRY_REDIRECT_FOCUS_FROM_COLLAPSED_TAB = 'try-redirect-focus-from-collaped-tab';
@@ -104,6 +120,7 @@ export const kNOTIFY_TRY_EXPAND_TREE_FROM_ATTACHED_CHILD = 'try-expand-tree-from
 export const kNOTIFY_TRY_EXPAND_TREE_FROM_FOCUSED_COLLAPSED_TAB = 'try-expand-tree-from-focused-collapsed-tab';
 export const kNOTIFY_TRY_EXPAND_TREE_FROM_LONG_PRESS_CTRL_KEY = 'try-expand-tree-from-long-press-ctrl-key';
 export const kNOTIFY_TRY_EXPAND_TREE_FROM_END_TAB_SWITCH = 'try-expand-tree-from-end-tab-switch';
+export const kNOTIFY_TRY_COLLAPSE_TREE_FROM_OTHER_EXPANSION = 'try-collapse-tree-from-other-expansion';
 export const kNOTIFY_TRY_FIXUP_TREE_ON_TAB_MOVED = 'try-fixup-tree-on-tab-moved';
 export const kGET_TREE              = 'get-tree';
 export const kATTACH                = 'attach';
@@ -140,11 +157,16 @@ export const kBLOCK_GROUPING        = 'block-grouping';
 export const kUNBLOCK_GROUPING      = 'unblock-grouping';
 export const kGRANT_TO_REMOVE_TABS  = 'grant-to-remove-tabs';
 export const kOPEN_ALL_BOOKMARKS_WITH_STRUCTURE = 'open-all-bookmarks-with-structure';
-export const kSET_EXTRA_TAB_CONTENTS   = 'set-extra-tab-contents';
-export const kCLEAR_EXTRA_TAB_CONTENTS = 'clear-extra-tab-contents';
-export const kCLEAR_ALL_EXTRA_TAB_CONTENTS = 'clear-all-extra-tab-contents';
-export const kSET_EXTRA_NEW_TAB_BUTTON_CONTENTS   = 'set-extra-new-tab-button-contents';
-export const kCLEAR_EXTRA_NEW_TAB_BUTTON_CONTENTS = 'clear-extra-new-tab-button-contents';
+export const kSET_EXTRA_CONTENTS                  = 'set-extra-contents';
+export const kCLEAR_EXTRA_CONTENTS                = 'clear-extra-contents';
+export const kCLEAR_ALL_EXTRA_CONTENTS            = 'clear-all-extra-contents';
+export const kSET_EXTRA_TAB_CONTENTS              = 'set-extra-tab-contents'; // for backward compatibility
+export const kCLEAR_EXTRA_TAB_CONTENTS            = 'clear-extra-tab-contents'; // for backward compatibility
+export const kCLEAR_ALL_EXTRA_TAB_CONTENTS        = 'clear-all-extra-tab-contents'; // for backward compatibility
+export const kSET_EXTRA_NEW_TAB_BUTTON_CONTENTS   = 'set-extra-new-tab-button-contents'; // for backward compatibility
+export const kCLEAR_EXTRA_NEW_TAB_BUTTON_CONTENTS = 'clear-extra-new-tab-button-contents'; // for backward compatibility
+export const kSET_EXTRA_CONTENTS_PROPERTIES       = 'set-extra-contents-properties';
+export const kFOCUS_TO_EXTRA_CONTENTS             = 'focus-to-extra-contents';
 export const kGET_DRAG_DATA         = 'get-drag-data';
 
 export const kCONTEXT_MENU_OPEN       = 'contextMenu-open';
@@ -191,8 +213,8 @@ const mAddons = new Map();
 let mScrollLockedBy    = {};
 let mGroupingBlockedBy = {};
 
-const mIsBackend  = location.href.startsWith(browser.extension.getURL('background/background.html'));
-const mIsFrontend = location.href.startsWith(browser.extension.getURL('sidebar/sidebar.html'));
+const mIsBackend  = location.href.startsWith(browser.runtime.getURL('background/background.html'));
+const mIsFrontend = location.href.startsWith(browser.runtime.getURL('sidebar/sidebar.html'));
 
 export class TreeItem {
   constructor(tab, options = {}) {
@@ -500,6 +522,8 @@ export async function initAsBackend() {
     bypassPermissionCheck: true
   });
   browser.runtime.onConnectExternal.addListener(port => {
+    if (!configs.APIEnabled)
+      return;
     const sender = port.sender;
     mConnections.set(sender.id, port);
     port.onMessage.addListener(message => {
@@ -843,6 +867,8 @@ export async function initAsFrontend() {
     await wait(10);
   }
   browser.runtime.onMessageExternal.addListener((message, sender) => {
+    if (!configs.APIEnabled)
+      return;
     if (message &&
         typeof message == 'object' &&
         typeof message.type == 'string') {
@@ -917,6 +943,7 @@ export async function notifyScrolled(params = {}) {
     type: kNOTIFY_SCROLLED,
     tab:  tab && allTreeItems.find(treeItem => treeItem.tab.id == tab.id),
     tabs: allTreeItems,
+    overflow: params.overflow,
     window,
     windowId: window,
 
@@ -982,6 +1009,9 @@ export function getListenersForMessageType(type, { targets, except } = {}) {
 }
 
 export async function sendMessage(message, options = {}) {
+  if (!configs.APIEnabled)
+    return [];
+
   const listenerAddons = getListenersForMessageType(message.type, options);
   const tabProperties = options.tabProperties || [];
   log(`sendMessage: sending message for ${message.type}: `, {
@@ -1025,7 +1055,7 @@ function* spawnMessages(targets, params) {
     const allowedMessage = await sanitizeMessage(message, { id, tabProperties });
 
     try {
-      const result = await browser.runtime.sendMessage(id, allowedMessage).catch(ApiTabs.createErrorHandler());
+      const result = await browser.runtime.sendMessage(id, allowedMessage);
       return {
         id,
         result
@@ -1099,52 +1129,56 @@ async function sanitizeMessage(message, params) {
 // =======================================================================
 
 export async function getTargetTabs(message, sender) {
-  await Tab.waitUntilTrackedAll(message.window || message.windowId);
-  if (Array.isArray(message.tabs))
-    return getTabsFromWrongIds(message.tabs, sender);
-  if (Array.isArray(message.tabIds))
-    return getTabsFromWrongIds(message.tabIds, sender);
-  if (message.window || message.windowId) {
-    if (message.tab == '*' ||
-        message.tabId == '*' ||
-        message.tabs == '*' ||
-        message.tabIds == '*')
-      return Tab.getAllTabs(message.window || message.windowId, { iterator: true });
-    else
-      return Tab.getRootTabs(message.window || message.windowId, { iterator: true });
+  const tabQuery = message.tabs || message.tabIds || message.tab || message.tabId;
+  const windowId = message.window || message.windowId;
+
+  if (Array.isArray(tabQuery))
+    await Promise.all(tabQuery.map(oneTabQuery => {
+      if (typeof oneTabQuery == 'number')
+        return Tab.waitUntilTracked(oneTabQuery)
+      return true;
+    }));
+  else if (typeof tabQuery == 'number')
+    await Tab.waitUntilTracked(tabQuery);
+
+  if (windowId)
+    await Tab.waitUntilTrackedAll(windowId);
+
+  if (Array.isArray(tabQuery))
+    return getTabsFromWrongIds(tabQuery, windowId, sender);
+  if (windowId) {
+    if (tabQuery == '*')
+      return Tab.getAllTabs(windowId, { iterator: true });
+    else if (!tabQuery)
+      return Tab.getRootTabs(windowId, { iterator: true });
   }
-  if (message.tab == '*' ||
-      message.tabId == '*' ||
-      message.tabs == '*' ||
-      message.tabIds == '*') {
+  if (tabQuery == '*') {
     const window = await browser.windows.getLastFocused({
       windowTypes: ['normal']
     }).catch(ApiTabs.createErrorHandler());
     return Tab.getAllTabs(window.id, { iterator: true });
   }
-  if (message.tab || message.tabId)
-    return getTabsFromWrongIds([message.tab || message.tabId], sender);
+  if (tabQuery)
+    return getTabsFromWrongIds([tabQuery], windowId, sender);
   return [];
 }
 
-async function getTabsFromWrongIds(ids, sender) {
-  let activeWindow = [];
-  if (ids.some(id => typeof id != 'number')) {
-    const window = await browser.windows.getLastFocused({
-      populate: true
-    }).catch(ApiTabs.createErrorHandler());
-    activeWindow = TabsStore.windows.get(window.id);
-  }
+async function getTabsFromWrongIds(ids, windowId, sender) {
+  const window = !windowId && await browser.windows.getLastFocused({
+    populate: true
+  }).catch(ApiTabs.createErrorHandler());
+  const activeWindow = TabsStore.windows.get(windowId || window.id) || window;
   const tabs = await Promise.all(ids.map(id => getTabFromWrongId({ id, activeWindow, sender }).catch(error => {
     console.error(error);
     return null;
   })));
-  log('getTabsFromWrongIds ', ids, ' => ', tabs, 'sender: ', sender);
+  log('getTabsFromWrongIds: ', ids, ' => ', tabs, 'sender: ', sender, windowId);
 
   return tabs.flat().filter(tab => !!tab);
 }
 
 async function getTabFromWrongId({ id, activeWindow, sender }) {
+  log('getTabsFromWrongId: ', { id, activeWindow, sender });
   if (id && typeof id == 'object' && typeof id.id == 'number') // tabs.Tab
     id = id.id;
   let query   = String(id).toLowerCase();
@@ -1161,6 +1195,12 @@ async function getTabFromWrongId({ id, activeWindow, sender }) {
     case 'active':
     case 'current':
       return baseTab;
+
+    case 'parent':
+      return baseTab.$TST.parent;
+
+    case 'root':
+      return baseTab.$TST.rootTab;
 
     case 'next':
       return baseTab.$TST.nextTab;
@@ -1216,7 +1256,7 @@ async function getTabFromWrongId({ id, activeWindow, sender }) {
       return baseTab.$TST.lastDescendant;
 
     case 'sendertab':
-      return sender.tab && Tab.get(sender.tab.id) || null;
+      return sender && sender.tab && Tab.get(sender.tab.id) || null;
     case 'highlighted':
     case 'multiselected':
       return Tab.getHighlightedTabs(activeWindow.id);

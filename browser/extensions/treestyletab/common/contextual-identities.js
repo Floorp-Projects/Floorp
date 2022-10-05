@@ -5,13 +5,14 @@
 */
 'use strict';
 
+import EventListenerManager from '/extlib/EventListenerManager.js';
+
 import {
+  configs,
   log as internalLogger,
   isWindows,
 } from './common.js';
 import * as ApiTabs from '/common/api-tabs.js';
-
-import EventListenerManager from '/extlib/EventListenerManager.js';
 
 // eslint-disable-next-line no-unused-vars
 function log(...args) {
@@ -30,6 +31,38 @@ export function getIdFromName(name) {
       return identity.cookieStoreId;
   }
   return null;
+}
+
+// Respect container type stored by Container Bookmarks
+// https://addons.mozilla.org/firefox/addon/container-bookmarks/
+export function getIdFromBookmark(bookmark) {
+  const containerMatcher = new RegExp(`#${configs.containerRedirectKey}-(.+)$`);
+  const matchedContainer = bookmark.url.match(containerMatcher);
+  if (!matchedContainer)
+    return {};
+
+  const idPart = matchedContainer[matchedContainer.length-1];
+  const url    = bookmark.url.replace(containerMatcher, '');
+
+  // old method
+  const identity = mContextualIdentities.get(decodeURIComponent(idPart));
+  if (identity) {
+    return {
+      cookieStoreId: identity.cookieStoreId,
+      url,
+    };
+  }
+
+  for (const [cookieStoreId, identity] of mContextualIdentities.entries()) {
+    if (idPart != encodeURIComponent(identity.name.toLowerCase().replace(/\s/g, '-')))
+      continue;
+    return {
+      cookieStoreId,
+      url,
+    };
+  }
+
+  return {};
 }
 
 export function getColorInfo() {

@@ -697,6 +697,9 @@
       }
 
       setTimeout(() => {
+        if (!this.ui ||
+            !this.ui.classList)
+          return;
         // Apply overflow:auto after all contents are correctly rendered.
         this.ui.classList.add('shown');
       }, 10);
@@ -733,8 +736,8 @@
           // remove elements after animation is finished
           ui.parentNode.removeChild(ui);
           style.parentNode.removeChild(style);
-          resolve();
         }, 1000);
+        resolve();
       });
     }
 
@@ -1102,6 +1105,76 @@
         ownerWin = await browser.windows.get(winId);
       }
 
+      const type = this.DIALOG_READY_NOTIFICATION_TYPE;
+      const tryRepositionDialogToCenterOfOwner = this._tryRepositionDialogToCenterOfOwner;
+      browser.runtime.onMessage.addListener(function onMessage(message, sender) {
+        switch (message.type) {
+          case type:
+            browser.runtime.onMessage.removeListener(onMessage);
+            tryRepositionDialogToCenterOfOwner({
+              ...message,
+              dialogWindowId: sender.tab.windowId,
+            });
+            break;
+        }
+      });
+
+      return this._showInPopupInternal(ownerWin, {
+        ...params,
+        inject: {
+          ...(params.inject || {}),
+          __RichConfirm__reportScreenMessageType: type,
+          __RichConfirm__ownerWindowId: ownerWin.id,
+        },
+        onShown: [
+          ...(!params.onShown ? [] : Array.isArray(params.onShown) ? params.onShown : [params.onShown]),
+          (container, { __RichConfirm__reportScreenMessageType, __RichConfirm__ownerWindowId }) => {
+            setTimeout(() => {
+              // We cannot move this window by this callback function, thus I just send
+              // a request to update window position.
+              browser.runtime.sendMessage({
+                type:          __RichConfirm__reportScreenMessageType,
+                ownerWindowId: __RichConfirm__ownerWindowId,
+                availLeft:     screen.availLeft,
+                availTop:      screen.availTop,
+                availWidth:    screen.availWidth,
+                availHeight:   screen.availHeight,
+              });
+            }, 0);
+          },
+        ],
+      });
+    }
+
+    static async _tryRepositionDialogToCenterOfOwner({ dialogWindowId, ownerWindowId, availLeft, availTop, availWidth, availHeight }) {
+      const [dialogWin, ownerWin] = await Promise.all([
+        browser.windows.get(dialogWindowId),
+        browser.windows.get(ownerWindowId),
+      ]);
+      const placedOnOwner = (
+        dialogWin.left + dialogWin.width - (dialogWin.width / 2) < ownerWin.left &&
+        dialogWin.top + dialogWin.height - (dialogWin.height / 2) < ownerWin.top &&
+        dialogWin.left + (dialogWin.width / 2) < ownerWin.left + ownerWin.width &&
+        dialogWin.top + (dialogWin.height / 2) < ownerWin.top + ownerWin.height
+      );
+      const placedInsideViewArea = (
+        dialogWin.left >= availLeft &&
+        dialogWin.top >= availTop &&
+        dialogWin.left + dialogWin.width <= availLeft + availWidth &&
+        dialogWin.top + dialogWin.height <= availTop + availHeight
+      );
+      if (placedOnOwner && placedInsideViewArea)
+        return;
+
+      const top  = ownerWin.top + Math.round((ownerWin.height - dialogWin.height) / 2);
+      const left = ownerWin.left + Math.round((ownerWin.width - dialogWin.width) / 2);
+      return browser.windows.update(dialogWin.id, {
+        left: Math.min(availLeft + availWidth - dialogWin.width, Math.max(availLeft, left)),
+        top:  Math.min(availTop + availHeight - dialogWin.height, Math.max(availTop, top)),
+      });
+    }
+
+    static async _showInPopupInternal(ownerWin, params) {
       const minWidth  = Math.max(ownerWin.width, Math.ceil(screen.availWidth / 3));
       const minHeight = Math.max(ownerWin.height, Math.ceil(screen.availHeight / 3));
 
@@ -1240,7 +1313,8 @@
               });
             });
 
-            await browser.tabs.setZoom(activeTab.id, 1);
+            if (typeof browser.tabs.setZoom == 'function')
+              await browser.tabs.setZoom(activeTab.id, 1);
             return this.showInTab(activeTab.id, {
               ...params,
               popup: true,
@@ -1298,6 +1372,7 @@
     }
   };
   RichConfirm.uniqueKey = RichConfirm.prototype.uniqueKey = uniqueKey;
+  RichConfirm.DIALOG_READY_NOTIFICATION_TYPE = `__RichConfirm_${uniqueKey}__confirmation-dialog-ready`;
   window.RichConfirm = RichConfirm;
   return true; // this is required to run this script as a content script
 })(parseInt(Math.random() * Math.pow(2, 16)));

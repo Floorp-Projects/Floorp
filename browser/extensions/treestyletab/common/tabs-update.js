@@ -14,7 +14,7 @@
  * The Original Code is the Tree Style Tab.
  *
  * The Initial Developer of the Original Code is YUKI "Piro" Hiroshi.
- * Portions created by the Initial Developer are Copyright (C) 2011-2020
+ * Portions created by the Initial Developer are Copyright (C) 2011-2022
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): YUKI "Piro" Hiroshi <piro.outsider.reflex@gmail.com>
@@ -34,9 +34,9 @@ import {
 } from './common.js';
 
 import * as Constants from './constants.js';
-import * as TabsStore from './tabs-store.js';
-import * as SidebarConnection from './sidebar-connection.js';
 import * as ContextualIdentities from './contextual-identities.js';
+import * as SidebarConnection from './sidebar-connection.js';
+import * as TabsStore from './tabs-store.js';
 
 import Tab from './Tab.js';
 
@@ -398,23 +398,24 @@ export async function updateTabsHighlighted(highlightInfo) {
   //const startAt = Date.now();
 
   const tabIds = highlightInfo.tabIds; // new Set(highlightInfo.tabIds);
-  const unhighlightedTabs = Tab.getHighlightedTabs(highlightInfo.windowId, {
+  const toBeUnhighlightedTabs = Tab.getHighlightedTabs(highlightInfo.windowId, {
     ordered: false,
     '!id':   tabIds
   });
-  const highlightedTabs = mapAndFilter(tabIds, id => {
+  const alreadyHighlightedTabs = TabsStore.highlightedTabsInWindow.get(highlightInfo.windowId);
+  const toBeHighlightedTabs = mapAndFilter(tabIds, id => {
     const tab = window.tabs.get(id);
-    return tab && !tab.highlighted && tab || undefined;
+    return tab && !alreadyHighlightedTabs.has(tab.id) && tab || undefined;
   });
 
-  //console.log(`updateTabsHighlighted: ${Date.now() - startAt}ms`);
+  //console.log(`updateTabsHighlighted: ${Date.now() - startAt}ms`, { toBeHighlightedTabs, toBeUnhighlightedTabs});
 
-  //log('updateTabsHighlighted ', { highlightedTabs, unhighlightedTabs});
-  for (const tab of unhighlightedTabs) {
+  //log('updateTabsHighlighted ', { toBeHighlightedTabs, toBeUnhighlightedTabs});
+  for (const tab of toBeUnhighlightedTabs) {
     TabsStore.removeHighlightedTab(tab);
     updateTabHighlighted(tab, false);
   }
-  for (const tab of highlightedTabs) {
+  for (const tab of toBeHighlightedTabs) {
     TabsStore.addHighlightedTab(tab);
     updateTabHighlighted(tab, true);
   }

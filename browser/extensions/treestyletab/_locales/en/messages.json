@@ -29,13 +29,25 @@
   "command_increaseSubPanel":      { "message": "Increase Size of the Sub Panel" },
   "command_decreaseSubPanel":      { "message": "Decrease Size of the Sub Panel" },
 
+  "tab_closebox_aria_label": { "message": "Close tab #$ID$",
+    "placeholders": {
+      "id": { "content": "$1", "example": "1" }
+    }},
   "tab_closebox_tab_tooltip": { "message": "Close tab" },
   "tab_closebox_tab_tooltip_multiselected": { "message": "Close tabs" },
   "tab_closebox_tree_tooltip": { "message": "Close tree" },
+  "tab_soundButton_aria_label": { "message": "Mute tab #$ID$",
+    "placeholders": {
+      "id": { "content": "$1", "example": "1" }
+    }},
   "tab_soundButton_muted_tooltip": { "message": "Unmute tab" },
   "tab_soundButton_muted_tooltip_multiselected": { "message": "Unmute tabs" },
   "tab_soundButton_playing_tooltip": { "message": "Mute tab" },
   "tab_soundButton_playing_tooltip_multiselected": { "message": "Mute tabs" },
+  "tab_twisty_aria_label": { "message": "Toggle tree #$ID$",
+    "placeholders": {
+      "id": { "content": "$1", "example": "1" }
+    }},
   "tab_twisty_expanded_tooltip": { "message": "Collapse tree" },
   "tab_twisty_collapsed_tooltip": { "message": "Expand tree" },
   "tab_tree_tooltip": { "message": "$TREE$\n  ...and $COUNT$ more tab(s)",
@@ -167,19 +179,19 @@
   "syncAvailable_notification_title":   { "message": "Tabs are sendable to other devices from TST now." },
   "syncAvailable_notification_message": { "message": "Tabs can be transferred between your devices. Please click here to set an identifiable name to this device." },
   "syncAvailable_notification_message_linux": { "message": "Tabs can be transferred between your devices. Please click the button to set an identifiable name to this device." },
-  "sentTabs_notification_title":            { "message": "" },
+  "sentTabs_notification_title":            { "message": "\u200b" },
   "sentTabs_notification_message":          { "message": "Tabs is sent to $DEVICE$",
     "placeholders": {
       "DEVICE": { "content": "$1", "example": "Firefox on Device X" }
     }},
-  "sentTabs_notification_title_multiple":   { "message": "" },
+  "sentTabs_notification_title_multiple":   { "message": "\u200b" },
   "sentTabs_notification_message_multiple": { "message": "Tabs are sent to $DEVICE$",
     "placeholders": {
       "DEVICE": { "content": "$1", "example": "Firefox on Device X" }
     }},
-  "sentTabsToAllDevices_notification_title":            { "message": "" },
+  "sentTabsToAllDevices_notification_title":            { "message": "\u200b" },
   "sentTabsToAllDevices_notification_message":          { "message": "Tab is sent to all devices" },
-  "sentTabsToAllDevices_notification_title_multiple":   { "message": "" },
+  "sentTabsToAllDevices_notification_title_multiple":   { "message": "\u200b" },
   "sentTabsToAllDevices_notification_message_multiple": { "message": "Tabs are sent to all devices" },
   "receiveTabs_notification_title":            { "message": "Tab from $DEVICE$",
     "placeholders": {
@@ -199,6 +211,13 @@
       "ALL": { "content": "$2", "example": "4" },
       "REST": { "content": "$3", "example": "3" }
     }},
+
+  "sidebarPositionRighsideNotification_message":   { "message": "TST detected the sidebar position as \"Right Side\". Do you want the appearance to be switched to the one matching to the current position?" },
+  "sidebarPositionRighsideNotification_rightside": { "message": "Apply appearance for Right Side" },
+  "sidebarPositionRighsideNotification_leftside":  { "message": "Keep appearance for Left Side" },
+
+  "sidebarPositionOptionNotification_title":   { "message": "Saved the appearance option for the sidebar position" },
+  "sidebarPositionOptionNotification_message": { "message": "Please see the \"Appearance\" section of the Tree Style Tab's options page if you need to change the option." },
 
   "startup_notification_title_installed":   { "message": "For newcomer of Tree Style Tab" },
   "startup_notification_message_installed": { "message": "Some extra permissions are required for more natural user experiences. Please click here to grant them." },
@@ -299,6 +318,8 @@
 
   "config_title": { "message": "Tree Style Tab Options" },
 
+  "config_recommended_choice": { "message": "(Recommended)" },
+
   "config_showExpertOptions_label": { "message": "Unlock Expert Options" },
   "config_openOptionsInTab_label": { "message": "Open this options page in more wide space" },
 
@@ -307,11 +328,8 @@
   "config_sidebarPosition_caption": { "message": "Style of contents for the sidebar position:" },
   "config_sidebarPosition_left": { "message": "Left side" },
   "config_sidebarPosition_right": { "message": "Right side" },
+  "config_sidebarPosition_auto": { "message": "Auto detect when the sidebar become shown" },
   "config_sidebarPosition_description": { "message": "*This configuration won't change the position of the sidebar itself. You need to click the switcher in the sidebar header and click \"Move Sidebar to Right\" manually." },
-
-  "config_sidebarDirection_caption": { "message": "Style for text direction:" },
-  "config_sidebarDirection_ltr": { "message": "LTR" },
-  "config_sidebarDirection_rtl": { "message": "RTL" },
 
   "config_style_caption": { "message": "Theme" },
   "config_style_proton": { "message": "Proton" },
@@ -336,6 +354,10 @@
   "config_animation_label": { "message": "Enable animation effects" },
   "config_animationForce_label": { "message": "Enable animations regardless \"reduce animations\" platform settings" },
   "config_showCollapsedDescendantsByTooltip_label": { "message": "Show collapsed descendants in the tooltip on a tab" },
+  "config_shiftTabsForScrollbarDistance_label_before": { "message": "Shift tabs aside " },
+  "config_shiftTabsForScrollbarDistance_label_after": { "message": " to keep in-tab buttons touchable avoiding covered with the auto-shown scrollbar" },
+  "config_shiftTabsForScrollbarDistance_placeholder": { "message": "(CSS length)" },
+  "config_shiftTabsForScrollbarOnlyOnHover_label": { "message": "Shift tabs only when the mouse cursor is near the scrollbar" },
   "config_suppressGapFromShownOrHiddenToolbar_caption": { "message": "Suppress visual gap of the sidebar contents produced by temporarily shown/hidden toolbars on following cases" },
   "config_suppressGapFromShownOrHiddenToolbarOnFullScreen_label": { "message": "Fullscreen windows" },
   "config_suppressGapFromShownOrHiddenToolbarOnNewTab_label": { "message": "Blank new tabs on Firefox 85 and later" },
@@ -372,7 +394,27 @@
   "config_removeDeviceButton_tooltip": { "message": "Delete this device from the list" },
 
 
-  "config_newTab_caption": { "message": "New Tabs Behavior" },
+  "config_newTabWithOwner_caption": { "message": "Tabs opened from Existing Tabs" },
+
+  "config_autoAttachOnOpenedWithOwner_before": { "message": "When a tab is opened from existing tab, open it as" },
+  "config_autoAttachOnOpenedWithOwner_noControl": { "message": "(no control)" },
+  "config_autoAttachOnOpenedWithOwner_independent": { "message": "an independent tab" },
+  "config_autoAttachOnOpenedWithOwner_child": { "message": "a child of the parent tab" },
+  "config_autoAttachOnOpenedWithOwner_sibling": { "message": "a sibling of the parent tab" },
+  "config_autoAttachOnOpenedWithOwner_nextSibling": { "message": "the next sibling of the parent tab" },
+  "config_autoAttachOnOpenedWithOwner_after": { "message": "\u200b" },
+
+  "config_insertNewTabFromPinnedTabAt_caption": { "message": "Insertion position of new child tabs (will appear as root tabs) from pinned tabs" },
+  "config_insertNewTabFromPinnedTabAt_noControl": { "message": "No control (respect the decision by Firefox or other tab addons)" },
+  "config_insertNewTabFromPinnedTabAt_nextToLastRelateTab": { "message": "Next to the recently opened child, or near the opener (simulates Firefox's default behavior)" },
+  "config_insertNewTabFromPinnedTabAt_top": { "message": "The top of the tree (near the opener)" },
+  "config_insertNewTabFromPinnedTabAt_end": { "message": "The end of the tree" },
+
+  "config_autoGroupNewTabsFromPinned_label": { "message": "Auto-group tabs opened from same pinned tab (a new tab for grouping will be opened with a title like \"Tabs from ...\")" },
+  "config_groupTabTemporaryStateForChildrenOfPinned_label": { "message": "Default state of group tabs for tabs opened from same pinned tab:" },
+
+
+  "config_newTab_caption": { "message": "New Tabs not from Existing Tabs" },
 
   "config_newTabButton_caption": { "message": "Special actions on the \"New Tab\" button" },
   "config_longPressOnNewTabButton_before":               { "message": "Long-press on the \"New Tab\" button to " },
@@ -464,23 +506,6 @@
   "config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_parent": { "message": "Inherit from the parent tab on the tree" },
   "config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_lastActive": { "message": "Inherit from the current tab" },
 
-  "config_insertNewChildAt_caption": { "message": "Insertion position of new child tabs" },
-  "config_insertNewChildAt_noControl": { "message": "No control (respect the decision by Firefox or other tab addons)" },
-  "config_insertNewChildAt_nextToLastRelateTab": { "message": "Next to the recently opened child, or next to the parent (simulates Firefox's  default behavior)" },
-  "config_insertNewChildAt_top": { "message": "The top of the tree (next to the parent)" },
-  "config_insertNewChildAt_end": { "message": "The end of the tree" },
-
-  "config_insertNewTabFromPinnedTabAt_caption": { "message": "Insertion position of new child tabs (will appear as root tabs) from pinned tabs" },
-  "config_insertNewTabFromPinnedTabAt_noControl": { "message": "No control (respect the decision by Firefox or other tab addons)" },
-  "config_insertNewTabFromPinnedTabAt_nextToLastRelateTab": { "message": "Next to the recently opened child, or near the opener (simulates Firefox's default behavior)" },
-  "config_insertNewTabFromPinnedTabAt_top": { "message": "The top of the tree (near the opener)" },
-  "config_insertNewTabFromPinnedTabAt_end": { "message": "The end of the tree" },
-
-  "config_insertDroppedTabsAt_caption": { "message": "Insertion position of children dropped onto a parent" },
-  "config_insertDroppedTabsAt_inherit": { "message": "Treat same as new children opened from the parent" },
-  "config_insertDroppedTabsAt_first": { "message": "The top of the tree (next to the parent)" },
-  "config_insertDroppedTabsAt_end": { "message": "The end of the tree" },
-
   "config_groupTab_caption": { "message": "Auto-grouping of tabs" },
 
   "config_autoGroupNewTabsFromBookmarks_before": { "message": "Auto-group tabs opened from a bookmark folder within" },
@@ -491,12 +516,11 @@
   "config_tabsFromSameFolderMinThresholdPercentage_before": { "message": "Treat all new tabs as opened from one bookmark folder, if over " },
   "config_tabsFromSameFolderMinThresholdPercentage_after": { "message":  "% tabs have corresponding bookmark in common bookmark folder" },
   "config_autoGroupNewTabsFromOthers_label": { "message": "Auto-group tabs opened at a time from non-bookmark triggers also" },
-  "config_autoGroupNewTabsDelayOnNewWindow_before": { "message": "But don't group new tabs opened within" },
-  "config_autoGroupNewTabsDelayOnNewWindow_after": { "message": "msec when a new window is opened, as a part of tabs opened as \"home page\"." },
+  "config_tabBunchesDetectionDelayOnNewWindow_before": { "message": "But don't group new tabs opened within" },
+  "config_tabBunchesDetectionDelayOnNewWindow_after": { "message": "msec when a new window is opened, as a part of tabs opened as \"home page\"." },
   "config_warnOnAutoGroupNewTabs_label": { "message": "Confirm to group tabs" },
   "config_warnOnAutoGroupNewTabsWithListing_label": { "message": "List tabs to be grouped in the confirmation dialog" },
 
-  "config_autoGroupNewTabsFromPinned_label": { "message": "Auto-group tabs opened from same pinned tab (a new tab for grouping will be opened with a title like \"Tabs from ...\")" },
   "config_renderTreeInGroupTabs_label": { "message": "Render tree in group tabs" },
 
   "config_groupTabTemporaryState_caption": { "message": "Default state of group tabs for each context" },
@@ -505,7 +529,6 @@
   "config_groupTabTemporaryState_option_checked_after": { "message": "\"" },
   "config_groupTabTemporaryStateForNewTabsFromBookmarks_label": { "message": "For tabs opened from bookmarks:" },
   "config_groupTabTemporaryStateForNewTabsFromOthers_label": { "message": "For tabs opened at a time from non-bookmark triggers:" },
-  "config_groupTabTemporaryStateForChildrenOfPinned_label": { "message": "For tabs opened from same pinned tab:" },
   "config_groupTabTemporaryStateForOrphanedTabs_label": { "message": "Opened to replace a closed parent tab:" },
 
   "config_inheritContextualIdentityToChildTabMode_label": { "message": "Container:" },
@@ -585,6 +608,12 @@
   "config_warnOnCloseTabsByClosebox_label": { "message": "Warn me when I attempt to close multiple tabs by a normal click on a closebox" },
   "config_warnOnCloseTabsWithListing_label": { "message": "List closing tabs in the confirmation dialog" },
 
+  "config_insertNewChildAt_caption": { "message": "Insertion position of new child tabs" },
+  "config_insertNewChildAt_noControl": { "message": "No control (respect the decision by Firefox or other tab addons)" },
+  "config_insertNewChildAt_nextToLastRelateTab": { "message": "Next to the recently opened child, or next to the parent (simulates Firefox's  default behavior)" },
+  "config_insertNewChildAt_top": { "message": "The top of the tree (next to the parent)" },
+  "config_insertNewChildAt_end": { "message": "The end of the tree" },
+
 
   "config_drag_caption": { "message": "Drag and Drop" },
 
@@ -609,10 +638,16 @@
   "config_dropLinksOnTabBehavior_load":    { "message": "Load to the tab" },
   "config_dropLinksOnTabBehavior_newtab":  { "message": "Open new child tab" },
 
+  "config_insertDroppedTabsAt_caption": { "message": "Insertion position of children dropped onto a parent" },
+  "config_insertDroppedTabsAt_inherit": { "message": "Treat same as new children opened from the parent" },
+  "config_insertDroppedTabsAt_first": { "message": "The top of the tree (next to the parent)" },
+  "config_insertDroppedTabsAt_end": { "message": "The end of the tree" },
+
   "config_autoExpandOnLongHoverDelay_before":  { "message": "Expand collapsed tree with hovering over " },
   "config_autoExpandOnLongHoverDelay_after":  { "message": "msec while dragging" },
   "config_autoExpandOnLongHoverRestoreIniitalState_label":  { "message": "Collapse such trees automatically after a drag action is finished" },
   "config_autoExpandIntelligently_label":  { "message": "Collapse other trees when collapsed tree is auto-expanded" },
+  "config_ignoreTabDropNearSidebarArea_label":  { "message": "Don't detach tab from window if it is dropped near the sidebar area (recommended to uncheck this if you use \"privacy.resistFingerprinting\"=\"true\")" },
 
 
   "config_more_caption": { "message": "More..." },
@@ -672,7 +707,7 @@
   "config_addons_description_before": { "message": "There are " },
   "config_addons_description_link_label": { "message": "addons which extend TST itself" },
   "config_addons_description_after": { "message": ". Check them out if you need more features on TST's sidebar." },
-  "helper_addons_list_link_uri": { "message": "https://github.com/piroor/treestyletab/blob/master/README.md#addons-that-extend-tst" },
+  "helper_addons_list_link_uri": { "message": "https://github.com/piroor/treestyletab/blob/master/README.md#extensions-that-extend-tst" },
 
   "config_theme_description_before": { "message": "Currently there are available built-in themes only \"Plain\", \"Sidebar\" and \"High Contrast\". If you want to use non-built-in theme, see " },
   "config_theme_description_link_label": { "message": "the code snippets" },
@@ -711,6 +746,8 @@
   "config_loggingConnectionMessages_label": { "message": "Log internal messages" },
   "config_showLogsButton_label": { "message": "Show Logs" },
   "config_simulateSVGContextFill_label": { "message": "Activate workaround for the Bug 1388193 and Bug 1421329 to simulate SVG icons (*This may increase CPU usage. To deactivate this option, you need to activate \"svg.context-properties.content.enabled\" via \"about:config\", until these bugs are fixed.)" },
+  "config_staticARIALabel_label": { "message": "Use static ARIA label for tab elements" },
+  "config_staticARIALabel_description": { "message": "*Please try checking this if your speech recognition system misses tab elements after some tab operations." },
   "config_useCachedTree_label": { "message": "Optimize tree restoration with cache" },
   "config_useCachedTree_description": { "message": "*Please try unchecking and re-checking this to refresh the cache, when the behavior around tree is unstable." },
   "config_acceleratedTabCreation_label": { "message": "Accelerate operations around newly opened tabs (*NOTE: You'll see unstable behavior around tabs.)" },

@@ -10,10 +10,7 @@ import EventListenerManager from '/extlib/EventListenerManager.js';
 
 import * as Constants from './constants.js';
 
-const localKeys = mapAndFilter(`
-  accelKey
-  baseIndent
-  cachedExternalAddons
+export const DEVICE_SPECIFIC_CONFIG_KEYS = mapAndFilter(`
   chunkedSyncDataLocal0
   chunkedSyncDataLocal1
   chunkedSyncDataLocal2
@@ -22,6 +19,31 @@ const localKeys = mapAndFilter(`
   chunkedSyncDataLocal5
   chunkedSyncDataLocal6
   chunkedSyncDataLocal7
+  fixDragEndCoordinates
+  lastConfirmedToCloseTabs
+  lastDragOverSidebarOwnerWindowId
+  lastDraggedTabs
+  loggingConnectionMessages
+  loggingQueries
+  migratedBookmarkUrls
+  requestingPermissions
+  requestingPermissionsNatively
+  syncAvailableNotified
+  syncDeviceInfo
+  syncDevicesLocalCache
+  syncEnabled
+  syncLastMessageTimestamp
+  syncOtherDevicesDetected
+`.trim().split('\n'), key => {
+  key = key.trim();
+  return key && key.indexOf('//') != 0 && key;
+});
+
+const localKeys = DEVICE_SPECIFIC_CONFIG_KEYS.concat(mapAndFilter(`
+  APIEnabled
+  accelKey
+  baseIndent
+  cachedExternalAddons
   colorScheme
   debug
   enableLinuxBehaviors
@@ -31,22 +53,14 @@ const localKeys = mapAndFilter(`
   grantedExternalAddonPermissions
   grantedRemovingTabIds
   incognitoAllowedExternalAddons
-  lastConfirmedToCloseTabs
-  lastDraggedTabs
   logFor
-  loggingConnectionMessages
-  loggingQueries
   logTimestamp
   maximumDelayForBug1561879
-  migratedBookmarkUrls
   minimumIntervalToProcessDragoverEvent
   minIndent
   notifiedFeaturesVersion
   optionsExpandedGroups
   optionsExpandedSections
-  requestingPermissions
-  requestingPermissionsNatively
-  sidebarDirection
   sidebarPosition
   sidebarVirtuallyClosedWindows
   sidebarVirtuallyOpenedWindows
@@ -54,26 +68,22 @@ const localKeys = mapAndFilter(`
   style
   subMenuCloseDelay
   subMenuOpenDelay
-  syncOtherDevicesDetected
-  syncAvailableNotified
-  syncDeviceInfo
-  syncDevicesLocalCache
-  syncLastMessageTimestamp
   testKey
   userStyleRulesFieldHeight
   userStyleRulesFieldTheme
 `.trim().split('\n'), key => {
   key = key.trim();
   return key && key.indexOf('//') != 0 && key;
-});
+}));
 
 export const configs = new Configs({
   optionsExpandedSections: ['section-appearance'],
   optionsExpandedGroups: [],
 
   // appearance
-  sidebarPosition: Constants.kTABBAR_POSITION_LEFT,
-  sidebarDirection: Constants.kTABBAR_DIRECTION_LTR,
+  sidebarPosition: Constants.kTABBAR_POSITION_AUTO,
+  sidebarPositionRighsideNotificationShown: false,
+  sidebarPositionOptionNotificationTimeout: 20 * 1000,
 
   style:
     /^Mac/i.test(navigator.platform) ? 'sidebar' :
@@ -83,6 +93,10 @@ export const configs = new Configs({
       })(),
   colorScheme: /^Linux/i.test(navigator.platform) ? 'system-color' : 'photon' ,
   iconColor: 'auto',
+  indentLine: 'auto',
+
+  shiftTabsForScrollbarDistance: '0.5em',
+  shiftTabsForScrollbarOnlyOnHover: true,
 
   unrepeatableBGImageAspectRatio: 4,
 
@@ -112,7 +126,7 @@ export const configs = new Configs({
   suppressGapFromShownOrHiddenToolbarOnFullScreen: false,
   suppressGapFromShownOrHiddenToolbarOnNewTab: true,
   suppressGapFromShownOrHiddenToolbarInterval: 50,
-  suppressGapFromShownOrHiddenToolbarTiemout: 500,
+  suppressGapFromShownOrHiddenToolbarTimeout: 500,
   cancelGapSuppresserHoverDelay: 1000, // msec
 
 
@@ -186,20 +200,22 @@ export const configs = new Configs({
   tabDragBehaviorShift: Constants.kDRAG_BEHAVIOR_MOVE | Constants.kDRAG_BEHAVIOR_ENTIRE_TREE | Constants.kDRAG_BEHAVIOR_ALLOW_BOOKMARK,
   showTabDragBehaviorNotification: true,
   guessDraggedNativeTabs: true,
+  ignoreTabDropNearSidebarArea: true,
 
   fixupTreeOnTabVisibilityChanged: false,
+  fixupOrderOfTabsFromOtherDevice: true,
 
   scrollToExpandedTree: true,
 
   spreadMutedStateOnlyToSoundPlayingTabs: true,
 
 
-  // grouping
+  // tab bunches
+  tabBunchesDetectionTimeout: 100,
+  tabBunchesDetectionDelayOnNewWindow: 500,
   autoGroupNewTabsFromBookmarks: true,
   tabsFromSameFolderMinThresholdPercentage: 50,
   autoGroupNewTabsFromOthers: false,
-  autoGroupNewTabsTimeout: 100,
-  autoGroupNewTabsDelayOnNewWindow: 500,
   autoGroupNewTabsFromPinned: true,
   groupTabTemporaryStateForNewTabsFromBookmarks: Constants.kGROUP_TAB_TEMPORARY_STATE_PASSIVE,
   groupTabTemporaryStateForNewTabsFromOthers: Constants.kGROUP_TAB_TEMPORARY_STATE_PASSIVE,
@@ -262,7 +278,6 @@ export const configs = new Configs({
   warnOnCloseTabsNotificationTimeout: 20 * 1000,
   warnOnCloseTabsByClosebox: true,
   warnOnCloseTabsWithListing: true,
-  warnOnCloseTabsWithListingMaxRows: 5,
   lastConfirmedToCloseTabs: 0,
   grantedRemovingTabIds: [],
   sidebarVirtuallyOpenedWindows: [], // for automated tests
@@ -285,17 +300,21 @@ export const configs = new Configs({
   // subpanel
   lastSelectedSubPanelProviderId: null,
   lastSubPanelHeight: 0,
+  maxSubPanelSizeRatio: 0.66,
 
 
   // misc.
   showExpertOptions: false,
   bookmarkTreeFolderName: browser.i18n.getMessage('bookmarkFolder_label_default', ['%TITLE%', '%YEAR%', '%MONTH%', '%DATE%']),
   defaultBookmarkParentId: 'toolbar_____', // 'unfiled_____' for Firefox 83 and olders,
+  incrementalSearchTimeout: 1000, // same to the default value of Firefox's "ui.menu.incremental_search.timeout"
   defaultSearchEngine: 'https://www.google.com/search?q=%s',
   acceleratedTabOperations: true,
   acceleratedTabCreation: false,
   enableWorkaroundForBug1409262: false,
   enableWorkaroundForBug1548949: true,
+  enableWorkaroundForBug1767165_fixDragEndCoordinates: null, // workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1767165
+  enableWorkaroundForBug1763420_reloadMaskImage: true, // workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1763420
   maximumDelayForBug1561879: 500,
   workaroundForBug1548949DroppedTabs: null,
   heartbeatInterval: 1000,
@@ -320,6 +339,7 @@ export const configs = new Configs({
   allowDragNewTabButton: true,
   newTabButtonDragGestureModifiers: 'shift',
   migratedBookmarkUrls: [],
+  lastDragOverSidebarOwnerWindowId: null,
   notifiedFeaturesVersion: 0,
 
   useCachedTree: true,
@@ -408,6 +428,8 @@ export const configs = new Configs({
 
 
   debug:     false,
+  syncEnabled: true,
+  APIEnabled: true,
   logTimestamp: true,
   loggingQueries: false,
   logFor: { // git grep configs.logFor | grep -v common.js | cut -d "'" -f 2 | sed -e "s/^/    '/" -e "s/$/': false,/"
@@ -417,7 +439,7 @@ export const configs = new Configs({
     'background/browser-action-menu': false,
     'background/commands': false,
     'background/context-menu': false,
-    'background/handle-group-tabs': false,
+    'background/handle-tab-bunches': false,
     'background/handle-misc': false,
     'background/handle-moved-tabs': false,
     'background/handle-new-tabs': false,
@@ -462,7 +484,8 @@ export const configs = new Configs({
     'sidebar/sidebar': false,
     'sidebar/size': false,
     'sidebar/subpanel': false,
-    'sidebar/tab-context-menu': false
+    'sidebar/tab-context-menu': false,
+    'sidebar/tst-api-frontend': false,
   },
   loggingConnectionMessages: false,
   enableLinuxBehaviors: false,
@@ -505,6 +528,9 @@ export const configs = new Configs({
   userStyleRules5: '',
   userStyleRules6: '',
   userStyleRules7: '',
+  autoGroupNewTabsTimeout: null, // migrated to tabBunchesDetectionTimeout
+  autoGroupNewTabsDelayOnNewWindow: null, // migrated to tabBunchesDetectionDelayOnNewWindow
+  autoHiddenScrollbarPlaceholderSize: null, // migrated to shiftTabsForScrollbarDistance
 
 
   configsVersion: 0,
@@ -512,6 +538,17 @@ export const configs = new Configs({
   testKey: 0 // for tests/utils.js
 }, {
   localKeys
+});
+
+configs.$addLocalLoadedObserver((key, value) => {
+  switch (key) {
+    case 'syncEnabled':
+      configs.sync = !!value;
+      return;
+
+    default:
+      return;
+  }
 });
 
 // cleanup old data
@@ -675,10 +712,10 @@ function uneval(value) {
 
 function getTimeStamp() {
   const time = new Date();
-  const hours = `0${time.getHours()}`.substr(-2);
-  const minutes = `0${time.getMinutes()}`.substr(-2);
-  const seconds = `0${time.getSeconds()}`.substr(-2);
-  const milliseconds = `00${time.getMilliseconds()}`.substr(-3);
+  const hours = `0${time.getHours()}`.slice(-2);
+  const minutes = `0${time.getMinutes()}`.slice(-2);
+  const seconds = `0${time.getSeconds()}`.slice(-2);
+  const milliseconds = `00${time.getMilliseconds()}`.slice(-3);
   return `${hours}:${minutes}:${seconds}.${milliseconds}`;
 }
 
@@ -763,6 +800,10 @@ export async function notify({ icon, title, message, timeout, url } = {}) {
     onClosed = null;
     return clicked;
   });
+}
+
+export function compareAsNumber(a, b) {
+  return a - b;
 }
 
 
@@ -852,11 +893,43 @@ export async function sha1sum(string) {
 }
 
 export function sanitizeForHTMLText(text) {
-  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 export function sanitizeAccesskeyMark(label) {
   return String(label || '').replace(/\(&[a-z]\)|&([a-z])/gi, '$1');
+}
+
+export function getWindowParamsFromSource(sourceWindow, { left, top, width, height } = {}) {
+  const params = {
+    // inherit properties of the source window
+    incognito: sourceWindow.incognito,
+    state:     sourceWindow.state,
+    width:     sourceWindow.width,
+    height:    sourceWindow.height,
+    left:      sourceWindow.left,
+    top:       sourceWindow.top,
+  };
+  if (typeof left == 'number')
+    params.left = left;
+  if (typeof top == 'number')
+    params.top = top;
+  if (typeof width == 'number')
+    params.width = width;
+  if (typeof height == 'number')
+    params.height = height;
+  if (params.state == 'fullscreen' ||
+      params.state == 'maximized') {
+    delete params.left;
+    delete params.top;
+    delete params.width;
+    delete params.height;
+  }
+  return params;
 }
 
 

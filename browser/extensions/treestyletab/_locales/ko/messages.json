@@ -864,18 +864,6 @@
         "message": "※이 설정은 사이드바 자체의 위치를 변경하지 않습니다. 사이드바를 창 오른쪽으로 이동하려면 사이드바 헤더의 전환 메뉴에서 \"사이드바를 오른쪽으로 이동\"을 선택하세요.",
         "hash": "adbea9fc2751f205418a7f6b10e68b5f"
     },
-    "config_sidebarDirection_caption": {
-        "message": "글씨 방향에 맞춘 스타일",
-        "hash": "df500379330e44d98c6ab41c6eb09f07"
-    },
-    "config_sidebarDirection_ltr": {
-        "message": "LTR",
-        "hash": "4fb680668e028ece5611db5ae4f2380c"
-    },
-    "config_sidebarDirection_rtl": {
-        "message": "RTL",
-        "hash": "f24b22d165c8a43ef76a792dedb56421"
-    },
     "config_style_caption": {
         "message": "테마",
         "hash": "9da24ca7508eb181c632829fd698be9a"
@@ -1060,7 +1048,7 @@
         "message": "이 기기를 목록에서 삭제",
         "hash": "915ab3b46ce271eb2878f602b12920e6"
     },
-    "config_newTab_caption": {
+    "config_newTab_caption_TRANSLATION_NEED_UPDATED": {
         "message": "새 탭을 실행",
         "hash": "b22c55cb6f60c72fdf0cbaa5133d5b46"
     },
@@ -1476,11 +1464,11 @@
         "message": "북마크 이외에서 연속적으로 열린 탭은 자동으로 묶입니다.",
         "hash": "a8c3d0dacf027b072bdac938343c5131"
     },
-    "config_autoGroupNewTabsDelayOnNewWindow_before": {
+    "config_tabBunchesDetectionDelayOnNewWindow_before": {
         "message": "다만, 새 창이 열리고부터",
         "hash": "2eb9969ecbaf2144590626aa33b20dff"
     },
-    "config_autoGroupNewTabsDelayOnNewWindow_after": {
+    "config_tabBunchesDetectionDelayOnNewWindow_after": {
         "message": "밀리초 안에 열린 탭은 \"홈페이지\"의 일부로 간주해 묶지 않습니다.",
         "hash": "a6e268352f07d4449db8c955fca074d7"
     },
@@ -1524,7 +1512,7 @@
         "message": "북마크 이외에서 연속적으로 열린 탭을 묶는 경우:",
         "hash": "58f527403a14b4a7bccfbd6bc5e74344"
     },
-    "config_groupTabTemporaryStateForChildrenOfPinned_label": {
+    "config_groupTabTemporaryStateForChildrenOfPinned_label_TRANSLATION_NEED_UPDATED": {
         "message": "같은 고정된 탭에서 열린 탭을 묶는 경우:",
         "hash": "72e4456279cc0fa02821409f00c28c39"
     },
@@ -1909,7 +1897,7 @@
         "hash": "2bff160a32604afc72ae4f0072ae8a59"
     },
     "config_accelKey_auto": {
-        "message": "기본(macOS=⌘, それ以外=Ctrl）",
+        "message": "기본(macOS=⌘, 기타=Ctrl）",
         "hash": "59c4f47d4df6c72706f01f5b421a452a"
     },
     "config_accelKey_alt": {
@@ -2057,7 +2045,7 @@
         "hash": "59a6e79ef78c82f7ac8ef391e4de01f5"
     },
     "helper_addons_list_link_uri": {
-        "message": "https://github.com/piroor/treestyletab/blob/master/README.md#addons-that-extend-tst",
+        "message": "https://github.com/piroor/treestyletab/blob/master/README.md#extensions-that-extend-tst",
         "hash": "8273bc1584de40aaa4ec5f04b3cd200c"
     },
     "config_theme_description_before": {
@@ -2280,11 +2268,11 @@
         "hash": "c3ae3c72832dfedee6c48d0dc37eb954"
     },
     "tabContextMenu_pin_label": {
-        "message": "탭 잠금(&P)",
+        "message": "탭 고정(&P)",
         "hash": "84f0158295ff8a14fd6062c7ec19c77c"
     },
     "tabContextMenu_unpin_label": {
-        "message": "탭 잠금 해제(&P)",
+        "message": "탭 고정 해제(&P)",
         "hash": "60571db0ccb087c30009dadd2042ebd8"
     },
     "tabContextMenu_duplicate_label": {
@@ -2380,11 +2368,11 @@
         "hash": "c9aec61975e838ae00211e78c365ca82"
     },
     "tabContextMenu_pin_label_multiselected": {
-        "message": "탭 잠금(&P)",
+        "message": "탭 고정(&P)",
         "hash": "b32691b5170714cfdb1b406b5756149b"
     },
     "tabContextMenu_unpin_label_multiselected": {
-        "message": "탭 잠금 해제(&P)",
+        "message": "탭 고정 해제(&P)",
         "hash": "b6bb715b523238636abe60c06c9679e6"
     },
     "tabContextMenu_duplicate_label_multiselected": {

@@ -5,11 +5,11 @@
 */
 'use strict';
 
-import * as Constants from './constants.js';
 import {
   log as internalLogger,
   configs
 } from './common.js';
+import * as Constants from './constants.js';
 
 // eslint-disable-next-line no-unused-vars
 function log(...args) {
@@ -397,6 +397,12 @@ export function unprepareIndexesForWindow(windowId) {
   unsynchronizedTabsInWindow.delete(windowId);
 }
 
+export function getTabsMap(tabsStore, windowId = null) {
+  return windowId ?
+    tabsStore.get(windowId) :
+    new Map([...tabsStore.values()].map(tabs => [...tabs.entries()]).flat());
+}
+
 export function updateIndexesForTab(tab) {
   addLivingTab(tab);
 
@@ -694,7 +700,7 @@ export function ensureLivingTab(tab) {
       (tab.$TST.element &&
        !tab.$TST.element.parentNode) ||
       !tabs.has(tab.id) ||
-      tab.$TST.states.has(Constants.kTAB_STATE_REMOVING) ||
+      tab.$TST.removing ||
       !windows.get(tab.windowId))
     return null;
   return tab;

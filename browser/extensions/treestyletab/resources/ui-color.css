@@ -94,27 +94,30 @@
   --yellow-90: #3e2800;
 
   /* https://hg.mozilla.org/mozilla-central/raw-file/tip/browser/themes/addons/dark/manifest.json */
-  --dark-frame: hsl(240, 5%, 5%);
-  --dark-icons: rgb(249, 249, 250, 0.7);
+  --dark-frame: #1c1b22;
+  --dark-icons: rgb(251,251,254);
   --dark-ntp-background: #2A2A2E;
-  --dark-ntp-text: rgb(249, 249, 250);
-  --dark-popup: #4a4a4f;
-  --dark-popup-border: #27272b;
-  --dark-popup-text: rgb(249, 249, 250);
+  --dark-ntp-text: rgb(251, 251, 254);
+  --dark-popup: rgb(66,65,77);
+  --dark-popup-border: rgb(82,82,94);
+  --dark-popup-text: rgb(251,251,254);
   --dark-sidebar: #38383D;
   --dark-sidebar-text: rgb(249, 249, 250);
   --dark-sidebar-border: rgba(255, 255, 255, 0.1);
-  --dark-tab-background-text: rgb(249, 249, 250);
-  --dark-tab-line: #0a84ff;
-  --dark-toolbar: hsl(240, 1%, 20%);
+  --dark-tab-background-text: #fbfbfe;
+  --dark-tab-line: transparent;
+  --dark-toolbar: rgb(43,42,51);
   --dark-toolbar-bottom-separator: hsl(240, 5%, 5%);
-  --dark-toolbar-field: rgb(71, 71, 73);
-  --dark-toolbar-field-border: rgba(249, 249, 250, 0.2);
+  --dark-toolbar-field: rgb(28,27,34);
+  --dark-toolbar-field-border: transparent;
   --dark-toolbar-field-separator: #5F6670;
-  --dark-toolbar-field-text: rgb(249, 249, 250);
+  --dark-toolbar-field-text: rgb(251,251,254);
 
   /* https://searchfox.org/mozilla-central/rev/35873cfc312a6285f54aa5e4ec2d4ab911157522/browser/themes/shared/tabs.inc.css#24 */
   --tab-loading-fill: #0A84FF;
+
+  --focus-outline-color: #0061E0; /* https://searchfox.org/mozilla-central/rev/f60e5304300b286376664b25143cdc6b38a0f0d7/browser/themes/shared/browser-shared.css#124 */
+  --focus-outline-color-a40: #0061E066; /* 40% alpha */
 
 
   --bg-color: var(--grey-10);
@@ -222,6 +225,9 @@ hr {
     --in-content-link-color: var(--blue-40);
     --in-content-link-color-hover: var(--blue-50);
     --in-content-link-color-active: var(--blue-60);
+
+    --focus-outline-color: #00DDFF; /* https://searchfox.org/mozilla-central/rev/f60e5304300b286376664b25143cdc6b38a0f0d7/browser/themes/shared/browser-shared.css#129 */
+    --focus-outline-color-a40: #00DDFF66; /* 40% alpha */
 
     --bg-color: var(--in-content-page-background);
     --text-color: var(--in-content-text-color);

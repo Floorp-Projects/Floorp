@@ -670,10 +670,10 @@ export class ReadableDiffer {
     common = Math.min(this._nLeadingCharacters(fromLine, '\t'),
                       this._nLeadingCharacters(toLine, '\t'));
     common = Math.min(common,
-                      this._nLeadingCharacters(fromTags.substr(0, common),
+                      this._nLeadingCharacters(fromTags.slice(0, common),
                                                ' '));
-    fromTags = fromTags.substr(common).replace(/\s*$/, '');
-    toTags = toTags.substr(common).replace(/\s*$/, '');
+    fromTags = fromTags.slice(common).replace(/\s*$/, '');
+    toTags = toTags.slice(common).replace(/\s*$/, '');
 
     result = this._tagDeleted([fromLine]);
     if (fromTags.length > 0) {

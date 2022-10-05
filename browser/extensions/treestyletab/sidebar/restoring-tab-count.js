@@ -5,8 +5,8 @@
 */
 'use strict';
 
-import * as Constants from '/common/constants.js';
 import * as BackgroundConnection from './background-connection.js';
+import * as Constants from '/common/constants.js';
 
 let mCount = 0;
 

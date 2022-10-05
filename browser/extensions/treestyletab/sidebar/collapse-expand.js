@@ -26,6 +26,8 @@
  * ***** END LICENSE BLOCK ******/
 'use strict';
 
+import EventListenerManager from '/extlib/EventListenerManager.js';
+
 import {
   log as internalLogger,
   nextFrame,
@@ -38,8 +40,6 @@ import * as TabsStore from '/common/tabs-store.js';
 import Tab from '/common/Tab.js';
 
 import * as BackgroundConnection from './background-connection.js';
-
-import EventListenerManager from '/extlib/EventListenerManager.js';
 
 import { TabInvalidationTarget } from './components/TabElement.js';
 

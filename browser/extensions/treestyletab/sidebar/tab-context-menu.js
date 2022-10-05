@@ -13,16 +13,17 @@ import {
   notify,
   configs,
   shouldApplyAnimation,
+  compareAsNumber,
   isLinux,
   isMacOS,
 } from '/common/common.js';
-import * as Constants from '/common/constants.js';
 import * as ApiTabs from '/common/api-tabs.js';
+import * as BackgroundConnection from './background-connection.js';
+import * as Constants from '/common/constants.js';
+import * as EventUtils from './event-utils.js';
+import * as Permissions from '/common/permissions.js';
 import * as TabsStore from '/common/tabs-store.js';
 import * as TSTAPI from '/common/tst-api.js';
-import * as Permissions from '/common/permissions.js';
-import * as EventUtils from './event-utils.js';
-import * as BackgroundConnection from './background-connection.js';
 
 import Tab from '/common/Tab.js';
 
@@ -193,7 +194,7 @@ function getAddonIcon(id) {
 function chooseIconForAddon(params) {
   const icons = params.icons || {};
   const addon = TSTAPI.getAddon(params.id) || {};
-  let sizes = Object.keys(icons).map(aSize => parseInt(aSize)).sort();
+  let sizes = Object.keys(icons).map(aSize => parseInt(aSize)).sort(compareAsNumber);
   const reducedSizes = sizes.filter(aSize => aSize < 16);
   if (reducedSizes.length > 0)
     sizes = reducedSizes;
