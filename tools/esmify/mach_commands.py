@@ -558,6 +558,7 @@ def rename_single_file(command_context, vcs_utils, jsm_path):
     esm_name = esm_path.name
 
     target_files = [
+        ".eslintignore",
         "moz.build",
         "jar.mn",
         "browser.ini",
