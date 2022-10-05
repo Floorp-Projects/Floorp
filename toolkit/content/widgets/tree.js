@@ -200,10 +200,10 @@
   class MozTreecolPicker extends MozElements.BaseControl {
     static get markup() {
       return `
-      <image class="tree-columnpicker-icon"></image>
+      <button class="tree-columnpicker-button"/>
       <menupopup anonid="popup">
-        <menuseparator anonid="menuseparator"></menuseparator>
-        <menuitem anonid="menuitem" data-l10n-id="tree-columnpicker-restore-order"></menuitem>
+        <menuseparator anonid="menuseparator"/>
+        <menuitem anonid="menuitem" data-l10n-id="tree-columnpicker-restore-order"/>
       </menupopup>
       `;
     }
@@ -211,29 +211,6 @@
       super();
 
       window.MozXULElement.insertFTLIfNeeded("toolkit/global/tree.ftl");
-
-      this.addEventListener("command", event => {
-        if (event.originalTarget == this) {
-          var popup = this.querySelector('[anonid="popup"]');
-          this.buildPopup(popup);
-          popup.openPopup(this, "after_end");
-        } else {
-          var tree = this.parentNode.parentNode;
-          tree.stopEditing(true);
-          var menuitem = this.querySelector('[anonid="menuitem"]');
-          if (event.originalTarget == menuitem) {
-            this.style.MozBoxOrdinalGroup = "";
-            tree._ensureColumnOrder(tree.NATURAL_ORDER);
-          } else {
-            var colindex = event.originalTarget.getAttribute("colindex");
-            var column = tree.columns[colindex];
-            if (column) {
-              var element = column.element;
-              element.hidden = !element.hidden;
-            }
-          }
-        }
-      });
     }
 
     connectedCallback() {
@@ -243,6 +220,24 @@
 
       this.textContent = "";
       this.appendChild(this.constructor.fragment);
+
+      let button = this.querySelector(".tree-columnpicker-button");
+      let popup = this.querySelector('[anonid="popup"]');
+      let menuitem = this.querySelector('[anonid="menuitem"]');
+
+      button.addEventListener("command", e => {
+        this.buildPopup(popup);
+        popup.openPopup(this, "after_end");
+        e.preventDefault();
+      });
+
+      menuitem.addEventListener("command", e => {
+        let tree = this.parentNode.parentNode;
+        tree.stopEditing(true);
+        this.style.MozBoxOrdinalGroup = "";
+        tree._ensureColumnOrder(tree.NATURAL_ORDER);
+        e.preventDefault();
+      });
     }
 
     buildPopup(aPopup) {
@@ -283,6 +278,16 @@
               currElement.getAttribute("closemenu")
             );
           }
+
+          popupChild.addEventListener("command", function() {
+            let colindex = this.getAttribute("colindex");
+            let column = tree.columns[colindex];
+            if (column) {
+              var element = column.element;
+              element.hidden = !element.hidden;
+            }
+          });
+
           aPopup.insertBefore(popupChild, refChild);
         }
       }
@@ -556,7 +561,7 @@
 
     static get markup() {
       return `
-      <treecolpicker class="treecol-image" fixed="true"></treecolpicker>
+      <treecolpicker fixed="true"></treecolpicker>
       `;
     }
 
