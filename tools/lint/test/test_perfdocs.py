@@ -763,7 +763,10 @@ def test_perfdocs_framework_gatherers(logger, structured_logger, perfdocs_sample
             assert suite == "suite"
             for test, manifest in suitetests.items():
                 assert test == "Example"
-                assert pathlib.Path(manifest) == perfdocs_sample["manifest"]
+                assert (
+                    pathlib.Path(manifest["path"])
+                    == perfdocs_sample["manifest"]["path"]
+                )
 
 
 @mock.patch("perfdocs.logger.PerfDocLogger")

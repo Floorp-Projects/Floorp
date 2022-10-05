@@ -26,6 +26,7 @@ Locally, Raptor can be invoked with the following command:
    debugging
    contributing
    test-list
+   metrics
 
 .. contents::
    :depth: 2
