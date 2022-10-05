@@ -144,7 +144,10 @@ struct SizeComputationInput {
 
  protected:
   // cached copy of the frame's writing-mode, for logical coordinates
-  mozilla::WritingMode mWritingMode;
+  const mozilla::WritingMode mWritingMode;
+
+  // Cached mFrame->IsThemed().
+  const bool mIsThemed = false;
 
   // Computed margin values
   mozilla::LogicalMargin mComputedMargin;

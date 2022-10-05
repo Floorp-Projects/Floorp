@@ -1437,42 +1437,6 @@ FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
       aAxisTracker, childWM, childRI.ComputedMaxISize(),
       childRI.ComputedMaxBSize());
 
-  // SPECIAL-CASE FOR WIDGET-IMPOSED SIZES
-  // Check if we're a themed widget, in which case we might have a minimum
-  // main & cross size imposed by our widget (which we can't go below), or
-  // (more severe) our widget might have only a single valid size.
-  const nsStyleDisplay* disp = aChildFrame->StyleDisplay();
-  if (aChildFrame->IsThemed(disp)) {
-    LayoutDeviceIntSize widgetMinSize =
-        PresContext()->Theme()->GetMinimumWidgetSize(
-            PresContext(), aChildFrame, disp->EffectiveAppearance());
-
-    nscoord widgetMainMinSize = PresContext()->DevPixelsToAppUnits(
-        aAxisTracker.MainComponent(widgetMinSize));
-    nscoord widgetCrossMinSize = PresContext()->DevPixelsToAppUnits(
-        aAxisTracker.CrossComponent(widgetMinSize));
-
-    // GetMinimumWidgetSize() returns border-box. We need content-box, so
-    // subtract borderPadding.
-    const LogicalMargin bpInFlexWM =
-        childRI.ComputedLogicalBorderPadding(flexWM);
-    widgetMainMinSize -= aAxisTracker.MarginSizeInMainAxis(bpInFlexWM);
-    widgetCrossMinSize -= aAxisTracker.MarginSizeInCrossAxis(bpInFlexWM);
-    // ... (but don't let that push these min sizes below 0).
-    widgetMainMinSize = std::max(0, widgetMainMinSize);
-    widgetCrossMinSize = std::max(0, widgetCrossMinSize);
-    // Ensure our min/max sizes are at least as large as the widget's mandated
-    // minimum size, so we don't flex below that.
-    mainMinSize = std::max(mainMinSize, widgetMainMinSize);
-    mainMaxSize = std::max(mainMaxSize, widgetMainMinSize);
-
-    if (tentativeCrossSize != NS_UNCONSTRAINEDSIZE) {
-      tentativeCrossSize = std::max(tentativeCrossSize, widgetCrossMinSize);
-    }
-    crossMinSize = std::max(crossMinSize, widgetCrossMinSize);
-    crossMaxSize = std::max(crossMaxSize, widgetCrossMinSize);
-  }
-
   // Construct the flex item!
   FlexItem* item = aLine.Items().EmplaceBack(
       childRI, flexGrow, flexShrink, flexBaseSize, mainMinSize, mainMaxSize,
