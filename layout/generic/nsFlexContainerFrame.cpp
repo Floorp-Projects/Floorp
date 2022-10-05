@@ -57,6 +57,11 @@ static bool IsLegacyBox(const nsIFrame* aFlexContainer) {
       NS_STATE_FLEX_IS_EMULATING_LEGACY_WEBKIT_BOX);
 }
 
+static bool IsLegacyMozBox(const nsFlexContainerFrame* aFlexContainer) {
+  return aFlexContainer->HasAnyStateBits(
+      NS_STATE_FLEX_IS_EMULATING_LEGACY_MOZ_BOX);
+}
+
 // Returns the OrderState enum we should pass to CSSOrderAwareFrameIterator
 // (depending on whether aFlexContainer has
 // NS_STATE_FLEX_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER state bit).
@@ -4037,37 +4042,6 @@ LogicalSide FlexboxAxisTracker::CrossAxisStartSide() const {
       CrossAxis(), IsCrossAxisReversed() ? eLogicalEdgeEnd : eLogicalEdgeStart);
 }
 
-bool nsFlexContainerFrame::ShouldUseMozBoxCollapseBehavior(
-    const nsStyleDisplay* aFlexStyleDisp) {
-  MOZ_ASSERT(StyleDisplay() == aFlexStyleDisp, "wrong StyleDisplay passed in");
-
-  // Quick filter to screen out *actual* (not-coopted-for-emulation)
-  // flex containers, using state bit:
-  if (!IsLegacyBox(this)) {
-    return false;
-  }
-
-  // Check our own display value:
-  if (aFlexStyleDisp->mDisplay == mozilla::StyleDisplay::MozBox ||
-      aFlexStyleDisp->mDisplay == mozilla::StyleDisplay::MozInlineBox) {
-    return true;
-  }
-
-  // Check our parent's display value, if we're an anonymous box (with a
-  // potentially-untrustworthy display value):
-  auto pseudoType = Style()->GetPseudoType();
-  if (pseudoType == PseudoStyleType::scrolledContent ||
-      pseudoType == PseudoStyleType::buttonContent) {
-    const nsStyleDisplay* disp = GetParent()->StyleDisplay();
-    if (disp->mDisplay == mozilla::StyleDisplay::MozBox ||
-        disp->mDisplay == mozilla::StyleDisplay::MozInlineBox) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 void nsFlexContainerFrame::GenerateFlexLines(
     const ReflowInput& aReflowInput, const nscoord aTentativeContentBoxMainSize,
     const nscoord aTentativeContentBoxCrossSize,
@@ -4122,8 +4096,7 @@ void nsFlexContainerFrame::GenerateFlexLines(
                        iter.ItemsAreAlreadyInOrder());
 
   bool prevItemRequestedBreakAfter = false;
-  const bool useMozBoxCollapseBehavior =
-      ShouldUseMozBoxCollapseBehavior(aReflowInput.mStyleDisplay);
+  const bool useMozBoxCollapseBehavior = IsLegacyMozBox(this);
 
   for (; !iter.AtEnd(); iter.Next()) {
     nsIFrame* childFrame = *iter;
@@ -5183,7 +5156,7 @@ nsFlexContainerFrame::FlexLayoutResult nsFlexContainerFrame::DoFlexLayout(
   // constructor), we can create struts for any flex items with
   // "visibility: collapse" (and restart flex layout).
   if (aStruts.IsEmpty() &&  // (Don't make struts if we already did)
-      !ShouldUseMozBoxCollapseBehavior(aReflowInput.mStyleDisplay)) {
+      !IsLegacyMozBox(this)) {
     BuildStrutInfoFromCollapsedItems(flr.mLines, aStruts);
     if (!aStruts.IsEmpty()) {
       // Restart flex layout, using our struts.
@@ -5705,8 +5678,7 @@ nscoord nsFlexContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
                                                     NS_UNCONSTRAINEDSIZE);
   }
 
-  const bool useMozBoxCollapseBehavior =
-      ShouldUseMozBoxCollapseBehavior(StyleDisplay());
+  const bool useMozBoxCollapseBehavior = IsLegacyMozBox(this);
 
   // The loop below sets aside space for a gap before each item besides the
   // first. This bool helps us handle that special-case.
