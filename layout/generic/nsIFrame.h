@@ -588,6 +588,9 @@ class nsIFrame : public nsQueryFrame {
         mHasModifiedDescendants(false),
         mHasOverrideDirtyRegion(false),
         mMayHaveWillChangeBudget(false),
+#ifdef DEBUG
+        mWasVisitedByAutoFrameConstructionPageName(false),
+#endif
         mIsPrimaryFrame(false),
         mMayHaveTransformAnimation(false),
         mMayHaveOpacityAnimation(false),
@@ -1296,12 +1299,28 @@ class nsIFrame : public nsQueryFrame {
   // frame construction, we insert page breaks when we begin a new page box and
   // the previous page box had a different name.
   struct PageValues {
-    // mFirstChildPageName of null is used to indicate that no child has been
-    // constructed yet.
+    // A value of null indicates that the value is equal to what auto resolves
+    // to for this frame.
     RefPtr<const nsAtom> mStartPageValue = nullptr;
     RefPtr<const nsAtom> mEndPageValue = nullptr;
   };
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(PageValuesProperty, PageValues)
+
+  const nsAtom* GetStartPageValue() const {
+    if (const PageValues* const values =
+            FirstInFlow()->GetProperty(PageValuesProperty())) {
+      return values->mStartPageValue;
+    }
+    return nullptr;
+  }
+
+  const nsAtom* GetEndPageValue() const {
+    if (const PageValues* const values =
+            FirstInFlow()->GetProperty(PageValuesProperty())) {
+      return values->mEndPageValue;
+    }
+    return nullptr;
+  }
 
  private:
   // The value that the CSS page-name "auto" keyword resolves to for children
@@ -5181,6 +5200,18 @@ class nsIFrame : public nsQueryFrame {
    * items consuming some of the will-change budget.
    */
   bool mMayHaveWillChangeBudget : 1;
+
+#ifdef DEBUG
+ public:
+  /**
+   * True if this frame has already been been visited by
+   * nsCSSFrameConstructor::AutoFrameConstructionPageName.
+   *
+   * This is used to assert that we have visited each frame only once, and is
+   * not useful otherwise.
+   */
+  bool mWasVisitedByAutoFrameConstructionPageName : 1;
+#endif
 
  private:
   /**
