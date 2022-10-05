@@ -199,16 +199,29 @@ class RemoteAgentParentProcess {
       return;
     }
 
-    // Try to resolve localhost to an IPv4 or IPv6 address so that the
-    // Server can be started on a given IP. This doesn't force httpd.js to
-    // have to use the dual stack support. Only fallback to keep using
-    // localhost if the hostname cannot be resolved.
+    // Try to resolve localhost to an IPv4  and / or IPv6 address so that the
+    // server can be started on a given IP. Only fallback to use localhost if
+    // the hostname cannot be resolved.
+    //
+    // Note: This doesn't force httpd.js to use the dual stack support.
+    let isIPv4Host = false;
     try {
       const addresses = await this.#resolveHostname(DEFAULT_HOST);
-      if (addresses.length) {
-        this.#host = addresses[0];
+      lazy.logger.trace(
+        `Available local IP addresses: ${addresses.join(", ")}`
+      );
+
+      // Prefer IPv4 over IPv6 addresses.
+      const addressesIPv4 = addresses.filter(value => !value.includes(":"));
+      isIPv4Host = !!addressesIPv4.length;
+      if (isIPv4Host) {
+        this.#host = addressesIPv4[0];
+      } else {
+        this.#host = addresses.length ? addresses[0] : DEFAULT_HOST;
       }
     } catch (e) {
+      this.#host = DEFAULT_HOST;
+
       lazy.logger.debug(
         `Failed to resolve hostname "localhost" to IP address: ${e.message}`
       );
@@ -220,14 +233,15 @@ class RemoteAgentParentProcess {
     }
 
     try {
+      // Bug 1783938: httpd.js refuses connections when started on a IPv4
+      // address. As workaround start on localhost and add another identity
+      // for that IP address.
       this.#server = new lazy.HttpServer();
-      const host = this.#host === "127.0.0.1" ? DEFAULT_HOST : this.#host;
+      const host = isIPv4Host ? DEFAULT_HOST : this.#host;
       this.server._start(port, host);
       this.#port = this.server._port;
 
-      if (this.#host == "127.0.0.1") {
-        // Bug 1783938: httpd.js refuses connections when started on 127.0.0.1.
-        // As workaround add another identity for that IP address.
+      if (isIPv4Host) {
         this.server.identity.add("http", this.#host, this.#port);
       }
 
@@ -273,6 +287,7 @@ class RemoteAgentParentProcess {
                 addresses.push(addr);
               }
             }
+
             resolve(addresses);
           }
         },
