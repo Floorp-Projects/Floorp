@@ -253,8 +253,10 @@ class OptionParser {
 
   Option* findOption(char shortflag);
   const Option* findOption(char shortflag) const;
+  const Option* tryFindOption(char shortflag) const;
   Option* findOption(const char* longflag);
   const Option* findOption(const char* longflag) const;
+  const Option* tryFindOption(const char* longflag) const;
   int findArgumentIndex(const char* name) const;
   Option* findArgument(const char* name);
   const Option* findArgument(const char* name) const;

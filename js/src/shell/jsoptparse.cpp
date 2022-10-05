@@ -405,37 +405,38 @@ void OptionParser::setHelpOption(char shortflag, const char* longflag,
 bool OptionParser::getHelpOption() const { return helpOption.value; }
 
 bool OptionParser::getBoolOption(char shortflag) const {
-  return findOption(shortflag)->asBoolOption()->value;
+  return tryFindOption(shortflag)->asBoolOption()->value;
 }
 
 int OptionParser::getIntOption(char shortflag) const {
-  return findOption(shortflag)->asIntOption()->value;
+  return tryFindOption(shortflag)->asIntOption()->value;
 }
 
 const char* OptionParser::getStringOption(char shortflag) const {
-  return findOption(shortflag)->asStringOption()->value;
+  return tryFindOption(shortflag)->asStringOption()->value;
 }
 
 MultiStringRange OptionParser::getMultiStringOption(char shortflag) const {
-  const MultiStringOption* mso = findOption(shortflag)->asMultiStringOption();
+  const MultiStringOption* mso =
+      tryFindOption(shortflag)->asMultiStringOption();
   return MultiStringRange(mso->strings.begin(), mso->strings.end());
 }
 
 bool OptionParser::getBoolOption(const char* longflag) const {
-  return findOption(longflag)->asBoolOption()->value;
+  return tryFindOption(longflag)->asBoolOption()->value;
 }
 
 int OptionParser::getIntOption(const char* longflag) const {
-  return findOption(longflag)->asIntOption()->value;
+  return tryFindOption(longflag)->asIntOption()->value;
 }
 
 const char* OptionParser::getStringOption(const char* longflag) const {
-  return findOption(longflag)->asStringOption()->value;
+  return tryFindOption(longflag)->asStringOption()->value;
 }
 
 MultiStringRange OptionParser::getMultiStringOption(
     const char* longflag) const {
-  const MultiStringOption* mso = findOption(longflag)->asMultiStringOption();
+  const MultiStringOption* mso = tryFindOption(longflag)->asMultiStringOption();
   return MultiStringRange(mso->strings.begin(), mso->strings.end());
 }
 
@@ -464,6 +465,15 @@ Option* OptionParser::findOption(char shortflag) {
 
 const Option* OptionParser::findOption(char shortflag) const {
   return const_cast<OptionParser*>(this)->findOption(shortflag);
+}
+
+const Option* OptionParser::tryFindOption(char shortflag) const {
+  const Option* maybeOption = findOption(shortflag);
+  if (!maybeOption) {
+    fprintf(stderr, "Failed to find short option %c\n", shortflag);
+    MOZ_CRASH();
+  }
+  return maybeOption;
 }
 
 Option* OptionParser::findOption(const char* longflag) {
@@ -497,6 +507,15 @@ Option* OptionParser::findOption(const char* longflag) {
 
 const Option* OptionParser::findOption(const char* longflag) const {
   return const_cast<OptionParser*>(this)->findOption(longflag);
+}
+
+const Option* OptionParser::tryFindOption(const char* longflag) const {
+  const Option* maybeOption = findOption(longflag);
+  if (!maybeOption) {
+    fprintf(stderr, "Failed to find long option %s\n", longflag);
+    MOZ_CRASH();
+  }
+  return maybeOption;
 }
 
 /* Argument accessors */
