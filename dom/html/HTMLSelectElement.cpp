@@ -580,10 +580,13 @@ void HTMLSelectElement::SetLength(uint32_t aLength, ErrorResult& aRv) {
       nsAutoString strOptionsLength;
       strOptionsLength.AppendInt(aLength);
 
+      nsAutoString strLimit;
+      strLimit.AppendInt(MAX_DYNAMIC_SELECT_LENGTH);
+
       nsContentUtils::ReportToConsole(
           nsIScriptError::warningFlag, "DOM"_ns, GetOwnerDocument(),
           nsContentUtils::eDOM_PROPERTIES,
-          "SelectElementOptionsLengthAssignmentWarning", {strOptionsLength});
+          "SelectOptionsLengthAssignmentWarning", {strOptionsLength, strLimit});
       return;
     }
 
