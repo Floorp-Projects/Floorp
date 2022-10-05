@@ -5,7 +5,7 @@ add_task(async function test() {
   ChromeUtils.registerWindowActor(ACTOR, {
     allFrames: true,
     child: {
-      moduleURI: `${base}/Bug1622420Child.jsm`,
+      esModuleURI: `${base}/Bug1622420Child.sys.mjs`,
     },
   });
 

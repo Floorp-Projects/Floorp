@@ -31,8 +31,8 @@ server.registerPathHandler("/", (request, response) => {
   response.write(HTML);
 });
 
-const { AllowJavascriptParent } = ChromeUtils.import(
-  "resource://test/AllowJavascriptParent.jsm"
+const { AllowJavascriptParent } = ChromeUtils.importESModule(
+  "resource://test/AllowJavascriptParent.sys.mjs"
 );
 
 async function assertScriptsAllowed(bc, expectAllowed, desc) {
@@ -65,11 +65,11 @@ add_task(async function() {
   ChromeUtils.registerWindowActor(ACTOR, {
     allFrames: true,
     child: {
-      moduleURI: "resource://test/AllowJavascriptChild.jsm",
+      esModuleURI: "resource://test/AllowJavascriptChild.sys.mjs",
       events: { load: { capture: true } },
     },
     parent: {
-      moduleURI: "resource://test/AllowJavascriptParent.jsm",
+      esModuleURI: "resource://test/AllowJavascriptParent.sys.mjs",
     },
   });
 

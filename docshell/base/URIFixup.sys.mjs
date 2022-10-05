@@ -16,11 +16,8 @@
 // simplified, but the risk of regressing its behavior is high.
 /* eslint complexity: ["error", 43] */
 
-var EXPORTED_SYMBOLS = ["URIFixup", "URIFixupInfo"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -266,7 +263,7 @@ XPCOMUtils.defineLazyGetter(lazy, "knownSuffixes", () => {
   return suffixes;
 });
 
-function URIFixup() {
+export function URIFixup() {
   // There are cases that nsIExternalProtocolService.externalProtocolHandlerExists() does
   // not work well and returns always true due to flatpak. In this case, in order to
   // fallback to nsIHandlerService.exits(), we test whether can trust
@@ -666,7 +663,7 @@ URIFixup.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIURIFixup"]),
 };
 
-function URIFixupInfo(originalInput = "") {
+export function URIFixupInfo(originalInput = "") {
   this._originalInput = originalInput;
 }
 

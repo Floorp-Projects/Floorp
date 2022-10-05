@@ -1,9 +1,6 @@
-"use strict";
-var EXPORTED_SYMBOLS = ["AllowJavascriptParent"];
-
 let loadPromises = new WeakMap();
 
-class AllowJavascriptParent extends JSWindowActorParent {
+export class AllowJavascriptParent extends JSWindowActorParent {
   async receiveMessage(msg) {
     switch (msg.name) {
       case "LoadFired":

@@ -1,7 +1,4 @@
-"use strict";
-var EXPORTED_SYMBOLS = ["AllowJavascriptChild"];
-
-class AllowJavascriptChild extends JSWindowActorChild {
+export class AllowJavascriptChild extends JSWindowActorChild {
   async receiveMessage(msg) {
     switch (msg.name) {
       case "CheckScriptsAllowed":
