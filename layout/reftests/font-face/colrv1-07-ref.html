@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<meta charset=utf-8>
+<title>COLRv1 font test: radial gradient with degenerate color line</title>
+<style>
+p { margin: 0; }
+div { height: 100px; position: relative; }
+/* Use CSS backgrounds to imitate the expected CAhem glyph rendering.
+   Antialiasing will differ, but otherwise the results should match. */
+span { display: inline-block; height: 40px; position: absolute; overflow: clip; }
+span.bg { width: 100px; top: 30px; background: red; }
+span.a { background: blue; border-radius: 20px; left: 30px; width: 200px; }
+span.b { background: blue; border-radius: 20px; left: 10px; width: 200px; }
+span.c { background: blue; border-radius: 20px; left: 50px; width: 200px; }
+span.d { background: blue; border-radius: 20px; left: 60px; width: 200px; }
+</style>
+
+<div><span class=bg><span class=a></span></span></div>
+<div><span class=bg><span class=b></span></span></div>
+<div><span class=bg><span class=c></span></span></div>
+<div><span class=bg><span class=d></span></span></div>

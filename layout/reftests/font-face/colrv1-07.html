@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<meta charset=utf-8>
+<title>COLRv1 font test: radial gradient with degenerate color line</title>
+<style>
+@font-face {
+  font-family: CAhem;
+  src: url("CAhem.ttf");
+}
+p { margin: 0; }
+span { font: 100px/1 CAhem; }
+.a { font-variation-settings: "GRX0" 400, "GRR0" 200, "GRX1" 600, "GRR1" 200, "COL1" 0.5, "COL2" 0.5, "COL3" 0.5; }
+.b { font-variation-settings: "GRX0" 400, "GRR0" 200, "GRX1" 600, "GRR1" 200, "COL1" -0.5, "COL2" -0.5, "COL3" -0.5; }
+.c { font-variation-settings: "GRX0" 400, "GRR0" 200, "GRX1" 600, "GRR1" 200, "COL1" 1.5, "COL2" 1.5, "COL3" 1.5; }
+.d { font-variation-settings: "GRX0" 400, "GRR0" 200, "GRX1" 600, "GRR1" 200, "COL1" 2.0, "COL2" 2.0, "COL3" 2.0; }
+</style>
+
+<div>
+  <div><span class=a>@</div>
+  <div><span class=b>@</div>
+  <div><span class=c>@</div>
+  <div><span class=d>@</div>
+</div>
