@@ -349,6 +349,11 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
   // If `this` is a document, use its viewport cache instead of
   // the cache of its parent document.
   if (DocAccessibleParent* doc = IsDoc() ? AsDoc() : mDoc) {
+    if (!doc->mCachedFields) {
+      // A client call might arrive after we've constructed doc but before we
+      // get a cache push for it.
+      return nullptr;
+    }
     if (auto maybeViewportCache =
             doc->mCachedFields->GetAttribute<nsTArray<uint64_t>>(
                 nsGkAtoms::viewport)) {
