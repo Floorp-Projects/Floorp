@@ -437,7 +437,7 @@ UNIFIED_SOURCES += [
     "vm/Xdr.cpp",
 ]
 
-if CONFIG["MOZ_JS_STREAMS"]:
+if not CONFIG["MOZ_DOM_STREAMS"]:
     UNIFIED_SOURCES += [
         "builtin/Stream.cpp",
         "builtin/streams/MiscellaneousOperations.cpp",
