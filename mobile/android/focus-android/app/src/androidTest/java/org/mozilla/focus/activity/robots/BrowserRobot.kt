@@ -541,9 +541,27 @@ class BrowserRobot {
     }
 
     fun clickSetCookiesButton() {
-        val setCookiesButton = mDevice.findObject(UiSelector().resourceId("setCookies"))
-        setCookiesButton.waitForExists(waitingTime)
-        setCookiesButton.click()
+        for (i in 1..RETRY_COUNT) {
+            try {
+                mDevice.findObject(UiSelector().resourceId("setCookies"))
+                    .also {
+                        it.waitForExists(waitingTime)
+                        it.click()
+                    }
+
+                break
+            } catch (e: UiObjectNotFoundException) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    browserScreen {
+                    }.openMainMenu {
+                    }.clickReloadButton {
+                    }
+                    progressBar.waitUntilGone(waitingTime)
+                }
+            }
+        }
     }
 
     class Transition {
