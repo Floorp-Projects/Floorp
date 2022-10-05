@@ -72,7 +72,6 @@ static constexpr gfx::sRGBColor sColorMeterRed10(
 static constexpr gfx::sRGBColor sColorMeterRed20(
     gfx::sRGBColor::UnusualFromARGB(0xff810220));
 
-static const CSSCoord kMinimumColorPickerHeight = 32.0f;
 static const CSSCoord kMinimumRangeThumbSize = 20.0f;
 static const CSSCoord kMinimumDropdownArrowButtonWidth = 18.0f;
 static const CSSCoord kMinimumSpinnerButtonWidth = 18.0f;
@@ -1516,11 +1515,6 @@ LayoutDeviceIntSize Theme::GetMinimumWidgetSize(nsPresContext* aPresContext,
 
   LayoutDeviceIntSize result;
   switch (aAppearance) {
-    case StyleAppearance::Button:
-      if (aFrame->IsColorControlFrame()) {
-        result.height = (kMinimumColorPickerHeight * dpiRatio).Rounded();
-      }
-      break;
     case StyleAppearance::RangeThumb:
       result.SizeTo((kMinimumRangeThumbSize * dpiRatio).Rounded(),
                     (kMinimumRangeThumbSize * dpiRatio).Rounded());

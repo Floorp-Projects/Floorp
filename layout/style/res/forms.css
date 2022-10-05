@@ -523,7 +523,7 @@ input:is([type=reset], [type=button], [type=submit]) {
 
 input[type=color] {
   inline-size: 64px;
-  block-size: 23px;
+  block-size: 32px;
 }
 
 @media (-moz-non-native-content-theme) {
