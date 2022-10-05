@@ -86,6 +86,13 @@ suites:
 SAMPLE_INI = """
 [Example]
 test_url = Example_url
+alert_on = fcp
+"""
+
+SAMPLE_METRICS_INI = """
+[Example]
+test_url = Example_url
+alert_on = fcp,SpeedIndex
 """
 
 
@@ -346,7 +353,7 @@ def test_perfdocs_verifier_not_existing_suite_in_test_list(
     logger, structured_logger, perfdocs_sample
 ):
     top_dir = perfdocs_sample["top_dir"]
-    manifest_path = perfdocs_sample["manifest"]
+    manifest_path = perfdocs_sample["manifest"]["path"]
     setup_sample_logger(logger, structured_logger, top_dir)
 
     from perfdocs.verifier import Verifier
@@ -480,7 +487,7 @@ def test_perfdocs_framework_gatherers(logger, structured_logger, perfdocs_sample
 
         # Setup some framework-specific things here if needed
         if framework == "raptor":
-            fg._manifest_path = perfdocs_sample["manifest"]
+            fg._manifest_path = perfdocs_sample["manifest"]["path"]
             fg._get_subtests_from_ini = mock.Mock()
             fg._get_subtests_from_ini.return_value = {
                 "Example": perfdocs_sample["manifest"]
