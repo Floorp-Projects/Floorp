@@ -64,18 +64,19 @@ add_task(async function feature_callout_is_accessible() {
 
       await waitForCalloutScreen(document, 1);
 
-      ok(
-        (document.activeElement.id = calloutId),
+      await BrowserTestUtils.waitForCondition(
+        () => document.activeElement.id === calloutId,
         "Feature Callout is focused on page load"
       );
-      ok(
-        document.querySelector(`${calloutSelector}[role="alert"]`),
+      await BrowserTestUtils.waitForCondition(
+        () => document.querySelector(`${calloutSelector}[role="alert"]`),
         "The callout container has role of alert"
       );
-      ok(
-        document.querySelector(
-          `${calloutSelector}[aria-describedby="#${calloutId} .welcome-text"]`
-        ),
+      await BrowserTestUtils.waitForCondition(
+        () =>
+          document.querySelector(
+            `${calloutSelector}[aria-describedby="#${calloutId} .welcome-text"]`
+          ),
         "The callout container has an aria-describedby value equal to the screen welcome text"
       );
 
@@ -93,12 +94,12 @@ add_task(async function feature_callout_is_accessible() {
         () => document.querySelector(calloutSelector).style.top != startingTop
       );
 
-      ok(
-        (document.activeElement.id = calloutId),
+      await BrowserTestUtils.waitForCondition(
+        () => document.activeElement.id === calloutId,
         "Feature Callout is focused after advancing screens"
       );
-      ok(
-        document.querySelector(`${calloutSelector}[role="alert"]`),
+      await BrowserTestUtils.waitForCondition(
+        () => document.querySelector(`${calloutSelector}[role="alert"]`),
         "The callout container has role of alert after advancing screens"
       );
     }
