@@ -1199,7 +1199,7 @@ xul|treecols {
 }
 
 xul|treecol:not([hideheader="true"]),
-xul|treecolpicker {
+.tree-columnpicker-button {
   appearance: none;
   border: none;
   background-color: var(--in-content-button-background);
@@ -1208,19 +1208,19 @@ xul|treecolpicker {
 }
 
 xul|treecol:not([hideheader="true"], [sortable="false"]):hover,
-xul|treecolpicker:hover {
+.tree-columnpicker-button:hover {
   background-color: var(--in-content-button-background-hover);
   color: var(--in-content-button-text-color-hover);
 }
 
 xul|treecol:not([hideheader="true"], [sortable="false"]):hover:active,
-xul|treecolpicker:hover:active {
+.tree-columnpicker-button:hover:active {
   background-color: var(--in-content-button-background-active);
   color: var(--in-content-button-text-color-active);
 }
 
 xul|treecol:not([hideheader="true"], :first-child),
-xul|treecolpicker {
+.tree-columnpicker-button {
   border-inline-start-width: 1px;
   border-inline-start-style: solid;
   border-image: linear-gradient(transparent 0%, transparent 20%, var(--in-content-box-border-color) 20%, var(--in-content-box-border-color) 80%, transparent 80%, transparent 100%) 1 1;

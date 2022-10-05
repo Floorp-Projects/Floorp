@@ -323,10 +323,14 @@ nsNativeTheme::TreeSortDirection nsNativeTheme::GetTreeSortDirection(
 }
 
 bool nsNativeTheme::IsLastTreeHeaderCell(nsIFrame* aFrame) {
-  if (!aFrame) return false;
+  if (!aFrame) {
+    return false;
+  }
 
-  // A tree column picker is always the last header cell.
-  if (aFrame->GetContent()->IsXULElement(nsGkAtoms::treecolpicker)) return true;
+  // A tree column picker button is always the last header cell.
+  if (aFrame->GetContent()->IsXULElement(nsGkAtoms::button)) {
+    return true;
+  }
 
   // Find the parent tree.
   nsIContent* parent = aFrame->GetContent()->GetParent();
