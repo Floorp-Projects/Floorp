@@ -50,6 +50,8 @@ class ODoH final : public TRR {
   virtual void HandleTimeout() override;
   virtual void HandleEncodeError(nsresult aStatusCode) override;
   virtual void HandleDecodeError(nsresult aStatusCode) override;
+
+  bool mTriedDownloadODoHConfigs = false;
 };
 
 }  // namespace net
