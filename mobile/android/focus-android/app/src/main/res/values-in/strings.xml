@@ -495,32 +495,63 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Selamat datang di %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">Selamat datang di %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Tutup</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Selamat datang di %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Cepat. Pribadi. Tanpa gangguan.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Memulai</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s tidak seperti peramban lain</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Kami menghapus riwayat Anda saat menutup aplikasi untuk privasi tambahan.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Jadikan %1$s sebagai perlindungan baku data Anda dengan setiap tautan yang Anda buka.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Setel sebagai peramban baku</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Lewati</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Penjelajahan pribadi tingkat lanjut di saat Anda menginginkannya</string>
+    <string moz:removedIn="106" name="onboarding_description">Penjelajahan pribadi tingkat lanjut di saat Anda menginginkannya</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Menyamar sekaligus tak terlihat</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Menyamar sekaligus tak terlihat</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s adalah peramban utama dengan perlindungan pelacakan dan perlindungan kuki bawaan ekstra kuat.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s adalah peramban utama dengan perlindungan pelacakan dan perlindungan kuki bawaan ekstra kuat.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Menjelajah seperti ini tidak pernah terjadi</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Menjelajah seperti ini tidak pernah terjadi</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Satu ketukan menghapus riwayat penelusuran dan kuki Anda — dan menghentikan iklan mengikuti Anda.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Satu ketukan menghapus riwayat penelusuran dan kuki Anda — dan menghentikan iklan mengikuti Anda.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Privasi yang sesuai dengan situasi apapun</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Privasi yang sesuai dengan situasi apapun</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Jika penjelajahan Anda perlu diubah, mudah untuk menaikkan atau menurunkan pengaturan privasi Anda.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Jika penjelajahan Anda perlu diubah, mudah untuk menaikkan atau menurunkan pengaturan privasi Anda.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Mulai menjelajah</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Mulai menjelajah</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Perkuat privasi Anda</string>
@@ -977,7 +1008,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Tampaknya situs ini mencoba melacak Anda. Klik perisai untuk membuka pengaturan situs dan statistik pemblokiran pelacak.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Tampaknya situs ini mencoba melacak Anda. Klik perisai untuk membuka pengaturan situs dan statistik pemblokiran pelacak.</string>
+    <string name="cfr_for_toolbar_shield_icon2">Dapat! Kami menghentikan situs ini untuk memata-mataimu. Ketuk perisai kapan saja untuk melihat apa yang kami blokir.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Tutup popup</string>
 
@@ -993,4 +1026,28 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Singkirkan data pribadi Anda, riwayat penjelajahan, dan lainnya dari sesi ini dengan mengetuk tombol tong sampah. Cobalah!</string>
     <string name="cfr_for_toolbar_delete_icon2">Ketuk di sini untuk membuang semuanya — riwayat, kuki, semuanya — dan memulai dari tab baru.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Tutup</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Cari widget</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Riwayat penjelajahan dihapus! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Kami akan meninggalkan Anda untuk menjelajah pribadi, tapi dapatkan awal yang lebih cepat lain kali dengan widget %1$s di layar Beranda Anda.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Tambahkan widget ke layar beranda</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Widget ditambahkan ke layar beranda</string>
 </resources>
