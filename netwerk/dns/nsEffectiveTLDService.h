@@ -28,7 +28,7 @@ class nsEffectiveTLDService final : public nsIEffectiveTLDService,
                                     public nsIObserver,
                                     public nsIMemoryReporter {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEFFECTIVETLDSERVICE
   NS_DECL_NSIMEMORYREPORTER
   NS_DECL_NSIOBSERVER
@@ -47,16 +47,17 @@ class nsEffectiveTLDService final : public nsIEffectiveTLDService,
   nsresult NormalizeHostname(nsCString& aHostname);
   ~nsEffectiveTLDService();
 
+  // Only set in `Init()` which is called during service construction.
   nsCOMPtr<nsIIDNService> mIDNService;
 
   // The DAFSA provides a compact encoding of the rather large eTLD list.
-  mozilla::Maybe<mozilla::Dafsa> mGraph;
+  mozilla::Maybe<mozilla::Dafsa> mGraph MOZ_GUARDED_BY(mGraphLock);
 
   // Memory map used for a new updated dafsa
-  mozilla::loader::AutoMemMap mDafsaMap;
+  mozilla::loader::AutoMemMap mDafsaMap MOZ_GUARDED_BY(mGraphLock);
 
   // Lock for mGraph and mDafsaMap
-  mozilla::RWLock mGraphLock MOZ_UNANNOTATED;
+  mozilla::RWLock mGraphLock;
 
   // Note that the cache entries here can record entries that were cached
   // successfully or unsuccessfully.  mResult must be checked before using an
@@ -86,6 +87,7 @@ class nsEffectiveTLDService final : public nsIEffectiveTLDService,
     }
   };
 
+  // NOTE: Only used on the main thread, so not guarded by mGraphLock.
   TldCache mMruTable;
 };
 
