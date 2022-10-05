@@ -162,7 +162,7 @@ if not CONFIG["JS_CODEGEN_NONE"]:
         "testsJit.cpp",
     ]
 
-if not CONFIG["MOZ_DOM_STREAMS"]:
+if CONFIG["MOZ_JS_STREAMS"]:
     UNIFIED_SOURCES += [
         "testReadableStream.cpp",
     ]
