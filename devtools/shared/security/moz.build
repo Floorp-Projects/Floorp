@@ -9,7 +9,7 @@ XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 
 DevToolsModules(
     "auth.js",
-    "DevToolsSocketStatus.jsm",
+    "DevToolsSocketStatus.sys.mjs",
     "prompt.js",
     "socket.js",
 )
