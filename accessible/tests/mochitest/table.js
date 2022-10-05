@@ -114,11 +114,12 @@ function testTableStruct(
     }
 
     if (aColHeaderType == kTreeColumnHeader) {
-      var columnPickerObj = {
+      headersObj.children.push({
         role: ROLE_PUSHBUTTON,
-      };
-
-      headersObj.children.push(columnPickerObj);
+      });
+      headersObj.children.push({
+        role: ROLE_MENUPOPUP,
+      });
     }
 
     tableObj.children.push(headersObj);

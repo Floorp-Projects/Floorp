@@ -22,36 +22,37 @@
     ////////////////////////////////////////////////////////////////////////////
     // Invokers
 
-    function openMenu(aButtonID, aMenuItemRole)
+    function openMenu(aButtonID, aIsTree)
     {
-      var menuItemRole = aMenuItemRole || ROLE_MENUITEM;
+      var menuItemRole = aIsTree ? ROLE_CHECK_MENU_ITEM : ROLE_MENUITEM;
       this.button = getAccessible(aButtonID);
-      this.menupopup = this.button.firstChild;
+      this.menupopup = aIsTree ? this.button.nextSibling : this.button.firstChild;
 
       var checker = new invokerChecker(EVENT_REORDER, this.menupopup);
       this.__proto__ = new synthClick(aButtonID, checker);
 
+      let testButton = popup => {
+        var children = [];
+        if (!aIsTree) {
+          children.push(popup);
+        }
+        var tree = { PUSHBUTTON: children };
+        testAccessibleTree(this.button, tree);
+        testAccessibleTree(this.menupop, popup);
+      }
+
       this.invoke = function openMenu_invoke()
       {
-        var tree =
-          { PUSHBUTTON: [
-            { MENUPOPUP: [ ] }
-          ] };
-        testAccessibleTree(this.button, tree);
-
+        testButton({ MENUPOPUP: [ ] });
         this.__proto__.invoke();
       }
 
       this.finalCheck = function openMenu_finalCheck()
       {
-        var tree =
-          { PUSHBUTTON: [
-            { MENUPOPUP: [
-              { role: menuItemRole, children: [ ] },
-              { role: menuItemRole, children: [ ] }
-            ] }
-          ] };
-        testAccessibleTree(this.button, tree);
+        testButton({ MENUPOPUP: [
+          { role: menuItemRole, children: [ ] },
+          { role: menuItemRole, children: [ ] }
+        ] });
 
         synthesizeKey("KEY_Escape");
       }
@@ -76,8 +77,8 @@
       gQueue.push(new openMenu("button1"));
       gQueue.push(new openMenu("button3"));
 
-      var columnPickerBtn = getAccessible("tree").firstChild.lastChild;
-      gQueue.push(new openMenu(columnPickerBtn, ROLE_CHECK_MENU_ITEM));
+      var columnPickerBtn = getAccessible("tree").firstChild.lastChild.previousSibling;
+      gQueue.push(new openMenu(columnPickerBtn, true));
       gQueue.invoke(); // SimpleTest.finish()
     }
 
