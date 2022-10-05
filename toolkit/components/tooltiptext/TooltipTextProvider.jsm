@@ -82,14 +82,13 @@ TooltipTextProvider.prototype = {
           if (files.length == TRUNCATED_FILE_COUNT + 1) {
             titleText += "\n" + files[TRUNCATED_FILE_COUNT].name;
           } else if (files.length > TRUNCATED_FILE_COUNT + 1) {
-            let xmoreStr = bundle.GetStringFromName("AndNMoreFiles");
-            let xmoreNum = files.length - TRUNCATED_FILE_COUNT;
-            let { PluralForm } = ChromeUtils.import(
-              "resource://gre/modules/PluralForm.jsm"
+            const l10n = new Localization(
+              ["toolkit/global/htmlForm.ftl"],
+              true
             );
-            let andXMoreStr = PluralForm.get(xmoreNum, xmoreStr).replace(
-              "#1",
-              xmoreNum
+            const andXMoreStr = l10n.formatValueSync(
+              "input-file-and-more-files",
+              { fileCount: files.length - TRUNCATED_FILE_COUNT }
             );
             titleText += "\n" + andXMoreStr;
           }
