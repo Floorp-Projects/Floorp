@@ -6103,59 +6103,21 @@ class DSImage extends (external_React_default()).PureComponent {
     let img;
 
     if (this.state) {
-      if (this.props.optimize && this.props.rawSource && !this.state.optimizedImageFailed) {
-        let baseSource = this.props.rawSource;
-        let sizeRules = [];
-        let srcSetRules = [];
-
-        for (let rule of this.props.sizes) {
-          let {
-            mediaMatcher,
-            width,
-            height
-          } = rule;
-          let sizeRule = `${mediaMatcher} ${width}px`;
-          sizeRules.push(sizeRule);
-          let srcSetRule = `${this.reformatImageURL(baseSource, width, height)} ${width}w`;
-          let srcSetRule2x = `${this.reformatImageURL(baseSource, width * 2, height * 2)} ${width * 2}w`;
-          srcSetRules.push(srcSetRule);
-          srcSetRules.push(srcSetRule2x);
-        }
-
-        if (this.props.sizes.length) {
-          // We have to supply a fallback in the very unlikely event that none of
-          // the media queries match. The smallest dimension was chosen arbitrarily.
-          sizeRules.push(`${this.props.sizes[this.props.sizes.length - 1].width}px`);
-        }
-
-        img = /*#__PURE__*/external_React_default().createElement("img", {
-          loading: "lazy",
-          alt: this.props.alt_text,
-          crossOrigin: "anonymous",
-          onLoad: this.onLoad,
-          onError: this.onOptimizedImageError,
-          sizes: sizeRules.join(","),
-          src: baseSource,
-          srcSet: srcSetRules.join(",")
-        });
-      } else if (this.props.source && !this.state.nonOptimizedImageFailed) {
-        img = /*#__PURE__*/external_React_default().createElement("img", {
-          loading: "lazy",
-          alt: this.props.alt_text,
-          crossOrigin: "anonymous",
-          onLoad: this.onLoad,
-          onError: this.onNonOptimizedImageError,
-          src: this.props.source
-        });
-      } else {
+      if (false) {} else if (false) {} else {
         // We consider a failed to load img or source without an image as loaded.
-        classNames = `${classNames} loaded`; // Remove the img element if both sources fail. Render a placeholder instead.
-        // This only happens if the sources are invalid or all attempts to load it failed.
+        classNames = `${classNames} loaded`; // Remove the img element if we have no source. Render a placeholder instead.
+        // This only happens for recent saves without a source.
 
-        img = /*#__PURE__*/external_React_default().createElement(PlaceholderImage, {
-          urlKey: this.props.url,
-          titleKey: this.props.title
-        });
+        if (this.props.isRecentSave && !this.props.rawSource && !this.props.source) {
+          img = /*#__PURE__*/external_React_default().createElement(PlaceholderImage, {
+            urlKey: this.props.url,
+            titleKey: this.props.title
+          });
+        } else {
+          img = /*#__PURE__*/external_React_default().createElement("div", {
+            className: "broken-image"
+          });
+        }
       }
     }
 
@@ -7728,7 +7690,8 @@ class _DSCard extends (external_React_default()).PureComponent {
       rawSource: this.props.raw_image_src,
       sizes: this.dsImageSizes,
       url: this.props.url,
-      title: this.props.title
+      title: this.props.title,
+      isRecentSave: isRecentSave
     })), /*#__PURE__*/external_React_default().createElement(DefaultMeta, {
       source: this.props.source,
       title: this.props.title,
