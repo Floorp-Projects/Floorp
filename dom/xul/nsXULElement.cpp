@@ -201,7 +201,6 @@ nsXULElement* nsXULElement::Construct(
       nodeInfo->Equals(nsGkAtoms::button) ||
       nodeInfo->Equals(nsGkAtoms::toolbarbutton) ||
       nodeInfo->Equals(nsGkAtoms::toolbarpaletteitem) ||
-      nodeInfo->Equals(nsGkAtoms::treecolpicker) ||
       nodeInfo->Equals(nsGkAtoms::scrollbarbutton)) {
     auto* nim = nodeInfo->NodeInfoManager();
     return new (nim) XULButtonElement(nodeInfo.forget());
