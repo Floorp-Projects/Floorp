@@ -22,6 +22,11 @@ box,
   padding: 0;
   margin: 0;
   background-color: var(--theme-sidebar-background);
+
+  display: -moz-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  contain: size;
 }
 
 .splitview-nav > li {
@@ -83,12 +88,6 @@ box,
   max-height: 14em;
   max-width: 400px;
   min-width: 200px;
-}
-
-.splitview-nav {
-  display: -moz-box;
-  overflow-x: hidden;
-  overflow-y: auto;
 }
 
 /* only the active details pane is shown */
