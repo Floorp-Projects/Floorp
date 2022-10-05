@@ -11,8 +11,8 @@
 var { Loader, Require, resolveURI, unload } = ChromeUtils.import(
   "resource://devtools/shared/loader/base-loader.js"
 );
-var { requireRawId } = ChromeUtils.import(
-  "resource://devtools/shared/loader/loader-plugin-raw.jsm"
+var { requireRawId } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/loader-plugin-raw.sys.mjs"
 );
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
