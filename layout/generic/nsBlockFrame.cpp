@@ -2823,18 +2823,11 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
     if (canBreakForPageNames && (!aState.mReflowInput.mFlags.mIsTopOfPage ||
                                  !aState.IsAdjacentWithBStart())) {
       const nsIFrame* const frame = line->mFirstChild;
-      if (const nsIFrame* prevFrame = frame->GetPrevSibling()) {
-        if (const nsIFrame::PageValues* const pageValues =
-                frame->FirstInFlow()->GetProperty(
-                    nsIFrame::PageValuesProperty())) {
-          const nsIFrame::PageValues* const prevPageValues =
-              prevFrame->FirstInFlow()->GetProperty(
-                  nsIFrame::PageValuesProperty());
-          if (prevPageValues &&
-              prevPageValues->mEndPageValue != pageValues->mStartPageValue) {
-            shouldBreakForPageName = true;
-            line->MarkDirty();
-          }
+      if (const nsIFrame* const prevFrame = frame->GetPrevSibling()) {
+        if (!frame->IsPlaceholderFrame() && !prevFrame->IsPlaceholderFrame() &&
+            frame->GetStartPageValue() != prevFrame->GetEndPageValue()) {
+          shouldBreakForPageName = true;
+          line->MarkDirty();
         }
       }
     }

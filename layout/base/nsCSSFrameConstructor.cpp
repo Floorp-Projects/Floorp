@@ -1413,6 +1413,11 @@ nsCSSFrameConstructor::AutoFrameConstructionPageName::
                "Page name should not have been set");
     return;
   }
+#ifdef DEBUG
+  MOZ_ASSERT(!aFrame->mWasVisitedByAutoFrameConstructionPageName,
+             "Frame should only have been visited once");
+  aFrame->mWasVisitedByAutoFrameConstructionPageName = true;
+#endif
 
   EnsureAutoPageName(aState, aFrame->GetParent());
   mNameToRestore = aState.mAutoPageNameValue;
@@ -1421,20 +1426,6 @@ nsCSSFrameConstructor::AutoFrameConstructionPageName::
              "Page name should have been found by EnsureAutoPageName");
   MaybeApplyPageName(aState, aFrame->StylePage()->mPage);
   aFrame->SetAutoPageValue(aState.mAutoPageNameValue);
-  // Ensure that the PageValuesProperty field has been created.
-  // Before layout.css.named_pages.enabled is prefed on by default, we should
-  // investigate making this property optional, and have a missing property
-  // indicate a default root page-name or an auto page-name.
-  //
-  // When we make this property optional, we should add a debug-only flag on
-  // nsIFrame to indicate it was visited by this logic, as currently we assert
-  // the existence of this property to validate that.
-  nsIFrame::PageValues* pageValues =
-      aFrame->GetProperty(nsIFrame::PageValuesProperty());
-  if (!pageValues) {
-    pageValues = new nsIFrame::PageValues();
-    aFrame->AddProperty(nsIFrame::PageValuesProperty(), pageValues);
-  }
 }
 
 nsCSSFrameConstructor::AutoFrameConstructionPageName::
@@ -9367,6 +9358,51 @@ static bool FrameHasOnlyPlaceholderNextSiblings(const nsIFrame* aFrame) {
   return !nextSibling;
 }
 
+static void SetPageValues(nsIFrame* const aFrame,
+                          const nsAtom* const aAutoValue,
+                          const nsAtom* const aStartValue,
+                          const nsAtom* const aEndValue) {
+  MOZ_ASSERT(aAutoValue, "Auto page value should never be null");
+  MOZ_ASSERT(aStartValue || aEndValue, "Should not have called with no values");
+  nsIFrame::PageValues* pageValues =
+      aFrame->GetProperty(nsIFrame::PageValuesProperty());
+
+  if (aStartValue) {
+    if (aStartValue == aAutoValue) {
+      // If the page value struct already exists, set the start value to null
+      // to indicate the auto value.
+      if (pageValues) {
+        pageValues->mStartPageValue = nullptr;
+      }
+    } else {
+      // The start value is not auto, so we need to store it, creating the
+      // page values struct if it does not already exist.
+      if (!pageValues) {
+        pageValues = new nsIFrame::PageValues();
+        aFrame->SetProperty(nsIFrame::PageValuesProperty(), pageValues);
+      }
+      pageValues->mStartPageValue = aStartValue;
+    }
+  }
+  if (aEndValue) {
+    if (aEndValue == aAutoValue) {
+      // If the page value struct already exists, set the end value to null
+      // to indicate the auto value.
+      if (pageValues) {
+        pageValues->mEndPageValue = nullptr;
+      }
+    } else {
+      // The end value is not auto, so we need to store it, creating the
+      // page values struct if it does not already exist.
+      if (!pageValues) {
+        pageValues = new nsIFrame::PageValues();
+        aFrame->SetProperty(nsIFrame::PageValuesProperty(), pageValues);
+      }
+      pageValues->mEndPageValue = aEndValue;
+    }
+  }
+}
+
 inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
     nsFrameConstructorState& aState, FrameConstructionItemList& aItems,
     nsContainerFrame* aParentFrame, bool aParentIsWrapperAnonBox,
@@ -9450,6 +9486,15 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
     // Set the start/end page values while iterating the frame list, to walk
     // up the frame tree only once after iterating the frame list.
     // This also avoids extra property lookups on these frames.
+    MOZ_ASSERT(aState.mAutoPageNameValue == aParentFrame->GetAutoPageValue(),
+               "aState.mAutoPageNameValue should have been equivalent to "
+               "the auto value stored on our parent frame.");
+    // Even though we store null for page values that equal the "auto" resolved
+    // value on frames, we always want startPageValue/endPageValue to be the
+    // actual atoms reflecting the start/end values. This is because when we
+    // propagate the values up the frame tree, we will need to compare them to
+    // the auto value for each ancestor. This value might be different than the
+    // auto value for this frame.
     const nsAtom* startPageValue = nullptr;
     const nsAtom* endPageValue = nullptr;
     for (nsIFrame* f : aFrameList) {
@@ -9484,21 +9529,29 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
               : aState.mAutoPageNameValue;
       nsIFrame::PageValues* pageValues =
           f->GetProperty(nsIFrame::PageValuesProperty());
-      if (!pageValues) {
-        pageValues = new nsIFrame::PageValues();
-        f->AddProperty(nsIFrame::PageValuesProperty(), pageValues);
+      // If this frame has any children, it will already have had its page
+      // values set at this point. However, if no page values have been set,
+      // we must ensure that the appropriate PageValuesProperty value has been
+      // set.
+      // If the page name is equal to the auto value, then PageValuesProperty
+      // should remain null to indicate that the start/end values are both
+      // equal to the auto value.
+      if (pageNameAtom != aState.mAutoPageNameValue && !pageValues) {
+        pageValues = new nsIFrame::PageValues{pageNameAtom, pageNameAtom};
+        f->SetProperty(nsIFrame::PageValuesProperty(), pageValues);
       }
-      MOZ_ASSERT(!pageValues->mStartPageValue == !pageValues->mEndPageValue,
-                 "Both or neither mStartPageValue and mEndPageValue should "
-                 "have been set");
-      if (!pageValues->mStartPageValue) {
-        pageValues->mStartPageValue = pageNameAtom;
-        pageValues->mEndPageValue = pageNameAtom;
-      }
+      // We don't want to use GetStartPageValue() or GetEndPageValue(), as each
+      // requires a property lookup which we can avoid here.
       if (!startPageValue) {
-        startPageValue = pageValues->mStartPageValue;
+        startPageValue = (pageValues && pageValues->mStartPageValue)
+                             ? pageValues->mStartPageValue.get()
+                             : aState.mAutoPageNameValue;
       }
-      endPageValue = pageValues->mEndPageValue;
+      endPageValue = (pageValues && pageValues->mEndPageValue)
+                         ? pageValues->mEndPageValue.get()
+                         : aState.mAutoPageNameValue;
+      MOZ_ASSERT(startPageValue && endPageValue,
+                 "Should have found start/end page value");
     }
     MOZ_ASSERT(!startPageValue == !endPageValue,
                "Should have set both or neither page values");
@@ -9507,7 +9560,8 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
       // end page values.
       // As we go, if we find that, for a frame, we are not contributing one of
       // the start/end page values, then our subtree will not contribute this
-      // value from that frame onward.
+      // value from that frame onward. startPageValue/endPageValue are set to
+      // null to indicate this.
       // Stop iterating when we are not contributing either start or end
       // values, when we hit the root frame (no parent), or when we find a
       // frame that is not a block frame.
@@ -9517,31 +9571,32 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
            ancestorFrame = ancestorFrame->GetParent()) {
         MOZ_ASSERT(!ancestorFrame->GetPrevInFlow(),
                    "Should not have fragmentation yet");
-
-        nsIFrame::PageValues* const ancestorPageValues =
-            ancestorFrame->GetProperty(nsIFrame::PageValuesProperty());
-
-        if (!ancestorPageValues) {
-          break;
+        MOZ_ASSERT(ancestorFrame->mWasVisitedByAutoFrameConstructionPageName,
+                   "Frame should have been visited by "
+                   "AutoFrameConstructionPageName");
+        {
+          // Get what the auto value is, based on this frame's parent.
+          // For the root frame, `auto` resolves to the empty atom.
+          const nsContainerFrame* const parent = ancestorFrame->GetParent();
+          const nsAtom* const parentAuto = MOZ_LIKELY(parent)
+                                               ? parent->GetAutoPageValue()
+                                               : nsGkAtoms::_empty;
+          SetPageValues(ancestorFrame, parentAuto, startPageValue,
+                        endPageValue);
         }
-
-        // Set start/end values if we are still contributing those values.
         // Once we stop contributing start/end values, we know there is a
         // sibling subtree that contributed that value to our shared parent
         // instead of our starting frame's subtree. This means once
-        // startPageValue/endPageValue becomes null, it should stay null and
-        // we no longer need to check for siblings in that direction.
-        if (startPageValue) {
-          ancestorPageValues->mStartPageValue = startPageValue;
-          if (!FrameHasOnlyPlaceholderPrevSiblings(ancestorFrame)) {
-            startPageValue = nullptr;
-          }
+        // startPageValue/endPageValue becomes null, indicating that we are no
+        // longer contributing that page value, it should stay null and we no
+        // longer need to check for siblings in that direction.
+        if (startPageValue &&
+            !FrameHasOnlyPlaceholderPrevSiblings(ancestorFrame)) {
+          startPageValue = nullptr;
         }
-        if (endPageValue) {
-          ancestorPageValues->mEndPageValue = endPageValue;
-          if (!FrameHasOnlyPlaceholderNextSiblings(ancestorFrame)) {
-            endPageValue = nullptr;
-          }
+        if (endPageValue &&
+            !FrameHasOnlyPlaceholderNextSiblings(ancestorFrame)) {
+          endPageValue = nullptr;
         }
       }
     }
