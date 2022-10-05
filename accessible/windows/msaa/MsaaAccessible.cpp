@@ -1119,10 +1119,29 @@ MsaaAccessible::get_accRole(
   // -- Try BSTR role
   // Could not map to known enumerated MSAA role like ROLE_BUTTON
   // Use BSTR role to expose role attribute or tag name + namespace
-  LocalAccessible* localAcc = mAcc->AsLocal();
-  if (!localAcc) {
-    return E_FAIL;
+  // XXX We should remove this hack and map to standard MSAA roles, even though
+  // they're lossy. See bug 798492.
+  if (mAcc->IsRemote()) {
+    // We don't support unknown or multiple ARIA roles for RemoteAccessible
+    // here, nor can we support namespaces. No one should be relying on this
+    // anyway, so this is fine. We just want to avoid returning a failure here.
+    nsAtom* val = nullptr;
+    const nsRoleMapEntry* roleMap = mAcc->ARIARoleMap();
+    if (roleMap && roleMap->roleAtom != nsGkAtoms::_empty) {
+      val = roleMap->roleAtom;
+    } else {
+      val = mAcc->TagName();
+    }
+    if (!val) {
+      return E_FAIL;
+    }
+    pvarRole->vt = VT_BSTR;
+    pvarRole->bstrVal = ::SysAllocString(val->GetUTF16String());
+    return S_OK;
   }
+
+  LocalAccessible* localAcc = mAcc->AsLocal();
+  MOZ_ASSERT(localAcc);
   nsIContent* content = localAcc->GetContent();
   if (!content) return E_FAIL;
 
