@@ -86,14 +86,33 @@ describe("Discovery Stream <DSImage>", () => {
     );
   });
 
-  it("should render a placeholder broken image when image failed", () => {
-    const img = mount(<DSImage />);
+  it("should render a placeholder image with no source and recent save", () => {
+    const img = mount(<DSImage isRecentSave={true} url="foo" title="bar" />);
+    img.setState({ isSeen: true });
+
+    img.update();
+
+    assert.equal(img.find("div").prop("className"), "placeholder-image");
+  });
+
+  it("should render a broken image with a source and a recent save", () => {
+    const img = mount(<DSImage isRecentSave={true} source="foo" />);
     img.setState({ isSeen: true });
 
     img.instance().onNonOptimizedImageError();
     img.update();
 
-    assert.equal(img.find("div").prop("className"), "placeholder-image");
+    assert.equal(img.find("div").prop("className"), "broken-image");
+  });
+
+  it("should render a broken image without a source and not a recent save", () => {
+    const img = mount(<DSImage isRecentSave={false} />);
+    img.setState({ isSeen: true });
+
+    img.instance().onNonOptimizedImageError();
+    img.update();
+
+    assert.equal(img.find("div").prop("className"), "broken-image");
   });
 
   it("should update loaded state when seen", () => {

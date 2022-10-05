@@ -366,6 +366,7 @@ export class _DSCard extends React.PureComponent {
               sizes={this.dsImageSizes}
               url={this.props.url}
               title={this.props.title}
+              isRecentSave={isRecentSave}
             />
           </div>
           <DefaultMeta

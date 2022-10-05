@@ -6149,13 +6149,19 @@ class DSImage extends (external_React_default()).PureComponent {
         });
       } else {
         // We consider a failed to load img or source without an image as loaded.
-        classNames = `${classNames} loaded`; // Remove the img element if both sources fail. Render a placeholder instead.
-        // This only happens if the sources are invalid or all attempts to load it failed.
+        classNames = `${classNames} loaded`; // Remove the img element if we have no source. Render a placeholder instead.
+        // This only happens for recent saves without a source.
 
-        img = /*#__PURE__*/external_React_default().createElement(PlaceholderImage, {
-          urlKey: this.props.url,
-          titleKey: this.props.title
-        });
+        if (this.props.isRecentSave && !this.props.rawSource && !this.props.source) {
+          img = /*#__PURE__*/external_React_default().createElement(PlaceholderImage, {
+            urlKey: this.props.url,
+            titleKey: this.props.title
+          });
+        } else {
+          img = /*#__PURE__*/external_React_default().createElement("div", {
+            className: "broken-image"
+          });
+        }
       }
     }
 
@@ -7728,7 +7734,8 @@ class _DSCard extends (external_React_default()).PureComponent {
       rawSource: this.props.raw_image_src,
       sizes: this.dsImageSizes,
       url: this.props.url,
-      title: this.props.title
+      title: this.props.title,
+      isRecentSave: isRecentSave
     })), /*#__PURE__*/external_React_default().createElement(DefaultMeta, {
       source: this.props.source,
       title: this.props.title,
