@@ -125,7 +125,6 @@ class nsCertOverrideService final : public nsICertOverrideService,
   void CountPermanentOverrideTelemetry(
       const mozilla::MutexAutoLock& aProofOfLock);
 
-  void RemoveAllFromMemory();
   nsresult Read(const mozilla::MutexAutoLock& aProofOfLock);
   nsresult Write(const mozilla::MutexAutoLock& aProofOfLock);
   nsresult AddEntryToList(const nsACString& host, int32_t port,
