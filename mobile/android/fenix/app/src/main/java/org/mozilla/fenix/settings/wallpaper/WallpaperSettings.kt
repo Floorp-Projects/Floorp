@@ -40,7 +40,11 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsPropertyReceiver
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -126,7 +130,22 @@ private fun WallpaperGroupHeading(
             style = FirefoxTheme.typography.subtitle2,
         )
     } else {
-        Column {
+        val label = stringResource(id = R.string.a11y_action_label_wallpaper_collection_learn_more)
+        val headingSemantics: SemanticsPropertyReceiver.() -> Unit =
+            if (collection.learnMoreUrl.isNullOrEmpty()) {
+                {}
+            } else {
+                {
+                    role = Role.Button
+                    onClick(label = label) {
+                        onLearnMoreClick(collection.learnMoreUrl, collection.name)
+                        false
+                    }
+                }
+            }
+        Column(
+            modifier = Modifier.semantics(mergeDescendants = true, properties = headingSemantics),
+        ) {
             Text(
                 text = stringResource(R.string.wallpaper_limited_edition_title),
                 color = FirefoxTheme.colors.textSecondary,
