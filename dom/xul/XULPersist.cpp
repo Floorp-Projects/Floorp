@@ -258,7 +258,7 @@ nsresult XULPersist::ApplyPersistentAttributesToElements(
     attrs->GetNext(attrstr);
 
     nsAutoString value;
-    rv = mLocalStore->GetValue(uri, aID, attrstr, value);
+    rv = mLocalStore->GetValue(aDocURI, aID, attrstr, value);
 #endif
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
