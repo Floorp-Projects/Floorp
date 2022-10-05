@@ -1216,104 +1216,77 @@ auto nsNativeThemeGTK::IsWidgetNonNative(nsIFrame* aFrame,
   return NonNative::No;
 }
 
-NS_IMETHODIMP
-nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
-                                       nsIFrame* aFrame,
-                                       StyleAppearance aAppearance,
-                                       LayoutDeviceIntSize* aResult,
-                                       bool* aIsOverridable) {
+LayoutDeviceIntSize nsNativeThemeGTK::GetMinimumWidgetSize(
+    nsPresContext* aPresContext, nsIFrame* aFrame,
+    StyleAppearance aAppearance) {
   if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
-    return Theme::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance,
-                                       aResult, aIsOverridable);
+    return Theme::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance);
   }
 
-  aResult->width = aResult->height = 0;
-  *aIsOverridable = true;
-
+  LayoutDeviceIntSize result;
   switch (aAppearance) {
     case StyleAppearance::Splitter: {
-      gint metrics;
       if (IsHorizontal(aFrame)) {
-        moz_gtk_splitter_get_metrics(GTK_ORIENTATION_HORIZONTAL, &metrics);
-        aResult->width = metrics;
-        aResult->height = 0;
+        moz_gtk_splitter_get_metrics(GTK_ORIENTATION_HORIZONTAL, &result.width);
       } else {
-        moz_gtk_splitter_get_metrics(GTK_ORIENTATION_VERTICAL, &metrics);
-        aResult->width = 0;
-        aResult->height = metrics;
+        moz_gtk_splitter_get_metrics(GTK_ORIENTATION_VERTICAL, &result.height);
       }
-      *aIsOverridable = false;
     } break;
     case StyleAppearance::RangeThumb: {
-      gint thumb_length, thumb_height;
-
       if (IsRangeHorizontal(aFrame)) {
         moz_gtk_get_scalethumb_metrics(GTK_ORIENTATION_HORIZONTAL,
-                                       &thumb_length, &thumb_height);
+                                       &result.width, &result.height);
       } else {
-        moz_gtk_get_scalethumb_metrics(GTK_ORIENTATION_VERTICAL, &thumb_height,
-                                       &thumb_length);
+        moz_gtk_get_scalethumb_metrics(GTK_ORIENTATION_VERTICAL, &result.width,
+                                       &result.width);
       }
-      aResult->width = thumb_length;
-      aResult->height = thumb_height;
-
-      *aIsOverridable = false;
     } break;
     case StyleAppearance::TabScrollArrowBack:
     case StyleAppearance::TabScrollArrowForward: {
-      moz_gtk_get_tab_scroll_arrow_size(&aResult->width, &aResult->height);
-      *aIsOverridable = false;
+      moz_gtk_get_tab_scroll_arrow_size(&result.width, &result.height);
     } break;
     case StyleAppearance::MozMenulistArrowButton: {
-      moz_gtk_get_combo_box_entry_button_size(&aResult->width,
-                                              &aResult->height);
-      *aIsOverridable = false;
+      moz_gtk_get_combo_box_entry_button_size(&result.width, &result.height);
     } break;
     case StyleAppearance::Menuseparator: {
-      gint separator_height;
-
-      moz_gtk_get_menu_separator_height(&separator_height);
-      aResult->height = separator_height;
-
-      *aIsOverridable = false;
+      moz_gtk_get_menu_separator_height(&result.height);
     } break;
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio: {
       const ToggleGTKMetrics* metrics = GetToggleMetrics(
           aAppearance == StyleAppearance::Radio ? MOZ_GTK_RADIOBUTTON
                                                 : MOZ_GTK_CHECKBUTTON);
-      aResult->width = metrics->minSizeWithBorder.width;
-      aResult->height = metrics->minSizeWithBorder.height;
+      result.width = metrics->minSizeWithBorder.width;
+      result.height = metrics->minSizeWithBorder.height;
     } break;
     case StyleAppearance::ToolbarbuttonDropdown:
     case StyleAppearance::ButtonArrowUp:
     case StyleAppearance::ButtonArrowDown:
     case StyleAppearance::ButtonArrowNext:
     case StyleAppearance::ButtonArrowPrevious: {
-      moz_gtk_get_arrow_size(MOZ_GTK_TOOLBARBUTTON_ARROW, &aResult->width,
-                             &aResult->height);
-      *aIsOverridable = false;
+      moz_gtk_get_arrow_size(MOZ_GTK_TOOLBARBUTTON_ARROW, &result.width,
+                             &result.height);
     } break;
     case StyleAppearance::MozWindowButtonClose: {
       const ToolbarButtonGTKMetrics* metrics =
           GetToolbarButtonMetrics(MOZ_GTK_HEADER_BAR_BUTTON_CLOSE);
-      aResult->width = metrics->minSizeWithBorderMargin.width;
-      aResult->height = metrics->minSizeWithBorderMargin.height;
+      result.width = metrics->minSizeWithBorderMargin.width;
+      result.height = metrics->minSizeWithBorderMargin.height;
       break;
     }
     case StyleAppearance::MozWindowButtonMinimize: {
       const ToolbarButtonGTKMetrics* metrics =
           GetToolbarButtonMetrics(MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE);
-      aResult->width = metrics->minSizeWithBorderMargin.width;
-      aResult->height = metrics->minSizeWithBorderMargin.height;
+      result.width = metrics->minSizeWithBorderMargin.width;
+      result.height = metrics->minSizeWithBorderMargin.height;
       break;
     }
     case StyleAppearance::MozWindowButtonMaximize:
     case StyleAppearance::MozWindowButtonRestore: {
       const ToolbarButtonGTKMetrics* metrics =
           GetToolbarButtonMetrics(MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE);
-      aResult->width = metrics->minSizeWithBorderMargin.width;
-      aResult->height = metrics->minSizeWithBorderMargin.height;
+      result.width = metrics->minSizeWithBorderMargin.width;
+      result.height = metrics->minSizeWithBorderMargin.height;
       break;
     }
     case StyleAppearance::CheckboxContainer:
@@ -1328,8 +1301,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       if (aAppearance == StyleAppearance::Menulist ||
           aAppearance == StyleAppearance::MenulistButton) {
         // Include the arrow size.
-        moz_gtk_get_arrow_size(MOZ_GTK_DROPDOWN, &aResult->width,
-                               &aResult->height);
+        moz_gtk_get_arrow_size(MOZ_GTK_DROPDOWN, &result.width, &result.height);
       }
       // else the minimum size is missing consideration of container
       // descendants; the value returned here will not be helpful, but the
@@ -1338,8 +1310,8 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       LayoutDeviceIntMargin border;
       GetCachedWidgetBorder(aFrame, aAppearance, GetTextDirection(aFrame),
                             &border);
-      aResult->width += border.left + border.right;
-      aResult->height += border.top + border.bottom;
+      result.width += border.LeftRight();
+      result.height += border.TopBottom();
     } break;
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield: {
@@ -1370,50 +1342,41 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
 
       gint height = contentHeight + borderPaddingHeight;
       if (aFrame->GetWritingMode().IsVertical()) {
-        aResult->width = height;
+        result.width = height;
       } else {
-        aResult->height = height;
+        result.height = height;
       }
     } break;
     case StyleAppearance::Separator: {
-      gint separator_width;
-
-      moz_gtk_get_toolbar_separator_width(&separator_width);
-
-      aResult->width = separator_width;
+      moz_gtk_get_toolbar_separator_width(&result.width);
     } break;
     case StyleAppearance::Spinner:
       // hard code these sizes
-      aResult->width = 14;
-      aResult->height = 26;
+      result.width = 14;
+      result.height = 26;
       break;
     case StyleAppearance::Treeheadersortarrow:
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
       // hard code these sizes
-      aResult->width = 14;
-      aResult->height = 13;
+      result.width = 14;
+      result.height = 13;
       break;
     case StyleAppearance::Resizer:
       // same as Windows to make our lives easier
-      aResult->width = aResult->height = 15;
-      *aIsOverridable = false;
+      result.width = result.height = 15;
       break;
     case StyleAppearance::Treetwisty:
     case StyleAppearance::Treetwistyopen: {
       gint expander_size;
-
       moz_gtk_get_treeview_expander_size(&expander_size);
-      aResult->width = aResult->height = expander_size;
-      *aIsOverridable = false;
+      result.width = result.height = expander_size;
     } break;
     default:
       break;
   }
 
-  *aResult = *aResult * GetMonitorScaleFactor(aFrame);
-
-  return NS_OK;
+  return result * GetMonitorScaleFactor(aFrame);
 }
 
 NS_IMETHODIMP

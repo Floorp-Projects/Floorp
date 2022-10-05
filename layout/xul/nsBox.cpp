@@ -373,8 +373,6 @@ bool nsIFrame::AddXULMinSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
   aWidthSet = false;
   aHeightSet = false;
 
-  bool canOverride = true;
-
   nsPresContext* pc = aBox->PresContext();
 
   // See if a native theme wants to supply a minimum size.
@@ -383,8 +381,8 @@ bool nsIFrame::AddXULMinSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
     nsITheme* theme = pc->Theme();
     StyleAppearance appearance = display->EffectiveAppearance();
     if (theme->ThemeSupportsWidget(pc, aBox, appearance)) {
-      LayoutDeviceIntSize size;
-      theme->GetMinimumWidgetSize(pc, aBox, appearance, &size, &canOverride);
+      LayoutDeviceIntSize size =
+          theme->GetMinimumWidgetSize(pc, aBox, appearance);
       if (size.width) {
         aSize.width = pc->DevPixelsToAppUnits(size.width);
         aWidthSet = true;
@@ -421,7 +419,7 @@ bool nsIFrame::AddXULMinSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
   const auto& minWidth = position->mMinWidth;
   if (minWidth.ConvertsToLength()) {
     nscoord min = minWidth.ToLength();
-    if (!aWidthSet || (min > aSize.width && canOverride)) {
+    if (!aWidthSet || min > aSize.width) {
       aSize.width = min;
       aWidthSet = true;
     }
@@ -440,7 +438,7 @@ bool nsIFrame::AddXULMinSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
   const auto& minHeight = position->mMinHeight;
   if (minHeight.ConvertsToLength()) {
     nscoord min = minHeight.ToLength();
-    if (!aHeightSet || (min > aSize.height && canOverride)) {
+    if (!aHeightSet || min > aSize.height) {
       aSize.height = min;
       aHeightSet = true;
     }

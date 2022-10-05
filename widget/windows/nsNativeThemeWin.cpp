@@ -2097,20 +2097,12 @@ bool nsNativeThemeWin::GetWidgetOverflow(nsDeviceContext* aContext,
   return false;
 }
 
-NS_IMETHODIMP
-nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext,
-                                       nsIFrame* aFrame,
-                                       StyleAppearance aAppearance,
-                                       LayoutDeviceIntSize* aResult,
-                                       bool* aIsOverridable) {
+LayoutDeviceIntSize nsNativeThemeWin::GetMinimumWidgetSize(
+    nsPresContext* aPresContext, nsIFrame* aFrame,
+    StyleAppearance aAppearance) {
   if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
-    return Theme::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance,
-                                       aResult, aIsOverridable);
+    return Theme::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance);
   }
-
-  aResult->width = aResult->height = 0;
-  *aIsOverridable = true;
-  nsresult rv = NS_OK;
 
   mozilla::Maybe<nsUXThemeClass> themeClass = GetThemeClass(aAppearance);
   HTHEME theme = NULL;
@@ -2118,10 +2110,9 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext,
     theme = nsUXThemeData::GetTheme(themeClass.value());
   }
   if (!theme) {
-    rv = ClassicGetMinimumWidgetSize(aFrame, aAppearance, aResult,
-                                     aIsOverridable);
-    ScaleForFrameDPI(aResult, aFrame);
-    return rv;
+    auto result = ClassicGetMinimumWidgetSize(aFrame, aAppearance);
+    ScaleForFrameDPI(&result, aFrame);
+    return result;
   }
 
   switch (aAppearance) {
@@ -2142,13 +2133,13 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext,
     case StyleAppearance::Menuitemtext:
     case StyleAppearance::MozWinGlass:
     case StyleAppearance::MozWinBorderlessGlass:
-      return NS_OK;  // Don't worry about it.
+      return {};  // Don't worry about it.
     default:
       break;
   }
 
   if (aAppearance == StyleAppearance::Menuitem && IsTopLevelMenu(aFrame)) {
-    return NS_OK;  // Don't worry about it for top level menus
+    return {};  // Don't worry about it for top level menus
   }
 
   // Call GetSystemMetrics to determine size for WinXP scrollbars
@@ -2157,20 +2148,18 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext,
   THEMESIZE sizeReq = TS_TRUE;  // Best-fit size
   switch (aAppearance) {
     case StyleAppearance::MozMenulistArrowButton: {
-      rv = ClassicGetMinimumWidgetSize(aFrame, aAppearance, aResult,
-                                       aIsOverridable);
-      ScaleForFrameDPI(aResult, aFrame);
-      return rv;
+      auto result = ClassicGetMinimumWidgetSize(aFrame, aAppearance);
+      ScaleForFrameDPI(&result, aFrame);
+      return result;
     }
     case StyleAppearance::Menuitem:
     case StyleAppearance::Checkmenuitem:
     case StyleAppearance::Radiomenuitem:
       if (!IsTopLevelMenu(aFrame)) {
         SIZE gutterSize(GetCachedGutterSize(theme));
-        aResult->width = gutterSize.cx;
-        aResult->height = gutterSize.cy;
-        ScaleForFrameDPI(aResult, aFrame);
-        return rv;
+        LayoutDeviceIntSize result(gutterSize.cx, gutterSize.cy);
+        ScaleForFrameDPI(&result, aFrame);
+        return result;
       }
       break;
 
@@ -2178,15 +2167,13 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext,
     case StyleAppearance::Menucheckbox:
     case StyleAppearance::Menuradio: {
       SIZE boxSize(GetCachedGutterSize(theme));
-      aResult->width = boxSize.cx + 2;
-      aResult->height = boxSize.cy;
-      *aIsOverridable = false;
-      ScaleForFrameDPI(aResult, aFrame);
-      return rv;
+      LayoutDeviceIntSize result(boxSize.cx + 2, boxSize.cy);
+      ScaleForFrameDPI(&result, aFrame);
+      return result;
     }
 
     case StyleAppearance::Menuitemtext:
-      return NS_OK;
+      return {};
 
     case StyleAppearance::ProgressBar:
       // Best-fit size for progress meters is too large for most
@@ -2196,28 +2183,24 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
 
     case StyleAppearance::Resizer:
-      *aIsOverridable = false;
       break;
 
     case StyleAppearance::RangeThumb: {
-      *aIsOverridable = false;
-      if (IsRangeHorizontal(aFrame)) {
-        aResult->width = 12;
-        aResult->height = 20;
-      } else {
-        aResult->width = 20;
-        aResult->height = 12;
+      LayoutDeviceIntSize result(12, 20);
+      if (!IsRangeHorizontal(aFrame)) {
+        std::swap(result.width, result.height);
       }
-      ScaleForFrameDPI(aResult, aFrame);
-      return rv;
+      ScaleForFrameDPI(&result, aFrame);
+      return result;
     }
 
-    case StyleAppearance::Separator:
+    case StyleAppearance::Separator: {
       // that's 2px left margin, 2px right margin and 2px separator
       // (the margin is drawn as part of the separator, though)
-      aResult->width = 6;
-      ScaleForFrameDPI(aResult, aFrame);
-      return rv;
+      LayoutDeviceIntSize result(6, 0);
+      ScaleForFrameDPI(&result, aFrame);
+      return result;
+    }
 
     case StyleAppearance::Button:
       // We should let HTML buttons shrink to their min size.
@@ -2230,41 +2213,36 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
 
     case StyleAppearance::MozWindowButtonMaximize:
-    case StyleAppearance::MozWindowButtonRestore:
+    case StyleAppearance::MozWindowButtonRestore: {
       // The only way to get accurate titlebar button info is to query a
       // window w/buttons when it's visible. nsWindow takes care of this and
       // stores that info in nsUXThemeData.
-      aResult->width =
-          nsUXThemeData::GetCommandButtonMetrics(CMDBUTTONIDX_RESTORE).cx;
-      aResult->height =
-          nsUXThemeData::GetCommandButtonMetrics(CMDBUTTONIDX_RESTORE).cy;
-      AddPaddingRect(aResult, CAPTIONBUTTON_RESTORE);
-      *aIsOverridable = false;
-      return rv;
+      SIZE sz = nsUXThemeData::GetCommandButtonMetrics(CMDBUTTONIDX_RESTORE);
+      LayoutDeviceIntSize result(sz.cx, sz.cy);
+      AddPaddingRect(&result, CAPTIONBUTTON_RESTORE);
+      return result;
+    }
 
-    case StyleAppearance::MozWindowButtonMinimize:
-      aResult->width =
-          nsUXThemeData::GetCommandButtonMetrics(CMDBUTTONIDX_MINIMIZE).cx;
-      aResult->height =
-          nsUXThemeData::GetCommandButtonMetrics(CMDBUTTONIDX_MINIMIZE).cy;
-      AddPaddingRect(aResult, CAPTIONBUTTON_MINIMIZE);
-      *aIsOverridable = false;
-      return rv;
+    case StyleAppearance::MozWindowButtonMinimize: {
+      SIZE sz = nsUXThemeData::GetCommandButtonMetrics(CMDBUTTONIDX_MINIMIZE);
+      LayoutDeviceIntSize result(sz.cx, sz.cy);
+      AddPaddingRect(&result, CAPTIONBUTTON_MINIMIZE);
+      return result;
+    }
 
-    case StyleAppearance::MozWindowButtonClose:
-      aResult->width =
-          nsUXThemeData::GetCommandButtonMetrics(CMDBUTTONIDX_CLOSE).cx;
-      aResult->height =
-          nsUXThemeData::GetCommandButtonMetrics(CMDBUTTONIDX_CLOSE).cy;
-      AddPaddingRect(aResult, CAPTIONBUTTON_CLOSE);
-      *aIsOverridable = false;
-      return rv;
+    case StyleAppearance::MozWindowButtonClose: {
+      SIZE sz = nsUXThemeData::GetCommandButtonMetrics(CMDBUTTONIDX_CLOSE);
+      LayoutDeviceIntSize result(sz.cx, sz.cy);
+      AddPaddingRect(&result, CAPTIONBUTTON_CLOSE);
+      return result;
+    }
 
     case StyleAppearance::MozWindowTitlebar:
-    case StyleAppearance::MozWindowTitlebarMaximized:
-      aResult->height = GetSystemMetrics(SM_CYCAPTION);
-      aResult->height += GetSystemMetrics(SM_CYFRAME);
-      aResult->height += GetSystemMetrics(SM_CXPADDEDBORDER);
+    case StyleAppearance::MozWindowTitlebarMaximized: {
+      LayoutDeviceIntSize result;
+      result.height = GetSystemMetrics(SM_CYCAPTION);
+      result.height += GetSystemMetrics(SM_CYFRAME);
+      result.height += GetSystemMetrics(SM_CXPADDEDBORDER);
       // On Win8.1, we don't want this scaling, because Windows doesn't scale
       // the non-client area of the window, and we can end up with ugly overlap
       // of the window frame controls into the tab bar or content area. But on
@@ -2272,48 +2250,47 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext,
       // better if we do apply this scaling (particularly with themes such as
       // DevEdition; see bug 1267636).
       if (IsWin10OrLater()) {
-        ScaleForFrameDPI(aResult, aFrame);
+        ScaleForFrameDPI(&result, aFrame);
       }
-      *aIsOverridable = false;
-      return rv;
+      return result;
+    }
 
     case StyleAppearance::MozWindowButtonBox:
-    case StyleAppearance::MozWindowButtonBoxMaximized:
+    case StyleAppearance::MozWindowButtonBoxMaximized: {
       if (gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
-        aResult->width = nsUXThemeData::GetCommandButtonBoxMetrics().cx;
-        aResult->height = nsUXThemeData::GetCommandButtonBoxMetrics().cy -
-                          GetSystemMetrics(SM_CYFRAME) -
-                          GetSystemMetrics(SM_CXPADDEDBORDER);
+        SIZE sz = nsUXThemeData::GetCommandButtonBoxMetrics();
+        LayoutDeviceIntSize result(sz.cx,
+                                   sz.cy - GetSystemMetrics(SM_CYFRAME) -
+                                       GetSystemMetrics(SM_CXPADDEDBORDER));
         if (aAppearance == StyleAppearance::MozWindowButtonBoxMaximized) {
-          aResult->width += 1;
-          aResult->height -= 2;
+          result.width += 1;
+          result.height -= 2;
         }
-        *aIsOverridable = false;
-        return rv;
+        return result;
       }
       break;
+    }
 
     case StyleAppearance::MozWindowFrameLeft:
     case StyleAppearance::MozWindowFrameRight:
     case StyleAppearance::MozWindowFrameBottom:
-      aResult->width = GetSystemMetrics(SM_CXFRAME);
-      aResult->height = GetSystemMetrics(SM_CYFRAME);
-      *aIsOverridable = false;
-      return rv;
+      return {GetSystemMetrics(SM_CXFRAME), GetSystemMetrics(SM_CYFRAME)};
 
     default:
       break;
   }
 
   int32_t part, state;
-  rv = GetThemePartAndState(aFrame, aAppearance, part, state);
-  if (NS_FAILED(rv)) return rv;
+  nsresult rv = GetThemePartAndState(aFrame, aAppearance, part, state);
+  if (NS_FAILED(rv)) {
+    return {};
+  }
 
+  LayoutDeviceIntSize result;
   rv = GetCachedMinimumWidgetSize(aFrame, theme, themeClass.value(),
-                                  aAppearance, part, state, sizeReq, aResult);
-
-  ScaleForFrameDPI(aResult, aFrame);
-  return rv;
+                                  aAppearance, part, state, sizeReq, &result);
+  ScaleForFrameDPI(&result, aFrame);
+  return result;
 }
 
 NS_IMETHODIMP
@@ -2677,41 +2654,37 @@ bool nsNativeThemeWin::ClassicGetWidgetPadding(nsDeviceContext* aContext,
   }
 }
 
-nsresult nsNativeThemeWin::ClassicGetMinimumWidgetSize(
-    nsIFrame* aFrame, StyleAppearance aAppearance, LayoutDeviceIntSize* aResult,
-    bool* aIsOverridable) {
-  (*aResult).width = (*aResult).height = 0;
-  *aIsOverridable = true;
+LayoutDeviceIntSize nsNativeThemeWin::ClassicGetMinimumWidgetSize(
+    nsIFrame* aFrame, StyleAppearance aAppearance) {
+  LayoutDeviceIntSize result;
   switch (aAppearance) {
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
-      (*aResult).width = (*aResult).height = 13;
+      result.width = result.height = 13;
       break;
     case StyleAppearance::Menucheckbox:
     case StyleAppearance::Menuradio:
     case StyleAppearance::Menuarrow:
-      (*aResult).width = ::GetSystemMetrics(SM_CXMENUCHECK);
-      (*aResult).height = ::GetSystemMetrics(SM_CYMENUCHECK);
+      result.width = ::GetSystemMetrics(SM_CXMENUCHECK);
+      result.height = ::GetSystemMetrics(SM_CYMENUCHECK);
       break;
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
-      (*aResult).width = ::GetSystemMetrics(SM_CXVSCROLL);
-      (*aResult).height = 8;  // No good metrics available for this
-      *aIsOverridable = false;
+      result.width = ::GetSystemMetrics(SM_CXVSCROLL);
+      result.height = 8;  // No good metrics available for this
       break;
     case StyleAppearance::RangeThumb: {
       if (IsRangeHorizontal(aFrame)) {
-        (*aResult).width = 12;
-        (*aResult).height = 20;
+        result.width = 12;
+        result.height = 20;
       } else {
-        (*aResult).width = 20;
-        (*aResult).height = 12;
+        result.width = 20;
+        result.height = 12;
       }
-      *aIsOverridable = false;
       break;
     }
     case StyleAppearance::MozMenulistArrowButton:
-      (*aResult).width = ::GetSystemMetrics(SM_CXVSCROLL);
+      result.width = ::GetSystemMetrics(SM_CXVSCROLL);
       break;
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
@@ -2736,60 +2709,55 @@ nsresult nsNativeThemeWin::ClassicGetMinimumWidgetSize(
       NONCLIENTMETRICS nc;
       nc.cbSize = sizeof(nc);
       if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(nc), &nc, 0))
-        (*aResult).width = (*aResult).height =
-            abs(nc.lfStatusFont.lfHeight) + 4;
+        result.width = result.height = abs(nc.lfStatusFont.lfHeight) + 4;
       else
-        (*aResult).width = (*aResult).height = 15;
-      *aIsOverridable = false;
+        result.width = result.height = 15;
       break;
     }
     case StyleAppearance::Menuseparator: {
-      aResult->width = 0;
-      aResult->height = 10;
+      result.width = 0;
+      result.height = 10;
       break;
     }
 
     case StyleAppearance::MozWindowTitlebarMaximized:
     case StyleAppearance::MozWindowTitlebar:
-      aResult->height = GetSystemMetrics(SM_CYCAPTION);
-      aResult->height += GetSystemMetrics(SM_CYFRAME);
-      aResult->width = 0;
+      result.height =
+          GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYFRAME);
       break;
     case StyleAppearance::MozWindowFrameLeft:
     case StyleAppearance::MozWindowFrameRight:
-      aResult->width = GetSystemMetrics(SM_CXFRAME);
-      aResult->height = 0;
+      result.width = GetSystemMetrics(SM_CXFRAME);
       break;
 
     case StyleAppearance::MozWindowFrameBottom:
-      aResult->height = GetSystemMetrics(SM_CYFRAME);
-      aResult->width = 0;
+      result.height = GetSystemMetrics(SM_CYFRAME);
       break;
 
     case StyleAppearance::MozWindowButtonClose:
     case StyleAppearance::MozWindowButtonMinimize:
     case StyleAppearance::MozWindowButtonMaximize:
     case StyleAppearance::MozWindowButtonRestore:
-      aResult->width = GetSystemMetrics(SM_CXSIZE);
-      aResult->height = GetSystemMetrics(SM_CYSIZE);
+      result.width = GetSystemMetrics(SM_CXSIZE);
+      result.height = GetSystemMetrics(SM_CYSIZE);
       // XXX I have no idea why these caption metrics are always off,
       // but they are.
-      aResult->width -= 2;
-      aResult->height -= 4;
+      result.width -= 2;
+      result.height -= 4;
       if (aAppearance == StyleAppearance::MozWindowButtonMinimize) {
-        AddPaddingRect(aResult, CAPTIONBUTTON_MINIMIZE);
+        AddPaddingRect(&result, CAPTIONBUTTON_MINIMIZE);
       } else if (aAppearance == StyleAppearance::MozWindowButtonMaximize ||
                  aAppearance == StyleAppearance::MozWindowButtonRestore) {
-        AddPaddingRect(aResult, CAPTIONBUTTON_RESTORE);
+        AddPaddingRect(&result, CAPTIONBUTTON_RESTORE);
       } else if (aAppearance == StyleAppearance::MozWindowButtonClose) {
-        AddPaddingRect(aResult, CAPTIONBUTTON_CLOSE);
+        AddPaddingRect(&result, CAPTIONBUTTON_CLOSE);
       }
       break;
 
     default:
-      return NS_ERROR_FAILURE;
+      break;
   }
-  return NS_OK;
+  return result;
 }
 
 nsresult nsNativeThemeWin::ClassicGetThemePartAndState(

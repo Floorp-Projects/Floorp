@@ -3035,55 +3035,47 @@ bool nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* 
   return false;
 }
 
-NS_IMETHODIMP
-nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                         StyleAppearance aAppearance, LayoutDeviceIntSize* aResult,
-                                         bool* aIsOverridable) {
+LayoutDeviceIntSize nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
+                                                             nsIFrame* aFrame,
+                                                             StyleAppearance aAppearance) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  aResult->SizeTo(0, 0);
-  *aIsOverridable = true;
-
   if (IsWidgetScrollbarPart(aAppearance)) {
-    return ThemeCocoa::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance, aResult,
-                                            aIsOverridable);
+    return ThemeCocoa::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance);
   }
 
+  LayoutDeviceIntSize result;
   switch (aAppearance) {
     case StyleAppearance::Button: {
-      aResult->SizeTo(pushButtonSettings.minimumSizes[miniControlSize].width,
-                      pushButtonSettings.naturalSizes[miniControlSize].height);
+      result.SizeTo(pushButtonSettings.minimumSizes[miniControlSize].width,
+                    pushButtonSettings.naturalSizes[miniControlSize].height);
       break;
     }
 
     case StyleAppearance::ButtonArrowUp:
     case StyleAppearance::ButtonArrowDown: {
-      aResult->SizeTo(kMenuScrollArrowSize.width, kMenuScrollArrowSize.height);
-      *aIsOverridable = false;
+      result.SizeTo(kMenuScrollArrowSize.width, kMenuScrollArrowSize.height);
       break;
     }
 
     case StyleAppearance::Menuarrow: {
-      aResult->SizeTo(kMenuarrowSize.width, kMenuarrowSize.height);
-      *aIsOverridable = false;
+      result.SizeTo(kMenuarrowSize.width, kMenuarrowSize.height);
       break;
     }
 
     case StyleAppearance::MozMacDisclosureButtonOpen:
     case StyleAppearance::MozMacDisclosureButtonClosed: {
-      aResult->SizeTo(kDisclosureButtonSize.width, kDisclosureButtonSize.height);
-      *aIsOverridable = false;
+      result.SizeTo(kDisclosureButtonSize.width, kDisclosureButtonSize.height);
       break;
     }
 
     case StyleAppearance::MozMacHelpButton: {
-      aResult->SizeTo(kHelpButtonSize.width, kHelpButtonSize.height);
-      *aIsOverridable = false;
+      result.SizeTo(kHelpButtonSize.width, kHelpButtonSize.height);
       break;
     }
 
     case StyleAppearance::Toolbarbutton: {
-      aResult->SizeTo(0, toolbarButtonHeights[miniControlSize]);
+      result.SizeTo(0, toolbarButtonHeights[miniControlSize]);
       break;
     }
 
@@ -3103,8 +3095,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
           buttonHeight /= 2;
         }
       }
-      aResult->SizeTo(buttonWidth, buttonHeight);
-      *aIsOverridable = true;
+      result.SizeTo(buttonWidth, buttonHeight);
       break;
     }
 
@@ -3112,7 +3103,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
     case StyleAppearance::MenulistButton: {
       SInt32 popupHeight = 0;
       ::GetThemeMetric(kThemeMetricPopupButtonHeight, &popupHeight);
-      aResult->SizeTo(0, popupHeight);
+      result.SizeTo(0, popupHeight);
       break;
     }
 
@@ -3123,26 +3114,25 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
       // at minimum, we should be tall enough for 9pt text.
       // I'm using hardcoded values here because the appearance manager
       // values for the frame size are incorrect.
-      aResult->SizeTo(0, (2 + 2) /* top */ + 9 + (1 + 1) /* bottom */);
+      result.SizeTo(0, (2 + 2) /* top */ + 9 + (1 + 1) /* bottom */);
       break;
     }
 
     case StyleAppearance::MozWindowButtonBox: {
       NSSize size = WindowButtonsSize(aFrame);
-      aResult->SizeTo(size.width, size.height);
-      *aIsOverridable = false;
+      result.SizeTo(size.width, size.height);
       break;
     }
 
     case StyleAppearance::ProgressBar: {
       SInt32 barHeight = 0;
       ::GetThemeMetric(kThemeMetricNormalProgressBarThickness, &barHeight);
-      aResult->SizeTo(0, barHeight);
+      result.SizeTo(0, barHeight);
       break;
     }
 
     case StyleAppearance::Separator: {
-      aResult->SizeTo(1, 1);
+      result.SizeTo(1, 1);
       break;
     }
 
@@ -3151,8 +3141,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
       SInt32 twistyHeight = 0, twistyWidth = 0;
       ::GetThemeMetric(kThemeMetricDisclosureButtonWidth, &twistyWidth);
       ::GetThemeMetric(kThemeMetricDisclosureButtonHeight, &twistyHeight);
-      aResult->SizeTo(twistyWidth, twistyHeight);
-      *aIsOverridable = false;
+      result.SizeTo(twistyWidth, twistyHeight);
       break;
     }
 
@@ -3160,12 +3149,12 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
     case StyleAppearance::Treeheadercell: {
       SInt32 headerHeight = 0;
       ::GetThemeMetric(kThemeMetricListHeaderHeight, &headerHeight);
-      aResult->SizeTo(0, headerHeight);
+      result.SizeTo(0, headerHeight);
       break;
     }
 
     case StyleAppearance::Tab: {
-      aResult->SizeTo(0, tabHeights[miniControlSize]);
+      result.SizeTo(0, tabHeights[miniControlSize]);
       break;
     }
 
@@ -3174,14 +3163,12 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
       SInt32 height = 0;
       ::GetThemeMetric(kThemeMetricSliderMinThumbWidth, &width);
       ::GetThemeMetric(kThemeMetricSliderMinThumbHeight, &height);
-      aResult->SizeTo(width, height);
-      *aIsOverridable = false;
+      result.SizeTo(width, height);
       break;
     }
 
     case StyleAppearance::MozMenulistArrowButton:
-      return ThemeCocoa::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance, aResult,
-                                              aIsOverridable);
+      return ThemeCocoa::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance);
 
     case StyleAppearance::Resizer: {
       HIThemeGrowBoxDrawInfo drawInfo;
@@ -3193,8 +3180,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
       HIPoint pnt = {0, 0};
       HIRect bounds;
       HIThemeGetGrowBoxBounds(&pnt, &drawInfo, &bounds);
-      aResult->SizeTo(bounds.size.width, bounds.size.height);
-      *aIsOverridable = false;
+      result.SizeTo(bounds.size.width, bounds.size.height);
       break;
     }
     default:
@@ -3202,12 +3188,12 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
   }
 
   if (IsHiDPIContext(aPresContext->DeviceContext())) {
-    *aResult = *aResult * 2;
+    result = result * 2;
   }
 
-  return NS_OK;
+  return result;
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
+  NS_OBJC_END_TRY_BLOCK_RETURN(LayoutDeviceIntSize());
 }
 
 NS_IMETHODIMP
