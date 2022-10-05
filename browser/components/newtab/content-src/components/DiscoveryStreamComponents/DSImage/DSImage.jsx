@@ -212,14 +212,22 @@ export class DSImage extends React.PureComponent {
       } else {
         // We consider a failed to load img or source without an image as loaded.
         classNames = `${classNames} loaded`;
-        // Remove the img element if both sources fail. Render a placeholder instead.
-        // This only happens if the sources are invalid or all attempts to load it failed.
-        img = (
-          <PlaceholderImage
-            urlKey={this.props.url}
-            titleKey={this.props.title}
-          />
-        );
+        // Remove the img element if we have no source. Render a placeholder instead.
+        // This only happens for recent saves without a source.
+        if (
+          this.props.isRecentSave &&
+          !this.props.rawSource &&
+          !this.props.source
+        ) {
+          img = (
+            <PlaceholderImage
+              urlKey={this.props.url}
+              titleKey={this.props.title}
+            />
+          );
+        } else {
+          img = <div className="broken-image" />;
+        }
       }
     }
 
