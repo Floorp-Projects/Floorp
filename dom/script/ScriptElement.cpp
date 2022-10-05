@@ -7,10 +7,12 @@
 #include "ScriptElement.h"
 #include "ScriptLoader.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "nsContentUtils.h"
+#include "nsThreadUtils.h"
 #include "nsPresContext.h"
 #include "nsIParser.h"
 #include "nsGkAtoms.h"
@@ -93,7 +95,18 @@ bool ScriptElement::MaybeProcessScript() {
                "You forgot to add self as observer");
 
   if (mAlreadyStarted || !mDoneAddingChildren || !cont->GetComposedDoc() ||
-      mMalformed || !HasScriptContent()) {
+      mMalformed) {
+    return false;
+  }
+
+  if (!HasScriptContent()) {
+    // In the case of an empty, non-external classic script, there is nothing
+    // to process. However, we must perform a microtask checkpoint afterwards,
+    // as per https://html.spec.whatwg.org/#clean-up-after-running-script
+    if (mKind == JS::loader::ScriptKind::eClassic && !mExternal) {
+      nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+          "ScriptElement::MaybeProcessScript", []() { nsAutoMicroTask mt; }));
+    }
     return false;
   }
 
