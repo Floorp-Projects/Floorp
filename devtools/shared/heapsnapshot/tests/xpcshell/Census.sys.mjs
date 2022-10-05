@@ -2,11 +2,7 @@
 // Debugger.Memory.prototype.takeCensus and
 // HeapSnapshot.prototype.takeCensus. Adapted from js/src/jit-test/lib/census.js.
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["Census"];
-
-const Census = {};
+export const Census = {};
 function dumpn(msg) {
   dump("DBG-TEST: Census.jsm: " + msg + "\n");
 }

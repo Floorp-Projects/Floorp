@@ -23,11 +23,9 @@
 "use strict";
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+});
 
 function getHeapSnapshotFileTemplate() {
   return PathUtils.join(PathUtils.osTempDir, `${Date.now()}.fxsnapshot`);
