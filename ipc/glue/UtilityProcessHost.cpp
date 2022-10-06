@@ -237,7 +237,7 @@ void UtilityProcessHost::Shutdown() {
     mShutdownRequested = true;
 
     // The channel might already be closed if we got here unexpectedly.
-    if (!mChannelClosed) {
+    if (mUtilityProcessParent->CanSend()) {
       mUtilityProcessParent->Close();
     }
 
@@ -262,7 +262,6 @@ void UtilityProcessHost::Shutdown() {
 void UtilityProcessHost::OnChannelClosed() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mChannelClosed = true;
   RejectPromise();
 
   if (!mShutdownRequested && mListener) {
