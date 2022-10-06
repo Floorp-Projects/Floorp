@@ -62,7 +62,7 @@ add_setup(async function() {
   // First cleanup the form history in case other tests left things there.
   await new Promise((resolve, reject) => {
     info("cleanup the search history");
-    FormHistory.update(
+    searchbar.FormHistory.update(
       { op: "remove", fieldname: "searchbar-history" },
       { handleCompletion: resolve, handleError: reject }
     );
@@ -73,7 +73,7 @@ add_setup(async function() {
     let addOps = kValues.map(value => {
       return { op: "add", fieldname: "searchbar-history", value };
     });
-    FormHistory.update(addOps, {
+    searchbar.FormHistory.update(addOps, {
       handleCompletion: resolve,
       handleError: reject,
     });
@@ -656,7 +656,7 @@ add_task(async function cleanup() {
   let removeOps = kValues.map(value => {
     return { op: "remove", fieldname: "searchbar-history", value };
   });
-  FormHistory.update(removeOps);
+  searchbar.FormHistory.update(removeOps);
 
   textbox.value = "";
 });

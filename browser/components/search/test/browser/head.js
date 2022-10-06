@@ -12,7 +12,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   CustomizableUITestUtils:
     "resource://testing-common/CustomizableUITestUtils.jsm",
-  FormHistory: "resource://gre/modules/FormHistory.jsm",
   FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
@@ -213,7 +212,7 @@ async function searchInSearchbar(inputText, win = window) {
 function clearSearchbarHistory(win = window) {
   return new Promise((resolve, reject) => {
     info("cleanup the search history");
-    FormHistory.update(
+    win.BrowserSearch.searchBar.FormHistory.update(
       { op: "remove", fieldname: "searchbar-history" },
       { handleCompletion: resolve, handleError: reject }
     );
