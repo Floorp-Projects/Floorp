@@ -284,6 +284,11 @@
   value: true
   mirror: always
 
+- name: apz.scrollend-event.content.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: apz.wr.activate_all_scroll_frames
   type: RelaxedAtomicBool
   value: false
