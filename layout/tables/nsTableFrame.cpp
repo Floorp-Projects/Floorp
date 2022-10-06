@@ -18,6 +18,7 @@
 #include "gfxContext.h"
 #include "nsCOMPtr.h"
 #include "mozilla/ComputedStyle.h"
+#include "nsFrameList.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
 #include "nsCellMap.h"
@@ -2169,12 +2170,6 @@ void nsTableFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
   SetGeometryDirty();
 }
 
-// Needs to be at file scope or ArrayLength fails to compile.
-struct ChildListInsertions {
-  nsIFrame::ChildListID mID;
-  nsFrameList mList;
-};
-
 void nsTableFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                                 const nsLineList::iterator* aPrevFrameLine,
                                 nsFrameList& aFrameList) {
@@ -2196,34 +2191,28 @@ void nsTableFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
 
   // Collect ColGroupFrames into a separate list and insert those separately
   // from the other frames (bug 759249).
-  ChildListInsertions insertions[2];  // ColGroup, other
-  const nsStyleDisplay* display = aFrameList.FirstChild()->StyleDisplay();
-  nsFrameList::FrameLinkEnumerator e(aFrameList);
-  for (; !aFrameList.IsEmpty(); e.Next()) {
-    nsIFrame* next = e.NextFrame();
-    if (!next || next->StyleDisplay()->mDisplay != display->mDisplay) {
-      nsFrameList head = aFrameList.ExtractHead(e);
-      if (display->mDisplay == mozilla::StyleDisplay::TableColumnGroup) {
-        insertions[0].mID = kColGroupList;
-        insertions[0].mList.AppendFrames(nullptr, head);
-      } else {
-        insertions[1].mID = kPrincipalList;
-        insertions[1].mList.AppendFrames(nullptr, head);
-      }
-      if (!next) {
-        break;
-      }
-      display = next->StyleDisplay();
+  nsFrameList colGroupList;
+  nsFrameList principalList;
+  do {
+    const auto display = aFrameList.FirstChild()->StyleDisplay()->mDisplay;
+    nsFrameList head = aFrameList.Split([display](nsIFrame* aFrame) {
+      return aFrame->StyleDisplay()->mDisplay != display;
+    });
+    if (display == mozilla::StyleDisplay::TableColumnGroup) {
+      colGroupList.AppendFrames(nullptr, head);
+    } else {
+      principalList.AppendFrames(nullptr, head);
     }
+  } while (aFrameList.NotEmpty());
+
+  // We pass aPrevFrame for both ColGroup and other frames since
+  // HomogenousInsertFrames will only use it if it's a suitable
+  // prev-sibling for the frames in the frame list.
+  if (colGroupList.NotEmpty()) {
+    HomogenousInsertFrames(kColGroupList, aPrevFrame, colGroupList);
   }
-  for (uint32_t i = 0; i < ArrayLength(insertions); ++i) {
-    // We pass aPrevFrame for both ColGroup and other frames since
-    // HomogenousInsertFrames will only use it if it's a suitable
-    // prev-sibling for the frames in the frame list.
-    if (!insertions[i].mList.IsEmpty()) {
-      HomogenousInsertFrames(insertions[i].mID, aPrevFrame,
-                             insertions[i].mList);
-    }
+  if (principalList.NotEmpty()) {
+    HomogenousInsertFrames(kPrincipalList, aPrevFrame, principalList);
   }
 }
 

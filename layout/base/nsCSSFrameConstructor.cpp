@@ -11007,13 +11007,17 @@ nsIFrame* nsCSSFrameConstructor::ConstructInline(
   ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame,
                               /* aParentIsWrapperAnonBox = */ false, childList);
 
-  nsFrameList::FrameLinkEnumerator firstBlockEnumerator(childList);
+  nsIFrame* firstBlock = nullptr;
   if (!aItem.mIsAllInline) {
-    firstBlockEnumerator.Find(
-        [](nsIFrame* aFrame) { return aFrame->IsBlockOutside(); });
+    for (nsIFrame* f : childList) {
+      if (f->IsBlockOutside()) {
+        firstBlock = f;
+        break;
+      }
+    }
   }
 
-  if (aItem.mIsAllInline || firstBlockEnumerator.AtEnd()) {
+  if (aItem.mIsAllInline || !firstBlock) {
     // This part is easy.  We either already know we have no non-inline kids,
     // or haven't found any when constructing actual frames (the latter can
     // happen only if out-of-flows that we thought had no containing block
@@ -11029,7 +11033,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructInline(
   // has to be chopped into several pieces, as described above.
 
   // Grab the first inline's kids
-  nsFrameList firstInlineKids = childList.ExtractHead(firstBlockEnumerator);
+  nsFrameList firstInlineKids = childList.ExtractHead(firstBlock);
   newFrame->SetInitialChildList(kPrincipalList, firstInlineKids);
 
   aFrameList.AppendFrame(nullptr, newFrame);
