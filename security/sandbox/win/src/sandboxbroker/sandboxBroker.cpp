@@ -1409,7 +1409,6 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
 
   switch (aSandbox) {
     case mozilla::ipc::SandboxingKind::GENERIC_UTILITY:
-    case mozilla::ipc::SandboxingKind::UTILITY_AUDIO_DECODING_GENERIC:
     case mozilla::ipc::SandboxingKind::UTILITY_AUDIO_DECODING_WMF:
 #if MOZ_WMF_MEDIA_ENGINE
     case mozilla::ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM:
