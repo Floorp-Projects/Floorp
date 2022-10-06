@@ -120,7 +120,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
         handleSearchWidgetNavigation(safeIntent)
 
-        if (intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG)) {
+        if (savedInstanceState == null && intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG)) {
             intentProcessor.handleNewIntent(this, safeIntent)
         }
 
