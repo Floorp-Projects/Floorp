@@ -12,7 +12,6 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "mozilla/net/DataChannelProtocol.h"
-#include "mozilla/Preferences.h"
 
 namespace mozilla {
 
@@ -274,10 +273,7 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
         opusParams.maxplaybackrate = mMaxPlaybackRate;
       }
       opusParams.maxAverageBitrate = mMaxAverageBitrate;
-
-      if (mChannels == 2 &&
-          !Preferences::GetBool("media.peerconnection.sdp.disable_stereo_fmtp",
-                                false)) {
+      if (mChannels == 2 && !mForceMono) {
         // We prefer to receive stereo, if available.
         opusParams.stereo = 1;
       }

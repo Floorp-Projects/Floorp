@@ -320,7 +320,6 @@ pref("media.videocontrols.keyboard-tab-to-all-controls", true);
     pref("media.peerconnection.sdp.strict_success", false);
   #endif
 
-  pref("media.peerconnection.sdp.disable_stereo_fmtp", false);
   pref("media.webrtc.debug.trace_mask", 0);
   pref("media.webrtc.debug.multi_log", false);
   pref("media.webrtc.debug.log_file", "");
