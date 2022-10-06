@@ -9,7 +9,7 @@
 
 #include "mozilla/dom/SVGGraphicsElement.h"
 #include "mozilla/gfx/2D.h"
-#include "SVGAnimatedNumber.h"
+#include "mozilla/dom/SVGAnimatedNumber.h"
 
 namespace mozilla {
 
