@@ -238,6 +238,7 @@ select {
 
   /* Set some styles for drop down selects. These are overridden below for
    * list box selects. */
+  padding-inline: 4px;
   background-color: -moz-Combobox;
   color: -moz-ComboboxText;
   vertical-align: baseline;
@@ -247,6 +248,7 @@ select {
 
 select:-moz-select-list-box {
   overflow: auto;
+  padding-inline: 0;
   background-color: Field;
   color: FieldText;
   vertical-align: text-bottom;
@@ -282,7 +284,6 @@ select > button {
 *|*::-moz-display-comboboxcontrol-frame {
   content: inherit;
   overflow: clip;
-  padding-inline: 4px;
   color: unset;
   white-space: nowrap;
   text-align: unset;
