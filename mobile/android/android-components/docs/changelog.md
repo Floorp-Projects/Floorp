@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **all modules**
+  * Updated the locally published artifacts to use a single timestamp rather than many [#12902](https://github.com/mozilla-mobile/android-components/issues/12902)
+
 * **nimbus-gradle-plugin**:
   * Updated the plugin to use the version of application services defined in the buildSrc Dependencies.
 

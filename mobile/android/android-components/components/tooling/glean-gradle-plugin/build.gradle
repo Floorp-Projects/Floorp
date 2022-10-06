@@ -48,7 +48,7 @@ publishing {
                 groupId = config.componentsGroupId
                 artifactId = archivesBaseName
                 description = project.ext.description
-                version = config.componentsVersion + (project.hasProperty('local') ? '-local' + getLocalPublicationTimestamp() : '')
+                version = config.componentsVersion + (project.hasProperty('local') ? '-local' + project.property('local') : '')
 
                 licenses {
                     license {

@@ -43,7 +43,7 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
                     groupId = groupIdArg
                     artifactId = artifactIdArg
                     // 'local' is for streamlining local publication workflow.
-                    version = config.componentsVersion + (project.hasProperty('local') ? '-local' + getLocalPublicationTimestamp() : '')
+                    version = config.componentsVersion + (project.hasProperty('local') ? '-local' + project.property('local') : '')
 
                     pom {
                         description = descriptionArg
