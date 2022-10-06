@@ -1313,7 +1313,7 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
       webSocket->GetOwner()->UpdateWebSocketCount(1);
     }
 
-    bool isSecure = true;
+    bool isSecure = principal->SchemeIs("https");
     aRv = webSocketImpl->IsSecure(&isSecure);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -2814,7 +2814,7 @@ nsresult WebSocketImpl::IsSecure(bool* aValue) {
     // innerWindow will be null. There is nothing on top of this to be
     // considered.
     if (NS_WARN_IF(!principal)) {
-      return NS_ERROR_DOM_SECURITY_ERR;
+      return NS_OK;
     }
     *aValue = principal->SchemeIs("https");
     return NS_OK;
