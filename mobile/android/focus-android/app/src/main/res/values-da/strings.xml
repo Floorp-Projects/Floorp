@@ -496,32 +496,63 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Velkommen til %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">Velkommen til %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Luk</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Velkommen til %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Hurtig. Privat. Ingen distraktioner.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Kom i gang</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s er ikke som andre browsere</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Vi rydder din historik for ekstra privatlivsbeskyttelse, når du lukker appen.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Gør %1$s til din standard-browser for at beskytte dine data, hver gang du åbner et link.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Angiv som standard-browser</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Spring over</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Privat browsing på næste niveau, når du ønsker det</string>
+    <string moz:removedIn="106" name="onboarding_description">Privat browsing på næste niveau, når du ønsker det</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Når inkognito møder usynlig</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Når inkognito møder usynlig</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s er en browser med indbygget beskyttelse af dit privatliv og med ekstra stærk beskyttelse mod sporing og cookies.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s er en browser med indbygget beskyttelse af dit privatliv og med ekstra stærk beskyttelse mod sporing og cookies.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Browse som om det aldrig skete</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Browse som om det aldrig skete</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Ét tryk sletter din browsinghistorik og dine cookies - og forhindrer reklamer i at følge efter dig.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Ét tryk sletter din browsinghistorik og dine cookies - og forhindrer reklamer i at følge efter dig.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Beskyttelse af privatlivet til enhver situation</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Beskyttelse af privatlivet til enhver situation</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Hvis dine behov for beskyttelse af dit privatliv ændrer sig, så er det nemt at ændre indstillingerne.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Hvis dine behov for beskyttelse af dit privatliv ændrer sig, så er det nemt at ændre indstillingerne.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Afslut rundvisningen</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Afslut rundvisningen</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Styrk dit privatliv</string>
@@ -981,7 +1012,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Det ser ud til, at dette websted forsøgte at spore dig. Klik på skjoldet for webstedsindstillinger og statistik for blokerede sporings-mekanismer.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Det ser ud til, at dette websted forsøgte at spore dig. Klik på skjoldet for webstedsindstillinger og statistik for blokerede sporings-mekanismer.</string>
+    <string name="cfr_for_toolbar_shield_icon2">Taget på fersk gerning! Vi forhindrede dette websted i at udspionere dig. Tryk på skjoldet når som helst for at se, hvad vi blokerer.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Luk pop op</string>
 
@@ -997,4 +1030,28 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Slet dine personlige data, browserhistorik og mere fra denne session ved at trykke på papirkurven. Prøv det!</string>
     <string name="cfr_for_toolbar_delete_icon2">Tryk her for at slette det hele — historik, cookies, alt — og start på en frisk i et nyt faneblad.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Luk</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Søge-widget</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Browserhistorik blev ryddet! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Vi overlader dig til din private browsing, men få en hurtigere start næste gang med %1$s-widget\'en på din startskærm.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Føj widget til startskærmen</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Widget føjet til startskærmen</string>
 </resources>

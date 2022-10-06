@@ -136,6 +136,10 @@
     <!-- Title of "switch" preference that enables/disables search suggestions -->
     <string name="preference_show_search_suggestions">వెతుకుడు సలహాలను చూపించు</string>
 
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">మీరు చిరునామా పట్టీలో టైపుచేసినదాన్ని %1$s మీ సెర్చింజనుకి పంపిస్తుంది</string>
+
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">అప్రమేయం</string>
 
@@ -172,6 +176,9 @@
     <!-- Label for the button to quick add custom autocomplete URLs. -->
     <string name="custom_autocomplete_quick_add">ఇష్టానుసారమైన URLను జోడించండి</string>
 
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">లంకెను స్వయంపూరణకు చేర్చు</string>
+
     <!-- Preference category for settings about cookies and site data -->
     <string name="preference_category_cookies">కుకీలు మరియు సైటు డేటా</string>
 
@@ -183,6 +190,9 @@
 
     <!-- A link to SUMO at autocomplete settings. -->
     <string name="preference_autocomplete_learn_more">ఇంకా తెలుసుకోండి</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">అభిమత స్వయంపూరణ చిరునామాలను చేర్చండి, నిర్వహించండి.</string>
 
     <!-- Label for the "custom autocomplete URL" input field -->
     <string name="preference_autocomplete_add_title">జోడించుటకు URL</string>
@@ -263,6 +273,9 @@
 
     <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
     <string name="preference_mozilla_telemetry_summary">ఇంకా తెలుసుకోండి</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">%1$s‌ని అందరికీ అందించడానికి, మెరుగుపరచడానికి ఎంత తక్కవ అవసరమో అంతే సేకరించడానికి మొజిల్లా కృషిచేస్తుంది.</string>
 
     <!-- In-app link (in settings) to Focus privacy notice. -->
     <string name="preference_privacy_notice">గోప్యతా విధానం</string>
@@ -413,7 +426,8 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">%1$sకి స్వాగతం!</string>
+    <string moz:removedIn="106" name="onboarding_title">%1$sకి స్వాగతం!</string>
+
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">మీ ప్రైవసీని శక్తిమంతం చేసుకోండి</string>
@@ -462,6 +476,10 @@
     <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
       item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
     <string name="download_firefox">Firefoxను దింపుకోండి</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s అనేది మొజిల్లా, ఇతర తోడ్పాటుదార్లు తయారుచేసిన స్వేచ్ఛా, ఓపెన్ సోర్సు సాఫ్ట్‌వేరు.]]></string>
 
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">వాడుకరి పేరు</string>
@@ -667,4 +685,8 @@
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">విస్మరించు</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
     </resources>
