@@ -69,7 +69,7 @@ Services.prefs.addObserver("floorp.browser.UserAgent", function(){
       Services.prefs.setStringPref("general.useragent.override", "Mozilla/5.0 (Macintosh; Intel Mac OS X 12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36");
      break;
     case 3:
-      Services.prefs.setStringPref("general.useragent.override", "Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0");
+      Services.prefs.setStringPref("general.useragent.override", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36");
      break;
     case 4:
       Services.prefs.setStringPref("general.useragent.override", "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/106.0.5249.92 Mobile/15E148 Safari/604.1");
