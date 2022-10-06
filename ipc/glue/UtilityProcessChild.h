@@ -37,10 +37,6 @@ class UtilityProcessChild final : public PUtilityProcessChild {
   mozilla::ipc::IPCResult RecvInitProfiler(
       Endpoint<PProfilerChild>&& aEndpoint);
 
-  mozilla::ipc::IPCResult RecvNewContentRemoteDecoderManager(
-      Endpoint<PRemoteDecoderManagerParent>&& aEndpoint,
-      const bool& aAllowHardwareDecoding);
-
   mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& pref);
 
   mozilla::ipc::IPCResult RecvRequestMemoryReport(
