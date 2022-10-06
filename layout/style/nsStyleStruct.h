@@ -1106,6 +1106,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVisibility {
     return mVisible == mozilla::StyleVisibility::Visible;
   }
 
+  bool IsCollapse() const {
+    return mVisible == mozilla::StyleVisibility::Collapse;
+  }
+
   bool IsVisibleOrCollapsed() const {
     return mVisible == mozilla::StyleVisibility::Visible ||
            mVisible == mozilla::StyleVisibility::Collapse;
