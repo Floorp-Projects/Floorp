@@ -27,7 +27,7 @@ class UtilityProcessImpl final : public ipc::ProcessChild {
   void CleanUp() override;
 
  private:
-  RefPtr<UtilityProcessChild> mUtility = new UtilityProcessChild();
+  RefPtr<UtilityProcessChild> mUtility = UtilityProcessChild::GetSingleton();
 
 #if defined(XP_WIN)
   mozilla::mscom::ProcessRuntime mCOMRuntime;
