@@ -92,6 +92,7 @@ impl NeqoHttp3Conn {
         max_blocked_streams: u16,
         max_data: u64,
         max_stream_data: u64,
+        version_negotiation: bool,
         qlog_dir: &nsACString,
     ) -> Result<RefPtr<NeqoHttp3Conn>, nsresult> {
         // Nss init.
@@ -114,9 +115,14 @@ impl NeqoHttp3Conn {
             _ => return Err(NS_ERROR_INVALID_ARG),
         };
 
+        let version_list = if version_negotiation {
+             Version::all()
+        } else {
+             vec![quic_version]
+        };
         #[allow(unused_mut)]
         let mut params = ConnectionParameters::default()
-            .versions(quic_version, vec![quic_version])
+            .versions(quic_version, version_list)
             .cc_algorithm(CongestionControlAlgorithm::Cubic)
             .max_data(max_data)
             .max_stream_data(StreamType::BiDi, false, max_stream_data);
@@ -223,6 +229,7 @@ pub extern "C" fn neqo_http3conn_new(
     max_blocked_streams: u16,
     max_data: u64,
     max_stream_data: u64,
+    version_negotiation: bool,
     qlog_dir: &nsACString,
     result: &mut *const NeqoHttp3Conn,
 ) -> nsresult {
@@ -237,6 +244,7 @@ pub extern "C" fn neqo_http3conn_new(
         max_blocked_streams,
         max_data,
         max_stream_data,
+        version_negotiation,
         qlog_dir,
     ) {
         Ok(http3_conn) => {

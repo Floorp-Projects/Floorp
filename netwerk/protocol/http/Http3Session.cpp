@@ -122,6 +122,7 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
       gHttpHandler->DefaultHttp3MaxBlockedStreams(),
       StaticPrefs::network_http_http3_max_data(),
       StaticPrefs::network_http_http3_max_stream_data(),
+      StaticPrefs::network_http_http3_version_negotiation_enabled(),
       gHttpHandler->Http3QlogDir(), getter_AddRefs(mHttp3Connection));
   if (NS_FAILED(rv)) {
     return rv;
