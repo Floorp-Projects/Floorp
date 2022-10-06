@@ -22,6 +22,7 @@ import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.base.worker.Frequency
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.autofill.AutofillConfirmActivity
@@ -105,8 +106,8 @@ class Components(private val context: Context) {
     }
 
     val addonCollectionProvider by lazyMonitored {
-        // Check if we have a customized (overridden) AMO collection (only supported in Nightly)
-        if (Config.channel.isNightlyOrDebug && context.settings().amoCollectionOverrideConfigured()) {
+        // Check if we have a customized (overridden) AMO collection (supported in Nightly & Beta)
+        if (FeatureFlags.customExtensionCollectionFeature && context.settings().amoCollectionOverrideConfigured()) {
             AddonCollectionProvider(
                 context,
                 core.client,

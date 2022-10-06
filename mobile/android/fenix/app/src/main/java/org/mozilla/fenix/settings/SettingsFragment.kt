@@ -38,6 +38,7 @@ import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
@@ -522,7 +523,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_override_amo_collection))
 
         val show = (
-            Config.channel.isNightlyOrDebug && (
+            FeatureFlags.customExtensionCollectionFeature && (
                 settings.amoCollectionOverrideConfigured() || settings.showSecretDebugMenuThisSession
                 )
             )

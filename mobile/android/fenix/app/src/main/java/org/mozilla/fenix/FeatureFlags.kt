@@ -12,6 +12,14 @@ import mozilla.components.support.locale.LocaleManager.getSystemDefault
  * A single source for setting feature flags that are mostly based on build type.
  */
 object FeatureFlags {
+
+    /**
+     * Enables custom extension collection feature,
+     * This feature does not only depend on this flag. It requires the AMO collection override to
+     * be enabled which is behind the Secret Settings.
+     * */
+    val customExtensionCollectionFeature = Config.channel.isNightlyOrDebug || Config.channel.isBeta
+
     /**
      * Pull-to-refresh allows you to pull the web content down far enough to have the page to
      * reload.
