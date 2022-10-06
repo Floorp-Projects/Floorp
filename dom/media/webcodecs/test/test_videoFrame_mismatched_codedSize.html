@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title></title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+let data = new Uint8Array([
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+]);
+// TODO: Crop the image instead of returning errors (Bug 1782128).
+try {
+  let frame = new VideoFrame(data, {
+    timestamp: 10,
+    codedWidth: 3,
+    codedHeight: 3,
+    visibleRect: { x: 0, y: 0, width: 1, height: 1 },
+    format: "RGBA",
+  });
+  frame.close();
+  ok(false, "Should not create a VideoFrame from a mismatched-size buffer");
+} catch (e) {
+  ok(e instanceof TypeError, "Should throw a TypeError");
+}
+</script>
+</body>
+</html>
