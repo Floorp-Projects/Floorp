@@ -3,6 +3,12 @@
 
 "use strict";
 
+// When running full suite, previous audio decoding tests might have left some
+// running and this might interfere with our testing
+add_setup(async function ensureNoExistingProcess() {
+  await utilityProcessTest().stopProcess();
+});
+
 add_task(async () => {
   const utilityPid = await startUtilityProcess();
 
@@ -23,7 +29,7 @@ add_task(async () => {
       aAmount,
       aDescription
     ) {
-      const expectedProcess = `Utility (pid: ${utilityPid}, sandboxingKind: ${kGenericUtility})`;
+      const expectedProcess = `Utility (pid: ${utilityPid}, sandboxingKind: ${kGenericUtilitySandbox})`;
       if (aProcess !== expectedProcess) {
         return;
       }

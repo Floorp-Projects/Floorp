@@ -76,6 +76,9 @@ enum class UtilityActorName {
   MfMediaEngineCDM,
 };
 
+// String that will be used e.g. to annotate crash reports
+nsCString GetUtilityActorName(const UtilityActorName aActorName);
+
 /* Get the CPU frequency to use to convert cycle time values to actual time.
  * @returns the TSC (Time Stamp Counter) frequency in MHz, or 0 if converting
  * cycle time values should not be attempted. */
