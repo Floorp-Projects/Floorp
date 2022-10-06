@@ -154,6 +154,7 @@
 
 #    include <fstream>
 
+#    include "BinaryPath.h"
 #    include "SpecialSystemDirectory.h"
 #    include "nsILineInputStream.h"
 #    include "mozilla/ipc/UtilityProcessSandboxing.h"
@@ -4884,6 +4885,7 @@ OpenBSDUnveilPaths(const nsACString& uPath, const nsACString& pledgePath) {
 bool StartOpenBSDSandbox(GeckoProcessType type, ipc::SandboxingKind kind) {
   nsAutoCString pledgeFile;
   nsAutoCString unveilFile;
+  char binaryPath[MAXPATHLEN];
 
   switch (type) {
     case GeckoProcessType_Default: {
@@ -4934,6 +4936,10 @@ bool StartOpenBSDSandbox(GeckoProcessType type, ipc::SandboxingKind kind) {
       return false;
   }
 
+  nsresult rv = mozilla::BinaryPath::Get(binaryPath);
+  if (NS_FAILED(rv)) {
+    errx(1, "failed to cache binary path ?");
+  }
   if (NS_WARN_IF(NS_FAILED(OpenBSDUnveilPaths(unveilFile, pledgeFile)))) {
     errx(1, "failed reading/parsing %s", unveilFile.get());
   }
