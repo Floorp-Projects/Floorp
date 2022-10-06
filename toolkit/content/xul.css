@@ -289,6 +289,7 @@ tooltip {
   padding: 2px 3px;
   max-width: 40em;
   overflow: clip;
+  pointer-events: none;
 }
 
 tooltip:not([position]) {
