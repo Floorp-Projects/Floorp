@@ -116,3 +116,44 @@ add_task(async function test_input_in_data() {
     );
   });
 });
+
+add_task(async function test_omit_private_things_in_URL() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["network.auth.confirmAuth.enabled", false]],
+  });
+  await promiseURLBarFocus();
+
+  await BrowserTestUtils.withNewTab(
+    "https://username:password@example.com/browser/toolkit/content/tests/browser/file_empty.html?query=some#ref",
+    async browser => {
+      ok(browser.isRemoteBrowser, "This test passes only in e10s mode");
+
+      await SpecialPowers.spawn(browser, [], async () => {
+        content.document.body.innerHTML = "<input>";
+        const input = content.document.querySelector("input");
+        input.focus();
+
+        // Wait for a tick for flushing IMEContentObserver's pending notifications.
+        await new Promise(resolve =>
+          content.requestAnimationFrame(() =>
+            content.requestAnimationFrame(resolve)
+          )
+        );
+      });
+
+      await promiseIMEStateEnabledByRemote();
+      if (!gDOMWindowUtils.inputContextURI) {
+        ok(
+          false,
+          `Input context should have valid URI even when the URL contains some private things`
+        );
+        return;
+      }
+      is(
+        gDOMWindowUtils.inputContextURI.spec,
+        "https://example.com/browser/toolkit/content/tests/browser/file_empty.html",
+        `Input context should have the document URI which omit some private things in the URL`
+      );
+    }
+  );
+});
