@@ -1194,21 +1194,22 @@ const biases = [
 // different types. To workaround this issue, we create a new ruleset for each type.
 var creditCardRulesets = {
   init() {
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "supportedTypes",
+      "extensions.formautofill.creditCards.heuristics.fathom.types",
+      null,
+      null,
+      val => val.split(",")
+    );
+
     for (const type of this.types) {
       this[type] = makeRuleset([...coefficients[type]], biases);
     }
   },
 
   get types() {
-    return [
-      // Only use Fathom to detect cc-number fields for now.
-      "cc-number",
-      //"cc-name",
-      //"cc-exp-month",
-      //"cc-exp-year",
-      //"cc-exp",
-      //"cc-type",
-    ];
+    return this.supportedTypes;
   },
 };
 this.creditCardRulesets.init();

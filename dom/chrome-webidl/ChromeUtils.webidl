@@ -67,6 +67,7 @@ dictionary InteractionData {
  */
 dictionary FormAutofillConfidences {
   double ccNumber = 0;
+  double ccName = 0;
 };
 
 /**
