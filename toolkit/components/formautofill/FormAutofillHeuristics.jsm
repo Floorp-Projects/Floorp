@@ -1175,11 +1175,13 @@ FormAutofillHeuristics = {
         return infoRecordWithFieldName(matchedFieldName, confidence);
       }
 
-      // TODO: Do we want to run old heuristics for fields that fathom isn't confident?
-      // Since Fathom isn't confident, try the old heuristics. I've removed all
-      // the CC-specific ones, so this should be almost a mutually exclusive
-      // set of fields.
-      fields = fields.filter(r => !lazy.creditCardRulesets.types.includes(r));
+      // Continue to run regex-based heuristics even when fathom doesn't recognize
+      // the field. Since the regex-based heuristic has good search coverage but
+      // has a worse precision. We use it in conjunction with fathom to maximize
+      // our search coverage. For example, when a <input> is not considered cc-name
+      // by fathom but is considered cc-name by regex-based heuristic, if the form
+      // also contains a cc-number identified by fathom, we will treat the form as a
+      // valid cc form; hence both cc-number & cc-name are identified.
     }
 
     if (fields.length) {

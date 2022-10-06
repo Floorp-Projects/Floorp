@@ -4278,21 +4278,13 @@ pref("extensions.formautofill.creditCards.hideui", false);
 // 1:Fathom in js implementation
 // 2:Fathom in c++ implementation
 pref("extensions.formautofill.creditCards.heuristics.mode", 2);
-pref("extensions.formautofill.creditCards.heuristics.fathom.types", "cc-number");
-// 'fathom.confidenceThreshold' defines the threshold we use to identify whether a field is a cc field
-// 'fathom.highConfidenceThreshold' is used to mark fields that are "high-confidence", see `isValidSection` for details
+pref("extensions.formautofill.creditCards.heuristics.fathom.types", "cc-number,cc-name");
+// Defines the threshold to identify whether a field is a cc field
 pref("extensions.formautofill.creditCards.heuristics.fathom.confidenceThreshold", "0.5");
+// Defineis the threshold to mark fields that are "high-confidence", see `isValidSection` for details
 pref("extensions.formautofill.creditCards.heuristics.fathom.highConfidenceThreshold", "0.95");
-// This is Only for testing!  Set the confidence value (> 0 && <= 1) after a field is identified by fathom
+// This is Only for testing! Set the confidence value (> 0 && <= 1) after a field is identified by fathom
 pref("extensions.formautofill.creditCards.heuristics.fathom.testConfidence", "0");
-
-// When enabled, a credit card form with cc-name and cc-exp fields is considered as a valid credit
-// card form, regardless of the existence of a cc-number field
-#ifdef NIGHTLY_BUILD
-pref("extensions.formautofill.creditCards.heuristics.nameExpirySection.enabled", true);
-#else
-pref("extensions.formautofill.creditCards.heuristics.nameExpirySection.enabled", false);
-#endif
 
 // Pref for shield/heartbeat to recognize users who have used Credit Card
 // Autofill. The valid values can be:

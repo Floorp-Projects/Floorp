@@ -5,37 +5,103 @@
 
 const TESTCASES = [
   {
-    description: "Form containing credit card autocomplete attributes.",
+    description: "@autocomplete - all fields in the same form",
     document: `<form>
                 <input id="cc-number" autocomplete="cc-number">
                 <input id="cc-name" autocomplete="cc-name">
-                <input id="cc-exp-month" autocomplete="cc-exp-month">
-                <input id="cc-exp-year" autocomplete="cc-exp-year">
+                <input id="cc-exp" autocomplete="cc-exp">
                </form>`,
-    idsToShowPopup: ["cc-number", "cc-name", "cc-exp-month", "cc-exp-year"],
+    idsToShowPopup: ["cc-number", "cc-name", "cc-exp"],
   },
   {
-    description: "Form containing credit card without autocomplete attributes.",
+    description: "without @autocomplete - all fields in the same form",
     document: `<form>
-                <input id="cc-number" name="credit card number">
-                <input id="cc-name" name="credit card holder name">
-                <input id="cc-exp-month" name="expiration month">
-                <input id="cc-exp-year" name="expiration year">
+                <input id="cc-number" placeholder="credit card number">
+                <input id="cc-name" placeholder="credit card holder name">
+                <input id="cc-exp" placeholder="expiration date">
                </form>`,
-    idsToShowPopup: ["cc-number", "cc-name", "cc-exp-month", "cc-exp-year"],
+    idsToShowPopup: ["cc-number", "cc-name", "cc-exp"],
   },
   {
-    description: "one input field cc-number with autocomplete",
-    document: `<form>
-                <input id="cc-number" autocomplete="cc-number">
-               </form>`,
-    idsToShowPopup: ["cc-number"],
+    description: "@autocomplete - each field in its own form",
+    document: `<form><input id="cc-number" autocomplete="cc-number"></form>
+               <form><input id="cc-name" autocomplete="cc-name"></form>
+               <form><input id="cc-exp" autocomplete="cc-exp"></form>`,
+    idsToShowPopup: ["cc-number", "cc-name", "cc-exp"],
   },
   {
     description:
-      "one input field cc-number without autocomplete (high confidence)",
+      "without @autocomplete - each field in its own form (high-confidence cc-number & cc-name)",
+    document: `<form><input id="cc-number" placeholder="credit card number"></form>
+               <form><input id="cc-name" placeholder="credit card holder name"></form>
+               <form><input id="cc-exp" placeholder="expiration date"></form>`,
+    prefs: [
+      [
+        "extensions.formautofill.creditCards.heuristics.fathom.highConfidenceThreshold",
+        "0.9",
+      ],
+      [
+        "extensions.formautofill.creditCards.heuristics.fathom.testConfidence",
+        "0.95",
+      ],
+    ],
+    idsToShowPopup: ["cc-number", "cc-name"],
+    idsWithNoPopup: ["cc-exp"],
+  },
+  {
+    description:
+      "without @autocomplete - each field in its own form (normal-confidence cc-number & cc-name)",
+    document: `<form><input id="cc-number" placeholder="credit card number"></form>
+               <form><input id="cc-name" placeholder="credit card holder name"></form>
+               <form><input id="cc-exp" placeholder="expiration date"></form>`,
+    prefs: [
+      [
+        "extensions.formautofill.creditCards.heuristics.fathom.highConfidenceThreshold",
+        "0.9",
+      ],
+      [
+        "extensions.formautofill.creditCards.heuristics.fathom.testConfidence",
+        "0.8",
+      ],
+    ],
+    idsWithNoPopup: ["cc-number", "cc-name", "cc-exp"],
+  },
+  {
+    description:
+      "with @autocomplete - cc-number/cc-name and another <input> in a form",
     document: `<form>
-                <input id="cc-number" name="credit card number">
+                 <input id="cc-number" autocomplete="cc-number">
+                 <input id="password" type="password">
+               </form>
+               <form>
+                 <input id="cc-name" autocomplete="cc-name">
+                 <input id="password" type="password">
+               </form>`,
+    idsToShowPopup: ["cc-number", "cc-name"],
+  },
+  {
+    description:
+      "without @autocomplete - high-confidence cc-number/cc-name and another <input> in a form",
+    document: `<form>
+                 <input id="cc-number" placeholder="credit card number">
+                 <input id="password" type="password">
+               </form>
+               <form>
+                 <input id="cc-name" placeholder="credit card holder name">
+                 <input id="password" type="password">
+               </form>`,
+    idsWithNoPopup: ["cc-number", "cc-name"],
+  },
+  {
+    description:
+      "without @autocomplete - high-confidence cc-number/cc-name and another hidden <input> in a form",
+    document: `<form>
+                 <input id="cc-number" placeholder="credit card number">
+                 <input id="token" type="hidden">
+               </form>
+               <form>
+                 <input id="cc-name" placeholder="credit card holder name">
+                 <input id="token" type="hidden">
                </form>`,
     prefs: [
       [
@@ -47,52 +113,7 @@ const TESTCASES = [
         "0.95",
       ],
     ],
-    idsToShowPopup: ["cc-number"],
-  },
-  {
-    description:
-      "one input field cc-number without autocomplete (low confidence)",
-    document: `<form>
-                <input id="cc-number" name="credit card number">
-               </form>`,
-    prefs: [
-      [
-        "extensions.formautofill.creditCards.heuristics.fathom.highConfidenceThreshold",
-        "0.9",
-      ],
-      [
-        "extensions.formautofill.creditCards.heuristics.fathom.testConfidence",
-        "0.8",
-      ],
-    ],
-    idsWithNoPopup: ["cc-number"],
-  },
-  {
-    description: "two input fields cc-number with autocomplete",
-    document: `<form>
-                <input id="cc-number" name="credit card number" autocomplete="cc-number">
-                <input id="password" type="password">
-               </form>`,
-    idsToShowPopup: ["cc-number"],
-  },
-  {
-    description: "two input fields cc-number without autocomplete",
-    document: `<form>
-                <input id="cc-number" name="credit card number">
-                <input id="password" type="password">
-               </form>`,
-    idsWithNoPopup: ["cc-number"],
-  },
-  {
-    description: "two input fields cc-number and a hidden input field",
-    document: `<form>
-                <input id="cc-number" name="credit card number">
-                <input id="token" type="hidden">
-               </form>`,
-    prefs: [
-      ["extensions.formautofill.creditCards.heuristics.testConfidence", "0.95"],
-    ],
-    idsToShowPopup: ["cc-number"],
+    idsToShowPopup: ["cc-number", "cc-name"],
   },
 ];
 
@@ -127,14 +148,13 @@ add_task(async function test_heuristics() {
         await runAndWaitForAutocompletePopupOpen(browser, async () => {
           await focusAndWaitForFieldsIdentified(browser, `#${id}`);
         });
-        ok(true, `popup is opened on <input id=${id}`);
+        ok(true, `popup is opened on <input id=${id}>`);
       }
 
       ids = TEST.idsWithNoPopup ?? [];
       for (const id of ids) {
         await focusAndWaitForFieldsIdentified(browser, `#${id}`);
         await ensureNoAutocompletePopup(browser);
-        ok(true, `popup is not opened on <input id=${id}`);
       }
     });
 
