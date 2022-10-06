@@ -197,6 +197,7 @@ void UtilityProcessHost::InitAfterConnect(bool aSucceeded) {
   UniquePtr<SandboxBroker::Policy> policy;
   switch (mSandbox) {
     case SandboxingKind::GENERIC_UTILITY:
+    case SandboxingKind::UTILITY_AUDIO_DECODING_GENERIC:
       policy = SandboxBrokerPolicyFactory::GetUtilityProcessPolicy(
           GetActor()->OtherPid());
       break;
@@ -237,7 +238,7 @@ void UtilityProcessHost::Shutdown() {
     mShutdownRequested = true;
 
     // The channel might already be closed if we got here unexpectedly.
-    if (mUtilityProcessParent->CanSend()) {
+    if (!mChannelClosed) {
       mUtilityProcessParent->Close();
     }
 
@@ -262,6 +263,7 @@ void UtilityProcessHost::Shutdown() {
 void UtilityProcessHost::OnChannelClosed() {
   MOZ_ASSERT(NS_IsMainThread());
 
+  mChannelClosed = true;
   RejectPromise();
 
   if (!mShutdownRequested && mListener) {
