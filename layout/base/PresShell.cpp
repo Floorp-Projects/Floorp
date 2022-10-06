@@ -38,6 +38,7 @@
 #include "mozilla/StaticPrefs_font.h"
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TouchEvents.h"
@@ -2430,9 +2431,7 @@ PresShell::ScrollLine(bool aForward) {
       GetScrollableFrameToScroll(VerticalScrollDirection);
   ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Lines);
   if (scrollFrame) {
-    int32_t lineCount =
-        Preferences::GetInt("toolkit.scrollbox.verticalScrollDistance",
-                            NS_DEFAULT_VERTICAL_SCROLL_DISTANCE);
+    int32_t lineCount = StaticPrefs::toolkit_scrollbox_verticalScrollDistance();
     scrollFrame->ScrollBy(
         nsIntPoint(0, aForward ? lineCount : -lineCount), ScrollUnit::LINES,
         scrollMode, nullptr, mozilla::ScrollOrigin::NotSpecified,
@@ -2447,9 +2446,7 @@ PresShell::ScrollCharacter(bool aRight) {
       GetScrollableFrameToScroll(HorizontalScrollDirection);
   ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Lines);
   if (scrollFrame) {
-    int32_t h =
-        Preferences::GetInt("toolkit.scrollbox.horizontalScrollDistance",
-                            NS_DEFAULT_HORIZONTAL_SCROLL_DISTANCE);
+    int32_t h = StaticPrefs::toolkit_scrollbox_horizontalScrollDistance();
     scrollFrame->ScrollBy(
         nsIntPoint(aRight ? h : -h, 0), ScrollUnit::LINES, scrollMode, nullptr,
         mozilla::ScrollOrigin::NotSpecified, nsIScrollableFrame::NOT_MOMENTUM,

@@ -51,6 +51,7 @@
 #include "mozilla/ScrollbarPreferences.h"
 #include "mozilla/ScrollingMetrics.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SVGOuterSVGFrame.h"
 #include "mozilla/ViewportUtils.h"
@@ -1756,8 +1757,7 @@ void ScrollFrameHelper::ScrollByLine(nsScrollbarFrame* aScrollbar,
   nsIntPoint delta;
   if (isHorizontal) {
     const double kScrollMultiplier =
-        Preferences::GetInt("toolkit.scrollbox.horizontalScrollDistance",
-                            NS_DEFAULT_HORIZONTAL_SCROLL_DISTANCE);
+        StaticPrefs::toolkit_scrollbox_horizontalScrollDistance();
     delta.x = aDirection * kScrollMultiplier;
     if (GetLineScrollAmount().width * delta.x > GetPageScrollAmount().width) {
       // The scroll frame is so small that the delta would be more
@@ -1768,8 +1768,7 @@ void ScrollFrameHelper::ScrollByLine(nsScrollbarFrame* aScrollbar,
     }
   } else {
     const double kScrollMultiplier =
-        Preferences::GetInt("toolkit.scrollbox.verticalScrollDistance",
-                            NS_DEFAULT_VERTICAL_SCROLL_DISTANCE);
+        StaticPrefs::toolkit_scrollbox_verticalScrollDistance();
     delta.y = aDirection * kScrollMultiplier;
     if (GetLineScrollAmount().height * delta.y > GetPageScrollAmount().height) {
       // The scroll frame is so small that the delta would be more
@@ -6851,8 +6850,7 @@ bool ScrollFrameHelper::ReflowFinished() {
     AutoWeakFrame weakFrame(mOuter);
     if (vScroll) {
       const double kScrollMultiplier =
-          Preferences::GetInt("toolkit.scrollbox.verticalScrollDistance",
-                              NS_DEFAULT_VERTICAL_SCROLL_DISTANCE);
+          StaticPrefs::toolkit_scrollbox_verticalScrollDistance();
       nscoord increment = lineScrollAmount.height * kScrollMultiplier;
       // We normally use (visualViewportSize.height - increment) for height of
       // page scrolling.  However, it is too small when increment is very large.
@@ -6870,8 +6868,7 @@ bool ScrollFrameHelper::ReflowFinished() {
     }
     if (hScroll) {
       const double kScrollMultiplier =
-          Preferences::GetInt("toolkit.scrollbox.horizontalScrollDistance",
-                              NS_DEFAULT_HORIZONTAL_SCROLL_DISTANCE);
+          StaticPrefs::toolkit_scrollbox_horizontalScrollDistance();
       nscoord increment = lineScrollAmount.width * kScrollMultiplier;
       FinishReflowForScrollbar(
           hScroll, scrollRange.x, scrollRange.XMost(), scrollPos.x,
