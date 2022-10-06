@@ -5513,12 +5513,23 @@ void ScrollFrameHelper::PostScrollEndEvent() {
 void ScrollFrameHelper::FireScrollEndEvent() {
   MOZ_ASSERT(mOuter->GetContent());
   MOZ_ASSERT(mScrollEndEvent);
+
+  RefPtr<nsPresContext> presContext = mOuter->PresContext();
   mScrollEndEvent->Revoke();
   mScrollEndEvent = nullptr;
 
-  nsContentUtils::DispatchEventOnlyToChrome(
-      mOuter->GetContent()->OwnerDoc(), mOuter->GetContent(), u"scrollend"_ns,
-      CanBubble::eYes, Cancelable::eNo);
+  nsEventStatus status = nsEventStatus_eIgnore;
+  WidgetGUIEvent event(true, eScrollend, nullptr);
+  event.mFlags.mBubbles = mIsRoot;
+  event.mFlags.mCancelable = false;
+  // If apz.scrollend-event.content.enabled is not set, the event should
+  // only be dispatched to the browser chrome.
+  event.mFlags.mOnlyChromeDispatch =
+      !StaticPrefs::apz_scrollend_event_content_enabled();
+  RefPtr<nsINode> target = mIsRoot
+                               ? static_cast<nsINode*>(presContext->Document())
+                               : mOuter->GetContent();
+  EventDispatcher::Dispatch(target, presContext, &event, nullptr, &status);
 }
 
 void ScrollFrameHelper::ReloadChildFrames() {
@@ -6019,7 +6030,7 @@ ScrollFrameHelper::ScrollEndEvent::ScrollEndEvent(ScrollFrameHelper* aHelper)
   mHelper->mOuter->PresContext()->RefreshDriver()->PostScrollEvent(this);
 }
 
-NS_IMETHODIMP
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
 ScrollFrameHelper::ScrollEndEvent::Run() {
   if (mHelper) {
     mHelper->FireScrollEndEvent();

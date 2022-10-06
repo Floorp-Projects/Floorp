@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    html, body { margin: 0; }
+
+    body {
+      height: 10000px;
+    }
+
+    #container {
+      height: 500px;
+      width: 500px;
+      overflow: scroll;
+    }
+
+    .spacer {
+      height: 5000px;
+      width: 100%;
+    }
+  </style>
+  <script>
+const searchParams = new URLSearchParams(location.search);
+
+async function test() {
+  let scrollendCount = 0;
+
+  // When scrollend is fired at the document, the document and
+  // window event listeners should be fired.
+  let expectedScrollendCount = 2;
+  let scrollTarget = document.scrollingElement;
+
+  // The scrollend event should not bubble if the target is not Document.
+  function onElementScrollend(e) {
+    scrollendCount += 1;
+    is(e.bubbles, false, "Event bubbles should be false for Element");
+  }
+
+  // The scrollend event should bubble if the target is Document.
+  function onDocumentScrollend(e) {
+    scrollendCount += 1;
+    is(e.bubbles, true, "Event bubbles should be true for Document");
+  }
+
+  function failOnScrollend(e) {
+    ok(false, e.target + ": should not receive a scrollend event");
+  }
+
+  switch (searchParams.get("scroll-target")) {
+    case "document":
+      // The window and the document event listeners should be triggered.
+      document.addEventListener("scrollend", onDocumentScrollend);
+      window.addEventListener("scrollend", onDocumentScrollend);
+
+      // Fail if the element receives a scrollend event.
+      container.addEventListener("scrollend", failOnScrollend);
+      break;
+    case "element":
+      scrollTarget = document.getElementById("container");
+      expectedScrollendCount = 1;
+
+      // Only the the element event listener should be triggered.
+      container.addEventListener("scrollend", onElementScrollend);
+
+      // Fail if the document or window receive a scrollend event.
+      document.addEventListener("scrollend", failOnScrollend);
+      window.addEventListener("scrollend", failOnScrollend);
+      break;
+    default:
+      ok(false, "Unsupported scroll-target: " + searchParams.get("scroll-target"));
+      break;
+  }
+
+  // Call the scrollTo function on the target to trigger the scrollend.
+  scrollTarget.scrollBy({ top: 500, left: 0 });
+
+  // Ensure the refresh driver has ticked.
+  await promiseFrame();
+
+  // A scrollend event should be posted after the refresh driver has ticked.
+  is(scrollendCount, expectedScrollendCount,
+     "Trigger the expected number of scrollend events");
+}
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+  </script>
+</head>
+<body>
+  <div id="container">
+    <div class="spacer">
+    </div>
+  </div>
+</body>
+</html>

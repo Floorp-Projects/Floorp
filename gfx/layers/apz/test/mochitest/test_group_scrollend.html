@@ -8,13 +8,28 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
-var prefs = [
+var basePrefs = [
   ["general.smoothScroll", false],
   ["apz.test.mac.synth_wheel_input", true],
 ];
 
+var scrollendDisabledPrefs = [
+  ...basePrefs,
+  ["apz.scrollend-event.content.enabled", false],
+];
+
+var prefs = [
+  ...basePrefs,
+  ["apz.scrollend-event.content.enabled", true],
+];
+
 var subtests = [
-  {"file": "helper_chrome_scrollend.html", "prefs": prefs},
+  {"file": "helper_basic_scrollend.html?chrome-only=true",
+        "prefs": scrollendDisabledPrefs},
+  {"file": "helper_basic_scrollend.html?chrome-only=true", "prefs": prefs},
+  {"file": "helper_basic_scrollend.html?chrome-only=false", "prefs": prefs},
+  {"file": "helper_scrollend_bubbles.html?scroll-target=document", "prefs": prefs},
+  {"file": "helper_scrollend_bubbles.html?scroll-target=element", "prefs": prefs},
 ];
 
 if (isApzEnabled()) {

@@ -14,6 +14,8 @@
     }
   </style>
   <script>
+const searchParams = new URLSearchParams(location.search);
+
 async function test() {
   var scrollendCount = 0;
 
@@ -21,8 +23,19 @@ async function test() {
     scrollendCount += 1;
   }
 
-  // Add chrome-only event listener.
-  SpecialPowers.addChromeEventListener("scrollend", onScrollend, true);
+  switch (searchParams.get("chrome-only")) {
+    case "true":
+      // Add chrome-only event listener.
+      SpecialPowers.addChromeEventListener("scrollend", onScrollend, true);
+      break;
+    case "false":
+      // Add document event listener.
+      document.addEventListener("scrollend", onScrollend);
+      break;
+    default:
+      ok(false, "Unsupported chrome-only value: " + searchParams.get("chrome-only"));
+      break;
+  }
 
   is(scrollendCount, 0, "A scrollend event should not be triggered yet");
 
@@ -30,7 +43,7 @@ async function test() {
 
   let wheelScrollTransformEndPromise = promiseTransformEnd();
 
-  await promiseMoveMouseAndScrollWheelOver(document.documentElement, 100, 100);
+  await promiseMoveMouseAndScrollWheelOver(document.scrollingElement, 100, 100);
 
   await wheelScrollTransformEndPromise;
 
