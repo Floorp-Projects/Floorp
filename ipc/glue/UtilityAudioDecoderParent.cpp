@@ -46,8 +46,10 @@ UtilityAudioDecoderParent::UtilityAudioDecoderParent() {
     return;
   }
 #endif
-  nsDebugImpl::SetMultiprocessMode("Utility AudioDecoder");
-  profiler_set_process_name(nsCString("Utility AudioDecoder"));
+  if (GetCurrentSandboxingKind() != SandboxingKind::GENERIC_UTILITY) {
+    nsDebugImpl::SetMultiprocessMode("Utility AudioDecoder");
+    profiler_set_process_name(nsCString("Utility AudioDecoder"));
+  }
 }
 
 /* static */
