@@ -17,10 +17,11 @@ class NeqoHttp3Conn final {
                        const NetAddr& aLocalAddr, const NetAddr& aRemoteAddr,
                        uint32_t aMaxTableSize, uint16_t aMaxBlockedStreams,
                        uint64_t aMaxData, uint64_t aMaxStreamData,
-                       const nsACString& aQlogDir, NeqoHttp3Conn** aConn) {
+                       bool aVersionNegotiation, const nsACString& aQlogDir,
+                       NeqoHttp3Conn** aConn) {
     return neqo_http3conn_new(&aOrigin, &aAlpn, &aLocalAddr, &aRemoteAddr,
                               aMaxTableSize, aMaxBlockedStreams, aMaxData,
-                              aMaxStreamData, &aQlogDir,
+                              aMaxStreamData, aVersionNegotiation, &aQlogDir,
                               (const mozilla::net::NeqoHttp3Conn**)aConn);
   }
 
