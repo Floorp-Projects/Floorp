@@ -79,7 +79,10 @@ void CachePromiseHandler::RejectedCallback(JSContext* aCx,
 
   // This will delete the cache object and will call LoadingFinished() with an
   // error for each ongoing operation.
-  mLoadContext->GetCacheCreator()->DeleteCache(NS_ERROR_FAILURE);
+  auto cacheCreator = mLoadContext->GetCacheCreator();
+  if (cacheCreator) {
+    cacheCreator->DeleteCache(NS_ERROR_FAILURE);
+  }
 }
 
 CacheCreator::CacheCreator(WorkerPrivate* aWorkerPrivate)
