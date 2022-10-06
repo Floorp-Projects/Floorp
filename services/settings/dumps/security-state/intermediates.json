@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1664891326687,
+      "derHash": "2FmCjk6MNezDjkFeHQz/1KnfwRYgVAHRKY/BM0fcAYc=",
+      "subject": "CN=SSL Secure Site CA,O=SSL Limited,C=GB",
+      "subjectDN": "MEAxCzAJBgNVBAYTAkdCMRQwEgYDVQQKDAtTU0wgTGltaXRlZDEbMBkGA1UEAwwSU1NMIFNlY3VyZSBTaXRlIENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1cbf517d05902fa781d9ca1babe1269e24dafbbff2ab524bb102a9bd41604a70",
+        "size": 1678,
+        "filename": "FMV2Nt-BwJTHkVoED60m_qJ_6h5_PcVDCANGYPuITIw=.pem",
+        "location": "security-state-staging/intermediates/7033adb1-aa08-477e-939e-ac09e5a8cc12.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "FMV2Nt+BwJTHkVoED60m/qJ/6h5/PcVDCANGYPuITIw=",
+      "crlite_enrolled": false,
+      "id": "df75a865-7d14-4a07-bd27-76ff9a5d3634",
+      "last_modified": 1664891823141
+    },
+    {
       "schema": 1664671760571,
       "derHash": "Uzjr7I+yrGCZYSbT52qjT9DzMYrHjrt6yPbxNh9ISzM=",
       "subject": "CN=Amazon RSA 2048 M01,O=Amazon,C=US",
@@ -26569,5 +26587,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1664672224512
+  "timestamp": 1664891823141
 }
