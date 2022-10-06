@@ -151,11 +151,6 @@ void FetchStreamReader::CloseAndRelease(JSContext* aCx, nsresult aStatus) {
           MOZ_KnownLive(mReader)->Cancel(aCx, errorValue, ignoredError);
       NS_WARNING_ASSERTION(!ignoredError.Failed(),
                            "Failed to cancel stream during close and release");
-      if (ignoredResultPromise) {
-        bool setSettled = ignoredResultPromise->SetSettledPromiseIsHandled();
-        NS_WARNING_ASSERTION(setSettled, "Failed to settle cancel promise");
-        (void)setSettled;
-      }
     }
 
     // We don't want to propagate exceptions during the cleanup.
