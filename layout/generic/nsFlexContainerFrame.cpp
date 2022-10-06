@@ -1179,8 +1179,7 @@ static void BuildStrutInfoFromCollapsedItems(const nsTArray<FlexLine>& aLines,
   uint32_t itemIdxInContainer = 0;
   for (const FlexLine& line : aLines) {
     for (const FlexItem& item : line.Items()) {
-      if (StyleVisibility::Collapse ==
-          item.Frame()->StyleVisibility()->mVisible) {
+      if (item.Frame()->StyleVisibility()->IsCollapse()) {
         // Note the cross size of the line as the item's strut size.
         aStruts.AppendElement(
             StrutInfo(itemIdxInContainer, line.LineCrossSize()));
@@ -2212,7 +2211,7 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
       mIsStrut(true),  // (this is the constructor for making struts, after all)
       mAlignSelf({StyleAlignFlags::FLEX_START}) {
   MOZ_ASSERT(mFrame, "expecting a non-null child frame");
-  MOZ_ASSERT(StyleVisibility::Collapse == mFrame->StyleVisibility()->mVisible,
+  MOZ_ASSERT(mFrame->StyleVisibility()->IsCollapse(),
              "Should only make struts for children with 'visibility:collapse'");
   MOZ_ASSERT(!mFrame->IsPlaceholderFrame(),
              "placeholder frames should not be treated as flex items");
@@ -4065,8 +4064,7 @@ void nsFlexContainerFrame::GenerateFlexLines(
       prevItemRequestedBreakAfter = false;
     }
 
-    const bool collapsed =
-        childFrame->StyleVisibility()->mVisible == StyleVisibility::Collapse;
+    const bool collapsed = childFrame->StyleVisibility()->IsCollapse();
     aHasCollapsedItems = aHasCollapsedItems || collapsed;
 
     if (useMozBoxCollapseBehavior && collapsed) {
@@ -5643,31 +5641,33 @@ nscoord nsFlexContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
       continue;
     }
 
-    // If we're using legacy "visibility:collapse" behavior, then we don't
-    // care about the sizes of any collapsed children.
-    if (!useMozBoxCollapseBehavior ||
-        (StyleVisibility::Collapse !=
-         childFrame->StyleVisibility()->mVisible)) {
-      nscoord childISize = nsLayoutUtils::IntrinsicForContainer(
-          aRenderingContext, childFrame, aType);
-      // * For a row-oriented single-line flex container, the intrinsic
-      // {min/pref}-isize is the sum of its items' {min/pref}-isizes and
-      // (n-1) column gaps.
-      // * For a column-oriented flex container, the intrinsic min isize
-      // is the max of its items' min isizes.
-      // * For a row-oriented multi-line flex container, the intrinsic
-      // pref isize is former (sum), and its min isize is the latter (max).
-      bool isSingleLine = (StyleFlexWrap::Nowrap == stylePos->mFlexWrap);
-      if (axisTracker.IsRowOriented() &&
-          (isSingleLine || aType == IntrinsicISizeType::PrefISize)) {
-        containerISize += childISize;
-        if (!onFirstChild) {
-          containerISize += mainGapSize;
-        }
-        onFirstChild = false;
-      } else {  // (col-oriented, or MinISize for multi-line row flex container)
-        containerISize = std::max(containerISize, childISize);
+    if (useMozBoxCollapseBehavior &&
+        childFrame->StyleVisibility()->IsCollapse()) {
+      // If we're using legacy "visibility:collapse" behavior, then we don't
+      // care about the sizes of any collapsed children.
+      continue;
+    }
+
+    nscoord childISize = nsLayoutUtils::IntrinsicForContainer(
+        aRenderingContext, childFrame, aType);
+
+    // * For a row-oriented single-line flex container, the intrinsic
+    // {min/pref}-isize is the sum of its items' {min/pref}-isizes and
+    // (n-1) column gaps.
+    // * For a column-oriented flex container, the intrinsic min isize
+    // is the max of its items' min isizes.
+    // * For a row-oriented multi-line flex container, the intrinsic
+    // pref isize is former (sum), and its min isize is the latter (max).
+    bool isSingleLine = (StyleFlexWrap::Nowrap == stylePos->mFlexWrap);
+    if (axisTracker.IsRowOriented() &&
+        (isSingleLine || aType == IntrinsicISizeType::PrefISize)) {
+      containerISize += childISize;
+      if (!onFirstChild) {
+        containerISize += mainGapSize;
       }
+      onFirstChild = false;
+    } else {  // (col-oriented, or MinISize for multi-line row flex container)
+      containerISize = std::max(containerISize, childISize);
     }
   }
 
