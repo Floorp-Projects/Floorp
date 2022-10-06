@@ -780,12 +780,12 @@ class PythonVirtualenv:
         relative_path = path.relative_to(data_path)
 
         # Path to virtualenv's "site-packages" directory for provided sysconfig path
-        return os.path.normpath(Path(self.prefix) / relative_path)
+        return os.path.normpath(os.path.normcase(Path(self.prefix) / relative_path))
 
     def site_packages_dirs(self):
         dirs = []
         if sys.platform.startswith("win"):
-            dirs.append(os.path.normpath(self.prefix))
+            dirs.append(os.path.normpath(os.path.normcase(self.prefix)))
         purelib = self.resolve_sysconfig_packages_path("purelib")
         platlib = self.resolve_sysconfig_packages_path("platlib")
 
