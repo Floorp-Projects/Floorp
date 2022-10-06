@@ -574,7 +574,7 @@ void PDMFactory::CreateUtilityPDMs() {
     CreateAndStartupPDM<AppleDecoderModule>();
   }
 #endif
-  if (aKind == ipc::SandboxingKind::UTILITY_AUDIO_DECODING_GENERIC) {
+  if (aKind == ipc::SandboxingKind::GENERIC_UTILITY) {
 #ifdef MOZ_FFVPX
     if (StaticPrefs::media_ffvpx_enabled() &&
         StaticPrefs::media_utility_ffvpx_enabled()) {
