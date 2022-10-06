@@ -16,4 +16,5 @@ DIRS += [
     "themes",
     "components",
     "locales",
+    "app/distribution"
 ]
