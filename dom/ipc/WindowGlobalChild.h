@@ -165,9 +165,6 @@ class WindowGlobalChild final : public WindowGlobalActor,
   mozilla::ipc::IPCResult RecvDispatchSecurityPolicyViolation(
       const nsString& aViolationEventJSON);
 
-  mozilla::ipc::IPCResult RecvGetSecurityInfo(
-      GetSecurityInfoResolver&& aResolve);
-
   mozilla::ipc::IPCResult RecvSaveStorageAccessPermissionGranted();
 
   mozilla::ipc::IPCResult RecvAddBlockedFrameNodeByClassifier(

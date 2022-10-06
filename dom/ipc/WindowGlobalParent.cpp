@@ -973,35 +973,6 @@ void WindowGlobalParent::DrawSnapshotInternal(gfx::CrossProcessPaint* aPaint,
       });
 }
 
-already_AddRefed<Promise> WindowGlobalParent::GetSecurityInfo(
-    ErrorResult& aRv) {
-  RefPtr<BrowserParent> browserParent = GetBrowserParent();
-  if (NS_WARN_IF(!browserParent)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsIGlobalObject* global = GetParentObject();
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  SendGetSecurityInfo(
-      [promise](const nsCOMPtr<nsITransportSecurityInfo>& aSecurityInfo) {
-        if (aSecurityInfo) {
-          promise->MaybeResolve(aSecurityInfo);
-        } else {
-          promise->MaybeResolveWithUndefined();
-        }
-      },
-      [promise](ResponseRejectReason&& aReason) {
-        promise->MaybeReject(NS_ERROR_FAILURE);
-      });
-
-  return promise.forget();
-}
-
 /**
  * Accumulated page use counter data for a given top-level content document.
  */

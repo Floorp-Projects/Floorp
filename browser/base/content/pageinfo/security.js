@@ -80,7 +80,7 @@ var security = {
       return retval;
     }
 
-    let secInfo = await window.opener.gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getSecurityInfo();
+    let secInfo = ui.secInfo;
     if (!secInfo) {
       return retval;
     }
