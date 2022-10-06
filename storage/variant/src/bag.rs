@@ -13,7 +13,7 @@ use xpcom::{
 use crate::{NsIVariantExt, VariantType};
 
 extern "C" {
-    fn NS_NewHashPropertyBag(bag: *mut *const nsIWritablePropertyBag) -> libc::c_void;
+    fn NS_NewHashPropertyBag(bag: *mut *const nsIWritablePropertyBag);
 }
 
 /// A hash property bag backed by storage variant values.
