@@ -98,6 +98,16 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
     }
   }
 
+  Span<const UtilityActorName> GetActors(
+      const RefPtr<UtilityProcessParent>& aParent) {
+    for (auto& p : mProcesses) {
+      if (p && p->mProcessParent && p->mProcessParent == aParent) {
+        return p->mActors;
+      }
+    }
+    return {};
+  }
+
   Span<const UtilityActorName> GetActors(GeckoChildProcessHost* aHost) {
     for (auto& p : mProcesses) {
       if (p && p->mProcess == aHost) {
