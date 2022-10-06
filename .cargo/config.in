@@ -40,7 +40,7 @@ rev = "f32b3ef708c0bfb2c414c08971d638527353d376"
 [source."https://github.com/mozilla/cubeb-coreaudio-rs"]
 git = "https://github.com/mozilla/cubeb-coreaudio-rs"
 replace-with = "vendored-sources"
-rev = "ab933e7cbd569f79b37b540412a7990a5352dd66"
+rev = "3ba2ca6ef5ae7724ae811551765792c76701f183"
 
 [source."https://github.com/mozilla/audioipc"]
 git = "https://github.com/mozilla/audioipc"
