@@ -130,6 +130,7 @@ class UtilityProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   UniquePtr<ipc::SharedPreferenceSerializer> mPrefSerializer{};
 
   bool mShutdownRequested = false;
+  bool mChannelClosed = false;
 
   void RejectPromise();
   void ResolvePromise();
