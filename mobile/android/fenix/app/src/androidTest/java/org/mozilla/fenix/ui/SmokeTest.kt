@@ -403,6 +403,7 @@ class SmokeTest {
         }
     }
 
+    @Ignore("Permanent failure: https://github.com/mozilla-mobile/fenix/issues/27312")
     @Test
     fun customTrackingProtectionSettingsTest() {
         val genericWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
