@@ -1001,24 +1001,6 @@ void EventStateManager::NotifyTargetUserActivation(WidgetEvent* aEvent,
     return;
   }
 
-  // Do not treat the click on scrollbar as a user interaction with the web
-  // content.
-  if (StaticPrefs::dom_user_activation_ignore_scrollbars() &&
-      (aEvent->mMessage == eMouseDown || aEvent->mMessage == ePointerDown) &&
-      aTargetContent->IsInNativeAnonymousSubtree()) {
-    nsIContent* current = aTargetContent;
-    do {
-      nsIContent* root = current->GetClosestNativeAnonymousSubtreeRoot();
-      if (!root) {
-        break;
-      }
-      if (root->IsXULElement(nsGkAtoms::scrollbar)) {
-        return;
-      }
-      current = root->GetParent();
-    } while (current);
-  }
-
   MOZ_ASSERT(aEvent->mMessage == eKeyDown || aEvent->mMessage == eMouseDown ||
              aEvent->mMessage == ePointerDown || aEvent->mMessage == eTouchEnd);
   doc->NotifyUserGestureActivation();
