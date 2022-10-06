@@ -713,3 +713,45 @@ add_task(async function test_updateRecipes_appId() {
 
   Services.prefs.clearUserPref("nimbus.appId");
 });
+
+add_task(async function test_updateRecipes_withPropNotInManifest() {
+  // Need to randomize the slug so subsequent test runs don't skip enrollment
+  // due to a conflicting slug
+  const PASS_FILTER_RECIPE = ExperimentFakes.recipe("foo" + Math.random(), {
+    arguments: {},
+    branches: [
+      {
+        features: [
+          {
+            enabled: true,
+            featureId: "testFeature",
+            value: {
+              enabled: true,
+              testInt: 5,
+              testSetString: "foo",
+              additionalPropNotInManifest: 7,
+            },
+          },
+        ],
+        ratio: 1,
+        slug: "treatment-2",
+      },
+    ],
+    channel: "nightly",
+    schemaVersion: "1.9.0",
+    targeting: "true",
+  });
+
+  const loader = ExperimentFakes.rsLoader();
+  sinon.stub(loader.remoteSettingsClient, "get").resolves([PASS_FILTER_RECIPE]);
+  sinon.stub(loader.manager, "onRecipe").resolves();
+  sinon.stub(loader.manager, "onFinalize");
+
+  await loader.init();
+
+  ok(
+    loader.manager.onRecipe.calledWith(PASS_FILTER_RECIPE, "rs-loader"),
+    "should call .onRecipe with this recipe"
+  );
+  equal(loader.manager.onRecipe.callCount, 1, "should only call onRecipe once");
+});
