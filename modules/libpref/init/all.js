@@ -4272,23 +4272,19 @@ pref("extensions.formautofill.creditCards.supportedCountries", "US,CA,GB,FR,DE")
 // Temporary preference to control displaying the UI elements for
 // credit card autofill used for the duration of the A/B test.
 pref("extensions.formautofill.creditCards.hideui", false);
+
 // Algorithm used by formautofill while determine whether a field is a credit card field
 // 0:Heurstics based on regular expression string matching
 // 1:Fathom in js implementation
 // 2:Fathom in c++ implementation
 pref("extensions.formautofill.creditCards.heuristics.mode", 2);
 pref("extensions.formautofill.creditCards.heuristics.fathom.types", "cc-number");
+// 'fathom.confidenceThreshold' defines the threshold we use to identify whether a field is a cc field
+// 'fathom.highConfidenceThreshold' is used to mark fields that are "high-confidence", see `isValidSection` for details
 pref("extensions.formautofill.creditCards.heuristics.fathom.confidenceThreshold", "0.5");
-// Confidence threshold hold to determin whether a credit card form is valid when
-// the form only contains a credit card number field.
-#ifdef EARLY_BETA_OR_EARLIER
-// Set the credit card number only confidence threshold to the same value as the default
-// confidence threshold. This means as long as a form contains a cc-number fieild, we consider it
-// as a valid credit card form.
-pref("extensions.formautofill.creditCards.heuristics.numberOnly.confidenceThreshold", "0.5");
-#else
-pref("extensions.formautofill.creditCards.heuristics.numberOnly.confidenceThreshold", "0.95");
-#endif
+pref("extensions.formautofill.creditCards.heuristics.fathom.highConfidenceThreshold", "0.95");
+// This is Only for testing!  Set the confidence value (> 0 && <= 1) after a field is identified by fathom
+pref("extensions.formautofill.creditCards.heuristics.fathom.testConfidence", "0");
 
 // When enabled, a credit card form with cc-name and cc-exp fields is considered as a valid credit
 // card form, regardless of the existence of a cc-number field

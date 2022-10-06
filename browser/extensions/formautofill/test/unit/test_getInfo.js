@@ -340,13 +340,13 @@ const TESTCASES = [
 
 add_setup(async function() {
   Services.prefs.setStringPref(
-    "extensions.formautofill.creditCards.heuristics.testConfidence",
+    "extensions.formautofill.creditCards.heuristics.fathom.testConfidence",
     "1"
   );
 
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref(
-      "extensions.formautofill.creditCards.heuristics.testConfidence"
+      "extensions.formautofill.creditCards.heuristics.fathom.testConfidence"
     );
   });
 });

@@ -496,7 +496,7 @@ class FieldScanner {
     }
 
     let highestField = null;
-    let highestConfidence = lazy.FormAutofillUtils.ccHeuristicsThreshold; // Start with a threshold of 0.5
+    let highestConfidence = lazy.FormAutofillUtils.ccFathomConfidenceThreshold; // Start with a threshold of 0.5
     for (let [key, value] of Object.entries(elementConfidences)) {
       if (!fields.includes(key)) {
         // ignore field that we don't care
@@ -514,10 +514,8 @@ class FieldScanner {
     }
 
     // Used by test ONLY! This ensure testcases always get the same confidence
-    if (lazy.FormAutofillUtils.ccHeuristicTestConfidence != null) {
-      highestConfidence = parseFloat(
-        lazy.FormAutofillUtils.ccHeuristicTestConfidence
-      );
+    if (lazy.FormAutofillUtils.ccFathomTestConfidence > 0) {
+      highestConfidence = lazy.FormAutofillUtils.ccFathomTestConfidence;
     }
 
     return [highestField, highestConfidence];
