@@ -10036,13 +10036,16 @@ nsFirstLetterFrame* nsCSSFrameConstructor::CreateFloatingLetterFrame(
   // Put the new float before any of the floats in the block we're doing
   // first-letter for, that is, before any floats whose parent is
   // containingBlock.
-  nsFrameList::FrameLinkEnumerator link(aState.mFloatedList);
-  while (!link.AtEnd() && link.NextFrame()->GetParent() != containingBlock) {
-    link.Next();
+  nsIFrame* prevSibling = nullptr;
+  for (nsIFrame* f : aState.mFloatedList) {
+    if (f->GetParent() == containingBlock) {
+      break;
+    }
+    prevSibling = f;
   }
 
   aState.AddChild(letterFrame, aResult, letterContent, aParentFrame, false,
-                  true, false, true, link.PrevFrame());
+                  true, false, true, prevSibling);
 
   if (nextTextFrame) {
     aResult.AppendFrame(nullptr, nextTextFrame);
