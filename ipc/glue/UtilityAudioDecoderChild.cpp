@@ -21,6 +21,21 @@
 
 namespace mozilla::ipc {
 
+NS_IMETHODIMP UtilityAudioDecoderChildShutdownObserver::Observe(
+    nsISupports* aSubject, const char* aTopic, const char16_t* aData) {
+  MOZ_ASSERT(strcmp(aTopic, "ipc:utility-shutdown") == 0);
+
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+  if (observerService) {
+    observerService->RemoveObserver(this, "ipc:utility-shutdown");
+  }
+
+  UtilityAudioDecoderChild::Shutdown(mSandbox);
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(UtilityAudioDecoderChildShutdownObserver, nsIObserver);
+
 static EnumeratedArray<SandboxingKind, SandboxingKind::COUNT,
                        StaticRefPtr<UtilityAudioDecoderChild>>
     sAudioDecoderChilds;
@@ -33,22 +48,32 @@ UtilityAudioDecoderChild::UtilityAudioDecoderChild(SandboxingKind aKind)
     gfx::gfxVars::AddReceiver(this);
   }
 #endif
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+  if (observerService) {
+    auto* obs = new UtilityAudioDecoderChildShutdownObserver(aKind);
+    observerService->AddObserver(obs, "ipc:utility-shutdown", false);
+  }
 }
 
 void UtilityAudioDecoderChild::ActorDestroy(ActorDestroyReason aReason) {
   MOZ_ASSERT(NS_IsMainThread());
-  sAudioDecoderChilds[mSandbox] = nullptr;
 #ifdef MOZ_WMF_MEDIA_ENGINE
   if (mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM) {
     gfx::gfxVars::RemoveReceiver(this);
   }
 #endif
+  Shutdown(mSandbox);
 }
 
 void UtilityAudioDecoderChild::Bind(
     Endpoint<PUtilityAudioDecoderChild>&& aEndpoint) {
   DebugOnly<bool> ok = aEndpoint.Bind(this);
   MOZ_ASSERT(ok);
+}
+
+/* static */
+void UtilityAudioDecoderChild::Shutdown(SandboxingKind aKind) {
+  sAudioDecoderChilds[aKind] = nullptr;
 }
 
 /* static */
