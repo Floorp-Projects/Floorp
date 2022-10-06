@@ -144,10 +144,11 @@ Status PassesDecoderState::PreparePipeline(ImageBundle* decoded,
                frame_header.save_before_color_transform);
     JXL_ASSERT(!options.render_spotcolors ||
                !decoded->metadata()->Find(ExtraChannel::kSpotColor));
-    bool is_rgba = (format.num_channels == 4);
-    uint8_t* rgb_output = reinterpret_cast<uint8_t*>(image_buffer);
-    builder.AddStage(GetFastXYBTosRGB8Stage(rgb_output, stride, width, height,
-                                            is_rgba, has_alpha, alpha_c));
+    bool is_rgba = (main_output.format.num_channels == 4);
+    uint8_t* rgb_output = reinterpret_cast<uint8_t*>(main_output.buffer);
+    builder.AddStage(GetFastXYBTosRGB8Stage(rgb_output, main_output.stride,
+                                            width, height, is_rgba, has_alpha,
+                                            alpha_c));
   } else {
     bool linear = false;
     if (frame_header.color_transform == ColorTransform::kYCbCr) {
@@ -212,10 +213,10 @@ Status PassesDecoderState::PreparePipeline(ImageBundle* decoded,
       linear = false;
     }
 
-    if (pixel_callback.IsPresent() || image_buffer) {
-      builder.AddStage(GetWriteToOutputStage(
-          pixel_callback, image_buffer, width, height, stride, format,
-          has_alpha, unpremul_alpha, alpha_c, undo_orientation));
+    if (main_output.callback.IsPresent() || main_output.buffer) {
+      builder.AddStage(GetWriteToOutputStage(main_output, width, height,
+                                             has_alpha, unpremul_alpha, alpha_c,
+                                             undo_orientation, extra_output));
     } else {
       builder.AddStage(GetWriteToImageBundleStage(
           decoded, output_encoding_info.color_encoding));

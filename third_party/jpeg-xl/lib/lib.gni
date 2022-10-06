@@ -430,8 +430,6 @@ libjxl_tests_sources = [
 
 # Test-only library code.
 libjxl_testlib_sources = [
-    "jxl/codec_y4m_testonly.cc",
-    "jxl/codec_y4m_testonly.h",
     "jxl/dct_for_test.h",
     "jxl/dec_transforms_testonly.cc",
     "jxl/dec_transforms_testonly.h",
@@ -457,8 +455,14 @@ libjxl_extras_sources = [
     "extras/dec/pgx.h",
     "extras/dec/pnm.cc",
     "extras/dec/pnm.h",
+    "extras/dec_group_jpeg.cc",
+    "extras/dec_group_jpeg.h",
+    "extras/decode_jpeg.cc",
+    "extras/decode_jpeg.h",
     "extras/enc/encode.cc",
     "extras/enc/encode.h",
+    "extras/enc/jxl.cc",
+    "extras/enc/jxl.h",
     "extras/enc/npy.cc",
     "extras/enc/npy.h",
     "extras/enc/pgx.cc",

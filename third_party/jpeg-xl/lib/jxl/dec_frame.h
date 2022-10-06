@@ -173,28 +173,22 @@ class FrameDecoder {
   }
 
   // Sets the pixel callback or image buffer where the pixels will be decoded.
-  // This is not supported for all images. If it succeeds, HasRGBBuffer() will
-  // return true.
-  // If it does not succeed, the image is decoded to the ImageBundle passed to
-  // InitFrame instead.
   //
   // @param undo_orientation: if true, indicates the frame decoder should apply
   // the exif orientation to bring the image to the intended display
   // orientation.
   void SetImageOutput(const PixelCallback& pixel_callback, void* image_buffer,
-                      size_t xsize, size_t ysize, JxlPixelFormat format,
+                      size_t image_buffer_size, size_t xsize, size_t ysize,
+                      JxlPixelFormat format, size_t bits_per_sample,
                       bool unpremul_alpha, bool undo_orientation) const {
-    dec_state_->pixel_callback = pixel_callback;
-    dec_state_->image_buffer = image_buffer;
     dec_state_->width = xsize;
     dec_state_->height = ysize;
-    dec_state_->format = format;
-    dec_state_->stride =
-        (xsize * BytesPerChannel(format.data_type) * format.num_channels);
-    if (format.align > 1) {
-      dec_state_->stride =
-          (jxl::DivCeil(dec_state_->stride, format.align) * format.align);
-    }
+    dec_state_->main_output.format = format;
+    dec_state_->main_output.bits_per_sample = bits_per_sample;
+    dec_state_->main_output.callback = pixel_callback;
+    dec_state_->main_output.buffer = image_buffer;
+    dec_state_->main_output.buffer_size = image_buffer_size;
+    dec_state_->main_output.stride = GetStride(xsize, format);
     const jxl::ExtraChannelInfo* alpha =
         decoded_->metadata()->Find(jxl::ExtraChannel::kAlpha);
     if (alpha && alpha->alpha_associated && unpremul_alpha) {
@@ -206,9 +200,11 @@ class FrameDecoder {
         std::swap(dec_state_->width, dec_state_->height);
       }
     }
+    dec_state_->extra_output.clear();
 #if !JXL_HIGH_PRECISION
-    if (dec_state_->image_buffer && (format.data_type == JXL_TYPE_UINT8) &&
-        (format.num_channels >= 3) && !dec_state_->unpremul_alpha &&
+    if (dec_state_->main_output.buffer &&
+        (format.data_type == JXL_TYPE_UINT8) && (format.num_channels >= 3) &&
+        !dec_state_->unpremul_alpha &&
         (dec_state_->undo_orientation == Orientation::kIdentity) &&
         decoded_->metadata()->xyb_encoded &&
         dec_state_->output_encoding_info.color_encoding.IsSRGB() &&
@@ -221,12 +217,15 @@ class FrameDecoder {
 #endif
   }
 
-  // Returns true if the rgb output buffer passed by MaybeSetRGB8OutputBuffer
-  // has been/will be populated by Flush() / FinalizeFrame(), or if a pixel
-  // callback has been used.
-  bool HasRGBBuffer() const {
-    return dec_state_->image_buffer != nullptr ||
-           dec_state_->pixel_callback.IsPresent();
+  void AddExtraChannelOutput(void* buffer, size_t buffer_size, size_t xsize,
+                             JxlPixelFormat format, size_t bits_per_sample) {
+    ImageOutput out;
+    out.format = format;
+    out.bits_per_sample = bits_per_sample;
+    out.buffer = buffer;
+    out.buffer_size = buffer_size;
+    out.stride = GetStride(xsize, format);
+    dec_state_->extra_output.push_back(out);
   }
 
  private:
@@ -271,6 +270,15 @@ class FrameDecoder {
     return (data_type == JXL_TYPE_UINT8   ? 1u
             : data_type == JXL_TYPE_FLOAT ? 4u
                                           : 2u);
+  }
+
+  static size_t GetStride(const size_t xsize, JxlPixelFormat format) {
+    size_t stride =
+        (xsize * BytesPerChannel(format.data_type) * format.num_channels);
+    if (format.align > 1) {
+      stride = (jxl::DivCeil(stride, format.align) * format.align);
+    }
+    return stride;
   }
 
   PassesDecoderState* dec_state_;

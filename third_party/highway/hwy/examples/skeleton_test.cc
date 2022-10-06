@@ -62,7 +62,7 @@ struct TestFloorLog2 {
 };
 
 HWY_NOINLINE void TestAllFloorLog2() {
-  ForPartialVectors<TestFloorLog2>()(float());
+  hn::ForPartialVectors<TestFloorLog2>()(float());
 }
 
 // Calls function defined in skeleton-inl.h.
@@ -91,7 +91,7 @@ struct TestSumMulAdd {
 };
 
 HWY_NOINLINE void TestAllSumMulAdd() {
-  ForFloatTypes(ForPartialVectors<TestSumMulAdd>());
+  hn::ForFloatTypes(hn::ForPartialVectors<TestSumMulAdd>());
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)

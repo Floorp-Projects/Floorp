@@ -13,6 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS  // before inttypes.h
+#endif
+#include <inttypes.h>
 #include <stdio.h>
 
 #include <cfloat>  // FLT_MAX

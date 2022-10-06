@@ -61,26 +61,21 @@ jxl::CodecInOut ConvertTestImage(const std::vector<uint8_t>& buf,
     }
   }
   size_t bitdepth = 0;
-  bool float_in = false;
   switch (pixel_format.data_type) {
     case JXL_TYPE_FLOAT:
       bitdepth = 32;
-      float_in = true;
       io.metadata.m.SetFloat32Samples();
       break;
     case JXL_TYPE_FLOAT16:
       bitdepth = 16;
-      float_in = true;
       io.metadata.m.SetFloat16Samples();
       break;
     case JXL_TYPE_UINT8:
       bitdepth = 8;
-      float_in = false;
       io.metadata.m.SetUintSamples(8);
       break;
     case JXL_TYPE_UINT16:
       bitdepth = 16;
-      float_in = false;
       io.metadata.m.SetUintSamples(16);
       break;
     default:
@@ -96,13 +91,12 @@ jxl::CodecInOut ConvertTestImage(const std::vector<uint8_t>& buf,
   } else {
     color_encoding = jxl::ColorEncoding::SRGB(is_gray);
   }
-  EXPECT_TRUE(ConvertFromExternal(
-      jxl::Span<const uint8_t>(buf.data(), buf.size()), xsize, ysize,
-      color_encoding, pixel_format.num_channels,
-      /*alpha_is_premultiplied=*/false,
-      /*bits_per_sample=*/bitdepth, pixel_format.endianness,
-      /*pool=*/nullptr, &io.Main(), float_in,
-      /*align=*/0));
+  EXPECT_TRUE(
+      ConvertFromExternal(jxl::Span<const uint8_t>(buf.data(), buf.size()),
+                          xsize, ysize, color_encoding,
+                          /*alpha_is_premultiplied=*/false,
+                          /*bits_per_sample=*/bitdepth, pixel_format,
+                          /*pool=*/nullptr, &io.Main()));
   return io;
 }
 
@@ -231,16 +225,11 @@ void VerifyRoundtripCompression(
   }
   if (alpha_in_extra_channels_vector && !has_interleaved_alpha) {
     jxl::ImageF alpha_channel(xsize, ysize);
-
-    EXPECT_EQ(
-        jxl::ConvertFromExternal(
-            jxl::Span<const uint8_t>(extra_channel_bytes.data(),
-                                     extra_channel_bytes.size()),
-            xsize, ysize, basic_info.bits_per_sample,
-            input_pixel_format.endianness, /*pool=*/nullptr, &alpha_channel,
-            /*float_in=*/input_pixel_format.data_type == JXL_TYPE_FLOAT,
-            /*align=*/0),
-        true);
+    EXPECT_TRUE(jxl::ConvertFromExternal(
+        jxl::Span<const uint8_t>(extra_channel_bytes.data(),
+                                 extra_channel_bytes.size()),
+        xsize, ysize, basic_info.bits_per_sample, extra_channel_pixel_format, 0,
+        /*pool=*/nullptr, &alpha_channel));
 
     original_io.metadata.m.SetAlphaBits(basic_info.bits_per_sample);
     original_io.Main().SetAlpha(std::move(alpha_channel), false);
@@ -306,7 +295,7 @@ void VerifyRoundtripCompression(
   for (size_t index = 0; index < channel_infos.size(); index++) {
     EXPECT_EQ(JXL_ENC_SUCCESS,
               JxlEncoderSetExtraChannelBuffer(
-                  frame_settings, &input_pixel_format,
+                  frame_settings, &extra_channel_pixel_format,
                   (void*)extra_channel_bytes.data(), extra_channel_bytes.size(),
                   index + has_interleaved_alpha));
   }

@@ -1030,6 +1030,9 @@ template <typename T, size_t N>
 HWY_API Vec128<T, N> Undefined(Simd<T, N, 0> /*d*/) {
   HWY_DIAGNOSTICS(push)
   HWY_DIAGNOSTICS_OFF(disable : 4701, ignored "-Wuninitialized")
+#if HWY_COMPILER_GCC_ACTUAL
+  HWY_DIAGNOSTICS_OFF(disable : 4701, ignored "-Wmaybe-uninitialized")
+#endif
   typename detail::Raw128<T, N>::type a;
   return Vec128<T, N>(a);
   HWY_DIAGNOSTICS(pop)
@@ -3285,6 +3288,16 @@ HWY_API Vec128<float, N> ConvertTo(Simd<float, N, 0> /* tag */,
   return Vec128<float, N>(vcvt_f32_s32(v.raw));
 }
 
+HWY_API Vec128<float> ConvertTo(Full128<float> /* tag */,
+                                const Vec128<uint32_t> v) {
+  return Vec128<float>(vcvtq_f32_u32(v.raw));
+}
+template <size_t N, HWY_IF_LE64(uint32_t, N)>
+HWY_API Vec128<float, N> ConvertTo(Simd<float, N, 0> /* tag */,
+                                   const Vec128<uint32_t, N> v) {
+  return Vec128<float, N>(vcvt_f32_u32(v.raw));
+}
+
 // Truncates (rounds toward zero).
 HWY_API Vec128<int32_t> ConvertTo(Full128<int32_t> /* tag */,
                                   const Vec128<float> v) {
@@ -3305,6 +3318,15 @@ HWY_API Vec128<double> ConvertTo(Full128<double> /* tag */,
 HWY_API Vec64<double> ConvertTo(Full64<double> /* tag */,
                                 const Vec64<int64_t> v) {
   return Vec64<double>(vcvt_f64_s64(v.raw));
+}
+
+HWY_API Vec128<double> ConvertTo(Full128<double> /* tag */,
+                                 const Vec128<uint64_t> v) {
+  return Vec128<double>(vcvtq_f64_u64(v.raw));
+}
+HWY_API Vec64<double> ConvertTo(Full64<double> /* tag */,
+                                const Vec64<uint64_t> v) {
+  return Vec64<double>(vcvt_f64_u64(v.raw));
 }
 
 // Truncates (rounds toward zero).
@@ -4979,24 +5001,52 @@ HWY_INLINE Vec128<T> MaxOfLanes(hwy::SizeTag<8> /* tag */,
   return Max(v10, v01);
 }
 
-// u16/i16
-template <typename T, size_t N, HWY_IF_LANE_SIZE(T, 2), HWY_IF_GE32(T, N)>
-HWY_API Vec128<T, N> MinOfLanes(hwy::SizeTag<2> /* tag */, Vec128<T, N> v) {
-  const Repartition<int32_t, Simd<T, N, 0>> d32;
+template <size_t N, HWY_IF_GE32(uint16_t, N)>
+HWY_API Vec128<uint16_t, N> MinOfLanes(hwy::SizeTag<2> /* tag */,
+                                       Vec128<uint16_t, N> v) {
+  const Simd<uint16_t, N, 0> d;
+  const RepartitionToWide<decltype(d)> d32;
   const auto even = And(BitCast(d32, v), Set(d32, 0xFFFF));
   const auto odd = ShiftRight<16>(BitCast(d32, v));
-  const auto min = MinOfLanes(d32, Min(even, odd));
+  const auto min = MinOfLanes(hwy::SizeTag<4>(), Min(even, odd));
   // Also broadcast into odd lanes.
-  return BitCast(Simd<T, N, 0>(), Or(min, ShiftLeft<16>(min)));
+  return OddEven(BitCast(d, ShiftLeft<16>(min)), BitCast(d, min));
 }
-template <typename T, size_t N, HWY_IF_LANE_SIZE(T, 2), HWY_IF_GE32(T, N)>
-HWY_API Vec128<T, N> MaxOfLanes(hwy::SizeTag<2> /* tag */, Vec128<T, N> v) {
-  const Repartition<int32_t, Simd<T, N, 0>> d32;
+template <size_t N, HWY_IF_GE32(int16_t, N)>
+HWY_API Vec128<int16_t, N> MinOfLanes(hwy::SizeTag<2> /* tag */,
+                                      Vec128<int16_t, N> v) {
+  const Simd<int16_t, N, 0> d;
+  const RepartitionToWide<decltype(d)> d32;
+  // Sign-extend
+  const auto even = ShiftRight<16>(ShiftLeft<16>(BitCast(d32, v)));
+  const auto odd = ShiftRight<16>(BitCast(d32, v));
+  const auto min = MinOfLanes(hwy::SizeTag<4>(), Min(even, odd));
+  // Also broadcast into odd lanes.
+  return OddEven(BitCast(d, ShiftLeft<16>(min)), BitCast(d, min));
+}
+
+template <size_t N, HWY_IF_GE32(uint16_t, N)>
+HWY_API Vec128<uint16_t, N> MaxOfLanes(hwy::SizeTag<2> /* tag */,
+                                       Vec128<uint16_t, N> v) {
+  const Simd<uint16_t, N, 0> d;
+  const RepartitionToWide<decltype(d)> d32;
   const auto even = And(BitCast(d32, v), Set(d32, 0xFFFF));
   const auto odd = ShiftRight<16>(BitCast(d32, v));
-  const auto min = MaxOfLanes(d32, Max(even, odd));
+  const auto min = MaxOfLanes(hwy::SizeTag<4>(), Max(even, odd));
   // Also broadcast into odd lanes.
-  return BitCast(Simd<T, N, 0>(), Or(min, ShiftLeft<16>(min)));
+  return OddEven(BitCast(d, ShiftLeft<16>(min)), BitCast(d, min));
+}
+template <size_t N, HWY_IF_GE32(int16_t, N)>
+HWY_API Vec128<int16_t, N> MaxOfLanes(hwy::SizeTag<2> /* tag */,
+                                      Vec128<int16_t, N> v) {
+  const Simd<int16_t, N, 0> d;
+  const RepartitionToWide<decltype(d)> d32;
+  // Sign-extend
+  const auto even = ShiftRight<16>(ShiftLeft<16>(BitCast(d32, v)));
+  const auto odd = ShiftRight<16>(BitCast(d32, v));
+  const auto min = MaxOfLanes(hwy::SizeTag<4>(), Max(even, odd));
+  // Also broadcast into odd lanes.
+  return OddEven(BitCast(d, ShiftLeft<16>(min)), BitCast(d, min));
 }
 
 }  // namespace detail
@@ -6354,64 +6404,6 @@ HWY_INLINE VFromD<D> Min128Upper(D d, const VFromD<D> a, const VFromD<D> b) {
 template <class D>
 HWY_INLINE VFromD<D> Max128Upper(D d, const VFromD<D> a, const VFromD<D> b) {
   return IfThenElse(Lt128Upper(d, b, a), a, b);
-}
-
-// ================================================== Operator wrapper
-
-// These apply to all x86_*-inl.h because there are no restrictions on V.
-
-template <class V>
-HWY_API V Add(V a, V b) {
-  return a + b;
-}
-template <class V>
-HWY_API V Sub(V a, V b) {
-  return a - b;
-}
-
-template <class V>
-HWY_API V Mul(V a, V b) {
-  return a * b;
-}
-template <class V>
-HWY_API V Div(V a, V b) {
-  return a / b;
-}
-
-template <class V>
-V Shl(V a, V b) {
-  return a << b;
-}
-template <class V>
-V Shr(V a, V b) {
-  return a >> b;
-}
-
-template <class V>
-HWY_API auto Eq(V a, V b) -> decltype(a == b) {
-  return a == b;
-}
-template <class V>
-HWY_API auto Ne(V a, V b) -> decltype(a == b) {
-  return a != b;
-}
-template <class V>
-HWY_API auto Lt(V a, V b) -> decltype(a == b) {
-  return a < b;
-}
-
-template <class V>
-HWY_API auto Gt(V a, V b) -> decltype(a == b) {
-  return a > b;
-}
-template <class V>
-HWY_API auto Ge(V a, V b) -> decltype(a == b) {
-  return a >= b;
-}
-
-template <class V>
-HWY_API auto Le(V a, V b) -> decltype(a == b) {
-  return a <= b;
 }
 
 namespace detail {  // for code folding

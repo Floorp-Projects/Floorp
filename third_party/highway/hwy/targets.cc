@@ -15,6 +15,9 @@
 
 #include "hwy/targets.h"
 
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS  // before inttypes.h
+#endif
 #include <inttypes.h>  // PRIx64
 #include <stdarg.h>
 #include <stddef.h>
@@ -23,7 +26,7 @@
 
 #include <atomic>
 
-#include "hwy/per_target.h"
+#include "hwy/per_target.h"  // VectorBytes
 
 #if HWY_IS_ASAN || HWY_IS_MSAN || HWY_IS_TSAN
 #include "sanitizer/common_interface_defs.h"  // __sanitizer_print_stack_trace

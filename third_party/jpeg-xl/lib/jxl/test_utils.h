@@ -19,14 +19,19 @@
 #include "gtest/gtest.h"
 #include "jxl/codestream_header.h"
 #include "jxl/encode.h"
+#include "lib/extras/dec/decode.h"
 #include "lib/extras/dec/jxl.h"
+#include "lib/extras/enc/jxl.h"
 #include "lib/extras/packed_image_convert.h"
 #include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/random.h"
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/common.h"  // JPEGXL_ENABLE_TRANSCODE_JPEG
+#include "lib/jxl/enc_butteraugli_comparator.h"
+#include "lib/jxl/enc_butteraugli_pnorm.h"
 #include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/enc_file.h"
@@ -116,13 +121,18 @@ MATCHER(MatchesPrimariesAndTransferFunction, "") {
       result_listener);
 }
 
+template <typename Params>
+void SetThreadParallelRunner(Params params, ThreadPool* pool) {
+  if (pool && !params.runner_opaque) {
+    params.runner = pool->runner();
+    params.runner_opaque = pool->runner_opaque();
+  }
+}
+
 template <typename Source>
 Status DecodeFile(extras::JXLDecompressParams dparams, const Source& file,
                   CodecInOut* JXL_RESTRICT io, ThreadPool* pool) {
-  if (pool && !dparams.runner_opaque) {
-    dparams.runner = pool->runner();
-    dparams.runner_opaque = pool->runner_opaque();
-  }
+  SetThreadParallelRunner(dparams, pool);
   extras::PackedPixelFile ppf;
   JXL_RETURN_IF_ERROR(DecodeImageJXL(file.data(), file.size(), dparams,
                                      /*decoded_bytes=*/nullptr, &ppf));
@@ -184,38 +194,21 @@ size_t Roundtrip(const CodecInOut* io, const CompressParams& cparams,
   return compressed.size();
 }
 
-void CoalesceGIFAnimationWithAlpha(CodecInOut* io) {
-  ImageBundle canvas = io->frames[0].Copy();
-  for (size_t i = 1; i < io->frames.size(); i++) {
-    const ImageBundle& frame = io->frames[i];
-    ImageBundle rendered = canvas.Copy();
-    for (size_t y = 0; y < frame.ysize(); y++) {
-      float* row0 =
-          rendered.color()->PlaneRow(0, frame.origin.y0 + y) + frame.origin.x0;
-      float* row1 =
-          rendered.color()->PlaneRow(1, frame.origin.y0 + y) + frame.origin.x0;
-      float* row2 =
-          rendered.color()->PlaneRow(2, frame.origin.y0 + y) + frame.origin.x0;
-      float* rowa =
-          rendered.alpha()->Row(frame.origin.y0 + y) + frame.origin.x0;
-      const float* row0f = frame.color().PlaneRow(0, y);
-      const float* row1f = frame.color().PlaneRow(1, y);
-      const float* row2f = frame.color().PlaneRow(2, y);
-      const float* rowaf = frame.alpha().Row(y);
-      for (size_t x = 0; x < frame.xsize(); x++) {
-        if (rowaf[x] != 0) {
-          row0[x] = row0f[x];
-          row1[x] = row1f[x];
-          row2[x] = row2f[x];
-          rowa[x] = rowaf[x];
-        }
-      }
-    }
-    if (frame.use_for_next_frame) {
-      canvas = rendered.Copy();
-    }
-    io->frames[i] = std::move(rendered);
-  }
+// Returns compressed size [bytes].
+size_t Roundtrip(const extras::PackedPixelFile& ppf_in,
+                 extras::JXLCompressParams cparams,
+                 extras::JXLDecompressParams dparams, ThreadPool* pool,
+                 extras::PackedPixelFile* ppf_out) {
+  SetThreadParallelRunner(cparams, pool);
+  SetThreadParallelRunner(dparams, pool);
+  std::vector<uint8_t> compressed;
+  EXPECT_TRUE(extras::EncodeImageJXL(cparams, ppf_in, /*jpeg_bytes=*/nullptr,
+                                     &compressed));
+  size_t decoded_bytes = 0;
+  EXPECT_TRUE(extras::DecodeImageJXL(compressed.data(), compressed.size(),
+                                     dparams, &decoded_bytes, ppf_out));
+  EXPECT_EQ(decoded_bytes, compressed.size());
+  return compressed.size();
 }
 
 // A POD descriptor of a ColorEncoding. Only used in tests as the return value
@@ -305,12 +298,14 @@ jxl::CodecInOut SomeTestImageToCodecInOut(const std::vector<uint8_t>& buf,
   io.metadata.m.SetAlphaBits(16);
   io.metadata.m.color_encoding = jxl::ColorEncoding::SRGB(
       /*is_gray=*/num_channels == 1 || num_channels == 2);
+  JxlPixelFormat format = {static_cast<uint32_t>(num_channels), JXL_TYPE_UINT16,
+                           JXL_BIG_ENDIAN, 0};
   EXPECT_TRUE(ConvertFromExternal(
       jxl::Span<const uint8_t>(buf.data(), buf.size()), xsize, ysize,
-      jxl::ColorEncoding::SRGB(/*is_gray=*/num_channels < 3), num_channels,
-      /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, JXL_BIG_ENDIAN,
+      jxl::ColorEncoding::SRGB(/*is_gray=*/num_channels < 3),
+      /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, format,
       /*pool=*/nullptr,
-      /*ib=*/&io.Main(), /*float_in=*/false, 0));
+      /*ib=*/&io.Main()));
   return io;
 }
 
@@ -595,6 +590,114 @@ double DistanceRMS(const uint8_t* a, const uint8_t* b, size_t xsize,
   sum /= (xsize * ysize);
   return sqrt(sum);
 }
+
+float ButteraugliDistance(const extras::PackedPixelFile& a,
+                          const extras::PackedPixelFile& b,
+                          ThreadPool* pool = nullptr) {
+  CodecInOut io0;
+  EXPECT_TRUE(ConvertPackedPixelFileToCodecInOut(a, pool, &io0));
+  CodecInOut io1;
+  EXPECT_TRUE(ConvertPackedPixelFileToCodecInOut(b, pool, &io1));
+  return ButteraugliDistance(io0, io1, ButteraugliParams(), GetJxlCms(),
+                             /*distmap=*/nullptr, pool);
+}
+
+float ComputeDistance2(const extras::PackedPixelFile& a,
+                       const extras::PackedPixelFile& b) {
+  CodecInOut io0;
+  EXPECT_TRUE(ConvertPackedPixelFileToCodecInOut(a, nullptr, &io0));
+  CodecInOut io1;
+  EXPECT_TRUE(ConvertPackedPixelFileToCodecInOut(b, nullptr, &io1));
+  return ComputeDistance2(io0.Main(), io1.Main(), GetJxlCms());
+}
+
+bool SameAlpha(const extras::PackedPixelFile& a,
+               const extras::PackedPixelFile& b) {
+  JXL_CHECK(a.info.xsize == b.info.xsize);
+  JXL_CHECK(a.info.ysize == b.info.ysize);
+  JXL_CHECK(a.info.alpha_bits == b.info.alpha_bits);
+  JXL_CHECK(a.info.alpha_exponent_bits == b.info.alpha_exponent_bits);
+  JXL_CHECK(a.info.alpha_bits > 0);
+  JXL_CHECK(a.frames.size() == b.frames.size());
+  for (size_t i = 0; i < a.frames.size(); ++i) {
+    const extras::PackedImage& color_a = a.frames[i].color;
+    const extras::PackedImage& color_b = b.frames[i].color;
+    JXL_CHECK(color_a.format.num_channels == color_b.format.num_channels);
+    JXL_CHECK(color_a.format.data_type == color_b.format.data_type);
+    JXL_CHECK(color_a.format.endianness == color_b.format.endianness);
+    JXL_CHECK(color_a.pixels_size == color_b.pixels_size);
+    size_t pwidth =
+        extras::PackedImage::BitsPerChannel(color_a.format.data_type) / 8;
+    size_t num_color = color_a.format.num_channels < 3 ? 1 : 3;
+    const uint8_t* p_a = reinterpret_cast<const uint8_t*>(color_a.pixels());
+    const uint8_t* p_b = reinterpret_cast<const uint8_t*>(color_b.pixels());
+    for (size_t y = 0; y < a.info.ysize; ++y) {
+      for (size_t x = 0; x < a.info.xsize; ++x) {
+        size_t idx =
+            ((y * a.info.xsize + x) * color_a.format.num_channels + num_color) *
+            pwidth;
+        if (memcmp(&p_a[idx], &p_b[idx], pwidth) != 0) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+bool SamePixels(const extras::PackedImage& a, const extras::PackedImage& b) {
+  JXL_CHECK(a.xsize == b.xsize);
+  JXL_CHECK(a.ysize == b.ysize);
+  JXL_CHECK(a.format.num_channels == b.format.num_channels);
+  JXL_CHECK(a.format.data_type == b.format.data_type);
+  JXL_CHECK(a.format.endianness == b.format.endianness);
+  JXL_CHECK(a.pixels_size == b.pixels_size);
+  const uint8_t* p_a = reinterpret_cast<const uint8_t*>(a.pixels());
+  const uint8_t* p_b = reinterpret_cast<const uint8_t*>(b.pixels());
+  for (size_t y = 0; y < a.ysize; ++y) {
+    for (size_t x = 0; x < a.xsize; ++x) {
+      size_t idx = (y * a.xsize + x) * a.pixel_stride();
+      if (memcmp(&p_a[idx], &p_b[idx], a.pixel_stride()) != 0) {
+        printf("Mismatch at row %" PRIuS " col %" PRIuS "\n", y, x);
+        printf("  a: ");
+        for (size_t j = 0; j < a.pixel_stride(); ++j) {
+          printf(" %3u", p_a[idx + j]);
+        }
+        printf("\n  b: ");
+        for (size_t j = 0; j < a.pixel_stride(); ++j) {
+          printf(" %3u", p_b[idx + j]);
+        }
+        printf("\n");
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+bool SamePixels(const extras::PackedPixelFile& a,
+                const extras::PackedPixelFile& b) {
+  JXL_CHECK(a.info.xsize == b.info.xsize);
+  JXL_CHECK(a.info.ysize == b.info.ysize);
+  JXL_CHECK(a.info.bits_per_sample == b.info.bits_per_sample);
+  JXL_CHECK(a.info.exponent_bits_per_sample == b.info.exponent_bits_per_sample);
+  JXL_CHECK(a.frames.size() == b.frames.size());
+  for (size_t i = 0; i < a.frames.size(); ++i) {
+    const auto& frame_a = a.frames[i];
+    const auto& frame_b = b.frames[i];
+    if (!SamePixels(frame_a.color, frame_b.color)) {
+      return false;
+    }
+    JXL_CHECK(frame_a.extra_channels.size() == frame_b.extra_channels.size());
+    for (size_t j = 0; j < frame_a.extra_channels.size(); ++j) {
+      if (!SamePixels(frame_a.extra_channels[i], frame_b.extra_channels[i])) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 }  // namespace test
 
 bool operator==(const jxl::PaddedBytes& a, const jxl::PaddedBytes& b) {

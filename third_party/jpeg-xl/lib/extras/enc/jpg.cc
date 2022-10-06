@@ -111,7 +111,7 @@ Status EncodeWithLibJpeg(const PackedImage& image, const JxlBasicInfo& info,
                          const std::vector<uint8_t>& icc,
                          std::vector<uint8_t> exif, size_t quality,
                          const std::string& chroma_subsampling,
-                         std::vector<uint8_t>* bytes) {
+                         bool progressive, std::vector<uint8_t>* bytes) {
   if (BITS_IN_JSAMPLE != 8 || sizeof(JSAMPLE) != 1) {
     return JXL_FAILURE("Only 8 bit JSAMPLE is supported.");
   }
@@ -139,6 +139,9 @@ Status EncodeWithLibJpeg(const PackedImage& image, const JxlBasicInfo& info,
     jpeg_set_colorspace(&cinfo, JCS_RGB);
   }
   jpeg_set_quality(&cinfo, quality, TRUE);
+  if (progressive) {
+    jpeg_simple_progression(&cinfo);
+  }
   jpeg_start_compress(&cinfo, TRUE);
   if (!icc.empty()) {
     WriteICCProfile(&cinfo, icc);
@@ -209,7 +212,8 @@ Status EncodeImageJPG(const PackedImage& image, const JxlBasicInfo& info,
                       const std::vector<uint8_t>& icc,
                       std::vector<uint8_t> exif, JpegEncoder encoder,
                       size_t quality, const std::string& chroma_subsampling,
-                      ThreadPool* pool, std::vector<uint8_t>* bytes) {
+                      bool progressive, ThreadPool* pool,
+                      std::vector<uint8_t>* bytes) {
   if (image.format.data_type != JXL_TYPE_UINT8) {
     return JXL_FAILURE("Unsupported pixel data type");
   }
@@ -222,9 +226,9 @@ Status EncodeImageJPG(const PackedImage& image, const JxlBasicInfo& info,
 
   switch (encoder) {
     case JpegEncoder::kLibJpeg:
-      JXL_RETURN_IF_ERROR(EncodeWithLibJpeg(image, info, color_encoding, icc,
-                                            std::move(exif), quality,
-                                            chroma_subsampling, bytes));
+      JXL_RETURN_IF_ERROR(
+          EncodeWithLibJpeg(image, info, color_encoding, icc, std::move(exif),
+                            quality, chroma_subsampling, progressive, bytes));
       break;
     case JpegEncoder::kSJpeg:
       JXL_RETURN_IF_ERROR(EncodeWithSJpeg(image, info, icc, std::move(exif),
@@ -253,28 +257,26 @@ class JPEGEncoder : public Encoder {
   Status Encode(const PackedPixelFile& ppf, EncodedImage* encoded_image,
                 ThreadPool* pool = nullptr) const override {
     JXL_RETURN_IF_ERROR(VerifyBasicInfo(ppf.info));
-    const auto& options = this->options();
     int quality = 100;
-    auto it_quality = options.find("q");
-    if (it_quality != options.end()) {
-      std::istringstream is(it_quality->second);
-      JXL_RETURN_IF_ERROR(static_cast<bool>(is >> quality));
-    }
     std::string chroma_subsampling = "444";
-    auto it_chroma_subsampling = options.find("chroma_subsampling");
-    if (it_chroma_subsampling != options.end()) {
-      chroma_subsampling = it_chroma_subsampling->second;
-    }
     JpegEncoder jpeg_encoder = JpegEncoder::kLibJpeg;
-    auto it_encoder = options.find("jpeg_encoder");
-    if (it_encoder != options.end()) {
-      if (it_encoder->second == "libjpeg") {
-        jpeg_encoder = JpegEncoder::kLibJpeg;
-      } else if (it_encoder->second == "sjpeg") {
-        jpeg_encoder = JpegEncoder::kSJpeg;
-      } else {
-        return JXL_FAILURE("unknown jpeg encoder \"%s\"",
-                           it_encoder->second.c_str());
+    bool progressive = false;
+    for (const auto& it : options()) {
+      if (it.first == "q") {
+        std::istringstream is(it.second);
+        JXL_RETURN_IF_ERROR(static_cast<bool>(is >> quality));
+      } else if (it.first == "chroma_subsampling") {
+        chroma_subsampling = it.second;
+      } else if (it.first == "jpeg_encoder") {
+        if (it.second == "libjpeg") {
+          jpeg_encoder = JpegEncoder::kLibJpeg;
+        } else if (it.second == "sjpeg") {
+          jpeg_encoder = JpegEncoder::kSJpeg;
+        } else {
+          return JXL_FAILURE("unknown jpeg encoder \"%s\"", it.second.c_str());
+        }
+      } else if (it.first == "progressive") {
+        progressive = true;
       }
     }
     std::vector<uint8_t> icc;
@@ -288,7 +290,7 @@ class JPEGEncoder : public Encoder {
       encoded_image->bitstreams.emplace_back();
       JXL_RETURN_IF_ERROR(EncodeImageJPG(
           frame.color, ppf.info, ppf.color_encoding, icc, ppf.metadata.exif,
-          jpeg_encoder, quality, chroma_subsampling, pool,
+          jpeg_encoder, quality, chroma_subsampling, progressive, pool,
           &encoded_image->bitstreams.back()));
     }
     return true;

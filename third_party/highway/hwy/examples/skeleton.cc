@@ -17,22 +17,28 @@
 
 #include <stdio.h>
 
+// >>>> for dynamic dispatch only, skip if you want static dispatch
+
 // First undef to prevent error when re-included.
 #undef HWY_TARGET_INCLUDE
-// For runtime dispatch, specify the name of the current file (unfortunately
+// For dynamic dispatch, specify the name of the current file (unfortunately
 // __FILE__ is not reliable) so that foreach_target.h can re-include it.
 #define HWY_TARGET_INCLUDE "hwy/examples/skeleton.cc"
 // Generates code for each enabled target by re-including this source file.
 #include "hwy/foreach_target.h"  // IWYU pragma: keep
+
+// <<<< end of dynamic dispatch
 
 // Must come after foreach_target.h to avoid redefinition errors.
 #include "hwy/highway.h"
 
 // Optional, can instead add HWY_ATTR to all functions.
 HWY_BEFORE_NAMESPACE();
+
 namespace skeleton {
 // This namespace name is unique per target, which allows code for multiple
-// targets to co-exist in the same translation unit.
+// targets to co-exist in the same translation unit. Required when using dynamic
+// dispatch, otherwise optional.
 namespace HWY_NAMESPACE {
 
 // Highway ops reside here; ADL does not find templates nor builtins.
@@ -104,6 +110,7 @@ HWY_DLLEXPORT void CallFloorLog2(const uint8_t* HWY_RESTRICT in,
                                  uint8_t* HWY_RESTRICT out) {
   // This must reside outside of HWY_NAMESPACE because it references (calls the
   // appropriate one from) the per-target implementations there.
+  // For static dispatch, use HWY_STATIC_DISPATCH.
   return HWY_DYNAMIC_DISPATCH(FloorLog2)(in, count, out);
 }
 

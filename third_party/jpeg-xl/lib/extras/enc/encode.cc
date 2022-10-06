@@ -40,6 +40,34 @@ Status Encoder::VerifyBasicInfo(const JxlBasicInfo& info) const {
   return true;
 }
 
+Status Encoder::VerifyFormat(const JxlPixelFormat& format) const {
+  for (auto f : AcceptedFormats()) {
+    if (f.num_channels != format.num_channels) continue;
+    if (f.data_type != format.data_type) continue;
+    if (f.data_type == JXL_TYPE_UINT8 || f.endianness == format.endianness) {
+      return true;
+    }
+  }
+  return JXL_FAILURE("Format is not in the list of accepted formats.");
+}
+
+Status Encoder::VerifyBitDepth(JxlDataType data_type, uint32_t bits_per_sample,
+                               uint32_t exponent_bits) const {
+  if ((data_type == JXL_TYPE_UINT8 &&
+       (bits_per_sample == 0 || bits_per_sample > 8 || exponent_bits != 0)) ||
+      (data_type == JXL_TYPE_UINT16 &&
+       (bits_per_sample <= 8 || bits_per_sample > 16 || exponent_bits != 0)) ||
+      (data_type == JXL_TYPE_FLOAT16 &&
+       (bits_per_sample != 16 || exponent_bits != 5)) ||
+      (data_type == JXL_TYPE_FLOAT &&
+       (bits_per_sample != 32 || exponent_bits != 8))) {
+    return JXL_FAILURE(
+        "Incompatible data_type %d and bit depth %u with exponent bits %u",
+        (int)data_type, bits_per_sample, exponent_bits);
+  }
+  return true;
+}
+
 Status Encoder::VerifyPackedImage(const PackedImage& image,
                                   const JxlBasicInfo& info) const {
   if (image.pixels() == nullptr) {
@@ -57,10 +85,10 @@ Status Encoder::VerifyPackedImage(const PackedImage& image,
       image.format.num_channels != info_num_channels) {
     return JXL_FAILURE("Frame size does not match image size");
   }
-  if (info.bits_per_sample >
-      PackedImage::BitsPerChannel(image.format.data_type)) {
-    return JXL_FAILURE("Bit depth does not fit pixel data type");
-  }
+  JXL_RETURN_IF_ERROR(VerifyFormat(image.format));
+  JXL_RETURN_IF_ERROR(VerifyBitDepth(image.format.data_type,
+                                     info.bits_per_sample,
+                                     info.exponent_bits_per_sample));
   return true;
 }
 

@@ -105,8 +105,8 @@ TU ComputeUlpDelta(const T expected, const T actual) {
   // Compute the difference in units of last place. We do not need to check for
   // differing signs; they will result in large differences, which is fine.
   TU ux, uy;
-  CopyBytes<sizeof(T)>(&expected, &ux);
-  CopyBytes<sizeof(T)>(&actual, &uy);
+  CopySameSize(&expected, &ux);
+  CopySameSize(&actual, &uy);
 
   // Avoid unsigned->signed cast: 2's complement is only guaranteed by C++20.
   const TU ulp = HWY_MAX(ux, uy) - HWY_MIN(ux, uy);

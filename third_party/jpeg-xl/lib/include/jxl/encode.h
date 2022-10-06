@@ -18,6 +18,7 @@
 #include "jxl/jxl_export.h"
 #include "jxl/memory_manager.h"
 #include "jxl/parallel_runner.h"
+#include "jxl/version.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -515,6 +516,22 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetFrameName(
     JxlEncoderFrameSettings* frame_settings, const char* frame_name);
 
 /**
+ * Sets the bit depth of the input buffer.
+ *
+ * For float pixel formats, only the default JXL_BIT_DEPTH_FROM_PIXEL_FORMAT
+ * setting is allowed, while for unsigned pixel formats,
+ * JXL_BIT_DEPTH_FROM_CODESTREAM setting is also allowed. See the comment on
+ * @ref JxlEncoderAddImageFrame for the effects of the bit depth setting.
+
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
+ * @param bit_depth the bit depth setting of the pixel input
+ * @return JXL_ENC_SUCCESS on success, JXL_ENC_ERROR on error
+ */
+JXL_EXPORT JxlEncoderStatus JxlEncoderSetFrameBitDepth(
+    JxlEncoderFrameSettings* frame_settings, const JxlBitDepth* bit_depth);
+
+/**
  * Sets the buffer to read JPEG encoded bytes from for the next frame to encode.
  *
  * If JxlEncoderSetBasicInfo has not yet been called, calling
@@ -555,15 +572,22 @@ JxlEncoderAddJPEGFrame(const JxlEncoderFrameSettings* frame_settings,
  * - JXL_TYPE_FLOAT, with nominal range 0..1
  *
  * Note: the sample data type in pixel_format is allowed to be different from
- * what is described in the JxlBasicInfo. The type in pixel_format describes the
- * format of the uncompressed pixel buffer. The bits_per_sample and
- * exponent_bits_per_sample in the JxlBasicInfo describes what will actually be
- * encoded in the JPEG XL codestream. For example, to encode a 12-bit image, you
- * would set bits_per_sample to 12, and you could use e.g. JXL_TYPE_UINT16
- * (where the values are rescaled to 16-bit, i.e. multiplied by 65535/4095) or
- * JXL_TYPE_FLOAT (where the values are rescaled to 0..1, i.e. multiplied
- * by 1.f/4095.f). While it is allowed, it is obviously not recommended to use a
- * pixel_format with lower precision than what is specified in the JxlBasicInfo.
+ * what is described in the JxlBasicInfo. The type in pixel_format, together
+ * with an optional @ref JxlBitDepth parameter set by @ref
+ * JxlEncoderSetFrameBitDepth describes the format of the uncompressed pixel
+ * buffer. The bits_per_sample and exponent_bits_per_sample in the JxlBasicInfo
+ * describes what will actually be encoded in the JPEG XL codestream.
+ * For example, to encode a 12-bit image, you would set bits_per_sample to 12,
+ * while the input frame buffer can be in the following formats:
+ *  - if pixel format is in JXL_TYPE_UINT16 with default bit depth setting
+ *    (i.e. JXL_BIT_DEPTH_FROM_PIXEL_FORMAT), input sample values are rescaled
+ *    to 16-bit, i.e. multiplied by 65535/4095;
+ *  - if pixel format is in JXL_TYPE_UINT16 with JXL_BIT_DEPTH_FROM_CODESTREAM
+ *    bit depth setting, input sample values are provided unscaled;
+ *  - if pixel format is in JXL_TYPE_FLOAT, input sample values are rescaled
+ *    to 0..1, i.e.  multiplied by 1.f/4095.f.
+ * While it is allowed, it is obviously not recommended to use a pixel_format
+ * with lower precision than what is specified in the JxlBasicInfo.
  *
  * We support interleaved channels as described by the JxlPixelFormat:
  * - single-channel data, e.g. grayscale

@@ -33,6 +33,13 @@ class PackedImage {
   PackedImage(size_t xsize, size_t ysize, const JxlPixelFormat& format)
       : PackedImage(xsize, ysize, format, CalcStride(format, xsize)) {}
 
+  PackedImage Copy() const {
+    PackedImage copy(xsize, ysize, format);
+    memcpy(reinterpret_cast<uint8_t*>(copy.pixels()),
+           reinterpret_cast<const uint8_t*>(pixels()), pixels_size);
+    return copy;
+  }
+
   // The interleaved pixels as defined in the storage format.
   void* pixels() const { return pixels_.get(); }
 
@@ -98,6 +105,18 @@ class PackedFrame {
   template <typename... Args>
   explicit PackedFrame(Args&&... args) : color(std::forward<Args>(args)...) {}
 
+  PackedFrame Copy() const {
+    PackedFrame copy(color.xsize, color.ysize, color.format);
+    copy.frame_info = frame_info;
+    copy.name = name;
+    copy.color = color.Copy();
+    for (size_t i = 0; i < extra_channels.size(); ++i) {
+      PackedImage ec = extra_channels[i].Copy();
+      copy.extra_channels.emplace_back(std::move(ec));
+    }
+    return copy;
+  }
+
   // The Frame metadata.
   JxlFrameHeader frame_info = {};
   std::string name;
@@ -117,17 +136,18 @@ class PackedMetadata {
   std::vector<uint8_t> xmp;
 };
 
+// The extra channel metadata information.
+struct PackedExtraChannel {
+  JxlExtraChannelInfo ec_info;
+  size_t index;
+  std::string name;
+};
+
 // Helper class representing a JXL image file as decoded to pixels from the API.
 class PackedPixelFile {
  public:
   JxlBasicInfo info = {};
 
-  // The extra channel metadata information.
-  struct PackedExtraChannel {
-    JxlExtraChannelInfo ec_info;
-    size_t index;
-    std::string name;
-  };
   std::vector<PackedExtraChannel> extra_channels_info;
 
   // Color information of the decoded pixels.

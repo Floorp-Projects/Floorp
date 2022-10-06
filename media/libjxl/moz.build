@@ -103,13 +103,10 @@ SOURCES += [
     "/third_party/jpeg-xl/lib/threads/thread_parallel_runner_internal.cc",
 ]
 
-DEFINES["JPEGXL_MAJOR_VERSION"] = "0"
-DEFINES["JPEGXL_MINOR_VERSION"] = "0"
-DEFINES["JPEGXL_PATCH_VERSION"] = "0"
-
 EXPORTS.jxl += [
     "./include/jxl/jxl_export.h",
     "./include/jxl/jxl_threads_export.h",
+    "./include/jxl/version.h",
     "/third_party/jpeg-xl/lib/include/jxl/butteraugli.h",
     "/third_party/jpeg-xl/lib/include/jxl/butteraugli_cxx.h",
     "/third_party/jpeg-xl/lib/include/jxl/cms_interface.h",

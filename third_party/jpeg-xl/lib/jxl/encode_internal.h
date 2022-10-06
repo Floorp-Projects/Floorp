@@ -108,6 +108,7 @@ typedef struct JxlEncoderFrameSettingsValuesStruct {
   JxlFrameHeader header;
   std::vector<JxlBlendInfo> extra_channel_blend_info;
   std::string frame_name;
+  JxlBitDepth image_bit_depth;
   bool frame_index_box = false;
 } JxlEncoderFrameSettingsValues;
 

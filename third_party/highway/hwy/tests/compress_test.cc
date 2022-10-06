@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <inttypes.h>  // PRIu64
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>  // memset
@@ -44,19 +43,16 @@ void CheckStored(D d, DI di, size_t expected_pos, size_t actual_pos,
                  const AlignedFreeUniquePtr<T[]>& expected, const T* actual_u,
                  int line) {
   if (expected_pos != actual_pos) {
-    hwy::Abort(
-        __FILE__, line,
-        "Size mismatch for %s: expected %" PRIu64 ", actual %" PRIu64 "\n",
-        TypeName(T(), Lanes(d)).c_str(), static_cast<uint64_t>(expected_pos),
-        static_cast<uint64_t>(actual_pos));
+    hwy::Abort(__FILE__, line, "Size mismatch for %s: expected %d, actual %d\n",
+               TypeName(T(), Lanes(d)).c_str(), static_cast<int>(expected_pos),
+               static_cast<int>(actual_pos));
   }
   // Modified from AssertVecEqual - we may not be checking all lanes.
   for (size_t i = 0; i < num_to_check; ++i) {
     if (!IsEqual(expected[i], actual_u[i])) {
       const size_t N = Lanes(d);
-      fprintf(stderr, "Mismatch at i=%" PRIu64 " of %" PRIu64 ", line %d:\n\n",
-              static_cast<uint64_t>(i), static_cast<uint64_t>(num_to_check),
-              line);
+      fprintf(stderr, "Mismatch at i=%d of %d, line %d:\n\n",
+              static_cast<int>(i), static_cast<int>(num_to_check), line);
       Print(di, "mask", Load(di, mask_lanes.get()), 0, N);
       Print(d, "in", Load(d, in.get()), 0, N);
       Print(d, "expect", Load(d, expected.get()), 0, N);
@@ -97,7 +93,7 @@ struct TestCompress {
         for (size_t i = 0; i < N; ++i) {
           const uint64_t bits = Random32(&rng);
           in_lanes[i] = T();  // cannot initialize float16_t directly.
-          CopyBytes<sizeof(T)>(&bits, &in_lanes[i]);
+          CopyBytes<sizeof(T)>(&bits, &in_lanes[i]);  // not same size
           mask_lanes[i] = (Random32(&rng) & 1024) ? TI(1) : TI(0);
           if (mask_lanes[i] > 0) {
             expected[expected_pos++] = in_lanes[i];
@@ -203,8 +199,8 @@ struct TestCompressBlocks {
       for (size_t i = 0; i < N; i += 2) {
         const uint64_t bits = Random32(&rng);
         in_lanes[i + 1] = in_lanes[i] = T();  // cannot set float16_t directly.
-        CopyBytes<sizeof(T)>(&bits, &in_lanes[i]);
-        CopyBytes<sizeof(T)>(&bits, &in_lanes[i + 1]);
+        CopyBytes<sizeof(T)>(&bits, &in_lanes[i]);      // not same size
+        CopyBytes<sizeof(T)>(&bits, &in_lanes[i + 1]);  // not same size
         mask_lanes[i + 1] = mask_lanes[i] = TI{(Random32(&rng) & 8) ? 1 : 0};
         if (mask_lanes[i] > 0) {
           expected[expected_pos++] = in_lanes[i];
@@ -598,8 +594,7 @@ void PrintCompress32x4Tables() {
 
     for (size_t i = 0; i < N; ++i) {
       for (size_t idx_byte = 0; idx_byte < sizeof(T); ++idx_byte) {
-        printf("%" PRIu64 ",",
-               static_cast<uint64_t>(sizeof(T) * indices[i] + idx_byte));
+        printf("%d,", static_cast<int>(sizeof(T) * indices[i] + idx_byte));
       }
     }
   }
@@ -630,8 +625,7 @@ void PrintCompressNot32x4Tables() {
 
     for (size_t i = 0; i < N; ++i) {
       for (size_t idx_byte = 0; idx_byte < sizeof(T); ++idx_byte) {
-        printf("%" PRIu64 ",",
-               static_cast<uint64_t>(sizeof(T) * indices[i] + idx_byte));
+        printf("%d,", static_cast<int>(sizeof(T) * indices[i] + idx_byte));
       }
     }
   }
@@ -662,8 +656,7 @@ void PrintCompress64x2Tables() {
 
     for (size_t i = 0; i < N; ++i) {
       for (size_t idx_byte = 0; idx_byte < sizeof(T); ++idx_byte) {
-        printf("%" PRIu64 ",",
-               static_cast<uint64_t>(sizeof(T) * indices[i] + idx_byte));
+        printf("%d,", static_cast<int>(sizeof(T) * indices[i] + idx_byte));
       }
     }
   }
@@ -694,8 +687,7 @@ void PrintCompressNot64x2Tables() {
 
     for (size_t i = 0; i < N; ++i) {
       for (size_t idx_byte = 0; idx_byte < sizeof(T); ++idx_byte) {
-        printf("%" PRIu64 ",",
-               static_cast<uint64_t>(sizeof(T) * indices[i] + idx_byte));
+        printf("%d,", static_cast<int>(sizeof(T) * indices[i] + idx_byte));
       }
     }
   }

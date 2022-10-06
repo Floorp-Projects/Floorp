@@ -15,7 +15,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
+#include <string.h>  // memcpy
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/blockwise_shift_test.cc"
@@ -63,17 +63,17 @@ struct TestShiftBytes {
     auto expected = AllocateAligned<T>(N);
     uint8_t* expected_bytes = reinterpret_cast<uint8_t*>(expected.get());
 
-    const size_t kBlockSize = HWY_MIN(N8, 16);
-    for (size_t block = 0; block < N8; block += kBlockSize) {
+    const size_t block_size = HWY_MIN(N8, 16);
+    for (size_t block = 0; block < N8; block += block_size) {
       expected_bytes[block] = 0;
-      memcpy(expected_bytes + block + 1, in_bytes + block, kBlockSize - 1);
+      memcpy(expected_bytes + block + 1, in_bytes + block, block_size - 1);
     }
     HWY_ASSERT_VEC_EQ(d, expected.get(), ShiftLeftBytes<1>(v));
     HWY_ASSERT_VEC_EQ(d, expected.get(), ShiftLeftBytes<1>(d, v));
 
-    for (size_t block = 0; block < N8; block += kBlockSize) {
-      memcpy(expected_bytes + block, in_bytes + block + 1, kBlockSize - 1);
-      expected_bytes[block + kBlockSize - 1] = 0;
+    for (size_t block = 0; block < N8; block += block_size) {
+      memcpy(expected_bytes + block, in_bytes + block + 1, block_size - 1);
+      expected_bytes[block + block_size - 1] = 0;
     }
     HWY_ASSERT_VEC_EQ(d, expected.get(), ShiftRightBytes<1>(d, v));
 #else
@@ -152,7 +152,7 @@ template <int kBytes>
 struct TestCombineShiftRightBytes {
   template <class T, class D>
   HWY_NOINLINE void operator()(T, D d) {
-    const size_t kBlockSize = 16;
+    constexpr size_t kBlockSize = 16;
     static_assert(kBytes < kBlockSize, "Shift count is per block");
     const Repartition<uint8_t, D> d8;
     const size_t N8 = Lanes(d8);
@@ -170,6 +170,7 @@ struct TestCombineShiftRightBytes {
         lo_bytes[i] = static_cast<uint8_t>(Random64(&rng) & 0xFF);
       }
       for (size_t i = 0; i < N8; i += kBlockSize) {
+        // Arguments are not the same size.
         CopyBytes<kBlockSize>(&lo_bytes[i], combined);
         CopyBytes<kBlockSize>(&hi_bytes[i], combined + kBlockSize);
         CopyBytes<kBlockSize>(combined + kBytes, &expected_bytes[i]);
@@ -194,7 +195,7 @@ struct TestCombineShiftRightLanes {
     auto hi_bytes = AllocateAligned<uint8_t>(N8);
     auto lo_bytes = AllocateAligned<uint8_t>(N8);
     auto expected_bytes = AllocateAligned<uint8_t>(N8);
-    const size_t kBlockSize = 16;
+    constexpr size_t kBlockSize = 16;
     uint8_t combined[2 * kBlockSize];
 
     // Random inputs in each lane
@@ -205,6 +206,7 @@ struct TestCombineShiftRightLanes {
         lo_bytes[i] = static_cast<uint8_t>(Random64(&rng) & 0xFF);
       }
       for (size_t i = 0; i < N8; i += kBlockSize) {
+        // Arguments are not the same size.
         CopyBytes<kBlockSize>(&lo_bytes[i], combined);
         CopyBytes<kBlockSize>(&hi_bytes[i], combined + kBlockSize);
         CopyBytes<kBlockSize>(combined + kLanes * sizeof(T),

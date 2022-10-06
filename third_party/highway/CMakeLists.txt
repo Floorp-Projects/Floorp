@@ -19,7 +19,7 @@ if(POLICY CMP0083)
   cmake_policy(SET CMP0083 NEW)
 endif()
 
-project(hwy VERSION 1.0.0)  # Keep in sync with highway.h version
+project(hwy VERSION 1.0.1)  # Keep in sync with highway.h version
 
 # Directly define the ABI version from the cmake project() version values:
 set(LIBRARY_VERSION "${hwy_VERSION}")
@@ -89,6 +89,9 @@ list(APPEND HWY_CONTRIB_SOURCES
     hwy/contrib/sort/vqsort-inl.h
     hwy/contrib/sort/vqsort.cc
     hwy/contrib/sort/vqsort.h
+    hwy/contrib/algo/copy-inl.h
+    hwy/contrib/algo/find-inl.h
+    hwy/contrib/algo/transform-inl.h
 )
 endif()  # HWY_ENABLE_CONTRIB
 

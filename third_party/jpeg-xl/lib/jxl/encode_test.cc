@@ -226,7 +226,7 @@ void VerifyFrameEncoding(size_t xsize, size_t ysize, JxlEncoder* enc,
 
 void VerifyFrameEncoding(JxlEncoder* enc,
                          const JxlEncoderFrameSettings* frame_settings) {
-  VerifyFrameEncoding(63, 129, enc, frame_settings, 2600,
+  VerifyFrameEncoding(63, 129, enc, frame_settings, 2700,
                       /*lossy_use_original_profile=*/false);
 }
 
@@ -523,7 +523,7 @@ TEST(EncodeTest, LossyEncoderUseOriginalProfileTest) {
     ASSERT_EQ(JXL_ENC_SUCCESS,
               JxlEncoderFrameSettingsSetOption(
                   frame_settings, JXL_ENC_FRAME_SETTING_EFFORT, 8));
-    VerifyFrameEncoding(63, 129, enc.get(), frame_settings, 3700, true);
+    VerifyFrameEncoding(63, 129, enc.get(), frame_settings, 3720, true);
   }
 }
 

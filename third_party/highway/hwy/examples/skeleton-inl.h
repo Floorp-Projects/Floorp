@@ -19,7 +19,9 @@
 // splitting code into different files while still inlining instead of requiring
 // calling through function pointers.
 
-// Include guard (still compiled once per target)
+// Per-target include guard. This is only required when using dynamic dispatch,
+// i.e. including foreach_target.h. For static dispatch, a normal include
+// guard would be fine because the header is only compiled once.
 #if defined(HIGHWAY_HWY_EXAMPLES_SKELETON_INL_H_) == defined(HWY_TARGET_TOGGLE)
 #ifdef HIGHWAY_HWY_EXAMPLES_SKELETON_INL_H_
 #undef HIGHWAY_HWY_EXAMPLES_SKELETON_INL_H_
@@ -36,7 +38,8 @@ HWY_BEFORE_NAMESPACE();
 namespace skeleton {
 namespace HWY_NAMESPACE {
 
-using namespace hwy::HWY_NAMESPACE;
+// Highway ops reside here; ADL does not find templates nor builtins.
+namespace hn = hwy::HWY_NAMESPACE;
 
 // Example of a type-agnostic (caller-specified lane type) and width-agnostic
 // (uses best available instruction set) function in a header.
@@ -46,12 +49,12 @@ template <class D, typename T>
 HWY_MAYBE_UNUSED void MulAddLoop(const D d, const T* HWY_RESTRICT mul_array,
                                  const T* HWY_RESTRICT add_array,
                                  const size_t size, T* HWY_RESTRICT x_array) {
-  for (size_t i = 0; i < size; i += Lanes(d)) {
-    const auto mul = Load(d, mul_array + i);
-    const auto add = Load(d, add_array + i);
-    auto x = Load(d, x_array + i);
-    x = MulAdd(mul, x, add);
-    Store(x, d, x_array + i);
+  for (size_t i = 0; i < size; i += hn::Lanes(d)) {
+    const auto mul = hn::Load(d, mul_array + i);
+    const auto add = hn::Load(d, add_array + i);
+    auto x = hn::Load(d, x_array + i);
+    x = hn::MulAdd(mul, x, add);
+    hn::Store(x, d, x_array + i);
   }
 }
 

@@ -41,7 +41,7 @@ namespace detail {
 // independent of the order.
 template <typename T>
 struct KeyLane {
-  constexpr bool Is128() const { return false; }
+  static constexpr bool Is128() { return false; }
   constexpr size_t LanesPerKey() const { return 1; }
 
   // What type bench_sort should allocate for generating inputs.
@@ -130,7 +130,7 @@ struct KeyLane {
 #if HWY_HAVE_FLOAT64  // in case D is float32
     const RepartitionToWide<D> dw;
 #else
-    const RepartitionToWide<RebindToUnsigned<D>> dw;
+    const RepartitionToWide<RebindToUnsigned<D> > dw;
 #endif
     return BitCast(d, SwapAdjacentPairs(dw, BitCast(dw, v)));
   }
@@ -146,7 +146,7 @@ struct KeyLane {
 #if HWY_HAVE_FLOAT64  // in case D is float32
     const RepartitionToWide<D> dw;
 #else
-    const RepartitionToWide<RebindToUnsigned<D>> dw;
+    const RepartitionToWide<RebindToUnsigned<D> > dw;
 #endif
     return BitCast(d, OddEven(BitCast(dw, odd), BitCast(dw, even)));
   }
@@ -160,7 +160,7 @@ struct KeyLane {
 #if HWY_HAVE_FLOAT64  // in case D is float32
     const RepartitionToWide<D> dw;
 #else
-    const RepartitionToWide<RebindToUnsigned<D>> dw;
+    const RepartitionToWide<RebindToUnsigned<D> > dw;
 #endif
     return BitCast(d, OddEvenPairs(dw, BitCast(dw, odd), BitCast(dw, even)));
   }
@@ -181,9 +181,7 @@ template <typename T>
 struct OrderAscending : public KeyLane<T> {
   using Order = SortAscending;
 
-  HWY_INLINE bool Compare1(const T* a, const T* b) {
-    return *a < *b;
-  }
+  HWY_INLINE bool Compare1(const T* a, const T* b) { return *a < *b; }
 
   template <class D>
   HWY_INLINE Mask<D> Compare(D /* tag */, Vec<D> a, Vec<D> b) const {
@@ -222,15 +220,18 @@ struct OrderAscending : public KeyLane<T> {
   HWY_INLINE Vec<D> LastValue(D d) const {
     return Set(d, hwy::HighestValue<T>());
   }
+
+  template <class D>
+  HWY_INLINE Vec<D> PrevValue(D d, Vec<D> v) const {
+    return Sub(v, Set(d, 1));
+  }
 };
 
 template <typename T>
 struct OrderDescending : public KeyLane<T> {
   using Order = SortDescending;
 
-  HWY_INLINE bool Compare1(const T* a, const T* b) {
-    return *b < *a;
-  }
+  HWY_INLINE bool Compare1(const T* a, const T* b) { return *b < *a; }
 
   template <class D>
   HWY_INLINE Mask<D> Compare(D /* tag */, Vec<D> a, Vec<D> b) const {
@@ -267,6 +268,11 @@ struct OrderDescending : public KeyLane<T> {
   template <class D>
   HWY_INLINE Vec<D> LastValue(D d) const {
     return Set(d, hwy::LowestValue<T>());
+  }
+
+  template <class D>
+  HWY_INLINE Vec<D> PrevValue(D d, Vec<D> v) const {
+    return Add(v, Set(d, 1));
   }
 };
 

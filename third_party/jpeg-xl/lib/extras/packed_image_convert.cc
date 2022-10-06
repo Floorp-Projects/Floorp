@@ -58,10 +58,8 @@ Status ConvertPackedFrameToImageBundle(const JxlBasicInfo& info,
 
   JXL_RETURN_IF_ERROR(ConvertFromExternal(
       span, frame.color.xsize, frame.color.ysize, io.metadata.m.color_encoding,
-      frame.color.format.num_channels,
       /*alpha_is_premultiplied=*/info.alpha_premultiplied,
-      frame_bits_per_sample, frame.color.format.endianness, pool, bundle,
-      /*float_in=*/float_in, /*align=*/0));
+      frame_bits_per_sample, frame.color.format, pool, bundle));
 
   bundle->extra_channels().resize(io.metadata.m.extra_channel_info.size());
   for (size_t i = 0; i < frame.extra_channels.size(); i++) {
@@ -140,8 +138,7 @@ Status ConvertPackedPixelFileToCodecInOut(const PackedPixelFile& ppf,
   io->blobs.xmp = ppf.metadata.xmp;
 
   // Append all other extra channels.
-  for (const PackedPixelFile::PackedExtraChannel& info :
-       ppf.extra_channels_info) {
+  for (const auto& info : ppf.extra_channels_info) {
     ExtraChannelInfo out;
     out.type = static_cast<jxl::ExtraChannel>(info.ec_info.type);
     out.bit_depth.bits_per_sample = info.ec_info.bits_per_sample;

@@ -1209,7 +1209,8 @@ HWY_API V PopulationCount(V v) {
 // RVV has a specialization that avoids the Set().
 #if HWY_TARGET != HWY_RVV
 // Slower fallback for capped vectors.
-template <typename V, class D = DFromV<V>, HWY_IF_LANE_SIZE_D(D, 1), HWY_IF_LT128_D(D)>
+template <typename V, class D = DFromV<V>, HWY_IF_LANE_SIZE_D(D, 1),
+          HWY_IF_LT128_D(D)>
 HWY_API V PopulationCount(V v) {
   static_assert(IsSame<TFromD<D>, uint8_t>(), "V must be u8");
   const D d;
@@ -1250,6 +1251,105 @@ HWY_API V PopulationCount(V v) {
 #endif
 
 #endif  // HWY_NATIVE_POPCNT
+
+template <class V, class D = DFromV<V>, HWY_IF_LANE_SIZE_D(D, 8),
+          HWY_IF_LT128_D(D)>
+HWY_API V operator*(V x, V y) {
+  return Set(D(), GetLane(x) * GetLane(y));
+}
+
+// "Include guard": skip if native 64-bit mul instructions are available.
+#if (defined(HWY_NATIVE_I64MULLO) == defined(HWY_TARGET_TOGGLE))
+#ifdef HWY_NATIVE_I64MULLO
+#undef HWY_NATIVE_I64MULLO
+#else
+#define HWY_NATIVE_I64MULLO
+#endif
+
+template <class V, class D64 = DFromV<V>, typename T = LaneType<V>,
+          HWY_IF_LANE_SIZE(T, 8), HWY_IF_UNSIGNED(T), HWY_IF_GE128_D(D64)>
+HWY_API V operator*(V x, V y) {
+  RepartitionToNarrow<D64> d32;
+  auto x32 = BitCast(d32, x);
+  auto y32 = BitCast(d32, y);
+  auto lolo = BitCast(d32, MulEven(x32, y32));
+  auto lohi = BitCast(d32, MulEven(x32, BitCast(d32, ShiftRight<32>(y))));
+  auto hilo = BitCast(d32, MulEven(BitCast(d32, ShiftRight<32>(x)), y32));
+  auto hi = BitCast(d32, ShiftLeft<32>(BitCast(D64{}, lohi + hilo)));
+  return BitCast(D64{}, lolo + hi);
+}
+template <class V, class DI64 = DFromV<V>, typename T = LaneType<V>,
+          HWY_IF_LANE_SIZE(T, 8), HWY_IF_SIGNED(T), HWY_IF_GE128_D(DI64)>
+HWY_API V operator*(V x, V y) {
+  RebindToUnsigned<DI64> du64;
+  return BitCast(DI64{}, BitCast(du64, x) * BitCast(du64, y));
+}
+
+#endif  // HWY_NATIVE_I64MULLO
+
+// ================================================== Operator wrapper
+
+// These targets currently cannot define operators and have already defined
+// (only) the corresponding functions such as Add.
+#if HWY_TARGET != HWY_RVV && HWY_TARGET != HWY_SVE &&      \
+    HWY_TARGET != HWY_SVE2 && HWY_TARGET != HWY_SVE_256 && \
+    HWY_TARGET != HWY_SVE2_128
+
+template <class V>
+HWY_API V Add(V a, V b) {
+  return a + b;
+}
+template <class V>
+HWY_API V Sub(V a, V b) {
+  return a - b;
+}
+
+template <class V>
+HWY_API V Mul(V a, V b) {
+  return a * b;
+}
+template <class V>
+HWY_API V Div(V a, V b) {
+  return a / b;
+}
+
+template <class V>
+V Shl(V a, V b) {
+  return a << b;
+}
+template <class V>
+V Shr(V a, V b) {
+  return a >> b;
+}
+
+template <class V>
+HWY_API auto Eq(V a, V b) -> decltype(a == b) {
+  return a == b;
+}
+template <class V>
+HWY_API auto Ne(V a, V b) -> decltype(a == b) {
+  return a != b;
+}
+template <class V>
+HWY_API auto Lt(V a, V b) -> decltype(a == b) {
+  return a < b;
+}
+
+template <class V>
+HWY_API auto Gt(V a, V b) -> decltype(a == b) {
+  return a > b;
+}
+template <class V>
+HWY_API auto Ge(V a, V b) -> decltype(a == b) {
+  return a >= b;
+}
+
+template <class V>
+HWY_API auto Le(V a, V b) -> decltype(a == b) {
+  return a <= b;
+}
+
+#endif  // HWY_TARGET for operators
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
 }  // namespace HWY_NAMESPACE

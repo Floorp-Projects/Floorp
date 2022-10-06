@@ -492,8 +492,8 @@ struct TestCLMul {
     const size_t padded = RoundUpTo(kCLMulNum, N);
     auto expected_lower = AllocateAligned<T>(padded);
     auto expected_upper = AllocateAligned<T>(padded);
-    memcpy(expected_lower.get(), kCLMulLower, kCLMulNum * sizeof(T));
-    memcpy(expected_upper.get(), kCLMulUpper, kCLMulNum * sizeof(T));
+    CopyBytes<kCLMulNum * sizeof(T)>(kCLMulLower, expected_lower.get());
+    CopyBytes<kCLMulNum * sizeof(T)>(kCLMulUpper, expected_upper.get());
     const size_t padding_size = (padded - kCLMulNum) * sizeof(T);
     memset(expected_lower.get() + kCLMulNum, 0, padding_size);
     memset(expected_upper.get() + kCLMulNum, 0, padding_size);

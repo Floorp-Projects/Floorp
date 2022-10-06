@@ -22,8 +22,6 @@
 #define HIGHWAY_HWY_CONTRIB_ALGO_COPY_INL_H_
 #endif
 
-#include <string.h>  // memcpy
-
 #include "hwy/highway.h"
 
 HWY_BEFORE_NAMESPACE();

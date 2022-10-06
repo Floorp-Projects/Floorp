@@ -629,6 +629,13 @@ HWY_SVE_FOREACH_UI(HWY_SVE_RETV_ARGPVN, MaxN, max_n)
 HWY_SVE_FOREACH_UI16(HWY_SVE_RETV_ARGPVV, Mul, mul)
 HWY_SVE_FOREACH_UIF3264(HWY_SVE_RETV_ARGPVV, Mul, mul)
 
+// Per-target flag to prevent generic_ops-inl.h from defining i64 operator*.
+#ifdef HWY_NATIVE_I64MULLO
+#undef HWY_NATIVE_I64MULLO
+#else
+#define HWY_NATIVE_I64MULLO
+#endif
+
 // ------------------------------ MulHigh
 HWY_SVE_FOREACH_UI16(HWY_SVE_RETV_ARGPVV, MulHigh, mulh)
 namespace detail {
@@ -1497,10 +1504,17 @@ HWY_API svint32_t DemoteTo(Simd<int32_t, N, kPow2> d, const svfloat64_t v) {
 // ------------------------------ ConvertTo F
 
 #define HWY_SVE_CONVERT(BASE, CHAR, BITS, HALF, NAME, OP)                     \
+  /* signed integers */                                                       \
   template <size_t N, int kPow2>                                              \
   HWY_API HWY_SVE_V(BASE, BITS)                                               \
       NAME(HWY_SVE_D(BASE, BITS, N, kPow2) /* d */, HWY_SVE_V(int, BITS) v) { \
     return sv##OP##_##CHAR##BITS##_s##BITS##_x(HWY_SVE_PTRUE(BITS), v);       \
+  }                                                                           \
+  /* unsigned integers */                                                     \
+  template <size_t N, int kPow2>                                              \
+  HWY_API HWY_SVE_V(BASE, BITS)                                               \
+      NAME(HWY_SVE_D(BASE, BITS, N, kPow2) /* d */, HWY_SVE_V(uint, BITS) v) { \
+    return sv##OP##_##CHAR##BITS##_u##BITS##_x(HWY_SVE_PTRUE(BITS), v);       \
   }                                                                           \
   /* Truncates (rounds toward zero). */                                       \
   template <size_t N, int kPow2>                                              \
@@ -2248,9 +2262,9 @@ HWY_API svuint64_t CompressBlocksNot(svuint64_t v, svbool_t mask) {
 #endif
 #if HWY_TARGET == HWY_SVE_256 || HWY_IDE
   uint64_t bits = 0;  // predicate reg is 32-bit
-  CopyBytes<4>(&mask, &bits);
+  CopyBytes<4>(&mask, &bits);  // not same size - 64-bit more efficient
   // Concatenate LSB for upper and lower blocks, pre-scale by 4 for table idx.
-  const size_t offset = ((bits & 1) ? 4 : 0) + ((bits & 0x10000) ? 8 : 0);
+  const size_t offset = ((bits & 1) ? 4u : 0u) + ((bits & 0x10000) ? 8u : 0u);
   // See CompressIsPartition. Manually generated; flip halves if mask = [0, 1].
   alignas(16) static constexpr uint64_t table[4 * 4] = {0, 1, 2, 3, 2, 3, 0, 1,
                                                         0, 1, 2, 3, 0, 1, 2, 3};
@@ -2680,7 +2694,7 @@ HWY_INLINE svbool_t LoadMaskBits(D /* tag */,
   // Max 2048 bits = 32 lanes = 32 input bits; replicate those into each lane.
   // The "at least 8 byte" guarantee in quick_reference ensures this is safe.
   uint32_t mask_bits;
-  CopyBytes<4>(bits, &mask_bits);
+  CopyBytes<4>(bits, &mask_bits);  // copy from bytes
   const auto vbits = Set(du, mask_bits);
 
   // 2 ^ {0,1, .., 31}, will not have more lanes than that.

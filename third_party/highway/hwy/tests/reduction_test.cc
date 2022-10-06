@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -80,6 +79,35 @@ struct TestMinOfLanes {
       min = HWY_MIN(min, in_lanes[i]);
     }
     HWY_ASSERT_VEC_EQ(d, Set(d, min), MinOfLanes(d, Load(d, in_lanes.get())));
+
+    // Bug #910: also check negative values
+    min = HighestValue<T>();
+    const T input_copy[] = {static_cast<T>(-1),
+                            static_cast<T>(-2),
+                            1,
+                            2,
+                            3,
+                            4,
+                            5,
+                            6,
+                            7,
+                            8,
+                            9,
+                            10,
+                            11,
+                            12,
+                            13,
+                            14};
+    size_t i = 0;
+    for (; i < HWY_MIN(N, sizeof(input_copy) / sizeof(T)); ++i) {
+      in_lanes[i] = input_copy[i];
+      min = HWY_MIN(min, input_copy[i]);
+    }
+    // Pad with neutral element to full vector (so we can load)
+    for (; i < N; ++i) {
+      in_lanes[i] = min;
+    }
+    HWY_ASSERT_VEC_EQ(d, Set(d, min), MinOfLanes(d, Load(d, in_lanes.get())));
   }
 };
 
@@ -103,6 +131,35 @@ struct TestMaxOfLanes {
     for (size_t i = 0; i < N; ++i) {
       in_lanes[i] = static_cast<T>(i);  // no 8-bit T so no wraparound
       max = HWY_MAX(max, in_lanes[i]);
+    }
+    HWY_ASSERT_VEC_EQ(d, Set(d, max), MaxOfLanes(d, Load(d, in_lanes.get())));
+
+    // Bug #910: also check negative values
+    max = LowestValue<T>();
+    const T input_copy[] = {static_cast<T>(-1),
+                            static_cast<T>(-2),
+                            1,
+                            2,
+                            3,
+                            4,
+                            5,
+                            6,
+                            7,
+                            8,
+                            9,
+                            10,
+                            11,
+                            12,
+                            13,
+                            14};
+    size_t i = 0;
+    for (; i < HWY_MIN(N, sizeof(input_copy) / sizeof(T)); ++i) {
+      in_lanes[i] = input_copy[i];
+      max = HWY_MAX(max, in_lanes[i]);
+    }
+    // Pad with neutral element to full vector (so we can load)
+    for (; i < N; ++i) {
+      in_lanes[i] = max;
     }
     HWY_ASSERT_VEC_EQ(d, Set(d, max), MaxOfLanes(d, Load(d, in_lanes.get())));
   }

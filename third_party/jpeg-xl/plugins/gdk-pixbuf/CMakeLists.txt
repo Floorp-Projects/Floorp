@@ -12,7 +12,7 @@ if (NOT Gdk-Pixbuf_FOUND)
   return ()
 endif ()
 
-add_library(pixbufloader-jxl SHARED pixbufloader-jxl.c)
+add_library(pixbufloader-jxl MODULE pixbufloader-jxl.c)
 
 # Mark all symbols as hidden by default. The PkgConfig::Gdk-Pixbuf dependency
 # will cause fill_info and fill_vtable entry points to be made public.
@@ -26,7 +26,7 @@ set_target_properties(pixbufloader-jxl PROPERTIES
 target_link_libraries(pixbufloader-jxl jxl jxl_threads skcms-interface PkgConfig::Gdk-Pixbuf)
 
 execute_process(COMMAND ${PKG_CONFIG_EXECUTABLE} gdk-pixbuf-2.0 --variable gdk_pixbuf_moduledir --define-variable=prefix=${CMAKE_INSTALL_PREFIX} OUTPUT_VARIABLE GDK_PIXBUF_MODULEDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-install(TARGETS pixbufloader-jxl LIBRARY DESTINATION "${GDK_PIXBUF_MODULEDIR}")
+install(TARGETS pixbufloader-jxl DESTINATION "${GDK_PIXBUF_MODULEDIR}")
 
 # Instead of the following, we might instead add the
 # mime type image/jxl to

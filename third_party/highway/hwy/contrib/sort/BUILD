@@ -99,6 +99,7 @@ cc_library(
         "traits-inl.h",
         "traits128-inl.h",
         "vqsort-inl.h",
+        # Placeholder for internal instrumentation. Do not remove.
     ],
     deps = [
         # Only if VQSORT_SECURE_RNG is set.

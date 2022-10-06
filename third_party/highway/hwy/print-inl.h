@@ -15,7 +15,6 @@
 
 // Print() function
 
-#include <inttypes.h>
 #include <stdint.h>
 
 #include "hwy/aligned_allocator.h"

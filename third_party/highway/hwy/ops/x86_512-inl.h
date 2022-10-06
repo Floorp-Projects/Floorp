@@ -1164,6 +1164,22 @@ HWY_API Vec512<uint16_t> operator*(Vec512<uint16_t> a, Vec512<uint16_t> b) {
 HWY_API Vec512<uint32_t> operator*(Vec512<uint32_t> a, Vec512<uint32_t> b) {
   return Vec512<uint32_t>{_mm512_mullo_epi32(a.raw, b.raw)};
 }
+HWY_API Vec512<uint64_t> operator*(Vec512<uint64_t> a, Vec512<uint64_t> b) {
+  return Vec512<uint64_t>{_mm512_mullo_epi64(a.raw, b.raw)};
+}
+HWY_API Vec256<uint64_t> operator*(Vec256<uint64_t> a, Vec256<uint64_t> b) {
+  return Vec256<uint64_t>{_mm256_mullo_epi64(a.raw, b.raw)};
+}
+HWY_API Vec128<uint64_t> operator*(Vec128<uint64_t> a, Vec128<uint64_t> b) {
+  return Vec128<uint64_t>{_mm_mullo_epi64(a.raw, b.raw)};
+}
+
+// Per-target flag to prevent generic_ops-inl.h from defining i64 operator*.
+#ifdef HWY_NATIVE_I64MULLO
+#undef HWY_NATIVE_I64MULLO
+#else
+#define HWY_NATIVE_I64MULLO
+#endif
 
 // Signed
 HWY_API Vec512<int16_t> operator*(Vec512<int16_t> a, Vec512<int16_t> b) {
@@ -1172,7 +1188,15 @@ HWY_API Vec512<int16_t> operator*(Vec512<int16_t> a, Vec512<int16_t> b) {
 HWY_API Vec512<int32_t> operator*(Vec512<int32_t> a, Vec512<int32_t> b) {
   return Vec512<int32_t>{_mm512_mullo_epi32(a.raw, b.raw)};
 }
-
+HWY_API Vec512<int64_t> operator*(Vec512<int64_t> a, Vec512<int64_t> b) {
+  return Vec512<int64_t>{_mm512_mullo_epi64(a.raw, b.raw)};
+}
+HWY_API Vec256<int64_t> operator*(Vec256<int64_t> a, Vec256<int64_t> b) {
+  return Vec256<int64_t>{_mm256_mullo_epi64(a.raw, b.raw)};
+}
+HWY_API Vec128<int64_t> operator*(Vec128<int64_t> a, Vec128<int64_t> b) {
+  return Vec128<int64_t>{_mm_mullo_epi64(a.raw, b.raw)};
+}
 // Returns the upper 16 bits of a * b in each lane.
 HWY_API Vec512<uint16_t> MulHigh(Vec512<uint16_t> a, Vec512<uint16_t> b) {
   return Vec512<uint16_t>{_mm512_mulhi_epu16(a.raw, b.raw)};
@@ -3399,6 +3423,16 @@ HWY_API Vec512<double> ConvertTo(Full512<double> /* tag */,
   return Vec512<double>{_mm512_cvtepi64_pd(v.raw)};
 }
 
+HWY_API Vec512<float> ConvertTo(Full512<float> /* tag*/,
+                                const Vec512<uint32_t> v) {
+  return Vec512<float>{_mm512_cvtepu32_ps(v.raw)};
+}
+
+HWY_API Vec512<double> ConvertTo(Full512<double> /* tag*/,
+                                const Vec512<uint64_t> v) {
+  return Vec512<double>{_mm512_cvtepu64_pd(v.raw)};
+}
+
 // Truncates (rounds toward zero).
 HWY_API Vec512<int32_t> ConvertTo(Full512<int32_t> d, const Vec512<float> v) {
   return detail::FixConversionOverflow(d, v, _mm512_cvttps_epi32(v.raw));
@@ -4231,14 +4265,22 @@ HWY_API Vec512<float> MinOfLanes(Full512<float> d, Vec512<float> v) {
 HWY_API Vec512<double> MinOfLanes(Full512<double> d, Vec512<double> v) {
   return Set(d, _mm512_reduce_min_pd(v.raw));
 }
-template <typename T, HWY_IF_LANE_SIZE(T, 2)>
-HWY_API Vec512<T> MinOfLanes(Full512<T> d, Vec512<T> v) {
-  const Repartition<int32_t, decltype(d)> d32;
+HWY_API Vec512<uint16_t> MinOfLanes(Full512<uint16_t> d, Vec512<uint16_t> v) {
+  const RepartitionToWide<decltype(d)> d32;
   const auto even = And(BitCast(d32, v), Set(d32, 0xFFFF));
   const auto odd = ShiftRight<16>(BitCast(d32, v));
   const auto min = MinOfLanes(d32, Min(even, odd));
   // Also broadcast into odd lanes.
-  return BitCast(d, Or(min, ShiftLeft<16>(min)));
+  return OddEven(BitCast(d, ShiftLeft<16>(min)), BitCast(d, min));
+}
+HWY_API Vec512<int16_t> MinOfLanes(Full512<int16_t> d, Vec512<int16_t> v) {
+  const RepartitionToWide<decltype(d)> d32;
+  // Sign-extend
+  const auto even = ShiftRight<16>(ShiftLeft<16>(BitCast(d32, v)));
+  const auto odd = ShiftRight<16>(BitCast(d32, v));
+  const auto min = MinOfLanes(d32, Min(even, odd));
+  // Also broadcast into odd lanes.
+  return OddEven(BitCast(d, ShiftLeft<16>(min)), BitCast(d, min));
 }
 
 // Returns the maximum in each lane.
@@ -4260,14 +4302,22 @@ HWY_API Vec512<float> MaxOfLanes(Full512<float> d, Vec512<float> v) {
 HWY_API Vec512<double> MaxOfLanes(Full512<double> d, Vec512<double> v) {
   return Set(d, _mm512_reduce_max_pd(v.raw));
 }
-template <typename T, HWY_IF_LANE_SIZE(T, 2)>
-HWY_API Vec512<T> MaxOfLanes(Full512<T> d, Vec512<T> v) {
-  const Repartition<int32_t, decltype(d)> d32;
+HWY_API Vec512<uint16_t> MaxOfLanes(Full512<uint16_t> d, Vec512<uint16_t> v) {
+  const RepartitionToWide<decltype(d)> d32;
   const auto even = And(BitCast(d32, v), Set(d32, 0xFFFF));
   const auto odd = ShiftRight<16>(BitCast(d32, v));
   const auto min = MaxOfLanes(d32, Max(even, odd));
   // Also broadcast into odd lanes.
-  return BitCast(d, Or(min, ShiftLeft<16>(min)));
+  return OddEven(BitCast(d, ShiftLeft<16>(min)), BitCast(d, min));
+}
+HWY_API Vec512<int16_t> MaxOfLanes(Full512<int16_t> d, Vec512<int16_t> v) {
+  const RepartitionToWide<decltype(d)> d32;
+  // Sign-extend
+  const auto even = ShiftRight<16>(ShiftLeft<16>(BitCast(d32, v)));
+  const auto odd = ShiftRight<16>(BitCast(d32, v));
+  const auto min = MaxOfLanes(d32, Max(even, odd));
+  // Also broadcast into odd lanes.
+  return OddEven(BitCast(d, ShiftLeft<16>(min)), BitCast(d, min));
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
