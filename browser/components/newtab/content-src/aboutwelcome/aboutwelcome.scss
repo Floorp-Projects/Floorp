@@ -534,10 +534,16 @@ html {
             margin: 6px 0;
           }
 
+          .message-text {
+            margin-inline: auto;
+          }
+
           h1 {
             font-size: 35px;
             text-align: center;
             white-space: normal;
+            margin-inline: auto;
+            margin-block: 14px 6px;
           }
 
           &:dir(rtl) {
