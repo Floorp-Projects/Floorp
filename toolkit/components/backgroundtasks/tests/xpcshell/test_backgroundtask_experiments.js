@@ -363,3 +363,35 @@ add_task(async function test_backgroundtask_Messaging_targeting() {
     );
   }
 });
+
+// Verify that `RemoteSettingsClient.sync` is invoked before any
+// `RemoteSettingsClient.get` invocations.  This ensures the Remote Settings
+// recipe collection is not allowed to go stale.
+add_task(
+  async function test_backgroundtask_RemoteSettingsClient_invokes_sync() {
+    let { infoArray, infoMap } = await doMessage({});
+
+    Assert.ok(
+      "RemoteSettingsClient.sync" in infoMap,
+      "RemoteSettingsClient.sync was invoked"
+    );
+
+    for (let info of infoArray) {
+      if ("RemoteSettingsClient.sync" in info) {
+        break;
+      }
+
+      if ("RemoteSettingsClient.get" in info) {
+        Assert.ok(
+          false,
+          "RemoteSettingsClient.sync not invoked before RemoteSettingsClient.get"
+        );
+      }
+    }
+
+    Assert.ok(
+      true,
+      "RemoteSettingsClient.sync was invoked before any RemoteSettingsClient.get"
+    );
+  }
+);

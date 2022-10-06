@@ -93,6 +93,22 @@ outputInfo = (sentinel, info) => {
   dump(`${sentinel}${JSON.stringify(info)}${sentinel}\n`);
 };
 
+function monkeyPatchRemoteSettingsClient({
+  last_modified = new Date().getTime(),
+  data = [],
+}) {
+  lazy.RemoteSettingsClient.prototype.sync = async () => {
+    let response = { last_modified };
+    outputInfo({ "RemoteSettingsClient.sync": { response } });
+    return [response];
+  };
+
+  lazy.RemoteSettingsClient.prototype.get = async () => {
+    outputInfo({ "RemoteSettingsClient.get": { response: { data } } });
+    return data;
+  };
+}
+
 async function handleCommandLine(commandLine) {
   const CASE_INSENSITIVE = false;
 
@@ -217,9 +233,7 @@ async function handleCommandLine(commandLine) {
       data = [data];
     }
 
-    lazy.RemoteSettingsClient.prototype.get = async () => {
-      return data;
-    };
+    monkeyPatchRemoteSettingsClient({ data });
 
     console.log(`Saw --experiments, read recipes from ${experimentsPath}`);
   }
@@ -229,9 +243,8 @@ async function handleCommandLine(commandLine) {
     !experiments &&
     commandLine.handleFlag("no-experiments", CASE_INSENSITIVE)
   ) {
-    lazy.RemoteSettingsClient.prototype.get = async () => {
-      return [];
-    };
+    monkeyPatchRemoteSettingsClient({ data: [] });
+
     console.log(`Saw --no-experiments, returning [] recipes`);
   }
 
