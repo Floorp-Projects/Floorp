@@ -38,8 +38,8 @@
 #include "nsNetUtil.h"
 #include "nsSerializationHelper.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/dom/PerformanceStorage.h"
-#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/ipc/BackgroundUtils.h"
@@ -454,10 +454,10 @@ void HttpChannelChild::OnStartRequest(
 
   if (!mAsyncOpenTime.IsNull() &&
       !aArgs.timing().transactionPending().IsNull()) {
-    TimeDuration asyncOpenToTransactionPending =
-        aArgs.timing().transactionPending() - mAsyncOpenTime;
-    glean::network::open_to_transaction_pending.AccumulateRawDuration(
-        asyncOpenToTransactionPending);
+    Telemetry::AccumulateTimeDelta(
+        Telemetry::NETWORK_ASYNC_OPEN_TO_TRANSACTION_PENDING_MS,
+        ClassOfService::ToString(mClassOfService), mAsyncOpenTime,
+        aArgs.timing().transactionPending());
   }
 
   StoreAllRedirectsSameOrigin(aArgs.allRedirectsSameOrigin());

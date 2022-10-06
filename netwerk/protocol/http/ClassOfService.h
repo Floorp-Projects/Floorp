@@ -5,7 +5,10 @@
 #ifndef __ClassOfService_h__
 #define __ClassOfService_h__
 
+#include "nsIClassOfService.h"
 #include "ipc/IPCMessageUtils.h"
+
+#include <bitset>
 
 namespace mozilla::net {
 
@@ -22,6 +25,10 @@ class ClassOfService {
   // incremental flags
   bool Incremental() const { return mIncremental; }
   void SetIncremental(bool incremental) { mIncremental = incremental; }
+
+  static nsCString ToString(const ClassOfService cos) {
+    return nsCString(std::bitset<32>(cos.Flags()).to_string());
+  }
 
  private:
   unsigned long mClassFlags;
