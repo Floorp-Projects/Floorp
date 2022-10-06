@@ -3,6 +3,8 @@
 == chrome://reftest/content/box/flex-emulation-2.xhtml chrome://reftest/content/box/flex-emulation-2-ref.xhtml
 != chrome://reftest/content/box/flex-emulation-3.xhtml chrome://reftest/content/box/flex-emulation-3-notref.xhtml
 == chrome://reftest/content/box/flex-emulation-4.xhtml chrome://reftest/content/box/flex-emulation-4-ref.xhtml
+== chrome://reftest/content/box/flex-emulation-5.xhtml chrome://reftest/content/box/flex-emulation-5-ref.xhtml
+== chrome://reftest/content/box/flex-emulation-5.xhtml chrome://reftest/content/box/flex-emulation-5-ref2.xhtml
 
 == flexbox-abspos-container-1a.html flexbox-abspos-container-1-ref.html
 == flexbox-abspos-container-1b.html flexbox-abspos-container-1-ref.html
