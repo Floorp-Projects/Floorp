@@ -1,0 +1,467 @@
+{
+  "extensionName": {
+    "message": "翻译网页"
+  },
+  "extensionDescription": {
+    "message": "使用 Google 或 Yandex 实时翻译您的页面。"
+  },
+  "pageActionTitle": {
+    "message": "翻译此页面"
+  },
+  "lblTranslate": {
+    "message": "翻译此页面？"
+  },
+  "lblTranslating": {
+    "message": "翻译中..."
+  },
+  "lblTranslated": {
+    "message": "译文"
+  },
+  "lblError": {
+    "message": "无法翻译此页面"
+  },
+  "lblAlwaysTranslate": {
+    "message": "总是翻译 - $LANGUAGE_NAME$",
+    "placeholders": {
+      "LANGUAGE_NAME": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "lblTargetLanguage": {
+    "message": "目标语言 $TARGET_LANGUAGE_NUM$",
+    "placeholders": {
+      "TARGET_LANGUAGE_NUM": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "btnReset": {
+    "message": "重置"
+  },
+  "btnTranslate": {
+    "message": "翻译"
+  },
+  "btnOptions": {
+    "message": "选项"
+  },
+  "btnRestore": {
+    "message": "显示原文"
+  },
+  "btnTryAgain": {
+    "message": "重试"
+  },
+  "btnOpenOnGoogleTranslate": {
+    "message": "在 Google 翻译中打开"
+  },
+  "btnDonate": {
+    "message": "捐助支持"
+  },
+  "btnNeverTranslate": {
+    "message": "永不翻译此网站"
+  },
+  "btnChangeLanguages": {
+    "message": "更改语言"
+  },
+  "btnMobileOriginal": {
+    "message": "原文"
+  },
+  "btnMobileTranslated": {
+    "message": "译文"
+  },
+  "btnMobileNeverTranslate": {
+    "message": "永不翻译此网站"
+  },
+  "btnMobileDonate": {
+    "message": "捐助支持"
+  },
+  "optionsNeverTranslate": {
+    "message": "永不翻译这些网站"
+  },
+  "optionsAlwaysTranslate": {
+    "message": "总是翻译这些语言"
+  },
+  "optionPopupConfig": {
+    "message": "显示底部翻译栏"
+  },
+  "optionPopupAuto": {
+    "message": "自动"
+  },
+  "optionPopupThreeFingers": {
+    "message": "当我三指轻触屏幕时"
+  },
+  "msgOpenOnYandexTranslator": {
+    "message": "在 Yandex 中打开翻译"
+  },
+  "lblOthers": {
+    "message": "其他"
+  },
+  "btnMoreOptions": {
+    "message": "更多选项"
+  },
+  "lblPlsDonate": {
+    "message": "通过捐款帮助开发者"
+  },
+  "msgTranslateFor": {
+    "message": "翻译为 $LANGUAGE_NAME$",
+    "placeholders": {
+      "LANGUAGE_NAME": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "lblShowContextMenu": {
+    "message": "在右键菜单中显示翻译页面的选项"
+  },
+  "msgYes": {
+    "message": "是"
+  },
+  "msgNo": {
+    "message": "否"
+  },
+  "lblUseNewAlgorithm": {
+    "message": "使用新的翻译算法？"
+  },
+  "msgYesRecommended": {
+    "message": "是（推荐）"
+  },
+  "msgNoUseWidgets": {
+    "message": "否（使用微件）"
+  },
+  "optionsPageTitle": {
+    "message": "翻译网页 - 选项"
+  },
+  "optionPopupjustWhenIClickTranlateThisSite": {
+    "message": "当我点按\"翻译此网站\"时"
+  },
+  "msgEmptyListNeverTranslateSites": {
+    "message": "您尚未将任何网站添加至此列表。"
+  },
+  "msgEmptyListAlwaysTranslateLanguages": {
+    "message": "您尚未将任何语言添加至此列表。"
+  },
+  "btnAlwaysTranslate": {
+    "message": "总是翻译此网站"
+  },
+  "lblAlwaysTranslateSites": {
+    "message": "总是翻译这些网站"
+  },
+  "msgDonateWithPaypal": {
+    "message": "PayPal 捐款"
+  },
+  "lblDarkMode": {
+    "message": "深色模式"
+  },
+  "lblShowReleaseNotes": {
+    "message": "更新后显示发行说明"
+  },
+  "lblShowTranslateSelectedButton": {
+    "message": "显示翻译选中文本的按钮"
+  },
+  "msgAutomatic": {
+    "message": "自动"
+  },
+  "msgTranslateSelectedText": {
+    "message": "翻译选中文本"
+  },
+  "lblShowTranslateSelectedContextMenu": {
+    "message": "在右键菜单中显示翻译选中文本的选项"
+  },
+  "lblNeverTranslateLangs": {
+    "message": "永不翻译这些语言"
+  },
+  "btnNeverTranslateThisLanguage": {
+    "message": "永不翻译此语言"
+  },
+  "lblShowOriginalTextWhenHovering": {
+    "message": "悬停显示原文"
+  },
+  "msgLanguages": {
+    "message": "语言"
+  },
+  "msgSites": {
+    "message": "网站"
+  },
+  "msgTranslations": {
+    "message": "翻译"
+  },
+  "msgStyle": {
+    "message": "样式"
+  },
+  "msgHotkeys": {
+    "message": "热键"
+  },
+  "lblMakeDonation": {
+    "message": "捐助支持"
+  },
+  "lblReleaseNotes": {
+    "message": "发行说明"
+  },
+  "lblReport": {
+    "message": "反馈问题"
+  },
+  "lblSettings": {
+    "message": "设置"
+  },
+  "lblAdd": {
+    "message": "添加"
+  },
+  "lblShowTranslatedWhenHovering": {
+    "message": "悬停显示译文"
+  },
+  "lblKeyboardShortcuts": {
+    "message": "键盘快捷键"
+  },
+  "msgToTranslateSites": {
+    "message": "翻译该网站"
+  },
+  "msgThanksForUseExtension": {
+    "message": "感谢您使用此扩展。"
+  },
+  "msgIWillBeGrateful": {
+    "message": "若您能够提供捐助，我将不胜感激。"
+  },
+  "btnAlwaysTranslateThisLanguage": {
+    "message": "总是翻译此语言"
+  },
+  "lblShowTranslatedHoveringSites": {
+    "message": "在这些网站悬停显示译文"
+  },
+  "popupBlueWhenSiteIsTranslated": {
+    "message": "若网站已翻译，则将地址栏中图标变为蓝色"
+  },
+  "more": {
+    "message": "更多"
+  },
+  "less": {
+    "message": "更少"
+  },
+  "dontShowIfPageLangIsTargetLang": {
+    "message": "若页面语言与目标语言一致，则不显示"
+  },
+  "dontShowIfPageLangIsUnknown": {
+    "message": "若页面语言未知，则不显示"
+  },
+  "dontShowIfSelectedTextIsTargetLang": {
+    "message": "若选中文本语言与目标语言一致，则不显示"
+  },
+  "dontShowIfSelectedTextIsUnknown": {
+    "message": "若选中文本语言未知，则不显示"
+  },
+  "lblShowTranslatedWhenHoveringThisSite": {
+    "message": "在此网站悬停显示译文"
+  },
+  "lblShowTranslatedWhenHoveringThisLang": {
+    "message": "在此语言的网站悬停显示翻译 - $LANGUAGE_NAME$",
+    "placeholders": {
+      "LANGUAGE_NAME": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "lblShowTranslatedHoveringLangs": {
+    "message": "在这些语言的网站悬停显示翻译"
+  },
+  "msgNoTranslateSelectedText": {
+    "message": "不要翻译选中文本"
+  },
+  "btnListen": {
+    "message": "朗读"
+  },
+  "btnStopListening": {
+    "message": "停止朗读"
+  },
+  "btnApply": {
+    "message": "应用"
+  },
+  "swapTranslationService": {
+    "message": "切换翻译服务"
+  },
+  "swapPopup": {
+    "message": "切换新旧界面"
+  },
+  "helpSwapInterface": {
+    "message": "点击此按钮即可切换新旧界面"
+  },
+  "lblTranslationService": {
+    "message": "翻译服务"
+  },
+  "msgUseOldPopupInterface": {
+    "message": "使用旧的弹出界面"
+  },
+  "lblTranslateInterface": {
+    "message": "翻译界面"
+  },
+  "lblButtonInTheAddressBar": {
+    "message": "在地址栏中显示按钮"
+  },
+  "lblPageTranslationService": {
+    "message": "页面翻译服务"
+  },
+  "lblTextTranslationService": {
+    "message": "文本翻译服务"
+  },
+  "msgStorage": {
+    "message": "存储"
+  },
+  "lblTranslationCache": {
+    "message": "翻译缓存"
+  },
+  "lblStorageUsed": {
+    "message": "已用存储空间："
+  },
+  "deleteTranslationCache": {
+    "message": "删除翻译缓存"
+  },
+  "lblPersonalSettings": {
+    "message": "个人设置"
+  },
+  "backupToFile": {
+    "message": "备份至文件"
+  },
+  "restoreFromFile": {
+    "message": "从文件恢复"
+  },
+  "resetToDefault": {
+    "message": "初始化设置"
+  },
+  "doYouWantToDeleteTranslationCache": {
+    "message": "要删除翻译缓存吗？"
+  },
+  "doYouWantOverwriteAllSettings": {
+    "message": "要使用备份数据覆盖当前所有设置吗？"
+  },
+  "fileIsCorrupted": {
+    "message": "该文件似乎已损坏"
+  },
+  "doYouWantRestoreSettings": {
+    "message": "要恢复扩展至默认设置吗？"
+  },
+  "lblTtsSpeed": {
+    "message": "文字转语音的语速"
+  },
+  "lblEnableDeepL": {
+    "message": "启用基于 DeepL 的文本翻译服务"
+  },
+  "enterShortcut": {
+    "message": "输入一个快捷键"
+  },
+  "hotkeyError_ctrlOrAlt": {
+    "message": "包含 Ctrl 或 Alt"
+  },
+  "hotkeyError_letter": {
+    "message": "输入一个字母"
+  },
+  "hotkeyError_invalid": {
+    "message": "无效的组合键"
+  },
+  "lblSwitchTranslatedAndOriginal": {
+    "message": "在页面的译文和原文间切换"
+  },
+  "lblRestorePageToOriginal": {
+    "message": "恢复页面为原文"
+  },
+  "lblTranslatePageToTargetLanguage": {
+    "message": "翻译页面为目标语言"
+  },
+  "lblTranslateTag_pre": {
+    "message": "启用对 $HTML_TAG_NAME$ 标签的翻译",
+    "placeholders": {
+      "HTML_TAG_NAME": {
+        "content": "<PRE>"
+      }
+    }
+  },
+  "lbldontsortresults": {
+    "message": "不对 Google 翻译结果进行排序"
+  },
+  "lbltranslatedynamicallycreatedcontent": {
+    "message": "翻译动态创建的内容"
+  },
+  "calculatestorage": {
+    "message": "计算"
+  },
+  "donatewithpaypal": {
+    "message": "PayPal 捐款"
+  },
+  "lblAutoTranslateWhenClickingALink": {
+    "message": "若点击链接所访问的网站与当前域名相同，则自动翻译"
+  },
+  "openNativeShortcutManager": {
+    "message": "打开本地快捷键管理器"
+  },
+  "lblKeyboardShortcutsSpecial": {
+    "message": "特殊键盘快捷键"
+  },
+  "lblTranslateSelectedWhenPressTwice": {
+    "message": "连按两下 $SHORTCUT_KEY$ 键翻译选中文本",
+    "placeholders": {
+      "SHORTCUT_KEY": {
+        "content": "[Ctrl]"
+      }
+    }
+  },
+  "lblTranslateTextOverMouseWhenPressTwice": {
+    "message": "连按两下 $SHORTCUT_KEY$ 键翻译鼠标悬停文本",
+    "placeholders": {
+      "SHORTCUT_KEY": {
+        "content": "[Ctrl]"
+      }
+    }
+  },
+  "translateClickingOnce": {
+    "message": "鼠标左击地址栏中按钮，一键翻译页面。(右击可看到弹出窗口)"
+  },
+  "btnShowPopup": {
+    "message": "显示弹出窗口"
+  },
+  "msgToTranslateThisDocument": {
+    "message": "要翻译此文档 $DOC_TYPE$，须将其转换为 HTML",
+    "placeholders": {
+      "DOC_TYPE": {
+        "content": "$1",
+        "example": "(.pdf)"
+      }
+    }
+  },
+  "msgSelectServiceConversion": {
+    "message": "选择一项服务进行此转换"
+  },
+  "msgDownloadingDocument": {
+    "message": "正在下载文档..."
+  },
+  "msgSendDocument": {
+    "message": "发送文档"
+  },
+  "msgErrorDownloadingDocument": {
+    "message": "下载文档时出错"
+  },
+  "msgFileLargerThan": {
+    "message": "此服务不支持大于 $FILE_SIZE$ 的文件",
+    "placeholders": {
+      "FILE_SIZE": {
+        "content": "$1",
+        "example": "10 MB"
+      }
+    }
+  },
+  "msgPDFtoHTML": {
+    "message": "PDF 转 HTML"
+  },
+  "btncopy": {
+    "message": "复制"
+  },
+  "msgRecents": {
+    "message": "最近"
+  },
+  "msgAll": {
+    "message": "全部"
+  },
+  "msgPleaseWait": {
+    "message": "请稍候…"
+  }
+}

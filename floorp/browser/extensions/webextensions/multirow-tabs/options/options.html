@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <h1>Settings</h1>
+
+    <div class="info">
+      Problems? Check the add-on homepage (<a href="https://github.com/numirias/paxmod/">https://github.com/numirias/paxmod</a>).
+    </div>
+
+    <div class="options">
+      <div><label for="enableIconColors">Dynamic tab colors</label></div>
+      <div><input id="enableIconColors" type="checkbox"></div>
+
+      <div><label for="displayNewtab">Display "New Tab" button</label></div>
+      <div><input id="displayNewtab" type="checkbox"></div>
+
+      <div><label for="displayTitlebar">Display titlebar buttons <small>(close, minimize, ...)</small></label></div>
+      <div><input id="displayTitlebar" type="checkbox"></div>
+
+      <div><label for="displayPlaceholders">Display titlebar spacers</label></div>
+      <div><input id="displayPlaceholders" type="checkbox"></div>
+
+      <div><label for="displayCloseButton">Always display tab close button</label></div>
+      <div><input id="displayCloseButton" type="checkbox"></div>
+
+      <div><label for="forceCompact">Compact tab grid</label></div>
+      <div><input id="forceCompact" type="checkbox"></div>
+
+      <div><label for="font">Tab label font <small>(see <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/font">here</a> for examples)</small></label></div>
+      <div><input id="font" type="text" placeholder="e.g. 12px &quot;Open Sans&quot;"></div>
+
+      <div><label for="tabSize">Default tab width</label></div>
+      <div><input id="tabSize" type="number"> %</div>
+
+      <div><label for="minTabSize">Min. tab width</label></div>
+      <div><input id="minTabSize" type="number"> px</div>
+
+      <div><label for="maxTabSize">Max. tab width</label></div>
+      <div><input id="maxTabSize" type="number"> px</div>
+
+      <div><label for="minTabHeight">Min. tab height</label></div>
+      <div><input id="minTabHeight" type="number"> px</div>
+
+      <div><label for="maxTabRows">Max. number of tab rows <small>(before scrollbar appears)</small></label></div>
+      <div><input id="maxTabRows" type="number"></div>
+
+      <div><label for="fitLightness">Fit tab lightness to current theme</label></div>
+      <div><input id="fitLightness" type="checkbox"></div>
+
+      <div><label for="minLightness">Min. tab color lightness <small>(best on dark theme: 59, light theme: 0)</small></label></div>
+      <div><input id="minLightness" type="number" min="0" max="100"> (0-100)</div>
+
+      <div><label for="maxLightness">Max. tab color lightness <small>(best on dark theme: 100, light theme: 52)</small></label></div>
+      <div><input id="maxLightness" type="number" min="0" max="100"> (0-100)</div>
+
+      <div><label for="userCSS">Path to custom CSS</label></div>
+      <div><input id="userCSS" type="text" placeholder="e.g. file:///home/john/custom.css"></div>
+
+      <div><label for="userCSSCode">Custom CSS</label></div>
+      <div><textarea id="userCSSCode"></textarea></div>
+    </div>
+
+    <div><h2>Import / Export</h2></div>
+
+    <div class="options">
+      <div><label for="importFile">Import options</label></div>
+      <div><input type="file" id="importFile"></div>
+
+      <div><label for="exportButton">Export options</label></div>
+      <div><button type="button" id="exportButton">Export</button></div>
+    </div>
+
+    <div class="optionButtons">
+      <button type="submit" class="saveOptionsButton">Apply</button>
+      <button type="submit" class="resetOptionsButton">Restore defaults</button>
+    </div>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

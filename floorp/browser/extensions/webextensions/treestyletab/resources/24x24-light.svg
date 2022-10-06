@@ -1,0 +1,30 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+<!-- Generator: Adobe Illustrator 14.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 43363)  -->
+<style>
+	g:target {
+		fill: #0C0C0D;
+		fill-rule: evenodd;
+	}
+	g:not(#default):not(:target),
+	g:target ~ #default {
+		display: none;
+	}
+</style>
+<symbol id="icon-24">
+	<path d="M20,1H4C2.346,1,1,2.346,1,4v16c0,1.654,1.346,3,3,3h16c1.654,0,3-1.346,3-3V4C23,2.346,21.654,1,20,1z
+		 M9,15c-0.5,0-1-0.5-1-1v-4h13v5H9z M3,4c0-0.551,0.449-1,1-1h16c0.552,0,1,0.449,1,1v5H4C3.5,9,3,8.5,3,8V4z M20,21h-6
+		c-0.5,0-1-0.5-1-1v-4h8v4C21,20.552,20.552,21,20,21z"/>
+	<circle cx="6" cy="6" r="1"/>
+	<circle cx="11" cy="12.375" r="1"/>
+	<circle cx="16" cy="18.5" r="1"/>
+</symbol>
+<g id="toolbar" fill-opacity="0.8">
+	<use href="#icon-24"/>
+</g>
+<g id="default" fill-opacity="1">
+	<use href="#icon-24"/>
+</g>
+</svg>

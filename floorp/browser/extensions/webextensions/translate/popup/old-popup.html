@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/w3css/4/w3.css">
+    <link rel="stylesheet" href="old-popup.css">
+    
+    <script src="detect-pdf.js"></script>
+</head>
+
+<body>
+    <main>
+        <div class="w3-display-topright">
+            <div class="w3-hover-light-grey" id="btnSwitchInterfaces"
+                title="Switch between the old interface and the new one" data-i18n-title="swapPopup">
+                <i class="gg-swap"></i>
+            </div>
+        </div>
+
+        <label id="lblTranslate" class="" style="margin-right: 30px;" data-i18n="lblTranslate">Translate this
+            page?</label>
+        <label id="lblTranslating" class="" style="margin-right: 30px;"
+            data-i18n="lblTranslating">Translating...</label>
+        <label id="lblTranslated" class="" style="margin-right: 30px;" data-i18n="lblTranslated">Translated</label>
+        <label id="lblError" class="" style="margin-right: 30px;" data-i18n="lblError">It was not possible to translate
+            this page</label>
+        <label id="lblTargetLanguage" class="" style="margin-right: 30px;" data-i18n="lblTargetLanguage"
+            data-i18n-ph-value="">Target language</label>
+        <br>
+        <div id="divAlwaysTranslateThisLang">
+            <input id="cbAlwaysTranslateThisLang" class="w3-check" type="checkbox">
+            <label id="lblAlwaysTranslateThisLang" for="cbAlwaysTranslateThisLang" class="w3-small"
+                data-i18n="lblAlwaysTranslate">Always translate from</label>
+        </div>
+        <select id="selectTargetLanguage" class="w3-select w3-padding-small w3-border w3-round w3-text-blue" size>
+            <optgroup name="recents" label="recents" data-i18n-label="msgRecents"></optgroup>
+            <optgroup name="all" label="all" data-i18n-label="msgAll"></optgroup>
+        </select>
+        <div class="flex-container">
+            <div id="divIconTranslateContainer" style="margin-left: 5px; margin-right: 25px;">
+                <div id='divIconTranslate' style="position: relative;" title="Switch between translation services"
+                    data-i18n-title="swapTranslationService">
+                    <img id='iconTranslate' src="/icons/google-translate-32.png" class="w3-btn w3-hover-none">
+                    <img id='iconSwap' src="/icons/swap-32.png" class="w3-btn w3-hover-none">
+                </div>
+            </div>
+
+            <div style="margin-left: auto;">
+                <button id="btnReset" class="w3-btn w3-padding-small w3-border w3-round w3-text-blue"
+                    data-i18n="btnReset">Reset</button>
+                <button id="btnTranslate" class="w3-btn w3-padding-small w3-round w3-blue"
+                    data-i18n="btnTranslate">Translate</button>
+                <button id="btnRestore" class="w3-btn w3-padding-small w3-border w3-round w3-text-blue"
+                    data-i18n="btnRestore">Show original</button>
+                <button id="btnTryAgain" class="w3-btn w3-padding-small w3-border w3-round w3-text-blue"
+                    data-i18n="btnTryAgain">Try Again</button>
+                <div id="btnOptionsDiv" style="position: relative; margin-left: 5px;">
+                    <select id="btnOptions" class="w3-btn w3-padding-small w3-border w3-round w3-text-blue"
+                        style="display: inline;" size>
+                        <option value="options" selected disabled hidden>Options</option>
+                        <option value="changeLanguage" data-i18n="btnChangeLanguages">Change languages</option>
+                        <option value="alwaysTranslateThisSite" data-i18n="btnAlwaysTranslate">Always translate this
+                            site</option>
+                        <option value="neverTranslateThisSite" data-i18n="btnNeverTranslate">Never translate this site
+                        </option>
+                        <option value="neverTranslateThisLanguage" data-i18n="btnNeverTranslateThisLanguage"
+                            style="display: none;">Never translate this language</option>
+                        <optgroup label=""></optgroup>
+                        <option data-i18n="lblShowTranslateSelectedButton" value="showTranslateSelectedButton">Show the
+                            button to translate the selected text</option>
+                        <option data-i18n="lblShowOriginalTextWhenHovering" value="showOriginalTextWhenHovering">Show
+                            original text when hovering</option>
+                        <option data-i18n="lblShowTranslatedWhenHoveringThisSite"
+                            value="showTranslatedWhenHoveringThisSite">Show translation when hovering over this site
+                        </option>
+                        <option data-i18n="lblShowTranslatedWhenHoveringThisLang"
+                            value="showTranslatedWhenHoveringThisLang" hidden>Show translation when hovering over
+                            websites in</option>
+                        <optgroup label=""></optgroup>
+                        <option value="translateInExternalSite" data-i18n="btnOpenOnGoogleTranslate">Open in google
+                            translate</option>
+                        <option value="moreOptions" data-i18n="btnMoreOptions">More options</option>
+                        <option value="donate" data-i18n="btnDonate">Donate</option>
+                    </select>
+                    <div id="btnOptionB"
+                        style="display: inline; position: absolute; top: -6px; left: 0; background-color: white"
+                        class="pointerIgnore w3-btn w3-padding-small w3-border w3-round w3-text-blue"
+                        data-i18n="btnOptions">Options</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/lib/languages.js"></script>
+    <script src="/lib/config.js"></script>
+    <script src="/lib/i18n.js"></script>
+    <script src="old-popup.js"></script>
+</body>
+
+</html>
