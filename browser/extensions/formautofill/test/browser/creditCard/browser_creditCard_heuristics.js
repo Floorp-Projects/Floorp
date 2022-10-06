@@ -39,10 +39,13 @@ const TESTCASES = [
                </form>`,
     prefs: [
       [
-        "extensions.formautofill.creditCards.heuristics.numberOnly.confidenceThreshold",
+        "extensions.formautofill.creditCards.heuristics.fathom.highConfidenceThreshold",
         "0.9",
       ],
-      ["extensions.formautofill.creditCards.heuristics.testConfidence", "0.95"],
+      [
+        "extensions.formautofill.creditCards.heuristics.fathom.testConfidence",
+        "0.95",
+      ],
     ],
     idsToShowPopup: ["cc-number"],
   },
@@ -54,10 +57,13 @@ const TESTCASES = [
                </form>`,
     prefs: [
       [
-        "extensions.formautofill.creditCards.heuristics.numberOnly.confidenceThreshold",
+        "extensions.formautofill.creditCards.heuristics.fathom.highConfidenceThreshold",
         "0.9",
       ],
-      ["extensions.formautofill.creditCards.heuristics.testConfidence", "0.8"],
+      [
+        "extensions.formautofill.creditCards.heuristics.fathom.testConfidence",
+        "0.8",
+      ],
     ],
     idsWithNoPopup: ["cc-number"],
   },

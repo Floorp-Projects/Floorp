@@ -95,7 +95,10 @@ const TESTCASES = [
     targetElementId: "cc-number1",
     expectedResult: [],
     prefs: [
-      ["extensions.formautofill.creditCards.heuristics.testConfidence", "1.0"],
+      [
+        "extensions.formautofill.creditCards.heuristics.fathom.testConfidence",
+        "1.0",
+      ],
     ],
   },
   {
@@ -111,7 +114,10 @@ const TESTCASES = [
     targetElementId: "cc-number1",
     expectedResult: [],
     prefs: [
-      ["extensions.formautofill.creditCards.heuristics.testConfidence", "1.0"],
+      [
+        "extensions.formautofill.creditCards.heuristics.fathom.testConfidence",
+        "1.0",
+      ],
     ],
   },
   {
@@ -128,7 +134,10 @@ const TESTCASES = [
     targetElementId: "cc-number1",
     expectedResult: ["cc-number3", "cc-name", "cc-exp-month", "cc-exp-year"],
     prefs: [
-      ["extensions.formautofill.creditCards.heuristics.testConfidence", "1.0"],
+      [
+        "extensions.formautofill.creditCards.heuristics.fathom.testConfidence",
+        "1.0",
+      ],
     ],
   },
   {

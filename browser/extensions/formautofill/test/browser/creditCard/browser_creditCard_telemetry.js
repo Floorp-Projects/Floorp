@@ -197,7 +197,10 @@ add_task(async function test_popup_opened_form_without_autocomplete() {
     set: [
       [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
       [AUTOFILL_CREDITCARDS_AVAILABLE_PREF, "on"],
-      ["extensions.formautofill.creditCards.heuristics.testConfidence", "1"],
+      [
+        "extensions.formautofill.creditCards.heuristics.fathom.testConfidence",
+        "1",
+      ],
     ],
   });
 
