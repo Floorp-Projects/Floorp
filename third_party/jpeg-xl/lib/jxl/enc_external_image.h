@@ -23,17 +23,16 @@
 namespace jxl {
 Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
                            size_t ysize, size_t bits_per_sample,
-                           JxlEndianness endianness, ThreadPool* pool,
-                           ImageF* channel, bool float_in, size_t align);
+                           JxlPixelFormat format, size_t c, ThreadPool* pool,
+                           ImageF* channel);
 
 // Convert an interleaved pixel buffer to the internal ImageBundle
 // representation. This is the opposite of ConvertToExternal().
 Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
                            size_t ysize, const ColorEncoding& c_current,
-                           size_t channels, bool alpha_is_premultiplied,
-                           size_t bits_per_sample, JxlEndianness endianness,
-                           ThreadPool* pool, ImageBundle* ib, bool float_in,
-                           size_t align);
+                           bool alpha_is_premultiplied, size_t bits_per_sample,
+                           JxlPixelFormat format, ThreadPool* pool,
+                           ImageBundle* ib);
 Status BufferToImageF(const JxlPixelFormat& pixel_format, size_t xsize,
                       size_t ysize, const void* buffer, size_t size,
                       ThreadPool* pool, ImageF* channel);

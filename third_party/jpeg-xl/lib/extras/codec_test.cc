@@ -51,9 +51,9 @@ std::string ExtensionFromCodec(Codec codec, const bool is_gray,
     case Codec::kPNG:
       return ".png";
     case Codec::kPNM:
+      if (bits_per_sample == 32) return ".pfm";
       if (has_alpha) return ".pam";
-      if (is_gray) return ".pgm";
-      return (bits_per_sample == 32) ? ".pfm" : ".ppm";
+      return is_gray ? ".pgm" : ".ppm";
     case Codec::kGIF:
       return ".gif";
     case Codec::kEXR:
@@ -173,10 +173,11 @@ struct TestImageParams {
   bool is_gray;
   bool add_alpha;
   bool big_endian;
+  bool add_extra_channels;
 
   bool ShouldTestRoundtrip() const {
     if (codec == Codec::kPNG) {
-      return true;
+      return bits_per_sample <= 16;
     } else if (codec == Codec::kPNM) {
       // TODO(szabadka) Make PNM encoder endianness-aware.
       return ((bits_per_sample <= 16 && big_endian) ||
@@ -213,7 +214,7 @@ struct TestImageParams {
   std::string DebugString() const {
     std::ostringstream os;
     os << "bps:" << bits_per_sample << " gr:" << is_gray << " al:" << add_alpha
-       << " be: " << big_endian;
+       << " be: " << big_endian << " ec: " << add_extra_channels;
     return os.str();
   }
 };
@@ -233,6 +234,19 @@ void CreateTestImage(const TestImageParams& params, PackedPixelFile* ppf) {
 
   PackedFrame frame(params.xsize, params.ysize, params.PixelFormat());
   FillPackedImage(params.bits_per_sample, &frame.color);
+  if (params.add_extra_channels) {
+    for (size_t i = 0; i < 7; ++i) {
+      JxlPixelFormat ec_format = params.PixelFormat();
+      ec_format.num_channels = 1;
+      PackedImage ec(params.xsize, params.ysize, ec_format);
+      FillPackedImage(params.bits_per_sample, &ec);
+      frame.extra_channels.emplace_back(std::move(ec));
+      PackedExtraChannel pec;
+      pec.ec_info.bits_per_sample = params.bits_per_sample;
+      pec.ec_info.type = static_cast<JxlExtraChannelType>(i);
+      ppf->extra_channels_info.emplace_back(std::move(pec));
+    }
+  }
   ppf->frames.emplace_back(std::move(frame));
 }
 
@@ -254,8 +268,13 @@ void TestRoundTrip(const TestImageParams& params, ThreadPool* pool) {
   ASSERT_EQ(encoded.bitstreams.size(), 1);
 
   PackedPixelFile ppf_out;
+  ColorHints color_hints;
+  if (params.codec == Codec::kPNM || params.codec == Codec::kPGX) {
+    color_hints.Add("color_space",
+                    params.is_gray ? "Gra_D65_Rel_SRG" : "RGB_D65_SRG_Rel_SRG");
+  }
   ASSERT_TRUE(DecodeBytes(Span<const uint8_t>(encoded.bitstreams[0]),
-                          ColorHints(), SizeConstraints(), &ppf_out));
+                          color_hints, SizeConstraints(), &ppf_out));
 
   if (params.codec != Codec::kPNM && params.codec != Codec::kPGX &&
       params.codec != Codec::kEXR) {
@@ -263,9 +282,21 @@ void TestRoundTrip(const TestImageParams& params, ThreadPool* pool) {
   }
 
   ASSERT_EQ(ppf_out.frames.size(), 1);
-  VerifySameImage(ppf_in.frames[0].color, ppf_in.info.bits_per_sample,
-                  ppf_out.frames[0].color, ppf_out.info.bits_per_sample,
+  const auto& frame_in = ppf_in.frames[0];
+  const auto& frame_out = ppf_out.frames[0];
+  VerifySameImage(frame_in.color, ppf_in.info.bits_per_sample, frame_out.color,
+                  ppf_out.info.bits_per_sample,
                   /*lossless=*/params.codec != Codec::kJPG);
+  ASSERT_EQ(frame_in.extra_channels.size(), frame_out.extra_channels.size());
+  ASSERT_EQ(ppf_out.extra_channels_info.size(),
+            frame_out.extra_channels.size());
+  for (size_t i = 0; i < frame_in.extra_channels.size(); ++i) {
+    VerifySameImage(frame_in.extra_channels[i], ppf_in.info.bits_per_sample,
+                    frame_out.extra_channels[i], ppf_out.info.bits_per_sample,
+                    /*lossless=*/true);
+    EXPECT_EQ(ppf_out.extra_channels_info[i].ec_info.type,
+              ppf_in.extra_channels_info[i].ec_info.type);
+  }
 }
 
 TEST(CodecTest, TestRoundTrip) {
@@ -285,7 +316,12 @@ TEST(CodecTest, TestRoundTrip) {
             params.is_gray = is_gray;
             params.add_alpha = add_alpha;
             params.big_endian = big_endian;
+            params.add_extra_channels = false;
             TestRoundTrip(params, &pool);
+            if (codec == Codec::kPNM && add_alpha) {
+              params.add_extra_channels = true;
+              TestRoundTrip(params, &pool);
+            }
           }
         }
       }

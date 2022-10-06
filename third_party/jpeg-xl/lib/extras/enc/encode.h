@@ -60,6 +60,11 @@ class Encoder {
 
   Status VerifyBasicInfo(const JxlBasicInfo& info) const;
 
+  Status VerifyFormat(const JxlPixelFormat& format) const;
+
+  Status VerifyBitDepth(JxlDataType data_type, uint32_t bits_per_sample,
+                        uint32_t exponent_bits) const;
+
   Status VerifyPackedImage(const PackedImage& image,
                            const JxlBasicInfo& info) const;
 

@@ -26,6 +26,9 @@ void DequantMatricesSetCustom(DequantMatrices* matrices,
                               const std::vector<QuantEncoding>& encodings,
                               ModularFrameEncoder* encoder);
 
+// Roundtrip encode/decode the matrices to ensure same values as decoder.
+void DequantMatricesRoundtrip(DequantMatrices* matrices);
+
 }  // namespace jxl
 
 #endif  // LIB_JXL_ENC_QUANT_WEIGHTS_H_

@@ -49,6 +49,7 @@ HWY_DIAGNOSTICS_OFF(disable : 4703 6001 26494, ignored "-Wmaybe-uninitialized")
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>  // memcpy
 
 #if HWY_IS_MSAN
 #include <sanitizer/msan_interface.h>
@@ -2368,7 +2369,7 @@ HWY_API void BlendedStore(Vec256<T> v, Mask256<T> m, Full256<T> d,
   Store(BitCast(du, VecFromMask(d, m)), du, mask);
   for (size_t i = 0; i < 32 / sizeof(T); ++i) {
     if (mask[i]) {
-      CopyBytes<sizeof(T)>(buf + i, p + i);
+      CopySameSize(buf + i, p + i);
     }
   }
 }
@@ -4207,6 +4208,53 @@ HWY_API Vec256<double> ConvertTo(Full256<double> dd, const Vec256<int64_t> v) {
 #endif
 }
 
+HWY_API Vec256<float> ConvertTo(HWY_MAYBE_UNUSED Full256<float> df,
+                                const Vec256<uint32_t> v) {
+#if HWY_TARGET <= HWY_AVX3
+  return Vec256<float>{_mm256_cvtepu32_ps(v.raw)};
+#else
+  // Based on wim's approach (https://stackoverflow.com/questions/34066228/)
+  const RebindToUnsigned<decltype(df)> du32;
+  const RebindToSigned<decltype(df)> d32;
+
+  const auto msk_lo = Set(du32, 0xFFFF);
+  const auto cnst2_16_flt = Set(df, 65536.0f); // 2^16
+
+  // Extract the 16 lowest/highest significant bits of v and cast to signed int
+  const auto v_lo = BitCast(d32, And(v, msk_lo));
+  const auto v_hi = BitCast(d32, ShiftRight<16>(v));
+
+  return MulAdd(cnst2_16_flt, ConvertTo(df, v_hi), ConvertTo(df, v_lo));
+#endif
+}
+
+HWY_API Vec256<double> ConvertTo(HWY_MAYBE_UNUSED Full256<double> dd,
+                                  const Vec256<uint64_t> v) {
+#if HWY_TARGET <= HWY_AVX3
+  return Vec256<double>{_mm256_cvtepu64_pd(v.raw)};
+#else
+  // Based on wim's approach (https://stackoverflow.com/questions/41144668/)
+  const RebindToUnsigned<decltype(dd)> d64;
+  using VU = VFromD<decltype(d64)>;
+
+  const VU msk_lo = Set(d64, 0xFFFFFFFFULL);
+  const auto cnst2_32_dbl = Set(dd, 4294967296.0); // 2^32
+
+   // Extract the 32 lowest significant bits of v
+  const VU v_lo = And(v, msk_lo);
+  const VU v_hi = ShiftRight<32>(v);
+
+  auto uint64_to_double256_fast = [&dd](Vec256<uint64_t> w) HWY_ATTR {
+    w = Or(w, Vec256<uint64_t>{
+                  detail::BitCastToInteger(Set(dd, 0x0010000000000000).raw)});
+    return BitCast(dd, w) - Set(dd, 0x0010000000000000);
+  };
+
+  const auto v_lo_dbl = uint64_to_double256_fast(v_lo);
+  return MulAdd(cnst2_32_dbl, uint64_to_double256_fast(v_hi), v_lo_dbl);
+#endif
+}
+
 // Truncates (rounds toward zero).
 HWY_API Vec256<int32_t> ConvertTo(Full256<int32_t> d, const Vec256<float> v) {
   return detail::FixConversionOverflow(d, v, _mm256_cvttps_epi32(v.raw));
@@ -4396,8 +4444,8 @@ HWY_API size_t StoreMaskBits(const Full256<T> /* tag */, const Mask256<T> mask,
 
   // Non-full byte, need to clear the undefined upper bits.
   if (N < 8) {
-    const int mask = static_cast<int>((1ull << N) - 1);
-    bits[0] = static_cast<uint8_t>(bits[0] & mask);
+    const int mask_bits = static_cast<int>((1ull << N) - 1);
+    bits[0] = static_cast<uint8_t>(bits[0] & mask_bits);
   }
   return kNumBytes;
 }
@@ -5381,24 +5429,48 @@ HWY_INLINE Vec256<T> MaxOfLanes(hwy::SizeTag<8> /* tag */,
   return Max(v10, v01);
 }
 
-// u16/i16
-template <typename T, HWY_IF_LANE_SIZE(T, 2)>
-HWY_API Vec256<T> MinOfLanes(hwy::SizeTag<2> /* tag */, Vec256<T> v) {
-  const Repartition<int32_t, Full256<T>> d32;
+HWY_API Vec256<uint16_t> MinOfLanes(hwy::SizeTag<2> /* tag */,
+                                    Vec256<uint16_t> v) {
+  const Full256<uint16_t> d;
+  const RepartitionToWide<decltype(d)> d32;
   const auto even = And(BitCast(d32, v), Set(d32, 0xFFFF));
   const auto odd = ShiftRight<16>(BitCast(d32, v));
-  const auto min = MinOfLanes(d32, Min(even, odd));
+  const auto min = MinOfLanes(hwy::SizeTag<4>(), Min(even, odd));
   // Also broadcast into odd lanes.
-  return BitCast(Full256<T>(), Or(min, ShiftLeft<16>(min)));
+  return OddEven(BitCast(d, ShiftLeft<16>(min)), BitCast(d, min));
 }
-template <typename T, HWY_IF_LANE_SIZE(T, 2)>
-HWY_API Vec256<T> MaxOfLanes(hwy::SizeTag<2> /* tag */, Vec256<T> v) {
-  const Repartition<int32_t, Full256<T>> d32;
+HWY_API Vec256<int16_t> MinOfLanes(hwy::SizeTag<2> /* tag */,
+                                   Vec256<int16_t> v) {
+  const Full256<int16_t> d;
+  const RepartitionToWide<decltype(d)> d32;
+  // Sign-extend
+  const auto even = ShiftRight<16>(ShiftLeft<16>(BitCast(d32, v)));
+  const auto odd = ShiftRight<16>(BitCast(d32, v));
+  const auto min = MinOfLanes(hwy::SizeTag<4>(), Min(even, odd));
+  // Also broadcast into odd lanes.
+  return OddEven(BitCast(d, ShiftLeft<16>(min)), BitCast(d, min));
+}
+
+HWY_API Vec256<uint16_t> MaxOfLanes(hwy::SizeTag<2> /* tag */,
+                                    Vec256<uint16_t> v) {
+  const Full256<uint16_t> d;
+  const RepartitionToWide<decltype(d)> d32;
   const auto even = And(BitCast(d32, v), Set(d32, 0xFFFF));
   const auto odd = ShiftRight<16>(BitCast(d32, v));
-  const auto min = MaxOfLanes(d32, Max(even, odd));
+  const auto min = MaxOfLanes(hwy::SizeTag<4>(), Max(even, odd));
   // Also broadcast into odd lanes.
-  return BitCast(Full256<T>(), Or(min, ShiftLeft<16>(min)));
+  return OddEven(BitCast(d, ShiftLeft<16>(min)), BitCast(d, min));
+}
+HWY_API Vec256<int16_t> MaxOfLanes(hwy::SizeTag<2> /* tag */,
+                                   Vec256<int16_t> v) {
+  const Full256<int16_t> d;
+  const RepartitionToWide<decltype(d)> d32;
+  // Sign-extend
+  const auto even = ShiftRight<16>(ShiftLeft<16>(BitCast(d32, v)));
+  const auto odd = ShiftRight<16>(BitCast(d32, v));
+  const auto min = MaxOfLanes(hwy::SizeTag<4>(), Max(even, odd));
+  // Also broadcast into odd lanes.
+  return OddEven(BitCast(d, ShiftLeft<16>(min)), BitCast(d, min));
 }
 
 }  // namespace detail

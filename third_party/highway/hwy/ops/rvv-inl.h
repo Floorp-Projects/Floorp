@@ -949,15 +949,15 @@ HWY_RVV_FOREACH_F(HWY_RVV_RETV_ARGVV, Max, fmax, _ALL)
 
 // ------------------------------ Mul
 
-// Only for internal use (Highway only promises Mul for 16/32-bit inputs).
-// Used by MulLower.
-namespace detail {
-HWY_RVV_FOREACH_U64(HWY_RVV_RETV_ARGVV, Mul, mul, _ALL)
-}  // namespace detail
-
-HWY_RVV_FOREACH_UI16(HWY_RVV_RETV_ARGVV, Mul, mul, _ALL)
-HWY_RVV_FOREACH_UI32(HWY_RVV_RETV_ARGVV, Mul, mul, _ALL)
+HWY_RVV_FOREACH_UI163264(HWY_RVV_RETV_ARGVV, Mul, mul, _ALL)
 HWY_RVV_FOREACH_F(HWY_RVV_RETV_ARGVV, Mul, fmul, _ALL)
+
+// Per-target flag to prevent generic_ops-inl.h from defining i64 operator*.
+#ifdef HWY_NATIVE_I64MULLO
+#undef HWY_NATIVE_I64MULLO
+#else
+#define HWY_NATIVE_I64MULLO
+#endif
 
 // ------------------------------ MulHigh
 
@@ -2019,6 +2019,11 @@ HWY_API VFromD<Simd<uint16_t, N, kPow2>> DemoteTo(
       HWY_RVV_D(BASE, SEW, N, SHIFT) d, HWY_RVV_V(int, SEW, LMUL) v) {         \
     return vfcvt_f_x_v_f##SEW##LMUL(v, Lanes(d));                              \
   }                                                                            \
+  template <size_t N>                                                          \
+  HWY_API HWY_RVV_V(BASE, SEW, LMUL) ConvertTo(                                \
+      HWY_RVV_D(BASE, SEW, N, SHIFT) d, HWY_RVV_V(uint, SEW, LMUL) v) {\
+    return vfcvt_f_xu_v_f##SEW##LMUL(v, Lanes(d));                             \
+  }                                                                            \
   /* Truncates (rounds toward zero). */                                        \
   template <size_t N>                                                          \
   HWY_API HWY_RVV_V(int, SEW, LMUL) ConvertTo(HWY_RVV_D(int, SEW, N, SHIFT) d, \
@@ -3069,14 +3074,14 @@ HWY_API VFromD<DW> MulEven(const V a, const V b) {
 // There is no 64x64 vwmul.
 template <class V, HWY_IF_LANE_SIZE_V(V, 8)>
 HWY_INLINE V MulEven(const V a, const V b) {
-  const auto lo = detail::Mul(a, b);
+  const auto lo = Mul(a, b);
   const auto hi = detail::MulHigh(a, b);
   return OddEven(detail::Slide1Up(hi), lo);
 }
 
 template <class V, HWY_IF_LANE_SIZE_V(V, 8)>
 HWY_INLINE V MulOdd(const V a, const V b) {
-  const auto lo = detail::Mul(a, b);
+  const auto lo = Mul(a, b);
   const auto hi = detail::MulHigh(a, b);
   return OddEven(hi, detail::Slide1Down(lo));
 }

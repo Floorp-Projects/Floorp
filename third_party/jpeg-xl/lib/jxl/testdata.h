@@ -20,6 +20,8 @@ static inline PaddedBytes ReadTestData(const std::string& filename) {
   std::string full_path = std::string(TEST_DATA_PATH "/") + filename;
   PaddedBytes data;
   JXL_CHECK(ReadFile(full_path, &data));
+  printf("Test data %s is %d bytes long.\n", filename.c_str(),
+         static_cast<int>(data.size()));
   return data;
 }
 

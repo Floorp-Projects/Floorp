@@ -15,7 +15,6 @@
 
 #include "hwy/tests/test_util.h"
 
-#include <inttypes.h>
 #include <stddef.h>
 #include <stdio.h>
 
@@ -71,8 +70,7 @@ HWY_TEST_DLLEXPORT bool IsEqual(const TypeInfo& info, const void* expected_ptr,
     CopyBytes<8>(actual_ptr, &actual);
     return ComputeUlpDelta(expected, actual) <= 1;
   } else {
-    HWY_ABORT("Unexpected float size %" PRIu64 "\n",
-              static_cast<uint64_t>(info.sizeof_t));
+    HWY_ABORT("Unexpected float size %d\n", static_cast<int>(info.sizeof_t));
     return false;
   }
 }
@@ -88,10 +86,9 @@ HWY_TEST_DLLEXPORT HWY_NORETURN void PrintMismatchAndAbort(
   char actual_str[100];
   ToString(info, actual_ptr, actual_str);
   Abort(filename, line,
-        "%s, %sx%" PRIu64 " lane %" PRIu64
-        " mismatch: expected '%s', got '%s'.\n",
-        target_name, type_name, static_cast<uint64_t>(num_lanes),
-        static_cast<uint64_t>(lane), expected_str, actual_str);
+        "%s, %sx%d lane %d mismatch: expected '%s', got '%s'.\n", target_name,
+        type_name, static_cast<int>(num_lanes), static_cast<int>(lane),
+        expected_str, actual_str);
 }
 
 HWY_TEST_DLLEXPORT void AssertArrayEqual(const TypeInfo& info,

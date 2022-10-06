@@ -101,9 +101,7 @@ using TFromV = TFromD<DFromV<V>>;
 template <typename T, size_t N, typename FromT, size_t FromN>
 HWY_API Vec128<T, N> BitCast(Simd<T, N, 0> /* tag */, Vec128<FromT, FromN> v) {
   Vec128<T, N> to;
-  static_assert(sizeof(T) * N == sizeof(FromT) * FromN,
-                "Casting does not change size");
-  CopyBytes<sizeof(T) * N>(v.raw, to.raw);
+  CopySameSize(&v, &to);
   return to;
 }
 
@@ -285,8 +283,7 @@ template <typename TFrom, typename TTo, size_t N>
 HWY_API Mask128<TTo, N> RebindMask(Simd<TTo, N, 0> /*tag*/,
                                    Mask128<TFrom, N> mask) {
   Mask128<TTo, N> to;
-  static_assert(sizeof(TTo) * N == sizeof(TFrom) * N, "Must have same size");
-  CopyBytes<sizeof(TTo) * N>(mask.bits, to.bits);
+  CopySameSize(&mask, &to);
   return to;
 }
 
@@ -294,15 +291,14 @@ HWY_API Mask128<TTo, N> RebindMask(Simd<TTo, N, 0> /*tag*/,
 template <typename T, size_t N>
 HWY_API Mask128<T, N> MaskFromVec(const Vec128<T, N> v) {
   Mask128<T, N> mask;
-  static_assert(sizeof(v) == sizeof(mask), "Must have same size");
-  CopyBytes<sizeof(T) * N>(v.raw, mask.bits);
+  CopySameSize(&v, &mask);
   return mask;
 }
 
 template <typename T, size_t N>
 Vec128<T, N> VecFromMask(const Mask128<T, N> mask) {
   Vec128<T, N> v;
-  CopyBytes<sizeof(T) * N>(mask.bits, v.raw);
+  CopySameSize(&mask, &v);
   return v;
 }
 
@@ -926,10 +922,10 @@ HWY_API Vec128<float, N> ApproximateReciprocalSqrt(Vec128<float, N> v) {
   for (size_t i = 0; i < N; ++i) {
     const float half = v.raw[i] * 0.5f;
     uint32_t bits;
-    CopyBytes<4>(&v.raw[i], &bits);
+    CopySameSize(&v.raw[i], &bits);
     // Initial guess based on log2(f)
     bits = 0x5F3759DF - (bits >> 1);
-    CopyBytes<4>(&bits, &v.raw[i]);
+    CopySameSize(&bits, &v.raw[i]);
     // One Newton-Raphson iteration
     v.raw[i] = v.raw[i] * (1.5f - (half * v.raw[i] * v.raw[i]));
   }
@@ -1039,7 +1035,7 @@ Vec128<Float, N> Ceil(Vec128<Float, N> v) {
     const bool positive = v.raw[i] > Float(0.0);
 
     Bits bits;
-    CopyBytes<sizeof(Bits)>(&v.raw[i], &bits);
+    CopySameSize(&v.raw[i], &bits);
 
     const int exponent =
         static_cast<int>(((bits >> kMantissaBits) & kExponentMask) - kBias);
@@ -1059,7 +1055,7 @@ Vec128<Float, N> Ceil(Vec128<Float, N> v) {
     if (positive) bits += (kMantissaMask + 1) >> exponent;
     bits &= ~mantissa_mask;
 
-    CopyBytes<sizeof(Bits)>(&bits, &v.raw[i]);
+    CopySameSize(&bits, &v.raw[i]);
   }
   return v;
 }
@@ -1077,7 +1073,7 @@ Vec128<Float, N> Floor(Vec128<Float, N> v) {
     const bool negative = v.raw[i] < Float(0.0);
 
     Bits bits;
-    CopyBytes<sizeof(Bits)>(&v.raw[i], &bits);
+    CopySameSize(&v.raw[i], &bits);
 
     const int exponent =
         static_cast<int>(((bits >> kMantissaBits) & kExponentMask) - kBias);
@@ -1097,7 +1093,7 @@ Vec128<Float, N> Floor(Vec128<Float, N> v) {
     if (negative) bits += (kMantissaMask + 1) >> exponent;
     bits &= ~mantissa_mask;
 
-    CopyBytes<sizeof(Bits)>(&bits, &v.raw[i]);
+    CopySameSize(&bits, &v.raw[i]);
   }
   return v;
 }
@@ -1110,7 +1106,7 @@ HWY_API Mask128<T, N> IsNaN(const Vec128<T, N> v) {
   for (size_t i = 0; i < N; ++i) {
     // std::isnan returns false for 0x7F..FF in clang AVX3 builds, so DIY.
     MakeUnsigned<T> bits;
-    memcpy(&bits, &v.raw[i], sizeof(T));
+    CopySameSize(&v.raw[i], &bits);
     bits += bits;
     bits >>= 1;  // clear sign bit
     // NaN if all exponent bits are set and the mantissa is not zero.
@@ -1278,7 +1274,7 @@ template <typename T, size_t N>
 HWY_API Vec128<T, N> Load(Simd<T, N, 0> /* tag */,
                           const T* HWY_RESTRICT aligned) {
   Vec128<T, N> v;
-  CopyBytes<sizeof(T) * N>(aligned, v.raw);
+  CopyBytes<sizeof(T) * N>(aligned, v.raw);  // copy from array
   return v;
 }
 
@@ -1305,7 +1301,7 @@ HWY_API Vec128<T, N> LoadDup128(Simd<T, N, 0> d,
 template <typename T, size_t N>
 HWY_API void Store(const Vec128<T, N> v, Simd<T, N, 0> /* tag */,
                    T* HWY_RESTRICT aligned) {
-  CopyBytes<sizeof(T) * N>(v.raw, aligned);
+  CopyBytes<sizeof(T) * N>(v.raw, aligned);  // copy to array
 }
 
 template <typename T, size_t N>
@@ -1434,7 +1430,7 @@ HWY_API void ScatterOffset(Vec128<T, N> v, Simd<T, N, 0> /* tag */, T* base,
   static_assert(sizeof(T) == sizeof(Offset), "Must match for portability");
   for (size_t i = 0; i < N; ++i) {
     uint8_t* const base8 = reinterpret_cast<uint8_t*>(base) + offset.raw[i];
-    CopyBytes<sizeof(T)>(&v.raw[i], base8);
+    CopyBytes<sizeof(T)>(&v.raw[i], base8);  // copy to bytes
   }
 }
 
@@ -1457,7 +1453,7 @@ HWY_API Vec128<T, N> GatherOffset(Simd<T, N, 0> /* tag */, const T* base,
   for (size_t i = 0; i < N; ++i) {
     const uint8_t* base8 =
         reinterpret_cast<const uint8_t*>(base) + offset.raw[i];
-    CopyBytes<sizeof(T)>(base8, &v.raw[i]);
+    CopyBytes<sizeof(T)>(base8, &v.raw[i]);  // copy from bytes
   }
   return v;
 }
@@ -1556,12 +1552,12 @@ namespace detail {
 
 HWY_INLINE void StoreU16ToF16(const uint16_t val,
                               hwy::float16_t* HWY_RESTRICT to) {
-  CopyBytes<2>(&val, to);
+  CopySameSize(&val, to);
 }
 
 HWY_INLINE uint16_t U16FromF16(const hwy::float16_t* HWY_RESTRICT from) {
   uint16_t bits16;
-  CopyBytes<2>(from, &bits16);
+  CopySameSize(from, &bits16);
   return bits16;
 }
 
@@ -1590,7 +1586,7 @@ HWY_API Vec128<float, N> PromoteTo(Simd<float, N, 0> /* tag */,
     const uint32_t biased_exp32 = biased_exp + (127 - 15);
     const uint32_t mantissa32 = mantissa << (23 - 10);
     const uint32_t bits32 = (sign << 31) | (biased_exp32 << 23) | mantissa32;
-    CopyBytes<4>(&bits32, &ret.raw[i]);
+    CopySameSize(&bits32, &ret.raw[i]);
   }
   return ret;
 }
@@ -1611,7 +1607,7 @@ HWY_API Vec128<float16_t, N> DemoteTo(Simd<float16_t, N, 0> /* tag */,
   Vec128<float16_t, N> ret;
   for (size_t i = 0; i < N; ++i) {
     uint32_t bits32;
-    CopyBytes<4>(&v.raw[i], &bits32);
+    CopySameSize(&v.raw[i], &bits32);
     const uint32_t sign = bits32 >> 31;
     const uint32_t biased_exp32 = (bits32 >> 23) & 0xFF;
     const uint32_t mantissa32 = bits32 & 0x7FFFFF;
@@ -2444,62 +2440,6 @@ HWY_INLINE Vec128<uint64_t> MulOdd(const Vec128<uint64_t> a,
   mul[0] =
       Mul128(GetLane(UpperHalf(d2, a)), GetLane(UpperHalf(d2, b)), &mul[1]);
   return Load(Full128<uint64_t>(), mul);
-}
-
-// ================================================== Operator wrapper
-
-template <class V>
-HWY_API V Add(V a, V b) {
-  return a + b;
-}
-template <class V>
-HWY_API V Sub(V a, V b) {
-  return a - b;
-}
-
-template <class V>
-HWY_API V Mul(V a, V b) {
-  return a * b;
-}
-template <class V>
-HWY_API V Div(V a, V b) {
-  return a / b;
-}
-
-template <class V>
-V Shl(V a, V b) {
-  return a << b;
-}
-template <class V>
-V Shr(V a, V b) {
-  return a >> b;
-}
-
-template <class V>
-HWY_API auto Eq(V a, V b) -> decltype(a == b) {
-  return a == b;
-}
-template <class V>
-HWY_API auto Ne(V a, V b) -> decltype(a == b) {
-  return a != b;
-}
-template <class V>
-HWY_API auto Lt(V a, V b) -> decltype(a == b) {
-  return a < b;
-}
-
-template <class V>
-HWY_API auto Gt(V a, V b) -> decltype(a == b) {
-  return a > b;
-}
-template <class V>
-HWY_API auto Ge(V a, V b) -> decltype(a == b) {
-  return a >= b;
-}
-
-template <class V>
-HWY_API auto Le(V a, V b) -> decltype(a == b) {
-  return a <= b;
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)

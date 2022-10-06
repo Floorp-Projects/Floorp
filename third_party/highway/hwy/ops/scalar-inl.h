@@ -102,7 +102,7 @@ template <typename T, typename FromT>
 HWY_API Vec1<T> BitCast(Sisd<T> /* tag */, Vec1<FromT> v) {
   static_assert(sizeof(T) <= sizeof(FromT), "Promoting is undefined");
   T to;
-  CopyBytes<sizeof(FromT)>(&v.raw, &to);
+  CopyBytes<sizeof(FromT)>(&v.raw, &to);  // not same size - ok to shrink
   return Vec1<T>(to);
 }
 
@@ -260,21 +260,21 @@ HWY_API Mask1<TTo> RebindMask(Sisd<TTo> /*tag*/, Mask1<TFrom> m) {
 template <typename T>
 HWY_API Mask1<T> MaskFromVec(const Vec1<T> v) {
   Mask1<T> mask;
-  CopyBytes<sizeof(mask.bits)>(&v.raw, &mask.bits);
+  CopySameSize(&v, &mask);
   return mask;
 }
 
 template <typename T>
 Vec1<T> VecFromMask(const Mask1<T> mask) {
   Vec1<T> v;
-  CopyBytes<sizeof(v.raw)>(&mask.bits, &v.raw);
+  CopySameSize(&mask, &v);
   return v;
 }
 
 template <typename T>
 Vec1<T> VecFromMask(Sisd<T> /* tag */, const Mask1<T> mask) {
   Vec1<T> v;
-  CopyBytes<sizeof(v.raw)>(&mask.bits, &v.raw);
+  CopySameSize(&mask, &v);
   return v;
 }
 
@@ -697,10 +697,10 @@ HWY_API Vec1<float> ApproximateReciprocalSqrt(const Vec1<float> v) {
   float f = v.raw;
   const float half = f * 0.5f;
   uint32_t bits;
-  CopyBytes<4>(&f, &bits);
+  CopySameSize(&f, &bits);
   // Initial guess based on log2(f)
   bits = 0x5F3759DF - (bits >> 1);
-  CopyBytes<4>(&bits, &f);
+  CopySameSize(&bits, &f);
   // One Newton-Raphson iteration
   return Vec1<float>(f * (1.5f - (half * f * f)));
 }
@@ -778,7 +778,7 @@ V Ceiling(const V v) {
   const bool positive = f > Float(0.0);
 
   Bits bits;
-  CopyBytes<sizeof(Bits)>(&v, &bits);
+  CopySameSize(&v, &bits);
 
   const int exponent =
       static_cast<int>(((bits >> kMantissaBits) & kExponentMask) - kBias);
@@ -795,7 +795,7 @@ V Ceiling(const V v) {
   if (positive) bits += (kMantissaMask + 1) >> exponent;
   bits &= ~mantissa_mask;
 
-  CopyBytes<sizeof(Bits)>(&bits, &f);
+  CopySameSize(&bits, &f);
   return V(f);
 }
 
@@ -810,7 +810,7 @@ V Floor(const V v) {
   const bool negative = f < Float(0.0);
 
   Bits bits;
-  CopyBytes<sizeof(Bits)>(&v, &bits);
+  CopySameSize(&v, &bits);
 
   const int exponent =
       static_cast<int>(((bits >> kMantissaBits) & kExponentMask) - kBias);
@@ -827,7 +827,7 @@ V Floor(const V v) {
   if (negative) bits += (kMantissaMask + 1) >> exponent;
   bits &= ~mantissa_mask;
 
-  CopyBytes<sizeof(Bits)>(&bits, &f);
+  CopySameSize(&bits, &f);
   return V(f);
 }
 
@@ -889,7 +889,7 @@ template <typename T>
 HWY_API Mask1<T> IsNaN(const Vec1<T> v) {
   // std::isnan returns false for 0x7F..FF in clang AVX3 builds, so DIY.
   MakeUnsigned<T> bits;
-  memcpy(&bits, &v, sizeof(v));
+  CopySameSize(&v, &bits);
   bits += bits;
   bits >>= 1;  // clear sign bit
   // NaN if all exponent bits are set and the mantissa is not zero.
@@ -929,7 +929,7 @@ HWY_API Mask1<double> IsFinite(const Vec1<double> v) {
 template <typename T>
 HWY_API Vec1<T> Load(Sisd<T> /* tag */, const T* HWY_RESTRICT aligned) {
   T t;
-  CopyBytes<sizeof(T)>(aligned, &t);
+  CopySameSize(aligned, &t);
   return Vec1<T>(t);
 }
 
@@ -955,7 +955,7 @@ HWY_API Vec1<T> LoadDup128(Sisd<T> d, const T* HWY_RESTRICT aligned) {
 template <typename T>
 HWY_API void Store(const Vec1<T> v, Sisd<T> /* tag */,
                    T* HWY_RESTRICT aligned) {
-  CopyBytes<sizeof(T)>(&v.raw, aligned);
+  CopySameSize(&v.raw, aligned);
 }
 
 template <typename T>
@@ -1119,7 +1119,7 @@ HWY_API Vec1<ToT> DemoteTo(Sisd<ToT> /* tag */, Vec1<FromT> from) {
 
 HWY_API Vec1<float> PromoteTo(Sisd<float> /* tag */, const Vec1<float16_t> v) {
   uint16_t bits16;
-  CopyBytes<2>(&v.raw, &bits16);
+  CopySameSize(&v.raw, &bits16);
   const uint32_t sign = static_cast<uint32_t>(bits16 >> 15);
   const uint32_t biased_exp = (bits16 >> 10) & 0x1F;
   const uint32_t mantissa = bits16 & 0x3FF;
@@ -1136,7 +1136,7 @@ HWY_API Vec1<float> PromoteTo(Sisd<float> /* tag */, const Vec1<float16_t> v) {
   const uint32_t mantissa32 = mantissa << (23 - 10);
   const uint32_t bits32 = (sign << 31) | (biased_exp32 << 23) | mantissa32;
   float out;
-  CopyBytes<4>(&bits32, &out);
+  CopySameSize(&bits32, &out);
   return Vec1<float>(out);
 }
 
@@ -1147,7 +1147,7 @@ HWY_API Vec1<float> PromoteTo(Sisd<float> d, const Vec1<bfloat16_t> v) {
 HWY_API Vec1<float16_t> DemoteTo(Sisd<float16_t> /* tag */,
                                  const Vec1<float> v) {
   uint32_t bits32;
-  CopyBytes<4>(&v.raw, &bits32);
+  CopySameSize(&v.raw, &bits32);
   const uint32_t sign = bits32 >> 31;
   const uint32_t biased_exp32 = (bits32 >> 23) & 0xFF;
   const uint32_t mantissa32 = bits32 & 0x7FFFFF;
@@ -1158,7 +1158,7 @@ HWY_API Vec1<float16_t> DemoteTo(Sisd<float16_t> /* tag */,
   Vec1<float16_t> out;
   if (exp < -24) {
     const uint16_t zero = 0;
-    CopyBytes<2>(&zero, &out.raw);
+    CopySameSize(&zero, &out.raw);
     return out;
   }
 
@@ -1182,7 +1182,7 @@ HWY_API Vec1<float16_t> DemoteTo(Sisd<float16_t> /* tag */,
   const uint32_t bits16 = (sign << 15) | (biased_exp16 << 10) | mantissa16;
   HWY_DASSERT(bits16 < 0x10000);
   const uint16_t narrowed = static_cast<uint16_t>(bits16);  // big-endian safe
-  CopyBytes<2>(&narrowed, &out.raw);
+  CopySameSize(&narrowed, &out.raw);
   return out;
 }
 
@@ -1379,7 +1379,7 @@ HWY_API Vec1<TI> TableLookupBytes(const Vec1<T> in, const Vec1<TI> indices) {
   uint8_t in_bytes[sizeof(T)];
   uint8_t idx_bytes[sizeof(T)];
   uint8_t out_bytes[sizeof(T)];
-  CopyBytes<sizeof(T)>(&in, &in_bytes);
+  CopyBytes<sizeof(T)>(&in, &in_bytes);  // copy to bytes
   CopyBytes<sizeof(T)>(&indices, &idx_bytes);
   for (size_t i = 0; i < sizeof(T); ++i) {
     out_bytes[i] = in_bytes[idx_bytes[i]];
@@ -1394,7 +1394,7 @@ HWY_API Vec1<TI> TableLookupBytesOr0(const Vec1<T> in, const Vec1<TI> indices) {
   uint8_t in_bytes[sizeof(T)];
   uint8_t idx_bytes[sizeof(T)];
   uint8_t out_bytes[sizeof(T)];
-  CopyBytes<sizeof(T)>(&in, &in_bytes);
+  CopyBytes<sizeof(T)>(&in, &in_bytes);  // copy to bytes
   CopyBytes<sizeof(T)>(&indices, &idx_bytes);
   for (size_t i = 0; i < sizeof(T); ++i) {
     out_bytes[i] = idx_bytes[i] & 0x80 ? 0 : in_bytes[idx_bytes[i]];
@@ -1544,62 +1544,6 @@ HWY_API Vec1<T> MinOfLanes(Sisd<T> /* tag */, const Vec1<T> v) {
 template <typename T>
 HWY_API Vec1<T> MaxOfLanes(Sisd<T> /* tag */, const Vec1<T> v) {
   return v;
-}
-
-// ================================================== Operator wrapper
-
-template <class V>
-HWY_API V Add(V a, V b) {
-  return a + b;
-}
-template <class V>
-HWY_API V Sub(V a, V b) {
-  return a - b;
-}
-
-template <class V>
-HWY_API V Mul(V a, V b) {
-  return a * b;
-}
-template <class V>
-HWY_API V Div(V a, V b) {
-  return a / b;
-}
-
-template <class V>
-V Shl(V a, V b) {
-  return a << b;
-}
-template <class V>
-V Shr(V a, V b) {
-  return a >> b;
-}
-
-template <class V>
-HWY_API auto Eq(V a, V b) -> decltype(a == b) {
-  return a == b;
-}
-template <class V>
-HWY_API auto Ne(V a, V b) -> decltype(a == b) {
-  return a != b;
-}
-template <class V>
-HWY_API auto Lt(V a, V b) -> decltype(a == b) {
-  return a < b;
-}
-
-template <class V>
-HWY_API auto Gt(V a, V b) -> decltype(a == b) {
-  return a > b;
-}
-template <class V>
-HWY_API auto Ge(V a, V b) -> decltype(a == b) {
-  return a >= b;
-}
-
-template <class V>
-HWY_API auto Le(V a, V b) -> decltype(a == b) {
-  return a <= b;
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)

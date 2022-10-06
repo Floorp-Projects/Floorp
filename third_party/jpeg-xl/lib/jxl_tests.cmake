@@ -66,8 +66,6 @@ set(TEST_FILES
 
 # Test-only library code.
 set(TESTLIB_FILES
-  jxl/codec_y4m_testonly.cc
-  jxl/codec_y4m_testonly.h
   jxl/dct_for_test.h
   jxl/dec_transforms_testonly.cc
   jxl/dec_transforms_testonly.h

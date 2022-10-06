@@ -1394,10 +1394,8 @@ cmd_bump_version() {
     fi
   fi
 
-  newver="${major}.${minor}"
-  if [[ "${patch}" != "0" ]]; then
-    newver="${newver}.${patch}"
-  fi
+  newver="${major}.${minor}.${patch}"
+
   echo "Bumping version to ${newver} (${major}.${minor}.${patch})"
   sed -E \
     -e "s/(set\\(JPEGXL_MAJOR_VERSION) [0-9]+\\)/\\1 ${major})/" \

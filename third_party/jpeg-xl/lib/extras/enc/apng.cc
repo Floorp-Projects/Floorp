@@ -58,8 +58,10 @@ class APNGEncoder : public Encoder {
     std::vector<JxlPixelFormat> formats;
     for (const uint32_t num_channels : {1, 2, 3, 4}) {
       for (const JxlDataType data_type : {JXL_TYPE_UINT8, JXL_TYPE_UINT16}) {
-        formats.push_back(JxlPixelFormat{num_channels, data_type,
-                                         JXL_BIG_ENDIAN, /*align=*/0});
+        for (JxlEndianness endianness : {JXL_BIG_ENDIAN, JXL_LITTLE_ENDIAN}) {
+          formats.push_back(
+              JxlPixelFormat{num_channels, data_type, endianness, /*align=*/0});
+        }
       }
     }
     return formats;
@@ -233,21 +235,7 @@ Status APNGEncoder::EncodePackedPixelFileToAPNG(
       } else {
         memcpy(&out[0], in, out_size);
       }
-    } else if (format.data_type == JXL_TYPE_FLOAT) {
-      float mul = 65535.0;
-      const uint8_t* p_in = in;
-      uint8_t* p_out = out.data();
-      for (size_t i = 0; i < num_samples; ++i, p_in += 4, p_out += 2) {
-        uint32_t val = (format.endianness == JXL_BIG_ENDIAN ? LoadBE32(p_in)
-                                                            : LoadLE32(p_in));
-        float fval;
-        memcpy(&fval, &val, 4);
-        StoreBE16(static_cast<uint32_t>(fval * mul + 0.5), p_out);
-      }
-    } else {
-      return JXL_FAILURE("Unsupported pixel data type");
     }
-
     png_structp png_ptr;
     png_infop info_ptr;
 

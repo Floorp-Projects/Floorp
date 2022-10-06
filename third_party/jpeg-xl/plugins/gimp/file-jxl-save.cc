@@ -6,6 +6,7 @@
 #include "plugins/gimp/file-jxl-save.h"
 
 #include <cmath>
+#include <utility>
 
 #include "gobject/gsignal.h"
 
@@ -602,12 +603,12 @@ bool JpegXlSaveOpts::UpdateBablFormat() {
 }
 
 bool JpegXlSaveOpts::SetBablModel(std::string model) {
-  babl_model_str = model;
+  babl_model_str = std::move(model);
   return UpdateBablFormat();
 }
 
 bool JpegXlSaveOpts::SetBablType(std::string type) {
-  babl_type_str = type;
+  babl_type_str = std::move(type);
   return UpdateBablFormat();
 }
 

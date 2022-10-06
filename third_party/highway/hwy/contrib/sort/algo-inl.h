@@ -124,7 +124,7 @@ class InputStats {
     // bit representations as the checksum.
     uint64_t bits = 0;
     static_assert(sizeof(T) <= 8, "Expected a built-in type");
-    CopyBytes<sizeof(T)>(&value, &bits);
+    CopyBytes<sizeof(T)>(&value, &bits);  // not same size
     sum_ += bits;
     count_ += 1;
   }

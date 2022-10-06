@@ -366,7 +366,6 @@ Status JPEGData::VisitFields(Visitor* visitor) {
   }
   uint32_t tail_data_len = tail_data.size();
   if (!visitor->IsReading() && tail_data_len > 4260096) {
-    error = JPEGReadError::TAIL_DATA_TOO_LARGE;
     return JXL_FAILURE("Tail data too large (max size = 4260096, size = %u).",
                        tail_data_len);
   }

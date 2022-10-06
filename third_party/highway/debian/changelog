@@ -1,3 +1,15 @@
+highway (1.0.1-1) UNRELEASED; urgency=medium
+
+* Add Eq128, i64 Mul, unsigned->float ConvertTo
+* Faster sort for few unique keys, more robust pivot selection
+* Fix: floating-point generator for sort tests, Min/MaxOfLanes for i16
+* Fix: avoid always_inline in debug, link atomic
+* GCC warnings: string.h, maybe-uninitialized, ignored-attributes
+* GCC warnings: preprocessor int overflow, spurious use-after-free/overflow
+* Doc: <=HWY_AVX3, Full32/64/128, how to use generic-inl
+
+ -- Jan Wassenberg <janwas@google.com>  Tue, 23 Aug 2022 10:00:00 +0200
+
 highway (1.0.0-1) UNRELEASED; urgency=medium
 
 * ABI change: 64-bit target values, more room for expansion

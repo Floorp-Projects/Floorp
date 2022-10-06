@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -58,7 +57,7 @@ struct TestUnsignedMul {
     HWY_ASSERT_VEC_EQ(d, vmax, Mul(v1, vmax));
 
     const size_t bits = sizeof(T) * 8;
-    const uint64_t mask = (1ull << bits) - 1;
+    const uint64_t mask = bits==64 ? (~uint64_t{0}) : (1ull << bits) - 1;
     const T max2 = (static_cast<uint64_t>(max) * max) & mask;
     HWY_ASSERT_VEC_EQ(d, Set(d, max2), Mul(vmax, vmax));
   }
@@ -97,13 +96,13 @@ HWY_NOINLINE void TestAllMul() {
   // No u8.
   test_unsigned(uint16_t());
   test_unsigned(uint32_t());
-  // No u64.
+  test_unsigned(uint64_t());
 
   const ForPartialVectors<TestSignedMul> test_signed;
   // No i8.
   test_signed(int16_t());
   test_signed(int32_t());
-  // No i64.
+  test_signed(int64_t());
 }
 
 struct TestMulHigh {

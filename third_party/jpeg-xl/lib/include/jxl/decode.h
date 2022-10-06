@@ -22,6 +22,7 @@
 #include "jxl/memory_manager.h"
 #include "jxl/parallel_runner.h"
 #include "jxl/types.h"
+#include "jxl/version.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -742,14 +743,26 @@ typedef enum {
  *    represented, the ICC profile may be a close approximation. It is also not
  *    always feasible to deduce from an ICC profile which named color space it
  *    exactly represents, if any, as it can represent any arbitrary space.
+ *    HDR color spaces such as those using PQ and HLG are also potentially
+ *    problematic, in that: while ICC profiles can encode a transfer function
+ *    that happens to approximate those of PQ and HLG (HLG for only one given
+ *    system gamma at a time, and necessitating a 3D LUT if gamma is to be
+ *    different from 1), they cannot (before ICCv4.4) semantically signal that
+ *    this is the color space that they represent. Therefore, they will
+ *    typically not actually be interpreted as representing an HDR color space.
+ *    This is especially detrimental to PQ which will then be interpreted as if
+ *    the maximum signal value represented SDR white instead of 10000 cd/m^2,
+ *    meaning that the image will be displayed two orders of magnitude (5-7 EV)
+ *    too dim.
  *  - The JPEG XL image has an encoded structured color profile, and it
  *    indicates an unknown or xyb color space. In that case, @ref
  *    JxlDecoderGetColorAsICCProfile is not available.
  *
- * When rendering an image on a system that supports ICC profiles, @ref
- * JxlDecoderGetColorAsICCProfile should be used first. When rendering
- * for a specific color space, possibly indicated in the JPEG XL
- * image, @ref JxlDecoderGetColorAsEncodedProfile should be used first.
+ * When rendering an image on a system where ICC-based color management is used,
+ * @ref JxlDecoderGetColorAsICCProfile should generally be used first as it will
+ * return a ready-to-use profile (with the aforementioned caveat about HDR).
+ * When knowledge about the nominal color space is desired if available, @ref
+ * JxlDecoderGetColorAsEncodedProfile should be used first.
  *
  * @param dec decoder object
  * @param unused_format deprecated, can be NULL
@@ -1436,6 +1449,21 @@ JXL_EXPORT size_t JxlDecoderGetIntendedDownsamplingRatio(JxlDecoder* dec);
  *     right now. Regular decoding can still be performed.
  */
 JXL_EXPORT JxlDecoderStatus JxlDecoderFlushImage(JxlDecoder* dec);
+
+/**
+ * Sets the bit depth of the output buffer or callback.
+ *
+ * Can be called after @ref JxlDecoderSetImageOutBuffer or @ref
+ * JxlDecoderSetImageOutCallback. For float pixel data types, only the default
+ * @ref JXL_BIT_DEPTH_FROM_PIXEL_FORMAT setting is supported.
+ *
+ * @param dec decoder object
+ * @param bit_depth the bit depth setting of the pixel output
+ * @return @ref JXL_DEC_SUCCESS on success, @ref JXL_DEC_ERROR on error, such as
+ *     incompatible custom bit depth and pixel data type.
+ */
+JXL_EXPORT JxlDecoderStatus
+JxlDecoderSetImageOutBitDepth(JxlDecoder* dec, const JxlBitDepth* bit_depth);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }

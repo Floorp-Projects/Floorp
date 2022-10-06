@@ -50,6 +50,12 @@
 #define HWY_COMPILER_ICC 0
 #endif
 
+#ifdef __INTEL_LLVM_COMPILER
+#define HWY_COMPILER_ICX __INTEL_LLVM_COMPILER
+#else
+#define HWY_COMPILER_ICX 0
+#endif
+
 // HWY_COMPILER_GCC is a generic macro for all compilers implementing the GNU
 // compiler extensions (eg. Clang, Intel...)
 #ifdef __GNUC__

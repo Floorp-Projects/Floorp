@@ -21,17 +21,16 @@ void BM_EncExternalImage_ConvertImageRGBA(benchmark::State& state) {
   ImageBundle ib(&im);
 
   std::vector<uint8_t> interleaved(xsize * ysize * 4);
-
+  JxlPixelFormat format = {4, JXL_TYPE_UINT8, JXL_NATIVE_ENDIAN, 0};
   for (auto _ : state) {
     for (size_t i = 0; i < kNumIter; ++i) {
       JXL_CHECK(ConvertFromExternal(
           Span<const uint8_t>(interleaved.data(), interleaved.size()), xsize,
           ysize,
           /*c_current=*/ColorEncoding::SRGB(),
-          /*channels=*/4,
           /*alpha_is_premultiplied=*/false,
-          /*bits_per_sample=*/8, JXL_NATIVE_ENDIAN,
-          /*pool=*/nullptr, &ib, /*float_in=*/false, /*align=*/0));
+          /*bits_per_sample=*/8, format,
+          /*pool=*/nullptr, &ib));
     }
   }
 

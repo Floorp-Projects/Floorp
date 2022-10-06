@@ -18,7 +18,6 @@
 
 // SIMD/multicore-friendly planar image representation with row accessors.
 
-#include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -104,7 +103,7 @@ struct HWY_CONTRIB_DLLEXPORT ImageBase {
   HWY_INLINE void* VoidRow(const size_t y) const {
 #if HWY_IS_ASAN || HWY_IS_MSAN || HWY_IS_TSAN
     if (y >= ysize_) {
-      HWY_ABORT("Row(%" PRIu64 ") >= %u\n", static_cast<uint64_t>(y), ysize_);
+      HWY_ABORT("Row(%d) >= %u\n", static_cast<int>(y), ysize_);
     }
 #endif
 
@@ -223,14 +222,11 @@ class Image3 {
 
   Image3(ImageT&& plane0, ImageT&& plane1, ImageT&& plane2) {
     if (!SameSize(plane0, plane1) || !SameSize(plane0, plane2)) {
-      HWY_ABORT("Not same size: %" PRIu64 " x %" PRIu64 ", %" PRIu64
-                " x %" PRIu64 ", %" PRIu64 " x %" PRIu64 "\n",
-                static_cast<uint64_t>(plane0.xsize()),
-                static_cast<uint64_t>(plane0.ysize()),
-                static_cast<uint64_t>(plane1.xsize()),
-                static_cast<uint64_t>(plane1.ysize()),
-                static_cast<uint64_t>(plane2.xsize()),
-                static_cast<uint64_t>(plane2.ysize()));
+      HWY_ABORT(
+          "Not same size: %d x %d, %d x %d, %d x %d\n",
+          static_cast<int>(plane0.xsize()), static_cast<int>(plane0.ysize()),
+          static_cast<int>(plane1.xsize()), static_cast<int>(plane1.ysize()),
+          static_cast<int>(plane2.xsize()), static_cast<int>(plane2.ysize()));
     }
     planes_[0] = std::move(plane0);
     planes_[1] = std::move(plane1);
@@ -294,9 +290,8 @@ class Image3 {
   HWY_INLINE void* VoidPlaneRow(const size_t c, const size_t y) const {
 #if HWY_IS_ASAN || HWY_IS_MSAN || HWY_IS_TSAN
     if (c >= kNumPlanes || y >= ysize()) {
-      HWY_ABORT("PlaneRow(%" PRIu64 ", %" PRIu64 ") >= %" PRIu64 "\n",
-                static_cast<uint64_t>(c), static_cast<uint64_t>(y),
-                static_cast<uint64_t>(ysize()));
+      HWY_ABORT("PlaneRow(%d, %d) >= %d\n", static_cast<int>(c),
+                static_cast<int>(y), static_cast<int>(ysize()));
     }
 #endif
     // Use the first plane's stride because the compiler might not realize they

@@ -15,7 +15,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/demote_test.cc"
@@ -66,7 +65,7 @@ struct TestDemoteTo {
       for (size_t i = 0; i < N; ++i) {
         do {
           const uint64_t bits = rng();
-          memcpy(&from[i], &bits, sizeof(T));
+          CopyBytes<sizeof(T)>(&bits, &from[i]);  // not same size
         } while (!value_ok(from[i]));
         expected[i] = static_cast<ToT>(HWY_MIN(HWY_MAX(min, from[i]), max));
       }
@@ -116,7 +115,7 @@ struct TestDemoteToFloat {
       for (size_t i = 0; i < N; ++i) {
         do {
           const uint64_t bits = rng();
-          memcpy(&from[i], &bits, sizeof(T));
+          CopyBytes<sizeof(T)>(&bits, &from[i]);  // not same size
         } while (!IsFiniteT(from[i]));
         const T magn = std::abs(from[i]);
         const T max_abs = HighestValue<ToT>();

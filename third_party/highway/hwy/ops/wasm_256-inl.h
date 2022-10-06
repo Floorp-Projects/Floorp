@@ -592,7 +592,7 @@ HWY_API Vec256<int16_t> MulHigh(const Vec256<int16_t> a,
 }
 
 HWY_API Vec256<int16_t> MulFixedPoint15(Vec256<int16_t>, Vec256<int16_t>) {
-  HWY_ASSERT(0);
+  HWY_ASSERT(0);  // Not implemented
 }
 
 // Multiplies even lanes (0, 2 ..) and returns the double-width result.
@@ -1043,7 +1043,7 @@ HWY_API Vec256<T> IfThenZeroElse(Mask256<T> mask, Vec256<T> no) {
 template <typename T>
     HWY_API Vec256 <
     T IfNegativeThenElse(Vec256<T> v, Vec256<T> yes, Vec256<T> no) {
-  HWY_ASSERT(0);
+  HWY_ASSERT(0);  // Not implemented
 }
 
 template <typename T, HWY_IF_FLOAT(T)>
@@ -1333,13 +1333,13 @@ HWY_API Vec256<T> GatherIndex(const Full256<T> d, const T* HWY_RESTRICT base,
 // ------------------------------ ExtractLane
 template <typename T, size_t N>
 HWY_API T ExtractLane(const Vec128<T, N> v, size_t i) {
-  HWY_ASSERT(0);
+  HWY_ASSERT(0);  // Not implemented
 }
 
 // ------------------------------ InsertLane
 template <typename T, size_t N>
 HWY_API Vec128<T, N> InsertLane(const Vec128<T, N> v, size_t i, T t) {
-  HWY_ASSERT(0);
+  HWY_ASSERT(0);  // Not implemented
 }
 
 // ------------------------------ GetLane
@@ -1846,21 +1846,21 @@ HWY_API Vec256<T> Reverse(Full256<T> d, const Vec256<T> v) {
 
 template <typename T>
 HWY_API Vec256<T> Reverse2(Full256<T> d, const Vec256<T> v) {
-  HWY_ASSERT(0);
+  HWY_ASSERT(0);  // Not implemented
 }
 
 // ------------------------------ Reverse4
 
 template <typename T>
 HWY_API Vec256<T> Reverse4(Full256<T> d, const Vec256<T> v) {
-  HWY_ASSERT(0);
+  HWY_ASSERT(0);  // Not implemented
 }
 
 // ------------------------------ Reverse8
 
 template <typename T>
 HWY_API Vec256<T> Reverse8(Full256<T> d, const Vec256<T> v) {
-  HWY_ASSERT(0);
+  HWY_ASSERT(0);  // Not implemented
 }
 
 // ------------------------------ InterleaveLower
@@ -2065,13 +2065,13 @@ HWY_API Vec256<T> ConcatEven(Full256<T> /* tag */, Vec256<T> hi, Vec256<T> lo) {
 // ------------------------------ DupEven
 template <typename T>
 HWY_API Vec256<T> DupEven(Vec256<T> v) {
-  HWY_ASSERT(0);
+  HWY_ASSERT(0);  // Not implemented
 }
 
 // ------------------------------ DupOdd
 template <typename T>
 HWY_API Vec256<T> DupOdd(Vec256<T> v) {
-  HWY_ASSERT(0);
+  HWY_ASSERT(0);  // Not implemented
 }
 
 // ------------------------------ OddEven
@@ -2353,6 +2353,10 @@ HWY_API Vec256<uint8_t, 16> TruncateTo(Simd<uint8_t, 16, 0> /* tag */,
 HWY_API Vec256<float> ConvertTo(Full256<float> /* tag */,
                                 const Vec256<int32_t> v) {
   return Vec256<float>{wasm_f32x4_convert_i32x4(v.raw)};
+}
+HWY_API Vec256<float> ConvertTo(Full256<float> /* tag */,
+                                const Vec256<uint32_t> v) {
+  return Vec256<float>{wasm_f32x4_convert_u32x4(v.raw)};
 }
 // Truncates (rounds toward zero).
 HWY_API Vec256<int32_t> ConvertTo(Full256<int32_t> /* tag */,
@@ -2811,7 +2815,7 @@ HWY_API Vec256<T> Compress(Vec256<T> v, const Mask256<T> mask) {
 // ------------------------------ CompressBlocksNot
 HWY_API Vec256<uint64_t> CompressBlocksNot(Vec256<uint64_t> v,
                                            Mask256<uint64_t> mask) {
-  HWY_ASSERT(0);
+  HWY_ASSERT(0);  // Not implemented
 }
 
 // ------------------------------ CompressBits
@@ -2968,22 +2972,12 @@ HWY_INLINE Vec256<T> MaxOfLanes(hwy::SizeTag<8> /* tag */,
 
 // u16/i16
 template <typename T, HWY_IF_LANE_SIZE(T, 2)>
-HWY_API Vec256<T> MinOfLanes(hwy::SizeTag<2> /* tag */, Vec256<T> v) {
-  const Repartition<int32_t, Full256<T>> d32;
-  const auto even = And(BitCast(d32, v), Set(d32, 0xFFFF));
-  const auto odd = ShiftRight<16>(BitCast(d32, v));
-  const auto min = MinOfLanes(d32, Min(even, odd));
-  // Also broadcast into odd lanes.
-  return BitCast(Full256<T>(), Or(min, ShiftLeft<16>(min)));
+HWY_API Vec256<T> MinOfLanes(hwy::SizeTag<2> /* tag */, Vec256<T> /*v*/) {
+  HWY_ASSERT(0);  // Not implemented
 }
 template <typename T, HWY_IF_LANE_SIZE(T, 2)>
-HWY_API Vec256<T> MaxOfLanes(hwy::SizeTag<2> /* tag */, Vec256<T> v) {
-  const Repartition<int32_t, Full256<T>> d32;
-  const auto even = And(BitCast(d32, v), Set(d32, 0xFFFF));
-  const auto odd = ShiftRight<16>(BitCast(d32, v));
-  const auto min = MaxOfLanes(d32, Max(even, odd));
-  // Also broadcast into odd lanes.
-  return BitCast(Full256<T>(), Or(min, ShiftLeft<16>(min)));
+HWY_API Vec256<T> MaxOfLanes(hwy::SizeTag<2> /* tag */, Vec256<T> /*v*/) {
+  HWY_ASSERT(0);  // Not implemented
 }
 
 }  // namespace detail

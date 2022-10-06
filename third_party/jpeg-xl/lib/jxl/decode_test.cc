@@ -259,13 +259,15 @@ PaddedBytes CreateTestJXLCodestream(Span<const uint8_t> pixels, size_t xsize,
   if (params.intensity_target != 0) {
     io.metadata.m.SetIntensityTarget(params.intensity_target);
   }
+  JxlPixelFormat format = {static_cast<uint32_t>(num_channels), JXL_TYPE_UINT16,
+                           JXL_BIG_ENDIAN, 0};
   // Make the grayscale-ness of the io metadata color_encoding and the packed
   // image match.
   io.metadata.m.color_encoding = color_encoding;
-  EXPECT_TRUE(ConvertFromExternal(
-      pixels, xsize, ysize, color_encoding, num_channels,
-      /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, JXL_BIG_ENDIAN,
-      &pool, &io.Main(), /*float_in=*/false, /*align=*/0));
+  EXPECT_TRUE(ConvertFromExternal(pixels, xsize, ysize, color_encoding,
+                                  /*alpha_is_premultiplied=*/false,
+                                  /*bits_per_sample=*/16, format, &pool,
+                                  &io.Main()));
   jxl::PaddedBytes jpeg_data;
   if (params.jpeg_codestream != nullptr) {
 #if JPEGXL_ENABLE_JPEG
@@ -1334,11 +1336,9 @@ TEST_P(DecodeTestParam, PixelTest) {
     io.SetSize(config.xsize, config.ysize);
 
     EXPECT_TRUE(ConvertFromExternal(bytes, config.xsize, config.ysize,
-                                    color_encoding, orig_channels,
+                                    color_encoding,
                                     /*alpha_is_premultiplied=*/false, 16,
-                                    JXL_BIG_ENDIAN, nullptr, &io.Main(),
-                                    /*float_in=*/false,
-                                    /*align=*/0));
+                                    format_orig, nullptr, &io.Main()));
 
     for (size_t i = 0; i < pixels.size(); i++) pixels[i] = 0;
     EXPECT_TRUE(ConvertToExternal(
@@ -1448,8 +1448,6 @@ std::vector<PixelTestConfig> GeneratePixelTests() {
   // Test previews.
   for (int preview_mode = 0; preview_mode < jxl::kNumPreviewModes;
        preview_mode++) {
-    // if (preview_mode == jxl::kBigPreview &&
-    //	ch_info[0].output_channels != 3) continue;
     make_test(ch_info[0], 77, 33, (jxl::PreviewMode)preview_mode,
               /*add_intrinsic_size=*/false, CodeStreamBoxFormat::kCSBF_None,
               JXL_ORIENT_IDENTITY,
@@ -1664,12 +1662,10 @@ TEST(DecodeTest, PixelTestWithICCProfileLossy) {
   jxl::Span<const uint8_t> span0(pixels.data(), pixels.size());
   jxl::CodecInOut io0;
   io0.SetSize(xsize, ysize);
-  EXPECT_TRUE(
-      ConvertFromExternal(span0, xsize, ysize, color_encoding0, /*channels=*/3,
-                          /*alpha_is_premultiplied=*/false,
-                          /*bits_per_sample=*/16, format_orig.endianness,
-                          /*pool=*/nullptr, &io0.Main(), /*float_in=*/false,
-                          /*align=*/0));
+  EXPECT_TRUE(ConvertFromExternal(span0, xsize, ysize, color_encoding0,
+                                  /*alpha_is_premultiplied=*/false,
+                                  /*bits_per_sample=*/16, format_orig,
+                                  /*pool=*/nullptr, &io0.Main()));
 
   jxl::ColorEncoding color_encoding1;
   EXPECT_TRUE(color_encoding1.SetICC(std::move(icc)));
@@ -1677,15 +1673,14 @@ TEST(DecodeTest, PixelTestWithICCProfileLossy) {
   jxl::CodecInOut io1;
   io1.SetSize(xsize, ysize);
   EXPECT_TRUE(ConvertFromExternal(span1, xsize, ysize, color_encoding1,
-                                  channels, /*alpha_is_premultiplied=*/false,
-                                  /*bits_per_sample=*/32, format.endianness,
-                                  /*pool=*/nullptr, &io1.Main(),
-                                  /*float_in=*/true, /*align=*/0));
+                                  /*alpha_is_premultiplied=*/false,
+                                  /*bits_per_sample=*/32, format,
+                                  /*pool=*/nullptr, &io1.Main()));
 
   jxl::ButteraugliParams ba;
   EXPECT_THAT(ButteraugliDistance(io0, io1, ba, jxl::GetJxlCms(),
                                   /*distmap=*/nullptr, nullptr),
-              IsSlightlyBelow(0.785f));
+              IsSlightlyBelow(0.85f));
 
   JxlDecoderDestroy(dec);
 }
@@ -1722,21 +1717,25 @@ double ButteraugliDistance(size_t xsize, size_t ysize,
   jxl::CodecInOut in;
   in.metadata.m.color_encoding = color_in;
   in.metadata.m.SetIntensityTarget(intensity_in);
+  JxlPixelFormat format_in = {static_cast<uint32_t>(color_in.Channels()),
+                              JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
   EXPECT_TRUE(jxl::ConvertFromExternal(
       jxl::Span<const uint8_t>(pixels_in.data(), pixels_in.size()), xsize,
-      ysize, color_in, color_in.Channels(),
+      ysize, color_in,
       /*alpha_is_premultiplied=*/false,
-      /*bits_per_sample=*/16, JXL_BIG_ENDIAN,
-      /*pool=*/nullptr, &in.Main(), /*float_in=*/false, /*align=*/0));
+      /*bits_per_sample=*/16, format_in,
+      /*pool=*/nullptr, &in.Main()));
   jxl::CodecInOut out;
   out.metadata.m.color_encoding = color_out;
   out.metadata.m.SetIntensityTarget(intensity_out);
+  JxlPixelFormat format_out = {static_cast<uint32_t>(color_out.Channels()),
+                               JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
   EXPECT_TRUE(jxl::ConvertFromExternal(
       jxl::Span<const uint8_t>(pixels_out.data(), pixels_out.size()), xsize,
-      ysize, color_out, color_out.Channels(),
+      ysize, color_out,
       /*alpha_is_premultiplied=*/false,
-      /*bits_per_sample=*/16, JXL_BIG_ENDIAN,
-      /*pool=*/nullptr, &out.Main(), /*float_in=*/false, /*align=*/0));
+      /*bits_per_sample=*/16, format_out,
+      /*pool=*/nullptr, &out.Main()));
   return ButteraugliDistance(in, out, jxl::ButteraugliParams(),
                              jxl::GetJxlCms(), nullptr, nullptr);
 }
@@ -1926,22 +1925,18 @@ TEST(DecodeTest, PixelTestOpaqueSrgbLossy) {
     jxl::Span<const uint8_t> span0(pixels.data(), pixels.size());
     jxl::CodecInOut io0;
     io0.SetSize(xsize, ysize);
-    EXPECT_TRUE(ConvertFromExternal(
-        span0, xsize, ysize, color_encoding0, /*channels=*/3,
-        /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16,
-        format_orig.endianness,
-        /*pool=*/nullptr, &io0.Main(), /*float_in=*/false,
-        /*align=*/0));
+    EXPECT_TRUE(ConvertFromExternal(span0, xsize, ysize, color_encoding0,
+                                    /*alpha_is_premultiplied=*/false,
+                                    /*bits_per_sample=*/16, format_orig,
+                                    /*pool=*/nullptr, &io0.Main()));
 
     jxl::ColorEncoding color_encoding1 = jxl::ColorEncoding::SRGB(false);
     jxl::Span<const uint8_t> span1(pixels2.data(), pixels2.size());
     jxl::CodecInOut io1;
     EXPECT_TRUE(ConvertFromExternal(span1, xsize, ysize, color_encoding1,
-                                    channels, /*alpha_is_premultiplied=*/false,
-                                    /*bits_per_sample=*/8, format.endianness,
-                                    /*pool=*/nullptr, &io1.Main(),
-                                    /*float_in=*/false,
-                                    /*align=*/0));
+                                    /*alpha_is_premultiplied=*/false,
+                                    /*bits_per_sample=*/8, format,
+                                    /*pool=*/nullptr, &io1.Main()));
 
     jxl::ButteraugliParams ba;
     EXPECT_THAT(ButteraugliDistance(io0, io1, ba, jxl::GetJxlCms(),
@@ -1982,22 +1977,18 @@ TEST(DecodeTest, PixelTestOpaqueSrgbLossyNoise) {
     jxl::Span<const uint8_t> span0(pixels.data(), pixels.size());
     jxl::CodecInOut io0;
     io0.SetSize(xsize, ysize);
-    EXPECT_TRUE(ConvertFromExternal(
-        span0, xsize, ysize, color_encoding0, /*channels=*/3,
-        /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16,
-        format_orig.endianness,
-        /*pool=*/nullptr, &io0.Main(), /*float_in=*/false,
-        /*align=*/0));
+    EXPECT_TRUE(ConvertFromExternal(span0, xsize, ysize, color_encoding0,
+                                    /*alpha_is_premultiplied=*/false,
+                                    /*bits_per_sample=*/16, format_orig,
+                                    /*pool=*/nullptr, &io0.Main()));
 
     jxl::ColorEncoding color_encoding1 = jxl::ColorEncoding::SRGB(false);
     jxl::Span<const uint8_t> span1(pixels2.data(), pixels2.size());
     jxl::CodecInOut io1;
     EXPECT_TRUE(ConvertFromExternal(span1, xsize, ysize, color_encoding1,
-                                    channels, /*alpha_is_premultiplied=*/false,
-                                    /*bits_per_sample=*/8, format.endianness,
-                                    /*pool=*/nullptr, &io1.Main(),
-                                    /*float_in=*/false,
-                                    /*align=*/0));
+                                    /*alpha_is_premultiplied=*/false,
+                                    /*bits_per_sample=*/8, format,
+                                    /*pool=*/nullptr, &io1.Main()));
 
     jxl::ButteraugliParams ba;
     EXPECT_THAT(ButteraugliDistance(io0, io1, ba, jxl::GetJxlCms(),
@@ -2362,7 +2353,7 @@ TEST(DecodeTest, DCNotGettableTest) {
 TEST(DecodeTest, PreviewTest) {
   size_t xsize = 77, ysize = 120;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 3, 0);
-
+  JxlPixelFormat format_orig = {3, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
   for (jxl::PreviewMode mode : {jxl::kSmallPreview, jxl::kBigPreview}) {
     jxl::TestCodestreamParams params;
     params.preview_mode = mode;
@@ -2393,9 +2384,8 @@ TEST(DecodeTest, PreviewTest) {
     jxl::CodecInOut io0;
     EXPECT_TRUE(jxl::ConvertFromExternal(
         jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-        c_srgb, 3, /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16,
-        JXL_BIG_ENDIAN, /*pool=*/nullptr, &io0.Main(),
-        /*float_in=*/false, /*align=*/0));
+        c_srgb, /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16,
+        format_orig, /*pool=*/nullptr, &io0.Main()));
     GeneratePreview(params.preview_mode, &io0.Main());
 
     size_t xsize_preview = io0.Main().xsize();
@@ -2416,9 +2406,9 @@ TEST(DecodeTest, PreviewTest) {
     jxl::CodecInOut io1;
     EXPECT_TRUE(jxl::ConvertFromExternal(
         jxl::Span<const uint8_t>(preview.data(), preview.size()), xsize_preview,
-        ysize_preview, c_srgb, 3, /*alpha_is_premultiplied=*/false,
-        /*bits_per_sample=*/8, JXL_LITTLE_ENDIAN,
-        /*pool=*/nullptr, &io1.Main(), /*float_in=*/false, /*align=*/0));
+        ysize_preview, c_srgb, /*alpha_is_premultiplied=*/false,
+        /*bits_per_sample=*/8, format,
+        /*pool=*/nullptr, &io1.Main()));
 
     jxl::ButteraugliParams ba;
     // TODO(lode): this ButteraugliDistance silently returns 0 (dangerous for
@@ -2492,10 +2482,9 @@ TEST(DecodeTest, AnimationTest) {
 
     EXPECT_TRUE(ConvertFromExternal(
         jxl::Span<const uint8_t>(frames[i].data(), frames[i].size()), xsize,
-        ysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false), /*channels=*/3,
-        /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16,
-        JXL_BIG_ENDIAN, /*pool=*/nullptr, &bundle,
-        /*float_in=*/false, /*align=*/0));
+        ysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
+        /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, format,
+        /*pool=*/nullptr, &bundle));
     bundle.duration = frame_durations[i];
     io.frames.push_back(std::move(bundle));
   }
@@ -2596,10 +2585,9 @@ TEST(DecodeTest, AnimationTestStreaming) {
 
     EXPECT_TRUE(ConvertFromExternal(
         jxl::Span<const uint8_t>(frames[i].data(), frames[i].size()), xsize,
-        ysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false), /*channels=*/3,
-        /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16,
-        JXL_BIG_ENDIAN, /*pool=*/nullptr, &bundle,
-        /*float_in=*/false, /*align=*/0));
+        ysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
+        /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, format,
+        /*pool=*/nullptr, &bundle));
     bundle.duration = frame_durations[i];
     io.frames.push_back(std::move(bundle));
   }
@@ -2815,10 +2803,9 @@ TEST(DecodeTest, SkipCurrentFrameTest) {
 
     EXPECT_TRUE(ConvertFromExternal(
         jxl::Span<const uint8_t>(frames[i].data(), frames[i].size()), xsize,
-        ysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false), /*channels=*/3,
-        /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16,
-        JXL_BIG_ENDIAN, /*pool=*/nullptr, &bundle,
-        /*float_in=*/false, /*align=*/0));
+        ysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
+        /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, format,
+        /*pool=*/nullptr, &bundle));
     bundle.duration = frame_durations[i];
     io.frames.push_back(std::move(bundle));
   }
@@ -2930,10 +2917,9 @@ TEST(DecodeTest, SkipFrameTest) {
 
     EXPECT_TRUE(ConvertFromExternal(
         jxl::Span<const uint8_t>(frames[i].data(), frames[i].size()), xsize,
-        ysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false), /*channels=*/3,
-        /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16,
-        JXL_BIG_ENDIAN, /*pool=*/nullptr, &bundle,
-        /*float_in=*/false, /*align=*/0));
+        ysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
+        /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, format,
+        /*pool=*/nullptr, &bundle));
     bundle.duration = frame_durations[i];
     io.frames.push_back(std::move(bundle));
   }
@@ -3067,10 +3053,8 @@ TEST(DecodeTest, SkipFrameWithBlendingTest) {
           jxl::Span<const uint8_t>(frame_internal.data(),
                                    frame_internal.size()),
           xsize, ysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
-          /*channels=*/3,
-          /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16,
-          JXL_BIG_ENDIAN, /*pool=*/nullptr, &bundle_internal,
-          /*float_in=*/false, /*align=*/0));
+          /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, format,
+          /*pool=*/nullptr, &bundle_internal));
       bundle_internal.duration = 0;
       bundle_internal.use_for_next_frame = true;
       io.frames.push_back(std::move(bundle_internal));
@@ -3083,10 +3067,9 @@ TEST(DecodeTest, SkipFrameWithBlendingTest) {
     jxl::ImageBundle bundle(&io.metadata.m);
     EXPECT_TRUE(ConvertFromExternal(
         jxl::Span<const uint8_t>(frame.data(), frame.size()), xsize, ysize,
-        jxl::ColorEncoding::SRGB(/*is_gray=*/false), /*channels=*/3,
-        /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16,
-        JXL_BIG_ENDIAN, /*pool=*/nullptr, &bundle,
-        /*float_in=*/false, /*align=*/0));
+        jxl::ColorEncoding::SRGB(/*is_gray=*/false),
+        /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, format,
+        /*pool=*/nullptr, &bundle));
     bundle.duration = frame_durations[i];
     // Create some variation in which frames depend on which.
     if (i != 3 && i != 9 && i != 10) {
@@ -3294,10 +3277,8 @@ TEST(DecodeTest, SkipFrameWithAlphaBlendingTest) {
           jxl::Span<const uint8_t>(frame_internal.data(),
                                    frame_internal.size()),
           xsize / 2, ysize / 2, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
-          /*channels=*/4,
-          /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16,
-          JXL_BIG_ENDIAN, /*pool=*/nullptr, &bundle_internal,
-          /*float_in=*/false, /*align=*/0));
+          /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, format,
+          /*pool=*/nullptr, &bundle_internal));
       bundle_internal.duration = 0;
       bundle_internal.use_for_next_frame = true;
       bundle_internal.origin = {13, 17};
@@ -3315,10 +3296,9 @@ TEST(DecodeTest, SkipFrameWithAlphaBlendingTest) {
     jxl::ImageBundle bundle(&io.metadata.m);
     EXPECT_TRUE(ConvertFromExternal(
         jxl::Span<const uint8_t>(frame.data(), frame.size()), cropxsize,
-        cropysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false), /*channels=*/4,
-        /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16,
-        JXL_BIG_ENDIAN, /*pool=*/nullptr, &bundle,
-        /*float_in=*/false, /*align=*/0));
+        cropysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
+        /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, format,
+        /*pool=*/nullptr, &bundle));
     bundle.duration = 5 + i;
     frame_durations_nc.push_back(5 + i);
     frame_durations_c.push_back(5 + i);
@@ -3579,10 +3559,8 @@ TEST(DecodeTest, OrientedCroppedFrameTest) {
       EXPECT_TRUE(ConvertFromExternal(
           jxl::Span<const uint8_t>(frame.data(), frame.size()), cropxsize,
           cropysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
-          /*channels=*/4,
-          /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16,
-          JXL_BIG_ENDIAN, /*pool=*/nullptr, &bundle,
-          /*float_in=*/false, /*align=*/0));
+          /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, format,
+          /*pool=*/nullptr, &bundle));
       bundle.origin = {cropx0, cropy0};
       bundle.use_for_next_frame = true;
       io.frames.push_back(std::move(bundle));
@@ -4659,14 +4637,15 @@ TEST_P(DecodeProgressiveTest, ProgressiveEventTest) {
     }
     std::vector<uint8_t> pixels =
         jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
+    JxlPixelFormat format = {num_channels, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
     jxl::ColorEncoding color_encoding = jxl::ColorEncoding::SRGB(false);
     jxl::CodecInOut io;
     EXPECT_TRUE(jxl::ConvertFromExternal(
         jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-        color_encoding, num_channels,
+        color_encoding,
         /*alpha_is_premultiplied=*/false,
-        /*bits_per_sample=*/16, JXL_BIG_ENDIAN,
-        /*pool=*/nullptr, &io.Main(), /*float_in=*/false, /*align=*/0));
+        /*bits_per_sample=*/16, format,
+        /*pool=*/nullptr, &io.Main()));
     jxl::TestCodestreamParams params;
     if (lossless) {
       params.cparams.SetLossless();
@@ -4681,7 +4660,6 @@ TEST_P(DecodeProgressiveTest, ProgressiveEventTest) {
     jxl::PaddedBytes data = jxl::CreateTestJXLCodestream(
         jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
         num_channels, params);
-    JxlPixelFormat format = {num_channels, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
 
     for (size_t increment : {(size_t)1, data.size()}) {
       printf(
@@ -4782,11 +4760,9 @@ TEST_P(DecodeProgressiveTest, ProgressiveEventTest) {
         jxl::CodecInOut io1;
         EXPECT_TRUE(jxl::ConvertFromExternal(
             jxl::Span<const uint8_t>(passes[p].data(), passes[p].size()), xsize,
-            ysize, color_encoding, num_channels,
-            /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16,
-            JXL_BIG_ENDIAN,
-            /*pool=*/nullptr, &io1.Main(), /*float_in=*/false,
-            /*align=*/0));
+            ysize, color_encoding,
+            /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, format,
+            /*pool=*/nullptr, &io1.Main()));
         distances[p] = ButteraugliDistance(io, io1, ba, jxl::GetJxlCms(),
                                            nullptr, nullptr);
         if (p == kNumPasses) break;
@@ -4800,7 +4776,7 @@ TEST_P(DecodeProgressiveTest, ProgressiveEventTest) {
         // Verify that the returned pass image is actually not the
         // same as the next pass image, by checking that it has a bit
         // worse butteraugli score.
-        EXPECT_LT(distances[next_p] * 1.2f, distances[p]);
+        EXPECT_LT(distances[next_p] * 1.1f, distances[p]);
         p = next_p;
       }
     }

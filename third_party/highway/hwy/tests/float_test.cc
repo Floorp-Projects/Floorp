@@ -15,7 +15,6 @@
 
 // Tests some ops specific to floating-point types (Div, Round etc.)
 
-#include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -113,9 +112,8 @@ struct TestReciprocalSquareRoot {
       float err = lanes[i] - 0.090166f;
       if (err < 0.0f) err = -err;
       if (err >= 4E-4f) {
-        HWY_ABORT("Lane %" PRIu64 "(%" PRIu64 "): actual %f err %f\n",
-                  static_cast<uint64_t>(i), static_cast<uint64_t>(N), lanes[i],
-                  err);
+        HWY_ABORT("Lane %d (%d): actual %f err %f\n", static_cast<int>(i),
+                  static_cast<int>(N), lanes[i], err);
       }
     }
   }

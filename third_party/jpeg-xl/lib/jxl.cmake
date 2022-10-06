@@ -447,6 +447,9 @@ else ()
   )
 endif ()
 
+# Generate version.h
+configure_file("jxl/version.h.in" "include/jxl/version.h")
+
 # Headers for exporting/importing public headers
 include(GenerateExportHeader)
 set_target_properties(jxl_dec-obj PROPERTIES

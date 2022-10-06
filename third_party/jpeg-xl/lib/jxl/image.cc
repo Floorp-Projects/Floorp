@@ -175,12 +175,13 @@ Image3F PadImageMirror(const Image3F& in, const size_t xborder,
   return out;
 }
 
-void PadImageToBlockMultipleInPlace(Image3F* JXL_RESTRICT in) {
+void PadImageToBlockMultipleInPlace(Image3F* JXL_RESTRICT in,
+                                    size_t block_dim) {
   PROFILER_FUNC;
   const size_t xsize_orig = in->xsize();
   const size_t ysize_orig = in->ysize();
-  const size_t xsize = RoundUpToBlockDim(xsize_orig);
-  const size_t ysize = RoundUpToBlockDim(ysize_orig);
+  const size_t xsize = RoundUpTo(xsize_orig, block_dim);
+  const size_t ysize = RoundUpTo(ysize_orig, block_dim);
   // Expands image size to the originally-allocated size.
   in->ShrinkTo(xsize, ysize);
   for (size_t c = 0; c < 3; c++) {

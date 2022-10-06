@@ -24,6 +24,7 @@ struct HeaderPNM {
   size_t bits_per_sample;
   bool floating_point;
   bool big_endian;
+  std::vector<JxlExtraChannelType> ec_types;  // PAM
 };
 
 class Parser {
@@ -183,16 +184,20 @@ class Parser {
   Status ParseHeaderPAM(HeaderPNM* header, const uint8_t** pos) {
     size_t depth = 3;
     size_t max_val = 255;
+    JXL_RETURN_IF_ERROR(SkipWhitespace());
     while (!MatchString("ENDHDR", /*skipws=*/false)) {
-      JXL_RETURN_IF_ERROR(SkipWhitespace());
       if (MatchString("WIDTH")) {
         JXL_RETURN_IF_ERROR(ParseUnsigned(&header->xsize));
+        JXL_RETURN_IF_ERROR(SkipWhitespace());
       } else if (MatchString("HEIGHT")) {
         JXL_RETURN_IF_ERROR(ParseUnsigned(&header->ysize));
+        JXL_RETURN_IF_ERROR(SkipWhitespace());
       } else if (MatchString("DEPTH")) {
         JXL_RETURN_IF_ERROR(ParseUnsigned(&depth));
+        JXL_RETURN_IF_ERROR(SkipWhitespace());
       } else if (MatchString("MAXVAL")) {
         JXL_RETURN_IF_ERROR(ParseUnsigned(&max_val));
+        JXL_RETURN_IF_ERROR(SkipWhitespace());
       } else if (MatchString("TUPLTYPE")) {
         if (MatchString("RGB_ALPHA")) {
           header->has_alpha = true;
@@ -209,6 +214,20 @@ class Parser {
         } else if (MatchString("BLACKANDWHITE")) {
           header->is_gray = true;
           max_val = 1;
+        } else if (MatchString("Alpha")) {
+          header->ec_types.push_back(JXL_CHANNEL_ALPHA);
+        } else if (MatchString("Depth")) {
+          header->ec_types.push_back(JXL_CHANNEL_DEPTH);
+        } else if (MatchString("SpotColor")) {
+          header->ec_types.push_back(JXL_CHANNEL_SPOT_COLOR);
+        } else if (MatchString("SelectionMask")) {
+          header->ec_types.push_back(JXL_CHANNEL_SELECTION_MASK);
+        } else if (MatchString("Black")) {
+          header->ec_types.push_back(JXL_CHANNEL_BLACK);
+        } else if (MatchString("CFA")) {
+          header->ec_types.push_back(JXL_CHANNEL_CFA);
+        } else if (MatchString("Thermal")) {
+          header->ec_types.push_back(JXL_CHANNEL_THERMAL);
         } else {
           return JXL_FAILURE("PAM: unknown TUPLTYPE");
         }
@@ -223,7 +242,7 @@ class Parser {
     }
     size_t num_channels = header->is_gray ? 1 : 3;
     if (header->has_alpha) num_channels++;
-    if (num_channels != depth) {
+    if (num_channels + header->ec_types.size() != depth) {
       return JXL_FAILURE("PAM: bad DEPTH");
     }
     if (max_val == 0 || max_val >= 65536) {
@@ -341,7 +360,17 @@ Status DecodeImagePNM(const Span<const uint8_t> bytes,
   ppf->info.alpha_bits = (header.has_alpha ? ppf->info.bits_per_sample : 0);
   ppf->info.alpha_exponent_bits = 0;
   ppf->info.num_color_channels = (header.is_gray ? 1 : 3);
-  ppf->info.num_extra_channels = (header.has_alpha ? 1 : 0);
+  uint32_t num_alpha_channels = (header.has_alpha ? 1 : 0);
+  uint32_t num_interleaved_channels =
+      ppf->info.num_color_channels + num_alpha_channels;
+  ppf->info.num_extra_channels = num_alpha_channels + header.ec_types.size();
+
+  for (auto type : header.ec_types) {
+    PackedExtraChannel pec;
+    pec.ec_info.bits_per_sample = ppf->info.bits_per_sample;
+    pec.ec_info.type = type;
+    ppf->extra_channels_info.emplace_back(std::move(pec));
+  }
 
   JxlDataType data_type;
   if (header.floating_point) {
@@ -356,27 +385,50 @@ Status DecodeImagePNM(const Span<const uint8_t> bytes,
   }
 
   const JxlPixelFormat format{
-      /*num_channels=*/ppf->info.num_color_channels +
-          ppf->info.num_extra_channels,
+      /*num_channels=*/num_interleaved_channels,
       /*data_type=*/data_type,
       /*endianness=*/header.big_endian ? JXL_BIG_ENDIAN : JXL_LITTLE_ENDIAN,
       /*align=*/0,
   };
+  const JxlPixelFormat ec_format{1, format.data_type, format.endianness, 0};
   ppf->frames.clear();
   ppf->frames.emplace_back(header.xsize, header.ysize, format);
   auto* frame = &ppf->frames.back();
-
+  for (size_t i = 0; i < header.ec_types.size(); ++i) {
+    frame->extra_channels.emplace_back(header.xsize, header.ysize, ec_format);
+  }
   size_t pnm_remaining_size = bytes.data() + bytes.size() - pos;
   if (pnm_remaining_size < frame->color.pixels_size) {
     return JXL_FAILURE("PNM file too small");
   }
-  const bool flipped_y = header.bits_per_sample == 32;  // PFMs are flipped
+
   uint8_t* out = reinterpret_cast<uint8_t*>(frame->color.pixels());
-  for (size_t y = 0; y < header.ysize; ++y) {
-    size_t y_in = flipped_y ? header.ysize - 1 - y : y;
-    const uint8_t* row_in = &pos[y_in * frame->color.stride];
-    uint8_t* row_out = &out[y * frame->color.stride];
-    memcpy(row_out, row_in, frame->color.stride);
+  std::vector<uint8_t*> ec_out(header.ec_types.size());
+  for (size_t i = 0; i < ec_out.size(); ++i) {
+    ec_out[i] = reinterpret_cast<uint8_t*>(frame->extra_channels[i].pixels());
+  }
+  if (ec_out.empty()) {
+    const bool flipped_y = header.bits_per_sample == 32;  // PFMs are flipped
+    for (size_t y = 0; y < header.ysize; ++y) {
+      size_t y_in = flipped_y ? header.ysize - 1 - y : y;
+      const uint8_t* row_in = &pos[y_in * frame->color.stride];
+      uint8_t* row_out = &out[y * frame->color.stride];
+      memcpy(row_out, row_in, frame->color.stride);
+    }
+  } else {
+    size_t pwidth = PackedImage::BitsPerChannel(data_type) / 8;
+    for (size_t y = 0; y < header.ysize; ++y) {
+      for (size_t x = 0; x < header.xsize; ++x) {
+        memcpy(out, pos, frame->color.pixel_stride());
+        out += frame->color.pixel_stride();
+        pos += frame->color.pixel_stride();
+        for (auto& p : ec_out) {
+          memcpy(p, pos, pwidth);
+          pos += pwidth;
+          p += pwidth;
+        }
+      }
+    }
   }
   return true;
 }

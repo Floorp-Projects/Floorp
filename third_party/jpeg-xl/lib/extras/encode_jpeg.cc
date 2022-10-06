@@ -31,27 +31,42 @@ namespace HWY_NAMESPACE {
 void ComputeDCTCoefficients(const Image3F& opsin, const ImageF& qf,
                             const FrameDimensions& frame_dim, const float* qm,
                             std::vector<jpeg::JPEGComponent>* components) {
+  int max_samp_factor = 1;
+  for (const auto& c : *components) {
+    JXL_DASSERT(c.h_samp_factor == c.v_samp_factor);
+    max_samp_factor = std::max(c.h_samp_factor, max_samp_factor);
+  }
   float qfmin, qfmax;
   ImageMinMax(qf, &qfmin, &qfmax);
   HWY_ALIGN float scratch_space[2 * kDCTBlockSize];
+  ImageF tmp;
   for (size_t c = 0; c < 3; c++) {
-    std::vector<jpeg::coeff_t>& coeffs = (*components)[c].coeffs;
-    size_t num_blocks = frame_dim.xsize_blocks * frame_dim.ysize_blocks;
-    coeffs.resize(num_blocks * kDCTBlockSize);
+    auto& comp = (*components)[c];
+    const size_t xsize_blocks = comp.width_in_blocks;
+    const size_t ysize_blocks = comp.height_in_blocks;
+    JXL_DASSERT(max_samp_factor % comp.h_samp_factor == 0);
+    const int factor = max_samp_factor / comp.h_samp_factor;
+    const ImageF* plane = &opsin.Plane(c);
+    if (factor > 1) {
+      tmp = CopyImage(*plane);
+      DownsampleImage(&tmp, factor);
+      plane = &tmp;
+    }
+    std::vector<jpeg::coeff_t>& coeffs = comp.coeffs;
+    coeffs.resize(xsize_blocks * ysize_blocks * kDCTBlockSize);
     const float* qmc = &qm[c * kDCTBlockSize];
-    for (size_t by = 0, bix = 0; by < frame_dim.ysize_blocks; by++) {
-      for (size_t bx = 0; bx < frame_dim.xsize_blocks; bx++, bix++) {
-        HWY_ALIGN float dct[kDCTBlockSize];
-        TransformFromPixels(AcStrategy::Type::DCT,
-                            opsin.PlaneRow(c, 8 * by) + 8 * bx,
-                            opsin.PixelsPerRow(), dct, scratch_space);
+    for (size_t by = 0, bix = 0; by < ysize_blocks; by++) {
+      for (size_t bx = 0; bx < xsize_blocks; bx++, bix++) {
         jpeg::coeff_t* block = &coeffs[bix * kDCTBlockSize];
+        HWY_ALIGN float dct[kDCTBlockSize];
+        TransformFromPixels(AcStrategy::Type::DCT, plane->Row(8 * by) + 8 * bx,
+                            plane->PixelsPerRow(), dct, scratch_space);
         for (size_t iy = 0, i = 0; iy < 8; iy++) {
           for (size_t ix = 0; ix < 8; ix++, i++) {
             float coeff = 2040 * dct[i] * qmc[i];
             // Create more zeros in areas where jpeg xl would have used a lower
             // quantization multiplier.
-            float zero_bias = 0.5f * qfmax / qf.Row(by)[bx];
+            float zero_bias = 0.5f * qfmax / qf.Row(by * factor)[bx * factor];
             int cc = std::abs(coeff) < zero_bias ? 0 : std::round(coeff);
             // If the relative value of the adaptive quantization field is less
             // than 0.5, we drop the least significant bit.
@@ -102,7 +117,7 @@ std::vector<uint8_t> CreateXybICCAppMarker() {
   return icc_marker;
 }
 
-void AddJpegQuantMatrices(const ImageF& qf, float dc_quant,
+void AddJpegQuantMatrices(const ImageF& qf, float dc_quant, float global_scale,
                           std::vector<jpeg::JPEGQuantTable>* quant_tables,
                           float* qm) {
   // Create a custom JPEG XL dequant matrix. The quantization weight parameters
@@ -127,7 +142,6 @@ void AddJpegQuantMatrices(const ImageF& qf, float dc_quant,
   // Scale the quant matrix based on the scaled XYB scales and the quant field.
   float qfmin, qfmax;
   ImageMinMax(qf, &qfmin, &qfmax);
-  const float global_scale = 0.66f;
   for (size_t c = 0; c < 3; c++) {
     const float scale = kScaledXYBScale[c] * global_scale;
     qm[c * kDCTBlockSize] *= scale;
@@ -237,7 +251,9 @@ void AddJpegHuffmanCodes(std::vector<Histogram>& histograms,
 }
 
 void FillJPEGData(const Image3F& opsin, const ImageF& qf, float dc_quant,
+                  float global_scale, const bool subsample_blue,
                   const FrameDimensions& frame_dim, jpeg::JPEGData* out) {
+  *out = jpeg::JPEGData();
   // ICC
   out->marker_order.push_back(0xe2);
   out->app_data.push_back(CreateXybICCAppMarker());
@@ -245,7 +261,7 @@ void FillJPEGData(const Image3F& opsin, const ImageF& qf, float dc_quant,
   // DQT
   out->marker_order.emplace_back(0xdb);
   float qm[3 * kDCTBlockSize];
-  AddJpegQuantMatrices(qf, dc_quant, &out->quant, qm);
+  AddJpegQuantMatrices(qf, dc_quant, global_scale, &out->quant, qm);
 
   // SOF
   out->marker_order.emplace_back(0xc2);
@@ -255,11 +271,15 @@ void FillJPEGData(const Image3F& opsin, const ImageF& qf, float dc_quant,
   out->components[0].id = 'R';
   out->components[1].id = 'G';
   out->components[2].id = 'B';
+  size_t max_samp_factor = subsample_blue ? 2 : 1;
   for (size_t c = 0; c < 3; ++c) {
-    out->components[c].h_samp_factor = 1;
-    out->components[c].v_samp_factor = 1;
-    out->components[c].width_in_blocks = frame_dim.xsize_blocks;
-    out->components[c].height_in_blocks = frame_dim.ysize_blocks;
+    const size_t factor = (subsample_blue && c == 2) ? 2 : 1;
+    out->components[c].h_samp_factor = max_samp_factor / factor;
+    out->components[c].v_samp_factor = max_samp_factor / factor;
+    JXL_ASSERT(frame_dim.xsize_blocks % factor == 0);
+    JXL_ASSERT(frame_dim.ysize_blocks % factor == 0);
+    out->components[c].width_in_blocks = frame_dim.xsize_blocks / factor;
+    out->components[c].height_in_blocks = frame_dim.ysize_blocks / factor;
     out->components[c].quant_idx = c;
   }
   HWY_DYNAMIC_DISPATCH(ComputeDCTCoefficients)
@@ -271,7 +291,7 @@ void FillJPEGData(const Image3F& opsin, const ImageF& qf, float dc_quant,
   // SOS
   std::vector<ProgressiveScan> progressive_mode = {
       // DC
-      {0, 0, 0, 0, true},
+      {0, 0, 0, 0, !subsample_blue},
       // AC 1 - highest bits
       {1, 63, 0, 1, false},
       // AC 2 - lowest bit
@@ -315,18 +335,31 @@ void FillJPEGData(const Image3F& opsin, const ImageF& qf, float dc_quant,
   }
 }
 
+size_t JpegSize(const jpeg::JPEGData& jpeg_data) {
+  size_t total_size = 0;
+  auto countsize = [&total_size](const uint8_t* buf, size_t len) {
+    total_size += len;
+    return len;
+  };
+  JXL_CHECK(jpeg::WriteJpeg(jpeg_data, countsize));
+  return total_size;
+}
+
 }  // namespace
 
-Status EncodeJpeg(const ImageBundle& input, float distance, ThreadPool* pool,
-                  std::vector<uint8_t>* compressed) {
+Status EncodeJpeg(const ImageBundle& input, size_t target_size, float distance,
+                  ThreadPool* pool, std::vector<uint8_t>* compressed) {
+  const bool subsample_blue = true;
+  const size_t max_shift = subsample_blue ? 1 : 0;
   FrameDimensions frame_dim;
-  frame_dim.Set(input.xsize(), input.ysize(), 1, 0, 0, false, 1);
+  frame_dim.Set(input.xsize(), input.ysize(), 1, max_shift, max_shift, false,
+                1);
 
   // Convert input to XYB colorspace.
   Image3F opsin(frame_dim.xsize_padded, frame_dim.ysize_padded);
   opsin.ShrinkTo(frame_dim.xsize, frame_dim.ysize);
   ToXYB(input, pool, &opsin, GetJxlCms());
-  PadImageToBlockMultipleInPlace(&opsin);
+  PadImageToBlockMultipleInPlace(&opsin, 8 << max_shift);
 
   // Compute adaptive quant field.
   ImageF mask;
@@ -335,7 +368,39 @@ Status EncodeJpeg(const ImageBundle& input, float distance, ThreadPool* pool,
 
   // Create jpeg data and optimize Huffman codes.
   jpeg::JPEGData jpeg_data;
-  FillJPEGData(opsin, qf, InitialQuantDC(distance), frame_dim, &jpeg_data);
+  float global_scale = 0.66f;
+  float dc_quant = InitialQuantDC(distance);
+  FillJPEGData(opsin, qf, dc_quant, global_scale, subsample_blue, frame_dim,
+               &jpeg_data);
+
+  if (target_size != 0) {
+    // Tweak the jpeg data so that the resulting compressed file is
+    // approximately target_size long.
+    size_t prev_size = 0;
+    float best_error = 100.0f;
+    float best_global_scale = global_scale;
+    size_t iter = 0;
+    for (;;) {
+      size_t size = JpegSize(jpeg_data);
+      float error = size * 1.0f / target_size - 1.0f;
+      if (std::abs(error) < std::abs(best_error)) {
+        best_error = error;
+        best_global_scale = global_scale;
+      }
+      if (size == prev_size || std::abs(error) < 0.001f || iter >= 10) {
+        break;
+      }
+      global_scale *= 1.0f + error;
+      FillJPEGData(opsin, qf, dc_quant, global_scale, subsample_blue, frame_dim,
+                   &jpeg_data);
+      prev_size = size;
+      ++iter;
+    }
+    if (best_global_scale != global_scale) {
+      FillJPEGData(opsin, qf, dc_quant, best_global_scale, subsample_blue,
+                   frame_dim, &jpeg_data);
+    }
+  }
 
   // Write jpeg data to compressed stream.
   auto write = [&compressed](const uint8_t* buf, size_t len) {

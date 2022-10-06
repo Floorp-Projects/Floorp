@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -243,7 +242,7 @@ T RightShiftNegative(T val) {
   // seen divisions replaced with shifts, so resort to bit operations.
   using TU = hwy::MakeUnsigned<T>;
   TU bits;
-  CopyBytes<sizeof(T)>(&val, &bits);
+  CopySameSize(&val, &bits);
 
   const TU shifted = TU(bits >> kAmount);
 
@@ -252,7 +251,7 @@ T RightShiftNegative(T val) {
   const TU sign_extended = static_cast<TU>((all << num_zero) & LimitsMax<TU>());
 
   bits = shifted | sign_extended;
-  CopyBytes<sizeof(T)>(&bits, &val);
+  CopySameSize(&bits, &val);
   return val;
 }
 
@@ -356,7 +355,7 @@ struct TestVariableSignedRightShifts {
     for (size_t i = 0; i < N; ++i) {
       const size_t amount = i & kMaxShift;
       const TU shifted = ~((1ull << (kMaxShift - amount)) - 1);
-      CopyBytes<sizeof(T)>(&shifted, &expected[i]);
+      CopySameSize(&shifted, &expected[i]);
     }
     HWY_ASSERT_VEC_EQ(d, expected.get(), Shr(Set(d, kMin), small_shifts));
 
@@ -364,7 +363,7 @@ struct TestVariableSignedRightShifts {
     for (size_t i = 0; i < N; ++i) {
       const size_t amount = kMaxShift - (i & kMaxShift);
       const TU shifted = ~((1ull << (kMaxShift - amount)) - 1);
-      CopyBytes<sizeof(T)>(&shifted, &expected[i]);
+      CopySameSize(&shifted, &expected[i]);
     }
     HWY_ASSERT_VEC_EQ(d, expected.get(), Shr(Set(d, kMin), large_shifts));
   }

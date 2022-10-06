@@ -65,12 +65,13 @@ class Rec2408ToneMapper {
                 Mul(Set(df_, 10000), TF_PQ().DisplayFromEncoded(df_, e4))));
 
     const V ratio = Div(new_luminance, luminance);
-
+    const V inv_target_peak = Set(df_, inv_target_peak_);
     const V normalizer = Set(df_, normalizer_);
+    const V multiplier = Mul(ratio, normalizer);
     for (V* const val : {red, green, blue}) {
-      *val = Mul(IfThenElse(Le(luminance, Set(df_, 1e-6f)), new_luminance,
-                            Mul(*val, ratio)),
-                 normalizer);
+      *val = IfThenElse(Le(luminance, Set(df_, 1e-6f)),
+                        Mul(new_luminance, inv_target_peak),
+                        Mul(*val, multiplier));
     }
   }
 
@@ -98,8 +99,8 @@ class Rec2408ToneMapper {
         ks,
         MulAdd(Add(t_b_3, MulAdd(Set(df_, -2), t_b_2, t_b)),
                Sub(Set(df_, 1), ks),
-               MulAdd(Set(df_, -2), t_b_3,
-                      Mul(Mul(Set(df_, 3), t_b_2), max_lum))));
+               Mul(MulAdd(Set(df_, -2), t_b_3, Mul(Set(df_, 3), t_b_2)),
+                   max_lum)));
   }
 
   D df_;
@@ -125,6 +126,7 @@ class Rec2408ToneMapper {
   const float inv_one_minus_ks_ = 1.0f / std::max(1e-6f, 1.0f - ks_);
 
   const float normalizer_ = source_range_.second / target_range_.second;
+  const float inv_target_peak_ = 1.f / target_range_.second;
 };
 
 class HlgOOTF {

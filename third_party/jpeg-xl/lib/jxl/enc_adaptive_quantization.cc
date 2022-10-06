@@ -733,8 +733,8 @@ ImageF TileDistMap(const ImageF& distmap, int tile_size, int margin,
   return tile_distmap;
 }
 
-constexpr float kDcQuantPow = 0.57f;
-static const float kDcQuant = 1.12f;
+constexpr float kDcQuantPow = 0.66f;
+static const float kDcQuant = 1.0f;
 static const float kAcQuant = 0.8294f;
 
 void FindBestQuantization(const ImageBundle& linear, const Image3F& opsin,
@@ -1037,7 +1037,7 @@ void AdjustQuantField(const AcStrategyImage& ac_strategy, const Rect& rect,
 }
 
 float InitialQuantDC(float butteraugli_target) {
-  const float kDcMul = 2.9;  // Butteraugli target where non-linearity kicks in.
+  const float kDcMul = 1.5;  // Butteraugli target where non-linearity kicks in.
   const float butteraugli_target_dc = std::max<float>(
       0.5f * butteraugli_target,
       std::min<float>(butteraugli_target,

@@ -56,6 +56,20 @@ struct PixelCallback {
   void* init_opaque = nullptr;
 };
 
+struct ImageOutput {
+  // Pixel format of the output pixels, used for buffer and callback output.
+  JxlPixelFormat format;
+  // Output bit depth for unsigned data types, used for float to int conversion.
+  size_t bits_per_sample;
+  // Callback for line-by-line output.
+  PixelCallback callback;
+  // Pixel buffer for image output.
+  void* buffer;
+  size_t buffer_size;
+  // Length of a row of image_buffer in bytes (based on oriented width).
+  size_t stride;
+};
+
 // Per-frame decoder state. All the images here should be accessed through a
 // group rect (either with block units or pixel units).
 struct PassesDecoderState {
@@ -77,17 +91,11 @@ struct PassesDecoderState {
   // Sigma values for EPF.
   ImageF sigma;
 
-  // Pixel buffer for image output.
-  void* image_buffer;
   // Image dimensions before applying undo_orientation.
   size_t width;
   size_t height;
-  // Length of a row of image_buffer in bytes (based on oriented width).
-  size_t stride;
-  // Callback for line-by-line output.
-  PixelCallback pixel_callback;
-  // Pixel format of the output pixels, used for buffer and callback output.
-  JxlPixelFormat format;
+  ImageOutput main_output;
+  std::vector<ImageOutput> extra_output;
 
   // Whether to use int16 float-XYB-to-uint8-srgb conversion.
   bool fast_xyb_srgb8_conversion;
@@ -134,8 +142,9 @@ struct PassesDecoderState {
     b_dm_multiplier =
         std::pow(1 / (1.25f), shared->frame_header.b_qm_scale - 2.0f);
 
-    pixel_callback = PixelCallback();
-    image_buffer = nullptr;
+    main_output.callback = PixelCallback();
+    main_output.buffer = nullptr;
+    extra_output.clear();
 
     fast_xyb_srgb8_conversion = false;
     unpremul_alpha = false;
