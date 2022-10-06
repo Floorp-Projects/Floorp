@@ -280,8 +280,20 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">A sua página inicial personalizada do Firefox faz com que agora seja mais simples continuar de onde parou. Encontre os seus separadores, marcadores e resultados de pesquisa recentes.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Conheça a sua página inicial personalizada. Aqui vão ser apresentados separadores recentes, marcadores e resultados de pesquisas.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Bem-vindo/a a uma Internet independente</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Bem-vindo a uma internet mais pessoal</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Mais cores. Melhor privacidade. O mesmo compromisso com as pessoas, acima dos lucros.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Alternar do telemóvel para o portátil e vice-versa</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">Alterar entre ecrãs é mais fácil do que nunca</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Continue de onde parou com os separadores de outros dispositivos agora na sua página inicial.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Começar</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
@@ -290,7 +302,7 @@
     <string name="onboarding_home_skip_button">Saltar</string>
 
     <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
-    <string name="sync_cfr_message">Os seus separadores estão a sincronizar! Retorne de onde parou no seu outro dispositivo.</string>
+    <string name="sync_cfr_message">Os seus separadores estão a ser sincronizados! Continue de onde parou no seu outro dispositivo.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -463,8 +475,12 @@
     <string name="wallpaper_updated_snackbar_message">Fundo atualizado!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Ver</string>
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">Não foi possível transferir o fundo</string>
     <!-- Snackbar label for action to retry downloading the wallpaper -->
     <string name="wallpaper_download_error_snackbar_action">Tentar novamente</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">Não foi possível alterar o fundo</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">Saber mais</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
@@ -475,9 +491,20 @@
     <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Logótipo do Firefox - altere o fundo, botão</string>
 
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
-    <string name="wallpaper_classic_title">Clássico %s</string>
+    <string name="wallpaper_classic_title">%s clássico</string>
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title">Edição limitada</string>
+
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">A nova coleção de vozes independentes. %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">A nova coleção de vozes independentes.</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">Experimente um toque de cor</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Escolha um fundo que lhe diga alguma coisa.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Explorar mais fundos</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1219,10 +1246,16 @@
 
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">Bem-vindo a uma internet melhor</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">Um navegador feito para as pessoas e não para os lucros.</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Sincronizar o Firefox entre dispositivos</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Continue de onde ficou</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Traga os marcadores, histórico e palavras-passe para o %1$s neste dispositivo.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Sincronize separadores e palavras-passe entre dispositivos para uma troca transparente entre ecrãs.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Registar</string>
     <!-- Text for the button to manually sign into Firefox account. -->
@@ -1232,8 +1265,12 @@
 
     <!-- text for the tracking protection onboarding card header -->
     <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Privacidade sempre ativa</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Proteção de privacidade por predefinição</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">O %1$s impede automaticamente que as empresas o sigam secretamente pela Internet.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">A apresentar a Proteção total de cookies para parar os rastreadores de utilizar cookies que o/a perseguem na Internet.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Padrão (predefinição)</string>
     <!-- text for standard blocking option button description -->
@@ -1246,14 +1283,22 @@
     <string name="onboarding_toolbar_placement_header_1">Escolha o posicionamento da barra de ferramentas</string>
     <!-- text for the toolbar position card description -->
     <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Facilite o acesso à barra de ferramentas. Mantenha a mesma na parte inferior ou mova-a para cima.</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Manter na parte inferior ou mover para o topo.</string>
     <!-- text for the privacy notice onboarding card header -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">A sua privacidade</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">Você controla os seus dados</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Nós desenhámos o %s para lhe dar mais controlo sobre o que partilha online e o que partilha connosco.</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">O Firefox dá-lhe mais controlo sobre o que partilha na Internet e o que partilha connosco.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Leia a nossa política de privacidade</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">Pronto para abrir uma Internet incrível?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Começar a navegar</string>
 
@@ -1342,6 +1387,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Todos os cookies de terceiros (poderá resultar em falhas nos sites)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Todos os cookies (irá causar falhas nos sites)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Isolar cookies inter-sites</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Conteúdo de monitorização</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1365,8 +1412,12 @@
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Cookies de monitorização entre sites</string>
 
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Cookies inter-sites</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Bloqueia os cookies que as redes de anúncios e empresas de análise utilizam para compilar os seus dados de navegação entre vários sites.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">A Proteção Total de Cookies isola cookies para o site que estiver a visitar, para que rastreadores (como redes de anúncios) não possam utilizá-los para o/a monitorizar enquanto navega entre sites.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Criptomineradores</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

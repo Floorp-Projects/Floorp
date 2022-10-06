@@ -1296,6 +1296,8 @@
     <!-- text for the privacy notice onboarding card header -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Vaša zasebnost</string>
 
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">Vaši podatki pod vašim nadzorom</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">%s smo zasnovali tako, da vam omogočimo nadzor nad tem, kaj delite na spletu in kaj delite z nami.</string>
@@ -1304,6 +1306,8 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Preberite naše obvestilo o zasebnosti</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">Pripravljeni na vstop v neverjeten internet?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Začnite brskati</string>
 
