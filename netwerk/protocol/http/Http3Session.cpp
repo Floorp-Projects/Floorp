@@ -131,10 +131,12 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
   nsAutoCString peerId;
   mSocketControl->GetPeerId(peerId);
   nsTArray<uint8_t> token;
+  SessionCacheInfo info;
   if (StaticPrefs::network_http_http3_enable_0rtt() &&
-      NS_SUCCEEDED(SSLTokensCache::Get(peerId, token))) {
+      NS_SUCCEEDED(SSLTokensCache::Get(peerId, token, info))) {
     LOG(("Found a resumption token in the cache."));
     mHttp3Connection->SetResumptionToken(token);
+    mSocketControl->SetSessionCacheInfo(std::move(info));
     if (mHttp3Connection->IsZeroRtt()) {
       LOG(("Can send ZeroRtt data"));
       RefPtr<Http3Session> self(this);
