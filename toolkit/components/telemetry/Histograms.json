@@ -3058,14 +3058,15 @@
   },
   "NETWORK_ASYNC_OPEN_TO_TRANSACTION_PENDING_MS" :{
     "record_in_processes": ["content"],
-    "products": [ "firefox", "fennec", "geckoview_streaming" ],
+    "products": [ "firefox", "fennec" ],
     "alert_emails": ["necko@mozilla.com", "acreskey@mozilla.com"],
     "bug_numbers": [1789468],
     "expires_in_version": "never",
+    "keyed": true,
     "kind": "linear",
     "high": 5000,
     "n_buckets": 50,
-    "description": "The time spent from HttpChannelChild::AsyncOpen to adding the transactionto the nsHttpConnectionMgr, in milliseconds"
+    "description": "The time spent from HttpChannelChild::AsyncOpen to adding the transactionto the nsHttpConnectionMgr, in milliseconds, keyed by classOfService"
   },
   "HTTP_AUTH_DIALOG_STATS_3": {
     "record_in_processes": ["main", "content"],
