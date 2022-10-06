@@ -17,7 +17,7 @@ SandboxingKind GetCurrentSandboxingKind() {
 SandboxingKind GetSandboxingKindFromLocation(RemoteDecodeIn aLocation) {
   switch (aLocation) {
     case RemoteDecodeIn::UtilityProcess_Generic:
-      return SandboxingKind::GENERIC_UTILITY;
+      return SandboxingKind::UTILITY_AUDIO_DECODING_GENERIC;
 #ifdef MOZ_APPLEMEDIA
     case RemoteDecodeIn::UtilityProcess_AppleMedia:
       return SandboxingKind::UTILITY_AUDIO_DECODING_APPLE_MEDIA;
@@ -39,7 +39,7 @@ SandboxingKind GetSandboxingKindFromLocation(RemoteDecodeIn aLocation) {
 
 RemoteDecodeIn GetRemoteDecodeInFromKind(SandboxingKind aKind) {
   switch (aKind) {
-    case SandboxingKind::GENERIC_UTILITY:
+    case SandboxingKind::UTILITY_AUDIO_DECODING_GENERIC:
       return RemoteDecodeIn::UtilityProcess_Generic;
 #ifdef MOZ_APPLEMEDIA
     case SandboxingKind::UTILITY_AUDIO_DECODING_APPLE_MEDIA:

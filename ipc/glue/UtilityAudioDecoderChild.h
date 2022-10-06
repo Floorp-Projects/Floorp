@@ -23,22 +23,6 @@
 
 namespace mozilla::ipc {
 
-class UtilityAudioDecoderChildShutdownObserver : public nsIObserver {
- public:
-  explicit UtilityAudioDecoderChildShutdownObserver(SandboxingKind aKind)
-      : mSandbox(aKind){};
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
-                     const char16_t* aData) override;
-
- private:
-  virtual ~UtilityAudioDecoderChildShutdownObserver() = default;
-
-  const SandboxingKind mSandbox;
-};
-
 // This controls performing audio decoding on the utility process and it is
 // intended to live on the main process side
 class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild
@@ -56,7 +40,7 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild
 
   UtilityActorName GetActorName() {
     switch (mSandbox) {
-      case GENERIC_UTILITY:
+      case UTILITY_AUDIO_DECODING_GENERIC:
         return UtilityActorName::AudioDecoder_Generic;
 #ifdef MOZ_APPLEMEDIA
       case UTILITY_AUDIO_DECODING_APPLE_MEDIA:
@@ -100,8 +84,6 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild
   void ActorDestroy(ActorDestroyReason aReason) override;
 
   void Bind(Endpoint<PUtilityAudioDecoderChild>&& aEndpoint);
-
-  static void Shutdown(SandboxingKind aKind);
 
   static RefPtr<UtilityAudioDecoderChild> GetSingleton(SandboxingKind aKind);
 

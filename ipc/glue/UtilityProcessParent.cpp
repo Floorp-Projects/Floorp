@@ -76,20 +76,9 @@ void UtilityProcessParent::ActorDestroy(ActorDestroyReason aWhy) {
 
     if (mCrashReporter) {
 #if defined(MOZ_SANDBOX)
-      RefPtr<mozilla::ipc::UtilityProcessManager> upm =
-          mozilla::ipc::UtilityProcessManager::GetSingleton();
-      if (upm) {
-        Span<const UtilityActorName> actors = upm->GetActors(this);
-        nsAutoCString actorsName;
-        if (!actors.IsEmpty()) {
-          actorsName += GetUtilityActorName(actors.First<1>()[0]);
-          for (const auto& actor : actors.From(1)) {
-            actorsName += ", "_ns + GetUtilityActorName(actor);
-          }
-        }
-        mCrashReporter->AddAnnotation(
-            CrashReporter::Annotation::UtilityActorsName, actorsName);
-      }
+      mCrashReporter->AddAnnotation(
+          CrashReporter::Annotation::UtilityProcessSandboxingKind,
+          (unsigned int)mHost->mSandbox);
 #endif
     }
 

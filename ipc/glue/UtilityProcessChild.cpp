@@ -12,7 +12,6 @@
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/RemoteDecoderManagerParent.h"
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/Sandbox.h"
@@ -37,25 +36,23 @@
 #include "mozilla/FOGIPC.h"
 #include "mozilla/glean/GleanMetrics.h"
 
-#include "mozilla/Services.h"
-
 namespace mozilla::ipc {
 
 using namespace layers;
 
 static StaticMutex sUtilityProcessChildMutex;
-static StaticRefPtr<UtilityProcessChild> sUtilityProcessChild
-    MOZ_GUARDED_BY(sUtilityProcessChildMutex);
+static StaticRefPtr<UtilityProcessChild> sUtilityProcessChild;
 
 UtilityProcessChild::UtilityProcessChild() {
   nsDebugImpl::SetMultiprocessMode("Utility");
+  StaticMutexAutoLock lock(sUtilityProcessChildMutex);
+  sUtilityProcessChild = this;
 }
 
 UtilityProcessChild::~UtilityProcessChild() = default;
 
 /* static */
 RefPtr<UtilityProcessChild> UtilityProcessChild::GetSingleton() {
-  MOZ_ASSERT(XRE_IsUtilityProcess());
   StaticMutexAutoLock lock(sUtilityProcessChildMutex);
   if (!sUtilityProcessChild) {
     sUtilityProcessChild = new UtilityProcessChild();
@@ -109,13 +106,6 @@ bool UtilityProcessChild::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
   // Notify the parent process that we have finished our init and that it can
   // now resolve the pending promise of process startup
   SendInitCompleted();
-
-  RunOnShutdown(
-      [] {
-        StaticMutexAutoLock lock(sUtilityProcessChildMutex);
-        sUtilityProcessChild = nullptr;
-      },
-      ShutdownPhase::XPCOMShutdownFinal);
 
   return true;
 }
@@ -245,27 +235,25 @@ void UtilityProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
     mProfilerController = nullptr;
   }
 
-  uint32_t timeout = 0;
-  if (mUtilityAudioDecoderInstance) {
-    mUtilityAudioDecoderInstance = nullptr;
-    timeout = 10 * 1000;
-  }
-
   // Wait until all RemoteDecoderManagerParent have closed.
-  // It is still possible some may not have clean up yet, and we might hit
-  // timeout. Our xpcom-shutdown listener should take care of cleaning the
-  // reference of our singleton.
   //
   // FIXME: Should move from using AsyncBlockers to proper
   // nsIAsyncShutdownService once it is not JS, see bug 1760855
-  mShutdownBlockers.WaitUntilClear(timeout)->Then(
-      GetCurrentSerialEventTarget(), __func__, [&]() {
+  mShutdownBlockers.WaitUntilClear(10 * 1000 /* 10s timeout*/)
+      ->Then(GetCurrentSerialEventTarget(), __func__, [&]() {
 #  ifdef XP_WIN
         {
           RefPtr<DllServices> dllSvc(DllServices::Get());
           dllSvc->DisableFull();
         }
 #  endif  // defined(XP_WIN)
+
+        {
+          StaticMutexAutoLock lock(sUtilityProcessChildMutex);
+          if (sUtilityProcessChild) {
+            sUtilityProcessChild = nullptr;
+          }
+        }
 
         ipc::CrashReporterClient::DestroySingleton();
         XRE_ShutdownChildProcess();

@@ -23,11 +23,11 @@ async function getAudioDecoderPid(expectation) {
 async function crashDecoder(expectation) {
   const audioPid = await getAudioDecoderPid(expectation);
   ok(audioPid > 0, `Found an audio decoder ${audioPid}`);
-  const actorIsAudioDecoder = actorNames => {
-    return actorNames.startsWith("audio-decoder-");
-  };
-  info(`Crashing audio decoder ${audioPid}`);
-  await crashSomeUtility(audioPid, actorIsAudioDecoder);
+
+  const ProcessTools = Cc["@mozilla.org/processtools-service;1"].getService(
+    Ci.nsIProcessToolsService
+  );
+  ProcessTools.kill(audioPid);
 }
 
 async function runTest(src, withClose, expectation) {
