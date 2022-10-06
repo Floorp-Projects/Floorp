@@ -45,17 +45,20 @@ class SSLTokensCache : public nsIMemoryReporter {
   static nsresult Put(const nsACString& aKey, const uint8_t* aToken,
                       uint32_t aTokenLen, nsITransportSecurityInfo* aSecInfo,
                       PRUint32 aExpirationTime);
-  static nsresult Get(const nsACString& aKey, nsTArray<uint8_t>& aToken);
-  static bool GetSessionCacheInfo(const nsACString& aKey,
-                                  SessionCacheInfo& aResult);
-  static nsresult Remove(const nsACString& aKey);
+  static nsresult Get(const nsACString& aKey, nsTArray<uint8_t>& aToken,
+                      SessionCacheInfo& aResult, uint64_t* aTokenId = nullptr);
+  static nsresult Remove(const nsACString& aKey, uint64_t aId);
+  static nsresult RemoveAll(const nsACString& aKey);
   static void Clear();
 
  private:
   SSLTokensCache();
   virtual ~SSLTokensCache();
 
-  nsresult RemoveLocked(const nsACString& aKey);
+  nsresult RemoveLocked(const nsACString& aKey, uint64_t aId);
+  nsresult RemovAllLocked(const nsACString& aKey);
+  nsresult GetLocked(const nsACString& aKey, nsTArray<uint8_t>& aToken,
+                     SessionCacheInfo& aResult, uint64_t* aTokenId);
 
   void EvictIfNecessary();
   void LogStats();
@@ -64,11 +67,14 @@ class SSLTokensCache : public nsIMemoryReporter {
 
   static mozilla::StaticRefPtr<SSLTokensCache> gInstance;
   static StaticMutex sLock MOZ_UNANNOTATED;
+  static uint64_t sRecordId;
 
   uint32_t mCacheSize{0};  // Actual cache size in bytes
 
   class TokenCacheRecord {
    public:
+    ~TokenCacheRecord();
+
     uint32_t Size() const;
     void Reset();
 
@@ -76,9 +82,33 @@ class SSLTokensCache : public nsIMemoryReporter {
     PRUint32 mExpirationTime = 0;
     nsTArray<uint8_t> mToken;
     SessionCacheInfo mSessionCacheInfo;
+    // An unique id to identify the record. Mostly used when we want to remove a
+    // record from TokenCacheEntry.
+    uint64_t mId = 0;
   };
 
-  nsClassHashtable<nsCStringHashKey, TokenCacheRecord> mTokenCacheRecords;
+  class TokenCacheEntry {
+   public:
+    uint32_t Size() const;
+    // Add a record into |mRecords|. To make sure |mRecords| is sorted, we
+    // iterate |mRecords| everytime to find a right place to insert the new
+    // record.
+    void AddRecord(UniquePtr<TokenCacheRecord>&& aRecord,
+                   nsTArray<TokenCacheRecord*>& aExpirationArray);
+    // This function returns the first record in |mRecords|.
+    const UniquePtr<TokenCacheRecord>& Get();
+    UniquePtr<TokenCacheRecord> RemoveWithId(uint64_t aId);
+    uint32_t RecordCount() const { return mRecords.Length(); }
+    const nsTArray<UniquePtr<TokenCacheRecord>>& Records() { return mRecords; }
+
+   private:
+    // The records in this array are ordered by the expiration time.
+    nsTArray<UniquePtr<TokenCacheRecord>> mRecords;
+  };
+
+  void OnRecordDestroyed(TokenCacheRecord* aRec);
+
+  nsClassHashtable<nsCStringHashKey, TokenCacheEntry> mTokenCacheRecords;
   nsTArray<TokenCacheRecord*> mExpirationArray;
 };
 
