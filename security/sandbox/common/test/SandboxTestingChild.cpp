@@ -88,9 +88,11 @@ void SandboxTestingChild::Bind(Endpoint<PSandboxTestingChild>&& aEndpoint) {
       case ipc::SandboxingKind::GENERIC_UTILITY:
         RunTestsGenericUtility(this);
 #ifdef MOZ_APPLEMEDIA
+        [[fallthrough]];
       case ipc::SandboxingKind::UTILITY_AUDIO_DECODING_APPLE_MEDIA:
 #endif
 #ifdef XP_WIN
+        [[fallthrough]];
       case ipc::SandboxingKind::UTILITY_AUDIO_DECODING_WMF:
 #endif
         RunTestsUtilityAudioDecoder(this, s->mSandbox);
