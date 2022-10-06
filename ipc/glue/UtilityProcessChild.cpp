@@ -45,14 +45,13 @@ static StaticRefPtr<UtilityProcessChild> sUtilityProcessChild;
 
 UtilityProcessChild::UtilityProcessChild() {
   nsDebugImpl::SetMultiprocessMode("Utility");
-  StaticMutexAutoLock lock(sUtilityProcessChildMutex);
-  sUtilityProcessChild = this;
 }
 
 UtilityProcessChild::~UtilityProcessChild() = default;
 
 /* static */
 RefPtr<UtilityProcessChild> UtilityProcessChild::GetSingleton() {
+  MOZ_ASSERT(XRE_IsUtilityProcess());
   StaticMutexAutoLock lock(sUtilityProcessChildMutex);
   if (!sUtilityProcessChild) {
     sUtilityProcessChild = new UtilityProcessChild();
