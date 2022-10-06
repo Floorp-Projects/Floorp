@@ -82,7 +82,7 @@
   /* We don't want this box to contribute arbitrarily to the intrinsic size of
    * the dialog, so set the width to a reasonable size, but let it flex to take
    * all available space. */
-  width: 500px;
+  width: 430px;
   -moz-box-flex: 1;
 }
 
