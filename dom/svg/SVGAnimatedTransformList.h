@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
-#include "SVGTransformList.h"
+#include "mozilla/dom/SVGTransformList.h"
 
 class nsAtom;
 
