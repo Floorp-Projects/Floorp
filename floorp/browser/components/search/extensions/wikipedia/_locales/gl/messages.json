@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Wikipedia (gl)"
+  },
+  "extensionDescription": {
+    "message": "Wikipedia, a enciclopedia libre"
+  },
+  "searchUrl": {
+    "message": "https://gl.wikipedia.org/wiki/Especial:Procurar"
+  },
+  "searchForm": {
+    "message": "https://gl.wikipedia.org/wiki/Especial:Procurar?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://gl.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Wikipedija (sl)"
+  },
+  "extensionDescription": {
+    "message": "Wikipedija, prosta enciklopedija"
+  },
+  "searchUrl": {
+    "message": "https://sl.wikipedia.org/wiki/Posebno:Iskanje"
+  },
+  "searchForm": {
+    "message": "https://sl.wikipedia.org/wiki/Posebno:Iskanje?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://sl.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

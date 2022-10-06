@@ -7,7 +7,7 @@
 for icon in ("firefox", "document", "newwindow", "newtab", "pbmode", "document_pdf"):
     DEFINES[icon.upper() + "_ICO"] = '"%s/%s/%s.ico"' % (
         TOPSRCDIR,
-        "floorp/official",
+        "floorp/branding",
         icon,
     )
 
