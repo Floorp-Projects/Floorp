@@ -10660,6 +10660,10 @@ graphox.us
 // Submitted by accesso Team <accessoecommerce@accesso.com>
 *.devcdnaccesso.com
 
+// Acorn Labs : https://acorn.io
+// Submitted by Craig Jellick <domains@acorn.io>
+*.on-acorn.io
+
 // Adobe : https://www.adobe.com/
 // Submitted by Ian Boston <boston@adobe.com> and Lars Trieloff <trieloff@adobe.com>
 adobeaemcloud.com
@@ -13457,7 +13461,9 @@ app.render.com
 onrender.com
 
 // Repl.it : https://repl.it
-// Submitted by Mason Clayton <mason@repl.it>
+// Submitted by Lincoln Bergeson <lincoln@replit.com>
+firewalledreplit.co
+id.firewalledreplit.co
 repl.co
 id.repl.co
 repl.run
