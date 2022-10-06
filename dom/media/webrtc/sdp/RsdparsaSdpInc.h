@@ -376,7 +376,7 @@ size_t sdp_media_section_count(const RustSdpSession* aSess);
 RustMediaSection* sdp_get_media_section(const RustSdpSession* aSess,
                                         size_t aLevel);
 nsresult sdp_add_media_section(RustSdpSession* aSess, uint32_t aMediaType,
-                               uint32_t aDirection, uint32_t aPort,
+                               uint32_t aDirection, uint16_t aPort,
                                uint32_t aProtocol, uint32_t aAddrType,
                                StringView aAddr);
 RustSdpMediaValue sdp_rust_get_media_type(const RustMediaSection* aMediaSec);
