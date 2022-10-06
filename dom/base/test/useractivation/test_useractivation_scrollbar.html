@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>User activation test: consume transient flag</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<textarea style="height: 100px; resize: none">
+&nbsp
+&nbsp
+&nbsp
+&nbsp
+&nbsp
+&nbsp
+&nbsp
+&nbsp
+&nbsp
+&nbsp
+&nbsp
+&nbsp
+&nbsp
+</textarea>
+<div id="target" style="height: 100px; width: 200px; overflow: scroll">
+&nbsp<br>
+&nbsp<br>
+&nbsp<br>
+&nbsp<br>
+&nbsp<br>
+&nbsp<br>
+&nbsp<br>
+&nbsp<br>
+&nbsp<br>
+&nbsp<br>
+&nbsp<br>
+&nbsp<br>
+&nbsp<br>
+</div>
+<div style="height: 2000px; width: 500px; background-color: green;"></div>
+<script>
+
+// Open a new window to ensure scrollbar is always visible.
+if (!opener) {
+  add_task(async function init() {
+    // Turn on the prefs that force overlay scrollbars to always be visible.
+    await SpecialPowers.pushPrefEnv({
+      set: [["layout.testing.overlay-scrollbars.always-visible", true]],
+    });
+  });
+
+  async function testOnNewWindow(aPrefValue) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["dom.user_activation.ignore_scrollbars", aPrefValue]],
+    });
+
+    let win = window.open(location);
+    // wait for message
+    await new Promise((aResolve) => {
+      window.addEventListener("message", function listener(event) {
+        if ("done" == event.data) {
+          window.removeEventListener("message", listener);
+          aResolve();
+        }
+      });
+    });
+    win.close();
+  }
+
+  add_task(async function test_pref_on() {
+    await testOnNewWindow(true);
+  });
+
+  add_task(async function test_pref_off() {
+    await testOnNewWindow(false);
+  });
+} else {
+  SimpleTest.waitForFocus(async function() {
+    function waitForEvent(aTarget, aEvent) {
+      return new Promise((aResolve) => {
+        aTarget.addEventListener(aEvent, function listener(event) {
+          aResolve();
+        }, { once: true });
+      });
+    }
+
+    let ignoreScrollbars = SpecialPowers.getBoolPref("dom.user_activation.ignore_scrollbars");
+
+    SpecialPowers.wrap(document).clearUserGestureActivation();
+    let textarea = document.querySelector("textarea");
+    var rect = textarea.getBoundingClientRect();
+
+    // click scrollbar of textarea
+    let promise = waitForEvent(textarea, "scroll");
+    synthesizeMouse(textarea, rect.width - 5, rect.height / 2, {});
+    await promise;
+
+    opener.is(SpecialPowers.wrap(document).hasBeenUserGestureActivated,
+              !ignoreScrollbars, "check has-been-user-activated");
+    opener.is(SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
+              !ignoreScrollbars, "check has-valid-transient-user-activation");
+
+    SpecialPowers.wrap(document).clearUserGestureActivation();
+    let div = document.querySelector("div[id=target]");
+    rect = div.getBoundingClientRect();
+
+    // click scrollbar of div
+    promise = waitForEvent(div, "scroll");
+    synthesizeMouse(div, rect.width - 5, rect.height / 2, {});
+    await promise;
+
+    opener.is(SpecialPowers.wrap(document).hasBeenUserGestureActivated,
+              !ignoreScrollbars, "check has-been-user-activated");
+    opener.is(SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
+              !ignoreScrollbars, "check has-valid-transient-user-activation");
+
+    SpecialPowers.wrap(document).clearUserGestureActivation();
+    let body = document.querySelector("body");
+
+    // click scrollbar of page
+    promise = waitForEvent(document, "scroll");
+    synthesizeMouse(body, innerWidth - 10, innerHeight / 2, {});
+    await promise;
+
+    opener.is(SpecialPowers.wrap(document).hasBeenUserGestureActivated,
+              !ignoreScrollbars, "check has-been-user-activated");
+    opener.is(SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
+              !ignoreScrollbars, "check has-valid-transient-user-activation");
+
+    opener.postMessage("done", "*");
+  }, window);
+}
+
+</script>
+</body>
