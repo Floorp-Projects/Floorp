@@ -41,4 +41,20 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
   return promise;
 }
 
+nsCString GetUtilityActorName(const UtilityActorName aActorName) {
+  switch (aActorName) {
+    case UtilityActorName::Unknown:
+      return "unknown"_ns;
+    case UtilityActorName::AudioDecoder_Generic:
+      return "audio-decoder-generic"_ns;
+    case UtilityActorName::AudioDecoder_AppleMedia:
+      return "audio-decoder-applemedia"_ns;
+    case UtilityActorName::AudioDecoder_WMF:
+      return "audio-decoder-wmf"_ns;
+    case UtilityActorName::MfMediaEngineCDM:
+      return "mf-media-engine"_ns;
+  }
+  return "unknown"_ns;
+}
+
 }  // namespace mozilla
