@@ -440,30 +440,6 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvDrawSnapshot(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult WindowGlobalChild::RecvGetSecurityInfo(
-    GetSecurityInfoResolver&& aResolve) {
-  nsCOMPtr<nsITransportSecurityInfo> securityInfo;
-  auto callResolve =
-      MakeScopeExit([aResolve, &securityInfo]() { aResolve(securityInfo); });
-
-  nsCOMPtr<Document> doc = mWindowGlobal->GetDoc();
-  if (!doc) {
-    return IPC_OK();
-  }
-
-  // First check if there's a failed channel, in case of a certificate
-  // error.
-  if (nsIChannel* failedChannel = doc->GetFailedChannel()) {
-    Unused << failedChannel->GetSecurityInfo(getter_AddRefs(securityInfo));
-    return IPC_OK();
-  }
-  // When there's no failed channel we should have a regular
-  // security info on the document. In some cases there's no
-  // security info at all, i.e. on HTTP sites.
-  securityInfo = doc->GetSecurityInfo();
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult
 WindowGlobalChild::RecvSaveStorageAccessPermissionGranted() {
   nsCOMPtr<nsPIDOMWindowInner> inner = GetWindowGlobal();

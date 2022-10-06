@@ -78,11 +78,6 @@ child:
   async DrawSnapshot(IntRect? aRect, float aScale, nscolor aBackgroundColor,
                      uint32_t aFlags) returns (PaintFragment retval);
 
-  /**
-   * Returns the security info associated with this window.
-   */
-  async GetSecurityInfo() returns(nsITransportSecurityInfo securityInfo);
-
   async DispatchSecurityPolicyViolation(nsString aViolationEventJSON);
 
   async SaveStorageAccessPermissionGranted();

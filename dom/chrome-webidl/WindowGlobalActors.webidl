@@ -7,7 +7,6 @@ interface Principal;
 interface URI;
 interface nsIDocShell;
 interface RemoteTab;
-interface nsITransportSecurityInfo;
 interface nsIDOMProcessParent;
 
 [Exposed=Window, ChromeOnly]
@@ -144,18 +143,6 @@ interface WindowGlobalParent : WindowContext {
                                     double scale,
                                     UTF8String backgroundColor,
                                     optional boolean resetScrollPosition = false);
-
-  /**
-   * Fetches the securityInfo object for this window. This function will
-   * look for failed and successful channels to find the security info,
-   * thus it will work on regular HTTPS pages as well as certificate
-   * error pages.
-   *
-   * This returns a Promise which resolves to an nsITransportSecurity
-   * object with certificate data or undefined if no security info is available.
-   */
-  [NewObject]
-  Promise<nsITransportSecurityInfo> getSecurityInfo();
 
   // True if any of the windows in the subtree rooted at this window
   // has active peer connections.  If this is called for a non-top-level

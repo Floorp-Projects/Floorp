@@ -162,8 +162,6 @@ class WindowGlobalParent final : public WindowContext,
       const DOMRect* aRect, double aScale, const nsACString& aBackgroundColor,
       bool aResetScrollPosition, mozilla::ErrorResult& aRv);
 
-  already_AddRefed<Promise> GetSecurityInfo(ErrorResult& aRv);
-
   static already_AddRefed<WindowGlobalParent> CreateDisconnected(
       const WindowGlobalInit& aInit);
 
