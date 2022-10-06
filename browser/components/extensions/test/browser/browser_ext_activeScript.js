@@ -169,7 +169,7 @@ async function testActiveScript(
   await extension.awaitMessage("expect-done");
 
   if (withUnifiedExtensionsPanel) {
-    await clickUnifiedExtensionsItem(win, extension.id);
+    await clickUnifiedExtensionsItem(win, extension.id, true);
   } else {
     await clickBrowserAction(extension, win);
   }

@@ -85,12 +85,24 @@ const openUnifiedExtensionsContextMenu = async (win, extensionId) => {
   return menu;
 };
 
-const clickUnifiedExtensionsItem = async (win, extensionId) => {
+const clickUnifiedExtensionsItem = async (
+  win,
+  extensionId,
+  forceEnableButton = false
+) => {
   // The panel should be closed automatically when we click an extension item.
   await openExtensionsPanel(win);
 
   const item = getUnifiedExtensionsItem(win, extensionId);
   ok(item, `expected item for ${extensionId}`);
+
+  // The action button should be disabled when users aren't supposed to click
+  // on it but it might still be useful to re-enable it for testing purposes.
+  if (forceEnableButton) {
+    let actionButton = item.querySelector(".unified-extensions-item-action");
+    actionButton.disabled = false;
+    ok(!actionButton.disabled, "action button was force-enabled");
+  }
 
   // Similar to `openUnifiedExtensionsContextMenu()`, we make sure the item is
   // visible before clicking on it to prevent intermittents.
