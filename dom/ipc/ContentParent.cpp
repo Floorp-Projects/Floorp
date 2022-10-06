@@ -1764,10 +1764,8 @@ void MaybeLogBlockShutdownDiagnostics(ContentParent* aSelf, const char* aMsg,
                                       const char* aFile, int32_t aLine) {
 #if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   if (aSelf->IsBlockingShutdown()) {
-    nsAutoCString logmsg;
-    logmsg.AppendPrintf("ContentParent: id=%p - ", aSelf);
-    logmsg.Append(aMsg);
-    NS_DebugBreak(NS_DEBUG_WARNING, logmsg.get(), nullptr, aFile, aLine);
+    MOZ_LOG(ContentParent::GetLog(), LogLevel::Info,
+            ("ContentParent: id=%p - %s at %s(%d)", aSelf, aMsg, aFile, aLine));
   }
 #else
   Unused << aSelf;
