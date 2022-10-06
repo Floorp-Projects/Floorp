@@ -5208,7 +5208,11 @@ bool nsDisplayOwnLayer::HasDynamicToolbar() const {
 }
 
 bool nsDisplayOwnLayer::ShouldFixedAndStickyContentGetAnimationIds() const {
+#if defined(MOZ_WIDGET_ANDROID)
   return mFrame->PresContext()->IsRootContentDocumentCrossProcess();
+#else
+  return false;
+#endif
 }
 
 bool nsDisplayOwnLayer::CreateWebRenderCommands(
