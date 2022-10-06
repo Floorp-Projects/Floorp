@@ -25,6 +25,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#if defined(MOZ_ASAN) || defined(FUZZING)
+#  include <signal.h>
+#endif
+
 #include "mozilla/Unused.h"
 #include "nsAppRunner.h"  // for IsWaylandEnabled on IsX11EGLEnabled
 #include "stdint.h"
@@ -1090,6 +1094,11 @@ static void vaapitest() {
 
   pid_t vaapitest_pid = fork();
   if (vaapitest_pid == 0) {
+#  if defined(MOZ_ASAN) || defined(FUZZING)
+    // If handle_segv=1 (default), then glxtest crash will print a sanitizer
+    // report which can confuse the harness in fuzzing automation.
+    signal(SIGSEGV, SIG_DFL);
+#  endif
     int vaapirv = childvaapitest();
     _exit(vaapirv);
   } else if (vaapitest_pid > 0) {
@@ -1219,6 +1228,11 @@ bool fire_glxtest_process() {
     close(pfd[0]);
     write_end_of_the_pipe = pfd[1];
     close_logging();
+#if defined(MOZ_ASAN) || defined(FUZZING)
+    // If handle_segv=1 (default), then glxtest crash will print a sanitizer
+    // report which can confuse the harness in fuzzing automation.
+    signal(SIGSEGV, SIG_DFL);
+#endif
     int rv = childgltest();
     close(pfd[1]);
     _exit(rv);
