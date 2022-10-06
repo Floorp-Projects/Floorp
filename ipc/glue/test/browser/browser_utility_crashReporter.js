@@ -11,7 +11,7 @@ async function startAndCrashUtility(actors, actorsCheck) {
 // When running full suite, previous audio decoding tests might have left some
 // running and this might interfere with our testing
 add_setup(async function ensureNoExistingProcess() {
-  await utilityProcessTest().stopProcess();
+  await killPendingUtilityProcess();
 });
 
 add_task(async function utilityNoActor() {

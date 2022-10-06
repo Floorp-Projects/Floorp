@@ -17,7 +17,7 @@ async function startUtilityProcess(actors) {
   return utilityProcessTest().startProcess(actors);
 }
 
-async function cleanUtilityProcessShutdown(utilityPid) {
+async function cleanUtilityProcessShutdown(utilityPid, preferKill = false) {
   info(`CleanShutdown Utility Process ${utilityPid}`);
   ok(utilityPid !== undefined, "Utility needs to be defined");
 
@@ -25,7 +25,17 @@ async function cleanUtilityProcessShutdown(utilityPid) {
     "ipc:utility-shutdown",
     (subject, data) => parseInt(data, 10) === utilityPid
   );
-  await utilityProcessTest().stopProcess();
+
+  if (preferKill) {
+    SimpleTest.expectChildProcessCrash();
+    info(`Kill Utility Process ${utilityPid}`);
+    const ProcessTools = Cc["@mozilla.org/processtools-service;1"].getService(
+      Ci.nsIProcessToolsService
+    );
+    ProcessTools.kill(utilityPid);
+  } else {
+    await utilityProcessTest().stopProcess();
+  }
 
   let [subject, data] = await utilityProcessGone;
   ok(
@@ -39,6 +49,25 @@ async function cleanUtilityProcessShutdown(utilityPid) {
   );
 
   ok(!subject.hasKey("dumpID"), "There should be no dumpID");
+}
+
+async function killPendingUtilityProcess() {
+  let audioDecoderProcesses = (
+    await ChromeUtils.requestProcInfo()
+  ).children.filter(p => {
+    return (
+      p.type === "utility" &&
+      p.utilityActors.find(a => a.actorName.startsWith("audioDecoder_Generic"))
+    );
+  });
+  info(`audioDecoderProcesses=${JSON.stringify(audioDecoderProcesses)}`);
+  for (let audioDecoderProcess of audioDecoderProcesses) {
+    info(`Stopping audio decoder PID ${audioDecoderProcess.pid}`);
+    await cleanUtilityProcessShutdown(
+      audioDecoderProcess.pid,
+      /* preferKill */ true
+    );
+  }
 }
 
 function audioTestData() {
@@ -209,11 +238,12 @@ async function crashSomeUtility(utilityPid, actorsCheck) {
   const ProcessTools = Cc["@mozilla.org/processtools-service;1"].getService(
     Ci.nsIProcessToolsService
   );
+
+  info(`Crash Utility Process ${utilityPid}`);
   ProcessTools.crash(utilityPid);
 
-  info("Waiting for utility process to go away.");
+  info(`Waiting for utility process ${utilityPid} to go away.`);
   let [subject, data] = await utilityProcessGone;
-  info(`utilityPid=${utilityPid} data=${data}`);
   ok(
     parseInt(data, 10) === utilityPid,
     `Should match the crashed PID ${utilityPid} with ${data}`
@@ -240,7 +270,7 @@ async function crashSomeUtility(utilityPid, actorsCheck) {
     ok(crash.id === dumpID, "Record should have an ID");
     ok(
       actorsCheck(crash.metadata.UtilityActorsName),
-      `Record should have the correct actors name: ${crash.metadata.UtilityActorsName}`
+      `Record should have the correct actors name for: ${crash.metadata.UtilityActorsName}`
     );
   });
 
