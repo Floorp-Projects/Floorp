@@ -276,6 +276,7 @@
 @RESPATH@/browser/defaults/settings/blocklists
 @RESPATH@/browser/defaults/settings/main
 @RESPATH@/browser/defaults/settings/security-state
+@RESPATH@/browser/@PREF_DIR@/000-floorp.js
 
 ; Warning: changing the path to channel-prefs.js can cause bugs (Bug 756325)
 ; Technically this is an app pref file, but we are keeping it in the original
