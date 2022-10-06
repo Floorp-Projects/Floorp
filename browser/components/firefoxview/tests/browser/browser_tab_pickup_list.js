@@ -299,13 +299,13 @@ add_task(async function test_time_updates_correctly() {
   });
   await clearAllParentTelemetryEvents();
 
+  const sandbox = setupRecentDeviceListMocks();
+  const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
+  let mockTabs1 = getMockTabData(syncedTabsData5);
+  syncedTabsMock.returns(mockTabs1);
+
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-
-    const sandbox = setupRecentDeviceListMocks();
-    const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
-    let mockTabs1 = getMockTabData(syncedTabsData5);
-    syncedTabsMock.returns(mockTabs1);
 
     await setupListState(browser);
 
@@ -362,10 +362,14 @@ add_task(async function test_time_updates_correctly() {
       "Tab opened at the beginning of the tab strip"
     );
     gBrowser.removeTab(gBrowser.selectedTab);
+    // make sure we're back on fx-view
+    browser.ownerGlobal.FirefoxViewHandler.openTab();
 
-    await clearAllParentTelemetryEvents();
-
+    info("Waiting for the tab pickup summary to be visible");
     await waitForElementVisible(browser, "#tab-pickup-container > summary");
+    // click on the details summary and verify telemetry gets logged for this event
+    await clearAllParentTelemetryEvents();
+    info("clicking the summary to collapse it");
     document.querySelector("#tab-pickup-container > summary").click();
 
     await TestUtils.waitForCondition(
@@ -380,7 +384,6 @@ add_task(async function test_time_updates_correctly() {
       200,
       100
     );
-
     TelemetryTestUtils.assertEvents(
       TAB_PICKUP_OPEN_EVENT,
       { category: "firefoxview" },
