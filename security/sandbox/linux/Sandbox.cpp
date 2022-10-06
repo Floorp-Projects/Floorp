@@ -751,7 +751,6 @@ void SetUtilitySandbox(int aBroker, ipc::SandboxingKind aKind) {
   UniquePtr<sandbox::bpf_dsl::Policy> policy;
   switch (aKind) {
     case ipc::SandboxingKind::GENERIC_UTILITY:
-    case ipc::SandboxingKind::UTILITY_AUDIO_DECODING_GENERIC:
       policy = GetUtilitySandboxPolicy(sBroker);
       break;
 

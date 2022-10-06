@@ -266,7 +266,7 @@ RefPtr<UtilityProcessManager::StartRemoteDecodingUtilityPromise>
 UtilityProcessManager::StartProcessForRemoteMediaDecoding(
     base::ProcessId aOtherProcess, SandboxingKind aSandbox) {
   // Not supported kinds.
-  if (aSandbox != SandboxingKind::UTILITY_AUDIO_DECODING_GENERIC
+  if (aSandbox != SandboxingKind::GENERIC_UTILITY
 #ifdef MOZ_APPLEMEDIA
       && aSandbox != SandboxingKind::UTILITY_AUDIO_DECODING_APPLE_MEDIA
 #endif

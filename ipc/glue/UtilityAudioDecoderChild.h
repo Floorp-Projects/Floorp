@@ -40,7 +40,7 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild
 
   UtilityActorName GetActorName() {
     switch (mSandbox) {
-      case UTILITY_AUDIO_DECODING_GENERIC:
+      case GENERIC_UTILITY:
         return UtilityActorName::AudioDecoder_Generic;
 #ifdef MOZ_APPLEMEDIA
       case UTILITY_AUDIO_DECODING_APPLE_MEDIA:
