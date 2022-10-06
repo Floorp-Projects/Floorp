@@ -60,6 +60,14 @@
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Qoʻshimcha…</string>
 
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> HTTP Strict Transport Security (HSTS) deb nomlangan xavfsizlik siyosatiga ega, yaʼni <b>%2$s</b> unga faqat xavfsiz ulanishi mumkin. Bu saytga tashrif buyurish uchun istisno qoʻsha olmaysiz.
+    ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> HTTP Strict Transport Security (HSTS) deb nomlangan xavfsizlik siyosatiga ega, yaʼni <b>%2$s</b> unga faqat xavfsiz ulanishi mumkin. Bu saytga tashrif buyurish uchun istisno qoʻsha olmaysiz.</label>
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Orqaga qaytish</string>
 
