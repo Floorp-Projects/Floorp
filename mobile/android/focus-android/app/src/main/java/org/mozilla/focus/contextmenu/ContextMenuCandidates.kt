@@ -21,46 +21,66 @@ object ContextMenuCandidates {
         appLinksUseCases: AppLinksUseCases,
         snackBarParentView: View,
         snackbarDelegate: ContextMenuCandidate.SnackbarDelegate = DefaultSnackbarDelegate(),
+        isCustomTab: Boolean,
     ): List<ContextMenuCandidate> {
-        return listOf(
-            ContextMenuCandidate.createOpenInPrivateTabCandidate(
-                context,
-                tabsUseCases,
-                snackBarParentView,
-                snackbarDelegate,
-            ),
-            ContextMenuCandidate.createCopyLinkCandidate(
-                context,
-                snackBarParentView,
-                snackbarDelegate,
-            ),
-            ContextMenuCandidate.createDownloadLinkCandidate(context, contextMenuUseCases),
-            ContextMenuCandidate.createShareLinkCandidate(context),
-            ContextMenuCandidate.createShareImageCandidate(context, contextMenuUseCases),
-            ContextMenuCandidate.createOpenImageInNewTabCandidate(
-                context,
-                tabsUseCases,
-                snackBarParentView,
-                snackbarDelegate,
-            ),
-            ContextMenuCandidate.createSaveImageCandidate(context, contextMenuUseCases),
-            ContextMenuCandidate.createSaveVideoAudioCandidate(context, contextMenuUseCases),
-            ContextMenuCandidate.createCopyImageLocationCandidate(
-                context,
-                snackBarParentView,
-                snackbarDelegate,
-            ),
-            ContextMenuCandidate.createAddContactCandidate(context),
-            ContextMenuCandidate.createShareEmailAddressCandidate(context),
-            ContextMenuCandidate.createCopyEmailAddressCandidate(
-                context,
-                snackBarParentView,
-                snackbarDelegate,
-            ),
-            ContextMenuCandidate.createOpenInExternalAppCandidate(
-                context,
-                appLinksUseCases,
-            ),
-        )
+        return if (isCustomTab) {
+            // the context menu candidates list is the same as in a Fenix custom tab.
+            listOf(
+                ContextMenuCandidate.createCopyLinkCandidate(
+                    context,
+                    snackBarParentView,
+                    snackbarDelegate,
+                ),
+                ContextMenuCandidate.createShareLinkCandidate(context),
+                ContextMenuCandidate.createSaveImageCandidate(context, contextMenuUseCases),
+                ContextMenuCandidate.createSaveVideoAudioCandidate(context, contextMenuUseCases),
+                ContextMenuCandidate.createCopyImageLocationCandidate(
+                    context,
+                    snackBarParentView,
+                    snackbarDelegate,
+                ),
+            )
+        } else {
+            listOf(
+                ContextMenuCandidate.createOpenInPrivateTabCandidate(
+                    context,
+                    tabsUseCases,
+                    snackBarParentView,
+                    snackbarDelegate,
+                ),
+                ContextMenuCandidate.createCopyLinkCandidate(
+                    context,
+                    snackBarParentView,
+                    snackbarDelegate,
+                ),
+                ContextMenuCandidate.createDownloadLinkCandidate(context, contextMenuUseCases),
+                ContextMenuCandidate.createShareLinkCandidate(context),
+                ContextMenuCandidate.createShareImageCandidate(context, contextMenuUseCases),
+                ContextMenuCandidate.createOpenImageInNewTabCandidate(
+                    context,
+                    tabsUseCases,
+                    snackBarParentView,
+                    snackbarDelegate,
+                ),
+                ContextMenuCandidate.createSaveImageCandidate(context, contextMenuUseCases),
+                ContextMenuCandidate.createSaveVideoAudioCandidate(context, contextMenuUseCases),
+                ContextMenuCandidate.createCopyImageLocationCandidate(
+                    context,
+                    snackBarParentView,
+                    snackbarDelegate,
+                ),
+                ContextMenuCandidate.createAddContactCandidate(context),
+                ContextMenuCandidate.createShareEmailAddressCandidate(context),
+                ContextMenuCandidate.createCopyEmailAddressCandidate(
+                    context,
+                    snackBarParentView,
+                    snackbarDelegate,
+                ),
+                ContextMenuCandidate.createOpenInExternalAppCandidate(
+                    context,
+                    appLinksUseCases,
+                ),
+            )
+        }
     }
 }

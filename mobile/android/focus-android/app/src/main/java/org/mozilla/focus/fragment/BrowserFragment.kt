@@ -226,6 +226,7 @@ class BrowserFragment :
                     components.appLinksUseCases,
                     view,
                     FocusSnackbarDelegate(view),
+                    tab.isCustomTab(),
                 ),
                 binding.engineView,
                 requireComponents.contextMenuUseCases,
