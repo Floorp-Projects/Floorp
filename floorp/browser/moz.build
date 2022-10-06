@@ -12,9 +12,10 @@ JS_PREFERENCE_PP_FILES += [
 ]
 
 DIRS += [
-    "extensions",
-    "themes",
-    "components",
-    "locales",
     "app/distribution"
+    "components",
+    "extensions",
+    "locales",
+    "themes",
+    "fonts",
 ]
