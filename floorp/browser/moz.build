@@ -10,3 +10,8 @@ export("DIST_SUBDIR")
 JS_PREFERENCE_PP_FILES += [
     "app/profile/000-floorp.js",
 ]
+
+DIRS += [
+    "extensions/userChromejs",
+    "themes",
+]
