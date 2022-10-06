@@ -199,7 +199,16 @@ class BinaryPath {
 
 #elif defined(__OpenBSD__)
   static nsresult Get(char aResult[MAXPATHLEN]) {
+    static bool cached = false;
+    static char cachedPath[MAXPATHLEN];
+    nsresult r;
     int mib[4];
+    if (cached) {
+      if (strlcpy(aResult, cachedPath, MAXPATHLEN) >= MAXPATHLEN) {
+        return NS_ERROR_FAILURE;
+      }
+      return NS_OK;
+    }
     mib[0] = CTL_KERN;
     mib[1] = KERN_PROC_ARGS;
     mib[2] = getpid();
@@ -215,7 +224,14 @@ class BinaryPath {
       return NS_ERROR_FAILURE;
     }
 
-    return GetFromArgv0(argv[0], aResult);
+    r = GetFromArgv0(argv[0], aResult);
+    if (NS_SUCCEEDED(r)) {
+      if (strlcpy(cachedPath, aResult, MAXPATHLEN) >= MAXPATHLEN) {
+        return NS_ERROR_FAILURE;
+      }
+      cached = true;
+    }
+    return r;
   }
 
   static nsresult GetFromArgv0(const char* aArgv0, char aResult[MAXPATHLEN]) {
