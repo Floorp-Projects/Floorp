@@ -1312,9 +1312,3 @@ XPCOMUtils.defineLazyPreferenceGetter(
   null,
   pref => parseFloat(pref)
 );
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  FormAutofillUtils,
-  "ccHeuristicsNameExpirySection",
-  "extensions.formautofill.creditCards.heuristics.nameExpirySection.enabled"
-);

@@ -226,7 +226,7 @@ add_task(async function test_popup_opened_form_without_autocomplete() {
     ccFormArgsv1("detected"),
     ccFormArgsv2(
       "detected",
-      buildccFormv2Extra({ cc_number: "1", cc_exp: "false" }, "0")
+      buildccFormv2Extra({ cc_number: "1", cc_name: "1", cc_exp: "false" }, "0")
     ),
     ccFormArgsv1("popup_shown"),
     ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
@@ -253,10 +253,9 @@ add_task(
       set: [
         [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
         [AUTOFILL_CREDITCARDS_AVAILABLE_PREF, "on"],
-        ["extensions.formautofill.creditCards.heuristics.testConfidence", "1"],
         [
-          "extensions.formautofill.creditCards.heuristics.nameExpirySection.enabled",
-          true,
+          "extensions.formautofill.creditCards.heuristics.fathom.testConfidence",
+          "1",
         ],
       ],
     });
@@ -299,7 +298,7 @@ add_task(
       ccFormArgsv2(
         "detected",
         buildccFormv2Extra(
-          { cc_name: "0", cc_type: "0", cc_exp_month: "0", cc_exp_year: "0" },
+          { cc_name: "1", cc_type: "0", cc_exp_month: "0", cc_exp_year: "0" },
           "false"
         )
       ),
