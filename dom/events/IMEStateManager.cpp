@@ -42,6 +42,7 @@
 #include "nsINode.h"
 #include "nsISupports.h"
 #include "nsIURI.h"
+#include "nsIURIMutator.h"
 #include "nsPresContext.h"
 
 namespace mozilla {
@@ -1539,7 +1540,17 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
       //       malicious text services may like files which are explicitly used
       //       by the user better.
       if (uri->SchemeIs("http") || uri->SchemeIs("https")) {
-        context.mURI = uri;
+        // Note that we don't need to expose UserPass, Query and Reference to
+        // IME since they may contain sensitive data, but non-malicious text
+        // services must not require these data.
+        nsCOMPtr<nsIURI> exposableURL;
+        if (NS_SUCCEEDED(NS_MutateURI(uri)
+                             .SetQuery(""_ns)
+                             .SetRef(""_ns)
+                             .SetUserPass(""_ns)
+                             .Finalize(exposableURL))) {
+          context.mURI = std::move(exposableURL);
+        }
       }
     }
   }
