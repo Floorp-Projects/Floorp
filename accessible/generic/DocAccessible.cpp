@@ -15,6 +15,7 @@
 #include "nsAccessiblePivot.h"
 #include "nsAccUtils.h"
 #include "nsEventShell.h"
+#include "nsIIOService.h"
 #include "nsLayoutUtils.h"
 #include "nsTextEquivUtils.h"
 #include "Pivot.h"
@@ -42,6 +43,7 @@
 #include "nsTHashSet.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Components.h"  // for mozilla::components
 #include "mozilla/EditorBase.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/ipc/ProcessChild.h"
@@ -341,15 +343,37 @@ already_AddRefed<EditorBase> DocAccessible::GetEditor() const {
 // DocAccessible public method
 
 void DocAccessible::URL(nsAString& aURL) const {
+  aURL.Truncate();
   nsCOMPtr<nsISupports> container = mDocumentNode->GetContainer();
   nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(container));
-  nsAutoCString theURL;
-  if (webNav) {
-    nsCOMPtr<nsIURI> pURI;
-    webNav->GetCurrentURI(getter_AddRefs(pURI));
-    if (pURI) pURI->GetSpec(theURL);
+  if (MOZ_UNLIKELY(!webNav)) {
+    return;
   }
-  CopyUTF8toUTF16(theURL, aURL);
+
+  nsCOMPtr<nsIURI> uri;
+  webNav->GetCurrentURI(getter_AddRefs(uri));
+  if (MOZ_UNLIKELY(!uri)) {
+    return;
+  }
+  // Let's avoid treating too long URI in the main process for avoiding
+  // memory fragmentation as far as possible.
+  if (uri->SchemeIs("data") || uri->SchemeIs("blob")) {
+    return;
+  }
+
+  nsCOMPtr<nsIIOService> io = mozilla::components::IO::Service();
+  if (NS_WARN_IF(!io)) {
+    return;
+  }
+  nsCOMPtr<nsIURI> exposableURI;
+  if (NS_FAILED(io->CreateExposableURI(uri, getter_AddRefs(exposableURI))) ||
+      MOZ_UNLIKELY(!exposableURI)) {
+    return;
+  }
+  nsAutoCString theURL;
+  if (NS_SUCCEEDED(exposableURI->GetSpec(theURL))) {
+    CopyUTF8toUTF16(theURL, aURL);
+  }
 }
 
 void DocAccessible::Title(nsString& aTitle) const {

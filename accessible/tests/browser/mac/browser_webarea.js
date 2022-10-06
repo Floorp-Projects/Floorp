@@ -36,9 +36,7 @@ addAccessibleTask(`<title>webarea test</title>`, async (browser, accDoc) => {
   // document, we'll get one AXLoadComplete event.
   let eventPromise = Promise.race([
     waitForMacEvent("AXLayoutComplete", (iface, data) => {
-      return (
-        iface.getAttributeValue("AXDescription") == "data:text/html,hello world"
-      );
+      return iface.getAttributeValue("AXDescription") == "iframe document";
     }),
     waitForMacEvent("AXLoadComplete", (iface, data) => {
       return iface.getAttributeValue("AXDescription") == "webarea test";
@@ -46,7 +44,7 @@ addAccessibleTask(`<title>webarea test</title>`, async (browser, accDoc) => {
   ]);
   await SpecialPowers.spawn(browser, [], () => {
     const iframe = content.document.createElement("iframe");
-    iframe.src = "data:text/html,hello world";
+    iframe.src = "data:text/html,<title>iframe document</title>hello world";
     content.document.body.appendChild(iframe);
   });
   let doc = await eventPromise;
@@ -67,7 +65,7 @@ addAccessibleTask(`<title>webarea test</title>`, async (browser, accDoc) => {
   is(doc.getAttributeValue("AXTitle"), null, "iframe document has no AXTitle");
   is(
     doc.getAttributeValue("AXDescription"),
-    "data:text/html,hello world",
+    "iframe document",
     "test has correct label"
   );
 
