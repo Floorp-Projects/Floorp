@@ -733,8 +733,10 @@ static bool RemoveFirstLine(nsLineList& aFromLines, nsFrameList& aFromFrames,
   *aOutLine = removedLine;
   nsLineList_iterator next = aFromLines.erase(removedLine);
   bool isLastLine = next == aFromLines.end();
-  nsIFrame* firstFrameInNextLine = isLastLine ? nullptr : next->mFirstChild;
-  *aOutFrames = aFromFrames.ExtractHead(firstFrameInNextLine);
+  nsIFrame* lastFrame = isLastLine ? aFromFrames.LastChild()
+                                   : next->mFirstChild->GetPrevSibling();
+  nsFrameList::FrameLinkEnumerator linkToBreak(aFromFrames, lastFrame);
+  *aOutFrames = aFromFrames.ExtractHead(linkToBreak);
   return isLastLine;
 }
 

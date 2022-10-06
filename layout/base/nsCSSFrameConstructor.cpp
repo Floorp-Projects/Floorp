@@ -10036,16 +10036,13 @@ nsFirstLetterFrame* nsCSSFrameConstructor::CreateFloatingLetterFrame(
   // Put the new float before any of the floats in the block we're doing
   // first-letter for, that is, before any floats whose parent is
   // containingBlock.
-  nsIFrame* prevSibling = nullptr;
-  for (nsIFrame* f : aState.mFloatedList) {
-    if (f->GetParent() == containingBlock) {
-      break;
-    }
-    prevSibling = f;
+  nsFrameList::FrameLinkEnumerator link(aState.mFloatedList);
+  while (!link.AtEnd() && link.NextFrame()->GetParent() != containingBlock) {
+    link.Next();
   }
 
   aState.AddChild(letterFrame, aResult, letterContent, aParentFrame, false,
-                  true, false, true, prevSibling);
+                  true, false, true, link.PrevFrame());
 
   if (nextTextFrame) {
     aResult.AppendFrame(nullptr, nextTextFrame);
@@ -11010,14 +11007,13 @@ nsIFrame* nsCSSFrameConstructor::ConstructInline(
   ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame,
                               /* aParentIsWrapperAnonBox = */ false, childList);
 
-  auto firstBlock = aItem.mIsAllInline
-                        ? childList.end()
-                        : std::find_if(childList.begin(), childList.end(),
-                                       [](nsIFrame* aFrame) {
-                                         return aFrame->IsBlockOutside();
-                                       });
+  nsFrameList::FrameLinkEnumerator firstBlockEnumerator(childList);
+  if (!aItem.mIsAllInline) {
+    firstBlockEnumerator.Find(
+        [](nsIFrame* aFrame) { return aFrame->IsBlockOutside(); });
+  }
 
-  if (aItem.mIsAllInline || firstBlock == childList.end()) {
+  if (aItem.mIsAllInline || firstBlockEnumerator.AtEnd()) {
     // This part is easy.  We either already know we have no non-inline kids,
     // or haven't found any when constructing actual frames (the latter can
     // happen only if out-of-flows that we thought had no containing block
@@ -11033,7 +11029,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructInline(
   // has to be chopped into several pieces, as described above.
 
   // Grab the first inline's kids
-  nsFrameList firstInlineKids = childList.ExtractHead(*firstBlock);
+  nsFrameList firstInlineKids = childList.ExtractHead(firstBlockEnumerator);
   newFrame->SetInitialChildList(kPrincipalList, firstInlineKids);
 
   aFrameList.AppendFrame(nullptr, newFrame);

@@ -1421,21 +1421,27 @@ nsFrameList nsContainerFrame::StealFramesAfter(nsIFrame* aChild) {
   NS_ASSERTION(!IsBlockFrame(), "unexpected call");
 
   if (!aChild) {
-    return std::move(mFrames);
+    nsFrameList copy(mFrames);
+    mFrames.Clear();
+    return copy;
   }
 
-  if (auto childIter = std::find(mFrames.begin(), mFrames.end(), aChild);
-      childIter != mFrames.end()) {
-    return mFrames.ExtractTail((*childIter)->GetNextSibling());
+  for (nsFrameList::FrameLinkEnumerator iter(mFrames); !iter.AtEnd();
+       iter.Next()) {
+    if (iter.PrevFrame() == aChild) {
+      return mFrames.ExtractTail(iter);
+    }
   }
 
   // We didn't find the child in the principal child list.
   // Maybe it's on the overflow list?
-  if (nsFrameList* overflowFrames = GetOverflowFrames()) {
-    if (auto childIter =
-            std::find(overflowFrames->begin(), overflowFrames->end(), aChild);
-        childIter != overflowFrames->end()) {
-      return overflowFrames->ExtractTail((*childIter)->GetNextSibling());
+  nsFrameList* overflowFrames = GetOverflowFrames();
+  if (overflowFrames) {
+    for (nsFrameList::FrameLinkEnumerator iter(*overflowFrames); !iter.AtEnd();
+         iter.Next()) {
+      if (iter.PrevFrame() == aChild) {
+        return overflowFrames->ExtractTail(iter);
+      }
     }
   }
 
