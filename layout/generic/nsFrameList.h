@@ -72,6 +72,9 @@ struct PostFrameDestroyData {
  */
 class nsFrameList {
  public:
+  class Iterator;
+  class Slice;
+
   nsFrameList() : mFirstChild(nullptr), mLastChild(nullptr) {}
 
   nsFrameList(nsIFrame* aFirstFrame, nsIFrame* aLastFrame)
@@ -137,8 +140,6 @@ class nsFrameList {
     mLastChild = aFrameList.LastChild();
     aFrameList.Clear();
   }
-
-  class Slice;
 
   /**
    * Append aFrameList to this list.  If aParent is not null,
@@ -259,24 +260,25 @@ class nsFrameList {
                          nsIFrame*>::value,
         "aPredicate should be of this function signature: bool(nsIFrame*)");
 
-    FrameLinkEnumerator link(*this);
-    link.Find(aPredicate);
-    return ExtractHead(link);
+    auto firstMatch = std::find_if(begin(), end(), aPredicate);
+    return ExtractHead(*firstMatch);
   }
 
   /**
-   * Split this frame list such that all the frames before the link pointed to
-   * by aLink end up in the returned list, while the remaining frames stay in
-   * this list.  After this call, aLink points to the beginning of this list.
+   * Split this frame list such that all the previous siblings of aFrame end up
+   * in the returned list, while aFrame and all its next siblings stay in this
+   * list. If aFrame is nullptr, extract the entire frame list.
+   * Note: aFrame must be in this frame list!
    */
-  nsFrameList ExtractHead(FrameLinkEnumerator& aLink);
+  nsFrameList ExtractHead(nsIFrame* aFrame);
 
   /**
-   * Split this frame list such that all the frames coming after the link
-   * pointed to by aLink end up in the returned list, while the frames before
-   * that link stay in this list.  After this call, aLink is at end.
+   * Split this frame list such that aFrame and all its next siblings end up in
+   * the returned list; all the previous siblings of aFrame stay in this list.
+   * If aFrame is nullptr, return an empty frame list.
+   * Note: aFrame must be in this frame list!
    */
-  nsFrameList ExtractTail(FrameLinkEnumerator& aLink);
+  nsFrameList ExtractTail(nsIFrame* aFrame);
 
   nsIFrame* FirstChild() const { return mFirstChild; }
 
