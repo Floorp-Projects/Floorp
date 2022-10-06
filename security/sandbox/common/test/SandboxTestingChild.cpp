@@ -87,9 +87,6 @@ void SandboxTestingChild::Bind(Endpoint<PSandboxTestingChild>&& aEndpoint) {
     switch (s->mSandbox) {
       case ipc::SandboxingKind::GENERIC_UTILITY:
         RunTestsGenericUtility(this);
-        break;
-
-      case ipc::SandboxingKind::UTILITY_AUDIO_DECODING_GENERIC:
 #ifdef MOZ_APPLEMEDIA
       case ipc::SandboxingKind::UTILITY_AUDIO_DECODING_APPLE_MEDIA:
 #endif
