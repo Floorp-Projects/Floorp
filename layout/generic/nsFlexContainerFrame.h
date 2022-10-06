@@ -325,6 +325,8 @@ class nsFlexContainerFrame final : public nsContainerFrame,
     // The absolutely-positioned flex children.
     nsTArray<nsIFrame*> mPlaceholders;
 
+    bool mHasCollapsedItems = false;
+
     // The final content-box main-size of the flex container as if there's no
     // fragmentation.
     nscoord mContentBoxMainSize = NS_UNCONSTRAINEDSIZE;
@@ -446,7 +448,8 @@ class nsFlexContainerFrame final : public nsContainerFrame,
                          const FlexboxAxisTracker& aAxisTracker,
                          nscoord aMainGapSize,
                          nsTArray<nsIFrame*>& aPlaceholders,
-                         nsTArray<FlexLine>& aLines);
+                         nsTArray<FlexLine>& aLines,
+                         bool& aHasCollapsedItems);
 
   /**
    * Generates and returns a FlexLayoutResult that contains the FlexLines and

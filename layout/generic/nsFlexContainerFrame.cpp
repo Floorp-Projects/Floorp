@@ -3997,7 +3997,7 @@ void nsFlexContainerFrame::GenerateFlexLines(
     const nscoord aTentativeContentBoxCrossSize,
     const nsTArray<StrutInfo>& aStruts, const FlexboxAxisTracker& aAxisTracker,
     nscoord aMainGapSize, nsTArray<nsIFrame*>& aPlaceholders,
-    nsTArray<FlexLine>& aLines /* out */) {
+    nsTArray<FlexLine>& aLines, bool& aHasCollapsedItems) {
   MOZ_ASSERT(aLines.IsEmpty(), "Expecting outparam to start out empty");
 
   auto ConstructNewFlexLine = [&aLines, aMainGapSize]() {
@@ -4065,9 +4065,11 @@ void nsFlexContainerFrame::GenerateFlexLines(
       prevItemRequestedBreakAfter = false;
     }
 
-    if (useMozBoxCollapseBehavior &&
-        (StyleVisibility::Collapse ==
-         childFrame->StyleVisibility()->mVisible)) {
+    const bool collapsed =
+        childFrame->StyleVisibility()->mVisible == StyleVisibility::Collapse;
+    aHasCollapsedItems = aHasCollapsedItems || collapsed;
+
+    if (useMozBoxCollapseBehavior && collapsed) {
       // Legacy visibility:collapse behavior: make a 0-sized strut. (No need to
       // bother with aStruts and remembering cross size.)
       curLine->Items().EmplaceBack(childFrame, 0, aReflowInput.GetWritingMode(),
@@ -5007,7 +5009,8 @@ nsFlexContainerFrame::FlexLayoutResult nsFlexContainerFrame::DoFlexLayout(
 
   GenerateFlexLines(aReflowInput, aTentativeContentBoxMainSize,
                     aTentativeContentBoxCrossSize, aStruts, aAxisTracker,
-                    aMainGapSize, flr.mPlaceholders, flr.mLines);
+                    aMainGapSize, flr.mPlaceholders, flr.mLines,
+                    flr.mHasCollapsedItems);
 
   if ((flr.mLines.Length() == 1 && flr.mLines[0].IsEmpty()) ||
       aReflowInput.mStyleDisplay->IsContainLayout()) {
@@ -5105,8 +5108,8 @@ nsFlexContainerFrame::FlexLayoutResult nsFlexContainerFrame::DoFlexLayout(
   // "align-content:stretch" adjustments, from the CrossAxisPositionTracker
   // constructor), we can create struts for any flex items with
   // "visibility: collapse" (and restart flex layout).
-  if (aStruts.IsEmpty() &&  // (Don't make struts if we already did)
-      !IsLegacyMozBox(this)) {
+  // Make sure to only do this if we had no struts.
+  if (aStruts.IsEmpty() && !IsLegacyMozBox(this) && flr.mHasCollapsedItems) {
     BuildStrutInfoFromCollapsedItems(flr.mLines, aStruts);
     if (!aStruts.IsEmpty()) {
       // Restart flex layout, using our struts.
