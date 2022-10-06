@@ -163,6 +163,7 @@ class EnhancedTrackingProtectionSettingsTest {
         }
     }
 
+    @Ignore("Permanent failure: https://github.com/mozilla-mobile/focus-android/issues/7816")
     @SmokeTest
     @Test
     fun blockSocialTrackersTest() {
