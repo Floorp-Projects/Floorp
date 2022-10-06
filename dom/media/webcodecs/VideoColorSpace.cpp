@@ -6,11 +6,12 @@
 
 #include "mozilla/dom/VideoColorSpace.h"
 #include "mozilla/dom/VideoColorSpaceBinding.h"
+#include "nsIGlobalObject.h"
 
 namespace mozilla::dom {
 
 // Only needed for refcounted objects.
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(VideoColorSpace)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(VideoColorSpace, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(VideoColorSpace)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(VideoColorSpace)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(VideoColorSpace)
@@ -18,47 +19,30 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(VideoColorSpace)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-VideoColorSpace::VideoColorSpace() {
-  // Add |MOZ_COUNT_CTOR(VideoColorSpace);| for a non-refcounted object.
+VideoColorSpace::VideoColorSpace(nsIGlobalObject* aParent,
+                                 const VideoColorSpaceInit& aInit)
+    : mParent(aParent), mInit(aInit) {
+  MOZ_ASSERT(mParent);
 }
 
-VideoColorSpace::~VideoColorSpace() {
-  // Add |MOZ_COUNT_DTOR(VideoColorSpace);| for a non-refcounted object.
-}
-
-// Add to make it buildable.
-nsIGlobalObject* VideoColorSpace::GetParentObject() const { return nullptr; }
+nsIGlobalObject* VideoColorSpace::GetParentObject() const { return mParent; }
 
 JSObject* VideoColorSpace::WrapObject(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
   return VideoColorSpace_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-// The followings are added to make it buildable.
-
 /* static */
 already_AddRefed<VideoColorSpace> VideoColorSpace::Constructor(
-    const GlobalObject& global, const VideoColorSpaceInit& init,
+    const GlobalObject& aGlobal, const VideoColorSpaceInit& aInit,
     ErrorResult& aRv) {
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-  return nullptr;
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  RefPtr<VideoColorSpace> videoColorSpace(new VideoColorSpace(global, aInit));
+  return aRv.Failed() ? nullptr : videoColorSpace.forget();
 }
-
-Nullable<VideoColorPrimaries> VideoColorSpace::GetPrimaries() const {
-  return nullptr;
-}
-
-Nullable<VideoTransferCharacteristics> VideoColorSpace::GetTransfer() const {
-  return nullptr;
-}
-
-Nullable<VideoMatrixCoefficients> VideoColorSpace::GetMatrix() const {
-  return nullptr;
-}
-
-Nullable<bool> VideoColorSpace::GetFullRange() const { return nullptr; }
-
-void VideoColorSpace::ToJSON(JSContext* cx,
-                             JS::MutableHandle<JSObject*> aRetVal) {}
 
 }  // namespace mozilla::dom
