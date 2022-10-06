@@ -664,20 +664,6 @@ fullscreen-exit-mac-button = Exit Full Screen (esc)
 pointerlock-warning-domain = <span data-l10n-name="domain">{ $domain }</span> has control of your pointer. Press Esc to take back control.
 pointerlock-warning-no-domain = This document has control of your pointer. Press Esc to take back control.
 
-## Subframe crash notification
-
-crashed-subframe-message = <strong>Part of this page crashed.</strong> To let { -brand-product-name } know about this issue and get it fixed faster, please submit a report.
-
-# The string for crashed-subframe-title.title should match crashed-subframe-message,
-# but without any markup.
-crashed-subframe-title =
-  .title = Part of this page crashed. To let { -brand-product-name } know about this issue and get it fixed faster, please submit a report.
-crashed-subframe-learnmore-link =
-  .value = Learn more
-crashed-subframe-submit =
-  .label = Submit report
-  .accesskey = S
-
 ## Bookmarks panels, menus and toolbar
 
 bookmarks-manage-bookmarks =
