@@ -47,7 +47,7 @@ DOM4_MSG_DEF(ConstraintError, "A mutation operation in the transaction failed be
 DOM4_MSG_DEF(ConstraintError, "Object store renamed to an already existing object store.", NS_ERROR_DOM_INDEXEDDB_RENAME_OBJECT_STORE_ERR)
 DOM4_MSG_DEF(ConstraintError, "Index already exists and a new one was being attempted to be created.", NS_ERROR_DOM_INDEXEDDB_RENAME_INDEX_ERR)
 DOM4_MSG_DEF(DataError, "Data provided to an operation does not meet requirements.", NS_ERROR_DOM_INDEXEDDB_DATA_ERR)
-DOM4_MSG_DEF(DataError, "No key or key range specified.", NS_ERROR_DOM_INDEXEDDB_KEY_ERR)
+DOM4_MSG_DEF(DataError, "No valid key or key range specified.", NS_ERROR_DOM_INDEXEDDB_KEY_ERR)
 DOM4_MSG_DEF(TransactionInactiveError, "A request was placed against a transaction which is currently not active, or which is finished.", NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR)
 DOM4_MSG_DEF(ReadOnlyError, "A mutation operation was attempted in a READ_ONLY transaction.", NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR)
 DOM4_MSG_DEF(VersionError, "The operation failed because the stored database is a higher version than the version requested.", NS_ERROR_DOM_INDEXEDDB_VERSION_ERR)
