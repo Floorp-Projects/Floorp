@@ -582,10 +582,15 @@ html {
   .onboardingContainer .screen[pos=split] .section-secondary .hero-image img {
     margin: 6px 0;
   }
+  .onboardingContainer .screen[pos=split] .section-secondary .message-text {
+    margin-inline: auto;
+  }
   .onboardingContainer .screen[pos=split] .section-secondary h1 {
     font-size: 35px;
     text-align: center;
     white-space: normal;
+    margin-inline: auto;
+    margin-block: 14px 6px;
   }
   .onboardingContainer .screen[pos=split] .section-secondary:dir(rtl) {
     margin: auto auto 0;
