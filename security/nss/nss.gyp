@@ -12,7 +12,6 @@
           'target_name': 'nss_libs',
           'type': 'none',
           'dependencies': [
-            'lib/ckfw/builtins/builtins.gyp:nssckbi',
             'lib/softoken/softoken.gyp:softokn3',
           ],
           'conditions': [
@@ -48,6 +47,11 @@
             [ 'disable_dbm==0', {
               'dependencies': [
                 'lib/softoken/legacydb/legacydb.gyp:nssdbm3',
+              ],
+            }],
+            [ 'disable_ckbi==0', {
+              'dependencies': [
+                'lib/ckfw/builtins/builtins.gyp:nssckbi',
               ],
             }],
           ],
