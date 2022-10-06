@@ -258,6 +258,10 @@ struct PromiseReactionRecordBuilder {
     JS::Handle<JS::Value> value, PromiseHandler onFulfilled,
     PromiseHandler onRejected);
 
+bool IsPromiseWithDefaultResolvingFunction(PromiseObject* promise);
+void SetAlreadyResolvedPromiseWithDefaultResolvingFunction(
+    PromiseObject* promise);
+
 }  // namespace js
 
 #endif  // builtin_Promise_h

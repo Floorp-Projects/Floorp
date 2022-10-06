@@ -3733,6 +3733,10 @@ static bool SettlePromiseNow(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  if (IsPromiseWithDefaultResolvingFunction(promise)) {
+    SetAlreadyResolvedPromiseWithDefaultResolvingFunction(promise);
+  }
+
   int32_t flags = promise->flags();
   promise->setFixedSlot(
       PromiseSlot_Flags,
