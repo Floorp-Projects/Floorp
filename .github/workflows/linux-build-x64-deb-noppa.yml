@@ -8,7 +8,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-
+    - uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 10
     - name: Create environment
       run: |
         sudo apt update
@@ -19,6 +21,7 @@ jobs:
         ./mach bootstrap
         echo -e "ac_add_options --with-app-name=floorp\\nac_add_options --with-app-basename=Floorp\\nac_add_options --with-branding=browser/branding/official\\nac_add_options --disable-crashreporter\\nac_add_options --enable-proxy-bypass-protection\\nac_add_options --disable-verify-mar\\nac_add_options --enable-update-channel=release\\nMOZ_REQUIRE_SIGNING=\\nMOZ_DATA_REPORTING=\\nMOZ_TELEMETRY_REPORTING=\\nac_add_options --with-mozilla-api-keyfile=$WORKDIR/apis/api-mozilla-key\\nac_add_options --with-google-location-service-api-keyfile=$WORKDIR/apis/api-google-location-service-key\\nac_add_options --with-google-safebrowsing-api-keyfile=$WORKDIR/apis/api-google-safe-browsing-key\\nac_add_options --enable-bootstrap\\nac_add_options --with-l10n-base=$WORKDIR/l10n-central/l10n-central" >> mozconfig
         ./mach configure
+        df
     - name: Build
       run: |
         export WORKDIR=`pwd`
@@ -64,6 +67,7 @@ jobs:
         sudo chown -R root:root $DEBWORK
         cd $WORKDIR
         sudo dpkg-deb -b $DEBWORK
+        df
     - name: Compress artifacts
       run: |
         export WORKDIR=`pwd`
