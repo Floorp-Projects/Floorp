@@ -49,7 +49,6 @@ jobs:
         cd $DEBWORK
         cd ../
         inst_size=$(du -ks floorp-$DISPVER|awk '{print $1}')
-        inst_size=$(( (${inst_size} + 1023) / 1024 ))
         cd $DEBWORK
         mkdir DEBIAN
         cd DEBIAN
