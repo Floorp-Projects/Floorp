@@ -1247,7 +1247,17 @@
       "label": "E_Tugra_Global_Root_CA_ECC_v3",
       "binNumber": 248,
       "sha256Fingerprint": "hz9Ghfp/VjYlJS5tNrzX8W/CSVHyZOR+G5VPSQjNyhM="
+    },
+    {
+      "label": "Security_Communication_RootCA3",
+      "binNumber": 249,
+      "sha256Fingerprint": "JKVcKrBRRC0GF3ZlQSOaStAy18VRdao0/94vvE9cUpQ="
+    },
+    {
+      "label": "Security_Communication_ECC_RootCA1",
+      "binNumber": 250,
+      "sha256Fingerprint": "50+9pVvVZMRzo2tEGqeZyKaOB3RA6CiLn6HlDku6yhE="
     }
   ],
-  "maxBin": 248
+  "maxBin": 250
 }
