@@ -103,7 +103,10 @@ class LeafRule : public PivotRule {
  public:
   virtual uint16_t Match(Accessible* aAcc) override {
     if (aAcc->IsOuterDoc()) {
-      return nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
+      // Treat an embedded doc as a single character in this document, but do
+      // not descend inside it.
+      return nsIAccessibleTraversalRule::FILTER_MATCH |
+             nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
     }
     // We deliberately include Accessibles such as empty input elements and
     // empty containers, as these can be at the start of a line.
@@ -468,10 +471,16 @@ static nsTArray<nsRange*> FindDOMSpellingErrors(LocalAccessible* aAcc,
 /*** TextLeafPoint ***/
 
 TextLeafPoint::TextLeafPoint(Accessible* aAcc, int32_t aOffset) {
-  if (aOffset != nsIAccessibleText::TEXT_OFFSET_CARET && aAcc->HasChildren()) {
+  // Even though an OuterDoc contains a document, we treat it as a leaf because
+  // we don't want to move into another document.
+  if (aOffset != nsIAccessibleText::TEXT_OFFSET_CARET && !aAcc->IsOuterDoc() &&
+      aAcc->HasChildren()) {
     // Find a leaf. This might not necessarily be a TextLeafAccessible; it
     // could be an empty container.
     auto GetChild = [&aOffset](Accessible* acc) -> Accessible* {
+      if (acc->IsOuterDoc()) {
+        return nullptr;
+      }
       return aOffset != nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT
                  ? acc->FirstChild()
                  : acc->LastChild();
