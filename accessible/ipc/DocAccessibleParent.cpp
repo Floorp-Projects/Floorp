@@ -7,6 +7,7 @@
 #include "CachedTableAccessible.h"
 #include "DocAccessibleParent.h"
 #include "mozilla/a11y/Platform.h"
+#include "mozilla/Components.h"  // for mozilla::components
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
@@ -14,6 +15,7 @@
 #include "xpcAccessibleDocument.h"
 #include "xpcAccEvents.h"
 #include "nsAccUtils.h"
+#include "nsIIOService.h"
 #include "TextRange.h"
 #include "RootAccessible.h"
 
@@ -1290,12 +1292,26 @@ void DocAccessibleParent::URL(nsAString& aURL) const {
   if (!mBrowsingContext) {
     return;
   }
-  nsAutoCString url;
   nsCOMPtr<nsIURI> uri = mBrowsingContext->GetCurrentURI();
   if (!uri) {
     return;
   }
-  uri->GetSpec(url);
+  // Let's avoid treating too long URI in the main process for avoiding
+  // memory fragmentation as far as possible.
+  if (uri->SchemeIs("data") || uri->SchemeIs("blob")) {
+    return;
+  }
+  nsCOMPtr<nsIIOService> io = mozilla::components::IO::Service();
+  if (NS_WARN_IF(!io)) {
+    return;
+  }
+  nsCOMPtr<nsIURI> exposableURI;
+  if (NS_FAILED(io->CreateExposableURI(uri, getter_AddRefs(exposableURI))) ||
+      MOZ_UNLIKELY(!exposableURI)) {
+    return;
+  }
+  nsAutoCString url;
+  exposableURI->GetSpec(url);
   CopyUTF8toUTF16(url, aURL);
 }
 
