@@ -7,7 +7,6 @@
 #include "Key.h"
 
 #include <algorithm>
-#include <cstdint>
 #include <stdint.h>          // for UINT32_MAX, uintptr_t
 #include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{IsArrayBufferObject,NewArrayBuffer{,WithContents},GetArrayBufferLengthAndData}
@@ -32,7 +31,6 @@
 #include "mozIStorageStatement.h"
 #include "mozIStorageValueArray.h"
 #include "nsJSUtils.h"
-#include "nsTStringRepr.h"
 #include "ReportInternalError.h"
 #include "xpcpublic.h"
 
@@ -557,22 +555,20 @@ Result<Ok, nsresult> Key::EncodeString(const Span<const T> aInput,
   return EncodeAsString(aInput, eString + aTypeOffset);
 }
 
-// nsCString maximum length is limited by INT32_MAX.
-// XXX: We probably want to enforce even shorter keys, though.
-#define KEY_MAXIMUM_BUFFER_LENGTH \
-  ::mozilla::detail::nsTStringLengthStorage<char>::kMax
-
 template <typename T>
 Result<Ok, nsresult> Key::EncodeAsString(const Span<const T> aInput,
                                          uint8_t aType) {
-  // Please note that the input buffer can either be based on two-byte UTF-16
-  // values or on arbitrary single byte binary values. Only the first case
-  // needs to account for the TWO_BYTE_LIMIT of UTF-8.
-  // First we measure how long the encoded string will be.
+  // First measure how long the encoded string will be.
+  if (NS_WARN_IF(UINT32_MAX - 2 < uintptr_t(aInput.Length()))) {
+    IDB_REPORT_INTERNAL_ERR();
+    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
 
-  // The 2 is for initial aType and trailing 0. We'll compensate for multi-byte
+  // The +2 is for initial aType and trailing 0. We'll compensate for multi-byte
   // chars below.
-  uint32_t size = 2;
+  CheckedUint32 size = 2;
+
+  MOZ_ASSERT(size.isValid());
 
   // We construct a range over the raw pointers here because this loop is
   // time-critical.
@@ -581,32 +577,32 @@ Result<Ok, nsresult> Key::EncodeAsString(const Span<const T> aInput,
   const auto inputRange = mozilla::detail::IteratorRange(
       aInput.Elements(), aInput.Elements() + aInput.Length());
 
-  uint32_t payloadSize = aInput.Length();
+  CheckedUint32 payloadSize = aInput.Length();
   bool anyMultibyte = false;
-  for (const T val : inputRange) {
+  for (const auto val : inputRange) {
     if (val > ONE_BYTE_LIMIT) {
       anyMultibyte = true;
       payloadSize += char16_t(val) > TWO_BYTE_LIMIT ? 2 : 1;
-      if (payloadSize > KEY_MAXIMUM_BUFFER_LENGTH) {
+      if (!payloadSize.isValid()) {
         IDB_REPORT_INTERNAL_ERR();
-        return Err(NS_ERROR_DOM_INDEXEDDB_KEY_ERR);
+        return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
       }
     }
   }
 
   size += payloadSize;
 
-  // Now we allocate memory for the new size
+  // Allocate memory for the new size
   uint32_t oldLen = mBuffer.Length();
   size += oldLen;
 
-  if (size > KEY_MAXIMUM_BUFFER_LENGTH) {
+  if (!size.isValid()) {
     IDB_REPORT_INTERNAL_ERR();
-    return Err(NS_ERROR_DOM_INDEXEDDB_KEY_ERR);
+    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   char* buffer;
-  if (!mBuffer.GetMutableData(&buffer, size)) {
+  if (!mBuffer.GetMutableData(&buffer, size.value())) {
     IDB_REPORT_INTERNAL_ERR();
     return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
