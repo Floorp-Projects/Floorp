@@ -12,7 +12,8 @@ let data = new Uint8Array([
 ]);
 // TODO: Crop the image instead of returning errors (Bug 1782128).
 try {
-  let frame = new VideoFrame(data, {
+  // Bug 1793814: Remove eslint-disable-line below
+  let frame = new VideoFrame(data, { // eslint-disable-line no-undef
     timestamp: 10,
     codedWidth: 3,
     codedHeight: 3,
