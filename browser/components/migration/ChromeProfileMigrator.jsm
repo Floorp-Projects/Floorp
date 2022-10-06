@@ -637,6 +637,7 @@ var EXPORTED_SYMBOLS = [
   "ChromeProfileMigrator",
   "ChromiumProfileMigrator",
   "BraveProfileMigrator",
+  "VivaldiProfileMigrator",
 ];
 
 /**
@@ -705,6 +706,21 @@ BraveProfileMigrator.prototype.contractID =
   "@mozilla.org/profile/migrator;1?app=browser&type=brave";
 BraveProfileMigrator.prototype.classID = Components.ID(
   "{4071880a-69e4-4c83-88b4-6c589a62801d}"
+);
+
+function VivaldiProfileMigrator() {
+  this._chromeUserDataPathSuffix = "Vivaldi";
+  this._keychainServiceName = "Vivaldi Safe Storage";
+  this._keychainAccountName = "Vivaldi";
+}
+
+VivaldiProfileMigrator.prototype = Object.create(ChromeProfileMigrator.prototype);
+VivaldiProfileMigrator.prototype.classDescription =
+ "Vivaldi Browser Migrator";
+VivaldiProfileMigrator.prototype.contractID =
+ "@mozilla.org/profile/migrator;1?app=browser&type=vivaldi";
+VivaldiProfileMigrator.prototype.classID = Components.ID(
+  "{91185366-ba97-4438-acba-48deaca63382}"
 );
 
 function ChromiumEdgeMigrator() {
