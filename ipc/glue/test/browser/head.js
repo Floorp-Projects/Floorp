@@ -186,16 +186,26 @@ async function checkAudioDecoder(
       }
     };
 
-    audio.addEventListener("timeupdate", timeUpdateHandler, { once: true });
+    const startPlaybackHandler = async ev => {
+      ok(
+        await audio.play().then(
+          _ => true,
+          _ => false
+        ),
+        "audio started playing"
+      );
+
+      audio.addEventListener("timeupdate", timeUpdateHandler, { once: true });
+    };
+
+    audio.addEventListener("canplaythrough", startPlaybackHandler, {
+      once: true,
+    });
   });
 
-  ok(
-    await audio.play().then(
-      _ => true,
-      _ => false
-    ),
-    "audio started playing"
-  );
+  // We need to make sure the decoder is ready before play()ing otherwise we
+  // could get into bad situations
+  audio.load();
   return checkPromise;
 }
 
