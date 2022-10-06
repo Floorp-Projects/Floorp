@@ -126,7 +126,18 @@ class _RemoteSettingsExperimentLoader {
     return this.manager.studiesEnabled;
   }
 
-  async init() {
+  /**
+   * Initialize the loader, updating recipes from Remote Settings.
+   *
+   * @param {Object} options            additional options.
+   * @param {bool}   options.forceSync  force Remote Settings to sync recipe collection
+   *                                    before updating recipes; throw if sync fails.
+   * @return {Promise}                  which resolves after initialization and recipes
+   *                                    are updated.
+   */
+  async init(options = {}) {
+    const { forceSync = false } = options;
+
     if (this._initialized || !this.enabled || !this.studiesEnabled) {
       return;
     }
@@ -135,7 +146,7 @@ class _RemoteSettingsExperimentLoader {
     lazy.CleanupManager.addCleanupHandler(() => this.uninit());
     this._initialized = true;
 
-    await this.updateRecipes();
+    await this.updateRecipes(undefined, { forceSync });
   }
 
   uninit() {
@@ -203,12 +214,18 @@ class _RemoteSettingsExperimentLoader {
 
   /**
    * Get all recipes from remote settings
-   * @param {string} trigger What caused the update to occur?
+   * @param {string} trigger   What caused the update to occur?
+   * @param {Object} options            additional options.
+   * @param {bool}   options.forceSync  force Remote Settings to sync recipe collection
+   *                                    before updating recipes; throw if sync fails.
+   * @return {Promise}                  which resolves after recipes are updated.
    */
-  async updateRecipes(trigger) {
+  async updateRecipes(trigger, options = {}) {
     if (this._updating || !this._initialized) {
       return;
     }
+
+    const { forceSync = false } = options;
 
     // Since this method is async, the enabled pref could change between await
     // points. We don't want to half validate experiments, so we cache this to
@@ -223,6 +240,21 @@ class _RemoteSettingsExperimentLoader {
 
     let recipes;
     let loadingError = false;
+
+    if (forceSync) {
+      try {
+        await this.remoteSettingsClient.sync({
+          trigger: "RemoteSettingsExperimentLoader",
+        });
+      } catch (e) {
+        lazy.log.debug(
+          "Error forcing sync of recipes from remote settings.",
+          e
+        );
+        Cu.reportError(e);
+        throw e;
+      }
+    }
 
     try {
       recipes = await this.remoteSettingsClient.get({
