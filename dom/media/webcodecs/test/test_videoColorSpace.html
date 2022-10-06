@@ -47,7 +47,8 @@ function getAllSubsets(set) {
 }
 
 function check(VCSI) {
-  let vcs = new VideoColorSpace(VCSI);
+  // Bug 1793814: Remove eslint-disable-line below
+  let vcs = new VideoColorSpace(VCSI); // eslint-disable-line no-undef
   let json = vcs.toJSON();
   const VCSIKeys = Object.keys(VCSI);
   for (const k of Object.keys(json)) {
