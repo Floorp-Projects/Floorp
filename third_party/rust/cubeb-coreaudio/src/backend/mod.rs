@@ -32,6 +32,7 @@ use self::mixer::*;
 use self::resampler::*;
 use self::utils::*;
 use atomic;
+use backend::ringbuf::RingBuffer;
 use cubeb_backend::{
     ffi, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceRef, DeviceType, Error, Ops,
     Result, SampleFormat, State, Stream, StreamOps, StreamParams, StreamParamsRef, StreamPrefs,
@@ -39,6 +40,7 @@ use cubeb_backend::{
 use mach::mach_time::{mach_absolute_time, mach_timebase_info};
 use std::cmp;
 use std::ffi::{CStr, CString};
+use std::fmt;
 use std::mem;
 use std::os::raw::c_void;
 use std::ptr;
@@ -390,10 +392,6 @@ extern "C" fn audiounit_input_callback(
             // output device is no longer valid and must be reset.
             // For now state that no error occurred and feed silence, stream will be
             // resumed once reinit has completed.
-            cubeb_alog!(
-                "({:p}) input: reinit pending, output will pull silence instead",
-                stm.core_stream_data.stm_ptr
-            );
             ErrorHandle::Reinit
         } else {
             assert_eq!(status, NO_ERR);
@@ -401,6 +399,24 @@ extern "C" fn audiounit_input_callback(
                 .push_data(input_buffer_list.mBuffers[0].mData, input_frames as usize);
             ErrorHandle::Return(status)
         };
+
+        // Full Duplex. We'll call data_callback in the AudioUnit output callback. Record this
+        // callback for logging.
+        if !stm.core_stream_data.output_unit.is_null() {
+            let input_callback_data = InputCallbackData {
+                bytes: input_buffer_list.mBuffers[0].mDataByteSize,
+                rendered_frames: input_frames,
+                total_available: input_buffer_manager.available_frames(),
+                channels: input_buffer_list.mBuffers[0].mNumberChannels,
+                num_buf: input_buffer_list.mNumberBuffers,
+            };
+            stm.core_stream_data
+                .input_logging
+                .as_mut()
+                .unwrap()
+                .push(input_callback_data);
+            return handle;
+        }
 
         cubeb_alogv!(
             "({:p}) input: buffers {}, size {}, channels {}, rendered frames {}, total frames {}.",
@@ -411,11 +427,6 @@ extern "C" fn audiounit_input_callback(
             input_frames,
             input_buffer_manager.available_frames()
         );
-
-        // Full Duplex. We'll call data_callback in the AudioUnit output callback.
-        if !stm.core_stream_data.output_unit.is_null() {
-            return handle;
-        }
 
         // Input only. Call the user callback through resampler.
         // Resampler will deliver input buffer in the correct rate.
@@ -553,16 +564,6 @@ extern "C" fn audiounit_output_callback(
         stm.total_output_latency_frames
             .store(output_latency_frames, Ordering::SeqCst);
     }
-
-    cubeb_alogv!(
-        "({:p}) output: buffers {}, size {}, channels {}, frames {}.",
-        stm as *const AudioUnitStream,
-        buffers.len(),
-        buffers[0].mDataByteSize,
-        buffers[0].mNumberChannels,
-        output_frames
-    );
-
     // Get output buffer
     let output_buffer = match stm.core_stream_data.mixer.as_mut() {
         None => buffers[0].mData,
@@ -581,6 +582,21 @@ extern "C" fn audiounit_output_callback(
 
     // Also get the input buffer if the stream is duplex
     let (input_buffer, mut input_frames) = if !stm.core_stream_data.input_unit.is_null() {
+        let input_logging = &mut stm.core_stream_data.input_logging.as_mut().unwrap();
+        if input_logging.is_empty() {
+            cubeb_alogv!("no audio input data in output callback");
+        } else {
+            while let Some(input_callback_data) = input_logging.pop() {
+                cubeb_alogv!(
+                    "input: buffers {}, size {}, channels {}, rendered frames {}, total frames {}.",
+                    input_callback_data.num_buf,
+                    input_callback_data.bytes,
+                    input_callback_data.channels,
+                    input_callback_data.rendered_frames,
+                    input_callback_data.total_available
+                );
+            }
+        }
         let input_buffer_manager = stm.core_stream_data.input_buffer_manager.as_mut().unwrap();
         assert_ne!(stm.core_stream_data.input_dev_desc.mChannelsPerFrame, 0);
         // If the output callback came first and this is a duplex stream, we need to
@@ -634,6 +650,15 @@ extern "C" fn audiounit_output_callback(
     } else {
         (ptr::null_mut::<c_void>(), 0)
     };
+
+    cubeb_alogv!(
+        "({:p}) output: buffers {}, size {}, channels {}, frames {}.",
+        stm as *const AudioUnitStream,
+        buffers.len(),
+        buffers[0].mDataByteSize,
+        buffers[0].mNumberChannels,
+        output_frames
+    );
 
     // If `input_buffer` is non-null but `input_frames` is zero and this is the first call to
     // resampler, then we will hit an assertion in resampler code since no internal buffer will be
@@ -978,7 +1003,7 @@ fn enable_audiounit_scope(
 ) -> std::result::Result<(), OSStatus> {
     assert!(!unit.is_null());
 
-    let enable: u32 = if enable_io { 1 } else { 0 };
+    let enable = u32::from(enable_io);
     let (scope, element) = match devtype {
         DeviceType::INPUT => (kAudioUnitScope_Input, AU_IN_BUS),
         DeviceType::OUTPUT => (kAudioUnitScope_Output, AU_OUT_BUS),
@@ -2209,6 +2234,50 @@ impl Drop for AudioUnitContext {
 unsafe impl Send for AudioUnitContext {}
 unsafe impl Sync for AudioUnitContext {}
 
+// Holds the information for an audio input callback call, for debugging purposes.
+struct InputCallbackData {
+    bytes: u32,
+    rendered_frames: u32,
+    total_available: usize,
+    channels: u32,
+    num_buf: u32,
+}
+struct InputCallbackLogger {
+    prod: ringbuf::Producer<InputCallbackData>,
+    cons: ringbuf::Consumer<InputCallbackData>,
+}
+
+impl InputCallbackLogger {
+    fn new() -> Self {
+        let ring = RingBuffer::<InputCallbackData>::new(16);
+        let (prod, cons) = ring.split();
+        Self { prod, cons }
+    }
+
+    fn push(&mut self, data: InputCallbackData) {
+        self.prod.push(data);
+    }
+
+    fn pop(&mut self) -> Option<InputCallbackData> {
+        self.cons.pop()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.cons.is_empty()
+    }
+}
+
+impl fmt::Debug for InputCallbackLogger {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "InputCallbackLogger  {{ prod: {}, cons: {} }}",
+            self.prod.len(),
+            self.cons.len()
+        )
+    }
+}
+
 #[derive(Debug)]
 struct CoreStreamData<'ctx> {
     stm_ptr: *const AudioUnitStream<'ctx>,
@@ -2234,6 +2303,7 @@ struct CoreStreamData<'ctx> {
     input_alive_listener: Option<device_property_listener>,
     input_source_listener: Option<device_property_listener>,
     output_source_listener: Option<device_property_listener>,
+    input_logging: Option<InputCallbackLogger>,
 }
 
 impl<'ctx> Default for CoreStreamData<'ctx> {
@@ -2269,6 +2339,7 @@ impl<'ctx> Default for CoreStreamData<'ctx> {
             input_alive_listener: None,
             input_source_listener: None,
             output_source_listener: None,
+            input_logging: None,
         }
     }
 }
@@ -2311,6 +2382,7 @@ impl<'ctx> CoreStreamData<'ctx> {
             input_alive_listener: None,
             input_source_listener: None,
             output_source_listener: None,
+            input_logging: None,
         }
     }
 
@@ -2855,6 +2927,13 @@ impl<'ctx> CoreStreamData<'ctx> {
             ffi::CUBEB_RESAMPLER_QUALITY_DESKTOP,
             reclock_policy,
         );
+
+        // In duplex, the input thread might be different from the output thread, and we're logging
+        // everything from the output thread: relay the audio input callback information using a
+        // ring buffer to diagnose issues.
+        if self.has_input() && self.has_output() {
+            self.input_logging = Some(InputCallbackLogger::new());
+        }
 
         if !self.input_unit.is_null() {
             let r = audio_unit_initialize(self.input_unit);
