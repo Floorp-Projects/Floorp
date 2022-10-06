@@ -4035,6 +4035,10 @@ static bool NeedsKeepAlive(MInstruction* slotsOrElements, MInstruction* use) {
     return true;
   }
 
+  if (use->type() == MIRType::BigInt) {
+    return true;
+  }
+
   MBasicBlock* block = use->block();
   MInstructionIterator iter(block->begin(slotsOrElements));
   MOZ_ASSERT(*iter == slotsOrElements);
