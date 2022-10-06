@@ -44,8 +44,8 @@ This tutorial was tested against Firefox 58 Beta and Nightly. It does not work i
 5.  Click on the Scratchpad panel and enter the following code:
 
     ```js
-    const { addDebuggerToGlobal } = ChromeUtils.import(
-      "resource://gre/modules/jsdebugger.jsm"
+    const { addDebuggerToGlobal } = ChromeUtils.importESModule(
+      "resource://gre/modules/jsdebugger.sys.mjs"
     );
     const { console } = ChromeUtils.import(
       "resource://gre/modules/Console.jsm"

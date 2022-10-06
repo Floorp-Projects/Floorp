@@ -215,7 +215,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   /**
    * Debugger instance.
    *
-   * @see jsdebugger.jsm
+   * @see jsdebugger.sys.mjs
    */
   dbg: null,
 

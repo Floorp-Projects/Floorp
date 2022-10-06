@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=765993
 
 /** Test for Bug 765993 **/
 
-const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
+const {addDebuggerToGlobal} = ChromeUtils.importESModule("resource://gre/modules/jsdebugger.sys.mjs");
 addDebuggerToGlobal(globalThis);
 
 window.onload = function() {

@@ -1,4 +1,4 @@
-var {addDebuggerToGlobal, addSandboxedDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
+var {addDebuggerToGlobal, addSandboxedDebuggerToGlobal} = ChromeUtils.importESModule("resource://gre/modules/jsdebugger.sys.mjs");
 
 const testingFunctions = Cu.getJSTestingFunctions();
 const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);

@@ -4,7 +4,7 @@
 <script>
   // Hook up the debugger statement to extract the calling script's
   // introductionType and set it in a property on the parent global.
-  const {addSandboxedDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
+  const {addSandboxedDebuggerToGlobal} = ChromeUtils.importESModule("resource://gre/modules/jsdebugger.sys.mjs");
   addSandboxedDebuggerToGlobal(globalThis);
   var dbg = new Debugger;
   dbg.addDebuggee(parent);

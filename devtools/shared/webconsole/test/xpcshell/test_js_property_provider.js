@@ -6,8 +6,8 @@ const {
   FallibleJSPropertyProvider: JSPropertyProvider,
 } = require("devtools/shared/webconsole/js-property-provider");
 
-const { addDebuggerToGlobal } = ChromeUtils.import(
-  "resource://gre/modules/jsdebugger.jsm"
+const { addDebuggerToGlobal } = ChromeUtils.importESModule(
+  "resource://gre/modules/jsdebugger.sys.mjs"
 );
 addDebuggerToGlobal(globalThis);
 

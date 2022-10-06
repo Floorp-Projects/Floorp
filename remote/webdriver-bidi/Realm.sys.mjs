@@ -5,8 +5,8 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  addDebuggerToGlobal: "resource://gre/modules/jsdebugger.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  addDebuggerToGlobal: "resource://gre/modules/jsdebugger.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "dbg", () => {
