@@ -23,7 +23,7 @@ XPCOM_MANIFESTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    "jsdebugger.jsm",
+    "jsdebugger.sys.mjs",
 ]
 
 # The /devtools/moz.build opted in to treatment of devtools as a browser

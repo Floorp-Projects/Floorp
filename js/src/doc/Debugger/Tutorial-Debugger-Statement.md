@@ -31,8 +31,8 @@ page whenever it executes a JavaScript `debugger;` statement.
     ```js
     // This simply defines 'Debugger' in this Scratchpad;
     // it doesn't actually start debugging anything.
-    const { addDebuggerToGlobal } = ChromeUtils.import(
-      "resource://gre/modules/jsdebugger.jsm"
+    const { addDebuggerToGlobal } = ChromeUtils.importESModule(
+      "resource://gre/modules/jsdebugger.sys.mjs"
     );
     addDebuggerToGlobal(window);
 

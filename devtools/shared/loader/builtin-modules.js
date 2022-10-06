@@ -154,8 +154,8 @@ defineLazyGetter(exports.modules, "Debugger", () => {
   if (global.Debugger) {
     return global.Debugger;
   }
-  const { addDebuggerToGlobal } = ChromeUtils.import(
-    "resource://gre/modules/jsdebugger.jsm"
+  const { addDebuggerToGlobal } = ChromeUtils.importESModule(
+    "resource://gre/modules/jsdebugger.sys.mjs"
   );
   addDebuggerToGlobal(global);
   return global.Debugger;
@@ -170,8 +170,8 @@ defineLazyGetter(exports.modules, "ChromeDebugger", () => {
     freshCompartment: true,
   });
 
-  const { addDebuggerToGlobal } = ChromeUtils.import(
-    "resource://gre/modules/jsdebugger.jsm"
+  const { addDebuggerToGlobal } = ChromeUtils.importESModule(
+    "resource://gre/modules/jsdebugger.sys.mjs"
   );
   addDebuggerToGlobal(debuggerSandbox);
   return debuggerSandbox.Debugger;

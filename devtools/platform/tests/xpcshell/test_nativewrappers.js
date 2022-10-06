@@ -1,8 +1,8 @@
 "use strict";
 
 function run_test() {
-  const { addDebuggerToGlobal } = ChromeUtils.import(
-    "resource://gre/modules/jsdebugger.jsm"
+  const { addDebuggerToGlobal } = ChromeUtils.importESModule(
+    "resource://gre/modules/jsdebugger.sys.mjs"
   );
 
   Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);

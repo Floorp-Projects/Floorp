@@ -57,8 +57,8 @@ const {
   CommandsFactory,
 } = require("resource://devtools/shared/commands/commands-factory.js");
 
-const { addDebuggerToGlobal } = ChromeUtils.import(
-  "resource://gre/modules/jsdebugger.jsm"
+const { addDebuggerToGlobal } = ChromeUtils.importESModule(
+  "resource://gre/modules/jsdebugger.sys.mjs"
 );
 
 const { AddonTestUtils } = ChromeUtils.import(

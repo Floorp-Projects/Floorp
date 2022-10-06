@@ -7,8 +7,8 @@
 var EXPORTED_SYMBOLS = ["CoverageCollector"];
 
 /* globals Debugger */
-const { addDebuggerToGlobal } = ChromeUtils.import(
-  "resource://gre/modules/jsdebugger.jsm"
+const { addDebuggerToGlobal } = ChromeUtils.importESModule(
+  "resource://gre/modules/jsdebugger.sys.mjs"
 );
 // eslint-disable-next-line mozilla/reject-globalThis-modification
 addDebuggerToGlobal(globalThis);
