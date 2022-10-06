@@ -1,0 +1,28 @@
+diff --git a/intl/icu/source/i18n/vtzone.cpp b/intl/icu/source/i18n/vtzone.cpp
+--- a/intl/icu/source/i18n/vtzone.cpp
++++ b/intl/icu/source/i18n/vtzone.cpp
+@@ -1735,14 +1735,17 @@ VTimeZone::write(VTZWriter& writer, UErr
+             }
+         }
+     } else {
+-        UnicodeString icutzprop;
+-        UVector customProps(nullptr, uhash_compareUnicodeString, status);
++        UVector customProps(uprv_deleteUObject, uhash_compareUnicodeString, status);
+         if (olsonzid.length() > 0 && icutzver.length() > 0) {
+-            icutzprop.append(olsonzid);
+-            icutzprop.append(u'[');
+-            icutzprop.append(icutzver);
+-            icutzprop.append(u']');
+-            customProps.addElement(&icutzprop, status);
++            LocalPointer<UnicodeString> icutzprop(new UnicodeString(ICU_TZINFO_PROP), status);
++            if (U_FAILURE(status)) {
++                return;
++            }
++            icutzprop->append(olsonzid);
++            icutzprop->append(u'[');
++            icutzprop->append(icutzver);
++            icutzprop->append(u']');
++            customProps.adoptElement(icutzprop.orphan(), status);
+         }
+         writeZone(writer, *tz, &customProps, status);
+     }
