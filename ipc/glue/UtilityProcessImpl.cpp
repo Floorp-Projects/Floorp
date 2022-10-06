@@ -38,8 +38,7 @@ bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
   // lower the sandbox in processes where the policy will prevent loading.
   ::LoadLibraryW(L"winmm.dll");
 
-  if (*sandboxingKind == SandboxingKind::GENERIC_UTILITY) {
-    // Preload audio generic libraries required for ffmpeg only
+  if (*sandboxingKind == SandboxingKind::UTILITY_AUDIO_DECODING_GENERIC) {
     UtilityAudioDecoderParent::GenericPreloadForSandbox();
   }
 

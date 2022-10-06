@@ -8,12 +8,11 @@
 #  include "mozilla/ipc/UtilityProcessTest.h"
 #  include "mozilla/ipc/UtilityProcessManager.h"
 #  include "mozilla/dom/Promise.h"
-#  include "mozilla/ProcInfo.h"
 
 namespace mozilla::ipc {
 
 NS_IMETHODIMP
-UtilityProcessTest::StartProcess(int32_t aUnknownActors, JSContext* aCx,
+UtilityProcessTest::StartProcess(JSContext* aCx,
                                  mozilla::dom::Promise** aOutPromise) {
   NS_ENSURE_ARG(aOutPromise);
   *aOutPromise = nullptr;
@@ -35,18 +34,9 @@ UtilityProcessTest::StartProcess(int32_t aUnknownActors, JSContext* aCx,
   utilityProc->LaunchProcess(SandboxingKind::GENERIC_UTILITY)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [promise, utilityProc, aUnknownActors]() {
+          [promise, utilityProc]() {
             Maybe<int32_t> utilityPid =
                 utilityProc->ProcessPid(SandboxingKind::GENERIC_UTILITY);
-            if (aUnknownActors > 0) {
-              RefPtr<UtilityProcessParent> utilityParent =
-                  utilityProc->GetProcessParent(
-                      SandboxingKind::GENERIC_UTILITY);
-              for (int32_t i = 0; i < aUnknownActors; i++) {
-                utilityProc->RegisterActor(utilityParent,
-                                           UtilityActorName::Unknown);
-              }
-            }
             if (utilityPid.isSome()) {
               promise->MaybeResolve(*utilityPid);
             } else {

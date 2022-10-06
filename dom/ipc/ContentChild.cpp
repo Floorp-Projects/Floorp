@@ -4921,6 +4921,13 @@ bool StartOpenBSDSandbox(GeckoProcessType type, ipc::SandboxingKind kind) {
       MOZ_RELEASE_ASSERT(kind <= SandboxingKind::COUNT,
                          "Should define a sandbox");
       switch (kind) {
+        case ipc::SandboxingKind::UTILITY_AUDIO_DECODING_GENERIC:
+          OpenBSDFindPledgeUnveilFilePath("pledge.utility-audioDecoder",
+                                          pledgeFile);
+          OpenBSDFindPledgeUnveilFilePath("unveil.utility-audioDecoder",
+                                          unveilFile);
+          break;
+
         case ipc::SandboxingKind::GENERIC_UTILITY:
         default:
           OpenBSDFindPledgeUnveilFilePath("pledge.utility", pledgeFile);
