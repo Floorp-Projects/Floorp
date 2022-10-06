@@ -15,16 +15,13 @@ function test() {
   // For UtilityProcess, allow constructing a string made of the process type
   // and the sandbox variant we want to test, e.g.,
   // utility:0 for GENERIC_UTILITY
-  // utility:1 for UTILITY_AUDIO_DECODER
-  var processTypes = [
-    "tab",
-    "socket",
-    "rdd",
-    "gmplugin",
-    "utility:0",
-    "utility:1",
-    "gpu",
-  ];
+  // utility:1 for AppleMedia/WMF on macOS/Windows
+  var processTypes = ["tab", "socket", "rdd", "gmplugin", "utility:0", "gpu"];
+
+  const platform = SpecialPowers.Services.appinfo.OS;
+  if (platform === "WINNT" || platform === "Darwin") {
+    processTypes.push("utility:1");
+  }
 
   // A callback called after each test-result.
   let sandboxTestResult = (subject, topic, data) => {

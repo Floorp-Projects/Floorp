@@ -288,7 +288,6 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
 
     switch (aInfo.utilityKind) {
       case ipc::SandboxingKind::GENERIC_UTILITY:
-      case ipc::SandboxingKind::UTILITY_AUDIO_DECODING_GENERIC:
         // Nothing to do here specifically
         break;
 
