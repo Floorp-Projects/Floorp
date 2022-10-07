@@ -105,11 +105,12 @@ DesktopFrameWithCursor::DesktopFrameWithCursor(
 
   if (!previous_cursor_rect.equals(cursor_rect_)) {
     mutable_updated_region()->AddRect(cursor_rect_);
-
-    // Only add the previous cursor if it is inside the frame.
-    // (it can be outside the frame if the desktop has been resized).
-    if (original_frame_->rect().ContainsRect(previous_cursor_rect))
-      mutable_updated_region()->AddRect(previous_cursor_rect);
+    // TODO(crbug:1323241) Update this code to properly handle the case where
+    // |previous_cursor_rect| is outside of the boundaries of |frame|.
+    // Any boundary check has to take into account the fact that
+    // |previous_cursor_rect| can be in DPI or in pixels, based on the platform
+    // we're running on.
+    mutable_updated_region()->AddRect(previous_cursor_rect);
   } else if (cursor_changed) {
     mutable_updated_region()->AddRect(cursor_rect_);
   }
