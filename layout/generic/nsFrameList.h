@@ -176,12 +176,13 @@ class nsFrameList {
   [[nodiscard]] nsFrameList TakeFramesBefore(nsIFrame* aFrame);
 
   /**
-   * Take the frames after aAfterFrame out of the frame list.  If
-   * aAfterFrame is null, removes the entire list.
-   * @param aAfterFrame a frame in this list, or null
-   * @return the removed frames, if any
+   * Take all the frames after aFrame out of the frame list; aFrame and all the
+   * frames before it stay in this list. If aFrame is nullptr, removes the
+   * entire list.
+   * @param aFrame a frame in this list, or nullptr.
+   * @return the removed frames, if any.
    */
-  nsFrameList RemoveFramesAfter(nsIFrame* aAfterFrame);
+  [[nodiscard]] nsFrameList TakeFramesAfter(nsIFrame* aFrame);
 
   /**
    * Take the first frame (if any) out of the frame list.
@@ -274,14 +275,6 @@ class nsFrameList {
     }
     return std::move(*this);
   }
-
-  /**
-   * Split this frame list such that aFrame and all its next siblings end up in
-   * the returned list; all the previous siblings of aFrame stay in this list.
-   * If aFrame is nullptr, return an empty frame list.
-   * Note: aFrame must be in this frame list!
-   */
-  nsFrameList ExtractTail(nsIFrame* aFrame);
 
   nsIFrame* FirstChild() const { return mFirstChild; }
 

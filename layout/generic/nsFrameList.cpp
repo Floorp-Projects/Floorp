@@ -85,24 +85,22 @@ void nsFrameList::RemoveFrame(nsIFrame* aFrame) {
   }
 }
 
-nsFrameList nsFrameList::RemoveFramesAfter(nsIFrame* aAfterFrame) {
-  if (!aAfterFrame) {
-    nsFrameList result;
-    result.InsertFrames(nullptr, nullptr, *this);
-    return result;
+nsFrameList nsFrameList::TakeFramesAfter(nsIFrame* aFrame) {
+  if (!aFrame) {
+    return std::move(*this);
   }
 
-  MOZ_ASSERT(NotEmpty(), "illegal operation on empty list");
-#ifdef DEBUG_FRAME_LIST
-  MOZ_ASSERT(ContainsFrame(aAfterFrame), "wrong list");
-#endif
+  MOZ_ASSERT(ContainsFrame(aFrame), "aFrame is not on this list!");
 
-  nsIFrame* tail = aAfterFrame->GetNextSibling();
-  // if (!tail) return EmptyList();  -- worth optimizing this case?
-  nsIFrame* oldLastChild = mLastChild;
-  mLastChild = aAfterFrame;
-  aAfterFrame->SetNextSibling(nullptr);
-  return nsFrameList(tail, tail ? oldLastChild : nullptr);
+  nsIFrame* newFirstChild = aFrame->GetNextSibling();
+  if (!newFirstChild) {
+    return nsFrameList();
+  }
+
+  nsIFrame* newLastChild = mLastChild;
+  mLastChild = aFrame;
+  mLastChild->SetNextSibling(nullptr);
+  return nsFrameList(newFirstChild, newLastChild);
 }
 
 nsIFrame* nsFrameList::RemoveFirstChild() {
@@ -183,28 +181,6 @@ nsFrameList nsFrameList::TakeFramesBefore(nsIFrame* aFrame) {
 
   prev->SetNextSibling(nullptr);
   mFirstChild = aFrame;
-
-  return nsFrameList(newFirstChild, newLastChild);
-}
-
-nsFrameList nsFrameList::ExtractTail(nsIFrame* aFrame) {
-  MOZ_ASSERT(!aFrame || ContainsFrame(aFrame), "aFrame is not on this list!");
-
-  if (!aFrame) {
-    return nsFrameList();
-  }
-
-  if (aFrame == mFirstChild) {
-    // We handed over the whole list.
-    return std::move(*this);
-  }
-
-  nsIFrame* prev = aFrame->GetPrevSibling();
-  nsIFrame* newFirstChild = aFrame;
-  nsIFrame* newLastChild = mLastChild;
-
-  prev->SetNextSibling(nullptr);
-  mLastChild = prev;
 
   return nsFrameList(newFirstChild, newLastChild);
 }

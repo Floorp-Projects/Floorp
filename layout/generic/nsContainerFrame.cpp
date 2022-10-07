@@ -1426,7 +1426,7 @@ nsFrameList nsContainerFrame::StealFramesAfter(nsIFrame* aChild) {
 
   for (nsIFrame* f : mFrames) {
     if (f == aChild) {
-      return mFrames.ExtractTail(f->GetNextSibling());
+      return mFrames.TakeFramesAfter(f);
     }
   }
 
@@ -1435,7 +1435,7 @@ nsFrameList nsContainerFrame::StealFramesAfter(nsIFrame* aChild) {
   if (nsFrameList* overflowFrames = GetOverflowFrames()) {
     for (nsIFrame* f : *overflowFrames) {
       if (f == aChild) {
-        return mFrames.ExtractTail(f->GetNextSibling());
+        return mFrames.TakeFramesAfter(f);
       }
     }
   }
@@ -1523,7 +1523,7 @@ void nsContainerFrame::PushChildrenToOverflow(nsIFrame* aFromChild,
 
   // Add the frames to our overflow list (let our next in flow drain
   // our overflow list when it is ready)
-  SetOverflowFrames(mFrames.RemoveFramesAfter(aPrevSibling));
+  SetOverflowFrames(mFrames.TakeFramesAfter(aPrevSibling));
 }
 
 void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
@@ -1533,7 +1533,7 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
   MOZ_ASSERT(aPrevSibling->GetNextSibling() == aFromChild, "bad prev sibling");
 
   // Disconnect aFromChild from its previous sibling
-  nsFrameList tail = mFrames.RemoveFramesAfter(aPrevSibling);
+  nsFrameList tail = mFrames.TakeFramesAfter(aPrevSibling);
 
   nsContainerFrame* nextInFlow =
       static_cast<nsContainerFrame*>(GetNextInFlow());

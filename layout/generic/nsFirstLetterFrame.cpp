@@ -258,7 +258,7 @@ void nsFirstLetterFrame::Reflow(nsPresContext* aPresContext,
       if (!IsFloating()) {
         CreateNextInFlow(kid);
         // And then push it to our overflow list
-        nsFrameList overflow = mFrames.RemoveFramesAfter(kid);
+        nsFrameList overflow = mFrames.TakeFramesAfter(kid);
         if (overflow.NotEmpty()) {
           SetOverflowFrames(std::move(overflow));
         }
