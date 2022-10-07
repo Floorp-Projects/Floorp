@@ -402,10 +402,10 @@
          "match case label is hidden in automatic mode");
 
       await enterStringIntoFindField("a");
-      var insensitiveLabel = matchCaseLabel.value;
+      const insensitiveL10nId = matchCaseLabel.dataset.l10nId;
       await enterStringIntoFindField("A");
-      var sensitiveLabel = matchCaseLabel.value;
-      ok(insensitiveLabel != sensitiveLabel,
+      const sensitiveL10nId = matchCaseLabel.dataset.l10nId;
+      ok(insensitiveL10nId != sensitiveL10nId,
          "Case Sensitive label was not correctly updated");
 
       // bug 365551
@@ -621,12 +621,12 @@
         current: 0,
         total: 0
       }];
-      let regex = /([\d]*)\sof\s([\d]*)/;
 
-      function assertMatches(aTest, aMatches) {
-        is(aMatches[1], String(aTest.current),
+      function assertMatches(aTest) {
+        const matches = JSON.parse(foundMatches.dataset.l10nArgs);
+        is(matches.current, aTest.current,
           `${linksOnly ? "[Links-only] " : ""}Currently highlighted match should be at ${aTest.current} for '${aTest.text}'`);
-        is(aMatches[2], String(aTest.total),
+        is(matches.total, aTest.total,
           `${linksOnly ? "[Links-only] " : ""}Total amount of matches should be ${aTest.total} for '${aTest.text}'`);
       }
 
@@ -643,11 +643,10 @@
         await new Promise(resolve => setTimeout(resolve, timeout));
         await enterStringIntoFindField(test.text, false);
         await promiseMatchesCountResult(test.text);
-        let matches = foundMatches.value.match(regex);
         if (!test.total) {
-          ok(!matches, "No message should be shown when 0 matches are expected");
+          ok(!foundMatches.dataset.l10nId, "No message should be shown when 0 matches are expected");
         } else {
-          assertMatches(test, matches);
+          assertMatches(test);
           for (let i = 1; i < test.total; i++) {
             await new Promise(resolve => setTimeout(resolve, timeout));
             gFindBar.onFindAgainCommand();
@@ -658,7 +657,7 @@
               text: test.text,
               current,
               total: test.total
-            }, foundMatches.value.match(regex));
+            });
           }
         }
       }

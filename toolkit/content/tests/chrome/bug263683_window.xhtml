@@ -169,8 +169,8 @@
 
       await toggleHighlightAndWait(false);
 
-      let matches = gFindBar._foundMatches.value.match(/([\d]*)\sof\s([\d]*)/);
-      is(matches[1], "2", "Found correct amount of matches")
+      const matches = JSON.parse(gFindBar._foundMatches.dataset.l10nArgs);
+      is(matches.total, 2, "Found correct amount of matches")
 
       await SpecialPowers.spawn(gBrowser, [], async function(args) {
         function getSelection(docShell) {

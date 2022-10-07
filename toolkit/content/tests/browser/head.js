@@ -30,7 +30,7 @@ async function promiseFindFinished(gBrowser, searchText, highlightOn = false) {
       // forces foundOrTimeout wait for the second "FOUND" message before
       // resolving the promise.
       let waitMore = highlightOn;
-      let findTimeout = setTimeout(() => foundOrTimedout(null), 2000);
+      let findTimeout = setTimeout(() => foundOrTimedout(null), 5000);
       let foundOrTimedout = function(aData) {
         if (aData !== null && waitMore) {
           waitMore = false;
@@ -40,7 +40,7 @@ async function promiseFindFinished(gBrowser, searchText, highlightOn = false) {
           info("Result listener not called, timeout reached.");
         }
         clearTimeout(findTimeout);
-        findbar.browser.finder.removeResultListener(resultListener);
+        findbar.browser?.finder.removeResultListener(resultListener);
         resolve();
       };
 

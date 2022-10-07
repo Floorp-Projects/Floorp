@@ -10,12 +10,6 @@
   const { AppConstants } = ChromeUtils.import(
     "resource://gre/modules/AppConstants.jsm"
   );
-  let LazyConstants = {};
-  ChromeUtils.defineModuleGetter(
-    LazyConstants,
-    "PluralForm",
-    "resource://gre/modules/PluralForm.jsm"
-  );
 
   const PREFS_TO_OBSERVE_BOOL = new Map([
     ["findAsYouType", "accessibility.typeaheadfind"],
@@ -55,9 +49,9 @@
           data-l10n-id="findbar-match-diacritics" oncommand="_setDiacriticMatching(this.checked ? 1 : 0);"/>
         <checkbox anonid="find-entire-word" class="findbar-entire-word tabbable"
           data-l10n-id="findbar-entire-word" oncommand="toggleEntireWord(this.checked);"/>
-        <label anonid="match-case-status" class="findbar-label" />
-        <label anonid="match-diacritics-status" class="findbar-label" />
-        <label anonid="entire-word-status" class="findbar-label" />
+        <label anonid="match-case-status" class="findbar-label" data-l10n-attrs="value" />
+        <label anonid="match-diacritics-status" class="findbar-label" data-l10n-attrs="value" />
+        <label anonid="entire-word-status" class="findbar-label" data-l10n-attrs="value" />
         <label anonid="found-matches" class="findbar-label found-matches" hidden="true" />
         <image anonid="find-status-icon" class="find-status-icon" />
         <description anonid="find-status" control="findbar-textbox" class="findbar-label findbar-find-status" />
@@ -126,8 +120,6 @@
       this._browser = null;
 
       this._destroyed = false;
-
-      this._strBundle = null;
 
       this._xulBrowserWindow = null;
 
@@ -345,18 +337,12 @@
 
     get browser() {
       if (!this._browser) {
-        this._browser = document.getElementById(this.getAttribute("browserid"));
+        const id = this.getAttribute("browserid");
+        if (id) {
+          this._browser = document.getElementById(id);
+        }
       }
       return this._browser;
-    }
-
-    get strBundle() {
-      if (!this._strBundle) {
-        this._strBundle = Services.strings.createBundle(
-          "chrome://global/locale/findbar.properties"
-        );
-      }
-      return this._strBundle;
     }
 
     observe(subject, topic, prefName) {
@@ -572,7 +558,10 @@
       let statusLabel = this.getElement("match-case-status");
       checkbox.checked = caseSensitive;
 
-      statusLabel.value = caseSensitive ? this._caseSensitiveStr : "";
+      document.l10n.setAttributes(
+        statusLabel,
+        caseSensitive ? "findbar-case-sensitive-status" : ""
+      );
 
       // Show the checkbox on the full Find bar in non-auto mode.
       // Show the label in all other cases.
@@ -623,7 +612,10 @@
       let statusLabel = this.getElement("match-diacritics-status");
       checkbox.checked = matchDiacritics;
 
-      statusLabel.value = matchDiacritics ? this._matchDiacriticsStr : "";
+      document.l10n.setAttributes(
+        statusLabel,
+        matchDiacritics ? "findbar-match-diacritics-status" : ""
+      );
 
       // Show the checkbox on the full Find bar in non-auto mode.
       // Show the label in all other cases.
@@ -665,7 +657,10 @@
       let statusLabel = this.getElement("entire-word-status");
       checkbox.checked = entireWord;
 
-      statusLabel.value = entireWord ? this._entireWordStr : "";
+      document.l10n.setAttributes(
+        statusLabel,
+        entireWord ? "findbar-entire-word-status" : ""
+      );
 
       // Show the checkbox on the full Find bar in non-auto mode.
       // Show the label in all other cases.
@@ -708,19 +703,6 @@
     open(mode) {
       if (mode != undefined) {
         this.findMode = mode;
-      }
-
-      if (!this._notFoundStr) {
-        var bundle = this.strBundle;
-        this._notFoundStr = bundle.GetStringFromName("NotFound");
-        this._wrappedToTopStr = bundle.GetStringFromName("WrappedToTop");
-        this._wrappedToBottomStr = bundle.GetStringFromName("WrappedToBottom");
-        this._normalFindStr = bundle.GetStringFromName("NormalFind");
-        this._fastFindStr = bundle.GetStringFromName("FastFind");
-        this._fastFindLinksStr = bundle.GetStringFromName("FastFindLinks");
-        this._caseSensitiveStr = bundle.GetStringFromName("CaseSensitive");
-        this._matchDiacriticsStr = bundle.GetStringFromName("MatchDiacritics");
-        this._entireWordStr = bundle.GetStringFromName("EntireWord");
       }
 
       this._findFailedString = null;
@@ -966,13 +948,15 @@
         this._findField.classList.remove("minimal");
       }
 
+      let l10nId;
       if (this.findMode == this.FIND_TYPEAHEAD) {
-        this._findField.placeholder = this._fastFindStr;
+        l10nId = "findbar-fast-find";
       } else if (this.findMode == this.FIND_LINKS) {
-        this._findField.placeholder = this._fastFindLinksStr;
+        l10nId = "findbar-fast-find-links";
       } else {
-        this._findField.placeholder = this._normalFindStr;
+        l10nId = "findbar-normal-find";
       }
+      document.l10n.setAttributes(this._findField, l10nId);
     }
 
     _find(value) {
@@ -1061,34 +1045,36 @@
     }
 
     _updateStatusUI(res, findPrevious) {
+      let statusL10nId;
       switch (res) {
         case Ci.nsITypeAheadFind.FIND_WRAPPED:
           this._findStatusIcon.setAttribute("status", "wrapped");
-          this._findStatusDesc.textContent = findPrevious
-            ? this._wrappedToBottomStr
-            : this._wrappedToTopStr;
           this._findField.removeAttribute("status");
+          statusL10nId = findPrevious
+            ? "findbar-wrapped-to-bottom"
+            : "findbar-wrapped-to-top";
           break;
         case Ci.nsITypeAheadFind.FIND_NOTFOUND:
           this._findStatusDesc.setAttribute("status", "notfound");
           this._findStatusIcon.setAttribute("status", "notfound");
-          this._findStatusDesc.textContent = this._notFoundStr;
           this._findField.setAttribute("status", "notfound");
+          statusL10nId = "findbar-not-found";
           break;
         case Ci.nsITypeAheadFind.FIND_PENDING:
           this._findStatusIcon.setAttribute("status", "pending");
-          this._findStatusDesc.textContent = "";
           this._findField.removeAttribute("status");
           this._findStatusDesc.removeAttribute("status");
+          statusL10nId = "";
           break;
         case Ci.nsITypeAheadFind.FIND_FOUND:
         default:
           this._findStatusIcon.removeAttribute("status");
-          this._findStatusDesc.textContent = "";
           this._findField.removeAttribute("status");
           this._findStatusDesc.removeAttribute("status");
+          statusL10nId = "";
           break;
       }
+      document.l10n.setAttributes(this._findStatusDesc, statusL10nId);
     }
 
     updateControlState(result, findPrevious) {
@@ -1306,25 +1292,21 @@
      *                 - {Number} current Vector of the current result.
      */
     onMatchesCountResult(result) {
-      if (result.total !== 0) {
-        if (result.total == -1) {
-          this._foundMatches.value = LazyConstants.PluralForm.get(
-            result.limit,
-            this.strBundle.GetStringFromName("FoundMatchesCountLimit")
-          ).replace("#1", result.limit);
-        } else {
-          this._foundMatches.value = LazyConstants.PluralForm.get(
-            result.total,
-            this.strBundle.GetStringFromName("FoundMatches")
-          )
-            .replace("#1", result.current)
-            .replace("#2", result.total);
-        }
-        this._foundMatches.hidden = false;
-      } else {
-        this._foundMatches.hidden = true;
-        this._foundMatches.value = "";
+      let l10nId;
+      switch (result.total) {
+        case 0:
+          l10nId = "";
+          this._foundMatches.hidden = true;
+          break;
+        case -1:
+          l10nId = "findbar-found-matches-count-limit";
+          this._foundMatches.hidden = false;
+          break;
+        default:
+          l10nId = "findbar-found-matches";
+          this._foundMatches.hidden = false;
       }
+      document.l10n.setAttributes(this._foundMatches, l10nId, result);
     }
 
     onHighlightFinished(result) {

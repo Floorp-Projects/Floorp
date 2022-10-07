@@ -8,7 +8,7 @@ const TEST_PAGE_URI =
 
 let gUpdateCount = 0;
 
-requestLongerTimeout(2);
+requestLongerTimeout(5);
 
 function initForBrowser(browser) {
   gUpdateCount = 0;
