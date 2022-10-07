@@ -104,6 +104,7 @@ ConnectionContext::ConnectionContext(
           std::move(dependencies->network_monitor_factory)),
       default_network_manager_(std::move(dependencies->network_manager)),
       call_factory_(std::move(dependencies->call_factory)),
+      default_socket_factory_(std::move(dependencies->packet_socket_factory)),
       sctp_factory_(
           MaybeCreateSctpFactory(std::move(dependencies->sctp_factory),
                                  network_thread(),
@@ -151,9 +152,10 @@ ConnectionContext::ConnectionContext(
     default_network_manager_ = std::make_unique<rtc::BasicNetworkManager>(
         network_monitor_factory_.get(), socket_factory, &field_trials());
   }
-  default_socket_factory_ =
-      std::make_unique<rtc::BasicPacketSocketFactory>(socket_factory);
-
+  if (!default_socket_factory_) {
+    default_socket_factory_ =
+        std::make_unique<rtc::BasicPacketSocketFactory>(socket_factory);
+  }
   // Set warning levels on the threads, to give warnings when response
   // may be slower than is expected of the thread.
   // Since some of the threads may be the same, start with the least

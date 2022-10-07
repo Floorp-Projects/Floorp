@@ -2327,6 +2327,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api:make_ref_counted",
       "../api:media_stream_interface",
       "../api:mock_encoder_selector",
+      "../api:mock_packet_socket_factory",
       "../api:mock_video_track",
       "../api:packet_socket_factory",
       "../api:priority",
