@@ -70,8 +70,7 @@ where
             CssRule::Keyframes(_) |
             CssRule::Page(_) |
             CssRule::LayerStatement(_) |
-            CssRule::FontFeatureValues(_) |
-            CssRule::FontPaletteValues(_) => None,
+            CssRule::FontFeatureValues(_) => None,
             CssRule::Import(ref import_rule) => {
                 let import_rule = import_rule.read_with(guard);
                 if !C::process_import(guard, device, quirks_mode, import_rule) {
