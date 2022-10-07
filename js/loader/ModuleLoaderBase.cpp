@@ -1273,17 +1273,17 @@ UniquePtr<ImportMap> ModuleLoaderBase::ParseImportMap(
   JS::SourceText<char16_t>& text = maybeSource.ref<SourceText<char16_t>>();
   ReportWarningHelper warning{mLoader, aRequest};
 
-  // https://whatpr.org/html/8075/webappapis.html#create-an-import-map-parse-result
+  // https://html.spec.whatwg.org/multipage/webappapis.html#create-an-import-map-parse-result
   // Step 2. Parse an import map string given input and baseURL, catching any
   // exceptions. If this threw an exception, then set result's error to rethrow
   // to that exception. Otherwise, set result's import map to the return value.
   //
-  // https://whatpr.org/html/8075/webappapis.html#register-an-import-map
+  // https://html.spec.whatwg.org/multipage/webappapis.html#register-an-import-map
   // Step 1. If result's error to rethrow is not null, then report the exception
   // given by result's error to rethrow and return.
   //
   // Impl note: We didn't implement 'Import map parse result' from the spec,
-  // https://whatpr.org/html/8075/webappapis.html#import-map-parse-result
+  // https://html.spec.whatwg.org/multipage/webappapis.html#import-map-parse-result
   // As the struct has another item called 'error to rethow' to store the
   // exception thrown during parsing import-maps, and report that exception
   // while registering an import map. Currently only inline import-maps are
@@ -1297,7 +1297,7 @@ void ModuleLoaderBase::RegisterImportMap(UniquePtr<ImportMap> aImportMap) {
   // Check for aImportMap is done in ScriptLoader.
   MOZ_ASSERT(aImportMap);
 
-  // https://whatpr.org/html/8075/webappapis.html#register-an-import-map
+  // https://html.spec.whatwg.org/multipage/webappapis.html#register-an-import-map
   // The step 1(report the exception if there's an error) is done in
   // ParseImportMap.
   //
@@ -1306,7 +1306,8 @@ void ModuleLoaderBase::RegisterImportMap(UniquePtr<ImportMap> aImportMap) {
   // from the implementation it defaults to nullptr, so we check if the global's
   // import map is null here.
   //
-  // Also see https://whatpr.org/html/8075/webappapis.html#empty-import-map
+  // Also see
+  // https://html.spec.whatwg.org/multipage/webappapis.html#empty-import-map
   MOZ_ASSERT(!mImportMap);
 
   // Step 3. Set global's import map to result's import map.

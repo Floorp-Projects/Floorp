@@ -181,7 +181,7 @@ class ModuleLoaderBase : public nsISupports {
   // for fetches to finish and for imports to become avilable.
   nsCOMPtr<nsISerialEventTarget> mEventTarget;
 
-  // https://whatpr.org/html/8075/webappapis.html#import-maps-allowed
+  // https://html.spec.whatwg.org/multipage/webappapis.html#import-maps-allowed
   //
   // Each Window has an import maps allowed boolean, initially true.
   bool mImportMapsAllowed = true;
@@ -285,12 +285,12 @@ class ModuleLoaderBase : public nsISupports {
   mozilla::UniquePtr<ImportMap> ParseImportMap(ScriptLoadRequest* aRequest);
 
   // Implements
-  // https://whatpr.org/html/8075/webappapis.html#register-an-import-map
+  // https://html.spec.whatwg.org/multipage/webappapis.html#register-an-import-map
   void RegisterImportMap(mozilla::UniquePtr<ImportMap> aImportMap);
 
   // Getter for mImportMapsAllowed.
   bool IsImportMapAllowed() const { return mImportMapsAllowed; }
-  // https://whatpr.org/html/8075/webappapis.html#disallow-further-import-maps
+  // https://html.spec.whatwg.org/multipage/webappapis.html#disallow-further-import-maps
   void DisallowImportMaps() { mImportMapsAllowed = false; }
 
   // Returns true if the module for given URL is already fetched.

@@ -499,7 +499,7 @@ void HTMLLinkElement::
       return;
     }
 
-    // https://whatpr.org/html/8075/webappapis.html#fetch-a-modulepreload-module-script-graph
+    // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-modulepreload-module-script-graph
     // Step 1. Disallow further import maps given settings object.
     OwnerDoc()->ScriptLoader()->GetModuleLoader()->DisallowImportMaps();
     return;
