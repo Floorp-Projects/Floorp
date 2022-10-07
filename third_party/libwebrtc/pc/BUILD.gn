@@ -446,7 +446,6 @@ rtc_source_set("rtp_transport") {
     "../rtc_base:logging",
     "../rtc_base:socket",
     "../rtc_base/network:sent_packet",
-    "../rtc_base/third_party/sigslot",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/strings",
@@ -608,7 +607,6 @@ rtc_source_set("srtp_transport") {
     "../rtc_base:safe_conversions",
     "../rtc_base:zero_memory",
     "../rtc_base/third_party/base64",
-    "../rtc_base/third_party/sigslot",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/strings",
@@ -1134,7 +1132,6 @@ rtc_source_set("sdp_offer_answer") {
     "../rtc_base:stringutils",
     "../rtc_base:threading",
     "../rtc_base:weak_ptr",
-    "../rtc_base/third_party/sigslot",
     "../system_wrappers:metrics",
   ]
   absl_deps = [

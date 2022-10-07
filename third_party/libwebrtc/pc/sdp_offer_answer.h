@@ -58,7 +58,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/operations_chain.h"
 #include "rtc_base/ssl_stream_adapter.h"
-#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/unique_id_generator.h"
@@ -77,8 +76,7 @@ namespace webrtc {
 // - Parsing and interpreting SDP.
 // - Generating offers and answers based on the current state.
 // This class lives on the signaling thread.
-class SdpOfferAnswerHandler : public SdpStateProvider,
-                              public sigslot::has_slots<> {
+class SdpOfferAnswerHandler : public SdpStateProvider {
  public:
   ~SdpOfferAnswerHandler();
 

@@ -175,8 +175,6 @@ void PeerConnectionTestWrapper::OnIceCandidate(
     const IceCandidateInterface* candidate) {
   std::string sdp;
   EXPECT_TRUE(candidate->ToString(&sdp));
-  // Give the user a chance to modify sdp for testing.
-  SignalOnIceCandidateCreated(&sdp);
   SignalOnIceCandidateReady(candidate->sdp_mid(), candidate->sdp_mline_index(),
                             sdp);
 }
@@ -195,9 +193,6 @@ void PeerConnectionTestWrapper::OnSuccess(SessionDescriptionInterface* desc) {
   RTC_LOG(LS_INFO) << "PeerConnectionTestWrapper " << name_ << ": "
                    << webrtc::SdpTypeToString(desc->GetType())
                    << " sdp created: " << sdp;
-
-  // Give the user a chance to modify sdp for testing.
-  SignalOnSdpCreated(&sdp);
 
   SetLocalDescription(desc->GetType(), sdp);
 
