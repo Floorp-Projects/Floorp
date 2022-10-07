@@ -19,6 +19,11 @@ GTEST_API_ ::testing::AssertionResult CmpHelperSTREQ(const char* s1_expression,
                                                      const nsAString& s1,
                                                      const nsAString& s2);
 
+GTEST_API_ ::testing::AssertionResult CmpHelperSTREQ(const char* s1_expression,
+                                                     const char* s2_expression,
+                                                     const nsACString& s1,
+                                                     const nsACString& s2);
+
 }  // namespace testing::internal
 
 #define ASSERT_NSEQ(lhs, rhs) \

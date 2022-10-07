@@ -24,4 +24,17 @@ GTEST_API_ ::testing::AssertionResult CmpHelperSTREQ(const char* s1_expression,
       /* ignore case */ false);
 }
 
+GTEST_API_ ::testing::AssertionResult CmpHelperSTREQ(const char* s1_expression,
+                                                     const char* s2_expression,
+                                                     const nsACString& s1,
+                                                     const nsACString& s2) {
+  if (s1.Equals(s2)) {
+    return ::testing::AssertionSuccess();
+  }
+
+  return ::testing::internal::EqFailure(s1_expression, s2_expression,
+                                        std::string(s1), std::string(s2),
+                                        /* ignore case */ false);
+}
+
 }  // namespace testing::internal
