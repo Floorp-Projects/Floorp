@@ -10372,3 +10372,5 @@ libwebrtc updated from /home/mfroman/git-checkouts/moz-libwebrtc commit mozpatch
 libwebrtc updated from /home/mfroman/git-checkouts/moz-libwebrtc commit mozpatches on 2022-10-07T22:54:08.486780.
 # python3 vendor-libwebrtc.py --from-local /home/mfroman/git-checkouts/moz-libwebrtc --commit mozpatches libwebrtc
 libwebrtc updated from /home/mfroman/git-checkouts/moz-libwebrtc commit mozpatches on 2022-10-07T22:54:53.207438.
+# python3 vendor-libwebrtc.py --from-local /home/mfroman/git-checkouts/moz-libwebrtc --commit mozpatches libwebrtc
+libwebrtc updated from /home/mfroman/git-checkouts/moz-libwebrtc commit mozpatches on 2022-10-07T22:56:04.537718.

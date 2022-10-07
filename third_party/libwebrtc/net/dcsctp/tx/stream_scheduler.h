@@ -10,6 +10,7 @@
 #ifndef NET_DCSCTP_TX_STREAM_SCHEDULER_H_
 #define NET_DCSCTP_TX_STREAM_SCHEDULER_H_
 
+#include <algorithm>
 #include <cstdint>
 #include <deque>
 #include <map>
@@ -24,6 +25,8 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "net/dcsctp/packet/chunk/idata_chunk.h"
+#include "net/dcsctp/packet/sctp_packet.h"
 #include "net/dcsctp/public/dcsctp_message.h"
 #include "net/dcsctp/public/dcsctp_socket.h"
 #include "net/dcsctp/public/types.h"
@@ -42,9 +45,21 @@ namespace dcsctp {
 // with a "virtual finish time", which is the time when a stream is allowed to
 // produce data. Streams are ordered by their virtual finish time, and the
 // "current virtual time" will advance to the next following virtual finish time
-// whenever a chunk is to be produced. In the initial round-robin scheduling
-// algorithm, a stream's virtual finish time will just increment by one (1)
-// after having produced a chunk, which results in a round-robin scheduling.
+// whenever a chunk is to be produced.
+//
+// When message interleaving is enabled, the WFQ - Weighted Fair Queueing -
+// scheduling algorithm will be used. And when it's not, round-robin scheduling
+// will be used instead.
+//
+// In the round robin scheduling algorithm, a stream's virtual finish time will
+// just increment by one (1) after having produced a chunk, which results in a
+// round-robin scheduling.
+//
+// In WFQ scheduling algorithm, a stream's virtual finish time will be defined
+// as the number of bytes in the next fragment to be sent, multiplied by the
+// inverse of the stream's priority, meaning that a high priority - or a smaller
+// fragment - results in a closer virtual finish time, compared to a stream with
+// either a lower priority or a larger fragment to be sent.
 class StreamScheduler {
  private:
   class VirtualTime : public webrtc::StrongAlias<class VirtualTimeTag, double> {
@@ -53,6 +68,13 @@ class StreamScheduler {
         : webrtc::StrongAlias<class VirtualTimeTag, double>(v) {}
 
     static constexpr VirtualTime Zero() { return VirtualTime(0); }
+  };
+  class InverseWeight
+      : public webrtc::StrongAlias<class InverseWeightTag, double> {
+   public:
+    constexpr explicit InverseWeight(StreamPriority priority)
+        : webrtc::StrongAlias<class InverseWeightTag, double>(
+              1.0 / std::max(static_cast<double>(*priority), 0.000001)) {}
   };
 
  public:
@@ -79,7 +101,7 @@ class StreamScheduler {
     StreamID stream_id() const { return stream_id_; }
 
     StreamPriority priority() const { return priority_; }
-    void set_priority(StreamPriority priority);
+    void SetPriority(StreamPriority priority);
 
     // Will activate the stream _if_ it has any data to send. That is, if the
     // callback to `bytes_to_send_in_next_message` returns non-zero. If the
@@ -105,13 +127,14 @@ class StreamScheduler {
         : parent_(*parent),
           producer_(*producer),
           stream_id_(stream_id),
-          priority_(priority) {}
+          priority_(priority),
+          inverse_weight_(priority) {}
 
     // Produces a message from this stream. This will only be called on streams
     // that have data.
     absl::optional<SendQueue::DataToSend> Produce(TimeMs now, size_t max_size);
 
-    void MakeActive();
+    void MakeActive(size_t bytes_to_send_next);
     void ForceMarkInactive();
 
     VirtualTime current_time() const { return current_virtual_time_; }
@@ -120,22 +143,32 @@ class StreamScheduler {
       return producer_.bytes_to_send_in_next_message();
     }
 
-    // Returns the next virtual finish time for this stream.
-    VirtualTime GetNextFinishTime() const;
+    VirtualTime CalculateFinishTime(size_t bytes_to_send_next) const;
 
     StreamScheduler& parent_;
     StreamProducer& producer_;
     const StreamID stream_id_;
     StreamPriority priority_;
+    InverseWeight inverse_weight_;
     // This outgoing stream's "current" virtual_time.
     VirtualTime current_virtual_time_ = VirtualTime::Zero();
     VirtualTime next_finish_time_ = VirtualTime::Zero();
   };
 
+  // The `mtu` parameter represents the maximum SCTP packet size, which should
+  // be the same as `DcSctpOptions::mtu`.
+  explicit StreamScheduler(size_t mtu)
+      : max_payload_bytes_(mtu - SctpPacket::kHeaderSize -
+                           IDataChunk::kHeaderSize) {}
+
   std::unique_ptr<Stream> CreateStream(StreamProducer* producer,
                                        StreamID stream_id,
                                        StreamPriority priority) {
     return absl::WrapUnique(new Stream(this, producer, stream_id, priority));
+  }
+
+  void EnableMessageInterleaving(bool enabled) {
+    enable_message_interleaving_ = enabled;
   }
 
   // Makes the scheduler stop producing message from the current stream and
@@ -165,14 +198,19 @@ class StreamScheduler {
 
   bool IsConsistent() const;
 
+  const size_t max_payload_bytes_;
+
   // The current virtual time, as defined in the WFQ algorithm.
   VirtualTime virtual_time_ = VirtualTime::Zero();
 
   // The current stream to send chunks from.
   Stream* current_stream_ = nullptr;
 
+  bool enable_message_interleaving_ = false;
+
   // Indicates if the streams is currently sending a message, and should then
-  // continue sending from this stream until that message has been sent in full.
+  // - if message interleaving is not enabled - continue sending from this
+  // stream until that message has been sent in full.
   bool currently_sending_a_message_ = false;
 
   // The currently active streams, ordered by virtual finish time.

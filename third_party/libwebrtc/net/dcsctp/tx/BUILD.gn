@@ -55,7 +55,9 @@ rtc_library("stream_scheduler") {
     "../../../rtc_base:strong_alias",
     "../../../rtc_base/containers:flat_set",
     "../common:str_join",
+    "../packet:chunk",
     "../packet:data",
+    "../packet:sctp_packet",
     "../public:socket",
     "../public:types",
   ]
