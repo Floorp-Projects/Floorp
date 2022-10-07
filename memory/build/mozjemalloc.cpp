@@ -1373,8 +1373,7 @@ static inline void ApplyZeroOrJunk(void* aPtr, size_t aSize) {
   }
 }
 
-// On Windows, delay crashing on OOM. Partly experimental. (See bug 1785145 for
-// more details.)
+// On Windows, delay crashing on OOM.
 #ifdef XP_WIN
 
 // Implementation of VirtualAlloc wrapper (bug 1716727).
@@ -1393,19 +1392,14 @@ struct StallSpecs {
 
 static constexpr StallSpecs maxStall = {.maxAttempts = kMaxAttempts,
                                         .delayMs = kDelayMs};
-static constexpr StallSpecs doNotStall
-    [[maybe_unused]] = {.maxAttempts = 0, .delayMs = 0};
 
-Atomic<bool> sHasStalled{false};
 static inline StallSpecs GetStallSpecs() {
 #  if defined(JS_STANDALONE)
   // GetGeckoProcessType() isn't available in this configuration. (SpiderMonkey
   // on Windows mostly skips this in favor of directly calling ::VirtualAlloc(),
   // though, so it's probably not going to matter whether we stall here or not.)
   return maxStall;
-#  elif defined(NIGHTLY_BUILD)
-  // On Nightly, partly for experiment's sake (bug 1785162):
-  //
+#  else
   switch (GetGeckoProcessType()) {
     // For the main process, stall for the maximum permissible time period. (The
     // main process is the most important one to keep alive.)
@@ -1416,13 +1410,6 @@ static inline StallSpecs GetStallSpecs() {
     default:
       return {.maxAttempts = kMaxAttempts / 2, .delayMs = kDelayMs};
   }
-#  else
-  // In the main process, always stall.
-  if (GetGeckoProcessType() == GeckoProcessType::GeckoProcessType_Default) {
-    return maxStall;
-  }
-  // Otherwise, stall at most once.
-  return sHasStalled.compareExchange(false, true) ? maxStall : doNotStall;
 #  endif
 }
 
