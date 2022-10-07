@@ -90,7 +90,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
 
   // After accepting one client connection on our server socket we want to
   // stop listening.
-  MessageLoopForIO::FileDescriptorWatcher server_listen_connection_watcher_;
   MessageLoopForIO::FileDescriptorWatcher read_watcher_;
   MessageLoopForIO::FileDescriptorWatcher write_watcher_;
 
@@ -106,7 +105,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   };
   mozilla::Maybe<PartialWrite> partial_write_;
 
-  int server_listen_pipe_;
   int pipe_;
   int client_pipe_;        // The client end of our socketpair().
   unsigned pipe_buf_len_;  // The SO_SNDBUF value of pipe_, or 0 if unknown.
@@ -148,11 +146,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   // the connect operation in overlapped mode.
   bool waiting_connect_;
 
-  // This flag is set when processing incoming messages.  It is used to
-  // avoid recursing through ProcessIncomingMessages, which could cause
-  // problems.  TODO(darin): make this unnecessary
-  bool processing_incoming_;
-
   // This flag is set after we've closed the channel.
   std::atomic<bool> closed_;
 
@@ -180,8 +173,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   // If available, the task port for the remote process.
   mozilla::UniqueMachSendRight other_task_;
 #endif
-
-  ScopedRunnableMethodFactory<ChannelImpl> factory_;
 
   DISALLOW_COPY_AND_ASSIGN(ChannelImpl);
 };

@@ -95,7 +95,6 @@ static int gClientChannelFd =
     ;
 
 //------------------------------------------------------------------------------
-const size_t kMaxPipeNameLength = sizeof(((sockaddr_un*)0)->sun_path);
 
 bool ErrorIsBrokenPipe(int err) { return err == EPIPE || err == ECONNRESET; }
 
@@ -143,8 +142,7 @@ void Channel::SetClientChannelFd(int fd) { gClientChannelFd = fd; }
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
 Channel::ChannelImpl::ChannelImpl(const ChannelId& channel_id, Mode mode,
-                                  Listener* listener)
-    : factory_(this) {
+                                  Listener* listener) {
   Init(mode, listener);
 
   if (!CreatePipe(mode)) {
@@ -159,8 +157,7 @@ Channel::ChannelImpl::ChannelImpl(const ChannelId& channel_id, Mode mode,
 }
 
 Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode,
-                                  Listener* listener)
-    : factory_(this) {
+                                  Listener* listener) {
   Init(mode, listener);
   SetPipe(pipe.release());
 
@@ -205,12 +202,10 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
   input_buf_offset_ = 0;
   input_buf_ = mozilla::MakeUnique<char[]>(Channel::kReadBufferSize);
   input_cmsg_buf_ = mozilla::MakeUnique<char[]>(kControlBufferSize);
-  server_listen_pipe_ = -1;
   SetPipe(-1);
   client_pipe_ = -1;
   listener_ = listener;
   waiting_connect_ = true;
-  processing_incoming_ = false;
   closed_ = false;
 #if defined(OS_MACOSX)
   last_pending_fd_id_ = 0;
@@ -219,7 +214,7 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
 }
 
 bool Channel::ChannelImpl::CreatePipe(Mode mode) {
-  DCHECK(server_listen_pipe_ == -1 && pipe_ == -1);
+  DCHECK(pipe_ == -1);
 
   if (mode == MODE_SERVER) {
     ChannelHandle server, client;
@@ -863,14 +858,6 @@ void Channel::ChannelImpl::OnFileCanWriteWithoutBlocking(int fd) {
 void Channel::ChannelImpl::Close() {
   // Close can be called multiple times, so we need to make sure we're
   // idempotent.
-
-  // Unregister libevent for the listening socket and close it.
-  server_listen_connection_watcher_.StopWatchingFileDescriptor();
-
-  if (server_listen_pipe_ != -1) {
-    IGNORE_EINTR(close(server_listen_pipe_));
-    server_listen_pipe_ = -1;
-  }
 
   // Unregister libevent for the FIFO and close it.
   read_watcher_.StopWatchingFileDescriptor();

@@ -89,9 +89,6 @@ class Channel {
 
     // Amount of data to read at once from the pipe.
     kReadBufferSize = 4 * 1024,
-
-    // Maximum size of a message that we allow to be copied (rather than moved).
-    kMaxCopySize = 32 * 1024,
   };
 
   // Initialize a Channel.
@@ -138,8 +135,7 @@ class Channel {
   int32_t OtherPid() const;
 
   // IsClosed() is safe to call from any thread, but the value returned may
-  // be out of date, because we don't use any synchronization when reading
-  // or writing it.
+  // be out of date.
   bool IsClosed() const;
 
 #if defined(OS_POSIX)
@@ -147,10 +143,6 @@ class Channel {
   // FD # for the client end of the socket and the equivalent FD# to use for
   // mapping it into the Child process.
   // This method may only be called on the server side of a channel.
-  //
-  // If the kTestingChannelID flag is specified on the command line then
-  // a named FIFO is used as the channel transport mechanism rather than a
-  // socketpair() in which case this method returns -1 for both parameters.
   void GetClientFileDescriptorMapping(int* src_fd, int* dest_fd) const;
 
   // Return the file descriptor for communication with the peer.
