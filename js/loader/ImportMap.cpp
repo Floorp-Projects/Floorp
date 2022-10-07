@@ -41,9 +41,9 @@ void ReportWarningHelper::Report(const char* aMessageName,
   mLoader->ReportWarningToConsole(mRequest, aMessageName, aParams);
 }
 
-// https://wicg.github.io/import-maps/#parse-a-url-like-import-specifier
-static ResolveResult ParseURLLikeImportSpecifier(const nsAString& aSpecifier,
-                                                 nsIURI* aBaseURL) {
+// https://whatpr.org/html/8075/webappapis.html#resolving-a-url-like-module-specifier
+static ResolveResult ResolveURLLikeModuleSpecifier(const nsAString& aSpecifier,
+                                                   nsIURI* aBaseURL) {
   nsCOMPtr<nsIURI> uri;
   nsresult rv;
 
@@ -90,9 +90,9 @@ static void NormalizeSpecifierKey(const nsAString& aSpecifierKey,
     return;
   }
 
-  // Step 2. Let url be the result of parsing a URL-like import specifier, given
-  // specifierKey and baseURL.
-  auto parseResult = ParseURLLikeImportSpecifier(aSpecifierKey, aBaseURL);
+  // Step 2. Let url be the result of resolving a URL-like module specifier,
+  // given specifierKey and baseURL.
+  auto parseResult = ResolveURLLikeModuleSpecifier(aSpecifierKey, aBaseURL);
 
   // Step 3. If url is not null, then return the serialization of url.
   if (parseResult.isOk()) {
@@ -153,9 +153,9 @@ static UniquePtr<SpecifierMap> SortAndNormalizeSpecifierMap(
     nsAutoJSString value;
     NS_ENSURE_TRUE(value.init(aCx, idVal), nullptr);
 
-    // Step 2.4. Let addressURL be the result of parsing a URL-like import
+    // Step 2.4. Let addressURL be the result of resolving a URL-like module
     // specifier given value and baseURL.
-    auto parseResult = ParseURLLikeImportSpecifier(value, aBaseURL);
+    auto parseResult = ResolveURLLikeModuleSpecifier(value, aBaseURL);
 
     // Step 2.5. If addressURL is null, then:
     if (parseResult.isErr()) {
@@ -585,11 +585,11 @@ ResolveResult ImportMap::ResolveModuleSpecifier(ImportMap* aImportMap,
     baseURL = aLoader->GetBaseURI();
   }
 
-  // Step 6. Let asURL be the result of parsing a URL-like import specifier
+  // Step 6. Let asURL be the result of resolving a URL-like module specifier
   // given specifier and baseURL.
   //
   // Impl note: Step 5 is done below if aImportMap exists.
-  auto parseResult = ParseURLLikeImportSpecifier(aSpecifier, baseURL);
+  auto parseResult = ResolveURLLikeModuleSpecifier(aSpecifier, baseURL);
   nsCOMPtr<nsIURI> asURL;
   if (parseResult.isOk()) {
     asURL = parseResult.unwrap();
