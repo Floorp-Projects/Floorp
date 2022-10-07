@@ -54,6 +54,7 @@ template struct StyleStrong<RawServoNamespaceRule>;
 template struct StyleStrong<RawServoPageRule>;
 template struct StyleStrong<RawServoSupportsRule>;
 template struct StyleStrong<RawServoFontFeatureValuesRule>;
+template struct StyleStrong<RawServoFontPaletteValuesRule>;
 template struct StyleStrong<RawServoFontFaceRule>;
 template struct StyleStrong<RawServoCounterStyleRule>;
 template struct StyleStrong<RawServoContainerRule>;
