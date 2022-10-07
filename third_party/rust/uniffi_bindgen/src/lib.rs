@@ -388,7 +388,7 @@ pub fn run_tests(
 /// For now, we assume that the UDL file is in `./src/something.udl` relative
 /// to the crate root. We might consider something more sophisticated in
 /// future.
-fn guess_crate_root(udl_file: &Utf8Path) -> Result<&Utf8Path> {
+pub fn guess_crate_root(udl_file: &Utf8Path) -> Result<&Utf8Path> {
     let path_guess = udl_file
         .parent()
         .context("UDL file has no parent folder!")?
@@ -428,7 +428,7 @@ fn get_out_dir(udl_file: &Utf8Path, out_dir_override: Option<&Utf8Path>) -> Resu
     Ok(match out_dir_override {
         Some(s) => {
             // Create the directory if it doesn't exist yet.
-            fs::create_dir_all(&s)?;
+            fs::create_dir_all(s)?;
             s.canonicalize_utf8().context("Unable to find out-dir")?
         }
         None => udl_file
@@ -537,9 +537,9 @@ enum Commands {
         #[clap(long, short)]
         config: Option<Utf8PathBuf>,
 
-        /// Extract proc-macro metadata from a cdylib for this crate
+        /// Extract proc-macro metadata from a native lib (cdylib or staticlib) for this crate.
         #[clap(long)]
-        cdylib: Option<Utf8PathBuf>,
+        lib_file: Option<Utf8PathBuf>,
 
         /// Path to the UDL file.
         udl_file: Utf8PathBuf,
@@ -594,14 +594,14 @@ pub fn run_main() -> Result<()> {
             out_dir,
             no_format,
             config,
-            cdylib,
+            lib_file,
             udl_file,
         } => crate::generate_bindings(
             udl_file,
             config.as_deref(),
             language.iter().map(String::as_str).collect(),
             out_dir.as_deref(),
-            cdylib.as_deref(),
+            lib_file.as_deref(),
             !no_format,
         ),
         Commands::Scaffolding {

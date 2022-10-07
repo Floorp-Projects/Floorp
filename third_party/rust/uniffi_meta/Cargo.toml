@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "uniffi_meta"
-version = "0.19.6"
+version = "0.20.0"
 description = "uniffi_meta"
 homepage = "https://mozilla.github.io/uniffi-rs"
 keywords = [

@@ -865,9 +865,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "51.2.0"
+version = "51.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "692dfb4494ad83161b7d596656c3e1f08b06bc2fa62a0eb8a3f4b7f83594025e"
+checksum = "5bb26e81939b071ae23dfa27fcbda5d5766684ac0f546bd37103b6fac47a4e6a"
 dependencies = [
  "chrono",
  "crossbeam-channel",
@@ -885,9 +885,9 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "51.2.0"
+version = "51.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e26d3c442090135439a6c6618f60653b139ee5a89116605eab947d18b5d64e7"
+checksum = "8013c5aced55a42f509e108378097f486ebff428a8f2537e7ea615b70c94f00a"
 dependencies = [
  "android_logger",
  "bincode",
@@ -2222,9 +2222,9 @@ checksum = "826e7639553986605ec5979c7dd957c7895e93eabed50ab2ffa7f6128a75097c"
 
 [[package]]
 name = "uniffi"
-version = "0.19.6"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea179ddeb64c249977c165b1d9f94af9c0a12a4f623e5986f553276612ea8796"
+checksum = "3ff9d73a665e4e94d566f069fc0c6b92d13fc7de25ae128dd20402023884b551"
 dependencies = [
  "anyhow",
  "bytes",
@@ -2239,9 +2239,9 @@ dependencies = [
 
 [[package]]
 name = "uniffi_bindgen"
-version = "0.19.6"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8849753c67126dd7e4f309d09b696378481bfe9b3f5cec0a0c2b8e27391789c8"
+checksum = "195251b1b0dbb221759ea4d79e3090e5c08a60fc4040c9e945b255def155ea90"
 dependencies = [
  "anyhow",
  "askama",
@@ -2262,9 +2262,9 @@ dependencies = [
 
 [[package]]
 name = "uniffi_build"
-version = "0.19.6"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d6c6fedf97b345227270837fcfd8d9a799f202af7fa843298c788fb943b159f"
+checksum = "74b65ae1c0bac70369bb0d9df6fae578b1ca130bf4cb6203e2636e2d6969dba5"
 dependencies = [
  "anyhow",
  "camino",
@@ -2273,9 +2273,9 @@ dependencies = [
 
 [[package]]
 name = "uniffi_macros"
-version = "0.19.6"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "090e5a993b51dc02faa0dc135ce94f02f050791bda283a5ae9f40fc9a4389a39"
+checksum = "5efddfb993c5b394a75042c0d144665388af2ad3db628401ab8f4fb6f6d07e54"
 dependencies = [
  "bincode",
  "camino",
@@ -2292,9 +2292,9 @@ dependencies = [
 
 [[package]]
 name = "uniffi_meta"
-version = "0.19.6"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10d099cea0c721294ec11ae6c39d661c96d13d8994247ffadaf1576b065e38e6"
+checksum = "fe1767e693cbd11fc22c37a4033d82eb9d891c3862e45329b4a891c1d8395df5"
 dependencies = [
  "serde",
 ]

@@ -1,0 +1,22 @@
+error[E0271]: type mismatch resolving `<Arc<child::Foo> as child::_::{closure#0}::TypeEq>::This == Arc<Foo>`
+  --> tests/ui/proc_macro_arc.rs:17:5
+   |
+17 |     #[uniffi::export]
+   |     ^^^^^^^^^^^^^^^^^ type mismatch resolving `<Arc<child::Foo> as child::_::{closure#0}::TypeEq>::This == Arc<Foo>`
+   |
+note: expected this to be `Arc<Foo>`
+  --> tests/ui/proc_macro_arc.rs:17:5
+   |
+17 |     #[uniffi::export]
+   |     ^^^^^^^^^^^^^^^^^
+   = note: expected struct `Arc<Foo>`
+              found struct `Arc<child::Foo>`
+note: required by a bound in `child::_::{closure#0}::assert_type_eq_all`
+  --> tests/ui/proc_macro_arc.rs:17:5
+   |
+17 |     #[uniffi::export]
+   |     ^^^^^^^^^^^^^^^^^
+   |     |
+   |     required by a bound in this
+   |     required by this bound in `child::_::{closure#0}::assert_type_eq_all`
+   = note: this error originates in the macro `::uniffi::deps::static_assertions::assert_type_eq_all` (in Nightly builds, run with -Z macro-backtrace for more info)
