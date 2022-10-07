@@ -829,7 +829,7 @@ TEST_F(RtcpSenderTest, SendsCombinedRtcpPacket) {
 
   std::vector<std::unique_ptr<rtcp::RtcpPacket>> packets;
   auto transport_feedback = std::make_unique<rtcp::TransportFeedback>();
-  transport_feedback->AddReceivedPacket(321, 10000);
+  transport_feedback->AddReceivedPacket(321, Timestamp::Millis(10));
   packets.push_back(std::move(transport_feedback));
   auto remote_estimate = std::make_unique<rtcp::RemoteEstimate>();
   packets.push_back(std::move(remote_estimate));

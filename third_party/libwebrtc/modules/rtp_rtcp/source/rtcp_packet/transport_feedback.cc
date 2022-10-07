@@ -387,40 +387,15 @@ Timestamp TransportFeedback::BaseTime() const {
          int64_t{base_time_ticks_} * kBaseTimeTick;
 }
 
-int64_t TransportFeedback::GetBaseTimeUs() const {
-  // Historically BaseTime was stored as signed integer and could be negative.
-  // However with new api it is not possible, but for compatibility with legacy
-  // tests return base time as negative when it used to be negative.
-  int64_t base_time_us = BaseTime().us() % kTimeWrapPeriod.us();
-  if (base_time_us >= kTimeWrapPeriod.us() / 2) {
-    return base_time_us - kTimeWrapPeriod.us();
-  } else {
-    return base_time_us;
-  }
-}
-
-namespace {
-TimeDelta CompensateForWrapAround(TimeDelta delta) {
+TimeDelta TransportFeedback::GetBaseDelta(Timestamp prev_timestamp) const {
+  TimeDelta delta = BaseTime() - prev_timestamp;
+  // Compensate for wrap around.
   if ((delta - kTimeWrapPeriod).Abs() < delta.Abs()) {
     delta -= kTimeWrapPeriod;  // Wrap backwards.
   } else if ((delta + kTimeWrapPeriod).Abs() < delta.Abs()) {
     delta += kTimeWrapPeriod;  // Wrap forwards.
   }
   return delta;
-}
-}  // namespace
-
-int64_t TransportFeedback::GetBaseDeltaUs(int64_t prev_timestamp_us) const {
-  int64_t delta_us = GetBaseTimeUs() - prev_timestamp_us;
-  return CompensateForWrapAround(TimeDelta::Micros(delta_us)).us();
-}
-
-TimeDelta TransportFeedback::GetBaseDelta(TimeDelta prev_timestamp) const {
-  return CompensateForWrapAround(GetBaseTime() - prev_timestamp);
-}
-
-TimeDelta TransportFeedback::GetBaseDelta(Timestamp prev_timestamp) const {
-  return CompensateForWrapAround(BaseTime() - prev_timestamp);
 }
 
 // De-serialize packet.
