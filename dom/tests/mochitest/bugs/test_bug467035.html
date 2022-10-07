@@ -13,11 +13,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=467035
   /** Test for Bug 467035 **/
   SimpleTest.waitForExplicitFinish();
   addLoadEvent(() => {
-    const s = `<!DOCTYPE html SYSTEM \"chrome://branding/locale/brand.dtd\">
+    const s = `<!DOCTYPE html SYSTEM \"chrome://global/locale/notification.dtd\">
       <html xmlns=\"http://www.w3.org/1999/xhtml\">
         <head>
           <meta charset=\"utf-8\"/>
-          <title>&brandShortName;</title>
+          <title>&closeNotification.tooltip;</title>
         </head>
       </html>`;
 
