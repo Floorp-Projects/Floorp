@@ -489,9 +489,6 @@ void HTMLLinkElement::
   }
 
   if (linkTypes & eMODULE_PRELOAD) {
-    // https://wicg.github.io/import-maps/#wait-for-import-maps
-    // Step 1.2: Set document’s acquiring import maps to false.
-    // When fetch a modulepreload module script graph.
     if (!OwnerDoc()->ScriptLoader()->GetModuleLoader()) {
       // For the print preview documents, at this moment it doesn't have module
       // loader yet, as the (print preview) document is not attached to the
@@ -502,8 +499,9 @@ void HTMLLinkElement::
       return;
     }
 
-    OwnerDoc()->ScriptLoader()->GetModuleLoader()->SetAcquiringImportMaps(
-        false);
+    // https://whatpr.org/html/8075/webappapis.html#fetch-a-modulepreload-module-script-graph
+    // Step 1. Disallow further import maps given settings object.
+    OwnerDoc()->ScriptLoader()->GetModuleLoader()->DisallowImportMaps();
     return;
   }
 
