@@ -331,4 +331,12 @@
   _hasStartedAecDump = NO;
 }
 
+- (rtc::Thread *)signalingThread {
+  return _signalingThread.get();
+}
+
+- (rtc::Thread *)workerThread {
+  return _workerThread.get();
+}
+
 @end

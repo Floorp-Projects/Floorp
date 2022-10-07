@@ -17,7 +17,8 @@
 #import "helpers/NSString+StdString.h"
 
 @implementation RTC_OBJC_TYPE (RTCVideoTrack) {
-  NSMutableArray *_adapters;
+  rtc::Thread *_workerThread;
+  NSMutableArray *_adapters /* accessed on _workerThread */;
 }
 
 @synthesize source = _source;
@@ -46,6 +47,7 @@
   NSParameterAssert(type == RTCMediaStreamTrackTypeVideo);
   if (self = [super initWithFactory:factory nativeTrack:nativeMediaTrack type:type]) {
     _adapters = [NSMutableArray array];
+    _workerThread = factory.workerThread;
   }
   return self;
 }
@@ -69,10 +71,15 @@
 }
 
 - (void)addRenderer:(id<RTC_OBJC_TYPE(RTCVideoRenderer)>)renderer {
+  if (!_workerThread->IsCurrent()) {
+    _workerThread->Invoke<void>(RTC_FROM_HERE, [renderer, self] { [self addRenderer:renderer]; });
+    return;
+  }
+
   // Make sure we don't have this renderer yet.
   for (RTCVideoRendererAdapter *adapter in _adapters) {
     if (adapter.videoRenderer == renderer) {
-      NSAssert(NO, @"|renderer| is already attached to this track");
+      RTC_LOG(LS_INFO) << "|renderer| is already attached to this track";
       return;
     }
   }
@@ -85,6 +92,11 @@
 }
 
 - (void)removeRenderer:(id<RTC_OBJC_TYPE(RTCVideoRenderer)>)renderer {
+  if (!_workerThread->IsCurrent()) {
+    _workerThread->Invoke<void>(RTC_FROM_HERE,
+                                [renderer, self] { [self removeRenderer:renderer]; });
+    return;
+  }
   __block NSUInteger indexToRemove = NSNotFound;
   [_adapters enumerateObjectsUsingBlock:^(RTCVideoRendererAdapter *adapter,
                                           NSUInteger idx,
@@ -95,6 +107,7 @@
     }
   }];
   if (indexToRemove == NSNotFound) {
+    RTC_LOG(LS_INFO) << "removeRenderer called with a renderer that has not been previously added";
     return;
   }
   RTCVideoRendererAdapter *adapterToRemove =
