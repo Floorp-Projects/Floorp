@@ -43,11 +43,10 @@ const int kHeight = 720;
 // TODO(sakal): ReceiveStatisticsProxy is lacking unittesting.
 class ReceiveStatisticsProxy2Test : public ::testing::Test {
  public:
-  explicit ReceiveStatisticsProxy2Test(std::string field_trials = "")
-      : field_trials_(field_trials), fake_clock_(1234) {
+  ReceiveStatisticsProxy2Test() : fake_clock_(1234) {
     metrics::Reset();
     statistics_proxy_.reset(new ReceiveStatisticsProxy(
-        kRemoteSsrc, &fake_clock_, loop_.task_queue(), field_trials_));
+        kRemoteSsrc, &fake_clock_, loop_.task_queue()));
   }
 
   ~ReceiveStatisticsProxy2Test() override { statistics_proxy_.reset(); }
@@ -1863,136 +1862,6 @@ TEST_P(ReceiveStatisticsProxy2TestWithContent,
                          "WebRTC.Video.InterframeDelayInMs.ExperimentGroup0"));
   }
 }
-
-class ReceiveStatisticsProxy2TestWithDecodeTimeHistograms
-    : public ::testing::WithParamInterface<
-          std::tuple<bool, int, int, int, VideoCodecType, std::string>>,
-      public ReceiveStatisticsProxy2Test {
- public:
-  ReceiveStatisticsProxy2TestWithDecodeTimeHistograms()
-      : ReceiveStatisticsProxy2Test(
-            std::get<0>(GetParam())
-                ? "WebRTC-DecodeTimeHistogramsKillSwitch/Enabled/"
-                : "") {}
-
- protected:
-  const std::string kUmaPrefix = "WebRTC.Video.DecodeTimePerFrameInMs.";
-  const int expected_number_of_samples_ = {std::get<1>(GetParam())};
-  const int width_ = {std::get<2>(GetParam())};
-  const int height_ = {std::get<3>(GetParam())};
-  const VideoCodecType codec_type_ = {std::get<4>(GetParam())};
-  const std::string implementation_name_ = {std::get<5>(GetParam())};
-  const std::string uma_histogram_name_ =
-      kUmaPrefix + (codec_type_ == kVideoCodecVP9 ? "Vp9." : "H264.") +
-      (height_ == 2160 ? "4k." : "Hd.") +
-      (implementation_name_.compare("ExternalDecoder") == 0 ? "Hw" : "Sw");
-};
-
-TEST_P(ReceiveStatisticsProxy2TestWithDecodeTimeHistograms,
-       DecodeTimeHistogramsUpdated) {
-  constexpr int kNumberOfFrames = 10;
-  constexpr int kDecodeTimeMs = 7;
-  constexpr int kFrameDurationMs = 1000 / 60;
-
-  webrtc::VideoFrame frame = CreateFrame(width_, height_);
-
-  statistics_proxy_->OnDecoderImplementationName(implementation_name_.c_str());
-  statistics_proxy_->OnPreDecode(codec_type_, /*qp=*/0);
-
-  for (int i = 0; i < kNumberOfFrames; ++i) {
-    statistics_proxy_->OnDecodedFrame(frame, /*qp=*/absl::nullopt,
-                                      TimeDelta::Millis(kDecodeTimeMs),
-                                      VideoContentType::UNSPECIFIED);
-    fake_clock_.AdvanceTimeMilliseconds(kFrameDurationMs);
-  }
-
-  loop_.Flush();
-
-  EXPECT_METRIC_EQ(expected_number_of_samples_,
-                   metrics::NumSamples(uma_histogram_name_));
-  EXPECT_METRIC_EQ(expected_number_of_samples_,
-                   metrics::NumEvents(uma_histogram_name_, kDecodeTimeMs));
-}
-
-const auto kVp94kHw = std::make_tuple(/*killswitch=*/false,
-                                      /*expected_number_of_samples=*/10,
-                                      /*width=*/3840,
-                                      /*height=*/2160,
-                                      kVideoCodecVP9,
-                                      /*implementation=*/"ExternalDecoder");
-const auto kVp94kSw = std::make_tuple(/*killswitch=*/false,
-                                      /*expected_number_of_samples=*/10,
-                                      /*width=*/3840,
-                                      /*height=*/2160,
-                                      kVideoCodecVP9,
-                                      /*implementation=*/"libvpx");
-const auto kVp9HdHw = std::make_tuple(/*killswitch=*/false,
-                                      /*expected_number_of_samples=*/10,
-                                      /*width=*/1920,
-                                      /*height=*/1080,
-                                      kVideoCodecVP9,
-                                      /*implementation=*/"ExternalDecoder");
-const auto kVp9HdSw = std::make_tuple(/*killswitch=*/false,
-                                      /*expected_number_of_samples=*/10,
-                                      /*width=*/1920,
-                                      /*height=*/1080,
-                                      kVideoCodecVP9,
-                                      /*implementation=*/"libvpx");
-const auto kH2644kHw = std::make_tuple(/*killswitch=*/false,
-                                       /*expected_number_of_samples=*/10,
-                                       /*width=*/3840,
-                                       /*height=*/2160,
-                                       kVideoCodecH264,
-                                       /*implementation=*/"ExternalDecoder");
-const auto kH2644kSw = std::make_tuple(/*killswitch=*/false,
-                                       /*expected_number_of_samples=*/10,
-                                       /*width=*/3840,
-                                       /*height=*/2160,
-                                       kVideoCodecH264,
-                                       /*implementation=*/"FFmpeg");
-const auto kH264HdHw = std::make_tuple(/*killswitch=*/false,
-                                       /*expected_number_of_samples=*/10,
-                                       /*width=*/1920,
-                                       /*height=*/1080,
-                                       kVideoCodecH264,
-                                       /*implementation=*/"ExternalDecoder");
-const auto kH264HdSw = std::make_tuple(/*killswitch=*/false,
-                                       /*expected_number_of_samples=*/10,
-                                       /*width=*/1920,
-                                       /*height=*/1080,
-                                       kVideoCodecH264,
-                                       /*implementation=*/"FFmpeg");
-
-INSTANTIATE_TEST_SUITE_P(AllHistogramsPopulated,
-                         ReceiveStatisticsProxy2TestWithDecodeTimeHistograms,
-                         ::testing::Values(kVp94kHw,
-                                           kVp94kSw,
-                                           kVp9HdHw,
-                                           kVp9HdSw,
-                                           kH2644kHw,
-                                           kH2644kSw,
-                                           kH264HdHw,
-                                           kH264HdSw));
-
-const auto kKillswitchDisabled =
-    std::make_tuple(/*killswitch=*/false,
-                    /*expected_number_of_samples=*/10,
-                    /*width=*/1920,
-                    /*height=*/1080,
-                    kVideoCodecVP9,
-                    /*implementation=*/"libvpx");
-const auto kKillswitchEnabled =
-    std::make_tuple(/*killswitch=*/true,
-                    /*expected_number_of_samples=*/0,
-                    /*width=*/1920,
-                    /*height=*/1080,
-                    kVideoCodecVP9,
-                    /*implementation=*/"libvpx");
-
-INSTANTIATE_TEST_SUITE_P(KillswitchEffective,
-                         ReceiveStatisticsProxy2TestWithDecodeTimeHistograms,
-                         ::testing::Values(kKillswitchDisabled,
-                                           kKillswitchEnabled));
 
 }  // namespace internal
 }  // namespace webrtc

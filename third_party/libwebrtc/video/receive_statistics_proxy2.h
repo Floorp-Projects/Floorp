@@ -17,7 +17,6 @@
 #include <vector>
 
 #include "absl/types/optional.h"
-#include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_base.h"
@@ -51,8 +50,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
  public:
   ReceiveStatisticsProxy(uint32_t remote_ssrc,
                          Clock* clock,
-                         TaskQueueBase* worker_thread,
-                         const FieldTrialsView& field_trials);
+                         TaskQueueBase* worker_thread);
   ~ReceiveStatisticsProxy() override;
 
   VideoReceiveStreamInterface::Stats GetStats() const;
@@ -149,16 +147,11 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   // Removes info about old frames and then updates the framerate.
   void UpdateFramerate(int64_t now_ms) const;
 
-  void UpdateDecodeTimeHistograms(int width,
-                                  int height,
-                                  int decode_time_ms) const;
-
   absl::optional<int64_t> GetCurrentEstimatedPlayoutNtpTimestampMs(
       int64_t now_ms) const;
 
   Clock* const clock_;
   const int64_t start_ms_;
-  const bool enable_decode_time_histograms_;
 
   int64_t last_sample_time_ RTC_GUARDED_BY(main_thread_);
 
