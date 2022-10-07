@@ -1200,16 +1200,13 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
     //   Step 2. Set el's relevant global object's import maps allowed to false.
     mModuleLoader->DisallowImportMaps();
 
+    //   Step 3. Let result be the result of creating an import map parse result
+    //   given source text and base URL.
     UniquePtr<ImportMap> importMap = mModuleLoader->ParseImportMap(request);
-
-    // https://wicg.github.io/import-maps/#register-an-import-map
-    //
-    // Step 1. If element’s the script’s result is null, then fire an event
-    // named error at element, and return.
     if (!importMap) {
-      NS_DispatchToCurrentThread(
-          NewRunnableMethod("nsIScriptElement::FireErrorEvent", aElement,
-                            &nsIScriptElement::FireErrorEvent));
+      // If parsing import maps fails, the exception will be reported in
+      // ModuleLoaderBase::ParseImportMap, and the registration of the import
+      // map will bail out early.
       return false;
     }
 
