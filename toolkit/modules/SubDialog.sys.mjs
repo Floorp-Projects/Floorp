@@ -476,7 +476,7 @@ SubDialog.prototype = {
       scrollWidth + "px";
     let frameWidth = docEl.getAttribute("width")
       ? docEl.getAttribute("width") + "px"
-      : frameMinWidth;
+      : scrollWidth + "px";
     if (
       this._box.getAttribute("sizeto") == "available" &&
       docEl.style.maxWidth
