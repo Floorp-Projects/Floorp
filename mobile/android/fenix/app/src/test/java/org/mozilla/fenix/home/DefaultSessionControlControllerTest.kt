@@ -1357,7 +1357,8 @@ class DefaultSessionControlControllerTest {
             learnMoreUrl = null,
         ),
         textColor = null,
-        cardColor = null,
+        cardColorLight = null,
+        cardColorDark = null,
         thumbnailFileState = thumbnailFileState,
         assetsFileState = Wallpaper.ImageFileState.Unavailable,
     )

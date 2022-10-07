@@ -185,7 +185,8 @@ class WallpapersUseCases(
                     name = Wallpaper.amethystName,
                     collection = firefoxClassicCollection,
                     textColor = null,
-                    cardColor = null,
+                    cardColorLight = null,
+                    cardColorDark = null,
                     thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
                     assetsFileState = Wallpaper.ImageFileState.Downloaded,
                 ),
@@ -193,7 +194,8 @@ class WallpapersUseCases(
                     name = Wallpaper.ceruleanName,
                     collection = firefoxClassicCollection,
                     textColor = null,
-                    cardColor = null,
+                    cardColorLight = null,
+                    cardColorDark = null,
                     thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
                     assetsFileState = Wallpaper.ImageFileState.Downloaded,
                 ),
@@ -201,7 +203,8 @@ class WallpapersUseCases(
                     name = Wallpaper.sunriseName,
                     collection = firefoxClassicCollection,
                     textColor = null,
-                    cardColor = null,
+                    cardColorLight = null,
+                    cardColorDark = null,
                     thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
                     assetsFileState = Wallpaper.ImageFileState.Downloaded,
                 ),
@@ -211,7 +214,8 @@ class WallpapersUseCases(
                     name = Wallpaper.twilightHillsName,
                     collection = firefoxClassicCollection,
                     textColor = null,
-                    cardColor = null,
+                    cardColorLight = null,
+                    cardColorDark = null,
                     thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
                     assetsFileState = Wallpaper.ImageFileState.Downloaded,
                 ),
@@ -219,7 +223,8 @@ class WallpapersUseCases(
                     name = Wallpaper.beachVibeName,
                     collection = firefoxClassicCollection,
                     textColor = null,
-                    cardColor = null,
+                    cardColorLight = null,
+                    cardColorDark = null,
                     thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
                     assetsFileState = Wallpaper.ImageFileState.Downloaded,
                 ),
@@ -454,7 +459,6 @@ class WallpapersUseCases(
         override suspend fun invoke(wallpaper: Wallpaper): Wallpaper.ImageFileState {
             settings.currentWallpaperName = wallpaper.name
             settings.currentWallpaperTextColor = wallpaper.textColor ?: 0
-            settings.currentWallpaperCardColor = wallpaper.cardColor ?: 0
             store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(wallpaper))
             return Wallpaper.ImageFileState.Downloaded
         }

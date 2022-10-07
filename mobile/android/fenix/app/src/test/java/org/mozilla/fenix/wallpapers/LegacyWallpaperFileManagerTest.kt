@@ -97,7 +97,8 @@ class LegacyWallpaperFileManagerTest {
     private fun generateWallpaper(name: String) = Wallpaper(
         name = name,
         textColor = null,
-        cardColor = null,
+        cardColorLight = null,
+        cardColorDark = null,
         thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
         assetsFileState = Wallpaper.ImageFileState.Downloaded,
         collection = Wallpaper.Collection(

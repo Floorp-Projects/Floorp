@@ -128,7 +128,8 @@ class WallpaperDownloaderTest {
         name = name,
         collection = wallpaperCollection,
         textColor = null,
-        cardColor = null,
+        cardColorLight = null,
+        cardColorDark = null,
         thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
         assetsFileState = Wallpaper.ImageFileState.Unavailable,
     )

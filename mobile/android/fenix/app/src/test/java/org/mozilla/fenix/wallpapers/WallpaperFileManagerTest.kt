@@ -154,7 +154,8 @@ class WallpaperFileManagerTest {
     private fun generateWallpaper(name: String) = Wallpaper(
         name = name,
         textColor = null,
-        cardColor = null,
+        cardColorLight = null,
+        cardColorDark = null,
         thumbnailFileState = Wallpaper.ImageFileState.Downloaded,
         assetsFileState = Wallpaper.ImageFileState.Downloaded,
         collection = Wallpaper.DefaultCollection,

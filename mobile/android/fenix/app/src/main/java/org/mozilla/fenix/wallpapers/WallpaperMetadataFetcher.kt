@@ -81,7 +81,8 @@ class WallpaperMetadataFetcher(
                 Wallpaper(
                     name = getString("id"),
                     textColor = getArgbValueAsLong("text-color"),
-                    cardColor = getArgbValueAsLong("card-color"),
+                    cardColorLight = getArgbValueAsLong("card-color-light"),
+                    cardColorDark = getArgbValueAsLong("card-color-dark"),
                     collection = collection,
                     thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
                     assetsFileState = Wallpaper.ImageFileState.Unavailable,

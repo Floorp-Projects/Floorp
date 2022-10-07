@@ -172,7 +172,8 @@ class ExtensionsTest {
     private fun generateClassicFirefoxWallpaper(name: String) = Wallpaper(
         name = name,
         textColor = 0L,
-        cardColor = 0L,
+        cardColorLight = 0L,
+        cardColorDark = 0L,
         thumbnailFileState = Wallpaper.ImageFileState.Downloaded,
         assetsFileState = Wallpaper.ImageFileState.Downloaded,
         collection = classicCollection,
@@ -195,7 +196,8 @@ class ExtensionsTest {
     ) = Wallpaper(
         name = wallpaperName,
         textColor = 0L,
-        cardColor = 0L,
+        cardColorLight = 0L,
+        cardColorDark = 0L,
         thumbnailFileState = thumbnailState,
         assetsFileState = Wallpaper.ImageFileState.Downloaded,
         collection = getSeasonalCollection(collectionName),

@@ -41,8 +41,6 @@ class WallpapersUseCasesTest {
     private val mockSettings = mockk<Settings> {
         every { currentWallpaperTextColor } returns 0L
         every { currentWallpaperTextColor = any() } just Runs
-        every { currentWallpaperCardColor } returns 0L
-        every { currentWallpaperCardColor = any() } just Runs
         every { shouldMigrateLegacyWallpaper } returns false
         every { shouldMigrateLegacyWallpaper = any() } just Runs
     }
@@ -525,7 +523,6 @@ class WallpapersUseCasesTest {
 
         verify { mockSettings.currentWallpaperName = selectedWallpaper.name }
         verify { mockSettings.currentWallpaperTextColor = selectedWallpaper.textColor!! }
-        verify { mockSettings.currentWallpaperCardColor = selectedWallpaper.cardColor!! }
         assertEquals(selectedWallpaper, appStore.state.wallpaperState.currentWallpaper)
         assertEquals(wallpaperFileState, Wallpaper.ImageFileState.Downloaded)
     }
@@ -677,7 +674,8 @@ class WallpapersUseCasesTest {
                     learnMoreUrl = null,
                 ),
                 textColor = Random.nextLong(),
-                cardColor = Random.nextLong(),
+                cardColorLight = Random.nextLong(),
+                cardColorDark = Random.nextLong(),
                 thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
                 assetsFileState = Wallpaper.ImageFileState.Unavailable,
             )
@@ -694,7 +692,8 @@ class WallpapersUseCasesTest {
                     learnMoreUrl = null,
                 ),
                 textColor = Random.nextLong(),
-                cardColor = Random.nextLong(),
+                cardColorLight = Random.nextLong(),
+                cardColorDark = Random.nextLong(),
                 thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
                 assetsFileState = Wallpaper.ImageFileState.Unavailable,
             )
