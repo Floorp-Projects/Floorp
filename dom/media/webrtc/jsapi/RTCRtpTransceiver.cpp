@@ -644,10 +644,12 @@ static void JsepCodecDescToAudioCodecConfig(
     return;
   }
 
+  // libwebrtc crashes if we attempt to configure a mono recv codec
+  bool sendMono = aCodec.mForceMono && aCodec.mDirection == sdp::kSend;
+
   *aConfig = Some(AudioCodecConfig(
       pt, aCodec.mName, static_cast<int>(aCodec.mClock),
-      aCodec.mForceMono ? 1 : static_cast<int>(aCodec.mChannels),
-      aCodec.mFECEnabled));
+      sendMono ? 1 : static_cast<int>(aCodec.mChannels), aCodec.mFECEnabled));
   (*aConfig)->mMaxPlaybackRate = static_cast<int>(aCodec.mMaxPlaybackRate);
   (*aConfig)->mDtmfEnabled = aCodec.mDtmfEnabled;
   (*aConfig)->mDTXEnabled = aCodec.mDTXEnabled;
