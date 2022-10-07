@@ -109,8 +109,8 @@ nsPopupSetFrame::DoXULLayout(nsBoxLayoutState& aState) {
   nsresult rv = nsBoxFrame::DoXULLayout(aState);
 
   // lay out all of our currently open popups.
-  for (nsFrameList::Enumerator e(mPopupList); !e.AtEnd(); e.Next()) {
-    nsMenuPopupFrame* popupChild = static_cast<nsMenuPopupFrame*>(e.get());
+  for (nsIFrame* f : mPopupList) {
+    auto* popupChild = static_cast<nsMenuPopupFrame*>(f);
     popupChild->LayoutPopup(aState, nullptr, false);
   }
 
@@ -127,10 +127,10 @@ void nsPopupSetFrame::RemovePopupFrame(nsIFrame* aPopup) {
 
 void nsPopupSetFrame::AddPopupFrameList(nsFrameList& aPopupFrameList) {
 #ifdef DEBUG
-  for (nsFrameList::Enumerator e(aPopupFrameList); !e.AtEnd(); e.Next()) {
-    NS_ASSERTION(e.get()->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
-                     e.get()->IsMenuPopupFrame(),
-                 "adding wrong type of frame in popupset's ::popupList");
+  for (nsIFrame* f : aPopupFrameList) {
+    NS_ASSERTION(
+        f->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) && f->IsMenuPopupFrame(),
+        "adding wrong type of frame in popupset's ::popupList");
   }
 #endif
   mPopupList.InsertFrames(nullptr, nullptr, aPopupFrameList);

@@ -11790,9 +11790,8 @@ void nsIFrame::TraceMsg(const char* aFormatString, ...) {
 }
 
 void nsIFrame::VerifyDirtyBitSet(const nsFrameList& aFrameList) {
-  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
-    NS_ASSERTION(e.get()->HasAnyStateBits(NS_FRAME_IS_DIRTY),
-                 "dirty bit not set");
+  for (nsIFrame* f : aFrameList) {
+    NS_ASSERTION(f->HasAnyStateBits(NS_FRAME_IS_DIRTY), "dirty bit not set");
   }
 }
 

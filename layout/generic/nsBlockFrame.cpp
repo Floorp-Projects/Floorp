@@ -5388,8 +5388,8 @@ bool nsBlockFrame::DrainOverflowLines() {
         // In case we own any next-in-flows of any of the drained frames, then
         // move those to the PushedFloat list.
         nsFrameList pushedFloats;
-        for (nsFrameList::Enumerator e(oofs.mList); !e.AtEnd(); e.Next()) {
-          nsIFrame* nif = e.get()->GetNextInFlow();
+        for (nsIFrame* f : oofs.mList) {
+          nsIFrame* nif = f->GetNextInFlow();
           for (; nif && nif->GetParent() == this; nif = nif->GetNextInFlow()) {
             MOZ_ASSERT(nif->HasAnyStateBits(NS_FRAME_IS_PUSHED_FLOAT));
             RemoveFloat(nif);
@@ -6956,8 +6956,7 @@ bool nsBlockFrame::HasPushedFloatsFromPrevContinuation() const {
 #ifdef DEBUG
   // Double-check the above assertion that pushed floats should be at the
   // beginning of our floats list.
-  for (nsFrameList::Enumerator e(mFloats); !e.AtEnd(); e.Next()) {
-    nsIFrame* f = e.get();
+  for (nsIFrame* f : mFloats) {
     NS_ASSERTION(!f->HasAnyStateBits(NS_FRAME_IS_PUSHED_FLOAT),
                  "pushed floats must be at the beginning of the float list");
   }
@@ -8157,8 +8156,8 @@ void nsBlockFrame::VerifyOverflowSituation() {
   // Overflow out-of-flows must not have a next-in-flow in mFloats or mFrames.
   nsFrameList* oofs = GetOverflowOutOfFlows();
   if (oofs) {
-    for (nsFrameList::Enumerator e(*oofs); !e.AtEnd(); e.Next()) {
-      nsIFrame* nif = e.get()->GetNextInFlow();
+    for (nsIFrame* f : *oofs) {
+      nsIFrame* nif = f->GetNextInFlow();
       MOZ_ASSERT(!nif ||
                  (!mFloats.ContainsFrame(nif) && !mFrames.ContainsFrame(nif)));
     }
@@ -8179,10 +8178,10 @@ void nsBlockFrame::VerifyOverflowSituation() {
   nsIFrame::ChildListID childLists[] = {nsIFrame::kFloatList,
                                         nsIFrame::kPushedFloatsList};
   for (size_t i = 0; i < ArrayLength(childLists); ++i) {
-    nsFrameList children(GetChildList(childLists[i]));
-    for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
+    const nsFrameList& children = GetChildList(childLists[i]);
+    for (nsIFrame* f : children) {
       nsIFrame* parent = this;
-      nsIFrame* nif = e.get()->GetNextInFlow();
+      nsIFrame* nif = f->GetNextInFlow();
       for (; nif; nif = nif->GetNextInFlow()) {
         bool found = false;
         for (nsIFrame* p = parent; p; p = p->GetNextInFlow()) {

@@ -1815,11 +1815,9 @@ nscoord nsBidiPresUtils::RepositionFrame(
     LogicalSize logicalSize(frameWM, frameISize, aFrame->BSize());
     nsSize frameSize = logicalSize.GetPhysicalSize(frameWM);
     // Reposition the child frames
-    for (nsFrameList::Enumerator e(aFrame->PrincipalChildList()); !e.AtEnd();
-         e.Next()) {
-      icoord +=
-          RepositionFrame(e.get(), aIsEvenLevel, icoord, aContinuationStates,
-                          frameWM, reverseDir, frameSize);
+    for (nsIFrame* f : aFrame->PrincipalChildList()) {
+      icoord += RepositionFrame(f, aIsEvenLevel, icoord, aContinuationStates,
+                                frameWM, reverseDir, frameSize);
     }
     icoord += reverseDir ? borderPadding.IStart(frameWM)
                          : borderPadding.IEnd(frameWM);

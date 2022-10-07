@@ -241,9 +241,8 @@ void nsMenuFrame::DestroyPopupList() {
 }
 
 void nsMenuFrame::SetPopupFrame(nsFrameList& aFrameList) {
-  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
-    nsMenuPopupFrame* popupFrame = do_QueryFrame(e.get());
-    if (popupFrame) {
+  for (nsIFrame* f : aFrameList) {
+    if (nsMenuPopupFrame* popupFrame = do_QueryFrame(f)) {
       // Remove the frame from the list and store it in a nsFrameList* property.
       aFrameList.RemoveFrame(popupFrame);
       nsFrameList* popupList =

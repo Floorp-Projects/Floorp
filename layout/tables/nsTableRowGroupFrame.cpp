@@ -77,11 +77,10 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 int32_t nsTableRowGroupFrame::GetRowCount() const {
 #ifdef DEBUG
-  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    NS_ASSERTION(
-        e.get()->StyleDisplay()->mDisplay == mozilla::StyleDisplay::TableRow,
-        "Unexpected display");
-    NS_ASSERTION(e.get()->IsTableRowFrame(), "Unexpected frame type");
+  for (nsIFrame* f : mFrames) {
+    NS_ASSERTION(f->StyleDisplay()->mDisplay == mozilla::StyleDisplay::TableRow,
+                 "Unexpected display");
+    NS_ASSERTION(f->IsTableRowFrame(), "Unexpected frame type");
   }
 #endif
 
@@ -1461,12 +1460,12 @@ void nsTableRowGroupFrame::AppendFrames(ChildListID aListID,
   // collect the new row frames in an array
   // XXXbz why are we doing the QI stuff?  There shouldn't be any non-rows here.
   AutoTArray<nsTableRowFrame*, 8> rows;
-  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
-    nsTableRowFrame* rowFrame = do_QueryFrame(e.get());
+  for (nsIFrame* f : aFrameList) {
+    nsTableRowFrame* rowFrame = do_QueryFrame(f);
     NS_ASSERTION(rowFrame, "Unexpected frame; frame constructor screwed up");
     if (rowFrame) {
       NS_ASSERTION(
-          mozilla::StyleDisplay::TableRow == e.get()->StyleDisplay()->mDisplay,
+          mozilla::StyleDisplay::TableRow == f->StyleDisplay()->mDisplay,
           "wrong display type on rowframe");
       rows.AppendElement(rowFrame);
     }
@@ -1500,12 +1499,12 @@ void nsTableRowGroupFrame::InsertFrames(
   nsTableFrame* tableFrame = GetTableFrame();
   nsTArray<nsTableRowFrame*> rows;
   bool gotFirstRow = false;
-  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
-    nsTableRowFrame* rowFrame = do_QueryFrame(e.get());
+  for (nsIFrame* f : aFrameList) {
+    nsTableRowFrame* rowFrame = do_QueryFrame(f);
     NS_ASSERTION(rowFrame, "Unexpected frame; frame constructor screwed up");
     if (rowFrame) {
       NS_ASSERTION(
-          mozilla::StyleDisplay::TableRow == e.get()->StyleDisplay()->mDisplay,
+          mozilla::StyleDisplay::TableRow == f->StyleDisplay()->mDisplay,
           "wrong display type on rowframe");
       rows.AppendElement(rowFrame);
       if (!gotFirstRow) {

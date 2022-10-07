@@ -1359,9 +1359,7 @@ static void MoveChildrenTo(nsIFrame* aOldParent, nsContainerFrame* aNewParent,
     nsContainerFrame::ReparentFrameViewList(aFrameList, aOldParent, aNewParent);
   }
 
-  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
-    e.get()->SetParent(aNewParent);
-  }
+  aFrameList.ApplySetParent(aNewParent);
 
   if (aNewParent->PrincipalChildList().IsEmpty() &&
       aNewParent->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
@@ -10245,10 +10243,9 @@ void nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
 
 static nsIFrame* FindFirstLetterFrame(nsIFrame* aFrame,
                                       nsIFrame::ChildListID aListID) {
-  nsFrameList list = aFrame->GetChildList(aListID);
-  for (nsFrameList::Enumerator e(list); !e.AtEnd(); e.Next()) {
-    if (e.get()->IsLetterFrame()) {
-      return e.get();
+  for (nsIFrame* f : aFrame->GetChildList(aListID)) {
+    if (f->IsLetterFrame()) {
+      return f;
     }
   }
   return nullptr;
