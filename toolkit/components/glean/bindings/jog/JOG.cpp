@@ -21,6 +21,7 @@ namespace mozilla::glean {
 // Thread Safety: Only used on the main thread.
 StaticAutoPtr<nsTHashSet<nsCString>> gCategories;
 StaticAutoPtr<nsTHashMap<nsCString, uint32_t>> gMetrics;
+StaticAutoPtr<nsTHashMap<nsCString, uint32_t>> gPings;
 
 // static
 bool JOG::HasCategory(const nsACString& aCategoryName) {
@@ -56,6 +57,12 @@ Maybe<uint32_t> JOG::GetMetric(const nsACString& aMetricName) {
   return !gMetrics ? Nothing() : gMetrics->MaybeGet(aMetricName);
 }
 
+// static
+Maybe<uint32_t> JOG::GetPing(const nsACString& aPingName) {
+  MOZ_ASSERT(NS_IsMainThread());
+  return !gPings ? Nothing() : gPings->MaybeGet(aPingName);
+}
+
 }  // namespace mozilla::glean
 
 // static
@@ -84,10 +91,35 @@ nsCString dottedSnakeToCamel(const nsACString& aSnake) {
   return camel;
 }
 
+// static
+nsCString kebabToCamel(const nsACString& aKebab) {
+  nsCString camel;
+  bool first = true;
+  for (const nsACString& segment : aKebab.Split('-')) {
+    if (first) {
+      first = false;
+      camel.Append(segment);
+    } else if (segment.Length()) {
+      char lower = segment.CharAt(0);
+      if ('a' <= lower && lower <= 'z') {
+        camel.Append(
+            std::toupper(lower, std::locale()));  // append the Capital.
+        camel.Append(segment.BeginReading() + 1,
+                     segment.Length() - 1);  // append the rest.
+      } else {
+        // Not gonna try to capitalize anything outside a->z.
+        camel.Append(segment);
+      }
+    }
+  }
+  return camel;
+}
+
 using mozilla::AppShutdown;
 using mozilla::ShutdownPhase;
 using mozilla::glean::gCategories;
 using mozilla::glean::gMetrics;
+using mozilla::glean::gPings;
 
 extern "C" NS_EXPORT void JOG_RegisterMetric(const nsACString& aCategory,
                                              const nsACString& aName,
@@ -117,4 +149,23 @@ extern "C" NS_EXPORT void JOG_RegisterMetric(const nsACString& aCategory,
                   ShutdownPhase::XPCOMWillShutdown);
   }
   gMetrics->InsertOrUpdate(categoryCamel + "."_ns + nameCamel, aMetric);
+}
+
+extern "C" NS_EXPORT void JOG_RegisterPing(const nsACString& aPingName,
+                                           uint32_t aPingId) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown)) {
+    return;
+  }
+
+  // aPingName is kebab-case. JS expects camelCase.
+  auto pingCamel = kebabToCamel(aPingName);
+
+  // Register the ping
+  if (!gPings) {
+    gPings = new nsTHashMap<nsCString, uint32_t>();
+    RunOnShutdown([&] { gPings = nullptr; }, ShutdownPhase::XPCOMWillShutdown);
+  }
+  gPings->InsertOrUpdate(pingCamel, aPingId);
 }
