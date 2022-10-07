@@ -10,7 +10,6 @@ mod counter_style_rule;
 mod document_rule;
 mod font_face_rule;
 pub mod font_feature_values_rule;
-pub mod font_palette_values_rule;
 pub mod import_rule;
 pub mod keyframes_rule;
 pub mod layer_rule;
@@ -51,7 +50,6 @@ pub use self::counter_style_rule::CounterStyleRule;
 pub use self::document_rule::DocumentRule;
 pub use self::font_face_rule::FontFaceRule;
 pub use self::font_feature_values_rule::FontFeatureValuesRule;
-pub use self::font_palette_values_rule::FontPaletteValuesRule;
 pub use self::import_rule::ImportRule;
 pub use self::keyframes_rule::KeyframesRule;
 pub use self::layer_rule::{LayerBlockRule, LayerStatementRule};
@@ -258,7 +256,6 @@ pub enum CssRule {
     Container(Arc<Locked<ContainerRule>>),
     FontFace(Arc<Locked<FontFaceRule>>),
     FontFeatureValues(Arc<Locked<FontFeatureValuesRule>>),
-    FontPaletteValues(Arc<Locked<FontPaletteValuesRule>>),
     CounterStyle(Arc<Locked<CounterStyleRule>>),
     Viewport(Arc<Locked<ViewportRule>>),
     Keyframes(Arc<Locked<KeyframesRule>>),
@@ -296,7 +293,6 @@ impl CssRule {
 
             CssRule::FontFace(_) => 0,
             CssRule::FontFeatureValues(_) => 0,
-            CssRule::FontPaletteValues(_) => 0,
             CssRule::CounterStyle(_) => 0,
             CssRule::Viewport(_) => 0,
             CssRule::Keyframes(_) => 0,
@@ -352,7 +348,6 @@ pub enum CssRuleType {
     LayerBlock = 16,
     LayerStatement = 17,
     Container = 18,
-    FontPaletteValues = 19,
 }
 
 #[allow(missing_docs)]
@@ -372,7 +367,6 @@ impl CssRule {
             CssRule::Media(_) => CssRuleType::Media,
             CssRule::FontFace(_) => CssRuleType::FontFace,
             CssRule::FontFeatureValues(_) => CssRuleType::FontFeatureValues,
-            CssRule::FontPaletteValues(_) => CssRuleType::FontPaletteValues,
             CssRule::CounterStyle(_) => CssRuleType::CounterStyle,
             CssRule::Keyframes(_) => CssRuleType::Keyframes,
             CssRule::Namespace(_) => CssRuleType::Namespace,
@@ -480,10 +474,6 @@ impl DeepCloneWithLock for CssRule {
                 let rule = arc.read_with(guard);
                 CssRule::FontFeatureValues(Arc::new(lock.wrap(rule.clone())))
             },
-            CssRule::FontPaletteValues(ref arc) => {
-                let rule = arc.read_with(guard);
-                CssRule::FontPaletteValues(Arc::new(lock.wrap(rule.clone())))
-            },
             CssRule::CounterStyle(ref arc) => {
                 let rule = arc.read_with(guard);
                 CssRule::CounterStyle(Arc::new(lock.wrap(rule.clone())))
@@ -541,7 +531,6 @@ impl ToCssWithGuard for CssRule {
             CssRule::Style(ref lock) => lock.read_with(guard).to_css(guard, dest),
             CssRule::FontFace(ref lock) => lock.read_with(guard).to_css(guard, dest),
             CssRule::FontFeatureValues(ref lock) => lock.read_with(guard).to_css(guard, dest),
-            CssRule::FontPaletteValues(ref lock) => lock.read_with(guard).to_css(guard, dest),
             CssRule::CounterStyle(ref lock) => lock.read_with(guard).to_css(guard, dest),
             CssRule::Viewport(ref lock) => lock.read_with(guard).to_css(guard, dest),
             CssRule::Keyframes(ref lock) => lock.read_with(guard).to_css(guard, dest),

@@ -51,7 +51,7 @@ pub use self::counters::{Content, ContentItem, CounterIncrement, CounterReset, C
 pub use self::easing::TimingFunction;
 pub use self::effects::{BoxShadow, Filter, SimpleShadow};
 pub use self::flex::FlexBasis;
-pub use self::font::{FontFamily, FontLanguageOverride, FontStyle, FontPalette};
+pub use self::font::{FontFamily, FontLanguageOverride, FontStyle};
 pub use self::font::{FontFeatureSettings, FontVariantLigatures, FontVariantNumeric};
 pub use self::font::{FontSize, FontSizeAdjust, FontSizeKeyword, FontStretch, FontSynthesis};
 pub use self::font::{FontVariantAlternates, FontWeight};
@@ -408,18 +408,6 @@ impl NonNegativeNumber {
     #[inline]
     pub fn get(&self) -> f32 {
         self.0.get()
-    }
-}
-
-/// An Integer which is >= 0.
-pub type NonNegativeInteger = NonNegative<Integer>;
-
-impl Parse for NonNegativeInteger {
-    fn parse<'i, 't>(
-        context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<Self, ParseError<'i>> {
-        Ok(NonNegative(Integer::parse_non_negative(context, input)?))
     }
 }
 

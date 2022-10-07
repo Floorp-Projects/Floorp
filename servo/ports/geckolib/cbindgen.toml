@@ -83,7 +83,6 @@ include = [
   "OutlineStyle",
   "CaptionSide",
   "FontSizeAdjust",
-  "FontPalette",
   "ComputedFontStretchRange",
   "ComputedFontStyleDescriptor",
   "ComputedFontWeightRange",
@@ -309,8 +308,6 @@ renaming_overrides_prefixing = true
 "ServoTraversalFlags" = "ServoTraversalFlags"
 "ServoStyleSetSizes" = "ServoStyleSetSizes"
 "BeforeFlag" = "StyleEasingBeforeFlag"
-"FontPaletteValueSet" = "gfx::FontPaletteValueSet"
-"PaletteValues" = "gfx::FontPaletteValueSet::PaletteValues"
 
 [export.body]
 "CSSPixelLength" = """
@@ -948,11 +945,5 @@ renaming_overrides_prefixing = true
 "FontFaceSourceTechFlags" = """
   inline static StyleFontFaceSourceTechFlags Empty() {
     return StyleFontFaceSourceTechFlags{0};
-  }
-"""
-
-"FontPalette" = """
-  inline static StyleFontPalette Normal() {
-    return StyleFontPalette{StyleAtom(nsGkAtoms::normal->ToAddRefed())};
   }
 """

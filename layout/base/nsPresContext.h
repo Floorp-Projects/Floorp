@@ -92,9 +92,6 @@ class Document;
 class Element;
 enum class PrefersColorSchemeOverride : uint8_t;
 }  // namespace dom
-namespace gfx {
-class FontPaletteValueSet;
-}  // namespace gfx
 }  // namespace mozilla
 
 // supported values for cached integer pref types
@@ -926,9 +923,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   void FlushFontFeatureValues();
   void MarkFontFeatureValuesDirty() { mFontFeatureValuesDirty = true; }
 
-  void FlushFontPaletteValues();
-  void MarkFontPaletteValuesDirty() { mFontPaletteValuesDirty = true; }
-
   // Ensure that it is safe to hand out CSS rules outside the layout
   // engine by ensuring that all CSS style sheets have unique inners
   // and, if necessary, synchronously rebuilding all style data.
@@ -1090,10 +1084,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
     return mFontFeatureValuesLookup;
   }
 
-  mozilla::gfx::FontPaletteValueSet* GetFontPaletteValueSet() const {
-    return mFontPaletteValueSet;
-  }
-
  protected:
   friend class nsRunnableMethod<nsPresContext>;
   void ThemeChangedInternal();
@@ -1195,7 +1185,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   RefPtr<mozilla::CounterStyleManager> mCounterStyleManager;
   const nsStaticAtom* mMedium;
   RefPtr<gfxFontFeatureValueSet> mFontFeatureValuesLookup;
-  RefPtr<mozilla::gfx::FontPaletteValueSet> mFontPaletteValueSet;
 
   // TODO(emilio): Maybe lazily create and put under a UniquePtr if this grows a
   // lot?
@@ -1350,9 +1339,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   // Is the current mFontFeatureValuesLookup valid?
   unsigned mFontFeatureValuesDirty : 1;
-
-  // Is the current mFontFeatureValueSet valid?
-  unsigned mFontPaletteValuesDirty : 1;
 
   unsigned mIsVisual : 1;
 

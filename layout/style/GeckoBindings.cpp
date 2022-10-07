@@ -1005,32 +1005,6 @@ nsTArray<uint32_t>* Gecko_AppendFeatureValueHashEntry(
                                                          aName, aAlternate);
 }
 
-gfx::FontPaletteValueSet* Gecko_ConstructFontPaletteValueSet() {
-  return new gfx::FontPaletteValueSet();
-}
-
-gfx::FontPaletteValueSet::PaletteValues* Gecko_AppendPaletteValueHashEntry(
-    gfx::FontPaletteValueSet* aPaletteValueSet, nsAtom* aFamily,
-    nsAtom* aName) {
-  MOZ_ASSERT(NS_IsMainThread());
-  return aPaletteValueSet->Insert(aName, nsAtomCString(aFamily));
-}
-
-void Gecko_SetFontPaletteBase(gfx::FontPaletteValueSet::PaletteValues* aValues,
-                              int32_t aBasePaletteIndex) {
-  aValues->mBasePalette = aBasePaletteIndex;
-}
-
-void Gecko_SetFontPaletteOverride(
-    gfx::FontPaletteValueSet::PaletteValues* aValues, int32_t aIndex,
-    StyleRGBA aColor) {
-  if (aIndex < 0) {
-    return;
-  }
-  aValues->mOverrides.AppendElement(gfx::FontPaletteValueSet::OverrideColor{
-      uint32_t(aIndex), gfx::sRGBColor::FromABGR(aColor.ToColor())});
-}
-
 void Gecko_CounterStyle_ToPtr(const StyleCounterStyle* aStyle,
                               CounterStylePtr* aPtr) {
   *aPtr = CounterStylePtr::FromStyle(*aStyle);
