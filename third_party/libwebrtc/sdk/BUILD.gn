@@ -760,34 +760,6 @@ if (is_ios || is_mac) {
       }
     }
 
-    # Build the PeerConnectionFactory without audio/video support.
-    # This target depends on the objc_peeerconnectionfactory_base which still
-    # includes some audio/video related objects such as RTCAudioSource because
-    # these objects are just thin wrappers of native C++ interfaces required
-    # when implementing webrtc::PeerConnectionFactoryInterface and
-    # webrtc::PeerConnectionInterface.
-    # The applications which only use WebRTC DataChannel can depend on this.
-    rtc_library("peerconnectionfactory_no_media_objc") {
-      visibility = [ "*" ]
-      allow_poison = [
-        "audio_codecs",  # TODO(bugs.webrtc.org/8396): Remove.
-        "default_task_queue",
-      ]
-      defines = [ "HAVE_NO_MEDIA" ]
-
-      sources = [ "objc/helpers/noop.mm" ]
-
-      public_configs = [ ":common_config_objc" ]
-
-      deps = [
-        ":native_api",
-        ":native_video",
-        ":peerconnectionfactory_base_objc",
-        "../api:libjingle_peerconnection_api",
-        "../rtc_base",
-      ]
-    }
-
     rtc_library("mediaconstraints_objc") {
       configs += [ "..:no_global_constructors" ]
       sources = [
@@ -1032,6 +1004,7 @@ if (is_ios || is_mac) {
         "../api/video:video_rtp_headers",
         "../api/video_codecs:video_codecs_api",
         "../common_video",
+        "../media:rtc_audio_video",
         "../media:rtc_media_base",
         "../modules/audio_device:audio_device_api",
         "../modules/audio_processing",

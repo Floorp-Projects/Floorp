@@ -30,35 +30,25 @@
 #include "sdk/objc/native/api/ssl_certificate_verifier.h"
 #include "system_wrappers/include/field_trial.h"
 
-#ifndef HAVE_NO_MEDIA
-#import "components/video_codec/RTCVideoDecoderFactoryH264.h"
-#import "components/video_codec/RTCVideoEncoderFactoryH264.h"
-// The no-media version PeerConnectionFactory doesn't depend on these files, but the gn check tool
-// is not smart enough to take the #ifdef into account.
-#include "api/audio_codecs/builtin_audio_decoder_factory.h"     // nogncheck
-#include "api/audio_codecs/builtin_audio_encoder_factory.h"     // nogncheck
+#include "api/audio_codecs/builtin_audio_decoder_factory.h"
+#include "api/audio_codecs/builtin_audio_encoder_factory.h"
 #include "api/rtc_event_log/rtc_event_log_factory.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/transport/field_trial_based_config.h"
-#include "modules/audio_device/include/audio_device.h"          // nogncheck
-#include "modules/audio_processing/include/audio_processing.h"  // nogncheck
+#import "components/video_codec/RTCVideoDecoderFactoryH264.h"
+#import "components/video_codec/RTCVideoEncoderFactoryH264.h"
+#include "media/engine/webrtc_media_engine.h"
+#include "modules/audio_device/include/audio_device.h"
+#include "modules/audio_processing/include/audio_processing.h"
 
 #include "sdk/objc/native/api/video_decoder_factory.h"
 #include "sdk/objc/native/api/video_encoder_factory.h"
 #include "sdk/objc/native/src/objc_video_decoder_factory.h"
 #include "sdk/objc/native/src/objc_video_encoder_factory.h"
-#endif
 
 #if defined(WEBRTC_IOS)
 #import "sdk/objc/native/api/audio_device_module.h"
 #endif
-
-// Adding the nogncheck to disable the including header check.
-// The no-media version PeerConnectionFactory doesn't depend on media related
-// C++ target.
-// TODO(zhihuang): Remove nogncheck once MediaEngineInterface is moved to C++
-// API layer.
-#include "media/engine/webrtc_media_engine.h"  // nogncheck
 
 @implementation RTC_OBJC_TYPE (RTCPeerConnectionFactory) {
   std::unique_ptr<rtc::Thread> _networkThread;
@@ -78,9 +68,6 @@
 }
 
 - (instancetype)init {
-#ifdef HAVE_NO_MEDIA
-  return [self initWithNoMedia];
-#else
   return [self
       initWithNativeAudioEncoderFactory:webrtc::CreateBuiltinAudioEncoderFactory()
               nativeAudioDecoderFactory:webrtc::CreateBuiltinAudioDecoderFactory()
@@ -90,15 +77,11 @@
                                             RTCVideoDecoderFactoryH264) alloc] init])
                       audioDeviceModule:[self audioDeviceModule].get()
                   audioProcessingModule:nullptr];
-#endif
 }
 
 - (instancetype)
     initWithEncoderFactory:(nullable id<RTC_OBJC_TYPE(RTCVideoEncoderFactory)>)encoderFactory
             decoderFactory:(nullable id<RTC_OBJC_TYPE(RTCVideoDecoderFactory)>)decoderFactory {
-#ifdef HAVE_NO_MEDIA
-  return [self initWithNoMedia];
-#else
   std::unique_ptr<webrtc::VideoEncoderFactory> native_encoder_factory;
   std::unique_ptr<webrtc::VideoDecoderFactory> native_decoder_factory;
   if (encoderFactory) {
@@ -113,7 +96,6 @@
                        nativeVideoDecoderFactory:std::move(native_decoder_factory)
                                audioDeviceModule:[self audioDeviceModule].get()
                            audioProcessingModule:nullptr];
-#endif
 }
 - (instancetype)initNative {
   if (self = [super init]) {
@@ -191,7 +173,6 @@
     if (webrtc::field_trial::IsEnabled("WebRTC-Network-UseNWPathMonitor")) {
       dependencies.network_monitor_factory = webrtc::CreateNetworkMonitorFactory();
     }
-#ifndef HAVE_NO_MEDIA
     dependencies.task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
     dependencies.trials = std::make_unique<webrtc::FieldTrialBasedConfig>();
     cricket::MediaEngineDependencies media_deps;
@@ -212,7 +193,6 @@
     dependencies.event_log_factory =
         std::make_unique<webrtc::RtcEventLogFactory>(dependencies.task_queue_factory.get());
     dependencies.network_controller_factory = std::move(networkControllerFactory);
-#endif
     _nativeFactory = webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
     NSAssert(_nativeFactory, @"Failed to initialize PeerConnectionFactory!");
   }
