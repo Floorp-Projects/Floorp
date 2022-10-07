@@ -30,9 +30,12 @@ class AudioBuffer;
 // microphone gain and/or applying digital gain.
 class GainController2 {
  public:
+  // Ctor. If `use_internal_vad` is true, an internal voice activity
+  // detector is used for digital adaptive gain.
   GainController2(const AudioProcessing::Config::GainController2& config,
                   int sample_rate_hz,
-                  int num_channels);
+                  int num_channels,
+                  bool use_internal_vad);
   GainController2(const GainController2&) = delete;
   GainController2& operator=(const GainController2&) = delete;
   ~GainController2();
@@ -44,12 +47,17 @@ class GainController2 {
   void SetFixedGainDb(float gain_db);
 
   // Applies fixed and adaptive digital gains to `audio` and runs a limiter.
-  void Process(AudioBuffer* audio);
+  // If the internal VAD is used, `speech_probability` is ignored. Otherwise
+  // `speech_probability` is used for digital adaptive gain if it's available
+  // (limited to values [0.0, 1.0]).
+  void Process(absl::optional<float> speech_probability, AudioBuffer* audio);
 
   // Handles analog level changes.
   void NotifyAnalogLevel(int level);
 
   static bool Validate(const AudioProcessing::Config::GainController2& config);
+
+  AvailableCpuFeatures GetCpuFeatures() const { return cpu_features_; }
 
  private:
   static int instance_count_;

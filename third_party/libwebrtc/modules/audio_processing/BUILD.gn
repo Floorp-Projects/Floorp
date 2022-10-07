@@ -401,6 +401,7 @@ if (rtc_include_tests) {
         "../../rtc_base/system:file_wrapper",
         "../../system_wrappers",
         "../../system_wrappers:denormal_disabler",
+        "../../test:field_trial",
         "../../test:fileutils",
         "../../test:rtc_expect_death",
         "../../test:test_support",

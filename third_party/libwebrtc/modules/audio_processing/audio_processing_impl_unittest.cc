@@ -23,6 +23,7 @@
 #include "modules/audio_processing/test/test_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/random.h"
+#include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -479,6 +480,78 @@ TEST(AudioProcessingImplTest,
   EXPECT_CALL(*echo_control_mock, ProcessCapture(NotNull(), testing::_, true))
       .Times(1);
   apm->ProcessStream(frame.data(), stream_config, stream_config, frame.data());
+}
+
+TEST(AudioProcessingImplTest,
+     EchoControllerObservesNoDigitalAgc2EchoPathGainChange) {
+  // Tests that the echo controller doesn't observe an echo path gain change
+  // when the AGC2 digital submodule changes the digital gain without analog
+  // gain changes.
+  auto echo_control_factory = std::make_unique<MockEchoControlFactory>();
+  const auto* echo_control_factory_ptr = echo_control_factory.get();
+  rtc::scoped_refptr<AudioProcessing> apm =
+      AudioProcessingBuilderForTesting()
+          .SetEchoControlFactory(std::move(echo_control_factory))
+          .Create();
+  webrtc::AudioProcessing::Config apm_config;
+  // Disable AGC1 analog.
+  apm_config.gain_controller1.enabled = false;
+  // Enable AGC2 digital.
+  apm_config.gain_controller2.enabled = true;
+  apm_config.gain_controller2.adaptive_digital.enabled = true;
+  apm->ApplyConfig(apm_config);
+
+  constexpr int16_t kAudioLevel = 1000;
+  constexpr size_t kSampleRateHz = 48000;
+  constexpr size_t kNumChannels = 2;
+  std::array<int16_t, kNumChannels * kSampleRateHz / 100> frame;
+  StreamConfig stream_config(kSampleRateHz, kNumChannels);
+  frame.fill(kAudioLevel);
+
+  MockEchoControl* echo_control_mock = echo_control_factory_ptr->GetNext();
+
+  EXPECT_CALL(*echo_control_mock, AnalyzeCapture(testing::_)).Times(1);
+  EXPECT_CALL(*echo_control_mock, ProcessCapture(NotNull(), testing::_,
+                                                 /*echo_path_change=*/false))
+      .Times(1);
+  apm->ProcessStream(frame.data(), stream_config, stream_config, frame.data());
+
+  EXPECT_CALL(*echo_control_mock, AnalyzeCapture(testing::_)).Times(1);
+  EXPECT_CALL(*echo_control_mock, ProcessCapture(NotNull(), testing::_,
+                                                 /*echo_path_change=*/false))
+      .Times(1);
+  apm->ProcessStream(frame.data(), stream_config, stream_config, frame.data());
+}
+
+TEST(AudioProcessingImplTest, ProcessWithAgc2InjectedSpeechProbability) {
+  // Tests that a stream is successfully processed for the field trial
+  // `WebRTC-Audio-TransientSuppressorVadMode/Enabled-RnnVad/` using
+  // injected speech probability in AGC2 digital.
+  webrtc::test::ScopedFieldTrials field_trials(
+      "WebRTC-Audio-TransientSuppressorVadMode/Enabled-RnnVad/");
+  rtc::scoped_refptr<AudioProcessing> apm = AudioProcessingBuilder().Create();
+  ASSERT_EQ(apm->Initialize(), AudioProcessing::kNoError);
+  webrtc::AudioProcessing::Config apm_config;
+  // Disable AGC1 analog.
+  apm_config.gain_controller1.enabled = false;
+  // Enable AGC2 digital.
+  apm_config.gain_controller2.enabled = true;
+  apm_config.gain_controller2.adaptive_digital.enabled = true;
+  apm->ApplyConfig(apm_config);
+  constexpr int kSampleRateHz = 48000;
+  constexpr int kNumChannels = 1;
+  std::array<float, kSampleRateHz / 100> buffer;
+  float* channel_pointers[] = {buffer.data()};
+  StreamConfig stream_config(/*sample_rate_hz=*/kSampleRateHz,
+                             /*num_channels=*/kNumChannels);
+  Random random_generator(2341U);
+  constexpr int kFramesToProcess = 10;
+  for (int i = 0; i < kFramesToProcess; ++i) {
+    RandomizeSampleVector(&random_generator, buffer);
+    ASSERT_EQ(apm->ProcessStream(channel_pointers, stream_config, stream_config,
+                                 channel_pointers),
+              kNoErr);
+  }
 }
 
 TEST(AudioProcessingImplTest, EchoControllerObservesPlayoutVolumeChange) {
