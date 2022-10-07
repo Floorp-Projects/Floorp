@@ -110,4 +110,3 @@ browser.jar:
 
 # L10n resources and overrides.
 % override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
-% override chrome://global/locale/netError.dtd chrome://browser/locale/netError.dtd

@@ -163,7 +163,14 @@ add_task(async function checkAdvancedDetails() {
 
     let message = await SpecialPowers.spawn(bc, [], async function() {
       let doc = content.document;
-      let shortDescText = doc.getElementById("errorShortDescText");
+
+      // Wait until fluent sets the error description.
+      let shortDescText;
+      await ContentTaskUtils.waitForCondition(() => {
+        shortDescText = doc.getElementById("errorShortDescText");
+        return shortDescText.textContent != "";
+      }, "error description has been set");
+
       Assert.ok(
         shortDescText.textContent.includes("expired.example.com"),
         "Should list hostname in error message."
@@ -502,18 +509,20 @@ add_task(async function checkViewSource() {
   await SpecialPowers.spawn(browser, [], async function() {
     let doc = content.document;
 
-    // Wait until fluent sets the errorCode inner text.
-    let el;
+    // Wait until fluent sets the error code and description.
+    let errorCode;
+    let shortDescText;
     await ContentTaskUtils.waitForCondition(() => {
-      el = doc.getElementById("errorCode");
-      return el.textContent != "";
-    }, "error code has been set inside the advanced button panel");
+      errorCode = doc.getElementById("errorCode");
+      shortDescText = doc.getElementById("errorShortDescText");
+      return errorCode.textContent != "" && shortDescText.textContent != "";
+    }, "error code and description have been set");
     Assert.equal(
-      el.textContent,
+      errorCode.textContent,
       "SEC_ERROR_EXPIRED_CERTIFICATE",
       "Correct error message found"
     );
-    Assert.equal(el.tagName, "a", "Error message is a link");
+    Assert.equal(errorCode.tagName, "a", "Error message is a link");
 
     let titleText = doc.querySelector(".title-text");
     Assert.equal(
@@ -521,7 +530,6 @@ add_task(async function checkViewSource() {
       "Warning: Potential Security Risk Ahead"
     );
 
-    let shortDescText = doc.getElementById("errorShortDescText");
     Assert.ok(
       shortDescText.textContent.includes("expired.example.com"),
       "Should list hostname in error message."

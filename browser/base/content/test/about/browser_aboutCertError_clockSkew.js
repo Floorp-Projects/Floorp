@@ -31,7 +31,6 @@ add_task(async function checkWrongSystemTimeWarning() {
     return SpecialPowers.spawn(browser, [], async function() {
       let doc = content.document;
       let div = doc.getElementById("errorShortDescText");
-      let systemDateDiv = doc.getElementById("wrongSystemTime_systemDate1");
       let learnMoreLink = doc.getElementById("learnMoreLink");
 
       await ContentTaskUtils.waitForCondition(
@@ -42,7 +41,6 @@ add_task(async function checkWrongSystemTimeWarning() {
       return {
         divDisplay: content.getComputedStyle(div).display,
         text: div.textContent,
-        systemDate: systemDateDiv.textContent,
         learnMoreLink: learnMoreLink.href,
       };
     });
@@ -53,8 +51,6 @@ add_task(async function checkWrongSystemTimeWarning() {
     PREF_SERVICES_SETTINGS_LAST_FETCHED,
     Math.floor(Date.now() / 1000)
   );
-
-  let formatter = new Intl.DateTimeFormat("default");
 
   // For this test, we want to trick Firefox into believing that
   // the local system time (as returned by Date.now()) is wrong.
@@ -73,7 +69,9 @@ add_task(async function checkWrongSystemTimeWarning() {
   // date is correct by recording the difference as clock skew.
   Services.prefs.setIntPref(PREF_SERVICES_SETTINGS_CLOCK_SKEW_SECONDS, skew);
 
-  let localDateFmt = formatter.format(localDate);
+  let localDateFmt = new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+  }).format(localDate);
 
   info("Loading a bad cert page with a skewed clock");
   let message = await setUpPage();
@@ -91,7 +89,7 @@ add_task(async function checkWrongSystemTimeWarning() {
     message.text.includes("expired.example.com"),
     "URL found in error message"
   );
-  ok(message.systemDate.includes(localDateFmt), "Correct local date displayed");
+  ok(message.text.includes(localDateFmt), "Correct local date displayed");
   ok(
     message.learnMoreLink.includes("time-errors"),
     "time-errors in the Learn More URL"

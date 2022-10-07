@@ -21,7 +21,7 @@ const { parse, pemToDER } = globalThis.certDecoderInitializer(
   crypto
 );
 
-const formatter = new Intl.DateTimeFormat("default");
+const formatter = new Intl.DateTimeFormat();
 
 const HOST_NAME = new URL(RPMGetInnerMostURI(document.location.href)).hostname;
 
@@ -81,8 +81,8 @@ const KNOWN_ERROR_TITLE_IDS = new Set([
 let searchParams = new URLSearchParams(document.documentURI.split("?")[1]);
 
 let gErrorCode = searchParams.get("e");
-
 let gIsCertError = gErrorCode == "nssBadCert";
+let gHasSts = gIsCertError && getCSSClass() === "badStsCert";
 
 // If the location of the favicon changes, FAVICON_CERTERRORPAGE_URL and/or
 // FAVICON_ERRORPAGE_URL in toolkit/components/places/nsFaviconService.idl
@@ -104,14 +104,20 @@ function isCaptive() {
   return searchParams.get("captive") == "true";
 }
 
+/**
+ * We don't actually know what the MitM is called (since we don't
+ * maintain a list), so we'll try and display the common name of the
+ * root issuer to the user. In the worst case they are as clueless as
+ * before, in the best case this gives them an actionable hint.
+ * This may be revised in the future.
+ */
+function getMitmName(failedCertInfo) {
+  return failedCertInfo.issuerCommonName;
+}
+
 function retryThis(buttonEl) {
   RPMSendAsyncMessage("Browser:EnableOnlineMode");
   buttonEl.disabled = true;
-}
-
-function showBlockingErrorReporting() {
-  // Display blocking error reporting UI for XFO error and CSP error.
-  document.getElementById("blockingErrorReporting").hidden = false;
 }
 
 function showPrefChangeContainer() {
@@ -143,9 +149,6 @@ function toggleCertErrorDebugInfoVisibility(shouldShow) {
 function setupAdvancedButton() {
   // Get the hostname and add it to the panel
   var panel = document.getElementById("badCertAdvancedPanel");
-  for (var span of panel.querySelectorAll("span.hostname")) {
-    span.textContent = HOST_NAME;
-  }
 
   // Register click handler for the weakCryptoAdvancedPanel
   document
@@ -154,12 +157,11 @@ function setupAdvancedButton() {
 
   function togglePanelVisibility() {
     panel.hidden = !panel.hidden;
-    if (gIsCertError) {
-      // Toggling the advanced panel must ensure that the debugging
-      // information panel is hidden as well, since it's opened by the
-      // error code link in the advanced panel.
-      toggleCertErrorDebugInfoVisibility(false);
-    }
+
+    // Toggling the advanced panel must ensure that the debugging
+    // information panel is hidden as well, since it's opened by the
+    // error code link in the advanced panel.
+    toggleCertErrorDebugInfoVisibility(false);
 
     if (panel.style.display == "block") {
       // send event to trigger telemetry ping
@@ -168,66 +170,36 @@ function setupAdvancedButton() {
     }
   }
 
-  if (!gIsCertError) {
-    return;
-  }
-
   if (getCSSClass() == "expertBadCert") {
     panel.hidden = false;
   }
-
-  disallowCertOverridesIfNeeded();
 }
 
 function disallowCertOverridesIfNeeded() {
-  var cssClass = getCSSClass();
   // Disallow overrides if this is a Strict-Transport-Security
   // host and the cert is bad (STS Spec section 7.3) or if the
   // certerror is in a frame (bug 633691).
-  if (cssClass == "badStsCert" || window != top) {
+  if (gHasSts || window != top) {
     document.getElementById("exceptionDialogButton").hidden = true;
   }
-  if (cssClass == "badStsCert") {
-    document.getElementById("badStsCertExplanation").removeAttribute("hidden");
+  if (gHasSts) {
+    const stsExplanation = document.getElementById("badStsCertExplanation");
+    document.l10n.setAttributes(
+      stsExplanation,
+      "certerror-what-should-i-do-bad-sts-cert-explanation",
+      { hostname: HOST_NAME }
+    );
+    stsExplanation.removeAttribute("hidden");
 
-    let stsReturnButtonText = document.getElementById("stsReturnButtonText")
-      .textContent;
-    document.getElementById("returnButton").textContent = stsReturnButtonText;
-    document.getElementById(
-      "advancedPanelReturnButton"
-    ).textContent = stsReturnButtonText;
-
-    let stsMitmWhatCanYouDoAboutIt3 = document.getElementById(
-      "stsMitmWhatCanYouDoAboutIt3"
-    ).innerHTML;
-    // eslint-disable-next-line no-unsanitized/property
-    document.getElementById(
-      "mitmWhatCanYouDoAboutIt3"
-    ).innerHTML = stsMitmWhatCanYouDoAboutIt3;
+    document.l10n.setAttributes(
+      document.getElementById("returnButton"),
+      "neterror-return-to-previous-page-button"
+    );
+    document.l10n.setAttributes(
+      document.getElementById("advancedPanelReturnButton"),
+      "neterror-return-to-previous-page-button"
+    );
   }
-}
-
-function setErrorPageStrings(err) {
-  let title = err + "-title";
-
-  let isCertError = err == "nssBadCert";
-  let className = getCSSClass();
-  if (isCertError && (window !== window.top || className == "badStsCert")) {
-    title = err + "-sts-title";
-  }
-
-  let cspXfoError = err === "cspBlocked" || err === "xfoBlocked";
-  if (cspXfoError) {
-    title = "csp-xfo-error-title";
-  }
-
-  let titleElement = document.querySelector(".title-text");
-
-  if (!KNOWN_ERROR_TITLE_IDS.has(title)) {
-    console.error("No strings exist for error:", title);
-    title = "generic-title";
-  }
-  document.l10n.setAttributes(titleElement, title);
 }
 
 function initPage() {
@@ -248,55 +220,40 @@ function initPage() {
     });
   }
 
-  var err = gErrorCode;
-  if (err == "blockedByPolicy") {
-    document.body.classList.add("blocked");
-  }
-
-  // Only worry about captive portals if this is a cert error.
-  let showCaptivePortalUI = isCaptive() && gIsCertError;
-  if (showCaptivePortalUI) {
-    err = "captivePortal";
-  }
-
-  let l10nErrId = err;
-  let className = getCSSClass();
+  const className = getCSSClass();
   if (className) {
     document.body.classList.add(className);
   }
 
-  if (gIsCertError && (window !== window.top || className == "badStsCert")) {
-    l10nErrId += "_sts";
-  }
-
-  let pageTitle = document.getElementById("ept_" + l10nErrId);
-  if (pageTitle) {
-    document.title = pageTitle.textContent;
-  }
-
-  // if it's an unknown error or there's no title or description
-  // defined, get the generic message
-  var errDesc = document.getElementById("ed_" + l10nErrId);
-  if (!errDesc) {
-    errDesc = document.getElementById("ed_generic");
-  }
-
-  setErrorPageStrings(err);
-
-  var sd = document.getElementById("errorShortDescText");
-  if (sd) {
-    if (gIsCertError) {
-      // eslint-disable-next-line no-unsanitized/property
-      sd.innerHTML = errDesc.innerHTML;
-    } else {
-      sd.textContent = getDescription();
-    }
-  }
+  const docTitle = document.querySelector("title");
+  const bodyTitle = document.querySelector(".title-text");
+  const shortDesc = document.getElementById("errorShortDescText");
 
   if (gIsCertError) {
-    if (showCaptivePortalUI) {
+    const isStsError = window !== window.top || gHasSts;
+    const errArgs = { hostname: HOST_NAME };
+    if (isCaptive()) {
+      document.l10n.setAttributes(
+        docTitle,
+        "neterror-captive-portal-page-title"
+      );
+      document.l10n.setAttributes(bodyTitle, "captivePortal-title");
+      document.l10n.setAttributes(
+        shortDesc,
+        "neterror-captive-portal",
+        errArgs
+      );
       initPageCaptivePortal();
     } else {
+      if (isStsError) {
+        document.l10n.setAttributes(docTitle, "certerror-sts-page-title");
+        document.l10n.setAttributes(bodyTitle, "nssBadCert-sts-title");
+        document.l10n.setAttributes(shortDesc, "certerror-sts-intro", errArgs);
+      } else {
+        document.l10n.setAttributes(docTitle, "certerror-page-title");
+        document.l10n.setAttributes(bodyTitle, "nssBadCert-title");
+        document.l10n.setAttributes(shortDesc, "certerror-intro", errArgs);
+      }
       initPageCertError();
     }
 
@@ -305,112 +262,269 @@ function initPage() {
     return;
   }
 
-  setFocus("#netErrorButtonContainer > .try-again");
-
   document.body.classList.add("neterror");
 
-  var ld = document.getElementById("errorLongDesc");
-  if (ld) {
-    // eslint-disable-next-line no-unsanitized/property
-    ld.innerHTML = errDesc.innerHTML;
-  }
-
-  if (err == "dnsNotFound") {
-    RPMCheckAlternateHostAvailable();
-  }
-
-  if (err == "sslv3Used") {
-    document.getElementById("learnMoreContainer").style.display = "block";
-    document.body.className = "certerror";
-  }
-
-  // remove undisplayed errors to avoid bug 39098
-  var errContainer = document.getElementById("errorContainer");
-  errContainer.remove();
-
-  let learnMoreLink = document.getElementById("learnMoreLink");
+  let longDesc = document.getElementById("errorLongDesc");
+  const netErrorButton = document.getElementById("netErrorButtonContainer");
+  const learnMore = document.getElementById("learnMoreContainer");
+  const learnMoreLink = document.getElementById("learnMoreLink");
   learnMoreLink.setAttribute("href", baseURL + "connection-not-secure");
 
-  if (err == "cspBlocked" || err == "xfoBlocked") {
-    // Remove the "Try again" button for XFO and CSP violations,
-    // since it's almost certainly useless. (Bug 553180)
-    document.getElementById("netErrorButtonContainer").style.display = "none";
+  let pageTitleId = "neterror-page-title";
+  let bodyTitleId = gErrorCode + "-title";
 
-    // Adding a button for opening websites blocked for CSP and XFO violations
-    // in a new window. (Bug 1461195)
-    document.getElementById("errorShortDesc").style.display = "none";
+  switch (gErrorCode) {
+    case "blockedByPolicy":
+      pageTitleId = "neterror-blocked-by-policy-page-title";
+      document.body.classList.add("blocked");
 
-    let hostString = document.location.hostname;
-    let longDescription = document.getElementById("errorLongDesc");
-    document.l10n.setAttributes(longDescription, "csp-xfo-blocked-long-desc", {
-      hostname: hostString,
-    });
+      // Remove the "Try again" button from pages that don't need it.
+      // For pages blocked by policy, trying again won't help.
+      netErrorButton.style.display = "none";
+      break;
 
-    document.getElementById("openInNewWindowContainer").style.display = "block";
+    case "cspBlocked":
+    case "xfoBlocked": {
+      bodyTitleId = "csp-xfo-error-title";
 
-    let openInNewWindowButton = document.getElementById(
-      "openInNewWindowButton"
-    );
-    openInNewWindowButton.href = document.location.href;
+      // Remove the "Try again" button for XFO and CSP violations,
+      // since it's almost certainly useless. (Bug 553180)
+      netErrorButton.style.display = "none";
 
-    // Add a learn more link
-    document.getElementById("learnMoreContainer").style.display = "block";
-    learnMoreLink.setAttribute("href", baseURL + "xframe-neterror-page");
+      // Adding a button for opening websites blocked for CSP and XFO violations
+      // in a new window. (Bug 1461195)
+      document.getElementById("errorShortDesc").style.display = "none";
 
-    setupBlockingReportingUI();
+      document.l10n.setAttributes(longDesc, "csp-xfo-blocked-long-desc", {
+        hostname: document.location.hostname, // FIXME - should this be HOST_NAME?
+      });
+      longDesc = null;
+
+      document.getElementById("openInNewWindowContainer").style.display =
+        "block";
+
+      const openInNewWindowButton = document.getElementById(
+        "openInNewWindowButton"
+      );
+      openInNewWindowButton.href = document.location.href;
+
+      // Add a learn more link
+      learnMore.style.display = "block";
+      learnMoreLink.setAttribute("href", baseURL + "xframe-neterror-page");
+
+      setupBlockingReportingUI();
+      break;
+    }
+
+    case "dnsNotFound":
+      pageTitleId = "neterror-dns-not-found-title";
+      RPMCheckAlternateHostAvailable();
+      break;
+
+    case "inadequateSecurityError":
+      // Remove the "Try again" button from pages that don't need it.
+      // For HTTP/2 inadequate security, trying again won't help.
+      netErrorButton.style.display = "none";
+      break;
+
+    case "malformedURI":
+      pageTitleId = "neterror-malformed-uri-page-title";
+      break;
+
+    // Pinning errors are of type nssFailure2
+    case "nssFailure2": {
+      learnMore.style.display = "block";
+
+      const errorCode = document.getNetErrorInfo().errorCodeString;
+      switch (errorCode) {
+        case "SSL_ERROR_UNSUPPORTED_VERSION":
+        case "SSL_ERROR_PROTOCOL_VERSION_ALERT": {
+          const tlsNotice = document.getElementById("tlsVersionNotice");
+          tlsNotice.hidden = false;
+          document.l10n.setAttributes(tlsNotice, "cert-error-old-tls-version");
+        }
+        // fallthrough
+
+        case "interrupted": // This happens with subresources that are above the max tls
+        case "SSL_ERROR_NO_CIPHERS_SUPPORTED":
+        case "SSL_ERROR_NO_CYPHER_OVERLAP":
+        case "SSL_ERROR_SSL_DISABLED":
+          RPMAddMessageListener("HasChangedCertPrefs", msg => {
+            if (msg.data.hasChangedCertPrefs) {
+              // Configuration overrides might have caused this; offer to reset.
+              showPrefChangeContainer();
+            }
+          });
+          RPMSendAsyncMessage("GetChangedCertPrefs");
+      }
+
+      break;
+    }
+
+    case "sslv3Used":
+      learnMore.style.display = "block";
+      document.body.className = "certerror";
+      document.getElementById("advancedButton").style.display = "none";
+      break;
+  }
+
+  document.l10n.setAttributes(docTitle, pageTitleId);
+
+  if (!KNOWN_ERROR_TITLE_IDS.has(bodyTitleId)) {
+    console.error("No strings exist for error:", bodyTitleId);
+    bodyTitleId = "generic-title";
+  }
+  document.l10n.setAttributes(bodyTitle, bodyTitleId);
+
+  shortDesc.textContent = getDescription();
+
+  setFocus("#netErrorButtonContainer > .try-again");
+
+  if (longDesc) {
+    const parts = getNetErrorDescParts();
+    setNetErrorMessageFromParts(longDesc, parts);
   }
 
   setNetErrorMessageFromCode();
+}
 
-  // Pinning errors are of type nssFailure2
-  if (err == "nssFailure2") {
-    document.getElementById("learnMoreContainer").style.display = "block";
+/**
+ * Builds HTML elements from `parts` and appends them to `parent`.
+ *
+ * @param {HTMLElement} parent
+ * @param {Array<["li" | "p" | "span", string, Record<string, string> | undefined]>} parts
+ */
+function setNetErrorMessageFromParts(parent, parts) {
+  let list = null;
 
-    const errorCode = document.getNetErrorInfo().errorCodeString;
-
-    if (
-      errorCode == "SSL_ERROR_UNSUPPORTED_VERSION" ||
-      errorCode == "SSL_ERROR_PROTOCOL_VERSION_ALERT"
-    ) {
-      document.getElementById("tlsVersionNotice").hidden = false;
+  for (let [tag, l10nId, l10nArgs] of parts) {
+    const elem = document.createElement(tag);
+    elem.dataset.l10nId = l10nId;
+    if (l10nArgs) {
+      elem.dataset.l10nArgs = JSON.stringify(l10nArgs);
     }
 
-    const hasPrefStyleError = [
-      "interrupted", // This happens with subresources that are above the max tls
-      "SSL_ERROR_NO_CIPHERS_SUPPORTED",
-      "SSL_ERROR_NO_CYPHER_OVERLAP",
-      "SSL_ERROR_PROTOCOL_VERSION_ALERT",
-      "SSL_ERROR_SSL_DISABLED",
-      "SSL_ERROR_UNSUPPORTED_VERSION",
-    ].some(substring => {
-      return substring == errorCode;
-    });
-
-    if (hasPrefStyleError) {
-      RPMAddMessageListener("HasChangedCertPrefs", msg => {
-        if (msg.data.hasChangedCertPrefs) {
-          // Configuration overrides might have caused this; offer to reset.
-          showPrefChangeContainer();
-        }
-      });
-      RPMSendAsyncMessage("GetChangedCertPrefs");
+    if (tag === "li") {
+      if (!list) {
+        list = document.createElement("ul");
+        parent.appendChild(list);
+      }
+      list.appendChild(elem);
+    } else {
+      if (list) {
+        list = null;
+      }
+      parent.appendChild(elem);
     }
   }
+}
 
-  if (err == "sslv3Used") {
-    document.getElementById("advancedButton").style.display = "none";
-  }
+/**
+ * Returns an array of tuples determining the parts of an error message:
+ * - HTML tag name
+ * - l10n id
+ * - l10n args (optional)
+ *
+ * @returns { Array<["li" | "p" | "span", string, Record<string, string> | undefined]> }
+ */
+function getNetErrorDescParts() {
+  switch (gErrorCode) {
+    case "connectionFailure":
+    case "netInterrupt":
+    case "netReset":
+    case "netTimeout":
+      return [
+        ["li", "neterror-load-error-try-again"],
+        ["li", "neterror-load-error-connection"],
+        ["li", "neterror-load-error-firewall"],
+      ];
 
-  if (err == "inadequateSecurityError" || err == "blockedByPolicy") {
-    // Remove the "Try again" button from pages that don't need it.
-    // For HTTP/2 inadequate security or pages blocked by policy, trying
-    // again won't help.
-    document.getElementById("netErrorButtonContainer").style.display = "none";
+    case "blockedByPolicy":
+    case "deniedPortAccess":
+    case "malformedURI":
+      return [];
 
-    var container = document.getElementById("errorLongDesc");
-    for (var span of container.querySelectorAll("span.hostname")) {
-      span.textContent = HOST_NAME;
+    case "captivePortal":
+      return [["p", ""]];
+    case "contentEncodingError":
+      return [["li", "neterror-content-encoding-error"]];
+    case "corruptedContentErrorv2":
+      return [
+        ["p", "neterror-corrupted-content-intro"],
+        ["li", "neterror-corrupted-content-contact-website"],
+      ];
+    case "dnsNotFound":
+      return [
+        ["span", "neterror-dns-not-found-hint-header"],
+        ["li", "neterror-dns-not-found-hint-try-again"],
+        ["li", "neterror-dns-not-found-hint-check-network"],
+        ["li", "neterror-dns-not-found-hint-firewall"],
+      ];
+    case "fileAccessDenied":
+      return [["li", "neterror-access-denied"]];
+    case "fileNotFound":
+      return [
+        ["li", "neterror-file-not-found-filename"],
+        ["li", "neterror-file-not-found-moved"],
+      ];
+    case "inadequateSecurityError":
+      return [
+        ["p", "neterror-inadequate-security-intro", { hostname: HOST_NAME }],
+        ["p", "neterror-inadequate-security-code"],
+      ];
+    case "mitm": {
+      const failedCertInfo = document.getFailedCertSecurityInfo();
+      const errArgs = {
+        hostname: HOST_NAME,
+        mitm: getMitmName(failedCertInfo),
+      };
+      return [["span", "certerror-mitm", errArgs]];
     }
+    case "netOffline":
+      return [["li", "neterror-net-offline"]];
+    case "networkProtocolError":
+      return [
+        ["p", "neterror-network-protocol-error-intro"],
+        ["li", "neterror-network-protocol-error-contact-website"],
+      ];
+    case "notCached":
+      return [
+        ["p", "neterror-not-cached-intro"],
+        ["li", "neterror-not-cached-sensitive"],
+        ["li", "neterror-not-cached-try-again"],
+      ];
+    case "nssFailure2":
+      return [
+        ["li", "neterror-nss-failure-not-verified"],
+        ["li", "neterror-nss-failure-contact-website"],
+      ];
+    case "proxyConnectFailure":
+      return [
+        ["li", "neterror-proxy-connect-failure-settings"],
+        ["li", "neterror-proxy-connect-failure-contact-admin"],
+      ];
+    case "proxyResolveFailure":
+      return [
+        ["li", "neterror-proxy-resolve-failure-settings"],
+        ["li", "neterror-proxy-resolve-failure-connection"],
+        ["li", "neterror-proxy-resolve-failure-firewall"],
+      ];
+    case "redirectLoop":
+      return [["li", "neterror-redirect-loop"]];
+    case "sslv3Used":
+      return [["span", "neterror-sslv3-used"]];
+    case "unknownProtocolFound":
+      return [["li", "neterror-unknown-protocol"]];
+    case "unknownSocketType":
+      return [
+        ["li", "neterror-unknown-socket-type-psm-installed"],
+        ["li", "neterror-unknown-socket-type-server-config"],
+      ];
+    case "unsafeContentType":
+      return [["li", "neterror-unsafe-content-type"]];
+
+    default:
+      return [["p", "neterror-generic-error"]];
   }
 }
 
@@ -423,21 +537,25 @@ function setupBlockingReportingUI() {
   checkbox.checked = !!reportingAutomatic;
 
   checkbox.addEventListener("change", function({ target: { checked } }) {
-    onSetBlockingReportAutomatic(checked);
+    RPMSetBoolPref("security.xfocsp.errorReporting.automatic", checked);
+
+    // If we're enabling reports, send a report for this failure.
+    if (checked) {
+      reportBlockingError();
+    }
   });
 
   let reportingEnabled = RPMGetBoolPref(
     "security.xfocsp.errorReporting.enabled"
   );
 
-  if (!reportingEnabled) {
-    return;
-  }
+  if (reportingEnabled) {
+    // Display blocking error reporting UI for XFO error and CSP error.
+    document.getElementById("blockingErrorReporting").hidden = false;
 
-  showBlockingErrorReporting();
-
-  if (reportingAutomatic) {
-    reportBlockingError();
+    if (reportingAutomatic) {
+      reportBlockingError();
+    }
   }
 }
 
@@ -486,21 +604,12 @@ function reportBlockingError() {
   });
 }
 
-function onSetBlockingReportAutomatic(checked) {
-  RPMSetBoolPref("security.xfocsp.errorReporting.automatic", checked);
-
-  // If we're enabling reports, send a report for this failure.
-  if (checked) {
-    reportBlockingError();
-  }
-}
-
 async function setNetErrorMessageFromCode() {
-  let hostString = HOST_NAME;
+  let hostname = HOST_NAME;
 
   let port = document.location.port;
   if (port && port != 443) {
-    hostString += ":" + port;
+    hostname += ":" + port;
   }
 
   let securityInfo;
@@ -511,36 +620,36 @@ async function setNetErrorMessageFromCode() {
     return;
   }
 
-  let desc = document.getElementById("errorShortDescText");
-  let errorCodeStr = securityInfo.errorCodeString || "";
-  let errorCodeStrId = errorCodeStr
+  const errorCodeStr = securityInfo.errorCodeString || "";
+  const errorCodeStrId = errorCodeStr
     .split("_")
     .join("-")
     .toLowerCase();
-  let errorCodeMsg = "";
 
+  let errorMessage = "";
   if (KNOWN_ERROR_MESSAGE_IDS.has(errorCodeStrId)) {
-    [errorCodeMsg] = await document.l10n.formatValues([errorCodeStrId]);
+    errorMessage = await document.l10n.formatValue(errorCodeStrId);
   }
 
-  if (!errorCodeMsg) {
-    console.warn("This error page has no error code in its security info");
-    document.l10n.setAttributes(desc, "ssl-connection-error", {
-      errorMessage: errorCodeStr,
-      hostname: hostString,
+  const shortDesc = document.getElementById("errorShortDescText");
+
+  if (errorMessage) {
+    document.l10n.setAttributes(shortDesc, "ssl-connection-error", {
+      errorMessage,
+      hostname,
     });
-    return;
+
+    const shortDesc2 = document.getElementById("errorShortDescText2");
+    document.l10n.setAttributes(shortDesc2, "cert-error-code-prefix", {
+      error: errorCodeStr,
+    });
+  } else {
+    console.warn("This error page has no error code in its security info");
+    document.l10n.setAttributes(shortDesc, "ssl-connection-error", {
+      errorMessage: errorCodeStr,
+      hostname,
+    });
   }
-
-  document.l10n.setAttributes(desc, "ssl-connection-error", {
-    errorMessage: errorCodeMsg,
-    hostname: hostString,
-  });
-
-  let desc2 = document.getElementById("errorShortDescText2");
-  document.l10n.setAttributes(desc2, "cert-error-code-prefix", {
-    error: errorCodeStr,
-  });
 }
 
 function initPageCaptivePortal() {
@@ -553,6 +662,7 @@ function initPageCaptivePortal() {
 
   setFocus("#openPortalLoginPageButton");
   setupAdvancedButton();
+  disallowCertOverridesIfNeeded();
 
   // When the portal is freed, an event is sent by the parent process
   // that we can pick up and attempt to reload the original page.
@@ -563,15 +673,12 @@ function initPageCaptivePortal() {
 
 function initPageCertError() {
   document.body.classList.add("certerror");
-  for (let host of document.querySelectorAll(".hostname")) {
-    host.textContent = HOST_NAME;
-  }
 
   setFocus("#returnButton");
   setupAdvancedButton();
-  document.getElementById("learnMoreContainer").style.display = "block";
+  disallowCertOverridesIfNeeded();
 
-  let hideAddExceptionButton = RPMGetBoolPref(
+  const hideAddExceptionButton = RPMGetBoolPref(
     "security.certerror.hideAddException",
     false
   );
@@ -579,22 +686,22 @@ function initPageCertError() {
     document.querySelector(".exceptionDialogButtonContainer").hidden = true;
   }
 
-  let els = document.querySelectorAll("[data-telemetry-id]");
+  const els = document.querySelectorAll("[data-telemetry-id]");
   for (let el of els) {
     el.addEventListener("click", recordClickTelemetry);
   }
 
-  let failedCertInfo = document.getFailedCertSecurityInfo();
+  const failedCertInfo = document.getFailedCertSecurityInfo();
   // Truncate the error code to avoid going over the allowed
   // string size limit for telemetry events.
-  let errorCode = failedCertInfo.errorCodeString.substring(0, 40);
+  const errorCode = failedCertInfo.errorCodeString.substring(0, 40);
   RPMRecordTelemetryEvent(
     "security.ui.certerror",
     "load",
     "aboutcerterror",
     errorCode,
     {
-      has_sts: (getCSSClass() == "badStsCert").toString(),
+      has_sts: gHasSts.toString(),
       is_frame: (window.parent != window).toString(),
     }
   );
@@ -615,7 +722,7 @@ function recordClickTelemetry(e) {
     telemetryId,
     errorCode,
     {
-      has_sts: (getCSSClass() == "badStsCert").toString(),
+      has_sts: gHasSts.toString(),
       is_frame: (window.parent != window).toString(),
     }
   );
@@ -701,12 +808,12 @@ async function getFailedCertificatesAsPEMString() {
   return details;
 }
 
-function setCertErrorDetails(event) {
+function setCertErrorDetails() {
   // Check if the connection is being man-in-the-middled. When the parent
   // detects an intercepted connection, the page may be reloaded with a new
   // error code (MOZILLA_PKIX_ERROR_MITM_DETECTED).
-  let failedCertInfo = document.getFailedCertSecurityInfo();
-  let mitmPrimingEnabled = RPMGetBoolPref(
+  const failedCertInfo = document.getFailedCertSecurityInfo();
+  const mitmPrimingEnabled = RPMGetBoolPref(
     "security.certerrors.mitm.priming.enabled"
   );
   if (
@@ -718,51 +825,39 @@ function setCertErrorDetails(event) {
     RPMSendAsyncMessage("Browser:PrimeMitm");
   }
 
-  let learnMoreLink = document.getElementById("learnMoreLink");
-  let baseURL = RPMGetFormatURLPref("app.support.baseURL");
-  learnMoreLink.setAttribute("href", baseURL + "connection-not-secure");
-  let errWhatToDo = document.getElementById(
-    "es_nssBadCert_" + failedCertInfo.errorCodeString
-  );
-  let es = document.getElementById("errorWhatToDoText");
-  let errWhatToDoTitle = document.getElementById("edd_nssBadCert");
-  let est = document.getElementById("errorWhatToDoTitleText");
-  let error = gErrorCode;
-
-  if (error == "sslv3Used") {
-    learnMoreLink.setAttribute("href", baseURL + "sslv3-error-messages");
-  }
-
-  if (error == "nssFailure2") {
-    let shortDesc = document.getElementById("errorShortDescText").textContent;
-    // nssFailure2 also gets us other non-overrideable errors. Choose
-    // a "learn more" link based on description:
-    if (shortDesc.includes("MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE")) {
-      learnMoreLink.setAttribute(
-        "href",
-        baseURL + "certificate-pinning-reports"
-      );
-    }
-  }
-
-  // This is set to true later if the user's system clock is at fault for this error.
-  let clockSkew = false;
   document.body.setAttribute("code", failedCertInfo.errorCodeString);
 
-  let titleElement = document.querySelector(".title-text");
-  let desc;
+  document.getElementById("learnMoreContainer").style.display = "block";
+  const learnMoreLink = document.getElementById("learnMoreLink");
+  const baseURL = RPMGetFormatURLPref("app.support.baseURL");
+  learnMoreLink.href = baseURL + "connection-not-secure";
+
+  const bodyTitle = document.querySelector(".title-text");
+  const shortDesc = document.getElementById("errorShortDescText");
+  const shortDesc2 = document.getElementById("errorShortDescText2");
+  const whatToDo = document.getElementById("errorWhatToDoText");
+  const whatToDoTitle = document.getElementById("errorWhatToDoTitleText");
+
+  let whatToDoParts = null;
+
   switch (failedCertInfo.errorCodeString) {
     case "SSL_ERROR_BAD_CERT_DOMAIN":
-    case "SEC_ERROR_OCSP_INVALID_SIGNING_CERT":
+      whatToDoParts = [
+        ["p", "certerror-bad-cert-domain-what-can-you-do-about-it"],
+      ];
+      break;
+
+    case "SEC_ERROR_OCSP_INVALID_SIGNING_CERT": // FIXME - this would have thrown?
+      break;
+
     case "SEC_ERROR_UNKNOWN_ISSUER":
-      if (es) {
-        // eslint-disable-next-line no-unsanitized/property
-        es.innerHTML = errWhatToDo.innerHTML;
-      }
-      if (est) {
-        // eslint-disable-next-line no-unsanitized/property
-        est.innerHTML = errWhatToDoTitle.innerHTML;
-      }
+      whatToDoParts = [
+        ["p", "certerror-unknown-issuer-what-can-you-do-about-it-website"],
+        [
+          "p",
+          "certerror-unknown-issuer-what-can-you-do-about-it-contact-admin",
+        ],
+      ];
       break;
 
     // This error code currently only exists for the Symantec distrust
@@ -770,17 +865,15 @@ function setCertErrorDetails(event) {
     // In case of future distrusts of that scale we might need to add
     // additional parameters that allow us to identify the affected party
     // without replicating the complex logic from certverifier code.
-    case "MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED":
-      desc = document.getElementById("errorShortDescText2");
+    case "MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED": {
       document.l10n.setAttributes(
-        desc,
+        shortDesc2,
         "cert-error-symantec-distrust-description",
-        {
-          hostname: HOST_NAME,
-        }
+        { hostname: HOST_NAME }
       );
 
-      let adminDesc = document.createElement("p");
+      // FIXME - this does nothing
+      const adminDesc = document.createElement("p");
       document.l10n.setAttributes(
         adminDesc,
         "cert-error-symantec-distrust-admin"
@@ -788,9 +881,10 @@ function setCertErrorDetails(event) {
 
       learnMoreLink.href = baseURL + "symantec-warning";
       break;
+    }
 
-    case "MOZILLA_PKIX_ERROR_MITM_DETECTED":
-      let autoEnabledEnterpriseRoots = RPMGetBoolPref(
+    case "MOZILLA_PKIX_ERROR_MITM_DETECTED": {
+      const autoEnabledEnterpriseRoots = RPMGetBoolPref(
         "security.enterprise_roots.auto-enabled",
         false
       );
@@ -798,28 +892,25 @@ function setCertErrorDetails(event) {
         RPMSendAsyncMessage("Browser:ResetEnterpriseRootsPref");
       }
 
-      // We don't actually know what the MitM is called (since we don't
-      // maintain a list), so we'll try and display the common name of the
-      // root issuer to the user. In the worst case they are as clueless as
-      // before, in the best case this gives them an actionable hint.
-      // This may be revised in the future.
-      let names = document.querySelectorAll(".mitm-name");
-      for (let span of names) {
-        span.textContent = failedCertInfo.issuerCommonName;
-      }
-
       learnMoreLink.href = baseURL + "security-error";
 
-      document.l10n.setAttributes(titleElement, "certerror-mitm-title");
-      desc = document.getElementById("ed_mitm");
-      // eslint-disable-next-line no-unsanitized/property
-      document.getElementById("errorShortDescText").innerHTML = desc.innerHTML;
+      document.l10n.setAttributes(bodyTitle, "certerror-mitm-title");
 
-      // eslint-disable-next-line no-unsanitized/property
-      es.innerHTML = errWhatToDo.innerHTML;
-      // eslint-disable-next-line no-unsanitized/property
-      est.innerHTML = errWhatToDoTitle.innerHTML;
+      document.l10n.setAttributes(shortDesc, "certerror-mitm", {
+        hostname: HOST_NAME,
+        mitm: getMitmName(failedCertInfo),
+      });
+
+      const id3 = gHasSts
+        ? "certerror-mitm-what-can-you-do-about-it-attack-sts"
+        : "certerror-mitm-what-can-you-do-about-it-attack";
+      whatToDoParts = [
+        ["li", "certerror-mitm-what-can-you-do-about-it-antivirus"],
+        ["li", "certerror-mitm-what-can-you-do-about-it-corporate"],
+        ["li", id3, { mitm: getMitmName(failedCertInfo) }],
+      ];
       break;
+    }
 
     case "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT":
       learnMoreLink.href = baseURL + "security-error";
@@ -831,20 +922,27 @@ function setCertErrorDetails(event) {
     case "SEC_ERROR_EXPIRED_CERTIFICATE":
     case "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE":
     case "MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE":
-    case "MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE":
+    case "MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE": {
       learnMoreLink.href = baseURL + "time-errors";
+
       // We check against the remote-settings server time first if available, because that allows us
       // to give the user an approximation of what the correct time is.
-      let difference = RPMGetIntPref("services.settings.clock_skew_seconds", 0);
-      let lastFetched =
+      const difference = RPMGetIntPref(
+        "services.settings.clock_skew_seconds",
+        0
+      );
+      const lastFetched =
         RPMGetIntPref("services.settings.last_update_seconds", 0) * 1000;
 
-      let now = Date.now();
-      let certRange = {
+      // This is set to true later if the user's system clock is at fault for this error.
+      let clockSkew = false;
+
+      const now = Date.now();
+      const certRange = {
         notBefore: failedCertInfo.certValidityRangeNotBefore,
         notAfter: failedCertInfo.certValidityRangeNotAfter,
       };
-      let approximateDate = now - difference * 1000;
+      const approximateDate = now - difference * 1000;
       // If the difference is more than a day, we last fetched the date in the last 5 days,
       // and adjusting the date per the interval would make the cert valid, warn the user:
       if (
@@ -857,91 +955,76 @@ function setCertErrorDetails(event) {
         // If there is no clock skew with Kinto servers, check against the build date.
         // (The Kinto ping could have happened when the time was still right, or not at all)
       } else {
-        let appBuildID = RPMGetAppBuildID();
-        let year = parseInt(appBuildID.substr(0, 4), 10);
-        let month = parseInt(appBuildID.substr(4, 2), 10) - 1;
-        let day = parseInt(appBuildID.substr(6, 2), 10);
+        const appBuildID = RPMGetAppBuildID();
+        const year = parseInt(appBuildID.substr(0, 4), 10);
+        const month = parseInt(appBuildID.substr(4, 2), 10) - 1;
+        const day = parseInt(appBuildID.substr(6, 2), 10);
 
-        let buildDate = new Date(year, month, day);
-        let systemDate = new Date();
+        const buildDate = new Date(year, month, day);
 
         // We don't check the notBefore of the cert with the build date,
         // as it is of course almost certain that it is now later than the build date,
         // so we shouldn't exclude the possibility that the cert has become valid
         // since the build date.
-        if (
-          buildDate > systemDate &&
-          new Date(certRange.notAfter) > buildDate
-        ) {
+        if (buildDate > now && new Date(certRange.notAfter) > buildDate) {
           clockSkew = true;
         }
       }
 
-      let systemDate = formatter.format(new Date());
-      document.getElementById(
-        "wrongSystemTime_systemDate1"
-      ).textContent = systemDate;
       if (clockSkew) {
         document.body.classList.add("clockSkewError");
-        document.l10n.setAttributes(titleElement, "clockSkewError-title");
-        let clockErrDesc = document.getElementById("ed_clockSkewError");
-        desc = document.getElementById("errorShortDescText");
-        document.getElementById("errorShortDesc").style.display = "block";
-        if (desc) {
-          // eslint-disable-next-line no-unsanitized/property
-          desc.innerHTML = clockErrDesc.innerHTML;
-        }
-      } else {
-        let targetElems = document.querySelectorAll(
-          "#wrongSystemTime_systemDate2"
-        );
-        for (let elem of targetElems) {
-          elem.textContent = systemDate;
-        }
+        document.l10n.setAttributes(bodyTitle, "clockSkewError-title");
+        document.l10n.setAttributes(shortDesc, "neterror-clock-skew-error", {
+          hostname: HOST_NAME,
+          now,
+        });
+        break;
+      }
 
-        let errDesc = document.getElementById(
-          "ed_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE"
-        );
-        let sd = document.getElementById("errorShortDescText");
-        // eslint-disable-next-line no-unsanitized/property
-        sd.innerHTML = errDesc.innerHTML;
+      document.l10n.setAttributes(shortDesc, "certerror-expired-cert-intro", {
+        hostname: HOST_NAME,
+      });
 
-        let span = sd.querySelector(".hostname");
-        span.textContent = HOST_NAME;
-
-        // The secondary description mentions expired certificates explicitly
-        // and should only be shown if the certificate has actually expired
-        // instead of being not yet valid.
-        if (failedCertInfo.errorCodeString == "SEC_ERROR_EXPIRED_CERTIFICATE") {
-          let cssClass = getCSSClass();
-          let stsSuffix = cssClass == "badStsCert" ? "_sts" : "";
-          let errDesc2 = document.getElementById(
-            `ed2_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE${stsSuffix}`
-          );
-          let sd2 = document.getElementById("errorShortDescText2");
-          // eslint-disable-next-line no-unsanitized/property
-          sd2.innerHTML = errDesc2.innerHTML;
-          if (
-            Math.abs(difference) <= 60 * 60 * 24 &&
-            now - lastFetched <= 60 * 60 * 24 * 5 * 1000
-          ) {
-            errWhatToDo = document.getElementById(
-              "es_nssBadCert_SSL_ERROR_BAD_CERT_DOMAIN"
-            );
-          }
-        }
-
-        if (es) {
-          // eslint-disable-next-line no-unsanitized/property
-          es.innerHTML = errWhatToDo.innerHTML;
-        }
-        if (est) {
-          // eslint-disable-next-line no-unsanitized/property
-          est.textContent = errWhatToDoTitle.textContent;
-          est.style.fontWeight = "bold";
+      // The secondary description mentions expired certificates explicitly
+      // and should only be shown if the certificate has actually expired
+      // instead of being not yet valid.
+      if (failedCertInfo.errorCodeString == "SEC_ERROR_EXPIRED_CERTIFICATE") {
+        const sd2Id = gHasSts
+          ? "certerror-expired-cert-sts-second-para"
+          : "certerror-expired-cert-second-para";
+        document.l10n.setAttributes(shortDesc2, sd2Id);
+        if (
+          Math.abs(difference) <= 60 * 60 * 24 &&
+          now - lastFetched <= 60 * 60 * 24 * 5 * 1000
+        ) {
+          whatToDoParts = [
+            ["p", "certerror-bad-cert-domain-what-can-you-do-about-it"],
+          ];
         }
       }
+
+      whatToDoTitle.className = "bold";
+      whatToDoParts ??= [
+        [
+          "p",
+          "certerror-expired-cert-what-can-you-do-about-it-clock",
+          { hostname: HOST_NAME, now },
+        ],
+        [
+          "p",
+          "certerror-expired-cert-what-can-you-do-about-it-contact-website",
+        ],
+      ];
       break;
+    }
+  }
+
+  if (whatToDoParts) {
+    document.l10n.setAttributes(
+      whatToDoTitle,
+      "certerror-what-can-you-do-about-it-title"
+    );
+    setNetErrorMessageFromParts(whatToDo, whatToDoParts);
   }
 }
 

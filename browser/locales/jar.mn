@@ -38,7 +38,6 @@
     locale/browser/syncSetup.properties         (%chrome/browser/syncSetup.properties)
 % locale browser-region @AB_CD@ %locale/browser-region/
 # the following files are browser-specific overrides
-    locale/browser/netError.dtd                (%chrome/overrides/netError.dtd)
     locale/browser/appstrings.properties       (%chrome/overrides/appstrings.properties)
 
 #ifdef XPI_NAME
