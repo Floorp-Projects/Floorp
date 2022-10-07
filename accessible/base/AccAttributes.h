@@ -264,6 +264,10 @@ class AccAttributes {
   Iterator begin() { return Iterator(mData.begin()); }
   Iterator end() { return Iterator(mData.end()); }
 
+#ifdef A11Y_LOG
+  static void DebugPrint(const char* aPrefix, AccAttributes& aAttributes);
+#endif
+
  private:
   static void StringFromValueAndName(nsAtom* aAttrName,
                                      const AttrValueType& aValue,

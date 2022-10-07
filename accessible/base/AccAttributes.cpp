@@ -181,3 +181,26 @@ void AccAttributes::CopyTo(AccAttributes* aDest) const {
         });
   }
 }
+
+#ifdef A11Y_LOG
+void AccAttributes::DebugPrint(const char* aPrefix,
+                               AccAttributes& aAttributes) {
+  nsAutoString prettyString;
+  prettyString.AssignLiteral("{\n");
+  for (auto iter : aAttributes) {
+    nsAutoString name;
+    iter.NameAsString(name);
+
+    nsAutoString value;
+    iter.ValueAsString(value);
+    prettyString.AppendLiteral("  ");
+    prettyString.Append(name);
+    prettyString.AppendLiteral(": ");
+    prettyString.Append(value);
+    prettyString.AppendLiteral("\n");
+  }
+
+  prettyString.AppendLiteral("}");
+  printf("%s %s\n", aPrefix, NS_ConvertUTF16toUTF8(prettyString).get());
+}
+#endif
