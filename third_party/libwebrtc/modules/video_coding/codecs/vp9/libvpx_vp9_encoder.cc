@@ -630,6 +630,10 @@ int LibvpxVp9Encoder::InitEncode(const VideoCodec* inst,
       config_->g_profile = 2;
       config_->g_input_bit_depth = 10;
       break;
+    case VP9Profile::kProfile3:
+      // Encoding of profile 3 is not implemented.
+      RTC_DCHECK_NOTREACHED();
+      break;
   }
 
   // Creating a wrapper to the image - setting image data to nullptr. Actual
@@ -1202,6 +1206,10 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
       raw_->stride[VPX_PLANE_Y] = i010_buffer->StrideY() * 2;
       raw_->stride[VPX_PLANE_U] = i010_buffer->StrideU() * 2;
       raw_->stride[VPX_PLANE_V] = i010_buffer->StrideV() * 2;
+      break;
+    }
+    case VP9Profile::kProfile3: {
+      RTC_DCHECK_NOTREACHED();
       break;
     }
   }
