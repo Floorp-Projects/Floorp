@@ -207,6 +207,7 @@ class AudioProcessingImpl : public AudioProcessing {
                 bool noise_suppressor_enabled,
                 bool adaptive_gain_controller_enabled,
                 bool gain_controller2_enabled,
+                bool voice_activity_detector_enabled,
                 bool gain_adjustment_enabled,
                 bool echo_controller_enabled,
                 bool transient_suppressor_enabled);
@@ -228,6 +229,7 @@ class AudioProcessingImpl : public AudioProcessing {
     bool mobile_echo_controller_enabled_ = false;
     bool noise_suppressor_enabled_ = false;
     bool adaptive_gain_controller_enabled_ = false;
+    bool voice_activity_detector_enabled_ = false;
     bool gain_controller2_enabled_ = false;
     bool gain_adjustment_enabled_ = false;
     bool echo_controller_enabled_ = false;
@@ -272,6 +274,11 @@ class AudioProcessingImpl : public AudioProcessing {
   // Initializes the `GainController2` sub-module. If the sub-module is enabled
   // and `config_has_changed` is true, recreates the sub-module.
   void InitializeGainController2(bool config_has_changed)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
+  // Initializes the `VoiceActivityDetectorWrapper` sub-module. If the
+  // sub-module is enabled and `config_has_changed` is true, recreates the
+  // sub-module.
+  void InitializeVoiceActivityDetector(bool config_has_changed)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializeNoiseSuppressor() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializeCaptureLevelsAdjuster()
@@ -393,6 +400,7 @@ class AudioProcessingImpl : public AudioProcessing {
     std::unique_ptr<AgcManagerDirect> agc_manager;
     std::unique_ptr<GainControlImpl> gain_control;
     std::unique_ptr<GainController2> gain_controller2;
+    std::unique_ptr<VoiceActivityDetectorWrapper> voice_activity_detector;
     std::unique_ptr<HighPassFilter> high_pass_filter;
     std::unique_ptr<EchoControl> echo_controller;
     std::unique_ptr<EchoControlMobileImpl> echo_control_mobile;

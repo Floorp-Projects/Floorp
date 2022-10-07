@@ -69,7 +69,8 @@ int GainController2::instance_count_ = 0;
 
 GainController2::GainController2(const Agc2Config& config,
                                  int sample_rate_hz,
-                                 int num_channels)
+                                 int num_channels,
+                                 bool use_internal_vad)
     : cpu_features_(GetAllowedCpuFeatures()),
       data_dumper_(rtc::AtomicOps::Increment(&instance_count_)),
       fixed_gain_applier_(
@@ -86,7 +87,7 @@ GainController2::GainController2(const Agc2Config& config,
   RTC_DCHECK(Validate(config));
   data_dumper_.InitiateNewSetOfRecordings();
   const bool use_vad = config.adaptive_digital.enabled;
-  if (use_vad) {
+  if (use_vad && use_internal_vad) {
     // TODO(bugs.webrtc.org/7494): Move `vad_reset_period_ms` from adaptive
     // digital to gain controller 2 config.
     vad_ = std::make_unique<VoiceActivityDetectorWrapper>(
@@ -125,13 +126,18 @@ void GainController2::SetFixedGainDb(float gain_db) {
   fixed_gain_applier_.SetGainFactor(gain_factor);
 }
 
-void GainController2::Process(AudioBuffer* audio) {
+void GainController2::Process(absl::optional<float> speech_probability,
+                              AudioBuffer* audio) {
   data_dumper_.DumpRaw("agc2_notified_analog_level", analog_level_);
   AudioFrameView<float> float_frame(audio->channels(), audio->num_channels(),
                                     audio->num_frames());
-  absl::optional<float> speech_probability;
   if (vad_) {
     speech_probability = vad_->Analyze(float_frame);
+  } else if (speech_probability.has_value()) {
+    RTC_DCHECK_GE(speech_probability.value(), 0.0f);
+    RTC_DCHECK_LE(speech_probability.value(), 1.0f);
+  }
+  if (speech_probability.has_value()) {
     data_dumper_.DumpRaw("agc2_speech_probability", speech_probability.value());
   }
   fixed_gain_applier_.ApplyGain(float_frame);
