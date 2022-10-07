@@ -294,6 +294,9 @@ BROWSER_PROCESS += [
 
     # AVerMedia's virtual camera module causes crashes (bug 1692908)
     DllBlocklistEntry("avmvirtualsource.ax", (1, 0, 0, 3)),
+
+    # Avast (bug 1794064)
+    DllBlocklistEntry("aswJsFlt.dll", (18, 0, 1473, 0)),
 ]
 
 CHILD_PROCESSES += [
