@@ -254,5 +254,4 @@ add_task(async function test_sync_disconnected_error() {
     await BrowserTestUtils.removeTab(preferencesTab);
   });
   await tearDown(sandbox);
-}).skip(); // Bug XXX: either de-support the case where we handle fxa signed-in + sync not enabled,
-// or find a different way to signal ready-to-sync tab other as implemented in Bug   1789885
+});
