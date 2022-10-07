@@ -215,6 +215,7 @@ struct nsTextFrame::DrawTextRunParams {
   nscolor textColor = NS_RGBA(0, 0, 0, 0);
   nscolor textStrokeColor = NS_RGBA(0, 0, 0, 0);
   nsAtom* fontPalette = nullptr;
+  gfx::FontPaletteValueSet* paletteValueSet = nullptr;
   float textStrokeWidth = 0.0f;
   bool drawSoftHyphen = false;
   explicit DrawTextRunParams(gfxContext* aContext) : context(aContext) {}
@@ -6347,12 +6348,14 @@ void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
   params.textStyle = &textPaintStyle;
   params.textColor =
       aParams.context == shadowContext ? shadowColor : NS_RGB(0, 0, 0);
-  params.fontPalette = nsGkAtoms::normal;  // XXX fixme
   params.clipEdges = aParams.clipEdges;
   params.drawSoftHyphen = HasAnyStateBits(TEXT_HYPHEN_BREAK);
   // Multi-color shadow is not allowed, so we use the same color of the text
   // color.
   params.decorationOverrideColor = &params.textColor;
+  params.fontPalette = StyleFont()->GetFontPaletteAtom();
+  params.paletteValueSet = PresContext()->GetFontPaletteValueSet();
+
   DrawText(aParams.range, aParams.textBaselinePt + shadowGfxOffset, params);
 
   contextBoxBlur.DoPaint();
@@ -6481,6 +6484,7 @@ bool nsTextFrame::PaintTextWithSelectionColors(
   params.callbacks = aParams.callbacks;
   params.glyphRange = aParams.glyphRange;
   params.fontPalette = StyleFont()->GetFontPaletteAtom();
+  params.paletteValueSet = PresContext()->GetFontPaletteValueSet();
 
   PaintShadowParams shadowParams(aParams);
   shadowParams.provider = aParams.provider;
@@ -7052,6 +7056,7 @@ void nsTextFrame::PaintText(const PaintTextParams& aParams,
   params.callbacks = aParams.callbacks;
   params.glyphRange = range;
   params.fontPalette = StyleFont()->GetFontPaletteAtom();
+  params.paletteValueSet = PresContext()->GetFontPaletteValueSet();
 
   DrawText(range, textBaselinePt, params);
 }
@@ -7066,6 +7071,7 @@ static void DrawTextRun(const gfxTextRun* aTextRun,
   params.advanceWidth = aParams.advanceWidth;
   params.contextPaint = aParams.contextPaint;
   params.fontPalette = aParams.fontPalette;
+  params.paletteValueSet = aParams.paletteValueSet;
   params.callbacks = aParams.callbacks;
   if (aParams.callbacks) {
     aParams.callbacks->NotifyBeforeText(aParams.textColor);
