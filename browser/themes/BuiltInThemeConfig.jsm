@@ -252,7 +252,7 @@ const ColorwayCollections = [
     expiry:
       colorwayClosetEnabled && AppConstants.NIGHTLY_BUILD
         ? "2022-08-03"
-        : "2022-02-08",
+        : "2032-02-08",
     l10nId: "colorway-collection-life-in-color",
   },
   {
@@ -260,7 +260,7 @@ const ColorwayCollections = [
     expiry:
       colorwayClosetEnabled && AppConstants.NIGHTLY_BUILD
         ? "2022-04-20"
-        : "2022-05-03",
+        : "2032-05-03",
     l10nId: "colorway-collection-true-colors",
   },
 ];
