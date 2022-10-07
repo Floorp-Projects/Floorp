@@ -609,6 +609,7 @@ cbindgen-types = [
     { gecko = "StyleFontStyle", servo = "crate::values::computed::font::FontStyle" },
     { gecko = "StyleFontWeight", servo = "crate::values::computed::font::FontWeight" },
     { gecko = "StyleFontStretch", servo = "crate::values::computed::font::FontStretch" },
+    { gecko = "StyleFontPalette", servo = "crate::values::computed::font::FontPalette" },
     { gecko = "StyleBoolInteger", servo = "crate::values::computed::BoolInteger" },
 ]
 

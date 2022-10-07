@@ -208,6 +208,7 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
       mFontSizeFactor(aSrc.mFontSizeFactor),
       mFontSizeOffset(aSrc.mFontSizeOffset),
       mFontSizeKeyword(aSrc.mFontSizeKeyword),
+      mFontPalette(aSrc.mFontPalette),
       mMathDepth(aSrc.mMathDepth),
       mMathVariant(aSrc.mMathVariant),
       mMathStyle(aSrc.mMathStyle),
@@ -228,6 +229,7 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
       mFontSizeFactor(1.0),
       mFontSizeOffset{0},
       mFontSizeKeyword(StyleFontSizeKeyword::Medium),
+      mFontPalette(StyleFontPalette::Normal()),
       mMathDepth(0),
       mMathVariant(StyleMathVariant::None),
       mMathStyle(NS_STYLE_MATH_STYLE_NORMAL),
@@ -272,6 +274,10 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aNewData) const {
 
     case nsFont::MaxDifference::eNone:
       break;
+  }
+
+  if (mFontPalette != aNewData.mFontPalette) {
+    return NS_STYLE_HINT_VISUAL;
   }
 
   // XXX Should any of these cause a non-nsChangeHint_NeutralChange change?
