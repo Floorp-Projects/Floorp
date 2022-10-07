@@ -103,7 +103,6 @@ void ServoStyleRuleMap::RuleRemoved(StyleSheet& aStyleSheet,
     case StyleCssRuleType::Namespace:
     case StyleCssRuleType::CounterStyle:
     case StyleCssRuleType::FontFeatureValues:
-    case StyleCssRuleType::FontPaletteValues:
     case StyleCssRuleType::Viewport:
       break;
   }
@@ -148,7 +147,6 @@ void ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule) {
     case StyleCssRuleType::Namespace:
     case StyleCssRuleType::CounterStyle:
     case StyleCssRuleType::FontFeatureValues:
-    case StyleCssRuleType::FontPaletteValues:
     case StyleCssRuleType::Viewport:
       break;
   }

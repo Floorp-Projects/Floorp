@@ -613,14 +613,12 @@ bool gfxMacFont::ShouldRoundXOffset(cairo_t* aCairo) const {
 }
 
 bool gfxMacFont::UseNativeColrFontSupport() const {
-  /*
-    if (nsCocoaFeatures::OnHighSierraOrLater()) {
-      auto* colr = GetFontEntry()->GetCOLR();
-      if (colr && COLRFonts::GetColrTableVersion(colr) == 0) {
-        return true;
-      }
+  if (nsCocoaFeatures::OnHighSierraOrLater()) {
+    auto* colr = GetFontEntry()->GetCOLR();
+    if (colr && COLRFonts::GetColrTableVersion(colr) == 0) {
+      return true;
     }
-  */
+  }
   return false;
 }
 

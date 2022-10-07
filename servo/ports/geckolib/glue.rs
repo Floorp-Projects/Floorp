@@ -41,14 +41,12 @@ use style::gecko_bindings::bindings::nsAString;
 use style::gecko_bindings::bindings::Gecko_AddPropertyToSet;
 use style::gecko_bindings::bindings::Gecko_AppendPropertyValuePair;
 use style::gecko_bindings::bindings::Gecko_ConstructFontFeatureValueSet;
-use style::gecko_bindings::bindings::Gecko_ConstructFontPaletteValueSet;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateFinalKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateInitialKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateKeyframeAtStart;
 use style::gecko_bindings::bindings::Gecko_HaveSeenPtr;
 use style::gecko_bindings::structs;
 use style::gecko_bindings::structs::gfxFontFeatureValueSet;
-use style::gecko_bindings::structs::gfx::FontPaletteValueSet;
 use style::gecko_bindings::structs::ipc::ByteBuf;
 use style::gecko_bindings::structs::nsAtom;
 use style::gecko_bindings::structs::nsCSSCounterDesc;
@@ -86,7 +84,6 @@ use style::gecko_bindings::structs::{nsINode as RawGeckoNode, Element as RawGeck
 use style::gecko_bindings::structs::{
     RawServoAnimationValue, RawServoAuthorStyles, RawServoContainerRule, RawServoCounterStyleRule,
     RawServoDeclarationBlock, RawServoFontFaceRule, RawServoFontFeatureValuesRule,
-    RawServoFontPaletteValuesRule,
     RawServoImportRule, RawServoKeyframe, RawServoKeyframesRule, RawServoLayerBlockRule,
     RawServoLayerStatementRule, RawServoMediaList, RawServoMediaRule, RawServoMozDocumentRule,
     RawServoNamespaceRule, RawServoPageRule, RawServoSharedMemoryBuilder, RawServoStyleSet,
@@ -122,9 +119,9 @@ use style::stylesheets::layer_rule::LayerOrder;
 use style::stylesheets::supports_rule::parse_condition_or_declaration;
 use style::stylesheets::{
     AllowImportRules, ContainerRule, CounterStyleRule, CssRule, CssRuleType, CssRules,
-    CssRulesHelpers, DocumentRule, FontFaceRule, FontFeatureValuesRule, FontPaletteValuesRule,
-    ImportRule, KeyframesRule, LayerBlockRule, LayerStatementRule, MediaRule, NamespaceRule,
-    Origin, OriginSet, PageRule, SanitizationData, SanitizationKind, StyleRule, StylesheetContents,
+    CssRulesHelpers, DocumentRule, FontFaceRule, FontFeatureValuesRule, ImportRule, KeyframesRule,
+    LayerBlockRule, LayerStatementRule, MediaRule, NamespaceRule, Origin, OriginSet, PageRule,
+    SanitizationData, SanitizationKind, StyleRule, StylesheetContents,
     StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData,
 };
 use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
@@ -2369,13 +2366,6 @@ impl_basic_rule_funcs! { (FontFeatureValues, FontFeatureValuesRule, RawServoFont
     changed: Servo_StyleSet_FontFeatureValuesRuleChanged,
 }
 
-impl_basic_rule_funcs! { (FontPaletteValues, FontPaletteValuesRule, RawServoFontPaletteValuesRule),
-    getter: Servo_CssRules_GetFontPaletteValuesRuleAt,
-    debug: Servo_FontPaletteValuesRule_Debug,
-    to_css: Servo_FontPaletteValuesRule_GetCssText,
-    changed: Servo_StyleSet_FontPaletteValuesRuleChanged,
-}
-
 impl_basic_rule_funcs! { (FontFace, FontFaceRule, RawServoFontFaceRule),
     getter: Servo_CssRules_GetFontFaceRuleAt,
     debug: Servo_FontFaceRule_Debug,
@@ -2969,7 +2959,7 @@ pub extern "C" fn Servo_FontFeatureValuesRule_GetFontFamily(
     result: &mut nsACString,
 ) {
     read_locked_arc(rule, |rule: &FontFeatureValuesRule| {
-        rule.family_names.to_css(&mut CssWriter::new(result))
+        rule.font_family_to_css(&mut CssWriter::new(result))
             .unwrap()
     })
 }
@@ -2981,54 +2971,6 @@ pub extern "C" fn Servo_FontFeatureValuesRule_GetValueText(
 ) {
     read_locked_arc(rule, |rule: &FontFeatureValuesRule| {
         rule.value_to_css(&mut CssWriter::new(result)).unwrap();
-    })
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_FontPaletteValuesRule_GetName(
-    rule: &RawServoFontPaletteValuesRule,
-    result: &mut nsACString,
-) {
-    read_locked_arc(rule, |rule: &FontPaletteValuesRule| {
-        rule.name.to_css(&mut CssWriter::new(result))
-            .unwrap()
-    })
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_FontPaletteValuesRule_GetFontFamily(
-    rule: &RawServoFontPaletteValuesRule,
-    result: &mut nsACString,
-) {
-    read_locked_arc(rule, |rule: &FontPaletteValuesRule| {
-        if !rule.family_names.is_empty() {
-            rule.family_names.to_css(&mut CssWriter::new(result))
-                .unwrap()
-        }
-    })
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_FontPaletteValuesRule_GetBasePalette(
-    rule: &RawServoFontPaletteValuesRule,
-    result: &mut nsACString,
-) {
-    read_locked_arc(rule, |rule: &FontPaletteValuesRule| {
-        rule.base_palette.to_css(&mut CssWriter::new(result))
-            .unwrap()
-    })
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_FontPaletteValuesRule_GetOverrideColors(
-    rule: &RawServoFontPaletteValuesRule,
-    result: &mut nsACString,
-) {
-    read_locked_arc(rule, |rule: &FontPaletteValuesRule| {
-        if !rule.override_colors.is_empty() {
-            rule.override_colors.to_css(&mut CssWriter::new(result))
-                .unwrap()
-        }
     })
 }
 
@@ -6555,37 +6497,6 @@ pub extern "C" fn Servo_StyleSet_BuildFontFeatureValueSet(
     for &(ref src, _) in font_feature_values_iter {
         let rule = src.read_with(&guard);
         rule.set_at_rules(set);
-    }
-    set
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_StyleSet_BuildFontPaletteValueSet(
-    raw_data: &RawServoStyleSet,
-) -> *mut FontPaletteValueSet {
-    let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
-
-    let global_style_data = &*GLOBAL_STYLE_DATA;
-    let guard = global_style_data.shared_lock.read();
-
-    let has_rule = data
-        .stylist
-        .iter_extra_data_origins()
-        .any(|(d, _)| !d.font_palette_values.is_empty());
-
-    if !has_rule {
-        return ptr::null_mut();
-    }
-
-    let font_palette_values_iter = data
-        .stylist
-        .iter_extra_data_origins_rev()
-        .flat_map(|(d, _)| d.font_palette_values.iter());
-
-    let set = unsafe { Gecko_ConstructFontPaletteValueSet() };
-    for &(ref src, _) in font_palette_values_iter {
-        let rule = src.read_with(&guard);
-        rule.to_gecko_palette_value_set(set);
     }
     set
 }

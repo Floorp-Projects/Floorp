@@ -275,6 +275,23 @@ macro_rules! font_feature_values_blocks {
                 rule
             }
 
+            /// Prints font family names.
+            pub fn font_family_to_css<W>(
+                &self,
+                dest: &mut CssWriter<W>,
+            ) -> fmt::Result
+            where
+                W: Write,
+            {
+                let mut iter = self.family_names.iter();
+                iter.next().unwrap().to_css(dest)?;
+                for val in iter {
+                    dest.write_str(", ")?;
+                    val.to_css(dest)?;
+                }
+                Ok(())
+            }
+
             /// Prints inside of `@font-feature-values` block.
             pub fn value_to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
             where
@@ -332,7 +349,7 @@ macro_rules! font_feature_values_blocks {
         impl ToCssWithGuard for FontFeatureValuesRule {
             fn to_css(&self, _guard: &SharedRwLockReadGuard, dest: &mut CssStringWriter) -> fmt::Result {
                 dest.write_str("@font-feature-values ")?;
-                self.family_names.to_css(&mut CssWriter::new(dest))?;
+                self.font_family_to_css(&mut CssWriter::new(dest))?;
                 dest.write_str(" {\n")?;
                 self.value_to_css(&mut CssWriter::new(dest))?;
                 dest.write_str("}")

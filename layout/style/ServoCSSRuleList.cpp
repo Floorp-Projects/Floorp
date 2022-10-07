@@ -11,7 +11,6 @@
 #include "mozilla/dom/CSSCounterStyleRule.h"
 #include "mozilla/dom/CSSFontFaceRule.h"
 #include "mozilla/dom/CSSFontFeatureValuesRule.h"
-#include "mozilla/dom/CSSFontPaletteValuesRule.h"
 #include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/CSSLayerBlockRule.h"
 #include "mozilla/dom/CSSLayerStatementRule.h"
@@ -87,7 +86,6 @@ css::Rule* ServoCSSRuleList::GetRule(uint32_t aIndex) {
       CASE_RULE(Document, MozDocument)
       CASE_RULE(Import, Import)
       CASE_RULE(FontFeatureValues, FontFeatureValues)
-      CASE_RULE(FontPaletteValues, FontPaletteValues)
       CASE_RULE(FontFace, FontFace)
       CASE_RULE(CounterStyle, CounterStyle)
       CASE_RULE(LayerBlock, LayerBlock)
@@ -256,7 +254,6 @@ void ServoCSSRuleList::SetRawContents(RefPtr<ServoCssRules> aNewRules,
       CASE_FOR(Document, MozDocument)
       CASE_FOR(Import, Import)
       CASE_FOR(FontFeatureValues, FontFeatureValues)
-      CASE_FOR(FontPaletteValues, FontPaletteValues)
       CASE_FOR(FontFace, FontFace)
       CASE_FOR(CounterStyle, CounterStyle)
       CASE_FOR(LayerBlock, LayerBlock)

@@ -481,7 +481,6 @@ WEBIDL_FILES = [
     "CSSCounterStyleRule.webidl",
     "CSSFontFaceRule.webidl",
     "CSSFontFeatureValuesRule.webidl",
-    "CSSFontPaletteValuesRule.webidl",
     "CSSGroupingRule.webidl",
     "CSSImportRule.webidl",
     "CSSKeyframeRule.webidl",

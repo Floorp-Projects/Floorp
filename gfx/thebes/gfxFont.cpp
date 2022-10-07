@@ -2035,7 +2035,8 @@ void gfxFont::DrawOneGlyph(uint32_t aGlyphID, const gfx::Point& aPt,
 
     if (fontParams.haveColorGlyphs && !UseNativeColrFontSupport() &&
         RenderColorGlyph(runParams.dt, runParams.context, textDrawer,
-                         fontParams, devPt, aGlyphID)) {
+                         fontParams.scaledFont, fontParams.drawOptions, devPt,
+                         aGlyphID)) {
       return;
     }
 
@@ -2185,17 +2186,6 @@ void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
   fontParams.haveSVGGlyphs = GetFontEntry()->TryGetSVGData(this);
   fontParams.haveColorGlyphs = GetFontEntry()->TryGetColorGlyphs();
   fontParams.contextPaint = aRunParams.runContextPaint;
-
-  if (fontParams.haveColorGlyphs && !UseNativeColrFontSupport()) {
-    DeviceColor ctxColor;
-    fontParams.currentColor = aRunParams.context->GetDeviceColor(ctxColor)
-                                  ? sRGBColor::FromABGR(ctxColor.ToABGR())
-                                  : sRGBColor::OpaqueBlack();
-    gfxFontEntry::AutoHBFace face = GetFontEntry()->GetHBFace();
-    fontParams.palette = COLRFonts::SetupColorPalette(
-        face, aRunParams.paletteValueSet, aRunParams.fontPalette,
-        GetFontEntry()->FamilyName());
-  }
 
   if (textDrawer) {
     fontParams.isVerticalFont = aRunParams.isVerticalRun;
@@ -2478,17 +2468,24 @@ bool gfxFont::RenderSVGGlyph(gfxContext* aContext,
 
 bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
                                layout::TextDrawTarget* aTextDrawer,
-                               const FontDrawParams& aFontParams,
-                               const Point& aPoint, uint32_t aGlyphId) {
+                               ScaledFont* aScaledFont,
+                               DrawOptions aDrawOptions, const Point& aPoint,
+                               uint32_t aGlyphId) {
+  auto currentColor = [=]() {
+    DeviceColor ctxColor;
+    return aContext->GetDeviceColor(ctxColor)
+               ? sRGBColor::FromABGR(ctxColor.ToABGR())
+               : sRGBColor::OpaqueBlack();
+  };
+
   if (const auto* paintGraph =
           COLRFonts::GetGlyphPaintGraph(GetFontEntry()->GetCOLR(), aGlyphId)) {
     const auto* hbShaper = GetHarfBuzzShaper();
     if (hbShaper && hbShaper->IsInitialized()) {
       return COLRFonts::PaintGlyphGraph(
           GetFontEntry()->GetCOLR(), hbShaper->GetHBFont(), paintGraph,
-          aDrawTarget, aTextDrawer, aFontParams.scaledFont,
-          aFontParams.drawOptions, aPoint, aFontParams.currentColor,
-          aFontParams.palette.get(), aGlyphId, mFUnitsConvFactor);
+          aDrawTarget, aTextDrawer, aScaledFont, aDrawOptions, currentColor(),
+          aPoint, aGlyphId, mFUnitsConvFactor);
     }
   }
 
@@ -2497,8 +2494,7 @@ bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
     auto face(GetFontEntry()->GetHBFace());
     bool ok = COLRFonts::PaintGlyphLayers(
         GetFontEntry()->GetCOLR(), face, layers, aDrawTarget, aTextDrawer,
-        aFontParams.scaledFont, aFontParams.drawOptions, aPoint,
-        aFontParams.currentColor, aFontParams.palette.get());
+        aScaledFont, aDrawOptions, currentColor(), aPoint);
     return ok;
   }
 
