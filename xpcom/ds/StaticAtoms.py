@@ -2206,6 +2206,9 @@ STATIC_ATOMS = [
     Atom("monospace", "monospace"),
     Atom("mozfixed", "-moz-fixed"),
     Atom("moz_fixed_pos_containing_block", "-moz-fixed-pos-containing-block"),
+    # Standard font-palette identifiers
+    Atom("light", "light"),
+    Atom("dark", "dark"),
     # IPC stuff
     # Atom("Remote", "remote"),  # "remote" is present above
     Atom("RemoteId", "_remote_id"),
