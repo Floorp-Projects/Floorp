@@ -39,7 +39,7 @@ const syncedTabsData1 = [
     id: 2,
     type: "client",
     name: "My iphone",
-    clientType: "mobile",
+    clientType: "phone",
     lastModified: 1655727832930,
     tabs: [
       {
