@@ -10,7 +10,10 @@
 
 #include "video/video_receive_stream_timeout_tracker.h"
 
+#include <algorithm>
 #include <utility>
+
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 
@@ -30,6 +33,10 @@ VideoReceiveStreamTimeoutTracker::~VideoReceiveStreamTimeoutTracker() {
 
 bool VideoReceiveStreamTimeoutTracker::Running() const {
   return timeout_task_.Running();
+}
+
+TimeDelta VideoReceiveStreamTimeoutTracker::TimeUntilTimeout() const {
+  return std::max(timeout_ - clock_->CurrentTime(), TimeDelta::Zero());
 }
 
 void VideoReceiveStreamTimeoutTracker::Start(bool waiting_for_keyframe) {
@@ -68,6 +75,7 @@ TimeDelta VideoReceiveStreamTimeoutTracker::HandleTimeoutTask() {
   // `timeout_` is hit and we have timed out. Schedule the next timeout at
   // the timeout delay.
   if (now >= timeout_) {
+    RTC_DLOG(LS_VERBOSE) << "Stream timeout at " << now;
     TimeDelta timeout_delay = TimeoutForNextFrame();
     timeout_ = now + timeout_delay;
     timeout_cb_(now - last_frame_);

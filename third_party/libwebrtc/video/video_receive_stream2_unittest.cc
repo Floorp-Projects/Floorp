@@ -1162,6 +1162,59 @@ TEST_P(VideoReceiveStream2Test, PoorConnectionWithFpsChangeDuringLostFrame) {
   video_receive_stream_->Stop();
 }
 
+TEST_P(VideoReceiveStream2Test, StreamShouldNotTimeoutWhileWaitingForFrame) {
+  // Disable smoothing since this makes it hard to test frame timing.
+  config_.enable_prerenderer_smoothing = false;
+  RecreateReceiveStream();
+
+  video_receive_stream_->Start();
+  EXPECT_CALL(mock_transport_, SendRtcp).Times(AnyNumber());
+
+  video_receive_stream_->OnCompleteFrame(
+      test::FakeFrameBuilder()
+          .Id(0)
+          .PayloadType(99)
+          .Time(RtpTimestampForFrame(0))
+          .ReceivedTime(ReceiveTimeForFrame(0))
+          .AsLast()
+          .Build());
+  EXPECT_THAT(fake_renderer_.WaitForFrame(k30FpsDelay, /*advance_time=*/true),
+              RenderedFrameWith(RtpTimestamp(RtpTimestampForFrame(0))));
+
+  for (int id = 1; id < 30; ++id) {
+    video_receive_stream_->OnCompleteFrame(
+        test::FakeFrameBuilder()
+            .Id(id)
+            .PayloadType(99)
+            .Time(RtpTimestampForFrame(id))
+            .ReceivedTime(ReceiveTimeForFrame(id))
+            .Refs({0})
+            .AsLast()
+            .Build());
+    EXPECT_THAT(fake_renderer_.WaitForFrame(k30FpsDelay, /*advance_time=*/true),
+                RenderedFrameWith(RtpTimestamp(RtpTimestampForFrame(id))));
+  }
+
+  // Simulate a pause in the stream, followed by a decodable frame that is ready
+  // long in the future. The stream should not timeout in this case, but rather
+  // decode the frame just before the timeout.
+  time_controller_.AdvanceTime(TimeDelta::Millis(2900));
+  uint32_t late_decode_rtp = kFirstRtpTimestamp + 200 * k30FpsRtpTimestampDelta;
+  video_receive_stream_->OnCompleteFrame(
+      test::FakeFrameBuilder()
+          .Id(121)
+          .PayloadType(99)
+          .Time(late_decode_rtp)
+          .ReceivedTime(clock_->CurrentTime())
+          .AsLast()
+          .Build());
+  EXPECT_THAT(fake_renderer_.WaitForFrame(TimeDelta::Millis(100),
+                                          /*advance_time=*/true),
+              RenderedFrameWith(RtpTimestamp(late_decode_rtp)));
+
+  video_receive_stream_->Stop();
+}
+
 INSTANTIATE_TEST_SUITE_P(VideoReceiveStream2Test,
                          VideoReceiveStream2Test,
                          testing::Bool(),

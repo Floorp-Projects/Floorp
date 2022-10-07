@@ -44,6 +44,7 @@ class VideoReceiveStreamTimeoutTracker {
   void Stop();
   void SetWaitingForKeyframe();
   void OnEncodedFrameReleased();
+  TimeDelta TimeUntilTimeout() const;
 
  private:
   TimeDelta TimeoutForNextFrame() const {
