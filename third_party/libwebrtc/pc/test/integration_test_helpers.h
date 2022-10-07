@@ -410,6 +410,11 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     return pc()->signaling_state() == webrtc::PeerConnectionInterface::kStable;
   }
 
+  bool IceGatheringStateComplete() {
+    return pc()->ice_gathering_state() ==
+           webrtc::PeerConnectionInterface::kIceGatheringComplete;
+  }
+
   void CreateDataChannel() { CreateDataChannel(nullptr); }
 
   void CreateDataChannel(const webrtc::DataChannelInit* init) {
