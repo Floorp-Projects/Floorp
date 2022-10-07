@@ -174,15 +174,14 @@ GeneratedFile(
 )
 
 # JOG provides both the Rust factory for building runtime-registered metrics
-# and pings _and_ the YAML file used at runtime to register those metrics and
-# pings for Artefact Builds.
+# and the YAML file used at runtime to register metrics for Artefact Builds.
 # The factory lives inside the `fog` crate to avoid a circular dependency.
 GeneratedFile(
     "api/src/factory.rs",
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="jog_factory",
     flags=[CONFIG["MOZ_APP_VERSION"]],
-    inputs=deps + pings_yamls + metrics_yamls + tags_yamls,
+    inputs=deps + metrics_yamls + tags_yamls,
 )
 
 # Only generate artefact_metrics.yaml in Artefact Builds since
