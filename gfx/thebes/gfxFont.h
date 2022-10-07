@@ -2263,9 +2263,11 @@ class gfxFont {
 
   bool RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
                         mozilla::layout::TextDrawTarget* aTextDrawer,
-                        mozilla::gfx::ScaledFont* scaledFont,
-                        mozilla::gfx::DrawOptions drawOptions,
+                        const FontDrawParams& aFontParams,
                         const mozilla::gfx::Point& aPoint, uint32_t aGlyphId);
+
+  void SetupColorPalette(FontDrawParams* aFontParams,
+                         const TextRunDrawParams& aRunParams) const;
 
   // Subclasses can override to return true if the platform is able to render
   // COLR-font glyphs directly, instead of us painting the layers explicitly.
@@ -2301,6 +2303,8 @@ struct MOZ_STACK_CLASS TextRunDrawParams {
   gfxPattern* textStrokePattern = nullptr;
   const mozilla::gfx::StrokeOptions* strokeOpts = nullptr;
   const mozilla::gfx::DrawOptions* drawOpts = nullptr;
+  const mozilla::gfx::FontPaletteValueSet* paletteValueSet = nullptr;
+  nsAtom* fontPalette = nullptr;
   DrawMode drawMode = DrawMode::GLYPH_FILL;
   bool isVerticalRun = false;
   bool isRTL = false;
@@ -2316,6 +2320,8 @@ struct MOZ_STACK_CLASS FontDrawParams {
   int32_t extraStrikes;
   mozilla::gfx::DrawOptions drawOptions;
   gfxFloat advanceDirection;
+  mozilla::gfx::sRGBColor currentColor;
+  mozilla::UniquePtr<nsTArray<mozilla::gfx::sRGBColor>> palette;
   bool isVerticalFont;
   bool haveSVGGlyphs;
   bool haveColorGlyphs;
