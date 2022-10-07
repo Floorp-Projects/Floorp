@@ -37,6 +37,7 @@ class VideoFrameTrackingIdInjector : public EncodedImageDataPropagator {
 
   void Start(int) override {}
   void AddParticipantInCall() override {}
+  void RemoveParticipantInCall() override {}
 };
 
 }  // namespace webrtc_pc_e2e

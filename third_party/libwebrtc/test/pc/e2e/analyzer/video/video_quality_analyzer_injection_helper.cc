@@ -167,6 +167,14 @@ void VideoQualityAnalyzerInjectionHelper::RegisterParticipantInCall(
   peers_count_++;
 }
 
+void VideoQualityAnalyzerInjectionHelper::UnregisterParticipantInCall(
+    absl::string_view peer_name) {
+  analyzer_->UnregisterParticipantInCall(peer_name);
+  extractor_->RemoveParticipantInCall();
+  MutexLock lock(&mutex_);
+  peers_count_--;
+}
+
 void VideoQualityAnalyzerInjectionHelper::OnStatsReports(
     absl::string_view pc_label,
     const rtc::scoped_refptr<const RTCStatsReport>& report) {
@@ -242,6 +250,7 @@ VideoQualityAnalyzerInjectionHelper::PopulateSinks(
   absl::optional<std::string> output_dump_file_name =
       config.output_dump_file_name;
   if (output_dump_file_name.has_value() && peers_count_ > 2) {
+    // TODO(titovartem): make this default behavior for any amount of peers.
     rtc::StringBuilder builder(*output_dump_file_name);
     builder << "." << receiver_stream.peer_name;
     output_dump_file_name = builder.str();

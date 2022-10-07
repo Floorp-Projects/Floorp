@@ -76,9 +76,14 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
   void Start(std::string test_case_name,
              rtc::ArrayView<const std::string> peer_names,
              int max_threads_count = 1);
+
   // Registers new call participant to the underlying video quality analyzer.
   // The method should be called before the participant is actually added.
   void RegisterParticipantInCall(absl::string_view peer_name);
+
+  // Will be called after test removed existing participant in the middle of the
+  // call.
+  void UnregisterParticipantInCall(absl::string_view peer_name);
 
   // Forwards `stats_reports` for Peer Connection `pc_label` to
   // `analyzer_`.
