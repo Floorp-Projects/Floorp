@@ -56,9 +56,9 @@ class StreamScheduler {
   };
 
  public:
-  class StreamCallback {
+  class StreamProducer {
    public:
-    virtual ~StreamCallback() = default;
+    virtual ~StreamProducer() = default;
 
     // Produces a fragment of data to send. The current wall time is specified
     // as `now` and should be used to skip chunks with expired limited lifetime.
@@ -99,11 +99,11 @@ class StreamScheduler {
     friend class StreamScheduler;
 
     Stream(StreamScheduler* parent,
-           StreamCallback* callback,
+           StreamProducer* producer,
            StreamID stream_id,
            StreamPriority priority)
         : parent_(*parent),
-          callback_(*callback),
+          producer_(*producer),
           stream_id_(stream_id),
           priority_(priority) {}
 
@@ -117,14 +117,14 @@ class StreamScheduler {
     VirtualTime current_time() const { return current_virtual_time_; }
     VirtualTime next_finish_time() const { return next_finish_time_; }
     size_t bytes_to_send_in_next_message() const {
-      return callback_.bytes_to_send_in_next_message();
+      return producer_.bytes_to_send_in_next_message();
     }
 
     // Returns the next virtual finish time for this stream.
     VirtualTime GetNextFinishTime() const;
 
     StreamScheduler& parent_;
-    StreamCallback& callback_;
+    StreamProducer& producer_;
     const StreamID stream_id_;
     StreamPriority priority_;
     // This outgoing stream's "current" virtual_time.
@@ -132,10 +132,10 @@ class StreamScheduler {
     VirtualTime next_finish_time_ = VirtualTime::Zero();
   };
 
-  std::unique_ptr<Stream> CreateStream(StreamCallback* callback,
+  std::unique_ptr<Stream> CreateStream(StreamProducer* producer,
                                        StreamID stream_id,
                                        StreamPriority priority) {
-    return absl::WrapUnique(new Stream(this, callback, stream_id, priority));
+    return absl::WrapUnique(new Stream(this, producer, stream_id, priority));
   }
 
   // Makes the scheduler stop producing message from the current stream and
@@ -148,10 +148,7 @@ class StreamScheduler {
   // may be returned. If no data can be produced, `absl::nullopt` is returned.
   absl::optional<SendQueue::DataToSend> Produce(TimeMs now, size_t max_size);
 
-  rtc::ArrayView<Stream* const> ActiveStreamsForTesting() const {
-    return rtc::MakeArrayView(&*active_streams_.cbegin(),
-                              active_streams_.size());
-  }
+  std::set<StreamID> ActiveStreamsForTesting() const;
 
  private:
   struct ActiveStreamComparator {

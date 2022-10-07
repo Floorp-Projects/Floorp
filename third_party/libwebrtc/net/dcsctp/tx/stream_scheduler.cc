@@ -114,7 +114,7 @@ StreamScheduler::VirtualTime StreamScheduler::Stream::GetNextFinishTime()
 absl::optional<SendQueue::DataToSend> StreamScheduler::Stream::Produce(
     TimeMs now,
     size_t max_size) {
-  absl::optional<SendQueue::DataToSend> data = callback_.Produce(now, max_size);
+  absl::optional<SendQueue::DataToSend> data = producer_.Produce(now, max_size);
 
   if (data.has_value()) {
     VirtualTime new_current = GetNextFinishTime();
@@ -170,6 +170,14 @@ void StreamScheduler::Stream::MakeInactive() {
   ForceMarkInactive();
   webrtc::EraseIf(parent_.active_streams_,
                   [&](const auto* s) { return s == this; });
+}
+
+std::set<StreamID> StreamScheduler::ActiveStreamsForTesting() const {
+  std::set<StreamID> stream_ids;
+  for (const auto& stream : active_streams_) {
+    stream_ids.insert(stream->stream_id());
+  }
+  return stream_ids;
 }
 
 }  // namespace dcsctp
