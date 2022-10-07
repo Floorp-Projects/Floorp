@@ -105,15 +105,6 @@ MouseCursor* CreateTestCursor(DesktopVector hotspot) {
   return new MouseCursor(image.release(), hotspot);
 }
 
-std::vector<DesktopRect> GetUpdatedRegions(const DesktopFrame& frame) {
-  std::vector<DesktopRect> result;
-  for (webrtc::DesktopRegion::Iterator i(frame.updated_region()); !i.IsAtEnd();
-       i.Advance()) {
-    result.push_back(i.rect());
-  }
-  return result;
-}
-
 class FakeScreenCapturer : public DesktopCapturer {
  public:
   FakeScreenCapturer() {}
@@ -434,32 +425,6 @@ TEST_F(DesktopAndCursorComposerNoCursorMonitorTest,
   expected_region.AddRect(first_cursor_rect);
   expected_region.AddRect(second_cursor_rect);
   EXPECT_TRUE(frame_->updated_region().Equals(expected_region));
-}
-
-TEST_F(DesktopAndCursorComposerNoCursorMonitorTest,
-       UpdatedRegionDoesNotIncludeOldCursorIfOutOfBounds) {
-  blender_.OnMouseCursor(CreateTestCursor(DesktopVector(0, 0)));
-
-  std::unique_ptr<SharedDesktopFrame> first_frame(
-      SharedDesktopFrame::Wrap(CreateTestFrame(1000, 1000)));
-  blender_.OnMouseCursorPosition(DesktopVector(900, 900));
-  fake_screen_->SetNextFrame(first_frame->Share());
-
-  blender_.CaptureFrame();
-
-  // Second frame is smaller than first frame, and the first cursor is outside
-  // of the bounds of the new frame, so it should not be in the updated region.
-  std::unique_ptr<SharedDesktopFrame> second_frame(
-      SharedDesktopFrame::Wrap(CreateTestFrame(500, 500)));
-  auto second_cursor_rect =
-      DesktopRect::MakeXYWH(400, 400, kCursorWidth, kCursorHeight);
-  blender_.OnMouseCursorPosition(DesktopVector(400, 400));
-  fake_screen_->SetNextFrame(second_frame->Share());
-  blender_.CaptureFrame();
-
-  DesktopRegion expected_region;
-  expected_region.AddRect(second_cursor_rect);
-  EXPECT_THAT(GetUpdatedRegions(*frame_), ElementsAre(second_cursor_rect));
 }
 
 TEST_F(DesktopAndCursorComposerNoCursorMonitorTest,
