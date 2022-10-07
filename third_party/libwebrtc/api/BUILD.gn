@@ -136,6 +136,8 @@ rtc_library("media_stream_interface") {
 
 # TODO(bugs.webrtc.org/8733): Switch to rtc_library.
 rtc_library("candidate") {
+  visibility = [ "*" ]
+
   # TODO(bugs.webrtc.org/8733): Uncomment.
   # sources = [
   #   "candidate.cc",
@@ -155,11 +157,14 @@ rtc_library("candidate") {
 }
 
 rtc_source_set("turn_customizer") {
+  visibility = [ "*" ]
   # TODO(bugs.webrtc.org/8733): Uncomment.
   # sources = [ "turn_customizer.h" ]
 }
 
 rtc_source_set("ice_transport_interface") {
+  visibility = [ "*" ]
+
   # TODO(bugs.webrtc.org/8733): Uncomment.
   # sources = [ "ice_transport_interface.h" ]
   deps = [
@@ -174,6 +179,8 @@ rtc_source_set("ice_transport_interface") {
 
 # TODO(bugs.webrtc.org/8733): Switch to rtc_library.
 rtc_source_set("dtls_transport_interface") {
+  visibility = [ "*" ]
+
   # TODO(bugs.webrtc.org/8733): Uncomment.
   # sources = [
   #   "dtls_transport_interface.cc",
