@@ -186,7 +186,7 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
     MutexLock lock(&mutex_);
     stream_to_sender_[stream_index] = peer_index;
     frame_counters_.captured++;
-    for (size_t i = 0; i < peers_->size(); ++i) {
+    for (size_t i : peers_->GetAllIndexes()) {
       if (i != peer_index || options_.enable_receive_own_stream) {
         InternalStatsKey key(stream_index, peer_index, i);
         stream_frame_counters_[key].captured++;
@@ -212,7 +212,7 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
       // If we overflow uint16_t and hit previous frame id and this frame is
       // still in flight, it means that this stream wasn't rendered for long
       // time and we need to process existing frame as dropped.
-      for (size_t i = 0; i < peers_->size(); ++i) {
+      for (size_t i : peers_->GetPresentIndexes()) {
         if (i == peer_index && !options_.enable_receive_own_stream) {
           continue;
         }
@@ -274,17 +274,18 @@ void DefaultVideoQualityAnalyzer::OnFramePreEncode(
       << "DefaultVideoQualityAnalyzer has to be started before use";
 
   auto it = captured_frames_in_flight_.find(frame.id());
-  RTC_DCHECK(it != captured_frames_in_flight_.end())
+  RTC_CHECK(it != captured_frames_in_flight_.end())
       << "Frame id=" << frame.id() << " not found";
+  FrameInFlight& frame_in_flight = it->second;
   frame_counters_.pre_encoded++;
   size_t peer_index = peers_->index(peer_name);
-  for (size_t i = 0; i < peers_->size(); ++i) {
+  for (size_t i : peers_->GetAllIndexes()) {
     if (i != peer_index || options_.enable_receive_own_stream) {
-      InternalStatsKey key(it->second.stream(), peer_index, i);
+      InternalStatsKey key(frame_in_flight.stream(), peer_index, i);
       stream_frame_counters_.at(key).pre_encoded++;
     }
   }
-  it->second.SetPreEncodeTime(Now());
+  frame_in_flight.SetPreEncodeTime(Now());
 }
 
 void DefaultVideoQualityAnalyzer::OnFrameEncoded(
@@ -300,21 +301,23 @@ void DefaultVideoQualityAnalyzer::OnFrameEncoded(
   if (it == captured_frames_in_flight_.end()) {
     RTC_LOG(LS_WARNING)
         << "The encoding of video frame with id [" << frame_id << "] for peer ["
-        << peer_name << "] finished after all receivers rendered this frame. "
-        << "It can be OK for simulcast/SVC if higher quality stream is not "
-        << "required, but it may indicate an ERROR for singlecast or if it "
-        << "happens often.";
+        << peer_name << "] finished after all receivers rendered this frame or "
+        << "were removed. It can be OK for simulcast/SVC if higher quality "
+        << "stream is not required or the last receiver was unregistered "
+        << "between encoding of different layers, but it may indicate an ERROR "
+        << "for singlecast or if it happens often.";
     return;
   }
+  FrameInFlight& frame_in_flight = it->second;
   // For SVC we can receive multiple encoded images for one frame, so to cover
   // all cases we have to pick the last encode time.
-  if (!it->second.HasEncodedTime()) {
+  if (!frame_in_flight.HasEncodedTime()) {
     // Increase counters only when we meet this frame first time.
     frame_counters_.encoded++;
     size_t peer_index = peers_->index(peer_name);
-    for (size_t i = 0; i < peers_->size(); ++i) {
+    for (size_t i : peers_->GetAllIndexes()) {
       if (i != peer_index || options_.enable_receive_own_stream) {
-        InternalStatsKey key(it->second.stream(), peer_index, i);
+        InternalStatsKey key(frame_in_flight.stream(), peer_index, i);
         stream_frame_counters_.at(key).encoded++;
       }
     }
@@ -326,9 +329,9 @@ void DefaultVideoQualityAnalyzer::OnFrameEncoded(
   used_encoder.last_frame_id = frame_id;
   used_encoder.switched_on_at = now;
   used_encoder.switched_from_at = now;
-  it->second.OnFrameEncoded(now, encoded_image._frameType,
-                            DataSize::Bytes(encoded_image.size()),
-                            stats.target_encode_bitrate, used_encoder);
+  frame_in_flight.OnFrameEncoded(now, encoded_image._frameType,
+                                 DataSize::Bytes(encoded_image.size()),
+                                 stats.target_encode_bitrate, used_encoder);
 }
 
 void DefaultVideoQualityAnalyzer::OnFrameDropped(
@@ -558,9 +561,7 @@ void DefaultVideoQualityAnalyzer::RegisterParticipantInCall(
   // as well. Sending stats (from this peer to others) will be added by
   // DefaultVideoQualityAnalyzer::OnFrameCaptured.
   std::vector<std::pair<InternalStatsKey, Timestamp>> stream_started_time;
-  for (auto& key_val : stream_to_sender_) {
-    size_t stream_index = key_val.first;
-    size_t sender_peer_index = key_val.second;
+  for (auto [stream_index, sender_peer_index] : stream_to_sender_) {
     InternalStatsKey key(stream_index, sender_peer_index, new_peer_index);
 
     // To initiate `FrameCounters` for the stream we should pick frame
@@ -568,7 +569,7 @@ void DefaultVideoQualityAnalyzer::RegisterParticipantInCall(
     // and any receiver's peer index and copy from its sender side
     // counters.
     FrameCounters counters;
-    for (size_t i = 0; i < peers_->size(); ++i) {
+    for (size_t i : peers_->GetPresentIndexes()) {
       InternalStatsKey prototype_key(stream_index, sender_peer_index, i);
       auto it = stream_frame_counters_.find(prototype_key);
       if (it != stream_frame_counters_.end()) {
@@ -589,16 +590,54 @@ void DefaultVideoQualityAnalyzer::RegisterParticipantInCall(
                                                start_time_);
   // Ensure, that frames states are handled correctly
   // (e.g. dropped frames tracking).
-  for (auto& key_val : stream_states_) {
-    key_val.second.AddPeer(new_peer_index);
+  for (auto& [stream_index, stream_state] : stream_states_) {
+    stream_state.AddPeer(new_peer_index);
   }
   // Register new peer for every frame in flight.
   // It is guaranteed, that no garbage FrameInFlight objects will stay in
   // memory because of adding new peer. Even if the new peer won't receive the
   // frame, the frame will be removed by OnFrameRendered after next frame comes
   // for the new peer. It is important because FrameInFlight is a large object.
-  for (auto& key_val : captured_frames_in_flight_) {
-    key_val.second.AddExpectedReceiver(new_peer_index);
+  for (auto& [frame_id, frame_in_flight] : captured_frames_in_flight_) {
+    frame_in_flight.AddExpectedReceiver(new_peer_index);
+  }
+}
+
+void DefaultVideoQualityAnalyzer::UnregisterParticipantInCall(
+    absl::string_view peer_name) {
+  MutexLock lock(&mutex_);
+  RTC_CHECK(peers_->HasName(peer_name));
+  absl::optional<size_t> peer_index = peers_->RemoveIfPresent(peer_name);
+  RTC_CHECK(peer_index.has_value());
+
+  for (auto& [stream_index, stream_state] : stream_states_) {
+    if (!options_.enable_receive_own_stream &&
+        peer_index == stream_state.sender()) {
+      continue;
+    }
+    stream_state.RemovePeer(*peer_index);
+  }
+
+  // Remove peer from every frame in flight. If we removed that last expected
+  // receiver for the frame, then we should removed this frame if it was
+  // already encoded. If frame wasn't encoded, it still will be used by sender
+  // side pipeline, so we can't delete it yet.
+  for (auto it = captured_frames_in_flight_.begin();
+       it != captured_frames_in_flight_.end();) {
+    FrameInFlight& frame_in_flight = it->second;
+    frame_in_flight.RemoveExpectedReceiver(*peer_index);
+    // If frame was fully sent and all receivers received it, then erase it.
+    // It may happen that when we remove FrameInFlight only some Simulcast/SVC
+    // layers were encoded and frame has encoded time, but more layers might be
+    // encoded after removal. In such case it's safe to still remove a frame,
+    // because OnFrameEncoded method will correctly handle the case when there
+    // is no FrameInFlight for the received encoded image.
+    if (frame_in_flight.HasEncodedTime() &&
+        frame_in_flight.HaveAllPeersReceived()) {
+      it = captured_frames_in_flight_.erase(it);
+    } else {
+      it++;
+    }
   }
 }
 
@@ -622,28 +661,31 @@ void DefaultVideoQualityAnalyzer::Stop() {
     for (auto& state_entry : stream_states_) {
       const size_t stream_index = state_entry.first;
       StreamState& stream_state = state_entry.second;
-      for (size_t i = 0; i < peers_->size(); ++i) {
-        if (i == stream_state.sender() && !options_.enable_receive_own_stream) {
+      for (size_t peer_index : peers_->GetPresentIndexes()) {
+        if (peer_index == stream_state.sender() &&
+            !options_.enable_receive_own_stream) {
           continue;
         }
 
-        InternalStatsKey stats_key(stream_index, stream_state.sender(), i);
+        InternalStatsKey stats_key(stream_index, stream_state.sender(),
+                                   peer_index);
 
         // If there are no freezes in the call we have to report
         // time_between_freezes_ms as call duration and in such case
         // `stream_last_freeze_end_time` for this stream will be `start_time_`.
         // If there is freeze, then we need add time from last rendered frame
         // to last freeze end as time between freezes.
-        if (stream_state.last_rendered_frame_time(i)) {
+        if (stream_state.last_rendered_frame_time(peer_index)) {
           last_rendered_frame_times.emplace(
-              stats_key, stream_state.last_rendered_frame_time(i).value());
+              stats_key,
+              stream_state.last_rendered_frame_time(peer_index).value());
         }
 
         // Add frames in flight for this stream into frames comparator.
         // Frames in flight were not rendered, so they won't affect stream's
         // last rendered frame time.
-        while (!stream_state.IsEmpty(i)) {
-          uint16_t frame_id = stream_state.PopFront(i);
+        while (!stream_state.IsEmpty(peer_index)) {
+          uint16_t frame_id = stream_state.PopFront(peer_index);
           auto it = captured_frames_in_flight_.find(frame_id);
           RTC_DCHECK(it != captured_frames_in_flight_.end());
           FrameInFlight& frame = it->second;
@@ -651,7 +693,7 @@ void DefaultVideoQualityAnalyzer::Stop() {
           frames_comparator_.AddComparison(
               stats_key, /*captured=*/absl::nullopt,
               /*rendered=*/absl::nullopt, FrameComparisonType::kFrameInFlight,
-              frame.GetStatsForPeer(i));
+              frame.GetStatsForPeer(peer_index));
 
           if (frame.HaveAllPeersReceived()) {
             captured_frames_in_flight_.erase(it);

@@ -90,4 +90,12 @@ std::set<size_t> NamesCollection::GetPresentIndexes() const {
   return out;
 }
 
+std::set<size_t> NamesCollection::GetAllIndexes() const {
+  std::set<size_t> out;
+  for (size_t i = 0; i < names_.size(); ++i) {
+    out.insert(i);
+  }
+  return out;
+}
+
 }  // namespace webrtc

@@ -79,7 +79,10 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   void OnDecoderError(absl::string_view peer_name,
                       uint16_t frame_id,
                       int32_t error_code) override;
+
   void RegisterParticipantInCall(absl::string_view peer_name) override;
+  void UnregisterParticipantInCall(absl::string_view peer_name) override;
+
   void Stop() override;
   std::string GetStreamLabel(uint16_t frame_id) override;
   void OnStatsReports(
