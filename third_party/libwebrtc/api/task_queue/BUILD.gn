@@ -109,6 +109,7 @@ rtc_source_set("to_queued_task") {
 }
 
 rtc_library("pending_task_safety_flag") {
+  visibility = [ "*" ]
   sources = [
     "pending_task_safety_flag.cc",
     "pending_task_safety_flag.h",
