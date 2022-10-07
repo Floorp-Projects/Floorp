@@ -84,6 +84,7 @@ use style::gecko_bindings::structs::{nsINode as RawGeckoNode, Element as RawGeck
 use style::gecko_bindings::structs::{
     RawServoAnimationValue, RawServoAuthorStyles, RawServoContainerRule, RawServoCounterStyleRule,
     RawServoDeclarationBlock, RawServoFontFaceRule, RawServoFontFeatureValuesRule,
+    RawServoFontPaletteValuesRule,
     RawServoImportRule, RawServoKeyframe, RawServoKeyframesRule, RawServoLayerBlockRule,
     RawServoLayerStatementRule, RawServoMediaList, RawServoMediaRule, RawServoMozDocumentRule,
     RawServoNamespaceRule, RawServoPageRule, RawServoSharedMemoryBuilder, RawServoStyleSet,
@@ -119,9 +120,9 @@ use style::stylesheets::layer_rule::LayerOrder;
 use style::stylesheets::supports_rule::parse_condition_or_declaration;
 use style::stylesheets::{
     AllowImportRules, ContainerRule, CounterStyleRule, CssRule, CssRuleType, CssRules,
-    CssRulesHelpers, DocumentRule, FontFaceRule, FontFeatureValuesRule, ImportRule, KeyframesRule,
-    LayerBlockRule, LayerStatementRule, MediaRule, NamespaceRule, Origin, OriginSet, PageRule,
-    SanitizationData, SanitizationKind, StyleRule, StylesheetContents,
+    CssRulesHelpers, DocumentRule, FontFaceRule, FontFeatureValuesRule, FontPaletteValuesRule,
+    ImportRule, KeyframesRule, LayerBlockRule, LayerStatementRule, MediaRule, NamespaceRule,
+    Origin, OriginSet, PageRule, SanitizationData, SanitizationKind, StyleRule, StylesheetContents,
     StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData,
 };
 use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
@@ -2366,6 +2367,13 @@ impl_basic_rule_funcs! { (FontFeatureValues, FontFeatureValuesRule, RawServoFont
     changed: Servo_StyleSet_FontFeatureValuesRuleChanged,
 }
 
+impl_basic_rule_funcs! { (FontPaletteValues, FontPaletteValuesRule, RawServoFontPaletteValuesRule),
+    getter: Servo_CssRules_GetFontPaletteValuesRuleAt,
+    debug: Servo_FontPaletteValuesRule_Debug,
+    to_css: Servo_FontPaletteValuesRule_GetCssText,
+    changed: Servo_StyleSet_FontPaletteValuesRuleChanged,
+}
+
 impl_basic_rule_funcs! { (FontFace, FontFaceRule, RawServoFontFaceRule),
     getter: Servo_CssRules_GetFontFaceRuleAt,
     debug: Servo_FontFaceRule_Debug,
@@ -2959,7 +2967,7 @@ pub extern "C" fn Servo_FontFeatureValuesRule_GetFontFamily(
     result: &mut nsACString,
 ) {
     read_locked_arc(rule, |rule: &FontFeatureValuesRule| {
-        rule.font_family_to_css(&mut CssWriter::new(result))
+        rule.family_names.to_css(&mut CssWriter::new(result))
             .unwrap()
     })
 }
@@ -2971,6 +2979,54 @@ pub extern "C" fn Servo_FontFeatureValuesRule_GetValueText(
 ) {
     read_locked_arc(rule, |rule: &FontFeatureValuesRule| {
         rule.value_to_css(&mut CssWriter::new(result)).unwrap();
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_FontPaletteValuesRule_GetName(
+    rule: &RawServoFontPaletteValuesRule,
+    result: &mut nsACString,
+) {
+    read_locked_arc(rule, |rule: &FontPaletteValuesRule| {
+        rule.name.to_css(&mut CssWriter::new(result))
+            .unwrap()
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_FontPaletteValuesRule_GetFontFamily(
+    rule: &RawServoFontPaletteValuesRule,
+    result: &mut nsACString,
+) {
+    read_locked_arc(rule, |rule: &FontPaletteValuesRule| {
+        if !rule.family_names.is_empty() {
+            rule.family_names.to_css(&mut CssWriter::new(result))
+                .unwrap()
+        }
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_FontPaletteValuesRule_GetBasePalette(
+    rule: &RawServoFontPaletteValuesRule,
+    result: &mut nsACString,
+) {
+    read_locked_arc(rule, |rule: &FontPaletteValuesRule| {
+        rule.base_palette.to_css(&mut CssWriter::new(result))
+            .unwrap()
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_FontPaletteValuesRule_GetOverrideColors(
+    rule: &RawServoFontPaletteValuesRule,
+    result: &mut nsACString,
+) {
+    read_locked_arc(rule, |rule: &FontPaletteValuesRule| {
+        if !rule.override_colors.is_empty() {
+            rule.override_colors.to_css(&mut CssWriter::new(result))
+                .unwrap()
+        }
     })
 }
 
@@ -6500,6 +6556,8 @@ pub extern "C" fn Servo_StyleSet_BuildFontFeatureValueSet(
     }
     set
 }
+
+/// TODO FontPaletteValues?
 
 #[no_mangle]
 pub extern "C" fn Servo_StyleSet_ResolveForDeclarations(
