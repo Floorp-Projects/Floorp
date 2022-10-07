@@ -91,7 +91,7 @@ class ConnectionContext final
     RTC_DCHECK_RUN_ON(signaling_thread_);
     return default_network_manager_.get();
   }
-  rtc::BasicPacketSocketFactory* default_socket_factory() {
+  rtc::PacketSocketFactory* default_socket_factory() {
     RTC_DCHECK_RUN_ON(signaling_thread_);
     return default_socket_factory_.get();
   }
@@ -140,7 +140,7 @@ class ConnectionContext final
   std::unique_ptr<webrtc::CallFactoryInterface> const call_factory_
       RTC_GUARDED_BY(worker_thread());
 
-  std::unique_ptr<rtc::BasicPacketSocketFactory> default_socket_factory_
+  std::unique_ptr<rtc::PacketSocketFactory> default_socket_factory_
       RTC_GUARDED_BY(signaling_thread_);
   std::unique_ptr<SctpTransportFactoryInterface> const sctp_factory_;
 };

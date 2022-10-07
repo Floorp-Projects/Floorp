@@ -1110,6 +1110,17 @@ if (rtc_include_tests) {
     ]
   }
 
+  rtc_source_set("mock_packet_socket_factory") {
+    visibility = [ "*" ]
+    testonly = true
+    sources = [ "test/mock_packet_socket_factory.h" ]
+
+    deps = [
+      ":packet_socket_factory",
+      "../test:test_support",
+    ]
+  }
+
   rtc_source_set("mock_peerconnectioninterface") {
     visibility = [ "*" ]
     testonly = true
@@ -1332,6 +1343,7 @@ if (rtc_include_tests) {
       ":mock_frame_decryptor",
       ":mock_frame_encryptor",
       ":mock_media_stream_interface",
+      ":mock_packet_socket_factory",
       ":mock_peer_connection_factory_interface",
       ":mock_peerconnectioninterface",
       ":mock_rtp",

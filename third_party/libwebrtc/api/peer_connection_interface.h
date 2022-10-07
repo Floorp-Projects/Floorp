@@ -1379,10 +1379,9 @@ struct RTC_EXPORT PeerConnectionDependencies final {
   PeerConnectionObserver* observer = nullptr;
   // Optional dependencies
   // TODO(bugs.webrtc.org/7447): remove port allocator once downstream is
-  // updated. For now, you can only set one of allocator and
-  // packet_socket_factory, not both.
+  // updated. The recommended way to inject networking components is to pass a
+  // PacketSocketFactory when creating the PeerConnectionFactory.
   std::unique_ptr<cricket::PortAllocator> allocator;
-  std::unique_ptr<rtc::PacketSocketFactory> packet_socket_factory;
   // Factory for creating resolvers that look up hostnames in DNS
   std::unique_ptr<webrtc::AsyncDnsResolverFactoryInterface>
       async_dns_resolver_factory;
@@ -1422,6 +1421,7 @@ struct RTC_EXPORT PeerConnectionFactoryDependencies final {
   rtc::Thread* worker_thread = nullptr;
   rtc::Thread* signaling_thread = nullptr;
   rtc::SocketFactory* socket_factory = nullptr;
+  std::unique_ptr<rtc::PacketSocketFactory> packet_socket_factory;
   std::unique_ptr<TaskQueueFactory> task_queue_factory;
   std::unique_ptr<cricket::MediaEngineInterface> media_engine;
   std::unique_ptr<CallFactoryInterface> call_factory;
