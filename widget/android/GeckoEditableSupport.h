@@ -274,6 +274,10 @@ class GeckoEditableSupport final
 
   // Commit current composition to sync Gecko text state with Java.
   void OnImeRequestCommit();
+
+  // Insert image from software keyboard.
+  void OnImeInsertImage(jni::ByteArray::Param aData,
+                        jni::String::Param aMimeType);
 };
 
 }  // namespace widget

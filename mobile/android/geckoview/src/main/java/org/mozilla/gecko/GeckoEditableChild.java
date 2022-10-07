@@ -71,6 +71,11 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
     }
 
     @Override // IGeckoEditableChild
+    public void onImeInsertImage(final byte[] data, final String mimeType) {
+      GeckoEditableChild.this.onImeInsertImage(data, mimeType);
+    }
+
+    @Override // IGeckoEditableChild
     public void onImeAddCompositionRange(
         final int start,
         final int end,
@@ -203,6 +208,10 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
   @WrapForJNI(dispatchTo = "proxy")
   @Override // IGeckoEditableChild
   public native void onImeRequestCommit();
+
+  @WrapForJNI(dispatchTo = "proxy")
+  @Override // IGeckoEditableChild
+  public native void onImeInsertImage(byte[] data, String mimeType);
 
   @Override // JNIObject
   protected void disposeNative() {

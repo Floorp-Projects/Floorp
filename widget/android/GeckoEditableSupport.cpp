@@ -10,6 +10,8 @@
 #include "KeyEvent.h"
 #include "PuppetWidget.h"
 #include "nsIContent.h"
+#include "nsITransferable.h"
+#include "nsStringStream.h"
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/IMEStateManager.h"
@@ -1645,6 +1647,46 @@ nsWindow* GeckoEditableSupport::GetNsWindow() const {
   }
 
   return acc->GetNsWindow();
+}
+
+void GeckoEditableSupport::OnImeInsertImage(jni::ByteArray::Param aData,
+                                            jni::String::Param aMimeType) {
+  AutoGeckoEditableBlocker blocker(this);
+
+  nsCString mimeType(aMimeType->ToCString());
+  nsCOMPtr<nsIInputStream> byteStream;
+
+  nsresult rv = NS_NewByteInputStream(
+      getter_AddRefs(byteStream),
+      mozilla::Span(
+          reinterpret_cast<const char*>(aData->GetElements().Elements()),
+          aData->Length()),
+      NS_ASSIGNMENT_COPY);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsCOMPtr<nsITransferable> trans =
+      do_CreateInstance("@mozilla.org/widget/transferable;1");
+  if (NS_WARN_IF(!trans)) {
+    return;
+  }
+  trans->Init(nullptr);
+  rv = trans->SetTransferData(mimeType.get(), byteStream);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (NS_WARN_IF(!widget) || NS_WARN_IF(widget->Destroyed())) {
+    return;
+  }
+
+  WidgetContentCommandEvent command(true, eContentCommandPasteTransferable,
+                                    widget);
+  command.mTransferable = trans.forget();
+  nsEventStatus status;
+  widget->DispatchEvent(&command, status);
 }
 
 }  // namespace widget
