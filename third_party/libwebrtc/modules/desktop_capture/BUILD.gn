@@ -615,6 +615,8 @@ rtc_library("desktop_capture_generic") {
       "linux/wayland/mouse_cursor_monitor_pipewire.cc",
       "linux/wayland/mouse_cursor_monitor_pipewire.h",
       "linux/wayland/portal_request_response.h",
+      "linux/wayland/restore_token_manager.cc",
+      "linux/wayland/restore_token_manager.h",
       "linux/wayland/scoped_glib.cc",
       "linux/wayland/scoped_glib.h",
       "linux/wayland/screen_capture_portal_interface.cc",
