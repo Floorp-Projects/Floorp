@@ -32,8 +32,7 @@ class RemoteBitrateObserver;
 // relaying for each received RTP packet back to the sender. While for
 // receive side bandwidth estimation, we do the estimation locally and
 // send our results back to the sender.
-class ReceiveSideCongestionController : public CallStatsObserver,
-                                        public Module {
+class ReceiveSideCongestionController : public CallStatsObserver {
  public:
   ReceiveSideCongestionController(
       Clock* clock,
@@ -65,9 +64,12 @@ class ReceiveSideCongestionController : public CallStatsObserver,
 
   void SetTransportOverhead(DataSize overhead_per_packet);
 
-  // Implements Module.
-  int64_t TimeUntilNextProcess() override;
-  void Process() override;
+  [[deprecated]] int64_t TimeUntilNextProcess();
+  [[deprecated]] void Process();
+
+  // Runs periodic tasks if it is time to run them, returns time until next
+  // call to `MaybeProcess` should be non idle.
+  TimeDelta MaybeProcess();
 
  private:
   class WrappingBitrateEstimator : public RemoteBitrateEstimator {

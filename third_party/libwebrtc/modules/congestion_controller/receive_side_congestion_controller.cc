@@ -184,6 +184,21 @@ void ReceiveSideCongestionController::Process() {
   remote_bitrate_estimator_.Process();
 }
 
+TimeDelta ReceiveSideCongestionController::MaybeProcess() {
+  int64_t time_until_rbe_ms = remote_bitrate_estimator_.TimeUntilNextProcess();
+  if (time_until_rbe_ms <= 0) {
+    remote_bitrate_estimator_.Process();
+    time_until_rbe_ms = remote_bitrate_estimator_.TimeUntilNextProcess();
+  }
+  int64_t time_until_rep_ms = remote_estimator_proxy_.TimeUntilNextProcess();
+  if (time_until_rep_ms <= 0) {
+    remote_estimator_proxy_.Process();
+    time_until_rep_ms = remote_estimator_proxy_.TimeUntilNextProcess();
+  }
+  int64_t time_until_next_ms = std::min(time_until_rbe_ms, time_until_rep_ms);
+  return TimeDelta::Millis(std::max<int64_t>(time_until_next_ms, 0));
+}
+
 void ReceiveSideCongestionController::SetMaxDesiredReceiveBitrate(
     DataRate bitrate) {
   remb_throttler_.SetMaxDesiredReceiveBitrate(bitrate);
