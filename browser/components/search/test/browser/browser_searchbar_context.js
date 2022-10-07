@@ -9,8 +9,20 @@
 
 let win;
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "clipboardHelper",
+  "@mozilla.org/widget/clipboardhelper;1",
+  "nsIClipboardHelper"
+);
+
 add_setup(async function() {
   await gCUITestUtils.addSearchBar();
+
+  await SearchTestUtils.installSearchExtension();
+
+  const defaultEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = Services.search.getEngineByName("Example");
 
   win = await BrowserTestUtils.openNewBrowserWindow();
 
@@ -21,6 +33,7 @@ add_setup(async function() {
   });
 
   registerCleanupFunction(async function() {
+    Services.search.defaultEngine = defaultEngine;
     await BrowserTestUtils.closeWindow(win);
     gCUITestUtils.removeSearchBar();
   });
@@ -189,4 +202,49 @@ add_task(async function test_text_in_unfocused_bar() {
   );
   contextMenu.hidePopup();
   await popupHiddenPromise;
+});
+
+add_task(async function test_paste_and_go() {
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser: win.gBrowser,
+  });
+
+  const searchbar = win.BrowserSearch.searchBar;
+
+  searchbar.value = "";
+  searchbar.focus();
+
+  const searchString = "test";
+
+  await SimpleTest.promiseClipboardChange(searchString, () => {
+    clipboardHelper.copyString(searchString);
+  });
+
+  let contextMenu = searchbar.querySelector(".textbox-contextmenu");
+  let contextMenuPromise = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popupshown"
+  );
+  await EventUtils.synthesizeMouseAtCenter(
+    searchbar,
+    { type: "contextmenu", button: 2 },
+    win
+  );
+  await contextMenuPromise;
+
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popuphidden"
+  );
+  let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  searchbar.querySelector(".searchbar-paste-and-search").click();
+  await p;
+  contextMenu.hidePopup();
+  await popupHiddenPromise;
+
+  Assert.equal(
+    tab.linkedBrowser.currentURI.spec,
+    `https://example.com/?q=${searchString}`,
+    "Should have loaded the expected search page."
+  );
 });
