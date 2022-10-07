@@ -7,7 +7,6 @@ import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -40,34 +39,6 @@ class FirstRunTest {
     fun stopWebServer() {
         webServer.shutdown()
         featureSettingsHelper.resetAllFeatureFlags()
-    }
-
-    @Test
-    @Ignore("See https://github.com/mozilla-mobile/focus-android/issues/7580")
-    fun firstRunOnboardingTest() {
-        homeScreen {
-            verifyOnboardingFirstSlide()
-            clickOnboardingNextBtn()
-            verifyOnboardingSecondSlide()
-            clickOnboardingNextBtn()
-            verifyOnboardingThirdSlide()
-            clickOnboardingNextBtn()
-            verifyOnboardingLastSlide()
-            clickOnboardingFinishBtn()
-            verifyEmptySearchBar()
-        }
-    }
-
-    @Test
-    @Ignore("See https://github.com/mozilla-mobile/focus-android/issues/7580")
-    fun skipFirstRunOnboardingTest() {
-        homeScreen {
-            verifyOnboardingFirstSlide()
-            clickOnboardingNextBtn()
-            verifyOnboardingSecondSlide()
-            skipFirstRun()
-            verifyEmptySearchBar()
-        }
     }
 
     @SmokeTest
