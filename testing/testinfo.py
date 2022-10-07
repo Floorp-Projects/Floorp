@@ -631,6 +631,12 @@ class TestInfoReport(TestInfo):
                             if_data = ifd.get(relpath)
                             test_info["failure_count"] = if_data["count"]
 
+                        if "manifest_relpath" in t and "manifest" in t:
+                            if "web-platform" in t["manifest_relpath"]:
+                                test_info["manifest"] = [t["manifest"]]
+                            else:
+                                test_info["manifest"] = [t["manifest_relpath"]]
+
                         if show_tests:
                             rkey = key if show_components else "all"
                             if rkey in by_component["tests"]:
@@ -643,6 +649,16 @@ class TestInfoReport(TestInfo):
                                         break
                                 if not found:
                                     by_component["tests"][rkey].append(test_info)
+                                else:
+                                    for ti in by_component["tests"][rkey]:
+                                        if ti["test"] == test_info["test"]:
+                                            if (
+                                                test_info["manifest"][0]
+                                                not in ti["manifest"]
+                                            ):
+                                                ti["manifest"].extend(
+                                                    test_info["manifest"]
+                                                )
                             else:
                                 by_component["tests"][rkey] = [test_info]
             if show_tests:
