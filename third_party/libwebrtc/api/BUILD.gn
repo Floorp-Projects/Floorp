@@ -786,7 +786,6 @@ rtc_source_set("time_controller") {
   ]
 
   deps = [
-    "../modules/utility",
     "../rtc_base",
     "../rtc_base:threading",
     "../rtc_base/synchronization:yield_policy",
