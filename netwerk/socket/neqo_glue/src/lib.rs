@@ -11,7 +11,7 @@ use neqo_http3::{Error as Http3Error, Priority};
 use neqo_http3::{Http3Client, Http3ClientEvent, Http3Parameters, Http3State};
 use neqo_transport::{
     stream_id::StreamType, CongestionControlAlgorithm, ConnectionParameters,
-    Error as TransportError, Output, Version, RandomConnectionIdGenerator, StreamId,
+    Error as TransportError, Output, RandomConnectionIdGenerator, StreamId, Version,
 };
 use nserror::*;
 use nsstring::*;

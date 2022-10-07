@@ -8,11 +8,12 @@ use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorTy
 use crate::metrics::Metric;
 use crate::metrics::MetricType;
 use crate::storage::StorageManager;
+use crate::util::truncate_string_at_boundary_with_error;
 use crate::CommonMetricData;
 use crate::Glean;
 
 // The maximum number of characters a URL Metric may have, before encoding.
-const MAX_URL_LENGTH: usize = 2048;
+const MAX_URL_LENGTH: usize = 8192;
 
 /// A URL metric.
 ///
@@ -80,16 +81,7 @@ impl UrlMetric {
             return;
         }
 
-        let s = value.into();
-        if s.len() > MAX_URL_LENGTH {
-            let msg = format!(
-                "Value length {} exceeds maximum of {}",
-                s.len(),
-                MAX_URL_LENGTH
-            );
-            record_error(glean, &self.meta, ErrorType::InvalidOverflow, msg, None);
-            return;
-        }
+        let s = truncate_string_at_boundary_with_error(glean, &self.meta, value, MAX_URL_LENGTH);
 
         if s.starts_with("data:") {
             record_error(
@@ -204,12 +196,24 @@ mod test {
             dynamic_label: None,
         });
 
-        let long_path = "testing".repeat(2000);
-        let test_url = format!("glean://{}", long_path);
+        // Whenever the URL is longer than our MAX_URL_LENGTH, we truncate the URL to the
+        // MAX_URL_LENGTH.
+        //
+        // This 8-character string was chosen so we could have an even number that is
+        // a divisor of our MAX_URL_LENGTH.
+        let long_path_base = "abcdefgh";
+
+        // Using 2000 creates a string > 16000 characters, well over MAX_URL_LENGTH.
+        let test_url = format!("glean://{}", long_path_base.repeat(2000));
         metric.set_sync(&glean, test_url);
 
-        assert!(metric.get_value(&glean, "store1").is_none());
+        // "glean://" is 8 characters
+        // "abcdefgh" (long_path_base) is 8 characters
+        // `long_path_base` is repeated 1023 times (8184)
+        // 8 + 8184 = 8192 (MAX_URL_LENGTH)
+        let expected = format!("glean://{}", long_path_base.repeat(1023));
 
+        assert_eq!(metric.get_value(&glean, "store1").unwrap(), expected);
         assert_eq!(
             1,
             test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow)

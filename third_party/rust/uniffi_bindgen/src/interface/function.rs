@@ -36,10 +36,13 @@ use std::hash::{Hash, Hasher};
 
 use anyhow::{bail, Result};
 
-use super::attributes::{ArgumentAttributes, FunctionAttributes};
 use super::ffi::{FFIArgument, FFIFunction};
 use super::literal::{convert_default_value, Literal};
 use super::types::{Type, TypeIterator};
+use super::{
+    attributes::{ArgumentAttributes, FunctionAttributes},
+    convert_type,
+};
 use super::{APIConverter, ComponentInterface};
 
 /// Represents a standalone function.
@@ -89,7 +92,7 @@ impl Function {
     }
 
     pub fn derive_ffi_func(&mut self, ci_prefix: &str) -> Result<()> {
-        // The name is already set if the function is defined in a proc-macro-generated JSON file
+        // The name is already set if the function is defined through a proc-macro invocation
         // rather than in UDL. Don't overwrite it in that case.
         if self.ffi_func.name.is_empty() {
             self.ffi_func.name = format!("{ci_prefix}_{}", self.name);
@@ -132,34 +135,6 @@ impl From<uniffi_meta::FnMetadata> for Function {
             ffi_func,
             attributes: Default::default(),
         }
-    }
-}
-
-fn convert_type(s: &uniffi_meta::Type) -> Type {
-    use uniffi_meta::Type as Ty;
-
-    match s {
-        Ty::U8 => Type::UInt8,
-        Ty::U16 => Type::UInt16,
-        Ty::U32 => Type::UInt32,
-        Ty::U64 => Type::UInt64,
-        Ty::I8 => Type::Int8,
-        Ty::I16 => Type::Int16,
-        Ty::I32 => Type::Int32,
-        Ty::I64 => Type::Int64,
-        Ty::F32 => Type::Float32,
-        Ty::F64 => Type::Float64,
-        Ty::Bool => Type::Boolean,
-        Ty::String => Type::String,
-        Ty::Option { inner_type } => Type::Optional(convert_type(inner_type).into()),
-        Ty::Vec { inner_type } => Type::Sequence(convert_type(inner_type).into()),
-        Ty::HashMap {
-            key_type,
-            value_type,
-        } => Type::Map(
-            convert_type(key_type).into(),
-            convert_type(value_type).into(),
-        ),
     }
 }
 
