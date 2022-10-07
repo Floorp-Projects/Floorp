@@ -131,6 +131,33 @@ describe("<DSCard>", () => {
     assert.equal(defaultMeta.props().timeToRead, 4);
   });
 
+  it("should not show save to pocket button for spocs", () => {
+    wrapper.setProps({
+      id: "fooidx",
+      pos: 1,
+      type: "foo",
+      flightId: 12345,
+      saveToPocketCard: true,
+    });
+
+    let stpButton = wrapper.find(".card-stp-button");
+
+    assert.lengthOf(stpButton, 0);
+  });
+
+  it("should show save to pocket button for non-spocs", () => {
+    wrapper.setProps({
+      id: "fooidx",
+      pos: 1,
+      type: "foo",
+      saveToPocketCard: true,
+    });
+
+    let stpButton = wrapper.find(".card-stp-button");
+
+    assert.lengthOf(stpButton, 1);
+  });
+
   describe("onLinkClick", () => {
     let fakeWindow;
 

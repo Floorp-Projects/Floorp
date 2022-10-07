@@ -3293,7 +3293,7 @@ main.has-snippet {
   padding-top: 50%;
   pointer-events: none;
   background: rgba(0, 0, 0, 0.4);
-  border-radius: 8px;
+  border-radius: 8px 8px 0 0;
 }
 .ds-card .card-stp-button-hover-background .card-stp-button-position-wrapper {
   position: absolute;
