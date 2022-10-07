@@ -252,6 +252,8 @@ class gfxTextRun : public gfxShapedText {
     gfxContext* context;
     DrawMode drawMode = DrawMode::GLYPH_FILL;
     nscolor textStrokeColor = 0;
+    nsAtom* fontPalette = nullptr;
+    mozilla::gfx::FontPaletteValueSet* paletteValueSet = nullptr;
     gfxPattern* textStrokePattern = nullptr;
     const mozilla::gfx::StrokeOptions* strokeOpts = nullptr;
     const mozilla::gfx::DrawOptions* drawOpts = nullptr;
