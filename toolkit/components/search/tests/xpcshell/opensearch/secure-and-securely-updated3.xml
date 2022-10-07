@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.0/">
+<ShortName>ss3</ShortName>
+<Description>Secure and securely updated 3</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC</Image>
+<Url type="text/html" method="GET" template="https://example.com/ss3">
+  <Param name="q" value="{searchTerms}"/>
+</Url>
+<Url type="application/opensearchdescription+xml"
+     rel="self"
+     template="https://example.com/ss3.xml" />
+<SearchForm>https://example.com/ss3</SearchForm>
+</OpenSearchDescription>

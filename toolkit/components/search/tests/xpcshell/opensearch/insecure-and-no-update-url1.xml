@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.0/">
+<ShortName>inu1</ShortName>
+<Description>Insecure and no update URL 1</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC</Image>
+<Url type="text/html" method="GET" template="http://example.com/inu1">
+  <Param name="q" value="{searchTerms}"/>
+</Url>
+<SearchForm>http://example.com/inu1</SearchForm>
+</OpenSearchDescription>

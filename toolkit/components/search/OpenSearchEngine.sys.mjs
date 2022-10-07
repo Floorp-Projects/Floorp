@@ -409,6 +409,18 @@ export class OpenSearchEngine extends SearchEngine {
     return !!(this._updateURL || this._iconUpdateURL || selfURL);
   }
 
+  /**
+   * Returns the engine's updateURI if it exists and returns null otherwise
+   */
+  get _updateURI() {
+    let updateURL = this._getURLOfType(lazy.SearchUtils.URL_TYPE.OPENSEARCH);
+    let updateURI =
+      updateURL && updateURL._hasRelation("self")
+        ? updateURL.getSubmission("", this).uri
+        : lazy.SearchUtils.makeURI(this._updateURL);
+    return updateURI;
+  }
+
   // This indicates where we found the .xml file to load the engine,
   // and attempts to hide user-identifiable data (such as username).
   static getAnonymizedLoadPath(shortName, uri) {
