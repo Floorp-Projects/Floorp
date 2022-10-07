@@ -7718,6 +7718,22 @@ class _DSCard extends (external_React_default()).PureComponent {
     const imageGradientClassName = imageGradient ? `ds-card-image-gradient` : ``;
     const titleLinesName = `ds-card-title-lines-${titleLines}`;
     const descLinesClassName = `ds-card-desc-lines-${descLines}`;
+
+    let stpButton = () => {
+      return /*#__PURE__*/external_React_default().createElement("button", {
+        className: "card-stp-button",
+        onClick: this.onSaveClick
+      }, this.props.context_type === "pocket" ? /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("span", {
+        className: "story-badge-icon icon icon-pocket"
+      }), /*#__PURE__*/external_React_default().createElement("span", {
+        "data-l10n-id": "newtab-pocket-saved"
+      })) : /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("span", {
+        className: "story-badge-icon icon icon-pocket-save"
+      }), /*#__PURE__*/external_React_default().createElement("span", {
+        "data-l10n-id": "newtab-pocket-save"
+      })));
+    };
+
     return /*#__PURE__*/external_React_default().createElement("div", {
       className: `ds-card ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName}`,
       ref: this.setContextMenuButtonHostRef
@@ -7762,18 +7778,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       className: "card-stp-button-hover-background"
     }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "card-stp-button-position-wrapper"
-    }, /*#__PURE__*/external_React_default().createElement("button", {
-      className: "card-stp-button",
-      onClick: this.onSaveClick
-    }, this.props.context_type === "pocket" ? /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("span", {
-      className: "story-badge-icon icon icon-pocket"
-    }), /*#__PURE__*/external_React_default().createElement("span", {
-      "data-l10n-id": "newtab-pocket-saved"
-    })) : /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("span", {
-      className: "story-badge-icon icon icon-pocket-save"
-    }), /*#__PURE__*/external_React_default().createElement("span", {
-      "data-l10n-id": "newtab-pocket-save"
-    }))), /*#__PURE__*/external_React_default().createElement(DSLinkMenu, {
+    }, !this.props.flightId && stpButton(), /*#__PURE__*/external_React_default().createElement(DSLinkMenu, {
       id: this.props.id,
       index: this.props.pos,
       dispatch: this.props.dispatch,
@@ -8279,7 +8284,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
         context_type: rec.context_type,
         bookmarkGuid: rec.bookmarkGuid,
         is_collection: this.props.is_collection,
-        saveToPocketCard: saveToPocketCard && !rec.flight_id
+        saveToPocketCard: saveToPocketCard
       }));
     }
 

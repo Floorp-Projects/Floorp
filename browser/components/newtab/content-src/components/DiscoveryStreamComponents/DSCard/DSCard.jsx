@@ -347,6 +347,24 @@ export class _DSCard extends React.PureComponent {
     const titleLinesName = `ds-card-title-lines-${titleLines}`;
     const descLinesClassName = `ds-card-desc-lines-${descLines}`;
 
+    let stpButton = () => {
+      return (
+        <button className="card-stp-button" onClick={this.onSaveClick}>
+          {this.props.context_type === "pocket" ? (
+            <>
+              <span className="story-badge-icon icon icon-pocket" />
+              <span data-l10n-id="newtab-pocket-saved" />
+            </>
+          ) : (
+            <>
+              <span className="story-badge-icon icon icon-pocket-save" />
+              <span data-l10n-id="newtab-pocket-save" />
+            </>
+          )}
+        </button>
+      );
+    };
+
     return (
       <div
         className={`ds-card ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName}`}
@@ -399,19 +417,7 @@ export class _DSCard extends React.PureComponent {
         {saveToPocketCard && (
           <div className="card-stp-button-hover-background">
             <div className="card-stp-button-position-wrapper">
-              <button className="card-stp-button" onClick={this.onSaveClick}>
-                {this.props.context_type === "pocket" ? (
-                  <>
-                    <span className="story-badge-icon icon icon-pocket" />
-                    <span data-l10n-id="newtab-pocket-saved" />
-                  </>
-                ) : (
-                  <>
-                    <span className="story-badge-icon icon icon-pocket-save" />
-                    <span data-l10n-id="newtab-pocket-save" />
-                  </>
-                )}
-              </button>
+              {!this.props.flightId && stpButton()}
               <DSLinkMenu
                 id={this.props.id}
                 index={this.props.pos}
