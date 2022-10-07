@@ -19,10 +19,13 @@
 #include "base/message_loop.h"
 #include "base/task.h"
 
+#include "mozilla/EventTargetCapability.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/Queue.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "nsISupports.h"
 
 namespace IPC {
 
@@ -30,70 +33,92 @@ namespace IPC {
 // socketpairs.  See the .cc file for an overview of the implementation.
 class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_EVENT_TARGET(
+      ChannelImpl, io_thread_.GetEventTarget());
+
   using ChannelId = Channel::ChannelId;
 
   // Mirror methods of Channel, see ipc_channel.h for description.
   ChannelImpl(const ChannelId& channel_id, Mode mode, Listener* listener);
   ChannelImpl(ChannelHandle pipe, Mode mode, Listener* listener);
-  ~ChannelImpl() { Close(); }
-  bool Connect();
-  void Close();
+  bool Connect() MOZ_EXCLUDES(mutex_);
+  void Close() MOZ_EXCLUDES(mutex_);
   Listener* set_listener(Listener* listener) {
+    io_thread_.AssertOnCurrentThread();
     Listener* old = listener_;
     listener_ = listener;
     return old;
   }
-  bool Send(mozilla::UniquePtr<Message> message);
+  // NOTE: `Send` may be called on threads other than the I/O thread.
+  bool Send(mozilla::UniquePtr<Message> message) MOZ_EXCLUDES(mutex_);
   void GetClientFileDescriptorMapping(int* src_fd, int* dest_fd) const;
 
   void CloseClientFileDescriptor();
 
-  int32_t OtherPid() const { return other_pid_; }
+  int32_t OtherPid() MOZ_EXCLUDES(mutex_) {
+    io_thread_.AssertOnCurrentThread();
+    mozilla::MutexAutoLock lock(mutex_);
+    return other_pid_;
+  }
 
   // See the comment in ipc_channel.h for info on IsClosed()
-  bool IsClosed() const;
+  // NOTE: `IsClosed` may be called on threads other than the I/O thread.
+  bool IsClosed() MOZ_EXCLUDES(mutex_) {
+    mozilla::MutexAutoLock lock(mutex_);
+    return pipe_ == -1;
+  }
 
 #if defined(OS_MACOSX)
-  void SetOtherMachTask(task_t task);
+  void SetOtherMachTask(task_t task) MOZ_EXCLUDES(mutex_);
 
-  void StartAcceptingMachPorts(Mode mode);
+  void StartAcceptingMachPorts(Mode mode) MOZ_EXCLUDES(mutex_);
 #endif
 
  private:
-  void Init(Mode mode, Listener* listener);
-  bool CreatePipe(Mode mode);
-  void SetPipe(int fd);
-  bool PipeBufHasSpaceAfter(size_t already_written);
-  bool EnqueueHelloMessage();
+  ~ChannelImpl() { Close(); }
 
-  bool ProcessIncomingMessages();
-  bool ProcessOutgoingMessages();
+  void Init(Mode mode, Listener* listener) MOZ_REQUIRES(mutex_, io_thread_);
+  bool CreatePipe(Mode mode) MOZ_REQUIRES(mutex_, io_thread_);
+  void SetPipe(int fd) MOZ_REQUIRES(mutex_, io_thread_);
+  bool PipeBufHasSpaceAfter(size_t already_written) MOZ_REQUIRES(mutex_);
+  bool EnqueueHelloMessage() MOZ_REQUIRES(mutex_, io_thread_);
+  bool ConnectLocked() MOZ_REQUIRES(mutex_, io_thread_);
+  void CloseLocked() MOZ_REQUIRES(mutex_, io_thread_);
+
+  bool ProcessIncomingMessages() MOZ_REQUIRES(mutex_, io_thread_);
+  bool ProcessOutgoingMessages() MOZ_REQUIRES(mutex_);
 
   // MessageLoopForIO::Watcher implementation.
   virtual void OnFileCanReadWithoutBlocking(int fd) override;
   virtual void OnFileCanWriteWithoutBlocking(int fd) override;
 
 #if defined(OS_MACOSX)
-  void CloseDescriptors(uint32_t pending_fd_id);
+  void CloseDescriptors(uint32_t pending_fd_id)
+      MOZ_REQUIRES(mutex_, io_thread_);
 
   // Called on a Message immediately before it is sent/recieved to transfer
   // handles to the remote process, or accept handles from the remote process.
-  bool AcceptMachPorts(Message& msg);
-  bool TransferMachPorts(Message& msg);
+  bool AcceptMachPorts(Message& msg) MOZ_REQUIRES(mutex_, io_thread_);
+  bool TransferMachPorts(Message& msg) MOZ_REQUIRES(mutex_);
 #endif
 
-  void OutputQueuePush(mozilla::UniquePtr<Message> msg);
-  void OutputQueuePop();
+  void OutputQueuePush(mozilla::UniquePtr<Message> msg) MOZ_REQUIRES(mutex_);
+  void OutputQueuePop() MOZ_REQUIRES(mutex_);
 
-  Mode mode_;
+  mozilla::Mutex mutex_{"ChannelImpl"};
+  const mozilla::EventTargetCapability<nsISerialEventTarget> io_thread_;
+
+  Mode mode_ MOZ_GUARDED_BY(io_thread_);
 
   // After accepting one client connection on our server socket we want to
   // stop listening.
-  MessageLoopForIO::FileDescriptorWatcher read_watcher_;
-  MessageLoopForIO::FileDescriptorWatcher write_watcher_;
+  MessageLoopForIO::FileDescriptorWatcher read_watcher_
+      MOZ_GUARDED_BY(io_thread_);
+  MessageLoopForIO::FileDescriptorWatcher write_watcher_
+      MOZ_GUARDED_BY(io_thread_);
 
   // Indicates whether we're currently blocked waiting for a write to complete.
-  bool is_blocked_on_write_;
+  bool is_blocked_on_write_ MOZ_GUARDED_BY(mutex_);
 
   // If sending a message blocks then we use this iterator to keep track of
   // where in the message we are. It gets reset when the message is finished
@@ -102,21 +127,24 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
     Pickle::BufferList::IterImpl iter_;
     mozilla::Span<const mozilla::UniqueFileHandle> handles_;
   };
-  mozilla::Maybe<PartialWrite> partial_write_;
+  mozilla::Maybe<PartialWrite> partial_write_ MOZ_GUARDED_BY(mutex_);
 
-  int pipe_;
-  int client_pipe_;        // The client end of our socketpair().
-  unsigned pipe_buf_len_;  // The SO_SNDBUF value of pipe_, or 0 if unknown.
+  int pipe_ MOZ_GUARDED_BY(mutex_);
+  // The client end of our socketpair().
+  int client_pipe_ MOZ_GUARDED_BY(io_thread_);
+  // The SO_SNDBUF value of pipe_, or 0 if unknown.
+  unsigned pipe_buf_len_ MOZ_GUARDED_BY(mutex_);
 
-  Listener* listener_;
+  Listener* listener_ MOZ_GUARDED_BY(io_thread_);
 
   // Messages to be sent are queued here.
-  mozilla::Queue<mozilla::UniquePtr<Message>, 64> output_queue_;
+  mozilla::Queue<mozilla::UniquePtr<Message>, 64> output_queue_
+      MOZ_GUARDED_BY(mutex_);
 
   // We read from the pipe into these buffers.
-  size_t input_buf_offset_;
-  mozilla::UniquePtr<char[]> input_buf_;
-  mozilla::UniquePtr<char[]> input_cmsg_buf_;
+  size_t input_buf_offset_ MOZ_GUARDED_BY(io_thread_);
+  mozilla::UniquePtr<char[]> input_buf_ MOZ_GUARDED_BY(io_thread_);
+  mozilla::UniquePtr<char[]> input_cmsg_buf_ MOZ_GUARDED_BY(io_thread_);
 
   // The control message buffer will hold all of the file descriptors that will
   // be read in during a single recvmsg call. Message::WriteFileDescriptor
@@ -137,20 +165,18 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
 
   // Large incoming messages that span multiple pipe buffers get built-up in the
   // buffers of this message.
-  mozilla::UniquePtr<Message> incoming_message_;
-  std::vector<int> input_overflow_fds_;
+  mozilla::UniquePtr<Message> incoming_message_ MOZ_GUARDED_BY(io_thread_);
+  std::vector<int> input_overflow_fds_ MOZ_GUARDED_BY(io_thread_);
 
-  // In server-mode, we have to wait for the client to connect before we
-  // can begin reading.  We make use of the input_state_ when performing
-  // the connect operation in overlapped mode.
-  bool waiting_connect_;
-
-  // This flag is set after we've closed the channel.
-  std::atomic<bool> closed_;
+  // Will be set to `true` until `Connect()` has been called and communication
+  // is ready. For privileged connections on macOS, this will not be cleared
+  // until the peer mach port has been provided to allow transferring mach
+  // ports.
+  bool waiting_connect_ MOZ_GUARDED_BY(mutex_) = true;
 
   // We keep track of the PID of the other side of this channel so that we can
   // record this when generating logs of IPC messages.
-  int32_t other_pid_ = -1;
+  int32_t other_pid_ MOZ_GUARDED_BY(mutex_) = -1;
 
 #if defined(OS_MACOSX)
   struct PendingDescriptors {
@@ -158,19 +184,19 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
     nsTArray<mozilla::UniqueFileHandle> handles;
   };
 
-  std::list<PendingDescriptors> pending_fds_;
+  std::list<PendingDescriptors> pending_fds_ MOZ_GUARDED_BY(mutex_);
 
   // A generation ID for RECEIVED_FD messages.
-  uint32_t last_pending_fd_id_;
+  uint32_t last_pending_fd_id_ MOZ_GUARDED_BY(mutex_);
 
   // Whether or not to accept mach ports from a remote process, and whether this
   // process is the privileged side of a IPC::Channel which can transfer mach
   // ports.
-  bool accept_mach_ports_ = false;
-  bool privileged_ = false;
+  bool accept_mach_ports_ MOZ_GUARDED_BY(mutex_) = false;
+  bool privileged_ MOZ_GUARDED_BY(mutex_) = false;
 
   // If available, the task port for the remote process.
-  mozilla::UniqueMachSendRight other_task_;
+  mozilla::UniqueMachSendRight other_task_ MOZ_GUARDED_BY(mutex_);
 #endif
 
   DISALLOW_COPY_AND_ASSIGN(ChannelImpl);

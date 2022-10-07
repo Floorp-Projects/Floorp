@@ -101,6 +101,9 @@ class Channel {
   // |listener| receives a callback on the current thread for each newly
   // received message.
   //
+  // The Channel must be created and destroyed on the IO thread, and all
+  // methods, unless otherwise noted, are only safe to call on the I/O thread.
+  //
   Channel(const ChannelId& channel_id, Mode mode, Listener* listener);
 
   // Initialize a pre-created channel |pipe| as |mode|.
@@ -123,8 +126,8 @@ class Channel {
 
   // Send a message over the Channel to the listener on the other end.
   //
-  // |message| must be allocated using operator new.  This object will be
-  // deleted once the contents of the Message have been sent.
+  // This method may be called from any thread, so long as the `Channel` is not
+  // destroyed before it returns.
   //
   // If you Send() a message on a Close()'d channel, we delete the message
   // immediately.
@@ -189,7 +192,7 @@ class Channel {
  private:
   // PIMPL to which all channel calls are delegated.
   class ChannelImpl;
-  ChannelImpl* channel_impl_;
+  RefPtr<ChannelImpl> channel_impl_;
 
   enum {
 #if defined(OS_MACOSX)
