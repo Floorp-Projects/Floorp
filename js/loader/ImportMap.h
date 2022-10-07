@@ -46,18 +46,18 @@ class ReportWarningHelper {
 };
 
 // Specifier map from import maps.
-// https://wicg.github.io/import-maps/#specifier-map
+// https://whatpr.org/html/8075/webappapis.html#module-specifier-map
 using SpecifierMap =
     std::map<nsString, nsCOMPtr<nsIURI>, std::greater<nsString>>;
 
 // Scope map from import maps.
-// https://wicg.github.io/import-maps/#import-map-scopes
+// https://whatpr.org/html/8075/webappapis.html#concept-import-map-scopes
 using ScopeMap = std::map<nsCString, mozilla::UniquePtr<SpecifierMap>,
                           std::greater<nsCString>>;
 
 /**
  * Implementation of Import maps.
- * https://wicg.github.io/import-maps
+ * https://whatpr.org/html/8075/webappapis.html#import-maps
  */
 class ImportMap {
  public:
@@ -67,10 +67,10 @@ class ImportMap {
 
   /**
    * Parse the JSON string from the Import map script.
-   * This function will throw TypeError if there's any invalid key or value in
+   * This function will throw a TypeError if there's any invalid key or value in
    * the JSON text according to the spec.
    *
-   * See https://wicg.github.io/import-maps/#parse-an-import-map-string
+   * https://whatpr.org/html/8075/webappapis.html#parse-an-import-map-string
    */
   static mozilla::UniquePtr<ImportMap> ParseString(
       JSContext* aCx, JS::SourceText<char16_t>& aInput, nsIURI* aBaseURL,
@@ -80,7 +80,7 @@ class ImportMap {
    * This implements "Resolve a module specifier" algorithm defined in the
    * Import maps spec.
    *
-   * See https://wicg.github.io/import-maps/#resolve-a-module-specifier
+   * See https://whatpr.org/html/8075/webappapis.html#resolve-a-module-specifier
    */
   static ResolveResult ResolveModuleSpecifier(ImportMap* aImportMap,
                                               ScriptLoaderInterface* aLoader,
@@ -92,11 +92,11 @@ class ImportMap {
 
  private:
   /**
-   * https://wicg.github.io/import-maps/#import-map
+   * https://whatpr.org/html/8075/webappapis.html#import-map
    *
-   * A import map is a struct with two items:
-   * 1. imports, a specifier map, and
-   * 2. scopes, an ordered map of URLs to specifier maps.
+   * An import map is a struct with two items:
+   * 1. imports, a module specifier map, and
+   * 2. scopes, an ordered map of URLs to module specifier maps.
    */
   mozilla::UniquePtr<SpecifierMap> mImports;
   mozilla::UniquePtr<ScopeMap> mScopes;
