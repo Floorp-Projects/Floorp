@@ -41,5 +41,11 @@
         <service android:name=".TestRuntimeService$instance1" android:enabled="true" android:exported="false" android:process=":runtime1" />
 
         <service android:name=".TrackingPermissionService" android:enabled="true" android:exported="false" android:process=":tp" />
+
+        <provider android:name="org.mozilla.geckoview.test.TestContentProvider"
+                  android:authorities="org.mozilla.geckoview.test.provider"
+                  android:grantUriPermissions="true"
+                  android:exported="false">
+        </provider>
     </application>
 </manifest>

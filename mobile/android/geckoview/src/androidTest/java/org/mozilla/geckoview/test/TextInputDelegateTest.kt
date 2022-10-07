@@ -13,6 +13,10 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 
 import androidx.test.filters.MediumTest
+import androidx.test.filters.SdkSuppress
+import android.content.ClipDescription
+import android.net.Uri
+import android.os.Build
 import android.os.Handler;
 import android.os.Looper;
 import android.text.InputType;
@@ -21,6 +25,7 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.ExtractedTextRequest
 import android.view.inputmethod.InputConnection
+import android.view.inputmethod.InputContentInfo
 
 import org.hamcrest.Matchers.*
 import org.junit.Assume.assumeThat
@@ -669,6 +674,49 @@ class TextInputDelegateTest : BaseSessionTest() {
         setupContent(content)
         val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
         assertText("Can set large initial text", ic, content, /* checkGecko */ false)
+    }
+
+    @SdkSuppress(minSdkVersion = Build.VERSION_CODES.N_MR1)
+    @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
+    @Test fun inputConnection_commitContent() {
+        if (id == "#input" || id == "#textarea") {
+            assertThat("This test is only for contenteditable or designmode",
+                       true, equalTo(true))
+            return
+        }
+
+        setupContent("")
+        val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
+        assertText("Set initial text", ic, "")
+
+        val promise = mainSession.evaluatePromiseJS(
+                when (id) {
+                    "#designmode" -> """
+                        new Promise((resolve, reject) => document.querySelector('$id').contentDocument.addEventListener('input', e => {
+                            if (e.inputType == 'insertFromPaste') {
+                                resolve();
+                            } else {
+                                reject();
+                            }
+                        }, { once: true }))
+                    """.trimIndent()
+                    else -> """
+                        new Promise((resolve, reject) => document.querySelector('$id').addEventListener('input', e => {
+                            if (e.inputType == 'insertFromPaste') {
+                                resolve();
+                            } else {
+                                reject();
+                            }
+                        }, { once: true }))
+                    """.trimIndent()
+                })
+
+        // InputContentInfo requires content:// uri, so we have to set test data to custom content provider.
+        TestContentProvider.setTestData(this.getTestBytes("/assets/www/images/test.gif"), "image/gif")
+        val info = InputContentInfo(Uri.parse("content://org.mozilla.geckoview.test.provider/gif"), ClipDescription("test", arrayOf("image/gif")))
+        ic.commitContent(info, 0, null)
+        promise.value
+        assertThat("Input event is fired by inserting image", true, equalTo(true))
     }
 
     // Bug 1133802, duplication when setting the same composing text more than once.
