@@ -583,34 +583,7 @@ class nsBlockFrame : public nsContainerFrame {
    * @returns true, if any of the floats at the beginning of our mFloats list
    *          have the NS_FRAME_IS_PUSHED_FLOAT bit set; false otherwise.
    */
-  bool HasPushedFloatsFromPrevContinuation() const {
-    if (!mFloats.IsEmpty()) {
-      // If we have pushed floats, then they should be at the beginning of our
-      // float list.
-      if (mFloats.FirstChild()->HasAnyStateBits(NS_FRAME_IS_PUSHED_FLOAT)) {
-        return true;
-      }
-    }
-
-#ifdef DEBUG
-    // Double-check the above assertion that pushed floats should be at the
-    // beginning of our floats list.
-    for (nsFrameList::Enumerator e(mFloats); !e.AtEnd(); e.Next()) {
-      nsIFrame* f = e.get();
-      NS_ASSERTION(!f->HasAnyStateBits(NS_FRAME_IS_PUSHED_FLOAT),
-                   "pushed floats must be at the beginning of the float list");
-    }
-#endif
-
-    // We may have a pending push of pushed floats too:
-    if (HasPushedFloats()) {
-      // XXX we can return 'true' here once we make HasPushedFloats
-      // not lie.  (see nsBlockFrame::RemoveFloat)
-      auto* pushedFloats = GetPushedFloats();
-      return pushedFloats && !pushedFloats->IsEmpty();
-    }
-    return false;
-  }
+  bool HasPushedFloatsFromPrevContinuation() const;
 
   // @see nsIFrame::AddSizeOfExcludingThisForTree
   void AddSizeOfExcludingThisForTree(nsWindowSizes&) const override;
