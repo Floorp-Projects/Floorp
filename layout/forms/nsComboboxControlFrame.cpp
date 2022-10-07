@@ -865,17 +865,12 @@ void nsComboboxControlFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
 
 void nsComboboxControlFrame::SetInitialChildList(ChildListID aListID,
                                                  nsFrameList& aChildList) {
-#ifdef DEBUG
   for (nsIFrame* f : aChildList) {
     MOZ_ASSERT(f->GetParent() == this, "Unexpected parent");
-  }
-#endif
-  for (nsFrameList::Enumerator e(aChildList); !e.AtEnd(); e.Next()) {
-    nsCOMPtr<nsIFormControl> formControl =
-        do_QueryInterface(e.get()->GetContent());
+    nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(f->GetContent());
     if (formControl &&
         formControl->ControlType() == FormControlType::ButtonButton) {
-      mButtonFrame = e.get();
+      mButtonFrame = f;
       break;
     }
   }

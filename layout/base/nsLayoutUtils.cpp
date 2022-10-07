@@ -7572,9 +7572,7 @@ static void GetFontFacesForFramesInner(
   nsIFrame::ChildListID childLists[] = {nsIFrame::kPrincipalList,
                                         nsIFrame::kPopupList};
   for (size_t i = 0; i < ArrayLength(childLists); ++i) {
-    nsFrameList children(aFrame->GetChildList(childLists[i]));
-    for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
-      nsIFrame* child = e.get();
+    for (nsIFrame* child : aFrame->GetChildList(childLists[i])) {
       child = nsPlaceholderFrame::GetRealFrameFor(child);
       GetFontFacesForFramesInner(child, aResult, aFontFaces, aMaxRanges,
                                  aSkipCollapsedWhitespace);

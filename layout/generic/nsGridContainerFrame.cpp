@@ -4808,9 +4808,7 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
     mGridColEnd -= offsetToColZero;
     mGridRowEnd -= offsetToRowZero;
     aState.mAbsPosItems.ClearAndRetainStorage();
-    size_t i = 0;
-    for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next(), ++i) {
-      nsIFrame* child = e.get();
+    for (nsIFrame* child : children) {
       GridItemInfo* info = aState.mAbsPosItems.AppendElement(GridItemInfo(
           child,
           PlaceAbsPos(child, colLineNameMap, rowLineNameMap, gridStyle)));
@@ -8500,8 +8498,7 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aState,
                                bSize + pad.BStartEnd(wm));
       const nsSize gridCBPhysicalSize = gridCB.Size(wm).GetPhysicalSize(wm);
       size_t i = 0;
-      for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next(), ++i) {
-        nsIFrame* child = e.get();
+      for (nsIFrame* child : children) {
         MOZ_ASSERT(i < aState.mAbsPosItems.Length());
         MOZ_ASSERT(aState.mAbsPosItems[i].mFrame == child);
         GridArea& area = aState.mAbsPosItems[i].mArea;
@@ -8514,6 +8511,7 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aState,
           child->SetProperty(GridItemContainingBlockRect(), cb);
         }
         *cb = itemCB.GetPhysicalRect(wm, gridCBPhysicalSize);
+        ++i;
       }
       // We pass a dummy rect as CB because each child has its own CB rect.
       // The eIsGridContainerCB flag tells nsAbsoluteContainingBlock::Reflow to

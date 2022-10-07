@@ -128,8 +128,7 @@ void nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
   // The block-dir position will be corrected below after containerSize
   // is finalized.
   const nsSize dummyContainerSize;
-  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    nsIFrame* child = e.get();
+  for (nsIFrame* child : mFrames) {
     MOZ_ASSERT(child->IsRubyTextFrame());
     LogicalRect rect = child->GetLogicalRect(rtcWM, dummyContainerSize);
     LogicalMargin margin = child->GetLogicalUsedMargin(rtcWM);
@@ -147,8 +146,7 @@ void nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
     }
     LogicalSize size(rtcWM, mISize, maxBCoord - minBCoord);
     nsSize containerSize = size.GetPhysicalSize(rtcWM);
-    for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-      nsIFrame* child = e.get();
+    for (nsIFrame* child : mFrames) {
       // We reflowed the child with a dummy container size, as the true size
       // was not yet known at that time.
       LogicalPoint pos = child->GetLogicalPosition(rtcWM, dummyContainerSize);

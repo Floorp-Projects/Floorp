@@ -487,9 +487,8 @@ void nsTableFrame::ResetRowIndices(
       // yet)
       const nsFrameList& rowFrames =
           excludeRowGroupsEnumerator.get()->PrincipalChildList();
-      for (nsFrameList::Enumerator rows(rowFrames); !rows.AtEnd();
-           rows.Next()) {
-        nsTableRowFrame* row = static_cast<nsTableRowFrame*>(rows.get());
+      for (nsIFrame* r : rowFrames) {
+        auto* row = static_cast<nsTableRowFrame*>(r);
         MOZ_ASSERT(row->GetRowIndex() == 0,
                    "exclusions cannot be used for rows that were already added,"
                    "because we'd need to process mDeletedRowIndexRanges");
@@ -504,11 +503,9 @@ void nsTableFrame::ResetRowIndices(
     nsTableRowGroupFrame* rgFrame = rowGroups[rgIdx];
     if (!excludeRowGroups.Contains(rgFrame)) {
       const nsFrameList& rowFrames = rgFrame->PrincipalChildList();
-      for (nsFrameList::Enumerator rows(rowFrames); !rows.AtEnd();
-           rows.Next()) {
-        if (mozilla::StyleDisplay::TableRow ==
-            rows.get()->StyleDisplay()->mDisplay) {
-          nsTableRowFrame* row = static_cast<nsTableRowFrame*>(rows.get());
+      for (nsIFrame* r : rowFrames) {
+        if (mozilla::StyleDisplay::TableRow == r->StyleDisplay()->mDisplay) {
+          auto* row = static_cast<nsTableRowFrame*>(r);
           row->SetRowIndex(rowIndex);
           rowIndex++;
         }
