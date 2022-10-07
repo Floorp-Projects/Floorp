@@ -70,7 +70,16 @@ async function iterateOverPath(path, extensions) {
   const subdirs = [];
 
   for (const entry of children) {
-    const stat = await IOUtils.stat(entry);
+    let stat;
+    try {
+      stat = await IOUtils.stat(entry);
+    } catch (error) {
+      if (error.name === "NotFoundError") {
+        // Ignore symlinks from prior builds to subsequently removed files
+        continue;
+      }
+      throw error;
+    }
 
     if (stat.type === "directory") {
       subdirs.push(entry);

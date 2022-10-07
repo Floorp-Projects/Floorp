@@ -64,9 +64,9 @@ add_task(async function resetToDefaultConfig() {
     );
 
     const prefResetButton = doc.getElementById("prefResetButton");
-    ok(
-      ContentTaskUtils.is_visible(prefResetButton),
-      "prefResetButton should be visible"
+    await ContentTaskUtils.waitForCondition(
+      () => ContentTaskUtils.is_visible(prefResetButton),
+      "prefResetButton is visible"
     );
 
     if (!Services.focus.focusedElement == prefResetButton) {
@@ -137,7 +137,7 @@ add_task(async function checkLearnMoreLink() {
       "Correct error page title is set"
     );
 
-    const errorCodeEl = doc.querySelector("#errorShortDescText2");
+    const errorCodeEl = doc.querySelector("#errorShortDesc2");
     const actualDataL10Args = errorCodeEl.getAttribute("data-l10n-args");
     ok(
       actualDataL10Args.includes("SSL_ERROR_PROTOCOL_VERSION_ALERT"),
@@ -180,19 +180,16 @@ add_task(async function checkDomainCorrection() {
       "Should be showing error page"
     );
 
-    const errorNotice = doc.getElementById("errorShortDescText");
+    const errorNotice = doc.getElementById("errorShortDesc");
     ok(ContentTaskUtils.is_visible(errorNotice), "Error text is visible");
 
     // Wait for the domain suggestion to be resolved and for the text to update
+    let link;
     await ContentTaskUtils.waitForCondition(() => {
-      let el = doc.getElementById("errorShortDescText");
-      if (el) {
-        return el.querySelector("a") && el.querySelector("a").textContent != "";
-      }
-      return false;
+      link = errorNotice.querySelector("a");
+      return link && link.textContent != "";
     }, "Helper link has been set");
 
-    const link = doc.getElementById("errorShortDescText").querySelector("a");
     is(
       link.getAttribute("href"),
       "https://www.example.com/example2/",

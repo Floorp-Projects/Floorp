@@ -24,15 +24,22 @@ body.certerror {
   width: 100%;
 }
 
+/* Normally, setting e.g. `display: flex` overrides the hidden attribute.
+ * This allows for element hiding to be controlled entirely in HTML & JS. */
+[hidden] {
+    display: none !important;
+}
+
+.title {
+  font-size: 1.75em;
+}
+
 body.captiveportal .title {
   background-image: url("chrome://global/skin/in-content/wifi.svg");
 }
 
 body.certerror .title {
   background-image: url("chrome://global/skin/icons/warning.svg");
-}
-
-body.certerror .title {
   color: var(--warning-color);
 }
 
@@ -45,8 +52,9 @@ body.clockSkewError .title {
   background-repeat: no-repeat;
 }
 
-#errorContainer {
-  display: none;
+.title-text {
+  font-weight: 300;
+  line-height: 1.2;
 }
 
 /* Pressing the retry button will cause the cursor to flicker from a pointer to
@@ -57,31 +65,12 @@ button:disabled {
 }
 
 #errorWhatToDoTitle {
+  font-weight: bold;
   margin-top: 2em;
 }
 
-#errorWhatToDoTitle .bold {
-  font-weight: bold;
-}
-
-#prefChangeContainer {
-  display: none;
-}
-
-#learnMoreContainer {
-  display: none;
-}
-
 #openInNewWindowContainer {
-  display: none;
-}
-
-#openInNewWindowContainer > p {
   margin-bottom: 0;
-}
-
-#certErrorAndCaptivePortalButtonContainer {
-  display: none;
 }
 
 #advancedPanelButtonContainer {
@@ -92,41 +81,16 @@ button:disabled {
   margin-top: 2em;
 }
 
-body:not(.neterror) #certErrorAndCaptivePortalButtonContainer {
+#certErrorAndCaptivePortalButtonContainer {
   display: flex;
-}
-
-body:not(.neterror) #netErrorButtonContainer {
-  display: none;
 }
 
 #netErrorButtonContainer > .try-again {
   margin-top: 1.2em;
 }
 
-#advancedButton {
-  display: none;
-}
-
-body.captiveportal #returnButton {
-  display: none;
-}
-
-body:not(.captiveportal) #openPortalLoginPageButton {
-  display: none;
-}
-
-body:not(.clockSkewError) #certErrorAndCaptivePortalButtonContainer > .try-again,
-body:not(.clockSkewError) #advancedPanelContainer .try-again {
-  display: none;
-}
-
 #openPortalLoginPageButton {
   margin-inline-start: 0;
-}
-
-body:not(.neterror) #advancedButton {
-  display: block;
 }
 
 #blockingErrorReporting {
@@ -136,7 +100,7 @@ body:not(.neterror) #advancedButton {
   margin-top: 1.2em;
 }
 
-#advancedPanelContainer {
+.advanced-panel-container {
   width: 100%;
   position: absolute;
   left: 0;
@@ -188,58 +152,15 @@ body:not(.neterror) #advancedButton {
   text-decoration: none;
 }
 
-.exceptionDialogButtonContainer {
-  display: flex;
-  justify-content: end;
-}
-
-.exceptionDialogButtonContainer[hidden] {
-  display: none;
-}
-
-.clockSkewError #returnButton {
-  display: none;
-}
-
-.clockSkewError #advancedButton {
-  display: none;
-}
-
 .clockSkewError .try-again {
-  display: block;
   margin-top: 0.3em;
-}
-
-.clockSkewError #exceptionDialogButton {
-  display: none;
-}
-
-.clockSkewError #advancedPanelReturnButton {
-  display: none;
-}
-
-.malformedURI .try-again {
-  display: none;
-}
-
-#wrongSystemTimeWithoutReferencePanel {
-  display: none;
 }
 
 #errorLongDesc strong {
   font-weight: 600;
 }
 
-.title {
-  font-size: 1.75em;
-}
-
-.title-text {
-  font-weight: 300;
-  line-height: 1.2;
-}
-
-#errorShortDescText {
+#errorShortDesc {
   font-size: 1.15em;
   line-height: 1.3;
   font-weight: 400;

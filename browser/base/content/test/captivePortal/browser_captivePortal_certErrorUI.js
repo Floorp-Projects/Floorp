@@ -123,11 +123,8 @@ add_task(async function testCaptivePortalAdvancedPanel() {
 
     info("Clicking on the advanced button");
     await EventUtils.synthesizeMouseAtCenter(advancedButton, {}, content);
-    let advPanelContainer = doc.getElementById("advancedPanelContainer");
-    ok(
-      ContentTaskUtils.is_visible(advPanelContainer),
-      "Advanced panel is now visible"
-    );
+    let advPanel = doc.getElementById("badCertAdvancedPanel");
+    ok(ContentTaskUtils.is_visible(advPanel), "Advanced panel is now visible");
 
     let advPanelContent = doc.getElementById("badCertTechnicalInfo");
     ok(

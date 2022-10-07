@@ -21,91 +21,77 @@
 
   <body>
     <!-- PAGE CONTAINER (for styling purposes only) -->
-    <div id="errorPageContainer" class="container">
+    <div class="container">
       <div id="text-container">
         <!-- Error Title -->
         <div class="title">
           <h1 class="title-text"></h1>
         </div>
 
-        <!-- LONG CONTENT (the section most likely to require scrolling) -->
-        <div id="errorLongContent">
+        <!-- Short Description -->
+        <p id="errorShortDesc"></p>
+        <p id="errorShortDesc2"></p>
 
-          <!-- Short Description -->
-          <div id="errorShortDesc">
-            <p id="errorShortDescText"></p>
-          </div>
+        <div id="errorWhatToDo" hidden="">
+          <p id="errorWhatToDoTitle" data-l10n-id="certerror-what-can-you-do-about-it-title"></p>
+          <p id="badStsCertExplanation" hidden=""></p>
+          <p id="errorWhatToDoText"></p>
+        </div>
 
-          <div id="errorShortDesc2">
-              <p id="errorShortDescText2"></p>
-          </div>
+        <!-- Long Description -->
+        <div id="errorLongDesc"></div>
 
-          <div id="errorWhatToDoTitle">
-              <p id="errorWhatToDoTitleText"></p>
-          </div>
+        <p id="tlsVersionNotice" hidden=""></p>
 
-          <div id="errorWhatToDo">
-              <p id="badStsCertExplanation" hidden="true"></p>
-              <p id="errorWhatToDoText"></p>
-          </div>
+        <p id="learnMoreContainer" hidden="">
+          <a id="learnMoreLink" target="_blank" rel="noopener noreferrer" data-telemetry-id="learn_more_link" data-l10n-id="neterror-learn-more-link"></a>
+        </p>
 
-          <!-- Long Description -->
-          <div id="errorLongDesc"></div>
-
-          <p id="tlsVersionNotice" hidden="true"></p>
-
-          <div id="learnMoreContainer">
-            <p><a id="learnMoreLink" target="_blank" rel="noopener noreferrer" data-telemetry-id="learn_more_link" data-l10n-id="neterror-learn-more-link"></a></p>
-          </div>
-
-          <div id="openInNewWindowContainer" class="button-container">
-            <p><a id="openInNewWindowButton" target="_blank" rel="noopener noreferrer">
-            <button class="primary" data-l10n-id="open-in-new-window-for-csp-or-xfo-error"></button></a></p>
-          </div>
+        <div id="openInNewWindowContainer" class="button-container" hidden="">
+          <p><a id="openInNewWindowButton" target="_blank" rel="noopener noreferrer">
+          <button class="primary" data-l10n-id="open-in-new-window-for-csp-or-xfo-error"></button></a></p>
         </div>
 
         <!-- UI for option to report certificate errors to Mozilla. Removed on
              init for other error types .-->
-        <div id="prefChangeContainer" class="button-container">
+        <div id="prefChangeContainer" class="button-container" hidden="">
           <p data-l10n-id="neterror-pref-reset"></p>
           <button id="prefResetButton" class="primary" data-l10n-id="neterror-pref-reset-button"></button>
         </div>
 
-        <div id="certErrorAndCaptivePortalButtonContainer" class="button-container">
+        <div id="certErrorAndCaptivePortalButtonContainer" class="button-container" hidden="">
           <button id="returnButton" class="primary" data-telemetry-id="return_button_top" data-l10n-id="neterror-return-to-previous-page-recommended-button"></button>
-          <button id="openPortalLoginPageButton" class="primary" data-l10n-id="neterror-open-portal-login-page-button"></button>
-          <button class="primary try-again" data-l10n-id="neterror-try-again-button"></button>
+          <button id="openPortalLoginPageButton" class="primary" data-l10n-id="neterror-open-portal-login-page-button" hidden=""></button>
+          <button id="certErrorTryAgainButton" class="primary try-again" data-l10n-id="neterror-try-again-button" hidden=""></button>
           <button id="advancedButton" data-telemetry-id="advanced_button" data-l10n-id="neterror-advanced-button"></button>
         </div>
       </div>
 
-      <div id="netErrorButtonContainer" class="button-container">
+      <div id="netErrorButtonContainer" class="button-container" hidden="">
         <button class="primary try-again" data-l10n-id="neterror-try-again-button"></button>
       </div>
 
-      <div id="advancedPanelContainer">
+      <div class="advanced-panel-container">
         <div id="badCertAdvancedPanel" class="advanced-panel" hidden="">
           <p id="badCertTechnicalInfo"></p>
           <a id="viewCertificate" href="javascript:void(0)" data-l10n-id="neterror-view-certificate-link"></a>
           <div id="advancedPanelButtonContainer" class="button-container">
             <button id="advancedPanelReturnButton" class="primary" data-telemetry-id="return_button_adv" data-l10n-id="neterror-return-to-previous-page-recommended-button"></button>
-            <button class="primary try-again" data-l10n-id="neterror-try-again-button"></button>
-            <div class="exceptionDialogButtonContainer">
-              <button id="exceptionDialogButton" data-telemetry-id="exception_button" data-l10n-id="neterror-override-exception-button"></button>
-            </div>
+            <button id="advancedPanelTryAgainButton" class="primary try-again" data-l10n-id="neterror-try-again-button" hidden=""></button>
+            <button id="exceptionDialogButton" data-telemetry-id="exception_button" data-l10n-id="neterror-override-exception-button"></button>
           </div>
         </div>
 
         <div id="blockingErrorReporting" class="advanced-panel" hidden="">
-            <p class="toggle-container-with-text">
-                <input type="checkbox" id="automaticallyReportBlockingInFuture" role="checkbox"/>
-                <label for="automaticallyReportBlockingInFuture" data-l10n-id="neterror-error-reporting-automatic" ></label>
-            </p>
+          <p class="toggle-container-with-text">
+            <input type="checkbox" id="automaticallyReportBlockingInFuture" role="checkbox"/>
+            <label for="automaticallyReportBlockingInFuture" data-l10n-id="neterror-error-reporting-automatic"></label>
+          </p>
         </div>
 
         <div id="certificateErrorDebugInformation" class="advanced-panel" hidden="">
           <button id="copyToClipboardTop" data-telemetry-id="clipboard_button_top" data-l10n-id="neterror-copy-to-clipboard-button"></button>
-          <div id="certificateErrorText"/>
+          <div id="certificateErrorText"></div>
           <button id="copyToClipboardBottom" data-telemetry-id="clipboard_button_bot" data-l10n-id="neterror-copy-to-clipboard-button"></button>
         </div>
       </div>

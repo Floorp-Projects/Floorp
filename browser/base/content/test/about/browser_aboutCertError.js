@@ -164,17 +164,14 @@ add_task(async function checkAdvancedDetails() {
     let message = await SpecialPowers.spawn(bc, [], async function() {
       let doc = content.document;
 
-      // Wait until fluent sets the error description.
-      let shortDescText;
-      await ContentTaskUtils.waitForCondition(() => {
-        shortDescText = doc.getElementById("errorShortDescText");
-        return shortDescText.textContent != "";
-      }, "error description has been set");
-
-      Assert.ok(
-        shortDescText.textContent.includes("expired.example.com"),
+      const shortDesc = doc.getElementById("errorShortDesc");
+      const sdArgs = JSON.parse(shortDesc.dataset.l10nArgs);
+      is(
+        sdArgs.hostname,
+        "expired.example.com",
         "Should list hostname in error message."
       );
+
       Assert.ok(
         doc.getElementById("certificateErrorDebugInformation").hidden,
         "Debug info is initially hidden"
@@ -190,13 +187,13 @@ add_task(async function checkAdvancedDetails() {
       advancedButton.click();
 
       // Wait until fluent sets the errorCode inner text.
-      let el;
+      let errorCode;
       await ContentTaskUtils.waitForCondition(() => {
-        el = doc.getElementById("errorCode");
-        return el.textContent != "";
+        errorCode = doc.getElementById("errorCode");
+        return errorCode && errorCode.textContent != "";
       }, "error code has been set inside the advanced button panel");
 
-      return { textContent: el.textContent, tagName: el.tagName };
+      return { textContent: errorCode.textContent, tagName: errorCode.tagName };
     });
     is(
       message.textContent,
@@ -432,23 +429,12 @@ add_task(async function checkBadStsCertHeadline() {
     }
 
     await SpecialPowers.spawn(bc, [useFrame], async _useFrame => {
-      let titleText = content.document.querySelector(".title-text");
-      await ContentTaskUtils.waitForCondition(
-        () => titleText.textContent,
-        "Error page title is initialized"
+      const titleText = content.document.querySelector(".title-text");
+      is(
+        titleText.dataset.l10nId,
+        _useFrame ? "nssBadCert-sts-title" : "nssBadCert-title",
+        "Error page title is set"
       );
-      let titleContent = titleText.textContent;
-      if (_useFrame) {
-        ok(
-          titleContent.endsWith("Security Issue"),
-          "Did Not Connect: Potential Security Issue"
-        );
-      } else {
-        ok(
-          titleContent.endsWith("Risk Ahead"),
-          "Warning: Potential Security Risk Ahead"
-        );
-      }
     });
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
@@ -467,33 +453,27 @@ add_task(async function checkSandboxedIframe() {
   await SpecialPowers.spawn(bc, [], async function() {
     let doc = content.document;
 
-    // aboutNetError.mjs is using async localization to format several
-    // messages and in result the translation may be applied later.
-    // We want to return the textContent of the element only after
-    // the translation completes, so let's wait for it here.
-    await ContentTaskUtils.waitForCondition(() => {
-      let elements = [
-        doc.querySelector(".title-text"),
-        doc.getElementById("errorCode"),
-      ];
-
-      return elements.every(elem => !!elem.textContent.trim().length);
-    });
-
-    let titleText = doc.querySelector(".title-text");
-    Assert.ok(
-      titleText.textContent.endsWith("Security Issue"),
+    const titleText = doc.querySelector(".title-text");
+    is(
+      titleText.dataset.l10nId,
+      "nssBadCert-sts-title",
       "Title shows Did Not Connect: Potential Security Issue"
     );
 
-    let el = doc.getElementById("errorCode");
-
-    Assert.equal(
-      el.textContent,
+    const errorLabel = doc.querySelector(
+      '[data-l10n-id="cert-error-code-prefix-link"]'
+    );
+    const elArgs = JSON.parse(errorLabel.dataset.l10nArgs);
+    is(
+      elArgs.error,
       "SEC_ERROR_EXPIRED_CERTIFICATE",
       "Correct error message found"
     );
-    Assert.equal(el.tagName, "a", "Error message is a link");
+    is(
+      doc.getElementById("errorCode").tagName,
+      "a",
+      "Error message contains a link"
+    );
   });
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
@@ -509,35 +489,37 @@ add_task(async function checkViewSource() {
   await SpecialPowers.spawn(browser, [], async function() {
     let doc = content.document;
 
-    // Wait until fluent sets the error code and description.
-    let errorCode;
-    let shortDescText;
-    await ContentTaskUtils.waitForCondition(() => {
-      errorCode = doc.getElementById("errorCode");
-      shortDescText = doc.getElementById("errorShortDescText");
-      return errorCode.textContent != "" && shortDescText.textContent != "";
-    }, "error code and description have been set");
-    Assert.equal(
-      errorCode.textContent,
+    const errorLabel = doc.querySelector(
+      '[data-l10n-id="cert-error-code-prefix-link"]'
+    );
+    const elArgs = JSON.parse(errorLabel.dataset.l10nArgs);
+    is(
+      elArgs.error,
       "SEC_ERROR_EXPIRED_CERTIFICATE",
       "Correct error message found"
     );
-    Assert.equal(errorCode.tagName, "a", "Error message is a link");
-
-    let titleText = doc.querySelector(".title-text");
-    Assert.equal(
-      titleText.textContent,
-      "Warning: Potential Security Risk Ahead"
+    is(
+      doc.getElementById("errorCode").tagName,
+      "a",
+      "Error message contains a link"
     );
 
-    Assert.ok(
-      shortDescText.textContent.includes("expired.example.com"),
+    const titleText = doc.querySelector(".title-text");
+    is(titleText.dataset.l10nId, "nssBadCert-title", "Error page title is set");
+
+    const shortDesc = doc.getElementById("errorShortDesc");
+    const sdArgs = JSON.parse(shortDesc.dataset.l10nArgs);
+    is(
+      sdArgs.hostname,
+      "expired.example.com",
       "Should list hostname in error message."
     );
 
-    let whatToDoText = doc.getElementById("errorWhatToDoText");
-    Assert.ok(
-      whatToDoText.textContent.includes("expired.example.com"),
+    const whatToDo = doc.querySelector("#errorWhatToDoText [data-l10n-args]");
+    const wtdArgs = JSON.parse(whatToDo.dataset.l10nArgs);
+    is(
+      wtdArgs.hostname,
+      "expired.example.com",
       "Should list hostname in what to do text."
     );
   });
@@ -566,7 +548,7 @@ add_task(async function checkViewSource() {
   ].getService(Ci.nsICertOverrideService);
   certOverrideService.clearValidityOverride("expired.example.com", -1, {});
 
-  loaded = BrowserTestUtils.waitForErrorPage(browser);
+  loaded = BrowserTestUtils.browserLoaded(browser, false, null, true);
   BrowserReloadSkipCache();
   await loaded;
 

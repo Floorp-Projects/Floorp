@@ -240,8 +240,10 @@ add_task(async function checkAllTheFluents() {
     }
 
     visitTextElement(node) {
-      let stripped_val = this.domParser.parseFromString(node.value, "text/html")
-        .documentElement.textContent;
+      const stripped_val = this.domParser.parseFromString(
+        "<!DOCTYPE html>" + node.value,
+        "text/html"
+      ).documentElement.textContent;
       testForErrors(this.uri, this.key, stripped_val);
     }
   }
