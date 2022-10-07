@@ -632,8 +632,6 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
   params.direction = direction;
   params.strokeOpts = aParams.strokeOpts;
   params.textStrokeColor = aParams.textStrokeColor;
-  params.fontPalette = aParams.fontPalette;
-  params.paletteValueSet = aParams.paletteValueSet;
   params.textStrokePattern = aParams.textStrokePattern;
   params.drawOpts = aParams.drawOpts;
   params.drawMode = aParams.drawMode;
