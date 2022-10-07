@@ -56,7 +56,14 @@ bool GleanPings::DefineGleanPings(JSContext* aCx,
 
 already_AddRefed<GleanPing> GleanPings::NamedGetter(const nsAString& aName,
                                                     bool& aFound) {
-  Maybe<uint32_t> pingId = PingByNameLookup(NS_ConvertUTF16toUTF8(aName));
+  aFound = false;
+
+  NS_ConvertUTF16toUTF8 pingName(aName);
+  Maybe<uint32_t> pingId = JOG::GetPing(pingName);
+  if (pingId.isNothing() && !JOG::AreRuntimeMetricsComprehensive()) {
+    pingId = PingByNameLookup(pingName);
+  }
+
   if (pingId.isNothing()) {
     aFound = false;
     return nullptr;
