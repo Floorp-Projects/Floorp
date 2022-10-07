@@ -47,10 +47,8 @@ class MathMLElement final : public MathMLElementBase,
       const override;
 
   enum {
-    PARSE_ALLOW_UNITLESS = 0x01,  // unitless 0 will be turned into 0px
     PARSE_ALLOW_NEGATIVE = 0x02,
     PARSE_SUPPRESS_WARNINGS = 0x04,
-    CONVERT_UNITLESS_TO_PERCENT = 0x08
   };
   static bool ParseNamedSpaceValue(const nsString& aString,
                                    nsCSSValue& aCSSValue, uint32_t aFlags,

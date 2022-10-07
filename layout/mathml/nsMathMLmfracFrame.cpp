@@ -91,8 +91,7 @@ nscoord nsMathMLmfracFrame::CalcLineThickness(nsPresContext* aPresContext,
   // https://w3c.github.io/mathml-core/#dfn-linethickness
   if (!aThicknessAttribute.IsEmpty()) {
     lineThickness = defaultThickness;
-    ParseNumericValue(aThicknessAttribute, &lineThickness,
-                      dom::MathMLElement::PARSE_ALLOW_UNITLESS, aPresContext,
+    ParseNumericValue(aThicknessAttribute, &lineThickness, 0, aPresContext,
                       aComputedStyle, aFontSizeInflation);
   }
   // use minimum if the lineThickness is a non-zero value less than minimun
