@@ -28,8 +28,7 @@ pub fn export(
     let gen_output = || {
         let mod_path = util::mod_path()?;
         let item = syn::parse(input)?;
-        let metadata = export::gen_metadata(item, &mod_path)?;
-        Ok(expand_export(metadata, &mod_path))
+        expand_export(item, &mod_path)
     };
     let output = gen_output().unwrap_or_else(syn::Error::into_compile_error);
 

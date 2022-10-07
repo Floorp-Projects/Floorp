@@ -24,29 +24,13 @@ impl FnMetadata {
 }
 
 #[derive(Clone, Debug, Hash, Deserialize, Serialize)]
-pub struct MethodMetadata {
-    pub module_path: Vec<String>,
-    pub self_name: String,
-    pub name: String,
-    pub inputs: Vec<FnParamMetadata>,
-    pub return_type: Option<Type>,
-}
-
-impl MethodMetadata {
-    pub fn ffi_symbol_name(&self) -> String {
-        let full_name = format!("impl_{}_{}", self.self_name, self.name);
-        fn_ffi_symbol_name(&self.module_path, &full_name, checksum(self))
-    }
-}
-
-#[derive(Clone, Debug, Hash, Deserialize, Serialize)]
 pub struct FnParamMetadata {
     pub name: String,
     #[serde(rename = "type")]
     pub ty: Type,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize, Serialize)]
+#[derive(Clone, Debug, Hash, Deserialize, Serialize)]
 pub enum Type {
     U8,
     U16,
@@ -70,9 +54,6 @@ pub enum Type {
         key_type: Box<Type>,
         value_type: Box<Type>,
     },
-    ArcObject {
-        object_name: String,
-    },
 }
 
 /// Returns the last 16 bits of the value's hash as computed with [`DefaultHasher`].
@@ -94,17 +75,10 @@ pub fn fn_ffi_symbol_name(mod_path: &[String], name: &str, checksum: u16) -> Str
 #[derive(Clone, Debug, Hash, Deserialize, Serialize)]
 pub enum Metadata {
     Func(FnMetadata),
-    Method(MethodMetadata),
 }
 
 impl From<FnMetadata> for Metadata {
     fn from(value: FnMetadata) -> Metadata {
-        Self::Func(value)
-    }
-}
-
-impl From<MethodMetadata> for Metadata {
-    fn from(m: MethodMetadata) -> Self {
-        Self::Method(m)
+        Metadata::Func(value)
     }
 }
