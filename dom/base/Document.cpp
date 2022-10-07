@@ -7184,6 +7184,7 @@ void Document::ApplicableStylesChanged() {
 
   pc->MarkCounterStylesDirty();
   pc->MarkFontFeatureValuesDirty();
+  pc->MarkFontPaletteValuesDirty();
   pc->RestyleManager()->NextRestyleIsForCSSRuleChanges();
 }
 
