@@ -292,4 +292,503 @@ TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles)
   dm->Close();
 }
 
+TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateMoveDirectories)
+{
+  FileSystemDatabaseManagerVersion001* rdm = nullptr;
+  ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(rdm));
+  UniquePtr<FileSystemDatabaseManagerVersion001> dm(rdm);
+  auto closeAtExit = MakeScopeExit([&dm]() { dm->Close(); });
+
+  TEST_TRY_UNWRAP(EntryId rootId, data::GetRootHandle(getTestOrigin()));
+
+  FileSystemEntryMetadata rootMeta{rootId, u"root"_ns, /* is directory */ true};
+
+  {
+    // Sanity check: no existing items should be found
+    TEST_TRY_UNWRAP(FileSystemDirectoryListing contents,
+                    dm->GetDirectoryEntries(rootId, /* page */ 0u));
+    ASSERT_TRUE(contents.directories().IsEmpty());
+    ASSERT_TRUE(contents.files().IsEmpty());
+  }
+
+  // Create subdirectory
+  FileSystemChildMetadata firstChildMeta(rootId, u"First"_ns);
+  TEST_TRY_UNWRAP(EntryId firstChildDir,
+                  dm->GetOrCreateDirectory(firstChildMeta, /* create */ true));
+
+  {
+    // Check that directory listing is as expected
+    TEST_TRY_UNWRAP(FileSystemDirectoryListing contents,
+                    dm->GetDirectoryEntries(rootId, /* page */ 0u));
+    ASSERT_TRUE(contents.files().IsEmpty());
+    ASSERT_EQ(1u, contents.directories().Length());
+    ASSERT_STREQ(firstChildMeta.childName(),
+                 contents.directories()[0].entryName());
+  }
+
+  {
+    // Try to move subdirectory to its current location
+    FileSystemEntryMetadata src{firstChildDir, firstChildMeta.childName(),
+                                /* is directory */ true};
+    FileSystemChildMetadata dest{rootId, src.entryName()};
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, rv);
+  }
+
+  {
+    // Try to move subdirectory under itself
+    FileSystemEntryMetadata src{firstChildDir, firstChildMeta.childName(),
+                                /* is directory */ true};
+    FileSystemChildMetadata dest{src.entryId(), src.entryName()};
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_INVALID_MODIFICATION_ERR, rv);
+  }
+
+  {
+    // Try to move root under its subdirectory
+    FileSystemEntryMetadata src{rootId, rootMeta.entryName(),
+                                /* is directory */ true};
+    FileSystemChildMetadata dest{firstChildDir, src.entryName()};
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
+  }
+
+  // Create subsubdirectory
+  FileSystemChildMetadata firstChildDescendantMeta(firstChildDir,
+                                                   u"Descendant"_ns);
+  TEST_TRY_UNWRAP(EntryId firstChildDescendant,
+                  dm->GetOrCreateDirectory(firstChildDescendantMeta,
+                                           /* create */ true));
+
+  {
+    TEST_TRY_UNWRAP(FileSystemDirectoryListing contents,
+                    dm->GetDirectoryEntries(firstChildDir, /* page */ 0u));
+    ASSERT_TRUE(contents.files().IsEmpty());
+    ASSERT_EQ(1u, contents.directories().Length());
+    ASSERT_STREQ(firstChildDescendantMeta.childName(),
+                 contents.directories()[0].entryName());
+
+    TEST_TRY_UNWRAP(Path subSubDirPath,
+                    dm->Resolve({rootId, contents.directories()[0].entryId()}));
+    ASSERT_EQ(2u, subSubDirPath.Length());
+    ASSERT_STREQ(firstChildMeta.childName(), subSubDirPath[0]);
+    ASSERT_STREQ(firstChildDescendantMeta.childName(), subSubDirPath[1]);
+  }
+
+  {
+    // Try to move subsubdirectory to its current location
+    FileSystemEntryMetadata src{firstChildDescendant,
+                                firstChildDescendantMeta.childName(),
+                                /* is directory */ true};
+    FileSystemChildMetadata dest{firstChildDir, src.entryName()};
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, rv);
+  }
+
+  {
+    // Try to move subsubdirectory under itself
+    FileSystemEntryMetadata src{firstChildDescendant,
+                                firstChildDescendantMeta.childName(),
+                                /* is directory */ true};
+    FileSystemChildMetadata dest{src.entryId(), src.entryName()};
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_INVALID_MODIFICATION_ERR, rv);
+  }
+
+  {
+    // Try to move subdirectory under its descendant
+    FileSystemEntryMetadata src{firstChildDir, firstChildMeta.childName(),
+                                /* is directory */ true};
+    FileSystemChildMetadata dest{firstChildDescendant, src.entryName()};
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_INVALID_MODIFICATION_ERR, rv);
+  }
+
+  {
+    // Try to move root under its subsubdirectory
+    FileSystemEntryMetadata src{rootId, rootMeta.entryName(),
+                                /* is directory */ true};
+    FileSystemChildMetadata dest{firstChildDescendant, src.entryName()};
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
+  }
+
+  // Create file in the subdirectory with already existing subsubdirectory
+  FileSystemChildMetadata testFileMeta(firstChildDir, u"Subfile"_ns);
+  TEST_TRY_UNWRAP(EntryId testFile,
+                  dm->GetOrCreateFile(testFileMeta, /* create */ true));
+
+  // Get handles to the original locations of the entries
+  FileSystemEntryMetadata subSubDir;
+  FileSystemEntryMetadata subSubFile;
+
+  {
+    TEST_TRY_UNWRAP(FileSystemDirectoryListing contents,
+                    dm->GetDirectoryEntries(firstChildDir, /* page */ 0u));
+    ASSERT_EQ(1u, contents.files().Length());
+    ASSERT_EQ(1u, contents.directories().Length());
+
+    subSubDir = contents.directories()[0];
+    ASSERT_STREQ(firstChildDescendantMeta.childName(), subSubDir.entryName());
+
+    subSubFile = contents.files()[0];
+    ASSERT_STREQ(testFileMeta.childName(), subSubFile.entryName());
+  }
+
+  {
+    TEST_TRY_UNWRAP(Path entryPath,
+                    dm->Resolve({rootId, subSubFile.entryId()}));
+    ASSERT_EQ(2u, entryPath.Length());
+    ASSERT_STREQ(firstChildMeta.childName(), entryPath[0]);
+    ASSERT_STREQ(testFileMeta.childName(), entryPath[1]);
+  }
+
+  {
+    // Try to move file to its current location with correct isDirectory flag
+    FileSystemEntryMetadata src{testFile, testFileMeta.childName(),
+                                /* is directory */ false};
+    FileSystemChildMetadata dest{firstChildDir, src.entryName()};
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, rv);
+  }
+
+  {
+    // Try to move file to its current location with incorrect isDirectory flag
+    FileSystemEntryMetadata src{testFile, testFileMeta.childName(),
+                                /* is directory */ true};
+    FileSystemChildMetadata dest{firstChildDir, src.entryName()};
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, rv);
+  }
+
+  {
+    // Try to rename file to a directory with correct isDirectory flag
+    FileSystemEntryMetadata src{testFile, testFileMeta.childName(),
+                                /* is directory */ false};
+    const FileSystemChildMetadata& dest = firstChildDescendantMeta;
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, rv);
+  }
+
+  {
+    // Try to rename file to a directory with incorrect isDirectory flag
+    FileSystemEntryMetadata src{testFile, testFileMeta.childName(),
+                                /* is directory */ true};
+    const FileSystemChildMetadata& dest = firstChildDescendantMeta;
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, rv);
+  }
+
+  {
+    // Try to rename directory to a file with correct isDirectory flag
+    FileSystemEntryMetadata src{firstChildDescendant,
+                                firstChildDescendantMeta.childName(),
+                                /* is directory */ true};
+    const FileSystemChildMetadata& dest = testFileMeta;
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, rv);
+  }
+
+  {
+    // Try to rename directory to a file with incorrect isDirectory flag
+    FileSystemEntryMetadata src{firstChildDescendant,
+                                firstChildDescendantMeta.childName(),
+                                /* is directory */ false};
+    const FileSystemChildMetadata& dest = testFileMeta;
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, rv);
+  }
+
+  {
+    // Try to move subsubdirectory under a file with correct isDirectory flag
+    FileSystemEntryMetadata src{firstChildDescendant,
+                                firstChildDescendantMeta.childName(),
+                                /* is directory */ true};
+    FileSystemChildMetadata dest{testFile,
+                                 firstChildDescendantMeta.childName()};
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_STORAGE_CONSTRAINT, rv);
+  }
+
+  {
+    // Try to move subsubdirectory under a file with incorrect isDirectory flag
+    FileSystemEntryMetadata src{firstChildDescendant,
+                                firstChildDescendantMeta.childName(),
+                                /* is directory */ false};
+    FileSystemChildMetadata dest{testFile,
+                                 firstChildDescendantMeta.childName()};
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_STORAGE_CONSTRAINT, rv);
+  }
+
+  {
+    // Try to move subsubdirectory under a file with incorrect isDirectory flag
+    FileSystemEntryMetadata src{firstChildDescendant,
+                                firstChildDescendantMeta.childName(),
+                                /* is directory */ false};
+    FileSystemChildMetadata dest{testFile,
+                                 firstChildDescendantMeta.childName()};
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_STORAGE_CONSTRAINT, rv);
+  }
+
+  {
+    // Move file one level up with correct isDirectory flag
+    FileSystemEntryMetadata src{testFile, testFileMeta.childName(),
+                                /* is directory */ false};
+    FileSystemChildMetadata dest{rootId, src.entryName()};
+    TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
+    ASSERT_TRUE(isMoved);
+  }
+
+  {
+    // Check that listings are as expected
+    TEST_TRY_UNWRAP(FileSystemDirectoryListing contents,
+                    dm->GetDirectoryEntries(firstChildDir, 0u));
+    ASSERT_TRUE(contents.files().IsEmpty());
+    ASSERT_EQ(1u, contents.directories().Length());
+    ASSERT_STREQ(firstChildDescendantMeta.childName(),
+                 contents.directories()[0].entryName());
+  }
+
+  {
+    TEST_TRY_UNWRAP(FileSystemDirectoryListing contents,
+                    dm->GetDirectoryEntries(rootId, 0u));
+    ASSERT_EQ(1u, contents.files().Length());
+    ASSERT_EQ(1u, contents.files().Length());
+    ASSERT_STREQ(testFileMeta.childName(), contents.files()[0].entryName());
+  }
+
+  {
+    TEST_TRY_UNWRAP(Path entryPath,
+                    dm->Resolve({rootId, subSubFile.entryId()}));
+    ASSERT_EQ(1u, entryPath.Length());
+    ASSERT_STREQ(testFileMeta.childName(), entryPath[0]);
+  }
+
+  {
+    // Try to get a handle to the old item
+    TEST_TRY_UNWRAP_ERR(nsresult rv,
+                        dm->GetOrCreateFile(testFileMeta, /* create */ false));
+    ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
+  }
+
+  {
+    // Try to move + rename file one level down to collide with subSubDirectory
+    FileSystemEntryMetadata src{testFile, testFileMeta.childName(),
+                                /* is directory */ false};
+    FileSystemChildMetadata dest{firstChildDir,
+                                 firstChildDescendantMeta.childName()};
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, rv);
+  }
+
+  // Rename file first and then try to move it to collide with subSubDirectory
+  {
+    // Rename
+    FileSystemEntryMetadata src{testFile, testFileMeta.childName(),
+                                /* is directory */ false};
+    FileSystemChildMetadata dest{rootId, firstChildDescendantMeta.childName()};
+    TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
+    ASSERT_TRUE(isMoved);
+  }
+
+  {
+    // Try to move one level down
+    FileSystemEntryMetadata src{testFile, firstChildDescendantMeta.childName(),
+                                /* is directory */ false};
+    FileSystemChildMetadata dest{firstChildDir,
+                                 firstChildDescendantMeta.childName()};
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, rv);
+  }
+
+  {
+    // Try to move subSubDirectory one level up to collide with file
+    FileSystemEntryMetadata src{firstChildDescendant,
+                                firstChildDescendantMeta.childName(),
+                                /* is directory */ true};
+    FileSystemChildMetadata dest{rootId, firstChildDescendantMeta.childName()};
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, rv);
+  }
+
+  // Create a new file in the subsubdirectory
+  FileSystemChildMetadata newFileMeta{firstChildDescendant,
+                                      testFileMeta.childName()};
+  TEST_TRY_UNWRAP(EntryId newFile,
+                  dm->GetOrCreateFile(newFileMeta, /* create */ true));
+
+  {
+    TEST_TRY_UNWRAP(Path entryPath, dm->Resolve({rootId, newFile}));
+    ASSERT_EQ(3u, entryPath.Length());
+    ASSERT_STREQ(firstChildMeta.childName(), entryPath[0]);
+    ASSERT_STREQ(firstChildDescendantMeta.childName(), entryPath[1]);
+    ASSERT_STREQ(testFileMeta.childName(), entryPath[2]);
+  }
+
+  {
+    // Move subSubDirectory one level up and rename it to testFile's old name
+    FileSystemEntryMetadata src{firstChildDescendant,
+                                firstChildDescendantMeta.childName(),
+                                /* is directory */ true};
+    FileSystemChildMetadata dest{rootId, testFileMeta.childName()};
+    TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
+    ASSERT_TRUE(isMoved);
+  }
+
+  {
+    // Try to get handles to the moved items
+    TEST_TRY_UNWRAP_ERR(nsresult rv,
+                        dm->GetOrCreateDirectory(firstChildDescendantMeta,
+                                                 /* create */ false));
+    ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
+
+    // Still under the same parent
+    TEST_TRY_UNWRAP(EntryId handle, dm->GetOrCreateFile(newFileMeta,
+                                                        /* create */ false));
+    ASSERT_STREQ(handle, newFile);
+
+    TEST_TRY_UNWRAP(handle,
+                    dm->GetOrCreateDirectory({rootId, testFileMeta.childName()},
+                                             /* create */ false));
+    ASSERT_STREQ(handle, firstChildDescendant);
+  }
+
+  {
+    // Check that new file path is as expected
+    TEST_TRY_UNWRAP(Path entryPath, dm->Resolve({rootId, newFile}));
+    ASSERT_EQ(2u, entryPath.Length());
+    ASSERT_STREQ(testFileMeta.childName(), entryPath[0]);
+    ASSERT_STREQ(testFileMeta.childName(), entryPath[1]);
+  }
+
+  {
+    // Try to overwrite subDirectory with subSubDirectory with rename
+    FileSystemEntryMetadata src{firstChildDescendant,
+                                firstChildDescendantMeta.childName(),
+                                /* is directory */ true};
+    FileSystemChildMetadata dest{rootId, firstChildMeta.childName()};
+    TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
+    ASSERT_NSEQ(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, rv);
+  }
+
+  // Move first file and subSubDirectory back one level down keeping the names
+  {
+    // First file with wrong isDirectory flag
+    FileSystemEntryMetadata src{testFile, firstChildDescendantMeta.childName(),
+                                /* is directory */ true};
+    FileSystemChildMetadata dest{firstChildDir,
+                                 firstChildDescendantMeta.childName()};
+
+    // Flag is ignored
+    TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
+    ASSERT_TRUE(isMoved);
+  }
+
+  {
+    // Then move the directory with wrong isDirectory flag
+    FileSystemEntryMetadata src{firstChildDescendant, testFileMeta.childName(),
+                                /* is directory */ false};
+    FileSystemChildMetadata dest{firstChildDir, testFileMeta.childName()};
+
+    // Flag is ignored
+    TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
+    ASSERT_TRUE(isMoved);
+  }
+
+  // Check that listings are as expected
+  {
+    TEST_TRY_UNWRAP(FileSystemDirectoryListing contents,
+                    dm->GetDirectoryEntries(rootId, 0u));
+    ASSERT_TRUE(contents.files().IsEmpty());
+    ASSERT_EQ(1u, contents.directories().Length());
+    ASSERT_STREQ(firstChildMeta.childName(),
+                 contents.directories()[0].entryName());
+  }
+
+  {
+    TEST_TRY_UNWRAP(FileSystemDirectoryListing contents,
+                    dm->GetDirectoryEntries(firstChildDir, 0u));
+    ASSERT_EQ(1u, contents.files().Length());
+    ASSERT_EQ(1u, contents.directories().Length());
+    ASSERT_STREQ(firstChildDescendantMeta.childName(),
+                 contents.files()[0].entryName());
+    ASSERT_STREQ(testFileMeta.childName(),
+                 contents.directories()[0].entryName());
+  }
+
+  {
+    TEST_TRY_UNWRAP(FileSystemDirectoryListing contents,
+                    dm->GetDirectoryEntries(firstChildDescendant, 0u));
+    ASSERT_EQ(1u, contents.files().Length());
+    ASSERT_TRUE(contents.directories().IsEmpty());
+    ASSERT_STREQ(testFileMeta.childName(), contents.files()[0].entryName());
+  }
+
+  // Names are swapped
+  {
+    TEST_TRY_UNWRAP(Path entryPath,
+                    dm->Resolve({rootId, subSubFile.entryId()}));
+    ASSERT_EQ(2u, entryPath.Length());
+    ASSERT_STREQ(firstChildMeta.childName(), entryPath[0]);
+    ASSERT_STREQ(firstChildDescendantMeta.childName(), entryPath[1]);
+  }
+
+  {
+    TEST_TRY_UNWRAP(Path entryPath, dm->Resolve({rootId, subSubDir.entryId()}));
+    ASSERT_EQ(2u, entryPath.Length());
+    ASSERT_STREQ(firstChildMeta.childName(), entryPath[0]);
+    ASSERT_STREQ(testFileMeta.childName(), entryPath[1]);
+  }
+
+  {
+    // Check that new file path is also as expected
+    TEST_TRY_UNWRAP(Path entryPath, dm->Resolve({rootId, newFile}));
+    ASSERT_EQ(3u, entryPath.Length());
+    ASSERT_STREQ(firstChildMeta.childName(), entryPath[0]);
+    ASSERT_STREQ(testFileMeta.childName(), entryPath[1]);
+    ASSERT_STREQ(testFileMeta.childName(), entryPath[2]);
+  }
+
+  {
+    // Try to get handles to the old items
+    TEST_TRY_UNWRAP_ERR(nsresult rv,
+                        dm->GetOrCreateFile({rootId, testFileMeta.childName()},
+                                            /* create */ false));
+    ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
+
+    TEST_TRY_UNWRAP_ERR(
+        rv, dm->GetOrCreateFile({rootId, firstChildDescendantMeta.childName()},
+                                /* create */ false));
+    ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
+
+    TEST_TRY_UNWRAP_ERR(
+        rv, dm->GetOrCreateDirectory({rootId, testFileMeta.childName()},
+                                     /* create */ false));
+    ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
+
+    TEST_TRY_UNWRAP_ERR(rv, dm->GetOrCreateDirectory(
+                                {rootId, firstChildDescendantMeta.childName()},
+                                /* create */ false));
+    ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
+
+    TEST_TRY_UNWRAP_ERR(
+        rv, dm->GetOrCreateFile({firstChildDir, testFileMeta.childName()},
+                                /* create */ false));
+    ASSERT_NSEQ(NS_ERROR_DOM_TYPE_MISMATCH_ERR, rv);
+
+    TEST_TRY_UNWRAP_ERR(
+        rv, dm->GetOrCreateDirectory(
+                {firstChildDir, firstChildDescendantMeta.childName()},
+                /* create */ false));
+    ASSERT_NSEQ(NS_ERROR_DOM_TYPE_MISMATCH_ERR, rv);
+
+    TEST_TRY_UNWRAP_ERR(rv,
+                        dm->GetOrCreateFile({testFile, newFileMeta.childName()},
+                                            /* create */ false));
+    ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
+  }
+}
+
 }  // namespace mozilla::dom::fs::test

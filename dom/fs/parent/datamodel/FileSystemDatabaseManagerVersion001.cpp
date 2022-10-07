@@ -158,6 +158,31 @@ Result<Path, QMResult> ResolveReversedPath(
   return pathResult;
 }
 
+Result<bool, QMResult> IsAncestor(const FileSystemConnection& aConnection,
+                                  const FileSystemEntryPair& aEndpoints) {
+  const nsCString pathQuery =
+      "WITH RECURSIVE followPath(handle, parent) AS ( "
+      "SELECT handle, parent "
+      "FROM Entries "
+      "WHERE handle=:entryId "
+      "UNION "
+      "SELECT Entries.handle, Entries.parent FROM followPath, Entries "
+      "WHERE followPath.parent=Entries.handle ) "
+      "SELECT EXISTS "
+      "(SELECT 1 FROM followPath "
+      "WHERE handle=:possibleAncestor ) "
+      ";"_ns;
+
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(aConnection, pathQuery));
+  QM_TRY(
+      QM_TO_RESULT(stmt.BindEntryIdByName("entryId"_ns, aEndpoints.childId())));
+  QM_TRY(QM_TO_RESULT(
+      stmt.BindEntryIdByName("possibleAncestor"_ns, aEndpoints.parentId())));
+
+  return stmt.YesOrNoQuery();
+}
+
 Result<bool, QMResult> DoesFileExist(const FileSystemConnection& mConnection,
                                      const FileSystemChildMetadata& aHandle) {
   MOZ_ASSERT(!aHandle.parentId().IsEmpty());
@@ -818,6 +843,15 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
   QM_TRY_UNWRAP(exists, DoesDirectoryExist(mConnection, aNewDesignation));
   if (exists) {
     return Err(QMResult(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR));
+  }
+
+  // To prevent cyclic paths, we check that there is no path from
+  // the item to be moved to the destination folder.
+  QM_TRY_UNWRAP(
+      const bool isDestinationUnderSelf,
+      IsAncestor(mConnection, {aHandle.entryId(), aNewDesignation.parentId()}));
+  if (isDestinationUnderSelf) {
+    return Err(QMResult(NS_ERROR_DOM_INVALID_MODIFICATION_ERR));
   }
 
   const nsLiteralCString updateEntryParentQuery =
