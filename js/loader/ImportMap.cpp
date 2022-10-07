@@ -74,7 +74,7 @@ static ResolveResult ResolveURLLikeModuleSpecifier(const nsAString& aSpecifier,
   return WrapNotNull(uri);
 }
 
-// https://wicg.github.io/import-maps/#normalize-a-specifier-key
+// https://whatpr.org/html/8075/webappapis.html#normalizing-a-specifier-key
 static void NormalizeSpecifierKey(const nsAString& aSpecifierKey,
                                   nsIURI* aBaseURL,
                                   const ReportWarningHelper& aWarning,
@@ -105,11 +105,11 @@ static void NormalizeSpecifierKey(const nsAString& aSpecifierKey,
   aRetVal = aSpecifierKey;
 }
 
-// https://wicg.github.io/import-maps/#sort-and-normalize-a-specifier-map
+// https://whatpr.org/html/8075/webappapis.html#sorting-and-normalizing-a-module-specifier-map
 static UniquePtr<SpecifierMap> SortAndNormalizeSpecifierMap(
     JSContext* aCx, JS::HandleObject aOriginalMap, nsIURI* aBaseURL,
     const ReportWarningHelper& aWarning) {
-  // Step 1. Let normalized be an empty map.
+  // Step 1. Let normalized be an empty ordered map.
   UniquePtr<SpecifierMap> normalized = MakeUnique<SpecifierMap>();
 
   JS::Rooted<JS::IdVector> specifierKeys(aCx, JS::IdVector(aCx));
@@ -139,8 +139,8 @@ static UniquePtr<SpecifierMap> SortAndNormalizeSpecifierMap(
                    nullptr);
     // Step 2.3. If value is not a string, then:
     if (!idVal.isString()) {
-      // Step 2.3.1. Report a warning to the console that addresses need to
-      // be strings.
+      // Step 2.3.1. The user agent may report a warning to the console
+      // indicating that addresses need to be strings.
       aWarning.Report("ImportMapAddressesNotStrings");
 
       // Step 2.3.2. Set normalized[normalizedSpecifierKey] to null.
@@ -159,8 +159,8 @@ static UniquePtr<SpecifierMap> SortAndNormalizeSpecifierMap(
 
     // Step 2.5. If addressURL is null, then:
     if (parseResult.isErr()) {
-      // Step 2.5.1. Report a warning to the console that the address was
-      // invalid.
+      // Step 2.5.1. The user agent may report a warning to the console
+      // indicating that the address was invalid.
       AutoTArray<nsString, 1> params;
       params.AppendElement(value);
       aWarning.Report("ImportMapInvalidAddress", params);
@@ -178,9 +178,10 @@ static UniquePtr<SpecifierMap> SortAndNormalizeSpecifierMap(
     // of addressURL does not end with U+002F (/), then:
     if (StringEndsWith(specifierKey, u"/"_ns) &&
         !StringEndsWith(address, "/"_ns)) {
-      // Step 2.6.1. Report a warning to the console that an invalid address
-      // was given for the specifier key specifierKey; since specifierKey
-      // ended in a slash, the address needs to as well.
+      // Step 2.6.1. The user agent may report a warning to the console
+      // indicating that an invalid address was given for the specifier key
+      // specifierKey; since specifierKey ends with a slash, the address needs
+      // to as well.
       AutoTArray<nsString, 2> params;
       params.AppendElement(specifierKey);
       params.AppendElement(NS_ConvertUTF8toUTF16(address));
@@ -229,7 +230,7 @@ static bool IsMapObject(JSContext* aCx, JS::HandleValue aMapVal, bool* aIsMap) {
   return true;
 }
 
-// https://wicg.github.io/import-maps/#sort-and-normalize-scopes
+// https://whatpr.org/html/8075/webappapis.html#sorting-and-normalizing-scopes
 static UniquePtr<ScopeMap> SortAndNormalizeScopes(
     JSContext* aCx, JS::HandleObject aOriginalMap, nsIURI* aBaseURL,
     const ReportWarningHelper& aWarning) {
@@ -247,9 +248,9 @@ static UniquePtr<ScopeMap> SortAndNormalizeScopes(
     nsAutoJSString scopePrefix;
     NS_ENSURE_TRUE(scopePrefix.init(aCx, scopeKey), nullptr);
 
-    // Step 2.1. If potentialSpecifierMap is not a map, then throw a TypeError
-    // indicating that the value of the scope with prefix scopePrefix needs to
-    // be a JSON object.
+    // Step 2.1. If potentialSpecifierMap is not an ordered map, then throw a
+    // TypeError indicating that the value of the scope with prefix scopePrefix
+    // needs to be a JSON object.
     JS::RootedValue mapVal(aCx);
     NS_ENSURE_TRUE(JS_GetPropertyById(aCx, aOriginalMap, scopeKey, &mapVal),
                    nullptr);
@@ -265,16 +266,16 @@ static UniquePtr<ScopeMap> SortAndNormalizeScopes(
       return nullptr;
     }
 
-    // Step 2.2. Let scopePrefixURL be the result of parsing scopePrefix with
-    // baseURL as the base URL.
+    // Step 2.2. Let scopePrefixURL be the result of URL parsing scopePrefix
+    // with baseURL.
     nsCOMPtr<nsIURI> scopePrefixURL;
     nsresult rv = NS_NewURI(getter_AddRefs(scopePrefixURL), scopePrefix,
                             nullptr, aBaseURL);
 
     // Step 2.3. If scopePrefixURL is failure, then:
     if (NS_FAILED(rv)) {
-      // Step 2.3.1. Report a warning to the console that the scope prefix URL
-      // was not parseable.
+      // Step 2.3.1. The user agent may report a warning to the console that
+      // the scope prefix URL was not parseable.
       AutoTArray<nsString, 1> params;
       params.AppendElement(scopePrefix);
       aWarning.Report("ImportMapScopePrefixNotParseable", params);
@@ -300,14 +301,15 @@ static UniquePtr<ScopeMap> SortAndNormalizeScopes(
                                  std::move(specifierMap));
   }
 
-  // Step 3. Return the result of sorting normalized, with an entry a being less
-  // than an entry b if b’s key is code unit less than a’s key.
+  // Step 3. Return the result of sorting in descending order normalized, with
+  // an entry a being less than an entry b if a's key is code unit less than b's
+  // key.
   //
   // Impl note: The sorting is done when inserting the entry.
   return normalized;
 }
 
-// https://wicg.github.io/import-maps/#parse-an-import-map-string
+// https://whatpr.org/html/8075/webappapis.html#parse-an-import-map-string
 // static
 UniquePtr<ImportMap> ImportMap::ParseString(
     JSContext* aCx, SourceText<char16_t>& aInput, nsIURI* aBaseURL,
@@ -321,8 +323,8 @@ UniquePtr<ImportMap> ImportMap::ParseString(
     return nullptr;
   }
 
-  // Step 2. If parsed is not a map, then throw a TypeError indicating that
-  // the top-level value needs to be a JSON object.
+  // Step 2. If parsed is not an ordered map, then throw a TypeError indicating
+  // that the top-level value needs to be a JSON object.
   bool isMap;
   if (!IsMapObject(aCx, parsedVal, &isMap)) {
     return nullptr;
@@ -339,7 +341,7 @@ UniquePtr<ImportMap> ImportMap::ParseString(
     return nullptr;
   }
 
-  // Step 3. Let sortedAndNormalizedImports be an empty map.
+  // Step 3. Let sortedAndNormalizedImports be an empty ordered map.
   //
   // Impl note: If parsed["imports"] doesn't exist, we will allocate
   // sortedAndNormalizedImports to an empty map in Step 8 below.
@@ -347,8 +349,9 @@ UniquePtr<ImportMap> ImportMap::ParseString(
 
   // Step 4. If parsed["imports"] exists, then:
   if (!importsVal.isUndefined()) {
-    // Step 4.1. If parsed["imports"] is not a map, then throw a TypeError
-    // indicating that the "imports" top-level key needs to be a JSON object.
+    // Step 4.1. If parsed["imports"] is not an ordered map, then throw a
+    // TypeError indicating that the "imports" top-level key needs to be a JSON
+    // object.
     bool isMap;
     if (!IsMapObject(aCx, importsVal, &isMap)) {
       return nullptr;
@@ -360,7 +363,7 @@ UniquePtr<ImportMap> ImportMap::ParseString(
     }
 
     // Step 4.2. Set sortedAndNormalizedImports to the result of sorting and
-    // normalizing a specifier map given parsed["imports"] and baseURL.
+    // normalizing a module specifier map given parsed["imports"] and baseURL.
     JS::RootedObject importsObj(aCx, &importsVal.toObject());
     sortedAndNormalizedImports =
         SortAndNormalizeSpecifierMap(aCx, importsObj, aBaseURL, aWarning);
@@ -374,7 +377,7 @@ UniquePtr<ImportMap> ImportMap::ParseString(
     return nullptr;
   }
 
-  // Step 5. Let sortedAndNormalizedScopes be an empty map.
+  // Step 5. Let sortedAndNormalizedScopes be an empty ordered map.
   //
   // Impl note: If parsed["scopes"] doesn't exist, we will allocate
   // sortedAndNormalizedScopes to an empty map in Step 8 below.
@@ -382,8 +385,9 @@ UniquePtr<ImportMap> ImportMap::ParseString(
 
   // Step 6. If parsed["scopes"] exists, then:
   if (!scopesVal.isUndefined()) {
-    // Step 6.1. If parsed["scopes"] is not a map, then throw a TypeError
-    // indicating that the "scopes" top-level key needs to be a JSON object.
+    // Step 6.1. If parsed["scopes"] is not an ordered map, then throw a
+    // TypeError indicating that the "scopes" top-level key needs to be a JSON
+    // object.
     bool isMap;
     if (!IsMapObject(aCx, scopesVal, &isMap)) {
       return nullptr;
@@ -405,8 +409,8 @@ UniquePtr<ImportMap> ImportMap::ParseString(
   }
 
   // Step 7. If parsed’s keys contains any items besides "imports" or
-  // "scopes", report a warning to the console that an invalid top-level key
-  // was present in the import map.
+  // "scopes", then the user agent should report a warning to the console
+  // indicating that an invalid top-level key was present in the import map.
   JS::Rooted<JS::IdVector> keys(aCx, JS::IdVector(aCx));
   if (!JS_Enumerate(aCx, parsedObj, &keys)) {
     return nullptr;
@@ -434,7 +438,7 @@ UniquePtr<ImportMap> ImportMap::ParseString(
     sortedAndNormalizedScopes = MakeUnique<ScopeMap>();
   }
 
-  // Step 8. Return the import map whose imports are
+  // Step 8. Return an import map whose imports are
   // sortedAndNormalizedImports and whose scopes scopes are
   // sortedAndNormalizedScopes.
   return MakeUnique<ImportMap>(std::move(sortedAndNormalizedImports),
@@ -450,7 +454,7 @@ static bool IsSpecialScheme(nsIURI* aURI) {
          scheme.EqualsLiteral("ws") || scheme.EqualsLiteral("wss");
 }
 
-// https://wicg.github.io/import-maps/#resolve-an-imports-match
+// https://whatpr.org/html/8075/webappapis.html#resolving-an-imports-match
 static mozilla::Result<nsCOMPtr<nsIURI>, ResolveError> ResolveImportsMatch(
     nsString& aNormalizedSpecifier, nsIURI* aAsURL,
     const SpecifierMap* aSpecifierMap) {
@@ -483,7 +487,7 @@ static mozilla::Result<nsCOMPtr<nsIURI>, ResolveError> ResolveImportsMatch(
 
     // Step 1.2. If all of the following are true:
     // specifierKey ends with U+002F (/),
-    // normalizedSpecifier starts with specifierKey, and
+    // specifierKey is a code unit prefix of normalizedSpecifier, and
     // either asURL is null, or asURL is special
     if (StringEndsWith(specifierKey, u"/"_ns) &&
         StringBeginsWith(aNormalizedSpecifier, specifierKey) &&
@@ -509,12 +513,12 @@ static mozilla::Result<nsCOMPtr<nsIURI>, ResolveError> ResolveImportsMatch(
       nsAutoString afterPrefix(
           Substring(aNormalizedSpecifier, specifierKey.Length()));
 
-      // Step 1.2.4. Assert: resolutionResult, serialized, ends with "/", as
-      // enforced during parsing.
+      // Step 1.2.4. Assert: resolutionResult, serialized, ends with U+002F (/),
+      // as enforced during parsing
       MOZ_ASSERT(StringEndsWith(resolutionResult->GetSpecOrDefault(), "/"_ns));
 
-      // Step 1.2.5. Let url be the result of parsing afterPrefix relative to
-      // the base URL resolutionResult.
+      // Step 1.2.5. Let url be the result of URL parsing afterPrefix with
+      // resolutionResult.
       nsCOMPtr<nsIURI> url;
       nsresult rv = NS_NewURI(getter_AddRefs(url), afterPrefix, nullptr,
                               resolutionResult);
@@ -541,8 +545,8 @@ static mozilla::Result<nsCOMPtr<nsIURI>, ResolveError> ResolveImportsMatch(
       // Step 1.2.7. Assert: url is a URL.
       MOZ_ASSERT(url);
 
-      // Step 1.2.8. If the serialization of url does not start with the
-      // serialization of resolutionResult, then throw a TypeError indicating
+      // Step 1.2.8. If the serialization of resolutionResult is not a code unit
+      // prefix of the serialization of url, then throw a TypeError indicating
       // that resolution of normalizedSpecifier was blocked due to it
       // backtracking above its prefix specifierKey.
       //
@@ -570,7 +574,7 @@ static mozilla::Result<nsCOMPtr<nsIURI>, ResolveError> ResolveImportsMatch(
   return nsCOMPtr<nsIURI>(nullptr);
 }
 
-// https://wicg.github.io/import-maps/#resolve-a-module-specifier
+// https://whatpr.org/html/8075/webappapis.html#resolve-a-module-specifier
 // static
 ResolveResult ImportMap::ResolveModuleSpecifier(ImportMap* aImportMap,
                                                 ScriptLoaderInterface* aLoader,
@@ -585,10 +589,10 @@ ResolveResult ImportMap::ResolveModuleSpecifier(ImportMap* aImportMap,
     baseURL = aLoader->GetBaseURI();
   }
 
-  // Step 6. Let asURL be the result of resolving a URL-like module specifier
+  // Step 7. Let asURL be the result of resolving a URL-like module specifier
   // given specifier and baseURL.
   //
-  // Impl note: Step 5 is done below if aImportMap exists.
+  // Impl note: Step 6 is done below if aImportMap exists.
   auto parseResult = ResolveURLLikeModuleSpecifier(aSpecifier, baseURL);
   nsCOMPtr<nsIURI> asURL;
   if (parseResult.isOk()) {
@@ -596,23 +600,24 @@ ResolveResult ImportMap::ResolveModuleSpecifier(ImportMap* aImportMap,
   }
 
   if (aImportMap) {
-    // Step 5. Let baseURLString be baseURL, serialized.
+    // Step 6. Let baseURLString be baseURL, serialized.
     nsCString baseURLString = baseURL->GetSpecOrDefault();
 
-    // Step 7. Let normalizedSpecifier be the serialization of asURL, if asURL
+    // Step 8. Let normalizedSpecifier be the serialization of asURL, if asURL
     // is non-null; otherwise, specifier.
     nsAutoString normalizedSpecifier =
         asURL ? NS_ConvertUTF8toUTF16(asURL->GetSpecOrDefault())
               : nsAutoString{aSpecifier};
 
-    // Step 8. For each scopePrefix → scopeImports of importMap’s scopes,
+    // Step 9. For each scopePrefix → scopeImports of importMap’s scopes,
     for (auto&& [scopePrefix, scopeImports] : *aImportMap->mScopes) {
-      // Step 8.1. If scopePrefix is baseURLString, or if scopePrefix ends with
-      // U+002F (/) and baseURLString starts with scopePrefix, then:
+      // Step 9.1. If scopePrefix is baseURLString, or if scopePrefix ends with
+      // U+002F (/) and scopePrefix is a code unit prefix of baseURLString,
+      // then:
       if (scopePrefix.Equals(baseURLString) ||
           (StringEndsWith(scopePrefix, "/"_ns) &&
            StringBeginsWith(baseURLString, scopePrefix))) {
-        // Step 8.1.1. Let scopeImportsMatch be the result of resolving an
+        // Step 9.1.1. Let scopeImportsMatch be the result of resolving an
         // imports match given normalizedSpecifier, asURL, and scopeImports.
         auto result =
             ResolveImportsMatch(normalizedSpecifier, asURL, scopeImports.get());
@@ -621,7 +626,7 @@ ResolveResult ImportMap::ResolveModuleSpecifier(ImportMap* aImportMap,
         }
 
         nsCOMPtr<nsIURI> scopeImportsMatch = result.unwrap();
-        // Step 8.1.2. If scopeImportsMatch is not null, then return
+        // Step 9.1.2. If scopeImportsMatch is not null, then return
         // scopeImportsMatch.
         if (scopeImportsMatch) {
           LOG((
@@ -632,7 +637,7 @@ ResolveResult ImportMap::ResolveModuleSpecifier(ImportMap* aImportMap,
       }
     }
 
-    // Step 9. Let topLevelImportsMatch be the result of resolving an imports
+    // Step 10. Let topLevelImportsMatch be the result of resolving an imports
     // match given normalizedSpecifier, asURL, and importMap’s imports.
     auto result = ResolveImportsMatch(normalizedSpecifier, asURL,
                                       aImportMap->mImports.get());
@@ -641,7 +646,7 @@ ResolveResult ImportMap::ResolveModuleSpecifier(ImportMap* aImportMap,
     }
     nsCOMPtr<nsIURI> topLevelImportsMatch = result.unwrap();
 
-    // Step 10. If topLevelImportsMatch is not null, then return
+    // Step 11. If topLevelImportsMatch is not null, then return
     // topLevelImportsMatch.
     if (topLevelImportsMatch) {
       LOG(("ImportMap::ResolveModuleSpecifier returns topLevelImportsMatch: %s",
@@ -650,7 +655,7 @@ ResolveResult ImportMap::ResolveModuleSpecifier(ImportMap* aImportMap,
     }
   }
 
-  // Step 11. At this point, the specifier was able to be turned in to a URL,
+  // Step 12. At this point, the specifier was able to be turned in to a URL,
   // but it wasn’t remapped to anything by importMap. If asURL is not null, then
   // return asURL.
   if (asURL) {
@@ -659,7 +664,7 @@ ResolveResult ImportMap::ResolveModuleSpecifier(ImportMap* aImportMap,
     return WrapNotNull(asURL);
   }
 
-  // Step 12. Throw a TypeError indicating that specifier was a bare specifier,
+  // Step 13. Throw a TypeError indicating that specifier was a bare specifier,
   // but was not remapped to anything by importMap.
   if (parseResult.unwrapErr() != ResolveError::FailureMayBeBare) {
     // We may have failed to parse a non-bare specifier for another reason.
