@@ -30,7 +30,7 @@ add_task(async function checkWrongSystemTimeWarning() {
 
     return SpecialPowers.spawn(browser, [], async function() {
       let doc = content.document;
-      let div = doc.getElementById("errorShortDescText");
+      let div = doc.getElementById("errorShortDesc");
       let learnMoreLink = doc.getElementById("learnMoreLink");
 
       await ContentTaskUtils.waitForCondition(

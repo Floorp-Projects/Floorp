@@ -117,8 +117,9 @@ class NetErrorChild extends RemotePageChild {
           hostAndPath: displayHost + pathQueryRef,
         });
 
-        doc.getElementById("errorShortDescText").textContent += " ";
-        doc.getElementById("errorShortDescText").appendChild(span);
+        const shortDesc = doc.getElementById("errorShortDesc");
+        shortDesc.textContent += " ";
+        shortDesc.appendChild(span);
       },
     };
 

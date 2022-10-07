@@ -189,9 +189,7 @@ add_task(async function checkhideAddExceptionButtonViaPref() {
         ? content.document.querySelector("iframe").contentDocument
         : content.document;
 
-      let exceptionButton = doc.querySelector(
-        ".exceptionDialogButtonContainer"
-      );
+      let exceptionButton = doc.getElementById("exceptionDialogButton");
       ok(
         ContentTaskUtils.is_hidden(exceptionButton),
         "Exception button is hidden."

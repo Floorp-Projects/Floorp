@@ -123,8 +123,8 @@ function retryThis(buttonEl) {
 
 function showPrefChangeContainer() {
   const panel = document.getElementById("prefChangeContainer");
-  panel.style.display = "block";
-  document.getElementById("netErrorButtonContainer").style.display = "none";
+  panel.hidden = false;
+  document.getElementById("netErrorButtonContainer").hidden = true;
   document
     .getElementById("prefResetButton")
     .addEventListener("click", function resetPreferences() {
@@ -164,7 +164,7 @@ function setupAdvancedButton() {
     // error code link in the advanced panel.
     toggleCertErrorDebugInfoVisibility(false);
 
-    if (panel.style.display == "block") {
+    if (!panel.hidden) {
       // send event to trigger telemetry ping
       var event = new CustomEvent("AboutNetErrorUIExpanded", { bubbles: true });
       document.dispatchEvent(event);
@@ -190,7 +190,7 @@ function disallowCertOverridesIfNeeded() {
       "certerror-what-should-i-do-bad-sts-cert-explanation",
       { hostname: HOST_NAME }
     );
-    stsExplanation.removeAttribute("hidden");
+    stsExplanation.hidden = false;
 
     document.l10n.setAttributes(
       document.getElementById("returnButton"),
@@ -228,7 +228,7 @@ function initPage() {
 
   const docTitle = document.querySelector("title");
   const bodyTitle = document.querySelector(".title-text");
-  const shortDesc = document.getElementById("errorShortDescText");
+  const shortDesc = document.getElementById("errorShortDesc");
 
   if (gIsCertError) {
     const isStsError = window !== window.top || gHasSts;
@@ -266,7 +266,8 @@ function initPage() {
   document.body.classList.add("neterror");
 
   let longDesc = document.getElementById("errorLongDesc");
-  const netErrorButton = document.getElementById("netErrorButtonContainer");
+  const tryAgain = document.getElementById("netErrorButtonContainer");
+  tryAgain.hidden = false;
   const learnMore = document.getElementById("learnMoreContainer");
   const learnMoreLink = document.getElementById("learnMoreLink");
   learnMoreLink.setAttribute("href", baseURL + "connection-not-secure");
@@ -281,7 +282,7 @@ function initPage() {
 
       // Remove the "Try again" button from pages that don't need it.
       // For pages blocked by policy, trying again won't help.
-      netErrorButton.style.display = "none";
+      tryAgain.hidden = true;
       break;
 
     case "cspBlocked":
@@ -290,19 +291,18 @@ function initPage() {
 
       // Remove the "Try again" button for XFO and CSP violations,
       // since it's almost certainly useless. (Bug 553180)
-      netErrorButton.style.display = "none";
+      tryAgain.hidden = true;
 
       // Adding a button for opening websites blocked for CSP and XFO violations
       // in a new window. (Bug 1461195)
-      document.getElementById("errorShortDesc").style.display = "none";
+      document.getElementById("errorShortDesc").hidden = true;
 
       document.l10n.setAttributes(longDesc, "csp-xfo-blocked-long-desc", {
         hostname: document.location.hostname, // FIXME - should this be HOST_NAME?
       });
       longDesc = null;
 
-      document.getElementById("openInNewWindowContainer").style.display =
-        "block";
+      document.getElementById("openInNewWindowContainer").hidden = false;
 
       const openInNewWindowButton = document.getElementById(
         "openInNewWindowButton"
@@ -310,7 +310,7 @@ function initPage() {
       openInNewWindowButton.href = document.location.href;
 
       // Add a learn more link
-      learnMore.style.display = "block";
+      learnMore.hidden = false;
       learnMoreLink.setAttribute("href", baseURL + "xframe-neterror-page");
 
       setupBlockingReportingUI();
@@ -325,16 +325,18 @@ function initPage() {
     case "inadequateSecurityError":
       // Remove the "Try again" button from pages that don't need it.
       // For HTTP/2 inadequate security, trying again won't help.
-      netErrorButton.style.display = "none";
+      tryAgain.hidden = true;
       break;
 
     case "malformedURI":
       pageTitleId = "neterror-malformed-uri-page-title";
+      // Remove the "Try again" button from pages that don't need it.
+      tryAgain.hidden = true;
       break;
 
     // Pinning errors are of type nssFailure2
     case "nssFailure2": {
-      learnMore.style.display = "block";
+      learnMore.hidden = false;
 
       const errorCode = document.getNetErrorInfo().errorCodeString;
       switch (errorCode) {
@@ -363,16 +365,15 @@ function initPage() {
     }
 
     case "sslv3Used":
-      learnMore.style.display = "block";
+      learnMore.hidden = false;
       document.body.className = "certerror";
-      document.getElementById("advancedButton").style.display = "none";
       break;
   }
 
   document.l10n.setAttributes(docTitle, pageTitleId);
 
   if (!KNOWN_ERROR_TITLE_IDS.has(bodyTitleId)) {
-    console.error("No strings exist for error:", bodyTitleId);
+    console.error("No strings exist for error:", gErrorCode);
     bodyTitleId = "generic-title";
   }
   document.l10n.setAttributes(bodyTitle, bodyTitleId);
@@ -632,7 +633,7 @@ async function setNetErrorMessageFromCode() {
     errorMessage = await document.l10n.formatValue(errorCodeStrId);
   }
 
-  const shortDesc = document.getElementById("errorShortDescText");
+  const shortDesc = document.getElementById("errorShortDesc");
 
   if (errorMessage) {
     document.l10n.setAttributes(shortDesc, "ssl-connection-error", {
@@ -640,7 +641,7 @@ async function setNetErrorMessageFromCode() {
       hostname,
     });
 
-    const shortDesc2 = document.getElementById("errorShortDescText2");
+    const shortDesc2 = document.getElementById("errorShortDesc2");
     document.l10n.setAttributes(shortDesc2, "cert-error-code-prefix", {
       error: errorCodeStr,
     });
@@ -655,11 +656,12 @@ async function setNetErrorMessageFromCode() {
 
 function initPageCaptivePortal() {
   document.body.className = "captiveportal";
-  document
-    .getElementById("openPortalLoginPageButton")
-    .addEventListener("click", () => {
-      RPMSendAsyncMessage("Browser:OpenCaptivePortalPage");
-    });
+  document.getElementById("returnButton").hidden = true;
+  const openButton = document.getElementById("openPortalLoginPageButton");
+  openButton.hidden = false;
+  openButton.addEventListener("click", () => {
+    RPMSendAsyncMessage("Browser:OpenCaptivePortalPage");
+  });
 
   setFocus("#openPortalLoginPageButton");
   setupAdvancedButton();
@@ -684,7 +686,7 @@ function initPageCertError() {
     false
   );
   if (hideAddExceptionButton) {
-    document.querySelector(".exceptionDialogButtonContainer").hidden = true;
+    document.getElementById("exceptionDialogButton").hidden = true;
   }
 
   const els = document.querySelectorAll("[data-telemetry-id]");
@@ -730,6 +732,9 @@ function recordClickTelemetry(e) {
 }
 
 function initCertErrorPageActions() {
+  document.getElementById(
+    "certErrorAndCaptivePortalButtonContainer"
+  ).hidden = false;
   document
     .getElementById("returnButton")
     .addEventListener("click", onReturnButtonClick);
@@ -828,16 +833,15 @@ function setCertErrorDetails() {
 
   document.body.setAttribute("code", failedCertInfo.errorCodeString);
 
-  document.getElementById("learnMoreContainer").style.display = "block";
+  const learnMore = document.getElementById("learnMoreContainer");
+  learnMore.hidden = false;
   const learnMoreLink = document.getElementById("learnMoreLink");
   const baseURL = RPMGetFormatURLPref("app.support.baseURL");
   learnMoreLink.href = baseURL + "connection-not-secure";
 
   const bodyTitle = document.querySelector(".title-text");
-  const shortDesc = document.getElementById("errorShortDescText");
-  const shortDesc2 = document.getElementById("errorShortDescText2");
-  const whatToDo = document.getElementById("errorWhatToDoText");
-  const whatToDoTitle = document.getElementById("errorWhatToDoTitleText");
+  const shortDesc = document.getElementById("errorShortDesc");
+  const shortDesc2 = document.getElementById("errorShortDesc2");
 
   let whatToDoParts = null;
 
@@ -979,6 +983,13 @@ function setCertErrorDetails() {
           hostname: HOST_NAME,
           now,
         });
+        document.getElementById("returnButton").hidden = true;
+        document.getElementById("certErrorTryAgainButton").hidden = false;
+        document.getElementById("advancedButton").hidden = true;
+
+        document.getElementById("advancedPanelReturnButton").hidden = true;
+        document.getElementById("advancedPanelTryAgainButton").hidden = false;
+        document.getElementById("exceptionDialogButton").hidden = true;
         break;
       }
 
@@ -1004,7 +1015,6 @@ function setCertErrorDetails() {
         }
       }
 
-      whatToDoTitle.className = "bold";
       whatToDoParts ??= [
         [
           "p",
@@ -1021,11 +1031,11 @@ function setCertErrorDetails() {
   }
 
   if (whatToDoParts) {
-    document.l10n.setAttributes(
-      whatToDoTitle,
-      "certerror-what-can-you-do-about-it-title"
+    setNetErrorMessageFromParts(
+      document.getElementById("errorWhatToDoText"),
+      whatToDoParts
     );
-    setNetErrorMessageFromParts(whatToDo, whatToDoParts);
+    document.getElementById("errorWhatToDo").hidden = false;
   }
 }
 
@@ -1034,12 +1044,10 @@ async function setTechnicalDetailsOnCertError(
   failedCertInfo = document.getFailedCertSecurityInfo()
 ) {
   let technicalInfo = document.getElementById("badCertTechnicalInfo");
+  technicalInfo.textContent = "";
 
-  function setL10NLabel(l10nId, args = {}, attrs = {}, rewrite = true) {
+  function addLabel(l10nId, args = null, attrs = null) {
     let elem = document.createElement("label");
-    if (rewrite) {
-      technicalInfo.textContent = "";
-    }
     technicalInfo.appendChild(elem);
 
     let newLines = document.createTextNode("\n \n");
@@ -1047,17 +1055,13 @@ async function setTechnicalDetailsOnCertError(
 
     if (attrs) {
       let link = document.createElement("a");
-      for (let attr of Object.keys(attrs)) {
-        link.setAttribute(attr, attrs[attr]);
+      for (let [attr, value] of Object.entries(attrs)) {
+        link.setAttribute(attr, value);
       }
       elem.appendChild(link);
     }
 
-    if (args) {
-      document.l10n.setAttributes(elem, l10nId, args);
-    } else {
-      document.l10n.setAttributes(elem, l10nId);
-    }
+    document.l10n.setAttributes(elem, l10nId, args);
   }
 
   let cssClass = getCSSClass();
@@ -1076,46 +1080,41 @@ async function setTechnicalDetailsOnCertError(
   if (failedCertInfo.overridableErrorCategory == "trust-error") {
     switch (failedCertInfo.errorCodeString) {
       case "MOZILLA_PKIX_ERROR_MITM_DETECTED":
-        setL10NLabel("cert-error-mitm-intro");
-        setL10NLabel("cert-error-mitm-mozilla", {}, {}, false);
-        setL10NLabel("cert-error-mitm-connection", {}, {}, false);
+        addLabel("cert-error-mitm-intro");
+        addLabel("cert-error-mitm-mozilla");
+        addLabel("cert-error-mitm-connection");
         break;
       case "SEC_ERROR_UNKNOWN_ISSUER":
-        setL10NLabel("cert-error-trust-unknown-issuer-intro");
-        setL10NLabel("cert-error-trust-unknown-issuer", args, {}, false);
+        addLabel("cert-error-trust-unknown-issuer-intro");
+        addLabel("cert-error-trust-unknown-issuer", args);
         break;
       case "SEC_ERROR_CA_CERT_INVALID":
-        setL10NLabel("cert-error-intro", args);
-        setL10NLabel("cert-error-trust-cert-invalid", {}, {}, false);
+        addLabel("cert-error-intro", args);
+        addLabel("cert-error-trust-cert-invalid");
         break;
       case "SEC_ERROR_UNTRUSTED_ISSUER":
-        setL10NLabel("cert-error-intro", args);
-        setL10NLabel("cert-error-trust-untrusted-issuer", {}, {}, false);
+        addLabel("cert-error-intro", args);
+        addLabel("cert-error-trust-untrusted-issuer");
         break;
       case "SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED":
-        setL10NLabel("cert-error-intro", args);
-        setL10NLabel(
-          "cert-error-trust-signature-algorithm-disabled",
-          {},
-          {},
-          false
-        );
+        addLabel("cert-error-intro", args);
+        addLabel("cert-error-trust-signature-algorithm-disabled");
         break;
       case "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE":
-        setL10NLabel("cert-error-intro", args);
-        setL10NLabel("cert-error-trust-expired-issuer", {}, {}, false);
+        addLabel("cert-error-intro", args);
+        addLabel("cert-error-trust-expired-issuer");
         break;
       case "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT":
-        setL10NLabel("cert-error-intro", args);
-        setL10NLabel("cert-error-trust-self-signed", {}, {}, false);
+        addLabel("cert-error-intro", args);
+        addLabel("cert-error-trust-self-signed");
         break;
       case "MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED":
-        setL10NLabel("cert-error-intro", args);
-        setL10NLabel("cert-error-trust-symantec", {}, {}, false);
+        addLabel("cert-error-intro", args);
+        addLabel("cert-error-trust-symantec");
         break;
       default:
-        setL10NLabel("cert-error-intro", args);
-        setL10NLabel("cert-error-untrusted-default", {}, {}, false);
+        addLabel("cert-error-intro", args);
+        addLabel("cert-error-untrusted-default");
     }
   } else if (failedCertInfo.overridableErrorCategory == "domain-mismatch") {
     let serverCertBase64 = failedCertInfo.certChainStrings[0];
@@ -1172,8 +1171,7 @@ async function setTechnicalDetailsOnCertError(
         // If we set a link, meaning there's something helpful for
         // the user here, expand the section by default
         if (href && cssClass != "expertBadCert") {
-          document.getElementById("badCertAdvancedPanel").style.display =
-            "block";
+          document.getElementById("badCertAdvancedPanel").hidden = false;
           if (error == "nssBadCert") {
             // Toggling the advanced panel must ensure that the debugging
             // information panel is hidden as well, since it's opened by the
@@ -1184,21 +1182,21 @@ async function setTechnicalDetailsOnCertError(
 
         // Set the link if we want it.
         if (href) {
-          setL10NLabel("cert-error-domain-mismatch-single", args, {
+          addLabel("cert-error-domain-mismatch-single", args, {
             href,
             "data-l10n-name": "domain-mismatch-link",
             id: "cert_domain_link",
           });
         } else {
-          setL10NLabel("cert-error-domain-mismatch-single-nolink", args);
+          addLabel("cert-error-domain-mismatch-single-nolink", args);
         }
       } else {
         let names = subjectAltNames.join(", ");
         args["subject-alt-names"] = names;
-        setL10NLabel("cert-error-domain-mismatch-multiple", args);
+        addLabel("cert-error-domain-mismatch-multiple", args);
       }
     } else {
-      setL10NLabel("cert-error-domain-mismatch", { hostname: hostString });
+      addLabel("cert-error-domain-mismatch", { hostname: hostString });
     }
   } else if (
     failedCertInfo.overridableErrorCategory == "expired-or-not-yet-valid"
@@ -1217,10 +1215,10 @@ async function setTechnicalDetailsOnCertError(
       l10nId = "cert-error-expired-now";
       args["not-after-local-time"] = notAfterLocalTime;
     }
-    setL10NLabel(l10nId, args);
+    addLabel(l10nId, args);
   }
 
-  setL10NLabel(
+  addLabel(
     "cert-error-code-prefix-link",
     { error: failedCertInfo.errorCodeString },
     {
@@ -1229,8 +1227,7 @@ async function setTechnicalDetailsOnCertError(
       "data-l10n-name": "error-code-link",
       "data-telemetry-id": "error_code_link",
       href: "#certificateErrorDebugInformation",
-    },
-    false
+    }
   );
   let errorCodeLink = document.getElementById("errorCode");
   if (errorCodeLink) {

@@ -67,7 +67,7 @@ add_task(async function checkMitmPriming() {
   );
 
   await SpecialPowers.spawn(browser, [], async () => {
-    const shortDesc = content.document.querySelector("#errorShortDescText");
+    const shortDesc = content.document.querySelector("#errorShortDesc");
     const whatToDo = content.document.querySelector("#errorWhatToDoText");
 
     await ContentTaskUtils.waitForCondition(
