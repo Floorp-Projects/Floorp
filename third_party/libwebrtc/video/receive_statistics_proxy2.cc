@@ -98,15 +98,11 @@ bool IsCurrentTaskQueueOrThread(TaskQueueBase* task_queue) {
 
 }  // namespace
 
-ReceiveStatisticsProxy::ReceiveStatisticsProxy(
-    uint32_t remote_ssrc,
-    Clock* clock,
-    TaskQueueBase* worker_thread,
-    const FieldTrialsView& field_trials)
+ReceiveStatisticsProxy::ReceiveStatisticsProxy(uint32_t remote_ssrc,
+                                               Clock* clock,
+                                               TaskQueueBase* worker_thread)
     : clock_(clock),
       start_ms_(clock->TimeInMilliseconds()),
-      enable_decode_time_histograms_(
-          !field_trials.IsEnabled("WebRTC-DecodeTimeHistogramsKillSwitch")),
       last_sample_time_(clock->TimeInMilliseconds()),
       fps_threshold_(kLowFpsThreshold,
                      kHighFpsThreshold,
@@ -584,63 +580,6 @@ void ReceiveStatisticsProxy::UpdateFramerate(int64_t now_ms) const {
   stats_.network_frame_rate = static_cast<int>(framerate);
 }
 
-void ReceiveStatisticsProxy::UpdateDecodeTimeHistograms(
-    int width,
-    int height,
-    int decode_time_ms) const {
-  RTC_DCHECK_RUN_ON(&main_thread_);
-
-  bool is_4k = (width == 3840 || width == 4096) && height == 2160;
-  bool is_hd = width == 1920 && height == 1080;
-  // Only update histograms for 4k/HD and VP9/H264.
-  if ((is_4k || is_hd) && (last_codec_type_ == kVideoCodecVP9 ||
-                           last_codec_type_ == kVideoCodecH264)) {
-    const std::string kDecodeTimeUmaPrefix =
-        "WebRTC.Video.DecodeTimePerFrameInMs.";
-
-    // Each histogram needs its own line for it to not be reused in the wrong
-    // way when the format changes.
-    if (last_codec_type_ == kVideoCodecVP9) {
-      bool is_sw_decoder =
-          stats_.decoder_implementation_name.compare(0, 6, "libvpx") == 0;
-      if (is_4k) {
-        if (is_sw_decoder)
-          RTC_HISTOGRAM_COUNTS_1000(kDecodeTimeUmaPrefix + "Vp9.4k.Sw",
-                                    decode_time_ms);
-        else
-          RTC_HISTOGRAM_COUNTS_1000(kDecodeTimeUmaPrefix + "Vp9.4k.Hw",
-                                    decode_time_ms);
-      } else {
-        if (is_sw_decoder)
-          RTC_HISTOGRAM_COUNTS_1000(kDecodeTimeUmaPrefix + "Vp9.Hd.Sw",
-                                    decode_time_ms);
-        else
-          RTC_HISTOGRAM_COUNTS_1000(kDecodeTimeUmaPrefix + "Vp9.Hd.Hw",
-                                    decode_time_ms);
-      }
-    } else {
-      bool is_sw_decoder =
-          stats_.decoder_implementation_name.compare(0, 6, "FFmpeg") == 0;
-      if (is_4k) {
-        if (is_sw_decoder)
-          RTC_HISTOGRAM_COUNTS_1000(kDecodeTimeUmaPrefix + "H264.4k.Sw",
-                                    decode_time_ms);
-        else
-          RTC_HISTOGRAM_COUNTS_1000(kDecodeTimeUmaPrefix + "H264.4k.Hw",
-                                    decode_time_ms);
-
-      } else {
-        if (is_sw_decoder)
-          RTC_HISTOGRAM_COUNTS_1000(kDecodeTimeUmaPrefix + "H264.Hd.Sw",
-                                    decode_time_ms);
-        else
-          RTC_HISTOGRAM_COUNTS_1000(kDecodeTimeUmaPrefix + "H264.Hd.Hw",
-                                    decode_time_ms);
-      }
-    }
-  }
-}
-
 absl::optional<int64_t>
 ReceiveStatisticsProxy::GetCurrentEstimatedPlayoutNtpTimestampMs(
     int64_t now_ms) const {
@@ -911,10 +850,6 @@ void ReceiveStatisticsProxy::OnDecodedFrame(
   stats_.total_assembly_time += assembly_time;
   if (!assembly_time.IsZero()) {
     ++stats_.frames_assembled_from_multiple_packets;
-  }
-  if (enable_decode_time_histograms_) {
-    UpdateDecodeTimeHistograms(frame_meta.width, frame_meta.height,
-                               decode_time.ms());
   }
 
   last_content_type_ = content_type;
