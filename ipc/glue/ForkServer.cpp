@@ -26,8 +26,6 @@
 namespace mozilla {
 namespace ipc {
 
-static const int sClientFd = 3;
-
 LazyLogModule gForkServiceLog("ForkService");
 
 ForkServer::ForkServer() {}
@@ -38,26 +36,14 @@ ForkServer::ForkServer() {}
 void ForkServer::InitProcess(int* aArgc, char*** aArgv) {
   base::InitForkServerProcess();
 
-  int fd = sClientFd;
-  int fd_flags = fcntl(sClientFd, F_GETFL, 0);
-  fcntl(fd, F_SETFL, fd_flags & ~O_NONBLOCK);
-  mTcver = MakeUnique<MiniTransceiver>(fd, DataBufferClear::AfterReceiving);
+  mTcver = MakeUnique<MiniTransceiver>(kClientPipeFd,
+                                       DataBufferClear::AfterReceiving);
 }
 
 /**
  * Start providing the service at the IPC channel.
  */
 bool ForkServer::HandleMessages() {
-  // |sClientFd| is created by an instance of |IPC::Channel|.
-  // It sends a HELLO automatically.
-  UniquePtr<IPC::Message> hello;
-  mTcver->RecvInfallible(
-      hello, "Expect to receive a HELLO message from the parent process!");
-  MOZ_ASSERT(hello->type() == kHELLO_MESSAGE_TYPE);
-
-  // Send it back
-  mTcver->SendInfallible(*hello, "Fail to ack the received HELLO!");
-
   while (true) {
     UniquePtr<IPC::Message> msg;
     if (!mTcver->Recv(msg)) {

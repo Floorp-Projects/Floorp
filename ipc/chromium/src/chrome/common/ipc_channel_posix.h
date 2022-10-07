@@ -46,7 +46,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   bool Send(mozilla::UniquePtr<Message> message);
   void GetClientFileDescriptorMapping(int* src_fd, int* dest_fd) const;
 
-  int GetFileDescriptor() const { return pipe_; }
   void CloseClientFileDescriptor();
 
   int32_t OtherPid() const { return other_pid_; }
