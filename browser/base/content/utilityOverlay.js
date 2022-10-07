@@ -1084,6 +1084,10 @@ function buildHelpMenu() {
     "helpSafeMode"
   ).disabled = !Services.policies.isAllowed("safeMode");
 
+  document.getElementById(
+    "troubleShooting"
+  ).disabled = !Services.policies.isAllowed("aboutSupport");
+
   let supportMenu = Services.policies.getSupportMenu();
   if (supportMenu) {
     let menuitem = document.getElementById("helpPolicySupport");
