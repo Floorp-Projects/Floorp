@@ -324,3 +324,33 @@ addAccessibleTask(
   },
   { topLevel: true, iframe: true, remoteIframe: true, chrome: true }
 );
+
+/**
+ * Test caching of the stale state.
+ */
+addAccessibleTask(
+  `<iframe id="iframe"></iframe>`,
+  async function(browser, docAcc) {
+    const iframe = findAccessibleChildByID(docAcc, "iframe");
+    info("Setting iframe src");
+    // This iframe won't finish loading. Thus, it will get the stale state and
+    // won't fire a document load complete event. We use the reorder event on
+    // the iframe to know when the document has been created.
+    let reordered = waitForEvent(EVENT_REORDER, iframe);
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("iframe").src =
+        'data:text/html,<img src="http://example.com/a11y/accessible/tests/mochitest/events/slow_image.sjs">';
+    });
+    const iframeDoc = (await reordered).accessible.firstChild;
+    testStates(iframeDoc, 0, EXT_STATE_STALE, 0, 0);
+
+    info("Finishing load of iframe doc");
+    let loadCompleted = waitForEvent(EVENT_DOCUMENT_LOAD_COMPLETE, iframeDoc);
+    await fetch(
+      "https://example.com/a11y/accessible/tests/mochitest/events/slow_image.sjs?complete"
+    );
+    await loadCompleted;
+    testStates(iframeDoc, 0, 0, 0, EXT_STATE_STALE);
+  },
+  { topLevel: true, chrome: true }
+);
