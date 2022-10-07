@@ -131,6 +131,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
   float mFontSizeFactor;
   mozilla::Length mFontSizeOffset;
   mozilla::StyleFontSizeKeyword mFontSizeKeyword;
+  mozilla::StyleFontPalette mFontPalette;
 
   // math-depth support (used for MathML scriptlevel)
   int8_t mMathDepth;
