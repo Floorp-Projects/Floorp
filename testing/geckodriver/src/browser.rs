@@ -277,7 +277,7 @@ impl RemoteBrowser {
         Ok(RemoteBrowser {
             handler,
             marionette_port,
-            prefs_backup
+            prefs_backup,
         })
     }
 

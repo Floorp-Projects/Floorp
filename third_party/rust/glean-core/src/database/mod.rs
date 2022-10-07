@@ -265,7 +265,7 @@ impl Database {
 
     /// Creates the storage directories and inits rkv.
     fn open_rkv(path: &Path) -> Result<Rkv> {
-        fs::create_dir_all(&path)?;
+        fs::create_dir_all(path)?;
 
         let rkv = rkv_new(path)?;
         migrate(path, &rkv);
@@ -620,10 +620,10 @@ impl Database {
         self.write_with_store(Lifetime::Ping, |mut writer, store| {
             let mut metrics = Vec::new();
             {
-                let mut iter = store.iter_from(&writer, &storage_name)?;
+                let mut iter = store.iter_from(&writer, storage_name)?;
                 while let Some(Ok((metric_id, _))) = iter.next() {
                     if let Ok(metric_id) = std::str::from_utf8(metric_id) {
-                        if !metric_id.starts_with(&storage_name) {
+                        if !metric_id.starts_with(storage_name) {
                             break;
                         }
                         metrics.push(metric_id.to_owned());
@@ -753,7 +753,7 @@ impl Database {
                     // There is no need for `get_storage_key` here because
                     // the key is already formatted from when it was saved
                     // to ping_lifetime_data.
-                    store.put(&mut writer, &key, &rkv::Value::Blob(&encoded))?;
+                    store.put(&mut writer, key, &rkv::Value::Blob(&encoded))?;
                 }
                 writer.commit()?;
                 Ok(())

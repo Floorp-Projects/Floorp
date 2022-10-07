@@ -87,14 +87,14 @@ fn storage_is_thread_safe() {
     let threadsafe_metric_clone = threadsafe_metric.clone();
     let glean_clone = glean.clone();
     let child = thread::spawn(move || {
-        threadsafe_metric_clone.add_sync(&*glean_clone.lock().unwrap(), 1);
+        threadsafe_metric_clone.add_sync(&glean_clone.lock().unwrap(), 1);
         c.wait();
-        threadsafe_metric_clone.add_sync(&*glean_clone.lock().unwrap(), 1);
+        threadsafe_metric_clone.add_sync(&glean_clone.lock().unwrap(), 1);
     });
 
-    threadsafe_metric.add_sync(&*glean.lock().unwrap(), 1);
+    threadsafe_metric.add_sync(&glean.lock().unwrap(), 1);
     barrier.wait();
-    threadsafe_metric.add_sync(&*glean.lock().unwrap(), 1);
+    threadsafe_metric.add_sync(&glean.lock().unwrap(), 1);
 
     child.join().unwrap();
 

@@ -3,99 +3,175 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::{format_ident, quote};
-use syn::{FnArg, ItemFn, Pat, ReturnType};
+use quote::{format_ident, quote, ToTokens};
+use syn::{FnArg, Pat, ReturnType, Signature};
 
-use super::ExportItem;
-
-pub(super) fn gen_scaffolding(item: ExportItem, mod_path: &[String]) -> syn::Result<TokenStream> {
-    match item {
-        ExportItem::Function {
-            item,
-            checksum,
-            meta_static_var,
-        } => {
-            let scaffolding = gen_fn_scaffolding(&item, mod_path, checksum)?;
-            Ok(quote! {
-                #scaffolding
-                #meta_static_var
-            })
-        }
-    }
-}
-
-fn gen_fn_scaffolding(
-    item: &ItemFn,
+pub(super) fn gen_fn_scaffolding(
+    sig: &Signature,
     mod_path: &[String],
     checksum: u16,
-) -> syn::Result<TokenStream> {
-    let name = &item.sig.ident;
+) -> TokenStream {
+    let name = &sig.ident;
     let name_s = name.to_string();
-    let ffi_name = Ident::new(
+
+    let ffi_ident = Ident::new(
         &uniffi_meta::fn_ffi_symbol_name(mod_path, &name_s, checksum),
         Span::call_site(),
     );
 
-    let mut params = Vec::new();
-    let mut args = Vec::new();
-
-    for (i, arg) in item.sig.inputs.iter().enumerate() {
-        match arg {
-            FnArg::Receiver(receiver) => {
-                return Err(syn::Error::new_spanned(
-                    receiver,
-                    "methods are not yet supported by uniffi::export",
-                ));
-            }
-            FnArg::Typed(pat_ty) => {
-                let ty = &pat_ty.ty;
-                let name = format_ident!("arg{i}");
-
-                params.push(quote! { #name: <#ty as ::uniffi::FfiConverter>::FfiType });
-
-                let panic_fmt = match &*pat_ty.pat {
-                    Pat::Ident(i) => {
-                        format!("Failed to convert arg '{}': {{}}", i.ident)
-                    }
-                    _ => {
-                        format!("Failed to convert arg #{i}: {{}}")
-                    }
-                };
-                args.push(quote! {
-                    <#ty as ::uniffi::FfiConverter>::try_lift(#name).unwrap_or_else(|err| {
-                        ::std::panic!(#panic_fmt, err)
-                    })
-                });
-            }
-        }
-    }
+    const ERROR_MSG: &str =
+        "uniffi::export must be used on the impl block, not its containing fn's";
+    let (params, args): (Vec<_>, Vec<_>) = collect_params(&sig.inputs, ERROR_MSG).unzip();
 
     let fn_call = quote! {
         #name(#(#args),*)
     };
 
+    gen_ffi_function(sig, ffi_ident, &params, fn_call)
+}
+
+pub(super) fn gen_method_scaffolding(
+    sig: &syn::Signature,
+    mod_path: &[String],
+    checksum: u16,
+    self_ident: &Ident,
+) -> TokenStream {
+    let name = &sig.ident;
+    let name_s = name.to_string();
+
+    let ffi_name = format!("impl_{self_ident}_{name_s}");
+    let ffi_ident = Ident::new(
+        &uniffi_meta::fn_ffi_symbol_name(mod_path, &ffi_name, checksum),
+        Span::call_site(),
+    );
+
+    let mut params_args = (Vec::new(), Vec::new());
+
+    const RECEIVER_ERROR: &str = "unreachable: only first parameter can be method receiver";
+    let mut assoc_fn_error = None;
+    let fn_call_prefix = match sig.inputs.first() {
+        Some(arg) if is_receiver(arg) => {
+            let ffi_converter = quote! {
+                <::std::sync::Arc<#self_ident> as ::uniffi::FfiConverter>
+            };
+
+            params_args.0.push(quote! { this: #ffi_converter::FfiType });
+
+            let remaining_args = sig.inputs.iter().skip(1);
+            params_args.extend(collect_params(remaining_args, RECEIVER_ERROR));
+
+            quote! {
+                #ffi_converter::try_lift(this).unwrap_or_else(|err| {
+                    ::std::panic!("Failed to convert arg 'self': {}", err)
+                }).
+            }
+        }
+        _ => {
+            assoc_fn_error = Some(
+                syn::Error::new_spanned(sig, "associated functions are not currently supported")
+                    .into_compile_error(),
+            );
+            params_args.extend(collect_params(&sig.inputs, RECEIVER_ERROR));
+            quote! { #self_ident:: }
+        }
+    };
+
+    let (params, args) = params_args;
+
+    let fn_call = quote! {
+        #assoc_fn_error
+        #fn_call_prefix #name(#(#args),*)
+    };
+
+    gen_ffi_function(sig, ffi_ident, &params, fn_call)
+}
+
+fn is_receiver(fn_arg: &FnArg) -> bool {
+    match fn_arg {
+        FnArg::Receiver(_) => true,
+        FnArg::Typed(pat_ty) => matches!(&*pat_ty.pat, Pat::Ident(i) if i.ident == "self"),
+    }
+}
+
+fn collect_params<'a>(
+    inputs: impl IntoIterator<Item = &'a FnArg> + 'a,
+    receiver_error_msg: &'static str,
+) -> impl Iterator<Item = (TokenStream, TokenStream)> + 'a {
+    fn receiver_error(
+        receiver: impl ToTokens,
+        receiver_error_msg: &str,
+    ) -> (TokenStream, TokenStream) {
+        let param = quote! { &self };
+        let arg = syn::Error::new_spanned(receiver, receiver_error_msg).into_compile_error();
+        (param, arg)
+    }
+
+    inputs.into_iter().enumerate().map(|(i, arg)| {
+        let (ty, name) = match arg {
+            FnArg::Receiver(r) => {
+                return receiver_error(r, receiver_error_msg);
+            }
+            FnArg::Typed(pat_ty) => {
+                let name = match &*pat_ty.pat {
+                    Pat::Ident(i) if i.ident == "self" => {
+                        return receiver_error(i, receiver_error_msg);
+                    }
+                    Pat::Ident(i) => Some(i.ident.to_string()),
+                    _ => None,
+                };
+
+                (&pat_ty.ty, name)
+            }
+        };
+
+        let arg_n = format_ident!("arg{i}");
+        let param = quote! { #arg_n: <#ty as ::uniffi::FfiConverter>::FfiType };
+
+        let panic_fmt = match name {
+            Some(name) => format!("Failed to convert arg '{name}': {{}}"),
+            None => format!("Failed to convert arg #{i}: {{}}"),
+        };
+        let arg = quote! {
+            <#ty as ::uniffi::FfiConverter>::try_lift(#arg_n).unwrap_or_else(|err| {
+                ::std::panic!(#panic_fmt, err)
+            })
+        };
+
+        (param, arg)
+    })
+}
+
+fn gen_ffi_function(
+    sig: &syn::Signature,
+    ffi_ident: Ident,
+    params: &[TokenStream],
+    rust_fn_call: TokenStream,
+) -> TokenStream {
+    let name = &sig.ident;
+    let name_s = name.to_string();
+
     // FIXME(jplatte): Use an extra trait implemented for `T: FfiConverter` as
     // well as `()` so no different codegen is needed?
     let (output, return_expr);
-    match &item.sig.output {
+    match &sig.output {
         ReturnType::Default => {
             output = None;
-            return_expr = fn_call;
+            return_expr = rust_fn_call;
         }
         ReturnType::Type(_, ty) => {
             output = Some(quote! {
                 -> <#ty as ::uniffi::FfiConverter>::FfiType
             });
             return_expr = quote! {
-                <#ty as ::uniffi::FfiConverter>::lower(#fn_call)
+                <#ty as ::uniffi::FfiConverter>::lower(#rust_fn_call)
             };
         }
     }
 
-    Ok(quote! {
+    quote! {
         #[doc(hidden)]
         #[no_mangle]
-        pub extern "C" fn #ffi_name(
+        pub extern "C" fn #ffi_ident(
             #(#params,)*
             call_status: &mut ::uniffi::RustCallStatus,
         ) #output {
@@ -104,5 +180,5 @@ fn gen_fn_scaffolding(
                 #return_expr
             })
         }
-    })
+    }
 }
