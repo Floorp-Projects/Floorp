@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<meta charset=utf-8>
+<title>COLRv1 font test: linear gradient with degenerate color line</title>
+<style>
+@font-face {
+  font-family: CAhem;
+  src: url("CAhem.ttf");
+}
+div div { width: 50px; height: 50px; }
+span { display: inline-block; height: 50px; }
+.blue { background: blue; }
+.red { background: red; }
+div:nth-child(1) .red { width: 0px }
+div:nth-child(1) .blue { width: 50px }
+div:nth-child(2) .red { width: 5px }
+div:nth-child(2) .blue { width: 45px }
+div:nth-child(3) .red { width: 10px }
+div:nth-child(3) .blue { width: 40px }
+div:nth-child(4) .red { width: 15px }
+div:nth-child(4) .blue { width: 35px }
+div:nth-child(5) .red { width: 20px }
+div:nth-child(5) .blue { width: 30px }
+div:nth-child(6) .red { width: 25px }
+div:nth-child(6) .blue { width: 25px }
+div:nth-child(7) .red { width: 30px }
+div:nth-child(7) .blue { width: 20px }
+div:nth-child(8) .red { width: 35px }
+div:nth-child(8) .blue { width: 15px }
+div:nth-child(9) .red { width: 40px }
+div:nth-child(9) .blue { width: 10px }
+</style>
+
+<div>
+  <div><span class=red></span><span class=blue></span></div>
+  <div><span class=red></span><span class=blue></span></div>
+  <div><span class=red></span><span class=blue></span></div>
+  <div><span class=red></span><span class=blue></span></div>
+  <div><span class=red></span><span class=blue></span></div>
+  <div><span class=red></span><span class=blue></span></div>
+  <div><span class=red></span><span class=blue></span></div>
+  <div><span class=red></span><span class=blue></span></div>
+  <div><span class=red></span><span class=blue></span></div>
+</div>

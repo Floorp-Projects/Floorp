@@ -844,29 +844,42 @@ struct PaintLinearGradient : public PaintPatternBase {
   UniquePtr<Pattern> NormalizeAndMakeGradient(const PaintState& aState,
                                               const T* aColorLine, Point p0,
                                               Point p1, Point p2) const {
+    // Ill-formed gradient should not be rendered.
+    if (p1 == p0 || p2 == p0) {
+      return MakeUnique<ColorPattern>(DeviceColor());
+    }
     UniquePtr<Pattern> solidColor = aColorLine->AsSolidColor(aState);
     if (solidColor) {
       return solidColor;
     }
     float firstStop, lastStop;
-    RefPtr stops = aColorLine->MakeGradientStops(aState, &firstStop, &lastStop);
-    if (!stops) {
-      return nullptr;
+    AutoTArray<GradientStop, 8> stopArray;
+    aColorLine->CollectGradientStops(aState, stopArray, &firstStop, &lastStop);
+    if (stopArray.IsEmpty()) {
+      return MakeUnique<ColorPattern>(DeviceColor());
     }
     if (firstStop != 0.0 || lastStop != 1.0) {
       if (firstStop == lastStop) {
         if (aColorLine->extend != T::EXTEND_PAD) {
           return MakeUnique<ColorPattern>(DeviceColor());
         }
-      } else {
-        // Normalize the gradient stops range to 0.0 - 1.0, and adjust positions
-        // of the endpoints accordingly.
-        Point v = p1 - p0;
-        p0 += v * firstStop;
-        p1 -= v * (1.0f - lastStop);
-        // Move the rotation vector to maintain the same direction from p0.
-        p2 += v * firstStop;
+        // For extend-pad, when the color line is zero-length, we add a "fake"
+        // color stop to create a [0.0..1.0]-normalized color line, so that the
+        // projection of points below works as expected.
+        for (auto& gs : stopArray) {
+          gs.offset = 0.0f;
+        }
+        stopArray.AppendElement(
+            GradientStop{1.0f, stopArray.LastElement().color});
+        lastStop += 1.0f;
       }
+      // Adjust positions of the points to account for normalization of the
+      // color line stop offsets.
+      Point v = p1 - p0;
+      p0 += v * firstStop;
+      p1 -= v * (1.0f - lastStop);
+      // Move the rotation vector to maintain the same direction from p0.
+      p2 += v * firstStop;
     }
     Point p3;
     if (FuzzyEqualsMultiplicative(p2.y, p0.y)) {
@@ -884,6 +897,7 @@ struct PaintLinearGradient : public PaintPatternBase {
       float y3 = (c1 * m - c2 * mInv) / (m - mInv);
       p3 = Point(x3, y3);
     }
+    RefPtr stops = aColorLine->MakeGradientStops(aState, stopArray);
     return MakeUnique<LinearGradientPattern>(p0, p3, std::move(stops),
                                              Matrix::Scaling(1.0, -1.0));
   }

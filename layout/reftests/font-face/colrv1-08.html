@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<meta charset=utf-8>
+<title>COLRv1 font test: linear gradient with degenerate color line</title>
+<style>
+@font-face {
+  font-family: CAhem;
+  src: url("CAhem.ttf");
+}
+span { font: 50px/1 CAhem; }
+div:nth-child(1) span { font-variation-settings: "COL1" -2.0, "COL2" -2.0, "COL3" -2.0; }
+div:nth-child(2) span { font-variation-settings: "COL1" -1.5, "COL2" -1.5, "COL3" -1.5; }
+div:nth-child(3) span { font-variation-settings: "COL1" -1.0, "COL2" -1.0, "COL3" -1.0; }
+div:nth-child(4) span { font-variation-settings: "COL1" -0.5, "COL2" -0.5, "COL3" -0.5; }
+div:nth-child(5) span { font-variation-settings: "COL1" 0.0, "COL2" 0.0, "COL3" 0.0; }
+div:nth-child(6) span { font-variation-settings: "COL1" 0.5, "COL2" 0.5, "COL3" 0.5; }
+div:nth-child(7) span { font-variation-settings: "COL1" 1.0, "COL2" 1.0, "COL3" 1.0; }
+div:nth-child(8) span { font-variation-settings: "COL1" 1.5, "COL2" 1.5, "COL3" 1.5; }
+div:nth-child(9) span { font-variation-settings: "COL1" 2.0, "COL2" 2.0, "COL3" 2.0; }
+</style>
+
+<div>
+  <div><span>!</div>
+  <div><span>!</div>
+  <div><span>!</div>
+  <div><span>!</div>
+  <div><span>!</div>
+  <div><span>!</div>
+  <div><span>!</div>
+  <div><span>!</div>
+  <div><span>!</div>
+</div>
