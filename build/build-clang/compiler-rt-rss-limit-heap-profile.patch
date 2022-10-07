@@ -1,0 +1,49 @@
+diff --git a/compiler-rt/lib/sanitizer_common/sanitizer_common_libcdep.cpp b/compiler-rt/lib/sanitizer_common/sanitizer_common_libcdep.cpp
+index 8fd398564280..b7c4820971bb 100644
+--- a/compiler-rt/lib/sanitizer_common/sanitizer_common_libcdep.cpp
++++ b/compiler-rt/lib/sanitizer_common/sanitizer_common_libcdep.cpp
+@@ -29,6 +29,7 @@ void *BackgroundThread(void *arg) {
+   const uptr hard_rss_limit_mb = common_flags()->hard_rss_limit_mb;
+   const uptr soft_rss_limit_mb = common_flags()->soft_rss_limit_mb;
+   const bool heap_profile = common_flags()->heap_profile;
++  const bool rss_limit_heap_profile = common_flags()->rss_limit_heap_profile;
+   uptr prev_reported_rss = 0;
+   uptr prev_reported_stack_depot_size = 0;
+   bool reached_soft_rss_limit = false;
+@@ -56,6 +57,10 @@ void *BackgroundThread(void *arg) {
+       Report("%s: hard rss limit exhausted (%zdMb vs %zdMb)\n",
+              SanitizerToolName, hard_rss_limit_mb, current_rss_mb);
+       DumpProcessMap();
++      if (rss_limit_heap_profile) {
++        Printf("\n\nHEAP PROFILE at RSS %zdMb\n", current_rss_mb);
++        __sanitizer_print_memory_profile(90, 20);
++      }
+       Die();
+     }
+     if (soft_rss_limit_mb) {
+@@ -63,6 +68,11 @@ void *BackgroundThread(void *arg) {
+         reached_soft_rss_limit = true;
+         Report("%s: soft rss limit exhausted (%zdMb vs %zdMb)\n",
+                SanitizerToolName, soft_rss_limit_mb, current_rss_mb);
++        if (rss_limit_heap_profile) {
++          Printf("\n\nHEAP PROFILE at RSS %zdMb\n", current_rss_mb);
++          __sanitizer_print_memory_profile(90, 20);
++          rss_during_last_reported_profile = current_rss_mb;
++        }
+         SetRssLimitExceeded(true);
+       } else if (soft_rss_limit_mb >= current_rss_mb &&
+                  reached_soft_rss_limit) {
+diff --git a/compiler-rt/lib/sanitizer_common/sanitizer_flags.inc b/compiler-rt/lib/sanitizer_common/sanitizer_flags.inc
+index 6148ae56067c..a0fbb8e14bd5 100644
+--- a/compiler-rt/lib/sanitizer_common/sanitizer_flags.inc
++++ b/compiler-rt/lib/sanitizer_common/sanitizer_flags.inc
+@@ -147,6 +147,9 @@ COMMON_FLAG(uptr, max_allocation_size_mb, 0,
+             "If non-zero, malloc/new calls larger than this size will return "
+             "nullptr (or crash if allocator_may_return_null=false).")
+ COMMON_FLAG(bool, heap_profile, false, "Experimental heap profiler, asan-only")
++COMMON_FLAG(bool, rss_limit_heap_profile, false,
++            "Experimental heap profiler (only when hard/soft rss limit "
++            "exceeded, asan-only")
+ COMMON_FLAG(s32, allocator_release_to_os_interval_ms,
+             ((bool)SANITIZER_FUCHSIA || (bool)SANITIZER_WINDOWS) ? -1 : 5000,
+             "Only affects a 64-bit allocator. If set, tries to release unused "
