@@ -166,6 +166,8 @@ pref("services.sync.prefs.sync.floorp.browser.tabbar.settings", true);// タブ�
 
 pref("toolkit.legacyUserProfileCustomizations.stylesheets" ,true);
 
+pref("browser.preferences.moreFromMozilla", false, locked);
+
 //たくさん閉じようとしたときに警告
 pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.warnOnCloseOtherTabs", true);
