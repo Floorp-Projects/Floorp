@@ -45,7 +45,7 @@ FINGERPRINT_URL = 'http://taskcluster/secrets/v1/secret/project/taskcluster/geck
 FALLBACK_FINGERPRINT = {
     'fingerprints':
         "sha256:4D:EB:21:6E:35:2F:99:C6:8F:C3:47:9B:57:B8:6C:17:15:8F:86:09:D4:6C:17:1D:87:B0:DE:F9:0E:51:70:FC,"
-        "sha256:FF:E7:8D:93:E9:56:3C:C0:19:FC:00:4C:18:B9:86:E5:08:E5:10:F5:E2:EA:48:E8:22:D3:A3:3A:CA:99:C3:4C"
+        "sha256:90:85:39:A8:4F:47:20:58:98:0D:48:4D:8A:AC:71:DB:5C:AF:76:44:F1:B1:3E:56:92:FF:21:8C:C9:A9:F7:11"
 }
 
 HGMOINTERNAL_CONFIG_URL = 'http://taskcluster/secrets/v1/secret/project/taskcluster/gecko/hgmointernal'
