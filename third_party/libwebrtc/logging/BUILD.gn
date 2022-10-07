@@ -571,8 +571,8 @@ rtc_library("ice_log") {
 
   deps = [
     ":rtc_event_field",
+    "../api:dtls_transport_interface",
     "../api:libjingle_logging_api",
-    "../api:libjingle_peerconnection_api",  # For api/dtls_transport_interface.h
     "../api/rtc_event_log",
     "../api/units:timestamp",
   ]
