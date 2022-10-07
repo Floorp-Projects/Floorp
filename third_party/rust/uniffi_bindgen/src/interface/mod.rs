@@ -77,6 +77,7 @@ pub use record::{Field, Record};
 
 pub mod ffi;
 pub use ffi::{FFIArgument, FFIFunction, FFIType};
+use uniffi_meta::MethodMetadata;
 
 /// The main public interface for this module, representing the complete details of an interface exposed
 /// by a rust component and the details of consuming it via an extern-C FFI layer.
@@ -515,6 +516,27 @@ impl ComponentInterface {
         Ok(())
     }
 
+    pub(super) fn add_method_definition(&mut self, meta: MethodMetadata) -> Result<()> {
+        let object = match self.objects.iter_mut().find(|o| o.name == meta.self_name) {
+            Some(o) => o,
+            None => {
+                self.objects.push(Object::new(meta.self_name.clone()));
+                self.objects.last_mut().unwrap()
+            }
+        };
+
+        let defn: Method = meta.into();
+        for arg in &defn.arguments {
+            self.types.add_known_type(arg.type_.clone())?;
+        }
+        if let Some(ty) = &defn.return_type {
+            self.types.add_known_type(ty.clone())?;
+        }
+        object.methods.push(defn);
+
+        Ok(())
+    }
+
     /// Called by `APIBuilder` impls to add a newly-parsed object definition to the `ComponentInterface`.
     fn add_object_definition(&mut self, defn: Object) {
         // Note that there will be no duplicates thanks to the previous type-finding pass.
@@ -782,6 +804,35 @@ trait APIConverter<T> {
 impl<U, T: APIConverter<U>> APIConverter<Vec<U>> for Vec<T> {
     fn convert(&self, ci: &mut ComponentInterface) -> Result<Vec<U>> {
         self.iter().map(|v| v.convert(ci)).collect::<Result<_>>()
+    }
+}
+
+fn convert_type(s: &uniffi_meta::Type) -> Type {
+    use uniffi_meta::Type as Ty;
+
+    match s {
+        Ty::U8 => Type::UInt8,
+        Ty::U16 => Type::UInt16,
+        Ty::U32 => Type::UInt32,
+        Ty::U64 => Type::UInt64,
+        Ty::I8 => Type::Int8,
+        Ty::I16 => Type::Int16,
+        Ty::I32 => Type::Int32,
+        Ty::I64 => Type::Int64,
+        Ty::F32 => Type::Float32,
+        Ty::F64 => Type::Float64,
+        Ty::Bool => Type::Boolean,
+        Ty::String => Type::String,
+        Ty::Option { inner_type } => Type::Optional(convert_type(inner_type).into()),
+        Ty::Vec { inner_type } => Type::Sequence(convert_type(inner_type).into()),
+        Ty::HashMap {
+            key_type,
+            value_type,
+        } => Type::Map(
+            convert_type(key_type).into(),
+            convert_type(value_type).into(),
+        ),
+        Ty::ArcObject { object_name } => Type::Object(object_name.clone()),
     }
 }
 

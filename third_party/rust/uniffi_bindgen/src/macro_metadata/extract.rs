@@ -157,6 +157,7 @@ impl ExtractedItems {
             // Already extracted this item
             return Ok(());
         }
+
         // Use the file data starting from offset, without specifying the end position.  We don't
         // always know the end position, because goblin reports the symbol size as 0 for PE and
         // MachO files.
@@ -165,6 +166,7 @@ impl ExtractedItems {
         // just ignore the trailing data.
         let data = &file_data[offset..];
         self.items.push(bincode::deserialize::<Metadata>(data)?);
+        self.names.insert(name.to_string());
         Ok(())
     }
 
