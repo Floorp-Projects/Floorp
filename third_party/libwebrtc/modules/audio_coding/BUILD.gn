@@ -606,6 +606,7 @@ rtc_library("isac_fix_c") {
   deps = [
     ":isac_bwinfo",
     ":isac_common",
+    ":isac_fix_common",
     "../../api/audio_codecs:audio_codecs_api",
     "../../common_audio",
     "../../common_audio:common_audio_c",
@@ -615,8 +616,6 @@ rtc_library("isac_fix_c") {
     "../../system_wrappers",
     "../third_party/fft",
   ]
-
-  public_deps = [ ":isac_fix_common" ]  # no-presubmit-check TODO(webrtc:8603)
 
   if (rtc_build_with_neon) {
     deps += [ ":isac_neon" ]
@@ -1618,6 +1617,7 @@ if (rtc_include_tests) {
       testonly = true
       defines = []
       deps = [
+        ":isac_fix_common",
         "../../rtc_base:macromagic",
         "../../test:fileutils",
       ]
@@ -2068,6 +2068,7 @@ if (rtc_include_tests) {
         ":isac_c",
         ":isac_common",
         ":isac_fix",
+        ":isac_fix_common",
         ":legacy_encoded_audio_frame",
         ":mocks",
         ":neteq",
