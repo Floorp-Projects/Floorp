@@ -5,10 +5,13 @@
 
 var EXPORTED_SYMBOLS = ["NetErrorParent"];
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+
 const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
-const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
 
 const { TelemetryController } = ChromeUtils.import(
   "resource://gre/modules/TelemetryController.jsm"
@@ -25,6 +28,12 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
 });
+
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "HomePage",
+  "resource:///modules/HomePage.jsm"
+);
 
 class CaptivePortalObserver {
   constructor(actor) {
@@ -118,10 +127,15 @@ class NetErrorParent extends JSWindowActorParent {
    * infected, so we can get them somewhere safe.
    */
   getDefaultHomePage(win) {
-    if (PrivateBrowsingUtils.isWindowPrivate(win)) {
-      return win.BROWSER_NEW_TAB_URL;
+    let url;
+    if (
+      !PrivateBrowsingUtils.isWindowPrivate(win) &&
+      AppConstants.MOZ_BUILD_APP == "browser"
+    ) {
+      url = lazy.HomePage.getDefault();
     }
-    let url = HomePage.getDefault();
+    url ||= win.BROWSER_NEW_TAB_URL || "about:blank";
+
     // If url is a pipe-delimited set of pages, just take the first one.
     if (url.includes("|")) {
       url = url.split("|")[0];
@@ -237,7 +251,7 @@ class NetErrorParent extends JSWindowActorParent {
       return;
     }
 
-    let offlinePagePath = `chrome://browser/content/certerror/supportpages/${supportPageSlug}.html`;
+    let offlinePagePath = `chrome://global/content/neterror/supportpages/${supportPageSlug}.html`;
     let triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     this.browser.loadURI(offlinePagePath, { triggeringPrincipal });
   }
@@ -299,14 +313,19 @@ class NetErrorParent extends JSWindowActorParent {
       case "Browser:CertExceptionError":
         switch (message.data.elementId) {
           case "viewCertificate": {
-            let window = this.browser.ownerGlobal;
             let certs = message.data.failedCertChain.map(certBase64 =>
               encodeURIComponent(certBase64)
             );
             let certsStringURL = certs.map(elem => `cert=${elem}`);
             certsStringURL = certsStringURL.join("&");
             let url = `about:certificate?${certsStringURL}`;
-            window.switchToTabHavingURI(url, true, {});
+
+            let window = this.browser.ownerGlobal;
+            if (AppConstants.MOZ_BUILD_APP === "browser") {
+              window.switchToTabHavingURI(url, true, {});
+            } else {
+              window.open(url, "_blank");
+            }
             break;
           }
         }

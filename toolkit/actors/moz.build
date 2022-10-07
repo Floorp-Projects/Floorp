@@ -61,6 +61,8 @@ FINAL_TARGET_FILES.actors += [
     "InlineSpellCheckerChild.jsm",
     "InlineSpellCheckerParent.jsm",
     "KeyPressEventModelCheckerChild.jsm",
+    "NetErrorChild.jsm",
+    "NetErrorParent.jsm",
     "PictureInPictureChild.sys.mjs",
     "PopupBlockingChild.jsm",
     "PopupBlockingParent.jsm",

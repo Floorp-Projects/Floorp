@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint-env mozilla/remote-page */
+/* eslint-disable import/no-unassigned-import */
 
 import "chrome://global/content/certviewer/pvutils_bundle.jsm";
 import "chrome://global/content/certviewer/asn1js_bundle.jsm";

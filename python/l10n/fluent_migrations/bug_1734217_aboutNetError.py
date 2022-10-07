@@ -72,7 +72,7 @@ def migrate(ctx):
     """Bug 1734217 - Migrate aboutNetError.xhtml from DTD to Fluent, part {index}"""
 
     source = "browser/chrome/overrides/netError.dtd"
-    target = "browser/browser/netError.ftl"
+    target = "toolkit/toolkit/neterror/netError.ftl"
     ctx.add_transforms(
         target,
         target,
@@ -176,7 +176,7 @@ neterror-dns-not-found-hint-try-again = { COPY_PATTERN(prev, "dns-not-found-hint
 neterror-dns-not-found-hint-check-network = { COPY_PATTERN(prev, "dns-not-found-hint-check-network") }
 neterror-dns-not-found-hint-firewall = { COPY_PATTERN(prev, "dns-not-found-hint-firewall") }
 """,
-            prev=target,
+            prev="browser/browser/netError.ftl",
         )
         + [
             # file-not-found-long-desc = { COPY(source, "fileNotFound.longDesc") }

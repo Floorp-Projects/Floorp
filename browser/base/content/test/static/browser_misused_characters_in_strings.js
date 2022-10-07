@@ -46,16 +46,6 @@ let gExceptionsList = [
     key: "PatternAttributeCompileFailure",
     type: "single-quote",
   },
-  {
-    file: "netError.dtd",
-    key: "inadequateSecurityError.longDesc",
-    type: "single-quote",
-  },
-  {
-    file: "netErrorApp.dtd",
-    key: "securityOverride.warningContent",
-    type: "single-quote",
-  },
 ];
 
 /**

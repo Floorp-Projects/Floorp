@@ -83,3 +83,9 @@ with Files("mozapps/preferences/**"):
 
 with Files("l10n-registry.manifest"):
     BUG_COMPONENT = ("Core", "Localization")
+
+GeneratedFile(
+    "content/neterror/aboutNetErrorCodes.js",
+    script="content/neterror/gen_aboutneterror_codes.py",
+    inputs=["/toolkit/locales/en-US/toolkit/neterror/nsserrors.ftl"],
+)

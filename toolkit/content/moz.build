@@ -214,6 +214,9 @@ with Files("about*"):
 with Files("aboutGlean.*"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")
 
+with Files("aboutNetError*"):
+    BUG_COMPONENT = ("Firefox", "Security")
+
 with Files("aboutNetworking*"):
     BUG_COMPONENT = ("Core", "Networking")
 

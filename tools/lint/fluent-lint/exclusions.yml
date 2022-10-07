@@ -48,7 +48,7 @@ ID01:
         - bottomLinks-privacy
         - aboutDialog-version
         - aboutDialog-version-nightly
-        # aboutCertError.ftl: These IDs are generated programmatically
+        # certError.ftl: These IDs are generated programmatically
         # from certificate error codes.
         - connectionFailure-title
         - deniedPortAccess-title
@@ -141,7 +141,7 @@ CO01:
         # browser/branding/official/locales/en-US/brand.ftl
         # browser/locales/en-US/browser/branding/brandings.ftl
         - trademarkInfo
-        # browser/locales/en-US/browser/aboutCertError.ftl
+        # toolkit/locales/en-US/toolkit/neterror/certError.ftl
         - cert-error-mitm-mozilla
         - cert-error-mitm-connection
         # browser/locales/en-US/browser/appExtensionFields.ftl

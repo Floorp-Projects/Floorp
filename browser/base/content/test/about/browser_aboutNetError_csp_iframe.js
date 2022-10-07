@@ -95,8 +95,8 @@ async function setupPage(htmlPageName, blockedPage) {
   await SpecialPowers.spawn(iframe, [], async function() {
     let doc = content.document;
 
-    // aboutNetError.js is using async localization to format several messages
-    // and in result the translation may be applied later.
+    // aboutNetError.mjs is using async localization to format several
+    // messages and in result the translation may be applied later.
     // We want to return the textContent of the element only after
     // the translation completes, so let's wait for it here.
     let elements = [

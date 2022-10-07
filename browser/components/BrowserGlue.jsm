@@ -592,22 +592,6 @@ let JSWINDOWACTORS = {
     messageManagerGroups: ["browsers"],
   },
 
-  NetError: {
-    parent: {
-      moduleURI: "resource:///actors/NetErrorParent.jsm",
-    },
-    child: {
-      moduleURI: "resource:///actors/NetErrorChild.jsm",
-      events: {
-        DOMDocElementInserted: {},
-        click: {},
-      },
-    },
-
-    matches: ["about:certerror?*", "about:neterror?*"],
-    allFrames: true,
-  },
-
   PageInfo: {
     child: {
       esModuleURI: "resource:///actors/PageInfoChild.sys.mjs",

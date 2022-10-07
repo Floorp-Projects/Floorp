@@ -53,7 +53,7 @@ var gExceptionPaths = [
 
   // Paths from this folder are constructed in NetErrorParent.jsm based on
   // the type of cert or net error the user is encountering.
-  "chrome://browser/content/certerror/supportpages/",
+  "chrome://global/content/neterror/supportpages/",
 
   // Points to theme preview images, which are defined in browser/ but only used
   // in toolkit/mozapps/extensions/content/aboutaddons.js.

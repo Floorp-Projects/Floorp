@@ -89,9 +89,3 @@ if CONFIG["OS_ARCH"] == "WINNT" and CONFIG["MOZ_DEFAULT_BROWSER_AGENT"]:
     DEFINES["MOZ_DEFAULT_BROWSER_AGENT"] = True
 
 JAR_MANIFESTS += ["jar.mn"]
-
-GeneratedFile(
-    "content/certerror/aboutNetErrorCodes.js",
-    script="content/certerror/gen_aboutneterror_codes.py",
-    inputs=["/browser/locales/en-US/browser/nsserrors.ftl"],
-)

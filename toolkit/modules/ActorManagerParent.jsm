@@ -332,6 +332,22 @@ let JSWINDOWACTORS = {
     },
   },
 
+  NetError: {
+    parent: {
+      moduleURI: "resource://gre/actors/NetErrorParent.jsm",
+    },
+    child: {
+      moduleURI: "resource://gre/actors/NetErrorChild.jsm",
+      events: {
+        DOMDocElementInserted: {},
+        click: {},
+      },
+    },
+
+    matches: ["about:certerror?*", "about:neterror?*"],
+    allFrames: true,
+  },
+
   PictureInPictureLauncher: {
     parent: {
       esModuleURI: "resource://gre/modules/PictureInPicture.sys.mjs",
