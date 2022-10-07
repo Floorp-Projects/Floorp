@@ -2000,6 +2000,7 @@ void PeerConnection::OnIceCandidate(
     return;
   }
   ReportIceCandidateCollected(candidate->candidate());
+  ClearStatsCache();
   Observer()->OnIceCandidate(candidate.get());
 }
 

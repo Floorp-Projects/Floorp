@@ -2418,6 +2418,38 @@ TEST_P(PeerConnectionIntegrationTestWithFakeClock,
   ClosePeerConnections();
 }
 
+TEST_P(PeerConnectionIntegrationTestWithFakeClock,
+       OnIceCandidateFlushesGetStatsCache) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+  caller()->AddAudioTrack();
+
+  // Call getStats, assert there are no candidates.
+  rtc::scoped_refptr<const webrtc::RTCStatsReport> first_report =
+      caller()->NewGetStats();
+  ASSERT_TRUE(first_report);
+  auto first_candidate_stats =
+      first_report->GetStatsOfType<webrtc::RTCLocalIceCandidateStats>();
+  ASSERT_EQ(first_candidate_stats.size(), 0u);
+
+  // Start candidate gathering and wait for it to complete.
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_SIMULATED_WAIT(caller()->IceGatheringStateComplete(),
+                             kDefaultTimeout, FakeClock());
+
+  // Call getStats again, assert there are candidates now.
+  rtc::scoped_refptr<const webrtc::RTCStatsReport> second_report =
+      caller()->NewGetStats();
+  ASSERT_TRUE(second_report);
+  auto second_candidate_stats =
+      second_report->GetStatsOfType<webrtc::RTCLocalIceCandidateStats>();
+  ASSERT_NE(second_candidate_stats.size(), 0u);
+
+  // The fake clock ensures that no time has passed so the cache must have been
+  // explicitly invalidated.
+  EXPECT_EQ(first_report->timestamp_us(), second_report->timestamp_us());
+}
+
 #endif  // !defined(THREAD_SANITIZER)
 
 // Verify that a TurnCustomizer passed in through RTCConfiguration
