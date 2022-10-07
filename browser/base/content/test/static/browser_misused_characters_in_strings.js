@@ -11,56 +11,6 @@
  * entries. */
 let gExceptionsList = [
   {
-    file: "netError.dtd",
-    key: "certerror.introPara2",
-    type: "single-quote",
-  },
-  {
-    file: "netError.dtd",
-    key: "certerror.sts.introPara",
-    type: "single-quote",
-  },
-  {
-    file: "netError.dtd",
-    key: "certerror.expiredCert.introPara",
-    type: "single-quote",
-  },
-  {
-    file: "netError.dtd",
-    key: "certerror.expiredCert.whatCanYouDoAboutIt2",
-    type: "single-quote",
-  },
-  {
-    file: "netError.dtd",
-    key: "certerror.whatShouldIDo.badStsCertExplanation1",
-    type: "single-quote",
-  },
-  {
-    file: "netError.dtd",
-    key: "inadequateSecurityError.longDesc",
-    type: "single-quote",
-  },
-  {
-    file: "netError.dtd",
-    key: "clockSkewError.longDesc",
-    type: "single-quote",
-  },
-  {
-    file: "netError.dtd",
-    key: "certerror.mitm.longDesc",
-    type: "single-quote",
-  },
-  {
-    file: "netError.dtd",
-    key: "certerror.mitm.whatCanYouDoAboutIt3",
-    type: "single-quote",
-  },
-  {
-    file: "netError.dtd",
-    key: "certerror.mitm.sts.whatCanYouDoAboutIt3",
-    type: "single-quote",
-  },
-  {
     file: "layout_errors.properties",
     key: "ImageMapRectBoundsError",
     type: "double-quote",

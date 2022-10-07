@@ -60,6 +60,10 @@ button:disabled {
   margin-top: 2em;
 }
 
+#errorWhatToDoTitle .bold {
+  font-weight: bold;
+}
+
 #prefChangeContainer {
   display: none;
 }
@@ -147,11 +151,6 @@ body:not(.neterror) #advancedButton {
   margin: 48px auto;
   min-width: var(--in-content-container-min-width);
   max-width: var(--in-content-container-max-width);
-}
-
-.mitm-name,
-#hostname {
-  font-weight: bold;
 }
 
 #errorCode {

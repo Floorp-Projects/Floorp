@@ -66,24 +66,24 @@ add_task(async function checkMitmPriming() {
     "Stored the correct issuer"
   );
 
-  await SpecialPowers.spawn(browser, [], () => {
-    let mitmName1 = content.document.querySelector(
-      "#errorShortDescText .mitm-name"
-    );
-    ok(
-      ContentTaskUtils.is_visible(mitmName1),
-      "Potential man in the middle is displayed"
-    );
-    is(mitmName1.textContent, "Unknown CA", "Shows the name of the issuer.");
+  await SpecialPowers.spawn(browser, [], async () => {
+    const shortDesc = content.document.querySelector("#errorShortDescText");
+    const whatToDo = content.document.querySelector("#errorWhatToDoText");
 
-    let mitmName2 = content.document.querySelector(
-      "#errorWhatToDoText .mitm-name"
+    await ContentTaskUtils.waitForCondition(
+      () => shortDesc.textContent != "" && whatToDo.textContent != "",
+      "DOM localization has been updated"
     );
+
     ok(
-      ContentTaskUtils.is_visible(mitmName2),
-      "Potential man in the middle is displayed"
+      shortDesc.textContent.includes("Unknown CA"),
+      "Shows the name of the issuer."
     );
-    is(mitmName2.textContent, "Unknown CA", "Shows the name of the issuer.");
+
+    ok(
+      whatToDo.textContent.includes("Unknown CA"),
+      "Shows the name of the issuer."
+    );
   });
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);

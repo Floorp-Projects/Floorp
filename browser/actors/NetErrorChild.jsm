@@ -117,7 +117,7 @@ class NetErrorChild extends RemotePageChild {
 
         let span = doc.createElement("span");
         span.appendChild(link);
-        doc.l10n.setAttributes(span, "dns-not-found-with-suggestion", {
+        doc.l10n.setAttributes(span, "neterror-dns-not-found-with-suggestion", {
           hostAndPath: displayHost + pathQueryRef,
         });
 
