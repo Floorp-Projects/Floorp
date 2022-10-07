@@ -50,9 +50,22 @@ class BaseCapturerPipeWire : public DesktopCapturer,
   xdg_portal::SessionDetails GetSessionDetails();
 
  private:
+  ScreenCastPortal* GetScreenCastPortal();
+
   DesktopCaptureOptions options_ = {};
   Callback* callback_ = nullptr;
   bool capturer_failed_ = false;
+  bool is_screencast_portal_ = false;
+
+  // SourceId that is selected using SelectSource() and that we previously
+  // returned in GetSourceList(). This should be a SourceId that has a restore
+  // token associated with it and can be restored if we have required version
+  // of xdg-desktop-portal.
+  SourceId selected_source_id_ = 0;
+  // SourceID we randomly generate and that is returned in GetSourceList() as
+  // available source that will later get assigned to a restore token in order
+  // to be restored later using SelectSource().
+  SourceId source_id_ = 0;
   std::unique_ptr<xdg_portal::ScreenCapturePortalInterface> portal_;
 };
 

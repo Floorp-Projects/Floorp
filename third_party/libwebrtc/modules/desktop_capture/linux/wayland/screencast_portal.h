@@ -58,6 +58,21 @@ class ScreenCastPortal : public xdg_portal::ScreenCapturePortalInterface {
     kMetadata = 0b100
   };
 
+  // Values are set based on persist mode property in
+  // xdg-desktop-portal/screencast
+  // https://github.com/flatpak/xdg-desktop-portal/blob/master/data/org.freedesktop.portal.ScreenCast.xml
+  enum class PersistMode : uint32_t {
+    // Do not allow to restore stream
+    kDoNotPersist = 0b00,
+    // The restore token is valid as long as the application is alive. It's
+    // stored in memory and revoked when the application closes its DBus
+    // connection
+    kTransient = 0b01,
+    // The restore token is stored in disk and is valid until the user manually
+    // revokes it
+    kPersistent = 0b10
+  };
+
   // Interface that must be implemented by the ScreenCastPortal consumers.
   class PortalNotifier {
    public:
@@ -106,6 +121,11 @@ class ScreenCastPortal : public xdg_portal::ScreenCapturePortalInterface {
   void SourcesRequest();
   void OpenPipeWireRemote();
 
+  // ScreenCast specific methods for stream restoration
+  void SetPersistMode(ScreenCastPortal::PersistMode mode);
+  void SetRestoreToken(const std::string& token);
+  std::string RestoreToken() const;
+
  private:
   PortalNotifier* notifier_;
 
@@ -113,11 +133,15 @@ class ScreenCastPortal : public xdg_portal::ScreenCapturePortalInterface {
   uint32_t pw_stream_node_id_ = 0;
   // A file descriptor of PipeWire socket
   int pw_fd_ = -1;
+  // Restore token that can be used to restore previous session
+  std::string restore_token_;
 
   CaptureSourceType capture_source_type_ =
       ScreenCastPortal::CaptureSourceType::kScreen;
 
   CursorMode cursor_mode_ = ScreenCastPortal::CursorMode::kMetadata;
+
+  PersistMode persist_mode_ = ScreenCastPortal::PersistMode::kDoNotPersist;
 
   ProxyRequestResponseHandler proxy_request_response_handler_;
   SourcesRequestResponseSignalHandler sources_request_response_signal_handler_;
