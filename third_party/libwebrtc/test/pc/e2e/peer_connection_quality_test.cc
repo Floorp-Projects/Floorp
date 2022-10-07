@@ -33,6 +33,7 @@
 #include "test/field_trial.h"
 #include "test/pc/e2e/analyzer/audio/default_audio_quality_analyzer.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer.h"
+#include "test/pc/e2e/analyzer/video/video_frame_tracking_id_injector.h"
 #include "test/pc/e2e/analyzer/video/video_quality_metrics_reporter.h"
 #include "test/pc/e2e/cross_media_metrics_reporter.h"
 #include "test/pc/e2e/stats_poller.h"
@@ -138,8 +139,13 @@ PeerConnectionE2EQualityTest::PeerConnectionE2EQualityTest(
     video_quality_analyzer = std::make_unique<DefaultVideoQualityAnalyzer>(
         time_controller_.GetClock());
   }
-  encoded_image_data_propagator_ =
-      std::make_unique<SingleProcessEncodedImageDataInjector>();
+  if (field_trial::IsEnabled("WebRTC-VideoFrameTrackingIdAdvertised")) {
+    encoded_image_data_propagator_ =
+        std::make_unique<VideoFrameTrackingIdInjector>();
+  } else {
+    encoded_image_data_propagator_ =
+        std::make_unique<SingleProcessEncodedImageDataInjector>();
+  }
   video_quality_analyzer_injection_helper_ =
       std::make_unique<VideoQualityAnalyzerInjectionHelper>(
           std::move(video_quality_analyzer),
