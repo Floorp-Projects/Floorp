@@ -1430,12 +1430,12 @@ struct RTC_EXPORT PeerConnectionFactoryDependencies final {
   std::unique_ptr<NetworkStatePredictorFactoryInterface>
       network_state_predictor_factory;
   std::unique_ptr<NetworkControllerFactoryInterface> network_controller_factory;
-  // This will only be used if CreatePeerConnection is called without a
-  // `port_allocator`, causing the default allocator and network manager to be
-  // used.
+  // The `network_manager` will only be used if CreatePeerConnection is called
+  // without a `port_allocator`, causing the default allocator and network
+  // manager to be used.
   std::unique_ptr<rtc::NetworkManager> network_manager;
-  // This will only be used if CreatePeerConnection is called without a
-  // `port_allocator`, and the above `network_manager' is null.
+  // The `network_monitor_factory` will only be used if CreatePeerConnection is
+  // called without a `port_allocator`, and the above `network_manager' is null.
   std::unique_ptr<rtc::NetworkMonitorFactory> network_monitor_factory;
   std::unique_ptr<NetEqFactory> neteq_factory;
   std::unique_ptr<SctpTransportFactoryInterface> sctp_factory;
