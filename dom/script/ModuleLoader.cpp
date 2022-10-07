@@ -110,7 +110,7 @@ nsresult ModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   nsresult rv = GetScriptLoader()->StartLoadInternal(aRequest, securityFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // https://whatpr.org/html/8075/webappapis.html#fetch-an-import()-module-script-graph
+  // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-an-import()-module-script-graph
   // Step 1. Disallow further import maps given settings object.
   if (!aRequest->GetScriptLoadContext()->IsPreload()) {
     LOG(("ScriptLoadRequest (%p): Disallow further import maps.", aRequest));

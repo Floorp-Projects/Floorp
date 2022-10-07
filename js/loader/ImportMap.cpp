@@ -41,7 +41,7 @@ void ReportWarningHelper::Report(const char* aMessageName,
   mLoader->ReportWarningToConsole(mRequest, aMessageName, aParams);
 }
 
-// https://whatpr.org/html/8075/webappapis.html#resolving-a-url-like-module-specifier
+// https://html.spec.whatwg.org/multipage/webappapis.html#resolving-a-url-like-module-specifier
 static ResolveResult ResolveURLLikeModuleSpecifier(const nsAString& aSpecifier,
                                                    nsIURI* aBaseURL) {
   nsCOMPtr<nsIURI> uri;
@@ -74,7 +74,7 @@ static ResolveResult ResolveURLLikeModuleSpecifier(const nsAString& aSpecifier,
   return WrapNotNull(uri);
 }
 
-// https://whatpr.org/html/8075/webappapis.html#normalizing-a-specifier-key
+// https://html.spec.whatwg.org/multipage/webappapis.html#normalizing-a-specifier-key
 static void NormalizeSpecifierKey(const nsAString& aSpecifierKey,
                                   nsIURI* aBaseURL,
                                   const ReportWarningHelper& aWarning,
@@ -105,7 +105,7 @@ static void NormalizeSpecifierKey(const nsAString& aSpecifierKey,
   aRetVal = aSpecifierKey;
 }
 
-// https://whatpr.org/html/8075/webappapis.html#sorting-and-normalizing-a-module-specifier-map
+// https://html.spec.whatwg.org/multipage/webappapis.html#sorting-and-normalizing-a-module-specifier-map
 static UniquePtr<SpecifierMap> SortAndNormalizeSpecifierMap(
     JSContext* aCx, JS::HandleObject aOriginalMap, nsIURI* aBaseURL,
     const ReportWarningHelper& aWarning) {
@@ -230,7 +230,7 @@ static bool IsMapObject(JSContext* aCx, JS::HandleValue aMapVal, bool* aIsMap) {
   return true;
 }
 
-// https://whatpr.org/html/8075/webappapis.html#sorting-and-normalizing-scopes
+// https://html.spec.whatwg.org/multipage/webappapis.html#sorting-and-normalizing-scopes
 static UniquePtr<ScopeMap> SortAndNormalizeScopes(
     JSContext* aCx, JS::HandleObject aOriginalMap, nsIURI* aBaseURL,
     const ReportWarningHelper& aWarning) {
@@ -309,7 +309,7 @@ static UniquePtr<ScopeMap> SortAndNormalizeScopes(
   return normalized;
 }
 
-// https://whatpr.org/html/8075/webappapis.html#parse-an-import-map-string
+// https://html.spec.whatwg.org/multipage/webappapis.html#parse-an-import-map-string
 // static
 UniquePtr<ImportMap> ImportMap::ParseString(
     JSContext* aCx, SourceText<char16_t>& aInput, nsIURI* aBaseURL,
@@ -454,7 +454,7 @@ static bool IsSpecialScheme(nsIURI* aURI) {
          scheme.EqualsLiteral("ws") || scheme.EqualsLiteral("wss");
 }
 
-// https://whatpr.org/html/8075/webappapis.html#resolving-an-imports-match
+// https://html.spec.whatwg.org/multipage/webappapis.html#resolving-an-imports-match
 static mozilla::Result<nsCOMPtr<nsIURI>, ResolveError> ResolveImportsMatch(
     nsString& aNormalizedSpecifier, nsIURI* aAsURL,
     const SpecifierMap* aSpecifierMap) {
@@ -574,7 +574,7 @@ static mozilla::Result<nsCOMPtr<nsIURI>, ResolveError> ResolveImportsMatch(
   return nsCOMPtr<nsIURI>(nullptr);
 }
 
-// https://whatpr.org/html/8075/webappapis.html#resolve-a-module-specifier
+// https://html.spec.whatwg.org/multipage/webappapis.html#resolve-a-module-specifier
 // static
 ResolveResult ImportMap::ResolveModuleSpecifier(ImportMap* aImportMap,
                                                 ScriptLoaderInterface* aLoader,

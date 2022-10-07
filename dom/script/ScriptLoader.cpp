@@ -909,7 +909,7 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
   LOG(("ScriptLoader (%p): Process external script for element %p", this,
        aElement));
 
-  // https://whatpr.org/html/8075/scripting.html#prepare-the-script-element
+  // https://html.spec.whatwg.org/multipage/scripting.html#prepare-the-script-element
   // Step 30.1. If el's type is "importmap", then queue an element task on the
   // DOM manipulation task source given el to fire an event named error at el,
   // and return.
@@ -956,7 +956,7 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
 
     LOG(("ScriptLoadRequest (%p): Using preload request", request.get()));
 
-    // https://whatpr.org/html/8075/webappapis.html#fetch-a-module-script-tree
+    // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-module-script-tree
     // Step 1. Disallow further import maps given settings object.
     if (request->IsModuleRequest()) {
       LOG(("ScriptLoadRequest (%p): Disallow further import maps.",
@@ -1125,7 +1125,7 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   // Check if adding an import map script is allowed. If not, we bail out
   // early to prevent creating a load request.
   if (aScriptKind == ScriptKind::eImportMap) {
-    // https://whatpr.org/html/8075/scripting.html#prepare-the-script-element
+    // https://html.spec.whatwg.org/multipage/scripting.html#prepare-the-script-element
     // Step 31.2 type is "importmap":
     //   Step 1. If el's relevant global object's import maps allowed is false,
     //   then queue an element task on the DOM manipulation task source given el
@@ -1172,7 +1172,7 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   request->mBaseURL = mDocument->GetDocBaseURI();
 
   if (request->IsModuleRequest()) {
-    // https://whatpr.org/html/8075/webappapis.html#fetch-an-inline-module-script-graph
+    // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-an-inline-module-script-graph
     // Step 1. Disallow further import maps given settings object.
     mModuleLoader->DisallowImportMaps();
 
@@ -1204,7 +1204,7 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   }
 
   if (request->IsImportMapRequest()) {
-    // https://whatpr.org/html/8075/scripting.html#prepare-the-script-element
+    // https://html.spec.whatwg.org/multipage/scripting.html#prepare-the-script-element
     // Step 31.2 type is "importmap":
     //   Impl note: Step 1 is done above before creating a ScriptLoadRequest.
     MOZ_ASSERT(mModuleLoader->IsImportMapAllowed());
@@ -1224,12 +1224,12 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
 
     // TODO: Bug 1781758: Move RegisterImportMap into EvaluateScriptElement.
     //
-    // https://whatpr.org/html/8075/scripting.html#execute-the-script-element
+    // https://html.spec.whatwg.org/multipage/scripting.html#execute-the-script-element
     // The spec defines 'register an import map' should be done in
     // 'execute the script element', because inside 'execute the script element'
     // it will perform a 'preparation-time document check'.
     // However, as import maps could be only inline scripts by now, the
-    // 'preparation-time document check' will never fail for import maps
+    // 'preparation-time document check' will never fail for import maps.
     // So we simply call 'register an import map' here.
     mModuleLoader->RegisterImportMap(std::move(importMap));
     return false;

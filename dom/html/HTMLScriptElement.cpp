@@ -183,7 +183,7 @@ void HTMLScriptElement::FreezeExecutionAttrs(Document* aOwnerDoc) {
       mKind = ScriptKind::eModule;
     }
 
-    // https://whatpr.org/html/8075/scripting.html#prepare-the-script-element
+    // https://html.spec.whatwg.org/multipage/scripting.html#prepare-the-script-element
     // Step 11. Otherwise, if the script block's type string is an ASCII
     // case-insensitive match for the string "importmap", then set el's type to
     // "importmap".
