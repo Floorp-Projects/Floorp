@@ -15,6 +15,22 @@ browser.searchinit.init_result_status_code
   Records the search service initialization code on startup. This is typically
   one of the error values in https://searchfox.org/mozilla-central/source/xpcom/base/ErrorList.py
 
+browser.searchinit.secure_opensearch_engine_count
+  Records the number of secure (i.e., using https) OpenSearch search
+  engines a given user has installed
+
+browser.searchinit.insecure_opensearch_engine_count
+  Records the number of insecure (i.e., using http) OpenSearch search
+  engines a given user has installed
+
+browser.searchinit.secure_opensearch_update_count
+  Records the number of OpenSearch search engines with secure updates
+  enabled (i.e., using https) a given user has installed
+
+browser.searchinit.insecure_opensearch_update_count
+  Records the number of OpenSearch search engines with insecure updates
+  enabled (i.e., using http) a given user has installed
+
 Keyed Scalars
 -------------
 

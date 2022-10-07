@@ -396,6 +396,7 @@ export class SearchService {
     await this.init();
     await this.#migrateLegacyEngines();
     await this.#checkWebExtensionEngines();
+    await this.#addOpenSearchTelemetry();
   }
 
   /**
@@ -2503,6 +2504,62 @@ export class SearchService {
   }
 
   /**
+   * Counts the number of secure, insecure, securely updated and insecurely
+   * updated OpenSearch engines the user has installed and reports those
+   * counts via telemetry.
+   *
+   * Run during the background checks.
+   */
+  async #addOpenSearchTelemetry() {
+    let totalSecure = 0;
+    let totalInsecure = 0;
+    let totalWithSecureUpdates = 0;
+    let totalWithInsecureUpdates = 0;
+
+    let engine;
+    let searchURL;
+    let updateURI;
+    for (let elem of this._engines) {
+      engine = elem[1];
+      if (engine instanceof lazy.OpenSearchEngine) {
+        searchURL = engine.getSubmission("").uri.spec;
+        updateURI = engine._updateURI;
+
+        if (searchURL.startsWith("https")) {
+          totalSecure++;
+        } else {
+          totalInsecure++;
+        }
+
+        // Note: there is a possibility that an OpenSearch engine doesn't have
+        // an updateURI at all, hence the else if clause below
+        if (updateURI && updateURI.scheme == "https") {
+          totalWithSecureUpdates++;
+        } else if (updateURI) {
+          totalWithInsecureUpdates++;
+        }
+      }
+    }
+
+    Services.telemetry.scalarSet(
+      "browser.searchinit.secure_opensearch_engine_count",
+      totalSecure
+    );
+    Services.telemetry.scalarSet(
+      "browser.searchinit.insecure_opensearch_engine_count",
+      totalInsecure
+    );
+    Services.telemetry.scalarSet(
+      "browser.searchinit.secure_opensearch_update_count",
+      totalWithSecureUpdates
+    );
+    Services.telemetry.scalarSet(
+      "browser.searchinit.insecure_opensearch_update_count",
+      totalWithInsecureUpdates
+    );
+  }
+
+  /**
    * Creates and adds a WebExtension based engine.
    * Note: this is currently used for enterprise policy engines as well.
    *
@@ -3562,11 +3619,7 @@ var engineUpdateService = {
     }
 
     let testEngine = null;
-    let updateURL = engine._getURLOfType(lazy.SearchUtils.URL_TYPE.OPENSEARCH);
-    let updateURI =
-      updateURL && updateURL._hasRelation("self")
-        ? updateURL.getSubmission("", engine).uri
-        : lazy.SearchUtils.makeURI(engine._updateURL);
+    let updateURI = engine._updateURI;
     if (updateURI) {
       if (engine.isAppProvided && !updateURI.schemeIs("https")) {
         lazy.logConsole.debug("Invalid scheme for default engine update");

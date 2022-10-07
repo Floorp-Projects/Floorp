@@ -496,7 +496,7 @@ browser.engagement.navigation:
       broken down by the originating action.
     expires: never
     kind: uint
-    keyed: True
+    keyed: true
     notification_emails:
       - fx-search-telemetry@mozilla.com
       - rev-data@mozilla.com
@@ -514,7 +514,7 @@ browser.engagement.navigation:
       mode, broken down by the originating action.
     expires: never
     kind: uint
-    keyed: True
+    keyed: true
     notification_emails:
       - fx-search-telemetry@mozilla.com
       - rev-data@mozilla.com
@@ -5109,7 +5109,7 @@ browser.search.content:
       broken down by the originating action.
     expires: never
     kind: uint
-    keyed: True
+    keyed: true
     notification_emails:
       - fx-search-telemetry@mozilla.com
       - rev-data@mozilla.com
@@ -5347,7 +5347,7 @@ browser.search.withads:
       broken down by the originating action.
     expires: never
     kind: uint
-    keyed: True
+    keyed: true
     notification_emails:
       - fx-search-telemetry@mozilla.com
       - rev-data@mozilla.com
@@ -5553,7 +5553,7 @@ browser.search.adclicks:
       broken down by the originating action.
     expires: never
     kind: uint
-    keyed: True
+    keyed: true
     notification_emails:
       - fx-search-telemetry@mozilla.com
       - rev-data@mozilla.com
@@ -5752,6 +5752,74 @@ browser.searchinit:
     notification_emails:
       - fx-search-telemetry@mozilla.com
       - mbanner@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
+
+  secure_opensearch_engine_count:
+    bug_numbers:
+      - 1789438
+    description: >
+      Records the number of secure (i.e., using https) OpenSearch search
+      engines a given user has installed
+    expires: "112"
+    keyed: false
+    kind: uint
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
+
+  insecure_opensearch_engine_count:
+    bug_numbers:
+      - 1789438
+    description: >
+      Records the number of insecure (i.e., using http) OpenSearch search
+      engines a given user has installed
+    expires: "112"
+    keyed: false
+    kind: uint
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
+
+  secure_opensearch_update_count:
+    bug_numbers:
+      - 1789438
+    description: >
+      Records the number of OpenSearch search engines with secure updates
+      enabled (i.e., using https) a given user has installed
+    expires: "112"
+    keyed: false
+    kind: uint
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
+
+  insecure_opensearch_update_count:
+    bug_numbers:
+      - 1789438
+    description: >
+      Records the number of OpenSearch search engines with insecure updates
+      enabled (i.e., using http) a given user has installed
+    expires: "112"
+    keyed: false
+    kind: uint
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
     products:
       - 'firefox'
     record_in_processes:
