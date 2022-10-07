@@ -296,7 +296,6 @@ class nsPrintJob final : public nsIWebProgressListener,
   bool mDoingInitialReflow = false;
   bool mIsDestroying = false;
   bool mDisallowSelectionPrint = false;
-  bool mIsForModalWindow = false;
 };
 
 #endif  // nsPrintJob_h
