@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1793776",
+    title: "Test that media.peerconnection.sdp.disable_stereo_fmtp works"
+  });
+
+  const tests = [
+    async function testStereo() {
+      const offerer = new RTCPeerConnection();
+      offerer.addTransceiver('audio');
+      const answerer = new RTCPeerConnection();
+      await offerer.setLocalDescription();
+      ok(offerer.localDescription.sdp.includes('stereo=1'),
+          'Offer uses stereo=1 when media.peerconnection.sdp.disable_stereo_fmtp is not set');
+      await answerer.setRemoteDescription(offerer.localDescription);
+      const {sdp} = await answerer.createAnswer();
+      ok(sdp.includes('stereo=1'), 'Answer uses stereo=1 when media.peerconnection.sdp.disable_stereo_fmtp is not set');
+    },
+
+    async function testNoStereo() {
+      await pushPrefs(
+          ['media.peerconnection.sdp.disable_stereo_fmtp', true]);
+
+      const offerer = new RTCPeerConnection();
+      offerer.addTransceiver('audio');
+      const answerer = new RTCPeerConnection();
+      await offerer.setLocalDescription();
+      ok(offerer.localDescription.sdp.includes('stereo=0'),
+          'Offer uses stereo=0 when media.peerconnection.sdp.disable_stereo_fmtp is set');
+      await answerer.setRemoteDescription(offerer.localDescription);
+      const {sdp} = await answerer.createAnswer();
+      ok(sdp.includes('stereo=0'), 'Answer uses stereo=0 when media.peerconnection.sdp.disable_stereo_fmtp is set');
+    },
+  ];
+
+  runNetworkTest(async () => {
+    for (const test of tests) {
+      info(`Running test: ${test.name}`);
+      try {
+        await test();
+      } catch (e) {
+        ok(false, `Caught ${e.name}: ${e.message} ${e.stack}`);
+      }
+      info(`Done running test: ${test.name}`);
+      // Make sure we don't build up a pile of GC work, and also get PCImpl to
+      // print their timecards.
+      await new Promise(r => SpecialPowers.exactGC(r));
+    }
+
+    await SpecialPowers.popPrefEnv();
+  });
+</script>
+</pre>
+</body>
+</html>
