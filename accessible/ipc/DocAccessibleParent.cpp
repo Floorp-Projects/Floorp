@@ -344,6 +344,12 @@ void DocAccessibleParent::FireEvent(RemoteAccessible* aAcc,
            child = child->RemoteNextSibling()) {
         child->InvalidateGroupInfo();
       }
+    } else if (aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE &&
+               aAcc == this) {
+      // A DocAccessible gets the STALE state while it is still loading, but we
+      // don't fire a state change for that. That state might have been
+      // included in the initial cache push, so clear it here.
+      UpdateStateCache(states::STALE, false);
     }
   }
 
