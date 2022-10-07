@@ -1063,7 +1063,10 @@ if (rtc_include_tests) {
       "codecs/av1:libaom_av1_decoder",
       #"//third_party/libyuv",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/memory",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
     include_dirs = [
       "/media/libyuv",
       "/media/libyuv/libyuv/include",
