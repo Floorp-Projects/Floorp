@@ -1222,10 +1222,15 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
       return false;
     }
 
-    // Step 3. Assert: element’s the script’s type is "importmap".
-    MOZ_ASSERT(aElement->GetScriptIsImportMap());
-
-    // Step 4 to step 9 is done in RegisterImportMap.
+    // TODO: Bug 1781758: Move RegisterImportMap into EvaluateScriptElement.
+    //
+    // https://whatpr.org/html/8075/scripting.html#execute-the-script-element
+    // The spec defines 'register an import map' should be done in
+    // 'execute the script element', because inside 'execute the script element'
+    // it will perform a 'preparation-time document check'.
+    // However, as import maps could be only inline scripts by now, the
+    // 'preparation-time document check' will never fail for import maps
+    // So we simply call 'register an import map' here.
     mModuleLoader->RegisterImportMap(std::move(importMap));
     return false;
   }
