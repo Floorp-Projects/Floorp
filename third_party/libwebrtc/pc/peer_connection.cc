@@ -1614,6 +1614,7 @@ RTCError PeerConnection::SetConfiguration(
 bool PeerConnection::AddIceCandidate(
     const IceCandidateInterface* ice_candidate) {
   RTC_DCHECK_RUN_ON(signaling_thread());
+  ClearStatsCache();
   return sdp_handler_->AddIceCandidate(ice_candidate);
 }
 
@@ -1621,7 +1622,11 @@ void PeerConnection::AddIceCandidate(
     std::unique_ptr<IceCandidateInterface> candidate,
     std::function<void(RTCError)> callback) {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  sdp_handler_->AddIceCandidate(std::move(candidate), callback);
+  sdp_handler_->AddIceCandidate(std::move(candidate),
+                                [this, callback](webrtc::RTCError result) {
+                                  ClearStatsCache();
+                                  callback(result);
+                                });
 }
 
 bool PeerConnection::RemoveIceCandidates(
