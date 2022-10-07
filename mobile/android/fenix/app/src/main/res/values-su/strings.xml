@@ -279,6 +279,8 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Tepas Firefox pribadi kiwari mantuan anjeun nyokot ti anu ditinggalkeun. Néangan tab anu can lila, markah, jeung hasil nyungsi.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Nepangkeun kaca tepas pribadi anjeun. Tab mutahir, markah, jeung hasil maluruh bakal némbongan di dieu.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Wilujeng sumping di internét mandiri</string>
     <!-- Home onboarding dialog welcome screen title text. -->
@@ -289,12 +291,17 @@
     <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Luncat tina telepon ka laptop jeung sabalikna</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Ngagilirkeun layar leuwih babari ti nu atos-atos</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Buka ti panungtung anu ditinggalkeun maké tab ti séjén parabot ayeuna dina kaca tepas.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Mitembeyan</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Asup</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Liwat</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Tab anjeun keur disingkronkeun! Pilih ti nu ditinggalkeun dina séjén parabot anjeun.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -383,6 +390,8 @@
     <string name="preferences_gestures">Réngkak</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Sesuaikeun</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Asup pikeun nyingkronkeun tab, markah, kecap sandi, jeung sajabana.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Akun Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1250,6 +1259,8 @@
     <string name="onboarding_message">Panyungsi anu diwangun pikeun jalma, lain bati.</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Singkronkeun Firefox sakur parabot</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Angkut di tempat nu ku anjeun tinggalkeun</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Bawa markah, jujutan, jeung kecap sandi ka %1$s di ieu parabot.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1287,6 +1298,8 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Maca wawaran salindungan kami</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">Siap muka internét anu hébring?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Mitembeyan nyungsi</string>
 
@@ -1404,6 +1417,8 @@
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Meungpeuk réréméh anu dipaké ku maskapé jaringan iklan jeung analitika pikeun ngumpulkeun data langlangan anjeun di loka anu kaanjangan.</string>
 
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Total Cookie Protection ngerem réréméh dina loka anu keur dibuka sangkan teu bisa dipaké ku palacak kayaning jaringan iklan pikeun nunutur anjeun meuntas-loa.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Gurandil kripto</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
