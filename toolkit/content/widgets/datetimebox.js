@@ -660,6 +660,7 @@ this.DateTimeBoxWidget = class {
           this.closeDateTimePicker();
         } else if (
           aEvent.key != "Escape" &&
+          aEvent.key != "Enter" &&
           this.shouldOpenDateTimePickerOnKeyPress()
         ) {
           this.openDateTimePicker();
