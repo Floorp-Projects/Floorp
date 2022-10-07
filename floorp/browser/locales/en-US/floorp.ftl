@@ -285,6 +285,54 @@ sidebar2-mute-and-unmute =
 sidebar2-unload-panel =
   .label = Unload this panel
 
+sidebar-close-button =
+  .tooltiptext = Close sidebar
+
+sidebar-back-button =
+  .tooltiptext = Back
+
+sidebar-forward-button =
+  .tooltiptext = Forward
+
+sidebar-reload-button = 
+  .tooltiptext = Reload
+
+sidebar-muteAndUnmute-button =
+  .tooltiptext = Mute/Unmute sidebar
+
+show-browser-manager-sidebar =
+  .tooltiptext = Show Browser Manager Sidebar
+
+show-bookmark-sidebar =
+  .tooltiptext = Show Bookmarks Sidebar
+
+show-history-sidebar =
+  .tooltiptext = Show History Sidebar
+
+show-download-sidebar =
+  .tooltiptext = Show Download Sidebar
+
+show-TST-sidebar =
+  .tooltiptext = Show Tree Style Tab Sidebar
+
+show-CustomURL-sidebar =
+ .label = Show Custom URL Sidebar
+
+Edit-Custom-URL =
+ .label = Edit Custom URL in Sidebar
+
+sidebar-addons-button =
+  .tooltiptext = Open Addon manager
+
+sidebar-passwords-button =
+  .tooltiptext = Open Password manager
+
+sidebar-preferences-button =
+  .tooltiptext = Open Preferences
+
+sidebar-keepWidth-button =
+  .tooltiptext = Keep This Panel Width
+
 #################################################################### menu panel ############################################################
 
 open-profile-dir = 
