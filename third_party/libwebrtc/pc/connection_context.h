@@ -37,7 +37,6 @@ class ChannelManager;
 }
 
 namespace rtc {
-class BasicNetworkManager;
 class BasicPacketSocketFactory;
 class UniqueRandomIdGenerator;
 }  // namespace rtc
@@ -88,7 +87,7 @@ class ConnectionContext final
   const FieldTrialsView& field_trials() const { return *trials_.get(); }
 
   // Accessors only used from the PeerConnectionFactory class
-  rtc::BasicNetworkManager* default_network_manager() {
+  rtc::NetworkManager* default_network_manager() {
     RTC_DCHECK_RUN_ON(signaling_thread_);
     return default_network_manager_.get();
   }
@@ -136,7 +135,7 @@ class ConnectionContext final
   rtc::UniqueRandomIdGenerator ssrc_generator_;
   std::unique_ptr<rtc::NetworkMonitorFactory> const network_monitor_factory_
       RTC_GUARDED_BY(signaling_thread_);
-  std::unique_ptr<rtc::BasicNetworkManager> default_network_manager_
+  std::unique_ptr<rtc::NetworkManager> default_network_manager_
       RTC_GUARDED_BY(signaling_thread_);
   std::unique_ptr<webrtc::CallFactoryInterface> const call_factory_
       RTC_GUARDED_BY(worker_thread());

@@ -34,6 +34,7 @@
 #include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/time_utils.h"
+#include "test/gmock.h"
 #include "test/gtest.h"
 
 #ifdef WEBRTC_ANDROID
@@ -50,6 +51,10 @@ using webrtc::PeerConnectionInterface;
 using webrtc::PeerConnectionObserver;
 using webrtc::VideoTrackInterface;
 using webrtc::VideoTrackSourceInterface;
+
+using ::testing::AtLeast;
+using ::testing::InvokeWithoutArgs;
+using ::testing::NiceMock;
 
 namespace {
 
@@ -91,6 +96,20 @@ class NullPeerConnectionObserver : public PeerConnectionObserver {
       PeerConnectionInterface::IceGatheringState new_state) override {}
   void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override {
   }
+};
+
+class MockNetworkManager : public rtc::NetworkManager {
+ public:
+  MOCK_METHOD(void, StartUpdating, (), (override));
+  MOCK_METHOD(void, StopUpdating, (), (override));
+  MOCK_METHOD(std::vector<const rtc::Network*>,
+              GetNetworks,
+              (),
+              (const override));
+  MOCK_METHOD(std::vector<const rtc::Network*>,
+              GetAnyAddressNetworks,
+              (),
+              (override));
 };
 
 }  // namespace
@@ -491,4 +510,29 @@ TEST_F(PeerConnectionFactoryTest, LocalRendering) {
   source->InjectFrame(frame_source.GetFrame());
   EXPECT_EQ(3, local_renderer.num_rendered_frames());
   EXPECT_FALSE(local_renderer.black_frame());
+}
+
+TEST(PeerConnectionFactoryDependenciesTest, UsesNetworkManager) {
+  constexpr int64_t kWaitTimeoutMs = 10000;
+  auto mock_network_manager = std::make_unique<NiceMock<MockNetworkManager>>();
+
+  rtc::Event called;
+  EXPECT_CALL(*mock_network_manager, StartUpdating())
+      .Times(AtLeast(1))
+      .WillRepeatedly(InvokeWithoutArgs([&] { called.Set(); }));
+
+  webrtc::PeerConnectionFactoryDependencies pcf_dependencies;
+  pcf_dependencies.network_manager = std::move(mock_network_manager);
+
+  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pcf =
+      CreateModularPeerConnectionFactory(std::move(pcf_dependencies));
+
+  PeerConnectionInterface::RTCConfiguration config;
+  config.ice_candidate_pool_size = 2;
+  NullPeerConnectionObserver observer;
+  auto pc = pcf->CreatePeerConnectionOrError(
+      config, webrtc::PeerConnectionDependencies(&observer));
+  ASSERT_TRUE(pc.ok());
+
+  called.Wait(kWaitTimeoutMs);
 }

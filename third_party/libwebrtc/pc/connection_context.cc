@@ -102,12 +102,16 @@ ConnectionContext::ConnectionContext(
       media_engine_(std::move(dependencies->media_engine)),
       network_monitor_factory_(
           std::move(dependencies->network_monitor_factory)),
+      default_network_manager_(std::move(dependencies->network_manager)),
       call_factory_(std::move(dependencies->call_factory)),
       sctp_factory_(
           MaybeCreateSctpFactory(std::move(dependencies->sctp_factory),
                                  network_thread(),
                                  *trials_.get())) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
+  RTC_DCHECK(!(default_network_manager_ && network_monitor_factory_))
+      << "You can't set both network_manager and network_monitor_factory.";
+
   signaling_thread_->AllowInvokesToThread(worker_thread());
   signaling_thread_->AllowInvokesToThread(network_thread_);
   worker_thread_->AllowInvokesToThread(network_thread_);
@@ -141,11 +145,12 @@ ConnectionContext::ConnectionContext(
       socket_factory = network_thread()->socketserver();
     }
   }
-  // If network_monitor_factory_ is non-null, it will be used to create a
-  // network monitor while on the network thread.
-  default_network_manager_ = std::make_unique<rtc::BasicNetworkManager>(
-      network_monitor_factory_.get(), socket_factory, &field_trials());
-
+  if (!default_network_manager_) {
+    // If network_monitor_factory_ is non-null, it will be used to create a
+    // network monitor while on the network thread.
+    default_network_manager_ = std::make_unique<rtc::BasicNetworkManager>(
+        network_monitor_factory_.get(), socket_factory, &field_trials());
+  }
   default_socket_factory_ =
       std::make_unique<rtc::BasicPacketSocketFactory>(socket_factory);
 
