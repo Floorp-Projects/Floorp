@@ -81,6 +81,16 @@ class ImportMap {
    * Import maps spec.
    *
    * See https://whatpr.org/html/8075/webappapis.html#resolve-a-module-specifier
+   *
+   * Impl note: According to the spec, if the specifier cannot be resolved, this
+   * method will throw a TypeError(Step 13). But the tricky part is when
+   * creating a module script,
+   * see
+   * https://whatpr.org/html/8075/webappapis.html#validate-requested-module-specifiers
+   * If the resolving failed, it shall catch the exception and set to the
+   * script's parse error.
+   * For implementation we return a ResolveResult here, and the callers will
+   * need to convert the result to a TypeError if it fails.
    */
   static ResolveResult ResolveModuleSpecifier(ImportMap* aImportMap,
                                               ScriptLoaderInterface* aLoader,
