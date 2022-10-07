@@ -284,7 +284,8 @@ class ModuleLoaderBase : public nsISupports {
   // Process <script type="importmap">
   mozilla::UniquePtr<ImportMap> ParseImportMap(ScriptLoadRequest* aRequest);
 
-  // Implements https://wicg.github.io/import-maps/#register-an-import-map
+  // Implements
+  // https://whatpr.org/html/8075/webappapis.html#register-an-import-map
   void RegisterImportMap(mozilla::UniquePtr<ImportMap> aImportMap);
 
   // Getter for mImportMapsAllowed.
