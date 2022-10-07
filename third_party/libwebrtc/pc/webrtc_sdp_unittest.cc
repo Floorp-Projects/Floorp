@@ -4699,6 +4699,21 @@ TEST_F(WebRtcSdpTest, FmtpBeforeRtpMap) {
   EXPECT_TRUE(SdpDeserialize(sdp, &jdesc_output));
 }
 
+TEST_F(WebRtcSdpTest, StaticallyAssignedPayloadTypeWithDifferentCasing) {
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 11 22 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "m=audio 49232 RTP/AVP 18\r\n"
+      // Casing differs from statically assigned type, this should
+      // still be accepted.
+      "a=rtpmap:18 g729/8000\r\n";
+
+  JsepSessionDescription jdesc_output(kDummyType);
+  EXPECT_TRUE(SdpDeserialize(sdp, &jdesc_output));
+}
+
 // This tests parsing of SDP with unknown ssrc-specific attributes.
 TEST_F(WebRtcSdpTest, ParseIgnoreUnknownSsrcSpecificAttribute) {
   std::string sdp = kSdpString;
