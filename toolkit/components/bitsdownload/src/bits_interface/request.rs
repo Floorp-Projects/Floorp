@@ -744,11 +744,7 @@ impl BitsRequest {
         cancel_with_reason_nsIRequest => CancelWithReason(status: nsresult, _reason: *const nsACString)
     );
     #[allow(non_snake_case)]
-    fn cancel_with_reason_nsIRequest(
-        &self,
-        status: nsresult,
-        _reason: *const nsACString,
-    ) -> Result<(), BitsTaskError> {
+    fn cancel_with_reason_nsIRequest(&self, status: nsresult,  _reason: *const nsACString) -> Result<(), BitsTaskError> {
         self.cancel(status, None)
     }
 }

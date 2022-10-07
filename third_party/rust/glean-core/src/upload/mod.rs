@@ -125,6 +125,8 @@ impl RateLimiter {
 ///
 /// When asking for the next ping request to upload,
 /// the requester may receive one out of three possible tasks.
+///
+/// If new variants are added, this should be reflected in `glean-core/ffi/src/upload.rs` as well.
 #[derive(PartialEq, Eq, Debug)]
 pub enum PingUploadTask {
     /// An upload task
