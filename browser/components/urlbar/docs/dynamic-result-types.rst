@@ -217,9 +217,9 @@ for a description of this object.
 ~~~~~~~~~~~~~~~~~~~~
 
 If you are creating the provider in the internal address bar implementation in
-mozilla-central, then add styling `dynamicResults.inc.css`_.
+mozilla-central, then add styling `urlbar-dynamic-results.css`_.
 
-.. _dynamicResults.inc.css: https://searchfox.org/mozilla-central/source/browser/themes/shared/urlbar/dynamicResults.inc.css
+.. _urlbar-dynamic-results.css: https://searchfox.org/mozilla-central/source/browser/themes/shared/urlbar-dynamic-results.css
 
 If you are creating the provider in an extension, then bundle a CSS file in your
 extension and declare it in the top-level ``stylesheet`` property of your view
@@ -344,7 +344,7 @@ structure may include the following properties:
 
   For dynamic result types created internally in the address bar codebase, this
   value should not be specified and instead styling should be added to
-  `dynamicResults.inc.css`_.
+  `urlbar-dynamic-results.css`_.
 
 Example
 ~~~~~~~
@@ -707,7 +707,7 @@ types.
 
 __ https://github.com/0c0w3/dynamic-result-type-extension
 __ https://github.com/mozilla-extensions/firefox-quick-suggest-weather/blob/master/src/background.js
-__ https://searchfox.org/mozilla-central/source/browser/components/urlbar/UrlbarProviderTabToSearch.jsm
+__ https://searchfox.org/mozilla-central/source/browser/components/urlbar/UrlbarProviderTabToSearch.sys.mjs
 
 Appendix B: Using the WebExtensions API Directly
 ------------------------------------------------
