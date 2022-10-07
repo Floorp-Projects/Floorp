@@ -380,6 +380,8 @@ if (!build_with_chromium) {
         ":chart_proto",
         "../api:function_view",
         "../api:network_state_predictor_api",
+        "../modules/audio_coding:neteq_input_audio_tools",
+        "../modules/audio_coding:neteq_tools_minimal",
         "../rtc_base:ignore_wundef",
         "../rtc_base:logging",
         "../rtc_base:macromagic",
