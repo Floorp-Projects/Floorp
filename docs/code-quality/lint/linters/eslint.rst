@@ -49,6 +49,12 @@ My editor doesn't understand a new global I've just added (e.g. to a content fil
 * Restarting your editor should pick up the new globals.
 * You can always double check via ``./mach lint --linter eslint <file path>`` on the command line.
 
+I am getting a linter error "Unknown Services member property"
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Make sure to add any new Services to ``tools/lint/eslint/eslint-plugin-mozilla/lib/services.json``. For example by copying from
+``<objdir>/xpcom/components/services.json`` after a build.
+
 I'm adding tests, how do I set up the right configuration?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
