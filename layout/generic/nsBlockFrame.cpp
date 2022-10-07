@@ -5297,7 +5297,7 @@ void nsBlockFrame::PushLines(BlockReflowState& aState,
         NS_ASSERTION(!f || lineBeforeLastFrame == aLineBefore->LastChild(),
                      "unexpected line frames");
       }
-      nsFrameList pushedFrames = mFrames.RemoveFramesAfter(lineBeforeLastFrame);
+      nsFrameList pushedFrames = mFrames.TakeFramesAfter(lineBeforeLastFrame);
       overflowLines->mFrames.InsertFrames(nullptr, nullptr, pushedFrames);
 
       overflowLines->mLines.splice(overflowLines->mLines.begin(), mLines,
