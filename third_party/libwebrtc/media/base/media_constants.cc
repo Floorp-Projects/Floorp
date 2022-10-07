@@ -114,6 +114,8 @@ const char kH264FmtpSpsPpsIdrInKeyframe[] = "sps-pps-idr-in-keyframe";
 const char kH264ProfileLevelConstrainedBaseline[] = "42e01f";
 const char kH264ProfileLevelConstrainedHigh[] = "640c1f";
 
+const char kVP9ProfileId[] = "profile-id";
+
 const int kDefaultVideoMaxFramerate = 60;
 
 const size_t kConferenceMaxNumSpatialLayers = 3;

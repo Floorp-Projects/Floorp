@@ -133,17 +133,25 @@ bool IsCodecValidForLowerRange(const VideoCodec& codec) {
       absl::EqualsIgnoreCase(codec.name, kAv1xCodecName)) {
     return true;
   } else if (absl::EqualsIgnoreCase(codec.name, kH264CodecName)) {
-    std::string profileLevelId;
-    std::string packetizationMode;
+    std::string profile_level_id;
+    std::string packetization_mode;
 
-    if (codec.GetParam(kH264FmtpProfileLevelId, &profileLevelId)) {
-      if (absl::StartsWithIgnoreCase(profileLevelId, "4d00")) {
-        if (codec.GetParam(kH264FmtpPacketizationMode, &packetizationMode)) {
-          return packetizationMode == "0";
+    if (codec.GetParam(kH264FmtpProfileLevelId, &profile_level_id)) {
+      if (absl::StartsWithIgnoreCase(profile_level_id, "4d00")) {
+        if (codec.GetParam(kH264FmtpPacketizationMode, &packetization_mode)) {
+          return packetization_mode == "0";
         }
       }
       // H264 with YUV444.
-      return absl::StartsWithIgnoreCase(profileLevelId, "f400");
+      return absl::StartsWithIgnoreCase(profile_level_id, "f400");
+    }
+  } else if (absl::EqualsIgnoreCase(codec.name, kVp9CodecName)) {
+    std::string profile_id;
+
+    if (codec.GetParam(kVP9ProfileId, &profile_id)) {
+      if (profile_id.compare("1") == 0 || profile_id.compare("3") == 0) {
+        return true;
+      }
     }
   }
   return false;
