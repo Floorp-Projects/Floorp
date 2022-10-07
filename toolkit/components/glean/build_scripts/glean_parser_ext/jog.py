@@ -10,7 +10,7 @@ Outputter to generate Rust code for metrics.
 
 import jinja2
 
-from js import ID_BITS
+from js import ID_BITS, PING_INDEX_BITS
 from util import type_ids_and_categories
 from glean_parser import util
 
@@ -77,6 +77,7 @@ def output_factory(objs, output_fd, options={}):
             extra_args=util.extra_args,
             metric_types=metric_types,
             runtime_metric_bit=ID_BITS - 1,
+            runtime_ping_bit=PING_INDEX_BITS - 1,
             ID_BITS=ID_BITS,
         )
     )

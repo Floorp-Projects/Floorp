@@ -157,4 +157,22 @@ interface nsIFOG : nsISupports
                                  in ACString aLifetime,
                                  in boolean aDisabled,
                                  [optional] in ACString aExtraArgs);
+
+  /**
+   * ** Test-only Method **
+   *
+   * Register a ping.
+   *
+   * This function is deliberately not too friendly to use. You probably aren't
+   * supposed to use it unless you're testing ping registration itself.
+   *
+   * @param aName - The ping's name.
+   * @param aIncludeClientId - Whether the ping should include the client_id.
+   * @param aSendIfEmpty - Whether the ping should send even if empty.
+   * @param aReasonCodes - The list of valid reasons for ping submission.
+   */
+  uint32_t testRegisterRuntimePing(in ACString aName,
+                                   in boolean aIncludeClientId,
+                                   in boolean aSendIfEmpty,
+                                   in Array<ACString> aReasonCodes);
 };

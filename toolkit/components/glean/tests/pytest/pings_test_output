@@ -80,6 +80,18 @@ pub fn register_pings() {
 
 #[cfg(feature = "with_gecko")]
 pub(crate) fn submit_ping_by_id(id: u32, reason: Option<&str>) {
+    if id & (1 << crate::factory::DYNAMIC_PING_BIT) > 0 {
+        let map = crate::factory::__jog_metric_maps::PING_MAP
+            .read()
+            .expect("Read lock for dynamic ping map was poisoned!");
+        if let Some(ping) = map.get(&id) {
+            ping.submit(reason);
+        } else {
+            // TODO: instrument this error.
+            log::error!("Cannot submit unknown dynamic ping {} by id.", id);
+        }
+        return;
+    }
     match id {
         1 => not_baseline.submit(reason),
         2 => not_metrics.submit(reason),

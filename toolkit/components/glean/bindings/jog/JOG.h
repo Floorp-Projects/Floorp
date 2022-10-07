@@ -71,6 +71,17 @@ class JOG {
    *         the runtime-registered metric.
    */
   static Maybe<uint32_t> GetMetric(const nsACString& aMetricName);
+
+  /**
+   * Get the ping id in a u32 for a named runtime-registered ping.
+   *
+   * Return value's only useful to GleanJSPingsLookup.h
+   *
+   * @param aPingName The ping name.
+   * @return Nothing() if no ping by that name was registered at runtime.
+   *         Otherwise, the id for the runtime-registered ping.
+   */
+  static Maybe<uint32_t> GetPing(const nsACString& aPingName);
 };
 
 }  // namespace mozilla::glean
