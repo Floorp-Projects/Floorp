@@ -99,10 +99,8 @@ class PeerConnectionTestWrapper
                           bool video);
 
   // sigslots
-  sigslot::signal1<std::string*> SignalOnIceCandidateCreated;
   sigslot::signal3<const std::string&, int, const std::string&>
       SignalOnIceCandidateReady;
-  sigslot::signal1<std::string*> SignalOnSdpCreated;
   sigslot::signal1<const std::string&> SignalOnSdpReady;
   sigslot::signal1<webrtc::DataChannelInterface*> SignalOnDataChannel;
 
