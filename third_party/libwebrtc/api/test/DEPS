@@ -30,7 +30,6 @@ specific_include_rules = {
     "+modules/audio_processing/include/audio_processing.h",
   ],
   "time_controller\.h": [
-    "+modules/utility/include/process_thread.h",
     "+rtc_base/synchronization/yield_policy.h",
     "+system_wrappers/include/clock.h",
   ],
