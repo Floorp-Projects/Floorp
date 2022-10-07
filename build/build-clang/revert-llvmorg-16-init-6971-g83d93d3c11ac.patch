@@ -1,0 +1,25 @@
+From 823eb0198cb40448f44faeee44dd920b10ac7287 Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh@glandium.org>
+Date: Fri, 7 Oct 2022 16:57:57 +0900
+Subject: [PATCH] Revert "[clang] Fix a warning"
+
+This reverts commit 83d93d3c11ac9727bf3d4c5c956de44233cc7f87.
+---
+ clang/lib/Analysis/ThreadSafety.cpp | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/clang/lib/Analysis/ThreadSafety.cpp b/clang/lib/Analysis/ThreadSafety.cpp
+index dd5a11cd661a..09b626edc8fa 100644
+--- a/clang/lib/Analysis/ThreadSafety.cpp
++++ b/clang/lib/Analysis/ThreadSafety.cpp
+@@ -1786,7 +1786,6 @@ void BuildLockset::handleCall(const Expr *Exp, const NamedDecl *D,
+       std::pair<til::LiteralPtr *, StringRef> Placeholder =
+           Analyzer->SxBuilder.createThisPlaceholder(Exp);
+       auto inserted = ConstructedObjects.insert({Exp, Placeholder.first});
+-      (void)inserted;
+       assert(inserted.second && "Are we visiting the same expression again?");
+       if (isa<CXXConstructExpr>(Exp))
+         Self = Placeholder.first;
+-- 
+2.37.1.1.g659da70093
+
