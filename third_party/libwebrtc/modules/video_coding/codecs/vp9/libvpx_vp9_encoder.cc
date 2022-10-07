@@ -1312,6 +1312,7 @@ int LibvpxVp9Encoder::UpdateCodecFrameSize(
 
 bool LibvpxVp9Encoder::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
                                              absl::optional<int>* spatial_idx,
+                                             absl::optional<int>* temporal_idx,
                                              const vpx_codec_cx_pkt& pkt) {
   RTC_CHECK(codec_specific != nullptr);
   codec_specific->codecType = kVideoCodecVP9;
@@ -1337,8 +1338,10 @@ bool LibvpxVp9Encoder::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
   if (num_temporal_layers_ == 1) {
     RTC_CHECK_EQ(layer_id.temporal_layer_id, 0);
     vp9_info->temporal_idx = kNoTemporalIdx;
+    *temporal_idx = absl::nullopt;
   } else {
     vp9_info->temporal_idx = layer_id.temporal_layer_id;
+    *temporal_idx = layer_id.temporal_layer_id;
   }
   if (num_active_spatial_layers_ == 1) {
     RTC_CHECK_EQ(layer_id.spatial_layer_id, 0);
@@ -1754,12 +1757,15 @@ void LibvpxVp9Encoder::GetEncodedLayerFrame(const vpx_codec_cx_pkt* pkt) {
 
   codec_specific_ = {};
   absl::optional<int> spatial_index;
-  if (!PopulateCodecSpecific(&codec_specific_, &spatial_index, *pkt)) {
+  absl::optional<int> temporal_index;
+  if (!PopulateCodecSpecific(&codec_specific_, &spatial_index, &temporal_index,
+                             *pkt)) {
     // Drop the frame.
     encoded_image_.set_size(0);
     return;
   }
   encoded_image_.SetSpatialIndex(spatial_index);
+  encoded_image_.SetTemporalIndex(temporal_index);
 
   const bool is_key_frame =
       ((pkt->data.frame.flags & VPX_FRAME_IS_KEY) ? true : false) &&

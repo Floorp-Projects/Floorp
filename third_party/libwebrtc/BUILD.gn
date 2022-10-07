@@ -67,6 +67,7 @@ if (!build_with_chromium && !build_with_mozilla) {
         "pc:peerconnection_unittests",
         "pc:rtc_pc_unittests",
         "pc:slow_peer_connection_unittests",
+        "pc:svc_tests",
         "rtc_tools:rtp_generator",
         "rtc_tools:video_replay",
         "stats:rtc_stats_unittests",

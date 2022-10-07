@@ -454,6 +454,36 @@
             }
           ]
         },
+        "test": "svc_tests",
+        "test_id_prefix": "ninja://pc:svc_tests/"
+      },
+      {
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_gtest_merge.py"
+        },
+        "resultdb": {
+          "enable": true,
+          "has_native_resultdb_integration": true
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "cipd_packages": [
+            {
+              "cipd_package": "infra/tools/luci/logdog/butler/${platform}",
+              "location": "bin",
+              "revision": "git_revision:ff387eadf445b24c935f1cf7d6ddd279f8a6b04c"
+            }
+          ],
+          "dimension_sets": [
+            {
+              "android_devices": "1",
+              "device_os": "MMB29Q",
+              "device_type": "bullhead",
+              "os": "Android"
+            }
+          ]
+        },
         "test": "system_wrappers_unittests",
         "test_id_prefix": "ninja://system_wrappers:system_wrappers_unittests/"
       },
@@ -1119,6 +1149,36 @@
             }
           ]
         },
+        "test": "svc_tests",
+        "test_id_prefix": "ninja://pc:svc_tests/"
+      },
+      {
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_gtest_merge.py"
+        },
+        "resultdb": {
+          "enable": true,
+          "has_native_resultdb_integration": true
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "cipd_packages": [
+            {
+              "cipd_package": "infra/tools/luci/logdog/butler/${platform}",
+              "location": "bin",
+              "revision": "git_revision:ff387eadf445b24c935f1cf7d6ddd279f8a6b04c"
+            }
+          ],
+          "dimension_sets": [
+            {
+              "android_devices": "1",
+              "device_os": "MMB29Q",
+              "device_type": "bullhead",
+              "os": "Android"
+            }
+          ]
+        },
         "test": "system_wrappers_unittests",
         "test_id_prefix": "ninja://system_wrappers:system_wrappers_unittests/"
       },
@@ -1756,6 +1816,36 @@
         },
         "test": "slow_peer_connection_unittests",
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
+      },
+      {
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_gtest_merge.py"
+        },
+        "resultdb": {
+          "enable": true,
+          "has_native_resultdb_integration": true
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "cipd_packages": [
+            {
+              "cipd_package": "infra/tools/luci/logdog/butler/${platform}",
+              "location": "bin",
+              "revision": "git_revision:ff387eadf445b24c935f1cf7d6ddd279f8a6b04c"
+            }
+          ],
+          "dimension_sets": [
+            {
+              "android_devices": "1",
+              "device_os": "MMB29Q",
+              "device_type": "bullhead",
+              "os": "Android"
+            }
+          ]
+        },
+        "test": "svc_tests",
+        "test_id_prefix": "ninja://pc:svc_tests/"
       },
       {
         "merge": {
@@ -2456,6 +2546,36 @@
         },
         "test": "slow_peer_connection_unittests",
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
+      },
+      {
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_gtest_merge.py"
+        },
+        "resultdb": {
+          "enable": true,
+          "has_native_resultdb_integration": true
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "cipd_packages": [
+            {
+              "cipd_package": "infra/tools/luci/logdog/butler/${platform}",
+              "location": "bin",
+              "revision": "git_revision:ff387eadf445b24c935f1cf7d6ddd279f8a6b04c"
+            }
+          ],
+          "dimension_sets": [
+            {
+              "android_devices": "1",
+              "device_os": "MMB29Q",
+              "device_type": "bullhead",
+              "os": "Android"
+            }
+          ]
+        },
+        "test": "svc_tests",
+        "test_id_prefix": "ninja://pc:svc_tests/"
       },
       {
         "merge": {
@@ -3298,6 +3418,51 @@
           "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com"
         },
         "test_id_prefix": "ninja://sdk:sdk_unittests/"
+      },
+      {
+        "args": [
+          "--platform",
+          "iPhone X",
+          "--version",
+          "12.4",
+          "--xcode-build-version",
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
+        ],
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "enable": true,
+          "has_native_resultdb_integration": true
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "cipd_packages": [
+            {
+              "cipd_package": "infra/tools/mac_toolchain/${platform}",
+              "location": ".",
+              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+            }
+          ],
+          "dimension_sets": [
+            {
+              "os": "Mac-11|Mac-12"
+            }
+          ],
+          "named_caches": [
+            {
+              "name": "xcode_ios_13c100",
+              "path": "Xcode.app"
+            }
+          ],
+          "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com"
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
       },
       {
         "args": [
@@ -4221,6 +4386,51 @@
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "enable": true,
+          "has_native_resultdb_integration": true
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "cipd_packages": [
+            {
+              "cipd_package": "infra/tools/mac_toolchain/${platform}",
+              "location": ".",
+              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+            }
+          ],
+          "dimension_sets": [
+            {
+              "os": "Mac-11|Mac-12"
+            }
+          ],
+          "named_caches": [
+            {
+              "name": "xcode_ios_13c100",
+              "path": "Xcode.app"
+            }
+          ],
+          "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com"
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
+      },
+      {
+        "args": [
+          "--platform",
+          "iPhone X",
+          "--version",
+          "13.6",
+          "--xcode-build-version",
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
+        ],
         "isolate_name": "system_wrappers_unittests",
         "merge": {
           "args": [],
@@ -5132,6 +5342,51 @@
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "enable": true,
+          "has_native_resultdb_integration": true
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "cipd_packages": [
+            {
+              "cipd_package": "infra/tools/mac_toolchain/${platform}",
+              "location": ".",
+              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+            }
+          ],
+          "dimension_sets": [
+            {
+              "os": "Mac-11|Mac-12"
+            }
+          ],
+          "named_caches": [
+            {
+              "name": "xcode_ios_13c100",
+              "path": "Xcode.app"
+            }
+          ],
+          "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com"
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
+      },
+      {
+        "args": [
+          "--platform",
+          "iPhone X",
+          "--version",
+          "14.5",
+          "--xcode-build-version",
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
+        ],
         "isolate_name": "system_wrappers_unittests",
         "merge": {
           "args": [],
@@ -5722,6 +5977,27 @@
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
       },
       {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
+      },
+      {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
           "args": [],
@@ -6139,6 +6415,27 @@
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
       },
       {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
+      },
+      {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
           "args": [],
@@ -6549,6 +6846,27 @@
           ]
         },
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
+      },
+      {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
       },
       {
         "isolate_name": "system_wrappers_unittests",
@@ -6988,6 +7306,27 @@
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
       },
       {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
+      },
+      {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
           "args": [],
@@ -7397,6 +7736,27 @@
           ]
         },
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
+      },
+      {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
       },
       {
         "isolate_name": "system_wrappers_unittests",
@@ -7859,6 +8219,27 @@
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
       },
       {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
+      },
+      {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
           "args": [],
@@ -8268,6 +8649,27 @@
           ]
         },
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
+      },
+      {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
       },
       {
         "isolate_name": "system_wrappers_unittests",
@@ -8681,6 +9083,27 @@
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
       },
       {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
+      },
+      {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
           "args": [],
@@ -9092,6 +9515,27 @@
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
       },
       {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
+      },
+      {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
           "args": [],
@@ -9501,6 +9945,27 @@
           ]
         },
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
+      },
+      {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
       },
       {
         "isolate_name": "system_wrappers_unittests",
@@ -9925,6 +10390,28 @@
           ]
         },
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
+      },
+      {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cores": "12",
+              "cpu": "x86-64",
+              "os": "Mac-11|Mac-12"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
       },
       {
         "isolate_name": "system_wrappers_unittests",
@@ -10359,6 +10846,28 @@
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
       },
       {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cores": "12",
+              "cpu": "x86-64",
+              "os": "Mac-11|Mac-12"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
+      },
+      {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
           "args": [],
@@ -10776,6 +11285,27 @@
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
       },
       {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "arm64-64-Apple_M1",
+              "os": "Mac-11|Mac-12"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
+      },
+      {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
           "args": [],
@@ -11185,6 +11715,27 @@
           ]
         },
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
+      },
+      {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Mac-11|Mac-12"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
       },
       {
         "isolate_name": "system_wrappers_unittests",
@@ -11647,6 +12198,27 @@
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
       },
       {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "arm64-64-Apple_M1",
+              "os": "Mac-11|Mac-12"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
+      },
+      {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
           "args": [],
@@ -12056,6 +12628,27 @@
           ]
         },
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
+      },
+      {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Windows-10-15063"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
       },
       {
         "isolate_name": "system_wrappers_unittests",
@@ -12473,6 +13066,27 @@
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
       },
       {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Windows-7-SP1"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
+      },
+      {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
           "args": [],
@@ -12882,6 +13496,27 @@
           ]
         },
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
+      },
+      {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Windows-10-15063"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
       },
       {
         "isolate_name": "system_wrappers_unittests",
@@ -13295,6 +13930,27 @@
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
       },
       {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Windows-7-SP1"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
+      },
+      {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
           "args": [],
@@ -13706,6 +14362,27 @@
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
       },
       {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Windows-7-SP1"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
+      },
+      {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
           "args": [],
@@ -14115,6 +14792,27 @@
           ]
         },
         "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
+      },
+      {
+        "isolate_name": "svc_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "svc_tests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Windows-7-SP1"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://pc:svc_tests/"
       },
       {
         "isolate_name": "system_wrappers_unittests",

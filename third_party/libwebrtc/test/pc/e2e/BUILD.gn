@@ -386,6 +386,7 @@ if (!build_with_chromium) {
         ":test_activities_executor",
         ":test_peer",
         ":test_peer_factory",
+        ":video_frame_tracking_id_injector",
         ":video_quality_analyzer_injection_helper",
         ":video_quality_metrics_reporter",
         "../..:field_trial",

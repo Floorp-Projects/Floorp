@@ -20,6 +20,10 @@ RtpFrameReferenceFinder::ReturnVector RtpVp8RefFinder::ManageFrame(
     std::unique_ptr<RtpFrameObject> frame) {
   const RTPVideoHeaderVP8& codec_header = absl::get<RTPVideoHeaderVP8>(
       frame->GetRtpVideoHeader().video_type_header);
+
+  if (codec_header.temporalIdx != kNoTemporalIdx)
+    frame->SetTemporalIndex(codec_header.temporalIdx);
+
   int64_t unwrapped_tl0 = tl0_unwrapper_.Unwrap(codec_header.tl0PicIdx & 0xFF);
   FrameDecision decision =
       ManageFrameInternal(frame.get(), codec_header, unwrapped_tl0);

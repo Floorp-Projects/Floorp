@@ -2719,4 +2719,50 @@ if (rtc_include_tests && !build_with_chromium) {
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
+
+  svc_tests_resources = [
+    "../resources/difficult_photo_1850_1110.yuv",
+    "../resources/photo_1850_1110.yuv",
+    "../resources/presentation_1850_1110.yuv",
+    "../resources/web_screenshot_1850_1110.yuv",
+  ]
+
+  if (is_ios) {
+    bundle_data("svc_tests_bundle_data") {
+      testonly = true
+      sources = svc_tests_resources
+      outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
+    }
+  }
+
+  rtc_test("svc_tests") {
+    sources = [ "test/svc_e2e_tests.cc" ]
+    data = svc_tests_resources
+    deps = [
+      "../api:create_network_emulation_manager",
+      "../api:create_peer_connection_quality_test_frame_generator",
+      "../api:create_peerconnection_quality_test_fixture",
+      "../api:frame_generator_api",
+      "../api:media_stream_interface",
+      "../api:network_emulation_manager_api",
+      "../api:peer_connection_quality_test_fixture_api",
+      "../api:simulated_network_api",
+      "../api:time_controller",
+      "../api/video_codecs:video_codecs_api",
+      "../call:simulated_network",
+      "../modules/video_coding:webrtc_vp9",
+      "../rtc_base/containers:flat_map",
+      "../system_wrappers:field_trial",
+      "../test:field_trial",
+      "../test:fileutils",
+      "../test:test_main",
+      "../test:test_support",
+      "../test/pc/e2e:default_video_quality_analyzer",
+      "../test/pc/e2e:network_quality_metrics_reporter",
+    ]
+
+    if (is_ios) {
+      deps += [ ":svc_tests_bundle_data" ]
+    }
+  }
 }
