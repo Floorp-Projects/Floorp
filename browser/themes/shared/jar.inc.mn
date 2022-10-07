@@ -8,7 +8,6 @@
 # to the location of the actual manifest.
 
   skin/classic/browser/aboutFrameCrashed.css                   (../shared/aboutFrameCrashed.css)
-  skin/classic/browser/aboutNetError.css                       (../shared/aboutNetError.css)
   skin/classic/browser/aboutRestartRequired.css                (../shared/aboutRestartRequired.css)
   skin/classic/browser/aboutSessionRestore.css                 (../shared/aboutSessionRestore.css)
   skin/classic/browser/aboutTabCrashed.css                     (../shared/aboutTabCrashed.css)
@@ -19,10 +18,8 @@
   skin/classic/browser/browser-shared.css                      (../shared/browser-shared.css)
   skin/classic/browser/ctrlTab.css                             (../shared/ctrlTab.css)
   skin/classic/browser/light-dark-overrides.css                (../shared/light-dark-overrides.css)
-  skin/classic/browser/error-pages.css                         (../shared/error-pages.css)
   skin/classic/browser/menupanel.css                           (../shared/menupanel.css)
   skin/classic/browser/notification-icons.css                  (../shared/notification-icons.css)
-  skin/classic/browser/offlineSupportPages.css                 (../shared/offlineSupportPages.css)
   skin/classic/browser/searchbar.css                           (../shared/searchbar.css)
   skin/classic/browser/setDesktopBackground.css                (../shared/setDesktopBackground.css)
   skin/classic/browser/sidebar.css                             (../shared/sidebar.css)
@@ -242,7 +239,6 @@
   skin/classic/browser/translation-16@2x.png                   (../shared/translation/translation-16@2x.png)
   skin/classic/browser/update-badge.svg                        (../shared/update-badge.svg)
   skin/classic/browser/profiler-popup-backdrop.png             (../shared/profiler-popup-backdrop.png)
-  skin/classic/browser/wifi.svg                                (../shared/incontent-icons/wifi.svg)
   skin/classic/browser/tab-crashed.svg                         (../shared/incontent-icons/tab-crashed.svg)
   skin/classic/browser/panic-panel/header.png                  (../shared/panic-panel/header.png)
   skin/classic/browser/panic-panel/header@2x.png               (../shared/panic-panel/header@2x.png)

@@ -435,10 +435,6 @@ Example chrome manifest
       -
       - chrome://global/content/license.html
       - chrome://browser/content/license.html
-   *  - override
-      -
-      - chrome://global/content/netError.xhtml
-      - chrome://browser/content/certerror/aboutNetError.xhtml
    *  - resource
       - payments
       - browser/res/payments/

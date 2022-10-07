@@ -11,12 +11,12 @@
     <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'" />
     <meta name="color-scheme" content="light dark" />
     <title data-l10n-id="neterror-page-title"></title>
-    <link rel="stylesheet" href="chrome://browser/skin/aboutNetError.css" type="text/css" media="all" />
+    <link rel="stylesheet" href="chrome://global/skin/aboutNetError.css" type="text/css" media="all" />
     <link rel="icon" id="favicon"/>
-    <link rel="localization" href="browser/aboutCertError.ftl" />
-    <link rel="localization" href="browser/nsserrors.ftl" />
     <link rel="localization" href="branding/brand.ftl"/>
-    <link rel="localization" href="browser/netError.ftl"/>
+    <link rel="localization" href="toolkit/neterror/certError.ftl" />
+    <link rel="localization" href="toolkit/neterror/netError.ftl"/>
+    <link rel="localization" href="toolkit/neterror/nsserrors.ftl" />
   </head>
 
   <body>
@@ -111,6 +111,6 @@
       </div>
     </div>
   </body>
-  <script src="chrome://browser/content/certerror/aboutNetErrorCodes.js"></script>
-  <script type="module" src="chrome://browser/content/certerror/aboutNetError.js"></script>
+  <script src="chrome://global/content/neterror/aboutNetErrorCodes.js"></script>
+  <script type="module" src="chrome://global/content/aboutNetError.mjs"></script>
 </html>

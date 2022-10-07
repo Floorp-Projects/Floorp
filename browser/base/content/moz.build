@@ -121,9 +121,6 @@ with Files("test/webrtc/**"):
 with Files("test/zoom/**"):
     BUG_COMPONENT = ("Firefox", "General")
 
-with Files("aboutNetError.xhtml"):
-    BUG_COMPONENT = ("Firefox", "Security")
-
 with Files("test/caps/**"):
     BUG_COMPONENT = ("Firefox", "Security")
 

@@ -167,8 +167,6 @@
     "mobile/android/actors/MediaControlDelegateChild.jsm",
   "resource:///actors/MediaControlDelegateParent.jsm":
     "mobile/android/actors/MediaControlDelegateParent.jsm",
-  "resource:///actors/NetErrorChild.jsm": "browser/actors/NetErrorChild.jsm",
-  "resource:///actors/NetErrorParent.jsm": "browser/actors/NetErrorParent.jsm",
   "resource:///actors/PageDataChild.jsm":
     "browser/components/pagedata/PageDataChild.jsm",
   "resource:///actors/PageDataParent.jsm":
@@ -857,6 +855,9 @@
     "toolkit/actors/KeyPressEventModelCheckerChild.jsm",
   "resource://gre/actors/LayoutDebugChild.jsm":
     "layout/tools/layout-debug/LayoutDebugChild.jsm",
+  "resource://gre/actors/NetErrorChild.jsm": "toolkit/actors/NetErrorChild.jsm",
+  "resource://gre/actors/NetErrorParent.jsm":
+    "toolkit/actors/NetErrorParent.jsm",
   "resource://gre/actors/PictureInPictureChild.jsm":
     "toolkit/actors/PictureInPictureChild.jsm",
   "resource://gre/actors/PopupBlockingChild.jsm":

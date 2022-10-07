@@ -9,14 +9,6 @@ const { RemotePageChild } = ChromeUtils.import(
   "resource://gre/actors/RemotePageChild.jsm"
 );
 
-const lazy = {};
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "UrlbarUtils",
-  "resource:///modules/UrlbarUtils.jsm"
-);
-
 class NetErrorChild extends RemotePageChild {
   actorCreated() {
     super.actorCreated();
@@ -84,8 +76,12 @@ class NetErrorChild extends RemotePageChild {
   }
 
   RPMCheckAlternateHostAvailable() {
-    let host = this.contentWindow.location.host;
-    if (!lazy.UrlbarUtils.looksLikeSingleWordHost(host)) {
+    const host = this.contentWindow.location.host.trim();
+
+    // Adapted from UrlbarUtils::looksLikeSingleWordHost
+    // https://searchfox.org/mozilla-central/rev/a26af613a476fafe6c3eba05a81bef63dff3c9f1/browser/components/urlbar/UrlbarUtils.sys.mjs#893
+    const REGEXP_SINGLE_WORD = /^[^\s@:/?#]+(:\d+)?$/;
+    if (!REGEXP_SINGLE_WORD.test(host)) {
       return;
     }
 

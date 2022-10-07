@@ -109,7 +109,7 @@ add_task(async function() {
 
   info("Test error icon");
   // This error icon must stay in sync with FAVICON_ERRORPAGE_URL in
-  // nsIFaviconService.idl, aboutCertError.xhtml and netError.xhtml.
+  // nsIFaviconService.idl and aboutNetError.xhtml.
   let faviconErrorPageURI = Services.io.newURI(
     "chrome://global/skin/icons/info.svg"
   );

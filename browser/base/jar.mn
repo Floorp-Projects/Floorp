@@ -25,11 +25,6 @@ browser.jar:
         content/browser/logos/vpn-dark.svg            (content/logos/vpn-dark.svg)
         content/browser/logos/vpn-light.svg           (content/logos/vpn-light.svg)
         content/browser/logos/fxa-logo.svg            (content/logos/fxa-logo.svg)
-        content/browser/certerror/aboutNetErrorCodes.js (content/certerror/aboutNetErrorCodes.js)
-        content/browser/certerror/aboutNetError.xhtml   (content/certerror/aboutNetError.xhtml)
-        content/browser/certerror/aboutNetError.js      (content/certerror/aboutNetError.js)
-        content/browser/certerror/supportpages/connection-not-secure.html (content/certerror/supportpages/connection-not-secure.html)
-        content/browser/certerror/supportpages/time-errors.html (content/certerror/supportpages/time-errors.html)
         content/browser/aboutRobots-icon.png          (content/aboutRobots-icon.png)
         content/browser/aboutFrameCrashed.html        (content/aboutFrameCrashed.html)
         content/browser/aboutTabCrashed.css           (content/aboutTabCrashed.css)
@@ -105,8 +100,6 @@ browser.jar:
         content/browser/spotlight.html                (content/spotlight.html)
         content/browser/spotlight.js                  (content/spotlight.js)
 *       content/browser/default-bookmarks.html        (content/default-bookmarks.html)
-
-% override chrome://global/content/netError.xhtml chrome://browser/content/certerror/aboutNetError.xhtml
 
 # L10n resources and overrides.
 % override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties

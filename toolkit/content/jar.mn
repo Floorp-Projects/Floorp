@@ -6,11 +6,8 @@ toolkit.jar:
    content/global/autocomplete.css
    content/global/aboutAbout.js
    content/global/aboutAbout.html
-#ifdef MOZILLA_OFFICIAL
-   content/global/aboutRights.xhtml
-#else
-   content/global/aboutRights.xhtml           (aboutRights-unbranded.xhtml)
-#endif
+   content/global/aboutNetError.mjs
+   content/global/aboutNetError.xhtml
    content/global/aboutNetworking.js
    content/global/aboutNetworking.html
 #ifndef ANDROID
@@ -18,6 +15,11 @@ toolkit.jar:
    content/global/aboutProfiles.xhtml
 #endif
    content/global/aboutRights.js
+#ifdef MOZILLA_OFFICIAL
+   content/global/aboutRights.xhtml
+#else
+   content/global/aboutRights.xhtml           (aboutRights-unbranded.xhtml)
+#endif
    content/global/aboutServiceWorkers.js
    content/global/aboutServiceWorkers.xhtml
    content/global/aboutwebrtc/aboutWebrtc.css   (aboutwebrtc/aboutWebrtc.css)
@@ -108,6 +110,9 @@ toolkit.jar:
    content/global/elements/videocontrols.js    (widgets/videocontrols.js)
    content/global/elements/tree.js             (widgets/tree.js)
    content/global/elements/wizard.js           (widgets/wizard.js)
+   content/global/neterror/aboutNetErrorCodes.js                    (neterror/aboutNetErrorCodes.js)
+   content/global/neterror/supportpages/connection-not-secure.html  (neterror/supportpages/connection-not-secure.html)
+   content/global/neterror/supportpages/time-errors.html            (neterror/supportpages/time-errors.html)
 #ifdef XP_MACOSX
    content/global/macWindowMenu.js
 #endif

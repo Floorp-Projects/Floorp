@@ -13,7 +13,6 @@
 
 toolkit.jar:
 % skin global classic/1.0 %skin/classic/global/
-  skin/classic/global/netError.css                         (../../shared/netError.css)
 
 # images and CSS we need for widgets like video controls
   skin/classic/global/icons/resizer.svg                    (../../shared/icons/resizer.svg)
