@@ -1297,8 +1297,19 @@ void ModuleLoaderBase::RegisterImportMap(UniquePtr<ImportMap> aImportMap) {
   // Check for aImportMap is done in ScriptLoader.
   MOZ_ASSERT(aImportMap);
 
-  // Step 8. Set element’s node document's import map to import map parse
-  // result’s import map.
+  // https://whatpr.org/html/8075/webappapis.html#register-an-import-map
+  // The step 1(report the exception if there's an error) is done in
+  // ParseImportMap.
+  //
+  // Step 2. Assert: global's import map is an empty import map.
+  // Impl note: The default import map from the spec is an empty import map, but
+  // from the implementation it defaults to nullptr, so we check if the global's
+  // import map is null here.
+  //
+  // Also see https://whatpr.org/html/8075/webappapis.html#empty-import-map
+  MOZ_ASSERT(!mImportMap);
+
+  // Step 3. Set global's import map to result's import map.
   mImportMap = std::move(aImportMap);
 }
 
