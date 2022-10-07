@@ -59,7 +59,7 @@ std::map<StreamID, size_t> GetPacketCounts(StreamScheduler& scheduler,
   return packet_counts;
 }
 
-class MockStreamCallback : public StreamScheduler::StreamCallback {
+class MockStreamProducer : public StreamScheduler::StreamProducer {
  public:
   MOCK_METHOD(absl::optional<SendQueue::DataToSend>,
               Produce,
@@ -74,18 +74,18 @@ class TestStream {
              StreamID stream_id,
              StreamPriority priority,
              size_t packet_size = kPayloadSize) {
-    EXPECT_CALL(callback_, Produce)
+    EXPECT_CALL(producer_, Produce)
         .WillRepeatedly(CreateChunk(stream_id, MID(0), packet_size));
-    EXPECT_CALL(callback_, bytes_to_send_in_next_message)
+    EXPECT_CALL(producer_, bytes_to_send_in_next_message)
         .WillRepeatedly(Return(packet_size));
-    stream_ = scheduler.CreateStream(&callback_, stream_id, priority);
+    stream_ = scheduler.CreateStream(&producer_, stream_id, priority);
     stream_->MaybeMakeActive();
   }
 
   StreamScheduler::Stream& stream() { return *stream_; }
 
  private:
-  StrictMock<MockStreamCallback> callback_;
+  StrictMock<MockStreamProducer> producer_;
   std::unique_ptr<StreamScheduler::Stream> stream_;
 };
 
@@ -100,9 +100,9 @@ TEST(StreamSchedulerTest, HasNoActiveStreams) {
 TEST(StreamSchedulerTest, CanSetAndGetStreamProperties) {
   StreamScheduler scheduler;
 
-  StrictMock<MockStreamCallback> callback;
+  StrictMock<MockStreamProducer> producer;
   auto stream =
-      scheduler.CreateStream(&callback, StreamID(1), StreamPriority(2));
+      scheduler.CreateStream(&producer, StreamID(1), StreamPriority(2));
 
   EXPECT_EQ(stream->stream_id(), StreamID(1));
   EXPECT_EQ(stream->priority(), StreamPriority(2));
@@ -115,13 +115,13 @@ TEST(StreamSchedulerTest, CanSetAndGetStreamProperties) {
 TEST(StreamSchedulerTest, CanProduceFromSingleStream) {
   StreamScheduler scheduler;
 
-  StrictMock<MockStreamCallback> callback;
-  EXPECT_CALL(callback, Produce).WillOnce(CreateChunk(StreamID(1), MID(0)));
-  EXPECT_CALL(callback, bytes_to_send_in_next_message)
+  StrictMock<MockStreamProducer> producer;
+  EXPECT_CALL(producer, Produce).WillOnce(CreateChunk(StreamID(1), MID(0)));
+  EXPECT_CALL(producer, bytes_to_send_in_next_message)
       .WillOnce(Return(kPayloadSize))  // When making active
       .WillOnce(Return(0));
   auto stream =
-      scheduler.CreateStream(&callback, StreamID(1), StreamPriority(2));
+      scheduler.CreateStream(&producer, StreamID(1), StreamPriority(2));
   stream->MaybeMakeActive();
 
   EXPECT_THAT(scheduler.Produce(TimeMs(0), kMtu), HasDataWithMid(MID(0)));
@@ -132,32 +132,32 @@ TEST(StreamSchedulerTest, CanProduceFromSingleStream) {
 TEST(StreamSchedulerTest, WillRoundRobinBetweenStreams) {
   StreamScheduler scheduler;
 
-  StrictMock<MockStreamCallback> callback1;
-  EXPECT_CALL(callback1, Produce)
+  StrictMock<MockStreamProducer> producer1;
+  EXPECT_CALL(producer1, Produce)
       .WillOnce(CreateChunk(StreamID(1), MID(100)))
       .WillOnce(CreateChunk(StreamID(1), MID(101)))
       .WillOnce(CreateChunk(StreamID(1), MID(102)));
-  EXPECT_CALL(callback1, bytes_to_send_in_next_message)
+  EXPECT_CALL(producer1, bytes_to_send_in_next_message)
       .WillOnce(Return(kPayloadSize))  // When making active
       .WillOnce(Return(kPayloadSize))
       .WillOnce(Return(kPayloadSize))
       .WillOnce(Return(0));
   auto stream1 =
-      scheduler.CreateStream(&callback1, StreamID(1), StreamPriority(2));
+      scheduler.CreateStream(&producer1, StreamID(1), StreamPriority(2));
   stream1->MaybeMakeActive();
 
-  StrictMock<MockStreamCallback> callback2;
-  EXPECT_CALL(callback2, Produce)
+  StrictMock<MockStreamProducer> producer2;
+  EXPECT_CALL(producer2, Produce)
       .WillOnce(CreateChunk(StreamID(2), MID(200)))
       .WillOnce(CreateChunk(StreamID(2), MID(201)))
       .WillOnce(CreateChunk(StreamID(2), MID(202)));
-  EXPECT_CALL(callback2, bytes_to_send_in_next_message)
+  EXPECT_CALL(producer2, bytes_to_send_in_next_message)
       .WillOnce(Return(kPayloadSize))  // When making active
       .WillOnce(Return(kPayloadSize))
       .WillOnce(Return(kPayloadSize))
       .WillOnce(Return(0));
   auto stream2 =
-      scheduler.CreateStream(&callback2, StreamID(2), StreamPriority(2));
+      scheduler.CreateStream(&producer2, StreamID(2), StreamPriority(2));
   stream2->MaybeMakeActive();
 
   EXPECT_THAT(scheduler.Produce(TimeMs(0), kMtu), HasDataWithMid(MID(100)));
@@ -174,8 +174,8 @@ TEST(StreamSchedulerTest, WillRoundRobinBetweenStreams) {
 TEST(StreamSchedulerTest, WillRoundRobinOnlyWhenFinishedProducingChunk) {
   StreamScheduler scheduler;
 
-  StrictMock<MockStreamCallback> callback1;
-  EXPECT_CALL(callback1, Produce)
+  StrictMock<MockStreamProducer> producer1;
+  EXPECT_CALL(producer1, Produce)
       .WillOnce(CreateChunk(StreamID(1), MID(100)))
       .WillOnce([](...) {
         return SendQueue::DataToSend(
@@ -196,7 +196,7 @@ TEST(StreamSchedulerTest, WillRoundRobinOnlyWhenFinishedProducingChunk) {
                  Data::IsEnd(true), IsUnordered(true)));
       })
       .WillOnce(CreateChunk(StreamID(1), MID(102)));
-  EXPECT_CALL(callback1, bytes_to_send_in_next_message)
+  EXPECT_CALL(producer1, bytes_to_send_in_next_message)
       .WillOnce(Return(kPayloadSize))  // When making active
       .WillOnce(Return(kPayloadSize))
       .WillOnce(Return(kPayloadSize))
@@ -204,21 +204,21 @@ TEST(StreamSchedulerTest, WillRoundRobinOnlyWhenFinishedProducingChunk) {
       .WillOnce(Return(kPayloadSize))
       .WillOnce(Return(0));
   auto stream1 =
-      scheduler.CreateStream(&callback1, StreamID(1), StreamPriority(2));
+      scheduler.CreateStream(&producer1, StreamID(1), StreamPriority(2));
   stream1->MaybeMakeActive();
 
-  StrictMock<MockStreamCallback> callback2;
-  EXPECT_CALL(callback2, Produce)
+  StrictMock<MockStreamProducer> producer2;
+  EXPECT_CALL(producer2, Produce)
       .WillOnce(CreateChunk(StreamID(2), MID(200)))
       .WillOnce(CreateChunk(StreamID(2), MID(201)))
       .WillOnce(CreateChunk(StreamID(2), MID(202)));
-  EXPECT_CALL(callback2, bytes_to_send_in_next_message)
+  EXPECT_CALL(producer2, bytes_to_send_in_next_message)
       .WillOnce(Return(kPayloadSize))  // When making active
       .WillOnce(Return(kPayloadSize))
       .WillOnce(Return(kPayloadSize))
       .WillOnce(Return(0));
   auto stream2 =
-      scheduler.CreateStream(&callback2, StreamID(2), StreamPriority(2));
+      scheduler.CreateStream(&producer2, StreamID(2), StreamPriority(2));
   stream2->MaybeMakeActive();
 
   EXPECT_THAT(scheduler.Produce(TimeMs(0), kMtu), HasDataWithMid(MID(100)));
@@ -236,16 +236,16 @@ TEST(StreamSchedulerTest, WillRoundRobinOnlyWhenFinishedProducingChunk) {
 TEST(StreamSchedulerTest, StreamsCanBeMadeInactive) {
   StreamScheduler scheduler;
 
-  StrictMock<MockStreamCallback> callback1;
-  EXPECT_CALL(callback1, Produce)
+  StrictMock<MockStreamProducer> producer1;
+  EXPECT_CALL(producer1, Produce)
       .WillOnce(CreateChunk(StreamID(1), MID(100)))
       .WillOnce(CreateChunk(StreamID(1), MID(101)));
-  EXPECT_CALL(callback1, bytes_to_send_in_next_message)
+  EXPECT_CALL(producer1, bytes_to_send_in_next_message)
       .WillOnce(Return(kPayloadSize))  // When making active
       .WillOnce(Return(kPayloadSize))
       .WillOnce(Return(kPayloadSize));  // hints that there is a MID(2) coming.
   auto stream1 =
-      scheduler.CreateStream(&callback1, StreamID(1), StreamPriority(2));
+      scheduler.CreateStream(&producer1, StreamID(1), StreamPriority(2));
   stream1->MaybeMakeActive();
 
   EXPECT_THAT(scheduler.Produce(TimeMs(0), kMtu), HasDataWithMid(MID(100)));
@@ -260,20 +260,20 @@ TEST(StreamSchedulerTest, StreamsCanBeMadeInactive) {
 TEST(StreamSchedulerTest, SingleStreamCanBeResumed) {
   StreamScheduler scheduler;
 
-  StrictMock<MockStreamCallback> callback1;
+  StrictMock<MockStreamProducer> producer1;
   // Callbacks are setup so that they hint that there is a MID(2) coming...
-  EXPECT_CALL(callback1, Produce)
+  EXPECT_CALL(producer1, Produce)
       .WillOnce(CreateChunk(StreamID(1), MID(100)))
       .WillOnce(CreateChunk(StreamID(1), MID(101)))
       .WillOnce(CreateChunk(StreamID(1), MID(102)));
-  EXPECT_CALL(callback1, bytes_to_send_in_next_message)
+  EXPECT_CALL(producer1, bytes_to_send_in_next_message)
       .WillOnce(Return(kPayloadSize))  // When making active
       .WillOnce(Return(kPayloadSize))
       .WillOnce(Return(kPayloadSize))
       .WillOnce(Return(kPayloadSize))  // When making active again
       .WillOnce(Return(0));
   auto stream1 =
-      scheduler.CreateStream(&callback1, StreamID(1), StreamPriority(2));
+      scheduler.CreateStream(&producer1, StreamID(1), StreamPriority(2));
   stream1->MaybeMakeActive();
 
   EXPECT_THAT(scheduler.Produce(TimeMs(0), kMtu), HasDataWithMid(MID(100)));
@@ -290,33 +290,33 @@ TEST(StreamSchedulerTest, SingleStreamCanBeResumed) {
 TEST(StreamSchedulerTest, WillRoundRobinWithPausedStream) {
   StreamScheduler scheduler;
 
-  StrictMock<MockStreamCallback> callback1;
-  EXPECT_CALL(callback1, Produce)
+  StrictMock<MockStreamProducer> producer1;
+  EXPECT_CALL(producer1, Produce)
       .WillOnce(CreateChunk(StreamID(1), MID(100)))
       .WillOnce(CreateChunk(StreamID(1), MID(101)))
       .WillOnce(CreateChunk(StreamID(1), MID(102)));
-  EXPECT_CALL(callback1, bytes_to_send_in_next_message)
+  EXPECT_CALL(producer1, bytes_to_send_in_next_message)
       .WillOnce(Return(kPayloadSize))  // When making active
       .WillOnce(Return(kPayloadSize))
       .WillOnce(Return(kPayloadSize))  // When making active
       .WillOnce(Return(kPayloadSize))
       .WillOnce(Return(0));
   auto stream1 =
-      scheduler.CreateStream(&callback1, StreamID(1), StreamPriority(2));
+      scheduler.CreateStream(&producer1, StreamID(1), StreamPriority(2));
   stream1->MaybeMakeActive();
 
-  StrictMock<MockStreamCallback> callback2;
-  EXPECT_CALL(callback2, Produce)
+  StrictMock<MockStreamProducer> producer2;
+  EXPECT_CALL(producer2, Produce)
       .WillOnce(CreateChunk(StreamID(2), MID(200)))
       .WillOnce(CreateChunk(StreamID(2), MID(201)))
       .WillOnce(CreateChunk(StreamID(2), MID(202)));
-  EXPECT_CALL(callback2, bytes_to_send_in_next_message)
+  EXPECT_CALL(producer2, bytes_to_send_in_next_message)
       .WillOnce(Return(kPayloadSize))  // When making active
       .WillOnce(Return(kPayloadSize))
       .WillOnce(Return(kPayloadSize))
       .WillOnce(Return(0));
   auto stream2 =
-      scheduler.CreateStream(&callback2, StreamID(2), StreamPriority(2));
+      scheduler.CreateStream(&producer2, StreamID(2), StreamPriority(2));
   stream2->MaybeMakeActive();
 
   EXPECT_THAT(scheduler.Produce(TimeMs(0), kMtu), HasDataWithMid(MID(100)));

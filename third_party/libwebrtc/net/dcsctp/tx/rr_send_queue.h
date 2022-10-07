@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <deque>
 #include <map>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -25,6 +26,7 @@
 #include "net/dcsctp/public/dcsctp_socket.h"
 #include "net/dcsctp/public/types.h"
 #include "net/dcsctp/tx/send_queue.h"
+#include "net/dcsctp/tx/stream_scheduler.h"
 
 namespace dcsctp {
 
@@ -111,32 +113,33 @@ class RRSendQueue : public SendQueue {
   };
 
   // Per-stream information.
-  class OutgoingStream {
+  class OutgoingStream : public StreamScheduler::StreamProducer {
    public:
     OutgoingStream(
+        StreamScheduler* scheduler,
         StreamID stream_id,
         StreamPriority priority,
         std::function<void()> on_buffered_amount_low,
         ThresholdWatcher& total_buffered_amount,
         const DcSctpSocketHandoverState::OutgoingStream* state = nullptr)
-        : stream_id_(stream_id),
-          priority_(priority),
+        : scheduler_stream_(scheduler->CreateStream(this, stream_id, priority)),
           next_unordered_mid_(MID(state ? state->next_unordered_mid : 0)),
           next_ordered_mid_(MID(state ? state->next_ordered_mid : 0)),
           next_ssn_(SSN(state ? state->next_ssn : 0)),
           buffered_amount_(std::move(on_buffered_amount_low)),
           total_buffered_amount_(total_buffered_amount) {}
 
-    StreamID stream_id() const { return stream_id_; }
+    StreamID stream_id() const { return scheduler_stream_->stream_id(); }
 
     // Enqueues a message to this stream.
     void Add(DcSctpMessage message,
              TimeMs expires_at,
              const SendOptions& send_options);
 
-    // Produces a data chunk to send, or `absl::nullopt` if nothing could be
-    // produced, e.g. if all messages have expired.
-    absl::optional<DataToSend> Produce(TimeMs now, size_t max_size);
+    // Implementing `StreamScheduler::StreamProducer`.
+    absl::optional<SendQueue::DataToSend> Produce(TimeMs now,
+                                                  size_t max_size) override;
+    size_t bytes_to_send_in_next_message() const override;
 
     const ThresholdWatcher& buffered_amount() const { return buffered_amount_; }
     ThresholdWatcher& buffered_amount() { return buffered_amount_; }
@@ -167,12 +170,10 @@ class RRSendQueue : public SendQueue {
     // Indicates if this stream has a partially sent message in it.
     bool has_partially_sent_message() const;
 
-    // Indicates if the stream possibly has data to send. Note that it may
-    // return `true` for streams that have enqueued, but expired, messages.
-    bool HasDataToSend() const;
-
-    void set_priority(StreamPriority priority) { priority_ = priority; }
-    StreamPriority priority() const { return priority_; }
+    StreamPriority priority() const { return scheduler_stream_->priority(); }
+    void set_priority(StreamPriority priority) {
+      scheduler_stream_->set_priority(priority);
+    }
 
     void AddHandoverState(
         DcSctpSocketHandoverState::OutgoingStream& state) const;
@@ -225,8 +226,8 @@ class RRSendQueue : public SendQueue {
 
     bool IsConsistent() const;
 
-    const StreamID stream_id_;
-    StreamPriority priority_;
+    const std::unique_ptr<StreamScheduler::Stream> scheduler_stream_;
+
     PauseState pause_state_ = PauseState::kNotPaused;
     // MIDs are different for unordered and ordered messages sent on a stream.
     MID next_unordered_mid_;
@@ -251,12 +252,10 @@ class RRSendQueue : public SendQueue {
       TimeMs now,
       size_t max_size);
 
-  // Return the next stream, in round-robin fashion.
-  std::map<StreamID, OutgoingStream>::iterator GetNextStream();
-
   const std::string log_prefix_;
   const size_t buffer_size_;
   const StreamPriority default_priority_;
+  StreamScheduler scheduler_;
 
   // Called when the buffered amount is below what has been set using
   // `SetBufferedAmountLowThreshold`.
@@ -268,15 +267,6 @@ class RRSendQueue : public SendQueue {
 
   // The total amount of buffer data, for all streams.
   ThresholdWatcher total_buffered_amount_;
-
-  // Indicates if the previous fragment sent was the end of a message. For
-  // non-interleaved sending, this means that the next message may come from a
-  // different stream. If not true, the next fragment must be produced from the
-  // same stream as last time.
-  bool previous_message_has_ended_ = true;
-
-  // The current stream to send chunks from. Modified by `GetNextStream`.
-  StreamID current_stream_id_ = StreamID(0);
 
   // All streams, and messages added to those.
   std::map<StreamID, OutgoingStream> streams_;
