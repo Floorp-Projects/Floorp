@@ -63,6 +63,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "font-feature-settings",
       "font-kerning",
       "font-language-override",
+      "font-palette",
       "font-style",
       "font-synthesis",
       "font-variant-alternates",

@@ -3037,6 +3037,7 @@ exports.CSS_PROPERTIES = {
       "font-variation-settings",
       "font-language-override",
       "font-optical-sizing",
+      "font-palette",
       "math-depth",
       "math-style",
       "-moz-osx-font-smoothing",
@@ -6681,7 +6682,8 @@ exports.CSS_PROPERTIES = {
       "font-variant-position",
       "font-language-override",
       "font-feature-settings",
-      "font-variation-settings"
+      "font-variation-settings",
+      "font-palette"
     ],
     "supports": [],
     "values": [
@@ -6810,6 +6812,20 @@ exports.CSS_PROPERTIES = {
       "inherit",
       "initial",
       "none",
+      "revert",
+      "revert-layer",
+      "unset"
+    ]
+  },
+  "font-palette": {
+    "isInherited": true,
+    "subproperties": [
+      "font-palette"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
       "revert",
       "revert-layer",
       "unset"
@@ -11917,6 +11933,10 @@ exports.PREFERENCES = [
   [
     "d",
     "layout.css.d-property.enabled"
+  ],
+  [
+    "font-palette",
+    "layout.css.font-palette.enabled"
   ],
   [
     "font-variation-settings",

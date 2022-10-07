@@ -5690,6 +5690,18 @@ var gCSSProperties = {
     other_values: ["'ENG'", "'TRK'", '"TRK"', "'N\\'Ko'"],
     invalid_values: ["TRK", "ja"],
   },
+  "font-palette": {
+    domProp: "fontPalette",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    applies_to_marker: true,
+    applies_to_placeholder: true,
+    initial_values: ["normal"],
+    other_values: ["light", "dark", "--custom"],
+    invalid_values: ["custom"],
+  },
   "font-size": {
     domProp: "fontSize",
     inherited: true,
