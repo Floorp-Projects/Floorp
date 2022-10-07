@@ -26,6 +26,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/ascii.h"
+#include "absl/strings/match.h"
 #include "api/candidate.h"
 #include "api/crypto_params.h"
 #include "api/jsep_ice_candidate.h"
@@ -3601,7 +3602,7 @@ bool ParseRtpmapAttribute(absl::string_view line,
     VideoContentDescription* video_desc = media_desc->as_video();
     for (const cricket::VideoCodec& existing_codec : video_desc->codecs()) {
       if (!existing_codec.name.empty() && payload_type == existing_codec.id &&
-          (encoding_name != existing_codec.name ||
+          (!absl::EqualsIgnoreCase(encoding_name, existing_codec.name) ||
            clock_rate != existing_codec.clockrate)) {
         rtc::StringBuilder description;
         description
@@ -3633,7 +3634,7 @@ bool ParseRtpmapAttribute(absl::string_view line,
     AudioContentDescription* audio_desc = media_desc->as_audio();
     for (const cricket::AudioCodec& existing_codec : audio_desc->codecs()) {
       if (!existing_codec.name.empty() && payload_type == existing_codec.id &&
-          (encoding_name != existing_codec.name ||
+          (!absl::EqualsIgnoreCase(encoding_name, existing_codec.name) ||
            clock_rate != existing_codec.clockrate ||
            channels != existing_codec.channels)) {
         rtc::StringBuilder description;
