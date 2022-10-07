@@ -13,6 +13,11 @@
   --success-background-color: #87FFD1;
   --success-box-text-color: #15141A;
 
+  --details-grid-column: 1;
+  --recently-closed-tabs-grid-row: 2;
+  --colorways-grid-column: 2;
+  --colorways-grid-row: 1 / 3;
+
   --colorways-figure-size: 225px;
   --colorways-figure-margin: 0 0 1.5em;
   --colorways-grid-template-areas:
@@ -119,12 +124,12 @@ body > main {
 }
 
 body > main > details {
-  grid-column: 1;
+  grid-column: var(--details-grid-column);
 }
 
-body > main > aside {
-  grid-column: 2;
-  grid-row: 1 / 3;
+#colorway-landmark {
+  grid-column: var(--colorways-grid-column);
+  grid-row: var(--colorways-grid-row);
 }
 
 @media (max-width: 76rem) {
@@ -141,12 +146,12 @@ body > main > aside {
   body {
     --colorways-no-collection-notice-bg-color: var(--newtab-background-color-secondary);
   }
-  body > main > details,
-  body > main > aside {
-    grid-column: 1 / -1;
-    grid-row: auto;
-  }
   :root {
+    --recently-closed-tabs-grid-row: 3;
+    --details-grid-column: 1 / -1;
+    --colorways-grid-column: 1 / -1;
+    --colorways-grid-row: 2;
+
     --colorways-grid-template-areas:
       "colorways-header colorways-figure"
       "colorways-description colorways-figure"
@@ -593,9 +598,14 @@ details[open] > .page-section-header > .twisty {
   }
 }
 
+#tab-pickup-container {
+  grid-row: 1;
+}
+
 /* 117px is the total height of the collapsible-tabs-container; setting that size
  for the second row stabilizes the layout so it doesn't shift when collapsibled */
 #recently-closed-tabs-container {
+  grid-row: var(--recently-closed-tabs-grid-row);
   display: grid;
   grid-template-rows: max-content 117px;
 }
