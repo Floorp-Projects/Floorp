@@ -32,9 +32,7 @@ use crate::stylesheets::keyframes_rule::KeyframesAnimation;
 use crate::stylesheets::layer_rule::{LayerName, LayerOrder};
 use crate::stylesheets::viewport_rule::{self, MaybeNew, ViewportRule};
 #[cfg(feature = "gecko")]
-use crate::stylesheets::{
-    CounterStyleRule, FontFaceRule, FontFeatureValuesRule, FontPaletteValuesRule, PageRule,
-};
+use crate::stylesheets::{CounterStyleRule, FontFaceRule, FontFeatureValuesRule, PageRule};
 use crate::stylesheets::{
     CssRule, EffectiveRulesIterator, Origin, OriginSet, PerOrigin, PerOriginIter,
 };
@@ -1676,10 +1674,6 @@ pub struct ExtraStyleData {
     #[cfg(feature = "gecko")]
     pub font_feature_values: LayerOrderedVec<Arc<Locked<FontFeatureValuesRule>>>,
 
-    /// A list of effective font-palette-values rules.
-    #[cfg(feature = "gecko")]
-    pub font_palette_values: LayerOrderedVec<Arc<Locked<FontPaletteValuesRule>>>,
-
     /// A map of effective counter-style rules.
     #[cfg(feature = "gecko")]
     pub counter_styles: LayerOrderedMap<Arc<Locked<CounterStyleRule>>>,
@@ -1703,15 +1697,6 @@ impl ExtraStyleData {
         layer: LayerId,
     ) {
         self.font_feature_values.push(rule.clone(), layer);
-    }
-
-    /// Add the given @font-palette-values rule.
-    fn add_font_palette_values(
-        &mut self,
-        rule: &Arc<Locked<FontPaletteValuesRule>>,
-        layer: LayerId,
-    ) {
-        self.font_palette_values.push(rule.clone(), layer);
     }
 
     /// Add the given @counter-style rule.
@@ -1755,7 +1740,6 @@ impl ExtraStyleData {
     fn sort_by_layer(&mut self, layers: &[CascadeLayer]) {
         self.font_faces.sort(layers);
         self.font_feature_values.sort(layers);
-        self.font_palette_values.sort(layers);
         self.counter_styles.sort(layers);
         self.pages.global.sort(layers);
     }
@@ -1765,7 +1749,6 @@ impl ExtraStyleData {
         {
             self.font_faces.clear();
             self.font_feature_values.clear();
-            self.font_palette_values.clear();
             self.counter_styles.clear();
             self.pages.clear();
         }
@@ -1802,7 +1785,6 @@ impl MallocSizeOf for ExtraStyleData {
         let mut n = 0;
         n += self.font_faces.shallow_size_of(ops);
         n += self.font_feature_values.shallow_size_of(ops);
-        n += self.font_palette_values.shallow_size_of(ops);
         n += self.counter_styles.shallow_size_of(ops);
         n += self.pages.shallow_size_of(ops);
         n
@@ -2648,11 +2630,6 @@ impl CascadeData {
                         .add_font_feature_values(rule, containing_rule_state.layer_id);
                 },
                 #[cfg(feature = "gecko")]
-                CssRule::FontPaletteValues(ref rule) => {
-                    self.extra_data
-                        .add_font_palette_values(rule, containing_rule_state.layer_id);
-                },
-                #[cfg(feature = "gecko")]
                 CssRule::CounterStyle(ref rule) => {
                     self.extra_data.add_counter_style(
                         guard,
@@ -2903,7 +2880,6 @@ impl CascadeData {
                 CssRule::Document(..) |
                 CssRule::LayerBlock(..) |
                 CssRule::LayerStatement(..) |
-                CssRule::FontPaletteValues(..) |
                 CssRule::FontFeatureValues(..) => {
                     // Not affected by device changes.
                     continue;
