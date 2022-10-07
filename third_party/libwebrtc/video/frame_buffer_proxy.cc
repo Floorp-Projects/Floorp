@@ -186,8 +186,6 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
       std::unique_ptr<FrameDecodeScheduler> frame_decode_scheduler,
       const FieldTrialsView& field_trials)
       : field_trials_(field_trials),
-        max_wait_for_keyframe_(max_wait_for_keyframe),
-        max_wait_for_frame_(max_wait_for_frame),
         clock_(clock),
         worker_queue_(worker_queue),
         decode_queue_(decode_queue),
@@ -393,10 +391,6 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
     OnFrameReady(std::move(frames), render_time);
   }
 
-  TimeDelta MaxWait() const RTC_RUN_ON(&worker_sequence_checker_) {
-    return keyframe_required_ ? max_wait_for_keyframe_ : max_wait_for_frame_;
-  }
-
   void UpdateDroppedFrames() RTC_RUN_ON(&worker_sequence_checker_) {
     const int dropped_frames = buffer_->GetTotalNumberOfDroppedFrames() -
                                frames_dropped_before_last_new_frame_;
@@ -464,11 +458,15 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
       return;
     }
 
+    TimeDelta max_wait = timeout_tracker_.TimeUntilTimeout();
+    // Ensures the frame is scheduled for decode before the stream times out.
+    // This is otherwise a race condition.
+    max_wait = std::max(max_wait - TimeDelta::Millis(1), TimeDelta::Zero());
     absl::optional<FrameDecodeTiming::FrameSchedule> schedule;
     while (decodable_tu_info) {
       schedule = decode_timing_.OnFrameBufferUpdated(
           decodable_tu_info->next_rtp_timestamp,
-          decodable_tu_info->last_rtp_timestamp, MaxWait(),
+          decodable_tu_info->last_rtp_timestamp, max_wait,
           IsTooManyFramesQueued());
       if (schedule) {
         // Don't schedule if already waiting for the same frame.
@@ -489,8 +487,6 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
 
   RTC_NO_UNIQUE_ADDRESS SequenceChecker worker_sequence_checker_;
   const FieldTrialsView& field_trials_;
-  const TimeDelta max_wait_for_keyframe_;
-  const TimeDelta max_wait_for_frame_;
   const absl::optional<RttMultExperiment::Settings> rtt_mult_settings_ =
       RttMultExperiment::GetRttMultValue();
   Clock* const clock_;
