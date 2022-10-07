@@ -1122,6 +1122,23 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
     return false;
   }
 
+  // Check if adding an import map script is allowed. If not, we bail out
+  // early to prevent creating a load request.
+  if (aScriptKind == ScriptKind::eImportMap) {
+    // https://whatpr.org/html/8075/scripting.html#prepare-the-script-element
+    // Step 31.2 type is "importmap":
+    //   Step 1. If el's relevant global object's import maps allowed is false,
+    //   then queue an element task on the DOM manipulation task source given el
+    //   to fire an event named error at el, and return.
+    if (!mModuleLoader->IsImportMapAllowed()) {
+      NS_WARNING("ScriptLoader: import maps allowed is false.");
+      NS_DispatchToCurrentThread(
+          NewRunnableMethod("nsIScriptElement::FireErrorEvent", aElement,
+                            &nsIScriptElement::FireErrorEvent));
+      return false;
+    }
+  }
+
   // Inline classic scripts ignore their CORS mode and are always CORS_NONE.
   CORSMode corsMode = CORS_NONE;
   if (aScriptKind == ScriptKind::eModule) {
@@ -1189,16 +1206,8 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   if (request->IsImportMapRequest()) {
     // https://whatpr.org/html/8075/scripting.html#prepare-the-script-element
     // Step 31.2 type is "importmap":
-    //   Step 1. If el's relevant global object's import maps allowed is false,
-    //   then queue an element task on the DOM manipulation task source given el
-    //   to fire an event named error at el, and return.
-    if (!mModuleLoader->IsImportMapAllowed()) {
-      NS_WARNING("ScriptLoader: import maps allowed is false.");
-      NS_DispatchToCurrentThread(
-          NewRunnableMethod("nsIScriptElement::FireErrorEvent", aElement,
-                            &nsIScriptElement::FireErrorEvent));
-      return false;
-    }
+    //   Impl note: Step 1 is done above before creating a ScriptLoadRequest.
+    MOZ_ASSERT(mModuleLoader->IsImportMapAllowed());
 
     //   Step 2. Set el's relevant global object's import maps allowed to false.
     mModuleLoader->DisallowImportMaps();
