@@ -1780,8 +1780,8 @@ TEST(RtcpReceiverTest, ReceivesTransportFeedback) {
   rtcp::TransportFeedback packet;
   packet.SetMediaSsrc(kReceiverMainSsrc);
   packet.SetSenderSsrc(kSenderSsrc);
-  packet.SetBase(1, 1000);
-  packet.AddReceivedPacket(1, 1000);
+  packet.SetBase(1, Timestamp::Millis(1));
+  packet.AddReceivedPacket(1, Timestamp::Millis(1));
 
   EXPECT_CALL(
       mocks.transport_feedback_observer,
@@ -1815,8 +1815,8 @@ TEST(RtcpReceiverTest, HandlesInvalidTransportFeedback) {
   auto packet = std::make_unique<rtcp::TransportFeedback>();
   packet->SetMediaSsrc(kReceiverMainSsrc);
   packet->SetSenderSsrc(kSenderSsrc);
-  packet->SetBase(1, 1000);
-  packet->AddReceivedPacket(1, 1000);
+  packet->SetBase(1, Timestamp::Millis(1));
+  packet->AddReceivedPacket(1, Timestamp::Millis(1));
 
   static uint32_t kBitrateBps = 50000;
   auto remb = std::make_unique<rtcp::Remb>();

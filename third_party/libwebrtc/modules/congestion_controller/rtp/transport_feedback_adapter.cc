@@ -205,7 +205,7 @@ TransportFeedbackAdapter::ProcessTransportFeedbackInner(
       current_offset_ += delta;
     }
   }
-  last_timestamp_ = feedback.GetBaseTime();
+  last_timestamp_ = feedback.BaseTime();
 
   std::vector<PacketResult> packet_result_vector;
   packet_result_vector.reserve(feedback.GetPacketStatusCount());
