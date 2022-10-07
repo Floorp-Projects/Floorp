@@ -887,9 +887,7 @@ void Call::DestroyAudioReceiveStream(
   audio_receive_stream->UnregisterFromTransport();
 
   uint32_t ssrc = audio_receive_stream->remote_ssrc();
-  receive_side_cc_
-      .GetRemoteBitrateEstimator(UseSendSideBwe(audio_receive_stream))
-      ->RemoveStream(ssrc);
+  receive_side_cc_.RemoveStream(ssrc);
 
   audio_receive_streams_.erase(audio_receive_stream);
 
@@ -1075,9 +1073,7 @@ void Call::DestroyVideoReceiveStream(
   video_receive_streams_.erase(receive_stream_impl);
   ConfigureSync(receive_stream_impl->sync_group());
 
-  receive_side_cc_
-      .GetRemoteBitrateEstimator(UseSendSideBwe(receive_stream_impl))
-      ->RemoveStream(receive_stream_impl->remote_ssrc());
+  receive_side_cc_.RemoveStream(receive_stream_impl->remote_ssrc());
 
   UpdateAggregateNetworkState();
   delete receive_stream_impl;
@@ -1121,9 +1117,7 @@ void Call::DestroyFlexfecReceiveStream(FlexfecReceiveStream* receive_stream) {
 
   // Remove all SSRCs pointing to the FlexfecReceiveStreamImpl to be
   // destroyed.
-  receive_side_cc_
-      .GetRemoteBitrateEstimator(UseSendSideBwe(receive_stream_impl))
-      ->RemoveStream(ssrc);
+  receive_side_cc_.RemoveStream(ssrc);
 
   delete receive_stream_impl;
 }
@@ -1154,11 +1148,7 @@ Call::Stats Call::GetStats() const {
   stats.rtt_ms = call_stats_->LastProcessedRtt();
 
   // Fetch available send/receive bitrates.
-  std::vector<unsigned int> ssrcs;
-  uint32_t recv_bandwidth = 0;
-  receive_side_cc_.GetRemoteBitrateEstimator(false)->LatestEstimate(
-      &ssrcs, &recv_bandwidth);
-  stats.recv_bandwidth_bps = recv_bandwidth;
+  stats.recv_bandwidth_bps = receive_side_cc_.LatestReceiveSideEstimate().bps();
   stats.send_bandwidth_bps =
       last_bandwidth_bps_.load(std::memory_order_relaxed);
   stats.max_padding_bitrate_bps =
