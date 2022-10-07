@@ -84,7 +84,8 @@ export const TabsSetupFlowManager = new (class {
           (this.syncIsWorking || this.syncHasWorked) &&
           !Services.prefs.prefIsLocked(FXA_ENABLED) &&
           // its only an error for sync to not be connected if we are signed-in.
-          (this.syncIsConnected || !this.fxaSignedIn) &&
+          (this.syncIsConnected ||
+            lazy.UIState.get().status !== lazy.UIState.STATUS_SIGNED_IN) &&
           // We treat a locked primary password as an error if we are signed-in.
           // If the user dismisses the prompt to unlock, they can use the "Try again" button to prompt again
           (!this.isPrimaryPasswordLocked || !this.fxaSignedIn)
@@ -221,7 +222,6 @@ export const TabsSetupFlowManager = new (class {
     return (
       UIState.isReady() &&
       syncState.status === UIState.STATUS_SIGNED_IN &&
-      // we actually mostly care that the user is signed into sync
       // syncEnabled just checks the "services.sync.username" pref has a value
       syncState.syncEnabled
     );
