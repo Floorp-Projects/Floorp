@@ -171,8 +171,8 @@ class RRSendQueue : public SendQueue {
     bool has_partially_sent_message() const;
 
     StreamPriority priority() const { return scheduler_stream_->priority(); }
-    void set_priority(StreamPriority priority) {
-      scheduler_stream_->set_priority(priority);
+    void SetPriority(StreamPriority priority) {
+      scheduler_stream_->SetPriority(priority);
     }
 
     void AddHandoverState(
