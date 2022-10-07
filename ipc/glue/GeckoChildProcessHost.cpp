@@ -840,11 +840,9 @@ void GeckoChildProcessHost::InitializeChannel(
 
   aChannelReady(GetChannel());
 
-  if (mProcessType != GeckoProcessType_ForkServer) {
-    mNodeController = NodeController::GetSingleton();
-    std::tie(mInitialPort, mNodeChannel) =
-        mNodeController->InviteChildProcess(TakeChannel());
-  }
+  mNodeController = NodeController::GetSingleton();
+  std::tie(mInitialPort, mNodeChannel) =
+      mNodeController->InviteChildProcess(TakeChannel());
 
   MonitorAutoLock lock(mMonitor);
   mProcessState = CHANNEL_INITIALIZED;
@@ -1169,16 +1167,19 @@ bool PosixProcessLauncher::DoSetup() {
 
   // remap the IPC socket fd to a well-known int, as the OS does for
   // STDOUT_FILENO, for example
+  // The fork server doesn't use IPC::Channel, so can skip this step.
+  if (mProcessType != GeckoProcessType_ForkServer) {
 #  ifdef MOZ_WIDGET_ANDROID
-  // On Android mChannelDstFd is uninitialised and the launching code uses only
-  // the first of each pair.
-  mLaunchOptions->fds_to_remap.push_back(
-      std::pair<int, int>(mChannelSrcFd.get(), -1));
+    // On Android mChannelDstFd is uninitialised and the launching code uses
+    // only the first of each pair.
+    mLaunchOptions->fds_to_remap.push_back(
+        std::pair<int, int>(mChannelSrcFd.get(), -1));
 #  else
-  MOZ_ASSERT(mChannelDstFd >= 0);
-  mLaunchOptions->fds_to_remap.push_back(
-      std::pair<int, int>(mChannelSrcFd.get(), mChannelDstFd));
+    MOZ_ASSERT(mChannelDstFd >= 0);
+    mLaunchOptions->fds_to_remap.push_back(
+        std::pair<int, int>(mChannelSrcFd.get(), mChannelDstFd));
 #  endif
+  }
 
   // no need for kProcessChannelID, the child process inherits the
   // other end of the socketpair() from us
@@ -1775,24 +1776,28 @@ RefPtr<ProcessLaunchPromise> BaseProcessLauncher::Launch(
     GeckoChildProcessHost* aHost) {
   AssertIOThread();
 
-  // Initializing the channel needs to happen on the I/O thread, but everything
-  // else can run on the launcher thread (or pool), to avoid blocking IPC
-  // messages.
-  //
-  // We avoid passing the host to the launcher thread to reduce the chances of
-  // data races with the IO thread (where e.g. OnChannelConnected may run
-  // concurrently). The pool currently needs access to the channel, which is not
-  // great.
-  bool failed = false;
-  aHost->InitializeChannel([&](IPC::Channel* channel) {
-    if (NS_WARN_IF(!channel || !SetChannel(channel))) {
-      failed = true;
+  // The ForkServer doesn't use IPC::Channel for communication, so we can skip
+  // initializing it.
+  if (mProcessType != GeckoProcessType_ForkServer) {
+    // Initializing the channel needs to happen on the I/O thread, but
+    // everything else can run on the launcher thread (or pool), to avoid
+    // blocking IPC messages.
+    //
+    // We avoid passing the host to the launcher thread to reduce the chances of
+    // data races with the IO thread (where e.g. OnChannelConnected may run
+    // concurrently). The pool currently needs access to the channel, which is
+    // not great.
+    bool failed = false;
+    aHost->InitializeChannel([&](IPC::Channel* channel) {
+      if (NS_WARN_IF(!channel || !SetChannel(channel))) {
+        failed = true;
+      }
+    });
+    if (failed) {
+      return ProcessLaunchPromise::CreateAndReject(LaunchError{}, __func__);
     }
-  });
-  if (failed) {
-    return ProcessLaunchPromise::CreateAndReject(LaunchError{}, __func__);
+    mChannelId = aHost->GetChannelId();
   }
-  mChannelId = aHost->GetChannelId();
 
   return InvokeAsync(mLaunchThread, this, __func__,
                      &BaseProcessLauncher::PerformAsyncLaunch);

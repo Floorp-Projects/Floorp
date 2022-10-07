@@ -1187,10 +1187,6 @@ void Channel::GetClientFileDescriptorMapping(int* src_fd, int* dest_fd) const {
   return channel_impl_->GetClientFileDescriptorMapping(src_fd, dest_fd);
 }
 
-int Channel::GetFileDescriptor() const {
-  return channel_impl_->GetFileDescriptor();
-}
-
 void Channel::CloseClientFileDescriptor() {
   channel_impl_->CloseClientFileDescriptor();
 }

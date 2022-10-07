@@ -24,31 +24,45 @@ extern LazyLogModule gForkServiceLog;
 
 mozilla::UniquePtr<ForkServiceChild> ForkServiceChild::sForkServiceChild;
 
+static bool ConfigurePipeFd(int aFd) {
+  int flags = fcntl(aFd, F_GETFD, 0);
+  return flags != -1 && fcntl(aFd, F_SETFD, flags | FD_CLOEXEC) != -1;
+}
+
 void ForkServiceChild::StartForkServer() {
-  std::vector<std::string> extraArgs;
+  // Create the socket to use for communication, and mark both ends as
+  // FD_CLOEXEC.
+  int fds[2];
+  if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) < 0) {
+    MOZ_LOG(gForkServiceLog, LogLevel::Error,
+            ("failed to create fork server socket"));
+    return;
+  }
+  UniqueFileHandle server(fds[0]);
+  UniqueFileHandle client(fds[1]);
+
+  if (!ConfigurePipeFd(server.get()) || !ConfigurePipeFd(client.get())) {
+    MOZ_LOG(gForkServiceLog, LogLevel::Error,
+            ("failed to configure fork server socket"));
+    return;
+  }
 
   GeckoChildProcessHost* subprocess =
       new GeckoChildProcessHost(GeckoProcessType_ForkServer, false);
-  subprocess->LaunchAndWaitForProcessHandle(std::move(extraArgs));
+  subprocess->AddFdToRemap(client.get(), ForkServer::kClientPipeFd);
+  if (!subprocess->LaunchAndWaitForProcessHandle(std::vector<std::string>{})) {
+    MOZ_LOG(gForkServiceLog, LogLevel::Error, ("failed to launch fork server"));
+    return;
+  }
 
-  int fd = subprocess->GetChannel()->GetFileDescriptor();
-  fd = dup(fd);  // Dup it because the channel will close it.
-  int fs_flags = fcntl(fd, F_GETFL, 0);
-  fcntl(fd, F_SETFL, fs_flags & ~O_NONBLOCK);
-  int fd_flags = fcntl(fd, F_GETFD, 0);
-  fcntl(fd, F_SETFD, fd_flags | FD_CLOEXEC);
-
-  sForkServiceChild = mozilla::MakeUnique<ForkServiceChild>(fd, subprocess);
-
-  // Without doing this, IO thread may intercept messages since the
-  // IPC::Channel created by it is still open.
-  subprocess->GetChannel()->Close();
+  sForkServiceChild =
+      mozilla::MakeUnique<ForkServiceChild>(server.release(), subprocess);
 }
 
 void ForkServiceChild::StopForkServer() { sForkServiceChild = nullptr; }
 
 ForkServiceChild::ForkServiceChild(int aFd, GeckoChildProcessHost* aProcess)
-    : mWaitForHello(true), mFailed(false), mProcess(aProcess) {
+    : mFailed(false), mProcess(aProcess) {
   mTcver = MakeUnique<MiniTransceiver>(aFd);
 }
 
@@ -60,16 +74,6 @@ ForkServiceChild::~ForkServiceChild() {
 bool ForkServiceChild::SendForkNewSubprocess(
     const nsTArray<nsCString>& aArgv, const nsTArray<EnvVar>& aEnvMap,
     const nsTArray<FdMapping>& aFdsRemap, pid_t* aPid) {
-  if (mWaitForHello) {
-    // IPC::Channel created by the GeckoChildProcessHost has
-    // already send a HELLO.  It is expected to receive a hello
-    // message from the fork server too.
-    UniquePtr<IPC::Message> hello;
-    mTcver->RecvInfallible(hello, "Fail to receive HELLO message");
-    MOZ_ASSERT(hello->type() == ForkServer::kHELLO_MESSAGE_TYPE);
-    mWaitForHello = false;
-  }
-
   mRecvPid = -1;
   IPC::Message msg(MSG_ROUTING_CONTROL, Msg_ForkNewSubprocess__ID);
 

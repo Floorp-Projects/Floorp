@@ -15,7 +15,9 @@ namespace ipc {
 
 class ForkServer {
  public:
-  static const int kHELLO_MESSAGE_TYPE = 65535;
+  // NOTE: This can re-use the same ID as the initial IPC::Channel, as the
+  // initial IPC::Channel will not be used by the fork server.
+  static constexpr int kClientPipeFd = 3;
 
   ForkServer();
   ~ForkServer(){};

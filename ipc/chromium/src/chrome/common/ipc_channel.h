@@ -145,9 +145,6 @@ class Channel {
   // This method may only be called on the server side of a channel.
   void GetClientFileDescriptorMapping(int* src_fd, int* dest_fd) const;
 
-  // Return the file descriptor for communication with the peer.
-  int GetFileDescriptor() const;
-
   // Close the client side of the socketpair.
   void CloseClientFileDescriptor();
 
