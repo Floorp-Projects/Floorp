@@ -134,15 +134,13 @@ rtc_library("media_stream_interface") {
   ]
 }
 
-# TODO(bugs.webrtc.org/8733): Switch to rtc_library.
 rtc_library("candidate") {
   visibility = [ "*" ]
 
-  # TODO(bugs.webrtc.org/8733): Uncomment.
-  # sources = [
-  #   "candidate.cc",
-  #   "candidate.h",
-  # ]
+  sources = [
+    "candidate.cc",
+    "candidate.h",
+  ]
   deps = [
     "../rtc_base",
     "../rtc_base:checks",
@@ -158,15 +156,13 @@ rtc_library("candidate") {
 
 rtc_source_set("turn_customizer") {
   visibility = [ "*" ]
-  # TODO(bugs.webrtc.org/8733): Uncomment.
-  # sources = [ "turn_customizer.h" ]
+  sources = [ "turn_customizer.h" ]
 }
 
 rtc_source_set("ice_transport_interface") {
   visibility = [ "*" ]
 
-  # TODO(bugs.webrtc.org/8733): Uncomment.
-  # sources = [ "ice_transport_interface.h" ]
+  sources = [ "ice_transport_interface.h" ]
   deps = [
     ":async_dns_resolver",
     ":packet_socket_factory",
@@ -177,15 +173,13 @@ rtc_source_set("ice_transport_interface") {
   ]
 }
 
-# TODO(bugs.webrtc.org/8733): Switch to rtc_library.
-rtc_source_set("dtls_transport_interface") {
+rtc_library("dtls_transport_interface") {
   visibility = [ "*" ]
 
-  # TODO(bugs.webrtc.org/8733): Uncomment.
-  # sources = [
-  #   "dtls_transport_interface.cc",
-  #   "dtls_transport_interface.h",
-  # ]
+  sources = [
+    "dtls_transport_interface.cc",
+    "dtls_transport_interface.h",
+  ]
   deps = [
     ":ice_transport_interface",
     ":rtc_error",
@@ -202,15 +196,10 @@ rtc_library("libjingle_peerconnection_api") {
   visibility = [ "*" ]
   cflags = []
   sources = [
-    "candidate.cc",
-    "candidate.h",
     "crypto_params.h",
     "data_channel_interface.cc",
     "data_channel_interface.h",
-    "dtls_transport_interface.cc",
-    "dtls_transport_interface.h",
     "dtmf_sender_interface.h",
-    "ice_transport_interface.h",
     "jsep.cc",
     "jsep.h",
     "jsep_ice_candidate.cc",
@@ -230,7 +219,6 @@ rtc_library("libjingle_peerconnection_api") {
     "set_remote_description_observer_interface.h",
     "stats_types.cc",
     "stats_types.h",
-    "turn_customizer.h",
     "uma_metrics.h",
     "video_track_source_proxy_factory.h",
   ]
@@ -239,10 +227,13 @@ rtc_library("libjingle_peerconnection_api") {
     ":async_dns_resolver",
     ":audio_options_api",
     ":callfactory_api",
+    ":candidate",
+    ":dtls_transport_interface",
     ":fec_controller_api",
     ":field_trials",
     ":field_trials_view",
     ":frame_transformer_interface",
+    ":ice_transport_interface",
     ":libjingle_logging_api",
     ":make_ref_counted",
     ":media_stream_interface",
@@ -256,7 +247,9 @@ rtc_library("libjingle_peerconnection_api") {
     ":rtp_transceiver_direction",
     ":scoped_refptr",
     ":sequence_checker",
+    ":turn_customizer",
     "../call:rtp_interfaces",
+    "../p2p:rtc_p2p",
     "../rtc_base:copy_on_write_buffer",
     "../rtc_base:logging",
     "../rtc_base:network_constants",
@@ -848,6 +841,7 @@ rtc_library("ice_transport_factory") {
     "ice_transport_factory.h",
   ]
   deps = [
+    ":ice_transport_interface",
     ":libjingle_peerconnection_api",
     ":make_ref_counted",
     ":packet_socket_factory",
