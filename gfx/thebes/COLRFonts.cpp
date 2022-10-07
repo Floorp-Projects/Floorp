@@ -146,7 +146,7 @@ struct PaintState {
     const COLRHeader* v0;
     const COLRv1Header* v1;
   } mHeader;
-  const hb_color_t* mPalette;
+  const sRGBColor* mPalette;
   DrawTarget* mDrawTarget;
   ScaledFont* mScaledFont;
   const int* mCoords;
@@ -174,16 +174,13 @@ struct PaintState {
 DeviceColor PaintState::GetColor(uint16_t aPaletteIndex, float aAlpha) const {
   sRGBColor color;
   if (aPaletteIndex < mNumColors) {
-    const hb_color_t& c = mPalette[uint16_t(aPaletteIndex)];
-    color = sRGBColor(
-        hb_color_get_red(c) / 255.0, hb_color_get_green(c) / 255.0,
-        hb_color_get_blue(c) / 255.0, hb_color_get_alpha(c) / 255.0 * aAlpha);
+    color = mPalette[uint16_t(aPaletteIndex)];
   } else if (aPaletteIndex == 0xffff) {
     color = mCurrentColor;
-    color.a *= aAlpha;
   } else {  // Palette index out of range! Return transparent black.
     color = sRGBColor();
   }
+  color.a *= aAlpha;
   return ToDeviceColor(color);
 }
 
@@ -2380,8 +2377,8 @@ const COLRFonts::GlyphLayers* COLRFonts::GetGlyphLayers(hb_blob_t* aCOLR,
 bool COLRFonts::PaintGlyphLayers(
     hb_blob_t* aCOLR, hb_face_t* aFace, const GlyphLayers* aLayers,
     DrawTarget* aDrawTarget, layout::TextDrawTarget* aTextDrawer,
-    ScaledFont* aScaledFont, DrawOptions aDrawOptions,
-    const sRGBColor& aCurrentColor, const Point& aPoint) {
+    ScaledFont* aScaledFont, DrawOptions aDrawOptions, const Point& aPoint,
+    const sRGBColor& aCurrentColor, const nsTArray<sRGBColor>* aColors) {
   const auto* glyphRecord = reinterpret_cast<const BaseGlyphRecord*>(aLayers);
   // Default to opaque rendering (non-webrender applies alpha with a layer)
   float alpha = 1.0;
@@ -2406,19 +2403,11 @@ bool COLRFonts::PaintGlyphLayers(
     alpha = aCurrentColor.a;
   }
 
-  // Get the default palette (TODO: hook up CSS font-palette support)
-  unsigned int colorCount = 0;
-  AutoTArray<hb_color_t, 64> colors;
-  colors.SetLength(hb_ot_color_palette_get_colors(aFace, /* paletteIndex */ 0,
-                                                  0, &colorCount, nullptr));
-  colorCount = colors.Length();
-  hb_ot_color_palette_get_colors(aFace, 0, 0, &colorCount, colors.Elements());
-
   unsigned int length;
   const COLRHeader* colr =
       reinterpret_cast<const COLRHeader*>(hb_blob_get_data(aCOLR, &length));
   PaintState state{{colr},
-                   colors.Elements(),
+                   aColors->Elements(),
                    aDrawTarget,
                    aScaledFont,
                    nullptr,  // variations not needed
@@ -2426,7 +2415,7 @@ bool COLRFonts::PaintGlyphLayers(
                    length,
                    aCurrentColor,
                    0.0,  // fontUnitsToPixels not needed
-                   uint16_t(colors.Length()),
+                   uint16_t(aColors->Length()),
                    0,
                    nullptr};
   return glyphRecord->Paint(state, alpha, aPoint);
@@ -2457,29 +2446,21 @@ const COLRFonts::GlyphPaintGraph* COLRFonts::GetGlyphPaintGraph(
 bool COLRFonts::PaintGlyphGraph(
     hb_blob_t* aCOLR, hb_font_t* aFont, const GlyphPaintGraph* aPaintGraph,
     DrawTarget* aDrawTarget, layout::TextDrawTarget* aTextDrawer,
-    ScaledFont* aScaledFont, DrawOptions aDrawOptions,
-    const sRGBColor& aCurrentColor, const Point& aPoint, uint32_t aGlyphId,
-    float aFontUnitsToPixels) {
+    ScaledFont* aScaledFont, DrawOptions aDrawOptions, const Point& aPoint,
+    const sRGBColor& aCurrentColor, const nsTArray<sRGBColor>* aColors,
+    uint32_t aGlyphId, float aFontUnitsToPixels) {
   if (aTextDrawer) {
     // Currently we always punt to a blob for COLRv1 glyphs.
     aTextDrawer->FoundUnsupportedFeature();
     return true;
   }
 
-  unsigned int colorCount = 0;
-  AutoTArray<hb_color_t, 64> colors;
-  hb_face_t* face = hb_font_get_face(aFont);
-  colors.SetLength(hb_ot_color_palette_get_colors(face, /* paletteIndex */ 0, 0,
-                                                  &colorCount, nullptr));
-  colorCount = colors.Length();
-  hb_ot_color_palette_get_colors(face, 0, 0, &colorCount, colors.Elements());
-
   unsigned int coordCount;
   const int* coords = hb_font_get_var_coords_normalized(aFont, &coordCount);
 
   AutoTArray<uint32_t, 32> visitedOffsets;
   PaintState state{{nullptr},
-                   colors.Elements(),
+                   aColors->Elements(),
                    aDrawTarget,
                    aScaledFont,
                    coords,
@@ -2487,7 +2468,7 @@ bool COLRFonts::PaintGlyphGraph(
                    hb_blob_get_length(aCOLR),
                    aCurrentColor,
                    aFontUnitsToPixels,
-                   uint16_t(colors.Length()),
+                   uint16_t(aColors->Length()),
                    uint16_t(coordCount),
                    &visitedOffsets};
   state.mHeader.v1 =
@@ -2546,6 +2527,100 @@ uint16_t COLRFonts::GetColrTableVersion(hb_blob_t* aCOLR) {
   MOZ_ASSERT(colr, "Cannot get COLR raw data");
   MOZ_ASSERT(blobLength >= sizeof(COLRHeader), "COLR data too small");
   return colr->version;
+}
+
+UniquePtr<nsTArray<sRGBColor>> COLRFonts::SetupColorPalette(
+    hb_face_t* aFace, const FontPaletteValueSet* aPaletteValueSet,
+    nsAtom* aFontPalette, const nsACString& aFamilyName) {
+  // Find the base color palette to use, if there are multiple available;
+  // default to first in the font, if nothing matches what is requested.
+  unsigned int paletteIndex = 0;
+  unsigned int count = hb_ot_color_palette_get_count(aFace);
+  MOZ_ASSERT(count > 0, "No palettes? Font should have been rejected!");
+
+  const FontPaletteValueSet::PaletteValues* fpv = nullptr;
+  if (aFontPalette && aFontPalette != nsGkAtoms::normal &&
+      (count > 1 || aPaletteValueSet)) {
+    auto findPalette = [&](hb_ot_color_palette_flags_t flag) -> unsigned int {
+      MOZ_ASSERT(flag != HB_OT_COLOR_PALETTE_FLAG_DEFAULT);
+      for (unsigned int i = 0; i < count; ++i) {
+        if (hb_ot_color_palette_get_flags(aFace, i) & flag) {
+          return i;
+        }
+      }
+      return 0;
+    };
+
+    if (aFontPalette == nsGkAtoms::light) {
+      paletteIndex =
+          findPalette(HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_LIGHT_BACKGROUND);
+    } else if (aFontPalette == nsGkAtoms::dark) {
+      paletteIndex =
+          findPalette(HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_DARK_BACKGROUND);
+    } else {
+      if (aPaletteValueSet) {
+        if ((fpv = aPaletteValueSet->Lookup(aFontPalette, aFamilyName))) {
+          if (fpv->mBasePalette >= 0 && fpv->mBasePalette < int32_t(count)) {
+            paletteIndex = fpv->mBasePalette;
+          } else if (fpv->mBasePalette ==
+                     FontPaletteValueSet::PaletteValues::kLight) {
+            paletteIndex = findPalette(
+                HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_LIGHT_BACKGROUND);
+          } else if (fpv->mBasePalette ==
+                     FontPaletteValueSet::PaletteValues::kDark) {
+            paletteIndex = findPalette(
+                HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_DARK_BACKGROUND);
+          }
+        }
+      }
+    }
+  }
+
+  // Collect the palette colors and convert them to sRGBColor values.
+  count =
+      hb_ot_color_palette_get_colors(aFace, paletteIndex, 0, nullptr, nullptr);
+  nsTArray<hb_color_t> colors;
+  colors.SetLength(count);
+  hb_ot_color_palette_get_colors(aFace, paletteIndex, 0, &count,
+                                 colors.Elements());
+
+  auto palette = MakeUnique<nsTArray<sRGBColor>>();
+  palette->SetCapacity(count);
+  for (const auto c : colors) {
+    palette->AppendElement(
+        sRGBColor(hb_color_get_red(c) / 255.0, hb_color_get_green(c) / 255.0,
+                  hb_color_get_blue(c) / 255.0, hb_color_get_alpha(c) / 255.0));
+  }
+
+  // Apply @font-palette-values overrides, if present.
+  if (fpv) {
+    for (const auto overrideColor : fpv->mOverrides) {
+      if (overrideColor.mIndex < palette->Length()) {
+        (*palette)[overrideColor.mIndex] = overrideColor.mColor;
+      }
+    }
+  }
+
+  return palette;
+}
+
+const FontPaletteValueSet::PaletteValues* FontPaletteValueSet::Lookup(
+    nsAtom* aName, const nsACString& aFamily) const {
+  nsAutoCString family(aFamily);
+  ToLowerCase(family);
+  if (const HashEntry* entry =
+          mValues.GetEntry(PaletteHashKey(aName, family))) {
+    return &entry->mValue;
+  }
+  return nullptr;
+}
+
+FontPaletteValueSet::PaletteValues* FontPaletteValueSet::Insert(
+    nsAtom* aName, const nsACString& aFamily) {
+  nsAutoCString family(aFamily);
+  ToLowerCase(family);
+  HashEntry* entry = mValues.PutEntry(PaletteHashKey(aName, family));
+  return &entry->mValue;
 }
 
 }  // end namespace mozilla::gfx
