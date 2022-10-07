@@ -145,11 +145,6 @@ with Files("tests/chrome/*418874*"):
 with Files("tests/chrome/*429723*"):
     BUG_COMPONENT = ("Toolkit", "Find Toolbar")
 
-with Files("tests/chrome/*437844*"):
-    BUG_COMPONENT = ("Toolkit", "General")
-with Files("tests/chrome/rtlchrome/**"):
-    BUG_COMPONENT = ("Toolkit", "General")
-
 with Files("tests/chrome/*451540*"):
     BUG_COMPONENT = ("Toolkit", "Find Toolbar")
 
