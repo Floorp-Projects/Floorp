@@ -32,13 +32,14 @@ import {
   toLines,
   configs
 } from '/common/common.js';
-import * as Constants from '/common/constants.js';
 import * as ApiTabs from '/common/api-tabs.js';
+import * as Constants from '/common/constants.js';
+import * as SidebarConnection from '/common/sidebar-connection.js';
+import * as TabsInternalOperation from '/common/tabs-internal-operation.js';
 import * as TabsStore from '/common/tabs-store.js';
 import * as TabsUpdate from '/common/tabs-update.js';
-import * as TabsInternalOperation from '/common/tabs-internal-operation.js';
 import * as TreeBehavior from '/common/tree-behavior.js';
-import * as SidebarConnection from '/common/sidebar-connection.js';
+import * as TSTAPI from '/common/tst-api.js';
 
 import Tab from '/common/Tab.js';
 import Window from '/common/Window.js';
@@ -256,6 +257,16 @@ async function onUpdated(tabId, changeInfo, tab) {
 
     if ('url' in changeInfo) {
       changeInfo.previousUrl = updatedTab.url;
+      // On Linux (and possibly on some other environments) the initial page load
+      // sometimes produces "onUpdated" event with unchanged URL unexpectedly,
+      // so we should ignure such invalid (uneffective) URL changes.
+      // See also: https://github.com/piroor/treestyletab/issues/3078
+      if (changeInfo.url == 'about:blank' &&
+          changeInfo.previousUrl == changeInfo.url &&
+          changeInfo.status == 'loading') {
+        delete changeInfo.url;
+        delete changeInfo.previousUrl;
+      }
     }
     /*
       Updated openerTabId is not notified via tabs.onUpdated due to
@@ -285,7 +296,9 @@ async function onUpdated(tabId, changeInfo, tab) {
       browser.tabs.get(tabId).then(tab => {
         if (tab.favIconUrl != updatedTab.favIconUrl)
           onUpdated(tabId, { favIconUrl: tab.favIconUrl }, tab);
-      }).catch(ApiTabs.createErrorSuppressor());
+      }).catch(ApiTabs.createErrorSuppressor(
+        ApiTabs.handleMissingTabError // the tab can be closed while waiting
+      ));
     }
     if (configs.enableWorkaroundForBug1409262 &&
         tab.openerTabId != updatedTab.$TST.updatedOpenerTabId) {
@@ -346,6 +359,13 @@ async function onCreated(tab) {
     await mPromisedStarted;
 
   log('tabs.onCreated: ', dumpTab(tab));
+
+  // Cache the initial index for areTabsFromOtherDeviceWithInsertAfterCurrent()@handle-tab-bunches.js
+  // See also: https://github.com/piroor/treestyletab/issues/2419
+  tab.$indexOnCreated = tab.index;
+  // Cache the initial windowId for Tab.onUpdated listner@handle-new-tabs.js
+  tab.$windowIdOnCreated = tab.windowId;
+
   return onNewTabTracked(tab, { trigger: 'tabs.onCreated' });
 }
 
@@ -373,7 +393,7 @@ async function onNewTabTracked(tab, info) {
   tab.index = Math.max(0, Math.min(tab.index, window.tabs.size));
   tab.reindexedBy = `onNewTabTracked (${tab.index})`;
 
-  // New tab from a bookmark always have its URL as the title
+  // New tab from a bookmark or external apps always have its URL as the title
   // (but the scheme part is missing.)
   tab.$possibleInitialUrl = tab.title;
 
@@ -606,10 +626,29 @@ async function onNewTabTracked(tab, info) {
     onCompleted(uniqueId);
     tab.$TST.removeState(Constants.kTAB_STATE_CREATING);
 
+    if (TSTAPI.hasListenerForMessageType(TSTAPI.kNOTIFY_NEW_TAB_PROCESSED)) {
+      const cache = {};
+      TSTAPI.sendMessage({
+        type:      TSTAPI.kNOTIFY_NEW_TAB_PROCESSED,
+        tab:       new TSTAPI.TreeItem(tab, { cache }),
+        originalTab: duplicated && new TSTAPI.TreeItem(Tab.get(uniqueId.originalTabId), { cache }),
+        restored,
+        duplicated,
+        fromExternal,
+      }, { tabProperties: ['tab', 'originalTab'] }).catch(_error => {});
+    }
+
     // tab can be changed while creating!
-    const renewedTab = await browser.tabs.get(tab.id).catch(ApiTabs.createErrorHandler());
-    if (!renewedTab)
-      throw new Error(`tab ${tab.id} is closed while tracking`);
+    const renewedTab = await browser.tabs.get(tab.id).catch(ApiTabs.createErrorHandler(ApiTabs.handleMissingTabError));
+    if (!renewedTab) {
+      log(`onNewTabTracked(${dumpTab(tab)}): tab ${tab.id} is closed while tracking`);
+      onCompleted(uniqueId);
+      tab.$TST.rejectOpened();
+      Tab.untrack(tab.id);
+      warnTabDestroyedWhileWaiting(tab.id, tab);
+      Tree.onAttached.removeListener(onTreeModified);
+      return;
+    }
 
     const updatedOpenerTabId = tab.openerTabId;
     const changedProps = {};
@@ -672,8 +711,8 @@ async function onNewTabTracked(tab, info) {
 
     return tab;
   }
-  catch(e) {
-    console.log(e, e.stack);
+  catch(error) {
+    console.log(error, error.stack);
     onCompleted();
     tab.$TST.removeState(Constants.kTAB_STATE_CREATING);
     Tree.onAttached.removeListener(onTreeModified);
@@ -702,6 +741,8 @@ function checkRecycledTab(windowId) {
 }
 
 async function onRemoved(tabId, removeInfo) {
+  Tree.markTabIdAsUnattachable(tabId);
+
   if (mPromisedStarted)
     await mPromisedStarted;
 
@@ -804,6 +845,9 @@ async function onRemoved(tabId, removeInfo) {
   catch(e) {
     console.log(e);
     onCompleted();
+  }
+  finally {
+    Tree.clearUnattachableTabId(tabId);
   }
 }
 

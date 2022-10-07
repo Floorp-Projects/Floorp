@@ -5,6 +5,8 @@
 */
 'use strict';
 
+import EventListenerManager from '/extlib/EventListenerManager.js';
+
 import {
   log as internalLogger,
   nextFrame,
@@ -14,22 +16,20 @@ import {
   configs,
   shouldApplyAnimation
 } from '/common/common.js';
-import * as Constants from '/common/constants.js';
 import * as ApiTabs from '/common/api-tabs.js';
+import * as Constants from '/common/constants.js';
+import * as MetricsData from '/common/metrics-data.js';
 import * as TabsStore from '/common/tabs-store.js';
 import * as TabsUpdate from '/common/tabs-update.js';
-import * as MetricsData from '/common/metrics-data.js';
 import * as UserOperationBlocker from '/common/user-operation-blocker.js';
 
 import Tab from '/common/Tab.js';
 import Window from '/common/Window.js';
 
-import * as SidebarTabs from './sidebar-tabs.js';
-import * as Indent from './indent.js';
 import * as BackgroundConnection from './background-connection.js';
 import * as CollapseExpand from './collapse-expand.js';
-
-import EventListenerManager from '/extlib/EventListenerManager.js';
+import * as Indent from './indent.js';
+import * as SidebarTabs from './sidebar-tabs.js';
 
 import {
   kTAB_ELEMENT_NAME,
@@ -40,7 +40,7 @@ function log(...args) {
   internalLogger('sidebar/sidebar-cache', ...args);
 }
 
-const kCONTENTS_VERSION = 25;
+const kCONTENTS_VERSION = 29;
 
 export const onRestored = new EventListenerManager();
 
@@ -221,7 +221,7 @@ function matcheSignatures(signatures) {
 }
 
 function signatureFromTabsCache(cachedTabs) {
-  const idMatcher = new RegExp(`${Constants.kAPI_TAB_ID}="([^"]+)"`);
+  const idMatcher = new RegExp(`\bid="tab-([^"]+)"`);
   const cookieStoreIdMatcher = new RegExp(/\bcontextual-identity-[^\s]+\b/);
   const incognitoMatcher = new RegExp(/\bincognito\b/);
   const pinnedMatcher = new RegExp(/\bpinned\b/);
@@ -253,7 +253,6 @@ export async function restoreTabsFromCache(cache, params = {}) {
   if (offset <= 0) {
     if (window.element)
       window.element.parentNode.removeChild(window.element);
-    mTabBar.setAttribute('style', cache.style);
   }
 
   const restored = (await MetricsData.addAsync('restoreTabsFromCache: restoring internally', restoreTabsFromCacheInternal({

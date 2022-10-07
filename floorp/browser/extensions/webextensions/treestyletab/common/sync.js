@@ -5,16 +5,18 @@
 */
 'use strict';
 
+import EventListenerManager from '/extlib/EventListenerManager.js';
+
 import {
   log as internalLogger,
   configs,
   notify,
+  wait,
   getChunkedConfig,
   setChunkedConfig,
   isLinux,
 } from './common.js';
 import * as Constants from '/common/constants.js';
-import EventListenerManager from '/extlib/EventListenerManager.js';
 
 function log(...args) {
   internalLogger('common/sync', ...args);
@@ -29,13 +31,22 @@ let mMyDeviceInfo = null;
 
 async function getMyDeviceInfo() {
   if (!configs.syncDeviceInfo || !configs.syncDeviceInfo.id) {
-    configs.syncDeviceInfo = await generateDeviceInfo();
+    const newDeviceInfo = await generateDeviceInfo();
+    if (!configs.syncDeviceInfo)
+      configs.syncDeviceInfo = newDeviceInfo;
   }
   return mMyDeviceInfo = configs.syncDeviceInfo;
 }
 
-export async function ensureDeviceInfoInitialized() {
+async function ensureDeviceInfoInitialized() {
   await getMyDeviceInfo();
+}
+
+export async function waitUntilDeviceInfoInitialized() {
+  while (!configs.syncDeviceInfo) {
+    await wait(100);
+  }
+  mMyDeviceInfo = configs.syncDeviceInfo;
 }
 
 configs.$loaded.then(async () => {
@@ -63,7 +74,9 @@ export async function init() {
         return;
 
       case 'syncDevices':
-        updateDevices();
+        // This may happen when all configs are reset.
+        // We need to try updating devices after syncDeviceInfo is completely cleared.
+        wait(100).then(updateDevices);
         break;
 
       case 'syncDeviceInfo':
@@ -112,10 +125,6 @@ configs.$addObserver(key => {
       isSendableTab.unsendableUrlMatcher = null;
       break;
 
-    case 'syncDeviceInfo':
-      ensureDeviceInfoInitialized();
-      break;
-
     default:
       break;
   }
@@ -127,8 +136,9 @@ async function updateSelf() {
 
   updateSelf.updating = true;
 
+  await ensureDeviceInfoInitialized();
   configs.syncDeviceInfo = mMyDeviceInfo = {
-    ...clone(await getMyDeviceInfo()),
+    ...clone(configs.syncDeviceInfo),
     timestamp: Date.now()
   };
 
@@ -143,13 +153,13 @@ async function updateDevices() {
   if (updateDevices.updating)
     return;
   updateDevices.updating = true;
-  const myDeviceInfo = await getMyDeviceInfo();
+  await waitUntilDeviceInfoInitialized();
 
   const remote = clone(configs.syncDevices);
   const local  = clone(configs.syncDevicesLocalCache);
   log('devices updated: ', local, remote);
   for (const [id, info] of Object.entries(remote)) {
-    if (id == myDeviceInfo.id)
+    if (id == mMyDeviceInfo.id)
       continue;
     local[id] = info;
     if (id in local) {
@@ -164,7 +174,7 @@ async function updateDevices() {
 
   for (const [id, info] of Object.entries(local)) {
     if (id in remote ||
-        id == myDeviceInfo.id)
+        id == mMyDeviceInfo.id)
       continue;
     log('obsolete device: ', info);
     delete local[id];
@@ -183,8 +193,8 @@ async function updateDevices() {
     }
   }
 
-  local[myDeviceInfo.id] = clone(myDeviceInfo);
-  log('store myself: ', myDeviceInfo, local[myDeviceInfo.id]);
+  local[mMyDeviceInfo.id] = clone(mMyDeviceInfo);
+  log('store myself: ', mMyDeviceInfo, local[mMyDeviceInfo.id]);
 
   if (!configs.syncOtherDevicesDetected && Object.keys(local).length > 1)
     configs.syncOtherDevicesDetected = true;
@@ -286,7 +296,7 @@ function clone(value) {
 
 export function getOtherDevices() {
   if (!mMyDeviceInfo)
-    throw new Error('Not initialized yet. You need to call "ensureDeviceInfoInitialized" before this.');
+    throw new Error('Not initialized yet. You need to call this after the device info is initialized.');
   const devices = configs.syncDevices || {};
   const result = [];
   for (const [id, info] of Object.entries(devices)) {

@@ -10,16 +10,15 @@ import {
   dumpTab,
   configs
 } from '/common/common.js';
-
 import * as Constants from '/common/constants.js';
-import * as TabsStore from '/common/tabs-store.js';
 import * as TabsInternalOperation from '/common/tabs-internal-operation.js';
+import * as TabsStore from '/common/tabs-store.js';
 import * as TreeBehavior from '/common/tree-behavior.js';
 
 import Tab from '/common/Tab.js';
 
-import * as TabsOpen from './tabs-open.js';
 import * as TabsMove from './tabs-move.js';
+import * as TabsOpen from './tabs-open.js';
 import * as Tree from './tree.js';
 
 function log(...args) {
@@ -314,6 +313,7 @@ Tab.onUpdated.addListener((tab, changeInfo) => {
   }
 
   if (tab.$TST.openedCompletely &&
+      tab.windowId == tab.$windowIdOnCreated && // Don't treat tab as "opened from active tab" if it is moved across windows while loading
       (changeInfo.url || changeInfo.status == 'complete') &&
       (tab.$TST.isNewTab ||
        tab.$TST.fromExternal ||

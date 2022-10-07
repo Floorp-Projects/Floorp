@@ -463,7 +463,7 @@ async function moveTabsFromSidebar(tabs) {
     tabs:                tabs.map(tab => tab && tab.$TST.sanitized),
     structure:           [],
     action:              'move',
-    allosedActions:      Constants.kDRAG_BEHAVIOR_MOVE | Constants.kDRAG_BEHAVIOR_TEAR_OFF | Constants.kDRAG_BEHAVIOR_ENTIRE_TREE,
+    allowedActions:      Constants.kDRAG_BEHAVIOR_MOVE | Constants.kDRAG_BEHAVIOR_TEAR_OFF | Constants.kDRAG_BEHAVIOR_ENTIRE_TREE,
     insertBeforeId:      allTabs[0].id,
     destinationWindowId: win.id,
     duplicate:           false,

@@ -30,10 +30,10 @@ import {
   log as internalLogger,
   configs
 } from '/common/common.js';
-import * as Constants from '/common/constants.js';
 import * as ApiTabs from '/common/api-tabs.js';
-import * as TabsStore from '/common/tabs-store.js';
+import * as Constants from '/common/constants.js';
 import * as SidebarConnection from '/common/sidebar-connection.js';
+import * as TabsStore from '/common/tabs-store.js';
 
 import Tab from '/common/Tab.js';
 
@@ -55,10 +55,14 @@ export async function loadURI(uri, options = {}) {
       tabId = options.tab.id;
     }
     else {
-      const tabs = await browser.tabs.query({
+      let tabs = await browser.tabs.query({
         windowId: options.windowId,
         active:   true
       }).catch(ApiTabs.createErrorHandler());
+      if (tabs.length == 0)
+        tabs = await browser.tabs.query({
+          windowId: options.windowId,
+        }).catch(ApiTabs.createErrorHandler());
       tabId = tabs[0].id;
     }
     let searchQuery = null;
@@ -162,11 +166,10 @@ export async function openURIsInTabs(uris, options = {}) {
         params.discarded = true;
       if (params.url == 'about:newtab')
         delete params.url
-      if (params.url &&
-          FORBIDDEN_URL_MATCHER.test(params.url) &&
-          !ALLOWED_URL_MATCHER.test(params.url))
-        params.url = `about:blank?${params.url}`;
-      if (/^about:/.test(params.url))
+      if (params.url)
+        params.url = sanitizeURL(params.url);
+      if (!('url' in params /* about:newtab case */) ||
+          /^about:/.test(params.url))
         params.discarded = false; // discarded tab cannot be opened with any about: URL
       if (!params.discarded) // title cannot be set for non-discarded tabs
         params.title = null;
@@ -238,6 +241,20 @@ export async function openURIsInTabs(uris, options = {}) {
     await TabsMove.waitUntilSynchronized(options.windowId);
   }
   return openedTabs;
+}
+
+function sanitizeURL(url) {
+  if (ALLOWED_URL_MATCHER.test(url))
+    return url;
+
+  // tabs.create() doesn't accept about:reader URLs so we fallback them to regular URLs.
+  if (/^about:reader\?/.test(url))
+    return (new URL(url)).searchParams.get('url') || 'about:blank';
+
+  if (FORBIDDEN_URL_MATCHER.test(url))
+    return `about:blank?${url}`;
+
+  return url;
 }
 
 

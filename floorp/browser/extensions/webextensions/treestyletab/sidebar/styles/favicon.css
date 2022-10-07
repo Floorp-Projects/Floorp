@@ -101,17 +101,21 @@ tab-item[data-current-uri^="about:logins"] .favicon-builtin::before,
   mask: none;
 }
 
-tab-item[data-current-uri^="about:performance"] .favicon-builtin::before {
+tab-item[data-current-uri^="about:performance"] .favicon-builtin::before,
+tab-item[data-current-uri^="about:processes"] .favicon-builtin::before {
   background: url("/resources/icons/performance.svg") no-repeat center / 100%;
 }
-:root.simulate-svg-context-fill tab-item[data-current-uri^="about:performance"] .favicon-builtin::before {
+:root.simulate-svg-context-fill tab-item[data-current-uri^="about:performance"] .favicon-builtin::before,
+:root.simulate-svg-context-fill tab-item[data-current-uri^="about:processes"] .favicon-builtin::before {
   background: var(--tab-text);
   mask: url("/resources/icons/performance.svg") no-repeat center / 100%;
 }
 
+tab-item[data-current-uri^="about:config"] .favicon-builtin::before,
 tab-item[data-current-uri^="about:preferences"] .favicon-builtin::before {
   background: url("/resources/icons/settings.svg") no-repeat center / 100%;
 }
+:root.simulate-svg-context-fill tab-item[data-current-uri^="about:config"] .favicon-builtin::before,
 :root.simulate-svg-context-fill tab-item[data-current-uri^="about:preferences"] .favicon-builtin::before {
   background: var(--tab-text);
   mask: url("/resources/icons/settings.svg") no-repeat center / 100%;
@@ -145,6 +149,22 @@ tab-item[data-current-uri^="about:robots"] .favicon-builtin::before,
   mask: none;
 }
 
+tab-item[data-current-favicon-uri="chrome://global/skin/icons/blocked.svg"] .favicon-builtin::before {
+  background: url("/resources/icons/blocked.svg") no-repeat center / 100%;
+}
+:root.simulate-svg-context-fill tab-item[data-current-favicon-uri="chrome://global/skin/icons/blocked.svg"] .favicon-builtin::before {
+  background: var(--tab-text);
+  mask: url("/resources/icons/blocked.svg") no-repeat center / 100%;
+}
+
+tab-item[data-current-favicon-uri="chrome://global/skin/icons/info.svg"] .favicon-builtin::before {
+  background: url("/resources/icons/info.svg") no-repeat center / 100%;
+}
+:root.simulate-svg-context-fill tab-item[data-current-favicon-uri="chrome://global/skin/icons/info.svg"] .favicon-builtin::before {
+  background: var(--tab-text);
+  mask: url("/resources/icons/info.svg") no-repeat center / 100%;
+}
+
 tab-item[data-current-favicon-uri="chrome://global/skin/icons/warning.svg"] .favicon-builtin::before {
   background: url("/resources/icons/warning.svg") no-repeat center / 100%;
 }
@@ -168,17 +188,37 @@ tab-favicon.error .favicon-image,
 .favicon-image:not([src]),
 tab-item[data-current-uri^="chrome:"] .favicon-image,
 tab-item[data-current-uri^="about:addons"] .favicon-image,
+tab-item[data-current-uri^="about:config"] .favicon-image,
 tab-item[data-current-uri^="about:debugging"] .favicon-image,
 tab-item[data-current-uri^="about:devtools-toolbox"] .favicon-image,
 tab-item[data-current-uri^="about:logins"] .favicon-image,
 tab-item[data-current-uri^="about:performance"] .favicon-image,
 tab-item[data-current-uri^="about:preferences"] .favicon-image,
 tab-item[data-current-uri^="about:privatebrowsing"] .favicon-image,
+tab-item[data-current-uri^="about:processes"] .favicon-image,
 tab-item[data-current-uri^="about:profiling"] .favicon-image,
 tab-item[data-current-uri^="about:protections"] .favicon-image,
 tab-item[data-current-uri^="about:robots"] .favicon-image,
+tab-item[data-current-favicon-uri="chrome://global/skin/icons/blocked.svg"] .favicon-image,
+tab-item[data-current-favicon-uri="chrome://global/skin/icons/info.svg"] .favicon-image,
 tab-item[data-current-favicon-uri="chrome://global/skin/icons/warning.svg"] .favicon-image,
-tab-item:not(.group-tab):not([data-current-uri^="chrome:"]):not([data-current-uri^="about:addons"]):not([data-current-uri^="about:debugging"]):not([data-current-uri^="about:logins"]):not([data-current-uri^="about:devtools-toolbox"]):not([data-current-uri^="about:performance"]):not([data-current-uri^="about:preferences"]):not([data-current-uri^="about:privatebrowsing"]):not([data-current-uri^="about:profiling"]):not([data-current-uri^="about:protections"]):not([data-current-uri^="about:robots"]):not([data-current-favicon-uri="chrome://global/skin/icons/warning.svg"])
+tab-item:not(.group-tab
+       ):not([data-current-uri^="chrome:"]
+       ):not([data-current-uri^="about:addons"]
+       ):not([data-current-uri^="about:config"]
+       ):not([data-current-uri^="about:debugging"]
+       ):not([data-current-uri^="about:logins"]
+       ):not([data-current-uri^="about:devtools-toolbox"]
+       ):not([data-current-uri^="about:performance"]
+       ):not([data-current-uri^="about:preferences"]
+       ):not([data-current-uri^="about:privatebrowsing"]
+       ):not([data-current-uri^="about:processes"]
+       ):not([data-current-uri^="about:profiling"]
+       ):not([data-current-uri^="about:protections"]
+       ):not([data-current-uri^="about:robots"]
+       ):not([data-current-favicon-uri="chrome://global/skin/icons/blocked.svg"]
+       ):not([data-current-favicon-uri="chrome://global/skin/icons/info.svg"]
+       ):not([data-current-favicon-uri="chrome://global/skin/icons/warning.svg"])
   tab-favicon:not(.error) .favicon-image[src] ~ .favicon-builtin::before,
 tab-item.loading .favicon-image,
 tab-item.loading .favicon-builtin::before {

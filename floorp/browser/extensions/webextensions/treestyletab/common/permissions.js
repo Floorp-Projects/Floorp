@@ -10,8 +10,8 @@ import {
   notify,
   configs
 } from './common.js';
-import * as Constants from './constants.js';
 import * as ApiTabs from '/common/api-tabs.js';
+import * as Constants from './constants.js';
 
 function log(...args) {
   internalLogger('common/permissions', ...args);

@@ -5,6 +5,8 @@
 */
 'use strict';
 
+import EventListenerManager from '/extlib/EventListenerManager.js';
+
 import {
   log as internalLogger,
   dumpTab,
@@ -12,24 +14,21 @@ import {
   configs,
   wait
 } from '/common/common.js';
-
-import * as Constants from '/common/constants.js';
 import * as ApiTabs from '/common/api-tabs.js';
-import * as TabsStore from '/common/tabs-store.js';
-import * as SidebarConnection from '/common/sidebar-connection.js';
+import * as Constants from '/common/constants.js';
 import * as MetricsData from '/common/metrics-data.js';
-import * as UserOperationBlocker from '/common/user-operation-blocker.js';
-import * as TreeBehavior from '/common/tree-behavior.js';
+import * as SidebarConnection from '/common/sidebar-connection.js';
 import * as TabsInternalOperation from '/common/tabs-internal-operation.js';
+import * as TabsStore from '/common/tabs-store.js';
+import * as TreeBehavior from '/common/tree-behavior.js';
+import * as UserOperationBlocker from '/common/user-operation-blocker.js';
 
 import Tab from '/common/Tab.js';
 
-import * as Tree from './tree.js';
-import * as TabsOpen from './tabs-open.js';
-import * as TabsMove from './tabs-move.js';
 import * as Commands from './commands.js';
-
-import EventListenerManager from '/extlib/EventListenerManager.js';
+import * as TabsMove from './tabs-move.js';
+import * as TabsOpen from './tabs-open.js';
+import * as Tree from './tree.js';
 
 function log(...args) {
   internalLogger('background/tree-structure', ...args);
@@ -132,14 +131,40 @@ export async function loadTreeStructure(windows, restoredFromCacheResults) {
     if (!windowStateCompletelyApplied) {
       log(`Tree information for the window ${window.id} is not same to actual state. Fallback to restoration from tab relations.`);
       MetricsData.add('loadTreeStructure: fallback to reserveToAttachTabFromRestoredInfo');
+      const unattachedTabs = new Set(tabs);
       for (const tab of tabs) {
         reserveToAttachTabFromRestoredInfo(tab, {
           keepCurrentTree: true,
           canCollapse:     true
+        }).then(attached => {
+          if (attached ||
+              tab.$TST.parent ||
+              tab.$TST.hasChild)
+            unattachedTabs.delete(tab);
         });
       }
       await reserveToAttachTabFromRestoredInfo.promisedDone;
       MetricsData.add('loadTreeStructure: attachTabFromRestoredInfo finish');
+
+      // unknown tabs may appear inside tree, so we need to fixup tree based on their position.
+      for (const tab of unattachedTabs) {
+        const action = Tree.detectTabActionFromNewPosition(tab, {
+          fromIndex: tabs.length - 1,
+          toIndex:   tab.index,
+          isTabCreating: true,
+        });
+        switch (action.action) {
+          default:
+            break;
+
+          case 'attach':
+          case 'detach':
+            log('loadTreeStructure: apply action for unattached tab: ', tab, action);
+            await action.applyIfNeeded();
+            break;
+        }
+      }
+      MetricsData.add('loadTreeStructure: finish to fixup tree structure');
     }
     Tab.dumpAll();
   })));
@@ -160,7 +185,7 @@ async function reserveToAttachTabFromRestoredInfo(tab, options = {}) {
     reserveToAttachTabFromRestoredInfo.tasks = [];
     const uniqueIds = tasks.map(task => task.tab.$TST.uniqueId);
     const bulk = tasks.length > 1;
-    await Promise.all(uniqueIds.map((uniqueId, index) => {
+    const attachedResults = await Promise.all(uniqueIds.map((uniqueId, index) => {
       const task = tasks[index];
       return attachTabFromRestoredInfo(task.tab, {
         ...task.options,
@@ -168,10 +193,11 @@ async function reserveToAttachTabFromRestoredInfo(tab, options = {}) {
         bulk
       }).catch(error => {
         console.log(`TreeStructure.reserveToAttachTabFromRestoredInfo: Fatal error on processing task ${index}, ${error}`, error.stack);
+        return false;
       });
     }));
     if (typeof reserveToAttachTabFromRestoredInfo.onDone == 'function')
-      reserveToAttachTabFromRestoredInfo.onDone();
+      reserveToAttachTabFromRestoredInfo.onDone(attachedResults.every(attached => !!attached));
     delete reserveToAttachTabFromRestoredInfo.onDone;
     delete reserveToAttachTabFromRestoredInfo.promisedDone;
     Tab.dumpAll();
@@ -349,9 +375,11 @@ async function attachTabFromRestoredInfo(tab, options = {}) {
   tab.$TST.treeStructureAlreadyRestoredFromSessionData = true;
 
   if (options.bulk)
-    return Promise.all(promises).then(updateCollapsedState);
+    await Promise.all(promises).then(updateCollapsedState);
   else
     updateCollapsedState();
+
+  return attached;
 }
 
 const mRestoringTabs = new Map();

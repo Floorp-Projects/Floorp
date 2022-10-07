@@ -14,7 +14,7 @@
  * The Original Code is the Tree Style Tab.
  *
  * The Initial Developer of the Original Code is YUKI "Piro" Hiroshi.
- * Portions created by the Initial Developer are Copyright (C) 2010-2021
+ * Portions created by the Initial Developer are Copyright (C) 2010-2022
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): YUKI "Piro" Hiroshi <piro.outsider.reflex@gmail.com>
@@ -37,15 +37,15 @@ import {
   isMacOS,
   isLinux,
 } from '/common/common.js';
-import * as Constants from '/common/constants.js';
 import * as ApiTabs from '/common/api-tabs.js';
+import * as BackgroundConnection from './background-connection.js';
+import * as Constants from '/common/constants.js';
+import * as EventUtils from './event-utils.js';
+import * as Scroll from './scroll.js';
+import * as SidebarTabs from './sidebar-tabs.js';
 import * as TabsStore from '/common/tabs-store.js';
 import * as TreeBehavior from '/common/tree-behavior.js';
 import * as TSTAPI from '/common/tst-api.js';
-import * as Scroll from './scroll.js';
-import * as EventUtils from './event-utils.js';
-import * as SidebarTabs from './sidebar-tabs.js';
-import * as BackgroundConnection from './background-connection.js';
 
 import Tab from '/common/Tab.js';
 
@@ -59,7 +59,7 @@ const kTYPE_X_MOZ_URL   = 'text/x-moz-url';
 const kTYPE_URI_LIST    = 'text/uri-list';
 const kTYPE_MOZ_TEXT_INTERNAL = 'text/x-moz-text-internal';
 const kBOOKMARK_FOLDER  = 'x-moz-place:';
-const kTYPE_ADDON_DRAG_DATA = `application/x-moz-addon-drag-data;provider=${browser.runtime.id}&id=`;
+const kTYPE_ADDON_DRAG_DATA = `application/x-treestyletab-drag-data;provider=${browser.runtime.id}&id=`;
 
 const kDROP_BEFORE  = 'before';
 const kDROP_ON_SELF = 'self';
@@ -102,8 +102,6 @@ export function init() {
   mDragBehaviorNotification = document.getElementById('tab-drag-notification');
 
   browser.runtime.sendMessage({ type: Constants.kCOMMAND_GET_INSTANCE_ID }).then(id => mInstanceId = id);
-
-  updateLastDragEventCoordinates();
 }
 
 
@@ -484,6 +482,7 @@ export function clearDropPosition() {
   for (const target of document.querySelectorAll(`[${kDROP_POSITION}]`)) {
     target.removeAttribute(kDROP_POSITION)
   }
+  configs.lastDragOverSidebarOwnerWindowId = null;
 }
 
 export function clearDraggingTabsState() {
@@ -581,7 +580,7 @@ async function retrieveURIsFromDragEvent(event) {
       break;
   }
   for (const type of dt.types) {
-    if (!/^application\/x-moz-addon-drag-data;(.+)$/.test(type))
+    if (!/^application\/x-treestyletab-drag-data;(.+)$/.test(type))
       continue;
     const params     = RegExp.$1;
     const providerId = /provider=([^;&]+)/.test(params) && RegExp.$1;
@@ -706,6 +705,7 @@ async function getDroppedLinksOnTabBehavior() {
 let mFinishCanceledDragOperation;
 let mCurrentDragDataForExternalsId = null;
 let mCurrentDragDataForExternals = null;
+let mLastBrowserInfo = null;
 
 function onDragStart(event, options = {}) {
   log('onDragStart: start ', event, options);
@@ -723,6 +723,10 @@ function onDragStart(event, options = {}) {
 
   mCurrentDragDataForExternalsId = `${parseInt(Math.random() * 65000)}-${Date.now()}`;
   mCurrentDragDataForExternals = {};
+
+  browser.runtime.getBrowserInfo().then(info => {
+    mLastBrowserInfo = info;
+  });
 
   const originalTarget = EventUtils.getElementOriginalTarget(event);
   const extraTabContentsDragData = originalTarget && JSON.parse(originalTarget.dataset && originalTarget.dataset.dragData || 'null');
@@ -794,6 +798,7 @@ function onDragStart(event, options = {}) {
     log('onDragStart: canceled / no dragged tab from drag data');
     return;
   }
+  log('dragData: ', dragData);
 
   if (!(behavior & Constants.kDRAG_BEHAVIOR_MOVE) &&
       !(behavior & Constants.kDRAG_BEHAVIOR_TEAR_OFF) &&
@@ -889,7 +894,17 @@ function onDragStart(event, options = {}) {
       dt.setData(kTYPE_URI_LIST, mCurrentDragDataForExternals[kTYPE_URI_LIST]);
     }
   }
-  dt.setData(`${kTYPE_ADDON_DRAG_DATA}${mCurrentDragDataForExternalsId}`, JSON.stringify(mCurrentDragDataForExternals));
+  {
+    const dragDataType    = `${kTYPE_ADDON_DRAG_DATA}${mCurrentDragDataForExternalsId}`;
+    const dragDataContent = JSON.stringify(mCurrentDragDataForExternals);
+    try {
+      dt.setData(dragDataType, dragDataContent);
+    }
+    catch(error) {
+      console.error(error);
+      console.log(`Failed to set drag data with the type ${dragDataType}:`, dragDataContent);
+    }
+  }
 
   {
     // We set negative offsets to get more visibility about drop targets.
@@ -907,7 +922,7 @@ function onDragStart(event, options = {}) {
   // a delay. (This timer will be cleared immediately by dragover
   // event, if the dragging operation is not canceled.)
   // See also: https://github.com/piroor/treestyletab/issues/1778#issuecomment-404569842
-  mFinishCanceledDragOperation = setTimeout(finishDrag, 250);
+  mFinishCanceledDragOperation = setTimeout(finishDrag, 500, 'onDragStart');
 
   if (!('behavior' in options) &&
       configs.showTabDragBehaviorNotification) {
@@ -1093,6 +1108,8 @@ function isEventFiredOnTabDropBlocker(event) {
 }
 
 function onDragEnter(event) {
+  configs.lastDragOverSidebarOwnerWindowId = TabsStore.getCurrentWindowId();
+
   mDraggingOnSelfWindow = true;
 
   const info = getDropAction(event);
@@ -1188,6 +1205,9 @@ reserveToProcessLongHover.cancel = function() {
 };
 
 function onDragLeave(event) {
+  if (configs.lastDragOverSidebarOwnerWindowId == TabsStore.getCurrentWindowId())
+    configs.lastDragOverSidebarOwnerWindowId = null;
+
   let leftFromTabBar = false;
   try {
     const info       = getDropAction(event);
@@ -1261,6 +1281,11 @@ function onDrop(event) {
     return;
   }
 
+  // We need to cancel the drop event explicitly to prevent Firefox tries to load the dropped URL to the tab itself.
+  // This is required to use "ext+treestyletab:tabbar" in a regular tab.
+  // See also: https://github.com/piroor/treestyletab/issues/3056
+  event.preventDefault();
+
   if (dropActionInfo.dragData &&
       dropActionInfo.dragData.tab) {
     log('there are dragged tabs');
@@ -1275,7 +1300,7 @@ function onDrop(event) {
       tabs:                dropActionInfo.dragData.tabs,
       structure:           dropActionInfo.dragData.structure,
       action:              dropActionInfo.action,
-      allosedActions:      dropActionInfo.dragData.behavior,
+      allowedActions:      dropActionInfo.dragData.behavior,
       attachToId:          dropActionInfo.parent && dropActionInfo.parent.id,
       insertBeforeId:      dropActionInfo.insertBefore && dropActionInfo.insertBefore.id,
       insertAfterId:       dropActionInfo.insertAfter && dropActionInfo.insertAfter.id,
@@ -1303,12 +1328,16 @@ function onDrop(event) {
         log('workaround for bug 1548949: setting last dropped tabs: ', configs.workaroundForBug1548949DroppedTabs);
       }
       const recentTab = tabs[0];
+      const allowedActions = event.shiftKey ?
+        configs.tabDragBehaviorShift :
+        configs.tabDragBehavior;
       BackgroundConnection.sendMessage({
         type:                Constants.kCOMMAND_PERFORM_TABS_DRAG_DROP,
         windowId:            recentTab.windowId,
         tabs:                [recentTab],
         structure:           [-1],
         action:              dropActionInfo.action,
+        allowedActions,
         attachToId:          dropActionInfo.parent && dropActionInfo.parent.id,
         insertBeforeId:      dropActionInfo.insertBefore && dropActionInfo.insertBefore.id,
         insertAfterId:       dropActionInfo.insertAfter && dropActionInfo.insertAfter.id,
@@ -1326,10 +1355,15 @@ function onDrop(event) {
 onDrop = EventUtils.wrapWithErrorHandler(onDrop);
 
 async function onDragEnd(event) {
-  log('onDragEnd, ', { mDraggingOnSelfWindow, mDraggingOnDraggedTabs, dropEffect: event.dataTransfer.dropEffect });
+  log('onDragEnd, ', { event, mDraggingOnSelfWindow, mDraggingOnDraggedTabs, dropEffect: event.dataTransfer.dropEffect });
+  if (!mLastDragEventCoordinates) {
+    console.error(new Error('dragend is handled after finishDrag'));
+    return;
+  }
   const lastDragEventCoordinatesX = mLastDragEventCoordinates.x;
   const lastDragEventCoordinatesY = mLastDragEventCoordinates.y;
   const lastDragEventCoordinatesTimestamp = mLastDragEventCoordinates.timestamp;
+  const droppedOnSidebarArea = !!configs.lastDragOverSidebarOwnerWindowId;
 
   let dragData = event.dataTransfer.getData(kTREE_DROP_TYPE);
   dragData = (dragData && JSON.parse(dragData)) || mCurrentDragData;
@@ -1344,7 +1378,7 @@ async function onDragEnd(event) {
   }).catch(_error => {});
 
   // Don't clear flags immediately, because they are referred by following operations in this function.
-  setTimeout(finishDrag, 0);
+  setTimeout(finishDrag, 0, 'onDragEnd');
 
   if (!dragData ||
       !(dragData.behavior & Constants.kDRAG_BEHAVIOR_TEAR_OFF))
@@ -1383,56 +1417,90 @@ async function onDragEnd(event) {
     return;
   }
 
-  const windowX = window.mozInnerScreenX;
-  const windowY = window.mozInnerScreenY;
-  const windowW = window.innerWidth;
-  const windowH = window.innerHeight;
-  const offset  = dragData.tab.$TST.element && dragData.tab.$TST.element.getBoundingClientRect().height / 2;
-  // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1561522
-  const fixedEventScreenX = event.screenX / window.devicePixelRatio;
-  const fixedEventScreenY = event.screenY / window.devicePixelRatio;
-  const now = Date.now();
-  log('dragend at: ', {
-    windowX,
-    windowY,
-    windowW,
-    windowH,
-    eventScreenX: event.screenX,
-    eventScreenY: event.screenY,
-    eventClientX: event.clientX,
-    eventClientY: event.clientY,
-    fixedEventScreenX,
-    fixedEventScreenY,
-    devicePixelRatio: window.devicePixelRatio,
-    lastDragEventCoordinatesX,
-    lastDragEventCoordinatesY,
-    lastDragEventCoordinatesTimestamp,
-    delayFromLast: now - lastDragEventCoordinatesTimestamp,
-    offset
-  });
-  if ((event.screenX >= windowX - offset &&
-       event.screenY >= windowY - offset &&
-       event.screenX <= windowX + windowW + offset &&
-       event.screenY <= windowY + windowH + offset) ||
-      // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1561522
-      (fixedEventScreenX >= windowX - offset &&
-       fixedEventScreenY >= windowY - offset &&
-       fixedEventScreenX <= windowX + windowW + offset &&
-       fixedEventScreenY <= windowY + windowH + offset) ||
-      // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1561879
-      // On macOS sometimes drag gesture is canceled immediately with (0,0) coordinates.
-      // (This happens on Windows also.)
-      (event.screenX == 0 &&
-       event.screenY == 0 &&
-       // We need to accept intentional drag and drop at left edge of the screen.
-       // For safety, cancel only when the coordinates become (0,0) accidently from the bug.
-       now - lastDragEventCoordinatesTimestamp < configs.maximumDelayForBug1561879 &&
-       (Math.abs(event.screenX - lastDragEventCoordinatesX) > offset ||
-        Math.abs(fixedEventScreenX - lastDragEventCoordinatesX) > offset) &&
-       (Math.abs(event.screenY - lastDragEventCoordinatesY) > offset ||
-        Math.abs(fixedEventScreenY - lastDragEventCoordinatesY) > offset))) {
-    log('dropped near the tab bar (from coordinates): detaching is canceled');
+  if (droppedOnSidebarArea) {
+    log('dropped on the tab bar (from event): detaching is canceled');
     return;
+  }
+
+  // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1767165
+  // The bug affects only on Firefox 99 and 100. This hack should be removed after Firefox 101 is released.
+  const fixDragEndCoordinates = (configs.enableWorkaroundForBug1767165_fixDragEndCoordinates && mLastBrowserInfo) ?
+    ((major) => major >= 99 && major <= 100)(parseInt(mLastBrowserInfo.version.split('.')[0])) :
+    false;
+  const subframeXOffset = fixDragEndCoordinates ? (window.mozInnerScreenX - window.screenX) : 0;
+  const subframeYOffset = fixDragEndCoordinates ? (window.mozInnerScreenY - window.screenY) : 0;
+
+  if (configs.ignoreTabDropNearSidebarArea) {
+    const windowX = window.mozInnerScreenX;
+    const windowY = window.mozInnerScreenY;
+    const windowW = window.innerWidth;
+    const windowH = window.innerHeight;
+    const offset  = dragData.tab.$TST.element && dragData.tab.$TST.element.getBoundingClientRect().height / 2;
+    // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1561522
+    const fixedEventScreenX = (event.screenX - subframeXOffset) / window.devicePixelRatio;
+    const fixedEventScreenY = (event.screenY - subframeYOffset) / window.devicePixelRatio;
+    const now = Date.now();
+    log('dragend at: ', {
+      windowX,
+      windowY,
+      windowW,
+      windowH,
+      eventScreenX: event.screenX,
+      eventScreenY: event.screenY,
+      eventClientX: event.clientX,
+      eventClientY: event.clientY,
+      fixedEventScreenX,
+      fixedEventScreenY,
+      devicePixelRatio: window.devicePixelRatio,
+      lastDragEventCoordinatesX,
+      lastDragEventCoordinatesY,
+      offset,
+      subframeXOffset,
+      subframeYOffset,
+    });
+    if ((event.screenX >= windowX - offset &&
+         event.screenY >= windowY - offset &&
+         event.screenX <= windowX + windowW + offset &&
+         event.screenY <= windowY + windowH + offset) ||
+        // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1561522
+        (fixedEventScreenX >= windowX - offset &&
+         fixedEventScreenY >= windowY - offset &&
+         fixedEventScreenX <= windowX + windowW + offset &&
+         fixedEventScreenY <= windowY + windowH + offset)) {
+      log('dropped near the tab bar (from coordinates): detaching is canceled');
+      return;
+    }
+    // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1561879
+    // On macOS sometimes drag gesture is canceled immediately with (0,0) coordinates.
+    // (This happens on Windows also.)
+    const delayFromLast = now - lastDragEventCoordinatesTimestamp;
+    const rawOffsetX    = Math.abs(event.screenX - subframeXOffset - lastDragEventCoordinatesX);
+    const rawOffsetY    = Math.abs(event.screenY - subframeYOffset - lastDragEventCoordinatesY);
+    const fixedOffsetX  = Math.abs(fixedEventScreenX - lastDragEventCoordinatesX);
+    const fixedOffsetY  = Math.abs(fixedEventScreenY - lastDragEventCoordinatesY);
+    log('check: ', {
+      now,
+      lastDragEventCoordinatesTimestamp,
+      delayFromLast,
+      maxDelay: configs.maximumDelayForBug1561879,
+      offset,
+      rawOffsetX,
+      rawOffsetY,
+      fixedOffsetX,
+      fixedOffsetY,
+      subframeXOffset,
+      subframeYOffset,
+    });
+    if (event.screenX == 0 &&
+        event.screenY == 0 &&
+        // We need to accept intentional drag and drop at left edge of the screen.
+        // For safety, cancel only when the coordinates become (0,0) accidently from the bug.
+        delayFromLast < configs.maximumDelayForBug1561879 &&
+        (rawOffsetX > offset || fixedOffsetX > offset) &&
+        (rawOffsetY > offset || fixedOffsetY > offset)) {
+      log('dropped at unknown position: detaching is canceled');
+      return;
+    }
   }
 
   log('trying to detach tab from window');
@@ -1449,14 +1517,14 @@ async function onDragEnd(event) {
     type:      Constants.kCOMMAND_NEW_WINDOW_FROM_TABS,
     tabIds:    detachTabs.map(tab => tab.id),
     duplicate: EventUtils.isAccelKeyPressed(event),
-    left:      event.screenX,
-    top:       event.screenY
+    left:      event.screenX - subframeXOffset,
+    top:       event.screenY - subframeYOffset,
   });
 }
 onDragEnd = EventUtils.wrapWithErrorHandler(onDragEnd);
 
-function finishDrag() {
-  log('finishDrag');
+function finishDrag(trigger) {
+  log(`finishDrag from ${trigger || 'unknown'}`);
 
   mDragBehaviorNotification.classList.add('hiding');
   mDragBehaviorNotification.classList.remove('shown');
@@ -1493,10 +1561,10 @@ function onFinishDrag() {
 }
 
 function updateLastDragEventCoordinates(event = null) {
-  mLastDragEventCoordinates = {
-    x: event ? event.screenX : 0,
-    y: event ? event.screenY : 0,
-    timestamp: event ? Date.now() : 0
+  mLastDragEventCoordinates = !event ? null : {
+    x: event.screenX,
+    y: event.screenY,
+    timestamp: Date.now(),
   };
 }
 

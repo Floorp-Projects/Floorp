@@ -12,9 +12,9 @@ import {
   configs,
   isMacOS,
 } from '/common/common.js';
-
 import * as ApiTabs from '/common/api-tabs.js';
 import * as Constants from '/common/constants.js';
+import * as Permissions from '/common/permissions.js';
 import * as TabsStore from '/common/tabs-store.js';
 import * as TabsInternalOperation from '/common/tabs-internal-operation.js';
 import * as TSTAPI from '/common/tst-api.js';
@@ -39,7 +39,9 @@ Window.onInitialized.addListener(window => {
     active:   true
   })
     .then(activeTabs => {
-      if (!window.lastActiveTab)
+      // There may be no active tab on a startup...
+      if (activeTabs.length > 0 &&
+          !window.lastActiveTab)
         window.lastActiveTab = activeTabs[0].id;
     });
 });
@@ -52,8 +54,8 @@ Tab.onActivating.addListener(async (tab, info = {}) => { // return false if the 
     delete tab.$TST.shouldReloadOnSelect;
   }
   const window = TabsStore.windows.get(tab.windowId);
-  log('  lastActiveTab: ', window.lastActiveTab);
-  const lastActiveTab = Tab.get(window.lastActiveTab);
+  log('  lastActiveTab: ', window.lastActiveTab); // it may be blank on a startup
+  const lastActiveTab = Tab.get(window.lastActiveTab || info.previousTabId);
   cancelDelayedExpand(lastActiveTab);
   let shouldSkipCollapsed = (
     !info.byInternalOperation &&
@@ -211,7 +213,7 @@ async function handleNewActiveTab(tab, info = {}) {
       return;
     if (canCollapseTree &&
         configs.autoExpandIntelligently)
-      Tree.collapseExpandTreesIntelligentlyFor(tab, {
+      await Tree.collapseExpandTreesIntelligentlyFor(tab, {
         broadcast: true
       });
     else
@@ -290,19 +292,29 @@ async function setupDelayedExpand(tab) {
     return;
   cancelDelayedExpand(tab);
   TabsStore.removeToBeExpandedTab(tab);
+  const [ctrlTabHandlingEnabled, allowedToExpandViaAPI] = await Promise.all([
+    Permissions.isGranted(Permissions.ALL_URLS),
+    TSTAPI.tryOperationAllowed(
+      TSTAPI.kNOTIFY_TRY_EXPAND_TREE_FROM_LONG_PRESS_CTRL_KEY,
+      { tab: new TSTAPI.TreeItem(tab) },
+      { tabProperties: ['tab'] }
+    ),
+  ]);
   if (!configs.autoExpandOnTabSwitchingShortcuts ||
       !tab.$TST.hasChild ||
       !tab.$TST.subtreeCollapsed ||
-      !(await TSTAPI.tryOperationAllowed(
-        TSTAPI.kNOTIFY_TRY_EXPAND_TREE_FROM_LONG_PRESS_CTRL_KEY,
-        { tab: new TSTAPI.TreeItem(tab) },
-        { tabProperties: ['tab'] }
-      )))
+      !ctrlTabHandlingEnabled ||
+      !allowedToExpandViaAPI)
     return;
   TabsStore.addToBeExpandedTab(tab);
-  tab.$TST.delayedExpand = setTimeout(() => {
+  tab.$TST.delayedExpand = setTimeout(async () => {
+    if (!tab.$TST.delayedExpand) { // already canceled
+      log('delayed expand is already canceled ', tab.id);
+      return;
+    }
+    log('delayed expand by long-press of ctrl key on ', tab.id);
     TabsStore.removeToBeExpandedTab(tab);
-    Tree.collapseExpandTreesIntelligentlyFor(tab, {
+    await Tree.collapseExpandTreesIntelligentlyFor(tab, {
       broadcast: true
     });
   }, configs.autoExpandOnTabSwitchingShortcutsDelay);
@@ -375,7 +387,9 @@ function onMessage(message, sender) {
           await Tab.waitUntilTracked(sender.tab.id);
           let tab = Tab.get(sender.tab.id);
           if (!tab) {
-            const tabs = await browser.tabs.query({ currentWindow: true, active: true }).catch(ApiTabs.createErrorHandler());
+            let tabs = await browser.tabs.query({ currentWindow: true, active: true }).catch(ApiTabs.createErrorHandler());
+            if (tabs.length == 0)
+              tabs = await browser.tabs.query({ currentWindow: true }).catch(ApiTabs.createErrorHandler());
             await Tab.waitUntilTracked(tabs[0].id);
             tab = Tab.get(tabs[0].id);
           }

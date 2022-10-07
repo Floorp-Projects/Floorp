@@ -12,14 +12,15 @@ import {
 
 import * as MetricsData from '/common/metrics-data.js';
 import * as TabsStore from '/common/tabs-store.js';
+
 import Tab from '/common/Tab.js';
 
-import * as Sidebar from './sidebar.js';
 import * as BackgroundConnection from './background-connection.js';
-import './mouse-event-listener.js';
+import * as Sidebar from './sidebar.js';
 import './collapse-expand.js';
-
+import './mouse-event-listener.js';
 import './tab-context-menu.js';
+import './tst-api-frontend.js';
 
 log.context = 'Sidebar-?';
 

@@ -34,7 +34,9 @@ let mOffset              = 0;
 export function init() {
   mWindowId = TabsStore.getCurrentWindowId();
 
-  browser.tabs.query({ active: true, windowId: mWindowId }).then(tabs => {
+  browser.tabs.query({ active: true, windowId: mWindowId }).then(async tabs => {
+    if (tabs.length == 0)
+      tabs = await browser.tabs.query({ windowId: mWindowId });
     onLocationChange(tabs[0].url);
   });
   BackgroundConnection.onMessage.addListener(async message => {
@@ -168,7 +170,7 @@ function onResize() {
   );
   updateOffset.timeoutTimer = setTimeout(() => {
     cancelUpdateOffset();
-  }, configs.suppressGapFromShownOrHiddenToolbarTiemout);
+  }, configs.suppressGapFromShownOrHiddenToolbarTimeout);
 }
 
 function cancelUpdateOffset() {

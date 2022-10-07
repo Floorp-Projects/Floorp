@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "__MSG_extensionName__",
-  "version": "3.8.2",
+  "version": "3.9.5",
   "author": "YUKI \"Piro\" Hiroshi",
   "description": "__MSG_extensionDescription__",
   "permissions": [
@@ -23,10 +23,10 @@
     "tabHide"
   ],
   "icons": {
-    "16": "/resources/16x16.svg",
-    "20": "/resources/20x20.svg",
-    "24": "/resources/24x24.svg",
-    "32": "/resources/32x32.svg"
+    "16": "/resources/16x16.svg#default-bright",
+    "20": "/resources/20x20.svg#default-bright",
+    "24": "/resources/24x24.svg#default-bright",
+    "32": "/resources/32x32.svg#default-bright"
   },
   "background": {
     "page": "/background/background.html"
@@ -34,19 +34,19 @@
   "browser_action": {
     "default_title": "__MSG_sidebarTitle__",
     "default_icon": {
-      "16": "/resources/16x16.svg",
-      "20": "/resources/20x20.svg",
-      "24": "/resources/24x24.svg",
-      "32": "/resources/32x32.svg"
+      "16": "/resources/16x16.svg#toolbar-bright",
+      "20": "/resources/20x20.svg#toolbar-bright",
+      "24": "/resources/24x24.svg#toolbar-bright",
+      "32": "/resources/32x32.svg#toolbar-bright"
     }
   },
   "sidebar_action": {
     "default_title": "__MSG_sidebarTitle__",
     "default_icon": {
-      "16": "/resources/16x16.svg",
-      "20": "/resources/20x20.svg",
-      "24": "/resources/24x24.svg",
-      "32": "/resources/32x32.svg"
+      "16": "/resources/16x16.svg#default-bright",
+      "20": "/resources/20x20.svg#default-bright",
+      "24": "/resources/24x24.svg#default-bright",
+      "32": "/resources/32x32.svg#default-bright"
     },
     "default_panel": "/sidebar/sidebar.html",
     "browser_style": false
@@ -208,9 +208,11 @@
     "/resources/group-tab.html*"
   ],
   "protocol_handlers": [
-    { "protocol":    "ext+treestyletab",
-      "name":        "Tree Style Tab",
-      "uriTemplate": "/resources/protocol-handler.html?%s" }
+    {
+      "protocol": "ext+treestyletab",
+      "name": "Tree Style Tab",
+      "uriTemplate": "/resources/protocol-handler.html?%s"
+    }
   ],
   "default_locale": "en",
   "applications": {

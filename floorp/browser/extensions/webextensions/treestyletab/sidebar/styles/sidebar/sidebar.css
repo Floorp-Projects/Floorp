@@ -91,35 +91,33 @@ body,
 }
 
 /* Style tabs themselves.  Get rid of most of the initial XUL styling */
-tab-item {
+tab-item-substance {
   border-top: 1px solid transparent;
   height: 2.2em;     /* height including border! */
   padding: 0.075em 3px 0.075em 2px;
   z-index: 0;
 }
 
-/* macOS workaround */
-:root.platform-mac #tabbar:dir(rtl).overflow tab-item:not(.pinned) {
-  padding-left: var(--scrollbar-placeholder-size); /* it will be enough larger than the default padding */
-}
-:root.platform-mac #tabbar:dir(ltr).overflow tab-item:not(.pinned) {
-  padding-right: var(--scrollbar-placeholder-size); /* it will be enough larger than the default padding */
-}
-
 tab-item.active {
   --tab-surface: var(--tab-surface-active-gradient);
+}
+tab-item.active tab-item-substance {
   background: var(--tab-surface);
   border-top: 1px solid var(--tab-surface-active-color);
 }
 
 tab-item.bundled-active {
   --tab-surface: var(--tab-surface-active-gradient-pale);
+}
+tab-item.bundled-active tab-item-substance {
   background: var(--tab-surface);
   border-top: 1px solid var(--tab-surface-active-color-pale);
 }
 
 :root:not(.active) tab-item.active {
   --tab-surface: var(--tab-surface-active-gradient-inactive);
+}
+:root:not(.active) tab-item.active tab-item-substance {
   background: var(--tab-surface);
   border-top: 1px solid var(--tab-surface-active-color-inactive);
 }
@@ -147,7 +145,7 @@ tab-item.active tab-closebox {
   opacity: 1;
 }
 
-tab-item:not(.active):not(:hover):not(#dummy-tab) tab-closebox {
+tab-item:not(.active):not(#dummy-tab) tab-item-substance:not(:hover) tab-closebox {
   display: none;
 }
 
@@ -184,13 +182,17 @@ tab-item.active tab-twisty {
 }
 
 .counter {
-  font-size: 85%;
   background-color: var(--badge-bg-color);
-  border-radius: 8px;
-  padding: 2px 4px;
+  border-radius: 0.75em;
+  box-sizing: content-box;
   color: var(--tab-text-active);
+  flex-shrink: 0;
+  font-size: 85%;
   font-weight: bold;
+  min-width: 1em;
+  padding: 0.25em;
   text-shadow: none;
+  text-align: center;
 }
 
 tab-item.active .counter {
@@ -211,7 +213,7 @@ tab-item.active .counter {
 /* Drag'n'drop styling */
 
 /* Round blue rectangle around tabs that are dropping targets. */
-tab-item[data-drop-position="self"] {
+tab-item[data-drop-position="self"] tab-item-substance {
   background: var(--dropmarker-bg-color);
   border: 2px solid var(--dropmarker-border-color); /* not OSX's colour but Firefox's */
   border-radius: 0.3em;
@@ -220,7 +222,7 @@ tab-item[data-drop-position="self"] {
 }
 
 /* White-blue-white separator for drop indicator. */
-tab-item[data-drop-position]:not([data-drop-position="self"])::before {
+tab-item[data-drop-position]:not([data-drop-position="self"]) tab-item-substance::before {
   background: transparent !important;
   max-height: 6px;
   min-height: 6px;
@@ -228,12 +230,12 @@ tab-item[data-drop-position]:not([data-drop-position="self"])::before {
   border-image-outset: 6px 0 0 0;
 }
 
-tab-item:not(.faviconized)[data-drop-position="before"]::before {
+tab-item:not(.faviconized)[data-drop-position="before"] tab-item-substance::before {
   top: 6px;
 }
 
 
-.mutiple-highlighted tab-item:not(.highlighted) {
+.mutiple-highlighted tab-item:not(.highlighted) tab-item-substance {
   opacity: 0.5;
 }
 
@@ -249,7 +251,8 @@ tab-item:not(.faviconized)[data-drop-position="before"]::before {
 
 /* for rightside tab bar: "display:none" breaks the order of tab contents. */
 :root
-  tab-item:not(:hover):not(.active):not(#dummy-tab)
+  tab-item:not(.active):not(#dummy-tab)
+  tab-item-substance:not(:hover)
   tab-closebox {
   display: -moz-box !important;
   visibility: collapse !important;
@@ -257,7 +260,7 @@ tab-item:not(.faviconized)[data-drop-position="before"]::before {
 
 
 /* for Multiple Tab Handler */
-tab-item:not(:hover):not(.active)[multipletab-ready-to-close="true"] tab-closebox {
+tab-item:not(.active)[multipletab-ready-to-close="true"] tab-item-substance:not(:hover) tab-closebox {
   visibility: visible;
 }
 
@@ -271,7 +274,7 @@ tab-item:not(:hover):not(.active)[multipletab-ready-to-close="true"] tab-closebo
 
 /* multiselection of tabs */
 
-.mutiple-highlighted > tab-item.highlighted::after {
+.mutiple-highlighted > tab-item.highlighted tab-item-substance::after {
   background: var(--multiselected-color);
   bottom: 0;
   content: " ";

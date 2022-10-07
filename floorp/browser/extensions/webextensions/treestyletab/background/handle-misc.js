@@ -12,28 +12,27 @@ import {
   configs,
   loadUserStyleRules
 } from '/common/common.js';
-
-import * as Constants from '/common/constants.js';
 import * as ApiTabs from '/common/api-tabs.js';
-import * as TabsStore from '/common/tabs-store.js';
-import * as TabsUpdate from '/common/tabs-update.js';
-import * as TabsInternalOperation from '/common/tabs-internal-operation.js';
-import * as TSTAPI from '/common/tst-api.js';
-import * as SidebarConnection from '/common/sidebar-connection.js';
-import * as Permissions from '/common/permissions.js';
-import * as TreeBehavior from '/common/tree-behavior.js';
 import * as Bookmark from '/common/bookmark.js';
 import * as BrowserTheme from '/common/browser-theme.js';
+import * as Constants from '/common/constants.js';
 import * as ContextualIdentities from '/common/contextual-identities.js';
+import * as Permissions from '/common/permissions.js';
+import * as SidebarConnection from '/common/sidebar-connection.js';
+import * as TabsInternalOperation from '/common/tabs-internal-operation.js';
+import * as TabsStore from '/common/tabs-store.js';
+import * as TabsUpdate from '/common/tabs-update.js';
+import * as TreeBehavior from '/common/tree-behavior.js';
+import * as TSTAPI from '/common/tst-api.js';
 
 import Tab from '/common/Tab.js';
 
 import * as Background from './background.js';
-import * as TabsOpen from './tabs-open.js';
-import * as TabsGroup from './tabs-group.js';
-import * as Tree from './tree.js';
 import * as Commands from './commands.js';
 import * as Migration from './migration.js';
+import * as TabsGroup from './tabs-group.js';
+import * as TabsOpen from './tabs-open.js';
+import * as Tree from './tree.js';
 
 function log(...args) {
   internalLogger('background/handle-misc', ...args);
@@ -87,10 +86,15 @@ function onToolbarButtonClick(tab) {
 }
 
 async function onShortcutCommand(command) {
-  const activeTab = Tab.get((await browser.tabs.query({
+  let activeTabs = await browser.tabs.query({
     active:        true,
-    currentWindow: true
-  }).catch(ApiTabs.createErrorHandler()))[0].id);
+    currentWindow: true,
+  }).catch(ApiTabs.createErrorHandler());
+  if (activeTabs.length == 0)
+    activeTabs = await browser.tabs.query({
+      currentWindow: true,
+    }).catch(ApiTabs.createErrorHandler());
+  const activeTab = Tab.get(activeTabs[0].id);
   const selectedTabs = activeTab.$TST.multiselected ? Tab.getSelectedTabs(activeTab.windowId) : [activeTab];
   log('onShortcutCommand ', { command, activeTab, selectedTabs });
 

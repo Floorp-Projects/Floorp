@@ -26,8 +26,8 @@ tab-item:not(.faviconized).subtree-collapsed.all-descendants-highlighted .highli
               width var(--tab-highlighter-animation);
 }
 
-tab-item:not(.active):not(.bundled-active):not(.highlighted):hover .highlighter::before,
-tab-item:not(.active):not(.bundled-active):not(.highlighted):not(.faviconized):hover .highlighter::after {
+tab-item:not(.active):not(.bundled-active):not(.highlighted) tab-item-substance:hover .highlighter::before,
+tab-item:not(.active):not(.bundled-active):not(.highlighted):not(.faviconized) tab-item-substance:hover .highlighter::after {
   background: var(--tab-highlighter-inactive);
 }
 tab-item.active .highlighter::before,
@@ -53,8 +53,8 @@ tab-item:not(.faviconized) .highlighter::after {
 :root.right tab-item:not(.faviconized) .highlighter::after {
   right: 0;
 }
-tab-item:not(.faviconized):hover .highlighter::before,
-tab-item:not(.faviconized):hover .highlighter::after,
+tab-item:not(.faviconized) tab-item-substance:hover .highlighter::before,
+tab-item:not(.faviconized) tab-item-substance:hover .highlighter::after,
 tab-item.active:not(.faviconized) .highlighter::before,
 tab-item.active:not(.faviconized) .highlighter::after,
 tab-item.bundled-active:not(.faviconized) .highlighter::before,
@@ -72,7 +72,7 @@ tab-item.faviconized .highlighter::before {
   top: 0;
   transform: scaleX(0);
 }
-tab-item.faviconized:hover .highlighter::before,
+tab-item.faviconized tab-item-substance:hover .highlighter::before,
 tab-item.active.faviconized .highlighter::before,
 tab-item.bundled-active.faviconized .highlighter::before,
 tab-item.highlighted.faviconized .highlighter::before {

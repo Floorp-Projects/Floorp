@@ -12,12 +12,12 @@ import {
   mapAndFilter,
   configs
 } from '/common/common.js';
-import * as Constants from '/common/constants.js';
 import * as ApiTabs from '/common/api-tabs.js';
+import * as Constants from '/common/constants.js';
+import * as MetricsData from '/common/metrics-data.js';
+import * as TabsInternalOperation from '/common/tabs-internal-operation.js';
 import * as TabsStore from '/common/tabs-store.js';
 import * as TabsUpdate from '/common/tabs-update.js';
-import * as TabsInternalOperation from '/common/tabs-internal-operation.js';
-import * as MetricsData from '/common/metrics-data.js';
 
 import Tab from '/common/Tab.js';
 

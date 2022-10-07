@@ -76,7 +76,7 @@ body,
   }
 }
 
-#tabbar {
+#tabbar:not(.scrollbar-autohide) {
   scrollbar-color: var(--theme-colors-toolbar_bottom_separator, var(--in-content-button-background-hover-mixed))
                    var(--theme-colors-toolbar, var(--in-content-box-background));
 }
@@ -96,6 +96,12 @@ tab-item,
   --tab-surface: var(--tab-surface-regular);
   --tab-text: var(--tab-text-regular);
   --tab-text-shadow: var(--browser-textshadow-for-header-image, none);
+}
+tab-item-substance,
+.after-tabs button,
+.after-tabs [role="button"],
+#subpanel-container,
+#dummy-tab-color-box {
   background: var(--tab-surface);
   color: var(--tab-text);
   text-shadow: var(--tab-text-shadow);
@@ -105,7 +111,7 @@ tab-item * {
   color: var(--tab-text);
 }
 
-tab-item:not(.active):hover,
+tab-item:not(.active) tab-item-substance:hover,
 .after-tabs button:hover,
 .after-tabs [role="button"]:hover {
   --tab-surface: var(--tab-surface-hover);
@@ -124,7 +130,7 @@ tab-item.active {
   --tab-text-inverted: var(--tab-text-active-inverted);
 }
 tab-item.bundled-active,
-tab-item.active:hover {
+tab-item.active tab-item-substance:hover {
   --tab-surface: var(--tab-surface-active-hover);
 }
 
@@ -148,11 +154,11 @@ tab-item .burster {
   --shadow-blur: 0.2em;
 }
 
-:root.left tab-item:not(.pinned):not(collapsed) {
+:root.left tab-item:not(.pinned):not(collapsed) tab-item-substance {
   box-shadow: -0.3em 0.3em var(--shadow-blur) var(--shadow-color);
 }
 
-:root.right tab-item:not(.pinned):not(collapsed) {
+:root.right tab-item:not(.pinned):not(collapsed) tab-item-substance {
   box-shadow: 0.3em 0.3em var(--shadow-blur) var(--shadow-color);
 }
 

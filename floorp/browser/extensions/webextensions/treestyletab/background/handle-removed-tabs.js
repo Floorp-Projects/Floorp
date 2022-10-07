@@ -13,7 +13,6 @@ import {
   countMatched,
   configs
 } from '/common/common.js';
-
 import * as Constants from '/common/constants.js';
 import * as TabsStore from '/common/tabs-store.js';
 import * as TabsInternalOperation from '/common/tabs-internal-operation.js';

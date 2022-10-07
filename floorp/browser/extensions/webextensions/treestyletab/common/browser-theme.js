@@ -40,13 +40,19 @@ export function generateThemeRules(theme) {
 
 export async function generateThemeDeclarations(theme) {
   if (!theme ||
-      !theme.colors)
-    return '';
+      !theme.colors) {
+    return `
+      :root {
+        /* https://searchfox.org/mozilla-central/rev/0c7c41109902cb8967ec3ef2c0ddb326701cfbee/browser/themes/windows/browser.css#15 */
+        /* https://searchfox.org/mozilla-central/rev/0c7c41109902cb8967ec3ef2c0ddb326701cfbee/browser/themes/linux/browser.css#20 */
+        --non-lwt-selected-tab-background-color-proton: rgba(255, 255, 255, 0.15);
+    }`;
+  }
 
   const extraColors = [];
   const themeFrameColor   = theme.colors.frame || theme.colors.accentcolor /* old name */;
   const inactiveTextColor = theme.colors.tab_background_text || theme.colors.textcolor /* old name */;
-  const activeTextColor   = theme.colors.bookmark_text || theme.colors.toolbar_text /* old name */ || inactiveTextColor;
+  const activeTextColor   = theme.colors.tab_text || theme.colors.bookmark_text || theme.colors.toolbar_text /* old name */ || inactiveTextColor;
   let bgAlpha = 1;
   let hasImage = false;
   if (theme.images) {
@@ -63,14 +69,10 @@ export async function generateThemeDeclarations(theme) {
       if (Color.isBrightColor(inactiveTextColor)) {
         // for bright text
         extraColors.push('--browser-textshadow-for-header-image: 1px 1px 1.5px black');
-        // https://searchfox.org/mozilla-central/rev/0e3d2eb698a51006943f3b4fb74c035da80aa2ff/browser/themes/shared/tabs.inc.css#840
-        extraColors.push('--browser-bg-hover-for-header-image-proton: rgba(255, 255, 255, 0.2);');
       }
       else {
         // for dark text
         extraColors.push('--browser-textshadow-for-header-image: 0 0 1.5px white');
-        // https://searchfox.org/mozilla-central/rev/0e3d2eb698a51006943f3b4fb74c035da80aa2ff/browser/themes/shared/tabs.inc.css#834
-        extraColors.push('--browser-bg-hover-for-header-image-proton: rgba(0, 0, 0, 0.2);');
       }
       images.push({
         url:      frameImage,

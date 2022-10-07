@@ -30,20 +30,13 @@
                            name="sidebarPosition"
                            value="2">
               __MSG_config_sidebarPosition_right__</label>
+       <label class="has-radio inline"
+             ><input type="radio"
+                     name="sidebarPosition"
+                     value="0">
+              __MSG_config_sidebarPosition_auto__</label>
     </p>
     <p class="sub">__MSG_config_sidebarPosition_description__</p>
-    <p>__MSG_config_sidebarDirection_caption__
-       <label class="has-radio inline"
-             ><input type="radio"
-                     name="sidebarDirection"
-                     value="1">
-              __MSG_config_sidebarDirection_ltr__</label>
-       <label class="has-radio inline"
-             ><input type="radio"
-                     name="sidebarDirection"
-                     value="2">
-              __MSG_config_sidebarDirection_rtl__</label>
-    </p>
     <fieldset>
       <legend>__MSG_config_style_caption__</legend>
       <ul id="style-radiogroup">
@@ -126,6 +119,15 @@
              ><input id="showCollapsedDescendantsByTooltip"
                      type="checkbox">
              __MSG_config_showCollapsedDescendantsByTooltip_label__</label></p>
+    <p><label>__MSG_config_shiftTabsForScrollbarDistance_label_before__
+       <input id="shiftTabsForScrollbarDistance"
+              size="8"
+              placeholder="__MSG_config_shiftTabsForScrollbarDistance_placeholder__">
+       __MSG_config_shiftTabsForScrollbarDistance_label_after__</label></p>
+    <p class="sub"><label class="has-checkbox"
+                         ><input id="shiftTabsForScrollbarOnlyOnHover"
+                                 type="checkbox">
+                         __MSG_config_shiftTabsForScrollbarOnlyOnHover_label__</label></p>
     <fieldset>
       <legend>__MSG_config_suppressGapFromShownOrHiddenToolbar_caption__</legend>
       <p><label class="has-checkbox"
@@ -370,6 +372,58 @@
     </section>
 
 
+    <section id="section-newTabWithOwner">
+    <h1>__MSG_config_newTabWithOwner_caption__</h1>
+
+    <p class="expert"><label>__MSG_config_autoAttachOnOpenedWithOwner_before__
+              <select id="autoAttachOnOpenedWithOwner">
+                <option value="-1">__MSG_config_autoAttachOnOpenedWithOwner_noControl__</option>
+                <option value="0">__MSG_config_autoAttachOnOpenedWithOwner_independent__</option>
+                <option value="1">__MSG_config_autoAttachOnOpenedWithOwner_child__ __MSG_config_recommended_choice__</option>
+                <option value="2">__MSG_config_autoAttachOnOpenedWithOwner_sibling__</option>
+                <option value="3">__MSG_config_autoAttachOnOpenedWithOwner_nextSibling__</option>
+              </select>
+              __MSG_config_autoAttachOnOpenedWithOwner_after__
+              <span class="preview-image"></span></label></p>
+    <fieldset>
+      <legend>__MSG_config_insertNewTabFromPinnedTabAt_caption__</legend>
+      <ul>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertNewTabFromPinnedTabAt" value="-1">
+              __MSG_config_insertNewTabFromPinnedTabAt_noControl__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertNewTabFromPinnedTabAt" value="3">
+              __MSG_config_insertNewTabFromPinnedTabAt_nextToLastRelateTab__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertNewTabFromPinnedTabAt" value="0">
+              __MSG_config_insertNewTabFromPinnedTabAt_top__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertNewTabFromPinnedTabAt" value="1">
+              __MSG_config_insertNewTabFromPinnedTabAt_end__</label></li>
+      </ul>
+      <hr>
+      <p><label class="has-checkbox"
+               ><input id="autoGroupNewTabsFromPinned"
+                       type="checkbox">
+                __MSG_config_autoGroupNewTabsFromPinned_label__</p>
+      <p><label>__MSG_config_groupTabTemporaryStateForChildrenOfPinned_label__
+                <select id="groupTabTemporaryStateForChildrenOfPinned">
+                  <option value="0">__MSG_config_groupTabTemporaryState_option_default__</option>
+                  <option value="1">__MSG_config_groupTabTemporaryState_option_checked_before__
+                                    __MSG_groupTab_temporary_label__
+                                    __MSG_config_groupTabTemporaryState_option_checked_after__</option>
+                  <option value="2">__MSG_config_groupTabTemporaryState_option_checked_before__
+                                    __MSG_groupTab_temporaryAggressive_label__
+                                    __MSG_config_groupTabTemporaryState_option_checked_after__</option>
+                </select></label></p>
+    </fieldset>
+    </section>
+
+
     <section id="section-newTab">
     <h1>__MSG_config_newTab_caption__</h1>
 
@@ -510,74 +564,8 @@
       </div>
     </fieldset>
 
-    <fieldset>
-      <legend>__MSG_config_insertNewChildAt_caption__</legend>
-      <ul>
-        <li><label class="has-radio"
-                  ><input type="radio"
-                          name="insertNewChildAt" value="-1">
-              __MSG_config_insertNewChildAt_noControl__</label></li>
-        <li><label class="has-radio"
-                  ><input type="radio"
-                          name="insertNewChildAt" value="3">
-              __MSG_config_insertNewChildAt_nextToLastRelateTab__</label></li>
-        <li><label class="has-radio"
-                  ><input type="radio"
-                          name="insertNewChildAt" value="0">
-              __MSG_config_insertNewChildAt_top__</label></li>
-        <li><label class="has-radio"
-                  ><input type="radio"
-                          name="insertNewChildAt" value="1">
-              __MSG_config_insertNewChildAt_end__</label></li>
-      </ul>
-    </fieldset>
-
-    <fieldset>
-      <legend>__MSG_config_insertNewTabFromPinnedTabAt_caption__</legend>
-      <ul>
-        <li><label class="has-radio"
-                  ><input type="radio"
-                          name="insertNewTabFromPinnedTabAt" value="-1">
-              __MSG_config_insertNewTabFromPinnedTabAt_noControl__</label></li>
-        <li><label class="has-radio"
-                  ><input type="radio"
-                          name="insertNewTabFromPinnedTabAt" value="3">
-              __MSG_config_insertNewTabFromPinnedTabAt_nextToLastRelateTab__</label></li>
-        <li><label class="has-radio"
-                  ><input type="radio"
-                          name="insertNewTabFromPinnedTabAt" value="0">
-              __MSG_config_insertNewTabFromPinnedTabAt_top__</label></li>
-        <li><label class="has-radio"
-                  ><input type="radio"
-                          name="insertNewTabFromPinnedTabAt" value="1">
-              __MSG_config_insertNewTabFromPinnedTabAt_end__</label></li>
-      </ul>
-    </fieldset>
-
-    <fieldset class="expert">
-      <legend>__MSG_config_insertDroppedTabsAt_caption__</legend>
-      <ul>
-        <li><label class="has-radio"
-                  ><input type="radio"
-                          name="insertDroppedTabsAt" value="-2">
-              __MSG_config_insertDroppedTabsAt_inherit__</label></li>
-        <li><label class="has-radio"
-                  ><input type="radio"
-                          name="insertDroppedTabsAt" value="0">
-              __MSG_config_insertDroppedTabsAt_first__</label></li>
-        <li><label class="has-radio"
-                  ><input type="radio"
-                          name="insertDroppedTabsAt" value="1">
-              __MSG_config_insertDroppedTabsAt_end__</label></li>
-      </ul>
-    </fieldset>
-
     <fieldset id="autoGroupNewTabsSection">
       <legend>__MSG_config_groupTab_caption__</legend>
-      <p><label class="has-checkbox"
-               ><input id="autoGroupNewTabsFromPinned"
-                       type="checkbox">
-                __MSG_config_autoGroupNewTabsFromPinned_label__</p>
       <p><label id="autoGroupNewTabsFromBookmarks_label"
                 class="has-checkbox"
                ><input id="autoGroupNewTabsFromBookmarks"
@@ -585,7 +573,7 @@
                        class="require-bookmarks-permission"
                        data-request-permission-message="__MSG_config_autoGroupNewTabsFromBookmarks_tooltiptext__">
                 <span>__MSG_config_autoGroupNewTabsFromBookmarks_before__</span>
-                <input id="autoGroupNewTabsTimeout"
+                <input id="tabBunchesDetectionTimeout"
                        type="number"
                        size="3"
                        class="with-bookmarks-permission">
@@ -603,11 +591,11 @@
                  ><input id="autoGroupNewTabsFromOthers"
                          type="checkbox">
                   __MSG_config_autoGroupNewTabsFromOthers_label__</label></p>
-        <p class="sub"><label>__MSG_config_autoGroupNewTabsDelayOnNewWindow_before__
-                              <input id="autoGroupNewTabsDelayOnNewWindow"
+        <p class="sub"><label>__MSG_config_tabBunchesDetectionDelayOnNewWindow_before__
+                              <input id="tabBunchesDetectionDelayOnNewWindow"
                                      type="number"
                                      size="3">
-                              __MSG_config_autoGroupNewTabsDelayOnNewWindow_after__</label></p>
+                              __MSG_config_tabBunchesDetectionDelayOnNewWindow_after__</label></p>
         <p class="sub"><label class="has-checkbox"
                              ><input id="warnOnAutoGroupNewTabs"
                                      type="checkbox">
@@ -640,16 +628,6 @@
                 </select></label></p>
       <p><label>__MSG_config_groupTabTemporaryStateForNewTabsFromOthers_label__
                 <select id="groupTabTemporaryStateForNewTabsFromOthers">
-                  <option value="0">__MSG_config_groupTabTemporaryState_option_default__</option>
-                  <option value="1">__MSG_config_groupTabTemporaryState_option_checked_before__
-                                    __MSG_groupTab_temporary_label__
-                                    __MSG_config_groupTabTemporaryState_option_checked_after__</option>
-                  <option value="2">__MSG_config_groupTabTemporaryState_option_checked_before__
-                                    __MSG_groupTab_temporaryAggressive_label__
-                                    __MSG_config_groupTabTemporaryState_option_checked_after__</option>
-                </select></label></p>
-      <p><label>__MSG_config_groupTabTemporaryStateForChildrenOfPinned_label__
-                <select id="groupTabTemporaryStateForChildrenOfPinned">
                   <option value="0">__MSG_config_groupTabTemporaryState_option_default__</option>
                   <option value="1">__MSG_config_groupTabTemporaryState_option_checked_before__
                                     __MSG_groupTab_temporary_label__
@@ -709,7 +687,7 @@
              ><input id="allUrlsPermissionGranted_ctrlTabTracking"
                      type="checkbox">
               __MSG_config_requestPermissions_allUrls_ctrlTabTracking__</label></p>
-    <div class="expert">
+    <div class="expert" id="ctrlTabSubItemsContainer">
       <p class="sub"><label class="has-checkbox"
                            ><input id="autoExpandOnTabSwitchingShortcuts"
                                    type="checkbox">
@@ -1021,12 +999,34 @@
               __MSG_config_fixupTreeOnTabVisibilityChanged_keep__</label></li>
       </ul>
     </fieldset>
+
+    <fieldset>
+      <legend>__MSG_config_insertNewChildAt_caption__</legend>
+      <ul>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertNewChildAt" value="-1">
+              __MSG_config_insertNewChildAt_noControl__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertNewChildAt" value="3">
+              __MSG_config_insertNewChildAt_nextToLastRelateTab__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertNewChildAt" value="0">
+              __MSG_config_insertNewChildAt_top__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertNewChildAt" value="1">
+              __MSG_config_insertNewChildAt_end__</label></li>
+      </ul>
+    </fieldset>
     </section>
 
 
     <section id="section-drag">
     <h1>__MSG_config_drag_caption__</h1>
-    <fieldset class="tabDragBehaviorConfigs">
+    <fieldset class="tabDragBehaviorConfigs" id="tabDragBehaviorConfigsGroup">
       <legend>__MSG_config_tabDragBehavior_caption__</legend>
       <p>__MSG_config_tabDragBehavior_description__</p>
       <table>
@@ -1132,6 +1132,23 @@
       </ul>
     </fieldset>
     <div class="expert">
+    <fieldset>
+      <legend>__MSG_config_insertDroppedTabsAt_caption__</legend>
+      <ul>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertDroppedTabsAt" value="-2">
+              __MSG_config_insertDroppedTabsAt_inherit__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertDroppedTabsAt" value="0">
+              __MSG_config_insertDroppedTabsAt_first__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertDroppedTabsAt" value="1">
+              __MSG_config_insertDroppedTabsAt_end__</label></li>
+      </ul>
+    </fieldset>
     <p><label class="has-checkbox"
              ><input id="autoExpandOnLongHover"
                      type="checkbox">
@@ -1147,6 +1164,10 @@
                          ><input id="autoExpandIntelligently"
                                  type="checkbox">
                           __MSG_config_autoExpandIntelligently_label__</label></p>
+    <p><label class="has-checkbox"
+             ><input id="ignoreTabDropNearSidebarArea"
+                     type="checkbox">
+              __MSG_config_ignoreTabDropNearSidebarArea_label__</label></p>
     </div>
     </section>
 
@@ -1372,7 +1393,7 @@
           <p><label class="has-checkbox"><input id="logFor-background/browser-action-menu" type="checkbox">background/browser-action-menu</label></p>
           <p><label class="has-checkbox"><input id="logFor-background/commands" type="checkbox">background/commands</label></p>
           <p><label class="has-checkbox"><input id="logFor-background/context-menu" type="checkbox">background/context-menu</label></p>
-          <p><label class="has-checkbox"><input id="logFor-background/handle-group-tabs" type="checkbox">background/handle-group-tabs</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/handle-tab-bunches" type="checkbox">background/handle-tab-bunches</label></p>
           <p><label class="has-checkbox"><input id="logFor-background/handle-misc" type="checkbox">background/handle-misc</label></p>
           <p><label class="has-checkbox"><input id="logFor-background/handle-moved-tabs" type="checkbox">background/handle-moved-tabs</label></p>
           <p><label class="has-checkbox"><input id="logFor-background/handle-new-tabs" type="checkbox">background/handle-new-tabs</label></p>
@@ -1406,6 +1427,7 @@
           <p><label class="has-checkbox"><input id="logFor-sidebar/size" type="checkbox">sidebar/size</label></p>
           <p><label class="has-checkbox"><input id="logFor-sidebar/subpanel" type="checkbox">sidebar/subpanel</label></p>
           <p><label class="has-checkbox"><input id="logFor-sidebar/tab-context-menu" type="checkbox">sidebar/tab-context-menu</label></p>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/tst-api-frontend" type="checkbox">sidebar/tst-api-frontend</label></p>
       </fieldset>
     </fieldset>
     <fieldset id="group-allConfigs" class="collapsible collapsed">

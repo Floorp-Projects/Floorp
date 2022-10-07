@@ -5,8 +5,6 @@
 <html class="left initializing sidebar">
   <head>
     <meta charset="UTF-8">
-    <style id="bgcolor" type="text/css"></style>
-    <script type="application/javascript" src="./bgcolor.js"></script>
     <script type="module" src="./index.js"></script>
     <script type="module" src="/common/handle-accel-key.js"></script>
     <link rel="stylesheet" type="text/css" href="./sidebar.css"/>
@@ -15,9 +13,11 @@
     <link id="style-loader" rel="stylesheet" type="text/css" href=""/>
     <style id="browser-theme-definition" type="text/css"></style>
     <style id="addons-style-rules" type="text/css"></style><!-- this is just a dummy to determine insertion position of actual style definitions -->
+    <style id="active-tree-rules" type="text/css"></style>
     <style id="user-style-rules" type="text/css"></style>
   </head>
   <body>
+    <div id="tabbar-top" class="vbox"><div class="extra-items-container"></div></div>
     <div id="tabbar-container">
     <div id="tabbar" class="vbox">
       <div id="all-tabs">
@@ -58,6 +58,7 @@
              draggable="true"><div class="extra-items-container"></div></div>
       </div>
     </div>
+    <div id="tabbar-bottom" class="vbox"><div class="extra-items-container"></div></div>
     </div>
     <div id="subpanel-container">
       <div id="subpanel-header">
@@ -107,15 +108,19 @@
       <span id="dummy-favicon-size-box"></span>
       <span id="dummy-tab-color-box"></span>
       <span id="dummy-highlight-color-box"></span>
+      <span id="dummy-shift-tabs-for-scrollbar-distance-box"></span>
       <span class="throbber"><span id="sync-throbber"></span></span>
       <tab-item id="dummy-tab" class="tab">
-        <tab-twisty class="twisty"></tab-twisty>
-        <tab-favicon class="favicon"><span class="throbber" id="conductor-throbber-container"><span id="conductor-throbber"></span></span></tab-favicon>
-        <tab-label class="label" value="-"></tab-label>
-        <tab-counter class="counter">0</tab-counter>
-        <tab-closebox class="close-box"></tab-closebox>
-        <span class="extra-items-container behind"></span>
-        <span class="extra-items-container front"></span>
+        <span class="extra-items-container indent"></span>
+        <tab-item-substance>
+          <tab-twisty class="twisty"></tab-twisty>
+          <tab-favicon class="favicon"><span class="throbber" id="conductor-throbber-container"><span id="conductor-throbber"></span></span></tab-favicon>
+          <tab-label class="label" value="-"></tab-label>
+          <tab-counter class="counter">0</tab-counter>
+          <tab-closebox class="close-box"></tab-closebox>
+          <span class="extra-items-container behind"></span>
+          <span class="extra-items-container front"></span>
+        </tab-item-substance>
       </tab-item>
     </ul>
     <div id="blocking-screen">
