@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '0813678bb72711a3fd4af222b5fdd965bd425f79',
+  'chromium_revision': '1d6f40f434ed7bed90078583695d075f6010e754',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -20,16 +20,16 @@ vars = {
 
   # By default, download the fuchsia sdk from the public sdk directory.
   'fuchsia_sdk_cipd_prefix': 'fuchsia/sdk/gn/',
-  'fuchsia_version': 'version:8.20220624.0.1',
+  'fuchsia_version': 'version:8.20220624.2.1',
 }
 
 deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@a247555e92a95489e8b51c0ddb2065d605aae716',
+    'https://chromium.googlesource.com/chromium/src/base@a719ceb30655e46a833f0667b1c2e48a2a96251a',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@c1a44ac54032b2eb90de6839fdd2787d53f886fc',
+    'https://chromium.googlesource.com/chromium/src/build@46f4dfdd1abc79208b13df8602ba0a081b1f781e',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@34f9ff8fd5f494bf2b886337e6ef6fcea414cb11',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -38,13 +38,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@b861feb32d649316b3a8559bcdd78bcc95be3ccc',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@b6af968340644a50cc2fb9d2bd62c9f1e3faae48',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@775321d999b99cb72824391e2c5b4c1b41fcc13e',
+    'https://chromium.googlesource.com/chromium/src/testing@1181f5b09340301d6f853853bb1ce9ff697ac414',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@f8a44f171e9596bd3e01204d4b251ec73266449c',
+    'https://chromium.googlesource.com/chromium/src/third_party@099c899d9e68da2a67445887208488fef6ebd386',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -133,7 +133,7 @@ deps = {
   'src/third_party/breakpad/breakpad':
     'https://chromium.googlesource.com/breakpad/breakpad.git@c4c43b80ea8854c57a4374ac32579b577172dc23',
   'src/third_party/catapult':
-    'https://chromium.googlesource.com/catapult.git@e1d679c11b2871009b67ef79e624a7b942b214cd',
+    'https://chromium.googlesource.com/catapult.git@61be685630e92a5fde84e7e5eb3676d4d9af560d',
   'src/third_party/ced/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/compact_enc_det.git@ba412eaaacd3186085babcd901679a48863c7dd5',
   },
@@ -142,7 +142,7 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@fa5ade41ee480003d9c5af6f43567ba22e4e17e6',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@d9a9c40738a9408a305a591a270e93db31ebcf82',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@0a2356cd39de6603f25e49e105ffdcec505bbde0',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@b86aef09f324c87e324365980422e56f6533454f',
   'src/third_party/findbugs': {
@@ -224,7 +224,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@8209fb9b9a4156232aa87ad4621e541bfb777ec1',
+    'https://android.googlesource.com/platform/external/perfetto.git@588d85dc56ee732822f5ba6c09ca0bf43a7a7c24',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@ca89bed50dbc5fe2abef50c5f36924bb1da6d1f6',
   'src/third_party/libyuv':
@@ -275,7 +275,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@ece1a0d099001d63c8dcaf56cc2a9499a662df9f',
+    'https://chromium.googlesource.com/chromium/src/tools@c0acb298a8b7213442ef8aca0d9484b5a7131b40',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
