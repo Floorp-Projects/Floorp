@@ -56,6 +56,10 @@ class EncodedImageDataExtractor {
   // frames. Will be invoked before that receiver will start receive data.
   virtual void AddParticipantInCall() = 0;
 
+  // Invoked by framework when it is required to remove receiver for frames.
+  // Will be invoked after that receiver will stop receiving data.
+  virtual void RemoveParticipantInCall() = 0;
+
   // Returns encoded image id, extracted from payload and also encoded image
   // with its original payload. For concatenated spatial layers it should be the
   // same id.

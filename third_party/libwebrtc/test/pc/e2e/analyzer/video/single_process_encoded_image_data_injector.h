@@ -57,6 +57,7 @@ class SingleProcessEncodedImageDataInjector
     expected_receivers_count_ = expected_receivers_count;
   }
   void AddParticipantInCall() override;
+  void RemoveParticipantInCall() override;
   EncodedImageExtractionResult ExtractData(const EncodedImage& source) override;
 
  private:
