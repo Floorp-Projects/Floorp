@@ -39,9 +39,6 @@ extern "C" {
 - (void)testBuilder {
   id factoryMock = OCMStrictClassMock([RTC_OBJC_TYPE(RTCPeerConnectionFactory) class]);
   OCMExpect([factoryMock alloc]).andReturn(factoryMock);
-#ifdef HAVE_NO_MEDIA
-  RTC_UNUSED([[[factoryMock expect] andReturn:factoryMock] initWithNoMedia]);
-#else
   RTC_UNUSED([[[[factoryMock expect] andReturn:factoryMock] ignoringNonObjectArgs]
       initWithNativeAudioEncoderFactory:nullptr
               nativeAudioDecoderFactory:nullptr
@@ -49,7 +46,6 @@ extern "C" {
               nativeVideoDecoderFactory:nullptr
                       audioDeviceModule:nullptr
                   audioProcessingModule:nullptr]);
-#endif
   RTCPeerConnectionFactoryBuilder* builder = [[RTCPeerConnectionFactoryBuilder alloc] init];
   RTC_OBJC_TYPE(RTCPeerConnectionFactory)* peerConnectionFactory =
       [builder createPeerConnectionFactory];
@@ -60,9 +56,6 @@ extern "C" {
 - (void)testDefaultComponentsBuilder {
   id factoryMock = OCMStrictClassMock([RTC_OBJC_TYPE(RTCPeerConnectionFactory) class]);
   OCMExpect([factoryMock alloc]).andReturn(factoryMock);
-#ifdef HAVE_NO_MEDIA
-  RTC_UNUSED([[[factoryMock expect] andReturn:factoryMock] initWithNoMedia]);
-#else
   RTC_UNUSED([[[[factoryMock expect] andReturn:factoryMock] ignoringNonObjectArgs]
       initWithNativeAudioEncoderFactory:nullptr
               nativeAudioDecoderFactory:nullptr
@@ -70,7 +63,6 @@ extern "C" {
               nativeVideoDecoderFactory:nullptr
                       audioDeviceModule:nullptr
                   audioProcessingModule:nullptr]);
-#endif
   RTCPeerConnectionFactoryBuilder* builder = [RTCPeerConnectionFactoryBuilder defaultBuilder];
   RTC_OBJC_TYPE(RTCPeerConnectionFactory)* peerConnectionFactory =
       [builder createPeerConnectionFactory];
