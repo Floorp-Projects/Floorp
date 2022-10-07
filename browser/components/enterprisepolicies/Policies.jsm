@@ -365,6 +365,7 @@ var Policies = {
     onBeforeUIStartup(manager, param) {
       if (param) {
         blockAboutPage(manager, "about:support");
+        manager.disallowFeature("aboutSupport");
       }
     },
   },
