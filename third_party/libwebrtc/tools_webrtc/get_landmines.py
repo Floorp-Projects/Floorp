@@ -43,6 +43,7 @@ def print_landmines():  # pylint: disable=invalid-name
     print('Clobber due to Win Debug linking errors in '
           'https://codereview.webrtc.org/2832063003/')
     print('Clobber win x86 bots (issues with isolated files).')
+    print('Clobber because of libc++ issue')
   if host_os() == 'mac':
     print('Clobber due to iOS compile errors (crbug.com/694721)')
     print('Clobber to unblock https://codereview.webrtc.org/2709573003')
