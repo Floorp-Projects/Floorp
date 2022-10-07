@@ -1119,6 +1119,8 @@ rtc_library("neteq_test_tools") {
   ]
 
   deps = [
+    ":neteq_tools",
+    ":neteq_tools_minimal",
     ":pcm16b",
     "../../api:array_view",
     "../../api:rtp_headers",
@@ -1132,11 +1134,6 @@ rtc_library("neteq_test_tools") {
     "../rtp_rtcp:rtp_rtcp_format",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-
-  public_deps = [
-    ":neteq_tools",
-    ":neteq_tools_minimal",
-  ]
 
   if (rtc_enable_protobuf) {
     sources += [
@@ -1163,6 +1160,8 @@ rtc_library("neteq_tools") {
   ]
 
   deps = [
+    ":neteq_input_audio_tools",
+    ":neteq_tools_minimal",
     "..:module_api_public",
     "../../api:array_view",
     "../../api/audio_codecs:audio_codecs_api",
@@ -1176,11 +1175,6 @@ rtc_library("neteq_tools") {
   absl_deps = [
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
-  ]
-
-  public_deps = [
-    ":neteq_input_audio_tools",
-    ":neteq_tools_minimal",
   ]
 }
 
@@ -1462,6 +1456,7 @@ if (rtc_include_tests) {
     deps = [
       ":audio_coding",
       ":neteq_tools",
+      ":neteq_tools_minimal",
       "../../api:scoped_refptr",
       "../../api/audio_codecs:audio_codecs_api",
       "../../api/audio_codecs:builtin_audio_decoder_factory",
@@ -1484,7 +1479,9 @@ if (rtc_include_tests) {
 
     deps = [
       ":audio_coding",
+      ":neteq_input_audio_tools",
       ":neteq_tools",
+      ":neteq_tools_minimal",
       "../../api/audio:audio_frame_api",
       "../../api/audio_codecs:audio_codecs_api",
       "../../api/audio_codecs:builtin_audio_decoder_factory",
@@ -1521,15 +1518,16 @@ if (rtc_include_tests) {
                ":isac",
                ":isac_fix",
                ":neteq",
+               ":neteq_input_audio_tools",
                ":neteq_tools",
-               "../../test:fileutils",
                "../../api/audio_codecs:audio_codecs_api",
                "../../api/audio_codecs/opus:audio_encoder_opus",
                "../../common_audio",
                "../../rtc_base/system:arch",
+               "../../test:fileutils",
                "../../test:test_main",
-               "//testing/gtest",
                "../../test:test_support",
+               "//testing/gtest",
              ] + audio_coding_deps
 
       data = audio_decoder_unittests_resources
@@ -1555,6 +1553,9 @@ if (rtc_include_tests) {
       visibility += webrtc_default_visibility
       defines = audio_codec_defines
       deps = [
+        ":neteq_input_audio_tools",
+        ":neteq_tools",
+        ":neteq_tools_minimal",
         "../../rtc_base:checks",
         "../../rtc_base:refcount",
         "../../test:fileutils",
@@ -1585,6 +1586,7 @@ if (rtc_include_tests) {
       deps = [
         ":neteq_test_factory",
         ":neteq_test_tools",
+        ":neteq_tools_minimal",
         "../../rtc_base:stringutils",
         "../../system_wrappers:field_trial",
         "../../test:field_trial",
@@ -1689,7 +1691,9 @@ if (rtc_include_tests) {
       deps = [
         ":default_neteq_factory",
         ":neteq",
+        ":neteq_input_audio_tools",
         ":neteq_test_tools",
+        ":neteq_tools_minimal",
         "../../api/audio_codecs:builtin_audio_decoder_factory",
         "../../api/neteq:neteq_api",
         "../../rtc_base:checks",
@@ -1764,6 +1768,7 @@ if (rtc_include_tests) {
       deps = [
         ":neteq",
         ":neteq_test_tools",
+        ":neteq_tools_minimal",
         ":pcm16b",
         "//testing/gtest",
         "//third_party/abseil-cpp/absl/flags:flag",
@@ -2066,8 +2071,11 @@ if (rtc_include_tests) {
         ":legacy_encoded_audio_frame",
         ":mocks",
         ":neteq",
+        ":neteq_input_audio_tools",
         ":neteq_test_support",
         ":neteq_test_tools",
+        ":neteq_tools",
+        ":neteq_tools_minimal",
         ":pcm16b",
         ":red",
         ":webrtc_cng",
