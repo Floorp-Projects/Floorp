@@ -270,15 +270,6 @@ nsPrintJob::nsPrintJob(nsIDocumentViewerPrint& aDocViewerPrint,
   mDisallowSelectionPrint =
       root &&
       root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdisallowselectionprint);
-
-  if (nsPIDOMWindowOuter* window = aOriginalDoc.GetWindow()) {
-    if (nsCOMPtr<nsIWebBrowserChrome> wbc = window->GetWebBrowserChrome()) {
-      // We only get this in order to skip opening the progress dialog when
-      // the window is modal.  Once the platform code stops opening the
-      // progress dialog (bug 1558907), we can get rid of this.
-      wbc->IsWindowModal(&mIsForModalWindow);
-    }
-  }
 }
 
 //-----------------------------------------------------------------
