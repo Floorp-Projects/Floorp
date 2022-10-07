@@ -4350,6 +4350,8 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
 
       mPresContext->FlushFontFeatureValues();
 
+      mPresContext->FlushFontPaletteValues();
+
       // Flush any requested SMIL samples.
       if (mDocument->HasAnimationController()) {
         mDocument->GetAnimationController()->FlushResampleRequests();
@@ -9407,6 +9409,8 @@ void PresShell::WillDoReflow() {
   mPresContext->FlushCounterStyles();
 
   mPresContext->FlushFontFeatureValues();
+
+  mPresContext->FlushFontPaletteValues();
 
   mLastReflowStart = GetPerformanceNowUnclamped();
 }

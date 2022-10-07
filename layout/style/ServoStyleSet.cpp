@@ -1225,6 +1225,14 @@ ServoStyleSet::BuildFontFeatureValueSet() {
   return set.forget();
 }
 
+already_AddRefed<gfx::FontPaletteValueSet>
+ServoStyleSet::BuildFontPaletteValueSet() {
+  MOZ_ASSERT(!StylistNeedsUpdate());
+  RefPtr<gfx::FontPaletteValueSet> set =
+      Servo_StyleSet_BuildFontPaletteValueSet(mRawSet.get());
+  return set.forget();
+}
+
 already_AddRefed<ComputedStyle> ServoStyleSet::ResolveForDeclarations(
     const ComputedStyle* aParentOrNull,
     const RawServoDeclarationBlock* aDeclarations) {

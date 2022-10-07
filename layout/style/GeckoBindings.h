@@ -19,6 +19,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/PreferenceSheet.h"
 #include "nsStyleStruct.h"
+#include "COLRFonts.h"
 
 class nsAtom;
 class nsIURI;
@@ -286,6 +287,22 @@ void Gecko_AppendAlternateValues(nsFont* font, uint32_t alternate_name,
                                  nsAtom* atom);
 
 void Gecko_CopyAlternateValuesFrom(nsFont* dest, const nsFont* src);
+
+// The FontPaletteValueSet returned from this function has zero reference.
+mozilla::gfx::FontPaletteValueSet* Gecko_ConstructFontPaletteValueSet();
+
+mozilla::gfx::FontPaletteValueSet::PaletteValues*
+Gecko_AppendPaletteValueHashEntry(
+    mozilla::gfx::FontPaletteValueSet* aPaletteValueSet, nsAtom* aFamily,
+    nsAtom* aName);
+
+void Gecko_SetFontPaletteBase(
+    mozilla::gfx::FontPaletteValueSet::PaletteValues* aValues,
+    int32_t aBasePaletteIndex);
+
+void Gecko_SetFontPaletteOverride(
+    mozilla::gfx::FontPaletteValueSet::PaletteValues* aValues, int32_t aIndex,
+    mozilla::StyleRGBA aColor);
 
 // Visibility style
 void Gecko_SetImageOrientation(nsStyleVisibility* aVisibility,

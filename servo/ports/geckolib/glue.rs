@@ -41,12 +41,14 @@ use style::gecko_bindings::bindings::nsAString;
 use style::gecko_bindings::bindings::Gecko_AddPropertyToSet;
 use style::gecko_bindings::bindings::Gecko_AppendPropertyValuePair;
 use style::gecko_bindings::bindings::Gecko_ConstructFontFeatureValueSet;
+use style::gecko_bindings::bindings::Gecko_ConstructFontPaletteValueSet;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateFinalKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateInitialKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateKeyframeAtStart;
 use style::gecko_bindings::bindings::Gecko_HaveSeenPtr;
 use style::gecko_bindings::structs;
 use style::gecko_bindings::structs::gfxFontFeatureValueSet;
+use style::gecko_bindings::structs::gfx::FontPaletteValueSet;
 use style::gecko_bindings::structs::ipc::ByteBuf;
 use style::gecko_bindings::structs::nsAtom;
 use style::gecko_bindings::structs::nsCSSCounterDesc;
@@ -6557,7 +6559,36 @@ pub extern "C" fn Servo_StyleSet_BuildFontFeatureValueSet(
     set
 }
 
-/// TODO FontPaletteValues?
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_BuildFontPaletteValueSet(
+    raw_data: &RawServoStyleSet,
+) -> *mut FontPaletteValueSet {
+    let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
+
+    let global_style_data = &*GLOBAL_STYLE_DATA;
+    let guard = global_style_data.shared_lock.read();
+
+    let has_rule = data
+        .stylist
+        .iter_extra_data_origins()
+        .any(|(d, _)| !d.font_palette_values.is_empty());
+
+    if !has_rule {
+        return ptr::null_mut();
+    }
+
+    let font_palette_values_iter = data
+        .stylist
+        .iter_extra_data_origins_rev()
+        .flat_map(|(d, _)| d.font_palette_values.iter());
+
+    let set = unsafe { Gecko_ConstructFontPaletteValueSet() };
+    for &(ref src, _) in font_palette_values_iter {
+        let rule = src.read_with(&guard);
+        rule.to_gecko_palette_value_set(set);
+    }
+    set
+}
 
 #[no_mangle]
 pub extern "C" fn Servo_StyleSet_ResolveForDeclarations(

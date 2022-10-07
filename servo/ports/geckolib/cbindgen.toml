@@ -309,6 +309,8 @@ renaming_overrides_prefixing = true
 "ServoTraversalFlags" = "ServoTraversalFlags"
 "ServoStyleSetSizes" = "ServoStyleSetSizes"
 "BeforeFlag" = "StyleEasingBeforeFlag"
+"FontPaletteValueSet" = "gfx::FontPaletteValueSet"
+"PaletteValues" = "gfx::FontPaletteValueSet::PaletteValues"
 
 [export.body]
 "CSSPixelLength" = """
