@@ -332,6 +332,7 @@ rtc_library("call") {
     "../rtc_base/experiments:field_trial_parser",
     "../rtc_base/network:sent_packet",
     "../rtc_base/system:no_unique_address",
+    "../rtc_base/task_utils:repeating_task",
     "../system_wrappers",
     "../system_wrappers:field_trial",
     "../system_wrappers:metrics",

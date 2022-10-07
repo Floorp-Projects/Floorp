@@ -57,6 +57,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/system/no_unique_address.h"
+#include "rtc_base/task_utils/repeating_task.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
@@ -203,7 +204,6 @@ class Call final : public webrtc::Call,
   Call(Clock* clock,
        const Call::Config& config,
        std::unique_ptr<RtpTransportControllerSendInterface> transport_send,
-       rtc::scoped_refptr<SharedModuleThread> module_process_thread,
        TaskQueueFactory* task_queue_factory);
   ~Call() override;
 
@@ -378,7 +378,6 @@ class Call final : public webrtc::Call,
   RTC_NO_UNIQUE_ADDRESS SequenceChecker send_transport_sequence_checker_;
 
   const int num_cpu_cores_;
-  const rtc::scoped_refptr<SharedModuleThread> module_process_thread_;
   const std::unique_ptr<CallStats> call_stats_;
   const std::unique_ptr<BitrateAllocator> bitrate_allocator_;
   const Call::Config config_ RTC_GUARDED_BY(worker_thread_);
@@ -456,6 +455,7 @@ class Call final : public webrtc::Call,
   std::atomic<uint32_t> configured_max_padding_bitrate_bps_{0};
 
   ReceiveSideCongestionController receive_side_cc_;
+  RepeatingTaskHandle receive_side_cc_periodic_task_;
 
   const std::unique_ptr<ReceiveTimeCalculator> receive_time_calculator_;
 
@@ -502,7 +502,7 @@ Call* Call::Create(const Call::Config& config) {
 
 Call* Call::Create(const Call::Config& config,
                    Clock* clock,
-                   rtc::scoped_refptr<SharedModuleThread> call_thread,
+                   rtc::scoped_refptr<SharedModuleThread> /*call_thread*/,
                    std::unique_ptr<ProcessThread> pacer_thread) {
   RTC_DCHECK(config.task_queue_factory);
 
@@ -513,17 +513,17 @@ Call* Call::Create(const Call::Config& config,
   return new internal::Call(
       clock, config,
       transport_controller_factory_.Create(transportConfig, clock),
-      std::move(call_thread), config.task_queue_factory);
+      config.task_queue_factory);
 }
 
 Call* Call::Create(const Call::Config& config,
                    Clock* clock,
-                   rtc::scoped_refptr<SharedModuleThread> call_thread,
+                   rtc::scoped_refptr<SharedModuleThread> /*call_thread*/,
                    std::unique_ptr<RtpTransportControllerSendInterface>
                        transportControllerSend) {
   RTC_DCHECK(config.task_queue_factory);
   return new internal::Call(clock, config, std::move(transportControllerSend),
-                            std::move(call_thread), config.task_queue_factory);
+                            config.task_queue_factory);
 }
 
 class SharedModuleThread::Impl {
@@ -785,7 +785,6 @@ void Call::SendStats::SetMinAllocatableRate(BitrateAllocationLimits limits) {
 Call::Call(Clock* clock,
            const Call::Config& config,
            std::unique_ptr<RtpTransportControllerSendInterface> transport_send,
-           rtc::scoped_refptr<SharedModuleThread> module_process_thread,
            TaskQueueFactory* task_queue_factory)
     : clock_(clock),
       task_queue_factory_(task_queue_factory),
@@ -800,7 +799,6 @@ Call::Call(Clock* clock,
                                                               worker_thread_)
                        : nullptr),
       num_cpu_cores_(CpuInfo::DetectNumberOfCores()),
-      module_process_thread_(std::move(module_process_thread)),
       call_stats_(new CallStats(clock_, worker_thread_)),
       bitrate_allocator_(new BitrateAllocator(this)),
       config_(config),
@@ -838,10 +836,11 @@ Call::Call(Clock* clock,
 
   call_stats_->RegisterStatsObserver(&receive_side_cc_);
 
-  module_process_thread_->process_thread()->RegisterModule(
-      receive_side_cc_.GetRemoteBitrateEstimator(true), RTC_FROM_HERE);
-  module_process_thread_->process_thread()->RegisterModule(&receive_side_cc_,
-                                                           RTC_FROM_HERE);
+  ReceiveSideCongestionController* receive_side_cc = &receive_side_cc_;
+  receive_side_cc_periodic_task_ = RepeatingTaskHandle::Start(
+      worker_thread_,
+      [receive_side_cc] { return receive_side_cc->MaybeProcess(); },
+      TaskQueueBase::DelayPrecision::kLow, clock_);
 }
 
 Call::~Call() {
@@ -853,9 +852,7 @@ Call::~Call() {
   RTC_CHECK(audio_receive_streams_.empty());
   RTC_CHECK(video_receive_streams_.empty());
 
-  module_process_thread_->process_thread()->DeRegisterModule(
-      receive_side_cc_.GetRemoteBitrateEstimator(true));
-  module_process_thread_->process_thread()->DeRegisterModule(&receive_side_cc_);
+  receive_side_cc_periodic_task_.Stop();
   call_stats_->DeregisterStatsObserver(&receive_side_cc_);
   send_stats_.SetFirstPacketTime(transport_send_->GetFirstPacketTime());
 
@@ -876,7 +873,6 @@ void Call::EnsureStarted() {
   // off being kicked off on request rather than in the ctor.
   transport_send_->RegisterTargetTransferRateObserver(this);
 
-  module_process_thread_->EnsureStarted();
   transport_send_->EnsureStarted();
 }
 
