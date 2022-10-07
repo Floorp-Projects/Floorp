@@ -1374,6 +1374,19 @@ import org.mozilla.geckoview.SessionTextInput.EditableListener.IMEState;
     }
   }
 
+  @Override // SessionTextInput.EditableClient
+  public void insertImage(final @NonNull byte[] data, final @NonNull String mimeType) {
+    if (mFocusedChild == null) {
+      return;
+    }
+
+    try {
+      mFocusedChild.onImeInsertImage(data, mimeType);
+    } catch (final RemoteException e) {
+      Log.e(LOGTAG, "Remote call to insert image failed", e);
+    }
+  }
+
   private void geckoSetIcHandler(final Handler newHandler) {
     // On Gecko or binder thread.
     mIcPostHandler.post(
@@ -1896,6 +1909,11 @@ import org.mozilla.geckoview.SessionTextInput.EditableListener.IMEState;
 
     if ((flags & SessionTextInput.EditableListener.IME_FLAG_PRIVATE_BROWSING) != 0) {
       outAttrs.imeOptions |= InputMethods.IME_FLAG_NO_PERSONALIZED_LEARNING;
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1 && typeHint.length() == 0) {
+      // contenteditable allows image insertion.
+      outAttrs.contentMimeTypes = new String[] {"image/gif", "image/jpeg", "image/png"};
     }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {

@@ -38,4 +38,7 @@ interface IGeckoEditableChild {
 
     // Commit current composition.
     void onImeRequestCommit();
+
+    // Insert requested image.
+    void onImeInsertImage(in byte[] data, in String mimeType);
 }

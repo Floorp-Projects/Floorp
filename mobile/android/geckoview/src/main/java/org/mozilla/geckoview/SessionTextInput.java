@@ -84,6 +84,8 @@ public final class SessionTextInput {
     void postToInputConnection(@NonNull Runnable runnable);
 
     void requestCursorUpdates(@CursorMonitorMode int requestMode);
+
+    void insertImage(@NonNull byte[] data, @NonNull String mimeType);
   }
 
   // Interface to access GeckoInputConnection from GeckoEditable.
