@@ -953,13 +953,12 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
 
     LOG(("ScriptLoadRequest (%p): Using preload request", request.get()));
 
-    // https://wicg.github.io/import-maps/#document-acquiring-import-maps
-    // If this preload request is for a module load, set acquiring import maps
-    // to false.
+    // https://whatpr.org/html/8075/webappapis.html#fetch-a-module-script-tree
+    // Step 1. Disallow further import maps given settings object.
     if (request->IsModuleRequest()) {
-      LOG(("ScriptLoadRequest (%p): Set acquiring import maps to false",
+      LOG(("ScriptLoadRequest (%p): Disallow further import maps.",
            request.get()));
-      mModuleLoader->SetAcquiringImportMaps(false);
+      mModuleLoader->DisallowImportMaps();
     }
 
     // It's possible these attributes changed since we started the preload so
@@ -1153,9 +1152,9 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   request->mBaseURL = mDocument->GetDocBaseURI();
 
   if (request->IsModuleRequest()) {
-    // https://wicg.github.io/import-maps/#document-acquiring-import-maps
-    // Set acquiring import maps to false for inline modules.
-    mModuleLoader->SetAcquiringImportMaps(false);
+    // https://whatpr.org/html/8075/webappapis.html#fetch-an-inline-module-script-graph
+    // Step 1. Disallow further import maps given settings object.
+    mModuleLoader->DisallowImportMaps();
 
     ModuleLoadRequest* modReq = request->AsModuleRequest();
     if (aElement->GetParserCreated() != NOT_FROM_PARSER) {
@@ -1185,22 +1184,21 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   }
 
   if (request->IsImportMapRequest()) {
-    // https://wicg.github.io/import-maps/#integration-prepare-a-script
-    // If the script's type is "importmap":
-    //
-    // Step 1: If the element's node document's acquiring import maps is false,
-    // then queue a task to fire an event named error at the element, and
-    // return.
-    if (!mModuleLoader->GetAcquiringImportMaps()) {
-      NS_WARNING("ScriptLoader: acquiring import maps is false.");
+    // https://whatpr.org/html/8075/scripting.html#prepare-the-script-element
+    // Step 31.2 type is "importmap":
+    //   Step 1. If el's relevant global object's import maps allowed is false,
+    //   then queue an element task on the DOM manipulation task source given el
+    //   to fire an event named error at el, and return.
+    if (!mModuleLoader->IsImportMapAllowed()) {
+      NS_WARNING("ScriptLoader: import maps allowed is false.");
       NS_DispatchToCurrentThread(
           NewRunnableMethod("nsIScriptElement::FireErrorEvent", aElement,
                             &nsIScriptElement::FireErrorEvent));
       return false;
     }
 
-    // Step 2: Set the element's node document's acquiring import maps to false.
-    mModuleLoader->SetAcquiringImportMaps(false);
+    //   Step 2. Set el's relevant global object's import maps allowed to false.
+    mModuleLoader->DisallowImportMaps();
 
     UniquePtr<ImportMap> importMap = mModuleLoader->ParseImportMap(request);
 

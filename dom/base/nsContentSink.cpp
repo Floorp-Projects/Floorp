@@ -329,11 +329,9 @@ nsresult nsContentSink::ProcessLinkFromHeader(const net::LinkHeader& aHeader) {
     }
 
     if (linkTypes & LinkStyle::eMODULE_PRELOAD) {
-      // https://wicg.github.io/import-maps/#wait-for-import-maps
-      // Step 1.2: Set document’s acquiring import maps to false.
-      // When fetch a modulepreload module script graph.
-      mDocument->ScriptLoader()->GetModuleLoader()->SetAcquiringImportMaps(
-          false);
+      // https://whatpr.org/html/8075/webappapis.html#fetch-a-modulepreload-module-script-graph
+      // Step 1. Disallow further import maps given settings object.
+      mDocument->ScriptLoader()->GetModuleLoader()->DisallowImportMaps();
     }
   }
 
