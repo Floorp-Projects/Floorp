@@ -47,12 +47,7 @@ NodeChannel::NodeChannel(const NodeName& aName,
       mOtherPid(aPid),
       mChannel(std::move(aChannel)) {}
 
-NodeChannel::~NodeChannel() {
-  AssertIOThread();
-  if (!mClosed) {
-    mChannel->Close();
-  }
-}
+NodeChannel::~NodeChannel() { Close(); }
 
 // Called when the NodeChannel's refcount drops to `0`.
 void NodeChannel::Destroy() {
@@ -108,7 +103,7 @@ void NodeChannel::Start(bool aCallConnect) {
 
     // Handle any events the previous listener had queued up. Make sure to stop
     // if an error causes our channel to become closed.
-    while (!pending.empty() && !mClosed) {
+    while (!pending.empty() && mState != State::Closed) {
       OnMessageReceived(std::move(pending.front()));
       pending.pop();
     }
@@ -118,11 +113,10 @@ void NodeChannel::Start(bool aCallConnect) {
 void NodeChannel::Close() {
   AssertIOThread();
 
-  if (!mClosed) {
+  if (mState.exchange(State::Closed) != State::Closed) {
     mChannel->Close();
     mChannel->set_listener(mExistingListener);
   }
-  mClosed = true;
 }
 
 void NodeChannel::SetOtherPid(base::ProcessId aNewPid) {
@@ -141,7 +135,7 @@ void NodeChannel::SetOtherPid(base::ProcessId aNewPid) {
 void NodeChannel::SetMachTaskPort(task_t aTask) {
   AssertIOThread();
 
-  if (!mClosed) {
+  if (mState != State::Closed) {
     mChannel->SetOtherMachTask(aTask);
   }
 }
@@ -205,28 +199,31 @@ void NodeChannel::SendMessage(UniquePtr<IPC::Message> aMessage) {
   }
   aMessage->AssertAsLargeAsHeader();
 
-  XRE_GetIOMessageLoop()->PostTask(
-      NewRunnableMethod<StoreCopyPassByRRef<UniquePtr<IPC::Message>>>(
-          "NodeChannel::DoSendMessage", this, &NodeChannel::DoSendMessage,
-          std::move(aMessage)));
-}
-
-void NodeChannel::DoSendMessage(UniquePtr<IPC::Message> aMessage) {
 #ifdef FUZZING_SNAPSHOT
   if (mBlockSendRecv) {
     return;
   }
 #endif
 
-  AssertIOThread();
-  if (mClosed) {
+  if (mState != State::Active) {
     NS_WARNING("Dropping message as channel has been closed");
     return;
   }
 
+  // NOTE: As this is not guaranteed to be running on the I/O thread, the
+  // channel may have become closed since we checked above. IPC::Channel will
+  // handle that and return `false` here, so we can re-check `mState`.
   if (!mChannel->Send(std::move(aMessage))) {
     NS_WARNING("Call to Send() failed");
-    OnChannelError();
+
+    // If we're still active, update `mState` to `State::Closing`, and dispatch
+    // a runnable to actually close our channel.
+    State expected = State::Active;
+    if (mState.compare_exchange_strong(expected, State::Closing)) {
+      XRE_GetIOMessageLoop()->PostTask(
+          NewRunnableMethod("NodeChannel::CloseForSendError", this,
+                            &NodeChannel::OnChannelError));
+    }
   }
 }
 
@@ -315,10 +312,14 @@ void NodeChannel::OnChannelConnected(base::ProcessId aPeerPid) {
 void NodeChannel::OnChannelError() {
   AssertIOThread();
 
+  State prev = mState.exchange(State::Closed);
+  if (prev == State::Closed) {
+    return;
+  }
+
   // Clean up the channel and make sure we're no longer the active listener.
   mChannel->Close();
   MOZ_ALWAYS_TRUE(this == mChannel->set_listener(mExistingListener));
-  mClosed = true;
 
   // Tell our listener about the error.
   mListener->OnChannelError(mName);

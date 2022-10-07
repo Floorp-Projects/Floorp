@@ -108,6 +108,7 @@ class NodeChannel final : public IPC::Channel::Listener {
   void SetName(const NodeName& aNewName) { mName = aNewName; }
 
 #ifdef FUZZING_SNAPSHOT
+  // MUST BE CALLED FROM THE IO THREAD.
   const NodeName& GetName() { return mName; }
 #endif
 
@@ -127,7 +128,6 @@ class NodeChannel final : public IPC::Channel::Listener {
   void SetOtherPid(base::ProcessId aNewPid);
 
   void SendMessage(UniquePtr<IPC::Message> aMessage);
-  void DoSendMessage(UniquePtr<IPC::Message> aMessage);
 
   // IPC::Channel::Listener implementation
   void OnMessageReceived(UniquePtr<IPC::Message> aMessage) override;
@@ -150,15 +150,20 @@ class NodeChannel final : public IPC::Channel::Listener {
   // be read from other threads.
   std::atomic<base::ProcessId> mOtherPid;
 
-  // WARNING: This must only be accessed on the IO thread.
-  mozilla::UniquePtr<IPC::Channel> mChannel;
+  // WARNING: Most methods on the IPC::Channel are only safe to call on the IO
+  // thread, however it is safe to call `Send()` and `IsClosed()` from other
+  // threads. See IPC::Channel's documentation for details.
+  const mozilla::UniquePtr<IPC::Channel> mChannel;
 
-  // WARNING: This must only be accessed on the IO thread.
-  bool mClosed = false;
+  // The state will start out as `State::Active`, and will only transition to
+  // `State::Closed` on the IO thread. If a Send fails, the state will
+  // transition to `State::Closing`, and a runnable will be dispatched to the
+  // I/O thread to notify callbacks.
+  enum class State { Active, Closing, Closed };
+  std::atomic<State> mState = State::Active;
 
 #ifdef FUZZING_SNAPSHOT
-  // WARNING: This must only be accessed on the IO thread.
-  bool mBlockSendRecv = false;
+  std::atomic<bool> mBlockSendRecv = false;
 #endif
 
   // WARNING: Must only be accessed on the IO thread.
