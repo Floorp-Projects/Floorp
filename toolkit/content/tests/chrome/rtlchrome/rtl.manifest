@@ -1,5 +1,0 @@
-content rtlchrome /
-
-# Override intl.css with our own CSS file
-override chrome://global/locale/intl.css chrome://rtlchrome/rtl.css
-override chrome://global/locale/global.dtd chrome://rtlchrome/rtl.dtd

@@ -55,7 +55,6 @@ def test(mod, path, entity=None):
     if mod == "dom":
         # keep this file list in sync with jar.mn
         if path in (
-            "chrome/global.dtd",
             "chrome/accessibility/AccessFu.properties",
             "chrome/dom/dom.properties",
         ):

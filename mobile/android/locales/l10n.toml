@@ -126,10 +126,6 @@ exclude-multi-locale = [
 
 # hand-picked paths from toolkit, keep in sync with jar.mn
 [[paths]]
-    reference = "dom/locales/en-US/chrome/global.dtd"
-    l10n = "{l}dom/chrome/global.dtd"
-
-[[paths]]
     reference = "dom/locales/en-US/chrome/accessibility/AccessFu.properties"
     l10n = "{l}dom/chrome/accessibility/AccessFu.properties"
 
