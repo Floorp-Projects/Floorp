@@ -43,6 +43,9 @@ static int FuzzingRunCOLRv1(const uint8_t* data, size_t size) {
   RefPtr sf = new MockScaledFont(uf, hb_data_font);
   Float f2p = kPixelSize / hb_face_get_upem(hb_data_face);
 
+  UniquePtr<nsTArray<sRGBColor>> colorPalette =
+      COLRFonts::SetupColorPalette(hb_data_face, nullptr, nullptr, "dummy"_ns);
+
   for (unsigned i = 0; i <= glyph_count; ++i) {
     if (COLRFonts::GetColrTableVersion(colr) == 1) {
       Rect bounds =
@@ -51,15 +54,16 @@ static int FuzzingRunCOLRv1(const uint8_t* data, size_t size) {
       if (paintGraph) {
         dt->PushClipRect(bounds);
         COLRFonts::PaintGlyphGraph(colr, hb_data_font, paintGraph, dt, nullptr,
-                                   sf, DrawOptions(), sRGBColor(), Point(), i,
-                                   f2p);
+                                   sf, DrawOptions(), Point(), sRGBColor(),
+                                   colorPalette.get(), i, f2p);
         dt->PopClip();
       }
     }
     const auto* layers = COLRFonts::GetGlyphLayers(colr, i);
     if (layers) {
       COLRFonts::PaintGlyphLayers(colr, hb_data_face, layers, dt, nullptr, sf,
-                                  DrawOptions(), sRGBColor(), Point());
+                                  DrawOptions(), Point(), sRGBColor(),
+                                  colorPalette.get());
     }
   }
 
