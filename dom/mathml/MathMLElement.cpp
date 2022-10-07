@@ -407,8 +407,7 @@ void MathMLElement::MapMathMLAttributesInto(
     aDecls.Document()->WarnOnceAbout(
         dom::DeprecatedOperations::eMathML_DeprecatedScriptminsizeAttribute);
     nsCSSValue scriptMinSize;
-    ParseNumericValue(value->GetStringValue(), scriptMinSize,
-                      PARSE_ALLOW_UNITLESS | CONVERT_UNITLESS_TO_PERCENT,
+    ParseNumericValue(value->GetStringValue(), scriptMinSize, 0,
                       aDecls.Document());
 
     if (scriptMinSize.GetUnit() == eCSSUnit_Percent) {
@@ -456,8 +455,7 @@ void MathMLElement::MapMathMLAttributesInto(
       !aDecls.PropertyIsSet(eCSSProperty_font_size)) {
     auto str = value->GetStringValue();
     nsCSSValue fontSize;
-    uint32_t flags = PARSE_ALLOW_UNITLESS | CONVERT_UNITLESS_TO_PERCENT;
-    ParseNumericValue(str, fontSize, flags, nullptr);
+    ParseNumericValue(str, fontSize, 0, nullptr);
     if (fontSize.GetUnit() == eCSSUnit_Percent) {
       aDecls.SetPercentValue(eCSSProperty_font_size,
                              fontSize.GetPercentValue());

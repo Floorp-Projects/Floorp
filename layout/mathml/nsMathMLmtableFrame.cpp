@@ -443,9 +443,8 @@ static void ExtractSpacingValues(const nsAString& aString, nsAtom* aAttribute,
       } else {
         newValue = aDefaultValue0;
       }
-      nsMathMLFrame::ParseNumericValue(
-          valueString, &newValue, dom::MathMLElement::PARSE_ALLOW_UNITLESS,
-          presContext, computedStyle, aFontSizeInflation);
+      nsMathMLFrame::ParseNumericValue(valueString, &newValue, 0, presContext,
+                                       computedStyle, aFontSizeInflation);
       aSpacingArray.AppendElement(newValue);
 
       startIndex += count;
