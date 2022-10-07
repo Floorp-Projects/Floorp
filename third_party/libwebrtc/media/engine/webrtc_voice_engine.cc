@@ -1479,9 +1479,9 @@ webrtc::RtpParameters WebRtcVoiceMediaChannel::GetDefaultRtpReceiveParameters()
   RTC_DCHECK_RUN_ON(worker_thread_);
   webrtc::RtpParameters rtp_params;
   if (!default_sink_) {
-    RTC_LOG(LS_WARNING) << "Attempting to get RTP parameters for the default, "
-                           "unsignaled audio receive stream, but not yet "
-                           "configured to receive such a stream.";
+    // Getting parameters on a default, unsignaled audio receive stream but
+    // because we've not configured to receive such a stream, `encodings` is
+    // empty.
     return rtp_params;
   }
   rtp_params.encodings.emplace_back();
