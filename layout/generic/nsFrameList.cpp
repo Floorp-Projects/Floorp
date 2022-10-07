@@ -163,13 +163,13 @@ nsFrameList::Slice nsFrameList::InsertFrames(nsContainerFrame* aParent,
   return Slice(*this, firstNewFrame, nextSibling);
 }
 
-nsFrameList nsFrameList::ExtractHead(nsIFrame* aFrame) {
-  MOZ_ASSERT(!aFrame || ContainsFrame(aFrame), "aFrame is not on this list!");
-
+nsFrameList nsFrameList::TakeFramesBefore(nsIFrame* aFrame) {
   if (!aFrame) {
     // We handed over the whole list.
     return std::move(*this);
   }
+
+  MOZ_ASSERT(ContainsFrame(aFrame), "aFrame is not on this list!");
 
   if (aFrame == mFirstChild) {
     // aFrame is our first child. Nothing to extract.

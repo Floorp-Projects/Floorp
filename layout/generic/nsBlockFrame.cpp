@@ -734,7 +734,7 @@ static bool RemoveFirstLine(nsLineList& aFromLines, nsFrameList& aFromFrames,
   nsLineList_iterator next = aFromLines.erase(removedLine);
   bool isLastLine = next == aFromLines.end();
   nsIFrame* firstFrameInNextLine = isLastLine ? nullptr : next->mFirstChild;
-  *aOutFrames = aFromFrames.ExtractHead(firstFrameInNextLine);
+  *aOutFrames = aFromFrames.TakeFramesBefore(firstFrameInNextLine);
   return isLastLine;
 }
 
