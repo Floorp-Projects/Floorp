@@ -855,7 +855,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
-    <string name="tip_add_to_homescreen"><![CDATA[Obtenga acceso con un toque a los sitios que más usa %1$s Menú > Añadir a la Pantalla de inicio\n]]></string>
+    <string name="tip_add_to_homescreen"><![CDATA[Conseguí acceso a los sitios que más usás con un toque a %1$s Menú > Añadir a la Pantalla de inicio]]></string>
 
     <!-- Tip displayed on home view explaining how to make Focus the default browser
     Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
