@@ -876,7 +876,9 @@
       this._menupopup.addEventListener("command", event => {
         switch (event.originalTarget) {
           case this._pasteAndSearchMenuItem:
-            BrowserSearch.pasteAndSearch(event);
+            this.select();
+            goDoCommand("cmd_paste");
+            this.handleSearchCommand(event);
             break;
           case clearHistoryItem:
             let param = this.textbox.getAttribute("autocompletesearchparam");
