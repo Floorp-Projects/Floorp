@@ -909,7 +909,10 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
   LOG(("ScriptLoader (%p): Process external script for element %p", this,
        aElement));
 
-  // Bug 1765745: Support external import maps.
+  // https://whatpr.org/html/8075/scripting.html#prepare-the-script-element
+  // Step 30.1. If el's type is "importmap", then queue an element task on the
+  // DOM manipulation task source given el to fire an event named error at el,
+  // and return.
   if (aScriptKind == ScriptKind::eImportMap) {
     NS_DispatchToCurrentThread(
         NewRunnableMethod("nsIScriptElement::FireErrorEvent", aElement,
