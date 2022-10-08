@@ -2393,6 +2393,8 @@ STATIC_ATOMS = [
     Atom("onsupportedkeyschange", "onsupportedkeyschange"),
     # media query for MathML Core's implementation of maction/semantics
     Atom("_moz_mathml_core_maction_and_semantics", "-moz-mathml-core-maction-and-semantics"),
+    # media query for MathML Core's implementation of ms
+    Atom("_moz_mathml_core_ms", "-moz-mathml-core-ms"),
     # Contextual Identity / Containers
     Atom("usercontextid", "usercontextid"),
     Atom("geckoViewSessionContextId", "geckoViewSessionContextId"),
