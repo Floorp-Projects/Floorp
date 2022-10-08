@@ -9,7 +9,29 @@ webrtc-indicator-title = { -brand-short-name } — Sharing Indicator
 webrtc-indicator-window =
     .title = { -brand-short-name } — Sharing Indicator
 
+## Used as list items in sharing menu
+
+webrtc-item-camera = camera
+webrtc-item-microphone = microphone
+webrtc-item-audio-capture = tab audio
+webrtc-item-application = application
+webrtc-item-screen = screen
+webrtc-item-window = window
+webrtc-item-browser = tab
+
 ##
+
+# This is used for the website origin for the sharing menu if no readable origin could be deduced from the URL.
+webrtc-sharing-menuitem-unknown-host = Unknown origin
+
+# Variables:
+#   $origin (String): The website origin (e.g. www.mozilla.org)
+#   $itemList (String): A formatted list of items (e.g. "camera, microphone and tab audio")
+webrtc-sharing-menuitem =
+    .label = { $origin } ({ $itemList })
+webrtc-sharing-menu =
+    .label = Tabs sharing devices
+    .accesskey = d
 
 webrtc-sharing-window = You are sharing another application window.
 webrtc-sharing-browser-window = You are sharing { -brand-short-name }.
