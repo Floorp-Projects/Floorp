@@ -1272,8 +1272,6 @@ function showOrCreateMenuForWindow(aWindow) {
   let document = aWindow.document;
   let menu = document.getElementById("tabSharingMenu");
   if (!menu) {
-    aWindow.MozXULElement.insertFTLIfNeeded("browser/webrtcIndicator.ftl");
-
     menu = document.createXULElement("menu");
     menu.id = "tabSharingMenu";
     document.l10n.setAttributes(menu, "webrtc-sharing-menu");

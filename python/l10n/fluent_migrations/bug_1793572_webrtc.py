@@ -2,7 +2,7 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 import fluent.syntax.ast as FTL
-from fluent.migrate.helpers import VARIABLE_REFERENCE
+from fluent.migrate.helpers import TERM_REFERENCE, VARIABLE_REFERENCE
 from fluent.migrate.transforms import (
     COPY,
     COPY_PATTERN,
@@ -17,7 +17,9 @@ def migrate(ctx):
 
     source = "browser/chrome/browser/webrtcIndicator.properties"
     browser = "browser/chrome/browser/browser.properties"
+    browser_ftl = "browser/browser/browser.ftl"
     target = "browser/browser/webrtcIndicator.ftl"
+
     ctx.add_transforms(
         target,
         target,
@@ -428,6 +430,340 @@ def migrate(ctx):
                     FTL.Attribute(
                         id=FTL.Identifier("accesskey"),
                         value=COPY(browser, "getUserMedia.sharingMenu.accesskey"),
+                    ),
+                ],
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-allow-share-camera"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareCamera3.message",
+                    {"%1$S": VARIABLE_REFERENCE("origin")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-allow-share-microphone"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareMicrophone3.message",
+                    {"%1$S": VARIABLE_REFERENCE("origin")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-allow-share-screen"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareScreen4.message",
+                    {"%1$S": VARIABLE_REFERENCE("origin")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-allow-share-camera-and-microphone"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareCameraAndMicrophone3.message",
+                    {"%1$S": VARIABLE_REFERENCE("origin")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-allow-share-camera-and-audio-capture"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareCameraAndAudioCapture3.message",
+                    {"%1$S": VARIABLE_REFERENCE("origin")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-allow-share-screen-and-microphone"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareScreenAndMicrophone4.message",
+                    {"%1$S": VARIABLE_REFERENCE("origin")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-allow-share-screen-and-audio-capture"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareScreenAndAudioCapture4.message",
+                    {"%1$S": VARIABLE_REFERENCE("origin")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-allow-share-audio-capture"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareAudioCapture3.message",
+                    {"%1$S": VARIABLE_REFERENCE("origin")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-allow-share-speaker"),
+                value=REPLACE(
+                    browser,
+                    "selectAudioOutput.shareSpeaker.message",
+                    {"%1$S": VARIABLE_REFERENCE("origin")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-allow-share-camera-unsafe-delegation"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareCameraUnsafeDelegation2.message",
+                    {
+                        "%1$S": VARIABLE_REFERENCE("origin"),
+                        "%2$S": VARIABLE_REFERENCE("thirdParty"),
+                    },
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-allow-share-microphone-unsafe-delegations"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareMicrophoneUnsafeDelegations2.message",
+                    {
+                        "%1$S": VARIABLE_REFERENCE("origin"),
+                        "%2$S": VARIABLE_REFERENCE("thirdParty"),
+                    },
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-allow-share-screen-unsafe-delegation"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareScreenUnsafeDelegation2.message",
+                    {
+                        "%1$S": VARIABLE_REFERENCE("origin"),
+                        "%2$S": VARIABLE_REFERENCE("thirdParty"),
+                    },
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier(
+                    "webrtc-allow-share-camera-and-microphone-unsafe-delegation"
+                ),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareCameraAndMicrophoneUnsafeDelegation2.message",
+                    {
+                        "%1$S": VARIABLE_REFERENCE("origin"),
+                        "%2$S": VARIABLE_REFERENCE("thirdParty"),
+                    },
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier(
+                    "webrtc-allow-share-camera-and-audio-capture-unsafe-delegation"
+                ),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareCameraAndAudioCaptureUnsafeDelegation2.message",
+                    {
+                        "%1$S": VARIABLE_REFERENCE("origin"),
+                        "%2$S": VARIABLE_REFERENCE("thirdParty"),
+                    },
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier(
+                    "webrtc-allow-share-screen-and-microphone-unsafe-delegation"
+                ),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareScreenAndMicrophoneUnsafeDelegation2.message",
+                    {
+                        "%1$S": VARIABLE_REFERENCE("origin"),
+                        "%2$S": VARIABLE_REFERENCE("thirdParty"),
+                    },
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier(
+                    "webrtc-allow-share-screen-and-audio-capture-unsafe-delegation"
+                ),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareScreenAndAudioCaptureUnsafeDelegation2.message",
+                    {
+                        "%1$S": VARIABLE_REFERENCE("origin"),
+                        "%2$S": VARIABLE_REFERENCE("thirdParty"),
+                    },
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-allow-share-speaker-unsafe-delegation"),
+                value=REPLACE(
+                    browser,
+                    "selectAudioOutput.shareSpeakerUnsafeDelegation.message",
+                    {
+                        "%1$S": VARIABLE_REFERENCE("origin"),
+                        "%2$S": VARIABLE_REFERENCE("thirdParty"),
+                    },
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-share-screen-warning"),
+                value=COPY(browser, "getUserMedia.shareScreenWarning2.message"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-share-browser-warning"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareFirefoxWarning2.message",
+                    {"%1$S": TERM_REFERENCE("brand-short-name")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-share-screen-learn-more"),
+                value=COPY(browser, "getUserMedia.shareScreen.learnMoreLabel"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-pick-window-or-screen"),
+                value=COPY(browser, "getUserMedia.pickWindowOrScreen.label"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-share-entire-screen"),
+                value=COPY(browser, "getUserMedia.shareEntireScreen.label"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-share-pipe-wire-portal"),
+                value=COPY(browser, "getUserMedia.sharePipeWirePortal.label"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-share-monitor"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.shareMonitor.label",
+                    {"%1$S": VARIABLE_REFERENCE("monitorIndex")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-share-application"),
+                value=PLURALS(
+                    browser,
+                    "getUserMedia.shareApplicationWindowCount.label",
+                    VARIABLE_REFERENCE("windowCount"),
+                    foreach=lambda n: REPLACE_IN_TEXT(
+                        n,
+                        {
+                            "#1": VARIABLE_REFERENCE("appName"),
+                            "#2": VARIABLE_REFERENCE("windowCount"),
+                        },
+                    ),
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-action-allow"),
+                attributes=[
+                    FTL.Attribute(
+                        id=FTL.Identifier("label"),
+                        value=COPY(browser, "getUserMedia.allow.label"),
+                    ),
+                    FTL.Attribute(
+                        id=FTL.Identifier("accesskey"),
+                        value=COPY(browser, "getUserMedia.allow.accesskey"),
+                    ),
+                ],
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-action-block"),
+                attributes=[
+                    FTL.Attribute(
+                        id=FTL.Identifier("label"),
+                        value=COPY_PATTERN(
+                            browser_ftl, "popup-screen-sharing-block.label"
+                        ),
+                    ),
+                    FTL.Attribute(
+                        id=FTL.Identifier("accesskey"),
+                        value=COPY_PATTERN(
+                            browser_ftl, "popup-screen-sharing-block.accesskey"
+                        ),
+                    ),
+                ],
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-action-always-block"),
+                attributes=[
+                    FTL.Attribute(
+                        id=FTL.Identifier("label"),
+                        value=COPY_PATTERN(
+                            browser_ftl, "popup-screen-sharing-always-block.label"
+                        ),
+                    ),
+                    FTL.Attribute(
+                        id=FTL.Identifier("accesskey"),
+                        value=COPY_PATTERN(
+                            browser_ftl,
+                            "popup-screen-sharing-always-block.accesskey",
+                        ),
+                    ),
+                ],
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-action-not-now"),
+                attributes=[
+                    FTL.Attribute(
+                        id=FTL.Identifier("label"),
+                        value=COPY(browser, "getUserMedia.notNow.label"),
+                    ),
+                    FTL.Attribute(
+                        id=FTL.Identifier("accesskey"),
+                        value=COPY(browser, "getUserMedia.notNow.accesskey"),
+                    ),
+                ],
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-remember-allow-checkbox"),
+                value=COPY(browser, "getUserMedia.remember"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-mute-notifications-checkbox"),
+                value=COPY_PATTERN(browser_ftl, "popup-mute-notifications-checkbox"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-reason-for-no-permanent-allow-screen"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.reasonForNoPermanentAllow.screen3",
+                    {"%1$S": TERM_REFERENCE("brand-short-name")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-reason-for-no-permanent-allow-audio"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.reasonForNoPermanentAllow.audio",
+                    {"%1$S": TERM_REFERENCE("brand-short-name")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-reason-for-no-permanent-allow-insecure"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.reasonForNoPermanentAllow.insecure",
+                    {"%1$S": TERM_REFERENCE("brand-short-name")},
+                ),
+            ),
+        ],
+    )
+
+    ctx.add_transforms(
+        browser_ftl,
+        browser_ftl,
+        [
+            FTL.Message(
+                id=FTL.Identifier("popup-select-window-or-screen"),
+                attributes=[
+                    FTL.Attribute(
+                        id=FTL.Identifier("label"),
+                        value=COPY(browser, "getUserMedia.selectWindowOrScreen2.label"),
+                    ),
+                    FTL.Attribute(
+                        id=FTL.Identifier("accesskey"),
+                        value=COPY(
+                            browser, "getUserMedia.selectWindowOrScreen2.accesskey"
+                        ),
                     ),
                 ],
             ),

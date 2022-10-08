@@ -477,17 +477,10 @@ popup-select-microphone-icon =
     .tooltiptext = Microphone
 popup-select-speaker-icon =
     .tooltiptext = Speakers
+popup-select-window-or-screen =
+    .label = Window or screen:
+    .accesskey = W
 popup-all-windows-shared = All visible windows on your screen will be shared.
-
-popup-screen-sharing-block =
-  .label = Block
-  .accesskey = B
-
-popup-screen-sharing-always-block =
-  .label = Always block
-  .accesskey = w
-
-popup-mute-notifications-checkbox = Mute website notifications while sharing
 
 ## WebRTC window or screen share tab switch warning
 
