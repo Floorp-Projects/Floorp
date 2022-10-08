@@ -13,6 +13,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="webrtcIndicator"
         role="alert"
+        data-l10n-id="webrtc-indicator-window"
         windowtype="Browser:WebRTCGlobalIndicator"
         onload="init(event);"
 #ifdef XP_MACOSX
@@ -22,6 +23,11 @@
         hidechrome="true"
         orient="horizontal"
         >
+  <linkset>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="browser/webrtcIndicator.ftl"/>
+  </linkset>
+
   <script src="chrome://browser/content/webrtcLegacyIndicator.js"/>
 
   <button id="firefoxButton"/>
