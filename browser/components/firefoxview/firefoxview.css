@@ -565,10 +565,6 @@ details[open] > .page-section-header > .twisty {
   margin-block: 0 0.33em;
 }
 
-.promo-box .message-description {
-  font-size: 0.85em;
-}
-
 .confirmation-message-box {
   background-color: var(--success-background-color);
   color: var(--success-box-text-color);
