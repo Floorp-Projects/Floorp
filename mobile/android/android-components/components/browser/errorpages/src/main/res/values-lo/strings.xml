@@ -264,8 +264,26 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">ພັອກຊີເຊີເວີໄດ້ປະຕິເສດການເຊື່ອມຕໍ່</string>
 
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>ຕົວ​ທ່ອງ​ເວັບ​ໄດ້​ຖືກ​ຕັ້ງ​ຄ່າ​ໃຫ້​ໃຊ້​ເຊີບ​ເວີ​ພຣັອກຊີ, ແຕ່​ພຣັອກຊີ​ໄດ້​ປະ​ຕິ​ເສດ​ການ​ເຊື່ອມ​ຕໍ່.</p>
+      <ul>
+        <li>ການກຳນົດຄ່າພຣັອກຊີຂອງບຣາວເຊີຖືກຕ້ອງບໍ? ກວດເບິ່ງການຕັ້ງຄ່າແລ້ວລອງໃໝ່ອີກຄັ້ງ.</li>
+        <li>ບໍລິການພຣັອກຊີອະນຸຍາດການເຊື່ອມຕໍ່ຈາກເຄືອຂ່າຍນີ້ບໍ?</li>
+        <li>ຍັງມີບັນຫາຢູ່ບໍ? ປຶກສາຜູ້ເບິ່ງແຍງລະບົບເຄືອຂ່າຍ ຫຼືຜູ້ໃຫ້ບໍລິການອິນເຕີເນັດຂອງທ່ານເພື່ອຂໍຄວາມຊ່ວຍເຫຼືອ.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">ບໍ່ພົບພລັອກຊີເຊີເວີ</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>ຕົວ​ທ່ອງ​ເວັບ​ໄດ້​ຖືກ​ຕັ້ງ​ຄ່າ​ໃຫ້​ໃຊ້​ເຊີບ​ເວີ​ພຣັອກ​ຊີ, ແຕ່​ບໍ່​ສາ​ມາດ​ຊອກ​ຫາ​ຕົວ​ແທນ​ໄດ້.</p>
+      <ul>
+        <li>ການກຳນົດຄ່າພຣັອກຊີຂອງບຣາວເຊີຖືກຕ້ອງບໍ? ກວດເບິ່ງການຕັ້ງຄ່າແລ້ວລອງໃໝ່ອີກຄັ້ງ.</li>
+        <li>ອຸປະກອນເຊື່ອມຕໍ່ກັບເຄືອຂ່າຍທີ່ໃຊ້ຢູ່ບໍ?</li>
+        <li>ຍັງມີບັນຫາຢູ່ບໍ? ປຶກສາຜູ້ເບິ່ງແຍງລະບົບເຄືອຂ່າຍ ຫຼືຜູ້ໃຫ້ບໍລິການອິນເຕີເນັດຂອງທ່ານເພື່ອຂໍຄວາມຊ່ວຍເຫຼືອ.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">ປັນຫາເວັບໄຊທ Malware</string>

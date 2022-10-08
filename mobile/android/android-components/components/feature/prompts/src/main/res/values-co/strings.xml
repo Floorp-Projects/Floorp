@@ -81,6 +81,8 @@
     <string name="mozac_feature_prompts_nov">nuve.</string>
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">dice.</string>
+    <!-- Title of the time picker dialog. -->
+    <string name="mozac_feature_prompts_set_time">Sceglie l’ora</string>
     <!-- Option in expanded select login prompt that links to login settings -->
     <string name="mozac_feature_prompts_manage_logins">Urganizà l’identificazioni di cunnessione</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
