@@ -34,7 +34,7 @@ random-if(smallScreen&&Android) fuzzy(0-255,0-200) fuzzy-if(geckoview,201-216,20
 != mi-mathvariant-3.html mi-mathvariant-3-ref.html
 != non-spacing-accent-1.xhtml non-spacing-accent-1-ref.xhtml
 == overbar-width-1.xhtml overbar-width-1-ref.xhtml
-== quotes-1.xhtml quotes-1-ref.xhtml
+pref(mathml.ms_lquote_rquote_attributes.disabled,false) == quotes-1.xhtml quotes-1-ref.xhtml
 != stretchy-underbar-1.xhtml stretchy-underbar-1-ref.xhtml
 != stretchy-munderover-1a.html stretchy-munderover-1-ref.html
 == stretchy-munderover-1b.html stretchy-munderover-1-ref.html
@@ -99,7 +99,7 @@ pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) == sema
 == mstyle-2.xhtml mstyle-2-ref.xhtml
 fuzzy-if(OSX,0-16,0-8) == mstyle-3.xhtml mstyle-3-ref.xhtml
 fuzzy-if(OSX,0-1,0-4) == mstyle-4.xhtml mstyle-4-ref.xhtml
-== mstyle-5.xhtml mstyle-5-ref.xhtml # Bug 787215
+== mstyle-5.xhtml mstyle-5-ref.xhtml
 == scale-stretchy-1.xhtml scale-stretchy-1-ref.xhtml
 != scale-stretchy-2.xhtml scale-stretchy-2-ref.xhtml
 fails-if(OSX>=1010) == scale-stretchy-3.xhtml scale-stretchy-3-ref.xhtml
@@ -162,7 +162,7 @@ pref(mathml.error_message_layout_for_invalid_markup.disabled,false) pref(mathml.
 == whitespace-trim-1.html whitespace-trim-1-ref.html
 == whitespace-trim-2.html whitespace-trim-2-ref.html
 == whitespace-trim-3.html whitespace-trim-3-ref.html
-fails == whitespace-trim-4.html whitespace-trim-4-ref.html # Bug 787215
+== whitespace-trim-4.html whitespace-trim-4-ref.html
 == whitespace-trim-5.html whitespace-trim-5-ref.html
 random-if(winWidget&&!d2d) == opentype-stretchy.html opentype-stretchy-ref.html
 == opentype-fraction-dynamic-linethickness.html opentype-fraction-dynamic-linethickness-ref.html
