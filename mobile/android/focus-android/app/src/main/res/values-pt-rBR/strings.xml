@@ -124,12 +124,12 @@
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
-    <string name="about_content"><![CDATA[<p>O %1$s coloca você no controle.</p>
-<p>Use como navegador privativo:
+    <string name="about_content"><![CDATA[<p>Assuma o controle com o %1$s.</p>
+<p>Use para navegação privativa:
   <ul>
-    <li>Pesquise e navegue direto no aplicativo</li>
-    <li>Bloqueie rastreadores (ou mude as configurações para permitir)</li>
-    <li>Limpe para excluir cookies, assim como o histórico de pesquisa e navegação</li>
+    <li>Pesquisa e navegação direto no aplicativo.</li>
+    <li>Bloqueio de rastreamento (ou mude as configurações para permitir).</li>
+    <li>Limpeza de cookies e histórico de pesquisa e navegação.</li>
   </ul>
 </p>
 <p>O %1$s é produzido pela Mozilla. Nossa missão é promover uma internet saudável e aberta.<br/>

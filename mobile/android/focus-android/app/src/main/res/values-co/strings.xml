@@ -365,7 +365,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">Affissà minichichje nant’à u screnu d’accolta</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Affissà minichichje nant’à u screnu d’accolta</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Aghjunghje un mutore di ricerca</string>
@@ -495,32 +495,56 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Benvenuta in %1$s !</string>
+    <string moz:removedIn="106" name="onboarding_title">Benvenuta in %1$s !</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Chjode</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Benvenuta in %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Rapidu. Pruvatu. Senza distrazzione.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Principià</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s ùn hè micca cum’è l’altri navigatori</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Sceglie cum’è navigatore predefinitu</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Ignurà</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Navigazione privata di livellu superiore secondu à i vostri bisogni</string>
+    <string moz:removedIn="106" name="onboarding_description">Navigazione privata di livellu superiore secondu à i vostri bisogni</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Induve l’incognitu scontra l’invisibile</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Induve l’incognitu scontra l’invisibile</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s hè un navigatore primurosu di cunfidenzialità cù prutezzioni integrate assai forte contr’à u spiunagiu è i canistrelli.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s hè un navigatore primurosu di cunfidenzialità cù prutezzioni integrate assai forte contr’à u spiunagiu è i canistrelli.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Navigate cum’è s’ella fussi a prima volta</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Navigate cum’è s’ella fussi a prima volta</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Una picchicciata squassa a cronolugia di a vostra navigazione è i canistrelli - è impedisce e publicità di seguità i vostri circondi.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Una picchicciata squassa a cronolugia di a vostra navigazione è i canistrelli - è impedisce e publicità di seguità i vostri circondi.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">A cunfidenzialità adattata à ogni situazione</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">A cunfidenzialità adattata à ogni situazione</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">S’è a vostra navigazione richiede di cambià, hè faciule di graduà più o menu e vostre preferenze di cunfidenzialità.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">S’è a vostra navigazione richiede di cambià, hè faciule di graduà più o menu e vostre preferenze di cunfidenzialità.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Principià a navigazione</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Principià a navigazione</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Rinfurzà a vostra vita privata</string>
@@ -819,7 +843,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">Ci seria u cuntenutu chì manca o u situ si cumpurteria d’una manera strana ?\n
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Ci seria u cuntenutu chì manca o u situ si cumpurteria d’una manera strana ?\n
     Pruvate di disattivà a prutezzione rinfurzata contr’à u spiunagiu</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -845,7 +869,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">Vulete fighjà a versione cumpleta d’un situ ?\n
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Vulete fighjà a versione cumpleta d’un situ ?\n
         Passate à a versione d’urdinatore da u listinu di %1$s</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -853,17 +877,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Vulete disattivà a prutezzione rinfurzata contr’à u spiunagiu per un situ di cunfidenza chì voi cunniscite ?\n
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Vulete disattivà a prutezzione rinfurzata contr’à u spiunagiu per un situ di cunfidenza chì voi cunniscite ?\n
         Aghjunghjelu à a lista di i siti di cunfidenza in e Preferenze
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Hè vera, avemu un aspettu tuttu novu !\n Sapene di più apprupositu di què è d’altre mudificazioni nant’à %1$s.</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Hè vera, avemu un aspettu tuttu novu !\n Sapene di più apprupositu di què è d’altre mudificazioni nant’à %1$s.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Create l’accurtatoghji per i siti chì vo visitate u più :\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Create l’accurtatoghji per i siti chì vo visitate u più :\n
     Selezziunate « Aghjunghje à l’accurtatoghji » in u listinu di %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -985,7 +1009,8 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Pare chì stu situ pruvava di seguitavvi. Fate un cliccu nant’à u scudu per vede e preferenze per u situ è e statistiche di blucchime di i perseguitatori.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Pare chì stu situ pruvava di seguitavvi. Fate un cliccu nant’à u scudu per vede e preferenze per u situ è e statistiche di blucchime di i perseguitatori.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Chjode a finestra popup</string>
 
@@ -999,6 +1024,23 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Righjittà</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">Sbarazzatevi di i vostri dati persunali, cronolugia di navigazione è ancu di più di sta sessione picchichjendu nant’à u buttone di a curbella. Pruvate puru !</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Sbarazzatevi di i vostri dati persunali, cronolugia di navigazione è ancu di più di sta sessione picchichjendu nant’à u buttone di a curbella. Pruvate puru !</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Chjode</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Cronolugia di navigazione squassata ! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_button_text">Aghjunghje u widget à u screnu d’accolta</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Widget aghjuntu à u screnu d’accolta</string>
 </resources>

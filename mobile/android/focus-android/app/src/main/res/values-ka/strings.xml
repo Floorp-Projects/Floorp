@@ -495,32 +495,63 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">მოგესალმებათ %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">მოგესალმებათ %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">დახურვა</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">მოგესალმებათ %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">სწრაფი. პირადი. მხოლოდ საქმისკენ მიმართული.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">დაიწყეთ</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s არ ჰგავს სხვა ბრაუზერებს</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">ისტორია გასუფთავდება პროგრამის დახურვისთანავე პირადულობის უკეთ დასაცავად.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">გახადეთ %1$s ნაგულისხმევი, რომ დაიცვათ მონაცემები ყოველი ბმულის გახსნისას.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">ნაგულისხმევ ბრაუზერად დაყენება</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">გამოტოვება</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">ახალ დონეზე აყვანილი პირადულობა, როცა მოგესურვებათ</string>
+    <string moz:removedIn="106" name="onboarding_description">ახალ დონეზე აყვანილი პირადულობა, როცა მოგესურვებათ</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">ფარული და უხილავი რეჟიმების გაერთიანება</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">ფარული და უხილავი რეჟიმების გაერთიანება</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s პირადულობის უწინარესობის უზრუნველმყოფი ბრაუზერია, თვალთვალისა და დევნისგან დაცვის მძლავრი ჩაშენებული საშუალებებით.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s პირადულობის უწინარესობის უზრუნველმყოფი ბრაუზერია, თვალთვალისა და დევნისგან დაცვის მძლავრი ჩაშენებული საშუალებებით.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">მოინახულეთ გვერდები სრულიად ახლებურად</string>
+    <string moz:removedIn="106" name="onboarding_history_title">მოინახულეთ გვერდები სრულიად ახლებურად</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">ერთი შეხებით წაშლის ისტორიასა და კვალს — ასევე, შეაჩერებს თვალთვალს სარეკლამოებისგან.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">ერთი შეხებით წაშლის ისტორიასა და კვალს — ასევე, შეაჩერებს თვალთვალს სარეკლამოებისგან.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">პირადულობის დაცვა ნებისმიერი გარემოებისთვის</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">პირადულობის დაცვა ნებისმიერი გარემოებისთვის</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">საჭიროების შემთხვევაში მარტივად შეგიძლიათ პირადულობის დაცვის გამკაცრება ან შემსუბუქება.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">საჭიროების შემთხვევაში მარტივად შეგიძლიათ პირადულობის დაცვის გამკაცრება ან შემსუბუქება.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">დაიწყეთ გვერდების მონახულება</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">დაიწყეთ გვერდების მონახულება</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">გააძლიერეთ პირადი მონაცემების დაცვა</string>
@@ -979,7 +1010,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">როგორც ჩანს, ეს საიტი თქვენს თვალთვალს ცდილობდა. დაწკაპეთ ფარზე საიტის პარამეტრებისა და შეზღუდვების გასაცნობად.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">როგორც ჩანს, ეს საიტი თქვენს თვალთვალს ცდილობდა. დაწკაპეთ ფარზე საიტის პარამეტრებისა და შეზღუდვების გასაცნობად.</string>
+    <string name="cfr_for_toolbar_shield_icon2">გამოჭერილია! ამ საიტს არ მივეცით თქვენი თვალთვალის საშუალება. შეეხეთ ფარის ნიშანს ნებისმიერ დროს და იხილეთ, რა იზღუდება.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">ამომხტარი ფანჯრის დახურვა</string>
 
@@ -995,4 +1028,28 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">მოაცილეთ პირადი მონაცემები, მონახულებული გვერდების ისტორია და მსგავსი ინფორმაცია ამ სეანსიდან, ნაგვის ურნის ღილაკზე შეხებით. თავადვე გამოცადეთ!</string>
     <string name="cfr_for_toolbar_delete_icon2">შეეხეთ აქ, რომ წაშალოთ სრულად — ისტორია, ფუნთუშები, ყველაფერი — და გახსნათ ახალი ჩანართი სუფთა ფურცლიდან.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">დახურვა</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">ვიჯეტის ძიება</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">დათვალიერების ისტორია გასუფთავებულია! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">ახლა გადადით პირად ფანჯარაზე, თუმცა შემდეგ ჯერზე სწრაფად გახსნისთვის გამოიყენეთ %1$s-ვიჯეტი მთავარი ეკრანიდან.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">ვიჯეტის დამატება მთავარ ეკრანზე</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">ვიჯეტი დამატებულია მთავარ ეკრანზე</string>
 </resources>

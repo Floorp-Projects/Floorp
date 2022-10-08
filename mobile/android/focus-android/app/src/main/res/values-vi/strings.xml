@@ -136,7 +136,7 @@
 <a href="%2$s">Tìm hiểu thêm</a></p>]]></string>
 
     <!-- Header for the Privacy and Security settings menu -->
-    <string name="preference_privacy_and_security_header">Riêng tư &amp; bảo mật</string>
+    <string name="preference_privacy_and_security_header">Quyền riêng tư &amp; bảo mật</string>
 
     <!-- Preference summary for settings related to privacy and security -->
     <string name="preference_privacy_and_security_summary">Theo dõi, cookie, lựa chọn dữ liệu</string>
@@ -1003,7 +1003,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
     <string name="errorpage_httpsonly_title">Trang web bạn yêu cầu không hỗ trợ HTTPS</string>
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Theo mặc định, %1$s cố gắng kết nối bằng HTTPS để tăng cường bảo mật. Để thay đổi cài đặt này hoặc để tìm hiểu thêm, hãy đi đến Cài đặt &gt; Riêng tư &amp; bảo mật &gt; Bảo mật.</string>
+    <string name="errorpage_httpsonly_message">Theo mặc định, %1$s cố gắng kết nối bằng HTTPS để tăng cường bảo mật. Để thay đổi cài đặt này hoặc để tìm hiểu thêm, hãy đi đến Cài đặt &gt; Quyền riêng tư &amp; bảo mật &gt; Bảo mật.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
