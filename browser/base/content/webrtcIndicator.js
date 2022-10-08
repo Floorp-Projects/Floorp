@@ -8,7 +8,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { webrtcUI } = ChromeUtils.import("resource:///modules/webrtcUI.jsm");
+const { showStreamSharingMenu, webrtcUI } = ChromeUtils.import(
+  "resource:///modules/webrtcUI.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -20,12 +22,6 @@ ChromeUtils.defineModuleGetter(
   this,
   "BrowserWindowTracker",
   "resource:///modules/BrowserWindowTracker.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "PluralForm",
-  "resource://gre/modules/PluralForm.jsm"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -500,83 +496,18 @@ const WebRTCIndicator = {
   },
 
   onPopupShowing(event) {
-    if (!this.eventIsForDeviceMenuPopup(event)) {
-      return;
-    }
+    if (this.eventIsForDeviceMenuPopup(event)) {
+      // When the indicator is hidden by default, opening the menu from the
+      // system tray _might_ cause the indicator to try to become visible again.
+      // We work around this by re-hiding it if it wasn't already visible.
+      if (document.documentElement.getAttribute("visible") != "true") {
+        let baseWin = window.docShell.treeOwner.QueryInterface(
+          Ci.nsIBaseWindow
+        );
+        baseWin.visibility = false;
+      }
 
-    let menupopup = event.target;
-    let type = menupopup.getAttribute("type");
-
-    // When the indicator is hidden by default, opening the menu from the
-    // system tray _might_ cause the indicator to try to become visible again.
-    // We work around this by re-hiding it if it wasn't already visible.
-    if (document.documentElement.getAttribute("visible") != "true") {
-      let baseWin = window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
-      baseWin.visibility = false;
-    }
-
-    let activeStreams;
-    if (type == "Camera") {
-      activeStreams = webrtcUI.getActiveStreams(true, false, false);
-    } else if (type == "Microphone") {
-      activeStreams = webrtcUI.getActiveStreams(false, true, false);
-    } else if (type == "Screen") {
-      activeStreams = webrtcUI.getActiveStreams(false, false, true, true);
-      type = webrtcUI.showScreenSharingIndicator;
-    }
-
-    let bundle = Services.strings.createBundle(
-      "chrome://browser/locale/webrtcIndicator.properties"
-    );
-
-    if (!activeStreams.length) {
-      event.preventDefault();
-      return;
-    }
-
-    if (activeStreams.length == 1) {
-      let stream = activeStreams[0];
-
-      let menuitem = document.createXULElement("menuitem");
-      let labelId = `webrtcIndicator.sharing${type}With.menuitem`;
-      let label = stream.browser.contentTitle || stream.uri;
-      menuitem.setAttribute(
-        "label",
-        bundle.formatStringFromName(labelId, [label])
-      );
-      menuitem.setAttribute("disabled", "true");
-      menupopup.appendChild(menuitem);
-
-      menuitem = document.createXULElement("menuitem");
-      menuitem.setAttribute(
-        "label",
-        bundle.GetStringFromName("webrtcIndicator.controlSharing.menuitem")
-      );
-      menuitem.stream = stream;
-
-      menupopup.appendChild(menuitem);
-      return;
-    }
-
-    // We show a different menu when there are several active streams.
-    let menuitem = document.createXULElement("menuitem");
-    let labelId = `webrtcIndicator.sharing${type}WithNTabs.menuitem`;
-    let count = activeStreams.length;
-    let label = PluralForm.get(
-      count,
-      bundle.GetStringFromName(labelId)
-    ).replace("#1", count);
-    menuitem.setAttribute("label", label);
-    menuitem.setAttribute("disabled", "true");
-    menupopup.appendChild(menuitem);
-
-    for (let stream of activeStreams) {
-      let item = document.createXULElement("menuitem");
-      labelId = "webrtcIndicator.controlSharingOn.menuitem";
-      label = stream.browser.contentTitle || stream.uri;
-      item.setAttribute("label", bundle.formatStringFromName(labelId, [label]));
-      item.stream = stream;
-      menupopup.appendChild(item);
+      showStreamSharingMenu(window, event, true);
     }
   },
 
