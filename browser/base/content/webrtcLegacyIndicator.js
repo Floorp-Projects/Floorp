@@ -4,21 +4,7 @@
 
 const { webrtcUI } = ChromeUtils.import("resource:///modules/webrtcUI.jsm");
 
-const BUNDLE_URL = "chrome://browser/locale/webrtcIndicator.properties";
-var gStringBundle;
-
 function init(event) {
-  gStringBundle = Services.strings.createBundle(BUNDLE_URL);
-
-  let brand = Services.strings.createBundle(
-    "chrome://branding/locale/brand.properties"
-  );
-  let brandShortName = brand.GetStringFromName("brandShortName");
-  document.title = gStringBundle.formatStringFromName(
-    "webrtcIndicator.windowtitle",
-    [brandShortName]
-  );
-
   for (let id of ["audioVideoButton", "screenSharePopup"]) {
     let popup = document.getElementById(id);
     popup.addEventListener("popupshowing", onPopupMenuShowing);
@@ -40,50 +26,47 @@ function init(event) {
 }
 
 function updateIndicatorState() {
-  // If gStringBundle isn't set, the window hasn't finished loading.
-  if (!gStringBundle) {
-    return;
-  }
-
   updateWindowAttr("sharingvideo", webrtcUI.showCameraIndicator);
   updateWindowAttr("sharingaudio", webrtcUI.showMicrophoneIndicator);
   updateWindowAttr("sharingscreen", webrtcUI.showScreenSharingIndicator);
 
   // Camera and microphone button tooltip.
-  let shareTypes = [];
+  const audioVideoButton = document.getElementById("audioVideoButton");
+  let avL10nId;
   if (webrtcUI.showCameraIndicator) {
-    shareTypes.push("Camera");
-  }
-  if (webrtcUI.showMicrophoneIndicator) {
-    shareTypes.push("Microphone");
-  }
-
-  let audioVideoButton = document.getElementById("audioVideoButton");
-  if (shareTypes.length) {
-    let stringId =
-      "webrtcIndicator.sharing" + shareTypes.join("And") + ".tooltip";
-    audioVideoButton.setAttribute(
-      "tooltiptext",
-      gStringBundle.GetStringFromName(stringId)
-    );
+    avL10nId = webrtcUI.showMicrophoneIndicator
+      ? "webrtc-indicator-sharing-camera-and-microphone"
+      : "webrtc-indicator-sharing-camera";
   } else {
-    audioVideoButton.removeAttribute("tooltiptext");
+    avL10nId = webrtcUI.showMicrophoneIndicator
+      ? "webrtc-indicator-sharing-microphone"
+      : "";
   }
+  document.l10n.setAttributes(audioVideoButton, avL10nId);
 
   // Screen sharing button tooltip.
-  let screenShareButton = document.getElementById("screenShareButton");
-  if (webrtcUI.showScreenSharingIndicator) {
-    let stringId =
-      "webrtcIndicator.sharing" +
-      webrtcUI.showScreenSharingIndicator +
-      ".tooltip";
-    screenShareButton.setAttribute(
-      "tooltiptext",
-      gStringBundle.GetStringFromName(stringId)
-    );
-  } else {
-    screenShareButton.removeAttribute("tooltiptext");
+  const screenShareButton = document.getElementById("screenShareButton");
+  let ssL10nId;
+  switch (webrtcUI.showScreenSharingIndicator) {
+    case "Application":
+      ssL10nId = "webrtc-indicator-sharing-application";
+      break;
+    case "Browser":
+      ssL10nId = "webrtc-indicator-sharing-browser";
+      break;
+    case "Screen":
+      ssL10nId = "webrtc-indicator-sharing-screen";
+      break;
+    case "Window":
+      ssL10nId = "webrtc-indicator-sharing-window";
+      break;
+    default:
+      Cu.reportError(
+        `Unknown showScreenSharingIndicator: ${webrtcUI.showScreenSharingIndicator}`
+      );
+      ssL10nId = "";
   }
+  document.l10n.setAttributes(screenShareButton, ssL10nId);
 
   // Resize and ensure the window position is correct
   // (sizeToContent messes with our position).
