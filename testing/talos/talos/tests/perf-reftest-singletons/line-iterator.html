@@ -13,11 +13,12 @@ window.onload = function() {
   }
   testElem = document.getElementById("test");
   testElem.textContent = text;
-  testElem.focus();
+  testElem.focus(); // FYI: When this runs, the URL bar has focus, thus, this fails to steal focus
   flush_layout();
   perf_start();
   // Move the selection down through 2000 lines...
-  let sel = document.getSelection();
+  const sel = getSelection();
+  sel.setPosition(testElem.firstChild, 0);
   for (let i = 0; i < 2000; i++) {
     sel.modify("move", "forward", "line");
   }
