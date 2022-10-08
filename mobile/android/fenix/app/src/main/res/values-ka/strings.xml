@@ -277,12 +277,16 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">გაეცანით მორგებულ საწყის გვერდს. ბოლოდროინდელი ჩანართები, სანიშნები და მოძიებული გვერდები გამოჩნდება აქ.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
-    <string name="onboarding_home_welcome_title">კეთილი იყოს თქვენი ფეხი დამოუკიდებელ ინტერნეტსივრცეში</string>
+    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">კეთილი იყოს თქვენი ფეხი დამოუკიდებელ ინტერნეტსივრცეში</string>
 
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">კეთილი იყოს თქვენი ფეხი მეტად პირად ინტერნეტსივრცეში</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">მეტი ფერი. გაუმჯობესებული პირადულობა. ხალხის მოგებაზე წინ დაყენება მუდამ.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title_2">მოქნილად გადაერთეთ ტელეფონიდან ლეპტოპზე და უკან</string>
+    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">მოქნილად გადაერთეთ ტელეფონიდან ლეპტოპზე და უკან</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">ეკრანებს შორის გადართვა ჯერ არნახული სიმარტივით</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">განაგრძეთ, სადაც გაჩერდით სხვა მოწყობილობიდან ჩანართების წამოღებით ახლა უკვე საწყის გვერდზე.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -384,8 +388,6 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">მორგება</string>
     <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">დაასინქრონეთ სანიშნები, პაროლები და ა. შ. თქვენი Firefox-ანგარიშით</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">შედით ანგარიშზე, რომ დაასინქრონოთ თქვენი ჩანართები, სანიშნები, პაროლები და სხვ.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox-ანგარიში</string>
@@ -469,12 +471,35 @@
     <string name="wallpaper_updated_snackbar_message">ფონი განახლებულია!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">ნახვა</string>
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">ფონის ჩამოტვირთვა ვერ მოხერხდა</string>
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">სცადეთ ხელახლა</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">ფონის შეცვლა ვერ მოხერხდა</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">ვრცლად</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">შეცვალეთ ფონი Firefox-ის საწყისი გვერდის ნიშანზე შეხებით</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox-ლოგო – შეცვალეთ ფონი, ღილაკი</string>
+
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">ჩვეული %s</string>
+    <!-- Text for limited edition wallpapers title. -->
+    <string name="wallpaper_limited_edition_title">შეზღუდული გამოშვება</string>
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">ახალი ნაკრები „დამოუკიდებელი ხმები“. %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">ახალი ნაკრები „დამოუკიდებელი ხმები“.</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">შეაფერადეთ</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">აირჩიეთ ფონი, რომელიც შთაგაგონებთ.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">სხვა გაფორმების მოძიება</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -558,8 +583,6 @@
     <string name="preference_experiments_summary_2">ნებას დართავს Mozilla-ს, ჩადგას და გაუშვას კვლევები</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">სინქრონიზაციის ჩართვა</string>
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">დაასინქრონეთ და გადაინახეთ თქვენი მონაცემები</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -774,9 +797,6 @@
     <string name="delete_from_history">ისტორიიდან ამოშლა</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (პირადი რეჟიმი)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">სხვა ჩანართები</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1184,8 +1204,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">გამოსვლა</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">სრულად გაასუფთავებს დათვალიერების მონაცემებს.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">გასასუფთავებელი დროის შუალედი</string>
     <!-- Body text of a delete browsing data dialog. -->
@@ -1220,20 +1238,34 @@
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">მოგესალმებათ %s!</string>
+    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">მოგესალმებათ %s!</string>
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">მოგესალმებით უკეთეს ინტერნეტში</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">ბრაუზერი შექმნილი ხალხისთვის, და არა მოგებისთვის</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">დაასინქრონეთ Firefox მოწყობილობებს შორის</string>
+    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">დაასინქრონეთ Firefox მოწყობილობებს შორის</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">განაგრძეთ იქიდან, სადაც გაჩერდით.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string name="onboarding_manual_sign_in_description_2">გადმოიტანს სანიშნებს, ისტორიასა და პაროლებს, ამ მოწყობილობის %1$s-ზე.</string>
+    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">გადმოიტანს სანიშნებს, ისტორიასა და პაროლებს, ამ მოწყობილობის %1$s-ზე.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">დაასინქრონეთ ჩანართები და პაროლები მოწყობილობებს შორის შეუფერხებლად გადასვლისთვის.</string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">ანგარიშის შექმნა</string>
+    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">ანგარიშის შექმნა</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">შესვლა</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">სინქრონიზაცია ჩართულია</string>
 
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">ყოველთვის პირადული</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">ყოველთვის პირადული</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">პირადულობის ნაგულისხმევი დაცვა</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">%1$s ავტომატურად უზღუდავს კომპანიებს თქვენს მოქმედებებზე ფარულად თვალის მიდევნების საშუალებას ვებსივრცეში.</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s ავტომატურად უზღუდავს კომპანიებს თქვენს მოქმედებებზე ფარულად თვალის მიდევნების საშუალებას ვებსივრცეში.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">ფუნთუშებისგან ყოველმხრივი დაცვით მეთვალყურეებს არ ექნებათ საშუალება, თვალი გადევნონ ვებსივრცეში ფუნთუშების გამოყენებით.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">ჩვეულებრივი (ნაგულისხმევი)</string>
     <!-- text for standard blocking option button description -->
@@ -1245,15 +1277,23 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">აირჩიეთ ხელსაწყოთა ზოლის მდებარეობა</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">განათავსეთ ხელსაწყოები მოხერხებულ ადგილას. დატოვეთ ქვემოთ ან გადაიტანეთ ზემოთ.</string>
+    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">განათავსეთ ხელსაწყოები მოხერხებულ ადგილას. დატოვეთ ქვემოთ ან გადაიტანეთ ზემოთ.</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">დატოვეთ ქვემოთ ან გადაიტანეთ ზემოთ.</string>
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">თქვენი პირადულობა</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">თქვენი პირადულობა</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">თქვენი მონაცემები თქვენს ხელშია</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">%s შექმნილია ისე, რომ თავად წყვეტდეთ რას გააზიარებთ ინტერნეტში და რას გაგვიზიარებთ ჩვენ.</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">%s შექმნილია ისე, რომ თავად წყვეტდეთ რას გააზიარებთ ინტერნეტში და რას გაგვიზიარებთ ჩვენ.</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">%s საშუალებას იძლევა, რომ თავად წყვეტდეთ, რას გააზიარებთ ინტერნეტში და რას გაგვიზიარებთ ჩვენ.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">გაეცანით პირადულობის განაცხადს</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">მზად ხართ, შეაღოთ საოცარი ინტერნეტსამყაროს კარი?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">დაიწყეთ გვერდების მონახულება</string>
 

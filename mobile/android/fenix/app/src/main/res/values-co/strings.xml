@@ -41,7 +41,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Indette recente</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Indette recente</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Arregistrate pocu fà</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Affissà tutte l’indette arregistrate</string>
 
@@ -137,6 +139,8 @@
     <string name="recent_tabs_see_all_synced_tabs_button_text">Vede tutte l’unghjette sincrunizate</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Apparechju sincrunizatu</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Caccià</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Caccià</string>
@@ -252,25 +256,32 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">Ciò chì hè novu in %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Ciò chì hè novu in %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Ora hè più faciule di rivene induve vo avete piantatu.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Ora hè più faciule di rivene induve vo avete piantatu.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Pagina d’accolta persunalizata di %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Pagina d’accolta persunalizata di %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Saltà à e vostre unghjette aperte, à l’indette è à a cronolugia di navigazione.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Saltà à e vostre unghjette aperte, à l’indette è à a cronolugia di navigazione.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Unghjette chjare è organizate</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Unghjette chjare è organizate</string>
 
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Sbarazzà l’unghjette cù un accunciamentu più chjaru è a so chjusura autumatica.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Sbarazzà l’unghjette cù un accunciamentu più chjaru è a so chjusura autumatica.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Ricerche recente</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Ricerche recente</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Fighjate torna l’ultime ricerche da a vostra pagina d’accolta è e vostre unghjette.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Fighjate torna l’ultime ricerche da a vostra pagina d’accolta è e vostre unghjette.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">A vostra pagina d’accolta Firefox persunalizata vi permette avà di rivene d’una manera faciule induve vo avete lasciatu. Ci truverete l’unghjette, l’indette, è i risultati di ricerca recente.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">A vostra pagina d’accolta Firefox persunalizata vi permette avà di rivene d’una manera faciule induve vo avete lasciatu. Ci truverete l’unghjette, l’indette, è i risultati di ricerca recente.</string>
+
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Principià</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Cunnettesi</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Ignurà</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -361,8 +372,6 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Persunalizà</string>
     <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Sincrunizate l’indette, a cronolugia è ancu di più cù u vostru contu Firefox</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Cunnittitevi per sincrunizà unghjette, indette, parolle d’intesa è ancu di più</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Contu Firefox</string>
@@ -450,11 +459,18 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Affissà</string>
 
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">Pruvà torna</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">Sapene di più</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Cambià u sfondulu di screnu picchichjendu u logo di a pagina d’accolta</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Cambià u sfondulu di screnu picchichjendu u logo di a pagina d’accolta</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Logo Firefox - cambià u sfondulu di screnu, buttone</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Logo Firefox - cambià u sfondulu di screnu, buttone</string>
+
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">%s classicu</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -537,8 +553,6 @@
     <string name="preference_experiments_summary_2">Permette à Mozilla d’installà è di lancià studii</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Attivà Sync</string>
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">Sincrunizà è arregistrà i vostri dati</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -739,8 +753,6 @@
     <string name="open_tabs_menu">Apre u listinu di l’unghjette</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Arregistrà l’unghjette in una cullezzione</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Listinu di l’unghjetta</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Squassà a cullezzione</string>
     <!-- Text for the menu button to rename a collection -->
@@ -759,9 +771,6 @@
     <string name="delete_from_history">Squassà da a cronolugia</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (navigazione privata)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Altre unghjette</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -791,16 +800,16 @@
     <string name="history_empty_message">Alcuna cronolugia</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Sincrunizati nant’à d’altri apparechji</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Sincrunizati nant’à d’altri apparechji</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">Da d’altri apparechji</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Da d’altri apparechji</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Cunnittitevi per affissà a cronolugia sincrunizata da i vostri altri apparechji.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Cunnittitevi per affissà a cronolugia sincrunizata da i vostri altri apparechji.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Cunnettesi</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Cunnettesi</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>O creà un contu Firefox per lancià a sincrunizazione</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>O creà un contu Firefox per lancià a sincrunizazione</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1168,9 +1177,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Esce</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">St’azzione squasserà tutti i vostri dati di navigazione.</string>
-
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Intervallu di tempu à squassà</string>
     <!-- Body text of a delete browsing data dialog. -->
@@ -1205,19 +1211,21 @@
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Benvenuta in %s !</string>
+    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Benvenuta in %s !</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Sincrunizate Firefox trà i vostri apparechji</string>
+    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Sincrunizate Firefox trà i vostri apparechji</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string name="onboarding_manual_sign_in_description_2">Impurtate e vostre indette, cronolugia è parolle d’intesa in %1$s nant’à st’apparechju.</string>
+    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Impurtate e vostre indette, cronolugia è parolle d’intesa in %1$s nant’à st’apparechju.</string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">Arregistrassi</string>
+    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Arregistrassi</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">Cunnettesi</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sincrunizazione attivata</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">Cunfidenzialità sempre attiva</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Cunfidenzialità sempre attiva</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">%1$s impedisce autumaticamente l’imprese di seguitavvi da manera sicreta nant’à u Web.</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s impedisce autumaticamente l’imprese di seguitavvi da manera sicreta nant’à u Web.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Classica (predefinita)</string>
     <!-- text for standard blocking option button description -->
@@ -1229,12 +1237,12 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Sceglie a pusizione di a vostra barra d’attrezzi</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">Piazzate a barra d’attrezzi à purtata di manu. Lasciatela quaghjò o dispiazzatela quassù.</string>
+    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Piazzate a barra d’attrezzi à purtata di manu. Lasciatela quaghjò o dispiazzatela quassù.</string>
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">A vostra vita privata</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">A vostra vita privata</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">Avemu cuncepitu %s per davvi u cuntrollu nant’à ciò chì vò spartite in linea è nant’à ciò chì vò spartite cù noi.</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Avemu cuncepitu %s per davvi u cuntrollu nant’à ciò chì vò spartite in linea è nant’à ciò chì vò spartite cù noi.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Leghjite a nostra pulitica di cunfidenzialità</string>
 

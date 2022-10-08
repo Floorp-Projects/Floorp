@@ -51,6 +51,11 @@
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ແມ່ນຜະລິດຂື້ນໂດຍ Mozilla.</string>
 
+    <!-- Private Browsing -->
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">
+        %1$s ຈະລຶບລ້າງປະຫວັດການຊອກຫາ ແລະການຊອກຫາຂອງທ່ານອອກຈາກແຖບສ່ວນຕົວ ເມື່ອທ່ານປິດພວກມັນ ຫຼືອອກຈາກແອັບ. ໃນຂະນະທີ່ນີ້ບໍ່ໄດ້ເຮັດໃຫ້ທ່ານບໍ່ເປີດເຜີຍຊື່ກັບເວັບໄຊທ໌ ຫຼືຜູ້ໃຫ້ບໍລິການອິນເຕີເນັດຂອງທ່ານ, ມັນເຮັດໃຫ້ມັນງ່າຍຂຶ້ນທີ່ຈະຮັກສາສິ່ງທີ່ທ່ານເຮັດອອນໄລນ໌ເປັນສ່ວນຕົວຈາກຜູ້ອື່ນທີ່ໃຊ້ອຸປະກອນນີ້.</string>
     <string name="private_browsing_common_myths">ຄວາມເຂົ້າໃຈຜິດທີ່ມັກພົບຕະລອດກ່ຽວກັບການທ່ອງເວັບແບບສ່ວນຕົວ</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
@@ -1367,6 +1372,8 @@
     <string name="preference_enhanced_tracking_protection">ເພີ່ມການປ້ອງກັນການຕິດຕາມ</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">ທ່ອງເວັບໂດຍບໍ່ມີການຕິດຕາມ</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">ຮັກສາຂໍ້ມູນຂອງທ່ານໃຫ້ກັບຕົວທ່ານເອງ. %s ປົກປ້ອງທ່ານຈາກຫຼາຍຕົວຕິດຕາມທົ່ວໄປທີ່ສຸດທີ່ຕິດຕາມສິ່ງທີ່ທ່ານເຮັດອອນໄລນ໌.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1429,12 +1436,18 @@
 
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title_2">ຄຸກກີຂ້າມເວັບໄຊ</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">ບລັອກຄຸກກີ້ທີ່ເຄືອຂ່າຍໂຄສະນາ ແລະບໍລິສັດວິເຄາະໃຊ້ເພື່ອລວບລວມຂໍ້ມູນການທ່ອງເວັບຂອງທ່ານໃນທົ່ວຫຼາຍເວັບໄຊ.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">ການປ້ອງກັນຄູກກີທັງໝົດຈະແຍກຄູກກີສຳລັບໄຊ້ທີທ່ານໄດ້ເຂົ້າ ດັ່ງນັ້ນຕົວຕິດຕາມຕ່າງໆເຊັ່ນ: ເຄື່ອຂ່າຍໂຄສະນາ ຈຶ່ງບໍ່ສາມາດໃຊ້ຄູກກີເຫຼົານີ້ເພືື່ອຕິດຕາມທ່ານຢູ່ເວັບໄຊຕ່າງໆໄດ້</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">ຕົວຂຸດຫລຽນດິຈິຕໍລ</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_description">ປ້ອງກັນບໍ່ໃຫ້ສະຄຣິບທີ່ເປັນອັນຕະລາຍເຂົ້າເຖິງອຸປະກອນຂອງທ່ານເພື່ອຂຸດຄົ້ນສະກຸນເງິນດິຈິຕອນ.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">ລາຍນິ້ວມື</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">ຢຸດການເກັບກຳຂໍ້ມູນທີ່ສາມາດລະບຸຕົວຕົນໄດ້ກ່ຽວກັບອຸປະກອນຂອງທ່ານທີ່ສາມາດໃຊ້ເພື່ອຈຸດປະສົງການຕິດຕາມ.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">ຕົວຕິດຕາມເນື້ອຫາ</string>
 
@@ -1461,6 +1474,9 @@
     <string name="etp_redirect_trackers_title">ປ່ຽນເສັ້ນທາງຕິດຕາມ</string>
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">ລຶບ cookies ທີ່ຕັ້ງໄວ້ໂດຍການປ່ຽນເສັ້ນທາງໄປຫາເວັບໄຊທ໌ຕິດຕາມທີ່ຮູ້ຈັກ.</string>
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">ບາງຕົວຕິດຕາມທີ່ໝາຍໄວ້ຂ້າງລຸ່ມນີ້ໄດ້ປົດບລັອກບາງສ່ວນຢູ່ໃນໜ້ານີ້ ເພາະວ່າທ່ານໄດ້ໂຕ້ຕອບກັບພວກມັນ *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
 
@@ -1506,6 +1522,9 @@
     <string name="add_to_homescreen_continue">ດຳເນີນການຕໍ່ໄປທີ່ເວັບໄຊທ</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">ຊື່ທາງລັດ</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">ທ່ານສາມາດເພີ່ມເວັບໄຊທ໌ນີ້ໃສ່ໜ້າຈໍຫຼັກຂອງອຸປະກອນທ່ານໄດ້ຢ່າງງ່າຍດາຍເພື່ອໃຫ້ເຂົ້າເຖິງທັນທີ ແລະທ່ອງເວັບໄວຂຶ້ນດ້ວຍປະສົບການທີ່ຄ້າຍຄືກັບແອັບ.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">ລັອກອິນ ແລະ ລະຫັດຜ່ານ</string>
