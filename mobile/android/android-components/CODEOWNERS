@@ -40,7 +40,7 @@
 /components/browser/menu2/                  @jonalmeida
 /components/browser/search/                 @mozilla-mobile/act
 /components/browser/state/                  @csadilek
-/components/browser/storage-sync/           @grigoryk
+/components/browser/storage-sync/           @mozilla-mobile/act
 /components/browser/tabstray/               @jonalmeida
 /components/browser/thumbnails/             @jonalmeida @gabrielluong
 /components/browser/toolbar/                @mozilla-mobile/act
@@ -51,16 +51,16 @@
 /components/concept/fetch/                  @csadilek
 /components/concept/menu/                   @mozilla-mobile/act
 /components/concept/push/                   @jonalmeida
-/components/concept/storage/                @grigoryk
-/components/concept/sync/                   @grigoryk
+/components/concept/storage/                @mozilla-mobile/act
+/components/concept/sync/                   @mozilla-mobile/act
 /components/concept/tabstray/               @jonalmeida
 /components/concept/toolbar/                @mozilla-mobile/act
 
 /components/feature/accounts-push/          @jonalmeida
-/components/feature/accounts/               @grigoryk
+/components/feature/accounts/               @mozilla-mobile/act
 /components/feature/addons/                 @csadilek @amejia481
 /components/feature/app-links/              @rocketsroger
-/components/feature/autofill/               @grigoryk
+/components/feature/autofill/               @mozilla-mobile/act
 /components/feature/awesomebar/             @csadilek
 /components/feature/containers/             @gabrielluong
 /components/feature/contextmenu/            @mozilla-mobile/act
@@ -71,7 +71,7 @@
 /components/feature/media/                  @rocketsroger
 /components/feature/privatemode/            @mozilla-mobile/act
 /components/feature/prompts/                @amejia481
-/components/feature/push/                   @jonalmeida @grigoryk
+/components/feature/push/                   @jonalmeida
 /components/feature/pwa/                    @mozilla-mobile/act
 /components/feature/qr/                     @csadilek
 /components/feature/readerview/             @csadilek
@@ -84,13 +84,13 @@
 /components/feature/tab-collections/        @mozilla-mobile/act
 /components/feature/tabs/                   @jonalmeida
 /components/feature/toolbar/                @mozilla-mobile/act
-/components/feature/top-sites/              @gabrielluong @grigoryk
+/components/feature/top-sites/              @gabrielluong
 /components/feature/webcompat-reporter/     @mozilla-mobile/Webcompat
 /components/feature/webcompat/              @mozilla-mobile/Webcompat
 /components/feature/webnotifications/       @jonalmeida @rocketsroger
 
 /components/lib/crash/                      @rocketsroger
-/components/lib/dataprotect/                @grigoryk
+/components/lib/dataprotect/                @mozilla-mobile/act
 /components/lib/fetch-httpurlconnection/    @mozilla-mobile/act
 /components/lib/fetch-okhttp/               @mozilla-mobile/act
 /components/lib/jexl/                       @mozilla-mobile/act
@@ -100,14 +100,14 @@
 
 /components/service/digitalassetlinks/      @mozilla-mobile/act
 /components/service/experiments/            @mozilla-mobile/telemetry
-/components/service/firefox-accounts/       @grigoryk
+/components/service/firefox-accounts/       @mozilla-mobile/act
 /components/service/fretboard/              @mozilla-mobile/act
 /components/service/glean/                  @mozilla-mobile/telemetry
 /components/service/location/               @mozilla-mobile/act
 /components/service/nimbus/                 @mozilla-mobile/telemetry @mozilla-mobile/ast
 /components/service/pocket/                 @Mugurell
 /components/service/sync-autofill/          @gabrielluong
-/components/service/sync-logins/            @grigoryk
+/components/service/sync-logins/            @mozilla-mobile/act
 
 /components/support/android-test/           @amejia481
 /components/support/base/                   @amejia481
@@ -116,7 +116,7 @@
 /components/support/locale/                 @amejia481
 /components/support/rusthttp/               @mozilla-mobile/ast
 /components/support/rustlog/                @mozilla-mobile/ast
-/components/support/sync-telemetry/         @grigoryk
+/components/support/sync-telemetry/         @mozilla-mobile/act
 /components/support/test-appservices/       @mozilla-mobile/act
 /components/support/test-libstate/          @csadilek
 /components/support/test/                   @amejia481
@@ -138,10 +138,10 @@
 /samples/browser/                           @csadilek @amejia481
 /samples/crash/                             @rocketsroger
 /samples/dataprotect/                       @mozilla-mobile/act
-/samples/firefox-accounts/                  @grigoryk
+/samples/firefox-accounts/                  @mozilla-mobile/act
 /samples/glean/                             @mozilla-mobile/telemetry
-/samples/sync-logins/                       @grigoryk
-/samples/sync/                              @grigoryk
+/samples/sync-logins/                       @mozilla-mobile/act
+/samples/sync/                              @mozilla-mobile/act
 /samples/toolbar/                           @mozilla-mobile/act
 
 # Bot owned files
