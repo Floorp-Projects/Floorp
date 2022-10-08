@@ -16,6 +16,7 @@ def migrate(ctx):
     """Bug 1793572 - Convert WebRTC strings to Fluent, part {index}."""
 
     source = "browser/chrome/browser/webrtcIndicator.properties"
+    browser = "browser/chrome/browser/browser.properties"
     target = "browser/browser/webrtcIndicator.ftl"
     ctx.add_transforms(
         target,
@@ -309,6 +310,125 @@ def migrate(ctx):
                             ),
                         ),
                     )
+                ],
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-item-camera"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.sharingMenuCamera",
+                    {
+                        "%1$S (": FTL.TextElement(""),
+                        "%1$S（": FTL.TextElement(""),
+                        ")": FTL.TextElement(""),
+                        "）": FTL.TextElement(""),
+                    },
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-item-microphone"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.sharingMenuMicrophone",
+                    {
+                        "%1$S (": FTL.TextElement(""),
+                        "%1$S（": FTL.TextElement(""),
+                        ")": FTL.TextElement(""),
+                        "）": FTL.TextElement(""),
+                    },
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-item-audio-capture"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.sharingMenuAudioCapture",
+                    {
+                        "%1$S (": FTL.TextElement(""),
+                        "%1$S（": FTL.TextElement(""),
+                        ")": FTL.TextElement(""),
+                        "）": FTL.TextElement(""),
+                    },
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-item-application"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.sharingMenuApplication",
+                    {
+                        "%1$S (": FTL.TextElement(""),
+                        "%1$S（": FTL.TextElement(""),
+                        ")": FTL.TextElement(""),
+                        "）": FTL.TextElement(""),
+                    },
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-item-screen"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.sharingMenuScreen",
+                    {
+                        "%1$S (": FTL.TextElement(""),
+                        "%1$S（": FTL.TextElement(""),
+                        ")": FTL.TextElement(""),
+                        "）": FTL.TextElement(""),
+                    },
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-item-window"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.sharingMenuWindow",
+                    {
+                        "%1$S (": FTL.TextElement(""),
+                        "%1$S（": FTL.TextElement(""),
+                        ")": FTL.TextElement(""),
+                        "）": FTL.TextElement(""),
+                    },
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-item-browser"),
+                value=REPLACE(
+                    browser,
+                    "getUserMedia.sharingMenuBrowser",
+                    {
+                        "%1$S (": FTL.TextElement(""),
+                        "%1$S（": FTL.TextElement(""),
+                        ")": FTL.TextElement(""),
+                        "）": FTL.TextElement(""),
+                    },
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-sharing-menuitem-unknown-host"),
+                value=COPY(browser, "getUserMedia.sharingMenuUnknownHost"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-sharing-menuitem"),
+                attributes=[
+                    FTL.Attribute(
+                        id=FTL.Identifier("label"),
+                        value=FTL.Pattern(
+                            [FTL.TextElement("{ $origin } ({ $itemList })")]
+                        ),
+                    ),
+                ],
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webrtc-sharing-menu"),
+                attributes=[
+                    FTL.Attribute(
+                        id=FTL.Identifier("label"),
+                        value=COPY(browser, "getUserMedia.sharingMenu.label"),
+                    ),
+                    FTL.Attribute(
+                        id=FTL.Identifier("accesskey"),
+                        value=COPY(browser, "getUserMedia.sharingMenu.accesskey"),
+                    ),
                 ],
             ),
         ],

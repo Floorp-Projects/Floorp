@@ -31,6 +31,16 @@ ChromeUtils.defineModuleGetter(
   "SitePermissions",
   "resource:///modules/SitePermissions.jsm"
 );
+XPCOMUtils.defineLazyGetter(
+  lazy,
+  "syncL10n",
+  () => new Localization(["browser/webrtcIndicator.ftl"], true)
+);
+XPCOMUtils.defineLazyGetter(
+  lazy,
+  "listFormat",
+  () => new Services.intl.ListFormat(undefined)
+);
 
 const SHARING_L10NID_BY_TYPE = new Map([
   [
@@ -75,6 +85,17 @@ const SHARING_L10NID_BY_TYPE = new Map([
       "webrtc-indicator-menuitem-sharing-browser-with-n-tabs",
     ],
   ],
+]);
+
+// These identifiers are defined in MediaStreamTrack.webidl
+const MEDIA_SOURCE_L10NID_BY_TYPE = new Map([
+  ["camera", "webrtc-item-camera"],
+  ["screen", "webrtc-item-screen"],
+  ["application", "webrtc-item-application"],
+  ["window", "webrtc-item-window"],
+  ["browser", "webrtc-item-browser"],
+  ["microphone", "webrtc-item-microphone"],
+  ["audioCapture", "webrtc-item-audio-capture"],
 ]);
 
 var webrtcUI = {
@@ -836,9 +857,9 @@ var webrtcUI = {
         host = uri.specIgnoringRef;
       } else {
         // This is unfortunate, but we should display *something*...
-        const kBundleURI = "chrome://browser/locale/browser.properties";
-        let bundle = Services.strings.createBundle(kBundleURI);
-        host = bundle.GetStringFromName("getUserMedia.sharingMenuUnknownHost");
+        host = lazy.syncL10n.formatValueSync(
+          "webrtc-sharing-menuitem-unknown-host"
+        );
       }
     }
     return host;
@@ -1043,7 +1064,7 @@ function showStreamSharingMenu(win, event, inclWindow = false) {
     return;
   }
 
-  const l10nIds = SHARING_L10NID_BY_TYPE.get(type);
+  const l10nIds = SHARING_L10NID_BY_TYPE.get(type) ?? [];
   if (activeStreams.length == 1) {
     let stream = activeStreams[0];
 
@@ -1218,29 +1239,19 @@ class MacOSWebRTCStatusbarIndicator {
 }
 
 function onTabSharingMenuPopupShowing(e) {
-  let streams = webrtcUI.getActiveStreams(true, true, true);
+  const streams = webrtcUI.getActiveStreams(true, true, true);
   for (let streamInfo of streams) {
-    let stringName = "getUserMedia.sharingMenu";
-    let types = streamInfo.types;
-    if (types.camera) {
-      stringName += "Camera";
-    }
-    if (types.microphone) {
-      stringName += "Microphone";
-    }
-    if (types.screen) {
-      stringName += types.screen;
-    }
+    const names = streamInfo.devices.map(({ mediaSource }) => {
+      const l10nId = MEDIA_SOURCE_L10NID_BY_TYPE.get(mediaSource);
+      return l10nId ? lazy.syncL10n.formatValueSync(l10nId) : mediaSource;
+    });
 
-    let doc = e.target.ownerDocument;
-    let bundle = doc.defaultView.gNavigatorBundle;
-
-    let origin = webrtcUI.getHostOrExtensionName(null, streamInfo.uri);
-    let menuitem = doc.createXULElement("menuitem");
-    menuitem.setAttribute(
-      "label",
-      bundle.getFormattedString(stringName, [origin])
-    );
+    const doc = e.target.ownerDocument;
+    const menuitem = doc.createXULElement("menuitem");
+    doc.l10n.setAttributes(menuitem, "webrtc-sharing-menuitem", {
+      origin: webrtcUI.getHostOrExtensionName(null, streamInfo.uri),
+      itemList: lazy.listFormat.format(names),
+    });
     menuitem.stream = streamInfo;
     menuitem.addEventListener("command", onTabSharingMenuPopupCommand);
     e.target.appendChild(menuitem);
@@ -1261,11 +1272,11 @@ function showOrCreateMenuForWindow(aWindow) {
   let document = aWindow.document;
   let menu = document.getElementById("tabSharingMenu");
   if (!menu) {
-    let stringBundle = aWindow.gNavigatorBundle;
+    aWindow.MozXULElement.insertFTLIfNeeded("browser/webrtcIndicator.ftl");
+
     menu = document.createXULElement("menu");
     menu.id = "tabSharingMenu";
-    let labelStringId = "getUserMedia.sharingMenu.label";
-    menu.setAttribute("label", stringBundle.getString(labelStringId));
+    document.l10n.setAttributes(menu, "webrtc-sharing-menu");
 
     let container, insertionPoint;
     if (AppConstants.platform == "macosx") {
@@ -1275,8 +1286,6 @@ function showOrCreateMenuForWindow(aWindow) {
       separator.id = "tabSharingSeparator";
       container.insertBefore(separator, insertionPoint);
     } else {
-      let accesskeyStringId = "getUserMedia.sharingMenu.accesskey";
-      menu.setAttribute("accesskey", stringBundle.getString(accesskeyStringId));
       container = document.getElementById("main-menubar");
       insertionPoint = document.getElementById("helpMenu");
     }
