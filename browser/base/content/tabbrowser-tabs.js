@@ -1092,6 +1092,7 @@
           }
 
           this._positionPinnedTabs();
+          this._updateCloseButtons();
         },
         true
       );
@@ -1109,6 +1110,7 @@
 
         this.setAttribute("overflow", "true");
         this._positionPinnedTabs();
+        this._updateCloseButtons();
         this._handleTabSelect(true);
       });
 

@@ -25,6 +25,7 @@
 
       <popupnotificationcontent id="webRTC-selectWindowOrScreen" orient="vertical">
         <label id="webRTC-selectWindow-label"
+               data-l10n-id="popup-select-window-or-screen"
                control="webRTC-selectWindow-menulist"/>
         <menulist id="webRTC-selectWindow-menulist"
                   oncommand="webrtcUI.updateWarningLabel(this);"
