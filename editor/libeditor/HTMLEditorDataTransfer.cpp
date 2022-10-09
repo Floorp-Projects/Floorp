@@ -260,13 +260,15 @@ nsresult HTMLEditor::InsertHTMLAsAction(const nsAString& aInString,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  rv = DoInsertHTMLWithContext(aInString, u""_ns, u""_ns, u""_ns,
-                               SafeToInsertData::Yes, EditorDOMPoint(),
-                               DeleteSelectedContent::Yes,
-                               InlineStylesAtInsertionPoint::Preserve);
+  AutoPlaceholderBatch treatAsOneTransaction(
+      *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
+  rv = InsertHTMLWithContextAsSubAction(aInString, u""_ns, u""_ns, u""_ns,
+                                        SafeToInsertData::Yes, EditorDOMPoint(),
+                                        DeleteSelectedContent::Yes,
+                                        InlineStylesAtInsertionPoint::Preserve);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::DoInsertHTMLWithContext(SafeToInsertData::"
-                       "Yes, DeleteSelectedContent::Yes, "
+                       "HTMLEditor::InsertHTMLWithContextAsSubAction("
+                       "SafeToInsertData::Yes, DeleteSelectedContent::Yes, "
                        "InlineStylesAtInsertionPoint::Preserve) failed");
   return EditorBase::ToGenericNSResult(rv);
 }
@@ -280,11 +282,9 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
   HTMLWithContextInserter(const HTMLWithContextInserter&) = delete;
   HTMLWithContextInserter(HTMLWithContextInserter&&) = delete;
 
-  MOZ_CAN_RUN_SCRIPT nsresult
-  Run(const nsAString& aInputString, const nsAString& aContextStr,
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditActionResult, nsresult> Run(
+      const nsAString& aInputString, const nsAString& aContextStr,
       const nsAString& aInfoStr, SafeToInsertData aSafeToInsertData,
-      const EditorDOMPoint& aPointToInsert,
-      DeleteSelectedContent aDeleteSelectedContent,
       InlineStylesAtInsertionPoint aInlineStylesAtInsertionPoint);
 
  private:
@@ -510,39 +510,27 @@ HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
   return pointToPutCaret;
 }
 
-nsresult HTMLEditor::DoInsertHTMLWithContext(
+nsresult HTMLEditor::InsertHTMLWithContextAsSubAction(
     const nsAString& aInputString, const nsAString& aContextStr,
     const nsAString& aInfoStr, const nsAString& aFlavor,
     SafeToInsertData aSafeToInsertData, const EditorDOMPoint& aPointToInsert,
     DeleteSelectedContent aDeleteSelectedContent,
     InlineStylesAtInsertionPoint aInlineStylesAtInsertionPoint) {
-  HTMLWithContextInserter htmlWithContextInserter(*this);
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  return htmlWithContextInserter.Run(
-      aInputString, aContextStr, aInfoStr, aSafeToInsertData, aPointToInsert,
-      aDeleteSelectedContent, aInlineStylesAtInsertionPoint);
-}
-
-nsresult HTMLEditor::HTMLWithContextInserter::Run(
-    const nsAString& aInputString, const nsAString& aContextStr,
-    const nsAString& aInfoStr, SafeToInsertData aSafeToInsertData,
-    const EditorDOMPoint& aPointToInsert,
-    DeleteSelectedContent aDeleteSelectedContent,
-    InlineStylesAtInsertionPoint aInlineStylesAtInsertionPoint) {
-  MOZ_ASSERT(mHTMLEditor.IsEditActionDataAvailable());
-
-  if (NS_WARN_IF(!mHTMLEditor.mInitSucceeded)) {
+  if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  // force IME commit; set up rules sniffing and batching
-  mHTMLEditor.CommitComposition();
-  AutoPlaceholderBatch treatAsOneTransaction(
-      mHTMLEditor, ScrollSelectionIntoView::Yes, __FUNCTION__);
+  if (IsReadonly()) {
+    return NS_OK;
+  }
+
+  CommitComposition();
+
   IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      mHTMLEditor, EditSubAction::ePasteHTMLContent, nsIEditor::eNext,
-      ignoredError);
+      *this, EditSubAction::ePasteHTMLContent, nsIEditor::eNext, ignoredError);
   if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
     return ignoredError.StealNSResult();
   }
@@ -550,6 +538,63 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
       !ignoredError.Failed(),
       "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
   ignoredError.SuppressException();
+
+  {
+    Result<EditActionResult, nsresult> result = CanHandleHTMLEditSubAction();
+    if (MOZ_UNLIKELY(result.isErr())) {
+      NS_WARNING("HTMLEditor::CanHandleHTMLEditSubAction() failed");
+      return result.unwrapErr();
+    }
+    if (result.inspect().Canceled()) {
+      return NS_OK;
+    }
+  }
+
+  // If we have a destination / target node, we want to insert there rather than
+  // in place of the selection.  Ignore aDeleteSelectedContent here if
+  // aPointToInsert is not set since deletion will also occur later in
+  // HTMLWithContextInserter and will be collapsed around there; this block
+  // is intended to cover the various scenarios where we are dropping in an
+  // editor (and may want to delete the selection before collapsing the
+  // selection in the new destination)
+  if (aPointToInsert.IsSet()) {
+    nsresult rv =
+        PrepareToInsertContent(aPointToInsert, aDeleteSelectedContent);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::PrepareToInsertContent() failed");
+      return rv;
+    }
+    aDeleteSelectedContent = DeleteSelectedContent::No;
+  }
+
+  HTMLWithContextInserter htmlWithContextInserter(*this);
+
+  Result<EditActionResult, nsresult> result = htmlWithContextInserter.Run(
+      aInputString, aContextStr, aInfoStr, aSafeToInsertData,
+      aInlineStylesAtInsertionPoint);
+  if (MOZ_UNLIKELY(result.isErr())) {
+    return result.unwrapErr();
+  }
+
+  // If nothing is inserted and delete selection is required, we need to
+  // delete selection right now.
+  if (result.inspect().Ignored() &&
+      aDeleteSelectedContent == DeleteSelectedContent::Yes) {
+    nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "EditorBase::DeleteSelectionAsSubAction(eNone, eStrip) failed");
+      return rv;
+    }
+  }
+  return NS_OK;
+}
+
+Result<EditActionResult, nsresult> HTMLEditor::HTMLWithContextInserter::Run(
+    const nsAString& aInputString, const nsAString& aContextStr,
+    const nsAString& aInfoStr, SafeToInsertData aSafeToInsertData,
+    InlineStylesAtInsertionPoint aInlineStylesAtInsertionPoint) {
+  MOZ_ASSERT(mHTMLEditor.IsEditActionDataAvailable());
 
   // create a dom document fragment that represents the structure to paste
   nsCOMPtr<nsINode> fragmentAsNode, streamStartParent, streamEndParent;
@@ -563,22 +608,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
     NS_WARNING(
         "HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste() "
         "failed");
-    return rv;
-  }
-
-  // if we have a destination / target node, we want to insert there
-  // rather than in place of the selection
-  // ignore aDeleteSelectedContent here if aPointToInsert is not set since
-  // deletion will also occur later; this block is intended to cover the various
-  // scenarios where we are dropping in an editor (and may want to delete
-  // the selection before collapsing the selection in the new destination)
-  if (aPointToInsert.IsSet()) {
-    rv = mHTMLEditor.PrepareToInsertContent(aPointToInsert,
-                                            aDeleteSelectedContent);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::PrepareToInsertContent() failed");
-      return rv;
-    }
+    return Err(rv);
   }
 
   // we need to recalculate various things based on potentially new offsets
@@ -607,19 +637,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
       arrayOfTopMostChildContents);
 
   if (arrayOfTopMostChildContents.IsEmpty()) {
-    // We aren't inserting anything, but if aDeleteSelectedContent is set, we do
-    // want to delete everything.
-    // XXX What will this do? We've already called DeleteSelectionAsSubAction()
-    //     above if insertion point is specified.
-    if (aDeleteSelectedContent == DeleteSelectedContent::Yes) {
-      nsresult rv = mHTMLEditor.DeleteSelectionAsSubAction(eNone, eStrip);
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "EditorBase::DeleteSelectionAsSubAction(eNone, eStrip) failed");
-        return rv;
-      }
-    }
-    return NS_OK;
+    return EditActionResult::IgnoredResult();  // Nothing to insert.
   }
 
   // Are there any table elements in the list?
@@ -642,7 +660,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
     rv = mHTMLEditor.DeleteSelectionAndPrepareToCreateNode();
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::DeleteSelectionAndPrepareToCreateNode() failed");
-      return rv;
+      return Err(rv);
     }
 
     if (aInlineStylesAtInsertionPoint == InlineStylesAtInsertionPoint::Clear) {
@@ -653,14 +671,14 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
               nullptr, SpecifiedStyle::Preserve);
       if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
         NS_WARNING("HTMLEditor::ClearStyleAt() failed");
-        return pointToPutCaretOrError.unwrapErr();
+        return pointToPutCaretOrError.propagateErr();
       }
       if (pointToPutCaretOrError.inspect().IsSet()) {
         nsresult rv =
             mHTMLEditor.CollapseSelectionTo(pointToPutCaretOrError.unwrap());
         if (NS_FAILED(rv)) {
           NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-          return rv;
+          return Err(rv);
         }
       }
     }
@@ -675,7 +693,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
       rv = mHTMLEditor.DeleteTableCellWithTransaction(1);
       if (NS_FAILED(rv)) {
         NS_WARNING("HTMLEditor::DeleteTableCellWithTransaction(1) failed");
-        return rv;
+        return Err(rv);
       }
     }
     // collapse selection to beginning of deleted table content
@@ -685,20 +703,15 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
                          "Selection::Collapse() failed, but ignored");
   }
 
-  // XXX Why don't we test this first?
-  if (mHTMLEditor.IsReadonly()) {
-    return NS_OK;
-  }
-
   {
     Result<EditActionResult, nsresult> result =
         mHTMLEditor.CanHandleHTMLEditSubAction();
     if (MOZ_UNLIKELY(result.isErr())) {
       NS_WARNING("HTMLEditor::CanHandleHTMLEditSubAction() failed");
-      return result.unwrapErr();
+      return result;
     }
     if (result.inspect().Canceled()) {
-      return NS_OK;
+      return result;
     }
   }
 
@@ -706,7 +719,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
 
   rv = mHTMLEditor.EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::EnsureNoPaddingBRElementForEmptyEditor() "
@@ -715,7 +728,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
   if (NS_SUCCEEDED(rv) && mHTMLEditor.SelectionRef().IsCollapsed()) {
     nsresult rv = mHTMLEditor.EnsureCaretNotAfterInvisibleBRElement();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return NS_ERROR_EDITOR_DESTROYED;
+      return Err(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() "
@@ -723,7 +736,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
     if (NS_SUCCEEDED(rv)) {
       nsresult rv = mHTMLEditor.PrepareInlineStylesForCaret();
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-        return NS_ERROR_EDITOR_DESTROYED;
+        return Err(NS_ERROR_EDITOR_DESTROYED);
       }
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
@@ -734,7 +747,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
   Element* editingHost =
       mHTMLEditor.ComputeEditingHost(HTMLEditor::LimitInBodyElement::No);
   if (NS_WARN_IF(!editingHost)) {
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
 
   // Adjust position based on the first node we are going to insert.
@@ -745,7 +758,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
           *editingHost);
   if (!pointToInsert.IsSet()) {
     NS_WARNING("HTMLEditor::GetBetterInsertionPointFor() failed");
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
 
   // Remove invisible `<br>` element at the point because if there is a `<br>`
@@ -758,7 +771,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
         MOZ_KnownLive(*invisibleBRElement));
     if (NS_FAILED(rv)) {
       NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed.");
-      return rv;
+      return Err(rv);
     }
   }
 
@@ -772,21 +785,21 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
             pointToInsert, SplitAtEdges::eAllowToCreateEmptyContainer);
     if (MOZ_UNLIKELY(splitNodeResult.isErr())) {
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
-      return splitNodeResult.unwrapErr();
+      return splitNodeResult.propagateErr();
     }
     nsresult rv = splitNodeResult.inspect().SuggestCaretPointTo(
         mHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
                       SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
     if (NS_FAILED(rv)) {
       NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
-      return rv;
+      return Err(rv);
     }
     pointToInsert = splitNodeResult.inspect().AtSplitPoint<EditorDOMPoint>();
     if (MOZ_UNLIKELY(!pointToInsert.IsSet())) {
       NS_WARNING(
           "HTMLEditor::SplitNodeDeepWithTransaction() didn't return split "
           "point");
-      return NS_ERROR_FAILURE;
+      return Err(NS_ERROR_FAILURE);
     }
   }
 
@@ -799,18 +812,18 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
   MOZ_ASSERT(pointToInsert.GetContainer()->GetChildAt_Deprecated(
                  pointToInsert.Offset()) == pointToInsert.GetChild());
 
-  const Result<EditorDOMPoint, nsresult> lastInsertedPoint = InsertContents(
+  Result<EditorDOMPoint, nsresult> lastInsertedPoint = InsertContents(
       pointToInsert, arrayOfTopMostChildContents, fragmentAsNode);
   if (lastInsertedPoint.isErr()) {
     NS_WARNING("HTMLWithContextInserter::InsertContents() failed.");
-    return lastInsertedPoint.inspectErr();
+    return lastInsertedPoint.propagateErr();
   }
 
   mHTMLEditor.TopLevelEditSubActionDataRef().mNeedsToCleanUpEmptyElements =
       false;
 
   if (!lastInsertedPoint.inspect().IsSet()) {
-    return NS_OK;
+    return EditActionResult::HandledResult();
   }
 
   const EditorDOMPoint pointToPutCaret =
@@ -820,7 +833,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
   if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
     NS_WARNING(
         "EditorBase::CollapseSelectionTo() caused destroying the editor");
-    return NS_ERROR_EDITOR_DESTROYED;
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::CollapseSelectionTo() failed, but ignored");
@@ -828,12 +841,12 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
   // If we didn't start from an `<a href>` element, we should not keep
   // caret in the link to make users type something outside the link.
   if (insertionPointWasInLink) {
-    return NS_OK;
+    return EditActionResult::HandledResult();
   }
   RefPtr<Element> linkElement = GetLinkElement(pointToPutCaret.GetContainer());
 
   if (!linkElement) {
-    return NS_OK;
+    return EditActionResult::HandledResult();
   }
 
   rv = MoveCaretOutsideOfLink(*linkElement, pointToPutCaret);
@@ -841,10 +854,10 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
     NS_WARNING(
         "HTMLEditor::HTMLWithContextInserter::MoveCaretOutsideOfLink "
         "failed.");
-    return rv;
+    return Err(rv);
   }
 
-  return NS_OK;
+  return EditActionResult::HandledResult();
 }
 
 Result<EditorDOMPoint, nsresult>
@@ -1194,7 +1207,8 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
       if (MOZ_UNLIKELY(lastInsertedPoint.GetContainer() !=
                        lastInsertedPoint.GetChild()->GetParentNode())) {
         NS_WARNING(
-            "HTMLEditor::DoInsertHTMLWithContext() got lost insertion point");
+            "HTMLEditor::InsertHTMLWithContextAsSubAction() got lost insertion "
+            "point");
         return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
       }
       pointToInsert = lastInsertedPoint.NextPoint();
@@ -1691,17 +1705,16 @@ nsresult HTMLEditor::BlobReader::OnResult(const nsACString& aResult) {
     return EditorBase::ToGenericNSResult(rv);
   }
 
+  RefPtr<HTMLEditor> htmlEditor = std::move(mHTMLEditor);
   AutoPlaceholderBatch treatAsOneTransaction(
-      *mHTMLEditor, ScrollSelectionIntoView::Yes, __FUNCTION__);
-  EditorDOMPoint pointToInsert(mPointToInsert);
-  rv = MOZ_KnownLive(mHTMLEditor)
-           ->DoInsertHTMLWithContext(stuffToPaste, u""_ns, u""_ns,
-                                     NS_LITERAL_STRING_FROM_CSTRING(kFileMime),
-                                     mSafeToInsertData, pointToInsert,
-                                     mDeleteSelectedContent,
-                                     InlineStylesAtInsertionPoint::Preserve);
+      *htmlEditor, ScrollSelectionIntoView::Yes, __FUNCTION__);
+  EditorDOMPoint pointToInsert = std::move(mPointToInsert);
+  rv = htmlEditor->InsertHTMLWithContextAsSubAction(
+      stuffToPaste, u""_ns, u""_ns, NS_LITERAL_STRING_FROM_CSTRING(kFileMime),
+      mSafeToInsertData, pointToInsert, mDeleteSelectedContent,
+      InlineStylesAtInsertionPoint::Preserve);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::DoInsertHTMLWithContext("
+                       "HTMLEditor::InsertHTMLWithContextAsSubAction("
                        "InlineStylesAtInsertionPoint::Preserve) failed");
   return EditorBase::ToGenericNSResult(rv);
 }
@@ -1912,14 +1925,14 @@ nsresult HTMLEditor::InsertObject(
 
     AutoPlaceholderBatch treatAsOneTransaction(
         *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
-    rv = DoInsertHTMLWithContext(
+    rv = InsertHTMLWithContextAsSubAction(
         stuffToPaste, u""_ns, u""_ns, NS_LITERAL_STRING_FROM_CSTRING(kFileMime),
         aSafeToInsertData, aPointToInsert, aDeleteSelectedContent,
         InlineStylesAtInsertionPoint::Preserve);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
-        "HTMLEditor::DoInsertHTMLWithContext(InlineStylesAtInsertionPoint::"
-        "Preserve) failed, but ignored");
+        "HTMLEditor::InsertHTMLWithContextAsSubAction("
+        "InlineStylesAtInsertionPoint::Preserve) failed, but ignored");
   }
 
   return NS_OK;
@@ -1986,29 +1999,31 @@ nsresult HTMLEditor::InsertFromTransferable(
         nsresult rv = ParseCFHTML(cfhtml, getter_Copies(cffragment),
                                   getter_Copies(cfcontext));
         if (NS_SUCCEEDED(rv) && !cffragment.IsEmpty()) {
-          AutoPlaceholderBatch treatAsOneTransaction(
-              *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
           // If we have our private HTML flavor, we will only use the fragment
           // from the CF_HTML. The rest comes from the clipboard.
           if (aHavePrivateHTMLFlavor == HavePrivateHTMLFlavor::Yes) {
-            rv = DoInsertHTMLWithContext(
+            AutoPlaceholderBatch treatAsOneTransaction(
+                *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
+            rv = InsertHTMLWithContextAsSubAction(
                 cffragment, aContextStr, aInfoStr, flavor, safeToInsertData,
                 EditorDOMPoint(), aDeleteSelectedContent,
                 InlineStylesAtInsertionPoint::Clear);
             if (NS_FAILED(rv)) {
               NS_WARNING(
-                  "HTMLEditor::DoInsertHTMLWithContext("
+                  "HTMLEditor::InsertHTMLWithContextAsSubAction("
                   "InlineStylesAtInsertionPoint::Clear) failed");
               return rv;
             }
           } else {
-            rv = DoInsertHTMLWithContext(
+            AutoPlaceholderBatch treatAsOneTransaction(
+                *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
+            rv = InsertHTMLWithContextAsSubAction(
                 cffragment, cfcontext, cfselection, flavor, safeToInsertData,
                 EditorDOMPoint(), aDeleteSelectedContent,
                 InlineStylesAtInsertionPoint::Clear);
             if (NS_FAILED(rv)) {
               NS_WARNING(
-                  "HTMLEditor::DoInsertHTMLWithContext("
+                  "HTMLEditor::InsertHTMLWithContextAsSubAction("
                   "InlineStylesAtInsertionPoint::Clear) failed");
               return rv;
             }
@@ -2036,20 +2051,22 @@ nsresult HTMLEditor::InsertFromTransferable(
       }
 
       if (!stuffToPaste.IsEmpty()) {
-        AutoPlaceholderBatch treatAsOneTransaction(
-            *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
         if (bestFlavor.EqualsLiteral(kHTMLMime)) {
-          nsresult rv = DoInsertHTMLWithContext(
+          AutoPlaceholderBatch treatAsOneTransaction(
+              *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
+          nsresult rv = InsertHTMLWithContextAsSubAction(
               stuffToPaste, aContextStr, aInfoStr, flavor, safeToInsertData,
               EditorDOMPoint(), aDeleteSelectedContent,
               InlineStylesAtInsertionPoint::Clear);
           if (NS_FAILED(rv)) {
             NS_WARNING(
-                "HTMLEditor::DoInsertHTMLWithContext("
+                "HTMLEditor::InsertHTMLWithContextAsSubAction("
                 "InlineStylesAtInsertionPoint::Clear) failed");
             return rv;
           }
         } else {
+          AutoPlaceholderBatch treatAsOneTransaction(
+              *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
           nsresult rv =
               InsertTextAsSubAction(stuffToPaste, SelectionHandling::Delete);
           if (NS_FAILED(rv)) {
@@ -2163,21 +2180,25 @@ nsresult HTMLEditor::InsertFromDataTransfer(
             GetStringFromDataTransfer(aDataTransfer,
                                       NS_LITERAL_STRING_FROM_CSTRING(kHTMLInfo),
                                       aIndex, infoString);
-            nsresult rv = DoInsertHTMLWithContext(
+            AutoPlaceholderBatch treatAsOneTransaction(
+                *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
+            nsresult rv = InsertHTMLWithContextAsSubAction(
                 cffragment, contextString, infoString, type, safeToInsertData,
                 aDroppedAt, aDeleteSelectedContent,
                 InlineStylesAtInsertionPoint::Clear);
             NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                                 "HTMLEditor::DoInsertHTMLWithContext("
+                                 "HTMLEditor::InsertHTMLWithContextAsSubAction("
                                  "InlineStylesAtInsertionPoint::Clear) failed");
             return rv;
           }
-          nsresult rv = DoInsertHTMLWithContext(
+          AutoPlaceholderBatch treatAsOneTransaction(
+              *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
+          nsresult rv = InsertHTMLWithContextAsSubAction(
               cffragment, cfcontext, cfselection, type, safeToInsertData,
               aDroppedAt, aDeleteSelectedContent,
               InlineStylesAtInsertionPoint::Clear);
           NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                               "HTMLEditor::DoInsertHTMLWithContext("
+                               "HTMLEditor::InsertHTMLWithContextAsSubAction("
                                "InlineStylesAtInsertionPoint::Clear) failed");
           return rv;
         }
@@ -2191,12 +2212,14 @@ nsresult HTMLEditor::InsertFromDataTransfer(
                                   NS_LITERAL_STRING_FROM_CSTRING(kHTMLInfo),
                                   aIndex, infoString);
         if (type.EqualsLiteral(kHTMLMime)) {
-          nsresult rv = DoInsertHTMLWithContext(
+          AutoPlaceholderBatch treatAsOneTransaction(
+              *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
+          nsresult rv = InsertHTMLWithContextAsSubAction(
               text, contextString, infoString, type, safeToInsertData,
               aDroppedAt, aDeleteSelectedContent,
               InlineStylesAtInsertionPoint::Clear);
           NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                               "HTMLEditor::DoInsertHTMLWithContext("
+                               "HTMLEditor::InsertHTMLWithContextAsSubAction("
                                "InlineStylesAtInsertionPoint::Clear) failed");
           return rv;
         }
@@ -2206,6 +2229,8 @@ nsresult HTMLEditor::InsertFromDataTransfer(
     if (type.EqualsLiteral(kTextMime) || type.EqualsLiteral(kMozTextInternal)) {
       nsAutoString text;
       GetStringFromDataTransfer(aDataTransfer, type, aIndex, text);
+      AutoPlaceholderBatch treatAsOneTransaction(
+          *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
       nsresult rv = InsertTextAt(text, aDroppedAt, aDeleteSelectedContent);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "EditorBase::InsertTextAt() failed");
