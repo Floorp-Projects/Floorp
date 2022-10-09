@@ -60,11 +60,7 @@ Your choice: """
 
 APPLICATIONS = OrderedDict(
     [
-        ("Firefox for Desktop Artifact Mode", "browser_artifact_mode"),
-        ("Firefox for Desktop", "browser"),
-        ("GeckoView/Firefox for Android Artifact Mode", "mobile_android_artifact_mode"),
-        ("GeckoView/Firefox for Android", "mobile_android"),
-        ("SpiderMonkey JavaScript engine", "js"),
+        ("Floorp for Desktop", "browser"),
     ]
 )
 
@@ -253,11 +249,7 @@ class Bootstrapper(object):
         if sys.platform.startswith("darwin") and platform.machine() == "arm64":
             return
 
-        if not self.instance.prompt_yesno("Will you be submitting commits to Mozilla?"):
-            return
-
-        mach_binary = checkout_root / "mach"
-        subprocess.check_call((sys.executable, str(mach_binary), "install-moz-phab"))
+        return
 
     def bootstrap(self, settings):
         if self.choice is None:
@@ -348,7 +340,7 @@ class Bootstrapper(object):
                 configure_mercurial(hg, state_dir)
 
         # Offer to configure Git, if the current checkout or repo type is Git.
-        elif git and checkout_type == "git":
+        elif git and checkout_type == None:
             should_configure_git = False
             if not self.instance.no_interactive:
                 should_configure_git = self.instance.prompt_yesno(prompt=CONFIGURE_GIT)
