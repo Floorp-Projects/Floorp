@@ -47,7 +47,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471722
           ok(editor.canUndo, "undo should be available");
 
           // Undo the cut
-          editor.undo(1);
+          editor.undo();
           is(t1.value, "minefield", "text reinserted");
 
           // So now, the cut should be in the redo stack, so executing the redo
@@ -56,7 +56,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471722
           // This will require the editor to figure out that we have a padding
           // <br> element again...
           ok(editor.canRedo, "redo should be available");
-          editor.redo(1);
+          editor.redo();
 
           // Did the editor notice a padding <br> element for empty editor
           // reappeared?

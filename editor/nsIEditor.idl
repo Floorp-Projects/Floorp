@@ -230,31 +230,29 @@ interface nsIEditor  : nsISupports
   [binaryname(ClearUndoRedoXPCOM)]
   void clearUndoRedo();
 
-  /** undo reverses the effects of the last Do operation,
-    * if Undo is enabled in the editor.
-    * It is provided here so clients need no knowledge of whether
-    * the editor has a transaction manager or not.
-    * If a transaction manager is present, it is told to undo,
-    * and the result of that undo is returned.
-    * Otherwise, the Undo request is ignored and an
-    * error NS_ERROR_NOT_AVAILABLE is returned.
-    *
-    */
+  /**
+   * Undo the topmost transaction in the undo stack.
+   * This may throw exception when this is called while editor is handling
+   * transactions.
+   */
   [can_run_script]
-  void undo(in unsigned long count);
+  void undo();
 
-  /** redo reverses the effects of the last Undo operation
-    * It is provided here so clients need no knowledge of whether
-    * the editor has a transaction manager or not.
-    * If a transaction manager is present, it is told to redo and the
-    * result of the previously undone transaction is reapplied to the document.
-    * If no transaction is available for Redo, or if the document
-    * has no transaction manager, the Redo request is ignored and an
-    * error NS_ERROR_NOT_AVAILABLE is returned.
-    *
-    */
+  /**
+   * Undo all transactions in the undo stack.
+   * This may throw exception when this is called while editor is handling
+   * transactions.
+   */
   [can_run_script]
-  void redo(in unsigned long count);
+  void undoAll();
+
+  /**
+   * Redo the topmost transaction in the redo stack.
+   * This may throw exception when this is called while editor is handling
+   * transactions.
+   */
+  [can_run_script]
+  void redo();
 
   /** beginTransaction is a signal from the caller to the editor that
     * the caller will execute multiple updates to the content tree

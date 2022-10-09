@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471319
         let t1Editor = t1.editor;
 
         // Did the editor recognize the new padding <br> element?
-        t1Editor.undo(1);
+        t1Editor.undo();
         ok(!t1.value, "<br> still recognized as padding on undo");
 
 
@@ -44,7 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471319
         let t2Editor = t2.editor;
 
         // Did the editor recognize the new padding <br> element?
-        t2Editor.redo(1);
+        t2Editor.redo();
         ok(!t2.value, "<br> still recognized as padding on redo");
 
 
@@ -55,7 +55,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471319
         t1.value = "mozilla";
         t1.value = "";
         t1Editor.transactionManager.endBatch(false);
-        t1Editor.undo(1);
+        t1Editor.undo();
         ok(!t1.value,
            "recreated <br> from undo transaction recognized as padding");
 
@@ -63,7 +63,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471319
         // Test 4: Redoing a batched transaction where both end points of the
         // transaction are the padding <br> element for empty editor - the
         // <br> element should still be recognized padding.
-        t1Editor.redo(1);
+        t1Editor.redo();
         ok(!t1.value,
            "recreated <br> from redo transaction recognized as padding");
         SimpleTest.finish();

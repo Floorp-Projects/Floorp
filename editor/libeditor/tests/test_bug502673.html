@@ -68,7 +68,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=502673
         // Test 1. Fire NotifyDocumentStateChanged notifications where the
         // listeners remove themselves
         input.value = "mozilla";
-        editor.undo(1);
+        editor.undo();
 
         // Report success if we get here - clearly we didn't crash
         ok(true, "Multiple listeners removed themselves after " +
