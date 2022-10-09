@@ -26,7 +26,7 @@ contributors = A list of <label data-l10n-name="about-contributor">contributors 
 
 about-ablaze = About Ablaze
 ablaze-twitter = Ablaze URLs : Twitter <label data-l10n-name="ablaze-twitter-id">@Ablaze_MIRAI</label>　Github : <label data-l10n-name="ablaze-github-id">@Ablaze-MIRAI</label>　alexandriteOS  : <label data-l10n-name="alexandriteos-url">official site</label> 
-about-ablaze-sub = Ablaze is a group on top of the Floorp project, which is developing Floorp, and the Floorp project is being run here, with support from Floorp. We also run other projects such as NekoLinux and AlexandriteOS.
+about-ablaze-sub = Ablaze is the group at the top of the Floorp project. We also maintain other projects, such as NekoLinux and AlexandriteOS.
 
 ######################################################################### Themes #########################################################################
 
