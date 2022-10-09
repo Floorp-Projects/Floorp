@@ -1368,7 +1368,7 @@ nsresult HTMLEditor::HTMLTransferablePreparer::Run() {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "nsITransferable::Init() failed, but ignored");
 
-  // See `HTMLEditor::InsertFromTransferable`.
+  // See `HTMLEditor::InsertFromTransferableAtSelection`.
   AddDataFlavorsInBestOrder(*transferable);
 
   transferable.forget(mTransferable);
@@ -1960,10 +1960,9 @@ static bool GetCString(nsISupports* aData, nsACString& aText) {
   return false;
 }
 
-nsresult HTMLEditor::InsertFromTransferable(
+nsresult HTMLEditor::InsertFromTransferableAtSelection(
     nsITransferable* aTransferable, const nsAString& aContextStr,
-    const nsAString& aInfoStr, HavePrivateHTMLFlavor aHavePrivateHTMLFlavor,
-    DeleteSelectedContent aDeleteSelectedContent) {
+    const nsAString& aInfoStr, HavePrivateHTMLFlavor aHavePrivateHTMLFlavor) {
   nsAutoCString bestFlavor;
   nsCOMPtr<nsISupports> genericDataObj;
 
@@ -1985,7 +1984,7 @@ nsresult HTMLEditor::InsertFromTransferable(
         bestFlavor.EqualsLiteral(kPNGImageMime) ||
         bestFlavor.EqualsLiteral(kGIFImageMime)) {
       nsresult rv = InsertObject(bestFlavor, genericDataObj, safeToInsertData,
-                                 EditorDOMPoint(), aDeleteSelectedContent);
+                                 EditorDOMPoint(), DeleteSelectedContent::Yes);
       if (NS_FAILED(rv)) {
         NS_WARNING("HTMLEditor::InsertObject() failed");
         return rv;
@@ -2006,11 +2005,12 @@ nsresult HTMLEditor::InsertFromTransferable(
                 *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
             rv = InsertHTMLWithContextAsSubAction(
                 cffragment, aContextStr, aInfoStr, flavor, safeToInsertData,
-                EditorDOMPoint(), aDeleteSelectedContent,
+                EditorDOMPoint(), DeleteSelectedContent::Yes,
                 InlineStylesAtInsertionPoint::Clear);
             if (NS_FAILED(rv)) {
               NS_WARNING(
                   "HTMLEditor::InsertHTMLWithContextAsSubAction("
+                  "DeleteSelectedContent::Yes, "
                   "InlineStylesAtInsertionPoint::Clear) failed");
               return rv;
             }
@@ -2019,11 +2019,12 @@ nsresult HTMLEditor::InsertFromTransferable(
                 *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
             rv = InsertHTMLWithContextAsSubAction(
                 cffragment, cfcontext, cfselection, flavor, safeToInsertData,
-                EditorDOMPoint(), aDeleteSelectedContent,
+                EditorDOMPoint(), DeleteSelectedContent::Yes,
                 InlineStylesAtInsertionPoint::Clear);
             if (NS_FAILED(rv)) {
               NS_WARNING(
                   "HTMLEditor::InsertHTMLWithContextAsSubAction("
+                  "DeleteSelectedContent::Yes, "
                   "InlineStylesAtInsertionPoint::Clear) failed");
               return rv;
             }
@@ -2056,11 +2057,12 @@ nsresult HTMLEditor::InsertFromTransferable(
               *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
           nsresult rv = InsertHTMLWithContextAsSubAction(
               stuffToPaste, aContextStr, aInfoStr, flavor, safeToInsertData,
-              EditorDOMPoint(), aDeleteSelectedContent,
+              EditorDOMPoint(), DeleteSelectedContent::Yes,
               InlineStylesAtInsertionPoint::Clear);
           if (NS_FAILED(rv)) {
             NS_WARNING(
                 "HTMLEditor::InsertHTMLWithContextAsSubAction("
+                "DeleteSelectedContent::Yes, "
                 "InlineStylesAtInsertionPoint::Clear) failed");
             return rv;
           }
@@ -2396,12 +2398,11 @@ nsresult HTMLEditor::PasteInternal(int32_t aClipboardType) {
     }
   }
 
-  rv = InsertFromTransferable(transferable, contextStr, infoStr,
-                              clipboardHasPrivateHTMLFlavor,
-                              DeleteSelectedContent::Yes);
+  rv = InsertFromTransferableAtSelection(transferable, contextStr, infoStr,
+                                         clipboardHasPrivateHTMLFlavor);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
-      "HTMLEditor::InsertFromTransferable(DeleteSelectedContent::Yes) failed");
+      "HTMLEditor::InsertFromTransferableAtSelection() failed");
   return rv;
 }
 
@@ -2444,13 +2445,11 @@ nsresult HTMLEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
                          "DeleteSelectedContent::Yes) failed");
   } else {
     nsAutoString contextStr, infoStr;
-    rv = InsertFromTransferable(aTransferable, contextStr, infoStr,
-                                HavePrivateHTMLFlavor::No,
-                                DeleteSelectedContent::Yes);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "HTMLEditor::InsertFromTransferable(HavePrivateHTMLFlavor::No, "
-        "DeleteSelectedContent::Yes) failed");
+    rv = InsertFromTransferableAtSelection(aTransferable, contextStr, infoStr,
+                                           HavePrivateHTMLFlavor::No);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "HTMLEditor::InsertFromTransferableAtSelection("
+                         "HavePrivateHTMLFlavor::No) failed");
   }
   return EditorBase::ToGenericNSResult(rv);
 }
@@ -2524,13 +2523,11 @@ nsresult HTMLEditor::PasteNoFormattingAsAction(int32_t aSelectionType,
     return rv;
   }
 
-  rv = InsertFromTransferable(transferable, u""_ns, u""_ns,
-                              HavePrivateHTMLFlavor::No,
-                              DeleteSelectedContent::Yes);
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "HTMLEditor::InsertFromTransferable(HavePrivateHTMLFlavor::No, "
-      "DeleteSelectedContent::Yes) failed");
+  rv = InsertFromTransferableAtSelection(transferable, u""_ns, u""_ns,
+                                         HavePrivateHTMLFlavor::No);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HTMLEditor::InsertFromTransferableAtSelection("
+                       "HavePrivateHTMLFlavor::No) failed");
   return EditorBase::ToGenericNSResult(rv);
 }
 
