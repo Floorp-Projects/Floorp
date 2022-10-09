@@ -3806,10 +3806,9 @@ class HTMLEditor final : public EditorBase,
   nsresult PrepareHTMLTransferable(nsITransferable** aTransferable) const;
 
   enum class HavePrivateHTMLFlavor { No, Yes };
-  MOZ_CAN_RUN_SCRIPT nsresult InsertFromTransferable(
+  MOZ_CAN_RUN_SCRIPT nsresult InsertFromTransferableAtSelection(
       nsITransferable* aTransferable, const nsAString& aContextStr,
-      const nsAString& aInfoStr, HavePrivateHTMLFlavor aHavePrivateHTMLFlavor,
-      DeleteSelectedContent aDeleteSelectedContent);
+      const nsAString& aInfoStr, HavePrivateHTMLFlavor aHavePrivateHTMLFlavor);
 
   /**
    * InsertFromDataTransfer() is called only when user drops data into
