@@ -10,11 +10,30 @@
 #include "mozilla/StaticPrefs_apz.h"
 
 class APZCPinchTester : public APZCBasicTester {
+ private:
+  // This (multiplied by apz.touch_start_tolerance) needs to be the hypotenuse
+  // in a Pythagorean triple, along with overcomeTouchToleranceX and
+  // overcomeTouchToleranceY from APZCTesterBase::Pan().
+  // This is because APZCTesterBase::Pan(), when run without the
+  // PanOptions::ExactCoordinates option, will need to first overcome the
+  // touch start tolerance by performing a move of exactly
+  // (apz.touch_start_tolerance * DPI) length.
+  // When moving on both axes at once, we need to use integers for both legs
+  // (overcomeTouchToleranceX and overcomeTouchToleranceY) while making sure
+  // that the hypotenuse is also a round integer number (hence Pythagorean
+  // triples). (The hypotenuse is the length of the movement in this case.)
+  static const int mDPI = 100;
+
  public:
   explicit APZCPinchTester(
       AsyncPanZoomController::GestureBehavior aGestureBehavior =
           AsyncPanZoomController::DEFAULT_GESTURES)
       : APZCBasicTester(aGestureBehavior) {}
+
+  void SetUp() override {
+    APZCBasicTester::SetUp();
+    tm->SetDPI(mDPI);
+  }
 
  protected:
   FrameMetrics GetPinchableFrameMetrics() {
@@ -138,8 +157,6 @@ class APZCPinchGestureDetectorTester : public APZCPinchTester {
 
 class APZCPinchLockingTester : public APZCPinchTester {
  private:
-  static const int mDPI = 160;
-
   ScreenIntPoint mFocus;
   float mSpan;
   int mPinchLockBufferMaxAge;
@@ -155,7 +172,6 @@ class APZCPinchLockingTester : public APZCPinchTester {
         StaticPrefs::apz_pinch_lock_buffer_max_age_AtStartup();
 
     APZCPinchTester::SetUp();
-    tm->SetDPI(mDPI);
     apzc->SetFrameMetrics(GetPinchableFrameMetrics());
     MakeApzcZoomable();
 

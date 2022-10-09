@@ -42,6 +42,8 @@ class APZCTreeManagerTester : public APZCTesterBase {
       ;
     manager->ClearTree();
     manager->ClearContentController();
+
+    APZCTesterBase::TearDown();
   }
 
   /**

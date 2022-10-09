@@ -434,7 +434,18 @@ class APZCTesterBase : public ::testing::Test {
  public:
   APZCTesterBase() { mcc = new NiceMock<MockContentControllerDelayed>(); }
 
-  virtual void SetUp() { gfxPlatform::GetPlatform(); }
+  void SetUp() override {
+    gfxPlatform::GetPlatform();
+    // This pref is changed in Pan() without using SCOPED_GFX_PREF
+    // because the modified value needs to be in place until the touch
+    // events are processed, which may not happen until the input queue
+    // is flushed in TearDown(). So, we save and restore its value here.
+    mTouchStartTolerance = StaticPrefs::apz_touch_start_tolerance();
+  }
+
+  void TearDown() override {
+    Preferences::SetFloat("apz.touch_start_tolerance", mTouchStartTolerance);
+  }
 
   enum class PanOptions {
     None = 0,
@@ -552,6 +563,9 @@ class APZCTesterBase : public ::testing::Test {
 
  protected:
   RefPtr<MockContentControllerDelayed> mcc;
+
+ private:
+  float mTouchStartTolerance;
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(APZCTesterBase::PanOptions)
@@ -602,11 +616,13 @@ void APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
                          nsTArray<uint32_t>* aAllowedTouchBehaviors,
                          nsEventStatus (*aOutEventStatuses)[4],
                          uint64_t* aOutInputBlockId) {
-  // Reduce the touch start and move tolerance to a tiny value.
+  // Reduce the move tolerance to a tiny value.
   // We can't use a scoped pref because this value might be read at some later
   // time when the events are actually processed, rather than when we deliver
   // them.
-  Preferences::SetFloat("apz.touch_start_tolerance", 1.0f / 1000.0f);
+  const float touchStartTolerance = 0.1f;
+  const float panThreshold = touchStartTolerance * aTarget->GetDPI();
+  Preferences::SetFloat("apz.touch_start_tolerance", touchStartTolerance);
   Preferences::SetFloat("apz.touch_move_tolerance", 0.0f);
   int overcomeTouchToleranceX = 0;
   int overcomeTouchToleranceY = 0;
@@ -614,11 +630,17 @@ void APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
     // Have the direction of the adjustment to overcome the touch tolerance
     // match the direction of the entire gesture, otherwise we run into
     // trouble such as accidentally activating the axis lock.
-    if (aTouchStart.x != aTouchEnd.x) {
-      overcomeTouchToleranceX = 1;
-    }
-    if (aTouchStart.y != aTouchEnd.y) {
-      overcomeTouchToleranceY = 1;
+    if (aTouchStart.x != aTouchEnd.x && aTouchStart.y != aTouchEnd.y) {
+      // Tests that need to avoid rounding error here can arrange for
+      // panThreshold to be 10 (by setting the DPI to 100), which makes sure
+      // that these are the legs in a Pythagorean triple where panThreshold is
+      // the hypotenuse. Watch out for changes of APZCPinchTester::mDPI.
+      overcomeTouchToleranceX = panThreshold / 10 * 6;
+      overcomeTouchToleranceY = panThreshold / 10 * 8;
+    } else if (aTouchStart.x != aTouchEnd.x) {
+      overcomeTouchToleranceX = panThreshold;
+    } else if (aTouchStart.y != aTouchEnd.y) {
+      overcomeTouchToleranceY = panThreshold;
     }
   }
 
