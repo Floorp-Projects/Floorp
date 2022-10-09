@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Test for nsIEditor.undoRedoEnabled</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content"><input><textarea></textarea><div contenteditable></div></div>
+<pre id="test">
+<script>
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  function isTextEditor(aElement) {
+    return aElement.tagName.toLowerCase() == "input" ||
+           aElement.tagName.toLowerCase() == "textarea";
+  }
+  function getEditor(aElement) {
+    if (isTextEditor(aElement)) {
+      return SpecialPowers.wrap(aElement).editor;
+    }
+    return SpecialPowers.wrap(window).docShell.editingSession?.getEditorForWindow(window);
+  }
+  function setValue(aElement, aValue) {
+    if (isTextEditor(aElement)) {
+      aElement.value = aValue;
+      return;
+    }
+    aElement.innerHTML = aValue;
+  }
+  function getValue(aElement) {
+    if (isTextEditor(aElement)) {
+      return aElement.value;
+    }
+    return aElement.innerHTML.replace(/<br>/g, "");
+  }
+  for (const selector of ["input", "textarea", "div[contenteditable]"]) {
+    const editableElement = document.querySelector(selector);
+    editableElement.focus();
+    const editor = getEditor(editableElement);
+    setValue(editableElement, "");
+    is(
+      editor.undoRedoEnabled,
+      true,
+      `undo/redo in editor for ${selector} should be enabled by default`
+    );
+    editor.enableUndo(false);
+    is(
+      editor.undoRedoEnabled,
+      false,
+      `undo/redo in editor for ${selector} should be disable after calling enableUndo(false)`
+    );
+    synthesizeKey("a");
+    is(
+      getValue(editableElement),
+      "a",
+      `inserting text should be handled by editor for ${selector} even if undo/redo is disabled`
+    );
+    is(
+      editor.canUndo,
+      false,
+      `undo transaction shouldn't be created by editor for ${selector} when undo/redo is disabled`
+    );
+    editor.enableUndo(true);
+    is(
+      editor.undoRedoEnabled,
+      true,
+      `undo/redo in editor for ${selector} should be enabled after calling enableUndo(true)`
+    );
+    synthesizeKey("b");
+    is(
+      getValue(editableElement),
+      "ab",
+      `inserting text should be handled by editor for ${selector} after enabling undo/redo`
+    );
+    is(
+      editor.canUndo,
+      true,
+      `undo transaction should be created by editor for ${selector} when undo/redo is enabled again`
+    );
+  }
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
