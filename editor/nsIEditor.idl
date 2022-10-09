@@ -204,6 +204,15 @@ interface nsIEditor  : nsISupports
     */
   void enableUndo(in boolean enable);
 
+  /**
+   * Clears the transactions both for undo and redo.
+   * This may fail if you call this while editor is handling something, i.e.,
+   * don't call this from a legacy mutation event listeners, then, you won't
+   * see any exceptions.
+   */
+  [binaryname(ClearUndoRedoXPCOM)]
+  void clearUndoRedo();
+
   /** undo reverses the effects of the last Do operation,
     * if Undo is enabled in the editor.
     * It is provided here so clients need no knowledge of whether

@@ -762,9 +762,7 @@
       this.browser.finder.removeSelection();
       // Clear value and undo/redo transactions
       this._findField.value = "";
-      if (this._findField.editor) {
-        this._findField.editor.transactionManager.clear();
-      }
+      this._findField.editor?.clearUndoRedo();
       this.toggleHighlight(false);
       this._updateStatusUI();
       this._enableFindButtons(false);

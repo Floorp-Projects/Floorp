@@ -940,6 +940,13 @@ NS_IMETHODIMP EditorBase::EnableUndo(bool aEnable) {
   return NS_OK;
 }
 
+NS_IMETHODIMP EditorBase::ClearUndoRedoXPCOM() {
+  if (MOZ_UNLIKELY(!ClearUndoRedo())) {
+    return NS_ERROR_FAILURE;  // We're handling a transaction
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP EditorBase::GetTransactionManager(
     nsITransactionManager** aTransactionManager) {
   if (NS_WARN_IF(!aTransactionManager)) {
