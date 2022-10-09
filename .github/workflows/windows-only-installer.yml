@@ -155,9 +155,9 @@ jobs:
         echo 'ac_add_options --enable-update-agent' >> mozconfig
         echo 'ac_add_options --enable-bootstrap' >> mozconfig
         
-        echo 'ac_add_options --with-mozilla-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/apis/api-mozilla-key' >> mozconfig
-        echo 'ac_add_options --with-google-safebrowsing-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/apis/api-google-safe-browsing-key' >> mozconfig
-        echo 'ac_add_options --with-google-location-service-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/apis/api-google-location-service-key' >> mozconfig
+        echo 'ac_add_options --with-mozilla-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-mozilla-key' >> mozconfig
+        echo 'ac_add_options --with-google-safebrowsing-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-safe-browsing-key' >> mozconfig
+        echo 'ac_add_options --with-google-location-service-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-location-service-key' >> mozconfig
 
 
         echo 'ac_add_options --target=x86_64-pc-mingw32' >> mozconfig
