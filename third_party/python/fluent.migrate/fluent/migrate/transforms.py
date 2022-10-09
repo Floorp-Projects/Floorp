@@ -464,7 +464,7 @@ class PLURALS(LegacySource):
         selector = ctx.evaluate(self.selector)
         keys = ctx.plural_categories
         forms = [
-            FTL.TextElement(part)
+            FTL.TextElement(part.strip())
             for part in element.value.split(';')
         ]
 
