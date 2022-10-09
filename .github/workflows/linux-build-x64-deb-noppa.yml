@@ -1,4 +1,4 @@
-name: Debian x64 Build
+name: No PPA Debian x64 Build
 
 on: workflow_dispatch
 
@@ -66,6 +66,8 @@ jobs:
         sudo chown -R root:root $DEBWORK
         cd $WORKDIR
         sudo dpkg-deb -b $DEBWORK
+        free
+        df
     - name: Compress artifacts
       run: |
         export WORKDIR=`pwd`
@@ -74,26 +76,6 @@ jobs:
         sudo touch floorp-$DISPVER.deb
         sudo chmod +r floorp-$DISPVER.deb
         zip -r dist.zip floorp-$DISPVER.deb
-    - name: Update PPA
-      run: |
-        echo "::add-mask::${{ secrets.KEYMASK }}"
-        export DISPVER=`cat browser/config/version_display.txt`
-        mkdir publish
-        echo "${{ secrets.GPG_SEC }}" > Floorp_sec.asc
-        gpg --import Floorp_sec.asc
-        echo "${{ secrets.FTP_INIT_SCRIPT }}" > init_script.txt
-        echo "${{ secrets.FTP_FINISH_SCRIPT }}" > finish_script.txt
-        cd publish
-        ftp -n -p < ../init_script.txt
-        cp ../floorp-$DISPVER.deb ./
-        dpkg-scanpackages --multiversion . > Packages
-        gzip -k -f Packages
-        apt-ftparchive release . > Release
-        gpg --default-key "${{ secrets.GPG_SSB }}" -abs -o - Release > Release.gpg
-        gpg --default-key "${{ secrets.GPG_SSB }}" --clearsign -o - Release > InRelease
-        ftp -n -p < ../finish_script.txt
-        cd ../
-        rm init_script.txt finish_script.txt Floorp_sec.asc
 
     - name: Publish
       uses: actions/upload-artifact@v1
