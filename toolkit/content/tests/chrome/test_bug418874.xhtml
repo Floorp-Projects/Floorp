@@ -40,18 +40,12 @@
       var t1 = $("t1");
       var t2 = $("t2");
       setTextboxValue(t1, "1");
-      var t1Enabled = {};
-      var t1CanUndo = {};
-      t1.editor.canUndo(t1Enabled, t1CanUndo);
-      is(t1CanUndo.value, true,
+      is(t1.editor.canUndo, true,
          "undo correctly enabled when placeholder was not changed through property");
 
       t2.placeholder = "reallyempty";
       setTextboxValue(t2, "2");
-      var t2Enabled = {};
-      var t2CanUndo = {};
-      t2.editor.canUndo(t2Enabled, t2CanUndo);
-      is(t2CanUndo.value, true,
+      is(t2.editor.canUndo, true,
          "undo correctly enabled when placeholder explicitly changed through property");
 
       SimpleTest.finish();

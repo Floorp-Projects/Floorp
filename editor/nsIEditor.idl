@@ -205,6 +205,23 @@ interface nsIEditor  : nsISupports
   void enableUndo(in boolean enable);
 
   /**
+   * Returns true when undo/redo is enabled (by default).
+   */
+  [infallible] readonly attribute boolean undoRedoEnabled;
+
+  /**
+   * Retruns true when undo/redo is enabled and there is one or more transaction
+   * in the undo stack.
+   */
+  [infallible] readonly attribute boolean canUndo;
+
+  /**
+   * Returns true when undo/redo is enabled and there is one or more transaction
+   * in the redo stack.
+   */
+  [infallible] readonly attribute boolean canRedo;
+
+  /**
    * Clears the transactions both for undo and redo.
    * This may fail if you call this while editor is handling something, i.e.,
    * don't call this from a legacy mutation event listeners, then, you won't
@@ -226,13 +243,6 @@ interface nsIEditor  : nsISupports
   [can_run_script]
   void undo(in unsigned long count);
 
-  /** returns state information about the undo system.
-    * @param aIsEnabled [OUT] PR_TRUE if undo is enabled
-    * @param aCanUndo   [OUT] PR_TRUE if at least one transaction is
-    *                         currently ready to be undone.
-    */
-  void canUndo(out boolean isEnabled, out boolean canUndo);
-
   /** redo reverses the effects of the last Undo operation
     * It is provided here so clients need no knowledge of whether
     * the editor has a transaction manager or not.
@@ -245,13 +255,6 @@ interface nsIEditor  : nsISupports
     */
   [can_run_script]
   void redo(in unsigned long count);
-
-  /** returns state information about the redo system.
-    * @param aIsEnabled [OUT] PR_TRUE if redo is enabled
-    * @param aCanRedo   [OUT] PR_TRUE if at least one transaction is
-                              currently ready to be redone.
-    */
-  void canRedo(out boolean isEnabled, out boolean canRedo);
 
   /** beginTransaction is a signal from the caller to the editor that
     * the caller will execute multiple updates to the content tree

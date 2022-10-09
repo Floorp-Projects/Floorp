@@ -36,10 +36,7 @@
     function doTest() {
       var t1 = $("t1");
       t1.focus();
-      var t1Enabled = {};
-      var t1CanUndo = {};
-      t1.editor.canUndo(t1Enabled, t1CanUndo);
-      ok(!t1CanUndo.value, "undo correctly disabled when no user edits");
+      ok(!t1.editor.canUndo, "undo correctly disabled when no user edits");
       SimpleTest.finish();
     }
 

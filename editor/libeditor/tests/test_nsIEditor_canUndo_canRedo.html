@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Test for nsIEditor.canUndo and nsIEditor.canRedo</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content"><input><textarea></textarea><div contenteditable></div></div>
+<pre id="test">
+<script>
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  function isTextEditor(aElement) {
+    return aElement.tagName.toLowerCase() == "input" ||
+           aElement.tagName.toLowerCase() == "textarea";
+  }
+  function getEditor(aElement) {
+    if (isTextEditor(aElement)) {
+      return SpecialPowers.wrap(aElement).editor;
+    }
+    return SpecialPowers.wrap(window).docShell.editingSession?.getEditorForWindow(window);
+  }
+  function setValue(aElement, aValue) {
+    if (isTextEditor(aElement)) {
+      aElement.value = aValue;
+      return;
+    }
+    aElement.innerHTML = aValue;
+  }
+  function getValue(aElement) {
+    if (isTextEditor(aElement)) {
+      return aElement.value;
+    }
+    return aElement.innerHTML.replace(/<br>/g, "");
+  }
+  for (const selector of ["input", "textarea", "div[contenteditable]"]) {
+    const editableElement = document.querySelector(selector);
+    editableElement.focus();
+    const editor = getEditor(editableElement);
+    setValue(editableElement, "");
+    is(
+      editor.canUndo,
+      false,
+      `Editor for ${selector} shouldn't have undo transaction at start`
+    );
+    is(
+      editor.canRedo,
+      false,
+      `Editor for ${selector} shouldn't have redo transaction at start`
+    );
+
+    synthesizeKey("b");
+    is(
+      getValue(editableElement),
+      "b",
+      `Editor for ${selector} should've handled inserting "b"`
+    );
+    is(
+      editor.canUndo,
+      true,
+      `Editor for ${selector} should have undo transaction after inserting "b"`
+    );
+    is(
+      editor.canRedo,
+      false,
+      `Editor for ${selector} shouldn't have redo transaction after inserting "b"`
+    );
+
+    synthesizeKey("KEY_ArrowLeft");
+    synthesizeKey("a");
+    is(
+      getValue(editableElement),
+      "ab",
+      `Editor for ${selector} should've handled inserting "a" before "b"`
+    );
+    is(
+      editor.canUndo,
+      true,
+      `Editor for ${selector} should have undo transaction after inserting text again`
+    );
+    is(
+      editor.canRedo,
+      false,
+      `Editor for ${selector} should have redo transaction after inserting text again`
+    );
+
+    document.execCommand("undo");
+    is(
+      getValue(editableElement),
+      "b",
+      `Editor for ${selector} should've undone inserting "a"`
+    );
+    is(
+      editor.canUndo,
+      true,
+      `Editor for ${selector} should have undo transaction for inserting "b" after undoing inserting "a"`
+    );
+    is(
+      editor.canRedo,
+      true,
+      `Editor for ${selector} should have redo transaction for inserting "b" after undoing inserting "a"`
+    );
+
+    document.execCommand("undo");
+    is(
+      getValue(editableElement),
+      "",
+      `Editor for ${selector} should've undone inserting "b"`
+    );
+    is(
+      editor.canUndo,
+      false,
+      `Editor for ${selector} shouldn't have undo transaction after undoing all things`
+    );
+    is(
+      editor.canRedo,
+      true,
+      `Editor for ${selector} should have redo transaction after undoing all things`
+    );
+
+    document.execCommand("redo");
+    is(
+      getValue(editableElement),
+      "b",
+      `Editor for ${selector} should've redone inserting "b"`
+    );
+    is(
+      editor.canUndo,
+      true,
+      `Editor for ${selector} should have undo transaction after redoing inserted "a"`
+    );
+    is(
+      editor.canRedo,
+      true,
+      `Editor for ${selector} should have redo transaction after redoing inserted "a"`
+    );
+
+    document.execCommand("redo");
+    is(
+      getValue(editableElement),
+      "ab",
+      `Editor for ${selector} should've redone inserting "b"`
+    );
+    is(
+      editor.canUndo,
+      true,
+      `Editor for ${selector} should have undo transaction after redoing all things`
+    );
+    is(
+      editor.canRedo,
+      false,
+      `Editor for ${selector} shouldn't have redo transaction for after redoing all things`
+    );
+
+    document.execCommand("undo");
+    synthesizeKey("c");
+    is(
+      getValue(editableElement),
+      "cb",
+      `Editor for ${selector} should've redone inserting "b"`
+    );
+    is(
+      editor.canUndo,
+      true,
+      `Editor for ${selector} should have undo transaction after inserting another undoing once`
+    );
+    is(
+      editor.canRedo,
+      false,
+      `Editor for ${selector} shouldn't have redo transaction after inserting another undoing once`
+    );
+  }
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
