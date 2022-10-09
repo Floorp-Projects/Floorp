@@ -711,10 +711,8 @@
           let numItems = suggestionsHidden ? 0 : popup.matchCount;
           return popup.oneOffButtons.handleKeyDown(aEvent, numItems, true);
         } else if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE) {
-          let undoCount = this.textbox.editor.transactionManager
-            .numberOfUndoItems;
-          if (undoCount) {
-            this.textbox.editor.undo(undoCount);
+          if (this.textbox.editor.canUndo) {
+            this.textbox.editor.undoAll();
           } else {
             this.textbox.select();
           }

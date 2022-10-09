@@ -959,8 +959,21 @@ NS_IMETHODIMP EditorBase::GetTransactionManager(
   return NS_OK;
 }
 
-NS_IMETHODIMP EditorBase::Undo(uint32_t aCount) {
-  nsresult rv = UndoAsAction(aCount);
+NS_IMETHODIMP EditorBase::Undo() {
+  nsresult rv = UndoAsAction(1u);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::UndoAsAction() failed");
+  return rv;
+}
+
+NS_IMETHODIMP EditorBase::UndoAll() {
+  if (!mTransactionManager) {
+    return NS_OK;
+  }
+  size_t numberOfUndoItems = mTransactionManager->NumberOfUndoItems();
+  if (!numberOfUndoItems) {
+    return NS_OK;  // no transactions
+  }
+  nsresult rv = UndoAsAction(numberOfUndoItems);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::UndoAsAction() failed");
   return rv;
 }
@@ -977,8 +990,8 @@ NS_IMETHODIMP EditorBase::GetCanUndo(bool* aCanUndo) {
   return NS_OK;
 }
 
-NS_IMETHODIMP EditorBase::Redo(uint32_t aCount) {
-  nsresult rv = RedoAsAction(aCount);
+NS_IMETHODIMP EditorBase::Redo() {
+  nsresult rv = RedoAsAction(1u);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::RedoAsAction() failed");
   return rv;
 }
