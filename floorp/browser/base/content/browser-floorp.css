@@ -1,0 +1,172 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#sidebar-button2 {
+    list-style-image: url("chrome://browser/skin/sidebars.svg");
+    fill: rgb(0, 192, 209) !important;
+  }
+  
+  .browser-sidebar2 {
+    -moz-box-ordinal-group: 0 !important;
+    background: var(--toolbar-field-background-color);
+    border: var(--win-sidebar-bgcolor) 0.1px solid;
+  } 
+  
+  #sidebar-select-box {
+    background: var(--toolbar-field-background-color);
+  }
+  
+  #sidebar-select-box {
+    -moz-box-ordinal-group: 0 !important;
+    scrollbar-width: thin;
+  }
+  
+  .sidepanel-icon, .sidepanel-browser-icon{
+    appearance: none;
+    -moz-context-properties: fill, fill-opacity;
+    border-radius: 4px;
+    color: inherit;
+    fill: currentColor;
+    margin: 1px 3px 5px 2px;
+    padding: 11px 10px 10px 11px;
+    scale: 1.0;
+  }
+  
+  @media (-moz-platform: linux) {
+    .sidepanel-icon, .sidepanel-browser-icon {
+      appearance: none;
+      -moz-context-properties: fill, fill-opacity;
+      border-radius: 4px;
+      color: inherit;
+      fill: currentColor;
+      margin: 1px 6px 5px 6px;
+      padding: 11px 10px 10px 13px;
+      scale: 1.0;
+    }
+  }
+  
+  #sidebar-select-box{
+    border-left: 1px solid var(--chrome-content-separator-color);
+    border-right: 1px solid var(--chrome-content-separator-color);
+  }
+  
+  .sidebar2-icon {
+    appearance: none;
+    -moz-context-properties: fill, fill-opacity;
+    border-radius: 4px;
+    color: inherit;
+    fill: currentColor;
+    padding: 2px;
+    width: 20px;
+    height: auto;
+  }
+  
+  @media not (prefers-contrast) {
+    .sidepanel-icon:hover,.sidepanel-browser-icon:hover, .sidebar2-icon:hover {
+      box-shadow: 0 0 4px rgba(0,0,0,.4) ;
+      background-color: var(--tab-selected-bgcolor, var(--toolbar-bgcolor));
+    }
+    .sidepanel-icon[checked="true"]{
+    background-color: color-mix(in srgb, currentColor 20%, transparent) ;
+    box-shadow: 0 0 4px rgba(0,0,0,.4) ;
+    }
+  }
+  
+  @media (prefers-contrast) {
+    .sidebar2-icon:hover, .sidepanel-icon:hover, .sidepanel-browser-icon:hover, .sidebar2-icon:hover {
+      outline: 1px solid currentColor;
+    }
+  }
+  
+  #sidebar2-back {
+    list-style-image: url("chrome://browser/skin/back.svg");
+  }
+  
+  #sidebar2-forward {
+    list-style-image: url("chrome://browser/skin/forward.svg");
+  }
+  
+  #sidebar2-reload {
+    list-style-image: url("chrome://global/skin/icons/reload.svg");
+  }
+  
+  #sidebar2-go-index {
+    list-style-image: url("chrome://browser/skin/home.svg");
+  }
+  
+  #sidebar2-keeppanelwidth {
+      list-style-image: url("chrome://browser/skin/lepton/screenshot.svg");
+  }
+  
+  #sidebar2-close {
+    list-style-image: url("chrome://global/skin/icons/close.svg");
+  }
+  
+  #sidebar2-mute {
+    scale: 1.4;
+    list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-playing-small.svg");
+  }
+  
+  #sidebar2-mute[mute=true]{
+    scale: 1.4;
+    list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-muted-small.svg") !important;
+  }
+  
+  #select-browser-manager {
+    list-style-image: url("chrome://browser/skin/lepton/toolbox.svg");
+  }
+  
+  #select-bookmark{
+    list-style-image: url("chrome://browser/skin/bookmark.svg");
+  }
+  
+  #select-history {
+    list-style-image: url("chrome://browser/skin/history.svg");
+  }
+  
+  #select-syncedtab {
+    list-style-image: url("chrome://browser/skin/tab.svg");
+  }
+  
+  #select-download {
+    list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
+  }
+  
+  #select-TST {
+    list-style-image: url("chrome://browser/skin/TST-dark.svg");
+    padding: 11px 7px 11px 9.5px !important;
+  }
+  
+  @media (-moz-platform: linux) {
+   #select-TST {
+     padding: 11px 6px 11px 11px !important;
+   }
+  }
+  
+  #select-CustomURL{
+    list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
+  }
+  
+  #preferences-icon{
+    list-style-image: url("chrome://browser/skin/settings.svg");
+  }
+  
+  #passwords-icon{
+    list-style-image: url("chrome://browser/skin/login.svg");
+  }
+  
+  #addons-icon{
+    list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
+  }
+  
+  :root[sizemode="fullscreen"] :is(#sidebar-select-box){
+    display: none;
+  }
+  
+  :root{
+    --usercontext-color-1: #00eeff;
+    --usercontext-color-2: #ff7f00;
+    --usercontext-color-3: #ffff00;
+    --usercontext-color-4: #00ff00;
+  }

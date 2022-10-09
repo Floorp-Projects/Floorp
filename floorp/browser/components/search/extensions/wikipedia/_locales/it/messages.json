@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Wikipedia (it)"
+  },
+  "extensionDescription": {
+    "message": "Wikipedia, l'enciclopedia libera"
+  },
+  "searchUrl": {
+    "message": "https://it.wikipedia.org/wiki/Speciale:Ricerca"
+  },
+  "searchForm": {
+    "message": "https://it.wikipedia.org/wiki/Speciale:Ricerca?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://it.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

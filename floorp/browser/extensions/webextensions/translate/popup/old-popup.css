@@ -1,0 +1,136 @@
+body {
+    user-select: none;
+    /* min-width: 300px; */
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+main {
+    margin: 10px;
+}
+
+.containerRight {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.flex-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 0;
+    margin: 0;
+    margin-top: 10px;
+    flex: 1;
+}
+
+button {
+    min-width: 80px;
+    margin-left: 5px;
+}
+
+#btnSwitchInterfaces {
+    margin: 10px;
+    border-radius: 50%;
+    padding: 10px;
+    cursor: pointer;
+}
+
+#divOptionsList {
+    position: static;
+}
+
+#lblTranslating,
+#lblTranslated,
+#lblError,
+#btnRestore,
+#btnTryAgain {
+    display: none;
+}
+
+.arrow-down {
+    border: solid #2196F3;
+    border-width: 0 2px 2px 0;
+    display: inline-block;
+    padding: 3px;
+    transform: rotate(45deg);
+}
+
+option {
+    color: black;
+}
+
+#divIconTranslate:hover #iconTranslate {
+    opacity: 0.6;
+}
+
+#iconSwap {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display: none;
+    opacity: 0.8;
+}
+
+#divIconTranslate:hover #iconSwap {
+    display: block;
+}
+
+#btnOptions option {
+    font-size: small;
+    font-weight: normal;
+}
+
+.pointerIgnore {
+    pointer-events: none;
+}
+
+.arrow {
+    border: solid #2196F3;
+    border-width: 0 2px 2px 0;
+    display: inline-block;
+    padding: 3px;
+}
+
+.down {
+    transform: rotate(45deg);
+}
+
+#divIconTranslate>img {
+    padding: 0;
+}
+
+.gg-swap {
+    box-sizing: border-box;
+    position: relative;
+    display: block;
+    transform: scale(var(--ggs, 1));
+    box-shadow:
+        -2px 2px 0,
+        2px -2px 0;
+    width: 6px;
+    height: 2px
+}
+
+.gg-swap::after,
+.gg-swap::before {
+    content: "";
+    display: block;
+    box-sizing: border-box;
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-top: 3px solid transparent;
+    border-bottom: 3px solid transparent
+}
+
+.gg-swap::before {
+    border-left: 3px solid;
+    top: -4px;
+    right: -4px
+}
+
+.gg-swap::after {
+    border-right: 3px solid;
+    bottom: -4px;
+    left: -4px
+}
