@@ -147,12 +147,13 @@ nsresult TextEditor::InsertDroppedDataTransferAsAction(
   // anymore because nobody should listen to mutation events of anonymous
   // text node in <input>/<textarea>.
   nsContentUtils::PlatformToDOMLineBreaks(data);
-  rv = InsertTextAt(data, aDroppedAt, false);
+  rv = InsertTextAt(data, aDroppedAt, DeleteSelectedContent::No);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::InsertTextAt() failed, but ignored");
+                       "EditorBase::InsertTextAt(DeleteSelectedContent::No) "
+                       "failed, but ignored");
   return rv;
 }
 

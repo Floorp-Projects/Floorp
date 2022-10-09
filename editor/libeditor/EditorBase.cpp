@@ -1726,14 +1726,15 @@ NS_IMETHODIMP EditorBase::Paste(int32_t aClipboardType) {
 }
 
 nsresult EditorBase::PrepareToInsertContent(
-    const EditorDOMPoint& aPointToInsert, bool aDoDeleteSelection) {
+    const EditorDOMPoint& aPointToInsert,
+    DeleteSelectedContent aDeleteSelectedContent) {
   // TODO: Move this method to `EditorBase`.
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   MOZ_ASSERT(aPointToInsert.IsSet());
 
   EditorDOMPoint pointToInsert(aPointToInsert);
-  if (aDoDeleteSelection) {
+  if (aDeleteSelectedContent == DeleteSelectedContent::Yes) {
     AutoTrackDOMPoint tracker(RangeUpdaterRef(), &pointToInsert);
     nsresult rv = DeleteSelectionAsSubAction(
         nsIEditor::eNone,
@@ -1750,13 +1751,13 @@ nsresult EditorBase::PrepareToInsertContent(
   return rv;
 }
 
-nsresult EditorBase::InsertTextAt(const nsAString& aStringToInsert,
-                                  const EditorDOMPoint& aPointToInsert,
-                                  bool aDoDeleteSelection) {
+nsresult EditorBase::InsertTextAt(
+    const nsAString& aStringToInsert, const EditorDOMPoint& aPointToInsert,
+    DeleteSelectedContent aDeleteSelectedContent) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPointToInsert.IsSet());
 
-  nsresult rv = PrepareToInsertContent(aPointToInsert, aDoDeleteSelection);
+  nsresult rv = PrepareToInsertContent(aPointToInsert, aDeleteSelectedContent);
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::PrepareToInsertContent() failed");
     return rv;
@@ -1768,10 +1769,9 @@ nsresult EditorBase::InsertTextAt(const nsAString& aStringToInsert,
   return rv;
 }
 
-bool EditorBase::IsSafeToInsertData(nsIPrincipal* aSourcePrincipal) const {
+EditorBase::SafeToInsertData EditorBase::IsSafeToInsertData(
+    nsIPrincipal* aSourcePrincipal) const {
   // Try to determine whether we should use a sanitizing fragment sink
-  bool isSafe = false;
-
   RefPtr<Document> destdoc = GetDocument();
   NS_ASSERTION(destdoc, "Where is our destination doc?");
 
@@ -1783,7 +1783,8 @@ bool EditorBase::IsSafeToInsertData(nsIPrincipal* aSourcePrincipal) const {
     docShell = root->GetDocShell();
   }
 
-  isSafe = docShell && docShell->GetAppType() == nsIDocShell::APP_TYPE_EDITOR;
+  bool isSafe =
+      docShell && docShell->GetAppType() == nsIDocShell::APP_TYPE_EDITOR;
 
   if (!isSafe && aSourcePrincipal) {
     nsIPrincipal* destPrincipal = destdoc->NodePrincipal();
@@ -1794,7 +1795,7 @@ bool EditorBase::IsSafeToInsertData(nsIPrincipal* aSourcePrincipal) const {
                          "nsIPrincipal::Subsumes() failed, but ignored");
   }
 
-  return isSafe;
+  return isSafe ? SafeToInsertData::Yes : SafeToInsertData::No;
 }
 
 NS_IMETHODIMP EditorBase::PasteTransferable(nsITransferable* aTransferable) {
@@ -4326,7 +4327,7 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
           dragSession, aDropEvent->WidgetEventPtr()->AsDragEvent())) {
     // Don't allow drags from subframe documents with different origins than
     // the drop destination.
-    if (!IsSafeToInsertData(sourcePrincipal)) {
+    if (IsSafeToInsertData(sourcePrincipal) == SafeToInsertData::No) {
       return NS_OK;
     }
   }
