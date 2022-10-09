@@ -3459,10 +3459,10 @@ class HTMLEditor final : public EditorBase,
     using AutoEditActionDataSetter = EditorBase::AutoEditActionDataSetter;
 
    public:
-    BlobReader(dom::BlobImpl* aBlob, HTMLEditor* aHTMLEditor,
-               SafeToInsertData aSafeToInsertData,
-               const EditorDOMPoint& aPointToInsert,
-               DeleteSelectedContent aDeleteSelectedContent);
+    MOZ_CAN_RUN_SCRIPT BlobReader(dom::BlobImpl* aBlob, HTMLEditor* aHTMLEditor,
+                                  SafeToInsertData aSafeToInsertData,
+                                  const EditorDOMPoint& aPointToInsert,
+                                  DeleteSelectedContent aDeleteSelectedContent);
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BlobReader)
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(BlobReader)
@@ -4067,7 +4067,7 @@ class HTMLEditor final : public EditorBase,
     Clear,     // If you want the paste to be keep its own style, e.g., pasting
                // from clipboard, use "Clear"
   };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult DoInsertHTMLWithContext(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertHTMLWithContextAsSubAction(
       const nsAString& aInputString, const nsAString& aContextStr,
       const nsAString& aInfoStr, const nsAString& aFlavor,
       SafeToInsertData aSafeToInsertData, const EditorDOMPoint& aPointToInsert,
