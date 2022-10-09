@@ -514,6 +514,13 @@
     <!-- %1$s will be replaced by the app short name(Focus) -->
     <string name="onboarding_second_screen_title">%1$s ùn hè micca cum’è l’altri navigatori</string>
 
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Per più di cunfidenzialità, squassemu a vostra cronolugia quandu si chjode l’appiecazione.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Fate di %1$s u vostru navigatore predefinitu per prutege i vostri dati à l’apertura d’ogni liame.</string>
+
     <!-- New Onboarding flow second screen make Focus default browser button label-->
     <string name="onboarding_second_screen_default_browser_button_text">Sceglie cum’è navigatore predefinitu</string>
 
@@ -1011,6 +1018,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
     <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Pare chì stu situ pruvava di seguitavvi. Fate un cliccu nant’à u scudu per vede e preferenze per u situ è e statistiche di blucchime di i perseguitatori.</string>
 
+    <string name="cfr_for_toolbar_shield_icon2">Missione compia ! Avemu fermatu u spiunagiu da stu situ. Picchichjate u scudu à ogni mumentu per vede ciò chì no blucchemu.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Chjode a finestra popup</string>
 
@@ -1026,6 +1035,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Sbarazzatevi di i vostri dati persunali, cronolugia di navigazione è ancu di più di sta sessione picchichjendu nant’à u buttone di a curbella. Pruvate puru !</string>
 
+    <string name="cfr_for_toolbar_delete_icon2">Picchicciate quì per squassà tuttu - cronolugia, canistrelli, ecc. - è principiate à zeru in un’unghjetta nova.</string>
+
     <!-- Promote SearchWidget Dialog -->
 
     !-- Content description (not visible, for screen readers etc.): This is the description for the
@@ -1034,10 +1045,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Widget di ricerca</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
     <string name="promote_search_widget_dialog_title">Cronolugia di navigazione squassata ! 🎉</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Vi lasciemu à a vostra navigazione privata, ma principiate più prestu e prossime volte cù u widget %1$s nant’à u vostru screnu d’accolta.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
     <string name="promote_search_widget_button_text">Aghjunghje u widget à u screnu d’accolta</string>
 
     !-- This is te text of the snackbar that appears after the search widget was added successfully

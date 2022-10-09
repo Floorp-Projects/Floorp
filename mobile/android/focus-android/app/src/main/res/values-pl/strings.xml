@@ -495,37 +495,69 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Witamy w przeglądarce %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">Witamy w przeglądarce %1$s!</string>
+
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Zamknij</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Witamy w przeglądarce %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Szybka. Prywatna. Skupiona na celu.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Pierwsze kroki</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s nie jest jak inne przeglądarki</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Usuwamy historię przeglądania po zamknięciu aplikacji, maksymalizując prywatność.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Ustaw przeglądarkę %1$s jako domyślną, aby chronić swoje dane przy każdym otwieranym odnośniku.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Ustaw jako domyślną przeglądarkę</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Pomiń</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Prywatne przeglądanie na wyższym poziomie, kiedy tylko chcesz</string>
+    <string moz:removedIn="106" name="onboarding_description">Prywatne przeglądanie na wyższym poziomie, kiedy tylko chcesz</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Gdzie incognito znaczy niewidzialność</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Gdzie incognito znaczy niewidzialność</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s to przeglądarka stawiająca prywatność na pierwszym miejscu, mająca wbudowaną supersilną ochronę ciasteczek i przed śledzeniem.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s to przeglądarka stawiająca prywatność na pierwszym miejscu, mająca wbudowaną supersilną ochronę ciasteczek i przed śledzeniem.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Przeglądaj bez żadnego śladu</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Przeglądaj bez żadnego śladu</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Jedno stuknięcie usuwa historię przeglądania i ciasteczka — i uniemożliwia reklamom śledzenie Cię w Internecie.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Jedno stuknięcie usuwa historię przeglądania i ciasteczka — i uniemożliwia reklamom śledzenie Cię w Internecie.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Prywatność pasująca do każdej sytuacji</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Prywatność pasująca do każdej sytuacji</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Jeśli potrzebujesz przeglądać inaczej, łatwo możesz zwiększyć lub zmniejszyć ustawienia prywatności.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Jeśli potrzebujesz przeglądać inaczej, łatwo możesz zwiększyć lub zmniejszyć ustawienia prywatności.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Zacznij przeglądać Internet</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Zacznij przeglądać Internet</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Nowy poziom prywatności</string>
     <!-- First run tour (Default browser): Text. -->
-    <string name="firstrun_defaultbrowser_text2">Przejdź na wyższy poziom prywatności. Blokuj reklamy i inne elementy mogące Cię śledzić między stronami i wydłużające wczytywanie się stron.</string>
+    <string name="firstrun_defaultbrowser_text2">Przejdź na wyższy poziom prywatności. Blokuj reklamy i inne elementy mogące Cię śledzić między witrynami i wydłużające wczytywanie się stron.</string>
 
     <!-- First run tour (Search): Title -->
     <string name="firstrun_search_title">Wyszukuj po swojemu</string>
@@ -980,7 +1012,10 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Wygląda na to, że ta witryna próbowała Cię śledzić. Kliknij tarczę, aby otworzyć ustawienia witryny i zobaczyć statystyki blokowania elementów śledzących.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Wygląda na to, że ta witryna próbowała Cię śledzić. Kliknij tarczę, aby otworzyć ustawienia witryny i zobaczyć statystyki blokowania elementów śledzących.</string>
+
+    <string name="cfr_for_toolbar_shield_icon2">Uniemożliwiliśmy tej witrynie szpiegowanie Cię. Stuknij tarczę w dowolnej chwili, aby zobaczyć, co blokujemy.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Zamknij</string>
 
@@ -996,4 +1031,28 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Pozbądź się z tej sesji prywatnych danych, historii przeglądania i nie tylko, stukając przycisk kosza. Spróbuj!</string>
     <string name="cfr_for_toolbar_delete_icon2">Stuknij tutaj, aby wyrzucić wszystko — historię, ciasteczka, wszystko — i zacząć od nowa na nowej karcie.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Zamknij</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Widżet wyszukiwania</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Usunięto historię przeglądania! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Następnym razem możesz szybciej zacząć przeglądanie prywatne za pomocą widżetu %1$s na ekranie głównym.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Dodaj widżet do ekranu głównego</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Dodano widżet do ekranu głównego</string>
 </resources>

@@ -495,32 +495,63 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">%1$s へようこそ！</string>
+    <string moz:removedIn="106" name="onboarding_title">%1$s へようこそ！</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">閉じる</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">%1$s へようこそ</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">高速でプライベート。気を散らすものはありません。</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">はじめる</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s は他のブラウザーとは一味違います</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">プライバシー強化のため、アプリを閉じると履歴が消去されます。</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">%1$s を既定のブラウザーに設定すれば、開いたリンク先であなたのデータが保護されます。</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">既定のブラウザーに設定する</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">スキップ</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">ユーザーに寄り添う先進のプライベートブラウジング</string>
+    <string moz:removedIn="106" name="onboarding_description">ユーザーに寄り添う先進のプライベートブラウジング</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">匿名と不可視が出会う場所</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">匿名と不可視が出会う場所</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s は非常に強力な追跡防止と Cookie 保護が組み込まれたプライバシーファーストのブラウザーです。</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s は非常に強力な追跡防止と Cookie 保護が組み込まれたプライバシーファーストのブラウザーです。</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">何事もなかったかのようなブラウジング</string>
+    <string moz:removedIn="106" name="onboarding_history_title">何事もなかったかのようなブラウジング</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">ワンタップでブラウジング履歴と Cookie を消去し、ユーザーを追い回す広告を防ぎます。</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">ワンタップでブラウジング履歴と Cookie を消去し、ユーザーを追い回す広告を防ぎます。</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">どんな状況でも適合するプライバシー機能</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">どんな状況でも適合するプライバシー機能</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">ブラウジングの変更が必要な時は、簡単にプライバシーレベルの設定を上げたり下げたりできます。</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">ブラウジングの変更が必要な時は、簡単にプライバシーレベルの設定を上げたり下げたりできます。</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">ブラウジングを開始</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">ブラウジングを開始</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">プライバシーを強化</string>
@@ -978,7 +1009,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">このサイトがあなたを追跡しようとしていたようです。サイト設定とトラッカーブロックの統計は盾アイコンをクリックしてください。</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">このサイトがあなたを追跡しようとしていたようです。サイト設定とトラッカーブロックの統計は盾アイコンをクリックしてください。</string>
+    <string name="cfr_for_toolbar_shield_icon2">このサイトによるスパイ行為を阻止しました。ブロックしたものに関する情報を見るには盾アイコンをタップしてください。</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">ポップアップを閉じる</string>
 
@@ -994,4 +1027,28 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">ごみ箱ボタンをタップするだけで、このセッションから個人データやブラウジング履歴などを削除できます。お試しください。</string>
     <string name="cfr_for_toolbar_delete_icon2">ここをタップして、履歴、Cookie、すべて破棄し、新しいタブで新たに始めましょう。</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">閉じる</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">検索ウィジェット</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">ブラウジング履歴を消去しました🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">プライベート ブラウジングはお任せしますが、次回はホーム画面の %1$s ウィジェットですばやく開始できます。</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">ホーム画面にウィジェットを追加</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">ホーム画面にウィジェットを追加しました</string>
 </resources>

@@ -496,32 +496,63 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Bonvenon al %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">Bonvenon al %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Fermi</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Bonvenon al %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Rapida. Privata. Sendistra.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Unuaj paŝoj</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s ne estas kiel aliaj retumiloj</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Ni viŝas vian historion kiam vi fermas la programon por havi kroman privatecon.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Igu %1$s via norma retumilo por protekti viajn datumojn en ĉiu malfermita ligilo.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Difini kiel norma retumilo</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Ignori</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Altgrada privata retumo kiam ajn vi volas</string>
+    <string moz:removedIn="106" name="onboarding_description">Altgrada privata retumo kiam ajn vi volas</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Tie, kie renkontiĝas anonimeco kaj nevideblo</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Tie, kie renkontiĝas anonimeco kaj nevideblo</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s estas retumilo kiu zorgegas pri privateco per treege fortaj protektoj kontraŭ spurado kaj kuketoj.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s estas retumilo kiu zorgegas pri privateco per treege fortaj protektoj kontraŭ spurado kaj kuketoj.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Retumu kvazaŭ tio neniam estus okazinta</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Retumu kvazaŭ tio neniam estus okazinta</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Unu tuŝeto forigas vian retuman historion kaj kuketojn — kaj evitas ke anoncoj sekvu vian retumon.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Unu tuŝeto forigas vian retuman historion kaj kuketojn — kaj evitas ke anoncoj sekvu vian retumon.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Privateco kongrua kun ĉiuj situacioj</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Privateco kongrua kun ĉiuj situacioj</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Se via retumo bezonas ŝanĝojn, estas facile alĝustigi viajn privatecajn agordojn.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Se via retumo bezonas ŝanĝojn, estas facile alĝustigi viajn privatecajn agordojn.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Komenci retumi</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Komenci retumi</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Plibonigi vian privatecon</string>
@@ -975,7 +1006,9 @@ Elektu Aldoni al ŝparvojoj el la menuo de %1$s</string>
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Ŝajne tiu ĉi retejo klopodis spuri vin. Alkalku la ŝildon por la retejaj agordoj kaj statistikoj de blokado de spuriloj.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Ŝajne tiu ĉi retejo klopodis spuri vin. Alkalku la ŝildon por la retejaj agordoj kaj statistikoj de blokado de spuriloj.</string>
+    <string name="cfr_for_toolbar_shield_icon2">Kaptita! Ni evitis ke tiu ĉi retejo spionu vin. Tuŝetu la ŝildon iam ajn por vidi kion ni blokas.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Fermi ŝprucaĵon</string>
 
@@ -991,4 +1024,28 @@ Elektu Aldoni al ŝparvojoj el la menuo de %1$s</string>
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Seniĝu je viaj personaj datumoj, retuma historio kaj aliaj ĉiseancaj aferoj per tuŝeto de la rubuja butono. Provu!</string>
     <string name="cfr_for_toolbar_delete_icon2">Tuŝetu ĉi tie por forigi ĉion — historion, kuketojn, ĉion — kaj komenci je nulo en nova langeto.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Fermi</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Serĉila komponanto</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Retuma historio viŝita! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Plu retumu private, sed venontfoje komencu tion pli rapide per komponanto de %1$s en via hejmekrano.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Aldoni komponanton al hejmekrano</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Komponanto aldonita al hejmekrano</string>
 </resources>

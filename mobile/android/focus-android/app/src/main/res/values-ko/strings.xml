@@ -294,12 +294,11 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">잠금 헤제에 지문을 사용</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">앱에 URL이 이미 열려 있다면 지문으로 %1$s를 잠금 해제 할 수 있습니다. 스텔스가 켜집니다.</string>
-
     <string name="preference_security_biometric_summary2">바로가기를 추가했거나 웹사이트가 이미 %s에서 열려 있는 경우 지문을 사용하여 잠금을 해제합니다.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -364,7 +363,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">홈 스크린 팁 표시</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">홈 스크린 팁 표시</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">검색 엔진 추가</string>
@@ -494,32 +493,56 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">%1$s에 오신 것을 환영합니다!</string>
+    <string moz:removedIn="106" name="onboarding_title">%1$s에 오신 것을 환영합니다!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">닫기</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">%1$s에 오신 것을 환영합니다</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">시작하기</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s, 다른 브라우저와 다릅니다.</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">추가적인 개인 정보 보호를 위해 앱을 닫으면 방문 기록이 삭제됩니다.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">기본 브라우저로 설정하기</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">건너뛰기</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">나의 차세대 개인 정보 보호 브라우징</string>
+    <string moz:removedIn="106" name="onboarding_description">나의 차세대 개인 정보 보호 브라우징</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">시크릿 브라우징이 보이지도 않을 때</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">시크릿 브라우징이 보이지도 않을 때</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s는 아주 강력한 추적 방지 기능과 쿠키 보호를 내장한 개인정보 보호를 최우선으로 하는 브라우저입니다.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s는 아주 강력한 추적 방지 기능과 쿠키 보호를 내장한 개인정보 보호를 최우선으로 하는 브라우저입니다.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">이런 브라우징은 지금까지 없었다</string>
+    <string moz:removedIn="106" name="onboarding_history_title">이런 브라우징은 지금까지 없었다</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">탭 한 번으로 검색 기록과 쿠키가 지워지고 광고가 사용자를 따라다니는 것을 방지합니다.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">탭 한 번으로 검색 기록과 쿠키가 지워지고 광고가 사용자를 따라다니는 것을 방지합니다.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">모든 상황에 맞는 프라이버시</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">모든 상황에 맞는 프라이버시</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">브라우징이 변경되어야 할 떄 개인 정보 설정을 쉽게 확장하거나 축소할 수 있습니다.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">브라우징이 변경되어야 할 떄 개인 정보 설정을 쉽게 확장하거나 축소할 수 있습니다.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">탐색 시작</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">탐색 시작</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">개인정보 보호 강화하기</string>
@@ -815,7 +838,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">사이트에서 콘텐츠가 나오지 않거나 이상하게 작동하나요?\n
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">사이트에서 콘텐츠가 나오지 않거나 이상하게 작동하나요?\n
     향상된 추적 방지를 꺼보세요.</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -837,7 +860,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">사이트 전체 버전을 보고 싶으신가요?\n
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">사이트 전체 버전을 보고 싶으신가요?\n
         %1$s 메뉴에서 데스크톱 사이트를 켜보세요.</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -845,17 +868,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">신뢰할 수 있는 사이트는 향상된 추적 방지 기능을 해제하고 싶으신가요?\n
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">신뢰할 수 있는 사이트는 향상된 추적 방지 기능을 해제하고 싶으신가요?\n
         설정의 허용 목록에 추가해보세요.
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">네, 새로운 모습으로 바뀌었습니다!\n 이에 대해 더 읽어보고 %1$s의 다른 업데이트도 살펴 보세요.</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">네, 새로운 모습으로 바뀌었습니다!\n 이에 대해 더 읽어보고 %1$s의 다른 업데이트도 살펴 보세요.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">가장 많이 방문하는 사이트에 대한 바로가기 만들기:\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">가장 많이 방문하는 사이트에 대한 바로가기 만들기:\n
     %1$s 메뉴에서 바로가기 추가를 선택하세요.</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -977,7 +1000,8 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">이 사이트가 당신을 추적하는 것 같습니다. 사이트 설정에서 방패를 클릭하여 추적자를 차단하세요. </string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">이 사이트가 당신을 추적하는 것 같습니다. 사이트 설정에서 방패를 클릭하여 추적자를 차단하세요. </string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">팝업 닫기</string>
 
@@ -990,6 +1014,31 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">닫기</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">휴지통 버튼을 눌러 이 세션에서 개인 데이터, 브라우징 히스토리 등을 삭제하세요. 시도해 보세요!</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">휴지통 버튼을 눌러 이 세션에서 개인 데이터, 브라우징 히스토리 등을 삭제하세요. 시도해 보세요!</string>
+    <string name="cfr_for_toolbar_delete_icon2">여기를 클릭하여 방문 기록, 쿠키를 포함한 모든 것을 삭제하고 새 탭을 시작하세요.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">닫기</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">위젯 검색하기</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">웹 사이트 방문 기록이 삭제되었습니다! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">개인 정보 보호 브라우저를 쓸 수 있지만, 홈 화면의 %1$s 위젯을 사용하면 다음에 브라우저를 더욱 빠르게 시작하실 수 있습니다.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">홈 화면에 위젯 추가하기</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">홈 화면에 위젯이 추가됨</string>
 </resources>
