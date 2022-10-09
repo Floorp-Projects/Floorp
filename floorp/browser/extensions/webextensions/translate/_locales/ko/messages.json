@@ -1,0 +1,467 @@
+{
+  "extensionName": {
+    "message": "Translate Web Pages"
+  },
+  "extensionDescription": {
+    "message": "보고 계신 페이지를 실시간으로 Google이나 Yandex를 사용하여 번역합니다."
+  },
+  "pageActionTitle": {
+    "message": "이 페이지 번역"
+  },
+  "lblTranslate": {
+    "message": "이 페이지를 번역하시겠습니까?"
+  },
+  "lblTranslating": {
+    "message": "번역 중..."
+  },
+  "lblTranslated": {
+    "message": "번역됨"
+  },
+  "lblError": {
+    "message": "이 페이지를 번역할 수 없습니다"
+  },
+  "lblAlwaysTranslate": {
+    "message": "$LANGUAGE_NAME$ 언어를 항상 번역",
+    "placeholders": {
+      "LANGUAGE_NAME": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "lblTargetLanguage": {
+    "message": "대상 언어 $TARGET_LANGUAGE_NUM$",
+    "placeholders": {
+      "TARGET_LANGUAGE_NUM": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "btnReset": {
+    "message": "초기화"
+  },
+  "btnTranslate": {
+    "message": "번역"
+  },
+  "btnOptions": {
+    "message": "옵션"
+  },
+  "btnRestore": {
+    "message": "원본 보기"
+  },
+  "btnTryAgain": {
+    "message": "다시 시도"
+  },
+  "btnOpenOnGoogleTranslate": {
+    "message": "Google 번역에서 열기"
+  },
+  "btnDonate": {
+    "message": "기부"
+  },
+  "btnNeverTranslate": {
+    "message": "이 사이트 번역 안 함"
+  },
+  "btnChangeLanguages": {
+    "message": "언어 변경"
+  },
+  "btnMobileOriginal": {
+    "message": "원본"
+  },
+  "btnMobileTranslated": {
+    "message": "번역됨"
+  },
+  "btnMobileNeverTranslate": {
+    "message": "이 사이트 번역 안 함"
+  },
+  "btnMobileDonate": {
+    "message": "기부"
+  },
+  "optionsNeverTranslate": {
+    "message": "번역하지 않을 사이트 목록"
+  },
+  "optionsAlwaysTranslate": {
+    "message": "항상 자동으로 번역할 언어 목록"
+  },
+  "optionPopupConfig": {
+    "message": "모바일 팝업 표시"
+  },
+  "optionPopupAuto": {
+    "message": "자동"
+  },
+  "optionPopupThreeFingers": {
+    "message": "화면을 손가락 세 개로 터치했을 때"
+  },
+  "msgOpenOnYandexTranslator": {
+    "message": "Yandex Translate에서 열기"
+  },
+  "lblOthers": {
+    "message": "기타"
+  },
+  "btnMoreOptions": {
+    "message": "추가 옵션"
+  },
+  "lblPlsDonate": {
+    "message": "기부하여 개발자 돕기"
+  },
+  "msgTranslateFor": {
+    "message": "$LANGUAGE_NAME$ 언어로 번역",
+    "placeholders": {
+      "LANGUAGE_NAME": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "lblShowContextMenu": {
+    "message": "상황에 맞는 메뉴에 페이지 번역 옵션 표시"
+  },
+  "msgYes": {
+    "message": "예"
+  },
+  "msgNo": {
+    "message": "아니오"
+  },
+  "lblUseNewAlgorithm": {
+    "message": "새 번역 알고리즘을 사용하시겠습니까?"
+  },
+  "msgYesRecommended": {
+    "message": "예 (권장)"
+  },
+  "msgNoUseWidgets": {
+    "message": "아니오 (위젯 사용)"
+  },
+  "optionsPageTitle": {
+    "message": "웹 페이지 번역기 - 옵션"
+  },
+  "optionPopupjustWhenIClickTranlateThisSite": {
+    "message": "\"이 사이트 번역\" 버튼을 클릭했을 때만"
+  },
+  "msgEmptyListNeverTranslateSites": {
+    "message": "이 목록에 사이트를 추가하지 않았습니다."
+  },
+  "msgEmptyListAlwaysTranslateLanguages": {
+    "message": "이 목록에 언어를 추가하지 않았습니다."
+  },
+  "btnAlwaysTranslate": {
+    "message": "이 사이트 항상 번역"
+  },
+  "lblAlwaysTranslateSites": {
+    "message": "항상 자동으로 번역할 사이트 목록"
+  },
+  "msgDonateWithPaypal": {
+    "message": "PayPal로 기부"
+  },
+  "lblDarkMode": {
+    "message": "야간 모드"
+  },
+  "lblShowReleaseNotes": {
+    "message": "부가 기능 업데이트 시 릴리스 정보 표시"
+  },
+  "lblShowTranslateSelectedButton": {
+    "message": "선택한 텍스트에 번역 버튼 표시"
+  },
+  "msgAutomatic": {
+    "message": "자동"
+  },
+  "msgTranslateSelectedText": {
+    "message": "선택한 텍스트 번역"
+  },
+  "lblShowTranslateSelectedContextMenu": {
+    "message": "상황에 맞는 메뉴에 선택한 텍스트 번역 옵션 표시"
+  },
+  "lblNeverTranslateLangs": {
+    "message": "번역하지 않을 언어 목록"
+  },
+  "btnNeverTranslateThisLanguage": {
+    "message": "이 언어 번역 안 함"
+  },
+  "lblShowOriginalTextWhenHovering": {
+    "message": "마우스를 가져다 대면 원본 텍스트 표시"
+  },
+  "msgLanguages": {
+    "message": "언어"
+  },
+  "msgSites": {
+    "message": "사이트"
+  },
+  "msgTranslations": {
+    "message": "번역"
+  },
+  "msgStyle": {
+    "message": "스타일"
+  },
+  "msgHotkeys": {
+    "message": "단축키"
+  },
+  "lblMakeDonation": {
+    "message": "기부하기"
+  },
+  "lblReleaseNotes": {
+    "message": "릴리스 정보"
+  },
+  "lblReport": {
+    "message": "문제 보고하기"
+  },
+  "lblSettings": {
+    "message": "설정"
+  },
+  "lblAdd": {
+    "message": "추가"
+  },
+  "lblShowTranslatedWhenHovering": {
+    "message": "마우스를 가져다 대면 번역된 텍스트 표시"
+  },
+  "lblKeyboardShortcuts": {
+    "message": "키보드 단축키"
+  },
+  "msgToTranslateSites": {
+    "message": "사이트 번역"
+  },
+  "msgThanksForUseExtension": {
+    "message": "이 확장 기능을 사용해주셔서 감사합니다."
+  },
+  "msgIWillBeGrateful": {
+    "message": "기부해 주시면 감사하겠습니다."
+  },
+  "btnAlwaysTranslateThisLanguage": {
+    "message": "이 언어 항상 번역"
+  },
+  "lblShowTranslatedHoveringSites": {
+    "message": "마우스를 가져다 대면 번역된 텍스트를 표시할 사이트 목록"
+  },
+  "popupBlueWhenSiteIsTranslated": {
+    "message": "사이트가 번역되면 팝업 아이콘을 파란색으로 표시"
+  },
+  "more": {
+    "message": "더보기"
+  },
+  "less": {
+    "message": "간단히"
+  },
+  "dontShowIfPageLangIsTargetLang": {
+    "message": "페이지의 언어가 대상 언어와 같으면 표시 안 함"
+  },
+  "dontShowIfPageLangIsUnknown": {
+    "message": "페이지의 언어를 알 수 없으면 표시 안 함"
+  },
+  "dontShowIfSelectedTextIsTargetLang": {
+    "message": "선택한 텍스트의 언어가 대상 언어와 같으면 표시 안 함"
+  },
+  "dontShowIfSelectedTextIsUnknown": {
+    "message": "선택한 텍스트의 언어를 알 수 없으면 표시 안 함"
+  },
+  "lblShowTranslatedWhenHoveringThisSite": {
+    "message": "이 사이트에 마우스를 가져다 대면 번역 표시"
+  },
+  "lblShowTranslatedWhenHoveringThisLang": {
+    "message": "$LANGUAGE_NAME$ 사이트에 마우스를 가져다 대면 번역 표시",
+    "placeholders": {
+      "LANGUAGE_NAME": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "lblShowTranslatedHoveringLangs": {
+    "message": "마우스를 가져다 대면 번역된 텍스트를 표시할 사이트의 언어 목록"
+  },
+  "msgNoTranslateSelectedText": {
+    "message": "선택한 텍스트를 번역 안 함"
+  },
+  "btnListen": {
+    "message": "듣기"
+  },
+  "btnStopListening": {
+    "message": "듣기 중지"
+  },
+  "btnApply": {
+    "message": "적용"
+  },
+  "swapTranslationService": {
+    "message": "번역 서비스 간 전환"
+  },
+  "swapPopup": {
+    "message": "이전 인터페이스와 새 인터페이스 간 전환"
+  },
+  "helpSwapInterface": {
+    "message": "이전 인터페이스와 새 인터페이스 간에 전환하려면 이 버튼을 클릭하세요."
+  },
+  "lblTranslationService": {
+    "message": "번역 서비스"
+  },
+  "msgUseOldPopupInterface": {
+    "message": "이전 팝업 인터페이스 사용"
+  },
+  "lblTranslateInterface": {
+    "message": "인터페이스 번역"
+  },
+  "lblButtonInTheAddressBar": {
+    "message": "주소 표시줄에 버튼 표시"
+  },
+  "lblPageTranslationService": {
+    "message": "페이지 번역 서비스"
+  },
+  "lblTextTranslationService": {
+    "message": "텍스트 번역 서비스"
+  },
+  "msgStorage": {
+    "message": "저장소"
+  },
+  "lblTranslationCache": {
+    "message": "번역 캐시"
+  },
+  "lblStorageUsed": {
+    "message": "사용한 저장용량:"
+  },
+  "deleteTranslationCache": {
+    "message": "번역 캐시 삭제"
+  },
+  "lblPersonalSettings": {
+    "message": "개인 설정"
+  },
+  "backupToFile": {
+    "message": "파일로 백업"
+  },
+  "restoreFromFile": {
+    "message": "파일에서 복원"
+  },
+  "resetToDefault": {
+    "message": "기본 설정 복원"
+  },
+  "doYouWantToDeleteTranslationCache": {
+    "message": "번역 캐시를 삭제하시겠습니까?"
+  },
+  "doYouWantOverwriteAllSettings": {
+    "message": "백업 데이터를 사용하여 모든 기존 설정을 덮어쓰시겠습니까?"
+  },
+  "fileIsCorrupted": {
+    "message": "파일이 손상된 것 같습니다"
+  },
+  "doYouWantRestoreSettings": {
+    "message": "확장 기능을 기본 설정으로 복원하시겠습니까?"
+  },
+  "lblTtsSpeed": {
+    "message": "텍스트 음성 변환 오디오 속도"
+  },
+  "lblEnableDeepL": {
+    "message": "텍스트 번역 서비스로 DeepL 활성화"
+  },
+  "enterShortcut": {
+    "message": "단축키 입력"
+  },
+  "hotkeyError_ctrlOrAlt": {
+    "message": "Ctrl 또는 Alt 포함"
+  },
+  "hotkeyError_letter": {
+    "message": "문자 입력"
+  },
+  "hotkeyError_invalid": {
+    "message": "잘못된 조합"
+  },
+  "lblSwitchTranslatedAndOriginal": {
+    "message": "번역된 페이지와 원본 페이지 간 전환"
+  },
+  "lblRestorePageToOriginal": {
+    "message": "페이지를 원본으로 복원"
+  },
+  "lblTranslatePageToTargetLanguage": {
+    "message": "페이지를 대상 언어로 번역"
+  },
+  "lblTranslateTag_pre": {
+    "message": "$HTML_TAG_NAME$ 태그에 번역 사용",
+    "placeholders": {
+      "HTML_TAG_NAME": {
+        "content": "<PRE>"
+      }
+    }
+  },
+  "lbldontsortresults": {
+    "message": "Google 번역 결과를 정렬하지 않음"
+  },
+  "lbltranslatedynamicallycreatedcontent": {
+    "message": "동적으로 생성된 콘텐츠 번역"
+  },
+  "calculatestorage": {
+    "message": "계산"
+  },
+  "donatewithpaypal": {
+    "message": "PayPal로 기부"
+  },
+  "lblAutoTranslateWhenClickingALink": {
+    "message": "현재 사이트와 동일한 도메인으로 연결되는 링크를 클릭하면 자동으로 번역"
+  },
+  "openNativeShortcutManager": {
+    "message": "브라우저 단축키 설정 열기"
+  },
+  "lblKeyboardShortcutsSpecial": {
+    "message": "특수 키보드 단축키"
+  },
+  "lblTranslateSelectedWhenPressTwice": {
+    "message": "$SHORTCUT_KEY$ 키를 두 번 누르면 선택한 텍스트를 번역",
+    "placeholders": {
+      "SHORTCUT_KEY": {
+        "content": "[Ctrl]"
+      }
+    }
+  },
+  "lblTranslateTextOverMouseWhenPressTwice": {
+    "message": "$SHORTCUT_KEY$ 키를 두 번 누르면 마우스 커서 아래의 텍스트를 번역",
+    "placeholders": {
+      "SHORTCUT_KEY": {
+        "content": "[Ctrl]"
+      }
+    }
+  },
+  "translateClickingOnce": {
+    "message": "주소 표시줄의 버튼을 한 번 클릭하여 페이지를 번역 (팝업을 보려면, 마우스 오른쪽 버튼을 클릭)"
+  },
+  "btnShowPopup": {
+    "message": "팝업 표시"
+  },
+  "msgToTranslateThisDocument": {
+    "message": "이 문서$DOC_TYPE$를 번역하려면 HTML로 변환해야 합니다",
+    "placeholders": {
+      "DOC_TYPE": {
+        "content": "$1",
+        "example": "(.pdf)"
+      }
+    }
+  },
+  "msgSelectServiceConversion": {
+    "message": "변환할 서비스를 선택하세요"
+  },
+  "msgDownloadingDocument": {
+    "message": "문서 다운로드 중..."
+  },
+  "msgSendDocument": {
+    "message": "문서 보내기"
+  },
+  "msgErrorDownloadingDocument": {
+    "message": "문서 다운로드 중 오류 발생"
+  },
+  "msgFileLargerThan": {
+    "message": "이 서비스는 $FILE_SIZE$보다 큰 파일은 지원하지 않습니다",
+    "placeholders": {
+      "FILE_SIZE": {
+        "content": "$1",
+        "example": "10 MB"
+      }
+    }
+  },
+  "msgPDFtoHTML": {
+    "message": "PDF를 HTML로"
+  },
+  "btncopy": {
+    "message": "복사"
+  },
+  "msgRecents": {
+    "message": "최근"
+  },
+  "msgAll": {
+    "message": "모두"
+  },
+  "msgPleaseWait": {
+    "message": "기다려 주세요..."
+  }
+}

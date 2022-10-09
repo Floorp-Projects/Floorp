@@ -1,0 +1,3 @@
+if CONFIG["OS_TARGET"] == "Linux":
+ FINAL_TARGET = "dist/bin/distribution"
+ FINAL_TARGET_FILES += ["linux/policies.json"]
