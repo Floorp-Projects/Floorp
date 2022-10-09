@@ -384,3 +384,30 @@ addAccessibleTask(
     remoteIframe: isCacheEnabled,
   }
 );
+
+/**
+ * Test the handling of ARIA tables with display: contents.
+ */
+addAccessibleTask(
+  `
+<div id="table" role="table" style="display: contents;">
+  <div role="row"><div role="cell">a</div></div>
+</div>
+  `,
+  async function(browser, docAcc) {
+    // XXX We don't create a TableAccessible in this case (bug 1494196). For
+    // now, just ensure we don't crash (bug 1793073).
+    const table = findAccessibleChildByID(docAcc, "table");
+    let queryOk = false;
+    try {
+      table.QueryInterface(nsIAccessibleTable);
+    } catch (e) {}
+    todo(queryOk, "Got nsIAccessibleTable");
+  },
+  {
+    chrome: true,
+    topLevel: isCacheEnabled,
+    iframe: isCacheEnabled,
+    remoteIframe: isCacheEnabled,
+  }
+);

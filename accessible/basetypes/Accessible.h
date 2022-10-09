@@ -455,12 +455,12 @@ class Accessible {
    * classes to use for accessible object creation. However, an invalid table
    * structure might cause these classes not to be used after all.
    *
-   * To make sure we're really dealing with a table cell, only check the
+   * To make sure we're really dealing with a table/cell, only check the
    * generic type defined by the class, not the type defined in the ARIA map.
    */
   bool IsTableCell() const { return mGenericTypes & eTableCell; }
 
-  bool IsTable() const { return HasGenericType(eTable); }
+  bool IsTable() const { return mGenericTypes & eTable; }
 
   bool IsHyperText() const { return HasGenericType(eHyperText); }
 
