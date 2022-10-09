@@ -529,16 +529,19 @@ async function confirmRestartPrompt(
     noRestartButtonText,
     restartLaterButtonText,
   ] = await document.l10n.formatValues([
-    {
-      id: aRestartToEnable
-        ? "feature-enable-requires-restart"
-        : "feature-disable-requires-restart",
-    },
+{
+  id: aRestartToEnable === null
+    ? "feature-requires-restart"
+    : aRestartToEnable
+    ? "feature-enable-requires-restart"
+    : "feature-disable-requires-restart",
+},
     { id: "should-restart-title" },
     { id: "should-restart-ok" },
     { id: "cancel-no-restart-button" },
     { id: "restart-later" },
   ]);
+
 
   // Set up the first (index 0) button:
   let buttonFlags =
