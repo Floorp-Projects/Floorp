@@ -1,0 +1,66 @@
+name: Linux AArch64 Build
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Delete system folders
+      run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+        
+    - name: Prepare cross compiler
+      run: |
+        sudo apt -y install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
+        rustup target add aarch64-unknown-linux-gnu
+
+
+    - name: Add swap file
+      run: |
+        sudo fallocate -l 5G /swapfile2
+        sudo chmod 600 /swapfile2
+        sudo mkswap /swapfile2
+        sudo swapon /swapfile2
+    - name: Create environment
+      run: |
+        git clone https://github.com/floorp-projects/l10n-central.git
+        ./mach bootstrap
+        echo 'ac_add_options --with-app-name=floorp' >> mozconfig
+        echo 'ac_add_options --with-app-basename=Floorp' >> mozconfig
+        echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
+        echo 'ac_add_options --disable-crashreporter' >> mozconfig
+        echo 'ac_add_options --enable-proxy-bypass-protection' >> mozconfig
+        echo 'ac_add_options --disable-verify-mar' >> mozconfig
+        echo 'ac_add_options --enable-update-channel=release' >> mozconfig
+        echo 'ac_add_options --with-mozilla-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/apis/api-mozilla-key' >> mozconfig
+        echo 'ac_add_options --with-google-location-service-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/apis/api-google-location-service-key' >> mozconfig
+        echo 'ac_add_options --with-google-safebrowsing-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/apis/api-google-safe-browsing-key' >> mozconfig
+        echo 'ac_add_options --enable-bootstrap' >> mozconfig
+        echo 'ac_add_options --with-l10n-base=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/l10n-central/l10n-central' >> mozconfig
+        echo 'ac_add_options "--enable-optimize=-O2"' >> mozconfig
+        echo 'ac_add_options --enable-rust-simd' >> mozconfig
+        echo 'ac_add_options --target=aarch64-unknown-linux-gnu' >> mozconfig
+        echo 'ac_add_options --enable-linker=lld' >> mozconfig
+        echo 'ac_add_options --without-wasm-sandboxed-libraries' >> mozconfig
+        echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
+        echo 'MOZ_DATA_REPORTING=' >> mozconfig
+        echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
+        ./mach configure
+    - name: Build & Package
+      run: |        
+        ./mach build
+        export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
+        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
+        AB_CD=multi ./mach package
+        zip -r dist.zip obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2
+    - name: Publish
+      uses: actions/upload-artifact@v1
+      with:
+        name: floorp-linux-aarch64
+        path: dist.zip
