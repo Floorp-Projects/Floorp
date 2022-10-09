@@ -101,12 +101,11 @@ SimpleTest.waitForFocus(() => {
     checkInputEvent(inputEvents[0], "insertText", "b", `when inserting "b" with key on <${editableElement.tagName.toLowerCase()}> element`);
 
     let editor = SpecialPowers.wrap(editableElement).editor;
-    let transactionManager = editor.transactionManager;
-    is(transactionManager.numberOfUndoItems, 2,
-       editableElement.tagName + ": Initially, there should be 2 undo items");
-    // Defined as TextControlElement::DEFAULT_UNDO_CAP
-    is(transactionManager.maxTransactionCount, 1000,
-       editableElement.tagName + ": Initially, transaction manager should be able to have 1,000 undo items");
+    is(
+      editor.canUndo,
+      true,
+      `${editableElement.tagName}: Initially, the editor should have undo transactions`
+    );
 
     beforeInputEvents = [];
     inputEvents = [];
@@ -116,10 +115,11 @@ SimpleTest.waitForFocus(() => {
     is(inputEvents.length, 0,
        `No "input" event should be fired when setting value of <${editableElement.tagName.toLowerCase()}> element`);
 
-    is(transactionManager.numberOfUndoItems, 0,
-       editableElement.tagName + ": After setting value, all undo items must be deleted");
-    is(transactionManager.maxTransactionCount, 1000,
-       editableElement.tagName + ": After setting value, maximum transaction count should be restored to the previous value");
+    is(
+      editor.canUndo,
+      false,
+      `${editableElement.tagName}: After setting value, the editor should not have undo transactions`
+    );
 
     beforeInputEvents = [];
     inputEvents = [];
@@ -144,12 +144,18 @@ SimpleTest.waitForFocus(() => {
     checkInputEvent(inputEvents[0], "historyUndo", null, `when undoing on <${editableElement.tagName.toLowerCase()}> element`);
 
     // Disable undo/redo.
-    editor.enableUndo(0);
-    is(transactionManager.maxTransactionCount, 0,
-       editableElement.tagName + ": Transaction manager should not be able to have undo items");
+    editor.enableUndo(false);
+    is(
+      editor.canUndo,
+      false,
+      `${editableElement.tagName}: After calling enableUndo(false), the editor should not have undo transactions`
+    );
     editableElement.value = "hij";
-    is(transactionManager.maxTransactionCount, 0,
-       editableElement.tagName + ": Transaction manager should not be able to have undo items after setting value");
+    is(
+      editor.canUndo,
+      false,
+      `${editableElement.tagName}: After calling enableUndo(false), the editor should not create undo transaction for setting value`
+    );
 
     editableElement.removeEventListener("beforeinput", onBeforeInput);
     editableElement.removeEventListener("input", onInput);
