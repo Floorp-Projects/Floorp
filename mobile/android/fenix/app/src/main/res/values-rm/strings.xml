@@ -279,11 +279,15 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Emprenda d\'enconuscher tia pagina da partenza persunalisada. Tabs recents, segnapaginas e resultats da tschertga vegnan a cumparair qua.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
-    <string name="onboarding_home_welcome_title">Bainvegni en in internet independent</string>
+    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Bainvegni en in internet independent</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Bainvegni en in internet pli persunal</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Novas colurs. Dapli protecziun da datas. Ma il medem engaschi per las persunas, betg per il profit.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title_2">Mida dal telefonin al laptop ed enavos</string>
+    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Mida dal telefonin al laptop ed enavos</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">La midada dad in visur a l\'auter è ussa pli simpla che mai</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Cuntinuescha là nua che ti has smess cun ils tabs dad auters apparats che figureschan ussa sin tia pagina da partenza.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -383,8 +387,6 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Persunalisar</string>
     <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Sincronisescha segnapaginas, la cronologia e dapli cun tes conto da Firefox</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">T\'annunzia per sincronisar tabs, segnapaginas, pleds-clav e dapli.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Conto da Firefox</string>
@@ -468,12 +470,35 @@
     <string name="wallpaper_updated_snackbar_message">Actualisà il maletg dal fund davos!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Mussar</string>
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">Impussibel da telechargiar il maletg dal fund davos</string>
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">Empruvar anc ina giada</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">Impussibel da midar il maletg dal fund davos</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">Ulteriuras infurmaziuns</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Mida il maletg dal fund davos cun tutgar il logo da Firefox sin la pagina da partenza</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Logo da Firefox – midar il maletg dal fund davos, buttun</string>
+
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">%s classic</string>
+    <!-- Text for limited edition wallpapers title. -->
+    <string name="wallpaper_limited_edition_title">Ediziun limitada</string>
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">La nova collecziun «Vuschs independentas». %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">La nova collecziun «Vuschs independentas».</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">Emprova cun in zic colur</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Tscherna in maletg dal fund davos che ta correspunda.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Scuvrir ulteriurs maletgs dal fund davos</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -556,8 +581,6 @@
     <string name="preference_experiments_summary_2">Permetter a Mozilla dad installar ed exequir studis</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Activar Sync</string>
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">Sincronisar e memorisar tias datas</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -770,9 +793,6 @@
     <string name="delete_from_history">Stizzar da la cronologia</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (modus privat)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Auters tabs</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1182,8 +1202,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Terminar</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Questa acziun stizza tut tias datas da navigaziun.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Interval per stizzar</string>
     <!-- Body text of a delete browsing data dialog. -->
@@ -1218,20 +1236,34 @@
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Bainvegni en %s!</string>
+    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Bainvegni en %s!</string>
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">Bainvegni en in meglier internet</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">In navigatur creà per persunas, betg per daners.</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Sincronisescha Firefox sin differents apparats</string>
+    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Sincronisescha Firefox sin differents apparats</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Cuntinuescha là nua che ti has chalà</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string name="onboarding_manual_sign_in_description_2">Importescha segnapaginas, la cronologia e pleds-clav en %1$s sin quest apparat.</string>
+    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Importescha segnapaginas, la cronologia e pleds-clav en %1$s sin quest apparat.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Sincronisescha tabs e pleds-clav tranter tes apparats per midar senza interrupziun dad in visur a l\'auter.</string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">Sa registrar</string>
+    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Sa registrar</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">S\'annunziar</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync è activà</string>
 
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">Protecziun da datas franco fabrica</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Protecziun da datas franco fabrica</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Protecziun da la sfera privata sco standard</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">%1$s impedescha automaticamain che interpresas ta persequiteschian a la zuppada en il web.</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s impedescha automaticamain che interpresas ta persequiteschian a la zuppada en il web.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Ussa cun la protecziun totala cunter cookies per impedir ch\'ils fastizaders dovrian ils cookies per ta persequitar sur pliras websites.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standard (predefinì)</string>
     <!-- text for standard blocking option button description -->
@@ -1244,15 +1276,23 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Tscherna la posiziun da la trav d\'utensils</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">Plazzescha la trav d\'utensils uschia ch\'ella è cuntanschibla a moda optimala. La mantegna giusut u la plazzescha sisum.</string>
+    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Plazzescha la trav d\'utensils uschia ch\'ella è cuntanschibla a moda optimala. La mantegna giusut u la plazzescha sisum.</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Lascha ella giusut u la sposta ensi.</string>
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">Tia sfera privata</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Tia sfera privata</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">Ti controlleschas tias datas</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">Nus avain creà %s per che ti possias controllar tge che ti cundividas en l\'internet e tge che ti cundividas cun nus.</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Nus avain creà %s per che ti possias controllar tge che ti cundividas en l\'internet e tge che ti cundividas cun nus.</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Firefox ta pussibilitescha da controllar tge che ti cundividas en l\'internet e tge che ti cundividas cun nus.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Legia nossas directivas per la protecziun da datas</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">Pront da scuvrir in internet mirveglius?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Cumenzar a navigar</string>
 

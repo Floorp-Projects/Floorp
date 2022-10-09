@@ -81,6 +81,12 @@
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Ricusà</string>
 
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">A nostra funzione di cunfidenzialità a più putente ora hè di scartà l’elementi intersiti di spiunagiu.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Sapene di più nant’à a prutezzione tutale contr’à i canistrelli</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Accessu richiestu à l’apparechju-fotò. Accidite à e preferenze d’Android, picchichjate Permessi, è dopu Permette.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -276,12 +282,29 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">A vostra pagina d’accolta Firefox persunalizata vi permette avà di rivene d’una manera faciule induve vo avete lasciatu. Ci truverete l’unghjette, l’indette, è i risultati di ricerca recente.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Fate cunnuscenza cù a vostra pagina d’accolta. L’unghjette, l’indette è i risultati di riceca recente ci si trovanu.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Benvenuta in un Internet indipendente</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Benvenuta in un Internet più persunale</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Più di culori. Una cunfidenzialità amendata. È u listessu impegnu per a ghjente piuttostu chè per i soldi.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Passate da u telefonu à l’urdinatore purtavule è vice versa</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">Passà d’un screnu à l’altru hè più faciule chè mai</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Ripigliate induve vi site piantati cù l’unghjette d’altri apparechji chì si trovanu avà nant’à a vostra pagina d’accolta.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Principià</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Cunnettesi</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Ignurà</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">E vostre unghjette sò sincrunizate ! Ripigliate induve vi site piantati nant’à u vostru altru apparechju.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -459,8 +482,12 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Affissà</string>
 
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">Impussibule di scaricà u sfondulu di screnu</string>
     <!-- Snackbar label for action to retry downloading the wallpaper -->
     <string name="wallpaper_download_error_snackbar_action">Pruvà torna</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">Impussibule di cambià u sfondulu di screnu</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">Sapene di più</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
@@ -471,6 +498,19 @@
 
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">%s classicu</string>
+
+    <!-- Text for limited edition wallpapers title. -->
+    <string name="wallpaper_limited_edition_title">Edizione limitata</string>
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">A nova cullezzione di Voci indipendente. %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">A nova cullezzione di Voci indipendente.</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">Pruvate un tastu di culore</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Sciglite un sfondulu di screnu chì vi piace.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Scuprite d’altri sfonduli di screnu</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1212,10 +1252,18 @@
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Benvenuta in %s !</string>
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">Benvenuta in un Internet più bellu</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">Un navigatore cuncepitu per a ghjente, micca per i prufiti.</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Sincrunizate Firefox trà i vostri apparechji</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Ripigliate induve vi site piantati</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Impurtate e vostre indette, cronolugia è parolle d’intesa in %1$s nant’à st’apparechju.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Sincrunizate l’unghjette è e parolle d’intesa trà i vostri apparechji per passà d’un screnu à l’altru senza straziu.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Arregistrassi</string>
     <!-- Text for the button to manually sign into Firefox account. -->
@@ -1224,8 +1272,12 @@
     <string name="onboarding_firefox_account_sync_is_on">Sincrunizazione attivata</string>
     <!-- text for the tracking protection onboarding card header -->
     <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Cunfidenzialità sempre attiva</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Prutezzione attiva di a vita privata</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s impedisce autumaticamente l’imprese di seguitavvi da manera sicreta nant’à u Web.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">A funzione di prutezzione tutale contr’à i canistrelli permette d’impedisce l’elementi di spiunagiu d’impiegà i canistrelli per seguitavvi d’un situ à l’altru.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Classica (predefinita)</string>
     <!-- text for standard blocking option button description -->
@@ -1238,14 +1290,22 @@
     <string name="onboarding_toolbar_placement_header_1">Sceglie a pusizione di a vostra barra d’attrezzi</string>
     <!-- text for the toolbar position card description -->
     <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Piazzate a barra d’attrezzi à purtata di manu. Lasciatela quaghjò o dispiazzatela quassù.</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Lasciatela quaghjò o dispiazzatela quassù.</string>
     <!-- text for the privacy notice onboarding card header -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">A vostra vita privata</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">Gardate u cuntrollu di i vostri dati</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Avemu cuncepitu %s per davvi u cuntrollu nant’à ciò chì vò spartite in linea è nant’à ciò chì vò spartite cù noi.</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Firefox vi dà u cuntrollu nant’à ciò chì vò spartite in linea è nant’à ciò chì vò spartite cù noi.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Leghjite a nostra pulitica di cunfidenzialità</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">Pronti à scopre un Internet incredibule ?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Principià a navigazione</string>
 
@@ -1333,6 +1393,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Tutti i canistrelli terzi (pò impedisce certi siti web di funziunà)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Tutti i canistrelli (impediscerà siti web di funziunà)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Scartà i canistrelli intersiti</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Cuntenutu impiegatu per u spiunagiu</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1355,8 +1417,12 @@
     <string name="etp_social_media_trackers_description">Limiteghja a capacità di e rete suciale à seguità a vostra navigazione nant’à u Web.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Canistrelli impiegati per u spiunagiu intersiti</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Canistrelli intersiti</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Bluccechja i canistrelli chì e rete di publicità è e sucietà d’analisa di dati impieganu per cumpilà i vostri dati di navigazione nant’à parechji siti.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">A prutezzione tutale contr’à i canistrelli scarta i canistrelli di u situ chì vo visitate è cusì l’elementi di spiunagiu cum’è e rete di publicità ùn ponu micca impiegalli per seguitavvi d’un situ à l’altru.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Minatori di crittomuneta</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

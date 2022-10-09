@@ -492,6 +492,15 @@
     <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
     <string name="wallpaper_limited_edition_description_with_learn_more">La nova kolekto &quot;Sendependaj voĉoj&quot;. %s</string>
 
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">La nova kolekto &quot;Sendependaj voĉoj&quot;.</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">Provu koloran tuŝeton</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Elektu ekranfonon kiu signifas ion por vi.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Serĉi pli da ekranfonoj</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">Nesubtenata aldonaĵo</string>
@@ -1239,18 +1248,32 @@
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Bonvenon al %s!</string>
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">Bonvenon al pli bona interreto</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">Retumilo farita homcele, ne profitcele.</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Speguli Firefox inter aparatoj</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Rekomencu kie vi haltis</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Porti legosignojn, historion kaj pasvortojn al %1$s en tiu ĉi aparato.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Spegulu langetojn kaj pasvortojn por senĝena irado tien kaj reen inter aparatoj.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Registriĝi</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">Komenci seancon</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Spegulado estas ŝaltita</string>
     <!-- text for the tracking protection onboarding card header -->
     <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Privateco ĉiam aktiva</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Norma protekto de privateco</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s aŭtomate evitas ke entreprenoj sekrete sekvu vin tra la teksaĵo.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">La totala protekto kontraŭ kuketoj evitas ke spuriloj uzu kuketojn por sekvi vin tra la reto.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Norma</string>
     <!-- text for standard blocking option button description -->
@@ -1264,14 +1287,22 @@
     <!-- text for the toolbar position card description -->
     <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Metu la ilaron ĉemanen. Lasu ĝin malsupre aŭ movu ĝin supren.</string>
 
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Lasu ĝin malsupre, aŭ movu ĝin al la supro.</string>
     <!-- text for the privacy notice onboarding card header -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Via privateco</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">Vi regas viajn datumojn</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Ni kreis %s por doni al vi la eblon plene regi kion vi dividas en la reto kaj kion vi dividas kun ni.</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Firefox donas  al vi la eblon plene regi kion vi dividas en la reto kaj kion vi dividas kun ni.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Legu nian rimarkon pri privateco</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">Ĉu preta por malkovri ravan interreton?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Komenci retumi</string>
 
