@@ -7,7 +7,7 @@
     }
   },
 
-  "name": "Firefox Alpenglow",
+  "name": "Floorp Alpenglow",
   "description": "Use a colorful appearance for buttons, menus, and windows.",
   "version": "1.4",
   "icons": { "32": "icon.svg" },
