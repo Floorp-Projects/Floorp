@@ -51,10 +51,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471319
         // Test 3: Undoing a batched transaction where both end points of the
         // transaction are the padding <br> element for empty editor - the
         // <br> element should still be recognized as padding.
-        t1Editor.transactionManager.beginBatch(null);
+        t1Editor.beginTransaction();
         t1.value = "mozilla";
         t1.value = "";
-        t1Editor.transactionManager.endBatch(false);
+        t1Editor.endTransaction();
         t1Editor.undo();
         ok(!t1.value,
            "recreated <br> from undo transaction recognized as padding");

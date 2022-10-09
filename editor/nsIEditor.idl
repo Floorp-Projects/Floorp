@@ -190,8 +190,13 @@ interface nsIEditor  : nsISupports
 
   /* ------------ Transaction methods -------------- */
 
-  /** transactionManager Get the transaction manager the editor is using.
-    */
+  /**
+   * Retruns the transaction manager which is managed by the editor.
+   * Note that this is deprecated and temporarily available for comm-central.
+   * Therefore, don't use this in new code, and if you want to do something
+   * which is not available with nsIEditor, please file a bug for requesting
+   * new API.
+   */
   readonly attribute nsITransactionManager transactionManager;
 
   /** turn the undo system on or off

@@ -25,16 +25,22 @@ addLoadEvent(function() {
   document.body.appendChild(i);
   i.select();
   i.focus();
-  is(SpecialPowers.wrap(i).editor.transactionManager.numberOfUndoItems, 0,
-     "The number of undo items should be 0 after initing the editor");
+  is(
+    SpecialPowers.wrap(i).editor.canUndo,
+    false,
+    "Editor shouldn't have undo transactions at start"
+  );
   i.style.display = "none";
   document.offsetWidth;
   i.style.display = "";
   document.offsetWidth;
   i.select();
   i.focus();
-  is(SpecialPowers.wrap(i).editor.transactionManager.numberOfUndoItems, 0,
-     "The number of undo items should be 0 after re-initing the editor");
+  is(
+    SpecialPowers.wrap(i).editor.canUndo,
+    false,
+    "Editor shouldn't have undo transaction after re-initializing the editor"
+  );
   SimpleTest.finish();
 });
 

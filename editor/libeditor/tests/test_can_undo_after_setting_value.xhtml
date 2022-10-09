@@ -17,11 +17,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1386222
 
 function runTest() {
   var t = document.getElementById("t");
-  var numUndo = () => t.editor.transactionManager.numberOfUndoItems;
-  is(numUndo(), 0, "no undo items to begin with");
+  is(
+    t.editor.canUndo,
+    false,
+    "Editor shouldn't have undo transaction at start"
+  );
   t.value = "foo";
   is(t.value, "foo", "value setter worked");
-  is(numUndo(), 1, "one undo item now");
+  is(
+    t.editor.canUndo,
+    true,
+    "Editor should have undo transaction after setting value"
+  );
   SimpleTest.finish();
 }
 
