@@ -2099,29 +2099,32 @@ class EditorBase : public nsIEditor,
    *                            shouldn't use this instance after calling this
    *                            method because this method may cause changing
    *                            the DOM tree and Selection.
-   * @param aDoDeleteSelection  true if selected content should be removed.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult PrepareToInsertContent(
-      const EditorDOMPoint& aPointToInsert, bool aDoDeleteSelection);
+  enum class DeleteSelectedContent : bool {
+    No,   // Don't delete selection
+    Yes,  // Delete selected content
+  };
+  MOZ_CAN_RUN_SCRIPT nsresult
+  PrepareToInsertContent(const EditorDOMPoint& aPointToInsert,
+                         DeleteSelectedContent aDeleteSelectedContent);
 
   /**
    * InsertTextAt() inserts aStringToInsert at aPointToInsert.
    *
    * @param aStringToInsert     The string which you want to insert.
    * @param aPointToInsert      The insertion point.
-   * @param aDoDeleteSelection  true if you want this to delete selected
-   *                            content.  Otherwise, false.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult InsertTextAt(const nsAString& aStringToInsert,
-                                           const EditorDOMPoint& aPointToInsert,
-                                           bool aDoDeleteSelection);
+  MOZ_CAN_RUN_SCRIPT nsresult InsertTextAt(
+      const nsAString& aStringToInsert, const EditorDOMPoint& aPointToInsert,
+      DeleteSelectedContent aDeleteSelectedContent);
 
   /**
-   * Return true if the data is safe to insert as the source and destination
+   * Return whether the data is safe to insert as the source and destination
    * principals match, or we are in a editor context where this doesn't matter.
    * Otherwise, the data must be sanitized first.
    */
-  bool IsSafeToInsertData(nsIPrincipal* aSourcePrincipal) const;
+  enum class SafeToInsertData : bool { No, Yes };
+  SafeToInsertData IsSafeToInsertData(nsIPrincipal* aSourcePrincipal) const;
 
  protected:  // Called by helper classes.
   /**

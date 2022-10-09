@@ -3456,11 +3456,13 @@ class HTMLEditor final : public EditorBase,
       bool aIgnoreIfSelectionInEditingHost) const;
 
   class BlobReader final {
-    typedef EditorBase::AutoEditActionDataSetter AutoEditActionDataSetter;
+    using AutoEditActionDataSetter = EditorBase::AutoEditActionDataSetter;
 
    public:
-    BlobReader(dom::BlobImpl* aBlob, HTMLEditor* aHTMLEditor, bool aIsSafe,
-               const EditorDOMPoint& aPointToInsert, bool aDoDeleteSelection);
+    BlobReader(dom::BlobImpl* aBlob, HTMLEditor* aHTMLEditor,
+               SafeToInsertData aSafeToInsertData,
+               const EditorDOMPoint& aPointToInsert,
+               DeleteSelectedContent aDeleteSelectedContent);
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BlobReader)
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(BlobReader)
@@ -3476,8 +3478,8 @@ class HTMLEditor final : public EditorBase,
     RefPtr<dom::DataTransfer> mDataTransfer;
     EditorDOMPoint mPointToInsert;
     EditAction mEditAction;
-    bool mIsSafe;
-    bool mDoDeleteSelection;
+    SafeToInsertData mSafeToInsertData;
+    DeleteSelectedContent mDeleteSelectedContent;
     bool mNeedsToDispatchBeforeInputEvent;
   };
 
@@ -3795,18 +3797,19 @@ class HTMLEditor final : public EditorBase,
    * @param aType one of kFileMime, kJPEGImageMime, kJPGImageMime,
    *              kPNGImageMime, kGIFImageMime.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult InsertObject(const nsACString& aType,
-                                           nsISupports* aObject, bool aIsSafe,
-                                           const EditorDOMPoint& aPointToInsert,
-                                           bool aDoDeleteSelection);
+  MOZ_CAN_RUN_SCRIPT nsresult InsertObject(
+      const nsACString& aType, nsISupports* aObject,
+      SafeToInsertData aSafeToInsertData, const EditorDOMPoint& aPointToInsert,
+      DeleteSelectedContent aDeleteSelectedContent);
 
   class HTMLTransferablePreparer;
   nsresult PrepareHTMLTransferable(nsITransferable** aTransferable) const;
 
+  enum class HavePrivateHTMLFlavor { No, Yes };
   MOZ_CAN_RUN_SCRIPT nsresult InsertFromTransferable(
       nsITransferable* aTransferable, const nsAString& aContextStr,
-      const nsAString& aInfoStr, bool aHavePrivateHTMLFlavor,
-      bool aDoDeleteSelection);
+      const nsAString& aInfoStr, HavePrivateHTMLFlavor aHavePrivateHTMLFlavor,
+      DeleteSelectedContent aDeleteSelectedContent);
 
   /**
    * InsertFromDataTransfer() is called only when user drops data into
@@ -3817,9 +3820,10 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult InsertFromDataTransfer(
       const dom::DataTransfer* aDataTransfer, uint32_t aIndex,
       nsIPrincipal* aSourcePrincipal, const EditorDOMPoint& aDroppedAt,
-      bool aDoDeleteSelection);
+      DeleteSelectedContent aDeleteSelectedContent);
 
-  static bool HavePrivateHTMLFlavor(nsIClipboard* clipboard);
+  static HavePrivateHTMLFlavor ClipboardHasPrivateHTMLFlavor(
+      nsIClipboard* clipboard);
 
   /**
    * CF_HTML:
@@ -4056,15 +4060,19 @@ class HTMLEditor final : public EditorBase,
    * (for example, if it's coming from a transferable object), in which case
    * aTrustedInput should be set to false, otherwise, the caller should set it
    * to true, which means that the HTML will be inserted in the DOM verbatim.
-   *
-   * aClearStyle should be set to false if you want the paste to be affected by
-   * local style (e.g., for the insertHTML command).
    */
+  enum class InlineStylesAtInsertionPoint {
+    Preserve,  // If you want the paste to be affected by local style, e.g.,
+               // for the insertHTML command, use "Preserve"
+    Clear,     // If you want the paste to be keep its own style, e.g., pasting
+               // from clipboard, use "Clear"
+  };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult DoInsertHTMLWithContext(
       const nsAString& aInputString, const nsAString& aContextStr,
       const nsAString& aInfoStr, const nsAString& aFlavor,
-      const EditorDOMPoint& aPointToInsert, bool aDeleteSelection,
-      bool aTrustedInput, bool aClearStyle = true);
+      SafeToInsertData aSafeToInsertData, const EditorDOMPoint& aPointToInsert,
+      DeleteSelectedContent aDeleteSelectedContent,
+      InlineStylesAtInsertionPoint aInlineStylesAtInsertionPoint);
 
   /**
    * sets the position of an element; warning it does NOT check if the
