@@ -441,22 +441,8 @@ var gEditItemOverlay = {
       aElement.value = aValue;
 
       // Clear the editor's undo stack
-      let transactionManager;
-      try {
-        transactionManager = aElement.editor.transactionManager;
-      } catch (e) {
-        // When retrieving the transaction manager, editor may be null resulting
-        // in a TypeError. Additionally, the transaction manager may not
-        // exist yet, which causes access to it to throw NS_ERROR_FAILURE.
-        // In either event, the transaction manager doesn't exist it, so we
-        // don't need to worry about clearing it.
-        if (!(e instanceof TypeError) && e.result != Cr.NS_ERROR_FAILURE) {
-          throw e;
-        }
-      }
-      if (transactionManager) {
-        transactionManager.clear();
-      }
+      // FYI: editor may be null.
+      aElement.editor?.clearUndoRedo();
     }
   },
 

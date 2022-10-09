@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Test for nsIEditor.clearUndoRedo()</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content"><input><textarea></textarea><div contenteditable></div></div>
+<pre id="test">
+<script>
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  function isTextEditor(aElement) {
+    return aElement.tagName.toLowerCase() == "input" ||
+           aElement.tagName.toLowerCase() == "textarea";
+  }
+  function getEditor(aElement) {
+    if (isTextEditor(aElement)) {
+      return SpecialPowers.wrap(aElement).editor;
+    }
+    return SpecialPowers.wrap(window).docShell.editingSession?.getEditorForWindow(window);
+  }
+  function setValue(aElement, aValue) {
+    if (isTextEditor(aElement)) {
+      aElement.value = aValue;
+      return;
+    }
+    aElement.innerHTML = aValue;
+  }
+  function getValue(aElement) {
+    if (isTextEditor(aElement)) {
+      return aElement.value;
+    }
+    return aElement.innerHTML.replace(/<br>/g, "");
+  }
+  for (const selector of ["input", "textarea", "div[contenteditable]"]) {
+    const editableElement = document.querySelector(selector);
+    editableElement.focus();
+    const editor = getEditor(editableElement);
+    let enabled = {}, can = {};
+    (function test_clearing_undo_history() {
+      setValue(editableElement, "");
+      editor.canUndo(enabled, can);
+      is(
+        can.value,
+        false,
+        `Editor for ${selector} shouldn't have undo transaction at start`
+      );
+      synthesizeKey("a");
+      is(
+        getValue(editableElement),
+        "a",
+        `Editor for ${selector} should've handled typing "a"`
+      );
+      editor.canUndo(enabled, can);
+      is(
+        can.value,
+        true,
+        `Editor for ${selector} should have undo transaction for the inserted text`
+      );
+      editor.clearUndoRedo();
+      editor.canUndo(enabled, can);
+      is(
+        can.value,
+        false,
+        `Editor for ${selector} shouldn't have undo transaction after calling nsIEditor.clearUndoRedo()`
+      );
+      document.execCommand("undo");
+      is(
+        getValue(editableElement),
+        "a",
+        `Editor for ${selector} should do noting for document.execCommand("undo")`
+      );
+    })();
+
+    (function test_clearing_redo_history() {
+      setValue(editableElement, "");
+      editor.canRedo(enabled, can);
+      is(
+        can.value,
+        false,
+        `Editor for ${selector} shouldn't have redo transaction at start`
+      );
+      synthesizeKey("b");
+      is(
+        getValue(editableElement),
+        "b",
+        `Editor for ${selector} should've handled typing "b"`
+      );
+      editor.canRedo(enabled, can);
+      is(
+        can.value,
+        false,
+        `Editor for ${selector} shouldn't have redo transaction after inserting text`
+      );
+      document.execCommand("undo");
+      is(
+        getValue(editableElement),
+        "",
+        `Editor for ${selector} should've handled the typing "b" after undoing`
+      );
+      editor.canRedo(enabled, can);
+      is(
+        can.value,
+        true,
+        `Editor for ${selector} should have redo transaction of inserting text`
+      );
+      editor.clearUndoRedo();
+      editor.canRedo(enabled, can);
+      is(
+        can.value,
+        false,
+        `Editor for ${selector} shouldn't have redo transaction after calling nsIEditor.clearUndoRedo()`
+      );
+      document.execCommand("redo");
+      is(
+        getValue(editableElement),
+        "",
+        `Editor for ${selector} should do noting for document.execCommand("redo")`
+      );
+    })();
+  }
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

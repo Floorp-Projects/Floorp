@@ -454,9 +454,7 @@ var Sanitizer = {
             if (searchBar) {
               let input = searchBar.textbox;
               input.value = "";
-              try {
-                input.editor.transactionManager.clear();
-              } catch (e) {}
+              input.editor?.clearUndoRedo();
             }
 
             let tabBrowser = currentWindow.gBrowser;

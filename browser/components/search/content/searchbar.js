@@ -800,7 +800,7 @@
 
       // override |onTextEntered| in autocomplete.xml
       this.textbox.onTextEntered = event => {
-        this.textbox.editor.transactionManager.clearUndoStack();
+        this.textbox.editor.clearUndoRedo();
 
         let engine;
         let oneOff = this.textbox.selectedButton;
