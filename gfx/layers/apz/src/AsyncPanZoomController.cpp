@@ -10,6 +10,7 @@
 #include <stdint.h>     // for uint32_t, uint64_t
 #include <sys/types.h>  // for int32_t
 #include <algorithm>    // for max, min
+#include <utility>      // for std::make_pair
 
 #include "APZCTreeManager.h"            // for APZCTreeManager
 #include "AsyncPanZoomAnimation.h"      // for AsyncPanZoomAnimation
@@ -1300,7 +1301,7 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(
     case SCROLLBAR_DRAG:
     case NOTHING: {
       ParentLayerPoint point = GetFirstTouchPoint(aEvent);
-      mStartTouch = GetFirstExternalTouchPoint(aEvent);
+      mLastTouch.mPosition = mStartTouch = GetFirstExternalTouchPoint(aEvent);
       StartTouch(point, aEvent.mTimeStamp);
       if (RefPtr<GeckoContentController> controller =
               GetGeckoContentController()) {
@@ -1310,7 +1311,7 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(
             GetCurrentTouchBlock()->GetOverscrollHandoffChain()->CanBePanned(
                 this));
       }
-      mTouchStartTime = aEvent.mTimeStamp;
+      mLastTouch.mTimeStamp = mTouchStartTime = aEvent.mTimeStamp;
       SetState(TOUCHING);
       break;
     }
@@ -1342,6 +1343,8 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(
     case TOUCHING: {
       ScreenCoord panThreshold = GetTouchStartTolerance();
       ExternalPoint extPoint = GetFirstExternalTouchPoint(aEvent);
+      Maybe<std::pair<MultiTouchInput, MultiTouchInput>> splitEvent;
+
       // We intentionally skip the UpdateWithTouchAtDevicePoint call when the
       // panThreshold is zero. This ensures more deterministic behaviour during
       // testing. If we call that, Axis::mPos gets updated to the point of this
@@ -1349,25 +1352,54 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(
       // panThreshold, so it's hard to pan a specific amount reliably from a
       // mochitest.
       if (panThreshold > 0.0f) {
-        UpdateWithTouchAtDevicePoint(aEvent);
-        if (PanVector(extPoint).Length() < panThreshold) {
+        const float vectorLength = PanVector(extPoint).Length();
+
+        if (vectorLength < panThreshold) {
+          UpdateWithTouchAtDevicePoint(aEvent);
+          mLastTouch = {extPoint, aEvent.mTimeStamp};
+
           return nsEventStatus_eIgnore;
         }
+
+        splitEvent = MaybeSplitTouchMoveEvent(aEvent, panThreshold,
+                                              vectorLength, extPoint);
+
+        UpdateWithTouchAtDevicePoint(splitEvent ? splitEvent->first : aEvent);
       }
+
+      nsEventStatus result;
+      const MultiTouchInput& firstEvent =
+          splitEvent ? splitEvent->first : aEvent;
 
       MOZ_ASSERT(GetCurrentTouchBlock());
       if (GetCurrentTouchBlock()->TouchActionAllowsPanningXY()) {
+        // In the calls to StartPanning() below, the first argument needs to be
+        // the External position of |firstEvent|.
+        // However, instead of computing that using
+        // GetFirstExternalTouchPoint(firstEvent), we pass |extPoint| which
+        // has been modified by MaybeSplitTouchMoveEvent() to the desired
+        // value. This is a workaround for the fact that recomputing the
+        // External point would require a round-trip through |mScreenPoint|
+        // which is an integer.
+
         // User tries to trigger a touch behavior. If allowed touch behavior is
-        // vertical pan
-        // + horizontal pan (touch-action value is equal to AUTO) we can return
-        // ConsumeNoDefault status immediately to trigger cancel event further.
+        // vertical pan + horizontal pan (touch-action value is equal to AUTO)
+        // we can return ConsumeNoDefault status immediately to trigger cancel
+        // event further.
         // It should happen independent of the parent type (whether it is
         // scrolling or not).
-        StartPanning(extPoint, aEvent.mTimeStamp);
+        StartPanning(extPoint, firstEvent.mTimeStamp);
+        result = nsEventStatus_eConsumeNoDefault;
+      } else {
+        result = StartPanning(extPoint, firstEvent.mTimeStamp);
+      }
+
+      if (splitEvent && IsInPanningState()) {
+        TrackTouch(splitEvent->second);
         return nsEventStatus_eConsumeNoDefault;
       }
 
-      return StartPanning(extPoint, aEvent.mTimeStamp);
+      return result;
     }
 
     case PANNING:
@@ -1767,6 +1799,9 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(
     // One finger is still down, so transition to a TOUCHING state
     if (ZoomConstraintsAllowZoom()) {
       mPanDirRestricted = false;
+      mLastTouch.mPosition = mStartTouch =
+          ToExternalPoint(aEvent.mScreenOffset, aEvent.mFocusPoint);
+      mLastTouch.mTimeStamp = mTouchStartTime = aEvent.mTimeStamp;
       StartTouch(aEvent.mLocalFocusPoint, aEvent.mTimeStamp);
       SetState(TOUCHING);
     } else {
@@ -6206,6 +6241,105 @@ Maybe<CSSSnapTarget> AsyncPanZoomController::FindSnapPointNear(
                               snapTarget->mTargetIds});
   }
   return Nothing();
+}
+
+Maybe<std::pair<MultiTouchInput, MultiTouchInput>>
+AsyncPanZoomController::MaybeSplitTouchMoveEvent(
+    const MultiTouchInput& aOriginalEvent, ScreenCoord aPanThreshold,
+    float aVectorLength, ExternalPoint& aExtPoint) {
+  if (aVectorLength <= aPanThreshold) {
+    return Nothing();
+  }
+
+  auto splitEvent = std::make_pair(aOriginalEvent, aOriginalEvent);
+
+  SingleTouchData& firstTouchData = splitEvent.first.mTouches[0];
+  SingleTouchData& secondTouchData = splitEvent.second.mTouches[0];
+
+  firstTouchData.mHistoricalData.Clear();
+  secondTouchData.mHistoricalData.Clear();
+
+  ExternalPoint destination = aExtPoint;
+  ExternalPoint thresholdPosition;
+
+  const float ratio = aPanThreshold / aVectorLength;
+  thresholdPosition.x = mStartTouch.x + ratio * (destination.x - mStartTouch.x);
+  thresholdPosition.y = mStartTouch.y + ratio * (destination.y - mStartTouch.y);
+
+  TouchSample start{mLastTouch};
+  // To compute the timestamp of the first event (which is at the threshold),
+  // use linear interpolation with the starting point |start| being the last
+  // event that's before the threshold, and the end point |end| being the first
+  // event after the threshold.
+
+  // The initial choice for |start| is the last touch event before
+  // |aOriginalEvent|, and the initial choice for |end| is |aOriginalEvent|.
+
+  // However, the historical data points stored in |aOriginalEvent| may contain
+  // intermediate positions that can serve as tighter bounds for the
+  // interpolation.
+  TouchSample end{destination, aOriginalEvent.mTimeStamp};
+
+  for (const auto& historicalData :
+       aOriginalEvent.mTouches[0].mHistoricalData) {
+    ExternalPoint histExtPoint = ToExternalPoint(aOriginalEvent.mScreenOffset,
+                                                 historicalData.mScreenPoint);
+
+    if (PanVector(histExtPoint).Length() <
+        PanVector(thresholdPosition).Length()) {
+      start = {histExtPoint, historicalData.mTimeStamp};
+    } else {
+      break;
+    }
+  }
+
+  for (const SingleTouchData::HistoricalTouchData& histData :
+       Reversed(aOriginalEvent.mTouches[0].mHistoricalData)) {
+    ExternalPoint histExtPoint =
+        ToExternalPoint(aOriginalEvent.mScreenOffset, histData.mScreenPoint);
+
+    if (PanVector(histExtPoint).Length() >
+        PanVector(thresholdPosition).Length()) {
+      end = {histExtPoint, histData.mTimeStamp};
+    } else {
+      break;
+    }
+  }
+
+  const float totalLength =
+      ScreenPoint(fabs(end.mPosition.x - start.mPosition.x),
+                  fabs(end.mPosition.y - start.mPosition.y))
+          .Length();
+  const float thresholdLength =
+      ScreenPoint(fabs(thresholdPosition.x - start.mPosition.x),
+                  fabs(thresholdPosition.y - start.mPosition.y))
+          .Length();
+  const float splitRatio = thresholdLength / totalLength;
+
+  splitEvent.first.mTimeStamp =
+      start.mTimeStamp +
+      (end.mTimeStamp - start.mTimeStamp).MultDouble(splitRatio);
+
+  for (const auto& historicalData :
+       aOriginalEvent.mTouches[0].mHistoricalData) {
+    if (historicalData.mTimeStamp > splitEvent.first.mTimeStamp) {
+      secondTouchData.mHistoricalData.AppendElement(historicalData);
+    } else {
+      firstTouchData.mHistoricalData.AppendElement(historicalData);
+    }
+  }
+
+  firstTouchData.mScreenPoint = RoundedToInt(
+      ViewAs<ScreenPixel>(thresholdPosition - splitEvent.first.mScreenOffset,
+                          PixelCastJustification::ExternalIsScreen));
+
+  // Recompute firstTouchData.mLocalScreenPoint.
+  splitEvent.first.TransformToLocal(GetTransformToThis());
+
+  // Pass |thresholdPosition| back out to the caller via |aExtPoint|
+  aExtPoint = thresholdPosition;
+
+  return Some(splitEvent);
 }
 
 void AsyncPanZoomController::ScrollSnapNear(const CSSPoint& aDestination,

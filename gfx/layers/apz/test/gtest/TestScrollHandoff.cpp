@@ -641,7 +641,7 @@ TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Fling) {
 
   // Pan on the child, enough to get very close to the end, so that the
   // subsequent fling reaches the end and has leftover velocity to hand off.
-  Pan(childApzc, 60, 12);
+  Pan(childApzc, 60, 2);
 
   // Allow the fling to run its course.
   childApzc->AdvanceAnimationsUntilEnd();
@@ -657,7 +657,7 @@ TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Fling) {
 
   // Pan again on the child. This time, since the child was scrolled to
   // its end when the gesture began, we expect the scroll to be handed off.
-  Pan(childApzc, 60, 50);
+  Pan(childApzc, 60, 40);
 
   // Allow the fling to run its course. The fling should also be handed off.
   childApzc->AdvanceAnimationsUntilEnd();

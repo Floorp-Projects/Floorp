@@ -54,6 +54,8 @@ class APZCBasicTester : public APZCTesterBase {
     apzc->Destroy();
     tm->ClearTree();
     tm->ClearContentController();
+
+    APZCTesterBase::TearDown();
   }
 
   void MakeApzcWaitForMainThread() { apzc->SetWaitForMainThread(); }
