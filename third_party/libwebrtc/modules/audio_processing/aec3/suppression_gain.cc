@@ -21,7 +21,6 @@
 #include "modules/audio_processing/aec3/subband_nearend_detector.h"
 #include "modules/audio_processing/aec3/vector_math.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "system_wrappers/include/field_trial.h"
 
@@ -102,7 +101,7 @@ void WeightEchoForAudibility(const EchoCanceller3Config& config,
 
 }  // namespace
 
-int SuppressionGain::instance_count_ = 0;
+std::atomic<int> SuppressionGain::instance_count_(0);
 
 float SuppressionGain::UpperBandsGain(
     rtc::ArrayView<const std::array<float, kFftLengthBy2Plus1>> echo_spectrum,
@@ -326,8 +325,7 @@ SuppressionGain::SuppressionGain(const EchoCanceller3Config& config,
                                  Aec3Optimization optimization,
                                  int sample_rate_hz,
                                  size_t num_capture_channels)
-    : data_dumper_(
-          new ApmDataDumper(rtc::AtomicOps::Increment(&instance_count_))),
+    : data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
       optimization_(optimization),
       config_(config),
       num_capture_channels_(num_capture_channels),

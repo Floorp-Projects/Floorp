@@ -28,7 +28,6 @@
 #include "modules/audio_processing/include/audio_frame_view.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "modules/audio_processing/optionally_built_submodule_creators.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/time_utils.h"
@@ -253,7 +252,7 @@ AudioProcessingImpl::AudioProcessingImpl()
                           /*echo_detector=*/nullptr,
                           /*capture_analyzer=*/nullptr) {}
 
-int AudioProcessingImpl::instance_count_ = 0;
+std::atomic<int> AudioProcessingImpl::instance_count_(0);
 
 AudioProcessingImpl::AudioProcessingImpl(
     const AudioProcessing::Config& config,
@@ -262,8 +261,7 @@ AudioProcessingImpl::AudioProcessingImpl(
     std::unique_ptr<EchoControlFactory> echo_control_factory,
     rtc::scoped_refptr<EchoDetector> echo_detector,
     std::unique_ptr<CustomAudioAnalyzer> capture_analyzer)
-    : data_dumper_(
-          new ApmDataDumper(rtc::AtomicOps::Increment(&instance_count_))),
+    : data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
       use_setup_specific_default_aec3_config_(
           UseSetupSpecificDefaultAec3Congfig()),
       use_denormal_disabler_(

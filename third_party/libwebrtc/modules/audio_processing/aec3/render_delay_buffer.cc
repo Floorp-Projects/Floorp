@@ -32,7 +32,6 @@
 #include "modules/audio_processing/aec3/render_buffer.h"
 #include "modules/audio_processing/aec3/spectrum_buffer.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "system_wrappers/include/field_trial.h"
@@ -74,7 +73,7 @@ class RenderDelayBufferImpl final : public RenderDelayBuffer {
   bool HasReceivedBufferDelay() override;
 
  private:
-  static int instance_count_;
+  static std::atomic<int> instance_count_;
   std::unique_ptr<ApmDataDumper> data_dumper_;
   const Aec3Optimization optimization_;
   const EchoCanceller3Config config_;
@@ -119,13 +118,12 @@ class RenderDelayBufferImpl final : public RenderDelayBuffer {
   bool RenderUnderrun();
 };
 
-int RenderDelayBufferImpl::instance_count_ = 0;
+std::atomic<int> RenderDelayBufferImpl::instance_count_ = 0;
 
 RenderDelayBufferImpl::RenderDelayBufferImpl(const EchoCanceller3Config& config,
                                              int sample_rate_hz,
                                              size_t num_render_channels)
-    : data_dumper_(
-          new ApmDataDumper(rtc::AtomicOps::Increment(&instance_count_))),
+    : data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
       optimization_(DetectOptimization()),
       config_(config),
       update_capture_call_counter_on_skipped_blocks_(

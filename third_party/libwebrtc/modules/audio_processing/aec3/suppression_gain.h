@@ -12,6 +12,7 @@
 #define MODULES_AUDIO_PROCESSING_AEC3_SUPPRESSION_GAIN_H_
 
 #include <array>
+#include <atomic>
 #include <memory>
 #include <vector>
 
@@ -118,7 +119,7 @@ class SuppressionGain {
     std::array<float, kFftLengthBy2Plus1> emr_transparent_;
   };
 
-  static int instance_count_;
+  static std::atomic<int> instance_count_;
   std::unique_ptr<ApmDataDumper> data_dumper_;
   const Aec3Optimization optimization_;
   const EchoCanceller3Config config_;

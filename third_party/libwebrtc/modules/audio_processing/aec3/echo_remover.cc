@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <memory>
 
@@ -33,7 +34,6 @@
 #include "modules/audio_processing/aec3/suppression_filter.h"
 #include "modules/audio_processing/aec3/suppression_gain.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
@@ -142,7 +142,7 @@ class EchoRemoverImpl final : public EchoRemover {
   void FormLinearFilterOutput(const SubtractorOutput& subtractor_output,
                               rtc::ArrayView<float> output);
 
-  static int instance_count_;
+  static std::atomic<int> instance_count_;
   const EchoCanceller3Config config_;
   const Aec3Fft fft_;
   std::unique_ptr<ApmDataDumper> data_dumper_;
@@ -180,7 +180,7 @@ class EchoRemoverImpl final : public EchoRemover {
   std::vector<SubtractorOutput> subtractor_output_heap_;
 };
 
-int EchoRemoverImpl::instance_count_ = 0;
+std::atomic<int> EchoRemoverImpl::instance_count_(0);
 
 EchoRemoverImpl::EchoRemoverImpl(const EchoCanceller3Config& config,
                                  int sample_rate_hz,
@@ -188,8 +188,7 @@ EchoRemoverImpl::EchoRemoverImpl(const EchoCanceller3Config& config,
                                  size_t num_capture_channels)
     : config_(config),
       fft_(),
-      data_dumper_(
-          new ApmDataDumper(rtc::AtomicOps::Increment(&instance_count_))),
+      data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
       optimization_(DetectOptimization()),
       sample_rate_hz_(sample_rate_hz),
       num_render_channels_(num_render_channels),

@@ -159,7 +159,6 @@ rtc_library("rtc_simulcast_encoder_adapter") {
     "../common_video",
     "../modules/video_coding:video_codec_interface",
     "../modules/video_coding:video_coding_utility",
-    "../rtc_base:atomicops",
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base/experiments:encoder_info_settings",

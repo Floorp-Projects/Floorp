@@ -18,7 +18,6 @@
 #include "modules/audio_processing/agc/gain_control.h"
 #include "modules/audio_processing/agc/gain_map_internal.h"
 #include "modules/audio_processing/include/audio_frame_view.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_minmax.h"
@@ -439,7 +438,7 @@ void MonoAgc::UpdateCompressor() {
   }
 }
 
-int AgcManagerDirect::instance_counter_ = 0;
+std::atomic<int> AgcManagerDirect::instance_counter_(0);
 
 AgcManagerDirect::AgcManagerDirect(
     Agc* agc,
@@ -472,8 +471,7 @@ AgcManagerDirect::AgcManagerDirect(
     int clipped_wait_frames,
     const ClippingPredictorConfig& clipping_config)
     : min_mic_level_override_(GetMinMicLevelOverride()),
-      data_dumper_(
-          new ApmDataDumper(rtc::AtomicOps::Increment(&instance_counter_))),
+      data_dumper_(new ApmDataDumper(instance_counter_.fetch_add(1) + 1)),
       use_min_channel_level_(!UseMaxAnalogChannelLevel()),
       num_capture_channels_(num_capture_channels),
       disable_digital_adaptive_(disable_digital_adaptive),

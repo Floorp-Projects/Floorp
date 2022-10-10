@@ -11,6 +11,7 @@
 
 #include <stddef.h>
 
+#include <atomic>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -26,7 +27,6 @@
 #include "modules/audio_processing/aec3/render_delay_buffer.h"
 #include "modules/audio_processing/aec3/render_delay_controller.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
@@ -64,7 +64,7 @@ class BlockProcessorImpl final : public BlockProcessor {
   void SetCaptureOutputUsage(bool capture_output_used) override;
 
  private:
-  static int instance_count_;
+  static std::atomic<int> instance_count_;
   std::unique_ptr<ApmDataDumper> data_dumper_;
   const EchoCanceller3Config config_;
   bool capture_properly_started_ = false;
@@ -79,7 +79,7 @@ class BlockProcessorImpl final : public BlockProcessor {
   absl::optional<DelayEstimate> estimated_delay_;
 };
 
-int BlockProcessorImpl::instance_count_ = 0;
+std::atomic<int> BlockProcessorImpl::instance_count_(0);
 
 BlockProcessorImpl::BlockProcessorImpl(
     const EchoCanceller3Config& config,
@@ -89,8 +89,7 @@ BlockProcessorImpl::BlockProcessorImpl(
     std::unique_ptr<RenderDelayBuffer> render_buffer,
     std::unique_ptr<RenderDelayController> delay_controller,
     std::unique_ptr<EchoRemover> echo_remover)
-    : data_dumper_(
-          new ApmDataDumper(rtc::AtomicOps::Increment(&instance_count_))),
+    : data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
       config_(config),
       sample_rate_hz_(sample_rate_hz),
       render_buffer_(std::move(render_buffer)),

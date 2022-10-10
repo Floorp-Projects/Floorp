@@ -14,12 +14,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <atomic>
 #include <string>
 #include <vector>
 
 #include "absl/strings/string_view.h"
 #include "api/sequence_checker.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
 #include "rtc_base/logging.h"
@@ -81,7 +81,7 @@ namespace tracing {
 namespace {
 
 // Atomic-int fast path for avoiding logging when disabled.
-static volatile int g_event_logging_active = 0;
+static std::atomic<int> g_event_logging_active(0);
 
 // TODO(pbos): Log metadata for all threads, etc.
 class EventLogger final {
@@ -199,8 +199,8 @@ class EventLogger final {
     }
     // Enable event logging (fast-path). This should be disabled since starting
     // shouldn't be done twice.
-    RTC_CHECK_EQ(0,
-                 rtc::AtomicOps::CompareAndSwap(&g_event_logging_active, 0, 1));
+    int zero = 0;
+    RTC_CHECK(g_event_logging_active.compare_exchange_strong(zero, 1));
 
     // Finally start, everything should be set up now.
     logging_thread_ =
@@ -212,7 +212,8 @@ class EventLogger final {
     RTC_DCHECK(thread_checker_.IsCurrent());
     TRACE_EVENT_INSTANT0("webrtc", "EventLogger::Stop");
     // Try to stop. Abort if we're not currently logging.
-    if (rtc::AtomicOps::CompareAndSwap(&g_event_logging_active, 1, 0) == 0)
+    int one = 1;
+    if (g_event_logging_active.compare_exchange_strong(one, 0))
       return;
 
     // Wake up logging thread to finish writing.
@@ -321,7 +322,7 @@ class EventLogger final {
   bool output_file_owned_ = false;
 };
 
-static EventLogger* volatile g_event_logger = nullptr;
+static std::atomic<EventLogger*> g_event_logger(nullptr);
 static const char* const kDisabledTracePrefix = TRACE_DISABLED_BY_DEFAULT("");
 const unsigned char* InternalGetCategoryEnabled(const char* name) {
   const char* prefix_ptr = &kDisabledTracePrefix[0];
@@ -349,33 +350,35 @@ void InternalAddTraceEvent(char phase,
                            const unsigned long long* arg_values,
                            unsigned char flags) {
   // Fast path for when event tracing is inactive.
-  if (rtc::AtomicOps::AcquireLoad(&g_event_logging_active) == 0)
+  if (g_event_logging_active.load() == 0)
     return;
 
-  g_event_logger->AddTraceEvent(name, category_enabled, phase, num_args,
-                                arg_names, arg_types, arg_values,
-                                rtc::TimeMicros(), 1, rtc::CurrentThreadId());
+  g_event_logger.load()->AddTraceEvent(
+      name, category_enabled, phase, num_args, arg_names, arg_types, arg_values,
+      rtc::TimeMicros(), 1, rtc::CurrentThreadId());
 }
 
 }  // namespace
 
 void SetupInternalTracer(bool enable_all_categories) {
-  RTC_CHECK(rtc::AtomicOps::CompareAndSwapPtr(
-                &g_event_logger, static_cast<EventLogger*>(nullptr),
-                new EventLogger()) == nullptr);
+  EventLogger* null_logger = nullptr;
+  RTC_CHECK(
+      g_event_logger.compare_exchange_strong(null_logger, new EventLogger()));
   webrtc::SetupEventTracer(enable_all_categories ? InternalEnableAllCategories
                                                  : InternalGetCategoryEnabled,
                            InternalAddTraceEvent);
 }
 
 void StartInternalCaptureToFile(FILE* file) {
-  if (g_event_logger) {
-    g_event_logger->Start(file, false);
+  EventLogger* event_logger = g_event_logger.load();
+  if (event_logger) {
+    event_logger->Start(file, false);
   }
 }
 
 bool StartInternalCapture(absl::string_view filename) {
-  if (!g_event_logger)
+  EventLogger* event_logger = g_event_logger.load();
+  if (!event_logger)
     return false;
 
   FILE* file = fopen(std::string(filename).c_str(), "w");
@@ -384,23 +387,22 @@ bool StartInternalCapture(absl::string_view filename) {
                       << "' for writing.";
     return false;
   }
-  g_event_logger->Start(file, true);
+  event_logger->Start(file, true);
   return true;
 }
 
 void StopInternalCapture() {
-  if (g_event_logger) {
-    g_event_logger->Stop();
+  EventLogger* event_logger = g_event_logger.load();
+  if (event_logger) {
+    event_logger->Stop();
   }
 }
 
 void ShutdownInternalTracer() {
   StopInternalCapture();
-  EventLogger* old_logger = rtc::AtomicOps::AcquireLoadPtr(&g_event_logger);
+  EventLogger* old_logger = g_event_logger.load(std::memory_order_acquire);
   RTC_DCHECK(old_logger);
-  RTC_CHECK(rtc::AtomicOps::CompareAndSwapPtr(
-                &g_event_logger, old_logger,
-                static_cast<EventLogger*>(nullptr)) == old_logger);
+  RTC_CHECK(g_event_logger.compare_exchange_strong(old_logger, nullptr));
   delete old_logger;
   webrtc::SetupEventTracer(nullptr, nullptr);
 }

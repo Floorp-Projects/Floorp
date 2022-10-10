@@ -279,7 +279,6 @@ if (is_ios || is_mac) {
           "../modules/audio_device:audio_device_buffer",
           "../modules/audio_device:audio_device_generic",
           "../rtc_base",
-          "../rtc_base:atomicops",
           "../rtc_base:buffer",
           "../rtc_base:checks",
           "../rtc_base:logging",
@@ -350,7 +349,6 @@ if (is_ios || is_mac) {
           ":base_objc",
           ":helpers_objc",
           "../rtc_base",
-          "../rtc_base:atomicops",
           "../rtc_base:checks",
           "../rtc_base/synchronization:mutex",
         ]

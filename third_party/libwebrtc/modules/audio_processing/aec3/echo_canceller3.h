@@ -13,6 +13,7 @@
 
 #include <stddef.h>
 
+#include <atomic>
 #include <memory>
 #include <vector>
 
@@ -185,7 +186,7 @@ class EchoCanceller3 : public EchoControl {
       RTC_GUARDED_BY(render_race_checker_);
 
   // State that may be accessed by the capture thread.
-  static int instance_count_;
+  static std::atomic<int> instance_count_;
   std::unique_ptr<ApmDataDumper> data_dumper_;
   const EchoCanceller3Config config_;
   const int sample_rate_hz_;

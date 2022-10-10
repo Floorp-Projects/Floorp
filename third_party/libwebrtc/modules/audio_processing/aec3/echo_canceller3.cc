@@ -15,7 +15,6 @@
 #include "modules/audio_processing/aec3/aec3_common.h"
 #include "modules/audio_processing/high_pass_filter.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
 #include "system_wrappers/include/field_trial.h"
@@ -707,7 +706,7 @@ void EchoCanceller3::RenderWriter::Insert(const AudioBuffer& input) {
   static_cast<void>(render_transfer_queue_->Insert(&render_queue_input_frame_));
 }
 
-int EchoCanceller3::instance_count_ = 0;
+std::atomic<int> EchoCanceller3::instance_count_(0);
 
 EchoCanceller3::EchoCanceller3(
     const EchoCanceller3Config& config,
@@ -715,8 +714,7 @@ EchoCanceller3::EchoCanceller3(
     int sample_rate_hz,
     size_t num_render_channels,
     size_t num_capture_channels)
-    : data_dumper_(
-          new ApmDataDumper(rtc::AtomicOps::Increment(&instance_count_))),
+    : data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
       config_(AdjustConfig(config)),
       sample_rate_hz_(sample_rate_hz),
       num_bands_(NumBandsForRate(sample_rate_hz_)),

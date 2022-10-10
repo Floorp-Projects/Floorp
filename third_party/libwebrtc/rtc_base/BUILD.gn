@@ -194,7 +194,6 @@ rtc_library("event_tracer") {
     "trace_event.h",
   ]
   deps = [
-    ":atomicops",
     ":checks",
     ":logging",
     ":macromagic",
@@ -346,7 +345,6 @@ rtc_library("criticalsection") {
     "deprecated/recursive_critical_section.h",
   ]
   deps = [
-    ":atomicops",
     ":checks",
     ":macromagic",
     ":platform_thread_types",
@@ -361,7 +359,6 @@ rtc_library("platform_thread") {
     "platform_thread.h",
   ]
   deps = [
-    ":atomicops",
     ":checks",
     ":macromagic",
     ":platform_thread_types",
@@ -451,10 +448,6 @@ rtc_library("logging") {
       libs += [ "log" ]
     }
   }
-}
-
-rtc_source_set("atomicops") {
-  sources = [ "atomic_ops.h" ]
 }
 
 rtc_library("checks") {
@@ -924,7 +917,6 @@ rtc_library("threading") {
   ]
   deps = [
     ":async_resolver_interface",
-    ":atomicops",
     ":byte_order",
     ":checks",
     ":criticalsection",
@@ -1501,7 +1493,6 @@ if (rtc_include_tests) {
     rtc_library("rtc_base_approved_unittests") {
       testonly = true
       sources = [
-        "atomic_ops_unittest.cc",
         "base64_unittest.cc",
         "bit_buffer_unittest.cc",
         "bitstream_reader_unittest.cc",
@@ -1545,7 +1536,6 @@ if (rtc_include_tests) {
         "zero_memory_unittest.cc",
       ]
       deps = [
-        ":atomicops",
         ":bit_buffer",
         ":bitstream_reader",
         ":bounded_inline_vector",
@@ -1714,7 +1704,6 @@ if (rtc_include_tests) {
         "unique_id_generator_unittest.cc",
       ]
       deps = [
-        ":atomicops",
         ":buffer",
         ":buffer_queue",
         ":checks",
