@@ -45,8 +45,7 @@ export var XPCOMUtils = {
    *        A function that returns what the getter should return.  This will
    *        only ever be called once.
    */
-  defineLazyGetter: function XPCU_defineLazyGetter(aObject, aName, aLambda)
-  {
+  defineLazyGetter(aObject, aName, aLambda) {
     let redefining = false;
     Object.defineProperty(aObject, aName, {
       get: function () {
@@ -76,9 +75,7 @@ export var XPCOMUtils = {
    * @param aResource
    *        The URL used to obtain the script.
    */
-  defineLazyScriptGetter: function XPCU_defineLazyScriptGetter(aObject, aNames,
-                                                               aResource)
-  {
+  defineLazyScriptGetter(aObject, aNames, aResource) {
     if (!Array.isArray(aNames)) {
       aNames = [aNames];
     }
@@ -147,11 +144,8 @@ export var XPCOMUtils = {
    * @param aInterfaceName
    *        The name of the interface to query the service to.
    */
-  defineLazyServiceGetter: function XPCU_defineLazyServiceGetter(aObject, aName,
-                                                                 aContract,
-                                                                 aInterfaceName)
-  {
-    this.defineLazyGetter(aObject, aName, function XPCU_serviceLambda() {
+  defineLazyServiceGetter(aObject, aName, aContract, aInterfaceName) {
+    this.defineLazyGetter(aObject, aName, () => {
       if (aInterfaceName) {
         return Cc[aContract].getService(Ci[aInterfaceName]);
       }
@@ -172,9 +166,7 @@ export var XPCOMUtils = {
    *        containing the contract ID and, optionally, the interface
    *        name of the service, as passed to defineLazyServiceGetter.
    */
-  defineLazyServiceGetters: function XPCU_defineLazyServiceGetters(
-                                   aObject, aServices)
-  {
+  defineLazyServiceGetters(aObject, aServices) {
     for (let [name, service] of Object.entries(aServices)) {
       // Note: This is hot code, and cross-compartment array wrappers
       // are not JIT-friendly to destructuring or spread operators, so
@@ -209,10 +201,15 @@ export var XPCOMUtils = {
    *        An object which acts on behalf of the module to be imported until
    *        the module has been imported.
    */
-  defineLazyModuleGetter: function XPCU_defineLazyModuleGetter(
-                                   aObject, aName, aResource, aSymbol,
-                                   aPreLambda, aPostLambda, aProxy)
-  {
+  defineLazyModuleGetter(
+    aObject,
+    aName,
+    aResource,
+    aSymbol,
+    aPreLambda,
+    aPostLambda,
+    aProxy
+  ) {
     if (arguments.length == 3) {
       return ChromeUtils.defineModuleGetter(aObject, aName, aResource);
     }
@@ -223,7 +220,7 @@ export var XPCOMUtils = {
       aPreLambda.apply(proxy);
     }
 
-    this.defineLazyGetter(aObject, aName, function XPCU_moduleLambda() {
+    this.defineLazyGetter(aObject, aName, () => {
       var temp = {};
       try {
         ChromeUtils.import(aResource, temp);
@@ -250,9 +247,7 @@ export var XPCOMUtils = {
    *        imported, where the property name is the name of the
    *        imported symbol and the value is the module URI.
    */
-  defineLazyModuleGetters: function XPCU_defineLazyModuleGetters(
-                                   aObject, aModules)
-  {
+  defineLazyModuleGetters(aObject, aModules) {
     for (let [name, module] of Object.entries(aModules)) {
       ChromeUtils.defineModuleGetter(aObject, name, module);
     }
@@ -279,12 +274,14 @@ export var XPCOMUtils = {
    *        this function receives the new preference value as an argument
    *        and its return value is used by the getter.
    */
-  defineLazyPreferenceGetter: function XPCU_defineLazyPreferenceGetter(
-                                   aObject, aName, aPreference,
-                                   aDefaultValue = null,
-                                   aOnUpdate = null,
-                                   aTransform = val => val)
-  {
+  defineLazyPreferenceGetter(
+    aObject,
+    aName,
+    aPreference,
+    aDefaultValue = null,
+    aOnUpdate = null,
+    aTransform = val => val
+  ) {
     if (AppConstants.DEBUG && aDefaultValue !== null) {
       let prefType = Services.prefs.getPrefType(aPreference);
       if (prefType != Ci.nsIPrefBranch.PREF_INVALID) {
@@ -382,7 +379,7 @@ export var XPCOMUtils = {
   /**
    * Defines a non-writable property on an object.
    */
-  defineConstant: function XPCOMUtils__defineConstant(aObj, aName, aValue) {
+  defineConstant(aObj, aName, aValue) {
     Object.defineProperty(aObj, aName, {
       value: aValue,
       enumerable: true,
@@ -446,8 +443,13 @@ export var XPCOMUtils = {
    *        this object gets evaluated, to make sure you're not accidentally triggering
    *        it earlier than expected.
    */
-  defineLazyProxy: function XPCOMUtils__defineLazyProxy(aObject, aName, aInitFuncOrResource,
-                                                        aStubProperties, aUntrapCallback) {
+  defineLazyProxy(
+    aObject,
+    aName,
+    aInitFuncOrResource,
+    aStubProperties,
+    aUntrapCallback
+  ) {
     let initFunc = aInitFuncOrResource;
 
     if (typeof(aInitFuncOrResource) == "string") {
