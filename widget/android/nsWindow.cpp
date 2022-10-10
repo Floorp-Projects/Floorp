@@ -1808,17 +1808,15 @@ void GeckoViewSupport::PrintToPdf(
   RefPtr<CanonicalBrowsingContext::PrintPromise> print =
       cbc->Print(printSettings);
 
+  geckoResult->Complete(stream);
   print->Then(
       mozilla::GetCurrentSerialEventTarget(), __func__,
       [result = java::GeckoResult::GlobalRef(geckoResult), stream, pdfErrorMsg](
           const CanonicalBrowsingContext::PrintPromise::ResolveOrRejectValue&
               aValue) {
         if (aValue.IsReject()) {
-          result->CompleteExceptionally(
-              IllegalStateException::New(pdfErrorMsg).Cast<jni::Throwable>());
-          GVS_LOG("Could not print.");
-        } else {
-          result->Complete(stream);
+          GVS_LOG("Could not print. %s", pdfErrorMsg);
+          stream->SendError();
         }
       });
 }
