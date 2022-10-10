@@ -399,17 +399,26 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 @implementation mozTableRowAccessible
 
 - (mozTableAccessible*)getTableParent {
-  mozTableAccessible* tableParent = static_cast<mozTableAccessible*>(
+  id tableParent = static_cast<mozTableAccessible*>(
       [self moxFindAncestor:^BOOL(id curr, BOOL* stop) {
+        if ([curr isKindOfClass:[mozOutlineAccessible class]]) {
+          // Outline rows are a kind of table row, so it's possible
+          // we're trying to call getTableParent on an outline row here.
+          // Stop searching.
+          *stop = YES;
+        }
         return [curr isKindOfClass:[mozTableAccessible class]];
       }]);
 
-  MOZ_ASSERT(tableParent, "Table row not contained in table?");
-  return tableParent;
+  return [tableParent isKindOfClass:[mozTableAccessible class]] ? tableParent
+                                                                : nil;
 }
 
 - (void)handleAccessibleEvent:(uint32_t)eventType {
   if (eventType == nsIAccessibleEvent::EVENT_REORDER) {
+    // It is possible for getTableParent to return nil if we're
+    // handling a reorder on an outilne row. Outlines don't have
+    // columns, so there's nothing to do here and this will no-op.
     [[self getTableParent] invalidateColumns];
   }
 
