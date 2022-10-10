@@ -54,6 +54,39 @@ class nsSplitterInfo {
   nsCOMPtr<nsIContent> childElem;
 };
 
+enum class ResizeType {
+  // Resize the closest sibling in a given direction.
+  Closest,
+  // Resize the farthest sibling in a given direction.
+  Farthest,
+  // Resize only flexible siblings in a given direction.
+  Flex,
+  // No space should be taken out of any children in that direction.
+  // FIXME(emilio): This is a rather odd name...
+  Grow,
+};
+static ResizeType ResizeTypeFromAttribute(const Element& aElement,
+                                          nsAtom* aAttribute) {
+  static Element::AttrValuesArray strings[] = {
+      nsGkAtoms::farthest, nsGkAtoms::flex, nsGkAtoms::grow, nullptr};
+  switch (aElement.FindAttrValueIn(kNameSpaceID_None, aAttribute, strings,
+                                   eCaseMatters)) {
+    case 0:
+      return ResizeType::Farthest;
+    case 1:
+      return ResizeType::Flex;
+    case 2:
+      // Grow only applies to resizeAfter.
+      if (aAttribute == nsGkAtoms::resizeafter) {
+        return ResizeType::Grow;
+      }
+      break;
+    default:
+      break;
+  }
+  return ResizeType::Closest;
+}
+
 class nsSplitterFrameInner final : public nsIDOMEventListener {
  protected:
   virtual ~nsSplitterFrameInner();
@@ -91,7 +124,6 @@ class nsSplitterFrameInner final : public nsIDOMEventListener {
   void AddListener();
   void RemoveListener();
 
-  enum ResizeType { Closest, Farthest, Flex, Grow };
   enum class State { Open, CollapsedBefore, CollapsedAfter, Dragging };
   enum CollapseDirection { Before, After };
 
@@ -126,35 +158,15 @@ class nsSplitterFrameInner final : public nsIDOMEventListener {
 
 NS_IMPL_ISUPPORTS(nsSplitterFrameInner, nsIDOMEventListener)
 
-nsSplitterFrameInner::ResizeType nsSplitterFrameInner::GetResizeBefore() {
-  static Element::AttrValuesArray strings[] = {nsGkAtoms::farthest,
-                                               nsGkAtoms::flex, nullptr};
-  switch (SplitterElement()->FindAttrValueIn(
-      kNameSpaceID_None, nsGkAtoms::resizebefore, strings, eCaseMatters)) {
-    case 0:
-      return Farthest;
-    case 1:
-      return Flex;
-  }
-  return Closest;
+ResizeType nsSplitterFrameInner::GetResizeBefore() {
+  return ResizeTypeFromAttribute(*SplitterElement(), nsGkAtoms::resizebefore);
+}
+
+ResizeType nsSplitterFrameInner::GetResizeAfter() {
+  return ResizeTypeFromAttribute(*SplitterElement(), nsGkAtoms::resizeafter);
 }
 
 nsSplitterFrameInner::~nsSplitterFrameInner() = default;
-
-nsSplitterFrameInner::ResizeType nsSplitterFrameInner::GetResizeAfter() {
-  static Element::AttrValuesArray strings[] = {
-      nsGkAtoms::farthest, nsGkAtoms::flex, nsGkAtoms::grow, nullptr};
-  switch (SplitterElement()->FindAttrValueIn(
-      kNameSpaceID_None, nsGkAtoms::resizeafter, strings, eCaseMatters)) {
-    case 0:
-      return Farthest;
-    case 1:
-      return Flex;
-    case 2:
-      return Grow;
-  }
-  return Closest;
-}
 
 nsSplitterFrameInner::State nsSplitterFrameInner::GetState() {
   static Element::AttrValuesArray strings[] = {nsGkAtoms::dragging,
@@ -391,7 +403,7 @@ void nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext,
 
   ResizeType resizeAfter = GetResizeAfter();
 
-  const bool bounded = resizeAfter != nsSplitterFrameInner::Grow;
+  const bool bounded = resizeAfter != ResizeType::Grow;
 
   for (int i = 0; i < mChildInfosBeforeCount; i++) {
     mChildInfosBefore[i].changed = mChildInfosBefore[i].current;
@@ -537,7 +549,6 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
   // get our index
   nsPresContext* outerPresContext = mOuter->PresContext();
 
-  const int32_t childCount = mParentBox->PrincipalChildList().GetLength();
   RefPtr<gfxContext> rc =
       outerPresContext->PresShell()->CreateReferenceRenderingContext();
   nsBoxLayoutState state(outerPresContext, rc);
@@ -545,10 +556,11 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
   mDidDrag = false;
 
   EnsureOrient();
-  bool isHorizontal = !mOuter->IsXULHorizontal();
+  const bool isHorizontal = !mOuter->IsXULHorizontal();
 
-  ResizeType resizeBefore = GetResizeBefore();
-  ResizeType resizeAfter = GetResizeAfter();
+  const ResizeType resizeBefore = GetResizeBefore();
+  const ResizeType resizeAfter = GetResizeAfter();
+  const int32_t childCount = mParentBox->PrincipalChildList().GetLength();
 
   mChildInfosBefore = MakeUnique<nsSplitterInfo[]>(childCount);
   mChildInfosAfter = MakeUnique<nsSplitterInfo[]>(childCount);
@@ -572,31 +584,49 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
         // We're at the beginning, nothing to do.
         return NS_OK;
       }
-      if (count == childCount - 1 && resizeAfter != Grow) {
-        // if it's the last index then we need to allow for resizeafter="grow"
+      if (count == childCount - 1 && resizeAfter != ResizeType::Grow) {
+        // If it's the last index then we need to allow for resizeafter="grow"
         return NS_OK;
       }
     }
     count++;
 
     nsIContent* content = childBox->GetContent();
-    if (auto* element = nsXULElement::FromNode(content)) {
-      if (element->NodeInfo()->NameAtom() == nsGkAtoms::splitter) {
-        // skip over any splitters
-        continue;
-      }
+    const nscoord flex = childBox->GetXULFlex();
+    const bool isBefore = !foundOuter;
+    const bool isResizable = [&] {
+      if (auto* element = nsXULElement::FromNode(content)) {
+        if (element->NodeInfo()->NameAtom() == nsGkAtoms::splitter) {
+          // skip over any splitters
+          return false;
+        }
 
-      // We need to check for hidden attribute too, since treecols with
-      // the hidden="true" attribute are not really hidden, just collapsed
-      if (element->GetXULBoolAttr(nsGkAtoms::fixed) ||
-          element->GetXULBoolAttr(nsGkAtoms::hidden)) {
-        continue;
+        // We need to check for hidden attribute too, since treecols with
+        // the hidden="true" attribute are not really hidden, just collapsed
+        if (element->GetXULBoolAttr(nsGkAtoms::fixed) ||
+            element->GetXULBoolAttr(nsGkAtoms::hidden)) {
+          return false;
+        }
       }
+      const ResizeType resizeType = isBefore ? resizeBefore : resizeAfter;
+      switch (resizeType) {
+        case ResizeType::Grow:
+          return false;
+        case ResizeType::Flex:
+          return flex > 0;
+        case ResizeType::Closest:
+        case ResizeType::Farthest:
+          break;
+      }
+      return true;
+    }();
+
+    if (!isResizable) {
+      continue;
     }
 
     nsSize minSize;
     nsSize maxSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-    const nscoord flex = childBox->GetXULFlex();
     if (childBox->IsXULBoxFrame()) {
       nsSize prefSize = childBox->GetXULPrefSize(state);
       minSize = childBox->GetXULMinSize(state);
@@ -618,7 +648,8 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
     childBox->GetXULMargin(margin);
     nsRect r(childBox->GetRect());
     r.Inflate(margin);
-    if (!foundOuter && (resizeBefore != Flex || flex > 0)) {
+
+    if (isBefore) {
       mChildInfosBefore[mChildInfosBeforeCount].childElem = content;
       mChildInfosBefore[mChildInfosBeforeCount].min =
           isHorizontal ? minSize.width : minSize.height;
@@ -629,7 +660,7 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
       mChildInfosBefore[mChildInfosBeforeCount].changed =
           mChildInfosBefore[mChildInfosBeforeCount].current;
       mChildInfosBeforeCount++;
-    } else if (foundOuter && (resizeAfter != Flex || flex > 0)) {
+    } else {
       mChildInfosAfter[mChildInfosAfterCount].childElem = content;
       mChildInfosAfter[mChildInfosAfterCount].min =
           isHorizontal ? minSize.width : minSize.height;
@@ -676,18 +707,16 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
 
   // if resizebefore is not Farthest, reverse the list because the first child
   // in the list is the farthest, and we want the first child to be the closest.
-  if (resizeBefore != Farthest)
+  if (resizeBefore != ResizeType::Farthest) {
     Reverse(mChildInfosBefore, mChildInfosBeforeCount);
+  }
 
   // if the resizeafter is the Farthest we must reverse the list because the
   // first child in the list is the closest we want the first child to be the
   // Farthest.
-  if (resizeAfter == Farthest) Reverse(mChildInfosAfter, mChildInfosAfterCount);
-
-  // grow only applies to the children after. If grow is set then no space
-  // should be taken out of any children after us. To do this we just set the
-  // size of that list to be 0.
-  if (resizeAfter == Grow) mChildInfosAfterCount = 0;
+  if (resizeAfter == ResizeType::Farthest) {
+    Reverse(mChildInfosAfter, mChildInfosAfterCount);
+  }
 
   int32_t c;
   nsPoint pt =
@@ -953,11 +982,9 @@ void nsSplitterFrameInner::ResizeChildTo(nscoord& aDiff,
   aDiff -= spaceLeft;
   AddRemoveSpace(-aDiff, aChildrenAfterInfos, aChildrenAfterCount, spaceLeft);
 
-  if (spaceLeft != 0) {
-    if (aBounded) {
-      aDiff += spaceLeft;
-      AddRemoveSpace(spaceLeft, aChildrenBeforeInfos, aChildrenBeforeCount,
-                     spaceLeft);
-    }
+  if (spaceLeft != 0 && aBounded) {
+    aDiff += spaceLeft;
+    AddRemoveSpace(spaceLeft, aChildrenBeforeInfos, aChildrenBeforeCount,
+                   spaceLeft);
   }
 }
