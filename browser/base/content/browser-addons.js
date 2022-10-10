@@ -1318,11 +1318,12 @@ customElements.define(
 
     _hasAction() {
       const policy = WebExtensionPolicy.getByID(this.addon.id);
-
-      return lazy.OriginControls.getState(
+      const state = lazy.OriginControls.getState(
         policy,
         this.ownerGlobal.gBrowser.currentURI
-      )?.whenClicked;
+      );
+
+      return state && state.whenClicked && !state.hasAccess;
     }
 
     render() {
