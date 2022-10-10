@@ -3,7 +3,7 @@
     <!-- The tile for the list of external apps to open the link in -->
     <string name="mozac_feature_applinks_open_in">…ਨਾਲ ਖੋਲ੍ਹੋ</string>
     <!-- The description to warn users that their private browsing session changes  -->
-    <string name="mozac_feature_applinks_confirm_dialog_title">ਐਪ ‘ਚ ਖੋਲ੍ਹਣਾ ਹੈ? ਤੁਹਾਡੀ ਸਰਗਰਮੀ ਪ੍ਰਾਈਵੇਟ ਨਹੀਂ ਵੀ ਰਹਿ ਸਕਦੀ ਹੈ।</string>
+    <string name="mozac_feature_applinks_confirm_dialog_title">ਐਪ ‘ਚ ਖੋਲ੍ਹਣਾ ਹੈ? ਤੁਹਾਡੀ ਸਰਗਰਮੀ ਨਿੱਜੀ ਨਹੀਂ ਵੀ ਰਹਿ ਸਕਦੀ ਹੈ।</string>
     <!-- Opens the selected time -->
     <string name="mozac_feature_applinks_confirm_dialog_confirm">ਖੋਲ੍ਹੋ</string>
     <!-- Cancels the prompt -->

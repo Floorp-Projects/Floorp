@@ -46,11 +46,11 @@
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">ਫਾਇਲਾਂ ਡਾਊਨਲੋਡ ਕਰਨ ਲਈ ਫਾਇਲਾਂ ਤੇ ਮੀਡੀਆ ਇਜਾਜ਼ਤ ਪਹੁੰਚ ਦੀ ਲੋੜ ਹੈ। Android ਸੈਟਿੰਗਾਂ ਉੱਤੇ ਜਾਓ, ਇਜਾਜ਼ਤਾਂ ਨੂੰ ਛੂਹੋ ਅਤੇ ਮਨਜ਼ੂਰੀ ਨੂੰ ਛੂਹੋ।</string>
 
     <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
-    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">ਪ੍ਰਾਈਵੇਟ ਡਾਊਨਲੋਡਾਂ ਨੂੰ ਰੱਦ ਕਰਨਾ ਹੈ?</string>
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">ਨਿੱਜੀ ਡਾਊਨਲੋਡਾਂ ਨੂੰ ਰੱਦ ਕਰਨਾ ਹੈ?</string>
     <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
-    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">ਜੇ ਤੁਸੀਂ ਹੁਣੇ ਸਾਰੀਆਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਨੂੰ ਬੰਦ ਕੀਤਾ ਤਾਂ %1$s ਡਾਊਨਲੋਡ ਨੂੰ ਰੱਦ ਕੀਤਾ ਜਾਵੇਗਾ। ਕੀ ਤੁਸੀਂ ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਨੂੰ ਛੱਡਣਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">ਜੇ ਤੁਸੀਂ ਹੁਣੇ ਸਾਰੀਆਂ ਨਿੱਜੀ ਟੈਬਾਂ ਨੂੰ ਬੰਦ ਕੀਤਾ ਤਾਂ %1$s ਡਾਊਨਲੋਡ ਨੂੰ ਰੱਦ ਕੀਤਾ ਜਾਵੇਗਾ। ਕੀ ਤੁਸੀਂ ਨਿੱਜੀ ਬਰਾਊਜ਼ਿੰਗ ਨੂੰ ਛੱਡਣਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
     <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
     <string name="mozac_feature_downloads_cancel_active_downloads_accept">ਡਾਊਨਲੋਡਾਂ ਨੂੰ ਰੱਦ ਕਰੋ</string>
     <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
-    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਵਿੱਚ ਰਹੋ</string>
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">ਨਿੱਜੀ ਬਰਾਊਜ਼ਿੰਗ ਵਿੱਚ ਰਹੋ</string>
 </resources>

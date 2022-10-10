@@ -87,9 +87,9 @@
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">ਬੰਦ</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
-    <string name="mozac_feature_addons_settings_allow_in_private_browsing">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਚ ਮਨਜ਼ੂਰ ਕਰੋ</string>
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">ਨਿੱਜੀ ਬਰਾਊਜ਼ਿੰਗ ਵਿੱਚ ਮਨਜ਼ੂਰ ਕਰੋ</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
-    <string name="mozac_feature_addons_settings_run_in_private_browsing">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਚ ਚਲਾਓ</string>
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">ਨਿੱਜੀ ਬਰਾਊਜ਼ਿੰਗ ਚ ਚਲਾਓ</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">ਸਮਰੱਥ ਹੈ</string>
     <!-- Indicates the add-on is disabled. -->
