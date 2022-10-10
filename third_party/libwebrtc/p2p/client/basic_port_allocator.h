@@ -69,11 +69,6 @@ class RTC_EXPORT BasicPortAllocator : public PortAllocator {
   }
 
   PortAllocatorSession* CreateSessionInternal(
-      const std::string& content_name,
-      int component,
-      const std::string& ice_ufrag,
-      const std::string& ice_pwd) override;
-  PortAllocatorSession* CreateSessionInternal(
       absl::string_view content_name,
       int component,
       absl::string_view ice_ufrag,

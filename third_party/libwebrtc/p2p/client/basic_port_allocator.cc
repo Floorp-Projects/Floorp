@@ -255,16 +255,6 @@ int BasicPortAllocator::GetNetworkIgnoreMask() const {
 }
 
 PortAllocatorSession* BasicPortAllocator::CreateSessionInternal(
-    const std::string& content_name,
-    int component,
-    const std::string& ice_ufrag,
-    const std::string& ice_pwd) {
-  return CreateSessionInternal(absl::string_view(content_name), component,
-                               absl::string_view(ice_ufrag),
-                               absl::string_view(ice_pwd));
-}
-
-PortAllocatorSession* BasicPortAllocator::CreateSessionInternal(
     absl::string_view content_name,
     int component,
     absl::string_view ice_ufrag,

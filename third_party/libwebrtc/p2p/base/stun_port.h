@@ -101,7 +101,6 @@ class UDPPort : public Port {
                             const rtc::SocketAddress& remote_addr,
                             int64_t packet_time_us) override;
 
-  bool SupportsProtocol(const std::string& protocol) const override;
   bool SupportsProtocol(absl::string_view protocol) const override;
   ProtocolType GetProtocol() const override;
 

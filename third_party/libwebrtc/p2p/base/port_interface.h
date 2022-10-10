@@ -63,8 +63,8 @@ class PortInterface {
 
   // TODO(webrtc:13579): Remove std::string version once downstream users have
   // migrated to the absl::string_view version.
-  virtual bool SupportsProtocol(const std::string& protocol) const = 0;
-  virtual bool SupportsProtocol(absl::string_view protocol) const;
+  virtual bool SupportsProtocol(const std::string& protocol) const;
+  virtual bool SupportsProtocol(absl::string_view protocol) const = 0;
 
   // PrepareAddress will attempt to get an address for this port that other
   // clients can send to.  It may take some time before the address is ready.
