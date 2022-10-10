@@ -52,7 +52,6 @@ class nsSplitterInfo {
   nscoord current;
   nscoord changed;
   nsCOMPtr<nsIContent> childElem;
-  int32_t flex;
 };
 
 class nsSplitterFrameInner final : public nsIDOMEventListener {
@@ -627,7 +626,6 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
           isHorizontal ? maxSize.width : maxSize.height;
       mChildInfosBefore[mChildInfosBeforeCount].current =
           isHorizontal ? r.width : r.height;
-      mChildInfosBefore[mChildInfosBeforeCount].flex = flex;
       mChildInfosBefore[mChildInfosBeforeCount].changed =
           mChildInfosBefore[mChildInfosBeforeCount].current;
       mChildInfosBeforeCount++;
@@ -639,7 +637,6 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
           isHorizontal ? maxSize.width : maxSize.height;
       mChildInfosAfter[mChildInfosAfterCount].current =
           isHorizontal ? r.width : r.height;
-      mChildInfosAfter[mChildInfosAfterCount].flex = flex;
       mChildInfosAfter[mChildInfosAfterCount].changed =
           mChildInfosAfter[mChildInfosAfterCount].current;
       mChildInfosAfterCount++;
