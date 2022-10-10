@@ -189,6 +189,7 @@ DcSctpSocket::DcSctpSocket(absl::string_view log_prefix,
       send_queue_(
           log_prefix_,
           options_.max_send_buffer_size,
+          options_.mtu,
           options_.default_stream_priority,
           [this](StreamID stream_id) {
             callbacks_.OnBufferedAmountLow(stream_id);

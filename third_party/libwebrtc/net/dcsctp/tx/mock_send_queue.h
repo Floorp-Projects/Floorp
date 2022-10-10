@@ -52,6 +52,7 @@ class MockSendQueue : public SendQueue {
               SetBufferedAmountLowThreshold,
               (StreamID stream_id, size_t bytes),
               (override));
+  MOCK_METHOD(void, EnableMessageInterleaving, (bool enabled), (override));
 };
 
 }  // namespace dcsctp

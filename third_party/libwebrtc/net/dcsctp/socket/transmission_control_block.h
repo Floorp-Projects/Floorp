@@ -129,6 +129,7 @@ class TransmissionControlBlock : public Context {
     if (handover_state == nullptr) {
       send_queue.Reset();
     }
+    send_queue.EnableMessageInterleaving(capabilities.message_interleaving);
   }
 
   // Implementation of `Context`.
