@@ -158,10 +158,10 @@ using mozilla::DebugOnly;
 #      define R32_sig(p) ((p)->uc_mcontext.gp_regs[32])
 #    endif
 #    if defined(__linux__) && defined(__loongarch__)
-#      define EPC_sig(p) ((p)->uc_mcontext.pc)
-#      define RRA_sig(p) ((p)->uc_mcontext.gregs[1])
-#      define RSP_sig(p) ((p)->uc_mcontext.gregs[3])
-#      define RFP_sig(p) ((p)->uc_mcontext.gregs[22])
+#      define EPC_sig(p) ((p)->uc_mcontext.__pc)
+#      define RRA_sig(p) ((p)->uc_mcontext.__gregs[1])
+#      define R03_sig(p) ((p)->uc_mcontext.__gregs[3])
+#      define RFP_sig(p) ((p)->uc_mcontext.__gregs[22])
 #    endif
 #    if defined(__sun__) && defined(__sparc__)
 #      define PC_sig(p) ((p)->uc_mcontext.gregs[REG_PC])
@@ -408,7 +408,7 @@ struct macos_aarch64_context {
 #  elif defined(__loongarch__)
 #    define PC_sig(p) EPC_sig(p)
 #    define FP_sig(p) RFP_sig(p)
-#    define SP_sig(p) RSP_sig(p)
+#    define SP_sig(p) R03_sig(p)
 #    define LR_sig(p) RRA_sig(p)
 #  endif
 
