@@ -57,9 +57,9 @@ class RendererRecordedFrame final : public layers::RecordedFrame {
   wr::RecordedFrameHandle mHandle;
 };
 
-wr::WrExternalImage wr_renderer_lock_external_image(
-    void* aObj, wr::ExternalImageId aId, uint8_t aChannelIndex,
-    wr::ImageRendering aRendering) {
+wr::WrExternalImage wr_renderer_lock_external_image(void* aObj,
+                                                    wr::ExternalImageId aId,
+                                                    uint8_t aChannelIndex) {
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
   RenderTextureHost* texture = renderer->GetRenderTexture(aId);
   MOZ_ASSERT(texture);
@@ -69,10 +69,9 @@ wr::WrExternalImage wr_renderer_lock_external_image(
     return InvalidToWrExternalImage();
   }
   if (auto* gl = renderer->gl()) {
-    return texture->Lock(aChannelIndex, gl, aRendering);
+    return texture->Lock(aChannelIndex, gl);
   } else if (auto* swgl = renderer->swgl()) {
-    return texture->LockSWGL(aChannelIndex, swgl, renderer->GetCompositor(),
-                             aRendering);
+    return texture->LockSWGL(aChannelIndex, swgl, renderer->GetCompositor());
   } else {
     gfxCriticalNoteOnce
         << "No GL or SWGL context available to lock ExternalImage for extId:"

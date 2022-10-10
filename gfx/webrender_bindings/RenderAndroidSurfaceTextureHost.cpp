@@ -42,8 +42,8 @@ RenderAndroidSurfaceTextureHost::~RenderAndroidSurfaceTextureHost() {
   }
 }
 
-wr::WrExternalImage RenderAndroidSurfaceTextureHost::Lock(
-    uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
+wr::WrExternalImage RenderAndroidSurfaceTextureHost::Lock(uint8_t aChannelIndex,
+                                                          gl::GLContext* aGL) {
   MOZ_ASSERT(aChannelIndex == 0);
   MOZ_ASSERT((mPrepareStatus == STATUS_PREPARED) ||
              (!mSurfTex->IsSingleBuffer() &&
@@ -62,14 +62,6 @@ wr::WrExternalImage RenderAndroidSurfaceTextureHost::Lock(
   MOZ_ASSERT(mAttachedToGLContext);
   if (!mAttachedToGLContext) {
     return InvalidToWrExternalImage();
-  }
-
-  if (IsFilterUpdateNecessary(aRendering)) {
-    // Cache new rendering filter.
-    mCachedRendering = aRendering;
-    ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE0,
-                                 LOCAL_GL_TEXTURE_EXTERNAL_OES,
-                                 mSurfTex->GetTexName(), aRendering);
   }
 
   if (mContinuousUpdate) {
@@ -115,8 +107,7 @@ bool RenderAndroidSurfaceTextureHost::EnsureAttachedToGLContext() {
     GLuint texName;
     mGL->fGenTextures(1, &texName);
     ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE0,
-                                 LOCAL_GL_TEXTURE_EXTERNAL_OES, texName,
-                                 mCachedRendering);
+                                 LOCAL_GL_TEXTURE_EXTERNAL_OES, texName);
 
     if (NS_FAILED(mSurfTex->AttachToGLContext((int64_t)mGL.get(), texName))) {
       MOZ_ASSERT(0);

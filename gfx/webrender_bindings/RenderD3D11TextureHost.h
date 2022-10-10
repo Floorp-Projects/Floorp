@@ -25,8 +25,7 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
                         gfx::ColorSpace2, gfx::ColorRange aColorRange,
                         gfx::IntSize aSize);
 
-  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
-                           wr::ImageRendering aRendering) override;
+  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
   void Unlock() override;
   void ClearCachedResources() override;
 
@@ -84,7 +83,7 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
   virtual ~RenderDXGITextureHost();
 
   bool EnsureD3D11Texture2DWithGL();
-  bool EnsureLockable(wr::ImageRendering aRendering);
+  bool EnsureLockable();
 
   void DeleteTextureHandle();
 
@@ -131,8 +130,7 @@ class RenderDXGIYCbCrTextureHost final : public RenderTextureHostSWGL {
     return this;
   }
 
-  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
-                           wr::ImageRendering aRendering) override;
+  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
   void Unlock() override;
   void ClearCachedResources() override;
 
@@ -178,7 +176,7 @@ class RenderDXGIYCbCrTextureHost final : public RenderTextureHostSWGL {
  private:
   virtual ~RenderDXGIYCbCrTextureHost();
 
-  bool EnsureLockable(wr::ImageRendering aRendering);
+  bool EnsureLockable();
 
   void DeleteTextureHandle();
 

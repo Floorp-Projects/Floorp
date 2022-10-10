@@ -385,7 +385,6 @@ extern "C" {
         renderer: *mut c_void,
         external_image_id: ExternalImageId,
         channel_index: u8,
-        rendering: ImageRendering,
     ) -> WrExternalImage;
     fn wr_renderer_unlock_external_image(renderer: *mut c_void, external_image_id: ExternalImageId, channel_index: u8);
 }
@@ -397,8 +396,8 @@ pub struct WrExternalImageHandler {
 }
 
 impl ExternalImageHandler for WrExternalImageHandler {
-    fn lock(&mut self, id: ExternalImageId, channel_index: u8, rendering: ImageRendering) -> ExternalImage {
-        let image = unsafe { wr_renderer_lock_external_image(self.external_image_obj, id, channel_index, rendering) };
+    fn lock(&mut self, id: ExternalImageId, channel_index: u8) -> ExternalImage {
+        let image = unsafe { wr_renderer_lock_external_image(self.external_image_obj, id, channel_index) };
         ExternalImage {
             uv: TexelRect::new(image.u0, image.v0, image.u1, image.v1),
             source: match image.image_type {

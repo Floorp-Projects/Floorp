@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::super::shader_source::{OPTIMIZED_SHADERS, UNOPTIMIZED_SHADERS};
-use api::{ImageDescriptor, ImageFormat, Parameter, BoolParameter, IntParameter};
+use api::{ImageDescriptor, ImageFormat, Parameter, BoolParameter, IntParameter, ImageRendering};
 use api::{MixBlendMode, ImageBufferKind, VoidPtrToSizeFn};
 use api::{CrashAnnotator, CrashAnnotation, CrashAnnotatorGuard};
 use api::units::*;
@@ -387,6 +387,7 @@ pub struct ExternalTexture {
     id: gl::GLuint,
     target: gl::GLuint,
     uv_rect: TexelRect,
+    image_rendering: ImageRendering,
 }
 
 impl ExternalTexture {
@@ -394,11 +395,13 @@ impl ExternalTexture {
         id: u32,
         target: ImageBufferKind,
         uv_rect: TexelRect,
+        image_rendering: ImageRendering,
     ) -> Self {
         ExternalTexture {
             id,
             target: get_gl_target(target),
             uv_rect,
+            image_rendering,
         }
     }
 
@@ -530,6 +533,7 @@ impl Texture {
                 self.size.width as f32,
                 self.size.height as f32,
             ),
+            image_rendering: ImageRendering::Auto,
         };
         self.id = 0; // don't complain, moved out
         ext
@@ -2141,11 +2145,16 @@ impl Device {
     }
 
     fn bind_texture_impl(
-        &mut self, slot: TextureSlot, id: gl::GLuint, target: gl::GLenum, set_swizzle: Option<Swizzle>
+        &mut self,
+        slot: TextureSlot,
+        id: gl::GLuint,
+        target: gl::GLenum,
+        set_swizzle: Option<Swizzle>,
+        image_rendering: Option<ImageRendering>,
     ) {
         debug_assert!(self.inside_frame);
 
-        if self.bound_textures[slot.0] != id || set_swizzle.is_some() {
+        if self.bound_textures[slot.0] != id || set_swizzle.is_some() || image_rendering.is_some() {
             self.gl.active_texture(gl::TEXTURE0 + slot.0 as gl::GLuint);
             // The android emulator gets confused if you don't explicitly unbind any texture
             // from GL_TEXTURE_EXTERNAL_OES before binding to GL_TEXTURE_2D. See bug 1636085.
@@ -2167,6 +2176,14 @@ impl Device {
                     debug_assert_eq!(swizzle, Swizzle::default());
                 }
             }
+            if let Some(image_rendering) = image_rendering {
+                let filter = match image_rendering {
+                    ImageRendering::Auto | ImageRendering::CrispEdges => gl::LINEAR,
+                    ImageRendering::Pixelated => gl::NEAREST,
+                };
+                self.gl.tex_parameter_i(target, gl::TEXTURE_MIN_FILTER, filter as i32);
+                self.gl.tex_parameter_i(target, gl::TEXTURE_MAG_FILTER, filter as i32);
+            }
             self.gl.active_texture(gl::TEXTURE0);
             self.bound_textures[slot.0] = id;
         }
@@ -2182,14 +2199,20 @@ impl Device {
         } else {
             None
         };
-        self.bind_texture_impl(slot.into(), texture.id, texture.target, set_swizzle);
+        self.bind_texture_impl(slot.into(), texture.id, texture.target, set_swizzle, None);
     }
 
     pub fn bind_external_texture<S>(&mut self, slot: S, external_texture: &ExternalTexture)
     where
         S: Into<TextureSlot>,
     {
-        self.bind_texture_impl(slot.into(), external_texture.id, external_texture.target, None);
+        self.bind_texture_impl(
+            slot.into(),
+            external_texture.id,
+            external_texture.target,
+            None,
+            Some(external_texture.image_rendering),
+        );
     }
 
     pub fn bind_read_target_impl(

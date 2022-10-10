@@ -23,8 +23,7 @@ class RenderDMABUFTextureHost final : public RenderTextureHost {
  public:
   explicit RenderDMABUFTextureHost(DMABufSurface* aSurface);
 
-  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
-                           wr::ImageRendering aRendering) override;
+  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
   void Unlock() override;
   void ClearCachedResources() override;
 

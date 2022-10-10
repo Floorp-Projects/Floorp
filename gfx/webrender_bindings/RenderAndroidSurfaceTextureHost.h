@@ -26,8 +26,7 @@ class RenderAndroidSurfaceTextureHost final : public RenderTextureHostSWGL {
       gfx::SurfaceFormat aFormat, bool aContinuousUpdate,
       Maybe<gfx::Matrix4x4> aTransformOverride);
 
-  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
-                           wr::ImageRendering aRendering) override;
+  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
   void Unlock() override;
 
   size_t Bytes() override {

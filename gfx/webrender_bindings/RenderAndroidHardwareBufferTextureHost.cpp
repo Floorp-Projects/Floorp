@@ -38,8 +38,7 @@ gfx::IntSize RenderAndroidHardwareBufferTextureHost::GetSize() const {
   return gfx::IntSize();
 }
 
-bool RenderAndroidHardwareBufferTextureHost::EnsureLockable(
-    wr::ImageRendering aRendering) {
+bool RenderAndroidHardwareBufferTextureHost::EnsureLockable() {
   if (!mAndroidHardwareBuffer) {
     return false;
   }
@@ -71,14 +70,6 @@ bool RenderAndroidHardwareBufferTextureHost::EnsureLockable(
   }
 
   if (mTextureHandle) {
-    // Update filter if filter was changed.
-    if (IsFilterUpdateNecessary(aRendering)) {
-      ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE0,
-                                   LOCAL_GL_TEXTURE_EXTERNAL_OES,
-                                   mTextureHandle, aRendering);
-      // Cache new rendering filter.
-      mCachedRendering = aRendering;
-    }
     return true;
   }
 
@@ -111,15 +102,12 @@ bool RenderAndroidHardwareBufferTextureHost::EnsureLockable(
   mGL->fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_EXTERNAL, mEGLImage);
 
   ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE0,
-                               LOCAL_GL_TEXTURE_EXTERNAL_OES, mTextureHandle,
-                               aRendering);
-  // Cache rendering filter.
-  mCachedRendering = aRendering;
+                               LOCAL_GL_TEXTURE_EXTERNAL_OES, mTextureHandle);
   return true;
 }
 
 wr::WrExternalImage RenderAndroidHardwareBufferTextureHost::Lock(
-    uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
+    uint8_t aChannelIndex, gl::GLContext* aGL) {
   MOZ_ASSERT(aChannelIndex == 0);
 
   if (mGL.get() != aGL) {
@@ -135,7 +123,7 @@ wr::WrExternalImage RenderAndroidHardwareBufferTextureHost::Lock(
     return InvalidToWrExternalImage();
   }
 
-  if (!EnsureLockable(aRendering)) {
+  if (!EnsureLockable()) {
     return InvalidToWrExternalImage();
   }
 

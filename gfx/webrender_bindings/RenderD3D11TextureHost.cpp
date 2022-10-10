@@ -221,24 +221,8 @@ bool RenderDXGITextureHost::EnsureD3D11Texture2D(ID3D11Device* aDevice) {
   return true;
 }
 
-bool RenderDXGITextureHost::EnsureLockable(wr::ImageRendering aRendering) {
+bool RenderDXGITextureHost::EnsureLockable() {
   if (mTextureHandle[0]) {
-    // Update filter if filter was changed.
-    if (IsFilterUpdateNecessary(aRendering)) {
-      ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE0,
-                                   LOCAL_GL_TEXTURE_EXTERNAL_OES,
-                                   mTextureHandle[0], aRendering);
-      // Cache new rendering filter.
-      mCachedRendering = aRendering;
-      // NV12 and P016 uses two handles.
-      if (mFormat == gfx::SurfaceFormat::NV12 ||
-          mFormat == gfx::SurfaceFormat::P010 ||
-          mFormat == gfx::SurfaceFormat::P016) {
-        ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE1,
-                                     LOCAL_GL_TEXTURE_EXTERNAL_OES,
-                                     mTextureHandle[1], aRendering);
-      }
-    }
     return true;
   }
 
@@ -274,9 +258,7 @@ bool RenderDXGITextureHost::EnsureLockable(wr::ImageRendering aRendering) {
     mGL->fGenTextures(1, mTextureHandle);
     ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE0,
                                  LOCAL_GL_TEXTURE_EXTERNAL_OES,
-                                 mTextureHandle[0], aRendering);
-    // Cache new rendering filter.
-    mCachedRendering = aRendering;
+                                 mTextureHandle[0]);
     ok &=
         bool(egl->fStreamConsumerGLTextureExternalAttribsNV(mStream, nullptr));
     ok &= bool(egl->fCreateStreamProducerD3DTextureANGLE(mStream, nullptr));
@@ -298,12 +280,10 @@ bool RenderDXGITextureHost::EnsureLockable(wr::ImageRendering aRendering) {
     mGL->fGenTextures(2, mTextureHandle);
     ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE0,
                                  LOCAL_GL_TEXTURE_EXTERNAL_OES,
-                                 mTextureHandle[0], aRendering);
+                                 mTextureHandle[0]);
     ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE1,
                                  LOCAL_GL_TEXTURE_EXTERNAL_OES,
-                                 mTextureHandle[1], aRendering);
-    // Cache new rendering filter.
-    mCachedRendering = aRendering;
+                                 mTextureHandle[1]);
     ok &= bool(egl->fStreamConsumerGLTextureExternalAttribsNV(
         mStream, consumerAttributes));
     ok &= bool(egl->fCreateStreamProducerD3DTextureANGLE(mStream, nullptr));
@@ -332,8 +312,7 @@ bool RenderDXGITextureHost::EnsureLockable(wr::ImageRendering aRendering) {
 }
 
 wr::WrExternalImage RenderDXGITextureHost::Lock(uint8_t aChannelIndex,
-                                                gl::GLContext* aGL,
-                                                wr::ImageRendering aRendering) {
+                                                gl::GLContext* aGL) {
   if (mGL.get() != aGL) {
     // Release the texture handle in the previous gl context.
     DeleteTextureHandle();
@@ -348,7 +327,7 @@ wr::WrExternalImage RenderDXGITextureHost::Lock(uint8_t aChannelIndex,
     return InvalidToWrExternalImage();
   }
 
-  if (!EnsureLockable(aRendering)) {
+  if (!EnsureLockable()) {
     return InvalidToWrExternalImage();
   }
 
@@ -501,18 +480,8 @@ RenderDXGIYCbCrTextureHost::~RenderDXGIYCbCrTextureHost() {
   DeleteTextureHandle();
 }
 
-bool RenderDXGIYCbCrTextureHost::EnsureLockable(wr::ImageRendering aRendering) {
+bool RenderDXGIYCbCrTextureHost::EnsureLockable() {
   if (mTextureHandles[0]) {
-    // Update filter if filter was changed.
-    if (IsFilterUpdateNecessary(aRendering)) {
-      for (int i = 0; i < 3; ++i) {
-        ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE0 + i,
-                                     LOCAL_GL_TEXTURE_EXTERNAL_OES,
-                                     mTextureHandles[i], aRendering);
-        // Cache new rendering filter.
-        mCachedRendering = aRendering;
-      }
-    }
     return true;
   }
 
@@ -552,9 +521,7 @@ bool RenderDXGIYCbCrTextureHost::EnsureLockable(wr::ImageRendering aRendering) {
   for (int i = 0; i < 3; ++i) {
     ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE0 + i,
                                  LOCAL_GL_TEXTURE_EXTERNAL_OES,
-                                 mTextureHandles[i], aRendering);
-    // Cache new rendering filter.
-    mCachedRendering = aRendering;
+                                 mTextureHandles[i]);
 
     // Create the EGLStream.
     mStreams[i] = egl->fCreateStreamKHR(nullptr);
@@ -637,8 +604,8 @@ bool RenderDXGIYCbCrTextureHost::LockInternal() {
   return true;
 }
 
-wr::WrExternalImage RenderDXGIYCbCrTextureHost::Lock(
-    uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
+wr::WrExternalImage RenderDXGIYCbCrTextureHost::Lock(uint8_t aChannelIndex,
+                                                     gl::GLContext* aGL) {
   if (mGL.get() != aGL) {
     // Release the texture handle in the previous gl context.
     DeleteTextureHandle();
@@ -653,7 +620,7 @@ wr::WrExternalImage RenderDXGIYCbCrTextureHost::Lock(
     return InvalidToWrExternalImage();
   }
 
-  if (!EnsureLockable(aRendering)) {
+  if (!EnsureLockable()) {
     return InvalidToWrExternalImage();
   }
 

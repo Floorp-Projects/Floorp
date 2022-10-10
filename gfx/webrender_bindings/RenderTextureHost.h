@@ -13,7 +13,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/webrender/webrender_ffi.h"  // for wr::ImageRendering
+#include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
@@ -33,11 +33,8 @@ class RenderMacIOSurfaceTextureHost;
 class RenderBufferTextureHost;
 class RenderTextureHostSWGL;
 
-GLenum ToGlTexFilter(wr::ImageRendering);
-
 void ActivateBindAndTexParameteri(gl::GLContext* aGL, GLenum aActiveTexture,
-                                  GLenum aBindTarget, GLuint aBindTexture,
-                                  wr::ImageRendering aRendering);
+                                  GLenum aBindTarget, GLuint aBindTexture);
 
 class RenderTextureHost {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RenderTextureHost)
@@ -45,14 +42,12 @@ class RenderTextureHost {
  public:
   RenderTextureHost();
 
-  virtual wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
-                                   wr::ImageRendering aRendering);
+  virtual wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL);
 
   virtual void Unlock() {}
 
   virtual wr::WrExternalImage LockSWGL(uint8_t aChannelIndex, void* aContext,
-                                       RenderCompositor* aCompositor,
-                                       wr::ImageRendering aRendering);
+                                       RenderCompositor* aCompositor);
 
   virtual void UnlockSWGL() {}
 
@@ -103,16 +98,12 @@ class RenderTextureHost {
  protected:
   virtual ~RenderTextureHost();
 
-  bool IsFilterUpdateNecessary(wr::ImageRendering aRendering);
-
   // Returns the UV coordinates to be used when sampling the texture, in pixels.
   // For most implementations these will be (0, 0) and (size.x, size.y), but
   // some texture types (such as RenderAndroidSurfaceTextureHost) require an
   // additional transform to be applied to the coordinates.
   virtual std::pair<gfx::Point, gfx::Point> GetUvCoords(
       gfx::IntSize aTextureSize) const;
-
-  wr::ImageRendering mCachedRendering;
 
   bool mIsFromDRMSource;
 };
