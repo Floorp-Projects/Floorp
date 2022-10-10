@@ -9004,6 +9004,11 @@ nsresult nsIFrame::PeekOffsetForLine(nsPeekOffsetStruct* aPos) {
         break;
       }
 
+      if (aPos->mResultFrame == blockFrame) {
+        // Make sure block element is not the same as the one we had before.
+        break;
+      }
+
       // we've struck another block element with selectable content!
       if (aPos->mDirection == eDirPrevious) {
         edgeCase = 1;  // far edge, search from end backwards
