@@ -529,9 +529,7 @@ class ToolboxToolbar extends Component {
       : null;
 
     // Display the toolbar in the MBT and about:debugging MBT if we have server support for it.
-    // @backward-compat { version 105 } supportsSwitchingMode check can be removed when 105 is on release
     const chromeDebugToolbar =
-      toolbox.commands.client.mainRoot.traits.supportsSwitchingMode &&
       toolbox.commands.targetCommand.descriptorFront
         .isBrowserProcessDescriptor &&
       Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false)
