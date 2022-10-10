@@ -18,7 +18,6 @@
 #include "modules/audio_processing/audio_buffer.h"
 #include "modules/audio_processing/include/audio_frame_view.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
@@ -65,14 +64,14 @@ std::unique_ptr<AdaptiveDigitalGainController> CreateAdaptiveDigitalController(
 
 }  // namespace
 
-int GainController2::instance_count_ = 0;
+std::atomic<int> GainController2::instance_count_(0);
 
 GainController2::GainController2(const Agc2Config& config,
                                  int sample_rate_hz,
                                  int num_channels,
                                  bool use_internal_vad)
     : cpu_features_(GetAllowedCpuFeatures()),
-      data_dumper_(rtc::AtomicOps::Increment(&instance_count_)),
+      data_dumper_(instance_count_.fetch_add(1) + 1),
       fixed_gain_applier_(
           /*hard_clip_samples=*/false,
           /*initial_gain_factor=*/DbToRatio(config.fixed_digital.gain_db)),

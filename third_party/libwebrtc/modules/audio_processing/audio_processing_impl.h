@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 
+#include <atomic>
 #include <list>
 #include <memory>
 #include <string>
@@ -180,7 +181,7 @@ class AudioProcessingImpl : public AudioProcessing {
   };
 
   const std::unique_ptr<ApmDataDumper> data_dumper_;
-  static int instance_count_;
+  static std::atomic<int> instance_count_;
   const bool use_setup_specific_default_aec3_config_;
 
   const bool use_denormal_disabler_;

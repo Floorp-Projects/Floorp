@@ -11,6 +11,7 @@
 #ifndef MODULES_AUDIO_PROCESSING_GAIN_CONTROLLER2_H_
 #define MODULES_AUDIO_PROCESSING_GAIN_CONTROLLER2_H_
 
+#include <atomic>
 #include <memory>
 #include <string>
 
@@ -60,7 +61,7 @@ class GainController2 {
   AvailableCpuFeatures GetCpuFeatures() const { return cpu_features_; }
 
  private:
-  static int instance_count_;
+  static std::atomic<int> instance_count_;
   const AvailableCpuFeatures cpu_features_;
   ApmDataDumper data_dumper_;
   GainApplier fixed_gain_applier_;

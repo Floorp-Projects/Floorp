@@ -20,7 +20,6 @@
 #include "api/array_view.h"
 #include "modules/audio_processing/aec3/aec3_common.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "system_wrappers/include/field_trial.h"
 
@@ -97,7 +96,7 @@ void ComputeAvgRenderReverb(
 
 }  // namespace
 
-int AecState::instance_count_ = 0;
+std::atomic<int> AecState::instance_count_(0);
 
 void AecState::GetResidualEchoScaling(
     rtc::ArrayView<float> residual_scaling) const {
@@ -115,8 +114,7 @@ void AecState::GetResidualEchoScaling(
 
 AecState::AecState(const EchoCanceller3Config& config,
                    size_t num_capture_channels)
-    : data_dumper_(
-          new ApmDataDumper(rtc::AtomicOps::Increment(&instance_count_))),
+    : data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
       config_(config),
       num_capture_channels_(num_capture_channels),
       deactivate_initial_state_reset_at_echo_path_change_(

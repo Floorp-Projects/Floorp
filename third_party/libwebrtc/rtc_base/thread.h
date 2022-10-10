@@ -628,7 +628,7 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   bool fInitialized_;
   bool fDestroyed_;
 
-  volatile int stop_;
+  std::atomic<int> stop_;
 
   // The SocketServer might not be owned by Thread.
   SocketServer* const ss_;

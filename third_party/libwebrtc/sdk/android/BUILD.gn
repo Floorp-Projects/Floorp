@@ -951,7 +951,6 @@ if (current_os == "linux" || is_android) {
       ":generated_native_api_jni",
       ":internal_jni",
       "../../api:sequence_checker",
-      "../../rtc_base:atomicops",
       "//api:array_view",
       "//rtc_base:checks",
     ]

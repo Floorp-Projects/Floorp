@@ -17,7 +17,6 @@
 #include "api/task_queue/to_queued_task.h"
 #include "rtc_base/async_invoker.h"
 #include "rtc_base/async_udp_socket.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
 #include "rtc_base/gunit.h"
@@ -658,7 +657,7 @@ TEST(ThreadManager, ProcessAllMessageQueues) {
   a->Start();
   b->Start();
 
-  volatile int messages_processed = 0;
+  std::atomic<int> messages_processed(0);
   auto incrementer = [&messages_processed,
                       &entered_process_all_message_queues] {
     // Wait for event as a means to ensure Increment doesn't occur outside
@@ -666,7 +665,7 @@ TEST(ThreadManager, ProcessAllMessageQueues) {
     // the main thread, which is guaranteed to be handled inside
     // ProcessAllMessageQueues.
     entered_process_all_message_queues.Wait(Event::kForever);
-    AtomicOps::Increment(&messages_processed);
+    messages_processed.fetch_add(1);
   };
   auto event_signaler = [&entered_process_all_message_queues] {
     entered_process_all_message_queues.Set();
@@ -680,7 +679,7 @@ TEST(ThreadManager, ProcessAllMessageQueues) {
   main_thread.PostTask(ToQueuedTask(event_signaler));
 
   ThreadManager::ProcessAllMessageQueuesForTesting();
-  EXPECT_EQ(4, AtomicOps::AcquireLoad(&messages_processed));
+  EXPECT_EQ(4, messages_processed.load(std::memory_order_acquire));
 }
 
 // Test that ProcessAllMessageQueues doesn't hang if a thread is quitting.

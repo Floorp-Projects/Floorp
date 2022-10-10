@@ -13,12 +13,12 @@
 
 #include <stddef.h>
 
+#include <atomic>
 #include <map>
 #include <memory>
 #include <string>
 
 #include "absl/strings/string_view.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/string_utils.h"
 
@@ -190,25 +190,22 @@ void NoOp(const Ts&...) {}
       webrtc::metrics::HistogramFactoryGetEnumeration(name, boundary))
 
 // The name of the histogram should not vary.
-#define RTC_HISTOGRAM_COMMON_BLOCK(constant_name, sample,                  \
-                                   factory_get_invocation)                 \
-  do {                                                                     \
-    static webrtc::metrics::Histogram* atomic_histogram_pointer = nullptr; \
-    webrtc::metrics::Histogram* histogram_pointer =                        \
-        rtc::AtomicOps::AcquireLoadPtr(&atomic_histogram_pointer);         \
-    if (!histogram_pointer) {                                              \
-      histogram_pointer = factory_get_invocation;                          \
-      webrtc::metrics::Histogram* prev_pointer =                           \
-          rtc::AtomicOps::CompareAndSwapPtr(                               \
-              &atomic_histogram_pointer,                                   \
-              static_cast<webrtc::metrics::Histogram*>(nullptr),           \
-              histogram_pointer);                                          \
-      RTC_DCHECK(prev_pointer == nullptr ||                                \
-                 prev_pointer == histogram_pointer);                       \
-    }                                                                      \
-    if (histogram_pointer) {                                               \
-      webrtc::metrics::HistogramAdd(histogram_pointer, sample);            \
-    }                                                                      \
+#define RTC_HISTOGRAM_COMMON_BLOCK(constant_name, sample,                     \
+                                   factory_get_invocation)                    \
+  do {                                                                        \
+    static std::atomic<webrtc::metrics::Histogram*> atomic_histogram_pointer( \
+        nullptr);                                                             \
+    webrtc::metrics::Histogram* histogram_pointer =                           \
+        atomic_histogram_pointer.load(std::memory_order_acquire);             \
+    if (!histogram_pointer) {                                                 \
+      histogram_pointer = factory_get_invocation;                             \
+      webrtc::metrics::Histogram* null_histogram = nullptr;                   \
+      atomic_histogram_pointer.compare_exchange_strong(null_histogram,        \
+                                                       histogram_pointer);    \
+    }                                                                         \
+    if (histogram_pointer) {                                                  \
+      webrtc::metrics::HistogramAdd(histogram_pointer, sample);               \
+    }                                                                         \
   } while (0)
 
 // The histogram is constructed/found for each call.

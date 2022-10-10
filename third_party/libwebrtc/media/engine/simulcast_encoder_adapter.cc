@@ -30,7 +30,6 @@
 #include "media/base/video_common.h"
 #include "modules/video_coding/include/video_error_codes.h"
 #include "modules/video_coding/utility/simulcast_rate_allocator.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/rate_control_settings.h"
 #include "rtc_base/logging.h"
@@ -294,7 +293,7 @@ int SimulcastEncoderAdapter::Release() {
   // It's legal to move the encoder to another queue now.
   encoder_queue_.Detach();
 
-  rtc::AtomicOps::ReleaseStore(&inited_, 0);
+  inited_.store(0);
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -368,7 +367,7 @@ int SimulcastEncoderAdapter::InitEncode(
       bypass_mode_ = true;
 
       DestroyStoredEncoders();
-      rtc::AtomicOps::ReleaseStore(&inited_, 1);
+      inited_.store(1);
       return WEBRTC_VIDEO_CODEC_OK;
     }
 
@@ -424,7 +423,7 @@ int SimulcastEncoderAdapter::InitEncode(
   // To save memory, don't store encoders that we don't use.
   DestroyStoredEncoders();
 
-  rtc::AtomicOps::ReleaseStore(&inited_, 1);
+  inited_.store(1);
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -678,7 +677,7 @@ void SimulcastEncoderAdapter::OnDroppedFrame(size_t stream_idx) {
 }
 
 bool SimulcastEncoderAdapter::Initialized() const {
-  return rtc::AtomicOps::AcquireLoad(&inited_) == 1;
+  return inited_.load() == 1;
 }
 
 void SimulcastEncoderAdapter::DestroyStoredEncoders() {

@@ -144,7 +144,6 @@ rtc_library("aec3") {
     "../../../api/audio:aec3_config",
     "../../../api/audio:echo_control",
     "../../../common_audio:common_audio_c",
-    "../../../rtc_base:atomicops",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
     "../../../rtc_base:macromagic",

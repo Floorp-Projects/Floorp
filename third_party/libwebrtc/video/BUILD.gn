@@ -112,7 +112,6 @@ rtc_library("video") {
     "../modules/video_coding/timing:inter_frame_delay",
     "../modules/video_coding/timing:timing_module",
     "../modules/video_processing",
-    "../rtc_base:atomicops",
     "../rtc_base:checks",
     "../rtc_base:event_tracer",
     "../rtc_base:histogram_percentile_counter",
