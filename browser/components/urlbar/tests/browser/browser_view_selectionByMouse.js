@@ -13,6 +13,7 @@ ChromeUtils.defineESModuleGetters(this, {
 add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
+      ["browser.urlbar.quickactions.enabled", true],
       ["browser.urlbar.suggest.quickactions", true],
       ["browser.urlbar.shortcuts.quickactions", true],
     ],

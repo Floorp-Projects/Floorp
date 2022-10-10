@@ -17,7 +17,10 @@ let testActionCalled = 0;
 
 add_setup(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.suggest.quickactions", true]],
+    set: [
+      ["browser.urlbar.suggest.quickactions", true],
+      ["browser.urlbar.quickactions.enabled", true],
+    ],
   });
 
   UrlbarProviderQuickActions.addAction("testaction", {
