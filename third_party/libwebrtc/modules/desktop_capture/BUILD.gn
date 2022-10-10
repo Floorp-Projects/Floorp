@@ -183,6 +183,7 @@ if (rtc_include_tests) {
 
     if (is_linux || is_chromeos) {
       sources += [ "screen_drawer_linux.cc" ]
+      libs = [ "X11" ]
     }
 
     if (is_mac) {
