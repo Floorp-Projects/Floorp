@@ -299,26 +299,6 @@ if (!build_with_mozilla) {
   }
 }
 
-# TODO(mbonadei): Just for backwards compatibility, remove.
-rtc_source_set("desktop_capture_generic") {
-  deps = [
-    ":desktop_capture",
-    ":primitives",
-    "../../api:scoped_refptr",
-    "../../rtc_base/system:rtc_export",
-  ]
-  sources = [
-    "desktop_capture_options.h",
-    "desktop_capturer.h",
-    "desktop_frame_generator.h",
-    "fake_desktop_capturer.h",
-  ]
-  if (rtc_use_x11_extensions) {
-    sources += [ "linux/x11/shared_x_display.h" ]
-    deps += [ "../../api:refcountedbase" ]
-  }
-}
-
 rtc_library("desktop_capture") {
   visibility = [ "*" ]
   defines = []
