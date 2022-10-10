@@ -1017,6 +1017,23 @@ gfx::YUVColorSpace FFmpegVideoDecoder<LIBAV_VER>::GetFrameColorSpace() const {
   }
 }
 
+gfx::ColorSpace2 FFmpegVideoDecoder<LIBAV_VER>::GetFrameColorPrimaries() const {
+  AVColorPrimaries colorPrimaries = AVCOL_PRI_UNSPECIFIED;
+#if LIBAVCODEC_VERSION_MAJOR > 57
+  colorPrimaries = mFrame->color_primaries;
+#endif
+  switch (colorPrimaries) {
+#if LIBAVCODEC_VERSION_MAJOR >= 55
+    case AVCOL_PRI_BT2020:
+      return gfx::ColorSpace2::BT2020;
+#endif
+    case AVCOL_PRI_BT709:
+      return gfx::ColorSpace2::BT709;
+    default:
+      return gfx::ColorSpace2::BT709;
+  }
+}
+
 gfx::ColorRange FFmpegVideoDecoder<LIBAV_VER>::GetFrameColorRange() const {
   AVColorRange range = AVCOL_RANGE_UNSPECIFIED;
 #if LIBAVCODEC_VERSION_MAJOR > 58

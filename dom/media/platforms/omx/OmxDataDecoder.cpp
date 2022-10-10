@@ -951,6 +951,12 @@ already_AddRefed<VideoData> MediaDataHelper::CreateYUV420VideoData(
   }
   b.mYUVColorSpace = *maybeColorSpace;
 
+  auto maybeColorPrimaries = info.mColorPrimaries;
+  if (!maybeColorPrimaries) {
+    maybeColorPrimaries = Some(gfx::ColorSpace2::BT709);
+  }
+  b.mColorPrimaries = *maybeColorPrimaries;
+
   RefPtr<VideoData> data = VideoData::CreateAndCopyData(
       info, mImageContainer,
       0,                                     // Filled later by caller.

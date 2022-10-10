@@ -69,6 +69,7 @@ already_AddRefed<MediaData> BlankVideoDataCreator::Create(
 
   buffer.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
   buffer.mYUVColorSpace = gfx::YUVColorSpace::BT601;
+  buffer.mColorPrimaries = gfx::ColorSpace2::BT709;
 
   return VideoData::CreateAndCopyData(mInfo, mImageContainer, aSample->mOffset,
                                       aSample->mTime, aSample->mDuration,

@@ -1018,6 +1018,12 @@ AVIFDecodedData Dav1dDecoder::Dav1dPictureToDecodedData(
       seq_hdr.color_range ? gfx::ColorRange::FULL : gfx::ColorRange::LIMITED;
   data.mColorRange = GetAVIFColorRange(aNclx, av1ColorRange);
 
+  auto colorPrimaries =
+      gfxUtils::CicpToColorPrimaries(data.mColourPrimaries, sAVIFLog);
+  if (colorPrimaries.isSome()) {
+    data.mColorPrimaries = *colorPrimaries;
+  }
+
   if (aAlphaPlane) {
     MOZ_ASSERT(aAlphaPlane->stride[0] == data.mYStride);
     data.mAlpha.emplace();
@@ -1099,6 +1105,12 @@ AVIFDecodedData AOMDecoder::AOMImageToToDecodedData(
 
   data.SetCicpValues(aNclx, av1ColourPrimaries, av1TransferCharacteristics,
                      av1MatrixCoefficients);
+
+  auto colorPrimaries =
+      gfxUtils::CicpToColorPrimaries(data.mColourPrimaries, sAVIFLog);
+  if (colorPrimaries.isSome()) {
+    data.mColorPrimaries = *colorPrimaries;
+  }
 
   if (aAlphaPlane) {
     MOZ_ASSERT(aAlphaPlane->stride[AOM_PLANE_Y] == data.mYStride);

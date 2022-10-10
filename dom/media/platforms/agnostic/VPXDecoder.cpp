@@ -13,6 +13,7 @@
 #include "ImageContainer.h"
 #include "TimeUnits.h"
 #include "gfx2DGlue.h"
+#include "gfxUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TaskQueue.h"
@@ -544,9 +545,9 @@ void VPXDecoder::GetVPCCBox(MediaByteBuffer* aDestBox,
   writer.WriteBit(aInfo.mFullRange);     // full/restricted range
 
   // See VPXDecoder::VPXStreamInfo enums
-  writer.WriteU8(2);  // colour primaries: unspecified
-  writer.WriteU8(2);  // transfer characteristics: unspecified
-  writer.WriteU8(2);  // matrix coefficients: unspecified
+  writer.WriteU8(aInfo.mColorPrimaries);    // color primaries
+  writer.WriteU8(aInfo.mTransferFunction);  // transfer characteristics
+  writer.WriteU8(2);                        // matrix coefficients: unspecified
 
   writer.WriteBits(0,
                    16);  // codecIntializationDataSize (must be 0 for VP8/VP9)
@@ -563,6 +564,10 @@ bool VPXDecoder::SetVideoInfo(VideoInfo* aDestInfo, const nsAString& aCodec) {
     return false;
   }
 
+  aDestInfo->mColorPrimaries =
+      gfxUtils::CicpToColorPrimaries(colorSpace.mPrimaries, sPDMLog);
+  aDestInfo->mTransferFunction =
+      gfxUtils::CicpToTransferFunction(colorSpace.mTransfer);
   aDestInfo->mColorDepth = gfx::ColorDepthForBitDepth(info.mBitDepth);
   VPXDecoder::SetChroma(info, chroma);
   info.mFullRange = colorSpace.mRange == ColorRange::FULL;
@@ -604,9 +609,9 @@ void VPXDecoder::ReadVPCCBox(VPXStreamInfo& aDestInfo, MediaByteBuffer* aBox) {
   SetChroma(aDestInfo, reader.ReadBits(3));
   aDestInfo.mFullRange = reader.ReadBit();
 
-  reader.ReadBits(8);  // colour primaries
-  reader.ReadBits(8);  // transfer characteristics
-  reader.ReadBits(8);  // matrix coefficients
+  aDestInfo.mColorPrimaries = reader.ReadBits(8);    // color primaries
+  aDestInfo.mTransferFunction = reader.ReadBits(8);  // transfer characteristics
+  reader.ReadBits(8);                                // matrix coefficients
 
   MOZ_ASSERT(reader.ReadBits(16) ==
              0);  // codecInitializationDataSize (must be 0 for VP8/VP9)

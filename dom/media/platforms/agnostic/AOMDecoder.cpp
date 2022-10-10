@@ -220,6 +220,18 @@ RefPtr<MediaDataDecoder::DecodePromise> AOMDecoder::ProcessDecode(
     b.mColorRange = img->range == AOM_CR_FULL_RANGE ? ColorRange::FULL
                                                     : ColorRange::LIMITED;
 
+    switch (img->cp) {
+      case AOM_CICP_CP_BT_709:
+        b.mColorPrimaries = ColorSpace2::BT709;
+        break;
+      case AOM_CICP_CP_BT_2020:
+        b.mColorPrimaries = ColorSpace2::BT2020;
+        break;
+      default:
+        b.mColorPrimaries = ColorSpace2::BT709;
+        break;
+    }
+
     RefPtr<VideoData> v;
     v = VideoData::CreateAndCopyData(
         mInfo, mImageContainer, aSample->mOffset, aSample->mTime,

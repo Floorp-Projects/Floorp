@@ -36,6 +36,9 @@ class DAV1DDecoder : public MediaDataDecoder,
   static Maybe<gfx::YUVColorSpace> GetColorSpace(const Dav1dPicture& aPicture,
                                                  LazyLogModule& aLogger);
 
+  static Maybe<gfx::ColorSpace2> GetColorPrimaries(const Dav1dPicture& aPicture,
+                                                   LazyLogModule& aLogger);
+
  private:
   ~DAV1DDecoder() = default;
   RefPtr<DecodePromise> InvokeDecode(MediaRawData* aSample);
