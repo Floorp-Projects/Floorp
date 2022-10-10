@@ -228,7 +228,7 @@ IAPZHitTester::HitTestResult WRHitTester::GetAPZCAtPoint(
       // match what is found in the hit-testing tree node.
       MOZ_ASSERT(sideBits == hit.mNode->GetFixedPosSides(),
                  "Fixed position side bits do not match");
-    } else if (hit.mTargetApzc->IsRootContent()) {
+    } else if (hit.mTargetApzc && hit.mTargetApzc->IsRootContent()) {
       // If the hit element is not a fixed position element, then the hit test
       // result item's side bits should not be populated.
       MOZ_ASSERT(sideBits == SideBits::eNone,
