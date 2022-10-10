@@ -2251,12 +2251,14 @@ CCGraphBuilder::NoteWeakMapping(JSObject* aMap, JS::GCCellPtr aKey,
 NS_IMETHODIMP_(void)
 CCGraphBuilder::NoteWeakMapping(JSObject* aKey, nsISupports* aVal,
                                 nsCycleCollectionParticipant* aValParticipant) {
+  MOZ_ASSERT(aKey, "Don't call NoteWeakMapping with a null key");
+  MOZ_ASSERT(aVal, "Don't call NoteWeakMapping with a null value");
   WeakMapping* mapping = mGraph.mWeakMaps.AppendElement();
   mapping->mMap = nullptr;
-  mapping->mKey = aKey ? AddWeakMapNode(aKey) : nullptr;
+  mapping->mKey = AddWeakMapNode(aKey);
   mapping->mKeyDelegate = mapping->mKey;
   MOZ_ASSERT(js::UncheckedUnwrapWithoutExpose(aKey) == aKey);
-  mapping->mVal = aVal ? AddNode(aVal, aValParticipant) : nullptr;
+  mapping->mVal = AddNode(aVal, aValParticipant);
 
   if (mLogger) {
     mLogger->NoteWeakMapEntry(0, (uint64_t)aKey, 0, (uint64_t)aVal);
