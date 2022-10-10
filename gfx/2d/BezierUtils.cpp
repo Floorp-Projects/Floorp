@@ -291,21 +291,35 @@ Float CalculateDistanceToEllipticArc(const Point& P, const Point& normal,
   Float d = normal.y / height;
 
   Float A = b * b + d * d;
+  // In the quadratic formulat B would be 2*(a*b+c*d), however we factor the 2
+  // out Here which cancels out later.
   Float B = a * b + c * d;
-  Float C = a * a + c * c - 1;
+  Float C = a * a + c * c - 1.0;
 
-  Float S = sqrt(B * B - A * C);
+  Float signB = 1.0;
+  if (B < 0.0) {
+    signB = -1.0;
+  }
 
-  Float n1 = -B + S;
-  Float n2 = -B - S;
+  // 2nd degree polynomials are typically computed using the formulae
+  // r1 = -(B - sqrt(delta)) / (2 * A)
+  // r2 = -(B + sqrt(delta)) / (2 * A)
+  // However B - sqrt(delta) can be an inportant source of precision loss for
+  // one of the roots when computing the difference between two similar and
+  // large numbers. To avoid that we pick the root with no precision loss in r1
+  // and compute r2 using the Citardauq formula.
+  // Factoring out 2 from B earlier let
+  Float S = B + signB * sqrt(B * B - A * C);
+  Float r1 = -S / A;
+  Float r2 = -C / S;
 
 #ifdef DEBUG
   Float epsilon = (Float)0.001;
-  MOZ_ASSERT(n1 >= -epsilon);
-  MOZ_ASSERT(n2 >= -epsilon);
+  MOZ_ASSERT(r1 >= -epsilon);
+  MOZ_ASSERT(r2 >= -epsilon);
 #endif
 
-  return std::max((n1 < n2 ? n1 : n2) / A, (Float)0.0);
+  return std::max((r1 < r2 ? r1 : r2), (Float)0.0);
 }
 
 }  // namespace gfx
