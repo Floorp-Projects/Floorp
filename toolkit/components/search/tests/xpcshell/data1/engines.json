@@ -35,6 +35,17 @@
         "defaultPrivate": "yes",
         "experiment": "exp2"
       }]
+    },
+    {
+      "webExtension": {
+        "id": "exp3@search.mozilla.org"
+      },
+      "orderHint": 20000,
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "default": "yes",
+        "experiment": "exp3"
+      }]
     }
   ]
 }
