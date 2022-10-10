@@ -530,6 +530,9 @@ void SVGMarkerObserver::OnRenderingChange() {
   MOZ_ASSERT(frame->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
 
   // Don't need to request ReflowFrame if we're being reflowed.
+  // Because mRect for SVG frames includes the bounds of any markers
+  // (see the comment for nsIFrame::GetRect), the referencing frame must be
+  // reflowed for any marker changes.
   if (!frame->HasAnyStateBits(NS_FRAME_IN_REFLOW)) {
     // XXXjwatt: We need to unify SVG into standard reflow so we can just use
     // nsChangeHint_NeedReflow | nsChangeHint_NeedDirtyReflow here.
