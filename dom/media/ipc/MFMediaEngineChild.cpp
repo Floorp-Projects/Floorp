@@ -60,7 +60,7 @@ RefPtr<GenericNonExclusivePromise> MFMediaEngineChild::Init(
                     RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM);
             if (!manager || !manager->CanSend()) {
               CLOG("Manager not exists or can't send");
-              mInitPromiseHolder.Reject(NS_ERROR_FAILURE, __func__);
+              mInitPromiseHolder.RejectIfExists(NS_ERROR_FAILURE, __func__);
               return;
             }
 
@@ -75,12 +75,13 @@ RefPtr<GenericNonExclusivePromise> MFMediaEngineChild::Init(
                       // Id 0 is used to indicate error.
                       if (aId == 0) {
                         CLOG("Failed to initialize MFMediaEngineChild");
-                        mInitPromiseHolder.Reject(NS_ERROR_FAILURE, __func__);
+                        mInitPromiseHolder.RejectIfExists(NS_ERROR_FAILURE,
+                                                          __func__);
                         return;
                       }
                       mMediaEngineId = aId;
                       CLOG("Initialized MFMediaEngineChild");
-                      mInitPromiseHolder.Resolve(true, __func__);
+                      mInitPromiseHolder.ResolveIfExists(true, __func__);
                     },
                     [self,
                      this](const mozilla::ipc::ResponseRejectReason& aReason) {
@@ -88,7 +89,8 @@ RefPtr<GenericNonExclusivePromise> MFMediaEngineChild::Init(
                       CLOG(
                           "Failed to initialize MFMediaEngineChild due to "
                           "IPC failure");
-                      mInitPromiseHolder.Reject(NS_ERROR_FAILURE, __func__);
+                      mInitPromiseHolder.RejectIfExists(NS_ERROR_FAILURE,
+                                                        __func__);
                     })
                 ->Track(mInitEngineRequest);
           },
@@ -206,6 +208,7 @@ void MFMediaEngineChild::IPDLActorDestroyed() {
 void MFMediaEngineChild::Shutdown() {
   AssertOnManagerThread();
   SendShutdown();
+  mInitPromiseHolder.RejectIfExists(NS_ERROR_FAILURE, __func__);
   mInitEngineRequest.DisconnectIfExists();
 }
 
