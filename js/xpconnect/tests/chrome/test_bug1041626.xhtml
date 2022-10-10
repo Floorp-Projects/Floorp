@@ -42,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1041626
     xrayOwnProperties = Object.getOwnPropertyNames(window[0].document);
 
     realOwnProperties = Object.getOwnPropertyNames(window[0].wrappedJSObject.document);
-    ok(realOwnProperties.length > 0);
+    ok(!!realOwnProperties.length);
 
     is(xrayOwnProperties.sort().toSource(), realOwnProperties.sort().toSource(),
        "Xray enumerates document properties properly");

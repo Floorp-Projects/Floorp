@@ -1,4 +1,4 @@
-var EXPORTED_SYMBOLS = ['checkFromJSM'];
+var EXPORTED_SYMBOLS = ["checkFromJSM"];
 
 function checkFromJSM(target, is_op) {
   is_op(target.numProp, 42, "Number expando works");
@@ -6,5 +6,7 @@ function checkFromJSM(target, is_op) {
   // If is_op is todo_is, target.objProp will be undefined.
   try {
     is_op(target.objProp.bar, "baz", "Object expando works");
-  } catch(e) { is_op(0, 1, "No object expando"); }
+  } catch (e) {
+    is_op(0, 1, "No object expando");
+  }
 }

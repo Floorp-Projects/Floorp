@@ -31,19 +31,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=658909
   }
 
   var testFunctions = {
-    testDocumentElement: function(a, b, name) {
+    testDocumentElement(a, b, name) {
       var getter = Object.prototype.__lookupGetter__.call(a.document, 'documentElement');
       is(getter.call(b.document), b.document.documentElement, msg(a, b, name));
     },
 
-    testInvalidCall: function(a, b, name) {
+    testInvalidCall(a, b, name) {
       var getter = Object.prototype.__lookupGetter__.call(a.document, 'documentElement');
       var threw = false;
       try { getter.call(b.document.body); } catch (e) { threw = true; };
       ok(threw, msg(a, b, name));
     },
 
-    testStatus: function(a, b, name) {
+    testStatus(a, b, name) {
       var setter = Object.prototype.__lookupSetter__.call(a, 'status');
       is(b.status, "", "Empty status");
       setter.call(b, "foopy");
@@ -51,16 +51,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=658909
       b.status = "";
     },
 
-    testCreateElement: function(a, b, name) {
+    testCreateElement(a, b, name) {
       is(a.document.createElement.call(b.document, 'div').ownerDocument, b.document, msg(a, b, name));
     },
 
-    testWindowName: function(a, b, name) {
+    testWindowName(a, b, name) {
       var getter = Object.prototype.__lookupGetter__.call(a, 'name');
       is(getter.call(b), b.name, msg(a, b, name));
     },
 
-    testCanvas: function(a, b, name) {
+    testCanvas(a, b, name) {
       var canvasA = a.document.createElement('canvas');
       var canvasB = b.document.createElement('canvas');
       var contextA = canvasA.getContext('2d');

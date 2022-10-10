@@ -33,7 +33,7 @@ async function go() {
     ok(!checkDead(), "WindowProxy shouldn't be dead yet");
 
     // Load a content page in the chrome frame.
-    w.location = "http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html";
+    w.location = "https://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html";
     tryWindow();
 
     function tryWindow() {

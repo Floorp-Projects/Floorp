@@ -27,14 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=895340
                   .getService(Ci.nsIConsoleService);
 
   let listener = {
-    QueryInterface: function(iid) {
-      if (!iid.equals(Ci.nsIConsoleListener) &&
-          !iid.equals(Ci.nsISupports))
-      {
-        throw Cr.NS_ERROR_NO_INTERFACE;
-      }
-      return this;
-    }
+    QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener"])
   };
 
   listener.observe = function(aMessage) {

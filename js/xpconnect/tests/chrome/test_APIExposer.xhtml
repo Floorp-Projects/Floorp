@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=634156
 
       function genPropDesc(value) {
           return { enumerable: true, configurable: true, writable: true,
-                   value: value };
+                   value };
       }
       const props = {
           'getProp': genPropDesc(function() { ok(true, "called prop that shadowed a getter"); }),

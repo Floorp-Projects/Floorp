@@ -22,19 +22,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=799348
   gCalledOnload = false;
   var myObserver = {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-    observe: function(win, topic, data) {
+    observe(win, topic, data) {
       if (topic == "domwindowopened") {
         ok(!gCalledOnload, "domwindowopened notification fired before onload");
         win.addEventListener("load", function(evt) {
           gCalledOnload = true;
           win.close();
-        }, false);
+        });
       } else if (topic == "domwindowclosed") {
         ok(gCalledOnload, "should have called onload");
         Services.ww.unregisterNotification(myObserver);
         SimpleTest.finish();
-      }
-      else {
+      } else {
         ok(false, "unknown topic");
       }
     }

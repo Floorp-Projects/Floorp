@@ -51,7 +51,7 @@ add_task(async () => {
     return inner();
   }
 
-  var contentSb = new Cu.Sandbox('http://www.example.com');
+  var contentSb = new Cu.Sandbox("https://www.example.com");
   var chromeSb = new Cu.Sandbox(window);
   chromeSb.ok = contentSb.ok = ok;
   Cu.evalInSandbox(nearNativeStackLimit.toSource(), chromeSb);

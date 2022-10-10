@@ -48,7 +48,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=673468
     sandbox.wrapper = null;
     sandbox.value = null;
 
-    live_dom.xyzabc = {wrappee: wrappee, m: map, sb: sandbox};
+    live_dom.xyzabc = {wrappee, m: map, sb: sandbox};
 
     let key = ChromeUtils.nondeterministicGetWeakMapKeys(map)[0];
     let value = map.get(key);

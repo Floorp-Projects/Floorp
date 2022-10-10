@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=771429
       function test(freshCompartment) {
         var s = new Cu.Sandbox(window, {
           sandboxPrototype: window,
-          freshCompartment: freshCompartment,
+          freshCompartment,
         });
         try {
           is(Cu.evalInSandbox('g()', s), window,

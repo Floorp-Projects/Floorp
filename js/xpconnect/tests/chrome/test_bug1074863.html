@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1074863
   <script type="application/javascript">
 
   /** Test for Bug 1074863 **/
-  var sb = new Cu.Sandbox('http://www.example.com');
+  var sb = new Cu.Sandbox("https://www.example.com");
   sb.namedCtor = Image;
   ok(true, "Didn't assert");
 
