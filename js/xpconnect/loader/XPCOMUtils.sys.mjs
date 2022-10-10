@@ -48,7 +48,7 @@ export var XPCOMUtils = {
   defineLazyGetter(aObject, aName, aLambda) {
     let redefining = false;
     Object.defineProperty(aObject, aName, {
-      get: function () {
+      get() {
         if (!redefining) {
           // Make sure we don't get into an infinite recursion loop if
           // the getter lambda does something shady.
@@ -57,7 +57,7 @@ export var XPCOMUtils = {
         }
       },
       configurable: true,
-      enumerable: true
+      enumerable: true,
     });
   },
 
@@ -81,7 +81,7 @@ export var XPCOMUtils = {
     }
     for (let name of aNames) {
       Object.defineProperty(aObject, name, {
-        get: function() {
+        get() {
           XPCOMUtils._scriptloader.loadSubScript(aResource, aObject);
           return aObject[name];
         },
@@ -89,7 +89,7 @@ export var XPCOMUtils = {
           redefine(aObject, name, value);
         },
         configurable: true,
-        enumerable: true
+        enumerable: true,
       });
     }
   },
@@ -171,7 +171,12 @@ export var XPCOMUtils = {
       // Note: This is hot code, and cross-compartment array wrappers
       // are not JIT-friendly to destructuring or spread operators, so
       // we need to use indexed access instead.
-      this.defineLazyServiceGetter(aObject, name, service[0], service[1] || null);
+      this.defineLazyServiceGetter(
+        aObject,
+        name,
+        service[0],
+        service[1] || null
+      );
     }
   },
 
@@ -216,7 +221,7 @@ export var XPCOMUtils = {
 
     let proxy = aProxy || {};
 
-    if (typeof(aPreLambda) === "function") {
+    if (typeof aPreLambda === "function") {
       aPreLambda.apply(proxy);
     }
 
@@ -225,7 +230,7 @@ export var XPCOMUtils = {
       try {
         ChromeUtils.import(aResource, temp);
 
-        if (typeof(aPostLambda) === "function") {
+        if (typeof aPostLambda === "function") {
           aPostLambda.apply(proxy);
         }
       } catch (ex) {
@@ -320,13 +325,12 @@ export var XPCOMUtils = {
             let latest = lazyGetter();
             aOnUpdate(data, previous, latest);
           } else {
-
             // Empty cache, next call to the getter will cause refetch.
             this.value = undefined;
           }
         }
       },
-    }
+    };
 
     let defineGetter = get => {
       Object.defineProperty(aObject, aName, {
@@ -358,9 +362,11 @@ export var XPCOMUtils = {
 
           default:
             // This should never happen.
-            throw new Error(`Error getting pref ${aPreference}; its value's type is ` +
-                            `${Services.prefs.getPrefType(aPreference)}, which I don't ` +
-                            `know how to handle.`);
+            throw new Error(
+              `Error getting pref ${aPreference}; its value's type is ` +
+                `${Services.prefs.getPrefType(aPreference)}, which I don't ` +
+                `know how to handle.`
+            );
         }
 
         observer.value = aTransform(prefValue);
@@ -383,7 +389,7 @@ export var XPCOMUtils = {
     Object.defineProperty(aObj, aName, {
       value: aValue,
       enumerable: true,
-      writable: false
+      writable: false,
     });
   },
 
@@ -452,16 +458,20 @@ export var XPCOMUtils = {
   ) {
     let initFunc = aInitFuncOrResource;
 
-    if (typeof(aInitFuncOrResource) == "string") {
-      initFunc = function () {
+    if (typeof aInitFuncOrResource == "string") {
+      initFunc = function() {
         let tmp = {};
         ChromeUtils.import(aInitFuncOrResource, tmp);
         return tmp[aName];
       };
     }
 
-    let handler = new LazyProxyHandler(aName, initFunc,
-                                       aStubProperties, aUntrapCallback);
+    let handler = new LazyProxyHandler(
+      aName,
+      initFunc,
+      aStubProperties,
+      aUntrapCallback
+    );
 
     /*
      * We cannot simply create a lazy getter for the underlying
@@ -487,7 +497,9 @@ export var XPCOMUtils = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(XPCOMUtils, "_scriptloader", () => { return Services.scriptloader; });
+XPCOMUtils.defineLazyGetter(XPCOMUtils, "_scriptloader", () => {
+  return Services.scriptloader;
+});
 
 /**
  * LazyProxyHandler
@@ -554,9 +566,11 @@ class LazyProxyHandler {
   }
 
   get(target, prop, receiver) {
-    if (this.pending &&
-        this.stubProperties &&
-        Object.prototype.hasOwnProperty.call(this.stubProperties, prop)) {
+    if (
+      this.pending &&
+      this.stubProperties &&
+      Object.prototype.hasOwnProperty.call(this.stubProperties, prop)
+    ) {
       return this.stubProperties[prop];
     }
     return Reflect.get(this.getObject(), prop, receiver);
@@ -575,4 +589,7 @@ class LazyProxyHandler {
   }
 }
 
-var XPCU_lazyPreferenceObserverQI = ChromeUtils.generateQI(["nsIObserver", "nsISupportsWeakReference"]);
+var XPCU_lazyPreferenceObserverQI = ChromeUtils.generateQI([
+  "nsIObserver",
+  "nsISupportsWeakReference",
+]);
