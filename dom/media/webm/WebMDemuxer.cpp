@@ -307,6 +307,10 @@ nsresult WebMDemuxer::ReadMetadata() {
           return NS_ERROR_FAILURE;
       }
 
+      mInfo.mVideo.mColorPrimaries = gfxUtils::CicpToColorPrimaries(
+          static_cast<gfx::CICP::ColourPrimaries>(params.primaries),
+          gMediaDemuxerLog);
+
       // For VPX, this is our only chance to capture the transfer
       // characteristics, which we can't get from a VPX bitstream later.
       // We only need this value if the video is using the BT2020

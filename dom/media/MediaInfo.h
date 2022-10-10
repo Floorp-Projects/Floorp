@@ -433,7 +433,8 @@ class VideoInfo : public TrackInfo {
   // Matrix coefficients (if specified by the video) imply a colorspace.
   Maybe<gfx::YUVColorSpace> mColorSpace;
 
-  // Color primaries are assumed to match the colorspace.
+  // Color primaries are independent from the coefficients.
+  Maybe<gfx::ColorSpace2> mColorPrimaries;
 
   // Transfer functions get their own member, which may not be strongly
   // correlated to the colorspace.

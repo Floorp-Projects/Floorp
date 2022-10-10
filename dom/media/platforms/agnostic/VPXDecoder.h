@@ -95,6 +95,37 @@ class VPXDecoder : public MediaDataDecoder,
       }
     }
 
+    uint8_t mColorPrimaries = gfx::CICP::ColourPrimaries::CP_UNSPECIFIED;
+    gfx::ColorSpace2 ColorPrimaries() const {
+      switch (mColorPrimaries) {
+        case gfx::CICP::ColourPrimaries::CP_BT709:
+          return gfx::ColorSpace2::BT709;
+        case gfx::CICP::ColourPrimaries::CP_UNSPECIFIED:
+          return gfx::ColorSpace2::BT709;
+        case gfx::CICP::ColourPrimaries::CP_BT2020:
+          return gfx::ColorSpace2::BT2020;
+        default:
+          return gfx::ColorSpace2::BT709;
+      }
+    }
+
+    uint8_t mTransferFunction =
+        gfx::CICP::TransferCharacteristics::TC_UNSPECIFIED;
+    gfx::TransferFunction TransferFunction() const {
+      switch (mTransferFunction) {
+        case gfx::CICP::TransferCharacteristics::TC_BT709:
+          return gfx::TransferFunction::BT709;
+        case gfx::CICP::TransferCharacteristics::TC_SRGB:
+          return gfx::TransferFunction::SRGB;
+        case gfx::CICP::TransferCharacteristics::TC_SMPTE2084:
+          return gfx::TransferFunction::PQ;
+        case gfx::CICP::TransferCharacteristics::TC_HLG:
+          return gfx::TransferFunction::HLG;
+        default:
+          return gfx::TransferFunction::BT709;
+      }
+    }
+
     /*
     mFullRange == false then:
       For BitDepth equals 8:

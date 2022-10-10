@@ -291,8 +291,8 @@ static already_AddRefed<gfxDrawable> CreateSamplingRestrictedDrawable(
 
   DrawTarget* destDrawTarget = aContext->GetDrawTarget();
   // We've been not using CreateSamplingRestrictedDrawable in a bunch of places
-  // for a while. Let's disable it everywhere and confirm that it's ok to get rid
-  // of.
+  // for a while. Let's disable it everywhere and confirm that it's ok to get
+  // rid of.
   if (destDrawTarget->GetBackendType() == BackendType::DIRECT2D1_1 || (true)) {
     return nullptr;
   }
@@ -1381,6 +1381,25 @@ const float kIdentityNarrowYCbCrToRGB_RowMajor[16] = {
     default:
       MOZ_LOG(aLogger, LogLevel::Debug,
               ("Unsupported color matrix value: %hhu", aMatrixCoefficients));
+      return {};
+  }
+}
+
+// Translate from CICP values to the color primaries we support, or return
+// Nothing() if there is no appropriate match to let the caller choose
+// a default or generate an error.
+//
+// See Rec. ITU-T H.273 (12/2016) for details on CICP
+/* static */ Maybe<gfx::ColorSpace2> gfxUtils::CicpToColorPrimaries(
+    const CICP::ColourPrimaries aColourPrimaries, LazyLogModule& aLogger) {
+  switch (aColourPrimaries) {
+    case CICP::ColourPrimaries::CP_BT709:
+      return Some(gfx::ColorSpace2::BT709);
+    case CICP::ColourPrimaries::CP_BT2020:
+      return Some(gfx::ColorSpace2::BT2020);
+    default:
+      MOZ_LOG(aLogger, LogLevel::Debug,
+              ("Unsupported color primaries value: %hhu", aColourPrimaries));
       return {};
   }
 }

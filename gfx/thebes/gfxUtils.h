@@ -232,6 +232,10 @@ class gfxUtils {
       const mozilla::gfx::CICP::ColourPrimaries,
       mozilla::LazyLogModule& aLogger);
 
+  static mozilla::Maybe<mozilla::gfx::ColorSpace2> CicpToColorPrimaries(
+      const mozilla::gfx::CICP::ColourPrimaries,
+      mozilla::LazyLogModule& aLogger);
+
   static mozilla::Maybe<mozilla::gfx::TransferFunction> CicpToTransferFunction(
       const mozilla::gfx::CICP::TransferCharacteristics);
 

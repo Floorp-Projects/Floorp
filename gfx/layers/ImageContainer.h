@@ -669,6 +669,7 @@ struct PlanarYCbCrData {
   StereoMode mStereoMode = StereoMode::MONO;
   gfx::ColorDepth mColorDepth = gfx::ColorDepth::COLOR_8;
   gfx::YUVColorSpace mYUVColorSpace = gfx::YUVColorSpace::Default;
+  gfx::ColorSpace2 mColorPrimaries = gfx::ColorSpace2::UNKNOWN;
   gfx::TransferFunction mTransferFunction = gfx::TransferFunction::BT709;
   gfx::ColorRange mColorRange = gfx::ColorRange::LIMITED;
   gfx::ChromaSubsampling mChromaSubsampling = gfx::ChromaSubsampling::FULL;
