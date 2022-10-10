@@ -17,7 +17,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
-import java.util.ArrayDeque
 
 internal class SearchDialogFragmentTest {
     private val navController: NavController = mockk()
@@ -36,14 +35,14 @@ internal class SearchDialogFragmentTest {
 
     @Test
     fun `GIVEN this is the only visible fragment WHEN asking for the previous destination THEN return null`() {
-        every { navController.backStack } returns ArrayDeque(listOf(getDestination(fragmentName)))
+        every { navController.backQueue } returns ArrayDeque(listOf(getDestination(fragmentName)))
 
         assertNull(fragment.getPreviousDestination())
     }
 
     @Test
     fun `GIVEN this and FragmentB on top of this are visible WHEN asking for the previous destination THEN return null`() {
-        every { navController.backStack } returns ArrayDeque(
+        every { navController.backQueue } returns ArrayDeque(
             listOf(
                 getDestination(fragmentName),
                 getDestination("FragmentB"),
@@ -56,7 +55,7 @@ internal class SearchDialogFragmentTest {
     @Test
     fun `GIVEN FragmentA, this and FragmentB are visible WHEN asking for the previous destination THEN return FragmentA`() {
         val fragmentADestination = getDestination("FragmentA")
-        every { navController.backStack } returns ArrayDeque(
+        every { navController.backQueue } returns ArrayDeque(
             listOf(
                 fragmentADestination,
                 getDestination(fragmentName),
@@ -70,7 +69,7 @@ internal class SearchDialogFragmentTest {
     @Test
     fun `GIVEN FragmentA and this on top of it are visible WHEN asking for the previous destination THEN return FragmentA`() {
         val fragmentADestination = getDestination("FragmentA")
-        every { navController.backStack } returns ArrayDeque(
+        every { navController.backQueue } returns ArrayDeque(
             listOf(
                 fragmentADestination,
                 getDestination(fragmentName),

@@ -917,7 +917,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     internal fun getPreviousDestination(): NavBackStackEntry? {
         // This duplicates the platform functionality for "previousBackStackEntry" but additionally skips this entry.
 
-        val descendingEntries = findNavController().backStack.descendingIterator()
+        val descendingEntries = findNavController().backQueue.reversed().iterator()
         // Throw the topmost destination away.
         if (descendingEntries.hasNext()) {
             descendingEntries.next()
