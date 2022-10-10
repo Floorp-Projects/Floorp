@@ -76,7 +76,10 @@ DeviceManagerDx::DeviceManagerDx()
   mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_11_0);
   mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_10_1);
   mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_10_0);
+  MOZ_COUNT_CTOR(DeviceManagerDx);
 }
+
+DeviceManagerDx::~DeviceManagerDx() { MOZ_COUNT_DTOR(DeviceManagerDx); }
 
 bool DeviceManagerDx::LoadD3D11() {
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);

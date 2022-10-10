@@ -52,6 +52,7 @@ class DeviceManagerDx final {
   static void Shutdown();
 
   DeviceManagerDx();
+  ~DeviceManagerDx();
 
   static DeviceManagerDx* Get() { return sInstance; }
 

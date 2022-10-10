@@ -26,7 +26,11 @@ namespace mozilla {
 using Microsoft::WRL::ComPtr;
 
 MFMediaSource::MFMediaSource()
-    : mPresentationEnded(false), mIsAudioEnded(false), mIsVideoEnded(false) {}
+    : mPresentationEnded(false), mIsAudioEnded(false), mIsVideoEnded(false) {
+  MOZ_COUNT_CTOR(MFMediaSource);
+}
+
+MFMediaSource::~MFMediaSource() { MOZ_COUNT_DTOR(MFMediaSource); }
 
 HRESULT MFMediaSource::RuntimeClassInitialize(
     const Maybe<AudioInfo>& aAudio, const Maybe<VideoInfo>& aVideo,

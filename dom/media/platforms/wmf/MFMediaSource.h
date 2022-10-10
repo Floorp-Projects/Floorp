@@ -41,6 +41,8 @@ class MFMediaSource
           IMFMediaSource, IMFRateControl, IMFRateSupport, IMFGetService> {
  public:
   MFMediaSource();
+  ~MFMediaSource();
+
   HRESULT RuntimeClassInitialize(const Maybe<AudioInfo>& aAudio,
                                  const Maybe<VideoInfo>& aVideo,
                                  nsISerialEventTarget* aManagerThread);

@@ -133,9 +133,14 @@ MFMediaEngineStreamWrapper::FakeDecodedDataCreator::FakeDecodedDataCreator(
 }
 
 MFMediaEngineStream::MFMediaEngineStream()
-    : mIsShutdown(false), mIsSelected(false), mReceivedEOS(false) {}
+    : mIsShutdown(false), mIsSelected(false), mReceivedEOS(false) {
+  MOZ_COUNT_CTOR(MFMediaEngineStream);
+}
 
-MFMediaEngineStream::~MFMediaEngineStream() { MOZ_ASSERT(IsShutdown()); }
+MFMediaEngineStream::~MFMediaEngineStream() {
+  MOZ_ASSERT(IsShutdown());
+  MOZ_COUNT_DTOR(MFMediaEngineStream);
+}
 
 HRESULT MFMediaEngineStream::RuntimeClassInitialize(
     uint64_t aStreamId, const TrackInfo& aInfo, MFMediaSource* aParentSource) {
