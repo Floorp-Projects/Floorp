@@ -121,12 +121,12 @@
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
          Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">ਨਿੱਜੀ ਤੌਰ \'ਤੇ ਖੋਜੋ</string>
+    <string name="text_selection_search_action">ਨਿੱਜੀ ਤੌਰ ਉੱਤੇ ਖੋਜੋ</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
     <string name="about_content"><![CDATA[<p>%1$s ਕੰਟਰੋਲ ਤੁਹਾਡੇ ਹੱਥ ਦਿੰਦਾ ਹੈ।</p>
-<p>ਇਸ ਨੂੰ ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਰ ਵਜੋਂ ਵਰਤੋਂ:
+<p>ਇਸ ਨੂੰ ਨਿੱਜੀ ਬਰਾਊਜ਼ਰ ਵਜੋਂ ਵਰਤੋਂ:
   <ul>
     <li>ਐਪ ਦੇ ਵਿੱਚ ਖੋਲ੍ਹੋ ਅਤੇ ਬਰਾਊਜ਼ ਕਰੋp</li>
     <li>ਟਰੈਕਰਾਂ ਤੇ ਲਾਓ ਪਾਬੰਦੀ (ਜਾਂ ਟਰੈਕਰਾਂ ਨੂੰ ਇਜਾਜ਼ਤ ਦੇਣ ਲਈ ਸੈਟਿੰਗਾਂ ਅੱਪਡੇਟ ਕਰੋ)</li>
@@ -458,7 +458,7 @@
          the app store installed on the device (usually that's Google Play). -->
     <string name="external_app_prompt_no_app">ਤੁਹਾਡੇ ਯੰਤਰ ਉੱਪਰਲੀ ਕੋਈ ਵੀ ਐਪ ਇਸ ਤੰਦ ਨੂੰ ਖੋਲ੍ਹਣ ਦੇ ਕਾਬਲ ਨਹੀਂ ਹੈ। ਤੁਸੀਂ %2$s ਦੇ ਲਈ ਕਿਸੇ ਕਾਬਲ ਐਪ ਨੂੰ ਲੱਭਣ ਲਈ %1$s ਛੱਡ ਸਕਦੇ ਹੋ।</string>
     <!-- This label is shown above a list of apps that can be used to open a given link -->
-    <string name="external_multiple_apps_matched_exit">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਤੋਂ ਬਾਹਰ ਨਿਕਲਣਾ ਹੈ?</string>
+    <string name="external_multiple_apps_matched_exit">ਨਿੱਜੀ ਬਰਾਊਜ਼ਿੰਗ ਤੋਂ ਬਾਹਰ ਨਿਕਲਣਾ ਹੈ?</string>
 
     <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
     <string name="download_snackbar_finished">%1$s ਮੁਕੰਮਲ</string>
@@ -524,7 +524,7 @@
 
 
     <!-- Onboarding: Description -->
-    <string moz:removedIn="106" name="onboarding_description">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਦਾ ਨਵਾਂ ਪੜਾਅ, ਜਿਸ ਦੀ ਤੁਸੀਂ ਆਸ ਕਰਦੇ ਹੋ</string>
+    <string moz:removedIn="106" name="onboarding_description">ਨਿੱਜੀ ਬਰਾਊਜ਼ਿੰਗ ਦਾ ਨਵਾਂ ਪੜਾਅ, ਜਿਸ ਦੀ ਤੁਸੀਂ ਆਸ ਕਰਦੇ ਹੋ</string>
 
     <!-- Onboarding: Incognito Title -->
     <string moz:removedIn="106" name="onboarding_incognito_title">ਜਿੱਥੇ ਅਣਪਛਾਤਾ ਅਦਿੱਖ ਬਣ ਜਾਂਦਾ ਹੈ</string>
@@ -551,7 +551,7 @@
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">ਆਪਣੀ ਪਰਦੇਦਾਰੀ ਨੂੰ ਕੰਟਰੋਲ ਕਰੋ</string>
     <!-- First run tour (Default browser): Text. -->
-    <string name="firstrun_defaultbrowser_text2">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਨੂੰ ਅਗਲੇ ਪੱਧਰ ਤੇ ਲੈ ਜਾਓ। ਇਸ਼ਤਿਹਾਰ ਅਤੇ ਹੋਰ ਸਮੱਗਰੀ, ਜੋ ਕਿ ਤੁਹਾਨੂੰ ਸਾਈਟਾਂ ਉੱਤੇ ਟਰੈਕ ਕਰ ਅਤੇ ਸਫ਼ਾ ਲੋਡ ਕਰਨ ਨੂੰ ਹੌਲੀ ਕਰ ਸਕਦੀ ਹੈ, ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਓ।</string>
+    <string name="firstrun_defaultbrowser_text2">ਨਿੱਜੀ ਬਰਾਊਜ਼ਿੰਗ ਨੂੰ ਅਗਲੇ ਪੱਧਰ ਤੇ ਲੈ ਜਾਓ। ਇਸ਼ਤਿਹਾਰ ਅਤੇ ਹੋਰ ਸਮੱਗਰੀ, ਜੋ ਕਿ ਤੁਹਾਨੂੰ ਸਾਈਟਾਂ ਉੱਤੇ ਟਰੈਕ ਕਰ ਅਤੇ ਸਫ਼ਾ ਲੋਡ ਕਰਨ ਨੂੰ ਹੌਲੀ ਕਰ ਸਕਦੀ ਹੈ, ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਓ।</string>
 
     <!-- First run tour (Search): Title -->
     <string name="firstrun_search_title">ਤੁਹਾਡੀ ਖੋਜ, ਤੁਹਾਡਾ ਢੰਗ</string>
@@ -568,7 +568,7 @@
     <string name="firstrun_privacy_title">ਪਰਦੇਦਾਰੀ ਨੂੰ ਆਦਤ ਬਣਾਓ</string>
 
     <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
-    <string name="firstrun_privacy_text">%1$s ਨੂੰ ਆਪਣਾ ਮੂਲ ਬਰਾਊਜ਼ਰ ਬਣਾਓ ਅਤੇ ਜਦੋਂ ਵੀ ਤੁਸੀਂ ਹੋਰ ਐਪਾਂ ਤੋਂ ਵੈਬ-ਸਫ਼ੇ ਨੂੰ ਖੋਲ੍ਹੋ ਤਾਂ ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਦਾ ਫਾਇਦਾ ਲਵੋ।</string>
+    <string name="firstrun_privacy_text">%1$s ਨੂੰ ਆਪਣਾ ਮੂਲ ਬਰਾਊਜ਼ਰ ਬਣਾਓ ਅਤੇ ਜਦੋਂ ਵੀ ਤੁਸੀਂ ਹੋਰ ਐਪਾਂ ਤੋਂ ਵੈਬ-ਸਫ਼ੇ ਨੂੰ ਖੋਲ੍ਹੋ ਤਾਂ ਨਿੱਜੀ ਬਰਾਊਜ਼ਿੰਗ ਦਾ ਫਾਇਦਾ ਲਵੋ।</string>
 
     <string name="firstrun_close_button">ਠੀਕ ਹੈ, ਸਮਝ ਗਏ!</string>
     <string name="firstrun_skip_button">ਛੱਡੋ</string>
@@ -599,7 +599,7 @@
     * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
     * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
     -->
-    <string name="notification_browsing_session_channel_name">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਰਿੰਗ ਕਾਰਜਕਾਲ</string>
+    <string name="notification_browsing_session_channel_name">ਨਿੱਜੀ ਬਰਾਊਜ਼ਿੰਗ ਸ਼ੈਸ਼ਨ</string>
 
     <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
@@ -930,7 +930,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Headline for the tab crash report screen -->
     <string name="tab_crash_report_headline">ਅਫ਼ਸੋਸ। ਸਾਨੂੰ ਇਸ ਟੈਬ ਨਾਲ ਸਮੱਸਿਆ ਆ ਰਹੀ ਹੈ।</string>
     <!-- Subtitle for the tab crash report screen -->
-    <string name="tab_crash_report_description">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਰ ਵਜੋਂ, ਅਸੀਂ ਇਸ ਟੈਬ ਲਈ ਕੁਝ ਨਹੀਂ ਸੰਭਾਲਿਆ ਅਤੇ ਬਹਾਲ ਨਹੀਂ ਕਰ ਸਕਦੇ ਹਾਂ।</string>
+    <string name="tab_crash_report_description">ਨਿੱਜੀ ਬਰਾਊਜ਼ਰ ਵਜੋਂ, ਅਸੀਂ ਇਸ ਟੈਬ ਲਈ ਕੁਝ ਨਹੀਂ ਸੰਭਾਲਿਆ ਅਤੇ ਬਹਾਲ ਨਹੀਂ ਕਰ ਸਕਦੇ ਹਾਂ।</string>
     <!-- Label for button to close the tab-->
     <string name="tab_crash_report_close_tab_button_label">ਟੈਬ ਬੰਦ ਕਰੋ</string>
 
@@ -1041,7 +1041,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
-    <string name="promote_search_widget_dialog_subtitle">ਹੁਣ ਤੁਸੀਂ ਆਪਣੀ ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਕਰੋ, ਪਰ ਅਗਲੀ ਵਾਰ ਫ਼ੌਰਨ ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਆਪਣੀ ਮੁੱਖ ਸਕਰੀਨ ਤੋਂ %1$s ਵਿਜੈਟ ਵਰਤ ਸਕਦੇ ਹੋ।</string>
+    <string name="promote_search_widget_dialog_subtitle">ਹੁਣ ਤੁਸੀਂ ਆਪਣੀ ਨਿੱਜੀ ਬਰਾਊਜ਼ਿੰਗ ਕਰੋ, ਪਰ ਅਗਲੀ ਵਾਰ ਫ਼ੌਰਨ ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਆਪਣੀ ਮੁੱਖ ਸਕਰੀਨ ਤੋਂ %1$s ਵਿਜੈਟ ਵਰਤ ਸਕਦੇ ਹੋ।</string>
 
     !-- This is te text from add search widget to home screen button .The button is located on
     promote search widget dialog. --&gt;

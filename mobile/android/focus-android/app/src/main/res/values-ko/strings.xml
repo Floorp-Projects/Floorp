@@ -502,6 +502,9 @@
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
     <string name="onboarding_first_screen_title">%1$s에 오신 것을 환영합니다</string>
 
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">빠르고. 사생활 보호되고. 방해 없는.</string>
+
     <!-- New Onboarding flow first screen button label-->
     <string name="onboarding_first_screen_button_text">시작하기</string>
 
@@ -511,6 +514,10 @@
 
     <!-- New Onboarding flow second screen subtitle the one that appears under title -->
     <string name="onboarding_second_screen_subtitle_one">추가적인 개인 정보 보호를 위해 앱을 닫으면 방문 기록이 삭제됩니다.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">링크를 열 때마다 내 데이터를 보호하려면 %1$s를 기본 브라우저로 설정하세요.</string>
 
     <!-- New Onboarding flow second screen make Focus default browser button label-->
     <string name="onboarding_second_screen_default_browser_button_text">기본 브라우저로 설정하기</string>
@@ -1001,6 +1008,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
     <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">이 사이트가 당신을 추적하는 것 같습니다. 사이트 설정에서 방패를 클릭하여 추적자를 차단하세요. </string>
+
+    <string name="cfr_for_toolbar_shield_icon2">잡았다! %@가 사용자를 감시하는 이 사이트를 중지했습니다. 차단된 항목에 대한 정보를 보려면 방패를 탭하세요.</string>
 
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">팝업 닫기</string>

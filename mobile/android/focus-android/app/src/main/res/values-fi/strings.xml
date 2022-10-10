@@ -296,6 +296,12 @@
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Avaa sovellus sormenjäljellä</string>
 
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string name="preference_security_biometric_summary2">Avaa lukitus sormenjäljellä, jos olet lisännyt pikakuvakkeita tai kun verkkosivusto on jo auki %s -selaimessa.</string>
+
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
     <string name="preference_privacy_secure_mode">Häivetila</string>
@@ -508,6 +514,13 @@
     <!-- %1$s will be replaced by the app short name(Focus) -->
     <string name="onboarding_second_screen_title">%1$s ei ole kuten muut selaimet</string>
 
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Tyhjennämme historian yksityisyyden lisäämiseksi, kun suljet sovelluksen.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Aseta %1$s oletukseksi suojataksesi tietosi jokaisella avaamallasi linkillä.</string>
+
     <!-- New Onboarding flow second screen make Focus default browser button label-->
     <string name="onboarding_second_screen_default_browser_button_text">Aseta oletusselaimeksi</string>
 
@@ -578,6 +591,10 @@
 
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">EI</string>
+
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Pikakuvake avautuu ilman tehostettua seurannan suojausta</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -691,6 +708,21 @@
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Automaattinen toisto</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Salliaksesi sen:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Mene Androidin asetuksiin</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Napauta <b>Käyttöoikeudet</b>]]></string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Mene asetuksiin</string>
+
+    <!-- Third step for allowing a permission. The placeholder will be updated by, for example, "Camera" -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Aseta <b>%1$s</b> PÄÄLLÄ-asentoon]]></string>
 
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">Kamera</string>
@@ -815,6 +847,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Käyttäytyykö sivusto odottamattomasti?\n Kokeile kytkeä seurannan suojaus pois päältä</string>
 
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Puuttuuko sivustolta sisältöä tai toimiiko se oudosti?\n
+    Kokeile ottaa tehostettu seurannan suojaus pois päältä</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Pääsy yhdellä napautuksella sivustoille, joilla useimmiten vierailet%1$s Valikko > Lisää linkki aloitusnäyttöön]]></string>
@@ -840,9 +877,20 @@
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Älä näytä vinkkejä aloitusnäytössä</string>
 
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Haluatko pitää tehostetun seurannan suojauksen pois käytöstä sivustoilla johon luotat?\n
+        Lisää sivusto sallittujen listalle asetuksista
+    </string>
+
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
     <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Kyllä, meillä on uusi ulkoasu!\n Lue lisää %1$siin tehdyistä päivityksistä.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Luo pikakuvakkeita sivustoille, joilla käyt useimmiten:\n
+    Valitse %1$s-valikosta Lisää pikakuvakkeisiin</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Uusi välilehti avattu</string>
@@ -930,6 +978,9 @@
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Nimeä uudelleen</string>
 
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Pikakuvakkeen nimi</string>
+
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">Tallennettuja ja jaettuja kuvia &lt;b&gt;ei poisteta&lt;/b&gt; kun tyhjennät %1$sin historian</string>
@@ -961,6 +1012,8 @@
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
     <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Vaikuttaa siltä, että tämä sivusto yritti seurata sinua. Napsauta kilpeä nähdäksesi sivuston asetukset ja seurannan estotilastot.</string>
 
+    <string name="cfr_for_toolbar_shield_icon2">Kiinni jäi! Tämän sivuston vakoilu sinua kohtaan on lopetettu. Napauta kilpeä milloin tahansa nähdäksesi, mitä estämme.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Sulje ponnahdusikkuna</string>
 
@@ -984,8 +1037,20 @@
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Hakuwidget</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
     <string name="promote_search_widget_dialog_title">Selaushistoria tyhjennetty! 🎉</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
-    </resources>
+    <string name="promote_search_widget_dialog_subtitle">Annamme sinulle rauhan yksityiseen selailuun, mutta halutessasi saat nopeamman lähdön ensi kerralla lisäämällä %1$s-widgetin aloitusnäytöllesi.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Lisää widget aloitusnäyttöön</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Widget lisätty aloitusnäyttöön</string>
+</resources>

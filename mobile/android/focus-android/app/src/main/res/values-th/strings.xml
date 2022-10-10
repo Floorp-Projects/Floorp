@@ -295,12 +295,11 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">ใช้ลายนิ้วมือเพื่อปลดล็อคแอป</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">ลายนิ้วมือของคุณสามารถปลดล็อค %1$s หาก URL ถูกเปิดอยู่แล้วในแอป การพรางตัวจะถูกเปิด</string>
-
     <string name="preference_security_biometric_summary2">ปลดล็อกโดยใช้ลายนิ้วมือหากคุณได้เพิ่มทางลัดหรือเมื่อเว็บไซต์เปิดอยู่ใน %s แล้ว</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -367,7 +366,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">แสดงเคล็ดลับหน้าจอหลัก</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">แสดงเคล็ดลับหน้าจอหลัก</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">เพิ่มเครื่องมือค้นหา</string>
@@ -497,33 +496,52 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">ยินดีต้อนรับสู่ %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">ยินดีต้อนรับสู่ %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">ปิด</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">ยินดีต้อนรับสู่ %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">เร็ว ส่วนตัว ไม่มีการรบกวน</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">เริ่มต้นใช้งาน</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">ตั้งเป็นเบราว์เซอร์เริ่มต้น</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">ข้าม</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">การเรียกดูแบบส่วนตัวที่เหนือไปอีกขั้นตามที่คุณต้องการ</string>
+    <string moz:removedIn="106" name="onboarding_description">การเรียกดูแบบส่วนตัวที่เหนือไปอีกขั้นตามที่คุณต้องการ</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">ปกปิดตัวตนของคุณไม่ให้คนอื่นเห็น</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">ปกปิดตัวตนของคุณไม่ให้คนอื่นเห็น</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s เป็นเบราว์เซอร์ที่เน้นเรื่องความเป็นส่วนตัวซึ่งมาพร้อมการป้องกันการติดตามและคุกกี้ที่แข็งแกร่งในตัว</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s เป็นเบราว์เซอร์ที่เน้นเรื่องความเป็นส่วนตัวซึ่งมาพร้อมการป้องกันการติดตามและคุกกี้ที่แข็งแกร่งในตัว</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">ท่องเว็บเหมือนมันไม่เคยเกิดขึ้น</string>
+    <string moz:removedIn="106" name="onboarding_history_title">ท่องเว็บเหมือนมันไม่เคยเกิดขึ้น</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">เพียงแตะครั้งเดียวก็สามารถลบประวัติการเรียกดูและคุกกี้ของคุณ รวมทั้งหยุดไม่ให้โฆษณาตามรอยคุณในทุกที่</string>
-    <string name="onboarding_history_description2">เพียงแตะครั้งเดียวก็สามารถลบประวัติการเรียกดูและคุกกี้ รวมทั้งหยุดไม่ให้โฆษณาตามรอยคุณในทุกที่</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">เพียงแตะครั้งเดียวก็สามารถลบประวัติการเรียกดูและคุกกี้ รวมทั้งหยุดไม่ให้โฆษณาตามรอยคุณในทุกที่</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">ปรับแต่งความเป็นส่วนตัวให้เข้ากับทุกสถานการณ์</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">ปรับแต่งความเป็นส่วนตัวให้เข้ากับทุกสถานการณ์</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">คุณสามารถปรับการตั้งค่าความเป็นส่วนตัวให้สูงขึ้นหรือต่ำลงได้เมื่อคุณจำเป็นต้องเปลี่ยนรูปแบบการเรียกดู</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">คุณสามารถปรับการตั้งค่าความเป็นส่วนตัวให้สูงขึ้นหรือต่ำลงได้เมื่อคุณจำเป็นต้องเปลี่ยนรูปแบบการเรียกดู</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">เริ่มการเรียกดู</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">เริ่มการเรียกดู</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">เพิ่มความเป็นส่วนตัวของคุณ</string>
@@ -821,7 +839,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">ไซต์ไม่มีเนื้อหาอะไรเลยหรือทำงานแปลก ๆ?\n
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">ไซต์ไม่มีเนื้อหาอะไรเลยหรือทำงานแปลก ๆ?\n
     ลองปิดการป้องกันการติดตามที่มากขึ้น</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -843,7 +861,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">ต้องการดูเว็บไซต์รุ่นเต็มหรือไม่?\n
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">ต้องการดูเว็บไซต์รุ่นเต็มหรือไม่?\n
         เปิด ไซต์เดสก์ท็อป จากเมนู %1$s</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -851,17 +869,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">ต้องการปิดการป้องกันการติดตามที่มากขึ้นสำหรับไซต์ที่คุณเชื่อถือหรือไม่?\n
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">ต้องการปิดการป้องกันการติดตามที่มากขึ้นสำหรับไซต์ที่คุณเชื่อถือหรือไม่?\n
         เพิ่มลงในรายการอนุญาตในการตั้งค่า
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">ใช่ เรามีรูปลักษณ์โฉมใหม่แล้ว!\n อ่านเพิ่มเติมเกี่ยวกับสิ่งนี้และการอัปเดตอื่น ๆ ของ %1$s</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">ใช่ เรามีรูปลักษณ์โฉมใหม่แล้ว!\n อ่านเพิ่มเติมเกี่ยวกับสิ่งนี้และการอัปเดตอื่น ๆ ของ %1$s</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">สร้างทางลัดไปยังไซต์ที่คุณเข้าชมบ่อยที่สุด:\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">สร้างทางลัดไปยังไซต์ที่คุณเข้าชมบ่อยที่สุด:\n
     เลือก เพิ่มทางลัด จากเมนู %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -982,7 +1000,8 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">ดูเหมือนว่าไซต์นี้พยายามจะตามรอยคุณ คลิกที่โล่สำหรับการตั้งค่าไซต์และสถิติการปิดกั้นตัวติดตาม</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">ดูเหมือนว่าไซต์นี้พยายามจะตามรอยคุณ คลิกที่โล่สำหรับการตั้งค่าไซต์และสถิติการปิดกั้นตัวติดตาม</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">ปิดป๊อปอัป</string>
 
@@ -995,6 +1014,26 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">ปิด</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">กำจัดข้อมูลส่วนตัว ประวัติการเรียกดู และอื่น ๆ จากวาระนี้โดยแตะที่ปุ่มถังขยะ ลองดูสิ!</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">กำจัดข้อมูลส่วนตัว ประวัติการเรียกดู และอื่น ๆ จากวาระนี้โดยแตะที่ปุ่มถังขยะ ลองดูสิ!</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">ปิด</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">วิดเจ็ตการค้นหา</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">ล้างประวัติการท่องเว็บแล้ว! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_button_text">เพิ่มวิดเจ็ตไปที่หน้าจอหลัก</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">เพิ่มวิดเจ็ตในหน้าจอหลักแล้ว</string>
 </resources>
