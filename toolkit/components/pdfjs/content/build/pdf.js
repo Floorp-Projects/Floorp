@@ -35,7 +35,7 @@ return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ([
 /* 0 */,
 /* 1 */
-/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+/***/ ((__unused_webpack_module, exports) => {
 
 
 
@@ -68,9 +68,7 @@ exports.stringToUTF8String = stringToUTF8String;
 exports.unreachable = unreachable;
 exports.utf8StringToString = utf8StringToString;
 exports.warn = warn;
-
-__w_pdfjs_require__(2);
-
+;
 const IDENTITY_MATRIX = [1, 0, 0, 1, 0, 0];
 exports.IDENTITY_MATRIX = IDENTITY_MATRIX;
 const FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
@@ -305,8 +303,7 @@ const VerbosityLevel = {
 exports.VerbosityLevel = VerbosityLevel;
 const CMapCompressionType = {
   NONE: 0,
-  BINARY: 1,
-  STREAM: 2
+  BINARY: 1
 };
 exports.CMapCompressionType = CMapCompressionType;
 const OPS = {
@@ -387,11 +384,8 @@ const OPS = {
   paintFormXObjectEnd: 75,
   beginGroup: 76,
   endGroup: 77,
-  beginAnnotations: 78,
-  endAnnotations: 79,
   beginAnnotation: 80,
   endAnnotation: 81,
-  paintJpegXObject: 82,
   paintImageMaskXObject: 83,
   paintImageMaskXObjectGroup: 84,
   paintImageXObject: 85,
@@ -404,13 +398,11 @@ const OPS = {
 };
 exports.OPS = OPS;
 const UNSUPPORTED_FEATURES = {
-  unknown: "unknown",
   forms: "forms",
   javaScript: "javaScript",
   signatures: "signatures",
   smask: "smask",
   shadingPattern: "shadingPattern",
-  font: "font",
   errorTilingPattern: "errorTilingPattern",
   errorExtGState: "errorExtGState",
   errorXObject: "errorXObject",
@@ -836,10 +828,6 @@ class Util {
     return [m[3] / d, -m[1] / d, -m[2] / d, m[0] / d, (m[2] * m[5] - m[4] * m[3]) / d, (m[4] * m[1] - m[5] * m[0]) / d];
   }
 
-  static apply3dTransform(m, v) {
-    return [m[0] * v[0] + m[1] * v[1] + m[2] * v[2], m[3] * v[0] + m[4] * v[1] + m[5] * v[2], m[6] * v[0] + m[7] * v[1] + m[8] * v[2]];
-  }
-
   static singularValueDecompose2dScale(m) {
     const transpose = [m[0], m[2], m[1], m[3]];
     const a = m[0] * transpose[0] + m[1] * transpose[2];
@@ -1079,29 +1067,6 @@ function createPromiseCapability() {
 
 /***/ }),
 /* 2 */
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __w_pdfjs_require__) => {
-
-
-
-var _is_node = __w_pdfjs_require__(3);
-
-;
-
-/***/ }),
-/* 3 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.isNodeJS = void 0;
-const isNodeJS = false;
-exports.isNodeJS = isNodeJS;
-
-/***/ }),
-/* 4 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -1116,27 +1081,27 @@ exports.version = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
-var _annotation_storage = __w_pdfjs_require__(5);
+var _annotation_storage = __w_pdfjs_require__(3);
 
-var _display_utils = __w_pdfjs_require__(8);
+var _display_utils = __w_pdfjs_require__(6);
 
-var _font_loader = __w_pdfjs_require__(11);
+var _font_loader = __w_pdfjs_require__(9);
 
-var _canvas = __w_pdfjs_require__(12);
+var _canvas = __w_pdfjs_require__(10);
 
-var _worker_options = __w_pdfjs_require__(15);
+var _worker_options = __w_pdfjs_require__(14);
 
-var _is_node = __w_pdfjs_require__(3);
+var _is_node = __w_pdfjs_require__(12);
 
-var _message_handler = __w_pdfjs_require__(16);
+var _message_handler = __w_pdfjs_require__(15);
 
-var _metadata = __w_pdfjs_require__(17);
+var _metadata = __w_pdfjs_require__(16);
 
-var _optional_content_config = __w_pdfjs_require__(18);
+var _optional_content_config = __w_pdfjs_require__(17);
 
-var _transport_stream = __w_pdfjs_require__(19);
+var _transport_stream = __w_pdfjs_require__(18);
 
-var _xfa_text = __w_pdfjs_require__(20);
+var _xfa_text = __w_pdfjs_require__(19);
 
 const DEFAULT_RANGE_CHUNK_SIZE = 65536;
 const RENDERING_CANCELLED_TIMEOUT = 100;
@@ -1266,6 +1231,10 @@ function getDocument(src) {
     params.isEvalSupported = true;
   }
 
+  if (typeof params.isOffscreenCanvasSupported !== "boolean") {
+    params.isOffscreenCanvasSupported = !_is_node.isNodeJS;
+  }
+
   if (typeof params.disableFontFace !== "boolean") {
     params.disableFontFace = _is_node.isNodeJS;
   }
@@ -1363,25 +1332,25 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '3.0.120',
-    source: {
-      data: source.data,
-      url: source.url,
-      password: source.password,
-      disableAutoFetch: source.disableAutoFetch,
-      rangeChunkSize: source.rangeChunkSize,
-      length: source.length
-    },
-    maxImageSize: source.maxImageSize,
-    disableFontFace: source.disableFontFace,
+    apiVersion: '3.0.200',
+    data: source.data,
+    password: source.password,
+    disableAutoFetch: source.disableAutoFetch,
+    rangeChunkSize: source.rangeChunkSize,
+    length: source.length,
     docBaseUrl: source.docBaseUrl,
-    ignoreErrors: source.ignoreErrors,
-    isEvalSupported: source.isEvalSupported,
-    fontExtraProperties: source.fontExtraProperties,
     enableXfa: source.enableXfa,
-    useSystemFonts: source.useSystemFonts,
-    cMapUrl: source.useWorkerFetch ? source.cMapUrl : null,
-    standardFontDataUrl: source.useWorkerFetch ? source.standardFontDataUrl : null
+    evaluatorOptions: {
+      maxImageSize: source.maxImageSize,
+      disableFontFace: source.disableFontFace,
+      ignoreErrors: source.ignoreErrors,
+      isEvalSupported: source.isEvalSupported,
+      isOffscreenCanvasSupported: source.isOffscreenCanvasSupported,
+      fontExtraProperties: source.fontExtraProperties,
+      useSystemFonts: source.useSystemFonts,
+      cMapUrl: source.useWorkerFetch ? source.cMapUrl : null,
+      standardFontDataUrl: source.useWorkerFetch ? source.standardFontDataUrl : null
+    }
   });
 
   if (source.data) {
@@ -2165,35 +2134,31 @@ class PDFPageProxy {
 exports.PDFPageProxy = PDFPageProxy;
 
 class LoopbackPort {
-  constructor() {
-    this._listeners = [];
-    this._deferred = Promise.resolve();
-  }
+  #listeners = [];
+  #deferred = Promise.resolve();
 
   postMessage(obj, transfers) {
     const event = {
       data: structuredClone(obj, transfers)
     };
-
-    this._deferred.then(() => {
-      for (const listener of this._listeners) {
+    this.#deferred.then(() => {
+      for (const listener of this.#listeners) {
         listener.call(this, event);
       }
     });
   }
 
   addEventListener(name, listener) {
-    this._listeners.push(listener);
+    this.#listeners.push(listener);
   }
 
   removeEventListener(name, listener) {
-    const i = this._listeners.indexOf(listener);
-
-    this._listeners.splice(i, 1);
+    const i = this.#listeners.indexOf(listener);
+    this.#listeners.splice(i, 1);
   }
 
   terminate() {
-    this._listeners.length = 0;
+    this.#listeners.length = 0;
   }
 
 }
@@ -2455,7 +2420,6 @@ class WorkerTransport {
     this.loadingTask = loadingTask;
     this.commonObjs = new PDFObjects();
     this.fontLoader = new _font_loader.FontLoader({
-      docId: loadingTask.docId,
       onUnsupportedFeature: this._onUnsupportedFeature.bind(this),
       ownerDocument: params.ownerDocument,
       styleElement: params.styleElement
@@ -3387,13 +3351,13 @@ class InternalRenderTask {
 
 }
 
-const version = '3.0.120';
+const version = '3.0.200';
 exports.version = version;
-const build = '91bdcd8b2';
+const build = '348665934';
 exports.build = build;
 
 /***/ }),
-/* 5 */
+/* 3 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -3405,9 +3369,9 @@ exports.PrintAnnotationStorage = exports.AnnotationStorage = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
-var _editor = __w_pdfjs_require__(6);
+var _editor = __w_pdfjs_require__(4);
 
-var _murmurhash = __w_pdfjs_require__(10);
+var _murmurhash = __w_pdfjs_require__(8);
 
 class AnnotationStorage {
   constructor() {
@@ -3570,7 +3534,7 @@ class PrintAnnotationStorage extends AnnotationStorage {
 exports.PrintAnnotationStorage = PrintAnnotationStorage;
 
 /***/ }),
-/* 6 */
+/* 4 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -3580,7 +3544,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.AnnotationEditor = void 0;
 
-var _tools = __w_pdfjs_require__(7);
+var _tools = __w_pdfjs_require__(5);
 
 var _util = __w_pdfjs_require__(1);
 
@@ -3903,7 +3867,7 @@ class AnnotationEditor {
 exports.AnnotationEditor = AnnotationEditor;
 
 /***/ }),
-/* 7 */
+/* 5 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -3917,7 +3881,7 @@ exports.opacityToHex = opacityToHex;
 
 var _util = __w_pdfjs_require__(1);
 
-var _display_utils = __w_pdfjs_require__(8);
+var _display_utils = __w_pdfjs_require__(6);
 
 function bindEvents(obj, element, names) {
   for (const name of names) {
@@ -4696,7 +4660,7 @@ class AnnotationEditorUIManager {
 exports.AnnotationEditorUIManager = AnnotationEditorUIManager;
 
 /***/ }),
-/* 8 */
+/* 6 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -4718,7 +4682,7 @@ exports.isPdfFile = isPdfFile;
 exports.isValidFetchUrl = isValidFetchUrl;
 exports.loadScript = loadScript;
 
-var _base_factory = __w_pdfjs_require__(9);
+var _base_factory = __w_pdfjs_require__(7);
 
 var _util = __w_pdfjs_require__(1);
 
@@ -5184,7 +5148,7 @@ function getCurrentTransformInverse(ctx) {
 }
 
 /***/ }),
-/* 9 */
+/* 7 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -5366,7 +5330,7 @@ class BaseSVGFactory {
 exports.BaseSVGFactory = BaseSVGFactory;
 
 /***/ }),
-/* 10 */
+/* 8 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -5491,7 +5455,7 @@ class MurmurHash3_64 {
 exports.MurmurHash3_64 = MurmurHash3_64;
 
 /***/ }),
-/* 11 */
+/* 9 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -5503,18 +5467,12 @@ exports.FontLoader = exports.FontFaceObject = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
-class BaseFontLoader {
+class FontLoader {
   constructor({
-    docId,
     onUnsupportedFeature,
     ownerDocument = globalThis.document,
     styleElement = null
   }) {
-    if (this.constructor === BaseFontLoader) {
-      (0, _util.unreachable)("Cannot initialize BaseFontLoader.");
-    }
-
-    this.docId = docId;
     this._onUnsupportedFeature = onUnsupportedFeature;
     this._document = ownerDocument;
     this.nativeFontFaces = [];
@@ -5528,16 +5486,13 @@ class BaseFontLoader {
   }
 
   insertRule(rule) {
-    let styleElement = this.styleElement;
+    if (!this.styleElement) {
+      this.styleElement = this._document.createElement("style");
 
-    if (!styleElement) {
-      styleElement = this.styleElement = this._document.createElement("style");
-      styleElement.id = `PDFJS_FONT_STYLE_TAG_${this.docId}`;
-
-      this._document.documentElement.getElementsByTagName("head")[0].append(styleElement);
+      this._document.documentElement.getElementsByTagName("head")[0].append(this.styleElement);
     }
 
-    const styleSheet = styleElement.sheet;
+    const styleSheet = this.styleElement.sheet;
     styleSheet.insertRule(rule, styleSheet.cssRules.length);
   }
 
@@ -5592,16 +5547,8 @@ class BaseFontLoader {
         return;
       }
 
-      await new Promise(resolve => {
-        const request = this._queueLoadingCallback(resolve);
-
-        this._prepareFontLoadEvent([rule], [font], request);
-      });
+      throw new Error("Not implemented: async font loading");
     }
-  }
-
-  _queueLoadingCallback(callback) {
-    (0, _util.unreachable)("Abstract method `_queueLoadingCallback`.");
   }
 
   get isFontLoadingAPISupported() {
@@ -5610,29 +5557,24 @@ class BaseFontLoader {
   }
 
   get isSyncFontLoadingSupported() {
-    (0, _util.unreachable)("Abstract method `isSyncFontLoadingSupported`.");
+    return (0, _util.shadow)(this, "isSyncFontLoadingSupported", true);
+  }
+
+  _queueLoadingCallback(callback) {
+    throw new Error("Not implemented: _queueLoadingCallback");
   }
 
   get _loadTestFont() {
-    (0, _util.unreachable)("Abstract method `_loadTestFont`.");
+    throw new Error("Not implemented: _loadTestFont");
   }
 
-  _prepareFontLoadEvent(rules, fontsToLoad, request) {
-    (0, _util.unreachable)("Abstract method `_prepareFontLoadEvent`.");
+  _prepareFontLoadEvent(font, request) {
+    throw new Error("Not implemented: _prepareFontLoadEvent");
   }
 
 }
 
-let FontLoader;
 exports.FontLoader = FontLoader;
-{
-  exports.FontLoader = FontLoader = class MozcentralFontLoader extends BaseFontLoader {
-    get isSyncFontLoadingSupported() {
-      return (0, _util.shadow)(this, "isSyncFontLoadingSupported", true);
-    }
-
-  };
-}
 
 class FontFaceObject {
   constructor(translatedData, {
@@ -5754,7 +5696,7 @@ class FontFaceObject {
 exports.FontFaceObject = FontFaceObject;
 
 /***/ }),
-/* 12 */
+/* 10 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -5766,13 +5708,13 @@ exports.CanvasGraphics = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
-var _display_utils = __w_pdfjs_require__(8);
+var _display_utils = __w_pdfjs_require__(6);
 
-var _pattern_helper = __w_pdfjs_require__(13);
+var _pattern_helper = __w_pdfjs_require__(11);
 
-var _image_utils = __w_pdfjs_require__(14);
+var _image_utils = __w_pdfjs_require__(13);
 
-var _is_node = __w_pdfjs_require__(3);
+var _is_node = __w_pdfjs_require__(12);
 
 const MIN_FONT_SIZE = 16;
 const MAX_FONT_SIZE = 100;
@@ -6502,9 +6444,7 @@ function putBinaryImageMask(ctx, imgData) {
 function copyCtxState(sourceCtx, destCtx) {
   const properties = ["strokeStyle", "fillStyle", "fillRule", "globalAlpha", "lineWidth", "lineCap", "lineJoin", "miterLimit", "globalCompositeOperation", "font"];
 
-  for (let i = 0, ii = properties.length; i < ii; i++) {
-    const property = properties[i];
-
+  for (const property of properties) {
     if (sourceCtx[property] !== undefined) {
       destCtx[property] = sourceCtx[property];
     }
@@ -7009,11 +6949,7 @@ class CanvasGraphics {
   setFlatness(flatness) {}
 
   setGState(states) {
-    for (let i = 0, ii = states.length; i < ii; i++) {
-      const state = states[i];
-      const key = state[0];
-      const value = state[1];
-
+    for (const [key, value] of states) {
       switch (key) {
         case "LW":
           this.setLineWidth(value);
@@ -7048,12 +6984,12 @@ class CanvasGraphics {
           break;
 
         case "CA":
-          this.current.strokeAlpha = state[1];
+          this.current.strokeAlpha = value;
           break;
 
         case "ca":
-          this.current.fillAlpha = state[1];
-          this.ctx.globalAlpha = state[1];
+          this.current.fillAlpha = value;
+          this.ctx.globalAlpha = value;
           break;
 
         case "BM":
@@ -8509,7 +8445,7 @@ for (const op in _util.OPS) {
 }
 
 /***/ }),
-/* 13 */
+/* 11 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -8522,9 +8458,9 @@ exports.getShadingPattern = getShadingPattern;
 
 var _util = __w_pdfjs_require__(1);
 
-var _display_utils = __w_pdfjs_require__(8);
+var _display_utils = __w_pdfjs_require__(6);
 
-var _is_node = __w_pdfjs_require__(3);
+var _is_node = __w_pdfjs_require__(12);
 
 const PathType = {
   FILL: "Fill",
@@ -9072,7 +9008,20 @@ class TilingPattern {
 exports.TilingPattern = TilingPattern;
 
 /***/ }),
-/* 14 */
+/* 12 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.isNodeJS = void 0;
+const isNodeJS = false;
+exports.isNodeJS = isNodeJS;
+
+/***/ }),
+/* 13 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -9131,7 +9080,7 @@ function applyMaskImageData({
 }
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -9146,7 +9095,7 @@ GlobalWorkerOptions.workerPort = GlobalWorkerOptions.workerPort === undefined ? 
 GlobalWorkerOptions.workerSrc = GlobalWorkerOptions.workerSrc === undefined ? "" : GlobalWorkerOptions.workerSrc;
 
 /***/ }),
-/* 16 */
+/* 15 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -9632,7 +9581,7 @@ class MessageHandler {
 exports.MessageHandler = MessageHandler;
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -9677,7 +9626,7 @@ class Metadata {
 exports.Metadata = Metadata;
 
 /***/ }),
-/* 18 */
+/* 17 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -9689,7 +9638,7 @@ exports.OptionalContentConfig = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
-var _murmurhash = __w_pdfjs_require__(10);
+var _murmurhash = __w_pdfjs_require__(8);
 
 const INTERNAL = Symbol("INTERNAL");
 
@@ -9940,7 +9889,7 @@ class OptionalContentConfig {
 exports.OptionalContentConfig = OptionalContentConfig;
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -9952,7 +9901,7 @@ exports.PDFDataTransportStream = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
-var _display_utils = __w_pdfjs_require__(8);
+var _display_utils = __w_pdfjs_require__(6);
 
 class PDFDataTransportStream {
   constructor(params, pdfDataRangeTransport) {
@@ -10032,22 +9981,14 @@ class PDFDataTransportStream {
 
   _onProgress(evt) {
     if (evt.total === undefined) {
-      const firstReader = this._rangeReaders[0];
-
-      if (firstReader?.onProgress) {
-        firstReader.onProgress({
-          loaded: evt.loaded
-        });
-      }
+      this._rangeReaders[0]?.onProgress?.({
+        loaded: evt.loaded
+      });
     } else {
-      const fullReader = this._fullRequestReader;
-
-      if (fullReader?.onProgress) {
-        fullReader.onProgress({
-          loaded: evt.loaded,
-          total: evt.total
-        });
-      }
+      this._fullRequestReader?.onProgress?.({
+        loaded: evt.loaded,
+        total: evt.total
+      });
     }
   }
 
@@ -10290,7 +10231,7 @@ class PDFDataTransportStreamRangeReader {
 }
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -10354,7 +10295,7 @@ class XfaText {
 exports.XfaText = XfaText;
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -10364,13 +10305,13 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.AnnotationEditorLayer = void 0;
 
-var _tools = __w_pdfjs_require__(7);
+var _tools = __w_pdfjs_require__(5);
 
 var _util = __w_pdfjs_require__(1);
 
-var _freetext = __w_pdfjs_require__(22);
+var _freetext = __w_pdfjs_require__(21);
 
-var _ink = __w_pdfjs_require__(23);
+var _ink = __w_pdfjs_require__(22);
 
 class AnnotationEditorLayer {
   #accessibilityManager;
@@ -10807,7 +10748,7 @@ class AnnotationEditorLayer {
 exports.AnnotationEditorLayer = AnnotationEditorLayer;
 
 /***/ }),
-/* 22 */
+/* 21 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -10819,9 +10760,9 @@ exports.FreeTextEditor = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
-var _tools = __w_pdfjs_require__(7);
+var _tools = __w_pdfjs_require__(5);
 
-var _editor = __w_pdfjs_require__(6);
+var _editor = __w_pdfjs_require__(4);
 
 class FreeTextEditor extends _editor.AnnotationEditor {
   #boundEditorDivBlur = this.editorDivBlur.bind(this);
@@ -11016,8 +10957,7 @@ class FreeTextEditor extends _editor.AnnotationEditor {
 
     const buffer = [];
 
-    for (let i = 0, ii = divs.length; i < ii; i++) {
-      const div = divs[i];
+    for (const div of divs) {
       const first = div.firstChild;
 
       if (first?.nodeName === "#text") {
@@ -11180,7 +11120,7 @@ class FreeTextEditor extends _editor.AnnotationEditor {
 exports.FreeTextEditor = FreeTextEditor;
 
 /***/ }),
-/* 23 */
+/* 22 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -11198,11 +11138,11 @@ Object.defineProperty(exports, "fitCurve", ({
 
 var _util = __w_pdfjs_require__(1);
 
-var _editor = __w_pdfjs_require__(6);
+var _editor = __w_pdfjs_require__(4);
 
-var _pdfjsFitCurve = __w_pdfjs_require__(24);
+var _pdfjsFitCurve = __w_pdfjs_require__(23);
 
-var _tools = __w_pdfjs_require__(7);
+var _tools = __w_pdfjs_require__(5);
 
 const RESIZER_SIZE = 16;
 
@@ -11982,7 +11922,7 @@ class InkEditor extends _editor.AnnotationEditor {
 exports.InkEditor = InkEditor;
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -11992,12 +11932,12 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.fitCurve = void 0;
 
-const fitCurve = __w_pdfjs_require__(25);
+const fitCurve = __w_pdfjs_require__(24);
 
 exports.fitCurve = fitCurve;
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ ((module) => {
 
 
@@ -12360,7 +12300,7 @@ module.exports.fitCubic = fitCubic;
 module.exports.createTangent = createTangent;
 
 /***/ }),
-/* 26 */
+/* 25 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -12372,13 +12312,13 @@ exports.AnnotationLayer = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
-var _display_utils = __w_pdfjs_require__(8);
+var _display_utils = __w_pdfjs_require__(6);
 
-var _annotation_storage = __w_pdfjs_require__(5);
+var _annotation_storage = __w_pdfjs_require__(3);
 
-var _scripting_utils = __w_pdfjs_require__(27);
+var _scripting_utils = __w_pdfjs_require__(26);
 
-var _xfa_layer = __w_pdfjs_require__(28);
+var _xfa_layer = __w_pdfjs_require__(27);
 
 const DEFAULT_TAB_INDEX = 1000;
 const DEFAULT_FONT_SIZE = 9;
@@ -12876,6 +12816,10 @@ class LinkAnnotationElement extends AnnotationElement {
       this._bindNamedAction(link, data.action);
 
       isBound = true;
+    } else if (data.attachment) {
+      this._bindAttachment(link, data.attachment);
+
+      isBound = true;
     } else if (data.setOCGState) {
       this.#bindSetOCGState(link, data.setOCGState);
       isBound = true;
@@ -12939,6 +12883,17 @@ class LinkAnnotationElement extends AnnotationElement {
 
     link.onclick = () => {
       this.linkService.executeNamedAction(action);
+      return false;
+    };
+
+    link.className = "internalLink";
+  }
+
+  _bindAttachment(link, attachment) {
+    link.href = this.linkService.getAnchorUrl("");
+
+    link.onclick = () => {
+      this.downloadManager?.openOrDownloadData(this.container, attachment.content, attachment.filename);
       return false;
     };
 
@@ -14796,7 +14751,7 @@ class AnnotationLayer {
 exports.AnnotationLayer = AnnotationLayer;
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -14865,7 +14820,7 @@ class ColorConverters {
 exports.ColorConverters = ColorConverters;
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -14875,7 +14830,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.XfaLayer = void 0;
 
-var _xfa_text = __w_pdfjs_require__(20);
+var _xfa_text = __w_pdfjs_require__(19);
 
 class XfaLayer {
   static setupStorage(html, id, element, storage, intent) {
@@ -15125,7 +15080,7 @@ class XfaLayer {
 exports.XfaLayer = XfaLayer;
 
 /***/ }),
-/* 29 */
+/* 28 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -15294,8 +15249,8 @@ function render(task) {
   }
 
   if (!task._textContentStream) {
-    for (let i = 0; i < textDivsLength; i++) {
-      task._layoutText(textDivs[i]);
+    for (const textDiv of textDivs) {
+      task._layoutText(textDiv);
     }
   }
 
@@ -15365,29 +15320,29 @@ class TextLayerRenderTask {
   }
 
   _processItems(items, styleCache) {
-    for (let i = 0, len = items.length; i < len; i++) {
-      if (items[i].str === undefined) {
-        if (items[i].type === "beginMarkedContentProps" || items[i].type === "beginMarkedContent") {
+    for (const item of items) {
+      if (item.str === undefined) {
+        if (item.type === "beginMarkedContentProps" || item.type === "beginMarkedContent") {
           const parent = this._container;
           this._container = document.createElement("span");
 
           this._container.classList.add("markedContent");
 
-          if (items[i].id !== null) {
-            this._container.setAttribute("id", `${items[i].id}`);
+          if (item.id !== null) {
+            this._container.setAttribute("id", `${item.id}`);
           }
 
           parent.append(this._container);
-        } else if (items[i].type === "endMarkedContent") {
+        } else if (item.type === "endMarkedContent") {
           this._container = this._container.parentNode;
         }
 
         continue;
       }
 
-      this._textContentItemsStr.push(items[i].str);
+      this._textContentItemsStr.push(item.str);
 
-      appendText(this, items[i], styleCache, this._layoutTextCtx);
+      appendText(this, item, styleCache, this._layoutTextCtx);
     }
   }
 
@@ -15516,7 +15471,7 @@ function renderTextLayer(renderParameters) {
 }
 
 /***/ }),
-/* 30 */
+/* 29 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -15526,11 +15481,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.SVGGraphics = void 0;
 
-var _display_utils = __w_pdfjs_require__(8);
+var _display_utils = __w_pdfjs_require__(6);
 
 var _util = __w_pdfjs_require__(1);
 
-var _is_node = __w_pdfjs_require__(3);
+var _is_node = __w_pdfjs_require__(12);
 
 let SVGGraphics = class {
   constructor() {
@@ -15630,12 +15585,6 @@ Object.defineProperty(exports, "InvalidPDFException", ({
   enumerable: true,
   get: function () {
     return _util.InvalidPDFException;
-  }
-}));
-Object.defineProperty(exports, "LoopbackPort", ({
-  enumerable: true,
-  get: function () {
-    return _api.LoopbackPort;
   }
 }));
 Object.defineProperty(exports, "MissingPDFException", ({
@@ -15803,28 +15752,28 @@ Object.defineProperty(exports, "version", ({
 
 var _util = __w_pdfjs_require__(1);
 
-var _api = __w_pdfjs_require__(4);
+var _api = __w_pdfjs_require__(2);
 
-var _display_utils = __w_pdfjs_require__(8);
+var _display_utils = __w_pdfjs_require__(6);
 
-var _annotation_editor_layer = __w_pdfjs_require__(21);
+var _annotation_editor_layer = __w_pdfjs_require__(20);
 
-var _tools = __w_pdfjs_require__(7);
+var _tools = __w_pdfjs_require__(5);
 
-var _annotation_layer = __w_pdfjs_require__(26);
+var _annotation_layer = __w_pdfjs_require__(25);
 
-var _worker_options = __w_pdfjs_require__(15);
+var _worker_options = __w_pdfjs_require__(14);
 
-var _is_node = __w_pdfjs_require__(3);
+var _is_node = __w_pdfjs_require__(12);
 
-var _text_layer = __w_pdfjs_require__(29);
+var _text_layer = __w_pdfjs_require__(28);
 
-var _svg = __w_pdfjs_require__(30);
+var _svg = __w_pdfjs_require__(29);
 
-var _xfa_layer = __w_pdfjs_require__(28);
+var _xfa_layer = __w_pdfjs_require__(27);
 
-const pdfjsVersion = '3.0.120';
-const pdfjsBuild = '91bdcd8b2';
+const pdfjsVersion = '3.0.200';
+const pdfjsBuild = '348665934';
 ;
 })();
 

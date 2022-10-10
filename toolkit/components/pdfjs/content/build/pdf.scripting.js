@@ -2083,6 +2083,14 @@ class AForm {
     return this._emailRegex.test(str);
   }
 
+  AFExactMatch(rePatterns, str) {
+    if (rePatterns instanceof RegExp) {
+      return str.match(rePatterns)?.[0] === str || 0;
+    }
+
+    return rePatterns.findIndex(re => str.match(re)?.[0] === str) + 1;
+  }
+
 }
 
 exports.AForm = AForm;
@@ -3224,6 +3232,8 @@ var _print_params = __w_pdfjs_require__(15);
 
 var _constants = __w_pdfjs_require__(2);
 
+const DOC_EXTERNAL = false;
+
 class InfoProxyHandler {
   static get(obj, prop) {
     return obj[prop.toLowerCase()];
@@ -3465,7 +3475,7 @@ class Doc extends _pdf_object.PDFObject {
   }
 
   get external() {
-    return true;
+    return DOC_EXTERNAL;
   }
 
   set external(_) {
@@ -5165,8 +5175,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '3.0.120';
-const pdfjsBuild = '91bdcd8b2';
+const pdfjsVersion = '3.0.200';
+const pdfjsBuild = '348665934';
 })();
 
 /******/ 	return __webpack_exports__;
