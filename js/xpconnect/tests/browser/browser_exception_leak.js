@@ -36,7 +36,10 @@ add_task(async function test() {
       // Intentionally hold a reference to the console event.
       let leakedConsoleEvent = consoleEvents[0];
 
+      // XXX I think this is intentionally leaking |doc|.
+      // eslint-disable-next-line no-unused-vars
       let doc = content.document;
+
       let promise = TestUtils.topicObserved(
         "inner-window-nuked",
         (subject, data) => {
