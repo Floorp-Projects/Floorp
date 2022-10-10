@@ -354,3 +354,10 @@ test-content-css =
 not-found-editor-path = Editor path not found
 set-pref-description = This operation requires a path to the editor. Set "view_source.editor.path" in "about:config"
 
+
+################################################################### about:addons ###############################################################
+
+# DualTheme
+dual-theme-enable-addon-button = Enable (Sub Theme)
+dual-theme-disable-addon-button = Disable (Sub Theme)
+dual-theme-enabled-heading = Enabled (Sub Theme)
