@@ -87,8 +87,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758415
 
     // Set up the sandboxes. Use an expanded principal to get xrays with
     // exclusive expandos.
-    sb1 = Cu.Sandbox(["http://test1.example.org", "http://test2.example.org"]);
-    sb2 = Cu.Sandbox(["http://test1.example.org", "http://test2.example.org"]);
+    sb1 = Cu.Sandbox(["https://test1.example.org", "https://test2.example.org"]);
+    sb2 = Cu.Sandbox(["https://test1.example.org", "https://test2.example.org"]);
     sb1.target = target;
     sb2.target = target;
     sb1.name = "sandbox1";
@@ -137,9 +137,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758415
 
   ]]>
   </script>
-  <iframe id="frameA1" onload="frameLoaded();" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
-  <iframe id="frameA2" onload="frameLoaded();" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
-  <iframe id="frameA3" onload="frameLoaded();" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
-  <iframe id="frameB" onload="frameLoaded();" type="content" src="http://test2.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
-  <iframe id="frameC" onload="frameLoaded();" type="content" src="http://sub1.test1.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
+  <iframe id="frameA1" onload="frameLoaded();" type="content" src="https://test1.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
+  <iframe id="frameA2" onload="frameLoaded();" type="content" src="https://test1.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
+  <iframe id="frameA3" onload="frameLoaded();" type="content" src="https://test1.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
+  <iframe id="frameB" onload="frameLoaded();" type="content" src="https://test2.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
+  <iframe id="frameC" onload="frameLoaded();" type="content" src="https://sub1.test1.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
 </window>

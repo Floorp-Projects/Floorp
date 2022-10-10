@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=860494
        "iframe names shouldn't shadow |alert| via Xray");
 
     // Now test XOWs.
-    var sb = new Cu.Sandbox('http://www.example.com');
+    var sb = new Cu.Sandbox("https://www.example.com");
     sb.win = iwin;
     sb.topWin = top;
     sb.parentWin = window;
@@ -52,5 +52,5 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=860494
 
   ]]>
   </script>
-  <iframe id="ifr" type="content" onload="go();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_bug860494.html" />
+  <iframe id="ifr" type="content" onload="go();" src="https://example.org/tests/js/xpconnect/tests/mochitest/file_bug860494.html" />
 </window>

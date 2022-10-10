@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=877673
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
       SimpleTest.waitForExplicitFinish();
-      var sb = new Cu.Sandbox("http://example.org", {wantExportHelpers: true});
+      var sb = new Cu.Sandbox("https://example.org", {wantExportHelpers: true});
       sb.ok = ok;
 
       function executeIn(frame, script, exceptionCb) {
@@ -62,7 +62,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=877673
           SimpleTest.finish();
       }
   ]]></script>
-  <iframe src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"
+  <iframe src="https://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"
           onload="testSameOrigin(this)">
   </iframe>
   <iframe src="http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_empty.html"
