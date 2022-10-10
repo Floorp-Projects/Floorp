@@ -2284,7 +2284,6 @@ export class SearchService {
 
     const engines = [
       { webExtension: { id: "google@search.mozilla.org",    locale: "default"}, default: "yes" },
-      { webExtension: { id: "frea@search.mozilla.org",      locale: "default"}},
       { webExtension: { id: "bing@search.mozilla.org",      locale: "default"}},
       { webExtension: { id: "startpage@search.mozilla.org", locale: "default"}},
       { webExtension: { id: "ddg@search.mozilla.org",       locale: "default"}},
@@ -2293,7 +2292,7 @@ export class SearchService {
     ];
 
     const privateDefault = (
-      { webExtension:{ id:"frea@search.mozilla.org", locale:"default"}, defaultPrivate:"yes"}
+      { webExtension:{ id:"ddg@search.mozilla.org", locale:"default"}, defaultPrivate:"yes"}
     );
 
     for (let e of engines) {
