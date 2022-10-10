@@ -66,12 +66,12 @@ Methods
 
   - ``theme {ThemeDefinition|String}`` - The theme definition object or the theme identifier.
 
-``showToolbox(target [, toolId [, hostType [, hostOptions]]])``
+``showToolbox(commands[, toolId [, hostType [, hostOptions]]])``
   Opens a toolbox for given target either by creating a new one or activating an existing one.
 
   **Parameters:**
 
-  - ``target {Target}`` - The target the toolbox will debug.
+  - ``commands {Object}`` - The commands object designating which debugging context the toolbox will debug.
   - ``toolId {String}`` - The tool that should be activated. If unspecified the previously active tool is shown.
   - ``hostType {String}`` - The position the toolbox will be placed. One of ``bottom``, ``side``, ``window``, ``custom``. See :ref:`HostType <devtoolsapi-host-type>` for details.
   - ``hostOptions {Object}`` - An options object passed to the selected host. See :ref:`HostType <devtoolsapi-host-type>` for details.
