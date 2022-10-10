@@ -73,14 +73,17 @@ class MFMediaEngineStream
   TaskQueue* GetTaskQueue() { return mTaskQueue; }
 
   void NotifyNewData(MediaRawData* aSample);
-  void NotifyEndOfStream();
+  void NotifyEndOfStream() {
+    Microsoft::WRL::ComPtr<MFMediaEngineStream> self = this;
+    Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
+        "MFMediaEngineStream::NotifyEndOfStream",
+        [self]() { self->NotifyEndOfStreamInternal(); }));
+  }
 
   // Return the type of the track, the result should be either audio or video.
   virtual TrackInfo::TrackType TrackType() = 0;
 
   RefPtr<MediaDataDecoder::FlushPromise> Flush();
-
-  bool IsEnded() const;
 
   MediaEventProducer<TrackInfo::TrackType>& EndedEvent() { return mEndedEvent; }
 
@@ -113,6 +116,10 @@ class MFMediaEngineStream
   HRESULT CreateInputSample(IMFSample** aSample);
   void ReplySampleRequestIfPossible();
   bool ShouldServeSamples() const;
+
+  void NotifyEndOfStreamInternal();
+
+  bool IsEnded() const;
 
   void AssertOnTaskQueue() const;
   void AssertOnMFThreadPool() const;

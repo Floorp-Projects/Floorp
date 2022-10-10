@@ -179,11 +179,11 @@ HRESULT MFMediaEngineStream::Start(const PROPVARIANT* aPosition) {
             !isFromCurrentPosition && IsEnded()) {
           SLOG("Stream restarts again from a new position, reset EOS");
           mReceivedEOS = false;
-        } else if (!IsEnded()) {
-          // Process pending requests (if any) which happened when the stream
-          // wasn't allowed to serve samples. Eg. stream is paused.
-          ReplySampleRequestIfPossible();
         }
+        // Process pending requests (if any) which happened when the stream
+        // wasn't allowed to serve samples. Eg. stream is paused. Or resend the
+        // ended event if the stream is ended already.
+        ReplySampleRequestIfPossible();
       }));
   return S_OK;
 }
@@ -443,7 +443,7 @@ void MFMediaEngineStream::NotifyNewData(MediaRawData* aSample) {
   }
 }
 
-void MFMediaEngineStream::NotifyEndOfStream() {
+void MFMediaEngineStream::NotifyEndOfStreamInternal() {
   AssertOnTaskQueue();
   if (mReceivedEOS) {
     return;
@@ -454,6 +454,7 @@ void MFMediaEngineStream::NotifyEndOfStream() {
 }
 
 bool MFMediaEngineStream::IsEnded() const {
+  AssertOnTaskQueue();
   return mReceivedEOS && mRawDataQueue.GetSize() == 0;
 }
 
