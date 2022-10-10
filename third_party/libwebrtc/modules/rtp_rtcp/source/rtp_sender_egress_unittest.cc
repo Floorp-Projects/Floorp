@@ -754,7 +754,7 @@ TEST_P(RtpSenderEgressTest, SendPacketUpdatesExtensions) {
   EXPECT_EQ(received_packet.GetExtension<TransmissionOffset>(), kDiffMs * 90);
 
   EXPECT_EQ(received_packet.GetExtension<AbsoluteSendTime>(),
-            AbsoluteSendTime::MsTo24Bits(clock_->TimeInMilliseconds()));
+            AbsoluteSendTime::To24Bits(clock_->CurrentTime()));
 
   VideoSendTiming timing;
   EXPECT_TRUE(received_packet.GetExtension<VideoTimingExtension>(&timing));

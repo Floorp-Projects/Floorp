@@ -155,12 +155,12 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
   }
 
   const uint32_t packet_ssrc = packet->Ssrc();
-  const int64_t now_ms = clock_->TimeInMilliseconds();
+  const Timestamp now = clock_->CurrentTime();
 
 #if BWE_TEST_LOGGING_COMPILE_TIME_ENABLE
   worker_queue_->PostTask(
-      ToQueuedTask(task_safety_, [this, now_ms, packet_ssrc]() {
-        BweTestLoggingPlot(now_ms, packet_ssrc);
+      ToQueuedTask(task_safety_, [this, now, packet_ssrc]() {
+        BweTestLoggingPlot(now.ms(), packet_ssrc);
       }));
 #endif
 
@@ -225,20 +225,19 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
   // In case of VideoTimingExtension, since it's present not in every packet,
   // data after rtp header may be corrupted if these packets are protected by
   // the FEC.
-  int64_t diff_ms = now_ms - packet->capture_time().ms();
+  TimeDelta diff = now - packet->capture_time();
   if (packet->HasExtension<TransmissionOffset>()) {
-    packet->SetExtension<TransmissionOffset>(kTimestampTicksPerMs * diff_ms);
+    packet->SetExtension<TransmissionOffset>(kTimestampTicksPerMs * diff.ms());
   }
   if (packet->HasExtension<AbsoluteSendTime>()) {
-    packet->SetExtension<AbsoluteSendTime>(
-        AbsoluteSendTime::MsTo24Bits(now_ms));
+    packet->SetExtension<AbsoluteSendTime>(AbsoluteSendTime::To24Bits(now));
   }
 
   if (packet->HasExtension<VideoTimingExtension>()) {
     if (populate_network2_timestamp_) {
-      packet->set_network2_time(Timestamp::Millis(now_ms));
+      packet->set_network2_time(now);
     } else {
-      packet->set_pacer_exit_time(Timestamp::Millis(now_ms));
+      packet->set_pacer_exit_time(now);
     }
   }
 
@@ -265,7 +264,7 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
 
   if (packet->packet_type() != RtpPacketMediaType::kPadding &&
       packet->packet_type() != RtpPacketMediaType::kRetransmission) {
-    UpdateDelayStatistics(packet->capture_time().ms(), now_ms, packet_ssrc);
+    UpdateDelayStatistics(packet->capture_time().ms(), now.ms(), packet_ssrc);
     UpdateOnSendPacket(options.packet_id, packet->capture_time().ms(),
                        packet_ssrc);
   }
@@ -276,7 +275,7 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
   // actual sending fails.
   if (is_media && packet->allow_retransmission()) {
     packet_history_->PutRtpPacket(std::make_unique<RtpPacketToSend>(*packet),
-                                  Timestamp::Millis(now_ms));
+                                  now);
   } else if (packet->retransmitted_sequence_number()) {
     packet_history_->MarkPacketAsSent(*packet->retransmitted_sequence_number());
   }
@@ -295,10 +294,10 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
     RtpPacketCounter counter(*packet);
     size_t size = packet->size();
     worker_queue_->PostTask(
-        ToQueuedTask(task_safety_, [this, now_ms, packet_ssrc, packet_type,
+        ToQueuedTask(task_safety_, [this, now, packet_ssrc, packet_type,
                                     counter = std::move(counter), size]() {
           RTC_DCHECK_RUN_ON(worker_queue_);
-          UpdateRtpStats(now_ms, packet_ssrc, packet_type, std::move(counter),
+          UpdateRtpStats(now.ms(), packet_ssrc, packet_type, std::move(counter),
                          size);
         }));
   }
