@@ -60,7 +60,7 @@ add_task(async function feature_callout_is_accessible() {
       const { document } = browser.contentWindow;
 
       window.FullZoom.setZoom(0.5, browser);
-      browser.contentWindow.resizeTo(1500, 1000);
+      browser.contentWindow.resizeTo(1550, 1000);
 
       await waitForCalloutScreen(document, 1);
 
@@ -122,15 +122,15 @@ add_task(async function feature_callout_is_repositioned_if_it_does_not_fit() {
     async browser => {
       const { document } = browser.contentWindow;
 
-      browser.contentWindow.resizeTo(1500, 1000);
+      browser.contentWindow.resizeTo(1550, 1000);
       await waitForCalloutScreen(document, 1);
       ok(
         document.querySelector(`${calloutSelector}.arrow-top`),
-        "On first screen at 1500x1000, the callout is positioned below the parent element"
+        "On first screen at 1550x1000, the callout is positioned below the parent element"
       );
 
       let startingTop = document.querySelector(calloutSelector).style.top;
-      browser.contentWindow.resizeTo(1500, 600);
+      browser.contentWindow.resizeTo(1550, 600);
       // Wait for callout to be repositioned
       await BrowserTestUtils.waitForMutationCondition(
         document.querySelector(calloutSelector),
@@ -139,7 +139,7 @@ add_task(async function feature_callout_is_repositioned_if_it_does_not_fit() {
       );
       ok(
         document.querySelector(`${calloutSelector}.arrow-inline-start`),
-        "On first screen at 1500x600, the callout is positioned to the right of the parent element"
+        "On first screen at 1550x600, the callout is positioned to the right of the parent element"
       );
 
       startingTop = document.querySelector(calloutSelector).style.top;
@@ -177,7 +177,7 @@ add_task(async function feature_callout_is_repositioned_if_it_does_not_fit() {
       );
 
       startingTop = document.querySelector(calloutSelector).style.top;
-      browser.contentWindow.resizeTo(700, 1150);
+      browser.contentWindow.resizeTo(800, 1300);
       await BrowserTestUtils.waitForMutationCondition(
         document.querySelector(calloutSelector),
         { attributeFilter: ["style"], attributes: true },
@@ -185,7 +185,7 @@ add_task(async function feature_callout_is_repositioned_if_it_does_not_fit() {
       );
       ok(
         document.querySelector(`${calloutSelector}.arrow-top`),
-        "On third screen at 700x1150, the callout is positioned below the parent element"
+        "On third screen at 800x1300, the callout is positioned below the parent element"
       );
     }
   );
@@ -209,15 +209,15 @@ add_task(async function feature_callout_is_repositioned_rtl() {
     async browser => {
       const { document } = browser.contentWindow;
 
-      browser.contentWindow.resizeTo(1500, 1000);
+      browser.contentWindow.resizeTo(1550, 1000);
       await waitForCalloutScreen(document, 1);
       ok(
         document.querySelector(`${calloutSelector}.arrow-top`),
-        "On first screen at 1500x1000, the callout is positioned below the parent element"
+        "On first screen at 1550x1000, the callout is positioned below the parent element"
       );
 
       let startingTop = document.querySelector(calloutSelector).style.top;
-      browser.contentWindow.resizeTo(1500, 600);
+      browser.contentWindow.resizeTo(1550, 600);
       // Wait for callout to be repositioned
       await BrowserTestUtils.waitForMutationCondition(
         document.querySelector(calloutSelector),
@@ -226,7 +226,7 @@ add_task(async function feature_callout_is_repositioned_rtl() {
       );
       ok(
         document.querySelector(`${calloutSelector}.arrow-inline-end`),
-        "On first screen at 1500x600, the callout is positioned to the right of the parent element"
+        "On first screen at 1550x600, the callout is positioned to the right of the parent element"
       );
 
       startingTop = document.querySelector(calloutSelector).style.top;
@@ -264,7 +264,7 @@ add_task(async function feature_callout_is_repositioned_rtl() {
       );
 
       startingTop = document.querySelector(calloutSelector).style.top;
-      browser.contentWindow.resizeTo(700, 1150);
+      browser.contentWindow.resizeTo(800, 1300);
       await BrowserTestUtils.waitForMutationCondition(
         document.querySelector(calloutSelector),
         { attributeFilter: ["style"], attributes: true },
@@ -272,7 +272,7 @@ add_task(async function feature_callout_is_repositioned_rtl() {
       );
       ok(
         document.querySelector(`${calloutSelector}.arrow-top`),
-        "On third screen at 700x1150, the callout is positioned below the parent element"
+        "On third screen at 800x1300, the callout is positioned below the parent element"
       );
     }
   );
