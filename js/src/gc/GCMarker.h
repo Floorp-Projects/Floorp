@@ -441,9 +441,8 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
   inline void processMarkStackTop(SliceBudget& budget);
 
   void markDelayedChildren(gc::Arena* arena);
-  [[nodiscard]] bool markAllDelayedChildren(SliceBudget& budget,
-                                            ShouldReportMarkTime reportTime);
-  bool processDelayedMarkingList(gc::MarkColor color, SliceBudget& budget);
+  void markAllDelayedChildren(ShouldReportMarkTime reportTime);
+  void processDelayedMarkingList(gc::MarkColor color);
   bool hasDelayedChildren() const { return !!delayedMarkingList; }
   void rebuildDelayedMarkingList();
   void appendToDelayedMarkingList(gc::Arena** listTail, gc::Arena* arena);
