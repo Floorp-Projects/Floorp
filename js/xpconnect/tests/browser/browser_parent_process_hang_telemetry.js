@@ -12,7 +12,7 @@ add_task(async function test_browser_hang() {
   // Trip some testing code to ensure we can test this. Sadly, this is a magic
   // number corresponding to code in XPCJSContext.cpp
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.max_chrome_script_run_time", 2]]
+    set: [["dom.max_chrome_script_run_time", 2]],
   });
   await SpecialPowers.promiseTimeout(0);
 
@@ -39,14 +39,22 @@ add_task(async function test_browser_hang() {
     );
     return events.parent?.some(e => e[1] == "slow_script_warning");
   }, "Should find an event after doing this.").catch(e => ok(false, e));
-  events = (events.parent || []);
+  events = events.parent || [];
   let event = events.find(e => e[1] == "slow_script_warning");
   ok(event, "Should have registered an event.");
   if (event) {
     is(event[3], "browser", "Should register as browser hang.");
     let args = event[5];
     is(args.uri_type, "browser", "Should register browser uri type.");
-    Assert.greater(duration + 1, parseFloat(args.hang_duration), "hang duration should not exaggerate.");
-    Assert.less(duration - 1, parseFloat(args.hang_duration), "hang duration should not undersell.");
+    Assert.greater(
+      duration + 1,
+      parseFloat(args.hang_duration),
+      "hang duration should not exaggerate."
+    );
+    Assert.less(
+      duration - 1,
+      parseFloat(args.hang_duration),
+      "hang duration should not undersell."
+    );
   }
 });
