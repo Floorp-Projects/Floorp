@@ -4953,6 +4953,15 @@
   value: false
   mirror: always
 
+# Allow showing of current profile along with process names, NOT
+# including processes from Private Windows
+# Setting this pref creates a privacy leak, but helps greatly with
+# debugging
+- name: fission.processProfileName
+  type: bool
+  value: false
+  mirror: always
+
 # If true, allow process-switching documents loaded by <object> and <embed>
 # elements into a remote process.
 # NOTE: This pref has no impact outside of windows with the

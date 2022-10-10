@@ -753,7 +753,7 @@ child:
     /**
      * Send the remote type associated with the content process.
      */
-    async RemoteType(nsCString aRemoteType);
+    async RemoteType(nsCString aRemoteType, nsCString aProfile);
 
     /**
      * Send BlobURLRegistrationData to child process.

@@ -1498,6 +1498,7 @@ class ContentParent final : public PContentParent,
   bool mIsAPreallocBlocker;  // We called AddBlocker for this ContentParent
 
   nsCString mRemoteType;
+  nsCString mProfile;
   nsCOMPtr<nsIPrincipal> mRemoteTypeIsolationPrincipal;
 
   ContentParentId mChildID;
