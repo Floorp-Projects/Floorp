@@ -358,6 +358,7 @@ rtc_source_set("rtp_rtcp_legacy") {
     "../../api/rtc_event_log",
     "../../api/transport:field_trial_based_config",
     "../../api/units:data_rate",
+    "../../api/units:timestamp",
     "../../api/video:video_bitrate_allocation",
     "../../logging:rtc_event_rtp_rtcp",
     "../../rtc_base:checks",

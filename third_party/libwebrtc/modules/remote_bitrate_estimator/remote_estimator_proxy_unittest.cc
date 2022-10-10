@@ -584,11 +584,11 @@ TEST_F(RemoteEstimatorProxyTest, ReportsIncomingPacketToNetworkStateEstimator) {
         first_send_timestamp = packet.sent_packet.send_time;
       }));
   // Incoming packet with abs sendtime but without transport sequence number.
-  proxy_.IncomingPacket({.arrival_time = kBaseTime,
-                         .size = kDefaultPacketSize,
-                         .ssrc = kMediaSsrc,
-                         .absolute_send_time_24bits =
-                             AbsoluteSendTime::MsTo24Bits(kBaseTime.ms())});
+  proxy_.IncomingPacket(
+      {.arrival_time = kBaseTime,
+       .size = kDefaultPacketSize,
+       .ssrc = kMediaSsrc,
+       .absolute_send_time_24bits = AbsoluteSendTime::To24Bits(kBaseTime)});
 
   // Expect packet with older abs send time to be treated as sent at the same
   // time as the previous packet due to reordering.
@@ -603,15 +603,16 @@ TEST_F(RemoteEstimatorProxyTest, ReportsIncomingPacketToNetworkStateEstimator) {
        .size = kDefaultPacketSize,
        .ssrc = kMediaSsrc,
        .absolute_send_time_24bits =
-           AbsoluteSendTime::MsTo24Bits(kBaseTime.ms() - 12)});
+           AbsoluteSendTime::To24Bits(kBaseTime - TimeDelta::Millis(12))});
 }
 
 TEST_F(RemoteEstimatorProxyTest, IncomingPacketHandlesWrapInAbsSendTime) {
   // abs send time use 24bit precision.
   const uint32_t kFirstAbsSendTime =
-      AbsoluteSendTime::MsTo24Bits((1 << 24) - 30);
+      AbsoluteSendTime::To24Bits(Timestamp::Millis((1 << 24) - 30));
   // Second abs send time has wrapped.
-  const uint32_t kSecondAbsSendTime = AbsoluteSendTime::MsTo24Bits((1 << 24));
+  const uint32_t kSecondAbsSendTime =
+      AbsoluteSendTime::To24Bits(Timestamp::Millis(1 << 24));
   const TimeDelta kExpectedAbsSendTimeDelta = TimeDelta::Millis(30);
 
   Timestamp first_send_timestamp = Timestamp::Millis(0);
@@ -641,12 +642,13 @@ TEST_F(RemoteEstimatorProxyTest, IncomingPacketHandlesWrapInAbsSendTime) {
 }
 
 TEST_F(RemoteEstimatorProxyTest, SendTransportFeedbackAndNetworkStateUpdate) {
-  proxy_.IncomingPacket({.arrival_time = kBaseTime,
-                         .size = kDefaultPacketSize,
-                         .ssrc = kMediaSsrc,
-                         .absolute_send_time_24bits =
-                             AbsoluteSendTime::MsTo24Bits(kBaseTime.ms() - 1),
-                         .transport_sequence_number = kBaseSeq});
+  proxy_.IncomingPacket(
+      {.arrival_time = kBaseTime,
+       .size = kDefaultPacketSize,
+       .ssrc = kMediaSsrc,
+       .absolute_send_time_24bits =
+           AbsoluteSendTime::To24Bits(kBaseTime - TimeDelta::Millis(1)),
+       .transport_sequence_number = kBaseSeq});
   EXPECT_CALL(network_state_estimator_, GetCurrentEstimate())
       .WillOnce(Return(NetworkStateEstimate()));
   EXPECT_CALL(feedback_sender_, Call(SizeIs(2)));
