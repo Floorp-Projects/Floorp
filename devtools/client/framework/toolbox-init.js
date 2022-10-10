@@ -87,8 +87,8 @@ async function initToolbox(url, host) {
   } = require("resource://devtools/client/framework/devtools.js");
 
   const {
-    descriptorFromURL,
-  } = require("resource://devtools/client/framework/descriptor-from-url.js");
+    commandsFromURL,
+  } = require("resource://devtools/client/framework/commands-from-url.js");
   const {
     Toolbox,
   } = require("resource://devtools/client/framework/toolbox.js");
@@ -97,7 +97,8 @@ async function initToolbox(url, host) {
   const tool = url.searchParams.get("tool");
 
   try {
-    const descriptor = await descriptorFromURL(url);
+    const commands = await commandsFromURL(url);
+    const descriptor = commands.descriptorFront;
     const toolbox = gDevTools.getToolboxForDescriptor(descriptor);
     if (toolbox && toolbox.isDestroying()) {
       // If a toolbox already exists for the descriptor, wait for current

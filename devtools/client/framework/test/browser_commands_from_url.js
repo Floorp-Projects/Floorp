@@ -8,11 +8,8 @@ const { DevToolsLoader } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
 const {
-  createCommandsDictionary,
-} = require("resource://devtools/shared/commands/index.js");
-const {
-  descriptorFromURL,
-} = require("resource://devtools/client/framework/descriptor-from-url.js");
+  commandsFromURL,
+} = require("resource://devtools/client/framework/commands-from-url.js");
 
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 Services.prefs.setBoolPref("devtools.debugger.prompt-connection", false);
@@ -32,44 +29,40 @@ function assertTarget(target, url, chrome = false) {
 add_task(async function() {
   const tab = await addTab(TEST_URI);
   const browser = tab.linkedBrowser;
-  let descriptor, target;
+  let commands, target;
 
   info("Test invalid type");
   try {
-    await descriptorFromURL(new URL("http://foo?type=x"));
+    await commandsFromURL(new URL("https://foo?type=x"));
     ok(false, "Shouldn't pass");
   } catch (e) {
-    is(e.message, "descriptorFromURL, unsupported type 'x' parameter");
+    is(e.message, "commandsFromURL, unsupported type 'x' parameter");
   }
 
   info("Test tab");
-  descriptor = await descriptorFromURL(
-    new URL("http://foo?type=tab&id=" + browser.browserId)
+  commands = await commandsFromURL(
+    new URL("https://foo?type=tab&id=" + browser.browserId)
   );
-  const commands = await createCommandsDictionary(descriptor);
   // Descriptor's getTarget will only work if the TargetCommand watches for the first top target
   await commands.targetCommand.startListening();
-  target = await descriptor.getTarget();
+  target = await commands.descriptorFront.getTarget();
   assertTarget(target, TEST_URI);
-  await descriptor.client.close();
+  await commands.destroy();
 
   info("Test invalid tab id");
   try {
-    await descriptorFromURL(new URL("http://foo?type=tab&id=10000"));
+    await commandsFromURL(new URL("https://foo?type=tab&id=10000"));
     ok(false, "Shouldn't pass");
   } catch (e) {
-    is(
-      e.message,
-      "descriptorFromURL, tab with browserId '10000' doesn't exist"
-    );
+    is(e.message, "commandsFromURL, tab with browserId '10000' doesn't exist");
   }
 
   info("Test parent process");
-  descriptor = await descriptorFromURL(new URL("http://foo?type=process"));
-  target = await descriptor.getTarget();
+  commands = await commandsFromURL(new URL("https://foo?type=process"));
+  target = await commands.descriptorFront.getTarget();
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
   assertTarget(target, topWindow.location.href, true);
-  await descriptor.client.close();
+  await commands.destroy();
 
   await testRemoteTCP();
   await testRemoteWebSocket();
@@ -119,19 +112,19 @@ async function testRemoteTCP() {
   const server = await setupDevToolsServer(false);
 
   const { port } = server.listener;
-  const descriptor = await descriptorFromURL(
-    new URL("http://foo?type=process&host=127.0.0.1&port=" + port)
+  const commands = await commandsFromURL(
+    new URL("https://foo?type=process&host=127.0.0.1&port=" + port)
   );
-  const target = await descriptor.getTarget();
+  const target = await commands.descriptorFront.getTarget();
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
   assertTarget(target, topWindow.location.href, true);
 
-  const settings = descriptor.client._transport.connectionSettings;
+  const settings = commands.client._transport.connectionSettings;
   is(settings.host, "127.0.0.1");
   is(parseInt(settings.port, 10), port);
   is(settings.webSocket, false);
 
-  await descriptor.client.close();
+  await commands.destroy();
 
   teardownDevToolsServer(server);
 }
@@ -142,18 +135,18 @@ async function testRemoteWebSocket() {
   const server = await setupDevToolsServer(true);
 
   const { port } = server.listener;
-  const descriptor = await descriptorFromURL(
-    new URL("http://foo?type=process&host=127.0.0.1&port=" + port + "&ws=true")
+  const commands = await commandsFromURL(
+    new URL("https://foo?type=process&host=127.0.0.1&port=" + port + "&ws=true")
   );
-  const target = await descriptor.getTarget();
+  const target = await commands.descriptorFront.getTarget();
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
   assertTarget(target, topWindow.location.href, true);
 
-  const settings = descriptor.client._transport.connectionSettings;
+  const settings = commands.client._transport.connectionSettings;
   is(settings.host, "127.0.0.1");
   is(parseInt(settings.port, 10), port);
   is(settings.webSocket, true);
-  await descriptor.client.close();
+  await commands.destroy();
 
   teardownDevToolsServer(server);
 }
