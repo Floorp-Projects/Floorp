@@ -358,7 +358,7 @@ var gSitePermissionsManager = {
     website.setAttribute("value", permission.origin);
     website.setAttribute("width", width);
     hbox.setAttribute("class", "website-name");
-    hbox.setAttribute("style", "-moz-box-flex: 1");
+    hbox.setAttribute("style", "-moz-box-flex: 3");
     hbox.appendChild(website);
 
     let menulist = document.createXULElement("menulist");
