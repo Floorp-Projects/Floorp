@@ -138,11 +138,16 @@ intl/l10n/
 # Exclude everything but self-hosted JS
 js/examples/
 js/public/
-js/xpconnect/
 js/src/devtools/
 js/src/jit-test/
 js/src/tests/
 js/src/Y.js
+
+# Changes to XPConnect tests must be carefully audited.
+js/xpconnect/loader/
+js/xpconnect/tests/browser/
+js/xpconnect/tests/mochitest/
+js/xpconnect/tests/unit/
 
 # Fuzzing code for testing only, targeting the JS shell
 js/src/fuzz-tests/

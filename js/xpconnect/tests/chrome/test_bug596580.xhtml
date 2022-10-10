@@ -26,11 +26,11 @@
       await SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
                                                true]]});
       Test = {
-        include: function(p) {
+        include(p) {
           var sawError = false;
           try {
             Cc["@mozilla.org/moz/jssubscript-loader;1"].
-              getService(Ci["mozIJSSubScriptLoader"]).
+              getService(Ci.mozIJSSubScriptLoader).
               loadSubScript(p);
           } catch (e) {
             sawError = true;

@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=503926
       var gWindowUtils = window.windowUtils;
       var passed = false;
       // eslint-disable-next-line mozilla/use-chromeutils-generateqi
-      var obj = { QueryInterface: function() { passed = true; } }
+      var obj = { QueryInterface() { passed = true; } }
       gWindowUtils.xpconnectArgument(obj);
       var isDialog = location.hash != '#iframe';
       var outer = XPCNativeWrapper.unwrap(isDialog ? window.arguments[0] : parent);

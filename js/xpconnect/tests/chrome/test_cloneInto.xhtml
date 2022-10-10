@@ -45,10 +45,10 @@
     if (Array.isArray(a))
       return 'array';
 
-    if (a instanceof File)
+    if (File.isInstance(a))
       return 'file';
 
-    if (a instanceof Blob)
+    if (Blob.isInstance(a))
       return 'blob';
 
     if (TypedArrayThings.includes(a.constructor.name))
@@ -152,7 +152,7 @@
     cloneAndTest(tests[i]);
   }
 
-  checkThrows(function() { Cu.cloneInto({ a: function() {} }, sandbox); },
+  checkThrows(function() { Cu.cloneInto({ a() {} }, sandbox); },
               'Function should not be cloned by default');
 
   checkThrows(function() { Cu.cloneInto({ a: document }, sandbox); },
@@ -181,11 +181,11 @@
               'wrapReflectors may not wrap cross-origin reflectors', /unsupported value type/);
 
 
-  var test = { a: function() { return 42; } };
+  var test = { a() { return 42; } };
   cloneAndTestWithFunctions(test);
 
   // Check that inputs are properly passed through cloned functions:
-  test = { a: function(obj) { return obj; } };
+  test = { a(obj) { return obj; } };
   var clonedTest = Cu.cloneInto(test, sandbox, {cloneFunctions: true});
   var testInput = {};
   is(clonedTest.a(testInput), testInput, "Objects should be identical");

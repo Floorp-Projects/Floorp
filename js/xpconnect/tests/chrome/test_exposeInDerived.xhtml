@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=804630
   <![CDATA[
   /** Test to make sure that COWed objects can't expose properties from their prototypes. **/
   // Set up the sandbox.
-  var sb = new Cu.Sandbox('http://www.example.com');
+  var sb = new Cu.Sandbox("https://www.example.com");
   sb.ok = ok;
   sb.is = is;
 

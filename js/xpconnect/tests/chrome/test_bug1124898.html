@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1124898
     var w = window.browsingContext.topChromeWindow.open("about:blank", "w", "chrome");
     is(w.eval('typeof getAttention'), 'function', 'getAttention exists on regular chrome window');
     is(w.eval('typeof messageManager'), 'object', 'messageManager exists on regular chrome window');
-    var contentURL = "http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html";
+    var contentURL = "https://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html";
     w.location = contentURL;
     tryWindow();
 

@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=706301
 
     // Perform the operation.
     Object.getOwnPropertyDescriptor(nodelist, 'length');
-    return nodelist['length'] == 0;
+    return !nodelist.length;
   }
 
   function finishTestInChrome() {
