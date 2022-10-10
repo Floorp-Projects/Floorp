@@ -123,7 +123,8 @@ class ContentChild final : public PContentChild,
   const AppInfo& GetAppInfo() { return mAppInfo; }
 
   void SetProcessName(const nsACString& aName,
-                      const nsACString* aETLDplus1 = nullptr);
+                      const nsACString* aETLDplus1 = nullptr,
+                      const nsACString* aCurrentProfile = nullptr);
 
   void GetProcessName(nsACString& aName) const;
 
@@ -357,7 +358,8 @@ class ContentChild final : public PContentChild,
       const nsCString& UAName, const nsCString& ID, const nsCString& vendor,
       const nsCString& sourceURL, const nsCString& updateURL);
 
-  mozilla::ipc::IPCResult RecvRemoteType(const nsCString& aRemoteType);
+  mozilla::ipc::IPCResult RecvRemoteType(const nsCString& aRemoteType,
+                                         const nsCString& aProfile);
 
   void PreallocInit();
 
@@ -802,6 +804,7 @@ class ContentChild final : public PContentChild,
   hal::ProcessPriority GetProcessPriority() const { return mProcessPriority; }
 
  private:
+  void AddProfileToProcessName(const nsACString& aProfile);
   mozilla::ipc::IPCResult RecvFlushFOGData(FlushFOGDataResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvUpdateMediaCodecsSupported(
