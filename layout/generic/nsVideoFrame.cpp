@@ -435,7 +435,7 @@ AspectRatio nsVideoFrame::GetIntrinsicRatio() const {
     }
   }
 
-  if (!StylePosition()->mAspectRatio.BehavesAsAuto()) {
+  if (StylePosition()->mAspectRatio.HasRatio()) {
     return AspectRatio();
   }
 
@@ -503,7 +503,7 @@ IntrinsicSize nsVideoFrame::GetIntrinsicSize() {
     }
   }
 
-  if (!StylePosition()->mAspectRatio.BehavesAsAuto()) {
+  if (StylePosition()->mAspectRatio.HasRatio()) {
     return {};
   }
 
