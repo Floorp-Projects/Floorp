@@ -38,7 +38,7 @@ extension-floorp-photon-description= Follow the operating system setting for but
 
 #################################################################### about:preferences ####################################################################
 
-notice-from-floorp-projects = Floorp Administration Notice
+feature-requires-restart = A reboot is required to change the settings
 
 floorp-preference = Experimet Preferences
 browser-design-settings = Tab Bar Settings
