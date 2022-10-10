@@ -154,18 +154,17 @@ async function openTabAndSetupStorage(url, options = {}) {
  * Open the toolbox, with the storage tool visible.
  *
  * @param tab {XULTab} Optional, the tab for the toolbox; defaults to selected tab
- * @param descriptor {Object} Optional, the descriptor for the toolbox; defaults to a tab descriptor
+ * @param commands {Object} Optional, the commands for the toolbox; defaults to a tab commands
  * @param hostType {Toolbox.HostType} Optional, type of host that will host the toolbox
  *
  * @return {Promise} a promise that resolves when the storage inspector is ready
  */
-var openStoragePanel = async function({ tab, descriptor, hostType } = {}) {
+var openStoragePanel = async function({ tab, commands, hostType } = {}) {
   info("Opening the storage inspector");
-  if (!descriptor) {
-    const commands = await LocalTabCommandsFactory.createCommandsForTab(
+  if (!commands) {
+    commands = await LocalTabCommandsFactory.createCommandsForTab(
       tab || gBrowser.selectedTab
     );
-    descriptor = commands.descriptorFront;
   }
 
   let storage, toolbox;
@@ -173,7 +172,7 @@ var openStoragePanel = async function({ tab, descriptor, hostType } = {}) {
   // Checking if the toolbox and the storage are already loaded
   // The storage-updated event should only be waited for if the storage
   // isn't loaded yet
-  toolbox = gDevTools.getToolboxForDescriptor(descriptor);
+  toolbox = gDevTools.getToolboxForCommands(commands);
   if (toolbox) {
     storage = toolbox.getPanel("storage");
     if (storage) {
@@ -190,7 +189,7 @@ var openStoragePanel = async function({ tab, descriptor, hostType } = {}) {
   }
 
   info("Opening the toolbox");
-  toolbox = await gDevTools.showToolbox(descriptor, {
+  toolbox = await gDevTools.showToolbox(commands, {
     toolId: "storage",
     hostType,
   });

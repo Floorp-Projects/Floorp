@@ -98,16 +98,15 @@ async function initToolbox(url, host) {
 
   try {
     const commands = await commandsFromURL(url);
-    const descriptor = commands.descriptorFront;
-    const toolbox = gDevTools.getToolboxForDescriptor(descriptor);
+    const toolbox = gDevTools.getToolboxForCommands(commands);
     if (toolbox && toolbox.isDestroying()) {
-      // If a toolbox already exists for the descriptor, wait for current
+      // If a toolbox already exists for the commands, wait for current
       // toolbox destroy to be finished.
       await toolbox.destroy();
     }
 
     // Display an error page if we are connected to a remote target and we lose it
-    descriptor.once("descriptor-destroyed", function() {
+    commands.descriptorFront.once("descriptor-destroyed", function() {
       // Prevent trying to display the error page if the toolbox tab is being destroyed
       if (host.contentDocument) {
         const error = new Error("Debug target was disconnected");
@@ -116,7 +115,7 @@ async function initToolbox(url, host) {
     });
 
     const options = { customIframe: host };
-    await gDevTools.showToolbox(descriptor, {
+    await gDevTools.showToolbox(commands, {
       toolId: tool,
       hostType: Toolbox.HostType.PAGE,
       hostOptions: options,
