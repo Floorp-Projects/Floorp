@@ -143,23 +143,6 @@ function getDuplicatedModules(loaders) {
  *        duplicated modules.
  */
 function runDuplicatedModulesTest(loaders, allowedDupes) {
-  const { AppConstants } = ChromeUtils.import(
-    "resource://gre/modules/AppConstants.jsm"
-  );
-  if (AppConstants.DEBUG_JS_MODULES) {
-    // DevTools load different modules when DEBUG_JS_MODULES is true, which
-    // makes the hardcoded allowedDupes incorrect. Fail the test early and return.
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1590630.
-    ok(
-      false,
-      "The DevTools metrics tests should not run with " +
-        "`--enable-debug-js-modules`. Please disable this option " +
-        "and run the test again."
-    );
-    // early return to avoid polluting the logs with irrelevant errors.
-    return;
-  }
-
   const duplicatedModules = getDuplicatedModules(loaders);
 
   // Remove allowedDupes entries, and fail if an allowed entry is not found.
