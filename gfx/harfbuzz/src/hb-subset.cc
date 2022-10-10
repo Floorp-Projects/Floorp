@@ -50,6 +50,7 @@
 #include "hb-ot-color-cbdt-table.hh"
 #include "hb-ot-layout-gsub-table.hh"
 #include "hb-ot-layout-gpos-table.hh"
+#include "hb-ot-var-fvar-table.hh"
 #include "hb-ot-var-gvar-table.hh"
 #include "hb-ot-var-hvar-table.hh"
 #include "hb-ot-math-table.hh"
@@ -475,6 +476,9 @@ _subset_table (hb_subset_plan_t *plan,
   case HB_OT_TAG_HVAR: return _subset<const OT::HVAR> (plan, buf);
   case HB_OT_TAG_VVAR: return _subset<const OT::VVAR> (plan, buf);
 #endif
+  case HB_OT_TAG_fvar:
+    if (plan->user_axes_location->is_empty ()) return _passthrough (plan, tag);
+    return _subset<const OT::fvar> (plan, buf);
   case HB_OT_TAG_STAT:
     /*TODO(qxliu): change the condition as we support more complex
      * instancing operation*/

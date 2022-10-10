@@ -134,6 +134,7 @@ property_names = [
 	'Number_Joiner',
 	'Number',
 	'Brahmi_Joining_Number',
+	'Symbol_Modifier',
 	'Hieroglyph',
 	'Hieroglyph_Joiner',
 	'Hieroglyph_Segment_Begin',
@@ -214,8 +215,7 @@ def is_CONS_MED(U, UISC, UDI, UGC, AJT):
 	return (UISC == Consonant_Medial and UGC != Lo or
 		UISC == Consonant_Initial_Postfixed)
 def is_CONS_MOD(U, UISC, UDI, UGC, AJT):
-	return (UISC in [Nukta, Gemination_Mark, Consonant_Killer] and
-		not is_SYM_MOD(U, UISC, UDI, UGC, AJT))
+	return UISC in [Nukta, Gemination_Mark, Consonant_Killer]
 def is_CONS_SUB(U, UISC, UDI, UGC, AJT):
 	return UISC == Consonant_Subjoined and UGC != Lo
 def is_CONS_WITH_STACKER(U, UISC, UDI, UGC, AJT):
@@ -257,7 +257,7 @@ def is_SAKOT(U, UISC, UDI, UGC, AJT):
 	# Split off of HALANT
 	return U == 0x1A60
 def is_SYM_MOD(U, UISC, UDI, UGC, AJT):
-	return U in [0x1B6B, 0x1B6C, 0x1B6D, 0x1B6E, 0x1B6F, 0x1B70, 0x1B71, 0x1B72, 0x1B73]
+	return UISC == Symbol_Modifier
 def is_VOWEL(U, UISC, UDI, UGC, AJT):
 	return (UISC == Pure_Killer or
 		UGC != Lo and UISC in [Vowel, Vowel_Dependent])
@@ -359,9 +359,6 @@ def map_to_use(data):
 		# TODO: These don't have UISC assigned in Unicode 13.0.0, but have UIPC
 		if 0x0F18 <= U <= 0x0F19 or 0x0F3E <= U <= 0x0F3F: UISC = Vowel_Dependent
 
-		# TODO: https://github.com/harfbuzz/harfbuzz/pull/627
-		if 0x1BF2 <= U <= 0x1BF3: UISC = Nukta; UIPC = Bottom
-
 		# TODO: U+1CED should only be allowed after some of
 		# the nasalization marks, maybe only for U+1CE9..U+1CF1.
 		if U == 0x1CED: UISC = Tone_Mark
@@ -372,23 +369,9 @@ def map_to_use(data):
 
 		# Resolve Indic_Positional_Category
 
-		# TODO: These should die, but have UIPC in Unicode 13.0.0
-		if U in [0x953, 0x954]: UIPC = Not_Applicable
-
-		# TODO: These are not in USE's override list that we have, nor are they in Unicode 13.0.0
-		if 0xA926 <= U <= 0xA92A: UIPC = Top
 		# TODO: https://github.com/harfbuzz/harfbuzz/pull/1037
 		#  and https://github.com/harfbuzz/harfbuzz/issues/1631
 		if U in [0x11302, 0x11303, 0x114C1]: UIPC = Top
-		if 0x1CF8 <= U <= 0x1CF9: UIPC = Top
-
-		# TODO: https://github.com/harfbuzz/harfbuzz/issues/3550
-		if U == 0x10A38: UIPC = Bottom
-
-		# TODO: https://github.com/harfbuzz/harfbuzz/pull/982
-		# also  https://github.com/harfbuzz/harfbuzz/issues/1012
-		if 0x1112A <= U <= 0x1112B: UIPC = Top
-		if 0x11131 <= U <= 0x11132: UIPC = Top
 
 		assert (UIPC in [Not_Applicable, Visual_Order_Left] or U == 0x0F7F or
 			USE in use_positions), "%s %s %s %s %s %s %s" % (hex(U), UIPC, USE, UISC, UDI, UGC, AJT)

@@ -1,3 +1,20 @@
+Overview of changes leading to 5.3.0
+Saturday, October 8, 2022
+"Women, Life, Freedom" #MahsaAmini
+====================================
+- Don’t add glyphs from dropped MATH or COLR tables to the subset glyphs.
+  (Khaled Hosny)
+- Map “rlig” to appropriate AAT feature selectors. (Jonathan Kew)
+- Update USE data files to latest version. (David Corbett)
+- Check “CBDT” extents first before outline tables, to help with fonts that
+  also include an empty “glyf” table. (Khaled Hosny)
+- More work towards variable font instancing in the subsetter. (Qunxin Liu)
+- Subsetter repacker improvements. (Garret Rieger)
+- New API:
++hb_ot_layout_lookup_get_optical_bound()
++hb_face_builder_sort_tables()
+
+
 Overview of changes leading to 5.2.0
 Saturday, September 17, 2022
 ====================================

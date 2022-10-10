@@ -36,7 +36,7 @@ emoji-data.txt:
 emoji-test.txt:
 	curl -O https://www.unicode.org/Public/emoji/latest/emoji-test.txt
 languagetags:
-	curl -O https://docs.microsoft.com/en-us/typography/opentype/spec/languagetags
+	curl -O https://learn.microsoft.com/en-us/typography/opentype/spec/languagetags
 language-subtag-registry:
 	curl -O https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry
 ucd.nounihan.grouped.zip:
