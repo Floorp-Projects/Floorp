@@ -287,7 +287,7 @@ class AnonymousContentOverlay {
   buildOverlay() {
     let [
       cancel,
-      instrustions,
+      instructions,
       download,
       copy,
     ] = lazy.overlayLocalization.formatMessagesSync([
@@ -307,8 +307,8 @@ class AnonymousContentOverlay {
               <div class="eye right"><div id="right-eye" class="eyeball"></div></div>
               <div class="face"></div>
             </div>
-            <div class="preview-instructions" data-l10n-id="screenshots-instructions">${instrustions.value}</div>
-            <div class="cancel-shot" id="screenshots-cancel-button" data-l10n-id="screenshots-overlay-cancel-button">${cancel.value}</div>
+            <div class="preview-instructions">${instructions.value}</div>
+            <div class="cancel-shot" id="screenshots-cancel-button">${cancel.value}</div>
           </div>
         </div>
         <div id="${this.hoverBoxId}"></div>
