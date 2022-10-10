@@ -222,6 +222,23 @@ main (int argc, char **argv)
     hb::unique_ptr<hb_hashmap_t<int, int>> *v2;
     m.has (0, &v2);
   }
+  /* Test hashmap with complex shared_ptrs as keys. */
+  {
+    hb_hashmap_t<hb::shared_ptr<hb_map_t>, unsigned> m;
 
+    hb_map_t *m1 = hb_map_create ();
+    hb_map_t *m2 = hb_map_create ();
+    m1->set (1,3);
+    m2->set (1,3);
+
+    hb::shared_ptr<hb_map_t> p1 {m1};
+    hb::shared_ptr<hb_map_t> p2 {m2};
+    m.set (p1,1);
+    
+    assert (m.has (p2));
+
+    m1->set (2,4);
+    assert (!m.has (p2));
+  }
   return 0;
 }

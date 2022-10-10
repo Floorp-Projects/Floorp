@@ -89,7 +89,6 @@ hb_subset_input_create_or_fail (void)
 
   hb_tag_t default_no_subset_tables[] = {
     HB_TAG ('a', 'v', 'a', 'r'),
-    HB_TAG ('f', 'v', 'a', 'r'),
     HB_TAG ('g', 'a', 's', 'p'),
     HB_TAG ('c', 'v', 't', ' '),
     HB_TAG ('f', 'p', 'g', 'm'),
