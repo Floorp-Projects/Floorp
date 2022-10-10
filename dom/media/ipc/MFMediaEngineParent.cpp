@@ -351,9 +351,10 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvNotifyMediaInfo(
   });
 
   // Create media source and set it to the media engine.
-  NS_ENSURE_TRUE(SUCCEEDED(MakeAndInitialize<MFMediaSource>(
-                     &mMediaSource, aInfo.audioInfo(), aInfo.videoInfo())),
-                 IPC_OK());
+  NS_ENSURE_TRUE(
+      SUCCEEDED(MakeAndInitialize<MFMediaSource>(
+          &mMediaSource, aInfo.audioInfo(), aInfo.videoInfo(), mManagerThread)),
+      IPC_OK());
   mMediaEngineExtension->SetMediaSource(mMediaSource.Get());
 
   // We use the source scheme in order to let the media engine to load our

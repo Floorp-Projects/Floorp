@@ -12,7 +12,6 @@
 #include "MediaEventSource.h"
 #include "MFMediaEngineExtra.h"
 #include "MFMediaEngineStream.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/TaskQueue.h"
 
@@ -43,7 +42,8 @@ class MFMediaSource
  public:
   MFMediaSource();
   HRESULT RuntimeClassInitialize(const Maybe<AudioInfo>& aAudio,
-                                 const Maybe<VideoInfo>& aVideo);
+                                 const Maybe<VideoInfo>& aVideo,
+                                 nsISerialEventTarget* aManagerThread);
 
   // Methods for IMFMediaSource
   IFACEMETHODIMP GetCharacteristics(DWORD* aCharacteristics) override;
@@ -83,8 +83,8 @@ class MFMediaSource
   IFACEMETHODIMP SetRate(BOOL aSupportsThinning, float aRate) override;
   IFACEMETHODIMP GetRate(BOOL* aSupportsThinning, float* aRate) override;
 
-  MFMediaEngineStream* GetAudioStream() { return mAudioStream.Get(); }
-  MFMediaEngineStream* GetVideoStream() { return mVideoStream.Get(); }
+  MFMediaEngineStream* GetAudioStream();
+  MFMediaEngineStream* GetVideoStream();
 
   TaskQueue* GetTaskQueue() { return mTaskQueue; }
 
@@ -112,26 +112,28 @@ class MFMediaSource
     Paused,
     Shutdowned,
   };
-  State GetState() const { return mState; }
+  State GetState() const;
 
   void SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle);
 
  private:
   void AssertOnTaskQueue() const;
+  void AssertOnManagerThread() const;
   void AssertOnMFThreadPool() const;
 
   void NotifyEndOfStreamInternal(TrackInfo::TrackType aType);
 
   bool IsSeekable() const;
-  MFMediaEngineStream* GetStreamByDescriptorId(DWORD aId) const;
 
   // A thread-safe event queue.
   // https://docs.microsoft.com/en-us/windows/win32/medfound/media-event-generators#implementing-imfmediaeventgenerator
   Microsoft::WRL::ComPtr<IMFMediaEventQueue> mMediaEventQueue;
-  Microsoft::WRL::ComPtr<MFMediaEngineStream> mAudioStream;
-  Microsoft::WRL::ComPtr<MFMediaEngineStream> mVideoStream;
 
   RefPtr<TaskQueue> mTaskQueue;
+
+  // The thread MFMediaEngineParent uses for the creation and deconstruction for
+  // the media source.
+  RefPtr<nsISerialEventTarget> mManagerThread;
 
   // MFMediaEngineStream will notify us when we need more sample.
   friend class MFMediaEngineStream;
@@ -140,16 +142,23 @@ class MFMediaSource
   MediaEventListener mAudioStreamEndedListener;
   MediaEventListener mVideoStreamEndedListener;
 
-  // This class would be run on two threads, MF thread pool and the source's
-  // task queue. Following members would be used across both threads so they
-  // need to be thread-safe.
+  // This class would be run on three threads, MF thread pool, the source's
+  // task queue and the manager thread. Following members could be used across
+  // threads so they need to be thread-safe.
+
+  mutable Mutex mMutex{"MFMediaEngineSource"};
 
   // True if the playback is ended. Use and modify on both task queue and MF
   // thread pool.
-  Atomic<bool> mPresentationEnded;
+  bool mPresentationEnded MOZ_GUARDED_BY(mMutex);
 
   // Modify on MF thread pool, read on any threads.
-  Atomic<State> mState;
+  State mState MOZ_GUARDED_BY(mMutex);
+
+  Microsoft::WRL::ComPtr<MFMediaEngineStream> mAudioStream
+      MOZ_GUARDED_BY(mMutex);
+  Microsoft::WRL::ComPtr<MFMediaEngineStream> mVideoStream
+      MOZ_GUARDED_BY(mMutex);
 
   // Thread-safe members END
 
