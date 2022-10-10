@@ -25,7 +25,8 @@ namespace mozilla {
 
 using Microsoft::WRL::ComPtr;
 
-MFMediaSource::MFMediaSource() : mPresentationEnded(false) {}
+MFMediaSource::MFMediaSource()
+    : mPresentationEnded(false), mIsAudioEnded(false), mIsVideoEnded(false) {}
 
 HRESULT MFMediaSource::RuntimeClassInitialize(
     const Maybe<AudioInfo>& aAudio, const Maybe<VideoInfo>& aVideo,
@@ -48,7 +49,9 @@ HRESULT MFMediaSource::RuntimeClassInitialize(
       return E_FAIL;
     }
     mAudioStreamEndedListener = mAudioStream->EndedEvent().Connect(
-        mTaskQueue, this, &MFMediaSource::HandleStreamEnded);
+        mManagerThread, this, &MFMediaSource::HandleStreamEnded);
+  } else {
+    mIsAudioEnded = true;
   }
 
   if (aVideo) {
@@ -59,7 +62,9 @@ HRESULT MFMediaSource::RuntimeClassInitialize(
       return E_FAIL;
     }
     mVideoStreamEndedListener = mVideoStream->EndedEvent().Connect(
-        mTaskQueue, this, &MFMediaSource::HandleStreamEnded);
+        mManagerThread, this, &MFMediaSource::HandleStreamEnded);
+  } else {
+    mIsVideoEnded = true;
   }
 
   RETURN_IF_FAILED(wmf::MFCreateEventQueue(&mMediaEventQueue));
@@ -211,6 +216,12 @@ IFACEMETHODIMP MFMediaSource::Start(
                               GUID_NULL, S_OK, aStartPosition));
   mState = State::Started;
   mPresentationEnded = false;
+  if (mAudioStream && mAudioStream->IsSelected()) {
+    mIsAudioEnded = false;
+  }
+  if (mVideoStream && mVideoStream->IsSelected()) {
+    mIsVideoEnded = false;
+  }
   LOG("Started media source");
   return S_OK;
 }
@@ -323,8 +334,8 @@ bool MFMediaSource::IsSeekable() const {
   return true;
 }
 
-void MFMediaSource::NotifyEndOfStreamInternal(TrackInfo::TrackType aType) {
-  AssertOnTaskQueue();
+void MFMediaSource::NotifyEndOfStream(TrackInfo::TrackType aType) {
+  AssertOnManagerThread();
   MutexAutoLock lock(mMutex);
   if (mState == State::Shutdowned) {
     return;
@@ -339,7 +350,7 @@ void MFMediaSource::NotifyEndOfStreamInternal(TrackInfo::TrackType aType) {
 }
 
 void MFMediaSource::HandleStreamEnded(TrackInfo::TrackType aType) {
-  AssertOnTaskQueue();
+  AssertOnManagerThread();
   MutexAutoLock lock(mMutex);
   if (mState == State::Shutdowned) {
     return;
@@ -352,11 +363,16 @@ void MFMediaSource::HandleStreamEnded(TrackInfo::TrackType aType) {
   }
 
   LOG("Handle %s stream ended", TrackTypeToStr(aType));
-  const bool audioEnded = !mAudioStream || mAudioStream->IsEnded();
-  const bool videoEnded = !mVideoStream || mVideoStream->IsEnded();
-  mPresentationEnded = audioEnded && videoEnded;
+  if (aType == TrackInfo::TrackType::kAudioTrack) {
+    mIsAudioEnded = true;
+  } else if (aType == TrackInfo::TrackType::kVideoTrack) {
+    mIsVideoEnded = true;
+  } else {
+    MOZ_ASSERT_UNREACHABLE("Incorrect track type!");
+  }
+  mPresentationEnded = mIsAudioEnded && mIsVideoEnded;
   LOG("PresentationEnded=%d, audioEnded=%d, videoEnded=%d",
-      !!mPresentationEnded, audioEnded, videoEnded);
+      !!mPresentationEnded, mIsAudioEnded, mIsVideoEnded);
   if (mPresentationEnded) {
     RETURN_VOID_IF_FAILED(
         QueueEvent(MEEndOfPresentation, GUID_NULL, S_OK, nullptr));
@@ -498,10 +514,6 @@ MFMediaEngineStream* MFMediaSource::GetAudioStream() {
 MFMediaEngineStream* MFMediaSource::GetVideoStream() {
   MutexAutoLock lock(mMutex);
   return mVideoStream.Get();
-}
-
-void MFMediaSource::AssertOnTaskQueue() const {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 }
 
 void MFMediaSource::AssertOnManagerThread() const {

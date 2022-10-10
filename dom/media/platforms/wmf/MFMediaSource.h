@@ -86,7 +86,7 @@ class MFMediaSource
   MFMediaEngineStream* GetAudioStream();
   MFMediaEngineStream* GetVideoStream();
 
-  TaskQueue* GetTaskQueue() { return mTaskQueue; }
+  TaskQueue* GetTaskQueue() const { return mTaskQueue; }
 
   MediaEventSource<SampleRequest>& RequestSampleEvent() {
     return mRequestSampleEvent;
@@ -94,12 +94,7 @@ class MFMediaSource
 
   // Called from the content process to notify that no more encoded data in that
   // type of track.
-  void NotifyEndOfStream(TrackInfo::TrackType aType) {
-    Unused << GetTaskQueue()->Dispatch(NS_NewRunnableFunction(
-        "MFMediaSource::NotifyEndOfStream", [aType, self = RefPtr{this}]() {
-          self->NotifyEndOfStreamInternal(aType);
-        }));
-  }
+  void NotifyEndOfStream(TrackInfo::TrackType aType);
 
   // Called from the MF stream to indicate that the stream has provided last
   // encoded sample to the media engine.
@@ -117,7 +112,6 @@ class MFMediaSource
   void SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle);
 
  private:
-  void AssertOnTaskQueue() const;
   void AssertOnManagerThread() const;
   void AssertOnMFThreadPool() const;
 
@@ -129,10 +123,10 @@ class MFMediaSource
   // https://docs.microsoft.com/en-us/windows/win32/medfound/media-event-generators#implementing-imfmediaeventgenerator
   Microsoft::WRL::ComPtr<IMFMediaEventQueue> mMediaEventQueue;
 
+  // The thread used to run the engine streams' tasks.
   RefPtr<TaskQueue> mTaskQueue;
 
-  // The thread MFMediaEngineParent uses for the creation and deconstruction for
-  // the media source.
+  // The thread used to run the media source's tasks.
   RefPtr<nsISerialEventTarget> mManagerThread;
 
   // MFMediaEngineStream will notify us when we need more sample.
@@ -142,17 +136,19 @@ class MFMediaSource
   MediaEventListener mAudioStreamEndedListener;
   MediaEventListener mVideoStreamEndedListener;
 
-  // This class would be run on three threads, MF thread pool, the source's
-  // task queue and the manager thread. Following members could be used across
-  // threads so they need to be thread-safe.
+  // This class would be run/accessed on three threads, MF thread pool, the
+  // source's task queue and the manager thread. Following members could be used
+  // across threads so they need to be thread-safe.
 
   mutable Mutex mMutex{"MFMediaEngineSource"};
 
-  // True if the playback is ended. Use and modify on both task queue and MF
-  // thread pool.
+  // True if the playback is ended. Use and modify on both the manager thread
+  // and MF thread pool.
   bool mPresentationEnded MOZ_GUARDED_BY(mMutex);
+  bool mIsAudioEnded MOZ_GUARDED_BY(mMutex);
+  bool mIsVideoEnded MOZ_GUARDED_BY(mMutex);
 
-  // Modify on MF thread pool, read on any threads.
+  // Modify on MF thread pool and the manager thread, read on any threads.
   State mState MOZ_GUARDED_BY(mMutex);
 
   Microsoft::WRL::ComPtr<MFMediaEngineStream> mAudioStream
