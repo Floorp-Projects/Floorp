@@ -11,6 +11,10 @@
   .profiles-icon {
     list-style-image: url("chrome://browser/skin/lepton/mail-inbox-all.svg");
   }
+
+  .dialogBox {
+    --in-content-page-background: #333333 !important;
+  }
   
   #browserContainersExtensionContent{
     display: none !important;

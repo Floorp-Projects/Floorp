@@ -126,7 +126,7 @@
       * just replace most of these for system colors and remove all this
       * duplication (assuming we honor the preferred color scheme for
       * in-content privileged pages and plain-text documents). */
-     --in-content-page-background: rgb(50,50,50) ;
+     --in-content-page-background:#333333;
      --in-content-page-color: rgb(251,251,254);
      --in-content-deemphasized-text: rgb(191,191,201);
  
@@ -178,7 +178,7 @@
      /* Also need this on dialog :hosts, or the rule above will override the
       * value for this custom property again in the shadow DOM. */
      :host(dialog) {
-       --in-content-page-background: #42414d;
+       --in-content-page-background:#333333
      }
    }
  }
@@ -256,7 +256,7 @@
  :root {
    font: message-box;
    appearance: none;
-   background-color: var(--in-content-page-background);
+   background-color: #333333;
    color: var(--in-content-page-color);
  }
  

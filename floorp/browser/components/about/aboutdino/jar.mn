@@ -1,0 +1,12 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+% skin browser classic/1.0 %skin/classic/browser/
+
+  skin/classic/browser/dino.js                                 (dino.js)
+  skin/classic/browser/index.css                               (index.css)
+  skin/classic/browser/dino.html                               (dino.html)
+  skin/classic/browser/100-offline-sprite.png                  (100-offline-sprite.png)
+  skin/classic/browser/200-offline-sprite.png                  (200-offline-sprite.png)
