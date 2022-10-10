@@ -1253,25 +1253,19 @@ GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
       }
 
       // Mark the object and push it onto the stack.
+      size_t oldPosition = stack.position();
       markAndTraverse(obj);
 
-      if (isMarkStackEmpty()) {
-        if (obj->asTenured().arena()->onDelayedMarkingList()) {
-          AutoEnterOOMUnsafeRegion oomUnsafe;
-          oomUnsafe.crash("mark queue OOM");
-        }
-      }
-
-      // Process just the one object that is now on top of the mark stack,
-      // possibly pushing more stuff onto the stack.
-      if (isMarkStackEmpty()) {
+      // If we overflow the stack here and delay marking, then we won't be
+      // testing what we think we're testing.
+      if (stack.position() == oldPosition) {
         MOZ_ASSERT(obj->asTenured().arena()->onDelayedMarkingList());
-        // If we overflow the stack here and delay marking, then we won't be
-        // testing what we think we're testing.
         AutoEnterOOMUnsafeRegion oomUnsafe;
         oomUnsafe.crash("Overflowed stack while marking test queue");
       }
 
+      // Process just the one object that is now on top of the mark stack,
+      // possibly pushing more stuff onto the stack.
       SliceBudget unlimited = SliceBudget::unlimited();
       processMarkStackTop(unlimited);
     } else if (val.isString()) {
@@ -1431,6 +1425,9 @@ inline void GCMarker::processMarkStackTop(SliceBudget& budget) {
    * marking slices, so we must check slots and element ranges read from the
    * stack.
    */
+
+  MOZ_ASSERT_IF(markColor() == MarkColor::Black, hasBlackEntries());
+  MOZ_ASSERT_IF(markColor() == MarkColor::Gray, hasGrayEntries());
 
   JSObject* obj;             // The object being scanned.
   SlotsOrElementsKind kind;  // The kind of slot range being scanned, if any.
@@ -2028,6 +2025,9 @@ void GCMarker::setMarkColor(gc::MarkColor newColor) {
 template <typename T>
 inline void GCMarker::pushTaggedPtr(T* ptr) {
   checkZone(ptr);
+  MOZ_ASSERT((markColor() == MarkColor::Black) ==
+             (stack.position() >= grayPosition));
+
   if (!stack.push(ptr)) {
     delayMarkingChildrenOnOOM(ptr);
   }
@@ -2038,6 +2038,8 @@ void GCMarker::pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
   checkZone(obj);
   MOZ_ASSERT(obj->is<NativeObject>());
   MOZ_ASSERT(start <= end);
+  MOZ_ASSERT((markColor() == MarkColor::Black) ==
+             (stack.position() >= grayPosition));
 
   if (start == end) {
     return;
