@@ -51,10 +51,6 @@ class ModuleRtpRtcpImpl : public RtpRtcp, public RTCPReceiver::ModuleRtpRtcp {
       const RtpRtcpInterface::Configuration& configuration);
   ~ModuleRtpRtcpImpl() override;
 
-  // Returns the number of milliseconds until the module want a worker thread to
-  // call Process.
-  int64_t TimeUntilNextProcess() override;
-
   // Process any pending tasks such as timeouts.
   void Process() override;
 
@@ -314,7 +310,6 @@ class ModuleRtpRtcpImpl : public RtpRtcp, public RTCPReceiver::ModuleRtpRtcp {
 
   int64_t last_bitrate_process_time_;
   int64_t last_rtt_process_time_;
-  int64_t next_process_time_;
   uint16_t packet_overhead_;
 
   // Send side

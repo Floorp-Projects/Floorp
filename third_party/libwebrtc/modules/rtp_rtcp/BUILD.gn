@@ -351,7 +351,6 @@ rtc_source_set("rtp_rtcp_legacy") {
   deps = [
     ":rtp_rtcp",
     ":rtp_rtcp_format",
-    "..:module_api",
     "..:module_fec_api",
     "../../api:rtp_headers",
     "../../api:transport_api",
