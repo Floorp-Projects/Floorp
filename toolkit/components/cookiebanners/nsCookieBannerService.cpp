@@ -130,8 +130,14 @@ nsresult nsCookieBannerService::Init() {
   // initialized.
   mIsInitialized = true;
 
-  // Import initial rule-set and enable rule syncing.
-  mListService->Init();
+  // Import initial rule-set and enable rule syncing. Uses
+  // NS_DispatchToCurrentThreadQueue with idle priority to avoid early
+  // main-thread IO caused by the list service accessing RemoteSettings.
+  nsresult rv = NS_DispatchToCurrentThreadQueue(
+      NS_NewRunnableFunction("CookieBannerListService init startup",
+                             [&] { mListService->Init(); }),
+      EventQueuePriority::Idle);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Initialize the cookie injector.
   RefPtr<nsCookieInjector> injector = nsCookieInjector::GetSingleton();
