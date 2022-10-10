@@ -171,14 +171,19 @@ mozilla::ipc::IPCResult MFMediaEngineChild::RecvNotifyError(
 mozilla::ipc::IPCResult MFMediaEngineChild::RecvUpdateStatisticData(
     const StatisticData& aData) {
   AssertOnManagerThread();
-  uint64_t currentRenderedFrames = mFrameStats->GetPresentedFrames();
-  uint64_t currentDroppedFrames = mFrameStats->GetDroppedFrames();
+  const uint64_t currentRenderedFrames = mFrameStats->GetPresentedFrames();
+  // Media engine won't tell us that which stage those dropped frames happened,
+  // so we treat all of them as the frames dropped in the a/v sync stage (sink).
+  const uint64_t currentDroppedSinkFrames = mFrameStats->GetDroppedSinkFrames();
+  MOZ_ASSERT(aData.renderedFrames() >= currentRenderedFrames);
+  MOZ_ASSERT(aData.droppedFrames() >= currentDroppedSinkFrames);
   mFrameStats->Accumulate({0, 0, aData.renderedFrames() - currentRenderedFrames,
-                           0, aData.droppedFrames() - currentDroppedFrames, 0});
+                           0, aData.droppedFrames() - currentDroppedSinkFrames,
+                           0});
   CLOG("Update statictis data (rendered %" PRIu64 " -> %" PRIu64
        ", dropped %" PRIu64 " -> %" PRIu64 ")",
        currentRenderedFrames, mFrameStats->GetPresentedFrames(),
-       currentDroppedFrames, mFrameStats->GetDroppedFrames());
+       currentDroppedSinkFrames, mFrameStats->GetDroppedSinkFrames());
   return IPC_OK();
 }
 
