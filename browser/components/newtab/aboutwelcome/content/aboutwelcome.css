@@ -203,6 +203,7 @@ html {
   --grey-subtitle-1: #696977;
   --newtab-button-secondary-color: #0060DF;
   --mr-welcome-background-color: #F8F6F4;
+  --mr-screen-heading-color: var(--in-content-text-color);
   --mr-welcome-background-gradient: linear-gradient(0deg, rgba(144, 89, 255, 0.2) 0%, rgba(2, 144, 238, 0.2) 100%);
   --mr-screen-background-color: #F8F6F4;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Ubuntu", "Helvetica Neue", sans-serif;
@@ -223,11 +224,8 @@ html {
 }
 @media (prefers-contrast) {
   .onboardingContainer {
-    --mr-screen-background-color: windowframe;
-  }
-}
-@media (prefers-contrast: more) {
-  .onboardingContainer {
+    --mr-screen-background-color: buttontext;
+    --mr-screen-heading-color: buttonface;
     background-color: var(--in-content-page-background);
   }
 }
@@ -509,6 +507,7 @@ html {
   margin: auto auto auto 0;
 }
 .onboardingContainer .screen[pos=split] .section-secondary h1 {
+  color: var(--mr-screen-heading-color);
   font-weight: 700;
   font-size: 47px;
   line-height: 110%;
@@ -937,7 +936,7 @@ html {
   border-radius: 2px;
   color: #FFF;
 }
-@media (prefers-contrast: more) {
+@media (prefers-contrast) {
   .onboardingContainer .colorway-variations .variation-button {
     outline: 2px solid var(--in-content-button-border-color);
     border-radius: 2px;
