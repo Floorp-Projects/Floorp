@@ -24,8 +24,7 @@ class RenderExternalTextureHost final : public RenderTextureHostSWGL {
   RenderExternalTextureHost(uint8_t* aBuffer,
                             const layers::BufferDescriptor& aDescriptor);
 
-  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
-                           wr::ImageRendering aRendering) override;
+  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
   void Unlock() override;
   void PrepareForUse() override;
   size_t Bytes() override {
@@ -59,7 +58,7 @@ class RenderExternalTextureHost final : public RenderTextureHostSWGL {
   bool IsYUV() const { return mFormat == gfx::SurfaceFormat::YUV; }
   size_t PlaneCount() const { return IsYUV() ? 3 : 1; }
   void UpdateTexture(size_t aIndex);
-  void UpdateTextures(wr::ImageRendering aRendering);
+  void UpdateTextures();
 
   uint8_t* mBuffer;
   layers::BufferDescriptor mDescriptor;

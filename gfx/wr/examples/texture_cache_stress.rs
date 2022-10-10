@@ -68,7 +68,6 @@ impl ExternalImageHandler for ImageGenerator {
         &mut self,
         _key: ExternalImageId,
         channel_index: u8,
-        _rendering: ImageRendering
     ) -> ExternalImage {
         self.generate_image(channel_index as i32);
         ExternalImage {

@@ -24,7 +24,7 @@ use euclid::{Transform3D, point2};
 use time::precise_time_ns;
 use malloc_size_of::MallocSizeOfOps;
 use api::units::*;
-use api::{ExternalImageSource, ImageBufferKind, ImageRendering, ImageFormat};
+use api::{ExternalImageSource, ImageBufferKind, ImageFormat};
 use crate::renderer::{
     Renderer, VertexArrayKind, RendererStats, TextureSampler, TEXTURE_CACHE_DBG_CLEAR_COLOR
 };
@@ -99,7 +99,7 @@ pub fn upload_to_texture_cache(
                         .as_mut()
                         .expect("Found external image, but no handler set!");
                     // The filter is only relevant for NativeTexture external images.
-                    match handler.lock(id, channel_index, ImageRendering::Auto).source {
+                    match handler.lock(id, channel_index).source {
                         ExternalImageSource::RawData(data) => {
                             &data[offset as usize ..]
                         }

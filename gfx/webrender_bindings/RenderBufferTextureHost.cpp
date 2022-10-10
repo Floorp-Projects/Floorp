@@ -47,8 +47,8 @@ RenderBufferTextureHost::~RenderBufferTextureHost() {
   MOZ_COUNT_DTOR_INHERITED(RenderBufferTextureHost, RenderTextureHost);
 }
 
-wr::WrExternalImage RenderBufferTextureHost::Lock(
-    uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
+wr::WrExternalImage RenderBufferTextureHost::Lock(uint8_t aChannelIndex,
+                                                  gl::GLContext* aGL) {
   if (!mLocked) {
     if (!GetBuffer()) {
       // We hit some problems to get the shmem.

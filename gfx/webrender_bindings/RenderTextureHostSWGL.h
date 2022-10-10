@@ -18,8 +18,7 @@ class RenderTextureHostSWGL : public RenderTextureHost {
   RenderTextureHostSWGL() {}
 
   wr::WrExternalImage LockSWGL(uint8_t aChannelIndex, void* aContext,
-                               RenderCompositor* aCompositor,
-                               wr::ImageRendering aRendering) override;
+                               RenderCompositor* aCompositor) override;
 
   void UnlockSWGL() override;
 
@@ -74,8 +73,7 @@ class RenderTextureHostSWGL : public RenderTextureHost {
 
   bool SetContext(void* aContext);
 
-  bool UpdatePlanes(RenderCompositor* aCompositor,
-                    wr::ImageRendering aRendering);
+  bool UpdatePlanes(RenderCompositor* aCompositor);
 
   void CleanupPlanes();
 

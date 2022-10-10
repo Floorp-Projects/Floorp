@@ -10,7 +10,6 @@ use std::ops::{Add, Sub};
 use std::sync::Arc;
 // local imports
 use crate::{IdNamespace, TileSize};
-use crate::display_item::ImageRendering;
 use crate::font::{FontInstanceKey, FontInstanceData, FontKey, FontTemplate};
 use crate::units::*;
 
@@ -93,8 +92,8 @@ pub struct ExternalImage<'a> {
 pub trait ExternalImageHandler {
     /// Lock the external image. Then, WR could start to read the image content.
     /// The WR client should not change the image content until the unlock()
-    /// call. Provide ImageRendering for NativeTexture external images.
-    fn lock(&mut self, key: ExternalImageId, channel_index: u8, rendering: ImageRendering) -> ExternalImage;
+    /// call.
+    fn lock(&mut self, key: ExternalImageId, channel_index: u8) -> ExternalImage;
     /// Unlock the external image. WR should not read the image content
     /// after this call.
     fn unlock(&mut self, key: ExternalImageId, channel_index: u8);

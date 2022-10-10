@@ -67,7 +67,6 @@ impl ExternalImageHandler for YuvImageProvider {
         &mut self,
         key: ExternalImageId,
         _channel_index: u8,
-        _rendering: ImageRendering
     ) -> ExternalImage {
         let id = self.texture_ids[key.0 as usize];
         ExternalImage {

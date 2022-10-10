@@ -3974,7 +3974,7 @@ impl Renderer {
                 .external_image
                 .expect("BUG: Deferred resolves must be external images!");
             // Provide rendering information for NativeTexture external images.
-            let image = handler.lock(ext_image.id, ext_image.channel_index, deferred_resolve.rendering);
+            let image = handler.lock(ext_image.id, ext_image.channel_index);
             let texture_target = match ext_image.image_type {
                 ExternalImageType::TextureHandle(target) => target,
                 ExternalImageType::Buffer => {
@@ -3992,6 +3992,7 @@ impl Renderer {
                         texture_id,
                         texture_target,
                         image.uv,
+                        deferred_resolve.rendering,
                     )
                 }
                 ExternalImageSource::Invalid => {
@@ -4006,6 +4007,7 @@ impl Renderer {
                         0,
                         texture_target,
                         image.uv,
+                        deferred_resolve.rendering,
                     )
                 }
                 ExternalImageSource::RawData(_) => {
@@ -5303,7 +5305,7 @@ struct DummyExternalImageHandler {
 
 #[cfg(feature = "replay")]
 impl ExternalImageHandler for DummyExternalImageHandler {
-    fn lock(&mut self, key: ExternalImageId, channel_index: u8, _rendering: ImageRendering) -> ExternalImage {
+    fn lock(&mut self, key: ExternalImageId, channel_index: u8) -> ExternalImage {
         let (ref captured_data, ref uv) = self.data[&(key, channel_index)];
         ExternalImage {
             uv: *uv,
@@ -5438,7 +5440,7 @@ impl Renderer {
                 info!("\t{}", def.short_path);
                 let ExternalImageData { id, channel_index, image_type } = def.external;
                 // The image rendering parameter is irrelevant because no filtering happens during capturing.
-                let ext_image = handler.lock(id, channel_index, ImageRendering::Auto);
+                let ext_image = handler.lock(id, channel_index);
                 let (data, short_path) = match ext_image.source {
                     ExternalImageSource::RawData(data) => {
                         let arc_id = arc_map.len() + 1;

@@ -23,15 +23,14 @@ class RenderAndroidHardwareBufferTextureHost final : public RenderTextureHost {
   explicit RenderAndroidHardwareBufferTextureHost(
       layers::AndroidHardwareBuffer* aAndroidHardwareBuffer);
 
-  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
-                           wr::ImageRendering aRendering) override;
+  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
   void Unlock() override;
 
   size_t Bytes() override;
 
  private:
   virtual ~RenderAndroidHardwareBufferTextureHost();
-  bool EnsureLockable(wr::ImageRendering aRendering);
+  bool EnsureLockable();
   void DestroyEGLImage();
   void DeleteTextureHandle();
   gfx::IntSize GetSize() const;

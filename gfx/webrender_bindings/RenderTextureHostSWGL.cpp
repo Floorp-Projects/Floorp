@@ -13,17 +13,16 @@
 namespace mozilla {
 namespace wr {
 
-bool RenderTextureHostSWGL::UpdatePlanes(RenderCompositor* aCompositor,
-                                         wr::ImageRendering aRendering) {
+bool RenderTextureHostSWGL::UpdatePlanes(RenderCompositor* aCompositor) {
   wr_swgl_make_current(mContext);
   size_t planeCount = GetPlaneCount();
-  bool filterUpdate = IsFilterUpdateNecessary(aRendering);
+  bool texInit = false;
   if (mPlanes.size() < planeCount) {
     mPlanes.reserve(planeCount);
     while (mPlanes.size() < planeCount) {
       mPlanes.push_back(PlaneInfo(wr_swgl_gen_texture(mContext)));
     }
-    filterUpdate = true;
+    texInit = true;
   }
   gfx::SurfaceFormat format = GetFormat();
   gfx::ColorDepth colorDepth = GetColorDepth();
@@ -82,16 +81,15 @@ bool RenderTextureHostSWGL::UpdatePlanes(RenderCompositor* aCompositor,
                                plane.mSize.width, plane.mSize.height,
                                plane.mStride, plane.mData, 0, 0);
   }
-  if (filterUpdate) {
-    mCachedRendering = aRendering;
-    GLenum filter = aRendering == wr::ImageRendering::Pixelated
-                        ? LOCAL_GL_NEAREST
-                        : LOCAL_GL_LINEAR;
+  if (texInit) {
+    // Initialize the mip filters to linear by default.
     for (const auto& plane : mPlanes) {
       wr_swgl_set_texture_parameter(mContext, plane.mTexture,
-                                    LOCAL_GL_TEXTURE_MIN_FILTER, filter);
+                                    LOCAL_GL_TEXTURE_MIN_FILTER,
+                                    LOCAL_GL_LINEAR);
       wr_swgl_set_texture_parameter(mContext, plane.mTexture,
-                                    LOCAL_GL_TEXTURE_MAG_FILTER, filter);
+                                    LOCAL_GL_TEXTURE_MAG_FILTER,
+                                    LOCAL_GL_LINEAR);
     }
   }
   return true;
@@ -107,13 +105,12 @@ bool RenderTextureHostSWGL::SetContext(void* aContext) {
 }
 
 wr::WrExternalImage RenderTextureHostSWGL::LockSWGL(
-    uint8_t aChannelIndex, void* aContext, RenderCompositor* aCompositor,
-    wr::ImageRendering aRendering) {
+    uint8_t aChannelIndex, void* aContext, RenderCompositor* aCompositor) {
   if (!SetContext(aContext)) {
     return InvalidToWrExternalImage();
   }
   if (!mLocked) {
-    if (!UpdatePlanes(aCompositor, aRendering)) {
+    if (!UpdatePlanes(aCompositor)) {
       return InvalidToWrExternalImage();
     }
     mLocked = true;
@@ -171,7 +168,7 @@ bool RenderTextureHostSWGL::LockSWGLCompositeSurface(
     return false;
   }
   if (!mLocked) {
-    if (!UpdatePlanes(nullptr, mCachedRendering)) {
+    if (!UpdatePlanes(nullptr)) {
       return false;
     }
     mLocked = true;

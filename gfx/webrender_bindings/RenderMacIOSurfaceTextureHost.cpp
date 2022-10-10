@@ -14,14 +14,13 @@ namespace mozilla {
 namespace wr {
 
 static CGLError CreateTextureForPlane(uint8_t aPlaneID, gl::GLContext* aGL,
-                                      MacIOSurface* aSurface, GLuint* aTexture,
-                                      wr::ImageRendering aRendering) {
+                                      MacIOSurface* aSurface,
+                                      GLuint* aTexture) {
   MOZ_ASSERT(aGL && aSurface && aTexture);
 
   aGL->fGenTextures(1, aTexture);
   ActivateBindAndTexParameteri(aGL, LOCAL_GL_TEXTURE0,
-                               LOCAL_GL_TEXTURE_RECTANGLE_ARB, *aTexture,
-                               aRendering);
+                               LOCAL_GL_TEXTURE_RECTANGLE_ARB, *aTexture);
   aGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_WRAP_T,
                       LOCAL_GL_CLAMP_TO_EDGE);
   aGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_WRAP_S,
@@ -76,8 +75,8 @@ size_t RenderMacIOSurfaceTextureHost::Bytes() {
   return mSurface->GetAllocSize();
 }
 
-wr::WrExternalImage RenderMacIOSurfaceTextureHost::Lock(
-    uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
+wr::WrExternalImage RenderMacIOSurfaceTextureHost::Lock(uint8_t aChannelIndex,
+                                                        gl::GLContext* aGL) {
   if (mGL.get() != aGL) {
     // release the texture handle in the previous gl context
     DeleteTextureHandle();
@@ -92,25 +91,11 @@ wr::WrExternalImage RenderMacIOSurfaceTextureHost::Lock(
   if (!mTextureHandles[0]) {
     MOZ_ASSERT(gl::GLContextCGL::Cast(mGL.get())->GetCGLContext());
 
-    mCachedRendering = aRendering;
     // The result of GetPlaneCount() is 0 for single plane format, but it will
     // be 2 if the format has 2 planar data.
-    CreateTextureForPlane(0, mGL, mSurface, &(mTextureHandles[0]), aRendering);
+    CreateTextureForPlane(0, mGL, mSurface, &(mTextureHandles[0]));
     for (size_t i = 1; i < mSurface->GetPlaneCount(); ++i) {
-      CreateTextureForPlane(i, mGL, mSurface, &(mTextureHandles[i]),
-                            aRendering);
-    }
-    // update filter if filter was changed
-  } else if (IsFilterUpdateNecessary(aRendering)) {
-    ActivateBindAndTexParameteri(aGL, LOCAL_GL_TEXTURE0,
-                                 LOCAL_GL_TEXTURE_RECTANGLE_ARB,
-                                 mTextureHandles[0], aRendering);
-    // Cache new rendering filter.
-    mCachedRendering = aRendering;
-    for (size_t i = 1; i < mSurface->GetPlaneCount(); ++i) {
-      ActivateBindAndTexParameteri(aGL, LOCAL_GL_TEXTURE0,
-                                   LOCAL_GL_TEXTURE_RECTANGLE_ARB,
-                                   mTextureHandles[i], aRendering);
+      CreateTextureForPlane(i, mGL, mSurface, &(mTextureHandles[i]));
     }
   }
 

@@ -132,8 +132,8 @@ bool RenderExternalTextureHost::IsReadyForDeletion() {
   return true;
 }
 
-wr::WrExternalImage RenderExternalTextureHost::Lock(
-    uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
+wr::WrExternalImage RenderExternalTextureHost::Lock(uint8_t aChannelIndex,
+                                                    gl::GLContext* aGL) {
   if (mGL.get() != aGL) {
     mGL = aGL;
     mGL->MakeCurrent();
@@ -147,7 +147,7 @@ wr::WrExternalImage RenderExternalTextureHost::Lock(
     return InvalidToWrExternalImage();
   }
 
-  UpdateTextures(aRendering);
+  UpdateTextures();
   return mImages[aChannelIndex];
 }
 
@@ -174,25 +174,14 @@ void RenderExternalTextureHost::UpdateTexture(size_t aIndex) {
   MOZ_ASSERT(mGL->GetError() == LOCAL_GL_NO_ERROR);
 }
 
-void RenderExternalTextureHost::UpdateTextures(wr::ImageRendering aRendering) {
-  const bool renderingChanged = IsFilterUpdateNecessary(aRendering);
-
-  if (!mTextureUpdateNeeded && !renderingChanged) {
+void RenderExternalTextureHost::UpdateTextures() {
+  if (!mTextureUpdateNeeded) {
     // Nothing to do here.
     return;
   }
 
   for (size_t i = 0; i < PlaneCount(); ++i) {
-    if (mTextureUpdateNeeded) {
-      UpdateTexture(i);
-    }
-
-    if (renderingChanged) {
-      const GLuint handle = mTextureSources[i]->GetTextureHandle();
-      ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE0,
-                                   LOCAL_GL_TEXTURE_RECTANGLE_ARB, handle,
-                                   aRendering);
-    }
+    UpdateTexture(i);
   }
 
   mTextureSources[0]->MaybeFenceTexture();
