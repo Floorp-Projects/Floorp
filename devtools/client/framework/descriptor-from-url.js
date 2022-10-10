@@ -13,12 +13,9 @@ const {
 const {
   remoteClientManager,
 } = require("resource://devtools/client/shared/remote-debugging/remote-client-manager.js");
-const {
-  CommandsFactory,
-} = require("resource://devtools/shared/commands/commands-factory.js");
 
 /**
- * Construct a commands object for a given URL with various query parameters:
+ * Construct a Target Descriptor for a given URL with various query parameters:
  *
  * - host, port & ws: See the documentation for clientFromURL
  *
@@ -45,9 +42,9 @@ const {
  * @param {URL} url
  *        The url to fetch query params from.
  *
- * @return A commands object
+ * @return A target descriptor
  */
-exports.commandsFromURL = async function commandsFromURL(url) {
+exports.descriptorFromURL = async function descriptorFromURL(url) {
   const client = await clientFromURL(url);
   const params = url.searchParams;
 
@@ -61,9 +58,9 @@ exports.commandsFromURL = async function commandsFromURL(url) {
   const id = params.get("id");
   const type = params.get("type");
 
-  let commands;
+  let descriptorFront;
   try {
-    commands = await _commandsFromURL(client, id, type);
+    descriptorFront = await _descriptorFromURL(client, id, type);
   } catch (e) {
     if (!isCachedClient) {
       // If the client was not cached, then the client was created here. If the target
@@ -73,77 +70,78 @@ exports.commandsFromURL = async function commandsFromURL(url) {
     throw e;
   }
 
-  // When opening about:debugging's toolboxes for remote runtimes,
-  // we create a new commands using a shared and cached client.
-  // Prevent closing the DevToolsClient on toolbox close and Commands destruction
-  // as this can be used by about:debugging and other toolboxes.
-  if (isCachedClient) {
-    commands.shouldCloseClient = false;
-  }
+  // If this isn't a cached client, it means that we just created a new client
+  // in `clientFromURL` and we have to destroy it at some point.
+  // In such case, force the Descriptor to destroy the client as soon as it gets
+  // destroyed. This typically happens only for about:debugging toolboxes
+  // opened for local Firefox's targets.
+  descriptorFront.shouldCloseClient = !isCachedClient;
 
-  return commands;
+  return descriptorFront;
 };
 
-async function _commandsFromURL(client, id, type) {
+async function _descriptorFromURL(client, id, type) {
   if (!type) {
-    throw new Error("commandsFromURL, missing type parameter");
+    throw new Error("descriptorFromURL, missing type parameter");
   }
 
-  let commands;
+  let descriptorFront;
   if (type === "tab") {
     // Fetch target for a remote tab
     id = parseInt(id, 10);
     if (isNaN(id)) {
       throw new Error(
-        `commandsFromURL, wrong tab id '${id}', should be a number`
+        `descriptorFromURL, wrong tab id '${id}', should be a number`
       );
     }
     try {
-      commands = await CommandsFactory.forRemoteTab(id, { client });
+      descriptorFront = await client.mainRoot.getTab({ browserId: id });
     } catch (ex) {
       if (ex.message.startsWith("Protocol error (noTab)")) {
         throw new Error(
-          `commandsFromURL, tab with browserId '${id}' doesn't exist`
+          `descriptorFromURL, tab with browserId '${id}' doesn't exist`
         );
       }
       throw ex;
     }
   } else if (type === "extension") {
-    commands = await CommandsFactory.forAddon(id, { client });
+    descriptorFront = await client.mainRoot.getAddon({ id });
 
-    if (!commands) {
+    if (!descriptorFront) {
       throw new Error(
-        `commandsFromURL, extension with id '${id}' doesn't exist`
+        `descriptorFromURL, extension with id '${id}' doesn't exist`
       );
     }
   } else if (type === "worker") {
-    commands = await CommandsFactory.forWorker(id, { client });
+    descriptorFront = await client.mainRoot.getWorker(id);
 
-    if (!commands) {
-      throw new Error(`commandsFromURL, worker with id '${id}' doesn't exist`);
+    if (!descriptorFront) {
+      throw new Error(
+        `descriptorFromURL, worker with id '${id}' doesn't exist`
+      );
     }
   } else if (type == "process") {
+    // Fetch descriptor for a remote chrome actor
+    DevToolsServer.allowChromeProcess = true;
     try {
       id = parseInt(id, 10);
       if (isNaN(id)) {
         id = 0;
       }
-      // When debugging firefox itself, force the server to accept debugging processes.
-      DevToolsServer.allowChromeProcess = true;
-      commands = await CommandsFactory.forProcess(id, { client });
+      descriptorFront = await client.mainRoot.getProcess(id);
     } catch (ex) {
       if (ex.error == "noProcess") {
         throw new Error(
-          `commandsFromURL, process with id '${id}' doesn't exist`
+          `descriptorFromURL, process with id '${id}' doesn't exist`
         );
       }
       throw ex;
     }
   } else {
-    throw new Error(`commandsFromURL, unsupported type '${type}' parameter`);
+    throw new Error(`descriptorFromURL, unsupported type '${type}' parameter`);
   }
 
-  return commands;
+  return descriptorFront;
 }
 
 /**

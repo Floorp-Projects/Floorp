@@ -50,6 +50,10 @@ async function assertListTabs(tab, rootFront) {
   );
 
   const tabTarget = await tabDescriptor.getTarget();
+  ok(
+    !tabDescriptor.shouldCloseClient,
+    "Tab descriptors from listTabs shouldn't auto-close their client"
+  );
   ok(isTargetAttached(tabTarget), "The tab target should be attached");
 
   info("Detach the tab target");
@@ -112,6 +116,10 @@ async function assertGetTab(client, rootFront, tab) {
   await removeTab(tab2);
 
   const tabTarget = await tabDescriptor.getTarget();
+  ok(
+    tabDescriptor.shouldCloseClient,
+    "Tab descriptor from getTab should close their client"
+  );
   ok(isTargetAttached(tabTarget), "The tab target should be attached");
 
   info("Detach the tab target");
@@ -133,6 +141,7 @@ async function assertGetTab(client, rootFront, tab) {
 
   info("Close the descriptor's tab");
   const onDescriptorDestroyed = tabDescriptor.once("descriptor-destroyed");
+  const onClientClosed = client.once("closed");
   await removeTab(tab);
 
   info("Wait for descriptor destruction");
@@ -147,7 +156,10 @@ async function assertGetTab(client, rootFront, tab) {
     "The tab descriptor is also always destroyed after tab closing"
   );
 
-  await client.close();
+  // Tab Descriptors returned by getTab({ tab }) are considered as local tabs
+  // and auto-close their client.
+  info("Wait for client being auto-closed by the descriptor");
+  await onClientClosed;
 }
 
 function isTargetAttached(targetFront) {
