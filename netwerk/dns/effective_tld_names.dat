@@ -7171,7 +7171,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2022-09-15T15:17:34Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2022-10-07T15:19:57Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -7640,9 +7640,6 @@ camera
 
 // camp : 2013-11-07 Binky Moon, LLC
 camp
-
-// cancerresearch : 2014-05-15 Australian Cancer Research Foundation
-cancerresearch
 
 // canon : 2014-09-12 Canon Inc.
 canon
