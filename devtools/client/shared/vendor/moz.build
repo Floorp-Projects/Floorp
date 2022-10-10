@@ -9,15 +9,10 @@ DevToolsModules(
     'immutable.js',
     'jszip.js',
     'react-dom-factories.js',
-    'react-dom-server.js',
-    'react-dom-test-utils.js',
-    'react-dom.js',
-    'react-prop-types.js',
     'react-redux.js',
     'react-router-dom.js',
     'react-test-renderer-shallow.js',
     'react-test-renderer.js',
-    'react.js',
     'redux.js',
     'reselect.js',
     'seamless-immutable.js',
@@ -27,10 +22,16 @@ DevToolsModules(
 
 # react dev versions are used if enable-debug-js-modules is set in .mozconfig.
 if CONFIG['DEBUG_JS_MODULES']:
+    RenamedDevToolsModules('react-dom-dev.js', 'react-dom.js')
+    RenamedDevToolsModules('react-dom-server-dev.js', 'react-dom-server.js')
+    RenamedDevToolsModules('react-dom-test-utils-dev.js', 'react-dom-test-utils.js')
+    RenamedDevToolsModules('react-prop-types-dev.js', 'react-prop-types.js')
+    RenamedDevToolsModules('react-dev.js', 'react.js')
+else:
     DevToolsModules(
-        'react-dev.js',
-        'react-dom-dev.js',
-        'react-dom-server-dev.js',
-        'react-dom-test-utils-dev.js',
-        'react-prop-types-dev.js',
+      'react-dom-server.js',
+      'react-dom-test-utils.js',
+      'react-dom.js',
+      'react-prop-types.js',
+      'react.js'
     )
