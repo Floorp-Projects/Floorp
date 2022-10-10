@@ -93,7 +93,7 @@ class nsSplitterFrameInner final : public nsIDOMEventListener {
   void RemoveListener();
 
   enum ResizeType { Closest, Farthest, Flex, Grow };
-  enum State { Open, CollapsedBefore, CollapsedAfter, Dragging };
+  enum class State { Open, CollapsedBefore, CollapsedAfter, Dragging };
   enum CollapseDirection { Before, After };
 
   ResizeType GetResizeBefore();
@@ -116,7 +116,7 @@ class nsSplitterFrameInner final : public nsIDOMEventListener {
   UniquePtr<nsSplitterInfo[]> mChildInfosAfter;
   int32_t mChildInfosBeforeCount = 0;
   int32_t mChildInfosAfterCount = 0;
-  State mState = Open;
+  State mState = State::Open;
   nscoord mSplitterPos = 0;
   bool mDragging = false;
 
@@ -165,21 +165,23 @@ nsSplitterFrameInner::State nsSplitterFrameInner::GetState() {
   switch (SplitterElement()->FindAttrValueIn(
       kNameSpaceID_None, nsGkAtoms::state, strings, eCaseMatters)) {
     case 0:
-      return Dragging;
+      return State::Dragging;
     case 1:
       switch (SplitterElement()->FindAttrValueIn(
           kNameSpaceID_None, nsGkAtoms::substate, strings_substate,
           eCaseMatters)) {
         case 0:
-          return CollapsedBefore;
+          return State::CollapsedBefore;
         case 1:
-          return CollapsedAfter;
+          return State::CollapsedAfter;
         default:
-          if (SupportsCollapseDirection(After)) return CollapsedAfter;
-          return CollapsedBefore;
+          if (SupportsCollapseDirection(After)) {
+            return State::CollapsedAfter;
+          }
+          return State::CollapsedBefore;
       }
   }
-  return Open;
+  return State::Open;
 }
 
 //
@@ -230,7 +232,6 @@ void nsSplitterFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
   nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
-  mInner->mState = nsSplitterFrameInner::Open;
   mInner->AddListener();
   mInner->mParentBox = nullptr;
 }
@@ -351,7 +352,7 @@ void nsSplitterFrameInner::MouseUp(nsPresContext* aPresContext,
     mDragging = false;
     State newState = GetState();
     // if the state is dragging then make it Open.
-    if (newState == Dragging) {
+    if (newState == State::Dragging) {
       mOuter->mContent->AsElement()->SetAttr(kNameSpaceID_None,
                                              nsGkAtoms::state, u""_ns, true);
     }
@@ -424,7 +425,7 @@ void nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext,
   // if we are in a collapsed position
   if (isCollapsedBefore || isCollapsedAfter) {
     // and we are not collapsed then collapse
-    if (currentState == Dragging) {
+    if (currentState == State::Dragging) {
       if (pastEnd) {
         // printf("Collapse right\n");
         if (supportsAfter) {
@@ -449,7 +450,7 @@ void nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext,
   } else {
     // if we are not in a collapsed position and we are not dragging make sure
     // we are dragging.
-    if (currentState != Dragging) {
+    if (currentState != State::Dragging) {
       mOuter->mContent->AsElement()->SetAttr(
           kNameSpaceID_None, nsGkAtoms::state, u"dragging"_ns, true);
     }
@@ -782,22 +783,24 @@ void nsSplitterFrameInner::UpdateState() {
   if ((SupportsCollapseDirection(Before) || SupportsCollapseDirection(After)) &&
       IsValidParentBox(mOuter->GetParent())) {
     // Find the splitter's immediate sibling.
-    const bool prev = newState == CollapsedBefore || mState == CollapsedBefore;
+    const bool prev =
+        newState == State::CollapsedBefore || mState == State::CollapsedBefore;
     nsIFrame* splitterSibling =
         nsBoxFrame::SlowOrdinalGroupAwareSibling(mOuter, !prev);
     if (splitterSibling) {
       nsCOMPtr<nsIContent> sibling = splitterSibling->GetContent();
       if (sibling && sibling->IsElement()) {
-        if (mState == CollapsedBefore || mState == CollapsedAfter) {
+        if (mState == State::CollapsedBefore ||
+            mState == State::CollapsedAfter) {
           // CollapsedBefore -> Open
           // CollapsedBefore -> Dragging
           // CollapsedAfter -> Open
           // CollapsedAfter -> Dragging
           nsContentUtils::AddScriptRunner(new nsUnsetAttrRunnable(
               sibling->AsElement(), nsGkAtoms::collapsed));
-        } else if ((mState == Open || mState == Dragging) &&
-                   (newState == CollapsedBefore ||
-                    newState == CollapsedAfter)) {
+        } else if ((mState == State::Open || mState == State::Dragging) &&
+                   (newState == State::CollapsedBefore ||
+                    newState == State::CollapsedAfter)) {
           // Open -> CollapsedBefore / CollapsedAfter
           // Dragging -> CollapsedBefore / CollapsedAfter
           nsContentUtils::AddScriptRunner(new nsSetAttrRunnable(
