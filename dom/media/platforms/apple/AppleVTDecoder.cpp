@@ -45,6 +45,8 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
       mColorSpace(aConfig.mColorSpace
                       ? *aConfig.mColorSpace
                       : DefaultColorSpace({mPictureWidth, mPictureHeight})),
+      mColorPrimaries(aConfig.mColorPrimaries ? *aConfig.mColorPrimaries
+                                              : gfx::ColorSpace2::BT709),
       mTransferFunction(aConfig.mTransferFunction
                             ? *aConfig.mTransferFunction
                             : gfx::TransferFunction::BT709),
@@ -419,6 +421,7 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
 
     buffer.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
     buffer.mYUVColorSpace = mColorSpace;
+    buffer.mColorPrimaries = mColorPrimaries;
     buffer.mColorRange = mColorRange;
 
     gfx::IntRect visible = gfx::IntRect(0, 0, mPictureWidth, mPictureHeight);
@@ -444,13 +447,17 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
       CVBufferSetAttachment(aImage, kCVImageBufferYCbCrMatrixKey,
                             kCVImageBufferYCbCrMatrix_ITU_R_709_2,
                             kCVAttachmentMode_ShouldPropagate);
-      CVBufferSetAttachment(aImage, kCVImageBufferColorPrimariesKey,
-                            kCVImageBufferColorPrimaries_ITU_R_709_2,
-                            kCVAttachmentMode_ShouldPropagate);
     } else if (mColorSpace == gfx::YUVColorSpace::BT2020) {
       CVBufferSetAttachment(aImage, kCVImageBufferYCbCrMatrixKey,
                             kCVImageBufferYCbCrMatrix_ITU_R_2020,
                             kCVAttachmentMode_ShouldPropagate);
+    }
+
+    if (mColorPrimaries == gfx::ColorSpace2::BT709) {
+      CVBufferSetAttachment(aImage, kCVImageBufferColorPrimariesKey,
+                            kCVImageBufferColorPrimaries_ITU_R_709_2,
+                            kCVAttachmentMode_ShouldPropagate);
+    } else if (mColorPrimaries == gfx::ColorSpace2::BT2020) {
       CVBufferSetAttachment(aImage, kCVImageBufferColorPrimariesKey,
                             kCVImageBufferColorPrimaries_ITU_R_2020,
                             kCVAttachmentMode_ShouldPropagate);
@@ -469,6 +476,7 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
 
     RefPtr<MacIOSurface> macSurface = new MacIOSurface(std::move(surface));
     macSurface->SetYUVColorSpace(mColorSpace);
+    macSurface->mColorPrimaries = mColorPrimaries;
 
     RefPtr<layers::Image> image = new layers::MacIOSurfaceImage(macSurface);
 

@@ -83,6 +83,7 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface) {
     data.mCbCrStride = cbCrWidth;
     data.mPictureRect = IntRect(IntPoint(0, 0), size);
     data.mYUVColorSpace = aSurface->GetYUVColorSpace();
+    data.mColorPrimaries = aSurface->mColorPrimaries;
     data.mColorRange = aSurface->IsFullRange() ? gfx::ColorRange::FULL
                                                : gfx::ColorRange::LIMITED;
     data.mChromaSubsampling = ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
@@ -147,6 +148,7 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface) {
       data.mCbCrStride = cbCrStride;
       data.mPictureRect = IntRect(IntPoint(0, 0), size);
       data.mYUVColorSpace = aSurface->GetYUVColorSpace();
+      data.mColorPrimaries = aSurface->mColorPrimaries;
       data.mColorRange = aSurface->IsFullRange() ? gfx::ColorRange::FULL
                                                  : gfx::ColorRange::LIMITED;
       data.mChromaSubsampling = ChromaSubsampling::HALF_WIDTH;
