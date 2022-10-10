@@ -86,12 +86,37 @@ const TAB_PICKUP_OPEN_EVENT = [
   ["firefoxview", "tab_pickup_open", "tabs", "false"],
 ];
 
+const TAB_PICKUP_STATE_PREF =
+  "browser.tabs.firefox-view.ui-state.tab-pickup.open";
+
 function cleanup() {
   Services.prefs.clearUserPref("services.sync.engine.tabs");
   Services.prefs.clearUserPref("services.sync.lastTabFetch");
+  Services.prefs.clearUserPref(TAB_PICKUP_STATE_PREF);
 }
 
 registerCleanupFunction(async function() {
+  cleanup();
+});
+
+add_task(async function test_keyboard_accessibility() {
+  await withFirefoxView({}, async browser => {
+    const win = browser.ownerGlobal;
+    const { document } = browser.contentWindow;
+    const enter = async () => {
+      info("Enter");
+      EventUtils.synthesizeKey("KEY_Enter", {}, win);
+    };
+    let details = document.getElementById("tab-pickup-container");
+    let summary = details.querySelector("summary");
+    ok(summary, "summary element should exist");
+    ok(details.open, "Tab pickup container should be initially open on load");
+    summary.focus();
+    await enter();
+    ok(!details.open, "Tab pickup container should be closed");
+    await enter();
+    ok(details.open, "Tab pickup container should be opened");
+  });
   cleanup();
 });
 
