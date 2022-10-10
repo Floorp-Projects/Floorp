@@ -86,9 +86,9 @@ class PeerConnectionEndToEndBaseTest : public sigslot::has_slots<>,
     RTC_CHECK(network_thread_->Start());
     RTC_CHECK(worker_thread_->Start());
     caller_ = rtc::make_ref_counted<PeerConnectionTestWrapper>(
-        "caller", network_thread_.get(), worker_thread_.get());
+        "caller", &pss_, network_thread_.get(), worker_thread_.get());
     callee_ = rtc::make_ref_counted<PeerConnectionTestWrapper>(
-        "callee", network_thread_.get(), worker_thread_.get());
+        "callee", &pss_, network_thread_.get(), worker_thread_.get());
     webrtc::PeerConnectionInterface::IceServer ice_server;
     ice_server.uri = "stun:stun.l.google.com:19302";
     config_.servers.push_back(ice_server);

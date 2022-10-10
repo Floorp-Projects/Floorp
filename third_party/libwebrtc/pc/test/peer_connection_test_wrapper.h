@@ -40,6 +40,7 @@ class PeerConnectionTestWrapper
                       PeerConnectionTestWrapper* callee);
 
   PeerConnectionTestWrapper(const std::string& name,
+                            rtc::SocketServer* socket_server,
                             rtc::Thread* network_thread,
                             rtc::Thread* worker_thread);
   virtual ~PeerConnectionTestWrapper();
@@ -116,6 +117,7 @@ class PeerConnectionTestWrapper
       bool video);
 
   std::string name_;
+  rtc::SocketServer* const socket_server_;
   rtc::Thread* const network_thread_;
   rtc::Thread* const worker_thread_;
   webrtc::SequenceChecker pc_thread_checker_;
