@@ -226,16 +226,6 @@ class FakePortAllocator : public cricket::PortAllocator {
   void SetNetworkIgnoreMask(int network_ignore_mask) override {}
 
   cricket::PortAllocatorSession* CreateSessionInternal(
-      const std::string& content_name,
-      int component,
-      const std::string& ice_ufrag,
-      const std::string& ice_pwd) override {
-    return CreateSessionInternal(absl::string_view(content_name), component,
-                                 absl::string_view(ice_ufrag),
-                                 absl::string_view(ice_pwd));
-  }
-
-  cricket::PortAllocatorSession* CreateSessionInternal(
       absl::string_view content_name,
       int component,
       absl::string_view ice_ufrag,

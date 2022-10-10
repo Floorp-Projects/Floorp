@@ -609,12 +609,12 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
       const std::string& content_name,
       int component,
       const std::string& ice_ufrag,
-      const std::string& ice_pwd) = 0;
+      const std::string& ice_pwd);
   virtual PortAllocatorSession* CreateSessionInternal(
       absl::string_view content_name,
       int component,
       absl::string_view ice_ufrag,
-      absl::string_view ice_pwd);
+      absl::string_view ice_pwd) = 0;
 
   const std::vector<std::unique_ptr<PortAllocatorSession>>& pooled_sessions() {
     return pooled_sessions_;

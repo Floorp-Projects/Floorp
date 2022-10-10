@@ -179,10 +179,6 @@ class TestPort : public Port {
                ICE_TYPE_PREFERENCE_HOST, 0, "", true);
   }
 
-  virtual bool SupportsProtocol(const std::string& protocol) const {
-    return SupportsProtocol(absl::string_view(protocol));
-  }
-
   virtual bool SupportsProtocol(absl::string_view protocol) const {
     return true;
   }

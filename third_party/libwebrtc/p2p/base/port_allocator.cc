@@ -314,12 +314,13 @@ std::vector<IceParameters> PortAllocator::GetPooledIceCredentials() {
 }
 
 PortAllocatorSession* PortAllocator::CreateSessionInternal(
-    absl::string_view content_name,
+    const std::string& content_name,
     int component,
-    absl::string_view ice_ufrag,
-    absl::string_view ice_pwd) {
-  return CreateSessionInternal(std::string(content_name), component,
-                               std::string(ice_ufrag), std::string(ice_pwd));
+    const std::string& ice_ufrag,
+    const std::string& ice_pwd) {
+  return CreateSessionInternal(absl::string_view(content_name), component,
+                               absl::string_view(ice_ufrag),
+                               absl::string_view(ice_pwd));
 }
 
 Candidate PortAllocator::SanitizeCandidate(const Candidate& c) const {
