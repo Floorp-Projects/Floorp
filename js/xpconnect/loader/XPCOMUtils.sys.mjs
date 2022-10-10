@@ -55,6 +55,7 @@ export var XPCOMUtils = {
           redefining = true;
           return redefine(aObject, aName, aLambda.apply(aObject));
         }
+        return undefined;
       },
       configurable: true,
       enumerable: true,
@@ -124,6 +125,7 @@ export var XPCOMUtils = {
       this.defineLazyGetter(aObject, name, () => {
         if (!(name in global)) {
           let importName = EXTRA_GLOBAL_NAME_TO_IMPORT_NAME[name] || name;
+          // eslint-disable-next-line mozilla/reject-importGlobalProperties, no-unused-vars
           Cu.importGlobalProperties([importName]);
         }
         return global[name];
@@ -216,7 +218,8 @@ export var XPCOMUtils = {
     aProxy
   ) {
     if (arguments.length == 3) {
-      return ChromeUtils.defineModuleGetter(aObject, aName, aResource);
+      ChromeUtils.defineModuleGetter(aObject, aName, aResource);
+      return;
     }
 
     let proxy = aProxy || {};
@@ -228,7 +231,7 @@ export var XPCOMUtils = {
     this.defineLazyGetter(aObject, aName, () => {
       var temp = {};
       try {
-        ChromeUtils.import(aResource, temp);
+        temp = ChromeUtils.import(aResource);
 
         if (typeof aPostLambda === "function") {
           aPostLambda.apply(proxy);
@@ -459,11 +462,7 @@ export var XPCOMUtils = {
     let initFunc = aInitFuncOrResource;
 
     if (typeof aInitFuncOrResource == "string") {
-      initFunc = function() {
-        let tmp = {};
-        ChromeUtils.import(aInitFuncOrResource, tmp);
-        return tmp[aName];
-      };
+      initFunc = () => ChromeUtils.import(aInitFuncOrResource)[aName];
     }
 
     let handler = new LazyProxyHandler(
