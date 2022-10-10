@@ -1488,6 +1488,11 @@ printpreview-pagination:focus-within,
   width: 18em;
 }
 
+#appcontent {
+  /* Always flex instead of using our splitter-imposed size, if any */
+  width: auto !important;
+}
+
 /* WebExtension Sidebars */
 #sidebar-box[sidebarcommand$="-sidebar-action"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
   list-style-image: var(--webextension-menuitem-image, inherit);
