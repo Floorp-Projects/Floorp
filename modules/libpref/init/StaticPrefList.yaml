@@ -8078,7 +8078,7 @@
 # Is support for the tech() function in the @font-face src descriptor enabled?
 - name: layout.css.font-tech.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
