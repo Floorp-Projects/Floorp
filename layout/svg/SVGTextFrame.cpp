@@ -2848,12 +2848,6 @@ void SVGTextFrame::ReflowSVGNonDisplayText() {
   // time it is painted, we reflow the anonymous block frame.
   this->MarkSubtreeDirty();
 
-  // We also need to call InvalidateRenderingObservers, so that if the <text>
-  // element is within a <mask>, say, the element referencing the <mask> will
-  // be updated, which will then cause this SVGTextFrame to be painted and
-  // in doing so cause the anonymous block frame to be reflowed.
-  SVGObserverUtils::InvalidateRenderingObservers(this);
-
   // Finally, we need to actually reflow the anonymous block frame and update
   // mPositions, in case we are being reflowed immediately after a DOM
   // mutation that needs frame reconstruction.
