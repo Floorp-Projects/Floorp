@@ -36,12 +36,14 @@ constexpr StreamPriority kDefaultPriority(10);
 constexpr size_t kBufferedAmountLowThreshold = 500;
 constexpr size_t kOneFragmentPacketSize = 100;
 constexpr size_t kTwoFragmentPacketSize = 101;
+constexpr size_t kMtu = 1100;
 
 class RRSendQueueTest : public testing::Test {
  protected:
   RRSendQueueTest()
       : buf_("log: ",
              kMaxQueueSize,
+             kMtu,
              kDefaultPriority,
              on_buffered_amount_low_.AsStdFunction(),
              kBufferedAmountLowThreshold,
@@ -787,7 +789,7 @@ TEST_F(RRSendQueueTest, WillHandoverPriority) {
   DcSctpSocketHandoverState state;
   buf_.AddHandoverState(state);
 
-  RRSendQueue q2("log: ", kMaxQueueSize, kDefaultPriority,
+  RRSendQueue q2("log: ", kMaxQueueSize, kMtu, kDefaultPriority,
                  on_buffered_amount_low_.AsStdFunction(),
                  kBufferedAmountLowThreshold,
                  on_total_buffered_amount_low_.AsStdFunction());
@@ -795,5 +797,25 @@ TEST_F(RRSendQueueTest, WillHandoverPriority) {
   EXPECT_EQ(q2.GetStreamPriority(StreamID(1)), StreamPriority(42));
   EXPECT_EQ(q2.GetStreamPriority(StreamID(2)), StreamPriority(42));
 }
+
+TEST_F(RRSendQueueTest, WillSendMessagesByPrio) {
+  buf_.EnableMessageInterleaving(true);
+  buf_.SetStreamPriority(StreamID(1), StreamPriority(10));
+  buf_.SetStreamPriority(StreamID(2), StreamPriority(20));
+  buf_.SetStreamPriority(StreamID(3), StreamPriority(30));
+
+  buf_.Add(kNow, DcSctpMessage(StreamID(1), kPPID, std::vector<uint8_t>(40)));
+  buf_.Add(kNow, DcSctpMessage(StreamID(2), kPPID, std::vector<uint8_t>(20)));
+  buf_.Add(kNow, DcSctpMessage(StreamID(3), kPPID, std::vector<uint8_t>(10)));
+  std::vector<uint16_t> expected_streams = {3, 2, 2, 1, 1, 1, 1};
+
+  for (uint16_t stream_num : expected_streams) {
+    ASSERT_HAS_VALUE_AND_ASSIGN(SendQueue::DataToSend chunk,
+                                buf_.Produce(kNow, 10));
+    EXPECT_EQ(chunk.data.stream_id, StreamID(stream_num));
+  }
+  EXPECT_FALSE(buf_.Produce(kNow, 1).has_value());
+}
+
 }  // namespace
 }  // namespace dcsctp
