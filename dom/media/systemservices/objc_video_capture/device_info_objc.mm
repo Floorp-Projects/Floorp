@@ -42,33 +42,25 @@
 
 + (int)captureDeviceCount {
   int cnt = 0;
-  @try {
-    for (AVCaptureDevice* device in [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo]) {
-      if ([device isSuspended]) {
-        continue;
-      }
-      cnt++;
+  for (AVCaptureDevice* device in [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo]) {
+    if ([device isSuspended]) {
+      continue;
     }
-  } @catch (NSException* exception) {
-    ctn = 0 ;
+    cnt++;
   }
   return cnt;
 }
 
 + (AVCaptureDevice*)captureDeviceForIndex:(int)index {
   int cnt = 0;
-  @try {
-    for (AVCaptureDevice* device in [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo]) {
-      if ([device isSuspended]) {
-        continue;
-      }
-      if (cnt == index) {
-        return device;
-      }
-      cnt++;
+  for (AVCaptureDevice* device in [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo]) {
+    if ([device isSuspended]) {
+      continue;
     }
-  } @catch (NSException* exception) {
-    ctn = 0 ;
+    if (cnt == index) {
+      return device;
+    }
+    cnt++;
   }
 
   return nil;
