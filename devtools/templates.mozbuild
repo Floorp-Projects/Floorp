@@ -29,3 +29,20 @@ def DevToolsModules(*modules):
     for dir in RELATIVEDIR.split('/'):
         base = base[dir]
     base += [m for m in modules]
+
+
+@template
+def RenamedDevToolsModules(source, target):
+    ''' Helper function to ship a file (source) with a distinct name (target).
+    This will ship the file the same way DevToolsModule does it, to resource://devtools/'''
+
+    base = FINAL_TARGET_FILES.chrome.devtools.modules
+    for dir in RELATIVEDIR.split("/"):
+        base = base[dir]
+    base += ["!%s" % target]
+
+    GeneratedFile(
+        target,
+        script="/devtools/rename.py",
+        inputs=[source],
+    )
