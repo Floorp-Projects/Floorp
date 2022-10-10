@@ -2,18 +2,18 @@
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="app_name_private_5">ਪ੍ਰਾਈਵੇਟ %s</string>
+    <string name="app_name_private_5">ਨਿੱਜੀ %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="app_name_private_4">%s (ਪ੍ਰਾਈਵੇਟ)</string>
+    <string name="app_name_private_4">%s (ਨਿੱਜੀ)</string>
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">ਹੋਰ ਚੋਣਾਂ</string>
 
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_private_browsing_button">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ ਕਰਨਾ ਸਮਰੱਥ ਕਰੋ</string>
+    <string name="content_description_private_browsing_button">ਨਿੱਜੀ ਬਰਾਊਜ਼ ਕਰਨਾ ਸਮਰੱਥ ਕਰੋ</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_disable_private_browsing_button">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ ਕਰਨਾ ਅਸਮਰੱਥ ਕਰੋ</string>
+    <string name="content_description_disable_private_browsing_button">ਨਿੱਜੀ ਬਰਾਊਜ਼ ਕਰਨਾ ਅਸਮਰੱਥ ਕਰੋ</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">ਖੋਜੋ ਜਾਂ ਸਿਰਨਾਵਾਂ ਦਿਓ</string>
     <!-- Placeholder text shown in the search bar when using application search engines -->
@@ -22,7 +22,7 @@
     <string name="no_open_tabs_description">ਤੁਹਾਡੀਆਂ ਖੁੱਲ੍ਹੀਆਂ ਟੈਬਾਂ ਨੂੰ ਇੱਥੇ ਵਿਖਾਇਆ ਜਾਵੇਗਾ।</string>
 
     <!-- No Private Tabs Message Description -->
-    <string name="no_private_tabs_description">ਤੁਹਾਡੀਆਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਨੂੰ ਇੱਥੇ ਵਿਖਾਇਆ ਜਾਵੇਗਾ।</string>
+    <string name="no_private_tabs_description">ਤੁਹਾਡੀਆਂ ਨਿੱਜੀ ਟੈਬਾਂ ਨੂੰ ਇੱਥੇ ਵਿਖਾਇਆ ਜਾਵੇਗਾ।</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d ਚੁਣੀਆਂ</string>
@@ -58,15 +58,15 @@
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">
-         ਜਦੋਂ ਤੁਸੀਂ ਸਾਰੀਆਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਨੂੰ ਬੰਦ ਕਰਦੇ ਹੋ ਜਾਂ ਐਪ ਤੋਂ ਬਾਹਰ ਜਾਂਦੇ ਹੋ ਤਾਂ %1$s ਤੁਹਾਡੀ ਖੋਜ ਅਤੇ ਬਰਾਊਜ਼ਿੰਗ ਅਤੀਤ ਨੂੰ ਸਾਫ ਕਰਦਾ ਹੈ। ਹਾਲਾਂਕਿ ਇਹ ਤੁਹਾਨੂੰ ਵੈਬਸਾਈਟਾਂ ਜਾਂ ਤੁਹਾਡੇ ਇੰਟਰਨੈੱਟ ਦੇਣ ਵਾਲੇ ਲਈ ਅਣਪਛਾਤਾ ਨਹੀਂ ਬਣਾਉਂਦਾ, ਪਰ ਇਸ ਨਾਲ
-ਇਸ ਡਿਵਾਈਸ ਨੂੰ ਵਰਤੇ ਵਾਲੇ ਕਿਸੇ ਤੋਂ ਵੀ ਤੁਹਾਡੇ ਵਲੋਂ ਆਨਲਾਈਨ ਕੀਤੇ ਨੂੰ ਪ੍ਰਾਈਵੇਟ ਰੱਖਣਾ ਹੋਰ ਸੌਖਾ ਹੋ ਜਾਂਦਾ ਹੈ।</string>
+         ਜਦੋਂ ਤੁਸੀਂ ਸਾਰੀਆਂ ਨਿੱਜੀ ਟੈਬਾਂ ਨੂੰ ਬੰਦ ਕਰਦੇ ਹੋ ਜਾਂ ਐਪ ਤੋਂ ਬਾਹਰ ਜਾਂਦੇ ਹੋ ਤਾਂ %1$s ਤੁਹਾਡੀ ਖੋਜ ਅਤੇ ਬਰਾਊਜ਼ਿੰਗ ਅਤੀਤ ਨੂੰ ਸਾਫ ਕਰਦਾ ਹੈ। ਹਾਲਾਂਕਿ ਇਹ ਤੁਹਾਨੂੰ ਵੈਬਸਾਈਟਾਂ ਜਾਂ ਤੁਹਾਡੇ ਇੰਟਰਨੈੱਟ ਦੇਣ ਵਾਲੇ ਲਈ ਅਣਪਛਾਤਾ ਨਹੀਂ ਬਣਾਉਂਦਾ, ਪਰ ਇਸ ਨਾਲ
+ਇਸ ਡਿਵਾਈਸ ਨੂੰ ਵਰਤੇ ਵਾਲੇ ਕਿਸੇ ਤੋਂ ਵੀ ਤੁਹਾਡੇ ਵਲੋਂ ਆਨਲਾਈਨ ਕੀਤੇ ਨੂੰ ਨਿੱਜੀ ਰੱਖਣਾ ਹੋਰ ਸੌਖਾ ਹੋ ਜਾਂਦਾ ਹੈ।</string>
     <string name="private_browsing_common_myths">
-       ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਬਾਰੇ ਆਮ ਫ਼ਰਜ਼ੀ ਗੱਲਾਂ
+       ਨਿੱਜੀ ਟੈਬਾਂ ਬਾਰੇ ਆਮ ਫ਼ਰਜ਼ੀ ਗੱਲਾਂ
     </string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">ਤੁਹਾਡੀ ਮੁੱਖ ਸਕਰੀਨ ਤੋਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਖੋਲ੍ਹਣ ਲਈ ਸ਼ਾਰਟਕੱਟ ਜੋੜੋ।</string>
+    <string name="cfr_message">ਤੁਹਾਡੀ ਮੁੱਖ ਸਕਰੀਨ ਤੋਂ ਨਿੱਜੀ ਟੈਬਾਂ ਖੋਲ੍ਹਣ ਲਈ ਸ਼ਾਰਟਕੱਟ ਜੋੜੋ।</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">ਸ਼ਾਰਟਕੱਟ ਜੋੜੋ</string>
     <!-- Text for the negative button -->
@@ -125,7 +125,7 @@
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">ਨਵੀਂ ਟੈਬ</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab_2">ਨਵੀਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬ</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">ਨਵੀਂ ਨਿੱਜੀ ਟੈਬ</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -253,7 +253,7 @@
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">ਇਜਾਜ਼ਤ ਨਾ ਦਿਓ</string>
     <!-- Search suggestion onboarding hint title text -->
-    <string name="search_suggestions_onboarding_title">ਪ੍ਰਾਈਵੇਟ ਸ਼ੈਸ਼ਨਾਂ ਵਿੱਚ ਖੋਜ ਸੁਝਾਆਵਾਂ ਦੀ ਇਜਾਜ਼ਤ ਦੇਣੀ ਹੈ?</string>
+    <string name="search_suggestions_onboarding_title">ਨਿੱਜੀ ਸ਼ੈਸ਼ਨਾਂ ਵਿੱਚ ਖੋਜ ਸੁਝਾਆਵਾਂ ਦੀ ਇਜਾਜ਼ਤ ਦੇਣੀ ਹੈ?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s ਤੁਹਾਡੇ ਵਲੋਂ ਸਿਰਨਾਵਾਂ ਪੱਟੀ ਵਿੱਚ ਲਿਖੀ ਹਰ ਚੀਜ਼ ਨੂੰ ਤੁਹਾਡੇ ਮੂਲ ਖੋਜ ਇੰਜਣ ਨਾਲ ਸਾਂਝਾ ਕਰੇਗਾ।</string>
 
@@ -348,15 +348,15 @@
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">ਸਾਈਟ ਇਜਾਜ਼ਤਾਂ</string>
     <!-- Preference for private browsing options -->
-    <string name="preferences_private_browsing_options">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ</string>
+    <string name="preferences_private_browsing_options">ਨਿੱਜੀ ਬਰਾਊਜ਼ਿੰਗ</string>
     <!-- Preference for opening links in a private tab-->
-    <string name="preferences_open_links_in_a_private_tab">ਲਿੰਕ ਪ੍ਰਾਈਵੇਟ ਟੈਬ ਵਿੱਚ ਖੋਲ੍ਹੋ</string>
+    <string name="preferences_open_links_in_a_private_tab">ਲਿੰਕ ਨਿੱਜੀ ਟੈਬ ਵਿੱਚ ਖੋਲ੍ਹੋ</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
-    <string name="preferences_allow_screenshots_in_private_mode">ਪ੍ਰਾਈਵੇਟ ਬ੍ਰਾਊਜ਼ਿੰਗ ਵਿੱਚ ਸਕਰੀਨਸ਼ਾਟ ਮਨਜ਼ੂਰ ਕਰੋ</string>
+    <string name="preferences_allow_screenshots_in_private_mode">ਨਿੱਜੀ ਬ੍ਰਾਊਜ਼ਿੰਗ ਵਿੱਚ ਸਕਰੀਨਸ਼ਾਟ ਮਨਜ਼ੂਰ ਕਰੋ</string>
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-    <string name="preferences_screenshots_in_private_mode_disclaimer">ਜੇ ਇਜਾਜ਼ਤ ਦਿੱਤੀ ਤਾਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਉਦੋਂ ਵੀ ਦਿਖਾਈ ਦੇਣਗੀਆਂ, ਜਦੋਂ ਕਈ ਐਪਾਂ ਖੁੱਲ੍ਹੀਆਂ ਹੁੰਦੀਆਂ ਹਨ</string>
+    <string name="preferences_screenshots_in_private_mode_disclaimer">ਜੇ ਇਜਾਜ਼ਤ ਦਿੱਤੀ ਤਾਂ ਨਿੱਜੀ ਟੈਬਾਂ ਉਦੋਂ ਵੀ ਦਿਖਾਈ ਦੇਣਗੀਆਂ, ਜਦੋਂ ਕਈ ਐਪਾਂ ਖੁੱਲ੍ਹੀਆਂ ਹੁੰਦੀਆਂ ਹਨ</string>
     <!-- Preference for adding private browsing shortcut -->
-    <string name="preferences_add_private_browsing_shortcut">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਸ਼ਾਰਟਕੱਟ ਜੋੜੋ</string>
+    <string name="preferences_add_private_browsing_shortcut">ਨਿੱਜੀ ਬਰਾਊਜ਼ਿੰਗ ਸ਼ਾਰਟਕੱਟ ਜੋੜੋ</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">ਸਿਰਫ਼-HTTPS ਢੰਗ</string>
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
@@ -370,7 +370,7 @@
     <!-- Option for the https only setting -->
     <string name="preferences_https_only_in_all_tabs">ਸਾਰੀਆਂ ਟੈਬਾਂ ਵਿੱਚ ਸਮਰੱਥ ਕਰੋ</string>
     <!-- Option for the https only setting -->
-    <string name="preferences_https_only_in_private_tabs">ਸਿਰਫ਼ ਪ੍ਰਾਈਵੇਟ ਟੈਬ ਵਿੱਚ ਸਮਰੱਥ ਕਰੋ</string>
+    <string name="preferences_https_only_in_private_tabs">ਸਿਰਫ਼ ਨਿੱਜੀ ਟੈਬ ਵਿੱਚ ਸਮਰੱਥ ਕਰੋ</string>
     <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
     <string name="errorpage_httpsonly_title">ਸੁਰੱਖਿਅਤ ਸਾਈਟ ਮੌਜੂਦ ਨਹੀਂ ਹੈ</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
@@ -418,7 +418,7 @@
     <!-- Preference title for switch preference to show voice search button -->
     <string name="preferences_show_voice_search">ਅਵਾਜ਼ੀ ਖੋਜ ਵਿਖਾਓ</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
-    <string name="preferences_show_search_suggestions_in_private">ਪ੍ਰਾਈਵੇਟ ਸ਼ੈਸ਼ਨ ਵਿੱਚ ਵੇਖਾਓ</string>
+    <string name="preferences_show_search_suggestions_in_private">ਨਿੱਜੀ ਸ਼ੈਸ਼ਨ ਵਿੱਚ ਵੇਖਾਓ</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">ਕਲਿੱਪਬੋਰਡ ਸੁਝਾਅ ਵੇਖਾਓ</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
@@ -753,15 +753,15 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">ਟੈਬਾਂ ਖੋਲ੍ਹੋ</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_tabs_title">ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ</string>
+    <string name="tabs_header_private_tabs_title">ਨਿੱਜੀ ਟੈਬਾਂ</string>
     <!-- Title for the list of tabs in the synced tabs -->
     <string name="tabs_header_synced_tabs_title">ਸਿੰਕ ਕੀਤੀਆਂ ਟੈਬਾਂ</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">ਟੈਬ ਜੋੜੋ</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
-    <string name="add_private_tab">ਪ੍ਰਾਈਵੇਟ ਟੈਬ ਜੋੜੋ</string>
+    <string name="add_private_tab">ਨਿੱਜੀ ਟੈਬ ਜੋੜੋ</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
-    <string name="tab_drawer_fab_content">ਪ੍ਰਾਈਵੇਟ</string>
+    <string name="tab_drawer_fab_content">ਨਿੱਜੀ</string>
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
     <string name="tab_drawer_fab_sync">ਸਿੰਕ</string>
     <!-- Text shown in the menu for sharing all tabs -->
@@ -814,7 +814,7 @@
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">ਅਤੀਤ ਵਿੱਚੋਂ ਹਟਾਓ</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
-    <string name="pwa_site_controls_title_private">%1$s (ਪ੍ਰਾਈਵੇਟ ਮੋਡ)</string>
+    <string name="pwa_site_controls_title_private">%1$s (ਨਿੱਜੀ ਮੋਡ)</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -904,7 +904,7 @@
     <!-- Bookmark overflow menu open in new tab button -->
     <string name="bookmark_menu_open_in_new_tab_button">ਨਵੀਂ ਟੈਬ ‘ਚ ਖੋਲ੍ਹੋ</string>
     <!-- Bookmark overflow menu open in private tab button -->
-    <string name="bookmark_menu_open_in_private_tab_button">ਪ੍ਰਾਈਵੇਟ ਟੈਬ ‘ਚ ਖੋਲ੍ਹੋ</string>
+    <string name="bookmark_menu_open_in_private_tab_button">ਨਿੱਜੀ ਟੈਬ ‘ਚ ਖੋਲ੍ਹੋ</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">ਹਟਾਓ</string>
     <!--Bookmark overflow menu save button -->
@@ -1123,12 +1123,12 @@
 
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text_2">ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਬੰਦ ਕਰੋ</string>
+    <string name="notification_pbm_delete_text_2">ਨਿੱਜੀ ਟੈਬਾਂ ਬੰਦ ਕਰੋ</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">ਮਾਰਕੀਟਿੰਗ</string>
     <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">%1$s ਤੇਜ਼ ਤੇ ਪ੍ਰਾਈਵੇਟ ਹੈ</string>
+    <string name="notification_default_browser_title">%1$s ਤੇਜ਼ ਅਤੇ ਨਿੱਜੀ ਹੈ</string>
     <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">%1$s ਨੂੰ ਆਪਣਾ ਮੂਲ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
@@ -1147,9 +1147,9 @@
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">ਸ਼ਾਰਟਕੱਟਾਂ ਵਿੱਚ ਜੋੜਿਆ!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
-    <string name="snackbar_private_tab_closed">ਪ੍ਰਾਈਵੇਟ ਟੈਬ ਬੰਦ ਕੀਤੀ</string>
+    <string name="snackbar_private_tab_closed">ਨਿੱਜੀ ਟੈਬ ਬੰਦ ਕੀਤੀ</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
-    <string name="snackbar_private_tabs_closed">ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਬੰਦ ਕੀਤੀਆਂ</string>
+    <string name="snackbar_private_tabs_closed">ਨਿੱਜੀ ਟੈਬਾਂ ਬੰਦ ਕੀਤੀਆਂ</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">UNDO</string>
 
@@ -1411,7 +1411,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">ਸਭ ਟੈਬਾਂ ਵਿੱਚ</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">ਸਿਰਫ਼ ਪ੍ਰਾਈਵੇਟ ਟੈਬ ਵਿੱਚ</string>
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">ਸਿਰਫ਼ ਨਿੱਜੀ ਟੈਬ ਵਿੱਚ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">ਕ੍ਰਿਪਟੋ-ਮਾਈਨਰ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

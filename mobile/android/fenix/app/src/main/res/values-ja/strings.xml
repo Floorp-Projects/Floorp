@@ -499,13 +499,13 @@
     <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox ロゴ - 壁紙変更ボタンです</string>
 
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
-    <string name="wallpaper_classic_title">クラシック %s</string>
+    <string name="wallpaper_classic_title">%s の定番</string>
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title">限定版</string>
     <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
-    <string name="wallpaper_limited_edition_description_with_learn_more">新しい Independent Voices コレクションです。%s</string>
+    <string name="wallpaper_limited_edition_description_with_learn_more">新しい壁紙コレクション「揺るぎない声」です。%s</string>
     <!-- Description text for the limited edition wallpapers. -->
-    <string name="wallpaper_limited_edition_description">新しい Independent Voices コレクションです。</string>
+    <string name="wallpaper_limited_edition_description">新しい壁紙コレクション「揺るぎない声」です。</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">鮮やかな色彩を試す</string>
     <!-- Wallpaper onboarding dialog body text. -->
