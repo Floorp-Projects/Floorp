@@ -16,8 +16,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 loader.lazyRequireGetter(
   this,
-  "TabDescriptorFactory",
-  "resource://devtools/client/framework/tab-descriptor-factory.js",
+  "LocalTabCommandsFactory",
+  "resource://devtools/client/framework/local-tab-commands-factory.js",
   true
 );
 loader.lazyRequireGetter(
@@ -608,18 +608,21 @@ DevTools.prototype = {
       const openerTab = tab.ownerGlobal.gBrowser.getTabForBrowser(
         tab.linkedBrowser.browsingContext.opener.embedderElement
       );
-      const openerDescriptor = await TabDescriptorFactory.getDescriptorForTab(
+      const openerCommands = await LocalTabCommandsFactory.getCommandsForTab(
         openerTab
       );
-      if (this.getToolboxForDescriptor(openerDescriptor)) {
+      if (
+        openerCommands &&
+        this.getToolboxForDescriptor(openerCommands.descriptorFront)
+      ) {
         console.log(
           "Can't open a toolbox for this document as this is debugged from its opener tab"
         );
         return null;
       }
     }
-    const descriptor = await TabDescriptorFactory.createDescriptorForTab(tab);
-    return this.showToolbox(descriptor, {
+    const commands = await LocalTabCommandsFactory.createCommandsForTab(tab);
+    return this.showToolbox(commands.descriptorFront, {
       toolId,
       hostType,
       startTime,
@@ -768,8 +771,8 @@ DevTools.prototype = {
    * Returns null otherwise.
    */
   async getToolboxForTab(tab) {
-    const descriptor = await TabDescriptorFactory.getDescriptorForTab(tab);
-    return this.getToolboxForDescriptor(descriptor);
+    const commands = await LocalTabCommandsFactory.getCommandsForTab(tab);
+    return commands && this.getToolboxForDescriptor(commands.descriptorFront);
   },
 
   /**
@@ -780,8 +783,8 @@ DevTools.prototype = {
    *         - or after toolbox.destroy() resolved if a Toolbox was found
    */
   async closeToolboxForTab(tab) {
-    const descriptor = await TabDescriptorFactory.getDescriptorForTab(tab);
-
+    const commands = await LocalTabCommandsFactory.getCommandsForTab(tab);
+    const descriptor = commands.descriptorFront;
     let toolbox = await this._creatingToolboxes.get(descriptor);
     if (!toolbox) {
       toolbox = this._toolboxes.get(descriptor);
