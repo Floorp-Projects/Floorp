@@ -463,6 +463,16 @@ add_task(async function test_messages_origin_controls() {
       },
       expectedDefaultMessage: ALWAYS_ON,
       expectedHoverMessage: ALWAYS_ON,
+      expectedActionButtonDisabled: true,
+    },
+    {
+      title: "MV2 - when clicked",
+      manifest: {
+        manifest_version: 2,
+        permissions: ["activeTab"],
+      },
+      expectedDefaultMessage: WHEN_CLICKED,
+      expectedHoverMessage: HOVER_RUN_VISIT_ONLY,
       expectedActionButtonDisabled: false,
     },
     {
@@ -492,7 +502,7 @@ add_task(async function test_messages_origin_controls() {
       },
       expectedDefaultMessage: ALWAYS_ON,
       expectedHoverMessage: ALWAYS_ON,
-      expectedActionButtonDisabled: false,
+      expectedActionButtonDisabled: true,
       grantHostPermissions: true,
     },
     {
