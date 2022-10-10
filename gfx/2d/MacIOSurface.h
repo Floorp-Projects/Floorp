@@ -50,6 +50,7 @@ class MacIOSurface final
   typedef mozilla::gfx::BackendType BackendType;
   typedef mozilla::gfx::IntSize IntSize;
   typedef mozilla::gfx::YUVColorSpace YUVColorSpace;
+  typedef mozilla::gfx::ColorSpace2 ColorSpace2;
   typedef mozilla::gfx::TransferFunction TransferFunction;
   typedef mozilla::gfx::ColorRange ColorRange;
   typedef mozilla::gfx::ColorDepth ColorDepth;
@@ -147,6 +148,8 @@ class MacIOSurface final
   CFTypeRefPtr<IOSurfaceRef> GetIOSurfaceRef() { return mIOSurfaceRef; }
 
   void SetColorSpace(mozilla::gfx::ColorSpace2) const;
+
+  ColorSpace2 mColorPrimaries = ColorSpace2::UNKNOWN;
 
  private:
   CFTypeRefPtr<IOSurfaceRef> mIOSurfaceRef;
