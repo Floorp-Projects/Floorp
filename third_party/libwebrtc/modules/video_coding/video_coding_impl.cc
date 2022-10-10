@@ -51,13 +51,7 @@ class VideoCodingModuleImpl : public VideoCodingModule {
         timing_(new VCMTiming(clock, *field_trials_)),
         receiver_(clock, timing_.get(), *field_trials_) {}
 
-  ~VideoCodingModuleImpl() override {}
-
-  int64_t TimeUntilNextProcess() override {
-    int64_t receiver_time = receiver_.TimeUntilNextProcess();
-    RTC_DCHECK_GE(receiver_time, 0);
-    return receiver_time;
-  }
+  ~VideoCodingModuleImpl() override = default;
 
   void Process() override { receiver_.Process(); }
 

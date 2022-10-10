@@ -94,7 +94,6 @@ rtc_library("nack_requester") {
     "../../rtc_base/experiments:field_trial_parser",
     "../../rtc_base/task_utils:repeating_task",
     "../../system_wrappers",
-    "../utility",
   ]
 }
 
@@ -366,7 +365,6 @@ rtc_library("video_coding_legacy") {
     "../../system_wrappers",
     "../rtp_rtcp:rtp_rtcp_format",
     "../rtp_rtcp:rtp_video_header",
-    "../utility",
     "timing:inter_frame_delay",
     "timing:jitter_estimator",
     "timing:timing_module",
