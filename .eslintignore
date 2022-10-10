@@ -144,7 +144,6 @@ js/src/tests/
 js/src/Y.js
 
 # Changes to XPConnect tests must be carefully audited.
-js/xpconnect/tests/browser/
 js/xpconnect/tests/mochitest/
 js/xpconnect/tests/unit/
 

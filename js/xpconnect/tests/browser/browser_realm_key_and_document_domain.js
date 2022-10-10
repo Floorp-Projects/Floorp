@@ -6,22 +6,23 @@
 "use strict";
 
 async function test_document(url) {
-  await BrowserTestUtils.withNewTab(url, async function (browser) {
-    let result = await ContentTask.spawn(
-      browser, {},
-      async function() {
-        let result = content.document.getElementById("result");
-        return result.innerText;
-      }
-    );
+  await BrowserTestUtils.withNewTab(url, async function(browser) {
+    let result = await ContentTask.spawn(browser, {}, async function() {
+      let result = content.document.getElementById("result");
+      return result.innerText;
+    });
     is(result, "OK", "test succeeds");
   });
 }
 
 add_task(async function test_explicit_object_prototype() {
-  await test_document("http://mochi.test:8888/browser/js/xpconnect/tests/browser/browser_realm_key_object_prototype_top.html");
+  await test_document(
+    "http://mochi.test:8888/browser/js/xpconnect/tests/browser/browser_realm_key_object_prototype_top.html"
+  );
 });
 
 add_task(async function test_implicit_object_prototype() {
-  await test_document("http://mochi.test:8888/browser/js/xpconnect/tests/browser/browser_realm_key_promise_top.html");
+  await test_document(
+    "http://mochi.test:8888/browser/js/xpconnect/tests/browser/browser_realm_key_promise_top.html"
+  );
 });
