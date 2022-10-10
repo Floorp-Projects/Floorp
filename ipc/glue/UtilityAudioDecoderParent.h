@@ -43,10 +43,10 @@ class UtilityAudioDecoderParent final : public PUtilityAudioDecoderParent {
   IPCResult RecvUpdateVar(const mozilla::gfx::GfxVarUpdate& aUpdate);
 #endif
 
-  static SandboxingKind GetSandboxingKind();
-
  private:
-  ~UtilityAudioDecoderParent() = default;
+  ~UtilityAudioDecoderParent();
+
+  const SandboxingKind mKind;
 };
 
 }  // namespace mozilla::ipc

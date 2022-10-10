@@ -36,12 +36,14 @@
 
 namespace mozilla::ipc {
 
-UtilityAudioDecoderParent::UtilityAudioDecoderParent() {
+UtilityAudioDecoderParent::UtilityAudioDecoderParent()
+    : mKind(GetCurrentSandboxingKind()) {
 #ifdef MOZ_WMF_MEDIA_ENGINE
-  if (GetCurrentSandboxingKind() == SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+  if (mKind == SandboxingKind::MF_MEDIA_ENGINE_CDM) {
     nsDebugImpl::SetMultiprocessMode("MF Media Engine CDM");
     profiler_set_process_name(nsCString("MF Media Engine CDM"));
     gfx::gfxConfig::Init();
+    gfx::gfxVars::Initialize();
     gfx::DeviceManagerDx::Init();
     return;
   }
@@ -50,6 +52,16 @@ UtilityAudioDecoderParent::UtilityAudioDecoderParent() {
     nsDebugImpl::SetMultiprocessMode("Utility AudioDecoder");
     profiler_set_process_name(nsCString("Utility AudioDecoder"));
   }
+}
+
+UtilityAudioDecoderParent::~UtilityAudioDecoderParent() {
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  if (mKind == SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+    gfx::gfxConfig::Shutdown();
+    gfx::gfxVars::Shutdown();
+    gfx::DeviceManagerDx::Shutdown();
+  }
+#endif
 }
 
 /* static */
@@ -80,15 +92,6 @@ void UtilityAudioDecoderParent::WMFPreloadForSandbox() {
 #endif  // defined(MOZ_SANDBOX) && defined(OS_WIN)
 }
 
-/* static */
-SandboxingKind UtilityAudioDecoderParent::GetSandboxingKind() {
-  RefPtr<UtilityProcessChild> me = UtilityProcessChild::GetSingleton();
-  if (!me) {
-    MOZ_CRASH("I cant find myself");
-  }
-  return me->mSandbox;
-}
-
 void UtilityAudioDecoderParent::Start(
     Endpoint<PUtilityAudioDecoderParent>&& aEndpoint) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -104,8 +107,8 @@ void UtilityAudioDecoderParent::Start(
 #endif
 
   auto supported = PDMFactory::Supported();
-  Unused << SendUpdateMediaCodecsSupported(
-      GetRemoteDecodeInFromKind(GetSandboxingKind()), supported);
+  Unused << SendUpdateMediaCodecsSupported(GetRemoteDecodeInFromKind(mKind),
+                                           supported);
 }
 
 mozilla::ipc::IPCResult
@@ -123,7 +126,7 @@ mozilla::ipc::IPCResult UtilityAudioDecoderParent::RecvInitVideoBridge(
     Endpoint<PVideoBridgeChild>&& aEndpoint,
     nsTArray<gfx::GfxVarUpdate>&& aUpdates,
     const ContentDeviceData& aContentDeviceData) {
-  MOZ_ASSERT(GetCurrentSandboxingKind() == SandboxingKind::MF_MEDIA_ENGINE_CDM);
+  MOZ_ASSERT(mKind == SandboxingKind::MF_MEDIA_ENGINE_CDM);
   if (!RemoteDecoderManagerParent::CreateVideoBridgeToOtherProcess(
           std::move(aEndpoint))) {
     return IPC_FAIL_NO_REASON(this);
@@ -154,7 +157,7 @@ mozilla::ipc::IPCResult UtilityAudioDecoderParent::RecvInitVideoBridge(
 
 IPCResult UtilityAudioDecoderParent::RecvUpdateVar(
     const GfxVarUpdate& aUpdate) {
-  MOZ_ASSERT(GetCurrentSandboxingKind() == SandboxingKind::MF_MEDIA_ENGINE_CDM);
+  MOZ_ASSERT(mKind == SandboxingKind::MF_MEDIA_ENGINE_CDM);
   gfx::gfxVars::ApplyUpdate(aUpdate);
   return IPC_OK();
 }

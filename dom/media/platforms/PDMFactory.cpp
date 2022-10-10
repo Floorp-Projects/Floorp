@@ -26,6 +26,7 @@
 #include "VorbisDecoder.h"
 #include "WAVDecoder.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/RemoteDecodeUtils.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/RemoteDecoderModule.h"
 #include "mozilla/SharedThreadPool.h"
@@ -559,8 +560,7 @@ void PDMFactory::CreateRddPDMs() {
 }
 
 void PDMFactory::CreateUtilityPDMs() {
-  const ipc::SandboxingKind aKind =
-      ipc::UtilityAudioDecoderParent::GetSandboxingKind();
+  const ipc::SandboxingKind aKind = GetCurrentSandboxingKind();
 #ifdef XP_WIN
   if (StaticPrefs::media_wmf_enabled() &&
       StaticPrefs::media_utility_wmf_enabled() &&
