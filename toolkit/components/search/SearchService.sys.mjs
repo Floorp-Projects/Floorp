@@ -696,10 +696,11 @@ export class SearchService {
       );
     }
 
+    engineToRemove.pendingRemoval = true;
+
     if (engineToRemove == this.defaultEngine) {
       this.#findAndSetNewDefaultEngine({
         privateMode: false,
-        excludeEngineName: engineToRemove.name,
       });
     }
 
@@ -714,7 +715,6 @@ export class SearchService {
     ) {
       this.#findAndSetNewDefaultEngine({
         privateMode: true,
-        excludeEngineName: engineToRemove.name,
       });
     }
 
@@ -723,6 +723,7 @@ export class SearchService {
       // avoid future conflicts with other engines.
       engineToRemove.hidden = true;
       engineToRemove.alias = null;
+      engineToRemove.pendingRemoval = false;
     } else {
       // Remove the engine file from disk if we had a legacy file in the profile.
       if (engineToRemove._filePath) {
@@ -1758,7 +1759,6 @@ export class SearchService {
       privateDefault,
     } = await this._fetchEngineSelectorEngines();
 
-    let enginesToRemove = [];
     let configEngines = [...appDefaultConfigEngines];
     let oldEngineList = [...this._engines.values()];
 
@@ -1785,7 +1785,7 @@ export class SearchService {
         // engines so we'll remove the existing engine and add new later if
         // necessary.
         if (replacementEngines.length != 1) {
-          enginesToRemove.push(engine);
+          engine.pendingRemoval = true;
           continue;
         }
 
@@ -1803,7 +1803,7 @@ export class SearchService {
           manifest.chrome_settings_overrides.search_provider.name.trim()
         ) {
           // No matching name, so just remove it.
-          enginesToRemove.push(engine);
+          engine.pendingRemoval = true;
           continue;
         }
 
@@ -1847,21 +1847,18 @@ export class SearchService {
     this.#loadEnginesMetadataFromSettings(settings.engines);
 
     // Now set the sort out the default engines and notify as appropriate.
+
+    // Clear the current values, so that we'll completely reset.
     this.#currentEngine = null;
     this.#currentPrivateEngine = null;
+
     // If the user's default is one of the private engines that is being removed,
     // reset the stored setting, so that we correctly detect the change in
     // in default.
-    if (
-      prevCurrentEngine &&
-      enginesToRemove.some(e => e.name == prevCurrentEngine.name)
-    ) {
+    if (prevCurrentEngine?.pendingRemoval) {
       this._settings.setMetaDataAttribute("current", "");
     }
-    if (
-      prevPrivateEngine &&
-      enginesToRemove.some(e => e.name == prevPrivateEngine.name)
-    ) {
+    if (prevPrivateEngine?.pendingRemoval) {
       this._settings.setMetaDataAttribute("private", "");
     }
 
@@ -1896,7 +1893,7 @@ export class SearchService {
         prevMetaData &&
         settings.metaData &&
         !this.#didSettingsMetaDataUpdate(prevMetaData) &&
-        enginesToRemove.includes(prevCurrentEngine) &&
+        prevCurrentEngine?.pendingRemoval &&
         Services.prefs.getBoolPref("browser.search.removeEngineInfobar.enabled")
       ) {
         this._showRemovalOfSearchEngineNotificationBox(
@@ -1923,9 +1920,15 @@ export class SearchService {
       );
     }
 
-    // Finally, remove any engines that need removing.
+    // Finally, remove any engines that need removing. We do this after sorting
+    // out the new default, as otherwise this could cause multiple notifications
+    // and the wrong engine to be selected as default.
 
-    for (let engine of enginesToRemove) {
+    for (let engine of this._engines.values()) {
+      if (!engine.pendingRemoval) {
+        continue;
+      }
+
       // If we have other engines that use the same extension ID, then
       // we do not want to remove the add-on - only remove the engine itself.
       let inUseEngines = [...this._engines.values()].filter(
@@ -2766,6 +2769,9 @@ export class SearchService {
    * be used if there is not default set yet, or if the current default is
    * being removed.
    *
+   * This function will not consider engines that have a `pendingRemoval`
+   * property set to true.
+   *
    * The new default will be chosen from (in order):
    *
    * - Existing default from configuration, if it is not hidden.
@@ -2778,38 +2784,28 @@ export class SearchService {
    *   If true, returns the default engine for private browsing mode, otherwise
    *   the default engine for the normal mode. Note, this function does not
    *   check the "separatePrivateDefault" preference - that is up to the caller.
-   * @param {string} [excludeEngineName]
-   *   Exclude the given engine name from the search for a new engine. This is
-   *   typically used when removing engines to ensure we do not try to reselect
-   *   the same engine again.
    * @returns {nsISearchEngine|null}
    *   The appropriate search engine, or null if one could not be determined.
    */
-  #findAndSetNewDefaultEngine({ privateMode, excludeEngineName = "" }) {
+  #findAndSetNewDefaultEngine({ privateMode }) {
     // First to the app default engine...
     let newDefault = privateMode
       ? this.appPrivateDefaultEngine
       : this.appDefaultEngine;
 
-    if (
-      !newDefault ||
-      newDefault.hidden ||
-      newDefault.name == excludeEngineName
-    ) {
+    if (!newDefault || newDefault.hidden || newDefault.pendingRemoval) {
       let sortedEngines = this.#sortedVisibleEngines;
       let generalSearchEngines = sortedEngines.filter(
         e => e.isGeneralPurposeEngine
       );
 
       // then to the first visible general search engine that isn't excluded...
-      let firstVisible = generalSearchEngines.find(
-        e => e.name != excludeEngineName
-      );
+      let firstVisible = generalSearchEngines.find(e => !e.pendingRemoval);
       if (firstVisible) {
         newDefault = firstVisible;
       } else if (newDefault) {
         // then to the app default if it is not the one that is excluded...
-        if (newDefault.name != excludeEngineName) {
+        if (!newDefault.pendingRemoval) {
           newDefault.hidden = false;
         } else {
           newDefault = null;
