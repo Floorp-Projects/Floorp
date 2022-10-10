@@ -47,7 +47,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=735544
       ok(false, "should throw");
     } catch (e) {
 
-      stackFrames = e.stack.split("\n");
+      let stackFrames = e.stack.split("\n");
 
       ok(/throwAsInner/.exec(stackFrames[0]),
          "The bottom frame should be thrown by the inner");

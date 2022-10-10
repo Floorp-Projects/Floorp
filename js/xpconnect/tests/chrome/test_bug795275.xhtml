@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795275
   SimpleTest.waitForExplicitFinish();
   SimpleTest.executeSoon(function() {
     SpecialPowers.pushPrefEnv({set: [["dom.use_components_shim", true]]},
-			      startLoad)
+                              startLoad)
   });
   function startLoad() {
     for (var i = 1; i <= document.getElementsByTagName('iframe').length; ++i) {
@@ -42,9 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795275
     observe: onWarning,
     QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener"])
   };
-  var gConsoleService = Cc["@mozilla.org/consoleservice;1"]
-                          .getService(Ci.nsIConsoleService);
-  gConsoleService.registerListener(gListener);
+  Services.console.registerListener(gListener);
 
   // Wait for all four child frame to load.
   var gLoadCount = 0;
@@ -66,7 +64,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795275
   }
 
   function done() {
-    gConsoleService.unregisterListener(gListener);
+    Services.console.unregisterListener(gListener);
     is(gWarnings, 3, "Got the right number of warnings");
     SimpleTest.finish();
   }

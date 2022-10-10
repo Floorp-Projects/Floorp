@@ -23,9 +23,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=895340
 
   var finished = false;
 
-  var console = Cc["@mozilla.org/consoleservice;1"]
-                  .getService(Ci.nsIConsoleService);
-
   let listener = {
     QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener"])
   };
@@ -34,12 +31,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=895340
     if (aMessage.message.includes("Will you report me?") && !finished) {
       finished = true;
       ok(true, "exception reported");
-      console.unregisterListener(listener);
+      Services.console.unregisterListener(listener);
       SimpleTest.finish();
     }
   };
 
-  console.registerListener(listener);
+  Services.console.registerListener(listener);
 
   /* Throw an exception and verify that it gets reported. */
   let foo_obs = function() {

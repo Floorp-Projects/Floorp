@@ -12,8 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1390159
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
     function test() {
-      var xulRuntime = Cc["@mozilla.org/xre/app-info;1"]
-                           .getService(Ci.nsIXULRuntime);
+      var xulRuntime = Services.appinfo;
 
       // Make sure it has an inSafeMode property. This is just an arbitrary
       // readonly property.
@@ -26,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1390159
       is(xulRuntime.inSafeMode, oldValue, "Should not have modified prop");
 
       // Adding a new property should throw.
-      ex = null;
+      let ex = null;
       try {
         xulRuntime.foobar = 1;
       } catch (e) {

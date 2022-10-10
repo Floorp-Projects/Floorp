@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=658909
   /** Test for call/apply-ing Xray methods.**/
   SimpleTest.waitForExplicitFinish();
 
-  gLoadCount = 0;
+  let gLoadCount = 0;
   function frameLoaded() {
     if (++gLoadCount == frames.length)
       go();
@@ -71,11 +71,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=658909
   };
 
   function go() {
-    for (var i = 0; i < frames.length; ++i)
+    for (let i = 0; i < frames.length; ++i)
         frames[i].name = 'frame' + i;
-    for (var i = 0; i < frames.length; ++i) {
-      for (var j = 0; j < frames.length; ++j) {
-        for (var k in testFunctions)
+    for (let i = 0; i < frames.length; ++i) {
+      for (let j = 0; j < frames.length; ++j) {
+        for (let k in testFunctions)
           testFunctions[k](frames[i], frames[j], k);
       }
     }

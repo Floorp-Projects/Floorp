@@ -43,13 +43,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=853571
 
   function checkSource(target, sb, expectedSource, message) {
     target.addEventListener("message", function listener(event) {
-      target.removeEventListener("message", listener);
       is(event.source, expectedSource, message);
       let {done} = gen.next();
       if (done) {
         // We're done.
       }
-    });
+    },
+    { once: true});
 
     sb.target = target;
     Cu.evalInSandbox("target.postMessage('foo', '*');", sb);

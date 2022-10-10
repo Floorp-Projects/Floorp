@@ -25,8 +25,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=706301
   function getLengthInChrome(nodelist) {
 
     // Make sure the object is Xray wrapped.
-    ok(nodelist === XPCNativeWrapper(nodelist), "object passed from content to chrome " +
-                                                "should be Xray-wrapped.");
+    is(nodelist, Cu.unwaiveXrays(nodelist),
+       "object passed from content to chrome should be Xray-wrapped.");
 
     // Perform the operation.
     Object.getOwnPropertyDescriptor(nodelist, 'length');

@@ -18,6 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=860494
   <script type="application/javascript">
   <![CDATA[
   /** Test for Bug 860494 **/
+
   SimpleTest.waitForExplicitFinish();
 
   function go() {
@@ -28,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=860494
     ok(!!/http/.exec(iwin.location), "iframe names shouldn't shadow |location| via Xray");
     is(iwin.length, 7, "iframe names shouldn't shadow |length| via Xray");
     is(iwin.window, iwin, "iframe names shouldn't shadow |window| via Xray");
-    is(iwin.navigator, XPCNativeWrapper(iwin.wrappedJSObject.navigator),
+    is(iwin.navigator, Cu.unwaiveXrays(iwin.wrappedJSObject.navigator),
        "iframe names shouldn't shadow |navigator| via Xray");
     ok(iwin.alert instanceof Function,
        "iframe names shouldn't shadow |alert| via Xray");

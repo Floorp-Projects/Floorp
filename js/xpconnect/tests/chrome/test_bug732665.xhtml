@@ -34,7 +34,9 @@ add_task(async () => {
     f = f || function() {};
     function inner() {
       try {
+        // eslint-disable-next-line no-with
         with ({}) { // keep things predictable -- stay in the interpreter
+          // eslint-disable-next-line no-eval
           var stepsFromLimit = eval("inner()"); // Use eval to force a number of native stackframes to be created.
         }
         if (stepsFromLimit == d) {

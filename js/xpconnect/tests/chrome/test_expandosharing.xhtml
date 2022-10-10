@@ -53,15 +53,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758415
     window.gWinB = document.getElementById('frameB').contentWindow;
     window.gWinC = document.getElementById('frameC').contentWindow;
 
+    /* globals gWinA1, gWinA2, gWinA3, gWinB, gWinC */
+
     // Test expando sharing with a JSM for different types of Xrays.
-    testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetWN));
-    testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetDOM));
-    testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetJS));
+    testJSM(Cu.unwaiveXrays(gWinC.wrappedJSObject.targetWN));
+    testJSM(Cu.unwaiveXrays(gWinC.wrappedJSObject.targetDOM));
+    testJSM(Cu.unwaiveXrays(gWinC.wrappedJSObject.targetJS));
 
     // Make sure sandboxes never share expandos with anyone else.
-    testSandbox(XPCNativeWrapper(gWinB.wrappedJSObject.targetWN));
-    testSandbox(XPCNativeWrapper(gWinB.wrappedJSObject.targetDOM));
-    testSandbox(XPCNativeWrapper(gWinB.wrappedJSObject.targetJS));
+    testSandbox(Cu.unwaiveXrays(gWinB.wrappedJSObject.targetWN));
+    testSandbox(Cu.unwaiveXrays(gWinB.wrappedJSObject.targetDOM));
+    testSandbox(Cu.unwaiveXrays(gWinB.wrappedJSObject.targetJS));
 
     // Test Content Xrays.
     testContentXrays();
@@ -87,8 +89,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758415
 
     // Set up the sandboxes. Use an expanded principal to get xrays with
     // exclusive expandos.
-    sb1 = Cu.Sandbox(["https://test1.example.org", "https://test2.example.org"]);
-    sb2 = Cu.Sandbox(["https://test1.example.org", "https://test2.example.org"]);
+    let sb1 = Cu.Sandbox(["https://test1.example.org", "https://test2.example.org"]);
+    let sb2 = Cu.Sandbox(["https://test1.example.org", "https://test2.example.org"]);
     sb1.target = target;
     sb2.target = target;
     sb1.name = "sandbox1";

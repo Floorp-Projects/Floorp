@@ -20,10 +20,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
 add_task(async () => {
 var sandbox = new Cu.Sandbox("about:blank");
 
-var test_utils = window.windowUtils;
-
 await SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
                                           true]]});
+
+/* eslint-disable no-eval */
 
 function getCOW(x) {
   if (typeof x != 'object' && typeof x != 'function')
@@ -113,8 +113,8 @@ function COWTests() {
        "object with empty exposedProps shouldn't have any properties");
 
     // Test object with one exposed property
-    var strict = { __exposedProps__: { foo: "r" }, foo: "foo property" };
-    var strictCOWr = getCOW(strict);
+    var strict2 = { __exposedProps__: { foo: "r" }, foo: "foo property" };
+    var strictCOWr = getCOW(strict2);
     PROPS_TO_TEST.forEach(function(name) {
         isPropHidden(strictCOW, name, "object with exposed 'foo'");
     });

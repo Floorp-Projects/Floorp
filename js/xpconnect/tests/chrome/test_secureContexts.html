@@ -16,6 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1273687
   SimpleTest.waitForExplicitFinish();
 
   window.onload = () => {
+    /* globals t, i */
     runTest(t, true);
     runTest(i, false);
 

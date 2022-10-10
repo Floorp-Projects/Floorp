@@ -30,6 +30,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=773962
       finishTest();
   }
 
+  var win1;
+  var win2;
+  var node1;
+  var loc1;
+  var win1Waiver;
+  var node1Waiver;
+  var loc1Waiver;
+
   function startTest() {
     // grab the windows and the node.
     win1 = document.getElementById('frame1').contentWindow;
@@ -62,7 +70,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=773962
     // Now, make sure everything is set up how we expect.
     ok(Cu.isDeadWrapper(win1Waiver), "window waiver should go away after navigation");
     ok(node1Waiver === node1.wrappedJSObject, "waivers still work");
-    ok(XPCNativeWrapper(node1Waiver) === node1, "waivers still work");
+    ok(Cu.unwaiveXrays(node1Waiver) === node1, "waivers still work");
 
     // The semantics of location are tricky, because win1 now has a new location object.
     // In fact, loc1 should be a dead object proxy. Let's make sure we get this right.

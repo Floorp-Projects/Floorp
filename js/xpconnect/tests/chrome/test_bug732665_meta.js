@@ -1,12 +1,16 @@
-var bottom = stackPointerInfo();
-var top = bottom;
+/* globals stackPointerInfo */
+
+var stackBottom = stackPointerInfo();
+var stackTop = stackBottom;
 
 function nearNativeStackLimit() {
   function inner() {
     try {
+      // eslint-disable-next-line no-with
       with ({}) {
         // keep things predictable -- stay in the interpreter
-        top = stackPointerInfo();
+        stackTop = stackPointerInfo();
+        // eslint-disable-next-line no-eval
         var stepsFromLimit = eval("inner()"); // Use eval to force a number of native stackframes to be created.
       }
       return stepsFromLimit + 1;
@@ -21,7 +25,7 @@ function nearNativeStackLimit() {
 }
 
 var nbFrames = nearNativeStackLimit();
-var frameSize = bottom - top;
+var frameSize = stackBottom - stackTop;
 print(
   "Max stack size:",
   frameSize,

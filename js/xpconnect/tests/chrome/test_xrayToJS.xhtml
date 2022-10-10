@@ -38,19 +38,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   var isNightlyBuild = AppConstants.NIGHTLY_BUILD;
   var isReleaseOrBeta = AppConstants.RELEASE_OR_BETA;
 
-  typedArrayClasses = ['Uint8Array', 'Int8Array', 'Uint16Array', 'Int16Array',
-                       'Uint32Array', 'Int32Array', 'Float32Array', 'Float64Array',
-                       'Uint8ClampedArray'];
-  errorObjectClasses = ['Error', 'InternalError', 'EvalError', 'RangeError', 'ReferenceError',
-                        'SyntaxError', 'TypeError', 'URIError', 'AggregateError'];
+  let typedArrayClasses = ['Uint8Array', 'Int8Array', 'Uint16Array', 'Int16Array',
+                           'Uint32Array', 'Int32Array', 'Float32Array', 'Float64Array',
+                           'Uint8ClampedArray'];
+  let errorObjectClasses = ['Error', 'InternalError', 'EvalError', 'RangeError', 'ReferenceError',
+                            'SyntaxError', 'TypeError', 'URIError', 'AggregateError'];
 
   // A simpleConstructors entry can either be the name of a constructor as a
   // string, or an object containing the properties `name`, and `args`.
   // In the former case, the constructor is invoked without any args; in the
   // latter case, it is invoked with `args` as the arguments list.
-  simpleConstructors = ['Object', 'Function', 'Array', 'Boolean', 'Date', 'Number',
-                        'String', 'RegExp', 'ArrayBuffer', 'WeakMap', 'WeakSet', 'Map', 'Set',
-                        {name: 'Promise', args: [function(){}]}];
+  let simpleConstructors = ['Object', 'Function', 'Array', 'Boolean', 'Date', 'Number',
+                            'String', 'RegExp', 'ArrayBuffer', 'WeakMap', 'WeakSet', 'Map', 'Set',
+                            {name: 'Promise', args: [function(){}]}];
 
   // All TypedArray constructors can be called with zero arguments.
   simpleConstructors = simpleConstructors.concat(typedArrayClasses);
@@ -62,10 +62,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
   function go() {
     window.iwin = document.getElementById('ifr').contentWindow;
+    /* global iwin */
 
     // Test constructors that can be instantiated with zero arguments, or with
     // a fixed set of arguments provided using `...rest`.
-    for (var c of simpleConstructors) {
+    for (let c of simpleConstructors) {
       var args = [];
       if (typeof c === 'object') {
         args = c.args;
@@ -100,7 +101,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     var doSetFoo = new iwin.Function('arg', 'arg.foo = 2;');
     is(global(doSetFoo), iwin, "function with args works");
     try {
-      doSetFoo(new Object());
+      doSetFoo({});
       ok(false, "should have thrown while setting property on object");
     } catch (e) {
       ok(!!/denied/.test(e), "Threw correctly: " + e);
@@ -240,7 +241,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   }
   gConstructorProperties.Array =
     constructorProps(["isArray", "from", "of", Symbol.species]);
-  for (var c of typedArrayClasses) {
+  for (let c of typedArrayClasses) {
     gPrototypeProperties[c] = ["constructor", "BYTES_PER_ELEMENT"];
     gConstructorProperties[c] = constructorProps(["BYTES_PER_ELEMENT"]);
   }
@@ -251,7 +252,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
      "slice", "map", "filter", "at"];
   // There is no TypedArray constructor, looks like.
   is(window.TypedArray, undefined, "If this ever changes, add to this test!");
-  for (var c of errorObjectClasses) {
+  for (let c of errorObjectClasses) {
       gPrototypeProperties[c] = ["constructor", "name", "message", "stack"];
       gConstructorProperties[c] = constructorProps([]);
   }
@@ -329,9 +330,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
   // Sort all the lists so we don't need to mutate them later (or copy them
   // again to sort them).
-  for (var c of Object.keys(gPrototypeProperties))
+  for (let c of Object.keys(gPrototypeProperties))
     sortProperties(gPrototypeProperties[c]);
-  for (var c of Object.keys(gConstructorProperties))
+  for (let c of Object.keys(gConstructorProperties))
     sortProperties(gConstructorProperties[c]);
 
   function filterOut(array, props) {
@@ -477,8 +478,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     is(xray2.expando, 42, "Xrayed instances see proto expandos");
 
     // Now test constructors
-    localCtor = window[classname];
-    xrayCtor = xrayProto.constructor;
+    let localCtor = window[classname];
+    let xrayCtor = xrayProto.constructor;
     // We already checked that this is the same as iwin[classname]
 
     let desiredCtorProps =
@@ -708,8 +709,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     for (let prop in trickyObject) {
       if (prop == 'primitiveProp')
         trickyObject[prop] = trickyObject[prop] - 10;
-      if (prop != 'expando')
+      if (prop != 'expando') {
+        // eslint-disable-next-line no-self-assign
         trickyObject[prop] = trickyObject[prop];
+      }
       ++propCount;
     }
     is(propCount, 3, "Should iterate the correct number of times");
@@ -798,7 +801,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
                                      typeof typedArrayProto[name] === "function") &&
                                     name !== "constructor");
 
-    for (var c of typedArrayClasses) {
+    for (let c of typedArrayClasses) {
       var t = new iwin[c](10);
       checkThrows(function() { t[2]; }, /performant/, "direct property-wise reading of typed arrays forbidden over Xrays");
       checkThrows(function() { t[2] = 3; }, /performant/, "direct property-wise writing of typed arrays forbidden over Xrays");

@@ -20,9 +20,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=801241
   /** Test for Bug 801241 **/
   SimpleTest.waitForExplicitFinish();
 
+  /* globals win */
+
   // This is decompiled and run inside the sandbox;
   function sbCode() {
     try {
+      // eslint-disable-next-line no-self-assign
       win.location = win.location;
       ok(true, "Didn't throw setting from location");
     } catch (e) {
