@@ -115,6 +115,12 @@ class TabDescriptorFront extends DescriptorMixin(
   setLocalTab(localTab) {
     this._localTab = localTab;
     this._setupLocalTabListeners();
+
+    // This is pure legacy. We always assumed closing the DevToolsClient
+    // when the tab was closed. It is mostly important for tests,
+    // but also ensure cleaning up the client and everything on tab closing.
+    // (this flag is handled by DescriptorMixin)
+    this.shouldCloseClient = true;
   }
 
   get isTabDescriptor() {
@@ -310,7 +316,7 @@ class TabDescriptorFront extends DescriptorMixin(
         // Always destroy the toolbox opened for this local tab descriptor.
         // When the toolbox is in a Window Host, it won't be removed from the
         // DOM when the tab is closed.
-        const toolbox = gDevTools.getToolboxForDescriptorFront(this);
+        const toolbox = gDevTools.getToolboxForDescriptor(this);
         if (toolbox) {
           // Toolbox.destroy will call target.destroy eventually.
           await toolbox.destroy();

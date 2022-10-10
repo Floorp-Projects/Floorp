@@ -1330,7 +1330,7 @@ export class StyleEditorUI extends EventEmitter {
         if (!rule.matches) {
           cond.classList.add("media-condition-unmatched");
         }
-        if (this.#commands.descriptorFront.isLocalTab) {
+        if (this.#toolbox.descriptorFront.isLocalTab) {
           this.#setConditionContents(cond, rule.conditionText);
         } else {
           cond.textContent = rule.conditionText;
