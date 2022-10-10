@@ -362,7 +362,7 @@ class TypeAndValueT {
   TypeAndValueT(StackType type, Value value) : tv_(type, value) {}
   TypeAndValueT(ValType type, Value value) : tv_(StackType(type), value) {}
   StackType type() const { return tv_.first(); }
-  StackType& typeRef() { return tv_.first(); }
+  void setType(StackType type) { tv_.first() = type; }
   Value value() const { return tv_.second(); }
   void setValue(Value value) { tv_.second() = value; }
 };
@@ -440,9 +440,20 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool popWithRefType(Value* value, StackType* type);
   [[nodiscard]] bool popWithFuncType(Value* value, FuncType** funcType,
                                      bool* maybeNull);
-  [[nodiscard]] bool popThenPushType(ResultType expected, ValueVector* values);
-  [[nodiscard]] bool topWithTypeAndPush(ResultType expected,
-                                        ValueVector* values);
+  // Check that the top of the value stack has type `expected`, bearing in
+  // mind that it may be a block type, hence involving multiple values.
+  //
+  // If the block's stack contains polymorphic values at its base (because we
+  // are in unreachable code) then suitable extra values are inserted into the
+  // value stack, as controlled by `retypePolymorphics`: if this is true,
+  // polymorphic values have their types created/updated from `expected`.  If
+  // it is false, such values are left as `StackType::bottom()`.
+  //
+  // If `values` is non-null, it is filled in with Value components of the
+  // relevant stack entries, including those of any new entries created.
+  [[nodiscard]] bool checkTopTypeMatches(ResultType expected,
+                                         ValueVector* values,
+                                         bool retypePolymorphics);
 
   [[nodiscard]] bool pushControl(LabelKind kind, BlockType type);
   [[nodiscard]] bool checkStackAtEndOfBlock(ResultType* type,
@@ -1028,12 +1039,10 @@ inline bool OpIter<Policy>::popWithFuncType(Value* value, FuncType** funcType,
   return true;
 }
 
-// This function is an optimization of the sequence:
-//   popWithType(ResultType, tmp)
-//   push(ResultType, tmp)
 template <typename Policy>
-inline bool OpIter<Policy>::popThenPushType(ResultType expected,
-                                            ValueVector* values) {
+inline bool OpIter<Policy>::checkTopTypeMatches(ResultType expected,
+                                                ValueVector* values,
+                                                bool retypePolymorphics) {
   if (expected.empty()) {
     return true;
   }
@@ -1067,11 +1076,15 @@ inline bool OpIter<Policy>::popThenPushType(ResultType expected,
       }
 
       // If the base of this block's stack is polymorphic, then we can just
-      // pull out as many fake values as we need to validate; they won't be used
-      // since we're in unreachable code. We must however push these types on
-      // the operand stack since they are now fixed by this constraint.
+      // pull out as many fake values as we need to validate, and create dummy
+      // stack entries accordingly; they won't be used since we're in
+      // unreachable code.  However, if `retypePolymorphics` is true, we must
+      // set the types on these new entries to whatever `expected` requires
+      // them to be.
+      TypeAndValue newTandV =
+          retypePolymorphics ? TypeAndValue(expectedType) : TypeAndValue();
       if (!valueStack_.insert(valueStack_.begin() + currentValueStackLength,
-                              TypeAndValue(expectedType))) {
+                              newTandV)) {
         return false;
       }
 
@@ -1080,68 +1093,11 @@ inline bool OpIter<Policy>::popThenPushType(ResultType expected,
       TypeAndValue& observed = valueStack_[currentValueStackLength - 1];
 
       if (observed.type().isBottom()) {
-        observed.typeRef() = StackType(expectedType);
-        collectValue(Value());
-      } else {
-        if (!checkIsSubtypeOf(observed.type().valType(), expectedType)) {
-          return false;
+        if (retypePolymorphics) {
+          // As above, update polymorphic values as required by `expected`.
+          observed.setType(StackType(expectedType));
         }
 
-        collectValue(observed.value());
-      }
-    }
-  }
-  return true;
-}
-
-template <typename Policy>
-inline bool OpIter<Policy>::topWithTypeAndPush(ResultType expected,
-                                               ValueVector* values) {
-  if (expected.empty()) {
-    return true;
-  }
-
-  Control& block = controlStack_.back();
-
-  size_t expectedLength = expected.length();
-  if (values && !values->resize(expectedLength)) {
-    return false;
-  }
-
-  for (size_t i = 0; i != expectedLength; i++) {
-    // We're iterating as-if we were popping each expected/actual type one by
-    // one, which means iterating the array of expected results backwards.
-    // The "current" value stack length refers to what the value stack length
-    // would have been if we were popping it.
-    size_t reverseIndex = expectedLength - i - 1;
-    ValType expectedType = expected[reverseIndex];
-    auto collectValue = [&](const Value& v) {
-      if (values) {
-        (*values)[reverseIndex] = v;
-      }
-    };
-
-    size_t currentValueStackLength = valueStack_.length() - i;
-
-    MOZ_ASSERT(currentValueStackLength >= block.valueStackBase());
-    if (currentValueStackLength == block.valueStackBase()) {
-      if (!block.polymorphicBase()) {
-        return failEmptyStack();
-      }
-
-      // If the base of this block's stack is polymorphic, then we can just
-      // pull out as many fake values as we need to validate; they won't be used
-      // since we're in unreachable code.
-      if (!valueStack_.insert(valueStack_.begin() + currentValueStackLength,
-                              TypeAndValue())) {
-        return false;
-      }
-
-      collectValue(Value());
-    } else {
-      TypeAndValue& observed = valueStack_[currentValueStackLength - 1];
-
-      if (observed.type().isBottom()) {
         collectValue(Value());
       } else {
         if (!checkIsSubtypeOf(observed.type().valType(), expectedType)) {
@@ -1160,7 +1116,7 @@ inline bool OpIter<Policy>::pushControl(LabelKind kind, BlockType type) {
   ResultType paramType = type.params();
 
   ValueVector values;
-  if (!popThenPushType(paramType, &values)) {
+  if (!checkTopTypeMatches(paramType, &values, /*retypePolymorphics=*/true)) {
     return false;
   }
   MOZ_ASSERT(valueStack_.length() >= paramType.length());
@@ -1179,7 +1135,8 @@ inline bool OpIter<Policy>::checkStackAtEndOfBlock(ResultType* expectedType,
     return fail("unused values not explicitly dropped by end of block");
   }
 
-  return popThenPushType(*expectedType, values);
+  return checkTopTypeMatches(*expectedType, values,
+                             /*retypePolymorphics=*/true);
 }
 
 template <typename Policy>
@@ -1472,7 +1429,7 @@ inline bool OpIter<Policy>::checkBranchValueAndPush(uint32_t relativeDepth,
   }
 
   *type = block->branchTargetType();
-  return topWithTypeAndPush(*type, values);
+  return checkTopTypeMatches(*type, values, /*retypePolymorphics=*/false);
 }
 
 // Check the typing of a branch instruction which casts an input type to
@@ -1529,7 +1486,8 @@ inline bool OpIter<Policy>::checkCastedBranchValueAndPush(
   }
   stackTargetType[castTypeIndex] = castedFromType;
 
-  return topWithTypeAndPush(ResultType::Vector(stackTargetType), values);
+  return checkTopTypeMatches(ResultType::Vector(stackTargetType), values,
+                             /*retypePolymorphics=*/false);
 }
 
 template <typename Policy>
@@ -1591,7 +1549,7 @@ inline bool OpIter<Policy>::checkBrTableEntryAndPush(
     branchValues = nullptr;
   }
 
-  return topWithTypeAndPush(*type, branchValues);
+  return checkTopTypeMatches(*type, branchValues, /*retypePolymorphics=*/false);
 }
 
 template <typename Policy>
@@ -2189,7 +2147,8 @@ inline bool OpIter<Policy>::readTeeLocal(const ValTypeVector& locals,
   }
 
   ValueVector single;
-  if (!popThenPushType(ResultType::Single(locals[*id]), &single)) {
+  if (!checkTopTypeMatches(ResultType::Single(locals[*id]), &single,
+                           /*retypePolymorphics=*/true)) {
     return false;
   }
 
@@ -2255,7 +2214,9 @@ inline bool OpIter<Policy>::readTeeGlobal(uint32_t* id, Value* value) {
   }
 
   ValueVector single;
-  if (!popThenPushType(ResultType::Single(env_.globals[*id].type()), &single)) {
+  if (!checkTopTypeMatches(ResultType::Single(env_.globals[*id].type()),
+                           &single,
+                           /*retypePolymorphics=*/true)) {
     return false;
   }
 
@@ -2435,7 +2396,7 @@ inline bool OpIter<Policy>::readBrOnNonNull(uint32_t* relativeDepth,
   }
 
   // Check if the type stack matches the branch target type.
-  if (!topWithTypeAndPush(*type, values)) {
+  if (!checkTopTypeMatches(*type, values, /*retypePolymorphics=*/false)) {
     return false;
   }
 
