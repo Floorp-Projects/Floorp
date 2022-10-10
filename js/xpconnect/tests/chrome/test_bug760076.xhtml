@@ -21,6 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=760076
 
   // This gets decompiled and run in the sandbox.
   function sandboxCode() {
+    /* globals chromeFunction */
     try {
       is(chromeFunction(), 42, "Should call successfully");
     } catch(e) { ok(false, "Shouldn't throw when calling"); }

@@ -76,7 +76,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=812415
 
     // Because of the crazy secret life of wantXrays, passing wantXrays=false
     // has the side effect of waiving Xrays on the returned sandbox. Undo that.
-    expanded = XPCNativeWrapper(expanded);
+    expanded = Cu.unwaiveXrays(expanded);
 
     testWaiving(iwin, regular);
     testWaiving(iwin, expanded);

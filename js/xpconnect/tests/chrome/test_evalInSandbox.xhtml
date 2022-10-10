@@ -121,7 +121,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
       SimpleTest.waitForExplicitFinish();
 
       try {
-        var sandbox = new Cu.Sandbox(this, { sandboxPrototype: undefined } );
+        var sandbox1 = new Cu.Sandbox(this, { sandboxPrototype: undefined } );
         ok(false, "undefined is not a valid prototype");
       }
       catch (e) {
@@ -129,7 +129,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
       }
 
       try {
-        var sandbox = new Cu.Sandbox(this, { wantXrays: undefined } );
+        var sandbox2 = new Cu.Sandbox(this, { wantXrays: undefined } );
         ok(false, "undefined is not a valid value for wantXrays");
       }
       catch (e) {
@@ -144,7 +144,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
       }
 
       try {
-        var sandbox = new Cu.Sandbox(this, { sameZoneAs: this } );
+        var sandbox3 = new Cu.Sandbox(this, { sameZoneAs: this } );
         ok(true, "sameZoneAs works");
       }
       catch (e) {
@@ -155,6 +155,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
       // to make sure that sandboxes get explict JS versions and don't inherit
       // them from the most recent scripted frame.
       function checkExplicitVersions() {
+        // eslint-disable-next-line no-undef
         var sb = new Cu.Sandbox(sop);
         Cu.evalInSandbox('let someVariable = 42', sb, '1.7');
         ok(true, "Didn't throw with let");

@@ -14,10 +14,10 @@
 
     <!-- test code goes here -->
     <script type="application/javascript"><![CDATA[
+            /* eslint-disable no-eval */
+
             add_task(async () => {
                 var sandbox = new Cu.Sandbox("about:blank");
-
-                var test_utils = window.windowUtils;
 
                 await SpecialPowers.pushPrefEnv({
                     "set": [["security.allow_eval_with_system_principal",
@@ -120,6 +120,7 @@
                     });
                 }
 
+                // eslint-disable-next-line no-unused-vars
                 var unwrapped = Cu.evalInSandbox(
                     '(' + returnCOW.toString() + ')()',
                     sandbox

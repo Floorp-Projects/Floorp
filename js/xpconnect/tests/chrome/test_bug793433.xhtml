@@ -29,8 +29,7 @@ function shouldThrow(fun, args, msg) {
 }
 
 function do_registerTopLevelWindow(win) {
-  Cc['@mozilla.org/appshell/appShellService;1'].
-    getService(Ci.nsIAppShellService).registerTopLevelWindow(win);
+  Services.appShell.registerTopLevelWindow(win);
 }
 
 shouldThrow(

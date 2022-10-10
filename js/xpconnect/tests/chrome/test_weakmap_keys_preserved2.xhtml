@@ -35,7 +35,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=673468
     let dead_child = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
     dead_dom.appendChild(dead_child);
     is(dead_dom.children.length, 1, "children have wrong length");
-    let wrappee = new Object();
+    let wrappee = {};
 
     dead_dom.abcxyz = wrappee;
 
@@ -60,7 +60,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=673468
   let check_wrappers_as_keys = function () {
     let live_dom = window.eeeevent.data.dummy;
     let live_map = live_dom.xyzabc.m;
-    let sandbox = live_dom.xyzabc.sb;
     is(ChromeUtils.nondeterministicGetWeakMapKeys(live_map).length, 1,
       "Map should not be empty.");
     let key = ChromeUtils.nondeterministicGetWeakMapKeys(live_map)[0];

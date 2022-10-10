@@ -15,6 +15,7 @@
     nestedFunction();
   }
   function nestedFunction() {
+    // eslint-disable-next-line no-undef
     doesntExistsAndThrow();
   }
 
@@ -32,7 +33,7 @@
       var s = aSubject.stack;
       ok(!!s, "has first frame");
       ok(s.source.includes("test_nsScriptErrorWithStack.html"), "source is correct");
-      is(s.line, 18, "line is correct");
+      is(s.line, 19, "line is correct");
       is(s.column, 5, "column is correct");
       is(s.functionDisplayName, "nestedFunction");
       s = s.parent;
