@@ -186,6 +186,7 @@ if (rtc_include_tests) {
       "../rtc_base",
       "../rtc_base:net_helpers",
       "../rtc_base:threading",
+      "../rtc_base/memory:always_valid_pointer",
       "../test:scoped_key_value_config",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]

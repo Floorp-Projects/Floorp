@@ -94,7 +94,8 @@ class PeerConnectionAdaptationIntegrationTest : public ::testing::Test {
       const char* name) {
     rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper =
         rtc::make_ref_counted<PeerConnectionTestWrapper>(
-            name, network_thread_.get(), worker_thread_.get());
+            name, &virtual_socket_server_, network_thread_.get(),
+            worker_thread_.get());
     PeerConnectionInterface::RTCConfiguration config;
     config.sdp_semantics = SdpSemantics::kUnifiedPlan;
     EXPECT_TRUE(pc_wrapper->CreatePc(config, CreateBuiltinAudioEncoderFactory(),

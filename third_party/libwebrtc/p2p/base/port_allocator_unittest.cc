@@ -28,10 +28,13 @@ static const char kTurnPassword[] = "test";
 class PortAllocatorTest : public ::testing::Test, public sigslot::has_slots<> {
  public:
   PortAllocatorTest()
-      : vss_(new rtc::VirtualSocketServer()), main_(vss_.get()) {
-    allocator_.reset(
-        new cricket::FakePortAllocator(rtc::Thread::Current(), nullptr));
-  }
+      : vss_(std::make_unique<rtc::VirtualSocketServer>()),
+        main_(vss_.get()),
+        packet_socket_factory_(
+            std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get())),
+        allocator_(std::make_unique<cricket::FakePortAllocator>(
+            rtc::Thread::Current(),
+            packet_socket_factory_.get())) {}
 
  protected:
   void SetConfigurationWithPoolSize(int candidate_pool_size) {
@@ -80,6 +83,7 @@ class PortAllocatorTest : public ::testing::Test, public sigslot::has_slots<> {
 
   std::unique_ptr<rtc::VirtualSocketServer> vss_;
   rtc::AutoSocketServerThread main_;
+  std::unique_ptr<rtc::PacketSocketFactory> packet_socket_factory_;
   std::unique_ptr<cricket::FakePortAllocator> allocator_;
   rtc::SocketAddress stun_server_1{"11.11.11.11", 3478};
   rtc::SocketAddress stun_server_2{"22.22.22.22", 3478};
