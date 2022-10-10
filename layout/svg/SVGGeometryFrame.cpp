@@ -809,17 +809,17 @@ bool SVGGeometryFrame::CreateWebRenderCommands(
   }
 
   if (!aDryRun) {
-    nscoord appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
-    int32_t appUnitsPerCSSPixel = AppUnitsPerCSSPixel();
+    auto appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
+    float scale = (float)AppUnitsPerCSSPixel() / (float)appUnitsPerDevPx;
 
     auto rect = simplePath.AsRect();
-    auto appRect =
-        nsLayoutUtils::RoundGfxRectToAppRect(rect, appUnitsPerCSSPixel);
-    auto offset = aItem->ToReferenceFrame() - GetPosition();
-    appRect += offset;
-    auto destRect = LayoutDeviceRect::FromAppUnits(appRect, appUnitsPerDevPx);
+    rect.Scale(scale);
 
-    auto wrRect = wr::ToLayoutRect(destRect);
+    auto offset = LayoutDevicePoint::FromAppUnits(
+        aItem->ToReferenceFrame() - GetPosition(), appUnitsPerDevPx);
+    rect.MoveBy(offset.x, offset.y);
+
+    auto wrRect = wr::ToLayoutRect(rect);
 
     SVGContextPaint* contextPaint =
         SVGContextPaint::GetContextPaint(GetContent());
