@@ -326,6 +326,9 @@ bool MFMediaSource::IsSeekable() const {
 void MFMediaSource::NotifyEndOfStreamInternal(TrackInfo::TrackType aType) {
   AssertOnTaskQueue();
   MutexAutoLock lock(mMutex);
+  if (mState == State::Shutdowned) {
+    return;
+  }
   if (aType == TrackInfo::TrackType::kAudioTrack) {
     MOZ_ASSERT(mAudioStream);
     mAudioStream->NotifyEndOfStream();
@@ -338,6 +341,9 @@ void MFMediaSource::NotifyEndOfStreamInternal(TrackInfo::TrackType aType) {
 void MFMediaSource::HandleStreamEnded(TrackInfo::TrackType aType) {
   AssertOnTaskQueue();
   MutexAutoLock lock(mMutex);
+  if (mState == State::Shutdowned) {
+    return;
+  }
   if (mPresentationEnded) {
     LOG("Presentation is ended already");
     RETURN_VOID_IF_FAILED(
