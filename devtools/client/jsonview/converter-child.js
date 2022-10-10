@@ -9,12 +9,6 @@ loader.lazyRequireGetter(
   "NetworkHelper",
   "resource://devtools/shared/webconsole/network-helper.js"
 );
-loader.lazyGetter(this, "debugJsModules", function() {
-  const { AppConstants } = ChromeUtils.import(
-    "resource://gre/modules/AppConstants.jsm"
-  );
-  return !!AppConstants.DEBUG_JS_MODULES;
-});
 
 const {
   getTheme,
@@ -240,7 +234,6 @@ function exportData(win, headers) {
   const json = new win.Text();
   const JSONView = Cu.cloneInto(
     {
-      debugJsModules,
       headers,
       json,
       readyState: "uninitialized",
