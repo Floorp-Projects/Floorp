@@ -358,7 +358,7 @@ add_task(async function test_time_updates_correctly() {
   );
 });
 
-add_task(async function test_arrow_keys() {
+add_task(async function test_keyboard_navigation() {
   await SpecialPowers.clearUserPref(RECENTLY_CLOSED_STATE_PREF);
   Services.obs.notifyObservers(null, "browser:purge-session-history");
   is(
@@ -394,6 +394,25 @@ add_task(async function test_arrow_keys() {
         info("Arrow up");
         EventUtils.synthesizeKey("KEY_ArrowUp");
       };
+      const enter = () => {
+        info("Enter");
+        EventUtils.synthesizeKey("KEY_Enter");
+      };
+
+      let summary = document.getElementById(
+        "recently-closed-tabs-header-section"
+      );
+      let details = document.getElementById("recently-closed-tabs-container");
+      ok(
+        details.open,
+        "Recently closed details should be initially open on load"
+      );
+      summary.focus();
+      enter();
+      ok(!details.open, "Recently closed details should be closed");
+      enter();
+      ok(details.open, "Recently closed details should be opened");
+
       list[0].focus();
       ok(list[0].matches(":focus"), "The first link is focused");
       arrowDown();
