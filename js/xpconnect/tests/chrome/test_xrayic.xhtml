@@ -42,8 +42,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1355109
   function testSandbox(iterations) {
     // Create an expanded principal sandbox to get xrays with exclusive
     // expandos.
-    var sandbox = new Cu.Sandbox(["http://test1.example.org",
-                                  "http://test2.example.org"]);
+    var sandbox = new Cu.Sandbox(["https://test1.example.org",
+                                  "https://test2.example.org"]);
     sandbox.iframeWindows = new sandbox.Array();
     for (let iframe of document.getElementsByTagName('iframe')) {
         sandbox.iframeWindows.push(iframe.contentWindow);
@@ -76,6 +76,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1355109
   }
   ]]>
   </script>
-  <iframe id="inlineFrame1" onload="frameLoaded();" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_xrayic.html" />
-  <iframe id="inlineFrame2" onload="frameLoaded();" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_xrayic.html" />
+  <iframe id="inlineFrame1" onload="frameLoaded();" type="content" src="https://test1.example.org/tests/js/xpconnect/tests/mochitest/file_xrayic.html" />
+  <iframe id="inlineFrame2" onload="frameLoaded();" type="content" src="https://test1.example.org/tests/js/xpconnect/tests/mochitest/file_xrayic.html" />
 </window>

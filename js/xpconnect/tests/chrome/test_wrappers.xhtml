@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
     is(utils.getClassName(location), "Location", "chrome doesn't have location wrappers")
     is(utils.getClassName(win), "Proxy", "win is an Proxy");
     is(utils.getClassName(win.location), "Proxy", "deep wrapping works");
-    is(win.location.href, "http://example.org/tests/js/xpconnect/tests/mochitest/chrome_wrappers_helper.html",
+    is(win.location.href, "https://example.org/tests/js/xpconnect/tests/mochitest/chrome_wrappers_helper.html",
        "can still get strings out");
 
     var unsafeWin = win.wrappedJSObject;
@@ -78,7 +78,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
 
   ]]></script>
   <iframe type="content"
-          src="http://example.org/tests/js/xpconnect/tests/mochitest/chrome_wrappers_helper.html"
+          src="https://example.org/tests/js/xpconnect/tests/mochitest/chrome_wrappers_helper.html"
           onload="go()"
           id="ifr">
   </iframe>

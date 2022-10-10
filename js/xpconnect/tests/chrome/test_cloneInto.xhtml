@@ -116,7 +116,7 @@
   };
   var sandbox = new Cu.Sandbox(window, sandboxOptions);
   // The second sandbox is for testing the exportHelper version of the cloneInto
-  var sandbox2 = new Cu.Sandbox("http://example.com", sandboxOptions);
+  var sandbox2 = new Cu.Sandbox("https://example.com", sandboxOptions);
   sandbox.sandbox2 = sandbox2;
   sandbox2.sandbox = sandbox;
 
@@ -168,9 +168,9 @@
               'CloneInto should only work on less privileged target scopes.',
               /denied|insecure/);
 
-  var cloneTarget = new Cu.Sandbox('http://example.com');
-  var sameOriginSB = new Cu.Sandbox('http://example.com', { wantGlobalProperties: ['XMLHttpRequest'] });
-  var crossOriginSB = new Cu.Sandbox('http://example.net', { wantGlobalProperties: ['XMLHttpRequest'] });
+  var cloneTarget = new Cu.Sandbox("https://example.com");
+  var sameOriginSB = new Cu.Sandbox("https://example.com", { wantGlobalProperties: ['XMLHttpRequest'] });
+  var crossOriginSB = new Cu.Sandbox("https://example.net", { wantGlobalProperties: ['XMLHttpRequest'] });
   sandbox2.cloneTarget = cloneTarget;
   sandbox2.soXHR = Cu.evalInSandbox('new XMLHttpRequest()', sameOriginSB);
   sandbox2.xoXHR = Cu.evalInSandbox('new XMLHttpRequest()', crossOriginSB);

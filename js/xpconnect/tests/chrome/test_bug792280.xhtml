@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=792280
   <![CDATA[
   /** Test for Bug 792280 **/
   function checkSb(sb, expect) {
-    var target = new Cu.Sandbox('http://www.example.com');
+    var target = new Cu.Sandbox("https://www.example.com");
     Cu.evalInSandbox('function fun() { return arguments.callee.caller; };', target);
     sb.fun = target.fun;
     let allowed = false;
@@ -34,8 +34,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=792280
   }
 
   // Note that COWs are callable, but XOWs are not.
-  checkSb(new Cu.Sandbox('http://www.example.com'), "allow");
-  checkSb(new Cu.Sandbox('http://www.example.org'), "throw");
+  checkSb(new Cu.Sandbox("https://www.example.com"), "allow");
+  checkSb(new Cu.Sandbox("https://www.example.org"), "throw");
   checkSb(new Cu.Sandbox(window), "censor");
 
   ]]>

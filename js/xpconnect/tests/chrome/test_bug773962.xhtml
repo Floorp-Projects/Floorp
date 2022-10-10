@@ -46,7 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=773962
     win2.document.adoptNode(node1);
 
     // Navigate win1. This causes win1 to be transplanted.
-    win1.location = 'http://test2.example.org/tests/js/xpconnect/tests/mochitest/file_empty.html';
+    win1.location = "https://test2.example.org/tests/js/xpconnect/tests/mochitest/file_empty.html";
 
     // The above happens async. Our onload handler will call finishTest() when we're ready.
   }
@@ -75,6 +75,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=773962
 
   ]]>
   </script>
-  <iframe id="frame1" onload="frameLoaded();" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
-  <iframe id="frame2" onload="frameLoaded();" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+  <iframe id="frame1" onload="frameLoaded();" type="content" src="https://test1.example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+  <iframe id="frame2" onload="frameLoaded();" type="content" src="https://test1.example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
 </window>

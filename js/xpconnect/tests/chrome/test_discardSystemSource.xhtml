@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990353
       case 1:
         ok(/native code/.test(window[0].canary.toString()), "System function should be sourceless: " + window[0].canary.toString());
         ok(/native code/.test(window[0].onload.toString()), "System event handler should be sourceless: " + window[0].onload.toString());
-        var sb = new Cu.Sandbox('http://www.example.com', { discardSource: true });
+        var sb = new Cu.Sandbox("https://www.example.com", { discardSource: true });
         Cu.evalInSandbox('function canary() { var someBitOfSource = 42; }', sb);
         ok(/native code/.test(sb.canary.toString()), "Function from sandbox with explicit discarding should be sourceless");
         try {
@@ -40,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990353
           ok(/some error/.test(e), "Threw exception as expected: " + e);
           ok(/throwSomething/.test(e.stack), "Exception stack trace works: " + e.stack);
         }
-        window[0].location = "http://example.org/tests/js/xpconnect/tests/chrome/file_discardSystemSource.html";
+        window[0].location = "https://example.org/tests/js/xpconnect/tests/chrome/file_discardSystemSource.html";
         break;
       case 2:
         ok(/someBitOfSource/.test(Cu.waiveXrays(window[0]).canary.toString()), "Content function should have source");

@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1042436
   /** Test for Bug 1042436 **/
   SimpleTest.waitForExplicitFinish();
 
-  var contentSb = Cu.Sandbox('http://www.example.com');
+  var contentSb = Cu.Sandbox("https://www.example.com");
   var nonXrayableObj = contentSb.eval("new Map()[Symbol.iterator]()");
   nonXrayableObj.wrappedJSObject.someExpandoProperty = 42;
   nonXrayableObj.wrappedJSObject.someOtherExpandoProperty = 52;
@@ -43,7 +43,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1042436
       is(contentObjWithGetter.valueProp, 42, "Getter prop set up correctly");
       chromeSb2.contentObjWithGetter = contentObjWithGetter;
       Cu.evalInSandbox('contentObjWithGetter.getterProp; contentObjWithGetter.valueProp; contentObjWithGetter.getterProp;',
-                       chromeSb2, "1.7", "http://phony.example.com/file.js", 99);
+                       chromeSb2, "1.7", "https://phony.example.com/file.js", 99);
   },
   [{ errorMessage: /property "someExpandoProperty" \(reason: object is not safely Xrayable/, sourceName: /test_bug1042436/, isWarning: true },
    { errorMessage: /property "getterProp" \(reason: property has accessor/, sourceName: /phony/, lineNumber: 99, isWarning: true } ],
