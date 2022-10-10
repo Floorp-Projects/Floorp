@@ -675,8 +675,8 @@ if (is_ios || is_mac) {
       ]
 
       deps = [
-        ":av1",
         ":base_objc",
+        ":libaom_av1_decoder",
         ":native_video",
         ":videocodec_objc",
         ":videotoolbox_objc",
@@ -684,6 +684,12 @@ if (is_ios || is_mac) {
         ":vp9",
         ":vpx_codec_constants",
       ]
+
+      defines = []
+      if (enable_libaom) {
+        defines += [ "RTC_USE_LIBAOM_AV1_ENCODER" ]
+        deps += [ ":libaom_av1_encoder" ]
+      }
     }
 
     rtc_library("vpx_codec_constants") {
@@ -734,14 +740,12 @@ if (is_ios || is_mac) {
       ]
     }
 
-    rtc_library("av1") {
+    rtc_library("libaom_av1_decoder") {
       visibility = [ "*" ]
       allow_poison = [ "software_video_codecs" ]
       sources = [
         "objc/api/video_codec/RTCVideoDecoderAV1.h",
         "objc/api/video_codec/RTCVideoDecoderAV1.mm",
-        "objc/api/video_codec/RTCVideoEncoderAV1.h",
-        "objc/api/video_codec/RTCVideoEncoderAV1.mm",
       ]
 
       deps = [
@@ -750,12 +754,22 @@ if (is_ios || is_mac) {
         "../media:rtc_media_base",
         "../modules/video_coding/codecs/av1:libaom_av1_decoder",
       ]
+    }
 
-      defines = []
-      if (enable_libaom) {
-        defines += [ "RTC_USE_LIBAOM_AV1_ENCODER" ]
-        deps += [ "../modules/video_coding/codecs/av1:libaom_av1_encoder" ]
-      }
+    rtc_library("libaom_av1_encoder") {
+      visibility = [ "*" ]
+      allow_poison = [ "software_video_codecs" ]
+      sources = [
+        "objc/api/video_codec/RTCVideoEncoderAV1.h",
+        "objc/api/video_codec/RTCVideoEncoderAV1.mm",
+      ]
+
+      deps = [
+        ":base_objc",
+        ":wrapped_native_codec_objc",
+        "../media:rtc_media_base",
+        "../modules/video_coding/codecs/av1:libaom_av1_encoder",
+      ]
     }
 
     rtc_library("mediaconstraints_objc") {
