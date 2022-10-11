@@ -21,7 +21,7 @@ add_task(async function() {
   const commands = CommandsFactory.forLocalTabWorker(tab, WORKER_URL);
   const workerDescriptorFront = commands.descriptorFront;
 
-  const toolbox = await gDevTools.showToolbox(workerDescriptorFront, {
+  const toolbox = await gDevTools.showToolbox(commands, {
     toolId: "jsdebugger",
     hostType: Toolbox.HostType.WINDOW,
   });
