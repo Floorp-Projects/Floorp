@@ -10,6 +10,13 @@
 #define CONFIG_RDFT 1
 #endif
 
+// override '#define EXTERN_ASM _' in config_generic.h to allow building with
+// gcc on arm
+#if defined(__GNUC__) && defined(__arm__)
+#undef EXTERN_ASM
+#define EXTERN_ASM
+#endif
+
 #if defined(MOZ_WAYLAND) && !defined(MOZ_FFVPX_AUDIOONLY)
 #undef CONFIG_VAAPI
 #undef CONFIG_VAAPI_1
