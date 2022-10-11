@@ -2572,12 +2572,16 @@ BrowserGlue.prototype = {
               desc + ".lnk",
               appdir
             );
-            // Once we've successfully created this, set this so we never do it again.
-            Services.prefs.setBoolPref(
-              PREF_PRIVATE_BROWSING_SHORTCUT_CREATED,
-              true
-            );
           }
+          // We always set this as long as no exception has been thrown. This
+          // ensure that it is `true` both if we created one because it didn't
+          // exist, or if it already existed (most likely because it was created
+          // by the installer). This avoids the need to call `hasMatchingShortcut`
+          // again, which necessarily does pointless I/O.
+          Services.prefs.setBoolPref(
+            PREF_PRIVATE_BROWSING_SHORTCUT_CREATED,
+            true
+          );
         },
       },
 
