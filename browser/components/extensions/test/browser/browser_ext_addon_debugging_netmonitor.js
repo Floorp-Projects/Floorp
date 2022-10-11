@@ -6,8 +6,6 @@ const { require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
 
-const { DevToolsClient } = require("devtools/client/devtools-client");
-const { DevToolsServer } = require("devtools/server/devtools-server");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { Toolbox } = require("devtools/client/framework/toolbox");
 const {
@@ -15,17 +13,10 @@ const {
 } = require("devtools/shared/commands/commands-factory");
 
 async function setupToolboxTest(extensionId) {
-  DevToolsServer.init();
-  DevToolsServer.registerAllActors();
-  const transport = DevToolsServer.connectPipe();
-  const client = new DevToolsClient(transport);
-  await client.connect();
-
   const commands = await CommandsFactory.forAddon(extensionId);
   await commands.targetCommand.startListening();
-  const addonDescriptor = commands.descriptorFront;
 
-  const toolbox = await gDevTools.showToolbox(addonDescriptor, {
+  const toolbox = await gDevTools.showToolbox(commands, {
     hostType: Toolbox.HostType.WINDOW,
   });
 
