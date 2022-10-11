@@ -1370,7 +1370,7 @@ export class SearchService {
     // we started listening, so do a check on startup.
     Services.tm.dispatchToMainThread(async () => {
       await lazy.NimbusFeatures.search.ready();
-      this.#checkNimbusPrefs();
+      this.#checkNimbusPrefs(true);
     });
 
     return this.#initRV;
@@ -3279,7 +3279,19 @@ export class SearchService {
     );
   }
 
-  #checkNimbusPrefs() {
+  /**
+   * Check the prefs are correctly updated for users enrolled in a Nimbus experiment.
+   *
+   * @param {boolean} isStartup
+   *   Whether this function was called as part of the startup flow.
+   */
+  #checkNimbusPrefs(isStartup = false) {
+    // If we are in an experiment we may need to check the status on startup, otherwise
+    // ignore the call to check on startup so we do not reset users prefs when they are
+    // not an experiment.
+    if (isStartup && !lazy.NimbusFeatures.search.getVariable("experiment")) {
+      return;
+    }
     let nimbusPrivateDefaultUIEnabled = lazy.NimbusFeatures.search.getVariable(
       "seperatePrivateDefaultUIEnabled"
     );

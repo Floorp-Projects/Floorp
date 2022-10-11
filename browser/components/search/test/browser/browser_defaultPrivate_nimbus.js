@@ -136,3 +136,24 @@ add_task(async function test_nimbus_experiment_urlbar_result_enabled() {
     "Should turn off private default and restore default engine after experiment"
   );
 });
+
+add_task(async function test_non_experiment_prefs() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.search.separatePrivateDefault.ui.enabled", false]],
+  });
+  let uiPref = () =>
+    Services.prefs.getBoolPref(
+      "browser.search.separatePrivateDefault.ui.enabled"
+    );
+  Assert.equal(uiPref(), false, "defaulted false");
+  await ExperimentAPI.ready();
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "privatesearch",
+    value: {
+      seperatePrivateDefaultUIEnabled: true,
+    },
+  });
+  Assert.equal(uiPref(), false, "Pref did not change without experiment");
+  await doExperimentCleanup();
+  await SpecialPowers.popPrefEnv();
+});
