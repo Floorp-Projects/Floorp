@@ -35,7 +35,6 @@
 #include "rtc_tools/rtc_event_log_visualizer/analyzer.h"
 #include "rtc_tools/rtc_event_log_visualizer/plot_base.h"
 #include "system_wrappers/include/field_trial.h"
-#include "test/field_trial.h"
 #include "test/testsupport/file_utils.h"
 
 ABSL_FLAG(std::string,
