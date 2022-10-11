@@ -1472,17 +1472,12 @@ impl YuvFormat {
 pub struct ImageMask {
     pub image: ImageKey,
     pub rect: LayoutRect,
-    pub repeat: bool,
 }
 
 impl ImageMask {
     /// Get a local clipping rect contributed by this mask.
     pub fn get_local_clip_rect(&self) -> Option<LayoutRect> {
-        if self.repeat {
-            None
-        } else {
-            Some(self.rect)
-        }
+        Some(self.rect)
     }
 }
 

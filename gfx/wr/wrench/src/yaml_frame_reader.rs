@@ -787,11 +787,9 @@ impl YamlFrameReader {
         let image_rect = item["rect"]
             .as_rect()
             .unwrap_or_else(|| LayoutRect::from_size(image_dims));
-        let image_repeat = item["repeat"].as_bool().expect("Expected boolean");
         Some(ImageMask {
             image: image_key,
             rect: image_rect,
-            repeat: image_repeat,
         })
     }
 
