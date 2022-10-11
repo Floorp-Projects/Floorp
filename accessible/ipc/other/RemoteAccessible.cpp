@@ -133,12 +133,6 @@ nsAtom* RemoteAccessible::LandmarkRole() const {
   return NS_GetStaticAtom(landmark);
 }
 
-nsStaticAtom* RemoteAccessible::ARIARoleAtom() const {
-  nsString role;
-  Unused << mDoc->SendARIARoleAtom(mID, &role);
-  return NS_GetStaticAtom(role);
-}
-
 GroupPos RemoteAccessible::GroupPosition() {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::GroupPosition();
