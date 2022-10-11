@@ -443,10 +443,12 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", () => {
     "resource://gre/modules/PopupNotifications.sys.mjs"
   );
   try {
-    // Hide all PopupNotifications while the URL is being edited and the
-    // address bar has focus, including the virtual focus in the results popup.
+    // Hide all PopupNotifications while the URL is being edited and the address
+    // bar has focus or while async tab switching, including the virtual focus in
+    // the results popup.
     let shouldSuppress = () =>
-      (gURLBar.getAttribute("pageproxystate") != "valid" && gURLBar.focused) ||
+      (gURLBar.getAttribute("pageproxystate") != "valid" &&
+        (gURLBar.focused || gBrowser.selectedBrowser._awaitingSetURI)) ||
       shouldSuppressPopupNotifications();
     return new PopupNotifications(
       gBrowser,

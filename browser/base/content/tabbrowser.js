@@ -1381,6 +1381,10 @@
 
         if (!window.fullScreen || newTab.isEmpty) {
           if (this._asyncTabSwitching) {
+            // Set _awaitingSetURI flag to suppress popup notification
+            // explicitly while tab switching asynchronously.
+            newBrowser._awaitingSetURI = true;
+
             // The onLocationChange event called in updateCurrentBrowser() will
             // be captured in browser.js, then it calls gURLBar.setURI(). In case
             // of that doing processing of here before doing above processing,
@@ -1394,6 +1398,7 @@
                 if (currentActiveElement === document.activeElement) {
                   gURLBar.select();
                 }
+                delete newBrowser._awaitingSetURI;
               },
               { once: true }
             );
