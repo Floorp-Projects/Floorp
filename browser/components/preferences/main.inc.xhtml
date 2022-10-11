@@ -808,6 +808,16 @@
 <!-- Performance -->
 <groupbox id="performanceGroup" data-category="paneGeneral" hidden="true">
   <label class="search-header" hidden="true"><html:h2 data-l10n-id="performance-title"/></label>
+  <hbox>
+  <label id="processCount" data-l10n-id="memory-and-performance"/>
+     <menulist id="dom-ipc-processCount" preference="dom.ipc.processCount">
+         <menupopup>
+           <menuitem data-l10n-id="min-memory" value="1"/>
+           <menuitem data-l10n-id="balance-memory" value="4"/>
+           <menuitem data-l10n-id="max-memory" value="8"/>
+         </menupopup>
+    </menulist>
+  </hbox>
 
   <hbox align="center">
     <checkbox id="useRecommendedPerformanceSettings"
