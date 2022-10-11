@@ -67,6 +67,8 @@ material-effect =
  .label = Allow Mica for Everyone to modify the browser design
 other-preference = Other Preferences
 
+operation-settings = Browser Operation
+
 enable-userscript = 
  .label = Enable legacy components
 about-legacy-components = Enabling this feature may cause unexpected bugs or fatal errors
@@ -230,10 +232,16 @@ container-3 =
 container-4 =
     .label = Container 4 -Shopping-
 
-disable-bg-newtab =
- .label = Disable Background Image at { -brand-short-name } Home
+memory-and-performance = Memory Performance Settings
 
-how-to-disable-ntbg = To apply this setting, press "Ctrl + Shift + R" on the { -brand-short-name } Homepage.
+min-memory = 
+    .label = Minimum Memory Usage (low performance)
+
+balance-memory = 
+    .label = Balance Memory Usage and Performance
+
+max-memory = 
+    .label = Best Speed and Performance (high memory usage) 
 
 ## DualTheme
 dualtheme-enable =
