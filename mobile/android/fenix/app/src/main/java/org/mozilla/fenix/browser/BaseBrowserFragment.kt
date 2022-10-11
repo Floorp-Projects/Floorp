@@ -1370,6 +1370,7 @@ abstract class BaseBrowserFragment :
                 .setText(getString(R.string.full_screen_notification))
                 .show()
             activity?.enterToImmersiveMode()
+            (view as? SwipeGestureLayout)?.isSwipeEnabled = false
             browserToolbarView.collapse()
             browserToolbarView.view.isVisible = false
             val browserEngine = binding.swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
@@ -1384,6 +1385,7 @@ abstract class BaseBrowserFragment :
             MediaState.fullscreen.record(NoExtras())
         } else {
             activity?.exitImmersiveMode()
+            (view as? SwipeGestureLayout)?.isSwipeEnabled = true
             (activity as? HomeActivity)?.let { activity ->
                 activity.themeManager.applyStatusBarTheme(activity)
             }
