@@ -63,11 +63,6 @@ class FrameBufferProxy {
 
   // Run on either the worker thread or the decode thread.
   virtual void StartNextDecode(bool keyframe_required) = 0;
-
-#if defined(WEBRTC_MOZILLA_BUILD)
-  // Run on the decode thread.
-  virtual void Start() = 0;
-#endif
 };
 
 }  // namespace webrtc
