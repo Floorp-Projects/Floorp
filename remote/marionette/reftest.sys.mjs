@@ -644,6 +644,7 @@ reftest.Runner = class {
 
   async loadTestUrl(win, url, timeout) {
     const browsingContext = this.driver.getBrowsingContext({ top: true });
+    const webProgress = browsingContext.webProgress;
 
     lazy.logger.debug(`Starting load of ${url}`);
     if (this.lastURL === url) {
@@ -671,7 +672,7 @@ reftest.Runner = class {
     while (!isReftestReady) {
       // Note: We cannot compare the URL here. Before the navigation is complete
       // currentWindowGlobal.documentURI.spec will still point to the old URL.
-      const actor = browsingContext.currentWindowGlobal.getActor(
+      const actor = webProgress.browsingContext.currentWindowGlobal.getActor(
         "MarionetteReftest"
       );
       isReftestReady = await actor.reftestWait(url, this.useRemoteTabs);
