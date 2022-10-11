@@ -55,6 +55,7 @@ static unsigned int HexStrToInt(NSString* str) {
   [mColorPanel setDelegate:self];
   [mColorPanel setTitle:aTitle];
   [mColorPanel setColor:aInitialColor];
+  [mColorPanel setFrameOrigin:[NSEvent mouseLocation]];
   [mColorPanel makeKeyAndOrderFront:nil];
 }
 
