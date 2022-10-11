@@ -69,17 +69,23 @@ nsresult nsTableColGroupFrame::AddColsToTable(int32_t aFirstColIndex,
 
   // set the col indices of the col frames and and add col info to the table
   int32_t colIndex = aFirstColIndex;
-  nsFrameList::Enumerator e(aCols);
-  for (; !e.AtEnd(); e.Next()) {
-    ((nsTableColFrame*)e.get())->SetColIndex(colIndex);
+
+  // XXX: We cannot use range-based for loop because InsertCol() can destroy the
+  // nsTableColFrame in the slice we're traversing! Need to check the validity
+  // of *colIter.
+  auto colIter = aCols.begin();
+  for (auto colIterEnd = aCols.end(); *colIter && colIter != colIterEnd;
+       ++colIter) {
+    auto* colFrame = static_cast<nsTableColFrame*>(*colIter);
+    colFrame->SetColIndex(colIndex);
     mColCount++;
-    tableFrame->InsertCol((nsTableColFrame&)*e.get(), colIndex);
+    tableFrame->InsertCol(*colFrame, colIndex);
     colIndex++;
   }
 
-  for (nsFrameList::Enumerator eTail = e.GetUnlimitedEnumerator();
-       !eTail.AtEnd(); eTail.Next()) {
-    ((nsTableColFrame*)eTail.get())->SetColIndex(colIndex);
+  for (; *colIter; ++colIter) {
+    auto* colFrame = static_cast<nsTableColFrame*>(*colIter);
+    colFrame->SetColIndex(colIndex);
     colIndex++;
   }
 

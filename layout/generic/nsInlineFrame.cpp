@@ -260,10 +260,10 @@ static void ReparentChildListStyle(nsPresContext* aPresContext,
                                    nsIFrame* aParentFrame) {
   RestyleManager* restyleManager = aPresContext->RestyleManager();
 
-  for (nsFrameList::Enumerator e(aFrames); !e.AtEnd(); e.Next()) {
-    NS_ASSERTION(e.get()->GetParent() == aParentFrame, "Bogus parentage");
-    restyleManager->ReparentComputedStyleForFirstLine(e.get());
-    nsLayoutUtils::MarkDescendantsDirty(e.get());
+  for (nsIFrame* f : aFrames) {
+    NS_ASSERTION(f->GetParent() == aParentFrame, "Bogus parentage");
+    restyleManager->ReparentComputedStyleForFirstLine(f);
+    nsLayoutUtils::MarkDescendantsDirty(f);
   }
 }
 
