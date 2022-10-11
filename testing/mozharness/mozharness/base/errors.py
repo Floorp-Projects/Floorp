@@ -103,10 +103,10 @@ MakefileErrorList = (
     + PythonErrorList
     + RustErrorList
     + [
+        {"substr": r""": error: """, "level": ERROR},
         {"substr": r"""No rule to make target """, "level": ERROR},
         {"regex": re.compile(r"""akefile.*was not found\."""), "level": ERROR},
         {"regex": re.compile(r"""Stop\.$"""), "level": ERROR},
-        {"regex": re.compile(r""":\d+: error:"""), "level": ERROR},
         {
             "regex": re.compile(r"""make\[\d+\]: \*\*\* \[.*\] Error \d+"""),
             "level": ERROR,
