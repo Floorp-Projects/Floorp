@@ -3,10 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["ClickHandlerParent", "MiddleMousePasteHandlerParent"];
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -25,7 +21,7 @@ ChromeUtils.defineModuleGetter(
 
 let gContentClickListeners = new Set();
 
-class MiddleMousePasteHandlerParent extends JSWindowActorParent {
+export class MiddleMousePasteHandlerParent extends JSWindowActorParent {
   receiveMessage(message) {
     if (message.name == "MiddleClickPaste") {
       // This is heavily based on contentAreaClick from browser.js (Bug 903016)
@@ -41,7 +37,7 @@ class MiddleMousePasteHandlerParent extends JSWindowActorParent {
   }
 }
 
-class ClickHandlerParent extends JSWindowActorParent {
+export class ClickHandlerParent extends JSWindowActorParent {
   static addContentClickListener(listener) {
     gContentClickListeners.add(listener);
   }

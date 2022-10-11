@@ -720,7 +720,7 @@ nsresult EditorEventListener::MouseClick(WidgetMouseEvent* aMouseClickEvent) {
       "EventStateManager::HandleMiddleClickPaste() failed, but ignored");
   if (status == nsEventStatus_eConsumeNoDefault) {
     // We no longer need to StopImmediatePropagation here since
-    // ClickHandlerChild.jsm checks for and ignores editables, so won't
+    // ClickHandlerChild.sys.mjs checks for and ignores editables, so won't
     // re-handle the event
     aMouseClickEvent->PreventDefault();
   }

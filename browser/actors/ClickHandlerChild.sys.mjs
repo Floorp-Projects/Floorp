@@ -3,11 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["ClickHandlerChild", "MiddleMousePasteHandlerChild"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -31,7 +27,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
 });
 
-class MiddleMousePasteHandlerChild extends JSWindowActorChild {
+export class MiddleMousePasteHandlerChild extends JSWindowActorChild {
   handleEvent(clickEvent) {
     if (
       clickEvent.defaultPrevented ||
@@ -60,7 +56,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   true
 );
 
-class ClickHandlerChild extends JSWindowActorChild {
+export class ClickHandlerChild extends JSWindowActorChild {
   handleEvent(wrapperEvent) {
     this.handleClickEvent(wrapperEvent.sourceEvent);
   }
