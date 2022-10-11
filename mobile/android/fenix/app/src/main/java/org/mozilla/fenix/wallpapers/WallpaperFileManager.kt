@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.wallpapers.Wallpaper.Companion.getLocalPath
 import java.io.File
 
@@ -28,15 +29,18 @@ class WallpaperFileManager(
     /**
      * Lookup all the files for a wallpaper name. This lookup will fail if there are not
      * files for each of a portrait and landscape orientation as well as a thumbnail.
+     *
+     * @param settings The local cache.
      */
-    suspend fun lookupExpiredWallpaper(name: String): Wallpaper? = withContext(coroutineDispatcher) {
+    suspend fun lookupExpiredWallpaper(settings: Settings): Wallpaper? = withContext(coroutineDispatcher) {
+        val name = settings.currentWallpaperName
         if (allAssetsExist(name)) {
             Wallpaper(
                 name = name,
                 collection = Wallpaper.DefaultCollection,
-                textColor = null,
-                cardColorLight = null,
-                cardColorDark = null,
+                textColor = settings.currentWallpaperTextColor,
+                cardColorLight = settings.currentWallpaperCardColorLight,
+                cardColorDark = settings.currentWallpaperCardColorDark,
                 thumbnailFileState = Wallpaper.ImageFileState.Downloaded,
                 assetsFileState = Wallpaper.ImageFileState.Downloaded,
             )

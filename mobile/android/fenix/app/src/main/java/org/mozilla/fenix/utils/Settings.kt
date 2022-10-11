@@ -201,6 +201,24 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * A cache of the background color to use on cards overlaying the current wallpaper when the user's
+     * theme is set to Light.
+     */
+    var currentWallpaperCardColorLight by longPreference(
+        appContext.getPreferenceKey(R.string.pref_key_current_wallpaper_card_color_light),
+        default = 0,
+    )
+
+    /**
+     * A cache of the background color to use on cards overlaying the current wallpaper when the user's
+     * theme is set to Dark.
+     */
+    var currentWallpaperCardColorDark by longPreference(
+        appContext.getPreferenceKey(R.string.pref_key_current_wallpaper_card_color_dark),
+        default = 0,
+    )
+
+    /**
      * Indicates if the current legacy wallpaper should be migrated.
      */
     var shouldMigrateLegacyWallpaper by booleanPreference(

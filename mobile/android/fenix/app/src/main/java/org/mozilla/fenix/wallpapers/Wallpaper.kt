@@ -117,15 +117,18 @@ data class Wallpaper(
          *
          * @param settings The local cache.
          */
+        @Suppress("ComplexCondition")
         fun getCurrentWallpaperFromSettings(settings: Settings): Wallpaper? {
             val name = settings.currentWallpaperName
             val textColor = settings.currentWallpaperTextColor
-            return if (name.isNotEmpty() && textColor != 0L) {
+            val cardColorLight = settings.currentWallpaperCardColorLight
+            val cardColorDark = settings.currentWallpaperCardColorDark
+            return if (name.isNotEmpty() && textColor != 0L && cardColorLight != 0L && cardColorDark != 0L) {
                 Wallpaper(
                     name = name,
                     textColor = textColor,
-                    cardColorLight = null,
-                    cardColorDark = null,
+                    cardColorLight = cardColorLight,
+                    cardColorDark = cardColorDark,
                     collection = DefaultCollection,
                     thumbnailFileState = ImageFileState.Downloaded,
                     assetsFileState = ImageFileState.Downloaded,
