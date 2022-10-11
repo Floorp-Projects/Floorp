@@ -277,3 +277,19 @@ devtools-no-eft:
         mozharness:
             extra-options:
                 - "--setpref=devtools.every-frame-target.enabled=false"
+
+wmf-media-engine:
+    description: "{description} with Windows Media Foundation media engine enabled"
+    component: "Core::Audio/Video:Playback"
+    expiration: "2023-04-10"
+    when:
+        $eval: '"windows10" in task["test-platform"]'
+    suffix: "wmfme"
+    replace:
+        tier: 2
+    merge:
+        mozharness:
+            extra-options:
+                - "--tag=media-engine-compatible"
+                - "--setpref=media.wmf.media-engine.enabled=true"
+                - "--setpref=media.wmf.media-engine.channel-decoder.enabled=true"

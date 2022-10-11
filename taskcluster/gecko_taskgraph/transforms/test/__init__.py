@@ -104,7 +104,9 @@ test_description_schema = Schema(
         # number of chunks to create for this task.  This can be keyed by test
         # platform by passing a dictionary in the `by-test-platform` key.  If the
         # test platform is not found, the key 'default' will be tried.
-        Required("chunks"): optionally_keyed_by("test-platform", Any(int, "dynamic")),
+        Required("chunks"): optionally_keyed_by(
+            "test-platform", "variant", Any(int, "dynamic")
+        ),
         # Custom 'test_manifest_loader' to use, overriding the one configured in the
         # parameters. When 'null', no test chunking will be performed. Can also
         # be used to disable "manifest scheduling".
