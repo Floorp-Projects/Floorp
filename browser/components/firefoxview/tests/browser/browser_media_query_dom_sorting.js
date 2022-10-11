@@ -28,43 +28,31 @@ async function resizeWindow(win, width) {
 }
 
 add_task(async function media_query_less_than_65em() {
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: "about:firefoxview",
-    },
-    async browser => {
-      const win = browser.contentWindow;
-      const { recentlyClosedTabs, colorwayLandmark } = getTestElements(
-        win.document
-      );
-      await resizeWindow(win, NARROW_WINDOW_WIDTH);
-      is(
-        recentlyClosedTabs.previousSibling,
-        colorwayLandmark,
-        "colorway landmark has been positioned before recently closed tabs"
-      );
-    }
-  );
+  await withFirefoxView({}, async browser => {
+    let win = browser.contentWindow;
+    const { recentlyClosedTabs, colorwayLandmark } = getTestElements(
+      win.document
+    );
+    await resizeWindow(win, NARROW_WINDOW_WIDTH);
+    is(
+      recentlyClosedTabs.previousSibling,
+      colorwayLandmark,
+      "colorway landmark has been positioned before recently closed tabs"
+    );
+  });
 });
 
 add_task(async function media_query_more_than_65em() {
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: "about:firefoxview",
-    },
-    async browser => {
-      const win = browser.contentWindow;
-      const { recentlyClosedTabs, colorwayLandmark } = getTestElements(
-        win.document
-      );
-      await resizeWindow(win, WIDE_WINDOW_WIDTH);
-      is(
-        recentlyClosedTabs.nextSibling,
-        colorwayLandmark,
-        "colorway landmark has been positioned after recently closed tabs"
-      );
-    }
-  );
+  await withFirefoxView({}, async browser => {
+    let win = browser.contentWindow;
+    const { recentlyClosedTabs, colorwayLandmark } = getTestElements(
+      win.document
+    );
+    await resizeWindow(win, WIDE_WINDOW_WIDTH);
+    is(
+      recentlyClosedTabs.nextSibling,
+      colorwayLandmark,
+      "colorway landmark has been positioned after recently closed tabs"
+    );
+  });
 });
