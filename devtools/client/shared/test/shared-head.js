@@ -65,9 +65,6 @@ const {
   gDevTools,
 } = require("resource://devtools/client/framework/devtools.js");
 const {
-  TabDescriptorFactory,
-} = require("resource://devtools/client/framework/tab-descriptor-factory.js");
-const {
   CommandsFactory,
 } = require("resource://devtools/shared/commands/commands-factory.js");
 const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
@@ -1215,7 +1212,7 @@ async function openNewTabAndToolbox(url, toolId, hostType) {
  * closed.
  */
 async function closeTabAndToolbox(tab = gBrowser.selectedTab) {
-  if (TabDescriptorFactory.isKnownTab(tab)) {
+  if (gDevTools.hasToolboxForTab(tab)) {
     await gDevTools.closeToolboxForTab(tab);
   }
 
