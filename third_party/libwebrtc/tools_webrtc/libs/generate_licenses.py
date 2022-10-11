@@ -53,8 +53,7 @@ LIB_TO_LICENSES_DICT = {
     'libaom': ['third_party/libaom/source/libaom/LICENSE'],
     'libc++': ['buildtools/third_party/libc++/trunk/LICENSE.TXT'],
     'libc++abi': ['buildtools/third_party/libc++abi/trunk/LICENSE.TXT'],
-    'libevent':
-    ['base/third_party/libevent/LICENSE', 'third_party/libevent/LICENSE'],
+    'libevent': ['third_party/libevent/LICENSE'],
     'libjpeg_turbo': ['third_party/libjpeg_turbo/LICENSE.md'],
     'libsrtp': ['third_party/libsrtp/LICENSE'],
     'libunwind': ['buildtools/third_party/libunwind/trunk/LICENSE.TXT'],
@@ -221,9 +220,6 @@ class LicenseBuilder:
       output_license_file.write('```\n')
       for path in self.common_licenses_dict[license_lib]:
         license_path = os.path.join(WEBRTC_ROOT, path)
-        # TODO(crbug.com/1335194) Workaround for unblocking autoroller.
-        if license_lib == "libevent" and not os.path.exists(license_path):
-          continue
         with open(license_path, 'r') as license_file:
           license_text = escape(license_file.read(), quote=True)
           output_license_file.write(license_text)
