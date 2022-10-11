@@ -3748,6 +3748,20 @@ void MacroAssembler::dotInt8x16Int7x16ThenAdd(FloatRegister lhs,
   Sadalp(Simd4S(dest), Simd8H(temp));
 }
 
+void MacroAssembler::dotBFloat16x8ThenAdd(FloatRegister lhs, FloatRegister rhs,
+                                          FloatRegister dest,
+                                          FloatRegister temp) {
+  MOZ_ASSERT(lhs != dest && rhs != dest);
+  ScratchSimd128Scope scratch(*this);
+  Shl(Simd4S(scratch), Simd4S(lhs), 16);
+  Shl(Simd4S(temp), Simd4S(rhs), 16);
+  Fmla(Simd4S(dest), Simd4S(scratch), Simd4S(temp));
+  loadConstantSimd128(SimdConstant::SplatX4(int32_t(0xFFFF0000)), temp);
+  And(Simd16B(scratch), Simd16B(lhs), Simd16B(temp));
+  And(Simd16B(temp), Simd16B(rhs), Simd16B(temp));
+  Fmla(Simd4S(dest), Simd4S(scratch), Simd4S(temp));
+}
+
 // Floating point rounding (experimental as of August, 2020)
 // https://github.com/WebAssembly/simd/pull/232
 

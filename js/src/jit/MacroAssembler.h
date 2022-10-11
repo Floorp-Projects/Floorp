@@ -3435,6 +3435,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                        FloatRegister dest, FloatRegister temp)
       DEFINED_ON(arm64);
 
+  inline void dotBFloat16x8ThenAdd(FloatRegister lhs, FloatRegister rhs,
+                                   FloatRegister dest, FloatRegister temp)
+      DEFINED_ON(x86_shared, arm64);
+
   // Floating point rounding
 
   inline void ceilFloat32x4(FloatRegister src, FloatRegister dest)

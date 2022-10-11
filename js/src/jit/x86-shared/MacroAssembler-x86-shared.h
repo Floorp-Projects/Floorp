@@ -560,6 +560,8 @@ class MacroAssemblerX86Shared : public Assembler {
                      FloatRegister output);
   void popcntInt8x16(FloatRegister src, FloatRegister temp,
                      FloatRegister output);
+  void dotBFloat16x8ThenAdd(FloatRegister lhs, FloatRegister rhs,
+                            FloatRegister dest, FloatRegister temp);
 
   // SIMD inline methods private to the implementation, that appear to be used.
 

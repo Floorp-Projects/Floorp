@@ -2842,6 +2842,13 @@ void MacroAssembler::dotInt8x16Int7x16ThenAdd(FloatRegister lhs,
   vpaddd(Operand(scratch), dest, dest);
 }
 
+void MacroAssembler::dotBFloat16x8ThenAdd(FloatRegister lhs, FloatRegister rhs,
+                                          FloatRegister dest,
+                                          FloatRegister temp) {
+  MOZ_ASSERT(lhs != dest && rhs != dest);
+  MacroAssemblerX86Shared::dotBFloat16x8ThenAdd(lhs, rhs, dest, temp);
+}
+
 // Rounding
 
 void MacroAssembler::ceilFloat32x4(FloatRegister src, FloatRegister dest) {

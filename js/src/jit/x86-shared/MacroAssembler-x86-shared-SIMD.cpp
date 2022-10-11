@@ -1480,3 +1480,22 @@ void MacroAssemblerX86Shared::popcntInt8x16(FloatRegister src,
   vpshufb(scratch, temp, temp);
   vpaddb(Operand(temp), output, output);
 }
+
+void MacroAssemblerX86Shared::dotBFloat16x8ThenAdd(FloatRegister lhs,
+                                                   FloatRegister rhs,
+                                                   FloatRegister dest,
+                                                   FloatRegister temp) {
+  ScratchSimd128Scope scratch(asMasm());
+  FloatRegister lhsCopy = asMasm().moveSimd128IntIfNotAVX(lhs, scratch);
+  FloatRegister rhsCopy = asMasm().moveSimd128IntIfNotAVX(rhs, temp);
+  vpslld(Imm32(16), lhsCopy, scratch);
+  vpslld(Imm32(16), rhsCopy, temp);
+  asMasm().mulFloat32x4(scratch, temp, scratch);
+  asMasm().addFloat32x4(dest, scratch, dest);
+  // The temp has 0 in low half-word. Use pblendw instead of `& 0xFFFF0000`.
+  FloatRegister tempCopy = asMasm().moveSimd128IntIfNotAVX(temp, scratch);
+  vpblendw(0xAA, lhs, tempCopy, scratch);
+  vpblendw(0xAA, rhs, temp, temp);
+  asMasm().mulFloat32x4(scratch, temp, scratch);
+  asMasm().addFloat32x4(dest, scratch, dest);
+}
