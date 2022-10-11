@@ -162,7 +162,6 @@ add_task(async function test_aboutwelcome_upgrade_mr_prefs_off() {
 
 /**
  * Test homepage/newtab prefs start off as non-defaults and do not change
- * Unchecking checkbox which is checked by default
  */
 add_task(
   async function test_aboutwelcome_upgrade_mr_prefs_non_default_unchecked() {
@@ -190,7 +189,6 @@ add_task(
       //Unexpected selectors:
       []
     );
-    browser.document.querySelector("#action-checkbox").click();
 
     await clickVisibleButton(browser, ".action-buttons button.primary");
     await waitForDialogClose(browser);
@@ -211,7 +209,6 @@ add_task(
 
 /**
  * Test homepage/newtab prefs start off as non-defaults and do change
- * checkbox is checked by default
  */
 add_task(
   async function test_aboutwelcome_upgrade_mr_prefs_non_default_checked() {
@@ -238,6 +235,8 @@ add_task(
       //Unexpected selectors:
       []
     );
+
+    browser.document.querySelector("#action-checkbox").click();
 
     await clickVisibleButton(browser, ".action-buttons button.primary");
     await waitForDialogClose(browser);
