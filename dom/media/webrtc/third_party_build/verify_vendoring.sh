@@ -27,7 +27,7 @@ fi
         --commit $MOZ_LIBWEBRTC_COMMIT \
         libwebrtc)
 
-hg revert \
+hg revert -q \
    --include "third_party/libwebrtc/**moz.build" \
    --include "third_party/libwebrtc/README.mozilla" \
    third_party/libwebrtc
