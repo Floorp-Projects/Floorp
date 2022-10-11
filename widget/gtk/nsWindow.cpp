@@ -1001,7 +1001,8 @@ void nsWindow::ResizeInt(const Maybe<LayoutDeviceIntPoint>& aMove,
   // https://gitlab.gnome.org/GNOME/gtk/-/blob/3.24.31/gtk/gtkwindow.c#L9782
   // So we don't update mBounds until OnSizeAllocate() when we know the
   // request is granted.
-  if (!mHasReceivedSizeAllocate ||
+  bool isOrWillBeVisible = mHasReceivedSizeAllocate || mNeedsShow || mIsShown;
+  if (!isOrWillBeVisible ||
       gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP) {
     mBounds.SizeTo(aSize);
     if (mCompositorWidgetDelegate) {
