@@ -417,10 +417,10 @@ let JSWINDOWACTORS = {
 
   ClickHandler: {
     parent: {
-      moduleURI: "resource:///actors/ClickHandlerParent.jsm",
+      esModuleURI: "resource:///actors/ClickHandlerParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/ClickHandlerChild.jsm",
+      esModuleURI: "resource:///actors/ClickHandlerChild.sys.mjs",
       events: {
         chromelinkclick: { capture: true, mozSystemGroup: true },
       },
@@ -437,10 +437,10 @@ let JSWINDOWACTORS = {
    */
   MiddleMousePasteHandler: {
     parent: {
-      moduleURI: "resource:///actors/ClickHandlerParent.jsm",
+      esModuleURI: "resource:///actors/ClickHandlerParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/ClickHandlerChild.jsm",
+      esModuleURI: "resource:///actors/ClickHandlerChild.sys.mjs",
       events: {
         auxclick: { capture: true, mozSystemGroup: true },
       },
