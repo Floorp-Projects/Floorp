@@ -655,12 +655,6 @@ DevTools.prototype = {
       this._commandsPromiseByWebExtId.delete(extensionId);
     });
 
-    // CommandsFactory.forAddon will spawn a new DevToolsClient.
-    // And by default, the WebExtensionDescriptor won't close the DevToolsClient
-    // when the toolbox closes and fronts are destroyed.
-    // Ensure we do close it, similarly to local tab debugging.
-    commands.descriptorFront.shouldCloseClient = true;
-
     return this.showToolbox(commands.descriptorFront, {
       hostType: Toolbox.HostType.WINDOW,
       hostOptions: {
