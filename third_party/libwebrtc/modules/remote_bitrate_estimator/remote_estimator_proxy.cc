@@ -16,6 +16,7 @@
 #include <utility>
 
 #include "api/units/data_size.h"
+#include "modules/rtp_rtcp/source/rtcp_packet/remote_estimate.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -46,22 +47,20 @@ TimeDelta GetAbsoluteSendTimeDelta(uint32_t new_sendtime,
 }  // namespace
 
 RemoteEstimatorProxy::RemoteEstimatorProxy(
-    Clock* clock,
     TransportFeedbackSender feedback_sender,
     const FieldTrialsView* key_value_config,
     NetworkStateEstimator* network_state_estimator)
-    : clock_(clock),
-      feedback_sender_(std::move(feedback_sender)),
+    : feedback_sender_(std::move(feedback_sender)),
       send_config_(key_value_config),
-      last_process_time_ms_(-1),
+      last_process_time_(Timestamp::MinusInfinity()),
       network_state_estimator_(network_state_estimator),
       media_ssrc_(0),
       feedback_packet_count_(0),
       packet_overhead_(DataSize::Zero()),
-      send_interval_ms_(send_config_.default_interval->ms()),
+      send_interval_(send_config_.default_interval.Get()),
       send_periodic_feedback_(true),
       previous_abs_send_time_(0),
-      abs_send_timestamp_(clock->CurrentTime()) {
+      abs_send_timestamp_(Timestamp::Zero()) {
   RTC_LOG(LS_INFO)
       << "Maximum interval between transport feedback RTCP messages (ms): "
       << send_config_.max_interval->ms();
@@ -151,32 +150,19 @@ void RemoteEstimatorProxy::IncomingPacket(Packet packet) {
   }
 }
 
-bool RemoteEstimatorProxy::LatestEstimate(std::vector<unsigned int>* ssrcs,
-                                          unsigned int* bitrate_bps) const {
-  return false;
-}
-
-int64_t RemoteEstimatorProxy::TimeUntilNextProcess() {
+TimeDelta RemoteEstimatorProxy::Process(Timestamp now) {
   MutexLock lock(&lock_);
   if (!send_periodic_feedback_) {
-    // Wait a day until next process.
-    return 24 * 60 * 60 * 1000;
-  } else if (last_process_time_ms_ != -1) {
-    int64_t now = clock_->TimeInMilliseconds();
-    if (now - last_process_time_ms_ < send_interval_ms_)
-      return last_process_time_ms_ + send_interval_ms_ - now;
+    return TimeDelta::PlusInfinity();
   }
-  return 0;
-}
-
-void RemoteEstimatorProxy::Process() {
-  MutexLock lock(&lock_);
-  if (!send_periodic_feedback_) {
-    return;
+  Timestamp next_process_time = last_process_time_ + send_interval_;
+  if (now >= next_process_time) {
+    last_process_time_ = now;
+    SendPeriodicFeedbacks();
+    return send_interval_;
   }
-  last_process_time_ms_ = clock_->TimeInMilliseconds();
 
-  SendPeriodicFeedbacks();
+  return next_process_time - now;
 }
 
 void RemoteEstimatorProxy::OnBitrateChanged(int bitrate_bps) {
@@ -185,20 +171,23 @@ void RemoteEstimatorProxy::OnBitrateChanged(int bitrate_bps) {
   // TwccReport size at 50ms interval is 24 byte.
   // TwccReport size at 250ms interval is 36 byte.
   // AverageTwccReport = (TwccReport(50ms) + TwccReport(250ms)) / 2
-  constexpr int kTwccReportSize = 20 + 8 + 10 + 30;
-  const double kMinTwccRate =
-      kTwccReportSize * 8.0 * 1000.0 / send_config_.max_interval->ms();
-  const double kMaxTwccRate =
-      kTwccReportSize * 8.0 * 1000.0 / send_config_.min_interval->ms();
+  constexpr DataSize kTwccReportSize = DataSize::Bytes(20 + 8 + 10 + 30);
+  const DataRate kMinTwccRate =
+      kTwccReportSize / send_config_.max_interval.Get();
 
   // Let TWCC reports occupy 5% of total bandwidth.
+  DataRate twcc_bitrate = DataRate::BitsPerSec(
+      static_cast<double>(send_config_.bandwidth_fraction) * bitrate_bps);
+
+  // Check upper send_interval bound by checking bitrate to avoid overflow when
+  // dividing by small bitrate, in particular avoid dividing by zero bitrate.
+  TimeDelta send_interval = twcc_bitrate <= kMinTwccRate
+                                ? send_config_.max_interval.Get()
+                                : std::max(kTwccReportSize / twcc_bitrate,
+                                           send_config_.min_interval.Get());
+
   MutexLock lock(&lock_);
-  send_interval_ms_ = static_cast<int>(
-      0.5 +
-      kTwccReportSize * 8.0 * 1000.0 /
-          rtc::SafeClamp(static_cast<double>(send_config_.bandwidth_fraction) *
-                             bitrate_bps,
-                         kMinTwccRate, kMaxTwccRate));
+  send_interval_ = send_interval;
 }
 
 void RemoteEstimatorProxy::SetSendPeriodicFeedback(
