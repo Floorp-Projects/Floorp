@@ -33,7 +33,7 @@ jobs:
         echo 'ac_add_options --disable-updater' >> mozconfig
         echo 'ac_add_options --with-app-name=floorp' >> mozconfig
         echo 'ac_add_options --with-app-basename=Floorp' >> mozconfig
-        echo 'ac_add_options --with-branding=floorp/browser/branding/official' >> mozconfig
+        echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
         echo 'ac_add_options --disable-crashreporter' >> mozconfig
         echo 'ac_add_options --enable-proxy-bypass-protection' >> mozconfig
         echo 'ac_add_options --disable-verify-mar' >> mozconfig
@@ -86,7 +86,7 @@ jobs:
         echo 'ac_add_options --disable-updater' >> mozconfig
         echo 'ac_add_options --with-app-name=floorp' >> mozconfig
         echo 'ac_add_options --with-app-basename=Floorp' >> mozconfig
-        echo 'ac_add_options --with-branding=floorp/browser/branding/official' >> mozconfig
+        echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
         echo 'ac_add_options --disable-crashreporter' >> mozconfig
         echo 'ac_add_options --enable-proxy-bypass-protection' >> mozconfig
         echo 'ac_add_options --disable-verify-mar' >> mozconfig

@@ -128,7 +128,7 @@ jobs:
         echo 'mk_add_options MOZ_MAKE_FLAGS=-j${X%.*}' >> mozconfig
         echo 'ac_add_options --with-app-name=floorp' >> mozconfig
         echo 'ac_add_options --with-app-basename=Floorp' >> mozconfig
-        echo 'ac_add_options --with-branding=floorp/browser/branding/official' >> mozconfig
+        echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
         echo 'ac_add_options --with-l10n-base=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/l10n-central/l10n-central' >> mozconfig
         echo 'ac_add_options --with-wasi-sysroot=/home/runner/work/wasi-sysroot/' >> mozconfig
         echo 'ac_add_options --disable-bits-download' >> mozconfig
