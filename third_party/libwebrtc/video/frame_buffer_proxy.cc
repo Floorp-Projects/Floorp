@@ -222,12 +222,6 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
                     field_trials.Lookup("WebRTC-ZeroPlayoutDelay"));
   }
 
-#if defined(WEBRTC_MOZILLA_BUILD)
-  void Start() override {
-    RTC_DCHECK(false); // currently unimplemented
-  }
-#endif
-
   // FrameBufferProxy implementation.
   void StopOnWorker() override {
     RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
