@@ -4082,7 +4082,11 @@ class Page {
         if (intentAny || intentDisplay && annotation.mustBeViewed(annotationStorage) || intentPrint && annotation.mustBePrinted(annotationStorage)) {
           opListPromises.push(annotation.getOperatorList(partialEvaluator, task, intent, renderForms, annotationStorage).catch(function (reason) {
             (0, _util.warn)("getOperatorList - ignoring annotation data during " + `"${task.name}" task: "${reason}".`);
-            return null;
+            return {
+              opList: null,
+              separateForm: false,
+              separateCanvas: false,
+            };
           }));
         }
       }
