@@ -19,9 +19,6 @@ const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 async function setupExtensionDebuggingToolbox(id) {
   const commands = await CommandsFactory.forAddon(id);
   const descriptor = commands.descriptorFront;
-  // As this mimic about:debugging toolbox, by default, the toolbox won't close
-  // the client on shutdown. So request it to do that here, via the descriptor.
-  descriptor.shouldCloseClient = true;
 
   const { toolbox, storage } = await openStoragePanel({
     descriptor,

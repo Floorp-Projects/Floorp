@@ -117,6 +117,12 @@ var connect = async function() {
 
   appendStatusMessage("Get root form for toolbox");
   gCommands = await CommandsFactory.forMainProcess({ client });
+
+  // Bug 1794607: for some unexpected reason, closing the DevToolsClient
+  // when the commands is destroyed by the toolbox would introduce leaks
+  // when running the browser-toolbox mochitests.
+  gCommands.shouldCloseClient = false;
+
   await openToolbox(gCommands);
 };
 
