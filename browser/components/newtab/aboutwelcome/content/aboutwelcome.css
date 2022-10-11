@@ -383,11 +383,6 @@ html {
 .onboardingContainer .screen[pos=split] .secondary-cta.top {
   padding-inline-end: 0;
 }
-@media (max-height: 650px) and (max-width: 990px) {
-  .onboardingContainer .screen[pos=split] .secondary-cta.top {
-    display: none;
-  }
-}
 .onboardingContainer .screen[pos=split] .secondary-cta.top button {
   color: var(--in-content-page-color);
 }
@@ -678,6 +673,26 @@ html {
   }
   .onboardingContainer .screen[pos=split] .section-main:dir(rtl) .main-content {
     border-radius: 0 0 8px 8px;
+  }
+}
+@media only screen and (max-height: 650px) and (min-width: 800px) and (max-width: 990px) {
+  .onboardingContainer .screen[pos=split] .section-main {
+    position: relative;
+  }
+  .onboardingContainer .screen[pos=split] .section-main .secondary-cta.top {
+    padding: 0;
+    top: 20px;
+    inset-inline-end: 20px;
+  }
+}
+@media only screen and (max-height: 650px) and (max-width: 590px) {
+  .onboardingContainer .screen[pos=split] .section-main {
+    position: relative;
+  }
+  .onboardingContainer .screen[pos=split] .section-main .secondary-cta.top {
+    padding: 0;
+    top: 0;
+    inset-inline-end: 0;
   }
 }
 .onboardingContainer .brand-logo {

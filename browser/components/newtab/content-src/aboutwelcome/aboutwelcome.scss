@@ -276,10 +276,6 @@ html {
       .secondary-cta.top {
         padding-inline-end: 0;
 
-        @media (max-height: 650px) and (max-width: 990px) {
-          display: none;
-        }
-
         button {
           color: var(--in-content-page-color);
         }
@@ -642,6 +638,34 @@ html {
           }
         }
 
+      }
+
+      // Reposition the "Sign in" button on the welcome screen to move inside
+      // the screen when it would otherwise overlap the screen.
+      @media only screen and (max-height: 650px) {
+        @media (min-width: 800px) and (max-width: 990px) {
+          .section-main {
+            position: relative;
+
+            .secondary-cta.top {
+              padding: 0;
+              top: 20px;
+              inset-inline-end: 20px;
+            }
+          }
+        }
+
+        @media (max-width: 590px) {
+          .section-main {
+            position: relative;
+
+            .secondary-cta.top {
+              padding: 0;
+              top: 0;
+              inset-inline-end: 0;
+            }
+          }
+        }
       }
     }
   }
