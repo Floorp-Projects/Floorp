@@ -301,21 +301,14 @@ class AccHideEvent : public AccMutationEvent {
  */
 class AccShowEvent : public AccMutationEvent {
  public:
-  explicit AccShowEvent(LocalAccessible* aTarget);
+  explicit AccShowEvent(LocalAccessible* aTarget)
+      : AccMutationEvent(::nsIAccessibleEvent::EVENT_SHOW, aTarget) {}
 
   // Event
   static const EventGroup kEventGroup = eShowEvent;
   virtual unsigned int GetEventGroups() const override {
     return AccMutationEvent::GetEventGroups() | (1U << eShowEvent);
   }
-
-  uint32_t InsertionIndex() const { return mInsertionIndex; }
-
- private:
-  nsTArray<RefPtr<AccHideEvent>> mPrecedingEvents;
-  uint32_t mInsertionIndex;
-
-  friend class EventTree;
 };
 
 /**

@@ -10,6 +10,7 @@
 #include "CachedTableAccessible.h"
 #include "DocAccessible-inl.h"
 #include "DocAccessibleChild.h"
+#include "EventTree.h"
 #include "HTMLImageMapAccessible.h"
 #include "nsAccCache.h"
 #include "nsAccessiblePivot.h"
@@ -2409,8 +2410,6 @@ bool DocAccessible::MoveChild(LocalAccessible* aChild,
       mARIAOwnsHash.Remove(curParent);
     }
   }
-
-  NotificationController::MoveGuard mguard(mNotificationController);
 
   if (curParent == aNewParent) {
     MOZ_ASSERT(aChild->IndexInParent() != aIdxInParent, "No move case");

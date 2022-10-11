@@ -7,10 +7,11 @@
 #define mozilla_a11y_NotificationController_h_
 
 #include "EventQueue.h"
-#include "EventTree.h"
 
 #include "mozilla/Tuple.h"
+#include "nsClassHashtable.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIFrame.h"
 #include "nsRefreshObservers.h"
 #include "nsTHashSet.h"
 
@@ -113,38 +114,6 @@ class NotificationController final : public EventQueue,
       ScheduleProcessing();
     }
   }
-
-  /**
-   * Returns existing event tree for the given the accessible or creates one if
-   * it doesn't exists yet.
-   */
-  EventTree* QueueMutation(LocalAccessible* aContainer);
-
-  class MoveGuard final {
-   public:
-    explicit MoveGuard(NotificationController* aController)
-        : mController(aController) {
-#ifdef DEBUG
-      MOZ_ASSERT(!mController->mMoveGuardOnStack,
-                 "Move guard is on stack already!");
-      mController->mMoveGuardOnStack = true;
-#endif
-    }
-    ~MoveGuard() {
-#ifdef DEBUG
-      MOZ_ASSERT(mController->mMoveGuardOnStack, "No move guard on stack!");
-      mController->mMoveGuardOnStack = false;
-#endif
-      mController->mPrecedingEvents.Clear();
-    }
-
-   private:
-    NotificationController* mController;
-  };
-
-#ifdef A11Y_LOG
-  const EventTree& RootEventTree() const { return mEventTree; };
-#endif
 
   /**
    * Queue a mutation event to emit if not coalesced away.  Returns true if the
@@ -300,23 +269,6 @@ class NotificationController final : public EventQueue,
   // nsARefreshObserver
   virtual void WillRefresh(mozilla::TimeStamp aTime) override;
 
-  /**
-   * Set and returns a hide event, paired with a show event, for the move.
-   */
-  void WithdrawPrecedingEvents(nsTArray<RefPtr<AccHideEvent>>* aEvs) {
-    if (mPrecedingEvents.Length() > 0) {
-      aEvs->AppendElements(std::move(mPrecedingEvents));
-    }
-  }
-  void StorePrecedingEvent(AccHideEvent* aEv) {
-    MOZ_ASSERT(mMoveGuardOnStack, "No move guard on stack!");
-    mPrecedingEvents.AppendElement(aEv);
-  }
-  void StorePrecedingEvents(nsTArray<RefPtr<AccHideEvent>>&& aEvs) {
-    MOZ_ASSERT(mMoveGuardOnStack, "No move guard on stack!");
-    mPrecedingEvents.InsertElementsAt(0, aEvs);
-  }
-
  private:
   /**
    * Remove a specific hide event if it should not be propagated.
@@ -402,24 +354,6 @@ class NotificationController final : public EventQueue,
    * Holds all scheduled relocations.
    */
   nsTArray<RefPtr<LocalAccessible>> mRelocations;
-
-  /**
-   * Holds all mutation events.
-   */
-  EventTree mEventTree;
-
-  /**
-   * A temporary collection of hide events that should be fired before related
-   * show event. Used by EventTree.
-   */
-  nsTArray<RefPtr<AccHideEvent>> mPrecedingEvents;
-
-#ifdef DEBUG
-  bool mMoveGuardOnStack;
-#endif
-
-  friend class MoveGuard;
-  friend class EventTree;
 
   /**
    * A list of all mutation events we may want to emit.  Ordered from the first
