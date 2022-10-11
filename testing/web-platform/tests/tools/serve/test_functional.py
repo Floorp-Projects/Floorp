@@ -27,13 +27,16 @@ class ServerProcSpy(serve.ServerProc):
 
         return result
 
+
 serve.ServerProc = ServerProcSpy  # type: ignore
+
 
 @pytest.fixture()
 def server_subprocesses():
     ServerProcSpy.instances = queue.Queue()
     yield ServerProcSpy.instances
     ServerProcSpy.instances = None
+
 
 @pytest.fixture()
 def tempfile_name():
@@ -70,7 +73,8 @@ def test_subprocess_exit(server_subprocesses, tempfile_name):
 
     server_subprocesses.get(True, timeout)
     subprocess = server_subprocesses.get(True, timeout)
-    subprocess.stop()
+    subprocess.request_shutdown()
+    subprocess.wait()
 
     thread.join(timeout)
 
