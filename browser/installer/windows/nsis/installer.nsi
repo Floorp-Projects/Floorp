@@ -615,6 +615,12 @@ Section "-Application" APP_IDX
     ${EndIf}
   ${EndIf}
 
+  ; This is always added if it doesn't already exist to ensure that Windows'
+  ; native "Pin to Taskbar" functionality can find an appropriate shortcut.
+  ; See https://bugzilla.mozilla.org/show_bug.cgi?id=1762994 for additional
+  ; background.
+  ${AddPrivateBrowsingShortcut}
+
   ; Update lastwritetime of the Start Menu shortcut to clear the tile cache.
   ; Do this for both shell contexts in case the user has shortcuts in multiple
   ; locations, then restore the previous context at the end.
