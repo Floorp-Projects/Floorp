@@ -362,17 +362,13 @@ class nsFrameList {
 
   static inline const nsFrameList& EmptyList();
 
-  class Enumerator;
-
   /**
    * A class representing a slice of a frame list.
    */
   class Slice {
-    friend class Enumerator;
-
    public:
-    // Implicit on purpose, so that we can easily create enumerators from
-    // nsFrameList via this impicit constructor.
+    // Implicit on purpose, so that we can easily create Slice from nsFrameList
+    // via this impicit constructor.
     MOZ_IMPLICIT Slice(const nsFrameList& aList)
         : mStart(aList.FirstChild()), mEnd(nullptr) {}
     Slice(nsIFrame* aStart, nsIFrame* aEnd) : mStart(aStart), mEnd(aEnd) {}
@@ -388,51 +384,6 @@ class nsFrameList {
 
     // The first frame that is NOT in the slice. May be null.
     nsIFrame* const mEnd;
-  };
-
-  class Enumerator {
-   public:
-    explicit Enumerator(const Slice& aSlice)
-        : mFrame(aSlice.mStart), mEnd(aSlice.mEnd) {}
-
-    Enumerator(const Enumerator& aOther) = default;
-
-    bool AtEnd() const {
-      // Can't just check mEnd, because some table code goes and destroys the
-      // tail of the frame list (including mEnd!) while iterating over the
-      // frame list.
-      return !mFrame || mFrame == mEnd;
-    }
-
-    /* Next() needs to know about nsIFrame, and nsIFrame will need to
-       know about nsFrameList methods, so in order to inline this put
-       the implementation in nsIFrame.h */
-    inline void Next();
-
-    /**
-     * Get the current frame we're pointing to.  Do not call this on an
-     * iterator that is at end!
-     */
-    nsIFrame* get() const {
-      MOZ_ASSERT(!AtEnd(), "Enumerator is at end");
-      return mFrame;
-    }
-
-    /**
-     * Get an enumerator that is just like this one, but not limited in terms of
-     * the part of the list it will traverse.
-     */
-    Enumerator GetUnlimitedEnumerator() const {
-      return Enumerator(*this, nullptr);
-    }
-
-   protected:
-    Enumerator(const Enumerator& aOther, const nsIFrame* const aNewEnd)
-        : mFrame(aOther.mFrame), mEnd(aNewEnd) {}
-
-    nsIFrame* mFrame;            // our current frame.
-    const nsIFrame* const mEnd;  // The first frame we should NOT enumerate.
-                                 // May be null.
   };
 
   template <typename FrameTraversal>
