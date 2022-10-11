@@ -59,3 +59,54 @@ add_task(async function test_tab_switch_dismiss() {
 
   BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function test_add_tab_by_user_and_switch() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, INSTALL_PAGE);
+
+  let listener = {
+    onInstallCancelled() {
+      this.canceledPromise = Promise.resolve();
+    },
+  };
+  AddonManager.addInstallListener(listener);
+
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [INSTALL_XPI], function(url) {
+    content.wrappedJSObject.installMozAM(url);
+  });
+
+  // Show addon permission notification.
+  await promisePopupNotificationShown("addon-webext-permissions");
+  is(
+    document.getElementById("addon-webext-perm-list").childElementCount,
+    5,
+    "Permissions list has 5 entries"
+  );
+
+  // Open about:newtab page in a new tab.
+  let newTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:newtab",
+    false
+  );
+
+  // Switch to tab that is opening addon permission notification.
+  gBrowser.selectedTab = tab;
+  is(
+    document.getElementById("addon-webext-perm-list").childElementCount,
+    5,
+    "Permission notification is shown again"
+  );
+  ok(!listener.canceledPromise, "Extension installation is not canceled");
+
+  // Cancel installation.
+  document.querySelector(".popup-notification-secondary-button").click();
+  await listener.canceledPromise;
+  info("Extension installation is canceled");
+
+  let addon = await AddonManager.getAddonByID("permissions@test.mozilla.org");
+  is(addon, null, "Extension is not installed");
+
+  AddonManager.removeInstallListener(listener);
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(newTab);
+});
