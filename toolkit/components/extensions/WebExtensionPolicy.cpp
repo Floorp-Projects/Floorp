@@ -9,11 +9,13 @@
 #include "mozilla/extensions/WebExtensionPolicy.h"
 
 #include "mozilla/AddonManagerWebAPI.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_extensions.h"
 #include "nsContentUtils.h"
 #include "nsEscape.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIObserver.h"
 #include "nsISubstitutingProtocolHandler.h"
 #include "nsNetUtil.h"
