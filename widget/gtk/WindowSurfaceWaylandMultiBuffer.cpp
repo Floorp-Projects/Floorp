@@ -197,6 +197,9 @@ already_AddRefed<DrawTarget> WindowSurfaceWaylandMB::Lock(
       mInProgressBuffer = mFrontBuffer;
     } else {
       mInProgressBuffer = ObtainBufferFromPool(lock, mMozContainerSize);
+      if (!mInProgressBuffer) {
+        return nullptr;
+      }
       if (mFrontBuffer) {
         HandlePartialUpdate(lock, aInvalidRegion);
         ReturnBufferToPool(lock, mFrontBuffer);
@@ -326,7 +329,9 @@ RefPtr<WaylandBufferSHM> WindowSurfaceWaylandMB::ObtainBufferFromPool(
   }
 
   RefPtr<WaylandBufferSHM> buffer = WaylandBufferSHM::Create(aSize);
-  mInUseBuffers.AppendElement(buffer);
+  if (buffer) {
+    mInUseBuffers.AppendElement(buffer);
+  }
 
   return buffer;
 }
