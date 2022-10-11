@@ -861,11 +861,10 @@ impl From<ClipItemKey> for ClipNode {
                     mode,
                 }
             }
-            ClipItemKeyKind::ImageMask(rect, image, repeat, polygon_handle) => {
+            ClipItemKeyKind::ImageMask(rect, image, polygon_handle) => {
                 ClipItemKind::Image {
                     image,
                     rect: rect.into(),
-                    repeat,
                     polygon_handle,
                 }
             }
@@ -1041,7 +1040,7 @@ impl ClipNodeInfo {
 
         let mut visible_tiles = None;
 
-        if let ClipItemKind::Image { rect, image, repeat, .. } = node.item.kind {
+        if let ClipItemKind::Image { rect, image, .. } = node.item.kind {
             let request = ImageRequest {
                 key: image,
                 rendering: ImageRendering::Auto,
@@ -1052,15 +1051,12 @@ impl ClipNodeInfo {
                 if let Some(tile_size) = props.tiling {
                     let tile_range_start = mask_tiles.len();
 
-                    let visible_rect = if repeat {
-                        *clipped_rect
-                    } else {
-                        // Bug 1648323 - It is unclear why on rare occasions we get
-                        // a clipped_rect that does not intersect the clip's mask rect.
-                        // defaulting to clipped_rect here results in zero repetitions
-                        // which clips the primitive entirely.
-                        clipped_rect.intersection(&rect).unwrap_or(*clipped_rect)
-                    };
+                    // Bug 1648323 - It is unclear why on rare occasions we get
+                    // a clipped_rect that does not intersect the clip's mask rect.
+                    // defaulting to clipped_rect here results in zero repetitions
+                    // which clips the primitive entirely.
+                    let visible_rect =
+                        clipped_rect.intersection(&rect).unwrap_or(*clipped_rect);
 
                     let repetitions = image_tiling::repetitions(
                         &rect,
@@ -1544,7 +1540,7 @@ impl<I: Iterator<Item = ComplexClipRegion>> Iterator for ComplexTranslateIter<I>
 pub enum ClipItemKeyKind {
     Rectangle(RectangleKey, ClipMode),
     RoundedRectangle(RectangleKey, BorderRadiusAu, ClipMode),
-    ImageMask(RectangleKey, ImageKey, bool, Option<PolygonDataHandle>),
+    ImageMask(RectangleKey, ImageKey, Option<PolygonDataHandle>),
     BoxShadow(PointKey, SizeKey, BorderRadiusAu, RectangleKey, Au, BoxShadowClipMode),
 }
 
@@ -1571,7 +1567,6 @@ impl ClipItemKeyKind {
         ClipItemKeyKind::ImageMask(
             mask_rect.into(),
             image_mask.image,
-            image_mask.repeat,
             polygon_handle,
         )
     }
@@ -1653,7 +1648,6 @@ pub enum ClipItemKind {
     Image {
         image: ImageKey,
         rect: LayoutRect,
-        repeat: bool,
         polygon_handle: Option<PolygonDataHandle>,
     },
     BoxShadow {
@@ -1853,12 +1847,8 @@ impl ClipItemKind {
             ClipItemKind::Rectangle { mode: ClipMode::ClipOut, .. } => None,
             ClipItemKind::RoundedRectangle { rect, mode: ClipMode::Clip, .. } => Some(rect),
             ClipItemKind::RoundedRectangle { mode: ClipMode::ClipOut, .. } => None,
-            ClipItemKind::Image { repeat, rect, .. } => {
-                if repeat {
-                    None
-                } else {
-                    Some(rect)
-                }
+            ClipItemKind::Image { rect, .. } => {
+                Some(rect)
             }
             ClipItemKind::BoxShadow { .. } => None,
         }
@@ -1883,10 +1873,9 @@ impl ClipItemKind {
                 let inner_clip_rect = extract_inner_rect_safe(&rect, radius);
                 (rect, inner_clip_rect, mode)
             }
-            ClipItemKind::Image { rect, repeat: false, .. } => {
+            ClipItemKind::Image { rect, .. } => {
                 (rect, None, ClipMode::Clip)
             }
-            ClipItemKind::Image { repeat: true, .. } |
             ClipItemKind::BoxShadow { .. } => {
                 return ClipResult::Partial;
             }
@@ -1991,17 +1980,13 @@ impl ClipItemKind {
                     }
                 }
             }
-            ClipItemKind::Image { rect, repeat, .. } => {
-                if repeat {
-                    ClipResult::Partial
-                } else {
-                    match rect.intersection(prim_rect) {
-                        Some(..) => {
-                            ClipResult::Partial
-                        }
-                        None => {
-                            ClipResult::Reject
-                        }
+            ClipItemKind::Image { rect, .. } => {
+                match rect.intersection(prim_rect) {
+                    Some(..) => {
+                        ClipResult::Partial
+                    }
+                    None => {
+                        ClipResult::Reject
                     }
                 }
             }

@@ -90,7 +90,7 @@ impl HitTestClipNode {
             ClipItemKeyKind::RoundedRectangle(rect, radius, mode) => {
                 HitTestRegion::RoundedRectangle(rect.into(), radius.into(), mode)
             }
-            ClipItemKeyKind::ImageMask(rect, _, _, polygon_handle) => {
+            ClipItemKeyKind::ImageMask(rect, _, polygon_handle) => {
                 if let Some(handle) = polygon_handle {
                     // Retrieve the polygon data from the interner.
                     let polygon = &interners.polygon[handle];
