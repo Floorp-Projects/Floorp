@@ -112,15 +112,18 @@ jobs:
   - script: |
       set -eux -o pipefail
       ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --log-mach - --log-mach-level info --channel dev chrome infrastructure/
+    condition: succeededOrFailed()
     displayName: 'Run tests (Chrome Dev)'
   - script: |
       set -eux -o pipefail
       ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --log-mach - --log-mach-level info --channel nightly firefox infrastructure/
+    condition: succeededOrFailed()
     displayName: 'Run tests (Firefox Nightly)'
   - script: |
       set -eux -o pipefail
       export SYSTEM_VERSION_COMPAT=0
       ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --log-mach - --log-mach-level info --channel preview safari infrastructure/
+    condition: succeededOrFailed()
     displayName: 'Run tests (Safari Technology Preview)'
   - template: tools/ci/azure/publish_logs.yml
 
