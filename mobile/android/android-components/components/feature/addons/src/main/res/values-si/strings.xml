@@ -27,7 +27,7 @@
     <!-- Description for unlimited_storage permission. -->
     <string name="mozac_feature_addons_permissions_unlimited_storage_description">අනුග්‍රාහක-පාර්ශ්ව දත්ත අසීමිතව ගබඩා කිරීම</string>
     <!-- Description for navigation permission. -->
-    <string name="mozac_feature_addons_permissions_web_navigation_description">යාත්‍රණය අතරතුර අතිරික්සු ක්‍රියාකාරකම් වෙත ප්‍රවේශය</string>
+    <string name="mozac_feature_addons_permissions_web_navigation_description">යාත්‍රණය අතරතුර අතිරික්සුවේ ක්‍රියාකාරකම් වෙත ප්‍රවේශය</string>
     <!-- Description for bookmarks permission. -->
     <string name="mozac_feature_addons_permissions_bookmarks_description">පොත්යොමු කියවීම හා සංශෝධනය</string>
     <!-- Description for browser_setting permission. -->
