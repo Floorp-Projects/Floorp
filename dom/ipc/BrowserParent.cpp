@@ -1064,6 +1064,8 @@ nsresult BrowserParent::UpdatePosition() {
   nsIntRect windowDims;
   NS_ENSURE_SUCCESS(frameLoader->GetWindowDimensions(windowDims),
                     NS_ERROR_FAILURE);
+  // Avoid updating sizes here.
+  windowDims.SizeTo(mRect.Size());
   UpdateDimensions(windowDims, mDimensions);
   return NS_OK;
 }

@@ -380,7 +380,6 @@ static void UpdateLastInputEventTime(void* aGdkEvent) {
 
 nsWindow::nsWindow()
     : mIsDestroyed(false),
-      mNeedsDispatchResized(false),
       mIsShown(false),
       mNeedsShow(false),
       mIsMapped(false),
@@ -489,7 +488,7 @@ void nsWindow::DispatchResized() {
   LOG("nsWindow::DispatchResized() size [%d, %d]", (int)(mBounds.width),
       (int)(mBounds.height));
 
-  mNeedsDispatchResized = false;
+  mNeedsDispatchSize = LayoutDeviceIntSize(-1, -1);
   if (mWidgetListener) {
     mWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
   }
@@ -499,7 +498,24 @@ void nsWindow::DispatchResized() {
 }
 
 void nsWindow::MaybeDispatchResized() {
-  if (mNeedsDispatchResized && !mIsDestroyed) {
+  if (mNeedsDispatchSize != LayoutDeviceIntSize(-1, -1) && !mIsDestroyed) {
+    mBounds.SizeTo(mNeedsDispatchSize);
+    // Check mBounds size
+    if (mCompositorSession &&
+        !wr::WindowSizeSanityCheck(mBounds.width, mBounds.height)) {
+      gfxCriticalNoteOnce << "Invalid mBounds in MaybeDispatchResized "
+                          << mBounds << " size state " << mSizeMode;
+    }
+
+    if (mWindowType == eWindowType_toplevel) {
+      UpdateTopLevelOpaqueRegion();
+    }
+
+    // Notify the GtkCompositorWidget of a ClientSizeChange
+    if (mCompositorWidgetDelegate) {
+      mCompositorWidgetDelegate->NotifyClientSizeChanged(GetClientSize());
+    }
+
     DispatchResized();
   }
 }
@@ -4126,6 +4142,11 @@ void nsWindow::OnSizeAllocate(GtkAllocation* aAllocation) {
   if (mBounds.Size() == size) {
     LOG("  Already the same size");
     // mBounds was set at Create() or Resize().
+    if (mNeedsDispatchSize != LayoutDeviceIntSize(-1, -1)) {
+      LOG("  No longer needs to dispatch %dx%d", mNeedsDispatchSize.width,
+          mNeedsDispatchSize.height);
+      mNeedsDispatchSize = LayoutDeviceIntSize(-1, -1);
+    }
     return;
   }
 
@@ -4145,23 +4166,13 @@ void nsWindow::OnSizeAllocate(GtkAllocation* aAllocation) {
     }
   }
 
-  mBounds.SizeTo(size);
-  // Check mBounds size
-  if (mCompositorSession &&
-      !wr::WindowSizeSanityCheck(mBounds.width, mBounds.height)) {
-    gfxCriticalNoteOnce << "Invalid mBounds in OnSizeAllocate " << mBounds
-                        << " size state " << mSizeMode;
-  }
-
-  // Notify the GtkCompositorWidget of a ClientSizeChange
-  if (mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->NotifyClientSizeChanged(GetClientSize());
-  }
+  // If we update mBounds here, then inner/outerHeight are out of sync until
+  // we call WindowResized.
+  mNeedsDispatchSize = size;
 
   // Gecko permits running nested event loops during processing of events,
   // GtkWindow callers of gtk_widget_size_allocate expect the signal
   // handlers to return sometime in the near future.
-  mNeedsDispatchResized = true;
   NS_DispatchToCurrentThread(NewRunnableMethod(
       "nsWindow::MaybeDispatchResized", this, &nsWindow::MaybeDispatchResized));
 }

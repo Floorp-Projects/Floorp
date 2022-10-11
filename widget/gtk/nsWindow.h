@@ -562,6 +562,8 @@ class nsWindow final : public nsBaseWidget {
   // OnSizeAllocate() might change mBounds.Size().
   LayoutDeviceIntSize mLastSizeRequest;
   LayoutDeviceIntPoint mClientOffset;
+  // Indicates a new size that still needs to be dispatched.
+  LayoutDeviceIntSize mNeedsDispatchSize = LayoutDeviceIntSize(-1, -1);
 
   // This field omits duplicate scroll events caused by GNOME bug 726878.
   guint32 mLastScrollEventTime = GDK_CURRENT_TIME;
@@ -620,8 +622,6 @@ class nsWindow final : public nsBaseWidget {
 
   // Has this widget been destroyed yet?
   bool mIsDestroyed : 1;
-  // Does WindowResized need to be called on listeners?
-  bool mNeedsDispatchResized : 1;
   // mIsShown tracks requested visible status from browser perspective, i.e.
   // if the window should be visible or now.
   bool mIsShown : 1;
