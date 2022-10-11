@@ -20,8 +20,4 @@ PortInterface::PortInterface() = default;
 
 PortInterface::~PortInterface() = default;
 
-bool PortInterface::SupportsProtocol(const std::string& protocol) const {
-  return SupportsProtocol(absl::string_view(protocol));
-}
-
 }  // namespace cricket

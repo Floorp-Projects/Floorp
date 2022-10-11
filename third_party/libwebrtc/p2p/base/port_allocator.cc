@@ -313,16 +313,6 @@ std::vector<IceParameters> PortAllocator::GetPooledIceCredentials() {
   return list;
 }
 
-PortAllocatorSession* PortAllocator::CreateSessionInternal(
-    const std::string& content_name,
-    int component,
-    const std::string& ice_ufrag,
-    const std::string& ice_pwd) {
-  return CreateSessionInternal(absl::string_view(content_name), component,
-                               absl::string_view(ice_ufrag),
-                               absl::string_view(ice_pwd));
-}
-
 Candidate PortAllocator::SanitizeCandidate(const Candidate& c) const {
   CheckRunOnValidThreadAndInitialized();
   // For a local host candidate, we need to conceal its IP address candidate if

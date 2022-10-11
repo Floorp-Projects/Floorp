@@ -3547,29 +3547,22 @@ TEST_F(PortTest, TestPortNotTimeoutUntilPruned) {
 
 TEST_F(PortTest, TestSupportsProtocol) {
   auto udp_port = CreateUdpPort(kLocalAddr1);
-  EXPECT_TRUE(udp_port->SupportsProtocol(absl::string_view(UDP_PROTOCOL_NAME)));
-  EXPECT_FALSE(
-      udp_port->SupportsProtocol(absl::string_view(TCP_PROTOCOL_NAME)));
+  EXPECT_TRUE(udp_port->SupportsProtocol(UDP_PROTOCOL_NAME));
+  EXPECT_FALSE(udp_port->SupportsProtocol(TCP_PROTOCOL_NAME));
 
   auto stun_port = CreateStunPort(kLocalAddr1, nat_socket_factory1());
-  EXPECT_TRUE(
-      stun_port->SupportsProtocol(absl::string_view(UDP_PROTOCOL_NAME)));
-  EXPECT_FALSE(
-      stun_port->SupportsProtocol(absl::string_view(TCP_PROTOCOL_NAME)));
+  EXPECT_TRUE(stun_port->SupportsProtocol(UDP_PROTOCOL_NAME));
+  EXPECT_FALSE(stun_port->SupportsProtocol(TCP_PROTOCOL_NAME));
 
   auto tcp_port = CreateTcpPort(kLocalAddr1);
-  EXPECT_TRUE(tcp_port->SupportsProtocol(absl::string_view(TCP_PROTOCOL_NAME)));
-  EXPECT_TRUE(
-      tcp_port->SupportsProtocol(absl::string_view(SSLTCP_PROTOCOL_NAME)));
-  EXPECT_FALSE(
-      tcp_port->SupportsProtocol(absl::string_view(UDP_PROTOCOL_NAME)));
+  EXPECT_TRUE(tcp_port->SupportsProtocol(TCP_PROTOCOL_NAME));
+  EXPECT_TRUE(tcp_port->SupportsProtocol(SSLTCP_PROTOCOL_NAME));
+  EXPECT_FALSE(tcp_port->SupportsProtocol(UDP_PROTOCOL_NAME));
 
   auto turn_port =
       CreateTurnPort(kLocalAddr1, nat_socket_factory1(), PROTO_UDP, PROTO_UDP);
-  EXPECT_TRUE(
-      turn_port->SupportsProtocol(absl::string_view(UDP_PROTOCOL_NAME)));
-  EXPECT_FALSE(
-      turn_port->SupportsProtocol(absl::string_view(TCP_PROTOCOL_NAME)));
+  EXPECT_TRUE(turn_port->SupportsProtocol(UDP_PROTOCOL_NAME));
+  EXPECT_FALSE(turn_port->SupportsProtocol(TCP_PROTOCOL_NAME));
 }
 
 // Test that SetIceParameters updates the component, ufrag and password
