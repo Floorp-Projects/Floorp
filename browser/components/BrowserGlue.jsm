@@ -521,11 +521,11 @@ let JSWINDOWACTORS = {
 
   EncryptedMedia: {
     parent: {
-      moduleURI: "resource:///actors/EncryptedMediaParent.jsm",
+      esModuleURI: "resource:///actors/EncryptedMediaParent.sys.mjs",
     },
 
     child: {
-      moduleURI: "resource:///actors/EncryptedMediaChild.jsm",
+      esModuleURI: "resource:///actors/EncryptedMediaChild.sys.mjs",
       observers: ["mediakeys-request"],
     },
 

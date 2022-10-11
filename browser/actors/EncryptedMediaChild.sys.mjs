@@ -2,9 +2,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
-
-var EXPORTED_SYMBOLS = ["EncryptedMediaChild"];
 
 /**
  * GlobalCaptureListener is a class that listens for changes to the global
@@ -99,7 +96,7 @@ class GlobalCaptureListener {
 
 const gGlobalCaptureListener = new GlobalCaptureListener();
 
-class EncryptedMediaChild extends JSWindowActorChild {
+export class EncryptedMediaChild extends JSWindowActorChild {
   // Expected to observe 'mediakeys-request' as notified from MediaKeySystemAccess.
   // @param aSubject the nsPIDOMWindowInner associated with the notifying MediaKeySystemAccess.
   // @param aTopic should be "mediakeys-request".
