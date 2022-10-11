@@ -77,6 +77,7 @@ treeherder:
         'M-swr-wayland': 'Mochitests with software webrender and Wayland backend enabled'
         'M-wayland': 'Mochitests with Wayland backend enabled'
         'M-wayland-1proc': 'Mochitests with Wayland backend enabled without e10s'
+        'M-wmfme': 'Mochitests with Windows Media Foundation media engine enabled'
         'M-f': 'Mochitest failures'
         'M-dt-no-eft-nofis': 'DevTools Mochitests with EFT without fission enabled'
         'MSI': 'Repack installers into MSIs'
