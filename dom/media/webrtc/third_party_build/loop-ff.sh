@@ -39,9 +39,14 @@ if [ "x$MOZ_STOP_AFTER_COMMIT" = "x" ]; then
   echo "No MOZ_STOP_AFTER_COMMIT variable defined - attempting unlimited advance"
 fi
 
+if [ "x$SKIP_NEXT_REVERT_CHK" = "x" ]; then
+  SKIP_NEXT_REVERT_CHK="0"
+fi
+
 MOZ_CHANGED=0
 GIT_CHANGED=0
 ERROR_HELP=""
+HANDLE_NOOP_COMMIT=""
 
 # After this point:
 # * eE: All commands should succeed.
@@ -95,13 +100,40 @@ git log --oneline --ancestry-path $MOZ_LIBWEBRTC_BASE^..master \
  | tail -2 | head -1 | awk '{print$1;}'`
 
 echo "============ loop ff ============" 2>&1| tee -a $LOOP_OUTPUT_LOG
+
+ERROR_HELP=$"Some portion of the detection and/or fixing of upstream revert commits
+has failed.  Please fix the state of the git hub repo at: $MOZ_LIBWEBRTC_SRC.
+When fixed, please resume this script with the following command:
+    SKIP_NEXT_REVERT_CHK=1 bash dom/media/webrtc/third_party_build/loop-ff.sh
+"
+if [ "x$SKIP_NEXT_REVERT_CHK" == "x0" ]; then
+  echo "===loop-ff=== Check for upcoming revert commit" 2>&1| tee -a $LOOP_OUTPUT_LOG
+  AUTO_FIX_REVERT_AS_NOOP=1 bash dom/media/webrtc/third_party_build/detect_upstream_revert.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
+fi
+SKIP_NEXT_REVERT_CHK="0"
+ERROR_HELP=""
+
+echo "===loop-ff=== looking for ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg"
+if [ -f ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
+  echo "===loop-ff=== detected special commit msg, setting HANDLE_NOOP_COMMIT=1"
+  HANDLE_NOOP_COMMIT="1"
+fi
+
 echo "===loop-ff=== Moving from moz-libwebrtc commit $MOZ_LIBWEBRTC_BASE to $MOZ_LIBWEBRTC_NEXT_BASE" 2>&1| tee -a $LOOP_OUTPUT_LOG
 bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
 
-ERROR_HELP=$"
+MOZ_CHANGED=`hg diff -c tip --stat \
+   | egrep -ve "README.moz-ff-commit|README.mozilla|files changed," \
+   | wc -l | tr -d " " || true`
+GIT_CHANGED=`cd $MOZ_LIBWEBRTC_SRC ; \
+   git show --oneline --name-only $MOZ_LIBWEBRTC_NEXT_BASE \
+   | csplit -f gitshow -sk - 2 ; cat gitshow01 \
+   | egrep -ve "^CODE_OF_CONDUCT.md|^ENG_REVIEW_OWNERS|^PRESUBMIT.py|^README.chromium|^WATCHLISTS|^abseil-in-webrtc.md|^codereview.settings|^license_template.txt|^native-api.md|^presubmit_test.py|^presubmit_test_mocks.py|^pylintrc|^style-guide.md" \
+   | wc -l | tr -d " " || true`
+FILE_CNT_MISMATCH_MSG=$"
 The number of files changed in the upstream commit ($GIT_CHANGED) does
-not match the number of files changed in the local Mozilla repo commit
-($MOZ_CHANGED).  This may indicate a mismatch between the vendoring
+not match the number of files changed in the local Mozilla repo
+commit ($MOZ_CHANGED).  This may indicate a mismatch between the vendoring
 script and this script, or it could be a true error in the import
 processing.  Once the issue has been resolved, the following steps
 remain for this commit:
@@ -113,20 +145,14 @@ remain for this commit:
   # do a (hopefully) quick test build
   ./mach build
 "
-MOZ_CHANGED=`hg diff -c tip --stat \
-   | egrep -ve "README.moz-ff-commit|README.mozilla|files changed," \
-   | wc -l | tr -d " "` || echo -n "0" > /dev/null
-GIT_CHANGED=`cd $MOZ_LIBWEBRTC_SRC ; \
-   git show --oneline --name-only $MOZ_LIBWEBRTC_NEXT_BASE \
-   | csplit -f gitshow -sk - 2 ; cat gitshow01 \
-   | egrep -ve "^CODE_OF_CONDUCT.md|^ENG_REVIEW_OWNERS|^PRESUBMIT.py|^README.chromium|^WATCHLISTS|^abseil-in-webrtc.md|^codereview.settings|^license_template.txt|^native-api.md|^presubmit_test.py|^presubmit_test_mocks.py|^pylintrc|^style-guide.md" \
-   | wc -l | tr -d " "`
 echo "===loop-ff=== Verify number of files changed MOZ($MOZ_CHANGED) GIT($GIT_CHANGED)" 2>&1| tee -a $LOOP_OUTPUT_LOG
-if [ $MOZ_CHANGED -ne $GIT_CHANGED ]; then
+if [ "x$HANDLE_NOOP_COMMIT" == "x1" ]; then
+  echo "===loop-ff=== NO-OP commit detected, we expect file changed counts to differ" 2>&1| tee -a $LOOP_OUTPUT_LOG
+elif [ $MOZ_CHANGED -ne $GIT_CHANGED ]; then
   echo "MOZ_CHANGED $MOZ_CHANGED should equal GIT_CHANGED $GIT_CHANGED" 2>&1| tee -a $LOOP_OUTPUT_LOG
+  echo "$FILE_CNT_MISMATCH_MSG"
   exit 1
 fi
-ERROR_HELP=""
 
 MODIFIED_BUILD_RELATED_FILE_CNT=`hg diff -c tip --stat \
     --include 'third_party/libwebrtc/**BUILD.gn' \

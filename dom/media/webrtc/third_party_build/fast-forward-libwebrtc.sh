@@ -33,6 +33,10 @@ if [ "x$MOZ_LIBWEBRTC_COMMIT" = "x" ]; then
   exit
 fi
 
+if [ "x$HANDLE_NOOP_COMMIT" = "x" ]; then
+  HANDLE_NOOP_COMMIT=""
+fi
+
 ERROR_HELP=""
 RESUME=""
 if [ -f log_resume.txt ]; then
@@ -66,6 +70,14 @@ MOZ_LIBWEBRTC_NEXT_BASE=`cd $MOZ_LIBWEBRTC_SRC ; \
 git log --oneline --reverse --ancestry-path $MOZ_LIBWEBRTC_BASE^..master \
  | head -2 | tail -1 | awk '{print$1;}'`
 
+echo "looking for ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg"
+if [ -f ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
+  echo "***"
+  echo "*** detected special commit msg, setting HANDLE_NOOP_COMMIT"
+  echo "***"
+  HANDLE_NOOP_COMMIT="1"
+fi
+
 UPSTREAM_ADDED_FILES=""
 
 # After this point:
@@ -76,6 +88,7 @@ set -eEuo pipefail
 
 echo "     MOZ_LIBWEBRTC_BASE: $MOZ_LIBWEBRTC_BASE"
 echo "MOZ_LIBWEBRTC_NEXT_BASE: $MOZ_LIBWEBRTC_NEXT_BASE"
+echo "HANDLE_NOOP_COMMIT: $HANDLE_NOOP_COMMIT"
 echo " RESUME: $RESUME"
 echo "SKIP_TO: $SKIP_TO"
 
@@ -136,6 +149,9 @@ function regen_mozbuild_files {
 }
 
 function add_new_upstream_files {
+  if [ "x$HANDLE_NOOP_COMMIT" == "x1" ]; then
+    return
+  fi
   UPSTREAM_ADDED_FILES=`cd $MOZ_LIBWEBRTC_SRC && \
     git diff -r $MOZ_LIBWEBRTC_BASE -r $MOZ_LIBWEBRTC_NEXT_BASE \
         --name-status --diff-filter=A \
@@ -150,6 +166,9 @@ function add_new_upstream_files {
 }
 
 function remove_deleted_upstream_files {
+  if [ "x$HANDLE_NOOP_COMMIT" == "x1" ]; then
+    return
+  fi
   UPSTREAM_DELETED_FILES=`cd $MOZ_LIBWEBRTC_SRC && \
     git diff -r $MOZ_LIBWEBRTC_BASE -r $MOZ_LIBWEBRTC_NEXT_BASE \
         --name-status --diff-filter=D \
@@ -164,6 +183,9 @@ function remove_deleted_upstream_files {
 }
 
 function handle_renamed_upstream_files {
+  if [ "x$HANDLE_NOOP_COMMIT" == "x1" ]; then
+    return
+  fi
   UPSTREAM_RENAMED_FILES=`cd $MOZ_LIBWEBRTC_SRC && \
     git diff -r $MOZ_LIBWEBRTC_BASE -r $MOZ_LIBWEBRTC_NEXT_BASE \
         --name-status --diff-filter=R \
@@ -208,10 +230,11 @@ fi
 
 if [ $SKIP_TO = "resume6" ]; then SKIP_TO="run"; fi
 if [ $SKIP_TO = "run" ]; then
-  echo "" > log_resume.txt
+  echo "resume7" > log_resume.txt
   handle_renamed_upstream_files;
 fi
 
+echo "" > log_resume.txt
 echo "-------"
 echo "------- Commit vendored changes from $MOZ_LIBWEBRTC_NEXT_BASE"
 echo "-------"
@@ -221,6 +244,11 @@ UPSTREAM_SHA=`cd $MOZ_LIBWEBRTC_SRC && \
 echo "Bug $MOZ_FASTFORWARD_BUG - Vendor libwebrtc from $MOZ_LIBWEBRTC_NEXT_BASE" \
     > commit_msg.txt
 echo "" >> commit_msg.txt
+if [ -f ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
+  cat ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg >> commit_msg.txt
+  echo "" >> commit_msg.txt
+  rm ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg
+fi
 echo "Upstream commit: https://webrtc.googlesource.com/src/+/$UPSTREAM_SHA" >> commit_msg.txt
 (cd $MOZ_LIBWEBRTC_SRC && \
 git show --name-only $MOZ_LIBWEBRTC_NEXT_BASE | grep "^ ") >> commit_msg.txt
