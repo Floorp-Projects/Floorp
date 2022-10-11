@@ -48,6 +48,10 @@ namespace mozilla {
 //   uint32_t mMediaCount MOZ_GUARDED_BY(mTargetCapability) = 0;
 //   EventTargetCapability<nsIEventTarget> mTargetCapability;
 // };
+//
+// NOTE: If you need a thread-safety capability for specifically the main
+// thread, the static `mozilla::sMainThreadCapability` capability exists, and
+// can be asserted using `AssertIsOnMainThread()`.
 
 template <typename T>
 class MOZ_CAPABILITY EventTargetCapability final {
