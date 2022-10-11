@@ -1,0 +1,25 @@
+{
+  "version": 3,
+  "file": "xbundle.js",
+  "sections": [
+    {
+      "offset": {
+        "line": 0,
+        "column": 0
+      },
+      "map": {
+        "version": 3,
+        "sources": [
+          "xsource.js"
+        ],
+        "names": [],
+        "mappings": ";;AAAA,WAAW,CAAC,YAAK;AAChB,QAAO,CAAC,GAAG,CAAC,gBAAgB,CAAC,CAAC;AAC9B,OAAM,IAAI,KAAK,CAAC,OAAO,CAAC,CAAC;CACzB,EAAE,IAAI,CAAC,CAAC",
+        "file": "xbundle.js",
+        "sourceRoot": "src",
+        "sourcesContent": [
+          "setInterval(() =>{\n\tconsole.log(\"about to throw\");\n\tthrow new Error('error');\n}, 1000);\n"
+        ]
+      }
+    }
+  ]
+}
