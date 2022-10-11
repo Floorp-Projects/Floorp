@@ -296,9 +296,8 @@ std::unique_ptr<RtcEventLog> PeerConnectionFactory::CreateRtcEventLog_w() {
   auto encoding_type = RtcEventLog::EncodingType::Legacy;
   if (IsTrialEnabled("WebRTC-RtcEventLogNewFormat"))
     encoding_type = RtcEventLog::EncodingType::NewFormat;
-  return event_log_factory_
-             ? event_log_factory_->CreateRtcEventLog(encoding_type)
-             : std::make_unique<RtcEventLogNull>();
+  return event_log_factory_ ? event_log_factory_->Create(encoding_type)
+                            : std::make_unique<RtcEventLogNull>();
 }
 
 std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
