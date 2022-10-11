@@ -36,20 +36,10 @@ function waitForPasteMenuPopupEvent(aEventSuffix) {
 }
 
 function promisePasteButtonIsShown() {
-  return waitForPasteMenuPopupEvent("shown").then(async () => {
+  return waitForPasteMenuPopupEvent("shown").then(() => {
     ok(true, "Witnessed 'popupshown' event for 'Paste' button.");
 
     const pasteButton = document.getElementById(kPasteMenuItemId);
-    ok(
-      pasteButton.disabled,
-      "Paste button should be shown with disabled by default"
-    );
-    await BrowserTestUtils.waitForMutationCondition(
-      pasteButton,
-      { attributeFilter: ["disabled"] },
-      () => !pasteButton.disabled,
-      "Wait for paste button enabled"
-    );
 
     return promiseBrowserReflow().then(() => {
       return coordinatesRelativeToScreen({
