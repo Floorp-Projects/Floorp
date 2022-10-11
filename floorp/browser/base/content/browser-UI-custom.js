@@ -8,7 +8,7 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 if (Services.prefs.getBoolPref("floorp.material.effect.enable", false)) {    
   var Tag = document.createElement("style");
-  Tag.innerText = `@import url(chrome://browser/skin/optioncss/micaforeveryone.css)`
+  Tag.innerText = `@import url(chrome://browser/skin/options/micaforeveryone.css)`
   document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
   Tag.setAttribute("id", "micaforeveryone");
 }
@@ -16,7 +16,7 @@ if (Services.prefs.getBoolPref("floorp.material.effect.enable", false)) {
 Services.prefs.addObserver("floorp.material.effect.enable", function(){
  if (Services.prefs.getBoolPref("floorp.material.effect.enable", false)) {
    var Tag = document.createElement("style");
-   Tag.innerText = `@import url(chrome://browser/skin/optioncss/micaforeveryone.css)`
+   Tag.innerText = `@import url(chrome://browser/skin/options/micaforeveryone.css)`
    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
    Tag.setAttribute("id", "micaforeveryone");
  }
@@ -26,7 +26,7 @@ Services.prefs.addObserver("floorp.material.effect.enable", function(){
 
   if (Services.prefs.getBoolPref("floorp.Tree-type.verticaltab.optimization", false)) {    
     var Tag = document.createElement("style");
-    Tag.innerText = `@import url(chrome://browser/skin/optioncss/treestyletab.css)`
+    Tag.innerText = `@import url(chrome://browser/skin/options/treestyletab.css)`
     document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
     Tag.setAttribute("id", "treestyletabopti");
   }
@@ -34,7 +34,7 @@ Services.prefs.addObserver("floorp.material.effect.enable", function(){
   Services.prefs.addObserver("floorp.Tree-type.verticaltab.optimization", function(){
     if (Services.prefs.getBoolPref("floorp.Tree-type.verticaltab.optimization", false)) {
       var Tag = document.createElement("style");
-      Tag.innerText = `@import url(chrome://browser/skin/optioncss/treestyletab.css)`
+      Tag.innerText = `@import url(chrome://browser/skin/options/treestyletab.css)`
       document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
       Tag.setAttribute("id", "treestyletabopti");
     }
@@ -44,14 +44,14 @@ Services.prefs.addObserver("floorp.material.effect.enable", function(){
 
   if (Services.prefs.getBoolPref("floorp.optimized.msbutton.ope", false)) {    
     var Tag = document.createElement("style");
-    Tag.innerText = `@import url(chrome://browser/skin/optioncss/msbutton.css)`
+    Tag.innerText = `@import url(chrome://browser/skin/options/msbutton.css)`
     document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
     Tag.setAttribute("id", "optimizedmsbuttonope");
   }
  Services.prefs.addObserver("floorp.optimized.msbutton.ope", function(){
    if (Services.prefs.getBoolPref("floorp.optimized.msbutton.ope", false)) {
      var Tag = document.createElement("style");
-     Tag.innerText = `@import url(chrome://browser/skin/optioncss/msbutton.css)`
+     Tag.innerText = `@import url(chrome://browser/skin/options/msbutton.css)`
      document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
      Tag.setAttribute("id", "optimizedmsbuttonope");
    }
@@ -61,14 +61,14 @@ Services.prefs.addObserver("floorp.material.effect.enable", function(){
 
   if (Services.prefs.getBoolPref("floorp.bookmarks.bar.focus.mode", false)) {    
     var Tag = document.createElement("style");
-    Tag.innerText = `@import url(chrome://browser/skin/optioncss/bookmarkbar_autohide.css)`
+    Tag.innerText = `@import url(chrome://browser/skin/options/bookmarkbar_autohide.css)`
     document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
     Tag.setAttribute("id", "bookmarkbarfocus");
   }
    Services.prefs.addObserver("floorp.bookmarks.bar.focus.mode", function(){
      if (Services.prefs.getBoolPref("floorp.bookmarks.bar.focus.mode", false)) {
      var Tag = document.createElement("style");
-     Tag.innerText = `@import url(chrome://browser/skin/optioncss/bookmarkbar_autohide.css)`
+     Tag.innerText = `@import url(chrome://browser/skin/options/bookmarkbar_autohide.css)`
      document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
      Tag.setAttribute("id", "bookmarkbarfocus");
     }
@@ -92,14 +92,14 @@ if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {
 
   if (Services.prefs.getBoolPref("floorp.search.top.mode", false)) {    
      var Tag = document.createElement("style");
-     Tag.innerText = `@import url(chrome://browser/skin/optioncss/move_page_inside_searchbar.css)` 
+     Tag.innerText = `@import url(chrome://browser/skin/options/move_page_inside_searchbar.css)` 
      document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
      Tag.setAttribute("id", "searchbartop");
   }
   Services.prefs.addObserver("floorp.search.top.mode", function(){
     if (Services.prefs.getBoolPref("floorp.search.top.mode", false)) {
       var Tag = document.createElement("style");
-      Tag.innerText = `@import url(chrome://browser/skin/optioncss/move_page_inside_searchbar.css)` 
+      Tag.innerText = `@import url(chrome://browser/skin/options/move_page_inside_searchbar.css)` 
       document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
       Tag.setAttribute("id", "searchbartop");
     }
@@ -110,14 +110,14 @@ if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {
  )
  if (Services.prefs.getBoolPref("floorp.legacy.dlui.enable", false)) {    
   var Tag = document.createElement("style");
-  Tag.innerText = `@import url(chrome://browser/skin/optioncss/browser-custum-dlmgr.css)`
+  Tag.innerText = `@import url(chrome://browser/skin/options/browser-custum-dlmgr.css)`
   document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
   Tag.setAttribute("id", "dlmgrcss");
 }
 Services.prefs.addObserver("floorp.legacy.dlui.enable", function(){
  if (Services.prefs.getBoolPref("floorp.legacy.dlui.enable", false)) {
    var Tag = document.createElement("style");
-   Tag.innerText = `@import url(chrome://browser/skin/optioncss/browser-custum-dlmgr.css)`
+   Tag.innerText = `@import url(chrome://browser/skin/options/browser-custum-dlmgr.css)`
    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
    Tag.setAttribute("id", "dlmgrcss");
  }
@@ -127,14 +127,14 @@ Services.prefs.addObserver("floorp.legacy.dlui.enable", function(){
 
  if (Services.prefs.getBoolPref("floorp.downloading.red.color", false)) {    
   var Tag = document.createElement("style");
-  Tag.innerText = `@import url(chrome://browser/skin/optioncss/downloading-redcolor.css`
+  Tag.innerText = `@import url(chrome://browser/skin/options/downloading-redcolor.css`
   document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
   Tag.setAttribute("id", "dlredcolor");
 }
 Services.prefs.addObserver("floorp.downloading.red.color", function(){
  if (Services.prefs.getBoolPref("floorp.downloading.red.color", false)) {
    var Tag = document.createElement("style");
-   Tag.innerText = `@import url(chrome://browser/skin/optioncss/downloading-redcolor.css`
+   Tag.innerText = `@import url(chrome://browser/skin/options/downloading-redcolor.css`
    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
    Tag.setAttribute("id", "dlredcolor");
  }
