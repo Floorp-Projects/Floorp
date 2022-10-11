@@ -52,6 +52,7 @@ import mozilla.components.browser.icons.compose.Placeholder
 import mozilla.components.browser.icons.compose.WithIcon
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.support.ktx.kotlin.trimmed
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.Image
@@ -143,7 +144,7 @@ private fun RecentTabItem(
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = tab.state.content.title.ifEmpty { tab.state.content.url },
+                    text = tab.state.content.title.ifEmpty { tab.state.content.url.trimmed() },
                     color = FirefoxTheme.colors.textPrimary,
                     fontSize = 14.sp,
                     maxLines = 2,
@@ -163,7 +164,7 @@ private fun RecentTabItem(
                     Spacer(modifier = Modifier.width(8.dp))
 
                     Text(
-                        text = tab.state.content.url,
+                        text = tab.state.content.url.trimmed(),
                         color = FirefoxTheme.colors.textSecondary,
                         fontSize = 12.sp,
                         overflow = TextOverflow.Ellipsis,

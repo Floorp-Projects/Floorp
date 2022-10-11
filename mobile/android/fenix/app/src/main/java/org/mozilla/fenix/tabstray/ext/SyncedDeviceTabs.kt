@@ -5,7 +5,7 @@
 package org.mozilla.fenix.tabstray.ext
 
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
-import mozilla.components.browser.toolbar.MAX_URI_LENGTH
+import mozilla.components.support.ktx.kotlin.trimmed
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
 
 /**
@@ -20,7 +20,7 @@ fun List<SyncedDeviceTabs>.toComposeList(
         } else {
             tabs.map {
                 val url = it.active().url
-                val titleText = it.active().title.ifEmpty { url.take(MAX_URI_LENGTH) }
+                val titleText = it.active().title.ifEmpty { url.trimmed() }
                 SyncedTabsListItem.Tab(titleText, url, it)
             }
         }
@@ -32,7 +32,7 @@ fun List<SyncedDeviceTabs>.toComposeList(
         } else {
             tabs.asSequence().map {
                 val url = it.active().url
-                val titleText = it.active().title.ifEmpty { url.take(MAX_URI_LENGTH) }
+                val titleText = it.active().title.ifEmpty { url.trimmed() }
                 SyncedTabsListItem.Tab(titleText, url, it)
             }
         }

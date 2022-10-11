@@ -43,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mozilla.components.concept.sync.DeviceType
+import mozilla.components.support.ktx.kotlin.trimmed
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.compose.ThumbnailCard
@@ -127,7 +128,7 @@ fun RecentSyncedTab(
                         RecentTabTitlePlaceholder()
                     } else {
                         Text(
-                            text = tab.title,
+                            text = tab.title.trimmed(),
                             color = FirefoxTheme.colors.textPrimary,
                             fontSize = 14.sp,
                             overflow = TextOverflow.Ellipsis,

@@ -25,10 +25,10 @@ import mozilla.components.browser.tabstray.SelectableTabViewHolder
 import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.browser.tabstray.TabsTrayStyling
 import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
-import mozilla.components.browser.toolbar.MAX_URI_LENGTH
 import mozilla.components.concept.base.images.ImageLoadRequest
 import mozilla.components.concept.base.images.ImageLoader
 import mozilla.components.concept.engine.mediasession.MediaSession
+import mozilla.components.support.ktx.kotlin.MAX_URI_LENGTH
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Tab

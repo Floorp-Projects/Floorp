@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mozilla.components.support.ktx.kotlin.trimmed
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.EagerFlingBehavior
 import org.mozilla.fenix.compose.Favicon
@@ -239,7 +240,7 @@ private fun RecentlyVisitedHistoryHighlight(
 
         Box(modifier = Modifier.fillMaxSize()) {
             RecentlyVisitedTitle(
-                text = recentVisit.title,
+                text = recentVisit.title.trimmed(),
                 modifier = Modifier.align(Alignment.CenterStart),
             )
 
