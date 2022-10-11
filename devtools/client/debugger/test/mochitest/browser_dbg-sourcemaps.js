@@ -36,6 +36,7 @@ add_task(async function() {
   );
   info("Expand the page folder and assert that the bundle appears");
   await clickElement(dbg, "sourceDirectoryLabel", 3);
+  await clickElement(dbg, "sourceDirectoryLabel", 4);
   await waitForSourcesInSourceTree(
     dbg,
     ["entry.js", "output.js", "times2.js", "opts.js", "bundle.js"],
