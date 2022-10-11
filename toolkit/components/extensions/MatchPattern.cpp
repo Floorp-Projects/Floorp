@@ -8,6 +8,7 @@
 
 #include "js/RegExp.h"  // JS::NewUCRegExpObject, JS::ExecuteRegExpNoStatics
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/Unused.h"
 
