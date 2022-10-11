@@ -214,6 +214,9 @@ function LightweightThemeConsumer(aDocument) {
   );
   this._update(LightweightThemeManager.themeData);
 
+  Services.prefs.addObserver("floorp.dualtheme.theme",this.dual_obs.bind(this))
+  Services.prefs.addObserver("floorp.enable.dualtheme",this.dual_obs.bind(this))
+  Services.prefs.addObserver("extensions.experiments.enabled",this.dual_obs.bind(this))
   this._win.addEventListener("unload", this, { once: true });
 }
 
@@ -223,6 +226,13 @@ LightweightThemeConsumer.prototype = {
   protocolHandler: Services.io
     .getProtocolHandler("resource")
     .QueryInterface(Ci.nsIResProtocolHandler),
+	
+  dual_obs(){
+    const { LightweightThemeManager } = ChromeUtils.import(
+      "resource://gre/modules/LightweightThemeManager.jsm"
+    );
+    this._update(LightweightThemeManager.themeData);
+  },
 
   observe(aSubject, aTopic, aData) {
     if (aTopic != "lightweight-theme-styling-update") {
@@ -417,8 +427,8 @@ if(Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
                   color in dualtheme_experiment.colors
                 ) {
                   let color_experiment = color
-                  if(!("experiment" in themeData)) themeData.experiment = {"colors":{}}
-                  if(!("colors" in themeData.experiment)) themeData.experiment.colors = {}
+                  if(!("experiment" in themeData && themeData != null)) themeData.experiment = {"colors":{}}
+                  if(!("colors" in themeData.experiment && themeData.experiment != null)) themeData.experiment.colors = {}
                   if("experimental" in theme && "colors" in theme.experimental){
                     while(color_experiment in themeData.experiment.colors || color_experiment in theme.experimental.colors){
                       color_experiment += "_"
@@ -459,8 +469,8 @@ if(Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
                   image in dualtheme_experiment.images
                 ) {
                   let image_experiment = image
-                  if(!("experiment" in themeData)) themeData.experiment = {"images":{}}
-                  if(!("images" in themeData.experiment)) themeData.experiment.images = {}
+                  if(!("experiment" in themeData && themeData != null)) themeData.experiment = {"images":{}}
+                  if(!("images" in themeData.experiment && themeData.experiment != null)) themeData.experiment.images = {}
                   if("experimental" in theme && "images" in theme.experimental){
                     while(image_experiment in themeData.experiment.images || image_experiment in theme.experimental.images){
                       image_experiment += "_"
@@ -523,8 +533,8 @@ if(Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
                   property in dualtheme_experiment.properties
                 ) {
                   let property_experiment = property
-                  if(!("experiment" in themeData)) themeData.experiment = {"properties":{}}
-                  if(!("properties" in themeData.experiment)) themeData.experiment.properties = {}
+                  if(!("experiment" in themeData && themeData != null)) themeData.experiment = {"properties":{}}
+                  if(!("properties" in themeData.experiment && themeData.experiment != null)) themeData.experiment.properties = {}
                   if("experimental" in theme && "properties" in theme.experimental){
                     while(property_experiment in themeData.experiment.properties || property_experiment in theme.experimental.properties){
                       property_experiment += "_"
@@ -542,8 +552,8 @@ if(Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
         if(dualtheme_experiment != undefined && dualtheme_experiment.stylesheet != undefined && dualtheme_experiment.stylesheet != null && (BuiltInThemeConfig.has(elem) || Services.prefs.getBoolPref("extensions.experiments.enabled",false))) {
           let val = dualtheme_experiment.stylesheet;
           if(val.slice(0,2) != "./") val = "./" + val
-          if(!("experiment" in themeData)) themeData.experiment = {"dual_stylesheets":[]}
-          if(!("dual_stylesheets" in themeData.experiment)) themeData.experiment.dual_stylesheets = []
+          if(!("experiment" in themeData && themeData != null)) themeData.experiment = {"dual_stylesheets":[]}
+          if(!("dual_stylesheets" in themeData.experiment && themeData.experiment != null)) themeData.experiment.dual_stylesheets = []
           themeData.experiment.dual_stylesheets.unshift((new URL(val,theme_path)).href)
           }
         }
