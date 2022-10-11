@@ -13851,10 +13851,15 @@
 # unless they have e.g.
 # https://html.spec.whatwg.org/multipage/canvas.html#2dcontext:dom-canvasrenderingcontext2dsettings-desynchronized
 # enabled, which defaults to false.
-# This pref enables async present in cases where it is allowed.
+# This pref=true with webgl.out-of-process.async-present.force-sync=false
+# enables async present in cases where it is allowed.
 - name: webgl.out-of-process.async-present
   type: RelaxedAtomicBool
+#if !defined(MOZ_WIDGET_ANDROID) && defined(EARLY_BETA_OR_EARLIER)
+  value: true
+#else
   value: false
+#endif
   mirror: always
 
 # Forces async present to wait for a sync, even while using remote textures.
