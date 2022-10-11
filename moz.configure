@@ -154,12 +154,13 @@ option(env="MOZ_PGO", help="Build with profile guided optimizations")
 set_config("MOZ_PGO", depends("MOZ_PGO")(lambda x: bool(x)))
 
 
+# Imply --enable-release when MOZILLA_OFFICIAL is set rather than adjusting the
+# default so that we can't have both MOZILLA_OFFICIAL and --disable-release set.
 imply_option("--enable-release", mozilla_official)
-imply_option("--enable-release", depends_if("MOZ_AUTOMATION")(lambda x: True))
 
 option(
     "--enable-release",
-    default=milestone.is_release_or_beta,
+    default=milestone.is_release_or_beta | depends("MOZ_AUTOMATION")(lambda x: bool(x)),
     help="{Build|Do not build} with more conservative, release "
     "engineering-oriented options.{ This may slow down builds.|}",
 )
