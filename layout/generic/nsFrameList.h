@@ -374,29 +374,10 @@ class nsFrameList {
     // Implicit on purpose, so that we can easily create enumerators from
     // nsFrameList via this impicit constructor.
     MOZ_IMPLICIT Slice(const nsFrameList& aList)
-        :
-#ifdef DEBUG
-          mList(aList),
-#endif
-          mStart(aList.FirstChild()),
-          mEnd(nullptr) {
-    }
-
-    Slice(const nsFrameList& aList, nsIFrame* aStart, nsIFrame* aEnd)
-        :
-#ifdef DEBUG
-          mList(aList),
-#endif
-          mStart(aStart),
-          mEnd(aEnd) {
-    }
-
-    Slice(const Slice& aOther) = default;
+        : mStart(aList.FirstChild()), mEnd(nullptr) {}
+    Slice(nsIFrame* aStart, nsIFrame* aEnd) : mStart(aStart), mEnd(aEnd) {}
 
    private:
-#ifdef DEBUG
-    const nsFrameList& mList;
-#endif
     nsIFrame* const mStart;      // our starting frame
     const nsIFrame* const mEnd;  // The first frame that is NOT in the slice.
                                  // May be null.
@@ -405,13 +386,7 @@ class nsFrameList {
   class Enumerator {
    public:
     explicit Enumerator(const Slice& aSlice)
-        :
-#ifdef DEBUG
-          mSlice(aSlice),
-#endif
-          mFrame(aSlice.mStart),
-          mEnd(aSlice.mEnd) {
-    }
+        : mFrame(aSlice.mStart), mEnd(aSlice.mEnd) {}
 
     Enumerator(const Enumerator& aOther) = default;
 
@@ -444,25 +419,10 @@ class nsFrameList {
       return Enumerator(*this, nullptr);
     }
 
-#ifdef DEBUG
-    const nsFrameList& List() const { return mSlice.mList; }
-#endif
-
    protected:
     Enumerator(const Enumerator& aOther, const nsIFrame* const aNewEnd)
-        :
-#ifdef DEBUG
-          mSlice(aOther.mSlice),
-#endif
-          mFrame(aOther.mFrame),
-          mEnd(aNewEnd) {
-    }
+        : mFrame(aOther.mFrame), mEnd(aNewEnd) {}
 
-#ifdef DEBUG
-    /* Has to be an object, not a reference, since the slice could
-       well be a temporary constructed from an nsFrameList */
-    const Slice mSlice;
-#endif
     nsIFrame* mFrame;            // our current frame.
     const nsIFrame* const mEnd;  // The first frame we should NOT enumerate.
                                  // May be null.
