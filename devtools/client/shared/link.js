@@ -7,9 +7,6 @@
 const {
   gDevTools,
 } = require("resource://devtools/client/framework/devtools.js");
-const {
-  TabDescriptorFactory,
-} = require("resource://devtools/client/framework/tab-descriptor-factory.js");
 
 /**
  * Retrieve the most recent chrome window.
@@ -64,7 +61,7 @@ exports.openContentLink = async function(url, options = {}) {
   }
   if (!options.triggeringPrincipal && top.gBrowser) {
     const tab = top.gBrowser.selectedTab;
-    if (TabDescriptorFactory.isKnownTab(tab)) {
+    if (gDevTools.hasToolboxForTab(tab)) {
       options.triggeringPrincipal = tab.linkedBrowser.contentPrincipal;
       options.csp = tab.linkedBrowser.csp;
     }
