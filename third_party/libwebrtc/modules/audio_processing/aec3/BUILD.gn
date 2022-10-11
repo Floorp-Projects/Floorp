@@ -226,6 +226,7 @@ rtc_source_set("matched_filter") {
     "../../../api:array_view",
     "../../../rtc_base/system:arch",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_source_set("vector_math") {
