@@ -1021,13 +1021,13 @@ void LIRGenerator::visitWasmTernarySimd128(MWasmTernarySimd128* ins) {
       break;
     }
     case wasm::SimdOp::F32x4RelaxedFma:
-    case wasm::SimdOp::F32x4RelaxedFms:
+    case wasm::SimdOp::F32x4RelaxedFnma:
     case wasm::SimdOp::F64x2RelaxedFma:
-    case wasm::SimdOp::F64x2RelaxedFms: {
-      auto* lir = new (alloc())
-          LWasmTernarySimd128(ins->simdOp(), useRegisterAtStart(ins->v0()),
-                              useRegister(ins->v1()), useRegister(ins->v2()));
-      defineReuseInput(lir, ins, LWasmTernarySimd128::V0);
+    case wasm::SimdOp::F64x2RelaxedFnma: {
+      auto* lir = new (alloc()) LWasmTernarySimd128(
+          ins->simdOp(), useRegister(ins->v0()), useRegister(ins->v1()),
+          useRegisterAtStart(ins->v2()));
+      defineReuseInput(lir, ins, LWasmTernarySimd128::V2);
       break;
     }
     case wasm::SimdOp::I32x4DotI8x16I7x16AddS: {

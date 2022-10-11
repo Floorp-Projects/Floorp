@@ -3466,14 +3466,16 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void fmaFloat32x4(FloatRegister src1, FloatRegister src2,
                            FloatRegister srcDest) DEFINED_ON(x86_shared, arm64);
 
-  inline void fmsFloat32x4(FloatRegister src1, FloatRegister src2,
-                           FloatRegister srcDest) DEFINED_ON(x86_shared, arm64);
+  inline void fnmaFloat32x4(FloatRegister src1, FloatRegister src2,
+                            FloatRegister srcDest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void fmaFloat64x2(FloatRegister src1, FloatRegister src2,
                            FloatRegister srcDest) DEFINED_ON(x86_shared, arm64);
 
-  inline void fmsFloat64x2(FloatRegister src1, FloatRegister src2,
-                           FloatRegister srcDest) DEFINED_ON(x86_shared, arm64);
+  inline void fnmaFloat64x2(FloatRegister src1, FloatRegister src2,
+                            FloatRegister srcDest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void minFloat32x4Relaxed(FloatRegister src, FloatRegister srcDest)
       DEFINED_ON(x86_shared, arm64);

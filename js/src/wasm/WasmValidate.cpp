@@ -1019,9 +1019,9 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
 
 #  ifdef ENABLE_WASM_RELAXED_SIMD
           case uint32_t(SimdOp::F32x4RelaxedFma):
-          case uint32_t(SimdOp::F32x4RelaxedFms):
+          case uint32_t(SimdOp::F32x4RelaxedFnma):
           case uint32_t(SimdOp::F64x2RelaxedFma):
-          case uint32_t(SimdOp::F64x2RelaxedFms):
+          case uint32_t(SimdOp::F64x2RelaxedFnma):
           case uint32_t(SimdOp::I8x16RelaxedLaneSelect):
           case uint32_t(SimdOp::I16x8RelaxedLaneSelect):
           case uint32_t(SimdOp::I32x4RelaxedLaneSelect):
