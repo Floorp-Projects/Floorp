@@ -158,7 +158,7 @@ nsFrameList::Slice nsFrameList::InsertFrames(nsContainerFrame* aParent,
   VerifyList();
 
   aFrameList.Clear();
-  return Slice(*this, firstNewFrame, nextSibling);
+  return Slice(firstNewFrame, nextSibling);
 }
 
 nsFrameList nsFrameList::TakeFramesBefore(nsIFrame* aFrame) {
