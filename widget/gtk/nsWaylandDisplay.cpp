@@ -98,43 +98,6 @@ void nsWaylandDisplay::SetSubcompositor(wl_subcompositor* aSubcompositor) {
   mSubcompositor = aSubcompositor;
 }
 
-void nsWaylandDisplay::SetDataDeviceManager(
-    wl_data_device_manager* aDataDeviceManager) {
-  mDataDeviceManager = aDataDeviceManager;
-}
-
-wl_seat* nsWaylandDisplay::GetSeat() {
-  GdkDisplay* gdkDisplay = gdk_display_get_default();
-  if (!gdkDisplay) {
-    return nullptr;
-  }
-
-  static auto sGdkDisplayGetDefaultSeat = (GdkSeat * (*)(GdkDisplay*))
-      dlsym(RTLD_DEFAULT, "gdk_display_get_default_seat");
-  if (!sGdkDisplayGetDefaultSeat) {
-    return nullptr;
-  }
-
-  static auto sGdkWaylandSeatGetWlSeat = (struct wl_seat * (*)(GdkSeat*))
-      dlsym(RTLD_DEFAULT, "gdk_wayland_seat_get_wl_seat");
-  if (!sGdkWaylandSeatGetWlSeat) {
-    return nullptr;
-  }
-
-  GdkSeat* gdkSeat = sGdkDisplayGetDefaultSeat(gdkDisplay);
-  return sGdkWaylandSeatGetWlSeat(gdkSeat);
-}
-
-void nsWaylandDisplay::SetPrimarySelectionDeviceManager(
-    gtk_primary_selection_device_manager* aPrimarySelectionDeviceManager) {
-  mPrimarySelectionDeviceManagerGtk = aPrimarySelectionDeviceManager;
-}
-
-void nsWaylandDisplay::SetPrimarySelectionDeviceManager(
-    zwp_primary_selection_device_manager_v1* aPrimarySelectionDeviceManager) {
-  mPrimarySelectionDeviceManagerZwpV1 = aPrimarySelectionDeviceManager;
-}
-
 void nsWaylandDisplay::SetIdleInhibitManager(
     zwp_idle_inhibit_manager_v1* aIdleInhibitManager) {
   mIdleInhibitManager = aIdleInhibitManager;
@@ -174,30 +137,6 @@ static void global_registry_handler(void* data, wl_registry* registry,
     auto* shm = WaylandRegistryBind<wl_shm>(registry, id, &wl_shm_interface, 1);
     wl_proxy_set_queue((struct wl_proxy*)shm, display->GetEventQueue());
     display->SetShm(shm);
-  } else if (strcmp(interface, "wl_data_device_manager") == 0) {
-    int data_device_manager_version = MIN(version, 3);
-    auto* data_device_manager = WaylandRegistryBind<wl_data_device_manager>(
-        registry, id, &wl_data_device_manager_interface,
-        data_device_manager_version);
-    wl_proxy_set_queue((struct wl_proxy*)data_device_manager,
-                       display->GetEventQueue());
-    display->SetDataDeviceManager(data_device_manager);
-  } else if (strcmp(interface, "gtk_primary_selection_device_manager") == 0) {
-    auto* primary_selection_device_manager =
-        WaylandRegistryBind<gtk_primary_selection_device_manager>(
-            registry, id, &gtk_primary_selection_device_manager_interface, 1);
-    wl_proxy_set_queue((struct wl_proxy*)primary_selection_device_manager,
-                       display->GetEventQueue());
-    display->SetPrimarySelectionDeviceManager(primary_selection_device_manager);
-  } else if (strcmp(interface, "zwp_primary_selection_device_manager_v1") ==
-             0) {
-    auto* primary_selection_device_manager =
-        WaylandRegistryBind<gtk_primary_selection_device_manager>(
-            registry, id, &zwp_primary_selection_device_manager_v1_interface,
-            1);
-    wl_proxy_set_queue((struct wl_proxy*)primary_selection_device_manager,
-                       display->GetEventQueue());
-    display->SetPrimarySelectionDeviceManager(primary_selection_device_manager);
   } else if (strcmp(interface, "zwp_idle_inhibit_manager_v1") == 0) {
     auto* idle_inhibit_manager =
         WaylandRegistryBind<zwp_idle_inhibit_manager_v1>(
