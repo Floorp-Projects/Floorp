@@ -24,7 +24,10 @@ rtc_library("repeating_task") {
     "../../api/units:timestamp",
     "../../system_wrappers:system_wrappers",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/memory",
+  ]
 }
 
 rtc_library("pending_task_safety_flag") {
