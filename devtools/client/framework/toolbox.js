@@ -245,7 +245,7 @@ function Toolbox(
   this.selection = new Selection();
   this.telemetry = new Telemetry();
 
-  this.descriptorFront = descriptorFront;
+  this._descriptorFront = descriptorFront;
 
   // The session ID is used to determine which telemetry events belong to which
   // toolbox session. Because we use Amplitude to analyse the telemetry data we
@@ -773,7 +773,7 @@ Toolbox.prototype = {
     if (
       targetFront.targetForm.isPopup &&
       !targetFront.isTopLevel &&
-      this.descriptorFront.isLocalTab
+      this._descriptorFront.isLocalTab
     ) {
       await this.switchHostToTab(targetFront.targetForm.browsingContextID);
     }
@@ -862,7 +862,7 @@ Toolbox.prototype = {
       // which are an abstraction on top of RDP methods.
       // See devtools/shared/commands/README.md
       // Bug 1700909 will make the commands be instantiated by gDevTools instead of the Toolbox.
-      this.commands = await createCommandsDictionary(this.descriptorFront);
+      this.commands = await createCommandsDictionary(this._descriptorFront);
 
       this.commands.targetCommand.on(
         "target-thread-wrong-order-on-resume",
@@ -1350,7 +1350,7 @@ Toolbox.prototype = {
     return {
       connectionType,
       runtimeInfo,
-      descriptorType: this.descriptorFront.descriptorType,
+      descriptorType: this._descriptorFront.descriptorType,
     };
   },
 
@@ -1836,7 +1836,7 @@ Toolbox.prototype = {
    * the host changes.
    */
   _buildDockOptions() {
-    if (!this.descriptorFront.isLocalTab) {
+    if (!this._descriptorFront.isLocalTab) {
       this.component.setDockOptionsEnabled(false);
       this.component.setCanCloseToolbox(false);
       return;
@@ -1900,7 +1900,7 @@ Toolbox.prototype = {
     // Popup auto-hide disabling is only available in browser toolbox and webextension toolboxes.
     if (
       this.isBrowserToolbox ||
-      this.descriptorFront.isWebExtensionDescriptor
+      this._descriptorFront.isWebExtensionDescriptor
     ) {
       disableAutohide = await this._isDisableAutohideEnabled();
     }
@@ -1917,7 +1917,7 @@ Toolbox.prototype = {
       this.component.setPseudoLocale(pseudoLocale);
     }
     if (
-      this.descriptorFront.isWebExtensionDescriptor &&
+      this._descriptorFront.isWebExtensionDescriptor &&
       this.hostType === Toolbox.HostType.WINDOW
     ) {
       const alwaysOnTop = Services.prefs.getBoolPref(
@@ -3374,7 +3374,7 @@ Toolbox.prototype = {
 
     if (
       this.isBrowserToolbox ||
-      this.descriptorFront.isWebExtensionDescriptor
+      this._descriptorFront.isWebExtensionDescriptor
     ) {
       this.component.setDisableAutohide(toggledValue);
     }
@@ -3395,7 +3395,7 @@ Toolbox.prototype = {
     );
     Services.prefs.setBoolPref(DEVTOOLS_ALWAYS_ON_TOP, !currentValue);
 
-    const addonId = this.descriptorFront.id;
+    const addonId = this._descriptorFront.id;
     await this.destroy();
     gDevTools.showToolboxForWebExtension(addonId);
   },
@@ -3403,7 +3403,7 @@ Toolbox.prototype = {
   async _isDisableAutohideEnabled() {
     if (
       !this.isBrowserToolbox &&
-      !this.descriptorFront.isWebExtensionDescriptor
+      !this._descriptorFront.isWebExtensionDescriptor
     ) {
       return false;
     }
@@ -3633,7 +3633,7 @@ Toolbox.prototype = {
    *        The host type of the new host object
    */
   switchHost(hostType) {
-    if (hostType == this.hostType || !this.descriptorFront.isLocalTab) {
+    if (hostType == this.hostType || !this._descriptorFront.isLocalTab) {
       return null;
     }
 
@@ -4261,7 +4261,7 @@ Toolbox.prototype = {
             // will lead to destroy frame targets which can temporarily make
             // some fronts unresponsive and block the cleanup.
             this.commands.targetCommand.destroy();
-            return this.descriptorFront.destroy();
+            return this._descriptorFront.destroy();
           }, console.error)
           .then(() => {
             this.emit("destroyed");
@@ -4271,7 +4271,7 @@ Toolbox.prototype = {
             this._host = null;
             this._win = null;
             this._toolPanels.clear();
-            this.descriptorFront = null;
+            this._descriptorFront = null;
             this.resourceCommand = null;
             this.commands = null;
 
@@ -4690,7 +4690,7 @@ Toolbox.prototype = {
     // but we still want to display target data.
     if (
       this.hostType === Toolbox.HostType.PAGE ||
-      this.descriptorFront.isWebExtensionDescriptor
+      this._descriptorFront.isWebExtensionDescriptor
     ) {
       // Displays DebugTargetInfo which shows the basic information of debug target,
       // if `about:devtools-toolbox` URL opens directly.
