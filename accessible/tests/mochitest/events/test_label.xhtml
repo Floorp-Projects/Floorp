@@ -128,14 +128,14 @@
 
       if (MAC) {
         // "valuetocro" -> "…etocro"
-        gQueue.push(new setCrop("croplabel", "left", "valu", "…"));
+        gQueue.push(new setCrop("croplabel", "left", "valuetocro", "…etocro"));
         // "…etocro", "val…cro"
-        gQueue.push(new setCrop("croplabel", "center", "…eto", "val…"));
+        gQueue.push(new setCrop("croplabel", "center", "…etocro", "val…cro"));
       } else {
         // "valuetocro" -> "…uetocro"
-        gQueue.push(new setCrop("croplabel", "left", "val", "…"));
+        gQueue.push(new setCrop("croplabel", "left", "valuetocro", "…uetocro"));
         // "…uetocro" -> "valu…cro"
-        gQueue.push(new setCrop("croplabel", "center", "…ueto", "valu…"));
+        gQueue.push(new setCrop("croplabel", "center", "…uetocro", "valu…cro"));
       }
 
       gQueue.invoke(); // Will call SimpleTest.finish();

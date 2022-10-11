@@ -104,7 +104,13 @@ addAccessibleTask(
     ];
     await changeText(browser, "p", "def", events);
 
-    events = [{ isInserted: true, str: "DEF", offset: 2 }];
+    // Adding text should not send events with diffs for non-editable text.
+    // We do this to avoid screen readers reading out confusing diffs for
+    // live regions.
+    events = [
+      { isInserted: false, str: "def", offset: 0 },
+      { isInserted: true, str: "deDEFf", offset: 0 },
+    ];
     await changeText(browser, "p", "deDEFf", events);
 
     // Test isFromUserInput property.
