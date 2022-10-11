@@ -1,0 +1,48 @@
+<!doctype html>
+<title>Enter submits on time input</title>
+<meta charset=utf-8>
+<link rel="author" href="mailto:emilio@crisal.io" title="Emilio Cobos Álvarez">
+<link rel="author" href="https://mozilla.org" title="Mozilla">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
+<script src="/resources/testdriver-actions.js"></script>
+<form>
+  <input type="time" name="time">
+  <input type=submit>
+</form>
+<form>
+  <input type="date" name="date">
+  <input type=submit>
+</form>
+<form>
+  <input type="datetime-local" name="datetime-local">
+  <input type=submit>
+</form>
+<script>
+async function testEnterOnInput(form) {
+  const submitted = new Promise(resolve => {
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      resolve();
+    }, { once: true });
+  });
+  const input = form.querySelector("input");
+  input.focus();
+
+  const ENTER = "\uE007";
+  await new test_driver.Actions()
+    .keyDown(ENTER)
+    .keyUp(ENTER)
+    .send()
+  await submitted;
+  assert_true(true, "Form was submitted on enter for input " + input.type);
+}
+
+promise_test(async t => {
+  for (let form of document.querySelectorAll("form")) {
+    await testEnterOnInput(form, t);
+  }
+});
+</script>
