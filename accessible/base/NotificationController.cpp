@@ -35,10 +35,6 @@ NotificationController::NotificationController(DocAccessible* aDocument,
       mObservingState(eNotObservingRefresh),
       mPresShell(aPresShell),
       mEventGeneration(0) {
-#ifdef DEBUG
-  mMoveGuardOnStack = false;
-#endif
-
   // Schedule initial accessible tree construction.
   ScheduleProcessing();
 }
@@ -107,15 +103,6 @@ void NotificationController::Shutdown() {
   mFocusEvent = nullptr;
   mEvents.Clear();
   mRelocations.Clear();
-  mEventTree.Clear();
-}
-
-EventTree* NotificationController::QueueMutation(LocalAccessible* aContainer) {
-  EventTree* tree = mEventTree.FindOrInsert(aContainer);
-  if (tree) {
-    ScheduleProcessing();
-  }
-  return tree;
 }
 
 void NotificationController::CoalesceHideEvent(AccHideEvent* aHideEvent) {

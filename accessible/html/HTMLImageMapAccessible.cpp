@@ -8,6 +8,7 @@
 #include "ARIAMap.h"
 #include "nsAccUtils.h"
 #include "DocAccessible-inl.h"
+#include "EventTree.h"
 #include "Role.h"
 
 #include "nsIFrame.h"
