@@ -1256,7 +1256,7 @@
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Dobrodošli v %s!</string>
+    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Dobrodošli v %su!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">Dobrodošli v boljšem internetu</string>
     <!-- Text for the onboarding welcome message. -->
