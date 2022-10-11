@@ -2742,6 +2742,25 @@ static PreRecordedMetaInformation PreRecordMetaInformation() {
       info.mHttpOscpu.AppendInt(bugfix);
     } else
 #endif
+#if defined(GP_OS_windows)
+      // On Windows, the http "oscpu" is capped at Windows 10, so we need to get
+      // the real OS version directly.
+      OSVERSIONINFO ovi = {sizeof(OSVERSIONINFO)};
+    if (GetVersionEx(&ovi)) {
+      info.mHttpOscpu.AppendLiteral("Windows ");
+      // The major version returned for Windows 11 is 10, but we can
+      // identify it from the build number.
+      info.mHttpOscpu.AppendInt(
+          ovi.dwBuildNumber >= 22000 ? 11 : int32_t(ovi.dwMajorVersion));
+      info.mHttpOscpu.AppendLiteral(".");
+      info.mHttpOscpu.AppendInt(int32_t(ovi.dwMinorVersion));
+#  if defined(_ARM64_)
+      info.mHttpOscpu.AppendLiteral(" Arm64");
+#  endif
+      info.mHttpOscpu.AppendLiteral("; build=");
+      info.mHttpOscpu.AppendInt(int32_t(ovi.dwBuildNumber));
+    } else
+#endif
     {
       Unused << http->GetOscpu(info.mHttpOscpu);
     }
