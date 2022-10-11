@@ -155,7 +155,18 @@ class Components(
                 AdsTelemetryMiddleware(adsTelemetry),
                 BlockedTrackersMiddleware(context),
                 RecordingDevicesMiddleware(context),
-            ) + EngineMiddleware.create(engine) + CfrMiddleware(context),
+                CfrMiddleware(context),
+            ) + EngineMiddleware.create(
+                engine,
+                // We are disabling automatic suspending of engine sessions under memory pressure.
+                // Instead we solely rely on GeckoView and the Android system to reclaim memory
+                // when needed. For details, see:
+                // https://bugzilla.mozilla.org/show_bug.cgi?id=1752594
+                // https://github.com/mozilla-mobile/fenix/issues/12731
+                // https://github.com/mozilla-mobile/android-components/issues/11300
+                // https://github.com/mozilla-mobile/android-components/issues/11653
+                trimMemoryAutomatically = false,
+            ),
         ).apply {
             MediaSessionFeature(context, MediaSessionService::class.java, this).start()
         }
