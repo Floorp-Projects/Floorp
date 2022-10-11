@@ -130,7 +130,18 @@ function _positionCallout() {
   const container = document.getElementById(CONTAINER_ID);
   const parentEl = document.querySelector(CURRENT_SCREEN?.parent_selector);
   // All possible arrow positions
-  const arrowPositions = ["top", "bottom", "end", "start"];
+  // If the position contains a dash, the value before the dash
+  // refers to which edge of the feature callout the arrow points
+  // from. The value after the dash describes where along that edge
+  // the arrow sits, with middle as the default.
+  const arrowPositions = [
+    "top",
+    "bottom",
+    "end",
+    "start",
+    "top-end",
+    "top-start",
+  ];
   const arrowPosition = CURRENT_SCREEN?.content?.arrow_position || "top";
   // Callout should overlap the parent element by 17px (so the box, not
   // including the arrow, will overlap by 5px)
@@ -227,13 +238,31 @@ function _positionCallout() {
         container.classList.add("arrow-inline-start");
       },
     },
+    "top-end": {
+      position() {
+        // Point to an element above and at the end of the callout
+        let containerTop =
+          getOffset(parentEl).top + parentEl.offsetHeight - overlap;
+        container.style.top = `${Math.max(
+          container.offsetHeight - overlap,
+          containerTop
+        )}px`;
+        alignEnd(container, parentEl);
+        container.classList.add(RTL ? "arrow-top-start" : "arrow-top-end");
+      },
+    },
   };
 
   function calloutFits(position) {
     // Does callout element fit in this position relative
     // to the parent element without going off screen?
+
+    // Only consider which edge of the callout the arrow points from,
+    // not the alignment of the arrow along the edge of the callout
+    let edgePosition = position.split("-")[0];
     return (
-      positioners[position].availableSpace > positioners[position].neededSpace
+      positioners[edgePosition].availableSpace >
+      positioners[edgePosition].neededSpace
     );
   }
 
@@ -276,6 +305,15 @@ function _positionCallout() {
         sideOffset
       : getOffset(parentEl).left + sideOffset;
     container.style[RTL ? "right" : "left"] = `${Math.max(containerSide, 0)}px`;
+  }
+
+  function alignEnd() {
+    let containerSide = RTL
+      ? parentEl.getBoundingClientRect().left
+      : parentEl.getBoundingClientRect().left +
+        parentEl.offsetWidth -
+        container.offsetWidth;
+    container.style.left = `${Math.max(containerSide, 0)}px`;
   }
 
   clearPosition(container);

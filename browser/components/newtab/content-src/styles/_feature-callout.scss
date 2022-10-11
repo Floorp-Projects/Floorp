@@ -228,4 +228,30 @@ $max-z-index: 2147483647;
     border-bottom: $arrow-border;
     border-inline-start: $arrow-border;
   }
+
+  // top-end arrow positioning
+  &.arrow-top-end::before,
+  &.arrow-top-end::after {
+    top: -$arrow-inset-size;
+    inset-inline-end: $arrow-inset-size;
+  }
+
+  // top-end arrow foreground
+  &.arrow-top-end::before {
+    border-top: $arrow-border;
+    border-inline-start: $arrow-border;
+  }
+
+  // top-start arrow positioning
+  &.arrow-top-start::before,
+  &.arrow-top-start::after {
+    top: -$arrow-inset-size;
+    inset-inline-start: $arrow-inset-size;
+  }
+
+  // top-start arrow foreground
+  &.arrow-top-start::before {
+    border-top: $arrow-border;
+    border-inline-start: $arrow-border;
+  }
 }
