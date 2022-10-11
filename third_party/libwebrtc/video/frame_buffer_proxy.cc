@@ -57,14 +57,6 @@ class FrameBuffer2Proxy : public FrameBufferProxy {
     RTC_DCHECK(receiver_);
   }
 
-#if defined(WEBRTC_MOZILLA_BUILD)
-  void Start() override {
-    RTC_DCHECK_RUN_ON(decode_queue_);
-    decode_safety_->SetAlive();
-    frame_buffer_.Start();
-  }
-#endif
-
   void StopOnWorker() override {
     RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
     decode_queue_->PostTask([this] {
