@@ -80,6 +80,14 @@ struct RedirectHistoryEntryInfo
   nsCString           remoteAddress;
 };
 
+struct InterceptionInfoArg
+{
+  PrincipalInfo?              triggeringPrincipalInfo;
+  nsContentPolicyType         contentPolicyType;
+  RedirectHistoryEntryInfo[]  redirectChain;
+  bool                        fromThirdParty;
+};
+
 struct LoadInfoArgs
 {
   PrincipalInfo?              requestingPrincipalInfo;
@@ -164,6 +172,7 @@ struct LoadInfoArgs
   bool                        isMetaRefresh;
   CrossOriginEmbedderPolicy   loadingEmbedderPolicy;
   nsIURI                      unstrippedURI;
+  InterceptionInfoArg?        interceptionInfo;
 };
 
 /**

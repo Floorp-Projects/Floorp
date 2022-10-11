@@ -19,6 +19,7 @@
 #include "nsIHttpHeaderVisitor.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIObserverService.h"
+#include "nsIRedirectHistoryEntry.h"
 #include "nsIScriptError.h"
 #include "nsIURI.h"
 #include "nsIUploadChannel2.h"
@@ -29,6 +30,7 @@
 #include "ServiceWorkerCloneData.h"
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerRegistrationInfo.h"
+#include "mozIThirdPartyUtil.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/ipc/PBackgroundChild.h"
@@ -841,11 +843,33 @@ Result<IPCInternalRequest, nsresult> GetIPCInternalRequest(
   }
 
   Maybe<PrincipalInfo> principalInfo;
+  Maybe<PrincipalInfo> interceptionPrincipalInfo;
 
   if (loadInfo->TriggeringPrincipal()) {
     principalInfo.emplace();
+    interceptionPrincipalInfo.emplace();
     MOZ_ALWAYS_SUCCEEDS(PrincipalToPrincipalInfo(
         loadInfo->TriggeringPrincipal(), principalInfo.ptr()));
+    MOZ_ALWAYS_SUCCEEDS(PrincipalToPrincipalInfo(
+        loadInfo->TriggeringPrincipal(), interceptionPrincipalInfo.ptr()));
+  }
+
+  nsTArray<RedirectHistoryEntryInfo> redirectChain;
+  for (const nsCOMPtr<nsIRedirectHistoryEntry>& redirectEntry :
+       loadInfo->RedirectChain()) {
+    RedirectHistoryEntryInfo* entry = redirectChain.AppendElement();
+    MOZ_ALWAYS_SUCCEEDS(RHEntryToRHEntryInfo(redirectEntry, entry));
+  }
+
+  bool isThirdPartyChannel;
+  // ThirdPartyUtil* thirdPartyUtil = ThirdPartyUtil::GetInstance();
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+      do_GetService(THIRDPARTYUTIL_CONTRACTID);
+  if (thirdPartyUtil) {
+    nsCOMPtr<nsIURI> uri;
+    MOZ_TRY(underlyingChannel->GetURI(getter_AddRefs(uri)));
+    MOZ_TRY(thirdPartyUtil->IsThirdPartyChannel(underlyingChannel, uri,
+                                                &isThirdPartyChannel));
   }
 
   // Note: all the arguments are copied rather than moved, which would be more
@@ -854,7 +878,8 @@ Result<IPCInternalRequest, nsresult> GetIPCInternalRequest(
       method, {spec}, ipcHeadersGuard, ipcHeaders, Nothing(), -1,
       alternativeDataType, contentPolicyType, referrer, referrerPolicy,
       requestMode, requestCredentials, cacheMode, requestRedirect, integrity,
-      fragment, principalInfo);
+      fragment, principalInfo, interceptionPrincipalInfo, contentPolicyType,
+      redirectChain, isThirdPartyChannel);
 }
 
 nsresult MaybeStoreStreamForBackgroundThread(nsIInterceptedChannel* aChannel,
