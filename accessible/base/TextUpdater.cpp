@@ -50,6 +50,31 @@ void TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
   mTextOffset = mHyperText->GetChildOffset(mTextLeaf);
   NS_ASSERTION(mTextOffset != -1, "Text leaf hasn't offset within hyper text!");
 
+  // Don't bother diffing if the hypertext isn't editable. Diffing non-editable
+  // text can lead to weird screen reader results with live regions, e.g.,
+  // changing "text" to "testing" might read the diff "s ing" when we'd really
+  // just like to hear "testing."
+  if (!mHyperText->IsEditable()) {
+    // Fire text change event for removal.
+    RefPtr<AccEvent> textRemoveEvent =
+        new AccTextChangeEvent(mHyperText, mTextOffset, aOldText, false);
+    mDocument->FireDelayedEvent(textRemoveEvent);
+
+    // Fire text change event for insertion if there's text to insert.
+    if (!aNewText.IsEmpty()) {
+      RefPtr<AccEvent> textInsertEvent =
+          new AccTextChangeEvent(mHyperText, mTextOffset, aNewText, true);
+      mDocument->FireDelayedEvent(textInsertEvent);
+    }
+
+    mDocument->MaybeNotifyOfValueChange(mHyperText);
+
+    // Update the text.
+    mTextLeaf->SetText(aNewText);
+    mHyperText->InvalidateCachedHyperTextOffsets();
+    return;
+  }
+
   uint32_t oldLen = aOldText.Length(), newLen = aNewText.Length();
   uint32_t minLen = std::min(oldLen, newLen);
 

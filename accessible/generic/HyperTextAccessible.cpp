@@ -188,7 +188,7 @@ role HyperTextAccessible::NativeRole() const {
 uint64_t HyperTextAccessible::NativeState() const {
   uint64_t states = AccessibleWrap::NativeState();
 
-  if (mContent->AsElement()->State().HasState(dom::ElementState::READWRITE)) {
+  if (IsEditable()) {
     states |= states::EDITABLE;
 
   } else if (mContent->IsHTMLElement(nsGkAtoms::article)) {
@@ -204,6 +204,13 @@ uint64_t HyperTextAccessible::NativeState() const {
   }
 
   return states;
+}
+
+bool HyperTextAccessible::IsEditable() const {
+  if (!mContent) {
+    return false;
+  }
+  return mContent->AsElement()->State().HasState(dom::ElementState::READWRITE);
 }
 
 LayoutDeviceIntRect HyperTextAccessible::GetBoundsInFrame(
