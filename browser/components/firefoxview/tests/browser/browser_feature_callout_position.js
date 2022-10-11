@@ -3,6 +3,13 @@
 
 "use strict";
 
+const { ASRouter } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouter.jsm"
+);
+const { FeatureCalloutMessages } = ChromeUtils.import(
+  "resource://activity-stream/lib/FeatureCalloutMessages.jsm"
+);
+
 const calloutId = "root";
 const calloutSelector = `#${calloutId}.featureCallout`;
 const primaryButtonSelector = `#${calloutId} .primary`;
@@ -151,5 +158,106 @@ add_task(
         ["intl.l10n.pseudo", ""],
       ],
     });
+  }
+);
+
+// This test should be moved into a surface agnostic test suite with bug 1793656.
+add_task(async function feature_callout_top_end_positioning() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[featureTourPref, getPrefValueByScreen(1)]],
+  });
+
+  const testMessage = {
+    message: FeatureCalloutMessages.getMessages().find(
+      m => m.id === "FIREFOX_VIEW_FEATURE_TOUR_1"
+    ),
+  };
+  testMessage.message.content.screens[0].content.arrow_position = "top-end";
+
+  const sandbox = sinon.createSandbox();
+  const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
+  sendTriggerStub.resolves(testMessage);
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+      await waitForCalloutScreen(document, 1);
+      let parent = document.querySelector("#tab-pickup-container");
+      let container = document.querySelector(calloutSelector);
+      let parentLeft = parent.getBoundingClientRect().left;
+      let containerLeft = container.getBoundingClientRect().left;
+
+      ok(
+        container.classList.contains("arrow-top-end"),
+        "Feature Callout container has the expected arrow-top-end class"
+      );
+      ok(
+        containerLeft - parent.clientWidth + container.offsetWidth ===
+          parentLeft,
+        "Feature Callout's right edge is aligned with parent element's right edge"
+      );
+    }
+  );
+  sandbox.restore();
+});
+
+// This test should be moved into a surface agnostic test suite with bug 1793656.
+add_task(
+  async function feature_callout_top_end_position_respects_RTL_layouts() {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        [featureTourPref, getPrefValueByScreen(1)],
+        // Set layout direction to right to left
+        ["intl.l10n.pseudo", "bidi"],
+      ],
+    });
+
+    const testMessage = {
+      message: FeatureCalloutMessages.getMessages().find(
+        m => m.id === "FIREFOX_VIEW_FEATURE_TOUR_1"
+      ),
+    };
+    testMessage.message.content.screens[0].content.arrow_position = "top-end";
+
+    const sandbox = sinon.createSandbox();
+    const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
+    sendTriggerStub.resolves(testMessage);
+
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url: "about:firefoxview",
+      },
+      async browser => {
+        const { document } = browser.contentWindow;
+        await waitForCalloutScreen(document, 1);
+        let parent = document.querySelector("#tab-pickup-container");
+        let container = document.querySelector(calloutSelector);
+        let parentLeft = parent.getBoundingClientRect().left;
+        let containerLeft = container.getBoundingClientRect().left;
+
+        ok(
+          container.classList.contains("arrow-top-start"),
+          "In RTL mode, the feature Callout container has the expected arrow-top-start class"
+        );
+        ok(
+          containerLeft === parentLeft,
+          "In RTL mode, the feature Callout's left edge is aligned with parent element's left edge"
+        );
+      }
+    );
+
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        // Revert layout direction to left to right
+        ["intl.l10n.pseudo", ""],
+      ],
+    });
+
+    sandbox.restore();
   }
 );

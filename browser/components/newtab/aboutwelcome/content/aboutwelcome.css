@@ -165,6 +165,22 @@
   border-bottom: 1px solid #CFCFD8;
   border-inline-start: 1px solid #CFCFD8;
 }
+.onboardingContainer.featureCallout.arrow-top-end::before, .onboardingContainer.featureCallout.arrow-top-end::after {
+  top: -12px;
+  inset-inline-end: 12px;
+}
+.onboardingContainer.featureCallout.arrow-top-end::before {
+  border-top: 1px solid #CFCFD8;
+  border-inline-start: 1px solid #CFCFD8;
+}
+.onboardingContainer.featureCallout.arrow-top-start::before, .onboardingContainer.featureCallout.arrow-top-start::after {
+  top: -12px;
+  inset-inline-start: 12px;
+}
+.onboardingContainer.featureCallout.arrow-top-start::before {
+  border-top: 1px solid #CFCFD8;
+  border-inline-start: 1px solid #CFCFD8;
+}
 
 html {
   height: 100%;
