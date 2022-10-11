@@ -27,7 +27,11 @@ class ClassOfService {
   void SetIncremental(bool incremental) { mIncremental = incremental; }
 
   static nsCString ToString(const ClassOfService cos) {
-    return nsCString(std::bitset<32>(cos.Flags()).to_string());
+    return ToString(cos.Flags());
+  }
+
+  static nsCString ToString(unsigned long flags) {
+    return nsCString(std::bitset<32>(flags).to_string());
   }
 
  private:

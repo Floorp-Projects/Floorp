@@ -1229,6 +1229,19 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
     Unused << SendOnStartRequestSent();
   }
 
+  if (!args.timing().domainLookupEnd().IsNull() &&
+      !args.timing().connectStart().IsNull()) {
+    nsCString protocolVersion;
+    mChannel->GetProtocolVersion(protocolVersion);
+    uint32_t classOfServiceFlags = 0;
+    mChannel->GetClassFlags(&classOfServiceFlags);
+    Telemetry::AccumulateTimeDelta(
+        Telemetry::NETWORK_DNS_END_TO_CONNECT_START_MS,
+        protocolVersion + "_"_ns +
+            ClassOfService::ToString(classOfServiceFlags),
+        args.timing().domainLookupEnd(), args.timing().connectStart());
+  }
+
   return rv;
 }
 
