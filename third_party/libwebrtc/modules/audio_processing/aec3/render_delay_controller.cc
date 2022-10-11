@@ -54,7 +54,6 @@ class RenderDelayControllerImpl final : public RenderDelayController {
   static std::atomic<int> instance_count_;
   std::unique_ptr<ApmDataDumper> data_dumper_;
   const int hysteresis_limit_blocks_;
-  const int delay_headroom_samples_;
   absl::optional<DelayEstimate> delay_;
   EchoPathDelayEstimator delay_estimator_;
   RenderDelayControllerMetrics metrics_;
@@ -67,15 +66,9 @@ class RenderDelayControllerImpl final : public RenderDelayController {
 DelayEstimate ComputeBufferDelay(
     const absl::optional<DelayEstimate>& current_delay,
     int hysteresis_limit_blocks,
-    int delay_headroom_samples,
     DelayEstimate estimated_delay) {
-  // Subtract delay headroom.
-  const int delay_with_headroom_samples = std::max(
-      static_cast<int>(estimated_delay.delay) - delay_headroom_samples, 0);
-
   // Compute the buffer delay increase required to achieve the desired latency.
-  size_t new_delay_blocks = delay_with_headroom_samples >> kBlockSizeLog2;
-
+  size_t new_delay_blocks = estimated_delay.delay >> kBlockSizeLog2;
   // Add hysteresis.
   if (current_delay) {
     size_t current_delay_blocks = current_delay->delay;
@@ -84,7 +77,6 @@ DelayEstimate ComputeBufferDelay(
       new_delay_blocks = current_delay_blocks;
     }
   }
-
   DelayEstimate new_delay = estimated_delay;
   new_delay.delay = new_delay_blocks;
   return new_delay;
@@ -99,7 +91,6 @@ RenderDelayControllerImpl::RenderDelayControllerImpl(
     : data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
       hysteresis_limit_blocks_(
           static_cast<int>(config.delay.hysteresis_limit_blocks)),
-      delay_headroom_samples_(config.delay.delay_headroom_samples),
       delay_estimator_(data_dumper_.get(), config, num_capture_channels),
       last_delay_estimate_quality_(DelayEstimate::Quality::kCoarse) {
   RTC_DCHECK(ValidFullBandRate(sample_rate_hz));
@@ -159,9 +150,8 @@ absl::optional<DelayEstimate> RenderDelayControllerImpl::GetDelay(
     const bool use_hysteresis =
         last_delay_estimate_quality_ == DelayEstimate::Quality::kRefined &&
         delay_samples_->quality == DelayEstimate::Quality::kRefined;
-    delay_ = ComputeBufferDelay(delay_,
-                                use_hysteresis ? hysteresis_limit_blocks_ : 0,
-                                delay_headroom_samples_, *delay_samples_);
+    delay_ = ComputeBufferDelay(
+        delay_, use_hysteresis ? hysteresis_limit_blocks_ : 0, *delay_samples_);
     last_delay_estimate_quality_ = delay_samples_->quality;
   }
 
