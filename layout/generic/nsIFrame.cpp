@@ -6734,6 +6734,7 @@ void nsIFrame::DidReflow(nsPresContext* aPresContext,
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS, ("nsIFrame::DidReflow"));
 
   if (IsHiddenByContentVisibilityOfInFlowParentForLayout()) {
+    RemoveStateBits(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW);
     return;
   }
 
@@ -6855,7 +6856,8 @@ bool nsIFrame::HidesContentForLayout() const {
 
 bool nsIFrame::IsHiddenByContentVisibilityOfInFlowParentForLayout() const {
   const auto* parent = GetInFlowParent();
-  return parent && parent->HidesContentForLayout() && !Style()->IsAnonBox();
+  return parent && parent->HidesContentForLayout() &&
+         !(Style()->IsAnonBox() && !IsFrameOfType(nsIFrame::eLineParticipant));
 }
 
 bool nsIFrame::IsHiddenByContentVisibilityOnAnyAncestor() const {
@@ -6863,18 +6865,17 @@ bool nsIFrame::IsHiddenByContentVisibilityOnAnyAncestor() const {
     return false;
   }
 
-  bool isAnonymousBox = Style()->IsAnonBox();
+  bool isAnonymousBlock =
+      Style()->IsAnonBox() && !IsFrameOfType(nsIFrame::eLineParticipant);
   for (nsIFrame* cur = GetInFlowParent(); cur; cur = cur->GetInFlowParent()) {
+    if (!isAnonymousBlock && cur->HidesContent()) {
+      return true;
+    }
+
     // Anonymous boxes are not hidden by the content-visibility of their first
     // non-anonymous ancestor, but can be hidden by ancestors further up the
     // tree.
-    if (isAnonymousBox && !cur->Style()->IsAnonBox()) {
-      isAnonymousBox = false;
-    }
-
-    if (!isAnonymousBox && cur->HidesContent()) {
-      return true;
-    }
+    isAnonymousBlock = false;
   }
 
   return false;
