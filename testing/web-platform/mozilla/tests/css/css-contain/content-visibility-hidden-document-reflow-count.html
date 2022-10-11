@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <meta charset="utf-8">
+  <title>CSS Contain: Test content-visibility:hidden reflow counts</title>
+  <link rel="author" title="Martin Robinson" href="mailto:mrobinson@igalia.com">
+
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+
+  <body style="content-visibility: hidden;">
+    hello
+  </body>
+
+  <script>
+  let gUtils = SpecialPowers.getDOMWindowUtils(window);
+  let gTestContainer = document.getElementById("test");
+
+  function flushLayout() {
+    document.documentElement.offsetHeight;
+  }
+
+  function getReflowCount() {
+    flushLayout();
+    return gUtils.framesReflowed;
+  }
+
+  function runTestFunctionAndCountReflows(testFunction) {
+    const beforeCount = getReflowCount();
+    testFunction();
+    const afterCount = getReflowCount();
+    console.log(afterCount - beforeCount);
+    return afterCount - beforeCount;
+  }
+
+  test(() => {
+    flushLayout();
+
+    const reflows = runTestFunctionAndCountReflows(() => {
+      document.body.innerText = "something else";
+    });
+    assert_equals(reflows, 1, "Reflow only triggered on body.");
+  }, "Changing text of 'content-visibility: hidden' body only triggers a single reflow.");
+  </script>
+</html>
