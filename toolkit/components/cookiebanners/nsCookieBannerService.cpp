@@ -20,6 +20,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsCRT.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "nsThreadUtils.h"
+#include "mozilla/EventQueue.h"
 
 namespace mozilla {
 
