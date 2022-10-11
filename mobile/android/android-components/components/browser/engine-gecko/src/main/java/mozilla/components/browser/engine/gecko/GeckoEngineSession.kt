@@ -675,7 +675,7 @@ class GeckoEngineSession(
                 )?.apply {
                     when (this) {
                         is InterceptionResponse.Content -> loadData(data, mimeType, encoding)
-                        is InterceptionResponse.Url -> loadUrl(url)
+                        is InterceptionResponse.Url -> loadUrl(url, flags = LoadUrlFlags.external())
                         is InterceptionResponse.AppIntent -> {
                             appRedirectUrl = lastLoadRequestUri
                             notifyObservers {

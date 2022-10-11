@@ -1728,7 +1728,7 @@ class GeckoEngineSessionTest {
 
         assertEquals("sample:about", interceptorCalledWithUri)
         verify(geckoSession).load(
-            GeckoSession.Loader().uri("https://mozilla.org")
+            GeckoSession.Loader().uri("https://mozilla.org").flags(LoadUrlFlags.EXTERNAL),
         )
     }
 
