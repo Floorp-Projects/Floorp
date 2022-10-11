@@ -75,10 +75,6 @@ class FrameBuffer {
   //                 implemented.
   void SetProtectionMode(VCMVideoProtection mode);
 
-  // Start the frame buffer, has no effect if the frame buffer is started.
-  // The frame buffer is started upon construction.
-  void Start();
-
   // Stop the frame buffer, causing any sleeping thread in NextFrame to
   // return immediately.
   void Stop();

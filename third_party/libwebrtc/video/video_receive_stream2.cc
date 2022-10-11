@@ -421,7 +421,6 @@ void VideoReceiveStream2::Start() {
   decode_queue_.PostTask([this] {
     RTC_DCHECK_RUN_ON(&decode_queue_);
     decoder_stopped_ = false;
-    frame_buffer_->Start();
   });
   frame_buffer_->StartNextDecode(true);
   decoder_running_ = true;
