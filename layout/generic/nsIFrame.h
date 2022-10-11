@@ -5725,11 +5725,6 @@ inline bool nsFrameList::StartRemoveFrame(nsIFrame* aFrame) {
   return ContinueRemoveFrame(aFrame);
 }
 
-inline void nsFrameList::Enumerator::Next() {
-  NS_ASSERTION(!AtEnd(), "Should have checked AtEnd()!");
-  mFrame = mFrame->GetNextSibling();
-}
-
 // Operators of nsFrameList::Iterator
 // ---------------------------------------------------
 
