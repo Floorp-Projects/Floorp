@@ -649,7 +649,7 @@ if (rtc_enable_libevent) {
       "//third_party/abseil-cpp/absl/strings",
     ]
     if (rtc_build_libevent) {
-      deps += [ "//base/third_party/libevent" ]
+      deps += [ "//third_party/libevent" ]
     }
   }
 }
