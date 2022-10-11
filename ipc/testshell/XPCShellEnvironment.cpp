@@ -65,9 +65,9 @@ static bool Print(JSContext* cx, unsigned argc, JS::Value* vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
   for (unsigned i = 0; i < args.length(); i++) {
-    JSString* str = JS::ToString(cx, args[i]);
+    JS::Rooted<JSString*> str(cx, JS::ToString(cx, args[i]));
     if (!str) return false;
-    JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str);
+    JS::UniqueChars bytes = JS_EncodeStringToUTF8(cx, str);
     if (!bytes) return false;
     fprintf(stdout, "%s%s", i ? " " : "", bytes.get());
     fflush(stdout);
@@ -91,9 +91,9 @@ static bool Dump(JSContext* cx, unsigned argc, JS::Value* vp) {
 
   if (!args.length()) return true;
 
-  JSString* str = JS::ToString(cx, args[0]);
+  JS::Rooted<JSString*> str(cx, JS::ToString(cx, args[0]));
   if (!str) return false;
-  JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str);
+  JS::UniqueChars bytes = JS_EncodeStringToUTF8(cx, str);
   if (!bytes) return false;
 
   fputs(bytes.get(), stdout);
