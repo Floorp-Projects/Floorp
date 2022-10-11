@@ -471,12 +471,25 @@ add_task(async function test_aboutwelcome_with_progress_bar() {
   await onButtonClick(browser, "button.primary");
 
   // Ensure step indicator has progress bar styles
+  // progress indicator height can differ based on device size and test_element_styles doesn't allow comparisons
+  await SpecialPowers.spawn(browser, [], async () => {
+    const indicatorElement = await ContentTaskUtils.waitForCondition(() =>
+      content.document.querySelector(".indicator")
+    );
+    const indicatorStyles = content.window.getComputedStyle(indicatorElement);
+    const [computedHeight] = indicatorStyles.height.match(/\d+/);
+
+    ok(
+      computedHeight >= 5 && computedHeight <= 7,
+      `Indicator height -  ${indicatorStyles.height} - is in correct range`
+    );
+  });
+
   await test_element_styles(
     browser,
     ".indicator",
     // Expected styles:
     {
-      height: "6px",
       "padding-block": "0px",
       margin: "0px",
     }
