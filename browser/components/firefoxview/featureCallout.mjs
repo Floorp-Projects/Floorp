@@ -90,6 +90,7 @@ function _addCalloutLinkElements() {
 
 let CURRENT_SCREEN;
 let CONFIG;
+let MESSAGE;
 let RENDER_OBSERVER;
 let READY = false;
 let LISTENERS_REGISTERED = false;
@@ -105,6 +106,16 @@ function _createContainer() {
   // This means the message was misconfigured, mistargeted, or the
   // content of the parent page is not as expected.
   if (!parent) {
+    if (MESSAGE?.template === "feature_callout") {
+      Services.telemetry.recordEvent(
+        "messaging_experiments",
+        "feature_callout",
+        "create_failed",
+        `${MESSAGE.id || "no_message"}-${CURRENT_SCREEN?.parent_selector ||
+          "no_current_screen"}`
+      );
+    }
+
     return false;
   }
 
@@ -429,7 +440,9 @@ async function _loadConfig() {
     id: "featureCalloutCheck",
     context: { source: document.location.pathname.toLowerCase() },
   });
-  CONFIG = result.message.content;
+
+  MESSAGE = result.message;
+  CONFIG = MESSAGE.content;
 
   let newScreen = CONFIG?.screens?.[CONFIG?.startScreen || 0];
 
@@ -439,7 +452,7 @@ async function _loadConfig() {
 
   // Only add an impression if we actually have a message to impress
   if (Object.keys(result.message).length) {
-    lazy.ASRouter.addImpression(result.message);
+    lazy.ASRouter.addImpression(MESSAGE);
   }
 
   CURRENT_SCREEN = newScreen;
