@@ -255,3 +255,41 @@ add_task(async function test_sync_disconnected_error() {
   });
   await tearDown(sandbox);
 });
+
+add_task(async function test_password_change_disconnect_error() {
+  // When the user changes their password on another device, we get into a state
+  // where the user is signed out but sync is still enabled.
+  const sandbox = setupSyncFxAMocks({
+    state: UIState.STATUS_LOGIN_FAILED,
+    syncEnabled: true,
+  });
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+
+    // triggered by the user changing fxa password on another device
+    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+
+    await waitForElementVisible(browser, "#tabpickup-steps", true);
+    await waitForVisibleSetupStep(browser, {
+      expectedVisible: "#tabpickup-steps-view0",
+    });
+
+    const errorStateHeader = document.querySelector(
+      "#tabpickup-steps-view0-header"
+    );
+
+    await BrowserTestUtils.waitForMutationCondition(
+      errorStateHeader,
+      { childList: true },
+      () => errorStateHeader.textContent.includes("Turn on syncing to continue")
+    );
+
+    ok(
+      errorStateHeader
+        .getAttribute("data-l10n-id")
+        .includes("sync-disconnected"),
+      "Correct message should show when user has been logged out due to external password change."
+    );
+  });
+  await tearDown(sandbox);
+});
