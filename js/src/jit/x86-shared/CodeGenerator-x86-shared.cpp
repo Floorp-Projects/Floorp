@@ -2282,6 +2282,11 @@ void CodeGenerator::visitWasmTernarySimd128(LWasmTernarySimd128* ins) {
                                     ToFloatRegister(ins->v1()),
                                     ToFloatRegister(ins->v2()));
       break;
+    case wasm::SimdOp::F32x4RelaxedDotBF16x8AddF32x4:
+      masm.dotBFloat16x8ThenAdd(
+          ToFloatRegister(ins->v0()), ToFloatRegister(ins->v1()),
+          ToFloatRegister(ins->v2()), ToFloatRegister(ins->temp()));
+      break;
     default:
       MOZ_CRASH("NYI");
   }

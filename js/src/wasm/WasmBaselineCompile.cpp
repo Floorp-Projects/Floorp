@@ -8310,6 +8310,18 @@ void BaseCompiler::emitDotI8x16I7x16AddS() {
   freeV128(rs0);
   pushV128(rsd);
 }
+
+void BaseCompiler::emitDotBF16x8AddF32x4() {
+  RegV128 rsd = popV128();
+  RegV128 rs0, rs1;
+  pop2xV128(&rs0, &rs1);
+  RegV128 temp = needV128();
+  masm.dotBFloat16x8ThenAdd(rs0, rs1, rsd, temp);
+  freeV128(temp);
+  freeV128(rs1);
+  freeV128(rs0);
+  pushV128(rsd);
+}
 #  endif  // ENABLE_WASM_RELAXED_SIMD
 
 void BaseCompiler::emitVectorAndNot() {
@@ -10028,6 +10040,11 @@ bool BaseCompiler::emitBody() {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(dispatchTernary0(emitDotI8x16I7x16AddS, ValType::V128));
+          case uint32_t(SimdOp::F32x4RelaxedDotBF16x8AddF32x4):
+            if (!moduleEnv_.v128RelaxedEnabled()) {
+              return iter_.unrecognizedOpcode(&op);
+            }
+            CHECK_NEXT(dispatchTernary0(emitDotBF16x8AddF32x4, ValType::V128));
 #  endif
           default:
             break;
