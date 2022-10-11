@@ -165,6 +165,10 @@ info["win10_2004"] = False
 if info["os"] == "win" and version == "10.0.19041":
     info["win10_2004"] = True
 
+info["win11_2009"] = False
+if info["os"] == "win" and version == "10.0.22000":
+    info["win11_2009"] = True
+
 info["version"] = version
 info["os_version"] = StringVersion(os_version)
 
