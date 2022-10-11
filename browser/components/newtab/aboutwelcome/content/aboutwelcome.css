@@ -365,6 +365,12 @@ html {
   font-weight: normal;
   line-height: 20px;
 }
+.onboardingContainer .screen:not([pos=split]) .secondary-cta.top button {
+  color: #FFF;
+}
+.onboardingContainer .screen:not([pos=split]) .secondary-cta.top button:hover {
+  color: #E0E0E6;
+}
 .onboardingContainer .screen[pos=split] {
   margin: auto;
   min-height: 550px;
@@ -1197,12 +1203,6 @@ html {
   top: 10px;
   inset-inline-end: 20px;
   z-index: 2;
-}
-.onboardingContainer .secondary-cta.top button {
-  color: #FFF;
-}
-.onboardingContainer .secondary-cta.top button:hover {
-  color: #E0E0E6;
 }
 .onboardingContainer .secondary-cta span {
   color: var(--grey-subtitle-1);

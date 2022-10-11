@@ -250,6 +250,16 @@ html {
           font-weight: normal;
           line-height: 20px;
         }
+
+        &.top {
+          button {
+            color: #FFF;
+
+            &:hover {
+              color: #E0E0E6;
+            }
+          }
+        }
       }
     }
 
@@ -1288,14 +1298,6 @@ html {
       top: 10px;
       inset-inline-end: 20px;
       z-index: 2;
-
-      button {
-        color: #FFF;
-
-        &:hover {
-          color: #E0E0E6;
-        }
-      }
     }
 
     span {
