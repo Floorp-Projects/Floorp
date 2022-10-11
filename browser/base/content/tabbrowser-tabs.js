@@ -631,7 +631,9 @@
         let newIndex = this._getDropIndex(event, effects == "link");
         let children = this.allTabs;
         if (newIndex == children.length) {
-          let tabRect = children[newIndex - 1].getBoundingClientRect();
+          let tabRect = this._getVisibleTabs()
+            .at(-1)
+            .getBoundingClientRect();
           if (RTL_UI) {
             newMargin = rect.right - tabRect.left;
           } else {
@@ -1984,8 +1986,9 @@
       if (!RTL_UI) {
         for (let i = tab ? tab._tPos : 0; i < tabs.length; i++) {
           if (
+            !tabs[i].hidden &&
             event.screenX <
-            tabs[i].screenX + tabs[i].getBoundingClientRect().width / 2
+              tabs[i].screenX + tabs[i].getBoundingClientRect().width / 2
           ) {
             return i;
           }
@@ -1993,8 +1996,9 @@
       } else {
         for (let i = tab ? tab._tPos : 0; i < tabs.length; i++) {
           if (
+            !tabs[i].hidden &&
             event.screenX >
-            tabs[i].screenX + tabs[i].getBoundingClientRect().width / 2
+              tabs[i].screenX + tabs[i].getBoundingClientRect().width / 2
           ) {
             return i;
           }
