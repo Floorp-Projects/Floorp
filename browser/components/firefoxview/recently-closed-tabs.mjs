@@ -74,7 +74,7 @@ class RecentlyClosedTabsList extends HTMLElement {
 
   handleEvent(event) {
     if (
-      event.type == "click" ||
+      (event.type == "click" && !event.altKey) ||
       (event.type == "keydown" && event.keyCode == KeyEvent.DOM_VK_RETURN)
     ) {
       this.openTabAndUpdate(event);

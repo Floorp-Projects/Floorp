@@ -442,13 +442,11 @@ add_task(async function test_switch_before_closing() {
       gBrowser,
       INITIAL_URL
     );
-
     // Switch back to FxView:
     await BrowserTestUtils.switchTab(
       gBrowser,
       gBrowser.getTabForBrowser(browser)
     );
-
     // Update the tab we opened to a different site:
     let loadPromise = BrowserTestUtils.browserLoaded(
       newTab.linkedBrowser,
@@ -481,4 +479,37 @@ add_task(async function test_switch_before_closing() {
       "Item should end up with the correct URL."
     );
   });
+});
+
+add_task(async function test_alt_click_no_launch() {
+  Services.obs.notifyObservers(null, "browser:purge-session-history");
+  is(
+    SessionStore.getClosedTabCount(window),
+    0,
+    "Closed tab count after purging session history"
+  );
+
+  await open_then_close(URLs[0]);
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      let gBrowser = browser.getTabBrowser();
+      let originalTabsLength = gBrowser.tabs.length;
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        ".closed-tab-li",
+        { altKey: true },
+        browser
+      );
+
+      is(
+        gBrowser.tabs.length,
+        originalTabsLength,
+        `Opened tabs length should still be ${originalTabsLength}`
+      );
+    }
+  );
 });
