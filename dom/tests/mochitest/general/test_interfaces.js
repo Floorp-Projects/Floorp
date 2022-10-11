@@ -283,7 +283,7 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CSSFontFeatureValuesRule", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "CSSFontPaletteValuesRule", insecureContext: true, nightly: true },
+  { name: "CSSFontPaletteValuesRule", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CSSGroupingRule", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
