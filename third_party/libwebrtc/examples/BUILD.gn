@@ -904,7 +904,7 @@ if (is_android) {
     ]
   }
 
-  junit_binary("android_examples_junit_tests") {
+  robolectric_binary("android_examples_junit_tests") {
     sources = [
       "androidjunit/src/org/appspot/apprtc/BluetoothManagerTest.java",
       "androidjunit/src/org/appspot/apprtc/DirectRTCClientTest.java",

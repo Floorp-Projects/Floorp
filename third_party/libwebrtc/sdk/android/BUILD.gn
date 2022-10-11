@@ -1712,7 +1712,7 @@ if (is_android) {
     jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
   }
 
-  junit_binary("android_sdk_junit_tests") {
+  robolectric_binary("android_sdk_junit_tests") {
     sources = [
       "tests/src/org/webrtc/AndroidVideoDecoderTest.java",
       "tests/src/org/webrtc/CameraEnumerationTest.java",
