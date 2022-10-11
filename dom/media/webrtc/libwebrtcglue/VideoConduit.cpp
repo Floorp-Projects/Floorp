@@ -201,8 +201,9 @@ bool operator!=(const rtc::VideoSinkWants& aThis,
 }
 
 // TODO: Make this a defaulted operator when we have c++20 (bug 1731036).
-bool operator!=(const webrtc::VideoReceiveStreamInterface::Config::Rtp& aThis,
-                const webrtc::VideoReceiveStreamInterface::Config::Rtp& aOther) {
+bool operator!=(
+    const webrtc::VideoReceiveStreamInterface::Config::Rtp& aThis,
+    const webrtc::VideoReceiveStreamInterface::Config::Rtp& aOther) {
   return aThis.remote_ssrc != aOther.remote_ssrc ||
          aThis.local_ssrc != aOther.local_ssrc ||
          aThis.rtcp_mode != aOther.rtcp_mode ||
@@ -225,8 +226,9 @@ bool operator!=(const webrtc::VideoReceiveStreamInterface::Config::Rtp& aThis,
 
 #ifdef DEBUG
 // TODO: Make this a defaulted operator when we have c++20 (bug 1731036).
-bool operator==(const webrtc::VideoReceiveStreamInterface::Config::Rtp& aThis,
-                const webrtc::VideoReceiveStreamInterface::Config::Rtp& aOther) {
+bool operator==(
+    const webrtc::VideoReceiveStreamInterface::Config::Rtp& aThis,
+    const webrtc::VideoReceiveStreamInterface::Config::Rtp& aOther) {
   return !(aThis != aOther);
 }
 #endif
@@ -389,30 +391,25 @@ void WebrtcVideoConduit::OnControlConfigChange() {
 
   bool encoderReconfigureNeeded = false;
   bool remoteSsrcUpdateNeeded = false;
-  bool recvStreamRecreationNeeded = false;
   bool sendStreamRecreationNeeded = false;
 
   if (mControl.mRemoteSsrc.Ref() != mControl.mConfiguredRemoteSsrc) {
     mControl.mConfiguredRemoteSsrc = mControl.mRemoteSsrc;
-    recvStreamRecreationNeeded = true;
     remoteSsrcUpdateNeeded = true;
   }
 
   if (mControl.mRemoteRtxSsrc.Ref() != mControl.mConfiguredRemoteRtxSsrc) {
     mControl.mConfiguredRemoteRtxSsrc = mControl.mRemoteRtxSsrc;
-    recvStreamRecreationNeeded = true;
     remoteSsrcUpdateNeeded = true;
   }
 
   if (mControl.mSyncGroup.Ref() != mRecvStreamConfig.sync_group) {
     mRecvStreamConfig.sync_group = mControl.mSyncGroup;
-    recvStreamRecreationNeeded = true;
   }
 
   if (mControl.mLocalRecvRtpExtensions.Ref() !=
       mRecvStreamConfig.rtp.extensions) {
     mRecvStreamConfig.rtp.extensions = mControl.mLocalRecvRtpExtensions;
-    recvStreamRecreationNeeded = true;
   }
 
   if (const auto [codecConfigList, rtpRtcpConfig] = std::make_pair(
@@ -423,7 +420,8 @@ void WebrtcVideoConduit::OnControlConfigChange() {
     mControl.mConfiguredRecvCodecs = codecConfigList;
     mControl.mConfiguredRecvRtpRtcpConfig = rtpRtcpConfig;
 
-    webrtc::VideoReceiveStreamInterface::Config::Rtp newRtp(mRecvStreamConfig.rtp);
+    webrtc::VideoReceiveStreamInterface::Config::Rtp newRtp(
+        mRecvStreamConfig.rtp);
     MOZ_ASSERT(newRtp == mRecvStreamConfig.rtp);
     newRtp.rtx_associated_payload_types.clear();
     newRtp.rtcp_mode = rtpRtcpConfig->GetRtcpMode();
@@ -528,12 +526,10 @@ void WebrtcVideoConduit::OnControlConfigChange() {
         CSFLogError(LOGTAG, "%s Found no valid receive codecs", __FUNCTION__);
       }
       mRecvStreamConfig.decoders = std::move(recv_codecs);
-      recvStreamRecreationNeeded = true;
     }
 
     if (mRecvStreamConfig.rtp != newRtp) {
       mRecvStreamConfig.rtp = newRtp;
-      recvStreamRecreationNeeded = true;
     }
   }
 
@@ -549,7 +545,6 @@ void WebrtcVideoConduit::OnControlConfigChange() {
                                      : mSendStreamConfig.rtp.ssrcs.front();
       if (localSsrc != mRecvStreamConfig.rtp.local_ssrc) {
         mRecvStreamConfig.rtp.local_ssrc = localSsrc;
-        recvStreamRecreationNeeded = true;
       }
     }
 
@@ -764,18 +759,15 @@ void WebrtcVideoConduit::OnControlConfigChange() {
       }
       if (localSsrc != mRecvStreamConfig.rtp.local_ssrc ||
           remoteSsrc != mRecvStreamConfig.rtp.remote_ssrc) {
-        recvStreamRecreationNeeded = true;
       }
       if (localSsrcs != mSendStreamConfig.rtp.ssrcs) {
         sendStreamRecreationNeeded = true;
       }
     }
 
-    // Recreate/Stop/Start streams as needed.
-    if (recvStreamRecreationNeeded) {
-      DeleteRecvStream();
-    }
+    // Recreate receiving streams
     if (mControl.mReceiving) {
+      DeleteRecvStream();
       CreateRecvStream();
     }
     if (sendStreamRecreationNeeded) {
@@ -1051,8 +1043,8 @@ Maybe<Ssrc> WebrtcVideoConduit::GetRemoteSSRC() const {
              : Some(mRecvStreamConfig.rtp.remote_ssrc);
 }
 
-Maybe<webrtc::VideoReceiveStreamInterface::Stats> WebrtcVideoConduit::GetReceiverStats()
-    const {
+Maybe<webrtc::VideoReceiveStreamInterface::Stats>
+WebrtcVideoConduit::GetReceiverStats() const {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   if (!mRecvStream) {
     return Nothing();
