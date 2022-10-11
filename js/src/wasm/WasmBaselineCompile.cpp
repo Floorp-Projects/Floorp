@@ -8232,9 +8232,9 @@ static void RelaxedFmaF32x4(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
   masm.fmaFloat32x4(rs1, rs2, rsd);
 }
 
-static void RelaxedFmsF32x4(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
-                            RegV128 rsd) {
-  masm.fmsFloat32x4(rs1, rs2, rsd);
+static void RelaxedFnmaF32x4(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
+                             RegV128 rsd) {
+  masm.fnmaFloat32x4(rs1, rs2, rsd);
 }
 
 static void RelaxedFmaF64x2(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
@@ -8242,9 +8242,9 @@ static void RelaxedFmaF64x2(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
   masm.fmaFloat64x2(rs1, rs2, rsd);
 }
 
-static void RelaxedFmsF64x2(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
-                            RegV128 rsd) {
-  masm.fmsFloat64x2(rs1, rs2, rsd);
+static void RelaxedFnmaF64x2(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
+                             RegV128 rsd) {
+  masm.fnmaFloat64x2(rs1, rs2, rsd);
 }
 
 static void RelaxedSwizzle(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
@@ -8598,6 +8598,10 @@ bool BaseCompiler::emitBody() {
 #define dispatchTernary1(arg1, type)                          \
   iter_.readTernary(type, &unused_a, &unused_b, &unused_c) && \
       (deadCode_ || (emitTernary(arg1), true))
+
+#define dispatchTernary2(arg1, type)                          \
+  iter_.readTernary(type, &unused_a, &unused_b, &unused_c) && \
+      (deadCode_ || (emitTernaryResultLast(arg1), true))
 
 #define dispatchComparison0(doEmit, operandType, compareOp)  \
   iter_.readComparison(operandType, &unused_a, &unused_b) && \
@@ -9939,22 +9943,22 @@ bool BaseCompiler::emitBody() {
             if (!moduleEnv_.v128RelaxedEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
-            CHECK_NEXT(dispatchTernary1(RelaxedFmaF32x4, ValType::V128));
-          case uint32_t(SimdOp::F32x4RelaxedFms):
+            CHECK_NEXT(dispatchTernary2(RelaxedFmaF32x4, ValType::V128));
+          case uint32_t(SimdOp::F32x4RelaxedFnma):
             if (!moduleEnv_.v128RelaxedEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
-            CHECK_NEXT(dispatchTernary1(RelaxedFmsF32x4, ValType::V128));
+            CHECK_NEXT(dispatchTernary2(RelaxedFnmaF32x4, ValType::V128));
           case uint32_t(SimdOp::F64x2RelaxedFma):
             if (!moduleEnv_.v128RelaxedEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
-            CHECK_NEXT(dispatchTernary1(RelaxedFmaF64x2, ValType::V128));
-          case uint32_t(SimdOp::F64x2RelaxedFms):
+            CHECK_NEXT(dispatchTernary2(RelaxedFmaF64x2, ValType::V128));
+          case uint32_t(SimdOp::F64x2RelaxedFnma):
             if (!moduleEnv_.v128RelaxedEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
-            CHECK_NEXT(dispatchTernary1(RelaxedFmsF64x2, ValType::V128));
+            CHECK_NEXT(dispatchTernary2(RelaxedFnmaF64x2, ValType::V128));
             break;
           case uint32_t(SimdOp::I8x16RelaxedLaneSelect):
           case uint32_t(SimdOp::I16x8RelaxedLaneSelect):

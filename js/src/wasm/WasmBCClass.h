@@ -1491,6 +1491,10 @@ struct BaseCompiler final {
   inline void emitTernary(void (*op)(CompilerType&, ValType src0, ValType src1,
                                      ValType srcDest, ValType temp));
 
+  template <typename CompilerType, typename ValType>
+  inline void emitTernaryResultLast(void (*op)(CompilerType&, ValType src0,
+                                               ValType src1, ValType srcDest));
+
   template <typename R>
   [[nodiscard]] inline bool emitInstanceCallOp(
       const SymbolicAddressSignature& fn, R reader);

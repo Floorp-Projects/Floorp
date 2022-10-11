@@ -375,6 +375,19 @@ void BaseCompiler::emitTernary(void (*op)(CompilerType&, ValType src0,
   push(srcDest);
 }
 
+template <typename CompilerType, typename ValType>
+void BaseCompiler::emitTernaryResultLast(void (*op)(CompilerType&, ValType src0,
+                                                    ValType src1,
+                                                    ValType srcDest)) {
+  ValType srcDest = pop<ValType>();
+  ValType src2 = pop<ValType>();
+  ValType src1 = pop<ValType>();
+  op(selectCompiler<CompilerType>(), src1, src2, srcDest);
+  free(src2);
+  free(src1);
+  push(srcDest);
+}
+
 template <typename RhsDestType, typename LhsType>
 void BaseCompiler::emitBinop(void (*op)(MacroAssembler& masm, RhsDestType src,
                                         LhsType srcDest, RhsDestOp)) {

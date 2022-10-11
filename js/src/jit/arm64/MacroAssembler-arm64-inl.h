@@ -3790,8 +3790,8 @@ void MacroAssembler::fmaFloat32x4(FloatRegister src1, FloatRegister src2,
   Fmla(Simd4S(srcDest), Simd4S(src1), Simd4S(src2));
 }
 
-void MacroAssembler::fmsFloat32x4(FloatRegister src1, FloatRegister src2,
-                                  FloatRegister srcDest) {
+void MacroAssembler::fnmaFloat32x4(FloatRegister src1, FloatRegister src2,
+                                   FloatRegister srcDest) {
   Fmls(Simd4S(srcDest), Simd4S(src1), Simd4S(src2));
 }
 
@@ -3800,8 +3800,8 @@ void MacroAssembler::fmaFloat64x2(FloatRegister src1, FloatRegister src2,
   Fmla(Simd2D(srcDest), Simd2D(src1), Simd2D(src2));
 }
 
-void MacroAssembler::fmsFloat64x2(FloatRegister src1, FloatRegister src2,
-                                  FloatRegister srcDest) {
+void MacroAssembler::fnmaFloat64x2(FloatRegister src1, FloatRegister src2,
+                                   FloatRegister srcDest) {
   Fmls(Simd2D(srcDest), Simd2D(src1), Simd2D(src2));
 }
 

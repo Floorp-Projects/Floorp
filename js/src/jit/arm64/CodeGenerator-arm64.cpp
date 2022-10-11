@@ -3011,20 +3011,20 @@ void CodeGenerator::visitWasmTernarySimd128(LWasmTernarySimd128* ins) {
       break;
     }
     case wasm::SimdOp::F32x4RelaxedFma:
-      masm.fmaFloat32x4(ToFloatRegister(ins->v1()), ToFloatRegister(ins->v2()),
-                        ToFloatRegister(ins->v0()));
+      masm.fmaFloat32x4(ToFloatRegister(ins->v0()), ToFloatRegister(ins->v1()),
+                        ToFloatRegister(ins->v2()));
       break;
-    case wasm::SimdOp::F32x4RelaxedFms:
-      masm.fmsFloat32x4(ToFloatRegister(ins->v1()), ToFloatRegister(ins->v2()),
-                        ToFloatRegister(ins->v0()));
+    case wasm::SimdOp::F32x4RelaxedFnma:
+      masm.fnmaFloat32x4(ToFloatRegister(ins->v0()), ToFloatRegister(ins->v1()),
+                         ToFloatRegister(ins->v2()));
       break;
     case wasm::SimdOp::F64x2RelaxedFma:
-      masm.fmaFloat64x2(ToFloatRegister(ins->v1()), ToFloatRegister(ins->v2()),
-                        ToFloatRegister(ins->v0()));
+      masm.fmaFloat64x2(ToFloatRegister(ins->v0()), ToFloatRegister(ins->v1()),
+                        ToFloatRegister(ins->v2()));
       break;
-    case wasm::SimdOp::F64x2RelaxedFms:
-      masm.fmsFloat64x2(ToFloatRegister(ins->v1()), ToFloatRegister(ins->v2()),
-                        ToFloatRegister(ins->v0()));
+    case wasm::SimdOp::F64x2RelaxedFnma:
+      masm.fnmaFloat64x2(ToFloatRegister(ins->v0()), ToFloatRegister(ins->v1()),
+                         ToFloatRegister(ins->v2()));
       break;
     case wasm::SimdOp::I8x16RelaxedLaneSelect:
     case wasm::SimdOp::I16x8RelaxedLaneSelect:
