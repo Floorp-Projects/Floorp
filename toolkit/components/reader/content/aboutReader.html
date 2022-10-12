@@ -6,11 +6,14 @@
 <html>
 
 <head>
+  <title id="reader-title"></title>
   <meta http-equiv="Content-Security-Policy" content="default-src chrome:; img-src data: *; media-src *; object-src 'none'" />
   <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
   <meta name="viewport" content="width=device-width; user-scalable=0" />
   <link rel="stylesheet" href="chrome://global/skin/aboutReader.css" type="text/css"/>
   <link rel="stylesheet" href="chrome://global/skin/aboutReaderPocket.css" type="text/css"/>
+  <link rel="localization" href="toolkit/about/aboutReader.ftl"/>
+  <link rel="localization" href="browser/branding/brandings.ftl"/>
 </head>
 
 <body>
@@ -19,28 +22,32 @@
   <div id="toolbar" class="toolbar-container">
     <div class="toolbar reader-toolbar">
       <div class="reader-controls">
-        <button class="close-button toolbar-button" data-telemetry-id="reader-close"></button>
+        <button class="close-button toolbar-button" aria-labelledby="toolbar-close" data-telemetry-id="reader-close">
+          <span class="hover-label" id="toolbar-close" data-l10n-id="about-reader-toolbar-close"></span>
+        </button>
         <ul class="dropdown style-dropdown">
           <li>
-            <button class="dropdown-toggle toolbar-button style-button" data-telemetry-id="reader-type-controls"></button>
+            <button class="dropdown-toggle toolbar-button style-button" aria-labelledby="toolbar-type-controls" data-telemetry-id="reader-type-controls">
+              <span class="hover-label" id="toolbar-type-controls" data-l10n-id="about-reader-toolbar-type-controls"></span>
+            </button>
           </li>
           <li class="dropdown-popup">
             <div class="dropdown-arrow"></div>
             <div class="font-type-buttons radiorow"></div>
             <div class="font-size-buttons buttonrow">
-              <button class="minus-button"></button>
+              <button class="minus-button" data-l10n-id="about-reader-toolbar-minus"></button>
               <span class="font-size-value"></span>
-              <button class="plus-button"/>
+              <button class="plus-button" data-l10n-id="about-reader-toolbar-plus"></button>
             </div>
             <div class="content-width-buttons buttonrow">
-               <button class="content-width-minus-button"></button>
+               <button class="content-width-minus-button" data-l10n-id="about-reader-toolbar-contentwidthminus"></button>
                <span class="content-width-value"></span>
-               <button class="content-width-plus-button"/>
+               <button class="content-width-plus-button" data-l10n-id="about-reader-toolbar-contentwidthplus"></button>
             </div>
             <div class="line-height-buttons buttonrow">
-                <button class="line-height-minus-button"></button>
+                <button class="line-height-minus-button" data-l10n-id="about-reader-toolbar-lineheightminus"></button>
                 <span class="line-height-value"></span>
-                <button class="line-height-plus-button"/>
+                <button class="line-height-plus-button" data-l10n-id="about-reader-toolbar-lineheightplus"></button>
             </div>
             <div class="color-scheme-buttons radiorow"></div>
           </li>
