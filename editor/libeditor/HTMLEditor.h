@@ -8,7 +8,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ComposerCommandsUpdater.h"
-#include "mozilla/CSSEditUtils.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorForwards.h"
 #include "mozilla/EditorUtils.h"
@@ -32,7 +31,6 @@
 #include "nsITableEditor.h"
 #include "nsPoint.h"
 #include "nsStubMutationObserver.h"
-#include "nsTArray.h"
 
 class nsDocumentFragment;
 class nsFrameSelection;
@@ -44,11 +42,14 @@ class nsStaticAtom;
 class nsStyledElement;
 class nsTableCellFrame;
 class nsTableWrapperFrame;
+template <class E>
+class nsTArray;
 
 namespace mozilla {
 class AlignStateAtSelection;
 class AutoSelectionSetterAfterTableEdit;
 class AutoSetTemporaryAncestorLimiter;
+class CSSEditUtils;
 class EmptyEditableFunctor;
 class ListElementSelectionState;
 class ListItemElementSelectionState;
@@ -866,14 +867,6 @@ class HTMLEditor final : public EditorBase,
    */
   MOZ_CAN_RUN_SCRIPT nsresult CollapseAdjacentTextNodes(nsRange& aRange);
 
-  static bool HasAttributes(Element* aElement) {
-    MOZ_ASSERT(aElement);
-    uint32_t attrCount = aElement->GetAttrCount();
-    return attrCount > 1 ||
-           (1 == attrCount &&
-            !aElement->GetAttrNameAt(0)->Equals(nsGkAtoms::mozdirty));
-  }
-
   static dom::Element* GetLinkElement(nsINode* aNode);
 
   /**
@@ -1245,20 +1238,6 @@ class HTMLEditor final : public EditorBase,
   already_AddRefed<nsRange> CreateRangeIncludingAdjuscentWhiteSpaces(
       const EditorDOMPointType1& aStartPoint,
       const EditorDOMPointType2& aEndPoint);
-
-  /**
-   * GetChildNodesOf() returns all child nodes of aParent with an array.
-   */
-  static void GetChildNodesOf(
-      nsINode& aParentNode,
-      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents) {
-    MOZ_ASSERT(aOutArrayOfContents.IsEmpty());
-    aOutArrayOfContents.SetCapacity(aParentNode.GetChildCount());
-    for (nsIContent* childContent = aParentNode.GetFirstChild(); childContent;
-         childContent = childContent->GetNextSibling()) {
-      aOutArrayOfContents.AppendElement(*childContent);
-    }
-  }
 
   /**
    * GetRangeExtendedToHardLineEdgesForBlockEditAction() returns an extended

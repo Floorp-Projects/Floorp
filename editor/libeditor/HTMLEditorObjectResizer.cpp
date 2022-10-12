@@ -5,6 +5,7 @@
 
 #include "HTMLEditor.h"
 
+#include "CSSEditUtils.h"
 #include "HTMLEditorEventListener.h"
 #include "HTMLEditUtils.h"
 

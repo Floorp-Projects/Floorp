@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ErrorList.h"
 #include "HTMLEditor.h"
 
 #include "AutoRangeArray.h"
+#include "CSSEditUtils.h"
 #include "EditAction.h"
 #include "EditorUtils.h"
 #include "HTMLEditHelpers.h"
@@ -14,6 +14,7 @@
 #include "PendingStyles.h"
 #include "SelectionState.h"
 
+#include "ErrorList.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/EditorForwards.h"
@@ -1426,7 +1427,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveStyleInside(
     SpecifiedStyle aSpecifiedStyle) {
   // First, handle all descendants.
   AutoTArray<OwningNonNull<nsIContent>, 32> arrayOfChildContents;
-  HTMLEditor::GetChildNodesOf(aElement, arrayOfChildContents);
+  HTMLEditUtils::CollectAllChildren(aElement, arrayOfChildContents);
   EditorDOMPoint pointToPutCaret;
   for (const OwningNonNull<nsIContent>& child : arrayOfChildContents) {
     if (!child->IsElement()) {
@@ -2994,7 +2995,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetFontSizeOfFontElementChildren(
 
     // Cycle through children and adjust relative font size.
     AutoTArray<OwningNonNull<nsIContent>, 32> arrayOfContents;
-    HTMLEditor::GetChildNodesOf(aContent, arrayOfContents);
+    HTMLEditUtils::CollectAllChildren(aContent, arrayOfContents);
     for (const auto& child : arrayOfContents) {
       // MOZ_KnownLive because of bug 1622253
       Result<EditorDOMPoint, nsresult> setFontSizeOfChildResult =
@@ -3017,7 +3018,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetFontSizeOfFontElementChildren(
   // Otherwise cycle through the children.
   EditorDOMPoint pointToPutCaret;
   AutoTArray<OwningNonNull<nsIContent>, 32> arrayOfContents;
-  HTMLEditor::GetChildNodesOf(aContent, arrayOfContents);
+  HTMLEditUtils::CollectAllChildren(aContent, arrayOfContents);
   for (const auto& child : arrayOfContents) {
     // MOZ_KnownLive because of bug 1622253
     Result<EditorDOMPoint, nsresult> fontSizeChangeResult =
@@ -3131,7 +3132,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetFontSizeWithBigOrSmallElement(
   // each getting their own.
   EditorDOMPoint pointToPutCaret;
   AutoTArray<OwningNonNull<nsIContent>, 32> arrayOfContents;
-  HTMLEditor::GetChildNodesOf(aContent, arrayOfContents);
+  HTMLEditUtils::CollectAllChildren(aContent, arrayOfContents);
   for (const auto& child : arrayOfContents) {
     // MOZ_KnownLive because of bug 1622253
     Result<EditorDOMPoint, nsresult> setFontSizeOfChildResult =

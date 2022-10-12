@@ -4,7 +4,9 @@
 
 #include "HTMLEditor.h"
 
+#include "CSSEditUtils.h"
 #include "HTMLEditUtils.h"
+
 #include "mozilla/Attributes.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
