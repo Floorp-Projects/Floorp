@@ -193,9 +193,6 @@ var AboutReader = function(
   );
   this._setColorSchemePref(colorScheme);
 
-  // See bug 1637089.
-  // let fontTypeSample = gStrings.GetStringFromName("aboutReader.fontTypeSample");
-
   let fontTypeOptions = [
     {
       l10nId: "about-reader-font-type-sans-serif",
