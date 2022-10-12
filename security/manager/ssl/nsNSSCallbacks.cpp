@@ -1125,7 +1125,6 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
   bool deprecatedTlsVer =
       (channelInfo.protocolVersion < SSL_LIBRARY_VERSION_TLS_1_2);
-  RememberCertErrorsTable::GetInstance().LookupCertErrorBits(infoObject);
 
   uint32_t state;
   if (renegotiationUnsafe || deprecatedTlsVer) {

@@ -46,6 +46,14 @@ SessionCacheInfo SessionCacheInfo::Clone() const {
                 *mSucceededCertChainBytes,
                 [](const auto& element) { return element.Clone(); }))
           : Nothing();
+  result.mIsBuiltCertChainRootBuiltInRoot = mIsBuiltCertChainRootBuiltInRoot;
+  result.mOverridableErrorCategory = mOverridableErrorCategory;
+  result.mFailedCertChainBytes =
+      mFailedCertChainBytes
+          ? Some(TransformIntoNewArray(
+                *mFailedCertChainBytes,
+                [](const auto& element) { return element.Clone(); }))
+          : Nothing();
   return result;
 }
 
@@ -64,9 +72,16 @@ SSLTokensCache::TokenCacheRecord::~TokenCacheRecord() {
 uint32_t SSLTokensCache::TokenCacheRecord::Size() const {
   uint32_t size = mToken.Length() + sizeof(mSessionCacheInfo.mEVStatus) +
                   sizeof(mSessionCacheInfo.mCertificateTransparencyStatus) +
-                  mSessionCacheInfo.mServerCertBytes.Length();
+                  mSessionCacheInfo.mServerCertBytes.Length() +
+                  sizeof(mSessionCacheInfo.mIsBuiltCertChainRootBuiltInRoot) +
+                  sizeof(mSessionCacheInfo.mOverridableErrorCategory);
   if (mSessionCacheInfo.mSucceededCertChainBytes) {
     for (const auto& cert : mSessionCacheInfo.mSucceededCertChainBytes.ref()) {
+      size += cert.Length();
+    }
+  }
+  if (mSessionCacheInfo.mFailedCertChainBytes) {
+    for (const auto& cert : mSessionCacheInfo.mFailedCertChainBytes.ref()) {
       size += cert.Length();
     }
   }
@@ -81,6 +96,10 @@ void SSLTokensCache::TokenCacheRecord::Reset() {
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE;
   mSessionCacheInfo.mServerCertBytes.Clear();
   mSessionCacheInfo.mSucceededCertChainBytes.reset();
+  mSessionCacheInfo.mIsBuiltCertChainRootBuiltInRoot.reset();
+  mSessionCacheInfo.mOverridableErrorCategory =
+      nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET;
+  mSessionCacheInfo.mFailedCertChainBytes.reset();
 }
 
 uint32_t SSLTokensCache::TokenCacheEntry::Size() const {
@@ -260,6 +279,30 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
     return rv;
   }
 
+  nsITransportSecurityInfo::OverridableErrorCategory overridableErrorCategory;
+  rv = aSecInfo->GetOverridableErrorCategory(&overridableErrorCategory);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  Maybe<nsTArray<nsTArray<uint8_t>>> failedCertChainBytes;
+  nsTArray<RefPtr<nsIX509Cert>> failedCertArray;
+  rv = aSecInfo->GetFailedCertChain(failedCertArray);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!failedCertArray.IsEmpty()) {
+    failedCertChainBytes.emplace();
+    for (const auto& cert : failedCertArray) {
+      nsTArray<uint8_t> rawCert;
+      nsresult rv = cert->GetRawDER(rawCert);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      failedCertChainBytes->AppendElement(std::move(rawCert));
+    }
+  }
+
   auto makeUniqueRecord = [&]() {
     auto rec = MakeUnique<TokenCacheRecord>();
     rec->mKey = aKey;
@@ -268,23 +311,18 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
     rec->mToken.AppendElements(aToken, aTokenLen);
     rec->mId = ++sRecordId;
     rec->mSessionCacheInfo.mServerCertBytes = std::move(certBytes);
-
     rec->mSessionCacheInfo.mSucceededCertChainBytes =
-        succeededCertChainBytes
-            ? Some(TransformIntoNewArray(
-                  *succeededCertChainBytes,
-                  [](auto& element) { return nsTArray(std::move(element)); }))
-            : Nothing();
-
+        std::move(succeededCertChainBytes);
     if (isEV) {
       rec->mSessionCacheInfo.mEVStatus = psm::EVStatus::EV;
     }
-
     rec->mSessionCacheInfo.mCertificateTransparencyStatus =
         certificateTransparencyStatus;
-
     rec->mSessionCacheInfo.mIsBuiltCertChainRootBuiltInRoot =
         std::move(isBuiltCertChainRootBuiltInRoot);
+    rec->mSessionCacheInfo.mOverridableErrorCategory = overridableErrorCategory;
+    rec->mSessionCacheInfo.mFailedCertChainBytes =
+        std::move(failedCertChainBytes);
     return rec;
   };
 
