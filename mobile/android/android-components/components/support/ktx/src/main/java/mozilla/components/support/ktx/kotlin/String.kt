@@ -32,6 +32,11 @@ private const val MAILTO = "mailto:"
 // Number of last digits to be shown when credit card number is obfuscated.
 private const val LAST_VISIBLE_DIGITS_COUNT = 4
 
+// This is used for truncating URLs to prevent extreme cases from
+// slowing down UI rendering e.g. in case of a bookmarklet or a data URI.
+// https://github.com/mozilla-mobile/android-components/issues/5249
+const val MAX_URI_LENGTH = 25000
+
 /**
  * Checks if this String is a URL.
  */
@@ -291,4 +296,12 @@ fun String.getRepresentativeCharacter(): String {
  */
 fun String.last4Digits(): String {
     return this.takeLast(LAST_VISIBLE_DIGITS_COUNT)
+}
+
+/**
+ * Returns a trimmed string. This is used to prevent extreme cases
+ * from slowing down UI rendering with large strings.
+ */
+fun String.trimmed(): String {
+    return this.take(MAX_URI_LENGTH)
 }

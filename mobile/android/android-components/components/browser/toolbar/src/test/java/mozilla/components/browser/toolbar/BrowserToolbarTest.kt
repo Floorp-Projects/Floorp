@@ -27,6 +27,7 @@ import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection
+import mozilla.components.support.ktx.kotlin.MAX_URI_LENGTH
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
