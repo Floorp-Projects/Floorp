@@ -300,6 +300,9 @@ class _RemoteSettingsExperimentLoader {
           continue;
         }
 
+        const validateFeatures =
+          validationEnabled && !r.featureValidationOptOut;
+
         if (validationEnabled) {
           let validation = recipeValidator.validate(r);
           if (!validation.valid) {
@@ -348,7 +351,7 @@ class _RemoteSettingsExperimentLoader {
 
         let type = r.isRollout ? "rollout" : "experiment";
 
-        if (validationEnabled) {
+        if (validateFeatures) {
           const result = await this._validateBranches(r, validatorCache);
           if (!result.valid) {
             if (result.invalidBranchSlugs.length) {
