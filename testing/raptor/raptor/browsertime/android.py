@@ -113,27 +113,34 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
         if self.config["power_test"]:
             args_list.extend(["--androidPower", "true"])
 
-        # If running on Fenix we must add the intent as we use a special non-default one there
-        if self.config["app"] == "fenix" and self.config.get("intent") is not None:
-            args_list.extend(["--firefox.android.intentArgument=-a"])
-            args_list.extend(
-                ["--firefox.android.intentArgument", self.config["intent"]]
-            )
+        if self.config["app"] == "fenix":
+            # See bug 1768889
+            args_list.extend(["--ignoreShutdownFailures", "true"])
 
-            # Change glean ping names in all cases on Fenix
-            args_list.extend(
-                [
-                    "--firefox.android.intentArgument=--es",
-                    "--firefox.android.intentArgument=startNext",
-                    "--firefox.android.intentArgument=" + self.config["activity"],
-                    "--firefox.android.intentArgument=--esa",
-                    "--firefox.android.intentArgument=sourceTags",
-                    "--firefox.android.intentArgument=automation",
-                ]
-            )
+            # If running on Fenix we must add the intent as we use a
+            # special non-default one there
+            if self.config.get("intent") is not None:
+                args_list.extend(["--firefox.android.intentArgument=-a"])
+                args_list.extend(
+                    ["--firefox.android.intentArgument", self.config["intent"]]
+                )
 
-            args_list.extend(["--firefox.android.intentArgument=-d"])
-            args_list.extend(["--firefox.android.intentArgument", str("about:blank")])
+                # Change glean ping names in all cases on Fenix
+                args_list.extend(
+                    [
+                        "--firefox.android.intentArgument=--es",
+                        "--firefox.android.intentArgument=startNext",
+                        "--firefox.android.intentArgument=" + self.config["activity"],
+                        "--firefox.android.intentArgument=--esa",
+                        "--firefox.android.intentArgument=sourceTags",
+                        "--firefox.android.intentArgument=automation",
+                    ]
+                )
+
+                args_list.extend(["--firefox.android.intentArgument=-d"])
+                args_list.extend(
+                    ["--firefox.android.intentArgument", str("about:blank")]
+                )
 
         return args_list
 
