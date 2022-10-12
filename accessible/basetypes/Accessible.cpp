@@ -293,9 +293,8 @@ int32_t Accessible::GetLevel(bool aFast) const {
           return 1;
         }
 
-        for (Accessible* child = parent->FirstChild(); child;
-             child = child->NextSibling()) {
-          if (child->IsHTMLOptGroup()) {
+        for (uint32_t i = 0, count = parent->ChildCount(); i < count; ++i) {
+          if (parent->ChildAt(i)->IsHTMLOptGroup()) {
             return 1;
           }
         }
