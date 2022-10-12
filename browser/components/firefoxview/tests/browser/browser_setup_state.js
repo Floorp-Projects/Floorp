@@ -711,3 +711,154 @@ add_task(async function test_keyboard_focus_after_tab_pickup_opened() {
   await tearDown(sandbox);
   await SpecialPowers.popPrefEnv();
 });
+
+async function mockFxaDeviceConnected(win) {
+  // We use an existing tab to navigate to the final "device connected" url
+  // in order to fake the fxa device sync process
+  const url = "https://example.org/pair/auth/complete";
+  is(win.gBrowser.tabs.length, 3, "Tabs strip should contain three tabs");
+
+  BrowserTestUtils.loadURI(win.gBrowser.selectedTab.linkedBrowser, url);
+
+  await BrowserTestUtils.browserLoaded(
+    win.gBrowser.selectedTab.linkedBrowser,
+    null,
+    url
+  );
+
+  is(
+    win.gBrowser.selectedTab.linkedBrowser.currentURI.filePath,
+    "/pair/auth/complete",
+    "/pair/auth/complete is the selected tab"
+  );
+}
+
+add_task(async function test_close_device_connected_tab() {
+  // test that when a device has been connected to sync we close
+  // that tab after the user is directed back to firefox view
+  await SpecialPowers.pushPrefEnv({
+    set: [["identity.fxaccounts.remote.root", "https://example.org/"]],
+  });
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  let fxViewTab = await openFirefoxViewTab(win);
+
+  await waitForVisibleSetupStep(win.gBrowser, {
+    expectedVisible: "#tabpickup-steps-view1",
+  });
+
+  let actionButton = win.gBrowser.contentWindow.document.querySelector(
+    "#tabpickup-steps-view1 button.primary"
+  );
+  // initiate the sign in flow from Firefox View, to check that didFxaTabOpen is set
+  let tabSwitched = BrowserTestUtils.waitForEvent(
+    win.gBrowser,
+    "TabSwitchDone"
+  );
+  actionButton.click();
+  await tabSwitched;
+
+  is(
+    win.gBrowser.selectedTab.linkedBrowser.currentURI.spec,
+    "https://example.org/?context=fx_desktop_v3&entrypoint=firefoxview&action=email&service=sync",
+    "fxa entrypoint is the selected tab"
+  );
+
+  // fake the end point of the device syncing flow
+  await mockFxaDeviceConnected(win);
+  let deviceConnectedTab = win.gBrowser.tabs[2];
+
+  // remove the blank tab opened with the browser to check that we don't
+  // close the window when the "Device connected" tab is closed
+  const newTab = win.gBrowser.tabs.find(
+    tab => tab != deviceConnectedTab && tab != fxViewTab
+  );
+  let removedTab = BrowserTestUtils.waitForTabClosing(newTab);
+  BrowserTestUtils.removeTab(newTab);
+  await removedTab;
+
+  is(win.gBrowser.tabs.length, 2, "Tabs strip should only contain two tabs");
+
+  is(
+    win.gBrowser.selectedTab.linkedBrowser.currentURI.filePath,
+    "/pair/auth/complete",
+    "/pair/auth/complete is the selected tab"
+  );
+
+  // we use this instead of BrowserTestUtils.switchTab to get back to the firefox view tab
+  // because this more accurately reflects how this tab is selected - via a custom onmousedown
+  // and command that calls FirefoxViewHandler.openTab (both when the user manually clicks the tab
+  // and when navigating from the fxa Device Connected tab, which also calls FirefoxViewHandler.openTab)
+  await EventUtils.synthesizeMouseAtCenter(
+    win.document.getElementById("firefox-view-button"),
+    { type: "mousedown" },
+    win
+  );
+
+  is(win.gBrowser.tabs.length, 2, "Tabs strip should only contain two tabs");
+
+  is(
+    win.gBrowser.tabs[0].linkedBrowser.currentURI.filePath,
+    "firefoxview",
+    "First tab is Firefox view"
+  );
+
+  is(
+    win.gBrowser.tabs[1].linkedBrowser.currentURI.filePath,
+    "newtab",
+    "Second tab is about:newtab"
+  );
+
+  // now simulate the signed-in state with the prompt to download
+  // and sync mobile
+  const sandbox = setupMocks({
+    state: UIState.STATUS_SIGNED_IN,
+    fxaDevices: [
+      {
+        id: 1,
+        name: "This Device",
+        isCurrentDevice: true,
+        type: "desktop",
+      },
+    ],
+  });
+
+  Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+
+  await waitForVisibleSetupStep(win.gBrowser, {
+    expectedVisible: "#tabpickup-steps-view2",
+  });
+
+  actionButton = win.gBrowser.contentWindow.document.querySelector(
+    "#tabpickup-steps-view2 button.primary"
+  );
+  // initiate the connect device (mobile) flow from Firefox View, to check that didFxaTabOpen is set
+  tabSwitched = BrowserTestUtils.waitForEvent(win.gBrowser, "TabSwitchDone");
+  actionButton.click();
+  await tabSwitched;
+  // fake the end point of the device syncing flow
+  await mockFxaDeviceConnected(win);
+
+  await EventUtils.synthesizeMouseAtCenter(
+    win.document.getElementById("firefox-view-button"),
+    { type: "mousedown" },
+    win
+  );
+  is(win.gBrowser.tabs.length, 2, "Tabs strip should only contain two tabs");
+
+  is(
+    win.gBrowser.tabs[0].linkedBrowser.currentURI.filePath,
+    "firefoxview",
+    "First tab is Firefox view"
+  );
+
+  is(
+    win.gBrowser.tabs[1].linkedBrowser.currentURI.filePath,
+    "newtab",
+    "Second tab is about:newtab"
+  );
+
+  // cleanup time
+  await tearDown(sandbox);
+  await SpecialPowers.popPrefEnv();
+  await BrowserTestUtils.closeWindow(win);
+});
