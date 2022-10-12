@@ -218,10 +218,16 @@ class RustRegexIter {
 };
 
 /*
- * RustRegexOptions is the set of non-flag configuration options for compiling
- * a regular expression. Currently, only two options are available: setting
- * the size limit of the compiled program and setting the size limit of the
- * cache of states that the DFA uses while searching.
+ * RustRegexOptions is the set of configuration options for compiling a regular
+ * expression.
+ *
+ * All flags on this type can be used to set default flags while compiling, and
+ * can be toggled in the expression itself using standard syntax, e.g. `(?i)`
+ * turns case-insensitive matching on, and `(?-i)` disables it.
+ *
+ * In addition, two non-flag options are available: setting the size limit of
+ * the compiled program and setting the size limit of the cache of states that
+ * the DFA uses while searching.
  *
  * For most uses, the default settings will work fine, and a default-constructed
  * RustRegexOptions can be passed.
@@ -231,18 +237,84 @@ class RustRegexOptions {
   RustRegexOptions() = default;
 
   /*
+   * Set the value for the case insensitive (i) flag.
+   *
+   * When enabled, letters in the pattern will match both upper case and lower
+   * case variants.
+   */
+  RustRegexOptions& CaseInsensitive(bool aYes) {
+    return SetFlag(aYes, RURE_FLAG_CASEI);
+  }
+
+  /*
+   * Set the value for the multi-line matching (m) flag.
+   *
+   * When enabled, ^ matches the beginning of lines and $ matches the end of
+   * lines.
+   *
+   * By default, they match beginning/end of the input.
+   */
+  RustRegexOptions& MultiLine(bool aYes) {
+    return SetFlag(aYes, RURE_FLAG_MULTI);
+  }
+
+  /*
+   * Set the value for the any character (s) flag, where in . matches anything
+   * when s is set and matches anything except for new line when it is not set
+   * (the default).
+   *
+   * N.B. “matches anything” means “any byte” when Unicode is disabled and means
+   * “any valid UTF-8 encoding of any Unicode scalar value” when Unicode is
+   * enabled.
+   */
+  RustRegexOptions& DotMatchesNewLine(bool aYes) {
+    return SetFlag(aYes, RURE_FLAG_DOTNL);
+  }
+
+  /*
+   * Set the value for the greedy swap (U) flag.
+   *
+   * When enabled, a pattern like a* is lazy (tries to find shortest match) and
+   * a*? is greedy (tries to find longest match).
+   *
+   * By default, a* is greedy and a*? is lazy.
+   */
+  RustRegexOptions& SwapGreed(bool aYes) {
+    return SetFlag(aYes, RURE_FLAG_SWAP_GREED);
+  }
+
+  /*
+   * Set the value for the ignore whitespace (x) flag.
+   *
+   * When enabled, whitespace such as new lines and spaces will be ignored
+   * between expressions of the pattern, and # can be used to start a comment
+   * until the next new line.
+   */
+  RustRegexOptions& IgnoreWhitespace(bool aYes) {
+    return SetFlag(aYes, RURE_FLAG_SPACE);
+  }
+
+  /*
+   * Set the value for the Unicode (u) flag.
+   *
+   * Enabled by default. When disabled, character classes such as \w only match
+   * ASCII word characters instead of all Unicode word characters.
+   */
+  RustRegexOptions& Unicode(bool aYes) {
+    return SetFlag(aYes, RURE_FLAG_UNICODE);
+  }
+
+  /*
    * SizeLimit sets the appoximate size limit of the compiled regular
    * expression.
    *
-   * This size limit roughly corresponds to the number of bytes occupied by a
-   * single compiled program. If the program would exceed this number, then
-   * an invalid RustRegex will be constructed.
+   * This size limit roughly corresponds to the number of bytes occupied by
+   * a single compiled program. If the program would exceed this number,
+   * then an invalid RustRegex will be constructed.
    */
-  void SizeLimit(size_t aLimit) {
-    if (!mPtr) {
-      mPtr.reset(rure_options_new());
-    }
-    rure_options_size_limit(mPtr.get(), aLimit);
+  RustRegexOptions& SizeLimit(size_t aLimit) {
+    mSizeLimit = Some(aLimit);
+    return *this;
   }
 
   /*
@@ -257,21 +329,47 @@ class RustRegexOptions {
    * simultaneously, then each thread may use up to the number of bytes
    * specified here.
    */
-  void DFASizeLimit(size_t aLimit) {
-    if (!mPtr) {
-      mPtr.reset(rure_options_new());
-    }
-    rure_options_dfa_size_limit(mPtr.get(), aLimit);
+  RustRegexOptions& DFASizeLimit(size_t aLimit) {
+    mDFASizeLimit = Some(aLimit);
+    return *this;
   }
 
  private:
   friend class RustRegex;
   friend class RustRegexSet;
 
-  struct Deleter {
+  struct OptionsDeleter {
     void operator()(rure_options* ptr) const { rure_options_free(ptr); }
   };
-  UniquePtr<rure_options, Deleter> mPtr;
+
+  UniquePtr<rure_options, OptionsDeleter> GetOptions() const {
+    UniquePtr<rure_options, OptionsDeleter> options;
+    if (mSizeLimit || mDFASizeLimit) {
+      options.reset(rure_options_new());
+      if (mSizeLimit) {
+        rure_options_size_limit(options.get(), *mSizeLimit);
+      }
+      if (mDFASizeLimit) {
+        rure_options_dfa_size_limit(options.get(), *mDFASizeLimit);
+      }
+    }
+    return options;
+  }
+
+  uint32_t GetFlags() const { return mFlags; }
+
+  RustRegexOptions& SetFlag(bool aYes, uint32_t aFlag) {
+    if (aYes) {
+      mFlags |= aFlag;
+    } else {
+      mFlags &= ~aFlag;
+    }
+    return *this;
+  }
+
+  uint32_t mFlags = RURE_DEFAULT_FLAGS;
+  Maybe<size_t> mSizeLimit;
+  Maybe<size_t> mDFASizeLimit;
 };
 
 /*
@@ -299,36 +397,9 @@ class RustRegex final {
   RustRegex() = default;
 
   /*
-   * The flags listed below can be passed to the constructor to set the default
-   * flags. All flags can otherwise be toggled in the expression itself using
-   * standard syntax, e.g., `(?i)` turns case insensitive matching on and
-   * `(?-i)` disables it.
-   */
-  enum Flags {
-    // No flags set.
-    ALL_DISABLED = 0,
-    // The case insensitive (i) flag.
-    FLAG_CASEI = RURE_FLAG_CASEI,
-    // The multi-line matching (m) flag (^ and $ match new line boundaries.)
-    FLAG_MULTI = RURE_FLAG_MULTI,
-    // The any character (s) flag. (. matches new line.)
-    FLAG_DOTNL = RURE_FLAG_DOTNL,
-    // The greedy swap (U) flag. (e.g., + is ungreedy and +? is greedy.)
-    FLAG_SWAP_GREED = RURE_FLAG_SWAP_GREED,
-    // The ignore whitespace (x) flag.
-    FLAG_SPACE = RURE_FLAG_SPACE,
-    // The Unicode (u) flag.
-    FLAG_UNICODE = RURE_FLAG_UNICODE,
-    // The default set of flags enabled when no flags are set.
-    DEFAULT_FLAGS = RURE_DEFAULT_FLAGS,
-  };
-
-  /*
    * Compiles the given pattern into a regular expression. The pattern must be
    * valid UTF-8 and the length corresponds to the number of bytes in the
    * pattern.
-   *
-   * aFlags is a bitfield. Valid values are defined by the `Flags` enum.
    *
    * If an error occurs, the constructed RustRegex will be `!IsValid()`.
    *
@@ -336,7 +407,6 @@ class RustRegex final {
    * simultaneously.
    */
   explicit RustRegex(const std::string_view& aPattern,
-                     Flags aFlags = DEFAULT_FLAGS,
                      const RustRegexOptions& aOptions = {}) {
 #ifdef DEBUG
     rure_error* error = rure_error_new();
@@ -344,8 +414,8 @@ class RustRegex final {
     rure_error* error = nullptr;
 #endif
     mPtr.reset(rure_compile(reinterpret_cast<const uint8_t*>(aPattern.data()),
-                            aPattern.size(), aFlags, aOptions.mPtr.get(),
-                            error));
+                            aPattern.size(), aOptions.GetFlags(),
+                            aOptions.GetOptions().get(), error));
 #ifdef DEBUG
     if (!mPtr) {
       NS_WARNING(nsPrintfCString("RustRegex compile failed: %s",
@@ -536,15 +606,10 @@ class RustRegex final {
  */
 class RustRegexSet final {
  public:
-  using Flags = RustRegex::Flags;
-
   /*
    * Compiles the given range of patterns into a single regular expression which
    * can be matched in a linear-scan. Each pattern in aPatterns must be valid
    * UTF-8, and implicitly coerce to `std::string_view`.
-   *
-   * aFlags is a bitfield. Valid values are defined by the `RustRegex::Flags`
-   * enum.
    *
    * If an error occurs, the constructed RustRegexSet will be `!IsValid()`.
    *
@@ -553,7 +618,6 @@ class RustRegexSet final {
    */
   template <typename Patterns>
   explicit RustRegexSet(Patterns&& aPatterns,
-                        Flags aFlags = RustRegex::DEFAULT_FLAGS,
                         const RustRegexOptions& aOptions = {}) {
 #ifdef DEBUG
     rure_error* error = rure_error_new();
@@ -568,8 +632,8 @@ class RustRegexSet final {
       patternSizes.AppendElement(view.size());
     }
     mPtr.reset(rure_compile_set(patternPtrs.Elements(), patternSizes.Elements(),
-                                patternPtrs.Length(), aFlags,
-                                aOptions.mPtr.get(), error));
+                                patternPtrs.Length(), aOptions.GetFlags(),
+                                aOptions.GetOptions().get(), error));
 #ifdef DEBUG
     if (!mPtr) {
       NS_WARNING(nsPrintfCString("RustRegexSet compile failed: %s",
