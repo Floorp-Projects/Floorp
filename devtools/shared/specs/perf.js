@@ -8,7 +8,7 @@ const {
   Option,
   RetVal,
   generateActorSpec,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 const perfDescription = {
   typeName: "perf",

@@ -2,7 +2,10 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { JSONPacket, BulkPacket } = require("devtools/shared/transport/packets");
+const {
+  JSONPacket,
+  BulkPacket,
+} = require("resource://devtools/shared/transport/packets.js");
 
 function run_test() {
   add_test(test_packet_done);

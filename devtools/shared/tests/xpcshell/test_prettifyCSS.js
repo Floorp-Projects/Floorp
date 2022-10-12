@@ -5,7 +5,9 @@
 
 "use strict";
 
-const { prettifyCSS } = require("devtools/shared/inspector/css-logic");
+const {
+  prettifyCSS,
+} = require("resource://devtools/shared/inspector/css-logic.js");
 
 const EXPAND_TAB = "devtools.editor.expandtab";
 

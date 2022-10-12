@@ -11,8 +11,8 @@ function testBug1091706() {
   const loader = new DevToolsLoader();
   const require = loader.require;
 
-  const indent1 = require("devtools/shared/indentation");
-  const indent2 = require("devtools/shared/indentation");
+  const indent1 = require("resource://devtools/shared/indentation.js");
+  const indent2 = require("resource://devtools/shared/indentation.js");
 
   Assert.ok(indent1 === indent2);
 }
@@ -37,12 +37,12 @@ function testInvalidModule() {
   try {
     // But when using devtools prefix, the URL is going to be correct but the file
     // doesn't exists, leading to "Error opening input stream (invalid filename?)" error
-    require("devtools/foo");
+    require("resource://devtools/foo.js");
     Assert.ok(false, "require should throw");
   } catch (error) {
     Assert.equal(
       error.message,
-      "Module `devtools/foo` is not found at resource://devtools/foo.js"
+      "Module `resource://devtools/foo.js` is not found at resource://devtools/foo.js"
     );
     Assert.ok(
       error.stack.includes("testInvalidModule"),

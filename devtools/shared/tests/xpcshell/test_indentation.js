@@ -11,7 +11,7 @@ const {
   getIndentationFromPrefs,
   getIndentationFromIteration,
   getIndentationFromString,
-} = require("devtools/shared/indentation");
+} = require("resource://devtools/shared/indentation.js");
 
 function test_indent_from_prefs() {
   Services.prefs.setBoolPref(DETECT_INDENT, true);

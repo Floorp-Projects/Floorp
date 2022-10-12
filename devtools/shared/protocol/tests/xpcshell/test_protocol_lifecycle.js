@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { Actor } = require("devtools/shared/protocol/Actor");
-const { Front } = require("devtools/shared/protocol/Front");
+const { Actor } = require("resource://devtools/shared/protocol/Actor.js");
+const { Front } = require("resource://devtools/shared/protocol/Front.js");
 
 add_task(async function() {
   // Front constructor expect to be provided a client object

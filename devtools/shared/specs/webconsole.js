@@ -10,7 +10,7 @@ const {
   RetVal,
   Option,
   Arg,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 types.addDictType("console.startlisteners", {
   startedListeners: "array:string",

@@ -9,7 +9,7 @@ const {
   RetVal,
   generateActorSpec,
   types,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 types.addDictType("available-breakpoint-group", {
   name: "string",

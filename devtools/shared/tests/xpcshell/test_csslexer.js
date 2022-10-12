@@ -5,7 +5,7 @@
 
 "use strict";
 
-const jsLexer = require("devtools/shared/css/lexer");
+const jsLexer = require("resource://devtools/shared/css/lexer.js");
 
 function test_lexer(cssText, tokenTypes) {
   const lexer = jsLexer.getCSSLexer(cssText);

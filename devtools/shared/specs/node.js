@@ -8,7 +8,7 @@ const {
   RetVal,
   generateActorSpec,
   types,
-} = require("devtools/shared/protocol.js");
+} = require("resource://devtools/shared/protocol.js");
 
 types.addDictType("imageData", {
   // The image data

@@ -18,7 +18,9 @@ add_task(async function() {
   await testWorker("JSM", () =>
     ChromeUtils.import("resource://devtools/shared/worker/worker.js")
   );
-  await testWorker("CommonJS", () => require("devtools/shared/worker/worker"));
+  await testWorker("CommonJS", () =>
+    require("resource://devtools/shared/worker/worker.js")
+  );
   await testTransfer();
 });
 

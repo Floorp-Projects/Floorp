@@ -5,7 +5,7 @@
 
 Object.defineProperty(this, "NetworkHelper", {
   get() {
-    return require("devtools/shared/webconsole/network-helper");
+    return require("resource://devtools/shared/webconsole/network-helper.js");
   },
   configurable: true,
   writeable: false,

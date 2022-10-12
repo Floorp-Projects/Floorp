@@ -3,7 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Arg, generateActorSpec } = require("devtools/shared/protocol");
+const {
+  Arg,
+  generateActorSpec,
+} = require("resource://devtools/shared/protocol.js");
 
 const heapSnapshotFileSpec = generateActorSpec({
   typeName: "heapSnapshotFile",

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const protocol = require("devtools/shared/protocol");
+const protocol = require("resource://devtools/shared/protocol.js");
 const { Arg, generateActorSpec, RetVal, types } = protocol;
 
 types.addActorType("accessible");

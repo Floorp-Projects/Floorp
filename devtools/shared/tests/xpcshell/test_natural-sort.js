@@ -8,7 +8,7 @@ const sessionString = l10n.formatValueSync("storage-expires-session");
 const {
   naturalSortCaseSensitive,
   naturalSortCaseInsensitive,
-} = require("devtools/shared/natural-sort");
+} = require("resource://devtools/shared/natural-sort.js");
 
 function run_test() {
   test("different values types", function() {

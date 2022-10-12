@@ -79,7 +79,7 @@ exports.allocationTracker = function({
     acceptGlobal = () => true;
   } else if (watchDevToolsGlobals) {
     // Only accept globals related to DevTools
-    const builtinGlobal = require("devtools/shared/loader/builtin-modules");
+    const builtinGlobal = require("resource://devtools/shared/loader/builtin-modules.js");
     acceptGlobal = g => {
       // self-hosting-global crashes when trying to call unsafeDereference
       if (g.class == "self-hosting-global") {

@@ -8,11 +8,11 @@
 
 /* General utilities used throughout devtools. */
 
-var flags = require("devtools/shared/flags");
+var flags = require("resource://devtools/shared/flags.js");
 var {
   getStack,
   callFunctionWithAsyncStack,
-} = require("devtools/shared/platform/stack");
+} = require("resource://devtools/shared/platform/stack.js");
 
 const lazy = {};
 ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
@@ -34,7 +34,7 @@ ChromeUtils.defineModuleGetter(
 var DevToolsUtils = exports;
 
 // Re-export the thread-safe utils.
-const ThreadSafeDevToolsUtils = require("devtools/shared/ThreadSafeDevToolsUtils.js");
+const ThreadSafeDevToolsUtils = require("resource://devtools/shared/ThreadSafeDevToolsUtils.js");
 for (const key of Object.keys(ThreadSafeDevToolsUtils)) {
   exports[key] = ThreadSafeDevToolsUtils[key];
 }
@@ -473,7 +473,7 @@ DevToolsUtils.defineLazyGetter(this, "NetUtil", () => {
 });
 
 DevToolsUtils.defineLazyGetter(this, "NetworkHelper", () => {
-  return require("devtools/shared/webconsole/network-helper");
+  return require("resource://devtools/shared/webconsole/network-helper.js");
 });
 
 /**

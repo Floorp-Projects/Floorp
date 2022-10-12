@@ -8,10 +8,10 @@ const {
   RetVal,
   generateActorSpec,
   types,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 // Load the "mediarule" type used in this file.
-require("devtools/shared/specs/media-rule");
+require("resource://devtools/shared/specs/media-rule.js");
 
 types.addActorType("stylesheet");
 

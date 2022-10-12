@@ -4,8 +4,10 @@
 
 "use strict";
 
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { DevToolsWorker } = require("devtools/shared/worker/worker");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
+const {
+  DevToolsWorker,
+} = require("resource://devtools/shared/worker/worker.js");
 
 const WORKER_URL =
   "resource://devtools/shared/heapsnapshot/HeapAnalysesWorker.js";

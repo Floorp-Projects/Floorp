@@ -9,7 +9,7 @@ const {
   RetVal,
   generateActorSpec,
   types,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 /**
  * Sent with the eval and reload requests, used to inform the

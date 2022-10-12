@@ -2,10 +2,10 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { RootActor } = require("devtools/server/actors/root");
+const { RootActor } = require("resource://devtools/server/actors/root.js");
 const {
   ActorRegistry,
-} = require("devtools/server/actors/utils/actor-registry");
+} = require("resource://devtools/server/actors/utils/actor-registry.js");
 
 exports.createRootActor = function createRootActor(connection) {
   const root = new RootActor(connection, {

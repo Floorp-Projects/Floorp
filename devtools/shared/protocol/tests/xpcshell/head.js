@@ -6,8 +6,12 @@
 const { require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
-const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DevToolsClient } = require("devtools/client/devtools-client");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+const {
+  DevToolsClient,
+} = require("resource://devtools/client/devtools-client.js");
 
 function dumpn(msg) {
   dump("DBG-TEST: " + msg + "\n");

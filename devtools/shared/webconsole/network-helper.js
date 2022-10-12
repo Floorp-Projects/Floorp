@@ -68,7 +68,7 @@ ChromeUtils.defineModuleGetter(
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 
 loader.lazyGetter(this, "certDecoder", () => {
   const { asn1js } = ChromeUtils.import(

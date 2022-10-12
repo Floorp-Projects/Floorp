@@ -15,7 +15,7 @@ let db;
 // Allow this require to fail in case it's been deleted in the process of running
 // `mach devtools-css-db` to regenerate the database.
 try {
-  db = require("devtools/shared/css/generated/properties-db");
+  db = require("resource://devtools/shared/css/generated/properties-db.js");
 } catch (error) {
   console.error(
     `If this error is being displayed and "mach devtools-css-db" is not ` +

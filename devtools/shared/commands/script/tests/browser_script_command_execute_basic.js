@@ -7,8 +7,10 @@
 const {
   MAX_AUTOCOMPLETE_ATTEMPTS,
   MAX_AUTOCOMPLETIONS,
-} = require("devtools/shared/webconsole/js-property-provider");
-const { DevToolsServer } = require("devtools/server/devtools-server");
+} = require("resource://devtools/shared/webconsole/js-property-provider.js");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
 
 add_task(async () => {
   const tab = await addTab(`data:text/html;charset=utf-8,

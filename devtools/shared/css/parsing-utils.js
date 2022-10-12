@@ -11,7 +11,7 @@
 
 "use strict";
 
-const { getCSSLexer } = require("devtools/shared/css/lexer");
+const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
 
 loader.lazyRequireGetter(
   this,

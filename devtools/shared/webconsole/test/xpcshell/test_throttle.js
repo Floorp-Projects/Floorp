@@ -7,7 +7,7 @@
 
 const {
   NetworkThrottleManager,
-} = require("devtools/shared/webconsole/throttle");
+} = require("resource://devtools/shared/webconsole/throttle.js");
 const nsIScriptableInputStream = Ci.nsIScriptableInputStream;
 
 function TestStreamListener() {

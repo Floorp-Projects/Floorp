@@ -4,7 +4,11 @@
 
 "use strict";
 
-const { generateActorSpec, RetVal, Arg } = require("devtools/shared/protocol");
+const {
+  generateActorSpec,
+  RetVal,
+  Arg,
+} = require("resource://devtools/shared/protocol.js");
 
 const networkContentSpec = generateActorSpec({
   typeName: "networkContent",

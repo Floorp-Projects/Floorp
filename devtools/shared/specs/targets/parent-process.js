@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { generateActorSpec } = require("devtools/shared/protocol");
-const { extend } = require("devtools/shared/extend");
+const { generateActorSpec } = require("resource://devtools/shared/protocol.js");
+const { extend } = require("resource://devtools/shared/extend.js");
 const {
   windowGlobalTargetSpecPrototype,
-} = require("devtools/shared/specs/targets/window-global");
+} = require("resource://devtools/shared/specs/targets/window-global.js");
 
 const parentProcessTargetSpecPrototype = extend(
   windowGlobalTargetSpecPrototype,
