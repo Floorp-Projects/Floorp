@@ -32,22 +32,20 @@ namespace extensions {
 
 using dom::MatchPatternOptions;
 
-// A sorted, binary-search-backed set of atoms, optimized for frequent lookups
-// and infrequent updates.
-class AtomSet final : public RefCounted<AtomSet> {
+// A sorted, immutable, binary-search-backed set of atoms, optimized for
+// frequent lookups.
+class AtomSet final {
+ public:
   using ArrayType = AutoTArray<RefPtr<nsAtom>, 1>;
 
- public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(AtomSet)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AtomSet)
 
   explicit AtomSet(const nsTArray<nsString>& aElems);
-
-  explicit AtomSet(const char** aElems);
 
   MOZ_IMPLICIT AtomSet(std::initializer_list<nsAtom*> aIL);
 
   bool Contains(const nsAString& elem) const {
-    RefPtr<nsAtom> atom = NS_AtomizeMainThread(elem);
+    RefPtr<nsAtom> atom = NS_Atomize(elem);
     return Contains(atom);
   }
 
@@ -61,45 +59,6 @@ class AtomSet final : public RefCounted<AtomSet> {
   }
 
   bool Intersects(const AtomSet& aOther) const;
-
-  void Add(nsAtom* aElem);
-  void Remove(nsAtom* aElem);
-
-  void Add(const nsAString& aElem) {
-    RefPtr<nsAtom> atom = NS_AtomizeMainThread(aElem);
-    return Add(atom);
-  }
-
-  void Remove(const nsAString& aElem) {
-    RefPtr<nsAtom> atom = NS_AtomizeMainThread(aElem);
-    return Remove(atom);
-  }
-
-  // Returns a cached, statically-allocated matcher for the given set of
-  // literal strings.
-  template <const char** schemes>
-  [[nodiscard]] static nsresult Get(RefPtr<AtomSet>& aMatcherOut) {
-    static RefPtr<AtomSet> sMatcher;
-
-    if (MOZ_UNLIKELY(!sMatcher)) {
-      // If this static method is called late during the shutdown,
-      // ClearOnShutdown would be destroying the instance before the
-      // RefPtr gets to the caller, let's make sure that this method
-      // signature does make it more clear by returning an explicit
-      // not discardable nsresult.
-      if (PastShutdownPhase(ShutdownPhase::XPCOMShutdownFinal)) {
-        aMatcherOut = nullptr;
-        return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-      }
-
-      sMatcher = new AtomSet(schemes);
-      ClearOnShutdown(&sMatcher);
-    }
-
-    MOZ_ASSERT(sMatcher);
-    aMatcherOut = do_AddRef(sMatcher);
-    return NS_OK;
-  }
 
   void Get(nsTArray<nsString>& aResult) const {
     aResult.SetCapacity(mElems.Length());
@@ -118,9 +77,9 @@ class AtomSet final : public RefCounted<AtomSet> {
   }
 
  private:
-  ArrayType mElems;
+  ~AtomSet() = default;
 
-  void SortAndUniquify();
+  const ArrayType mElems;
 };
 
 // A helper class to lazily retrieve, transcode, and atomize certain URI
