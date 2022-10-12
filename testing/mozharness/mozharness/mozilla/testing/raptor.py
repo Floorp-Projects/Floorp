@@ -74,9 +74,9 @@ RaptorErrorList = (
 # the users locally cached ffmpeg binary from from when the user
 # ran `./mach browsertime --setup`
 FFMPEG_LOCAL_CACHE = {
-    "mac": "ffmpeg-4.1.1-macos64-static",
-    "linux": "ffmpeg-4.1.4-i686-static",
-    "win": "ffmpeg-4.1.1-win64-static",
+    "mac": "ffmpeg-macos",
+    "linux": "ffmpeg-4.4.1-i686-static",
+    "win": "ffmpeg-4.4.1-full_build",
 }
 
 
@@ -1164,7 +1164,6 @@ class Raptor(
             path_to_ffmpeg = os.path.join(
                 btime_cache,
                 FFMPEG_LOCAL_CACHE["mac"],
-                "bin",
             )
         elif "linux" in platform:
             path_to_ffmpeg = os.path.join(
