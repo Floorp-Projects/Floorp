@@ -34,11 +34,34 @@ const PRINCIPAL_UNSECURE = ssm.createContentPrincipalFromOrigin(
 const PRINCIPAL_IP = ssm.createContentPrincipalFromOrigin(
   "https://18.154.122.194"
 );
+const PRINCIPAL_PRIVATEBROWSING = ssm.createContentPrincipalFromOrigin(
+  "https://example.withprivatebrowsing.com",
+  { privateBrowsing: 1 }
+);
+const PRINCIPAL_USERCONTEXT = ssm.createContentPrincipalFromOrigin(
+  "https://example.withusercontext.com",
+  { userContextId: 2 }
+);
 
 const GATED_SITE_PERM1 = "test/gatedSitePerm";
 const GATED_SITE_PERM2 = "test/anotherGatedSitePerm";
 addGatedPermissionTypesForXpcShellTests([GATED_SITE_PERM1, GATED_SITE_PERM2]);
 const NON_GATED_SITE_PERM = "test/nonGatedPerm";
+
+// Observers to bypass panels and continue install.
+const expectAndHandleInstallPrompts = () => {
+  TestUtils.topicObserved("addon-install-blocked").then(([subject]) => {
+    let installInfo = subject.wrappedJSObject;
+    info("==== test got addon-install-blocked, calling `install`");
+    installInfo.install();
+  });
+  TestUtils.topicObserved("webextension-permission-prompt").then(
+    ([subject]) => {
+      info("==== test webextension-permission-prompt, calling `resolve`");
+      subject.wrappedJSObject.info.resolve();
+    }
+  );
+};
 
 add_task(
   {
@@ -368,18 +391,7 @@ add_task(
     info(
       "Call installSitePermsAddonFromWebpage for authorized principal and gated permission"
     );
-    // Observers to bypass panels and continue install.
-    TestUtils.topicObserved("addon-install-blocked").then(([subject]) => {
-      let installInfo = subject.wrappedJSObject;
-      info("==== test got addon-install-blocked, calling `install`");
-      installInfo.install();
-    });
-    TestUtils.topicObserved("webextension-permission-prompt").then(
-      ([subject]) => {
-        info("==== test webextension-permission-prompt, calling `resolve`");
-        subject.wrappedJSObject.info.resolve();
-      }
-    );
+    expectAndHandleInstallPrompts();
     await AddonManager.installSitePermsAddonFromWebpage(
       null,
       PRINCIPAL_COM,
@@ -395,6 +407,88 @@ add_task(
       PermissionTestUtils.testExactPermission(PRINCIPAL_COM, GATED_SITE_PERM1),
       true,
       "...and set the permission"
+    );
+
+    info(
+      "Call installSitePermsAddonFromWebpage for private browsing principal and gated permission"
+    );
+    expectAndHandleInstallPrompts();
+    await AddonManager.installSitePermsAddonFromWebpage(
+      null,
+      PRINCIPAL_PRIVATEBROWSING,
+      GATED_SITE_PERM1
+    );
+    Assert.equal(
+      PermissionTestUtils.testExactPermission(
+        PRINCIPAL_PRIVATEBROWSING,
+        GATED_SITE_PERM1
+      ),
+      true,
+      "...and set the permission"
+    );
+    addons = await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE]);
+    Assert.equal(
+      addons.length,
+      2,
+      "installSitePermsAddonFromWebpage should add the addon..."
+    );
+    const [addonWithPrivateBrowsing] = addons.filter(
+      addon => addon.siteOrigin === PRINCIPAL_PRIVATEBROWSING.siteOriginNoSuffix
+    );
+    Assert.equal(
+      addonWithPrivateBrowsing?.siteOrigin,
+      PRINCIPAL_PRIVATEBROWSING.siteOriginNoSuffix,
+      "Got an addon for the expected siteOriginNoSuffix value"
+    );
+    await addonWithPrivateBrowsing.uninstall();
+    Assert.equal(
+      PermissionTestUtils.testExactPermission(
+        PRINCIPAL_PRIVATEBROWSING,
+        GATED_SITE_PERM1
+      ),
+      false,
+      "Uninstalling the addon should clear the permission for the private browsing principal"
+    );
+
+    info(
+      "Call installSitePermsAddonFromWebpage for user context isolated principal and gated permission"
+    );
+    expectAndHandleInstallPrompts();
+    await AddonManager.installSitePermsAddonFromWebpage(
+      null,
+      PRINCIPAL_USERCONTEXT,
+      GATED_SITE_PERM1
+    );
+    Assert.equal(
+      PermissionTestUtils.testExactPermission(
+        PRINCIPAL_USERCONTEXT,
+        GATED_SITE_PERM1
+      ),
+      true,
+      "...and set the permission"
+    );
+    addons = await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE]);
+    Assert.equal(
+      addons.length,
+      2,
+      "installSitePermsAddonFromWebpage should add the addon..."
+    );
+    const [addonWithUserContextId] = addons.filter(
+      addon => addon.siteOrigin === PRINCIPAL_USERCONTEXT.siteOriginNoSuffix
+    );
+    Assert.equal(
+      addonWithUserContextId?.siteOrigin,
+      PRINCIPAL_USERCONTEXT.siteOriginNoSuffix,
+      "Got an addon for the expected siteOriginNoSuffix value"
+    );
+    await addonWithUserContextId.uninstall();
+    Assert.equal(
+      PermissionTestUtils.testExactPermission(
+        PRINCIPAL_USERCONTEXT,
+        GATED_SITE_PERM1
+      ),
+      false,
+      "Uninstalling the addon should clear the permission for the user context isolated principal"
     );
   }
 );
