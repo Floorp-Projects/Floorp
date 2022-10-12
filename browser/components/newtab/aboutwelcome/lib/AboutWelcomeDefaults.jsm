@@ -318,6 +318,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
           action: {
             data: {
               entrypoint: "activity-stream-firstrun",
+              where: "tab",
             },
             type: "SHOW_FIREFOX_ACCOUNTS",
             addFlowParams: true,
