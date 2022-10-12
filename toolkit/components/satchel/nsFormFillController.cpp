@@ -200,11 +200,10 @@ void nsFormFillController::NativeAnonymousChildListChange(nsIContent* aContent,
 void nsFormFillController::ParentChainChanged(nsIContent* aContent) {}
 
 MOZ_CAN_RUN_SCRIPT_BOUNDARY
-void nsFormFillController::NodeWillBeDestroyed(nsINode* aNode) {
+void nsFormFillController::NodeWillBeDestroyed(const nsINode* aNode) {
   MOZ_LOG(sLogger, LogLevel::Verbose, ("NodeWillBeDestroyed: %p", aNode));
   mPwmgrInputs.Remove(aNode);
   mAutofillInputs.Remove(aNode);
-  MaybeRemoveMutationObserver(aNode);
   if (aNode == mListNode) {
     mListNode = nullptr;
     RevalidateDataList();
