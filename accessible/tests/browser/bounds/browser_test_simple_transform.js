@@ -9,7 +9,7 @@ addAccessibleTask(
   `<p id="translate">hello world</p>`,
   async function(browser, iframeDocAcc, contentDocAcc) {
     ok(iframeDocAcc, "IFRAME document accessible is present");
-    await testBoundsInContent(iframeDocAcc, "translate", browser);
+    await testBoundsWithContent(iframeDocAcc, "translate", browser);
 
     await invokeContentTask(browser, [], () => {
       let p = content.document.getElementById("translate");
@@ -17,7 +17,7 @@ addAccessibleTask(
     });
 
     await waitForContentPaint(browser);
-    await testBoundsInContent(iframeDocAcc, "translate", browser);
+    await testBoundsWithContent(iframeDocAcc, "translate", browser);
   },
   { topLevel: true, iframe: true, remoteIframe: true }
 );
@@ -27,7 +27,7 @@ addAccessibleTask(
   `<p id="rotate">hello world</p>`,
   async function(browser, iframeDocAcc, contentDocAcc) {
     ok(iframeDocAcc, "IFRAME document accessible is present");
-    await testBoundsInContent(iframeDocAcc, "rotate", browser);
+    await testBoundsWithContent(iframeDocAcc, "rotate", browser);
 
     await invokeContentTask(browser, [], () => {
       let p = content.document.getElementById("rotate");
@@ -35,7 +35,7 @@ addAccessibleTask(
     });
 
     await waitForContentPaint(browser);
-    await testBoundsInContent(iframeDocAcc, "rotate", browser);
+    await testBoundsWithContent(iframeDocAcc, "rotate", browser);
   },
   { topLevel: true, iframe: true, remoteIframe: true }
 );
@@ -45,7 +45,7 @@ addAccessibleTask(
   `<p id="scale">hello world</p>`,
   async function(browser, iframeDocAcc, contentDocAcc) {
     ok(iframeDocAcc, "IFRAME document accessible is present");
-    await testBoundsInContent(iframeDocAcc, "scale", browser);
+    await testBoundsWithContent(iframeDocAcc, "scale", browser);
 
     await invokeContentTask(browser, [], () => {
       let p = content.document.getElementById("scale");
@@ -53,7 +53,7 @@ addAccessibleTask(
     });
 
     await waitForContentPaint(browser);
-    await testBoundsInContent(iframeDocAcc, "scale", browser);
+    await testBoundsWithContent(iframeDocAcc, "scale", browser);
   },
   { topLevel: true, iframe: true, remoteIframe: true }
 );
