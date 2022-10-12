@@ -288,7 +288,7 @@ class nsIMutationObserver
    *       the observer.  The observer is responsible for making sure it
    *       stays alive for the duration of the call as needed.
    */
-  virtual void NodeWillBeDestroyed(const nsINode* aNode) = 0;
+  virtual void NodeWillBeDestroyed(nsINode* aNode) = 0;
 
   /**
    * Notification that the node's parent chain has changed. This
@@ -345,7 +345,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMutationObserver, NS_IMUTATION_OBSERVER_IID)
                               nsIContent* aPreviousSibling) override;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED \
-  virtual void NodeWillBeDestroyed(const nsINode* aNode) override;
+  virtual void NodeWillBeDestroyed(nsINode* aNode) override;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED \
   virtual void ParentChainChanged(nsIContent* aContent) override;
@@ -363,7 +363,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMutationObserver, NS_IMUTATION_OBSERVER_IID)
   NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
 
 #define NS_IMPL_NSIMUTATIONOBSERVER_CORE_STUB(_class) \
-  void _class::NodeWillBeDestroyed(const nsINode* aNode) {}
+  void _class::NodeWillBeDestroyed(nsINode* aNode) {}
 
 #define NS_IMPL_NSIMUTATIONOBSERVER_CONTENT(_class)                          \
   void _class::CharacterDataWillChange(                                      \

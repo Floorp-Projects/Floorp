@@ -177,7 +177,7 @@ void nsXMLPrettyPrinter::ContentRemoved(nsIContent* aChild,
   MaybeUnhook(aChild->GetParent());
 }
 
-void nsXMLPrettyPrinter::NodeWillBeDestroyed(const nsINode* aNode) {
+void nsXMLPrettyPrinter::NodeWillBeDestroyed(nsINode* aNode) {
   mDocument = nullptr;
   NS_RELEASE_THIS();
 }

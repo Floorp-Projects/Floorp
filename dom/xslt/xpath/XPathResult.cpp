@@ -96,7 +96,7 @@ nsINode* XPathResult::IterateNext(ErrorResult& aRv) {
   return mResultNodes.SafeElementAt(mCurrentPos++);
 }
 
-void XPathResult::NodeWillBeDestroyed(const nsINode* aNode) {
+void XPathResult::NodeWillBeDestroyed(nsINode* aNode) {
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   // Set to null to avoid unregistring unnecessarily
   mDocument = nullptr;
