@@ -103,18 +103,21 @@ class FileOutputStream : public FileQuotaStreamWithWrite<nsFileOutputStream> {
   virtual ~FileOutputStream() { Close(); }
 };
 
-class FileStream : public FileQuotaStreamWithWrite<nsFileStream> {
+class FileRandomAccessStream
+    : public FileQuotaStreamWithWrite<nsFileRandomAccessStream> {
  public:
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(FileStream,
-                                       FileQuotaStreamWithWrite<nsFileStream>)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(
+      FileRandomAccessStream,
+      FileQuotaStreamWithWrite<nsFileRandomAccessStream>)
 
-  FileStream(PersistenceType aPersistenceType,
-             const OriginMetadata& aOriginMetadata, Client::Type aClientType)
-      : FileQuotaStreamWithWrite<nsFileStream>(aPersistenceType,
-                                               aOriginMetadata, aClientType) {}
+  FileRandomAccessStream(PersistenceType aPersistenceType,
+                         const OriginMetadata& aOriginMetadata,
+                         Client::Type aClientType)
+      : FileQuotaStreamWithWrite<nsFileRandomAccessStream>(
+            aPersistenceType, aOriginMetadata, aClientType) {}
 
  private:
-  virtual ~FileStream() { Close(); }
+  virtual ~FileRandomAccessStream() { Close(); }
 };
 
 Result<NotNull<RefPtr<FileInputStream>>, nsresult> CreateFileInputStream(
@@ -127,10 +130,12 @@ Result<NotNull<RefPtr<FileOutputStream>>, nsresult> CreateFileOutputStream(
     Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags = -1,
     int32_t aPerm = -1, int32_t aBehaviorFlags = 0);
 
-Result<NotNull<RefPtr<FileStream>>, nsresult> CreateFileStream(
-    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
-    Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags = -1,
-    int32_t aPerm = -1, int32_t aBehaviorFlags = 0);
+Result<NotNull<RefPtr<FileRandomAccessStream>>, nsresult>
+CreateFileRandomAccessStream(PersistenceType aPersistenceType,
+                             const OriginMetadata& aOriginMetadata,
+                             Client::Type aClientType, nsIFile* aFile,
+                             int32_t aIOFlags = -1, int32_t aPerm = -1,
+                             int32_t aBehaviorFlags = 0);
 
 }  // namespace mozilla::dom::quota
 

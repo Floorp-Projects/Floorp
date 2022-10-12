@@ -27,7 +27,7 @@
 #include "nsTArray.h"
 #include "prio.h"
 
-class nsFileStream;
+class nsFileRandomAccessStream;
 
 namespace mozilla {
 
@@ -861,7 +861,7 @@ class IOUtils::JsBuffer final {
 
 class SyncReadFile : public nsISupports, public nsWrapperCache {
  public:
-  SyncReadFile(nsISupports* aParent, RefPtr<nsFileStream>&& aStream,
+  SyncReadFile(nsISupports* aParent, RefPtr<nsFileRandomAccessStream>&& aStream,
                int64_t aSize);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -880,7 +880,7 @@ class SyncReadFile : public nsISupports, public nsWrapperCache {
   virtual ~SyncReadFile();
 
   nsCOMPtr<nsISupports> mParent;
-  RefPtr<nsFileStream> mStream;
+  RefPtr<nsFileRandomAccessStream> mStream;
   int64_t mSize = 0;
 };
 

@@ -14938,12 +14938,12 @@ already_AddRefed<nsISupports> MutableFile::CreateStream(bool aReadOnly) {
         nullptr);
     result = NS_ISUPPORTS_CAST(nsIFileInputStream*, stream.get());
   } else {
-    QM_TRY_INSPECT(
-        const auto& stream,
-        CreateFileStream(persistenceType, originMetadata, Client::IDB, mFile,
-                         -1, -1, nsIFileStream::DEFER_OPEN),
-        nullptr);
-    result = NS_ISUPPORTS_CAST(nsIFileStream*, stream.get());
+    QM_TRY_INSPECT(const auto& stream,
+                   CreateFileRandomAccessStream(
+                       persistenceType, originMetadata, Client::IDB, mFile, -1,
+                       -1, nsIFileRandomAccessStream::DEFER_OPEN),
+                   nullptr);
+    result = NS_ISUPPORTS_CAST(nsIFileRandomAccessStream*, stream.get());
   }
 
   return result.forget();

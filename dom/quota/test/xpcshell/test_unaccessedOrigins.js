@@ -24,25 +24,27 @@ async function testSteps() {
     let metadataFile = originDir.clone();
     metadataFile.append(".metadata-v2");
 
-    let fileStream = Cc["@mozilla.org/network/file-stream;1"].createInstance(
-      Ci.nsIFileStream
-    );
-    fileStream.init(metadataFile, -1, -1, 0);
+    let fileRandomAccessStream = Cc[
+      "@mozilla.org/network/file-random-access-stream;1"
+    ].createInstance(Ci.nsIFileRandomAccessStream);
+    fileRandomAccessStream.init(metadataFile, -1, -1, 0);
 
     let binaryInputStream = Cc[
       "@mozilla.org/binaryinputstream;1"
     ].createInstance(Ci.nsIBinaryInputStream);
-    binaryInputStream.setInputStream(fileStream);
+    binaryInputStream.setInputStream(fileRandomAccessStream);
 
     let lastAccessTime = binaryInputStream.read64();
 
-    let seekableStream = fileStream.QueryInterface(Ci.nsISeekableStream);
+    let seekableStream = fileRandomAccessStream.QueryInterface(
+      Ci.nsISeekableStream
+    );
     seekableStream.seek(Ci.nsISeekableStream.NS_SEEK_SET, 0);
 
     binaryOutputStream = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(
       Ci.nsIBinaryOutputStream
     );
-    binaryOutputStream.setOutputStream(fileStream);
+    binaryOutputStream.setOutputStream(fileRandomAccessStream);
 
     binaryOutputStream.write64(lastAccessTime + deltaSec * PR_USEC_PER_SEC);
 

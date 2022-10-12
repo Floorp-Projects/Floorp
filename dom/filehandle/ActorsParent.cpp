@@ -1166,8 +1166,8 @@ already_AddRefed<nsISupports> BackgroundMutableFileParentBase::CreateStream(
   }
 
   nsCOMPtr<nsIRandomAccessStream> stream;
-  rv = NS_NewLocalFileStream(getter_AddRefs(stream), mFile, -1, -1,
-                             nsIFileStream::DEFER_OPEN);
+  rv = NS_NewLocalFileRandomAccessStream(getter_AddRefs(stream), mFile, -1, -1,
+                                         nsIFileRandomAccessStream::DEFER_OPEN);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
