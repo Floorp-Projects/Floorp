@@ -5,14 +5,14 @@
 
 #include "TextServicesDocument.h"
 
-#include "FilteredContentIterator.h"  // for FilteredContentIterator
-#include "mozilla/Assertions.h"       // for MOZ_ASSERT, etc
-#include "mozilla/EditorBase.h"       // for EditorBase
-#include "mozilla/EditorUtils.h"      // for AutoTransactionBatchExternal
-#include "mozilla/HTMLEditHelpers.h"  // for JoinNodesDirection
-#include "mozilla/HTMLEditUtils.h"    // for HTMLEditUtils
-#include "mozilla/IntegerRange.h"     // for IntegerRange
-#include "mozilla/mozalloc.h"         // for operator new, etc
+#include "FilteredContentIterator.h"         // for FilteredContentIterator
+#include "mozilla/Assertions.h"              // for MOZ_ASSERT, etc
+#include "mozilla/EditorBase.h"              // for EditorBase
+#include "mozilla/EditorUtils.h"             // for AutoTransactionBatchExternal
+#include "mozilla/HTMLEditUtils.h"           // for HTMLEditUtils
+#include "mozilla/IntegerRange.h"            // for IntegerRange
+#include "mozilla/JoinSplitNodeDirection.h"  // for JoinNodesDirection
+#include "mozilla/mozalloc.h"                // for operator new, etc
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/UniquePtr.h"          // for UniquePtr
 #include "mozilla/dom/AbstractRange.h"  // for AbstractRange

@@ -7,6 +7,7 @@
 
 #include "EditorDOMPoint.h"
 #include "EditorUtils.h"
+#include "HTMLEditHelpers.h"  // for MoveNodeResult, SplitNodeResult
 #include "HTMLEditor.h"
 #include "HTMLEditUtils.h"
 #include "SelectionState.h"

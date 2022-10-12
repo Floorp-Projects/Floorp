@@ -6,10 +6,11 @@
 #include "SplitNodeTransaction.h"
 
 #include "EditorDOMPoint.h"   // for EditorRawDOMPoint
-#include "HTMLEditHelpers.h"  // for SplitNodeResult, SplitNodeDirection, etc
+#include "HTMLEditHelpers.h"  // for SplitNodeResult
 #include "HTMLEditor.h"       // for HTMLEditor
 #include "HTMLEditUtils.h"
-#include "SelectionState.h"  // for AutoTrackDOMPoint and RangeUpdater
+#include "JoinSplitNodeDirection.h"  // for SplitNodeDirection
+#include "SelectionState.h"          // for AutoTrackDOMPoint and RangeUpdater
 
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"

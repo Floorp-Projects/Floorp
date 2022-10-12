@@ -20,6 +20,7 @@
 #include "mozilla/dom/Element.h"  // for Element, nsINode
 #include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/StaticRange.h"
 #include "mozilla/dom/Text.h"  // for Text
 
 #include "nsAString.h"  // for nsAString::IsEmpty

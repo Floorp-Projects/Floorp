@@ -5,10 +5,11 @@
 
 #include "AutoRangeArray.h"
 
-#include "EditorDOMPoint.h"  // for EditorDOMPoint, EditorDOMRange, etc
-#include "EditorForwards.h"  // for CollectChildrenOptions
-#include "HTMLEditUtils.h"   // for HTMLEditUtils
-#include "WSRunObject.h"     // for WSRunScanner
+#include "EditorDOMPoint.h"   // for EditorDOMPoint, EditorDOMRange, etc
+#include "EditorForwards.h"   // for CollectChildrenOptions
+#include "HTMLEditUtils.h"    // for HTMLEditUtils
+#include "HTMLEditHelpers.h"  // for SplitNodeResult
+#include "WSRunObject.h"      // for WSRunScanner
 
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
 #include "mozilla/dom/Document.h"       // for dom::Document

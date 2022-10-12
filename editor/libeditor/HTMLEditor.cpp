@@ -17,6 +17,7 @@
 #include "HTMLEditUtils.h"
 #include "InsertNodeTransaction.h"
 #include "JoinNodesTransaction.h"
+#include "JoinSplitNodeDirection.h"
 #include "MoveNodeTransaction.h"
 #include "PendingStyles.h"
 #include "ReplaceTextTransaction.h"
