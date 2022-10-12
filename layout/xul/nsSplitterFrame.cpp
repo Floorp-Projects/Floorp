@@ -50,6 +50,7 @@ class nsSplitterInfo {
   nscoord min;
   nscoord max;
   nscoord current;
+  nscoord pref;
   nscoord changed;
   nsCOMPtr<nsIContent> childElem;
 };
@@ -634,35 +635,37 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
     }
 
     nsSize minSize;
+    nsSize prefSize;
     nsSize maxSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+    nsSize curSize = childBox->GetSize();
     if (childBox->IsXULBoxFrame()) {
-      nsSize prefSize = childBox->GetXULPrefSize(state);
       minSize = childBox->GetXULMinSize(state);
-      maxSize = nsIFrame::XULBoundsCheckMinMax(minSize,
-                                               childBox->GetXULMaxSize(state));
-      prefSize = nsIFrame::XULBoundsCheck(minSize, prefSize, maxSize);
-
-      nsSplitterFrame::AddXULMargin(childBox, minSize);
-      nsSplitterFrame::AddXULMargin(childBox, prefSize);
-      nsSplitterFrame::AddXULMargin(childBox, maxSize);
+      maxSize = childBox->GetXULMaxSize(state);
+      prefSize = childBox->GetXULPrefSize(state);
     } else {
       const auto& pos = *childBox->StylePosition();
       minSize = ToLengthWithFallback(pos.mMinWidth, pos.mMinHeight);
       maxSize = ToLengthWithFallback(pos.mMaxWidth, pos.mMaxHeight,
                                      NS_UNCONSTRAINEDSIZE);
+      prefSize.width = ToLengthWithFallback(pos.mWidth, curSize.width);
+      prefSize.height = ToLengthWithFallback(pos.mHeight, curSize.height);
     }
 
-    nsMargin margin;
-    childBox->GetXULMargin(margin);
-    nsRect r(childBox->GetRect());
-    r.Inflate(margin);
+    maxSize = nsIFrame::XULBoundsCheckMinMax(minSize, maxSize);
+    prefSize = nsIFrame::XULBoundsCheck(minSize, prefSize, maxSize);
+
+    nsSplitterFrame::AddXULMargin(childBox, minSize);
+    nsSplitterFrame::AddXULMargin(childBox, maxSize);
+    nsSplitterFrame::AddXULMargin(childBox, prefSize);
+    nsSplitterFrame::AddXULMargin(childBox, curSize);
 
     auto& list = isBefore ? mChildInfosBefore : mChildInfosAfter;
     nsSplitterInfo& info = *list.AppendElement();
     info.childElem = content;
     info.min = isHorizontal ? minSize.width : minSize.height;
     info.max = isHorizontal ? maxSize.width : maxSize.height;
-    info.current = info.changed = isHorizontal ? r.width : r.height;
+    info.pref = isHorizontal ? prefSize.width : prefSize.height;
+    info.current = info.changed = isHorizontal ? curSize.width : curSize.height;
   }
 
   if (!foundOuter) {
@@ -853,17 +856,17 @@ void nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext,
   nsBoxLayoutState state(aPresContext);
 
   for (auto& info : aChildInfos) {
+    nscoord newPref = info.pref + (info.changed - info.current);
     if (nsIFrame* childBox =
             GetChildBoxForContent(mParentBox, info.childElem)) {
-      SetPreferredSize(state, childBox, aIsHorizontal, info.changed);
+      SetPreferredSize(state, childBox, aIsHorizontal, newPref);
     }
   }
 }
 
 void nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState,
                                             nsIFrame* aChildBox,
-                                            bool aIsHorizontal,
-                                            nscoord aSize) {
+                                            bool aIsHorizontal, nscoord aSize) {
   nsMargin margin(0, 0, 0, 0);
   aChildBox->GetXULMargin(margin);
 
