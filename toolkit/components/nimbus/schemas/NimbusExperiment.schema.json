@@ -310,6 +310,10 @@
             "null"
           ],
           "description": "The slug of the reference branch (that is, which branch we consider \"control\")"
+        },
+        "featureValidationOptOut": {
+          "type": "boolean",
+          "description": "Opt out of feature schema validation. Only supported on desktop."
         }
       },
       "required": [
