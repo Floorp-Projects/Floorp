@@ -149,8 +149,11 @@ WebAccessibleResource::WebAccessibleResource(
   if (!aInit.mMatches.IsNull()) {
     MatchPatternOptions options;
     options.mRestrictSchemes = true;
-    mMatches = ParseMatches(aGlobal, aInit.mMatches.Value(), options,
-                            ErrorBehavior::CreateEmptyPattern, aRv);
+    RefPtr<MatchPatternSet> matches =
+        ParseMatches(aGlobal, aInit.mMatches.Value(), options,
+                     ErrorBehavior::CreateEmptyPattern, aRv);
+    MOZ_DIAGNOSTIC_ASSERT(!aRv.Failed());
+    mMatches = matches->Core();
   }
 
   if (!aInit.mExtension_ids.IsNull()) {

@@ -191,7 +191,7 @@ const nsCString& CookieInfo::RawHost() const {
 }
 
 /*****************************************************************************
- * MatchPattern
+ * MatchPatternCore
  *****************************************************************************/
 
 #define DEFINE_STATIC_ATOM_SET(name, ...)            \
@@ -222,22 +222,9 @@ DEFINE_STATIC_ATOM_SET(WildcardSchemes, nsGkAtoms::http, nsGkAtoms::https,
 
 #undef DEFINE_STATIC_ATOM_SET
 
-/* static */
-already_AddRefed<MatchPattern> MatchPattern::Constructor(
-    dom::GlobalObject& aGlobal, const nsAString& aPattern,
-    const MatchPatternOptions& aOptions, ErrorResult& aRv) {
-  RefPtr<MatchPattern> pattern = new MatchPattern(aGlobal.GetAsSupports());
-  pattern->Init(aGlobal.Context(), aPattern, aOptions.mIgnorePath,
-                aOptions.mRestrictSchemes, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  return pattern.forget();
-}
-
-void MatchPattern::Init(JSContext* aCx, const nsAString& aPattern,
-                        bool aIgnorePath, bool aRestrictSchemes,
-                        ErrorResult& aRv) {
+MatchPatternCore::MatchPatternCore(const nsAString& aPattern, bool aIgnorePath,
+                                   bool aRestrictSchemes, ErrorResult& aRv) {
+  MOZ_ASSERT(NS_IsMainThread());
   RefPtr<AtomSet> permittedSchemes = PermittedSchemes();
 
   mPattern = aPattern;
@@ -341,7 +328,7 @@ void MatchPattern::Init(JSContext* aCx, const nsAString& aPattern,
   mPath = new MatchGlobCore(path, false, aRv);
 }
 
-bool MatchPattern::MatchesDomain(const nsACString& aDomain) const {
+bool MatchPatternCore::MatchesDomain(const nsACString& aDomain) const {
   if (DomainIsWildcard() || mDomain == aDomain) {
     return true;
   }
@@ -357,8 +344,8 @@ bool MatchPattern::MatchesDomain(const nsACString& aDomain) const {
   return false;
 }
 
-bool MatchPattern::Matches(const nsAString& aURL, bool aExplicit,
-                           ErrorResult& aRv) const {
+bool MatchPatternCore::Matches(const nsAString& aURL, bool aExplicit,
+                               ErrorResult& aRv) const {
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
   if (NS_FAILED(rv)) {
@@ -369,7 +356,7 @@ bool MatchPattern::Matches(const nsAString& aURL, bool aExplicit,
   return Matches(uri.get(), aExplicit);
 }
 
-bool MatchPattern::Matches(const URLInfo& aURL, bool aExplicit) const {
+bool MatchPatternCore::Matches(const URLInfo& aURL, bool aExplicit) const {
   if (aExplicit && mMatchSubdomain) {
     return false;
   }
@@ -389,7 +376,7 @@ bool MatchPattern::Matches(const URLInfo& aURL, bool aExplicit) const {
   return true;
 }
 
-bool MatchPattern::MatchesCookie(const CookieInfo& aCookie) const {
+bool MatchPatternCore::MatchesCookie(const CookieInfo& aCookie) const {
   if (!mSchemes->Contains(nsGkAtoms::https) &&
       (aCookie.IsSecure() || !mSchemes->Contains(nsGkAtoms::http))) {
     return false;
@@ -417,7 +404,7 @@ bool MatchPattern::MatchesCookie(const CookieInfo& aCookie) const {
   return StringTail(mDomain, host.Length()) == host;
 }
 
-bool MatchPattern::SubsumesDomain(const MatchPattern& aPattern) const {
+bool MatchPatternCore::SubsumesDomain(const MatchPatternCore& aPattern) const {
   if (!mMatchSubdomain && aPattern.mMatchSubdomain &&
       aPattern.mDomain == mDomain) {
     return false;
@@ -426,7 +413,7 @@ bool MatchPattern::SubsumesDomain(const MatchPattern& aPattern) const {
   return MatchesDomain(aPattern.mDomain);
 }
 
-bool MatchPattern::Subsumes(const MatchPattern& aPattern) const {
+bool MatchPatternCore::Subsumes(const MatchPatternCore& aPattern) const {
   for (auto& scheme : *aPattern.mSchemes) {
     if (!mSchemes->Contains(scheme)) {
       return false;
@@ -436,12 +423,30 @@ bool MatchPattern::Subsumes(const MatchPattern& aPattern) const {
   return SubsumesDomain(aPattern);
 }
 
-bool MatchPattern::Overlaps(const MatchPattern& aPattern) const {
+bool MatchPatternCore::Overlaps(const MatchPatternCore& aPattern) const {
   if (!mSchemes->Intersects(*aPattern.mSchemes)) {
     return false;
   }
 
   return SubsumesDomain(aPattern) || aPattern.SubsumesDomain(*this);
+}
+
+/*****************************************************************************
+ * MatchPattern
+ *****************************************************************************/
+
+/* static */
+already_AddRefed<MatchPattern> MatchPattern::Constructor(
+    dom::GlobalObject& aGlobal, const nsAString& aPattern,
+    const MatchPatternOptions& aOptions, ErrorResult& aRv) {
+  RefPtr<MatchPattern> pattern = new MatchPattern(
+      aGlobal.GetAsSupports(),
+      MakeAndAddRef<MatchPatternCore>(aPattern, aOptions.mIgnorePath,
+                                      aOptions.mRestrictSchemes, aRv));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  return pattern.forget();
 }
 
 JSObject* MatchPattern::WrapObject(JSContext* aCx,
@@ -455,7 +460,7 @@ bool MatchPattern::MatchesAllURLs(const URLInfo& aURL) {
   return permittedSchemes->Contains(aURL.Scheme());
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MatchPattern, mPath, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MatchPattern, mParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MatchPattern)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -465,38 +470,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MatchPattern)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MatchPattern)
 
-/*****************************************************************************
- * MatchPatternSet
- *****************************************************************************/
-
-/* static */
-already_AddRefed<MatchPatternSet> MatchPatternSet::Constructor(
-    dom::GlobalObject& aGlobal,
-    const nsTArray<dom::OwningStringOrMatchPattern>& aPatterns,
-    const MatchPatternOptions& aOptions, ErrorResult& aRv) {
-  ArrayType patterns;
-
-  for (auto& elem : aPatterns) {
-    if (elem.IsMatchPattern()) {
-      patterns.AppendElement(elem.GetAsMatchPattern());
-    } else {
-      RefPtr<MatchPattern> pattern =
-          MatchPattern::Constructor(aGlobal, elem.GetAsString(), aOptions, aRv);
-
-      if (!pattern) {
-        return nullptr;
-      }
-      patterns.AppendElement(std::move(pattern));
-    }
-  }
-
-  RefPtr<MatchPatternSet> patternSet =
-      new MatchPatternSet(aGlobal.GetAsSupports(), std::move(patterns));
-  return patternSet.forget();
-}
-
-bool MatchPatternSet::Matches(const nsAString& aURL, bool aExplicit,
-                              ErrorResult& aRv) const {
+bool MatchPatternSetCore::Matches(const nsAString& aURL, bool aExplicit,
+                                  ErrorResult& aRv) const {
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
   if (NS_FAILED(rv)) {
@@ -507,7 +482,7 @@ bool MatchPatternSet::Matches(const nsAString& aURL, bool aExplicit,
   return Matches(uri.get(), aExplicit);
 }
 
-bool MatchPatternSet::Matches(const URLInfo& aURL, bool aExplicit) const {
+bool MatchPatternSetCore::Matches(const URLInfo& aURL, bool aExplicit) const {
   for (const auto& pattern : mPatterns) {
     if (pattern->Matches(aURL, aExplicit)) {
       return true;
@@ -516,7 +491,7 @@ bool MatchPatternSet::Matches(const URLInfo& aURL, bool aExplicit) const {
   return false;
 }
 
-bool MatchPatternSet::MatchesCookie(const CookieInfo& aCookie) const {
+bool MatchPatternSetCore::MatchesCookie(const CookieInfo& aCookie) const {
   for (const auto& pattern : mPatterns) {
     if (pattern->MatchesCookie(aCookie)) {
       return true;
@@ -525,7 +500,7 @@ bool MatchPatternSet::MatchesCookie(const CookieInfo& aCookie) const {
   return false;
 }
 
-bool MatchPatternSet::Subsumes(const MatchPattern& aPattern) const {
+bool MatchPatternSetCore::Subsumes(const MatchPatternCore& aPattern) const {
   for (const auto& pattern : mPatterns) {
     if (pattern->Subsumes(aPattern)) {
       return true;
@@ -534,7 +509,8 @@ bool MatchPatternSet::Subsumes(const MatchPattern& aPattern) const {
   return false;
 }
 
-bool MatchPatternSet::SubsumesDomain(const MatchPattern& aPattern) const {
+bool MatchPatternSetCore::SubsumesDomain(
+    const MatchPatternCore& aPattern) const {
   for (const auto& pattern : mPatterns) {
     if (pattern->SubsumesDomain(aPattern)) {
       return true;
@@ -543,7 +519,8 @@ bool MatchPatternSet::SubsumesDomain(const MatchPattern& aPattern) const {
   return false;
 }
 
-bool MatchPatternSet::Overlaps(const MatchPatternSet& aPatternSet) const {
+bool MatchPatternSetCore::Overlaps(
+    const MatchPatternSetCore& aPatternSet) const {
   for (const auto& pattern : aPatternSet.mPatterns) {
     if (Overlaps(*pattern)) {
       return true;
@@ -552,7 +529,7 @@ bool MatchPatternSet::Overlaps(const MatchPatternSet& aPatternSet) const {
   return false;
 }
 
-bool MatchPatternSet::Overlaps(const MatchPattern& aPattern) const {
+bool MatchPatternSetCore::Overlaps(const MatchPatternCore& aPattern) const {
   for (const auto& pattern : mPatterns) {
     if (pattern->Overlaps(aPattern)) {
       return true;
@@ -561,7 +538,8 @@ bool MatchPatternSet::Overlaps(const MatchPattern& aPattern) const {
   return false;
 }
 
-bool MatchPatternSet::OverlapsAll(const MatchPatternSet& aPatternSet) const {
+bool MatchPatternSetCore::OverlapsAll(
+    const MatchPatternSetCore& aPatternSet) const {
   for (const auto& pattern : aPatternSet.mPatterns) {
     if (!Overlaps(*pattern)) {
       return false;
@@ -570,12 +548,54 @@ bool MatchPatternSet::OverlapsAll(const MatchPatternSet& aPatternSet) const {
   return aPatternSet.mPatterns.Length() > 0;
 }
 
+/*****************************************************************************
+ * MatchPatternSet
+ *****************************************************************************/
+
+/* static */
+already_AddRefed<MatchPatternSet> MatchPatternSet::Constructor(
+    dom::GlobalObject& aGlobal,
+    const nsTArray<dom::OwningStringOrMatchPattern>& aPatterns,
+    const MatchPatternOptions& aOptions, ErrorResult& aRv) {
+  MatchPatternSetCore::ArrayType patterns;
+
+  for (auto& elem : aPatterns) {
+    if (elem.IsMatchPattern()) {
+      patterns.AppendElement(elem.GetAsMatchPattern()->Core());
+    } else {
+      RefPtr<MatchPatternCore> pattern =
+          new MatchPatternCore(elem.GetAsString(), aOptions.mIgnorePath,
+                               aOptions.mRestrictSchemes, aRv);
+
+      if (aRv.Failed()) {
+        return nullptr;
+      }
+      patterns.AppendElement(std::move(pattern));
+    }
+  }
+
+  RefPtr<MatchPatternSet> patternSet = new MatchPatternSet(
+      aGlobal.GetAsSupports(),
+      do_AddRef(new MatchPatternSetCore(std::move(patterns))));
+  return patternSet.forget();
+}
+
+void MatchPatternSet::GetPatterns(ArrayType& aPatterns) {
+  if (!mPatternsCache) {
+    mPatternsCache.emplace(Core()->mPatterns.Length());
+    for (auto& elem : Core()->mPatterns) {
+      mPatternsCache->AppendElement(new MatchPattern(this, do_AddRef(elem)));
+    }
+  }
+  aPatterns.AppendElements(*mPatternsCache);
+}
+
 JSObject* MatchPatternSet::WrapObject(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
   return MatchPatternSet_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MatchPatternSet, mPatterns, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MatchPatternSet, mPatternsCache, mParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MatchPatternSet)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
