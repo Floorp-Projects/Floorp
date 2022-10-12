@@ -710,6 +710,10 @@ class XPCShellTestThread(Thread):
         """Parses a single line of output, determining its significance and
         reporting a message.
         """
+        if isinstance(line_string, bytes):
+            # Transform binary to string representation
+            line_string = line_string.decode(sys.stdout.encoding, errors="replace")
+
         if not line_string.strip():
             return
 
