@@ -190,10 +190,6 @@ var gSyncPane = {
     setEventListener("openChangeProfileImage", "keypress", function(event) {
       gSyncPane.openChangeProfileImage(event);
     });
-    setEventListener("verifiedManage", "keypress", function(event) {
-      gSyncPane.openManageFirefoxAccount(event);
-    });
-
     setEventListener("fxaChangeDeviceName", "command", function() {
       this._toggleComputerNameControls(true);
       this._focusComputerNameTextbox();
@@ -491,23 +487,6 @@ var gSyncPane = {
       // Prevent page from scrolling on the space key.
       event.preventDefault();
     }
-  },
-
-  openManageFirefoxAccount(event) {
-    if (this.clickOrSpaceOrEnterPressed(event)) {
-      this.manageFirefoxAccount();
-      // Prevent page from scrolling on the space key.
-      event.preventDefault();
-    }
-  },
-
-  manageFirefoxAccount() {
-    FxAccounts.config.promiseManageURI(this._getEntryPoint()).then(url => {
-      this.openContentInBrowser(url, {
-        replaceQueryString: true,
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      });
-    });
   },
 
   verifyFirefoxAccount() {
