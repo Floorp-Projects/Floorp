@@ -7,7 +7,6 @@
 #include "api/audio/audio_mixer.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "call/audio_state.h"
-#include "call/shared_module_thread.h"
 #include "common/browser_logging/CSFLog.h"
 #include "common/browser_logging/WebRtcLog.h"
 #include "gmp-video-decode.h"  // GMP_API_VIDEO_DECODER
@@ -169,20 +168,6 @@ SharedWebrtcState::SharedWebrtcState(
       mTrials(std::move(aTrials)) {}
 
 SharedWebrtcState::~SharedWebrtcState() = default;
-
-SharedModuleThread* SharedWebrtcState::GetModuleThread() {
-  MOZ_ASSERT(mCallWorkerThread->IsOnCurrentThread());
-  if (!mModuleThread) {
-    mModuleThread = webrtc::SharedModuleThread::Create(
-        webrtc::ProcessThread::Create("libwebrtcModuleThread"),
-        [this, self = RefPtr<SharedWebrtcState>(this)] {
-          MOZ_ASSERT(mCallWorkerThread->IsOnCurrentThread());
-          mModuleThread = nullptr;
-        });
-  }
-
-  return mModuleThread.get();
-}
 
 class PeerConnectionCtxObserver : public nsIObserver {
  public:
