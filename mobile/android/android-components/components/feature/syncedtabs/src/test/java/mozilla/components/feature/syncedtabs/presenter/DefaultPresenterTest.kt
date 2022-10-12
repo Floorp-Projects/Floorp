@@ -236,4 +236,20 @@ class DefaultPresenterTest {
 
         verify(view).onError(ErrorType.SYNC_ENGINE_UNAVAILABLE)
     }
+
+    @Test
+    fun `GIVEN the presenter is started WHEN it is stopped THEN unregister the account and sync events observers`() {
+        val presenter = DefaultPresenter(
+            context,
+            controller,
+            accountManager,
+            view,
+            lifecycleOwner,
+        )
+
+        presenter.stop()
+
+        verify(accountManager).unregisterForSyncEvents(presenter.eventObserver)
+        verify(accountManager).unregister(presenter.accountObserver)
+    }
 }

@@ -81,7 +81,8 @@ internal class DefaultPresenter(
     }
 
     override fun stop() {
-        // no-op
+        accountManager.unregisterForSyncEvents(eventObserver)
+        accountManager.unregister(accountObserver)
     }
 
     companion object {

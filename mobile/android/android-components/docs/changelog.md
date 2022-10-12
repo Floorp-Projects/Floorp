@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **feature-syncedtabs**
+  * 🚒 Bug fixed [issue #12930](https://github.com/mozilla-mobile/android-components/issues/12930) Ensure `DefaultPresenter` will unregister it's `FxaAccountManager` observers when it's `lifecycleOwner` is stopped to prevent memory leaks. 
+
 * **feature-app-links**
   * 🚒 Bug fixed [issue #12804](https://github.com/mozilla-mobile/android-components/issues/12804) Speculative fix for a TransactionTooLargeException or RuntimeException when querying activities.
 

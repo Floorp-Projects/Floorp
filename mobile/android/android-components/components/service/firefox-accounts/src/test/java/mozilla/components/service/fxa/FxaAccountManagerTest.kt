@@ -5,6 +5,7 @@
 package mozilla.components.service.fxa
 
 import android.content.Context
+import androidx.lifecycle.LifecycleOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -99,6 +100,9 @@ internal open class TestableFxaAccountManager(
     }
 ) : FxaAccountManager(context, config, DeviceConfig("test", DeviceType.UNKNOWN, capabilities), syncConfig, emptySet(), crashReporter, coroutineContext) {
     private val testableStorageWrapper = TestableStorageWrapper(this, accountEventObserverRegistry, serverConfig, block)
+
+    override var syncStatusObserverRegistry = ObserverRegistry<SyncStatusObserver>()
+
     override fun getStorageWrapper(): StorageWrapper {
         return testableStorageWrapper
     }
@@ -1732,6 +1736,45 @@ class FxaAccountManagerTest {
         integration.onLoggedOut()
         verify(syncManager, times(2)).stop()
         verifyNoMoreInteractions(syncManager)
+    }
+
+    @Test
+    fun `GIVEN a sync observer WHEN registering it THEN add it to the sync observer registry`() {
+        val fxaManager = TestableFxaAccountManager(
+            context = testContext,
+            config = mock(),
+            storage = mock(),
+            capabilities = setOf(DeviceCapability.SEND_TAB),
+            syncConfig = null,
+            coroutineContext = mock(),
+        )
+        fxaManager.syncStatusObserverRegistry = mock()
+        val observer: SyncStatusObserver = mock()
+        val lifecycleOwner: LifecycleOwner = mock()
+
+        fxaManager.registerForSyncEvents(observer, lifecycleOwner, false)
+
+        verify(fxaManager.syncStatusObserverRegistry).register(observer, lifecycleOwner, false)
+        verifyNoMoreInteractions(fxaManager.syncStatusObserverRegistry)
+    }
+
+    @Test
+    fun `GIVEN a sync observer WHEN unregistering it THEN remove it from the sync observer registry`() {
+        val fxaManager = TestableFxaAccountManager(
+            context = testContext,
+            config = mock(),
+            storage = mock(),
+            capabilities = setOf(DeviceCapability.SEND_TAB),
+            syncConfig = null,
+            coroutineContext = mock(),
+        )
+        fxaManager.syncStatusObserverRegistry = mock()
+        val observer: SyncStatusObserver = mock()
+
+        fxaManager.unregisterForSyncEvents(observer)
+
+        verify(fxaManager.syncStatusObserverRegistry).unregister(observer)
+        verifyNoMoreInteractions(fxaManager.syncStatusObserverRegistry)
     }
 
     private suspend fun prepareHappyAuthenticationFlow(

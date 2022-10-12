@@ -178,7 +178,9 @@ open class FxaAccountManager(
 
     @VisibleForTesting
     val accountEventObserverRegistry = ObserverRegistry<AccountEventsObserver>()
-    private val syncStatusObserverRegistry = ObserverRegistry<SyncStatusObserver>()
+
+    @VisibleForTesting
+    open val syncStatusObserverRegistry = ObserverRegistry<SyncStatusObserver>()
 
     // We always obtain a "profile" scope, as that's assumed to be needed for any application integration.
     // We obtain a sync scope only if this was requested by the application via SyncConfig.
@@ -485,6 +487,14 @@ open class FxaAccountManager(
      */
     fun registerForSyncEvents(observer: SyncStatusObserver, owner: LifecycleOwner, autoPause: Boolean) {
         syncStatusObserverRegistry.register(observer, owner, autoPause)
+    }
+
+    /**
+     * Unregister a [SyncStatusObserver] from being informed about "sync lifecycle" events.
+     * The method is safe to call even if the provided observer was not registered before.
+     */
+    fun unregisterForSyncEvents(observer: SyncStatusObserver) {
+        syncStatusObserverRegistry.unregister(observer)
     }
 
     override fun close() {
