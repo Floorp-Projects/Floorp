@@ -45,6 +45,7 @@ UNIFIED_SOURCES += [
     "TestQueue.cpp",
     "TestRacingServiceManager.cpp",
     "TestRecursiveMutex.cpp",
+    "TestRustRegex.cpp",
     "TestRWLock.cpp",
     "TestSegmentedBuffer.cpp",
     "TestSlicedInputStream.cpp",
