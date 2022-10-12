@@ -20,7 +20,6 @@
 
 namespace webrtc {
 class AudioDecoderFactory;
-class SharedModuleThread;
 
 // Used for testing in mediapipeline_unittest.cpp, MockCall.h
 class NoTrialsConfig : public FieldTrialsView {
@@ -67,8 +66,6 @@ class SharedWebrtcState {
                     RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
                     UniquePtr<webrtc::FieldTrialsView> aTrials);
 
-  webrtc::SharedModuleThread* GetModuleThread();
-
   // A global Call worker thread shared between all Call instances. Implements
   // AbstractThread for running tasks that call into a Call instance through its
   // webrtc::TaskQueue member, and for using AbstractThread-specific higher
@@ -89,11 +86,6 @@ class SharedWebrtcState {
 
  private:
   virtual ~SharedWebrtcState();
-
-  // SharedModuleThread used for processing in all Call instances.
-  // Only accessed on the global Call worker task queue. Set on first
-  // GetModuleThread(), Unset on the last external Release.
-  rtc::scoped_refptr<webrtc::SharedModuleThread> mModuleThread;
 };
 
 // A class to hold some of the singleton objects we need:
