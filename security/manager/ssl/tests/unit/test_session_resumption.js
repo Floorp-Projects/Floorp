@@ -14,7 +14,6 @@ const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.OCSP.enabled");
-  Services.prefs.clearUserPref("network.ssl_tokens_cache_enabled");
 });
 
 Services.prefs.setIntPref("security.OCSP.enabled", 1);
