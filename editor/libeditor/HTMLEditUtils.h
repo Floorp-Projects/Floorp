@@ -598,6 +598,17 @@ class HTMLEditUtils final {
   }
 
   /**
+   * Whether aElement has at least one attribute except _moz_dirty attribute or
+   * has no attribute or only has _moz_dirty attribute.
+   */
+  static bool ElementHasAttributesExceptMozDirty(const Element& aElement) {
+    uint32_t attrCount = aElement.GetAttrCount();
+    return attrCount > 1 ||
+           (attrCount == 1u &&
+            !aElement.GetAttrNameAt(0)->Equals(nsGkAtoms::mozdirty));
+  }
+
+  /**
    * Get adjacent content node of aNode if there is (even if one is in different
    * parent element).
    *
@@ -2035,6 +2046,20 @@ class HTMLEditUtils final {
       }
     }
     return false;
+  }
+
+  /**
+   * CollectAllChildren() collects all child nodes of aParentNode.
+   */
+  static void CollectAllChildren(
+      const nsINode& aParentNode,
+      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents) {
+    MOZ_ASSERT(aOutArrayOfContents.IsEmpty());
+    aOutArrayOfContents.SetCapacity(aParentNode.GetChildCount());
+    for (nsIContent* childContent = aParentNode.GetFirstChild(); childContent;
+         childContent = childContent->GetNextSibling()) {
+      aOutArrayOfContents.AppendElement(*childContent);
+    }
   }
 
   /**

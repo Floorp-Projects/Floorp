@@ -5950,7 +5950,7 @@ Result<CreateElementResult, nsresult> HTMLEditor::ChangeListElementType(
   EditorDOMPoint pointToPutCaret;
 
   AutoTArray<OwningNonNull<nsIContent>, 32> listElementChildren;
-  HTMLEditor::GetChildNodesOf(aListElement, listElementChildren);
+  HTMLEditUtils::CollectAllChildren(aListElement, listElementChildren);
 
   for (const OwningNonNull<nsIContent>& childContent : listElementChildren) {
     if (!childContent->IsElement()) {
@@ -8248,7 +8248,7 @@ HTMLEditor::WrapContentsInBlockquoteElementsWithTransaction(
       curBlock = nullptr;
       // Recursion time
       AutoTArray<OwningNonNull<nsIContent>, 24> childContents;
-      HTMLEditor::GetChildNodesOf(*content, childContents);
+      HTMLEditUtils::CollectAllChildren(*content, childContents);
       Result<CreateElementResult, nsresult>
           wrapChildrenInAnotherBlockquoteResult =
               WrapContentsInBlockquoteElementsWithTransaction(childContents,
@@ -8391,7 +8391,7 @@ HTMLEditor::RemoveBlockContainerElementsWithTransaction(
       }
       // Recursion time
       AutoTArray<OwningNonNull<nsIContent>, 24> childContents;
-      HTMLEditor::GetChildNodesOf(*content, childContents);
+      HTMLEditUtils::CollectAllChildren(*content, childContents);
       Result<EditorDOMPoint, nsresult> removeBlockContainerElementsResult =
           RemoveBlockContainerElementsWithTransaction(childContents);
       if (MOZ_UNLIKELY(removeBlockContainerElementsResult.isErr())) {
@@ -8550,7 +8550,7 @@ HTMLEditor::CreateOrChangeBlockContainerElement(
       curBlock = nullptr;
       // Recursion time
       AutoTArray<OwningNonNull<nsIContent>, 24> childContents;
-      HTMLEditor::GetChildNodesOf(*content, childContents);
+      HTMLEditUtils::CollectAllChildren(*content, childContents);
       if (!childContents.IsEmpty()) {
         Result<CreateElementResult, nsresult> wrapChildrenInBlockElementResult =
             CreateOrChangeBlockContainerElement(childContents, aBlockTag,
@@ -10411,7 +10411,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ChangeMarginStart(
 
   // Remove unnecessary divs
   if (!aElement.IsHTMLElement(nsGkAtoms::div) ||
-      HTMLEditor::HasAttributes(&aElement)) {
+      HTMLEditUtils::ElementHasAttributesExceptMozDirty(aElement)) {
     return EditorDOMPoint();
   }
   // Don't touch editing host nor node which is outside of it.

@@ -6,6 +6,7 @@
 #include "HTMLEditor.h"
 
 #include "AutoRangeArray.h"
+#include "CSSEditUtils.h"
 #include "EditAction.h"
 #include "EditorBase.h"
 #include "EditorDOMPoint.h"
@@ -5372,7 +5373,7 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
     }
     // Otherwise it's an interior node, so shuffle around the children.
     AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfChildContents;
-    HTMLEditor::GetChildNodesOf(aContentToRemove, arrayOfChildContents);
+    HTMLEditUtils::CollectAllChildren(aContentToRemove, arrayOfChildContents);
 
     if (aDirection == JoinNodesDirection::LeftNodeIntoRightNode) {
       for (const OwningNonNull<nsIContent>& child :
@@ -6226,7 +6227,7 @@ HTMLEditor::CopyLastEditableChildStylesWithTransaction(
   // First, clear out aNewBlock.  Contract is that we want only the styles
   // from aPreviousBlock.
   AutoTArray<OwningNonNull<nsIContent>, 32> newBlockChildren;
-  HTMLEditor::GetChildNodesOf(aNewBlock, newBlockChildren);
+  HTMLEditUtils::CollectAllChildren(aNewBlock, newBlockChildren);
   for (const OwningNonNull<nsIContent>& child : newBlockChildren) {
     // MOZ_KNownLive(child) because of bug 1622253
     nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(child));

@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "AutoRangeArray.h"
+#include "CSSEditUtils.h"
 #include "EditAction.h"
 #include "EditorDOMPoint.h"
 #include "EditorUtils.h"

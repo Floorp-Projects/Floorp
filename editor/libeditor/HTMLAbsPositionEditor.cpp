@@ -6,6 +6,7 @@
 
 #include <math.h>
 
+#include "CSSEditUtils.h"
 #include "EditAction.h"
 #include "HTMLEditorEventListener.h"
 #include "HTMLEditUtils.h"
