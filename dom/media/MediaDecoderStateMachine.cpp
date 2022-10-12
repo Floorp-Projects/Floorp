@@ -2251,7 +2251,7 @@ void MediaDecoderStateMachine::StateObject::HandleResumeVideoDecoding(
                         ? SeekTarget::Type::Accurate
                         : SeekTarget::Type::PrevSyncPoint;
 
-  seekJob.mTarget.emplace(aTarget, type, true /* aVideoOnly */);
+  seekJob.mTarget.emplace(aTarget, type, SeekTarget::Track::VideoOnly);
 
   // Hold mMaster->mAbstractMainThread here because this->mMaster will be
   // invalid after the current state object is deleted in SetState();
