@@ -175,7 +175,8 @@ bool WebAccessibleResource::IsExtensionMatch(const URLInfo& aURI) {
  * WebExtensionPolicyCore
  *****************************************************************************/
 
-WebExtensionPolicyCore::WebExtensionPolicyCore(WebExtensionPolicy* aPolicy,
+WebExtensionPolicyCore::WebExtensionPolicyCore(GlobalObject& aGlobal,
+                                               WebExtensionPolicy* aPolicy,
                                                const WebExtensionInit& aInit,
                                                ErrorResult& aRv)
     : mPolicy(aPolicy),
@@ -212,10 +213,45 @@ WebExtensionPolicyCore::WebExtensionPolicyCore(WebExtensionPolicy* aPolicy,
     }
   }
 
+  mWebAccessibleResources.SetCapacity(aInit.mWebAccessibleResources.Length());
+  for (const auto& resourceInit : aInit.mWebAccessibleResources) {
+    RefPtr<WebAccessibleResource> resource =
+        new WebAccessibleResource(aGlobal, resourceInit, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+    mWebAccessibleResources.AppendElement(std::move(resource));
+  }
+
   nsresult rv = NS_NewURI(getter_AddRefs(mBaseURI), aInit.mBaseURL);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
+}
+
+bool WebExtensionPolicyCore::SourceMayAccessPath(
+    const URLInfo& aURI, const nsACString& aPath) const {
+  if (aURI.Scheme() == nsGkAtoms::moz_extension &&
+      MozExtensionHostname().Equals(aURI.Host())) {
+    // An extension can always access it's own paths.
+    return true;
+  }
+  // Bug 1786564 Static themes need to allow access to theme resources.
+  if (Type() == nsGkAtoms::theme) {
+    RefPtr<WebExtensionPolicyCore> policyCore =
+        ExtensionPolicyService::GetCoreByHost(aURI.Host());
+    return policyCore != nullptr;
+  }
+
+  if (ManifestVersion() < 3) {
+    return IsWebAccessiblePath(aPath);
+  }
+  for (const auto& resource : mWebAccessibleResources) {
+    if (resource->SourceMayAccessPath(aURI, aPath)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /*****************************************************************************
@@ -225,7 +261,7 @@ WebExtensionPolicyCore::WebExtensionPolicyCore(WebExtensionPolicy* aPolicy,
 WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
                                        const WebExtensionInit& aInit,
                                        ErrorResult& aRv)
-    : mCore(new WebExtensionPolicyCore(this, aInit, aRv)),
+    : mCore(new WebExtensionPolicyCore(aGlobal, this, aInit, aRv)),
       mLocalizeCallback(aInit.mLocalizeCallback),
       mPermissions(new AtomSet(aInit.mPermissions)) {
   if (aRv.Failed()) {
@@ -244,16 +280,6 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
   if (!aInit.mBackgroundScripts.IsNull()) {
     mBackgroundScripts.SetValue().AppendElements(
         aInit.mBackgroundScripts.Value());
-  }
-
-  mWebAccessibleResources.SetCapacity(aInit.mWebAccessibleResources.Length());
-  for (const auto& resourceInit : aInit.mWebAccessibleResources) {
-    RefPtr<WebAccessibleResource> resource =
-        new WebAccessibleResource(aGlobal, resourceInit, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
-    mWebAccessibleResources.AppendElement(std::move(resource));
   }
 
   mContentScripts.SetCapacity(aInit.mContentScripts.Length());
@@ -443,30 +469,6 @@ bool WebExtensionPolicy::IsExtensionProcess(GlobalObject& aGlobal) {
 /* static */
 bool WebExtensionPolicy::BackgroundServiceWorkerEnabled(GlobalObject& aGlobal) {
   return StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup();
-}
-
-bool WebExtensionPolicy::SourceMayAccessPath(const URLInfo& aURI,
-                                             const nsACString& aPath) const {
-  if (aURI.Scheme() == nsGkAtoms::moz_extension &&
-      MozExtensionHostname().Equals(aURI.Host())) {
-    // An extension can always access it's own paths.
-    return true;
-  }
-  // Bug 1786564 Static themes need to allow access to theme resources.
-  if (Type() == nsGkAtoms::theme) {
-    WebExtensionPolicy* policy = EPS().GetByHost(aURI.Host());
-    return policy != nullptr;
-  }
-
-  if (ManifestVersion() < 3) {
-    return IsWebAccessiblePath(aPath);
-  }
-  for (const auto& resource : mWebAccessibleResources) {
-    if (resource->SourceMayAccessPath(aURI, aPath)) {
-      return true;
-    }
-  }
-  return false;
 }
 
 namespace {
