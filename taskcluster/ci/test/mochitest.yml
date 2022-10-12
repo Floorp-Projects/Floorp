@@ -576,7 +576,7 @@ mochitest-media:
                     default: []
             wmf-media-engine:
                 by-test-platform:
-                    (windows10-64-2004)(?!.*-qr).*: ['autoland', 'mozilla-central']
+                    windows10-64-2004.*: ['autoland', 'mozilla-central']
                     default: []
             default:
                 by-test-platform:
