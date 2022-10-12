@@ -217,7 +217,6 @@ static const char* gCallbackPrefs[] = {
 static const char* gCallbackPrefsForSocketProcess[] = {
     WEBRTC_PREF_PREFIX,
     NETWORK_DNS_PREF,
-    "network.ssl_tokens_cache_enabled",
     "network.send_ODA_to_content_directly",
     "network.trr.",
     "doh-rollout.",
