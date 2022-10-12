@@ -79,7 +79,7 @@ pub extern "C" fn jog_test_register_metric(
         disabled,
         extra_args.time_unit,
         extra_args.memory_unit,
-        extra_args.allowed_extra_keys,
+        extra_args.allowed_extra_keys.or_else(|| Some(Vec::new())),
         extra_args.range_min,
         extra_args.range_max,
         extra_args.bucket_count,
