@@ -506,7 +506,7 @@ class AesTask : public ReturnArrayBufferViewTask, public DeferredData {
 
       ATTEMPT_BUFFER_INIT(mIv, params.mIv)
       if (mIv.Length() != 16) {
-        mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+        mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
         return;
       }
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR)) {
@@ -523,7 +523,7 @@ class AesTask : public ReturnArrayBufferViewTask, public DeferredData {
 
       ATTEMPT_BUFFER_INIT(mIv, params.mCounter)
       if (mIv.Length() != 16) {
-        mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+        mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
         return;
       }
 
