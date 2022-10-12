@@ -9,6 +9,7 @@
 
 #include "EditAction.h"
 #include "EditorBase.h"
+#include "HTMLEditHelpers.h"  // for EditorInlineStyle, EditorInlineStyleAndValue
 #include "HTMLEditor.h"
 #include "HTMLEditUtils.h"
 

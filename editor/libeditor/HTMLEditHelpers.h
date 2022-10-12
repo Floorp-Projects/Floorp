@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_HTMLEditHelpers_h
-#define mozilla_HTMLEditHelpers_h
+#ifndef HTMLEditHelpers_h
+#define HTMLEditHelpers_h
 
 /**
  * This header declares/defines trivial helper classes which are used by
@@ -12,18 +12,21 @@
  * see HTMLEditUtils.h.
  */
 
+#include "EditorDOMPoint.h"
+#include "EditorForwards.h"
+#include "EditorUtils.h"  // for CaretPoint
+#include "JoinSplitNodeDirection.h"
+
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ContentIterator.h"
-#include "mozilla/EditorDOMPoint.h"
-#include "mozilla/EditorForwards.h"
-#include "mozilla/EditorUtils.h"  // for CaretPoint
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/Result.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/StaticRange.h"
+
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
@@ -34,42 +37,6 @@
 class nsISimpleEnumerator;
 
 namespace mozilla {
-
-// JoinNodesDirection is also affected to which one is new node at splitting
-// a node because a couple of undo/redo.
-enum class JoinNodesDirection {
-  LeftNodeIntoRightNode,
-  RightNodeIntoLeftNode,
-};
-
-static inline std::ostream& operator<<(std::ostream& aStream,
-                                       JoinNodesDirection aJoinNodesDirection) {
-  if (aJoinNodesDirection == JoinNodesDirection::LeftNodeIntoRightNode) {
-    return aStream << "JoinNodesDirection::LeftNodeIntoRightNode";
-  }
-  if (aJoinNodesDirection == JoinNodesDirection::RightNodeIntoLeftNode) {
-    return aStream << "JoinNodesDirection::RightNodeIntoLeftNode";
-  }
-  return aStream << "Invalid value";
-}
-
-// SplitNodeDirection is also affected to which one is removed at joining a
-// node because a couple of undo/redo.
-enum class SplitNodeDirection {
-  LeftNodeIsNewOne,
-  RightNodeIsNewOne,
-};
-
-static inline std::ostream& operator<<(std::ostream& aStream,
-                                       SplitNodeDirection aSplitNodeDirection) {
-  if (aSplitNodeDirection == SplitNodeDirection::LeftNodeIsNewOne) {
-    return aStream << "SplitNodeDirection::LeftNodeIsNewOne";
-  }
-  if (aSplitNodeDirection == SplitNodeDirection::RightNodeIsNewOne) {
-    return aStream << "SplitNodeDirection::RightNodeIsNewOne";
-  }
-  return aStream << "Invalid value";
-}
 
 /*****************************************************************************
  * MoveNodeResult is a simple class for MoveSomething() methods.
@@ -990,4 +957,4 @@ struct MOZ_STACK_CLASS EditorInlineStyleAndValue : public EditorInlineStyle {
 
 }  // namespace mozilla
 
-#endif  // #ifndef mozilla_HTMLEditHelpers_h
+#endif  // #ifndef HTMLEditHelpers_h

@@ -12,7 +12,7 @@
 #include "mozilla/EditorForwards.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/HTMLEditHelpers.h"
+#include "mozilla/JoinSplitNodeDirection.h"
 #include "mozilla/ManualNAC.h"
 #include "mozilla/Result.h"
 #include "mozilla/dom/BlobImpl.h"

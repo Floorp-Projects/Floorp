@@ -5,9 +5,10 @@
 
 #include "JoinNodesTransaction.h"
 
-#include "EditorDOMPoint.h"   // for EditorDOMPoint, etc.
-#include "HTMLEditHelpers.h"  // for SplitNodeResult, JoinNodesDirection, etc
-#include "HTMLEditor.h"       // for HTMLEditor
+#include "EditorDOMPoint.h"          // for EditorDOMPoint, etc.
+#include "HTMLEditHelpers.h"         // for SplitNodeResult
+#include "JoinSplitNodeDirection.h"  // JoinNodesDirection
+#include "HTMLEditor.h"              // for HTMLEditor
 #include "HTMLEditUtils.h"
 
 #include "mozilla/Logging.h"
