@@ -312,8 +312,8 @@ const SpecialMessageActions = {
           (data && data.entrypoint) || "snippets",
           (data && data.extraParams) || {}
         );
-        // We want to replace the current tab.
-        window.openLinkIn(url, "current", {
+        // Use location provided; if not specified, replace the current tab.
+        window.openLinkIn(url, data.where || "current", {
           private: false,
           triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
             {}
