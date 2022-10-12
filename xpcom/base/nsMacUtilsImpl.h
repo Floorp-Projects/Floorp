@@ -7,7 +7,6 @@
 #ifndef nsMacUtilsImpl_h___
 #define nsMacUtilsImpl_h___
 
-#include "nsIMacUtils.h"
 #include "nsString.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
@@ -18,11 +17,10 @@ using mozilla::Atomic;
 using mozilla::StaticAutoPtr;
 using mozilla::StaticMutex;
 
-class nsMacUtilsImpl final : public nsIMacUtils {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMACUTILS
+class nsIFile;
 
+class nsMacUtilsImpl final {
+ public:
   nsMacUtilsImpl() {}
 
   // Return the repo directory and the repo object directory respectively.
@@ -44,7 +42,6 @@ class nsMacUtilsImpl final : public nsIMacUtils {
   static void EnableTCSMIfAvailable();
   static bool IsTCSMAvailable();
   static uint32_t GetPhysicalCPUCount();
-  static nsresult GetArchitecturesForBundle(uint32_t* aArchMask);
   static nsresult GetArchitecturesForBinary(const char* aPath,
                                             uint32_t* aArchMask);
 
@@ -59,13 +56,6 @@ class nsMacUtilsImpl final : public nsIMacUtils {
 
  private:
   ~nsMacUtilsImpl() {}
-
-  nsresult GetArchString(nsAString& aArchString);
-
-  // A string containing a "-" delimited list of architectures
-  // in our binary.
-  nsString mBinaryArchs;
-
 #if defined(MOZ_SANDBOX) || defined(__aarch64__)
   // Cache the appDir returned from GetAppPath to avoid doing I/O
   static StaticAutoPtr<nsCString> sCachedAppPath
@@ -75,10 +65,6 @@ class nsMacUtilsImpl final : public nsIMacUtils {
   // Utility method to call ClearOnShutdown() on the main thread
   static nsresult ClearCachedAppPathOnShutdown();
 #endif
-
-  // The cached machine architectures of the .app bundle which can
-  // be multiple architectures for universal binaries.
-  static std::atomic<uint32_t> sBundleArchMaskAtomic;
 
 #if defined(__aarch64__)
   // Limit XUL translation to one attempt
@@ -93,15 +79,5 @@ class nsMacUtilsImpl final : public nsIMacUtils {
   static bool IsTCSMEnabled();
 #endif
 };
-
-// Global singleton service
-// 697BD3FD-43E5-41CE-AD5E-C339175C0818
-#define NS_MACUTILSIMPL_CID                          \
-  {                                                  \
-    0x697BD3FD, 0x43E5, 0x41CE, {                    \
-      0xAD, 0x5E, 0xC3, 0x39, 0x17, 0x5C, 0x08, 0x18 \
-    }                                                \
-  }
-#define NS_MACUTILSIMPL_CONTRACTID "@mozilla.org/xpcom/mac-utils;1"
 
 #endif /* nsMacUtilsImpl_h___ */
