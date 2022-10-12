@@ -79,7 +79,6 @@ class EraseBrowsingDataTest {
 
     @SmokeTest
     @Test
-    @Ignore("See https://github.com/mozilla-mobile/focus-android/issues/7037")
     fun notificationEraseAndOpenButtonTest() {
         val testPage = getGenericTabAsset(webServer, 1)
 
