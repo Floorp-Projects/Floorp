@@ -67,7 +67,7 @@ class WebAccessibleResource final : public nsISupports {
 
  private:
   MatchGlobSet mWebAccessiblePaths;
-  RefPtr<MatchPatternSet> mMatches;
+  RefPtr<MatchPatternSetCore> mMatches;
   RefPtr<AtomSet> mExtensionIDs;
 };
 
