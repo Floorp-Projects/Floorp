@@ -46,11 +46,11 @@ class WebAccessibleResource final : public nsISupports {
                         const WebAccessibleResourceInit& aInit,
                         ErrorResult& aRv);
 
-  bool IsWebAccessiblePath(const nsAString& aPath) const {
+  bool IsWebAccessiblePath(const nsACString& aPath) const {
     return mWebAccessiblePaths.Matches(aPath);
   }
 
-  bool SourceMayAccessPath(const URLInfo& aURI, const nsAString& aPath) {
+  bool SourceMayAccessPath(const URLInfo& aURI, const nsACString& aPath) {
     return mWebAccessiblePaths.Matches(aPath) &&
            (IsHostMatch(aURI) || IsExtensionMatch(aURI));
   }
@@ -115,7 +115,7 @@ class WebExtensionPolicy final : public nsISupports,
                     bool aCheckRestricted = true,
                     bool aAllowFilePermission = false) const;
 
-  bool IsWebAccessiblePath(const nsAString& aPath) const {
+  bool IsWebAccessiblePath(const nsACString& aPath) const {
     for (const auto& resource : mWebAccessibleResources) {
       if (resource->IsWebAccessiblePath(aPath)) {
         return true;
@@ -124,7 +124,7 @@ class WebExtensionPolicy final : public nsISupports,
     return false;
   }
 
-  bool SourceMayAccessPath(const URLInfo& aURI, const nsAString& aPath) const;
+  bool SourceMayAccessPath(const URLInfo& aURI, const nsACString& aPath) const;
 
   bool HasPermission(const nsAtom* aPermission) const {
     return mPermissions->Contains(aPermission);

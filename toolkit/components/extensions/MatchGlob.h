@@ -12,6 +12,7 @@
 #include "jspubtd.h"
 #include "js/RootingAPI.h"
 
+#include "mozilla/RustRegex.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
@@ -25,18 +26,18 @@ class MatchPattern;
 class MatchGlob final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MatchGlob)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(MatchGlob)
 
   static already_AddRefed<MatchGlob> Constructor(dom::GlobalObject& aGlobal,
-                                                 const nsAString& aGlob,
+                                                 const nsACString& aGlob,
                                                  bool aAllowQuestion,
                                                  ErrorResult& aRv);
 
-  bool Matches(const nsAString& aString) const;
+  bool Matches(const nsACString& aString) const;
 
   bool IsWildcard() const { return mIsPrefix && mPathLiteral.IsEmpty(); }
 
-  void GetGlob(nsAString& aGlob) const { aGlob = mGlob; }
+  void GetGlob(nsACString& aGlob) const { aGlob = mGlob; }
 
   nsISupports* GetParentObject() const { return mParent; }
 
@@ -49,27 +50,25 @@ class MatchGlob final : public nsISupports, public nsWrapperCache {
  private:
   friend class MatchPattern;
 
-  explicit MatchGlob(nsISupports* aParent) : mParent(aParent) {}
-
-  void Init(JSContext* aCx, const nsAString& aGlob, bool aAllowQuestion,
-            ErrorResult& aRv);
+  explicit MatchGlob(nsISupports* aParent, const nsACString& aGlob,
+                     bool aAllowQuestion, ErrorResult& aRv);
 
   nsCOMPtr<nsISupports> mParent;
 
   // The original glob string that this glob object represents.
-  nsString mGlob;
+  const nsCString mGlob;
 
   // The literal path string to match against. If this contains a non-void
   // value, the glob matches against this exact literal string, rather than
   // performng a pattern match. If mIsPrefix is true, the literal must appear
   // at the start of the matched string. If it is false, the the literal must
   // be exactly equal to the matched string.
-  nsString mPathLiteral;
+  nsCString mPathLiteral;
   bool mIsPrefix = false;
 
   // The regular expression object which is equivalent to this glob pattern.
   // Used for matching if, and only if, mPathLiteral is non-void.
-  JS::Heap<JSObject*> mRegExp;
+  RustRegex mRegExp;
 };
 
 class MatchGlobSet final : public CopyableTArray<RefPtr<MatchGlob>> {
@@ -84,7 +83,7 @@ class MatchGlobSet final : public CopyableTArray<RefPtr<MatchGlob>> {
   MOZ_IMPLICIT MatchGlobSet(std::initializer_list<RefPtr<MatchGlob>> aIL)
       : CopyableTArray(aIL) {}
 
-  bool Matches(const nsAString& aValue) const;
+  bool Matches(const nsACString& aValue) const;
 };
 
 }  // namespace extensions
