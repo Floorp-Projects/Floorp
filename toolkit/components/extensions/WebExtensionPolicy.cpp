@@ -79,14 +79,15 @@ static nsISubstitutingProtocolHandler* Proto() {
   return sHandler;
 }
 
-bool ParseGlobs(GlobalObject& aGlobal, Sequence<OwningMatchGlobOrString> aGlobs,
+bool ParseGlobs(GlobalObject& aGlobal,
+                Sequence<OwningMatchGlobOrUTF8String> aGlobs,
                 nsTArray<RefPtr<MatchGlob>>& aResult, ErrorResult& aRv) {
   for (auto& elem : aGlobs) {
     if (elem.IsMatchGlob()) {
       aResult.AppendElement(elem.GetAsMatchGlob());
     } else {
       RefPtr<MatchGlob> glob =
-          MatchGlob::Constructor(aGlobal, elem.GetAsString(), true, aRv);
+          MatchGlob::Constructor(aGlobal, elem.GetAsUTF8String(), true, aRv);
       if (aRv.Failed()) {
         return false;
       }
@@ -441,7 +442,7 @@ bool WebExtensionPolicy::BackgroundServiceWorkerEnabled(GlobalObject& aGlobal) {
 }
 
 bool WebExtensionPolicy::SourceMayAccessPath(const URLInfo& aURI,
-                                             const nsAString& aPath) const {
+                                             const nsACString& aPath) const {
   if (aURI.Scheme() == nsGkAtoms::moz_extension &&
       mHostname.Equals(aURI.Host())) {
     // An extension can always access it's own paths.
@@ -824,11 +825,11 @@ bool MozDocumentMatcher::MatchesURI(const URLInfo& aURL,
     return false;
   }
 
-  if (!mIncludeGlobs.IsNull() && !mIncludeGlobs.Value().Matches(aURL.Spec())) {
+  if (!mIncludeGlobs.IsNull() && !mIncludeGlobs.Value().Matches(aURL.CSpec())) {
     return false;
   }
 
-  if (!mExcludeGlobs.IsNull() && mExcludeGlobs.Value().Matches(aURL.Spec())) {
+  if (!mExcludeGlobs.IsNull() && mExcludeGlobs.Value().Matches(aURL.CSpec())) {
     return false;
   }
 
