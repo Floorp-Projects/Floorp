@@ -460,6 +460,13 @@ void HttpChannelChild::OnStartRequest(
         aArgs.timing().transactionPending());
   }
 
+  if (!aArgs.timing().responseStart().IsNull()) {
+    Telemetry::AccumulateTimeDelta(
+        Telemetry::NETWORK_RESPONSE_START_PARENT_TO_CONTENT_MS,
+        ClassOfService::ToString(mClassOfService),
+        aArgs.timing().responseStart(), TimeStamp::Now());
+  }
+
   StoreAllRedirectsSameOrigin(aArgs.allRedirectsSameOrigin());
 
   mMultiPartID = aArgs.multiPartID();
