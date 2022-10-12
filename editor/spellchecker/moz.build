@@ -26,4 +26,9 @@ UNIFIED_SOURCES += [
     "TextServicesDocument.cpp",
 ]
 
+LOCAL_INCLUDES += [
+    # For stop exposing libeditor's headers, allow to refer them directly
+    "/editor/libeditor",
+]
+
 FINAL_LIBRARY = "xul"

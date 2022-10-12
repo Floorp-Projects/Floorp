@@ -6,7 +6,6 @@
 #ifndef mozilla_TextServicesDocument_h
 #define mozilla_TextServicesDocument_h
 
-#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
