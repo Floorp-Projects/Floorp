@@ -100,6 +100,17 @@ class WebExtensionPolicyCore final {
     return mBackgroundWorkerScript;
   }
 
+  bool IsWebAccessiblePath(const nsACString& aPath) const {
+    for (const auto& resource : mWebAccessibleResources) {
+      if (resource->IsWebAccessiblePath(aPath)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool SourceMayAccessPath(const URLInfo& aURI, const nsACString& aPath) const;
+
   // Try to get a reference to the cycle-collected main-thread-only
   // WebExtensionPolicy instance.
   //
@@ -111,7 +122,9 @@ class WebExtensionPolicyCore final {
 
  private:
   friend class WebExtensionPolicy;
-  WebExtensionPolicyCore(WebExtensionPolicy* aPolicy,
+
+  WebExtensionPolicyCore(dom::GlobalObject& aGlobal,
+                         WebExtensionPolicy* aPolicy,
                          const WebExtensionInit& aInit, ErrorResult& aRv);
 
   ~WebExtensionPolicyCore() = default;
@@ -140,6 +153,8 @@ class WebExtensionPolicyCore final {
   const bool mTemporarilyInstalled;
 
   const nsString mBackgroundWorkerScript;
+
+  /* const */ nsTArray<RefPtr<WebAccessibleResource>> mWebAccessibleResources;
 };
 
 class WebExtensionPolicy final : public nsISupports, public nsWrapperCache {
@@ -191,15 +206,12 @@ class WebExtensionPolicy final : public nsISupports, public nsWrapperCache {
                     bool aAllowFilePermission = false) const;
 
   bool IsWebAccessiblePath(const nsACString& aPath) const {
-    for (const auto& resource : mWebAccessibleResources) {
-      if (resource->IsWebAccessiblePath(aPath)) {
-        return true;
-      }
-    }
-    return false;
+    return mCore->IsWebAccessiblePath(aPath);
   }
 
-  bool SourceMayAccessPath(const URLInfo& aURI, const nsACString& aPath) const;
+  bool SourceMayAccessPath(const URLInfo& aURI, const nsACString& aPath) const {
+    return mCore->SourceMayAccessPath(aURI, aPath);
+  }
 
   bool HasPermission(const nsAtom* aPermission) const {
     return mPermissions->Contains(aPermission);
@@ -327,7 +339,6 @@ class WebExtensionPolicy final : public nsISupports, public nsWrapperCache {
 
   dom::Nullable<nsTArray<nsString>> mBackgroundScripts;
 
-  nsTArray<RefPtr<WebAccessibleResource>> mWebAccessibleResources;
   nsTArray<RefPtr<WebExtensionContentScript>> mContentScripts;
 
   RefPtr<dom::Promise> mReadyPromise;
