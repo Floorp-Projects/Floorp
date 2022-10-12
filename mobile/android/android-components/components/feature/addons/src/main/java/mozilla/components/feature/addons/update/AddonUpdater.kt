@@ -30,6 +30,7 @@ import androidx.work.WorkerParameters
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionException
 import mozilla.components.concept.engine.webextension.isUnsupported
@@ -577,20 +578,17 @@ internal class AddonUpdaterWorker(
     private val logger = Logger("AddonUpdaterWorker")
     internal var updateAttemptStorage = DefaultAddonUpdater.UpdateAttemptStorage(applicationContext)
 
-    @Suppress("OverridingDeprecatedMember")
-    override val coroutineContext = Dispatchers.Main
-
     @VisibleForTesting
     internal var attemptScope = CoroutineScope(Dispatchers.IO)
 
     @Suppress("TooGenericExceptionCaught", "MaxLineLength")
-    override suspend fun doWork(): Result {
+    override suspend fun doWork(): Result = withContext(Dispatchers.Main) {
         val extensionId = params.inputData.getString(KEY_DATA_EXTENSIONS_ID) ?: ""
         logger.info("Trying to update extension $extensionId")
         // We need to guarantee that we are not trying to update without all the required state being initialized first.
         WebExtensionSupport.awaitInitialization()
 
-        return suspendCoroutine { continuation ->
+        return@withContext suspendCoroutine { continuation ->
             try {
                 val manager = GlobalAddonDependencyProvider.requireAddonManager()
 
