@@ -143,8 +143,8 @@ class URLInfo final {
   nsAtom* Scheme() const;
   const nsCString& Host() const;
   const nsAtom* HostAtom() const;
-  const nsString& Path() const;
-  const nsString& FilePath() const;
+  const nsCString& Path() const;
+  const nsCString& FilePath() const;
   const nsString& Spec() const;
   const nsCString& CSpec() const;
 
@@ -160,8 +160,8 @@ class URLInfo final {
   mutable nsCString mHost;
   mutable RefPtr<nsAtom> mHostAtom;
 
-  mutable nsString mPath;
-  mutable nsString mFilePath;
+  mutable nsCString mPath;
+  mutable nsCString mFilePath;
   mutable nsString mSpec;
   mutable nsCString mCSpec;
 
