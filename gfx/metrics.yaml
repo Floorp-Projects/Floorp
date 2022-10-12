@@ -92,6 +92,7 @@ wr:
     send_in_pings:
       - metrics
       - pseudo-main
+      - new-metric-capture-emulation
   renderer_time_no_sc:
     type: timing_distribution
     description: >
