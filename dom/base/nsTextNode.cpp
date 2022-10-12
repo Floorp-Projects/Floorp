@@ -240,7 +240,7 @@ void nsAttributeTextNode::AttributeChanged(Element* aElement,
   }
 }
 
-void nsAttributeTextNode::NodeWillBeDestroyed(const nsINode* aNode) {
+void nsAttributeTextNode::NodeWillBeDestroyed(nsINode* aNode) {
   NS_ASSERTION(aNode == static_cast<nsINode*>(mGrandparent), "Wrong node!");
   mGrandparent = nullptr;
 }

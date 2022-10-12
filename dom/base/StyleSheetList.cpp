@@ -28,7 +28,7 @@ JSObject* StyleSheetList::WrapObject(JSContext* aCx,
   return StyleSheetList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void StyleSheetList::NodeWillBeDestroyed(const nsINode* aNode) {
+void StyleSheetList::NodeWillBeDestroyed(nsINode* aNode) {
   mDocumentOrShadowRoot = nullptr;
 }
 

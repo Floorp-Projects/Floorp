@@ -955,7 +955,7 @@ void nsTreeContentView::ContentRemoved(nsIContent* aChild,
   }
 }
 
-void nsTreeContentView::NodeWillBeDestroyed(const nsINode* aNode) {
+void nsTreeContentView::NodeWillBeDestroyed(nsINode* aNode) {
   // XXXbz do we need this strong ref?  Do we drop refs to self in ClearRows?
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   ClearRows();

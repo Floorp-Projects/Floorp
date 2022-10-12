@@ -1052,7 +1052,7 @@ nsresult txMozillaXSLTProcessor::ensureStylesheet() {
   return TX_CompileStylesheet(style, this, getter_AddRefs(mStylesheet));
 }
 
-void txMozillaXSLTProcessor::NodeWillBeDestroyed(const nsINode* aNode) {
+void txMozillaXSLTProcessor::NodeWillBeDestroyed(nsINode* aNode) {
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   if (NS_FAILED(mCompileResult)) {
     return;
