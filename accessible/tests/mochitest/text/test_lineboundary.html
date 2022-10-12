@@ -265,6 +265,10 @@
                          [2, 7, `\n${kEmbedChar}b c d`, 1, 8,
                           [ [ 2, "inlineInput4", kOkIfCache, kOkIfCache, kOkIfCache ] ] ] ]);
 
+      testTextAtOffset([ "contentEditableTable" ], BOUNDARY_LINE_START, [
+        [0, 0, `${kEmbedChar}\n`, 0, 2],
+      ]);
+
       SimpleTest.finish();
     }
 
@@ -388,5 +392,29 @@ two words
   <div id="inlineInput2">a<br><input value="b"> c d</div>
   <div id="inlineInput3">a<br> b<input value=""> c d</div>
   <div id="inlineInput4">a<br><input value="">b c d</div>
+  <div id="contentEditableTable" contenteditable>
+    <table style="display: inline-table">
+      <thead>
+        <th>Foo</th>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Bar</td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <table style="display: inline-table">
+      <thead>
+        <th>Foo</th>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Bar</td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+  </div>
 </body>
 </html>
