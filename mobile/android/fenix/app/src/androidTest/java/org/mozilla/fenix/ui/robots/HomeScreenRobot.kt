@@ -343,6 +343,16 @@ class HomeScreenRobot {
         return sponsoredShortcut
     }
 
+    fun verifyJumpBackInMessage() {
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().text(
+                    getStringResource(R.string.onboarding_home_screen_jump_back_contextual_hint_2),
+                ),
+            ).waitForExists(waitingTime),
+        )
+    }
+
     class Transition {
 
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {

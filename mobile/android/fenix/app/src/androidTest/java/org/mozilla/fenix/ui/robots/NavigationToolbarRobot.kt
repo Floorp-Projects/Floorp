@@ -22,18 +22,17 @@ import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
-import androidx.test.espresso.matcher.ViewMatchers.withResourceName
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
-import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.CoreMatchers.not
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
@@ -98,12 +97,15 @@ class NavigationToolbarRobot {
             mDevice.pressEnter()
 
             runWithIdleRes(sessionLoadedIdlingResource) {
-                onView(
-                    anyOf(
-                        withResourceName("browserLayout"),
-                        withResourceName("download_button"),
-                    ),
-                ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+                assertTrue(
+                    mDevice.findObject(
+                        UiSelector().resourceId("$packageName:id/browserLayout"),
+                    ).waitForExists(waitingTime) || mDevice.findObject(
+                        UiSelector().resourceId("$packageName:id/download_button"),
+                    ).waitForExists(waitingTime) || mDevice.findObject(
+                        UiSelector().text(getStringResource(R.string.tcp_cfr_message)),
+                    ).waitForExists(waitingTime),
+                )
             }
 
             BrowserRobot().interact()

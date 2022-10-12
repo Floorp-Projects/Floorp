@@ -43,6 +43,7 @@ import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.waitForObjects
@@ -816,6 +817,15 @@ class BrowserRobot {
         setCookiesButton.click()
     }
 
+    fun verifyCookiesProtectionHint() {
+        val hintMessage =
+            mDevice.findObject(
+                UiSelector()
+                    .textContains(getStringResource(R.string.tcp_cfr_message)),
+            )
+        assertTrue(hintMessage.waitForExists(waitingTime))
+    }
+
     class Transition {
         private fun threeDotButton() = onView(
             allOf(
@@ -881,7 +891,12 @@ class BrowserRobot {
 
             assertTrue(
                 mDevice.findObject(UiSelector().resourceId("$packageName:id/homeLayout"))
-                    .waitForExists(waitingTime),
+                    .waitForExists(waitingTime) ||
+                    mDevice.findObject(
+                        UiSelector().text(
+                            getStringResource(R.string.onboarding_home_screen_jump_back_contextual_hint_2),
+                        ),
+                    ).waitForExists(waitingTime),
             )
 
             HomeScreenRobot().interact()
