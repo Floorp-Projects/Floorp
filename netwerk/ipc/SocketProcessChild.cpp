@@ -203,6 +203,12 @@ void SocketProcessChild::CleanUp() {
     MutexAutoLock lock(mMutex);
     mBackgroundDataBridgeMap.Clear();
   }
+
+  // Normally, the IPC channel should be already closed at this point, but
+  // sometimes it's not (bug 1788860). When the channel is closed, calling
+  // Close() again is harmless.
+  Close();
+
   NS_ShutdownXPCOM(nullptr);
 
   if (sInitializedJS) {
