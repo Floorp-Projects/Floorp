@@ -3068,6 +3068,18 @@
     "n_buckets": 50,
     "description": "The time spent from HttpChannelChild::AsyncOpen to adding the transactionto the nsHttpConnectionMgr, in milliseconds, keyed by classOfService"
   },
+  "NETWORK_RESPONSE_START_PARENT_TO_CONTENT_MS" :{
+      "record_in_processes": ["content"],
+      "products": [ "firefox", "fennec" ],
+      "alert_emails": ["necko@mozilla.com", "acreskey@mozilla.com"],
+      "bug_numbers": [1793975],
+      "expires_in_version": "never",
+      "keyed": true,
+      "kind": "linear",
+      "high": 5000,
+      "n_buckets": 50,
+      "description": "The time spent relaying response start from the socket thread of the parent process to the content process, in milliseconds, keyed by classOfService"
+    },
   "NETWORK_DNS_END_TO_CONNECT_START_MS" :{
     "record_in_processes": ["main"],
     "products": [ "firefox", "fennec" ],
