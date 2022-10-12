@@ -10,8 +10,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
+import io.mockk.verify
 import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.concept.fetch.Client
+import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
@@ -175,6 +177,26 @@ class SettingsFragmentTest {
         settingsFragment.setupHttpsOnlyPreferences()
 
         assertEquals(summary, httpsOnlyPreference.summary)
+    }
+
+    @Test
+    fun `GIVEN an account observer WHEN the fragment is visible THEN register it for updates`() {
+        val accountManager: FxaAccountManager = mockk(relaxed = true)
+        every { testContext.components.backgroundServices.accountManager } returns accountManager
+
+        settingsFragment.onStart()
+
+        verify { accountManager.register(settingsFragment.accountObserver, settingsFragment, true) }
+    }
+
+    @Test
+    fun `GIVEN an account observer WHEN the fragment stops being visible THEN unregister it for updates`() {
+        val accountManager: FxaAccountManager = mockk(relaxed = true)
+        every { testContext.components.backgroundServices.accountManager } returns accountManager
+
+        settingsFragment.onStop()
+
+        verify { accountManager.unregister(settingsFragment.accountObserver) }
     }
 
     @After
