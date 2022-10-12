@@ -134,7 +134,7 @@ interface nsIFileOutputStream : nsIOutputStream
  * A stream that allows you to read from a file or stream to a file.
  */
 [scriptable, builtinclass, uuid(82cf605a-8393-4550-83ab-43cd5578e006)]
-interface nsIFileStream : nsIRandomAccessStream
+interface nsIFileRandomAccessStream : nsIRandomAccessStream
 {
     /**
      * @param file          file to read from or stream to

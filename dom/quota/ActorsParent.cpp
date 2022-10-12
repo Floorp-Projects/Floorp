@@ -2516,7 +2516,8 @@ Result<nsCOMPtr<nsIOutputStream>, nsresult> GetOutputStream(
         return nsCOMPtr<nsIOutputStream>();
       }
 
-      QM_TRY_INSPECT(const auto& stream, NS_NewLocalFileStream(&aFile));
+      QM_TRY_INSPECT(const auto& stream,
+                     NS_NewLocalFileRandomAccessStream(&aFile));
 
       nsCOMPtr<nsIOutputStream> outputStream = do_QueryInterface(stream);
       QM_TRY(OkIf(outputStream), Err(NS_ERROR_FAILURE));

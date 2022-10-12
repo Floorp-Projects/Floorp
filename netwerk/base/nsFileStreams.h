@@ -251,10 +251,10 @@ class nsSafeFileOutputStream : public nsAtomicFileOutputStream {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsFileStream : public nsFileStreamBase,
-                     public nsIFileStream,
-                     public nsIInputStream,
-                     public nsIOutputStream {
+class nsFileRandomAccessStream : public nsFileStreamBase,
+                                 public nsIFileRandomAccessStream,
+                                 public nsIInputStream,
+                                 public nsIOutputStream {
  public:
   static nsresult Create(REFNSIID aIID, void** aResult);
 
@@ -262,7 +262,7 @@ class nsFileStream : public nsFileStreamBase,
   NS_FORWARD_NSITELLABLESTREAM(nsFileStreamBase::)
   NS_FORWARD_NSISEEKABLESTREAM(nsFileStreamBase::)
   NS_DECL_NSIRANDOMACCESSSTREAM
-  NS_DECL_NSIFILESTREAM
+  NS_DECL_NSIFILERANDOMACCESSSTREAM
   NS_FORWARD_NSIINPUTSTREAM(nsFileStreamBase::)
 
   // Can't use NS_FORWARD_NSIOUTPUTSTREAM due to overlapping methods
@@ -282,7 +282,7 @@ class nsFileStream : public nsFileStreamBase,
   }
 
  protected:
-  virtual ~nsFileStream() = default;
+  virtual ~nsFileRandomAccessStream() = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

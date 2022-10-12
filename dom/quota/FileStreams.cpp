@@ -113,11 +113,13 @@ Result<NotNull<RefPtr<FileOutputStream>>, nsresult> CreateFileOutputStream(
   return stream;
 }
 
-Result<NotNull<RefPtr<FileStream>>, nsresult> CreateFileStream(
-    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
-    Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
-    int32_t aBehaviorFlags) {
-  const auto stream = MakeNotNull<RefPtr<FileStream>>(
+Result<NotNull<RefPtr<FileRandomAccessStream>>, nsresult>
+CreateFileRandomAccessStream(PersistenceType aPersistenceType,
+                             const OriginMetadata& aOriginMetadata,
+                             Client::Type aClientType, nsIFile* aFile,
+                             int32_t aIOFlags, int32_t aPerm,
+                             int32_t aBehaviorFlags) {
+  const auto stream = MakeNotNull<RefPtr<FileRandomAccessStream>>(
       aPersistenceType, aOriginMetadata, aClientType);
 
   QM_TRY(MOZ_TO_RESULT(stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags)));
