@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<?xml-stylesheet href="data:text/css, hbox { border: 1px solid red; } vbox { border: 1px solid green }" type="text/css"?>
+<window title="XUL splitter resizebefore/after tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        orient="horizontal">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <hbox style="width: 200px; height: 200px; direction: ltr;">
+    <vbox style="height: 200px; width: 40px" />
+    <splitter id="ltr-splitter-before" width="5" resizebefore="sibling" resizeafter="none"/>
+    <vbox style="height: 200px;" flex="1"/>
+  </hbox>
+
+  <hbox style="width: 200px; height: 200px; direction: rtl;">
+    <vbox style="height: 200px; width: 40px" />
+    <splitter id="rtl-splitter-before" width="5" resizebefore="sibling" resizeafter="none"/>
+    <vbox style="height: 200px;" flex="1"/>
+  </hbox>
+
+  <hbox style="width: 200px; height: 200px; direction: ltr;">
+    <vbox style="height: 200px;" flex="1"/>
+    <splitter id="ltr-splitter-after" width="5" resizeafter="sibling" resizebefore="none"/>
+    <vbox style="height: 200px; width: 40px" />
+  </hbox>
+
+  <hbox style="width: 200px; height: 200px; direction: rtl;">
+    <vbox style="height: 200px;" flex="1"/>
+    <splitter id="rtl-splitter-after" width="5" resizeafter="sibling" resizebefore="none"/>
+    <vbox style="height: 200px; width: 40px" />
+  </hbox>
+
+  <script><![CDATA[
+    async function dragSplitter(splitter, offsetX) {
+      info(`Dragging splitter ${splitter.id} to ${offsetX}`);
+
+      const splitterRect = splitter.getBoundingClientRect();
+      const splitterWidth = splitterRect.width;
+      synthesizeMouse(splitter, splitterWidth / 2, 2, {type: "mousedown"});
+      synthesizeMouse(splitter, splitterWidth / 2, 1, {type: "mousemove"});
+      await new Promise(SimpleTest.executeSoon);
+      is(splitter.getAttribute("state"), "dragging", "The splitter should be dragged");
+      synthesizeMouse(splitter, offsetX, 1, {type: "mousemove"});
+      synthesizeMouse(splitter, offsetX, 1, {type: "mouseup"});
+      await new Promise(SimpleTest.executeSoon);
+      const newSplitterRect = splitter.getBoundingClientRect();
+      is(
+        offsetX > 0,
+        newSplitterRect.left > splitterRect.left,
+        `Should move in the right direction ${splitterRect.left} -> ${newSplitterRect.left}, ${offsetX}`
+      );
+    }
+
+    add_task(async function() {
+      for (let splitter of document.querySelectorAll("splitter")) {
+        info(`Testing ${splitter.id}`);
+        const isBefore = splitter.getAttribute("resizebefore") == "sibling";
+        const isRtl = getComputedStyle(splitter).direction == "rtl";
+
+        const resizableElement = isBefore ? splitter.previousElementSibling : splitter.nextElementSibling;
+        const nonResizableElement = isBefore ? splitter.nextElementSibling : splitter.previousElementSibling;
+        const oldWidth = resizableElement.getBoundingClientRect().width;
+
+        await dragSplitter(splitter, 10);
+
+        is(nonResizableElement.style.width, "", "Shouldn't have set width");
+        isnot(resizableElement.style.width, "40px", "Should've changed width");
+
+        const newWidth = resizableElement.getBoundingClientRect().width;
+
+        info(`Went from ${oldWidth} -> ${newWidth}\n`);
+
+        if (isRtl == isBefore) {
+          ok(newWidth < oldWidth, "Should've shrunk");
+        } else {
+          ok(newWidth > oldWidth, "Should've grown");
+        }
+      }
+    });
+   ]]></script>
+</window>
