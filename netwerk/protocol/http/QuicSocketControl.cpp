@@ -69,8 +69,6 @@ void QuicSocketControl::CallAuthenticated() {
 }
 
 void QuicSocketControl::HandshakeCompleted() {
-  psm::RememberCertErrorsTable::GetInstance().LookupCertErrorBits(this);
-
   uint32_t state = nsIWebProgressListener::STATE_IS_SECURE;
 
   MutexAutoLock lock(mMutex);
