@@ -160,7 +160,6 @@ socketprocess_networking:
             extra-options:
                 - "--setpref=network.process.enabled=true"
                 - "--setpref=network.http.network_access_on_socket_process.enabled=true"
-                - "--setpref=network.ssl_tokens_cache_enabled=true"
 
 wayland:
     description: "{description} with Wayland backend enabled"
