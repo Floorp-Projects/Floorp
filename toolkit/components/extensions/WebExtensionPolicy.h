@@ -38,10 +38,9 @@ using dom::WebExtensionLocalizeCallback;
 class DocInfo;
 class WebExtensionContentScript;
 
-class WebAccessibleResource final : public nsISupports {
+class WebAccessibleResource final {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(WebAccessibleResource)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebAccessibleResource)
 
   WebAccessibleResource(dom::GlobalObject& aGlobal,
                         const WebAccessibleResourceInit& aInit,
@@ -62,10 +61,9 @@ class WebAccessibleResource final : public nsISupports {
 
   bool IsExtensionMatch(const URLInfo& aURI);
 
- protected:
-  virtual ~WebAccessibleResource() = default;
-
  private:
+  ~WebAccessibleResource() = default;
+
   MatchGlobSet mWebAccessiblePaths;
   RefPtr<MatchPatternSetCore> mMatches;
   RefPtr<AtomSet> mExtensionIDs;
