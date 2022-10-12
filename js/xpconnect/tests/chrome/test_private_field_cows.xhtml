@@ -115,7 +115,6 @@
                 // Test that COWed objects passing from content to chrome get unwrapped.
                 function returnCOW() {
                     return getCOW({
-                        __exposedProps__: {},
                         bar: 6
                     });
                 }

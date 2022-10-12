@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1065185
     switch(gLoadCount++) {
       case 0:
         doMonitor([/access to property "a"/i]);
-        window[0].wrappedJSObject.probe = { a: 2, __exposedProps__: { 'a': 'r' } };
+        window[0].wrappedJSObject.probe = { a: 2 };
         is(window[0].eval('probe.a'), undefined, "Accessed exposed prop");
         endMonitor();
         break;

@@ -12,7 +12,7 @@ function run_test() {
   var sb = new Cu.Sandbox('http://www.example.com');
   sb.ok = ok;
   sb.fun = function() { ok(false, "Shouldn't ever reach me"); };
-  sb.cow = { foopy: 2, __exposedProps__: { foopy: 'rw' } };
+  sb.cow = { foopy: 2 };
   sb.payload = Cu.evalInSandbox('new Object()', xosb);
   Cu.evalInSandbox(checkThrows.toSource(), sb);
   Cu.evalInSandbox('checkThrows(function() { fun(payload); });', sb);

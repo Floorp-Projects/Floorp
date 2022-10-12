@@ -1,5 +1,5 @@
 function setupChromeSandbox() {
-  this.chromeObj = {a: 2, __exposedProps__: {a: "rw", b: "rw"} };
+  this.chromeObj = {a: 2 };
   this.chromeArr = [4, 2, 1];
 }
 

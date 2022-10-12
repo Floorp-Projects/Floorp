@@ -10,7 +10,7 @@
 function run_test()
 {
   var sb = Cu.Sandbox("http://www.example.com");
-  sb.obj = { foo: 42, __exposedProps__: { hasOwnProperty: 'r' } };
+  sb.obj = { foo: 42 };
   Assert.equal(Cu.evalInSandbox('typeof obj.foo', sb), 'undefined', "COW works as expected");
   Assert.equal(Cu.evalInSandbox('obj.hasOwnProperty', sb), undefined);
 }

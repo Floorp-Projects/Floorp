@@ -17,7 +17,7 @@ function run_test() {
   var sb = new Cu.Sandbox('http://www.example.org');
   sb.obj = {foo: 2};
   checkThrows('obj.foo = 3;', sb, /denied/);
-  Cu.evalInSandbox("var p = {__exposedProps__: {foo: 'rw'}};", sb);
+  Cu.evalInSandbox("var p = {};", sb);
   sb.obj.__proto__ = sb.p;
   checkThrows('obj.foo = 4;', sb, /denied/);
 }
