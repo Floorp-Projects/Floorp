@@ -23,15 +23,11 @@ namespace extensions {
 
 class MatchPattern;
 
-class MatchGlob final : public nsISupports, public nsWrapperCache {
+class MatchGlobCore final {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(MatchGlob)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MatchGlobCore)
 
-  static already_AddRefed<MatchGlob> Constructor(dom::GlobalObject& aGlobal,
-                                                 const nsACString& aGlob,
-                                                 bool aAllowQuestion,
-                                                 ErrorResult& aRv);
+  MatchGlobCore(const nsACString& aGlob, bool aAllowQuestion, ErrorResult& aRv);
 
   bool Matches(const nsACString& aString) const;
 
@@ -39,21 +35,8 @@ class MatchGlob final : public nsISupports, public nsWrapperCache {
 
   void GetGlob(nsACString& aGlob) const { aGlob = mGlob; }
 
-  nsISupports* GetParentObject() const { return mParent; }
-
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
-
- protected:
-  virtual ~MatchGlob();
-
  private:
-  friend class MatchPattern;
-
-  explicit MatchGlob(nsISupports* aParent, const nsACString& aGlob,
-                     bool aAllowQuestion, ErrorResult& aRv);
-
-  nsCOMPtr<nsISupports> mParent;
+  ~MatchGlobCore() = default;
 
   // The original glob string that this glob object represents.
   const nsCString mGlob;
@@ -71,7 +54,44 @@ class MatchGlob final : public nsISupports, public nsWrapperCache {
   RustRegex mRegExp;
 };
 
-class MatchGlobSet final : public CopyableTArray<RefPtr<MatchGlob>> {
+class MatchGlob final : public nsISupports, public nsWrapperCache {
+ public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(MatchGlob)
+
+  static already_AddRefed<MatchGlob> Constructor(dom::GlobalObject& aGlobal,
+                                                 const nsACString& aGlob,
+                                                 bool aAllowQuestion,
+                                                 ErrorResult& aRv);
+
+  explicit MatchGlob(nsISupports* aParent,
+                     already_AddRefed<MatchGlobCore> aCore)
+      : mParent(aParent), mCore(std::move(aCore)) {}
+
+  bool Matches(const nsACString& aString) const {
+    return Core()->Matches(aString);
+  }
+
+  bool IsWildcard() const { return Core()->IsWildcard(); }
+
+  void GetGlob(nsACString& aGlob) const { Core()->GetGlob(aGlob); }
+
+  MatchGlobCore* Core() const { return mCore; }
+
+  nsISupports* GetParentObject() const { return mParent; }
+
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
+
+ private:
+  ~MatchGlob() = default;
+
+  nsCOMPtr<nsISupports> mParent;
+
+  RefPtr<MatchGlobCore> mCore;
+};
+
+class MatchGlobSet final : public CopyableTArray<RefPtr<MatchGlobCore>> {
  public:
   // Note: We can't use the nsTArray constructors directly, since the static
   // analyzer doesn't handle their MOZ_IMPLICIT annotations correctly.
@@ -80,7 +100,7 @@ class MatchGlobSet final : public CopyableTArray<RefPtr<MatchGlob>> {
   explicit MatchGlobSet(const nsTArray& aOther) : CopyableTArray(aOther) {}
   MOZ_IMPLICIT MatchGlobSet(nsTArray&& aOther)
       : CopyableTArray(std::move(aOther)) {}
-  MOZ_IMPLICIT MatchGlobSet(std::initializer_list<RefPtr<MatchGlob>> aIL)
+  MOZ_IMPLICIT MatchGlobSet(std::initializer_list<RefPtr<MatchGlobCore>> aIL)
       : CopyableTArray(aIL) {}
 
   bool Matches(const nsACString& aValue) const;

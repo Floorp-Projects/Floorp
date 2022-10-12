@@ -338,7 +338,7 @@ void MatchPattern::Init(JSContext* aCx, const nsAString& aPattern,
     return;
   }
 
-  mPath = new MatchGlob(this, path, false, aRv);
+  mPath = new MatchGlobCore(path, false, aRv);
 }
 
 bool MatchPattern::MatchesDomain(const nsACString& aDomain) const {
@@ -586,27 +586,12 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(MatchPatternSet)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MatchPatternSet)
 
 /*****************************************************************************
- * MatchGlob
+ * MatchGlobCore
  *****************************************************************************/
 
-MatchGlob::~MatchGlob() = default;
-
-/* static */
-already_AddRefed<MatchGlob> MatchGlob::Constructor(dom::GlobalObject& aGlobal,
-                                                   const nsACString& aGlob,
-                                                   bool aAllowQuestion,
-                                                   ErrorResult& aRv) {
-  RefPtr<MatchGlob> glob =
-      new MatchGlob(aGlobal.GetAsSupports(), aGlob, aAllowQuestion, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  return glob.forget();
-}
-
-MatchGlob::MatchGlob(nsISupports* aParent, const nsACString& aGlob,
-                     bool aAllowQuestion, ErrorResult& aRv)
-    : mParent(aParent), mGlob(aGlob) {
+MatchGlobCore::MatchGlobCore(const nsACString& aGlob, bool aAllowQuestion,
+                             ErrorResult& aRv)
+    : mGlob(aGlob) {
   // Check for a literal match with no glob metacharacters.
   auto index = mGlob.FindCharInSet(aAllowQuestion ? "*?" : "*");
   if (index < 0) {
@@ -660,7 +645,7 @@ MatchGlob::MatchGlob(nsISupports* aParent, const nsACString& aGlob,
   }
 }
 
-bool MatchGlob::Matches(const nsACString& aString) const {
+bool MatchGlobCore::Matches(const nsACString& aString) const {
   if (mRegExp) {
     return mRegExp.IsMatch(aString);
   }
@@ -670,6 +655,24 @@ bool MatchGlob::Matches(const nsACString& aString) const {
   }
 
   return mPathLiteral == aString;
+}
+
+/*****************************************************************************
+ * MatchGlob
+ *****************************************************************************/
+
+/* static */
+already_AddRefed<MatchGlob> MatchGlob::Constructor(dom::GlobalObject& aGlobal,
+                                                   const nsACString& aGlob,
+                                                   bool aAllowQuestion,
+                                                   ErrorResult& aRv) {
+  RefPtr<MatchGlob> glob =
+      new MatchGlob(aGlobal.GetAsSupports(),
+                    MakeAndAddRef<MatchGlobCore>(aGlob, aAllowQuestion, aRv));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  return glob.forget();
 }
 
 JSObject* MatchGlob::WrapObject(JSContext* aCx,
