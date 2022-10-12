@@ -514,14 +514,6 @@ add_task(async function checkViewSource() {
       "expired.example.com",
       "Should list hostname in error message."
     );
-
-    const whatToDo = doc.querySelector("#errorWhatToDoText [data-l10n-args]");
-    const wtdArgs = JSON.parse(whatToDo.dataset.l10nArgs);
-    is(
-      wtdArgs.hostname,
-      "expired.example.com",
-      "Should list hostname in what to do text."
-    );
   });
 
   let loaded = BrowserTestUtils.browserLoaded(browser, false, uri);
@@ -548,7 +540,7 @@ add_task(async function checkViewSource() {
   ].getService(Ci.nsICertOverrideService);
   certOverrideService.clearValidityOverride("expired.example.com", -1, {});
 
-  loaded = BrowserTestUtils.browserLoaded(browser, false, null, true);
+  loaded = BrowserTestUtils.waitForErrorPage(browser);
   BrowserReloadSkipCache();
   await loaded;
 
