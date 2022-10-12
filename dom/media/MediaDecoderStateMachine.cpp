@@ -891,7 +891,8 @@ class MediaDecoderStateMachine::LoopingDecodingState
   void RequestAudioDataFromStartPosition() {
     Reader()->ResetDecode(TrackInfo::kAudioTrack);
     Reader()
-        ->Seek(SeekTarget(media::TimeUnit::Zero(), SeekTarget::Accurate))
+        ->Seek(SeekTarget(media::TimeUnit::Zero(), SeekTarget::Type::Accurate,
+                          SeekTarget::Track::AudioOnly))
         ->Then(
             OwnerThread(), __func__,
             [this]() -> void {
