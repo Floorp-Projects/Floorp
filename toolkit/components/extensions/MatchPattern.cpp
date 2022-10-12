@@ -26,46 +26,33 @@ using namespace mozilla::dom;
  * AtomSet
  *****************************************************************************/
 
-AtomSet::AtomSet(const nsTArray<nsString>& aElems) {
-  mElems.SetCapacity(aElems.Length());
+template <typename Range, typename AsAtom>
+static AtomSet::ArrayType AtomSetFromRange(Range&& aRange,
+                                           AsAtom&& aTransform) {
+  AtomSet::ArrayType atoms;
+  atoms.SetCapacity(RangeSize(aRange));
+  std::transform(aRange.begin(), aRange.end(), MakeBackInserter(atoms),
+                 std::forward<AsAtom>(aTransform));
 
-  for (const auto& elem : aElems) {
-    mElems.AppendElement(NS_AtomizeMainThread(elem));
-  }
-
-  SortAndUniquify();
-}
-
-AtomSet::AtomSet(const char** aElems) {
-  for (const char** elemp = aElems; *elemp; elemp++) {
-    mElems.AppendElement(NS_Atomize(*elemp));
-  }
-
-  SortAndUniquify();
-}
-
-AtomSet::AtomSet(std::initializer_list<nsAtom*> aIL) {
-  mElems.SetCapacity(aIL.size());
-
-  for (const auto& elem : aIL) {
-    mElems.AppendElement(elem);
-  }
-
-  SortAndUniquify();
-}
-
-void AtomSet::SortAndUniquify() {
-  mElems.Sort();
+  atoms.Sort();
 
   nsAtom* prev = nullptr;
-  mElems.RemoveElementsBy([&prev](const RefPtr<nsAtom>& aAtom) {
+  atoms.RemoveElementsBy([&prev](const RefPtr<nsAtom>& aAtom) {
     bool remove = aAtom == prev;
     prev = aAtom;
     return remove;
   });
 
-  mElems.Compact();
+  atoms.Compact();
+  return atoms;
 }
+
+AtomSet::AtomSet(const nsTArray<nsString>& aElems)
+    : mElems(AtomSetFromRange(
+          aElems, [](const nsString& elem) { return NS_Atomize(elem); })) {}
+
+AtomSet::AtomSet(std::initializer_list<nsAtom*> aIL)
+    : mElems(AtomSetFromRange(aIL, [](nsAtom* elem) { return elem; })) {}
 
 bool AtomSet::Intersects(const AtomSet& aOther) const {
   for (const auto& atom : *this) {
@@ -79,20 +66,6 @@ bool AtomSet::Intersects(const AtomSet& aOther) const {
     }
   }
   return false;
-}
-
-void AtomSet::Add(nsAtom* aAtom) {
-  auto index = mElems.IndexOfFirstElementGt(aAtom);
-  if (index == 0 || mElems[index - 1] != aAtom) {
-    mElems.InsertElementAt(index, aAtom);
-  }
-}
-
-void AtomSet::Remove(nsAtom* aAtom) {
-  auto index = mElems.BinaryIndexOf(aAtom);
-  if (index != ArrayType::NoIndex) {
-    mElems.RemoveElementAt(index);
-  }
 }
 
 /*****************************************************************************
@@ -221,15 +194,33 @@ const nsCString& CookieInfo::RawHost() const {
  * MatchPattern
  *****************************************************************************/
 
-const char* PERMITTED_SCHEMES[] = {"http", "https", "ws",   "wss",
-                                   "file", "ftp",   "data", nullptr};
+#define DEFINE_STATIC_ATOM_SET(name, ...)            \
+  static already_AddRefed<AtomSet> name() {          \
+    MOZ_ASSERT(NS_IsMainThread());                   \
+    static StaticRefPtr<AtomSet> sAtomSet;           \
+    RefPtr<AtomSet> atomSet = sAtomSet;              \
+    if (!atomSet) {                                  \
+      atomSet = sAtomSet = new AtomSet{__VA_ARGS__}; \
+      ClearOnShutdown(&sAtomSet);                    \
+    }                                                \
+    return atomSet.forget();                         \
+  }
+
+DEFINE_STATIC_ATOM_SET(PermittedSchemes, nsGkAtoms::http, nsGkAtoms::https,
+                       nsGkAtoms::ws, nsGkAtoms::wss, nsGkAtoms::file,
+                       nsGkAtoms::ftp, nsGkAtoms::data);
 
 // Known schemes that are followed by "://" instead of ":".
-const char* HOST_LOCATOR_SCHEMES[] = {
-    "http",   "https",    "ws",  "wss",      "file",    "ftp",  "moz-extension",
-    "chrome", "resource", "moz", "moz-icon", "moz-gio", nullptr};
+DEFINE_STATIC_ATOM_SET(HostLocatorSchemes, nsGkAtoms::http, nsGkAtoms::https,
+                       nsGkAtoms::ws, nsGkAtoms::wss, nsGkAtoms::file,
+                       nsGkAtoms::ftp, nsGkAtoms::moz_extension,
+                       nsGkAtoms::chrome, nsGkAtoms::resource, nsGkAtoms::moz,
+                       nsGkAtoms::moz_icon, nsGkAtoms::moz_gio);
 
-const char* WILDCARD_SCHEMES[] = {"http", "https", "ws", "wss", nullptr};
+DEFINE_STATIC_ATOM_SET(WildcardSchemes, nsGkAtoms::http, nsGkAtoms::https,
+                       nsGkAtoms::ws, nsGkAtoms::wss);
+
+#undef DEFINE_STATIC_ATOM_SET
 
 /* static */
 already_AddRefed<MatchPattern> MatchPattern::Constructor(
@@ -247,12 +238,7 @@ already_AddRefed<MatchPattern> MatchPattern::Constructor(
 void MatchPattern::Init(JSContext* aCx, const nsAString& aPattern,
                         bool aIgnorePath, bool aRestrictSchemes,
                         ErrorResult& aRv) {
-  RefPtr<AtomSet> permittedSchemes;
-  nsresult rv = AtomSet::Get<PERMITTED_SCHEMES>(permittedSchemes);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return;
-  }
+  RefPtr<AtomSet> permittedSchemes = PermittedSchemes();
 
   mPattern = aPattern;
 
@@ -278,19 +264,10 @@ void MatchPattern::Init(JSContext* aCx, const nsAString& aPattern,
   RefPtr<nsAtom> scheme = NS_AtomizeMainThread(StringHead(aPattern, index));
   bool requireHostLocatorScheme = true;
   if (scheme == nsGkAtoms::_asterisk) {
-    rv = AtomSet::Get<WILDCARD_SCHEMES>(mSchemes);
-    if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
-      return;
-    }
+    mSchemes = WildcardSchemes();
   } else if (!aRestrictSchemes || permittedSchemes->Contains(scheme) ||
              scheme == nsGkAtoms::moz_extension) {
-    RefPtr<AtomSet> hostLocatorSchemes;
-    rv = AtomSet::Get<HOST_LOCATOR_SCHEMES>(hostLocatorSchemes);
-    if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
-      return;
-    }
+    RefPtr<AtomSet> hostLocatorSchemes = HostLocatorSchemes();
     mSchemes = new AtomSet({scheme});
     requireHostLocatorScheme = hostLocatorSchemes->Contains(scheme);
   } else {
@@ -474,12 +451,7 @@ JSObject* MatchPattern::WrapObject(JSContext* aCx,
 
 /* static */
 bool MatchPattern::MatchesAllURLs(const URLInfo& aURL) {
-  RefPtr<AtomSet> permittedSchemes;
-  nsresult rv = AtomSet::Get<PERMITTED_SCHEMES>(permittedSchemes);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to retrireve PERMITTED_SCHEMES AtomSet");
-    return false;
-  }
+  RefPtr<AtomSet> permittedSchemes = PermittedSchemes();
   return permittedSchemes->Contains(aURL.Scheme());
 }
 
