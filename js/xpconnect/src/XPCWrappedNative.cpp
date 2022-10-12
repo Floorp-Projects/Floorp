@@ -1668,15 +1668,7 @@ void CallMethodHelper::trace(JSTracer* aTrc) {
 
 JSObject* XPCWrappedNative::GetJSObject() { return GetFlatJSObject(); }
 
-XPCWrappedNative* nsIXPConnectWrappedNative::AsXPCWrappedNative() {
-  return static_cast<XPCWrappedNative*>(this);
-}
-
-nsresult nsIXPConnectWrappedNative::DebugDump(int16_t depth) {
-  return AsXPCWrappedNative()->DebugDump(depth);
-}
-
-nsresult XPCWrappedNative::DebugDump(int16_t depth) {
+NS_IMETHODIMP XPCWrappedNative::DebugDump(int16_t depth) {
 #ifdef DEBUG
   depth--;
   XPC_LOG_ALWAYS(

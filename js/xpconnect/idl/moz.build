@@ -6,6 +6,7 @@
 
 XPIDL_SOURCES += [
     "mozIJSSubScriptLoader.idl",
+    "nsIXPConnect.idl",
     "nsIXPCScriptable.idl",
     "xpccomponents.idl",
     "xpcIJSWeakReference.idl",

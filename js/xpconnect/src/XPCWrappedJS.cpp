@@ -168,17 +168,12 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsXPCWrappedJS)
   return tmp->CanSkip();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
-nsXPCWrappedJS* nsIXPConnectWrappedJS::AsXPCWrappedJS() {
-  return static_cast<nsXPCWrappedJS*>(this);
-}
-
-nsresult nsIXPConnectWrappedJS::AggregatedQueryInterface(REFNSIID aIID,
-                                                         void** aInstancePtr) {
-  MOZ_ASSERT(AsXPCWrappedJS()->IsAggregatedToNative(),
-             "bad AggregatedQueryInterface call");
+NS_IMETHODIMP
+nsXPCWrappedJS::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr) {
+  MOZ_ASSERT(IsAggregatedToNative(), "bad AggregatedQueryInterface call");
   *aInstancePtr = nullptr;
 
-  if (!AsXPCWrappedJS()->IsValid()) {
+  if (!IsValid()) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -188,11 +183,11 @@ nsresult nsIXPConnectWrappedJS::AggregatedQueryInterface(REFNSIID aIID,
   // once in QueryInterface and once in DelegatedQueryInterface.
   if (aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJS))) {
     NS_ADDREF(this);
-    *aInstancePtr = (void*)this;
+    *aInstancePtr = (void*)static_cast<nsIXPConnectWrappedJS*>(this);
     return NS_OK;
   }
 
-  return AsXPCWrappedJS()->DelegatedQueryInterface(aIID, aInstancePtr);
+  return DelegatedQueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP
@@ -324,8 +319,8 @@ nsXPCWrappedJS::GetWeakReference(nsIWeakReference** aInstancePtr) {
 
 JSObject* nsXPCWrappedJS::GetJSObject() { return mJSObj; }
 
-JSObject* nsIXPConnectWrappedJS::GetJSObjectGlobal() {
-  JSObject* obj = AsXPCWrappedJS()->mJSObj;
+JSObject* nsXPCWrappedJS::GetJSObjectGlobal() {
+  JSObject* obj = mJSObj;
   if (js::IsCrossCompartmentWrapper(obj)) {
     JS::Compartment* comp = JS::GetCompartment(obj);
     return js::GetFirstGlobalInCompartment(comp);
@@ -595,10 +590,10 @@ nsXPCWrappedJS* nsXPCWrappedJS::FindInherited(REFNSIID aIID) {
 }
 
 NS_IMETHODIMP
-nsIXPConnectWrappedJS::GetInterfaceIID(nsIID** iid) {
+nsXPCWrappedJS::GetInterfaceIID(nsIID** iid) {
   MOZ_ASSERT(iid, "bad param");
 
-  *iid = AsXPCWrappedJS()->GetIID().Clone();
+  *iid = GetIID().Clone();
   return NS_OK;
 }
 
@@ -648,11 +643,8 @@ size_t nsXPCWrappedJS::SizeOfIncludingThis(
 
 /***************************************************************************/
 
-nsresult nsIXPConnectWrappedJS::DebugDump(int16_t depth) {
-  return AsXPCWrappedJS()->DebugDump(depth);
-}
-
-nsresult nsXPCWrappedJS::DebugDump(int16_t depth) {
+NS_IMETHODIMP
+nsXPCWrappedJS::DebugDump(int16_t depth) {
 #ifdef DEBUG
   XPC_LOG_ALWAYS(
       ("nsXPCWrappedJS @ %p with mRefCnt = %" PRIuPTR, this, mRefCnt.get()));
