@@ -165,7 +165,8 @@ bool WebAccessibleResource::IsExtensionMatch(const URLInfo& aURI) {
   if (!mExtensionIDs) {
     return false;
   }
-  WebExtensionPolicy* policy = EPS().GetByHost(aURI.Host());
+  RefPtr<WebExtensionPolicyCore> policy =
+      ExtensionPolicyService::GetCoreByHost(aURI.Host());
   return policy && (mExtensionIDs->Contains(nsGkAtoms::_asterisk) ||
                     mExtensionIDs->Contains(policy->Id()));
 }
