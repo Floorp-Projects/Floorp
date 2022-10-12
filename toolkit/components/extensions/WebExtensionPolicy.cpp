@@ -83,13 +83,13 @@ static nsISubstitutingProtocolHandler* Proto() {
 
 bool ParseGlobs(GlobalObject& aGlobal,
                 Sequence<OwningMatchGlobOrUTF8String> aGlobs,
-                nsTArray<RefPtr<MatchGlob>>& aResult, ErrorResult& aRv) {
+                nsTArray<RefPtr<MatchGlobCore>>& aResult, ErrorResult& aRv) {
   for (auto& elem : aGlobs) {
     if (elem.IsMatchGlob()) {
-      aResult.AppendElement(elem.GetAsMatchGlob());
+      aResult.AppendElement(elem.GetAsMatchGlob()->Core());
     } else {
-      RefPtr<MatchGlob> glob =
-          MatchGlob::Constructor(aGlobal, elem.GetAsUTF8String(), true, aRv);
+      RefPtr<MatchGlobCore> glob =
+          new MatchGlobCore(elem.GetAsUTF8String(), true, aRv);
       if (aRv.Failed()) {
         return false;
       }
@@ -903,8 +903,7 @@ JSObject* WebExtensionContentScript::WrapObject(
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MozDocumentMatcher, mMatches,
-                                      mExcludeMatches, mIncludeGlobs,
-                                      mExcludeGlobs, mExtension)
+                                      mExcludeMatches, mExtension)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MozDocumentMatcher)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
