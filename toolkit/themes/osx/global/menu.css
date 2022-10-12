@@ -153,15 +153,25 @@ menulist > menupopup > menu {
   -moz-default-appearance: checkmenuitem;
 }
 
-menulist > menupopup > menuitem:is([checked="true"], [selected="true"])::before {
+menulist > menupopup > menuitem {
+  padding-inline: 0;
+}
+
+/* We only show the ::before pseudo-element, but we'd like the spacing to be
+ * symmetric, so we render an invisible checkmark on both sides in order to
+ * reserve the right amount of space. */
+menulist > menupopup > menuitem::after,
+menulist > menupopup > menuitem::before {
   content: '\2713'; /* a checkmark */
   display: inline-block;
   vertical-align: middle;
   line-height: 0;
-  width: 15px;
-  max-width: 15px;
-  min-width: 15px;
-  margin-inline-start: -15px;
+  visibility: hidden;
+  padding-inline: 4px;
+}
+
+menulist > menupopup > menuitem:is([checked="true"], [selected="true"])::before {
+  visibility: inherit;
 }
 
 /* menuseparator */
