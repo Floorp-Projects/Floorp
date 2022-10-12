@@ -9,10 +9,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.feature.customtabs.createCustomTabConfigFromIntent
 import org.mozilla.focus.BuildConfig
+import org.mozilla.focus.R
 import org.mozilla.focus.activity.CustomTabActivity
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.getPackageInfoCompat
@@ -104,6 +107,11 @@ object SupportUtils {
     }
 
     fun openUrlInCustomTab(activity: FragmentActivity, destinationUrl: String) {
+        activity.intent.putExtra(
+            CustomTabsIntent.EXTRA_TOOLBAR_COLOR,
+            ContextCompat.getColor(activity, R.color.settings_background),
+        )
+
         val tabId = activity.components.customTabsUseCases.add(
             url = destinationUrl,
             customTabConfig = createCustomTabConfigFromIntent(activity.intent, activity.resources),
