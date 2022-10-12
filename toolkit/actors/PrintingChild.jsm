@@ -243,12 +243,8 @@ class PrintingChild extends JSWindowActorChild {
         // Display reader content element
         readerContent.style.display = "block";
       } else {
-        let aboutReaderStrings = Services.strings.createBundle(
-          "chrome://global/locale/aboutReader.properties"
-        );
-        let errorMessage = aboutReaderStrings.GetStringFromName(
-          "aboutReader.loadError"
-        );
+        const l10n = new Localization(["toolkit/about/aboutReader.ftl"], true);
+        const errorMessage = l10n.formatValueSync("about-reader-load-error");
 
         document.title = errorMessage;
 
