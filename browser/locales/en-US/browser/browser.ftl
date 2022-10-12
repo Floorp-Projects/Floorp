@@ -640,21 +640,6 @@ urlbar-group-search-suggestions =
 urlbar-group-quickactions =
   .label = Quick Actions
 
-## Reader View toolbar & menubar items
-## These menu items may use the same accesskey.
-
-reader-view-enter-button =
-    .aria-label = Enter Reader View
-reader-view-enter-menuitem =
-    .label = Enter Reader View
-    .accesskey = R
-
-reader-view-close-button =
-    .aria-label = Close Reader View
-reader-view-close-menuitem =
-    .label = Close Reader View
-    .accesskey = R
-
 ## Full Screen and Pointer Lock UI
 
 # Please ensure that the domain stays in the `<span data-l10n-name="domain">` markup.

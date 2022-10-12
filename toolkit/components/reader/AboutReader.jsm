@@ -13,10 +13,6 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -29,27 +25,18 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   lazy,
+  "PluralForm",
+  "resource://gre/modules/PluralForm.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  lazy,
   "NimbusFeatures",
   "resource://nimbus/ExperimentAPI.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(
-  lazy,
-  "numberFormat",
-  () => new Services.intl.NumberFormat(undefined)
+var gStrings = Services.strings.createBundle(
+  "chrome://global/locale/aboutReader.properties"
 );
-XPCOMUtils.defineLazyGetter(
-  lazy,
-  "pluralRules",
-  () => new Services.intl.PluralRules(undefined)
-);
-
-const COLORSCHEME_L10N_IDS = {
-  light: "about-reader-color-scheme-light",
-  dark: "about-reader-color-scheme-dark",
-  sepia: "about-reader-color-scheme-sepia",
-  auto: "about-reader-color-scheme-auto",
-};
 
 Services.telemetry.setEventRecordingEnabled("readermode", true);
 
@@ -169,7 +156,11 @@ var AboutReader = function(
 
   Services.obs.addObserver(this, "inner-window-destroyed");
 
-  this._setupButton("close-button", this._onReaderClose.bind(this));
+  this._setupButton(
+    "close-button",
+    this._onReaderClose.bind(this),
+    "aboutReader.toolbar.close"
+  );
 
   // we're ready for any external setup, send a signal for that.
   this._actor.sendAsyncMessage("Reader:OnSetup");
@@ -177,12 +168,14 @@ var AboutReader = function(
   let colorSchemeValues = JSON.parse(
     Services.prefs.getCharPref("reader.color_scheme.values")
   );
-  let colorSchemeOptions = colorSchemeValues.map(value => ({
-    l10nId: COLORSCHEME_L10N_IDS[value],
-    groupName: "color-scheme",
-    value,
-    itemClass: value + "-button",
-  }));
+  let colorSchemeOptions = colorSchemeValues.map(value => {
+    return {
+      name: gStrings.GetStringFromName("aboutReader.colorScheme." + value),
+      groupName: "color-scheme",
+      value,
+      itemClass: value + "-button",
+    };
+  });
   let colorScheme = Services.prefs.getCharPref("reader.color_scheme");
 
   this._setupSegmentedButton(
@@ -193,15 +186,21 @@ var AboutReader = function(
   );
   this._setColorSchemePref(colorScheme);
 
+  let styleButton = this._doc.querySelector(".style-button");
+  this._setButtonTip(styleButton, "aboutReader.toolbar.typeControls");
+
+  // See bug 1637089.
+  // let fontTypeSample = gStrings.GetStringFromName("aboutReader.fontTypeSample");
+
   let fontTypeOptions = [
     {
-      l10nId: "about-reader-font-type-sans-serif",
+      name: gStrings.GetStringFromName("aboutReader.fontType.sans-serif"),
       groupName: "font-type",
       value: "sans-serif",
       itemClass: "sans-serif-button",
     },
     {
-      l10nId: "about-reader-font-type-serif",
+      name: gStrings.GetStringFromName("aboutReader.fontType.serif"),
       groupName: "font-type",
       value: "serif",
       itemClass: "serif-button",
@@ -232,6 +231,30 @@ var AboutReader = function(
   }
 
   this._loadArticle(docContentType);
+
+  let dropdown = this._toolbarElement;
+
+  let elemL10nMap = {
+    ".minus-button": "minus",
+    ".plus-button": "plus",
+    ".content-width-minus-button": "contentwidthminus",
+    ".content-width-plus-button": "contentwidthplus",
+    ".line-height-minus-button": "lineheightminus",
+    ".line-height-plus-button": "lineheightplus",
+    ".light-button": "colorschemelight",
+    ".dark-button": "colorschemedark",
+    ".sepia-button": "colorschemesepia",
+    ".auto-button": "colorschemeauto",
+  };
+
+  for (let [selector, stringID] of Object.entries(elemL10nMap)) {
+    dropdown
+      .querySelector(selector)
+      ?.setAttribute(
+        "title",
+        gStrings.GetStringFromName("aboutReader.toolbar." + stringID)
+      );
+  }
 };
 
 AboutReader.prototype = {
@@ -308,28 +331,30 @@ AboutReader.prototype = {
     ));
   },
 
-  receiveMessage({ data, name }) {
-    const doc = this._doc;
-    switch (name) {
+  receiveMessage(message) {
+    switch (message.name) {
       case "Reader:AddButton": {
-        if (data.id && data.image && !doc.getElementsByClassName(data.id)[0]) {
-          let btn = doc.createElement("button");
-          btn.dataset.buttonid = data.id;
-          btn.dataset.telemetryId = `reader-${data.telemetryId}`;
-          btn.className = "toolbar-button " + data.id;
-          btn.setAttribute("aria-labelledby", "label-" + data.id);
-          let tip = doc.createElement("span");
+        if (
+          message.data.id &&
+          message.data.image &&
+          !this._doc.getElementsByClassName(message.data.id)[0]
+        ) {
+          let btn = this._doc.createElement("button");
+          btn.dataset.buttonid = message.data.id;
+          btn.dataset.telemetryId = `reader-${message.data.telemetryId}`;
+          btn.className = "toolbar-button " + message.data.id;
+          let tip = this._doc.createElement("span");
           tip.className = "hover-label";
-          tip.id = "label-" + data.id;
-          doc.l10n.setAttributes(tip, data.l10nId);
+          tip.textContent = message.data.label;
           btn.append(tip);
-          btn.style.backgroundImage = "url('" + data.image + "')";
-          if (data.width && data.height) {
-            btn.style.backgroundSize = `${data.width}px ${data.height}px`;
+          btn.setAttribute("aria-label", message.data.label);
+          btn.style.backgroundImage = "url('" + message.data.image + "')";
+          if (message.data.width && message.data.height) {
+            btn.style.backgroundSize = `${message.data.width}px ${message.data.height}px`;
           }
           let tb = this._toolbarElement;
           tb.appendChild(btn);
-          this._setupButton(data.id, button => {
+          this._setupButton(message.data.id, button => {
             this._actor.sendAsyncMessage(
               "Reader:Clicked-" + button.dataset.buttonid,
               { article: this._article }
@@ -339,8 +364,8 @@ AboutReader.prototype = {
         break;
       }
       case "Reader:RemoveButton": {
-        if (data.id) {
-          let btn = doc.getElementsByClassName(data.id)[0];
+        if (message.data.id) {
+          let btn = this._doc.getElementsByClassName(message.data.id)[0];
           if (btn) {
             btn.remove();
           }
@@ -968,19 +993,31 @@ AboutReader.prototype = {
     this._toolbarElement.setAttribute("articledir", article.dir || "ltr");
   },
 
+  _formatReadTime(slowEstimate, fastEstimate) {
+    let displayStringKey = "aboutReader.estimatedReadTimeRange1";
+
+    // only show one reading estimate when they are the same value
+    if (slowEstimate == fastEstimate) {
+      displayStringKey = "aboutReader.estimatedReadTimeValue1";
+    }
+
+    return lazy.PluralForm.get(
+      slowEstimate,
+      gStrings.GetStringFromName(displayStringKey)
+    )
+      .replace("#1", fastEstimate)
+      .replace("#2", slowEstimate);
+  },
+
   _showError() {
     this._headerElement.classList.remove("reader-show-element");
     this._contentElement.classList.remove("reader-show-element");
 
-    this._doc.l10n.setAttributes(
-      this._messageElement,
-      "about-reader-load-error"
-    );
-    this._doc.l10n.setAttributes(
-      this._doc.getElementById("reader-title"),
-      "about-reader-load-error"
-    );
+    let errorMessage = gStrings.GetStringFromName("aboutReader.loadError");
+    this._messageElement.textContent = errorMessage;
     this._messageElement.style.display = "block";
+
+    this._doc.title = errorMessage;
 
     this._doc.documentElement.dataset.isError = true;
 
@@ -1034,19 +1071,9 @@ AboutReader.prototype = {
     this._creditsElement.textContent = article.byline;
 
     this._titleElement.textContent = article.title;
-
-    const slow = article.readingTimeMinsSlow;
-    const fast = article.readingTimeMinsFast;
-    this._doc.l10n.setAttributes(
-      this._readTimeElement,
-      "about-reader-estimated-read-time",
-      {
-        range: lazy.numberFormat.formatRange(fast, slow),
-        rangePlural:
-          slow === fast
-            ? lazy.pluralRules.select(fast) // workaround for https://github.com/tc39/proposal-intl-numberformat-v3/issues/64
-            : lazy.pluralRules.selectRange(fast, slow),
-      }
+    this._readTimeElement.textContent = this._formatReadTime(
+      article.readingTimeMinsSlow,
+      article.readingTimeMinsFast
     );
 
     // If a document title was not provided in the constructor, we'll fall back
@@ -1114,9 +1141,8 @@ AboutReader.prototype = {
       this._headerElement.classList.remove("reader-show-element");
       this._contentElement.classList.remove("reader-show-element");
 
-      this._doc.l10n.setAttributes(
-        this._messageElement,
-        "about-reader-loading"
+      this._messageElement.textContent = gStrings.GetStringFromName(
+        "aboutReader.loading2"
       );
       this._messageElement.classList.add("reader-show-element");
     }, 300);
@@ -1143,9 +1169,9 @@ AboutReader.prototype = {
       segmentedButton.appendChild(radioButton);
 
       let item = doc.createElement("label");
+      item.textContent = option.name;
       item.htmlFor = radioButton.id;
       item.classList.add(option.itemClass);
-      doc.l10n.setAttributes(item, option.l10nId);
 
       segmentedButton.appendChild(item);
 
@@ -1174,8 +1200,12 @@ AboutReader.prototype = {
     }
   },
 
-  _setupButton(id, callback) {
+  _setupButton(id, callback, titleEntity) {
     let button = this._doc.querySelector("." + id);
+    if (titleEntity) {
+      this._setButtonTip(button, titleEntity);
+    }
+
     button.removeAttribute("hidden");
     button.addEventListener(
       "click",
@@ -1189,6 +1219,19 @@ AboutReader.prototype = {
       },
       true
     );
+  },
+
+  /**
+   * Sets a tooltip-style label on a button.
+   * @param   Localizable string providing UI element usage tip.
+   */
+  _setButtonTip(button, titleEntity) {
+    let tip = this._doc.createElement("span");
+    let localizedString = gStrings.GetStringFromName(titleEntity);
+    tip.textContent = localizedString;
+    tip.className = "hover-label";
+    button.setAttribute("aria-label", localizedString);
+    button.append(tip);
   },
 
   _toggleDropdownClicked(event) {

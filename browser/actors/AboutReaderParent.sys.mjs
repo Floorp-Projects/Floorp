@@ -19,6 +19,10 @@ ChromeUtils.defineModuleGetter(
   "chrome://pocket/content/pktApi.jsm"
 );
 
+const gStringBundle = Services.strings.createBundle(
+  "chrome://global/locale/aboutReader.properties"
+);
+
 // A set of all of the AboutReaderParent actors that exist.
 // See bug 1631146 for a request for a less manual way of doing this.
 let gAllActors = new Set();
@@ -220,30 +224,43 @@ export class AboutReaderParent extends JSWindowActorParent {
       return;
     }
 
-    let doc = browser.ownerGlobal.document;
-    let button = doc.getElementById("reader-mode-button");
-    let menuitem = doc.getElementById("menu_readerModeItem");
-    let key = doc.getElementById("key_toggleReaderMode");
+    let win = browser.ownerGlobal;
+
+    let button = win.document.getElementById("reader-mode-button");
+    let menuitem = win.document.getElementById("menu_readerModeItem");
+    let key = win.document.getElementById("key_toggleReaderMode");
     if (this.isReaderMode()) {
       gAllActors.add(this);
 
+      let closeText = gStringBundle.GetStringFromName("readerView.close");
+
       button.setAttribute("readeractive", true);
       button.hidden = false;
-      doc.l10n.setAttributes(button, "reader-view-close-button");
+      button.setAttribute("aria-label", closeText);
 
+      menuitem.setAttribute("label", closeText);
       menuitem.hidden = false;
-      doc.l10n.setAttributes(menuitem, "reader-view-close-menuitem");
+      menuitem.setAttribute(
+        "accesskey",
+        gStringBundle.GetStringFromName("readerView.close.accesskey")
+      );
 
       key.setAttribute("disabled", false);
 
       Services.obs.notifyObservers(null, "reader-mode-available");
     } else {
+      let enterText = gStringBundle.GetStringFromName("readerView.enter");
+
       button.removeAttribute("readeractive");
       button.hidden = !browser.isArticle;
-      doc.l10n.setAttributes(button, "reader-view-enter-button");
+      button.setAttribute("aria-label", enterText);
 
+      menuitem.setAttribute("label", enterText);
       menuitem.hidden = !browser.isArticle;
-      doc.l10n.setAttributes(menuitem, "reader-view-enter-menuitem");
+      menuitem.setAttribute(
+        "accesskey",
+        gStringBundle.GetStringFromName("readerView.enter.accesskey")
+      );
 
       key.setAttribute("disabled", !browser.isArticle);
 
