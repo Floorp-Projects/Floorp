@@ -1963,7 +1963,11 @@ pref("extensions.manifestV2.actionsPopupURLRestricted", false);
   pref("extensions.manifestV3.enabled", false);
 #endif
 // Whether to enable the unified extensions feature.
-pref("extensions.unifiedExtensions.enabled", false);
+#ifdef NIGHTLY_BUILD
+  pref("extensions.unifiedExtensions.enabled", true);
+#else
+  pref("extensions.unifiedExtensions.enabled", false);
+#endif
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
