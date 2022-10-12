@@ -5,14 +5,15 @@
 
 #include "TextServicesDocument.h"
 
-#include "FilteredContentIterator.h"         // for FilteredContentIterator
-#include "mozilla/Assertions.h"              // for MOZ_ASSERT, etc
-#include "mozilla/EditorBase.h"              // for EditorBase
-#include "mozilla/EditorUtils.h"             // for AutoTransactionBatchExternal
-#include "mozilla/HTMLEditUtils.h"           // for HTMLEditUtils
-#include "mozilla/IntegerRange.h"            // for IntegerRange
-#include "mozilla/JoinSplitNodeDirection.h"  // for JoinNodesDirection
-#include "mozilla/mozalloc.h"                // for operator new, etc
+#include "EditorBase.h"               // for EditorBase
+#include "EditorUtils.h"              // for AutoTransactionBatchExternal
+#include "FilteredContentIterator.h"  // for FilteredContentIterator
+#include "HTMLEditUtils.h"            // for HTMLEditUtils
+#include "JoinSplitNodeDirection.h"   // for JoinNodesDirection
+
+#include "mozilla/Assertions.h"    // for MOZ_ASSERT, etc
+#include "mozilla/IntegerRange.h"  // for IntegerRange
+#include "mozilla/mozalloc.h"      // for operator new, etc
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/UniquePtr.h"          // for UniquePtr
 #include "mozilla/dom/AbstractRange.h"  // for AbstractRange
@@ -21,8 +22,9 @@
 #include "mozilla/dom/StaticRange.h"  // for StaticRange
 #include "mozilla/dom/Text.h"
 #include "mozilla/intl/WordBreaker.h"  // for WordRange, WordBreaker
-#include "nsAString.h"                 // for nsAString::Length, etc
-#include "nsContentUtils.h"            // for nsContentUtils
+
+#include "nsAString.h"       // for nsAString::Length, etc
+#include "nsContentUtils.h"  // for nsContentUtils
 #include "nsComposeTxtSrvFilter.h"
 #include "nsDebug.h"                 // for NS_ENSURE_TRUE, etc
 #include "nsDependentSubstring.h"    // for Substring

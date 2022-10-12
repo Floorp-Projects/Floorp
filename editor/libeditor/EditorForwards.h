@@ -39,7 +39,7 @@ class Text;
  * enum classes
  ******************************************************************************/
 
-enum class CollectChildrenOption;              // mozilla/HTMLEditUtils.h
+enum class CollectChildrenOption;              // HTMLEditUtils.h
 enum class EditAction;                         // mozilla/EditAction.h
 enum class EditorCommandParamType : uint16_t;  // mozilla/EditorCommands.h
 enum class EditSubAction : int32_t;            // mozilla/EditAction.h
