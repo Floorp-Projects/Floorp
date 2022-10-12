@@ -3,16 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/TextEditor.h"
+#include "TextEditor.h"
+
+#include "EditorUtils.h"
+#include "HTMLEditor.h"
+#include "SelectionState.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/HTMLEditor.h"
 #include "mozilla/MouseEvents.h"
-#include "mozilla/SelectionState.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Selection.h"
+
 #include "nsAString.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"

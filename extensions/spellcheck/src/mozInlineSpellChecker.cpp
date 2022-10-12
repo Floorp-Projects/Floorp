@@ -38,7 +38,6 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorSpellCheck.h"
-#include "mozilla/EditorUtils.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IntegerRange.h"

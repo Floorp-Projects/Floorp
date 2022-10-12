@@ -12,11 +12,11 @@
 #include "AutoRangeArray.h"
 #include "CSSEditUtils.h"
 #include "EditAction.h"
+#include "EditorUtils.h"
 #include "HTMLEditUtils.h"
 #include "WSRunObject.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/EditorUtils.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
