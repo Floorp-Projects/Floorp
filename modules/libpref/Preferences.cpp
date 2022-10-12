@@ -6000,7 +6000,6 @@ static const PrefListEntry sParentOnlyPrefBranchList[] = {
     PREF_LIST_ENTRY("media.gmp-manager.lastCheck"),
     PREF_LIST_ENTRY("places.database.lastMaintenance"),
     PREF_LIST_ENTRY("privacy.purge_trackers.last_purge"),
-    PREF_LIST_ENTRY("security.sandbox.content.tempDirSuffix"),
     PREF_LIST_ENTRY("storage.vacuum.last.places.sqlite"),
     PREF_LIST_ENTRY("toolkit.startup.last_success"),
 
@@ -6052,6 +6051,7 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
     PREF_LIST_ENTRY("media.video_loopback_dev"),
     PREF_LIST_ENTRY("media.webspeech.service.endpoint"),
     PREF_LIST_ENTRY("network.gio.supported-protocols"),
+    PREF_LIST_ENTRY("network.security.ports.banned.override"),
     PREF_LIST_ENTRY("pdfjs."),
     PREF_LIST_ENTRY("print.printer_"),
     PREF_LIST_ENTRY("print_printer"),
