@@ -382,6 +382,35 @@ struct MapRequest {
   WebGPUParent::BufferMapResolver mResolver;
 };
 
+nsCString MapStatusString(ffi::WGPUBufferMapAsyncStatus status) {
+  switch (status) {
+    case ffi::WGPUBufferMapAsyncStatus_Success:
+      return nsCString("Success");
+    case ffi::WGPUBufferMapAsyncStatus_AlreadyMapped:
+      return nsCString("Already mapped");
+    case ffi::WGPUBufferMapAsyncStatus_MapAlreadyPending:
+      return nsCString("Map is already pending");
+    case ffi::WGPUBufferMapAsyncStatus_Aborted:
+      return nsCString("Map aborted");
+    case ffi::WGPUBufferMapAsyncStatus_ContextLost:
+      return nsCString("Context lost");
+    case ffi::WGPUBufferMapAsyncStatus_Invalid:
+      return nsCString("Invalid buffer");
+    case ffi::WGPUBufferMapAsyncStatus_InvalidRange:
+      return nsCString("Invalid range");
+    case ffi::WGPUBufferMapAsyncStatus_InvalidAlignment:
+      return nsCString("Invalid alignment");
+    case ffi::WGPUBufferMapAsyncStatus_InvalidUsageFlags:
+      return nsCString("Invalid usage flags");
+    case ffi::WGPUBufferMapAsyncStatus_Error:
+      return nsCString("Map failed");
+    case ffi::WGPUBufferMapAsyncStatus_Sentinel:  // For -Wswitch
+      break;
+  }
+
+  MOZ_CRASH("Bad ffi::WGPUBufferMapAsyncStatus");
+}
+
 static void MapCallback(ffi::WGPUBufferMapAsyncStatus status,
                         uint8_t* userdata) {
   auto* req = reinterpret_cast<MapRequest*>(userdata);
@@ -398,9 +427,7 @@ static void MapCallback(ffi::WGPUBufferMapAsyncStatus status,
   MOZ_RELEASE_ASSERT(mapData);
 
   if (status != ffi::WGPUBufferMapAsyncStatus_Success) {
-    // TODO: construct a proper error message from the status code.
-    nsCString errorString("mapAsync: Failed to map the buffer");
-    result = BufferMapError(errorString);
+    result = BufferMapError(MapStatusString(status));
   } else {
     auto size = req->mSize;
     auto offset = req->mOffset;
