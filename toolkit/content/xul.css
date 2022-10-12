@@ -576,10 +576,11 @@ menulist[popuponly] {
 /********** splitter **********/
 
 .tree-splitter {
-  width: 0px;
-  max-width: 0px;
-  min-width: 0% ! important;
-  min-height: 0% ! important;
+  width: 0;
+  max-width: 0;
+  appearance: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
   -moz-box-ordinal-group: 2147483646;
 }
 
