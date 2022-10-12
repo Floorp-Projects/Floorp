@@ -93,7 +93,7 @@ import org.mozilla.fenix.telemetry.TelemetryLifecycleObserver
 import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.Settings.Companion.TOP_SITES_PROVIDER_MAX_THRESHOLD
-import org.mozilla.fenix.wallpapers.WallpaperManager
+import org.mozilla.fenix.wallpapers.Wallpaper
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
@@ -696,7 +696,10 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             }
             installSource.set(installSourcePackage.orEmpty())
 
-            defaultWallpaper.set(WallpaperManager.isDefaultTheCurrentWallpaper(settings))
+            val isDefaultTheCurrentWallpaper =
+                Wallpaper.nameIsDefault(settings.currentWallpaperName)
+
+            defaultWallpaper.set(isDefaultTheCurrentWallpaper)
         }
 
         with(AndroidAutofill) {

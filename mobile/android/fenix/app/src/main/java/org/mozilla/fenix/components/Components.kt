@@ -8,7 +8,6 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.content.Intent
-import android.os.StrictMode
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
@@ -46,7 +45,6 @@ import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.utils.ClipboardHandler
 import org.mozilla.fenix.utils.Settings
-import org.mozilla.fenix.wallpapers.WallpaperManager
 import org.mozilla.fenix.wifi.WifiConnectionMonitor
 import java.util.concurrent.TimeUnit
 
@@ -163,14 +161,6 @@ class Components(private val context: Context) {
     val push by lazyMonitored { Push(context, analytics.crashReporter) }
     val wifiConnectionMonitor by lazyMonitored { WifiConnectionMonitor(context as Application) }
     val strictMode by lazyMonitored { StrictModeManager(Config, this) }
-
-    val wallpaperManager by lazyMonitored {
-        strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
-            WallpaperManager(
-                appStore,
-            )
-        }
-    }
 
     val settings by lazyMonitored { Settings(context) }
 
