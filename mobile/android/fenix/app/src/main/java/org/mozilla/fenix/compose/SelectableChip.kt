@@ -18,6 +18,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.intl.Locale
@@ -32,12 +33,16 @@ import org.mozilla.fenix.theme.Theme
  *
  * @param text [String] displayed in this chip. Ideally should only be one word.
  * @param isSelected Whether this should be shown as selected.
+ * @param selectedBackgroundColor Optional background [Color] when the chip is selected.
+ * @param unselectedBackgroundColor Optional background [Color] when the chip is not selected.
  * @param onClick Callback for when the user taps this.
  */
 @Composable
 fun SelectableChip(
     text: String,
     isSelected: Boolean,
+    selectedBackgroundColor: Color? = null,
+    unselectedBackgroundColor: Color? = null,
     onClick: () -> Unit,
 ) {
     Box(
@@ -46,9 +51,9 @@ fun SelectableChip(
             .clip(MaterialTheme.shapes.small)
             .background(
                 color = if (isSelected) {
-                    FirefoxTheme.colors.actionPrimary
+                    selectedBackgroundColor ?: FirefoxTheme.colors.actionPrimary
                 } else {
-                    FirefoxTheme.colors.actionTertiary
+                    unselectedBackgroundColor ?: FirefoxTheme.colors.actionTertiary
                 },
             )
             .padding(horizontal = 16.dp, vertical = 10.dp),
@@ -67,7 +72,8 @@ fun SelectableChip(
 
 @Composable
 @Preview(uiMode = UI_MODE_NIGHT_YES)
-private fun SelectableChipDarkThemePreview() {
+@Preview(uiMode = UI_MODE_NIGHT_NO)
+private fun SelectableChipPreview() {
     FirefoxTheme(theme = Theme.getTheme()) {
         Row(
             modifier = Modifier
@@ -82,8 +88,9 @@ private fun SelectableChipDarkThemePreview() {
 }
 
 @Composable
+@Preview(uiMode = UI_MODE_NIGHT_YES)
 @Preview(uiMode = UI_MODE_NIGHT_NO)
-private fun SelectableChipLightThemePreview() {
+private fun SelectableChipWithBackgroundColorPreview() {
     FirefoxTheme(theme = Theme.getTheme()) {
         Row(
             modifier = Modifier
@@ -91,8 +98,8 @@ private fun SelectableChipLightThemePreview() {
                 .background(FirefoxTheme.colors.layer1),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            SelectableChip(text = "Chirp", isSelected = false) { }
-            SelectableChip(text = "Chirp", isSelected = true) { }
+            SelectableChip(text = "Chirp", isSelected = false, unselectedBackgroundColor = Color.Cyan) { }
+            SelectableChip(text = "Chirp", isSelected = true, selectedBackgroundColor = Color.Yellow) { }
         }
     }
 }
