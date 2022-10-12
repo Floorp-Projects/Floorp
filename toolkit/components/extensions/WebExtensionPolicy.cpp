@@ -171,14 +171,6 @@ bool WebAccessibleResource::IsExtensionMatch(const URLInfo& aURI) {
                     mExtensionIDs->Contains(policy->Id()));
 }
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebAccessibleResource)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTION(WebAccessibleResource)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(WebAccessibleResource)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(WebAccessibleResource)
-
 /*****************************************************************************
  * WebExtensionPolicyCore
  *****************************************************************************/
@@ -653,7 +645,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WebExtensionPolicy)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowsingContextGroup)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocalizeCallback)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHostPermissions)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWebAccessibleResources)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContentScripts)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   AssertIsOnMainThread();
@@ -664,7 +655,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WebExtensionPolicy)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowsingContextGroup)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalizeCallback)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHostPermissions)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWebAccessibleResources)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContentScripts)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
