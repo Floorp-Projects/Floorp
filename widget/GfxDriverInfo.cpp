@@ -821,17 +821,26 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_RANGE(0x7310, 0x73ff);
       APPEND_RANGE(0x9830, 0x986f);
       APPEND_RANGE(0x9900, 0x99ff);
-      // Raven
+      // Raven APU
       APPEND_DEVICE(0x15dd);
       APPEND_DEVICE(0x15d8);
-      // Renoir
+      // Renoir APU
       APPEND_DEVICE(0x1636);
-      // Cezanne
+      // Cezanne APU (Ryzen 5700G and variants)
       APPEND_DEVICE(0x1638);
-      // Lucienne
+      // VanGogh APU (Steam Deck)
+      APPEND_DEVICE(0x163F);
+      // Lucienne APU
       APPEND_DEVICE(0x164c);
-      // Yellow Carp
+      // Yellow Carp APU
+      APPEND_DEVICE(0x164d);
       APPEND_DEVICE(0x1681);
+      // Barcelo APU (Ryzen 5825U and variants)
+      APPEND_DEVICE(0x15e7);
+      // Raphael APU (Ryzen 7950X and variants)
+      APPEND_DEVICE(0x164e);
+      // Sabrina APU
+      APPEND_DEVICE(0x1506);
 
       // Evergreen
       APPEND_RANGE(0x6840, 0x684b);
@@ -849,6 +858,10 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
 
       // Kaveri
       APPEND_RANGE(0x1304, 0x131d);
+      // Skillfish
+      APPEND_RANGE(0x13f9, 0x143f);
+      // Navi24
+      APPEND_RANGE(0x7420, 0x743f);
 
       // R700
       APPEND_RANGE(0x9440, 0x949f);
