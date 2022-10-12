@@ -276,7 +276,7 @@ void BFCachePreventionObserver::ContentRemoved(nsIContent* aChild,
   MutationHappened();
 }
 
-void BFCachePreventionObserver::NodeWillBeDestroyed(nsINode* aNode) {
+void BFCachePreventionObserver::NodeWillBeDestroyed(const nsINode* aNode) {
   mDocument = nullptr;
 }
 

@@ -100,12 +100,11 @@ class MutationObserverWrapper final : public nsIMutationObserver {
     mOwner->ContentRemoved(aChild, aPreviousSibling);
   }
 
-  void NodeWillBeDestroyed(nsINode* aNode) override {
+  void NodeWillBeDestroyed(const nsINode* aNode) override {
     MOZ_ASSERT(mOwner);
-    AddRefWrapper();
     RefPtr<nsMultiMutationObserver> owner = mOwner;
     owner->NodeWillBeDestroyed(aNode);
-    owner->RemoveMutationObserverFromNode(aNode);
+    owner->mWrapperForNode.Remove(const_cast<nsINode*>(aNode));
     mOwner = nullptr;
     ReleaseWrapper();
   }
