@@ -455,7 +455,7 @@ void HttpChannelChild::OnStartRequest(
   if (!mAsyncOpenTime.IsNull() &&
       !aArgs.timing().transactionPending().IsNull()) {
     Telemetry::AccumulateTimeDelta(
-        Telemetry::NETWORK_ASYNC_OPEN_TO_TRANSACTION_PENDING_MS,
+        Telemetry::NETWORK_ASYNC_OPEN_CHILD_TO_TRANSACTION_PENDING_MS,
         ClassOfService::ToString(mClassOfService), mAsyncOpenTime,
         aArgs.timing().transactionPending());
   }

@@ -3056,7 +3056,7 @@
     "description": "Count of the HTTP redirection that triggered by top-level document or by subresource, keyed by the URL scheme redirected to.",
     "labels": ["topLevel", "subresource"]
   },
-  "NETWORK_ASYNC_OPEN_TO_TRANSACTION_PENDING_MS" :{
+  "NETWORK_ASYNC_OPEN_CHILD_TO_TRANSACTION_PENDING_MS" :{
     "record_in_processes": ["content"],
     "products": [ "firefox", "fennec" ],
     "alert_emails": ["necko@mozilla.com", "acreskey@mozilla.com"],
