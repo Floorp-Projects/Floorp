@@ -48,7 +48,6 @@ namespace mozilla {
 class AlignStateAtSelection;
 class AutoSelectionSetterAfterTableEdit;
 class AutoSetTemporaryAncestorLimiter;
-class CSSEditUtils;
 class EmptyEditableFunctor;
 class ListElementSelectionState;
 class ListItemElementSelectionState;
