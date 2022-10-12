@@ -492,6 +492,10 @@ const SitePermsAddonProvider = {
   },
 
   observe(subject, topic, data) {
+    if (!this.isEnabled) {
+      return;
+    }
+
     if (topic == FIRST_CONTENT_PROCESS_TOPIC) {
       Services.obs.removeObserver(this, FIRST_CONTENT_PROCESS_TOPIC);
 
@@ -510,5 +514,7 @@ const SitePermsAddonProvider = {
   },
 };
 
-// We want to register the SitePermsAddonProvider once the first content process gets created.
+// We want to register the SitePermsAddonProvider once the first content process gets created
+// (and only if the feature is also enabled through the "dom.sitepermsaddon-provider.enabled"
+// about:config pref).
 SitePermsAddonProvider.addFirstContentProcessObserver();

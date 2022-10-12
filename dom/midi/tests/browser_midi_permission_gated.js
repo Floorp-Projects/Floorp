@@ -16,11 +16,7 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.webmidi.enabled", true],
-      ["dom.sitepermsaddon-provider.enabled", true],
-      ["midi.prompt.testing", false],
-    ],
+    set: [["midi.prompt.testing", false]],
   });
 
   registerCleanupFunction(async () => {
