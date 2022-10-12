@@ -76,7 +76,7 @@ internal class TestableStorageWrapper(
         val account: OAuthAccount = mock()
         `when`(account.deviceConstellation()).thenReturn(mock())
         account
-    }
+    },
 ) : StorageWrapper(manager, accountEventObserverRegistry, serverConfig) {
     override fun obtainAccount(): OAuthAccount = block()
 }
@@ -97,7 +97,7 @@ internal open class TestableFxaAccountManager(
         val account: OAuthAccount = mock()
         `when`(account.deviceConstellation()).thenReturn(mock())
         account
-    }
+    },
 ) : FxaAccountManager(context, config, DeviceConfig("test", DeviceType.UNKNOWN, capabilities), syncConfig, emptySet(), crashReporter, coroutineContext) {
     private val testableStorageWrapper = TestableStorageWrapper(this, accountEventObserverRegistry, serverConfig, block)
 
@@ -203,8 +203,12 @@ class FxaAccountManagerTest {
         val accountObserver: AccountObserver = mock()
 
         val manager = TestableFxaAccountManager(
-            testContext, ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"), accountStorage,
-            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+            testContext,
+            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
+            accountStorage,
+            setOf(DeviceCapability.SEND_TAB),
+            null,
+            this.coroutineContext,
         ) {
             account
         }
@@ -218,7 +222,7 @@ class FxaAccountManagerTest {
         var migratableAccount = ShareableAccount(
             email = "test@example.com",
             sourcePackage = "org.mozilla.firefox",
-            authInfo = MigratingAccountInfo("session", "kSync", "kXCS")
+            authInfo = MigratingAccountInfo("session", "kSync", "kXCS"),
         )
 
         // TODO Need to mock inputs into - mock a PackageManager, and have it return PackageInfo with the right signature.
@@ -228,7 +232,7 @@ class FxaAccountManagerTest {
         account.migrationResult = MigrationResult.Failure
         assertEquals(
             MigrationResult.Failure,
-            manager.migrateFromAccount(migratableAccount)
+            manager.migrateFromAccount(migratableAccount),
         )
 
         assertEquals("session", account.latestMigrateAuthInfo!!.sessionToken)
@@ -243,12 +247,12 @@ class FxaAccountManagerTest {
         // Success.
         account.migrationResult = MigrationResult.Success
         migratableAccount = migratableAccount.copy(
-            authInfo = MigratingAccountInfo("session2", "kSync2", "kXCS2")
+            authInfo = MigratingAccountInfo("session2", "kSync2", "kXCS2"),
         )
 
         assertEquals(
             MigrationResult.Success,
-            manager.migrateFromAccount(migratableAccount)
+            manager.migrateFromAccount(migratableAccount),
         )
 
         assertEquals("session2", account.latestMigrateAuthInfo!!.sessionToken)
@@ -275,8 +279,12 @@ class FxaAccountManagerTest {
         val accountObserver: AccountObserver = mock()
 
         val manager = TestableFxaAccountManager(
-            testContext, ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"), accountStorage,
-            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+            testContext,
+            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
+            accountStorage,
+            setOf(DeviceCapability.SEND_TAB),
+            null,
+            this.coroutineContext,
         ) {
             account
         }
@@ -290,7 +298,7 @@ class FxaAccountManagerTest {
         var migratableAccount = ShareableAccount(
             email = "test@example.com",
             sourcePackage = "org.mozilla.firefox",
-            authInfo = MigratingAccountInfo("session", "kSync", "kXCS")
+            authInfo = MigratingAccountInfo("session", "kSync", "kXCS"),
         )
 
         // TODO Need to mock inputs into - mock a PackageManager, and have it return PackageInfo with the right signature.
@@ -300,7 +308,7 @@ class FxaAccountManagerTest {
         account.migrationResult = MigrationResult.Failure
         assertEquals(
             MigrationResult.Failure,
-            manager.migrateFromAccount(migratableAccount, reuseSessionToken = true)
+            manager.migrateFromAccount(migratableAccount, reuseSessionToken = true),
         )
 
         assertEquals("session", account.latestMigrateAuthInfo!!.sessionToken)
@@ -315,12 +323,12 @@ class FxaAccountManagerTest {
         // Success.
         account.migrationResult = MigrationResult.Success
         migratableAccount = migratableAccount.copy(
-            authInfo = MigratingAccountInfo("session2", "kSync2", "kXCS2")
+            authInfo = MigratingAccountInfo("session2", "kSync2", "kXCS2"),
         )
 
         assertEquals(
             MigrationResult.Success,
-            manager.migrateFromAccount(migratableAccount, reuseSessionToken = true)
+            manager.migrateFromAccount(migratableAccount, reuseSessionToken = true),
         )
 
         assertEquals("session2", account.latestMigrateAuthInfo!!.sessionToken)
@@ -343,8 +351,12 @@ class FxaAccountManagerTest {
         val accountObserver: AccountObserver = mock()
 
         val manager = TestableFxaAccountManager(
-            testContext, ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"), accountStorage,
-            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+            testContext,
+            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
+            accountStorage,
+            setOf(DeviceCapability.SEND_TAB),
+            null,
+            this.coroutineContext,
         ) {
             account
         }
@@ -358,7 +370,7 @@ class FxaAccountManagerTest {
         val migratableAccount = ShareableAccount(
             email = "test@example.com",
             sourcePackage = "org.mozilla.firefox",
-            authInfo = MigratingAccountInfo("session", "kSync", "kXCS")
+            authInfo = MigratingAccountInfo("session", "kSync", "kXCS"),
         )
 
         // TODO Need to mock inputs into - mock a PackageManager, and have it return PackageInfo with the right signature.
@@ -368,7 +380,7 @@ class FxaAccountManagerTest {
         account.migrationResult = MigrationResult.WillRetry
         assertEquals(
             MigrationResult.WillRetry,
-            manager.migrateFromAccount(migratableAccount, reuseSessionToken = true)
+            manager.migrateFromAccount(migratableAccount, reuseSessionToken = true),
         )
 
         assertEquals("session", account.latestMigrateAuthInfo!!.sessionToken)
@@ -401,8 +413,12 @@ class FxaAccountManagerTest {
         val account = StatePersistenceTestableAccount(profile, constellation)
 
         val manager = TestableFxaAccountManager(
-            testContext, ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"), accountStorage,
-            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+            testContext,
+            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
+            accountStorage,
+            setOf(DeviceCapability.SEND_TAB),
+            null,
+            this.coroutineContext,
         ) {
             account
         }
@@ -438,8 +454,12 @@ class FxaAccountManagerTest {
         val account = StatePersistenceTestableAccount(profile, constellation)
 
         val manager = TestableFxaAccountManager(
-            testContext, ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"), accountStorage,
-            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+            testContext,
+            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
+            accountStorage,
+            setOf(DeviceCapability.SEND_TAB),
+            null,
+            this.coroutineContext,
         ) {
             account
         }
@@ -472,8 +492,12 @@ class FxaAccountManagerTest {
         val account = StatePersistenceTestableAccount(profile, constellation)
 
         val manager = TestableFxaAccountManager(
-            testContext, ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"), accountStorage,
-            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+            testContext,
+            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
+            accountStorage,
+            setOf(DeviceCapability.SEND_TAB),
+            null,
+            this.coroutineContext,
         ) {
             account
         }
@@ -504,8 +528,12 @@ class FxaAccountManagerTest {
         val account = StatePersistenceTestableAccount(profile, constellation)
 
         val manager = TestableFxaAccountManager(
-            testContext, ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"), accountStorage,
-            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+            testContext,
+            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
+            accountStorage,
+            setOf(DeviceCapability.SEND_TAB),
+            null,
+            this.coroutineContext,
         ) {
             account
         }
@@ -540,8 +568,12 @@ class FxaAccountManagerTest {
 
         val accountObserver: AccountObserver = mock()
         val manager = TestableFxaAccountManager(
-            testContext, ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"), accountStorage,
-            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+            testContext,
+            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
+            accountStorage,
+            setOf(DeviceCapability.SEND_TAB),
+            null,
+            this.coroutineContext,
         ) {
             account
         }
@@ -575,8 +607,12 @@ class FxaAccountManagerTest {
 
         val accountObserver: AccountObserver = mock()
         val manager = TestableFxaAccountManager(
-            testContext, ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"), accountStorage,
-            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+            testContext,
+            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
+            accountStorage,
+            setOf(DeviceCapability.SEND_TAB),
+            null,
+            this.coroutineContext,
         ) {
             account
         }
@@ -612,7 +648,9 @@ class FxaAccountManagerTest {
             testContext,
             ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
             accountStorage,
-            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+            setOf(DeviceCapability.SEND_TAB),
+            null,
+            this.coroutineContext,
         ) {
             account
         }
@@ -654,7 +692,9 @@ class FxaAccountManagerTest {
             testContext,
             ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
             accountStorage,
-            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+            setOf(DeviceCapability.SEND_TAB),
+            null,
+            this.coroutineContext,
         ) {
             account
         }
@@ -690,7 +730,7 @@ class FxaAccountManagerTest {
         val tokenServerEndpointUrl: String? = null,
         var migrationResult: MigrationResult = MigrationResult.Failure,
         var migrationRetrySuccess: Boolean = false,
-        val accessToken: (() -> AccessTokenInfo)? = null
+        val accessToken: (() -> AccessTokenInfo)? = null,
     ) : OAuthAccount {
 
         var persistenceCallback: StatePersistenceCallback? = null
@@ -807,7 +847,8 @@ class FxaAccountManagerTest {
         val manager = TestableFxaAccountManager(
             testContext,
             ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-            accountStorage, coroutineContext = this.coroutineContext
+            accountStorage,
+            coroutineContext = this.coroutineContext,
         )
 
         val accountObserver = object : AccountObserver {
@@ -841,7 +882,8 @@ class FxaAccountManagerTest {
         val manager = TestableFxaAccountManager(
             testContext,
             ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-            accountStorage, coroutineContext = this.coroutineContext
+            accountStorage,
+            coroutineContext = this.coroutineContext,
         )
 
         val accountObserver: AccountObserver = mock()
@@ -867,7 +909,10 @@ class FxaAccountManagerTest {
         val mockAccount: OAuthAccount = mock()
         val constellation: DeviceConstellation = mock()
         val profile = Profile(
-            "testUid", "test@example.com", null, "Test Profile"
+            "testUid",
+            "test@example.com",
+            null,
+            "Test Profile",
         )
         `when`(mockAccount.getProfile(ignoreCache = false)).thenReturn(profile)
         `when`(mockAccount.isInMigrationState()).thenReturn(null)
@@ -881,7 +926,9 @@ class FxaAccountManagerTest {
             testContext,
             ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
             accountStorage,
-            emptySet(), null, this.coroutineContext
+            emptySet(),
+            null,
+            this.coroutineContext,
         )
 
         val accountObserver: AccountObserver = mock()
@@ -1018,7 +1065,8 @@ class FxaAccountManagerTest {
         val manager = TestableFxaAccountManager(
             testContext,
             ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-            accountStorage, coroutineContext = coroutineContext
+            accountStorage,
+            coroutineContext = coroutineContext,
         ) {
             mockAccount
         }
@@ -1270,7 +1318,7 @@ class FxaAccountManagerTest {
             accountObserver,
             this.coroutineContext,
             setOf(DeviceCapability.SEND_TAB),
-            crashReporter
+            crashReporter,
         )
 
         // We start off as logged-out, but the event won't be called (initial default state is assumed).
@@ -1316,7 +1364,7 @@ class FxaAccountManagerTest {
             accountObserver,
             this.coroutineContext,
             setOf(DeviceCapability.SEND_TAB),
-            crashReporter
+            crashReporter,
         )
         GlobalAccountManager.setInstance(manager)
 
@@ -1364,7 +1412,7 @@ class FxaAccountManagerTest {
         accountObserver: AccountObserver,
         manager: FxaAccountManager,
         mockAccount: OAuthAccount,
-        crashReporter: CrashReporting
+        crashReporter: CrashReporting,
     ) {
         // During recovery, only 'sign-in' finalize device call should have been made.
         verify(constellation, times(1)).finalizeDevice(eq(AuthType.Signin), any())
@@ -1407,7 +1455,8 @@ class FxaAccountManagerTest {
         val manager = TestableFxaAccountManager(
             testContext,
             ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-            accountStorage, coroutineContext = this.coroutineContext
+            accountStorage,
+            coroutineContext = this.coroutineContext,
         ) {
             mockAccount
         }
@@ -1441,7 +1490,10 @@ class FxaAccountManagerTest {
         // Make sure we can re-try fetching a profile. This time, let's have it succeed.
         reset(accountObserver)
         val profile = Profile(
-            uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile"
+            uid = "testUID",
+            avatar = null,
+            email = "test@example.com",
+            displayName = "test profile",
         )
 
         `when`(mockAccount.getProfile(ignoreCache = true)).thenReturn(profile)
@@ -1474,7 +1526,8 @@ class FxaAccountManagerTest {
         val manager = TestableFxaAccountManager(
             testContext,
             ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-            accountStorage, coroutineContext = this.coroutineContext
+            accountStorage,
+            coroutineContext = this.coroutineContext,
         ) {
             mockAccount
         }
@@ -1533,7 +1586,8 @@ class FxaAccountManagerTest {
         val manager = TestableFxaAccountManager(
             testContext,
             ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-            accountStorage, coroutineContext = this.coroutineContext
+            accountStorage,
+            coroutineContext = this.coroutineContext,
         ) {
             mockAccount
         }
@@ -1583,7 +1637,10 @@ class FxaAccountManagerTest {
         `when`(constellation.finalizeDevice(any(), any())).thenReturn(ServiceResult.Ok)
 
         val profile = Profile(
-            uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile"
+            uid = "testUID",
+            avatar = null,
+            email = "test@example.com",
+            displayName = "test profile",
         )
 
         // Recovery flow will hit this API, return a success.
@@ -1597,7 +1654,8 @@ class FxaAccountManagerTest {
         val manager = TestableFxaAccountManager(
             testContext,
             ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-            accountStorage, coroutineContext = this.coroutineContext
+            accountStorage,
+            coroutineContext = this.coroutineContext,
         ) {
             mockAccount
         }
@@ -1670,7 +1728,8 @@ class FxaAccountManagerTest {
         val manager = TestableFxaAccountManager(
             testContext,
             ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-            accountStorage, coroutineContext = this.coroutineContext
+            accountStorage,
+            coroutineContext = this.coroutineContext,
         ) {
             mockAccount
         }
@@ -1784,11 +1843,13 @@ class FxaAccountManagerTest {
         accountObserver: AccountObserver,
         coroutineContext: CoroutineContext,
         capabilities: Set<DeviceCapability> = emptySet(),
-        crashReporter: CrashReporting? = null
+        crashReporter: CrashReporting? = null,
     ): FxaAccountManager {
-
         val accessTokenInfo = AccessTokenInfo(
-            "testSc0pe", "someToken", OAuthScopedKey("kty", "testSc0pe", "kid", "k"), System.currentTimeMillis() + 1000 * 10
+            "testSc0pe",
+            "someToken",
+            OAuthScopedKey("kty", "testSc0pe", "kid", "k"),
+            System.currentTimeMillis() + 1000 * 10,
         )
 
         `when`(mockAccount.getProfile(ignoreCache = false)).thenReturn(profile)
@@ -1804,9 +1865,11 @@ class FxaAccountManagerTest {
         val manager = TestableFxaAccountManager(
             testContext,
             ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-            accountStorage, capabilities,
+            accountStorage,
+            capabilities,
             SyncConfig(setOf(SyncEngine.History, SyncEngine.Bookmarks), PeriodicSyncConfig()),
-            coroutineContext = coroutineContext, crashReporter = crashReporter
+            coroutineContext = coroutineContext,
+            crashReporter = crashReporter,
         ) {
             mockAccount
         }
@@ -1822,7 +1885,7 @@ class FxaAccountManagerTest {
         profile: Profile,
         accountStorage: AccountStorage,
         accountObserver: AccountObserver,
-        coroutineContext: CoroutineContext
+        coroutineContext: CoroutineContext,
     ): FxaAccountManager {
         `when`(mockAccount.getProfile(ignoreCache = false)).thenReturn(profile)
         `when`(mockAccount.deviceConstellation()).thenReturn(mock())
@@ -1835,7 +1898,8 @@ class FxaAccountManagerTest {
         val manager = TestableFxaAccountManager(
             testContext,
             ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-            accountStorage, coroutineContext = coroutineContext
+            accountStorage,
+            coroutineContext = coroutineContext,
         ) {
             mockAccount
         }

@@ -240,7 +240,7 @@ open class FxaAccountManager(
      */
     suspend fun migrateFromAccount(
         fromAccount: ShareableAccount,
-        reuseSessionToken: Boolean = false
+        reuseSessionToken: Boolean = false,
     ): MigrationResult = withContext(coroutineContext) {
         processQueue(Event.Account.MigrateFromAccount(fromAccount, reuseSessionToken))
 
@@ -289,7 +289,7 @@ open class FxaAccountManager(
     ) = withContext(coroutineContext) {
         check(
             customEngineSubset.isEmpty() ||
-                syncConfig?.supportedEngines?.containsAll(customEngineSubset) == true
+                syncConfig?.supportedEngines?.containsAll(customEngineSubset) == true,
         ) {
             "Custom engines for sync must be a subset of supported engines."
         }
@@ -310,7 +310,7 @@ open class FxaAccountManager(
                         maybeUpdateSyncAuthInfoCache()
                     } catch (e: AccessTokenUnexpectedlyWithoutKey) {
                         crashReporter?.submitCaughtException(
-                            AccountManagerException.MissingKeyFromSyncScopedAccessToken("syncNow")
+                            AccountManagerException.MissingKeyFromSyncScopedAccessToken("syncNow"),
                         )
                         processQueue(Event.Account.AccessTokenKeyError)
                         // No point in trying to sync now.
@@ -356,7 +356,8 @@ open class FxaAccountManager(
         is State.Idle -> when (s.accountState) {
             AccountState.Authenticated,
             AccountState.IncompleteMigration,
-            AccountState.AuthenticationProblem -> account
+            AccountState.AuthenticationProblem,
+            -> account
             else -> null
         }
         else -> null
@@ -386,7 +387,8 @@ open class FxaAccountManager(
     fun accountProfile(): Profile? = when (val s = state) {
         is State.Idle -> when (s.accountState) {
             AccountState.Authenticated,
-            AccountState.AuthenticationProblem -> profile
+            AccountState.AuthenticationProblem,
+            -> profile
             else -> null
         }
         else -> null
@@ -424,16 +426,18 @@ open class FxaAccountManager(
 
         // 'deferredAuthUrl' will be set as the state machine reacts to the 'event'.
         var deferredAuthUrl: String? = null
-        oauthObservers.register(object : OAuthObserver {
-            override fun onBeginOAuthFlow(authFlowUrl: AuthFlowUrl) {
-                deferredAuthUrl = authFlowUrl.url
-            }
+        oauthObservers.register(
+            object : OAuthObserver {
+                override fun onBeginOAuthFlow(authFlowUrl: AuthFlowUrl) {
+                    deferredAuthUrl = authFlowUrl.url
+                }
 
-            override fun onError() {
-                // No-op for now.
-                logger.warn("Got an error during 'beginAuthentication'")
-            }
-        })
+                override fun onError() {
+                    // No-op for now.
+                    logger.warn("Got an error during 'beginAuthentication'")
+                }
+            },
+        )
         processQueue(event)
         oauthObservers.unregisterObservers()
         deferredAuthUrl
@@ -505,10 +509,10 @@ open class FxaAccountManager(
 
     internal suspend fun encounteredAuthError(
         operation: String,
-        errorCountWithinTheTimeWindow: Int = 1
+        errorCountWithinTheTimeWindow: Int = 1,
     ) = withContext(coroutineContext) {
         processQueue(
-            Event.Account.AuthenticationError(operation, errorCountWithinTheTimeWindow)
+            Event.Account.AuthenticationError(operation, errorCountWithinTheTimeWindow),
         )
     }
 
@@ -589,7 +593,7 @@ open class FxaAccountManager(
     @Suppress("NestedBlockDepth", "LongMethod")
     private suspend fun internalStateSideEffects(
         forState: State.Active,
-        via: Event
+        via: Event,
     ): Event? = when (forState.progressState) {
         ProgressState.Initializing -> {
             when (accountOnDisk) {
@@ -753,7 +757,7 @@ open class FxaAccountManager(
             // frequently, drive the state machine into an unauthorized state.
             if (via.errorCountWithinTheTimeWindow >= AUTH_CHECK_CIRCUIT_BREAKER_COUNT) {
                 crashReporter?.submitCaughtException(
-                    AccountManagerException.AuthRecoveryCircuitBreakerException(via.operation)
+                    AccountManagerException.AuthRecoveryCircuitBreakerException(via.operation),
                 )
                 logger.warn("Unable to recover from an auth problem, triggered a circuit breaker.")
 
@@ -807,7 +811,7 @@ open class FxaAccountManager(
 
     private suspend fun tryToMigrate(
         reuseSessionToken: Boolean,
-        migrationBlock: suspend () -> JSONObject?
+        migrationBlock: suspend () -> JSONObject?,
     ): Event.Progress {
         return if (migrationBlock() != null) {
             Event.Progress.Migrated(reuseSessionToken)
@@ -894,7 +898,8 @@ open class FxaAccountManager(
     }
 
     private suspend fun finalizeDevice(authType: AuthType) = account.deviceConstellation().finalizeDevice(
-        authType, deviceConfig
+        authType,
+        deviceConfig,
     )
 
     /**
@@ -907,7 +912,7 @@ open class FxaAccountManager(
             maybeUpdateSyncAuthInfoCache()
         } catch (e: AccessTokenUnexpectedlyWithoutKey) {
             crashReporter?.submitCaughtException(
-                AccountManagerException.MissingKeyFromSyncScopedAccessToken(operation)
+                AccountManagerException.MissingKeyFromSyncScopedAccessToken(operation),
             )
             // Since we don't know what's causing a missing key for the SCOPE_SYNC access tokens, we
             // do not attempt to recover here. If this is a persistent state for an account, a recovery
@@ -922,8 +927,8 @@ open class FxaAccountManager(
             DeviceSettings(
                 fxaDeviceId = account.getCurrentDeviceId()!!,
                 name = deviceConfig.name,
-                kind = deviceConfig.type.intoSyncType()
-            )
+                kind = deviceConfig.type.intoSyncType(),
+            ),
         )
         return true
     }
@@ -954,7 +959,7 @@ open class FxaAccountManager(
      */
     @VisibleForTesting
     internal class AccountsToSyncIntegration(
-        private val syncManager: SyncManager
+        private val syncManager: SyncManager,
     ) : AccountObserver {
         override fun onLoggedOut() {
             syncManager.stop()
@@ -963,7 +968,8 @@ open class FxaAccountManager(
         override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
             val reason = when (authType) {
                 is AuthType.OtherExternal, AuthType.Signin, AuthType.Signup, AuthType.MigratedReuse,
-                AuthType.MigratedCopy, AuthType.Pairing -> SyncReason.FirstSync
+                AuthType.MigratedCopy, AuthType.Pairing,
+                -> SyncReason.FirstSync
                 AuthType.Existing, AuthType.Recovered -> SyncReason.Startup
             }
             syncManager.start()
@@ -984,7 +990,7 @@ open class FxaAccountManager(
      * Sync status changes flowing into account manager.
      */
     private class SyncToAccountsIntegration(
-        private val accountManager: FxaAccountManager
+        private val accountManager: FxaAccountManager,
     ) : SyncStatusObserver {
         override fun onStarted() {
             accountManager.syncStatusObserverRegistry.notifyObservers { onStarted() }

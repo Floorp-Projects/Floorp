@@ -96,7 +96,7 @@ internal class DefaultPresenter(
 
     internal class SyncedTabsAccountObserver(
         private val view: SyncedTabsView,
-        private val controller: SyncedTabsController
+        private val controller: SyncedTabsController,
     ) : AccountObserver {
 
         override fun onLoggedOut() {
@@ -119,7 +119,7 @@ internal class DefaultPresenter(
     internal class SyncedTabsSyncObserver(
         private val context: Context,
         private val view: SyncedTabsView,
-        private val controller: SyncedTabsController
+        private val controller: SyncedTabsController,
     ) : SyncStatusObserver {
 
         override fun onIdle() {
