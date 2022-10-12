@@ -307,6 +307,9 @@ const SpecialMessageActions = {
         });
         break;
       case "SHOW_FIREFOX_ACCOUNTS":
+        if (!(await lazy.FxAccounts.canConnectAccount())) {
+          break;
+        }
         const data = action.data;
         const url = await lazy.FxAccounts.config.promiseConnectAccountURI(
           (data && data.entrypoint) || "snippets",

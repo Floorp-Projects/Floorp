@@ -897,6 +897,9 @@ var gMainPane = {
       win.openTrustedLinkIn("about:preferences#sync", "current");
       return;
     }
+    if (!(await FxAccounts.canConnectAccount())) {
+      return;
+    }
     let url = await FxAccounts.config.promiseConnectAccountURI(
       "dev-edition-setup"
     );

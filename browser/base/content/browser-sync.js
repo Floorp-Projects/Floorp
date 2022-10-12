@@ -1142,6 +1142,9 @@ var gSync = {
   },
 
   async openSignInAgainPage(entryPoint) {
+    if (!(await FxAccounts.canConnectAccount())) {
+      return;
+    }
     const url = await FxAccounts.config.promiseForceSigninURI(entryPoint);
     switchToTabHavingURI(url, true, {
       replaceQueryString: true,
@@ -1198,6 +1201,9 @@ var gSync = {
   },
 
   async openFxAEmailFirstPage(entryPoint) {
+    if (!(await FxAccounts.canConnectAccount())) {
+      return;
+    }
     const url = await FxAccounts.config.promiseConnectAccountURI(entryPoint);
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
