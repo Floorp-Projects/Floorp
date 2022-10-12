@@ -8144,7 +8144,14 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
     size_t tryNoteIndex = callBase->tryNoteIndex();
     wasm::TryNoteVector& tryNotes = masm.tryNotes();
     wasm::TryNote& tryNote = tryNotes[tryNoteIndex];
-    tryNote.setTryBodyEnd(masm.currentOffset());
+
+    // Don't set the end of the try note if we've OOM'ed, as the above
+    // instructions may not have been emitted, which will trigger an assert
+    // about zero-length try-notes. This is okay as this compilation will be
+    // thrown away.
+    if (!masm.oom()) {
+      tryNote.setTryBodyEnd(masm.currentOffset());
+    }
 
     // This instruction or the adjunct safepoint must be the last instruction
     // in the block. No other instructions may be inserted.
