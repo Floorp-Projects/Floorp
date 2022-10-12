@@ -513,20 +513,17 @@ nsresult ContentPrincipal::GetSiteIdentifier(SiteIdentifier& aSite) {
 }
 
 WebExtensionPolicy* ContentPrincipal::AddonPolicy() {
-  AssertIsOnMainThread();
-
   if (!mAddon.isSome()) {
     NS_ENSURE_TRUE(mURI, nullptr);
 
-    WebExtensionPolicy* policy =
-        mURI->SchemeIs("moz-extension") ? EPS().GetByURL(mURI.get()) : nullptr;
-    mAddon.emplace(policy ? policy->Core() : nullptr);
+    if (mURI->SchemeIs("moz-extension")) {
+      mAddon.emplace(EPS().GetByURL(mURI.get()));
+    } else {
+      mAddon.emplace(nullptr);
+    }
   }
 
-  if (extensions::WebExtensionPolicyCore* policy = mAddon.ref()) {
-    return policy->GetMainThreadPolicy();
-  }
-  return nullptr;
+  return mAddon.value();
 }
 
 NS_IMETHODIMP

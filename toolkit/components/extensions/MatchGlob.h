@@ -12,7 +12,6 @@
 #include "jspubtd.h"
 #include "js/RootingAPI.h"
 
-#include "mozilla/RustRegex.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
@@ -23,75 +22,57 @@ namespace extensions {
 
 class MatchPattern;
 
-class MatchGlobCore final {
- public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MatchGlobCore)
-
-  MatchGlobCore(const nsACString& aGlob, bool aAllowQuestion, ErrorResult& aRv);
-
-  bool Matches(const nsACString& aString) const;
-
-  bool IsWildcard() const { return mIsPrefix && mPathLiteral.IsEmpty(); }
-
-  void GetGlob(nsACString& aGlob) const { aGlob = mGlob; }
-
- private:
-  ~MatchGlobCore() = default;
-
-  // The original glob string that this glob object represents.
-  const nsCString mGlob;
-
-  // The literal path string to match against. If this contains a non-void
-  // value, the glob matches against this exact literal string, rather than
-  // performng a pattern match. If mIsPrefix is true, the literal must appear
-  // at the start of the matched string. If it is false, the the literal must
-  // be exactly equal to the matched string.
-  nsCString mPathLiteral;
-  bool mIsPrefix = false;
-
-  // The regular expression object which is equivalent to this glob pattern.
-  // Used for matching if, and only if, mPathLiteral is non-void.
-  RustRegex mRegExp;
-};
-
 class MatchGlob final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(MatchGlob)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MatchGlob)
 
   static already_AddRefed<MatchGlob> Constructor(dom::GlobalObject& aGlobal,
-                                                 const nsACString& aGlob,
+                                                 const nsAString& aGlob,
                                                  bool aAllowQuestion,
                                                  ErrorResult& aRv);
 
-  explicit MatchGlob(nsISupports* aParent,
-                     already_AddRefed<MatchGlobCore> aCore)
-      : mParent(aParent), mCore(std::move(aCore)) {}
+  bool Matches(const nsAString& aString) const;
 
-  bool Matches(const nsACString& aString) const {
-    return Core()->Matches(aString);
-  }
+  bool IsWildcard() const { return mIsPrefix && mPathLiteral.IsEmpty(); }
 
-  bool IsWildcard() const { return Core()->IsWildcard(); }
-
-  void GetGlob(nsACString& aGlob) const { Core()->GetGlob(aGlob); }
-
-  MatchGlobCore* Core() const { return mCore; }
+  void GetGlob(nsAString& aGlob) const { aGlob = mGlob; }
 
   nsISupports* GetParentObject() const { return mParent; }
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
+ protected:
+  virtual ~MatchGlob();
+
  private:
-  ~MatchGlob() = default;
+  friend class MatchPattern;
+
+  explicit MatchGlob(nsISupports* aParent) : mParent(aParent) {}
+
+  void Init(JSContext* aCx, const nsAString& aGlob, bool aAllowQuestion,
+            ErrorResult& aRv);
 
   nsCOMPtr<nsISupports> mParent;
 
-  RefPtr<MatchGlobCore> mCore;
+  // The original glob string that this glob object represents.
+  nsString mGlob;
+
+  // The literal path string to match against. If this contains a non-void
+  // value, the glob matches against this exact literal string, rather than
+  // performng a pattern match. If mIsPrefix is true, the literal must appear
+  // at the start of the matched string. If it is false, the the literal must
+  // be exactly equal to the matched string.
+  nsString mPathLiteral;
+  bool mIsPrefix = false;
+
+  // The regular expression object which is equivalent to this glob pattern.
+  // Used for matching if, and only if, mPathLiteral is non-void.
+  JS::Heap<JSObject*> mRegExp;
 };
 
-class MatchGlobSet final : public CopyableTArray<RefPtr<MatchGlobCore>> {
+class MatchGlobSet final : public CopyableTArray<RefPtr<MatchGlob>> {
  public:
   // Note: We can't use the nsTArray constructors directly, since the static
   // analyzer doesn't handle their MOZ_IMPLICIT annotations correctly.
@@ -100,10 +81,10 @@ class MatchGlobSet final : public CopyableTArray<RefPtr<MatchGlobCore>> {
   explicit MatchGlobSet(const nsTArray& aOther) : CopyableTArray(aOther) {}
   MOZ_IMPLICIT MatchGlobSet(nsTArray&& aOther)
       : CopyableTArray(std::move(aOther)) {}
-  MOZ_IMPLICIT MatchGlobSet(std::initializer_list<RefPtr<MatchGlobCore>> aIL)
+  MOZ_IMPLICIT MatchGlobSet(std::initializer_list<RefPtr<MatchGlob>> aIL)
       : CopyableTArray(aIL) {}
 
-  bool Matches(const nsACString& aValue) const;
+  bool Matches(const nsAString& aValue) const;
 };
 
 }  // namespace extensions

@@ -11,16 +11,16 @@
 [ChromeOnly, Exposed=Window]
 interface MatchGlob {
   [Throws]
-  constructor(UTF8String glob, optional boolean allowQuestion = true);
-
+  constructor(DOMString glob, optional boolean allowQuestion = true);
+  
   /**
    * Returns true if the string matches the glob.
    */
-  boolean matches(UTF8String string);
+  boolean matches(DOMString string);
 
   /**
    * The glob string this MatchGlob represents.
    */
   [Constant]
-  readonly attribute UTF8String glob;
+  readonly attribute DOMString glob;
 };
