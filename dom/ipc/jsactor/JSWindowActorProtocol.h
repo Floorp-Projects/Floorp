@@ -77,7 +77,7 @@ class JSWindowActorProtocol final : public JSActorProtocol,
 
  private:
   explicit JSWindowActorProtocol(const nsACString& aName) : mName(aName) {}
-  extensions::MatchPatternSetCore* GetURIMatcher();
+  extensions::MatchPatternSet* GetURIMatcher();
   bool RemoteTypePrefixMatches(const nsDependentCSubstring& aRemoteType);
   bool MessageManagerGroupMatches(BrowsingContext* aBrowsingContext);
   ~JSWindowActorProtocol() = default;
@@ -94,7 +94,7 @@ class JSWindowActorProtocol final : public JSActorProtocol,
   ParentSide mParent;
   ChildSide mChild;
 
-  RefPtr<extensions::MatchPatternSetCore> mURIMatcher;
+  RefPtr<extensions::MatchPatternSet> mURIMatcher;
 };
 
 }  // namespace dom
