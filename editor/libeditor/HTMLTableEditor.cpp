@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include "HTMLEditor.h"
+#include "HTMLEditorInlines.h"
 
 #include "EditAction.h"
 #include "EditorDOMPoint.h"

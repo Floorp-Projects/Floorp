@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HTMLEditor.h"
+#include "HTMLEditorInlines.h"
 
 #include "AutoRangeArray.h"
 #include "CSSEditUtils.h"
@@ -3966,8 +3967,8 @@ Result<CreateElementResult, nsresult> HTMLEditor::InsertBRElement(
 
 Result<CreateElementResult, nsresult>
 HTMLEditor::InsertContainerWithTransactionInternal(
-    nsIContent& aContentToBeWrapped, nsAtom& aWrapperTagName,
-    nsAtom& aAttribute, const nsAString& aAttributeValue) {
+    nsIContent& aContentToBeWrapped, const nsAtom& aWrapperTagName,
+    const nsAtom& aAttribute, const nsAString& aAttributeValue) {
   EditorDOMPoint pointToInsertNewContainer(&aContentToBeWrapped);
   if (NS_WARN_IF(!pointToInsertNewContainer.IsSet())) {
     return Err(NS_ERROR_FAILURE);
@@ -3988,7 +3989,8 @@ HTMLEditor::InsertContainerWithTransactionInternal(
 
   // Set attribute if needed.
   if (&aAttribute != nsGkAtoms::_empty) {
-    nsresult rv = newContainer->SetAttr(kNameSpaceID_None, &aAttribute,
+    nsresult rv = newContainer->SetAttr(kNameSpaceID_None,
+                                        const_cast<nsAtom*>(&aAttribute),
                                         aAttributeValue, true);
     if (NS_WARN_IF(Destroyed())) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
@@ -4037,7 +4039,7 @@ HTMLEditor::InsertContainerWithTransactionInternal(
 
 Result<CreateElementResult, nsresult>
 HTMLEditor::ReplaceContainerWithTransactionInternal(
-    Element& aOldContainer, nsAtom& aTagName, nsAtom& aAttribute,
+    Element& aOldContainer, const nsAtom& aTagName, const nsAtom& aAttribute,
     const nsAString& aAttributeValue, bool aCloneAllAttributes) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
@@ -4056,7 +4058,8 @@ HTMLEditor::ReplaceContainerWithTransactionInternal(
     MOZ_ASSERT(&aAttribute == nsGkAtoms::_empty);
     CloneAttributesWithTransaction(*newContainer, aOldContainer);
   } else if (&aAttribute != nsGkAtoms::_empty) {
-    nsresult rv = newContainer->SetAttr(kNameSpaceID_None, &aAttribute,
+    nsresult rv = newContainer->SetAttr(kNameSpaceID_None,
+                                        const_cast<nsAtom*>(&aAttribute),
                                         aAttributeValue, true);
     if (NS_FAILED(rv)) {
       NS_WARNING("Element::SetAttr() failed");

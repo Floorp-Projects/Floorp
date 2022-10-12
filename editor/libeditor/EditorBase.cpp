@@ -5,43 +5,45 @@
 
 #include "EditorBase.h"
 
-#include "ErrorList.h"
-#include "mozilla/DebugOnly.h"  // for DebugOnly
-
 #include <stdio.h>   // for nullptr, stdout
 #include <string.h>  // for strcmp
 
 #include "AutoRangeArray.h"              // for AutoRangeArray
 #include "ChangeAttributeTransaction.h"  // for ChangeAttributeTransaction
 #include "CompositionTransaction.h"      // for CompositionTransaction
+#include "CSSEditUtils.h"                // for CSSEditUtils
 #include "DeleteNodeTransaction.h"       // for DeleteNodeTransaction
 #include "DeleteRangeTransaction.h"      // for DeleteRangeTransaction
 #include "DeleteTextTransaction.h"       // for DeleteTextTransaction
+#include "EditAction.h"                  // for EditSubAction
 #include "EditAggregateTransaction.h"    // for EditAggregateTransaction
+#include "EditorDOMPoint.h"              // for EditorDOMPoint
+#include "EditorUtils.h"                 // for various helper classes.
+#include "EditTransactionBase.h"         // for EditTransactionBase
 #include "EditTransactionBase.h"         // for EditTransactionBase
 #include "EditorEventListener.h"         // for EditorEventListener
-#include "gfxFontUtils.h"                // for gfxFontUtils
-#include "HTMLEditUtils.h"               // for HTMLEditUtils
-#include "InsertNodeTransaction.h"       // for InsertNodeTransaction
-#include "InsertTextTransaction.h"       // for InsertTextTransaction
-#include "JoinNodesTransaction.h"        // for JoinNodesTransaction
-#include "PlaceholderTransaction.h"      // for PlaceholderTransaction
-#include "SplitNodeTransaction.h"        // for SplitNodeTransaction
+#include "HTMLEditor.h"                  // for HTMLEditor
+#include "HTMLEditorInlines.h"
+#include "HTMLEditUtils.h"           // for HTMLEditUtils
+#include "InsertNodeTransaction.h"   // for InsertNodeTransaction
+#include "InsertTextTransaction.h"   // for InsertTextTransaction
+#include "JoinNodesTransaction.h"    // for JoinNodesTransaction
+#include "PlaceholderTransaction.h"  // for PlaceholderTransaction
+#include "SplitNodeTransaction.h"    // for SplitNodeTransaction
+#include "TextEditor.h"              // for TextEditor
+
+#include "ErrorList.h"
+#include "gfxFontUtils.h"  // for gfxFontUtils
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/BasePrincipal.h"            // for BasePrincipal
 #include "mozilla/CheckedInt.h"               // for CheckedInt
 #include "mozilla/ComposerCommandsUpdater.h"  // for ComposerCommandsUpdater
 #include "mozilla/ContentEvents.h"            // for InternalClipboardEvent
-#include "mozilla/CSSEditUtils.h"             // for CSSEditUtils
-#include "mozilla/EditAction.h"               // for EditSubAction
-#include "mozilla/EditorDOMPoint.h"           // for EditorDOMPoint
+#include "mozilla/DebugOnly.h"                // for DebugOnly
 #include "mozilla/EditorSpellCheck.h"         // for EditorSpellCheck
-#include "mozilla/EditorUtils.h"              // for various helper classes.
-#include "mozilla/EditTransactionBase.h"      // for EditTransactionBase
 #include "mozilla/Encoding.h"  // for Encoding (used in Document::GetDocumentCharacterSet)
 #include "mozilla/EventDispatcher.h"     // for EventChainPreVisitor, etc.
 #include "mozilla/FlushType.h"           // for FlushType::Frames
-#include "mozilla/HTMLEditor.h"          // for HTMLEditor
 #include "mozilla/IMEContentObserver.h"  // for IMEContentObserver
 #include "mozilla/IMEStateManager.h"     // for IMEStateManager
 #include "mozilla/InputEventOptions.h"   // for InputEventOptions
@@ -63,7 +65,6 @@
 #include "mozilla/TextControlElement.h"  // for TextControlElement
 #include "mozilla/TextInputListener.h"   // for TextInputListener
 #include "mozilla/TextServicesDocument.h"  // for TextServicesDocument
-#include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TransactionManager.h"   // for TransactionManager
 #include "mozilla/dom/AbstractRange.h"    // for AbstractRange
