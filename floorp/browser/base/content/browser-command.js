@@ -379,79 +379,43 @@ function setBrowserDesign() {
     PhotonUIMultitab: `@import url(chrome://browser/skin/photon/photonChrome-multitab.css);
                     @import url(chrome://browser/skin/photon/photonContent-multitab.css);`,
     MaterialUI: `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);`,
+    MaterialUIMultitab: `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);
+    .tabbrowser-tab { margin-top: 0.7em !important;  position: relative !important;  top: -0.34em !important; }`,
     fluentUI: `@import url(chrome://browser/skin/fluentUI/fluentUI.css);`,
     gnomeUI: `@import url(chrome://browser/skin/gnomeUI/gnomeUI.css);`,
     leptonUI: `@import url(chrome://browser/skin/lepton/userChrome.css);
                   @import url(chrome://browser/skin/lepton/userContent.css);`,
+    FluerialUI: `@import url(chrome://browser/skin/floorplegacy/test_legacy.css);`,
   }
+  var Tag = document.createElement('style');
+  Tag.setAttribute("id", "browserdesgin");
   switch (floorpinterfacenum) {
     //ProtonUI 
     case 1:
-      var Tag = document.createElement("style");
-      Tag.setAttribute("id", "browserdesgin");
-      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
       break;
     case 2:
-      var Tag = document.createElement('style');
-      Tag.setAttribute("id", "browserdesgin");
       Tag.innerText = ThemeCSS.ProtonfixUI;
-      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
       break;
     case 3:
-      if (!Services.prefs.getBoolPref("floorp.enable.multitab", false)) {
-        var Tag = document.createElement('style');
-        Tag.setAttribute("id", "browserdesgin");
-        Tag.innerText = ThemeCSS.PhotonUI;
-        document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-      } else {
-        var Tag = document.createElement('style')
-        Tag.setAttribute("id", "browserdesgin");
-        Tag.innerText = ThemeCSS.PhotonUIMultitab;
-        document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-      }
+      Tag.innerText = Services.prefs.getBoolPref("floorp.enable.multitab", false) ? ThemeCSS.PhotonUIMultitab : ThemeCSS.PhotonUI ;
       break;
     case 4:
-      var Tag = document.createElement('style');
-      Tag.setAttribute("id", "browserdesgin");
-      Tag.innerText = ThemeCSS.MaterialUI;
-      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-
-      if (Services.prefs.getBoolPref("floorp.enable.multitab", false)) {
-        var Tag = document.createElement('style');
-        Tag.innerText = `
-      .tabbrowser-tab {
-        margin-top: 0.7em !important;
-        position: relative !important;
-        top: -0.34em !important;
-     }
-     `
-        document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-      }
+      Tag.innerText = Services.prefs.getBoolPref("floorp.enable.multitab", false) ? ThemeCSS.MaterialUIMultitab : ThemeCSS.MaterialUI;
       break;
     case 5:
-      if (AppConstants.platform != "linux") {
-        var Tag = document.createElement('style');
-        Tag.setAttribute("id", "browserdesgin");
-        Tag.innerText = ThemeCSS.fluentUI;
-        document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-      }
+      if (AppConstants.platform != "linux") Tag.innerText = ThemeCSS.fluentUI;
       break;
-
     case 6:
-      if (AppConstants.platform == "linux") {
-        var Tag = document.createElement('style');
-        Tag.setAttribute("id", "browserdesgin");
-        Tag.innerText = ThemeCSS.gnomeUI;
-        document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-      }
+      if (AppConstants.platform == "linux") Tag.innerText = ThemeCSS.gnomeUI;
       break;
     case 7:
-      var Tag = document.createElement('style');
-      Tag.setAttribute("id", "browserdesgin");
       Tag.innerText = ThemeCSS.leptonUI;
-      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
+      break;
+    case 8: 
+      Tag.innerText = ThemeCSS.FluerialUI;
       break;
   }
+  document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
 }
 
 /*---------------------------------------------------------------- URLbar recalculation ----------------------------------------------------------------*/
