@@ -774,7 +774,9 @@ PRStatus nsNSSSocketInfo::CloseSocketAndDestroy() {
 
   // We need to clear the callback to make sure the ssl layer cannot call the
   // callback after mFD is nulled.
-  SSL_SetResumptionTokenCallback(mFd, nullptr, nullptr);
+  if (StaticPrefs::network_ssl_tokens_cache_enabled()) {
+    SSL_SetResumptionTokenCallback(mFd, nullptr, nullptr);
+  }
 
   PRStatus status = mFd->methods->close(mFd);
 
@@ -899,6 +901,10 @@ nsNSSSocketInfo::GetPeerId(nsACString& aResult) {
 }
 
 nsresult nsNSSSocketInfo::SetResumptionTokenFromExternalCache() {
+  if (!StaticPrefs::network_ssl_tokens_cache_enabled()) {
+    return NS_OK;
+  }
+
   if (!mFd) {
     return NS_ERROR_FAILURE;
   }
@@ -2249,11 +2255,13 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
 
   infoObject->SharedState().NoteSocketCreated();
 
-  rv = infoObject->SetResumptionTokenFromExternalCache();
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (StaticPrefs::network_ssl_tokens_cache_enabled()) {
+    rv = infoObject->SetResumptionTokenFromExternalCache();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    SSL_SetResumptionTokenCallback(sslSock, &StoreResumptionToken, infoObject);
   }
-  SSL_SetResumptionTokenCallback(sslSock, &StoreResumptionToken, infoObject);
 
   return NS_OK;
 loser:
