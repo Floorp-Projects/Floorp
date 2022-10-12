@@ -762,9 +762,6 @@ static void TestMatchingHolder(CacheIRWriter& writer, NativeObject* obj,
 // Note: this relies on shape implying proto.
 static void ShapeGuardProtoChain(CacheIRWriter& writer, NativeObject* obj,
                                  ObjOperandId objId) {
-  uint32_t depth = 0;
-  static const uint32_t MAX_CACHED_LOADS = 4;
-
   while (true) {
     JSObject* proto = obj->staticPrototype();
     if (!proto) {
@@ -772,18 +769,7 @@ static void ShapeGuardProtoChain(CacheIRWriter& writer, NativeObject* obj,
     }
 
     obj = &proto->as<NativeObject>();
-
-    // After guarding the shape of an object, we can safely bake that
-    // object's proto into the stub data. Compared to LoadProto, this
-    // takes one load instead of three (object -> shape -> baseshape
-    // -> proto). We cap the depth to avoid bloating the size of the
-    // stub data.
-    if (depth < MAX_CACHED_LOADS) {
-      objId = writer.loadObject(obj);
-    } else {
-      objId = writer.loadProto(objId);
-    }
-    depth++;
+    objId = writer.loadProto(objId);
 
     writer.guardShape(objId, obj->shape());
   }
