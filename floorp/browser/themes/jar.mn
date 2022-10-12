@@ -335,6 +335,7 @@ browser.jar:
 
 # Floorp Legacy by materialfox
   skin/classic/browser/floorplegacy/floorplegacy.css           (designs/floorp-legacy/floorplegacy.css)
+  skin/classic/browser/floorplegacy/test_legacy.css            (designs/floorp-legacy/test_legacy.css)
   skin/classic/browser/floorplegacy/material.svg               (designs/floorp-legacy/material.svg)
   skin/classic/browser/ablaze.png                              (icons/ablaze.png)
   skin/classic/browser/support-m.svg                           (icons/support-m.svg)
