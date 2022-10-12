@@ -162,6 +162,9 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   };
 
  private:
+  // VideoFrame can run on either main thread or worker thread.
+  void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(VideoFrame); }
+
   // A class representing the VideoFrame's data.
   class Resource final {
    public:
