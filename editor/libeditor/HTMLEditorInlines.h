@@ -97,6 +97,50 @@ already_AddRefed<nsRange> HTMLEditor::GetChangedRangeForTopLevelEditSubAction()
   return do_AddRef(mChangedRangeForTopLevelEditSubAction);
 }
 
+// static
+template <typename EditorDOMPointType>
+HTMLEditor::CharPointType HTMLEditor::GetPreviousCharPointType(
+    const EditorDOMPointType& aPoint) {
+  MOZ_ASSERT(aPoint.IsInTextNode());
+  if (aPoint.IsStartOfContainer()) {
+    return CharPointType::TextEnd;
+  }
+  if (aPoint.IsPreviousCharPreformattedNewLine()) {
+    return CharPointType::PreformattedLineBreak;
+  }
+  if (EditorUtils::IsWhiteSpacePreformatted(
+          *aPoint.template ContainerAs<Text>())) {
+    return CharPointType::PreformattedChar;
+  }
+  if (aPoint.IsPreviousCharASCIISpace()) {
+    return CharPointType::ASCIIWhiteSpace;
+  }
+  return aPoint.IsPreviousCharNBSP() ? CharPointType::NoBreakingSpace
+                                     : CharPointType::VisibleChar;
+}
+
+// static
+template <typename EditorDOMPointType>
+HTMLEditor::CharPointType HTMLEditor::GetCharPointType(
+    const EditorDOMPointType& aPoint) {
+  MOZ_ASSERT(aPoint.IsInTextNode());
+  if (aPoint.IsEndOfContainer()) {
+    return CharPointType::TextEnd;
+  }
+  if (aPoint.IsCharPreformattedNewLine()) {
+    return CharPointType::PreformattedLineBreak;
+  }
+  if (EditorUtils::IsWhiteSpacePreformatted(
+          *aPoint.template ContainerAs<Text>())) {
+    return CharPointType::PreformattedChar;
+  }
+  if (aPoint.IsCharASCIISpace()) {
+    return CharPointType::ASCIIWhiteSpace;
+  }
+  return aPoint.IsCharNBSP() ? CharPointType::NoBreakingSpace
+                             : CharPointType::VisibleChar;
+}
+
 }  // namespace mozilla
 
 #endif  // HTMLEditorInlines_h

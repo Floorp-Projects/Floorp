@@ -6,24 +6,31 @@
 
 #include "EditorEventListener.h"
 
+#include "EditorBase.h"   // for EditorBase, etc.
+#include "EditorUtils.h"  // for EditorUtils
+#include "HTMLEditor.h"   // for HTMLEditor
+#include "TextEditor.h"   // for TextEditor
+
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc.
 #include "mozilla/AutoRestore.h"
 #include "mozilla/ContentEvents.h"          // for InternalFocusEvent
-#include "mozilla/EditorBase.h"             // for EditorBase, etc.
 #include "mozilla/EventListenerManager.h"   // for EventListenerManager
 #include "mozilla/EventStateManager.h"      // for EventStateManager
-#include "mozilla/HTMLEditor.h"             // for HTMLEditor
 #include "mozilla/IMEStateManager.h"        // for IMEStateManager
 #include "mozilla/NativeKeyBindingsType.h"  // for NativeKeyBindingsType
 #include "mozilla/Preferences.h"            // for Preferences
 #include "mozilla/PresShell.h"              // for PresShell
-#include "mozilla/TextEditor.h"             // for TextEditor
 #include "mozilla/TextEvents.h"             // for WidgetCompositionEvent
-#include "mozilla/dom/Element.h"            // for Element
-#include "mozilla/dom/Event.h"              // for Event
-#include "mozilla/dom/EventTarget.h"        // for EventTarget
-#include "mozilla/dom/MouseEvent.h"         // for MouseEvent
+#include "mozilla/dom/DataTransfer.h"
+#include "mozilla/dom/Document.h"  // for Document
+#include "mozilla/dom/DOMStringList.h"
+#include "mozilla/dom/DragEvent.h"
+#include "mozilla/dom/Element.h"      // for Element
+#include "mozilla/dom/Event.h"        // for Event
+#include "mozilla/dom/EventTarget.h"  // for EventTarget
+#include "mozilla/dom/MouseEvent.h"   // for MouseEvent
 #include "mozilla/dom/Selection.h"
+
 #include "nsAString.h"
 #include "nsCaret.h"            // for nsCaret
 #include "nsDebug.h"            // for NS_WARNING, etc.
@@ -33,16 +40,12 @@
 #include "nsIContentInlines.h"  // for nsINode::IsInDesignMode()
 #include "nsIController.h"      // for nsIController
 #include "nsID.h"
-#include "mozilla/dom/DOMStringList.h"
-#include "mozilla/dom/DataTransfer.h"
-#include "mozilla/dom/DragEvent.h"
-#include "mozilla/dom/Document.h"  // for Document
-#include "nsIFormControl.h"        // for nsIFormControl, etc.
-#include "nsINode.h"               // for nsINode, etc.
-#include "nsIWidget.h"             // for nsIWidget
-#include "nsLiteralString.h"       // for NS_LITERAL_STRING
-#include "nsPIWindowRoot.h"        // for nsPIWindowRoot
-#include "nsPrintfCString.h"       // for nsPrintfCString
+#include "nsIFormControl.h"   // for nsIFormControl, etc.
+#include "nsINode.h"          // for nsINode, etc.
+#include "nsIWidget.h"        // for nsIWidget
+#include "nsLiteralString.h"  // for NS_LITERAL_STRING
+#include "nsPIWindowRoot.h"   // for nsPIWindowRoot
+#include "nsPrintfCString.h"  // for nsPrintfCString
 #include "nsRange.h"
 #include "nsServiceManagerUtils.h"  // for do_GetService
 #include "nsString.h"               // for nsAutoString

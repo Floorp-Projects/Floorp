@@ -10,7 +10,6 @@
 #include "mozilla/ComposerCommandsUpdater.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorForwards.h"
-#include "mozilla/EditorUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/JoinSplitNodeDirection.h"
 #include "mozilla/ManualNAC.h"
@@ -2123,43 +2122,9 @@ class HTMLEditor final : public EditorBase,
    */
   template <typename EditorDOMPointType>
   static CharPointType GetPreviousCharPointType(
-      const EditorDOMPointType& aPoint) {
-    MOZ_ASSERT(aPoint.IsInTextNode());
-    if (aPoint.IsStartOfContainer()) {
-      return CharPointType::TextEnd;
-    }
-    if (aPoint.IsPreviousCharPreformattedNewLine()) {
-      return CharPointType::PreformattedLineBreak;
-    }
-    if (EditorUtils::IsWhiteSpacePreformatted(
-            *aPoint.template ContainerAs<Text>())) {
-      return CharPointType::PreformattedChar;
-    }
-    if (aPoint.IsPreviousCharASCIISpace()) {
-      return CharPointType::ASCIIWhiteSpace;
-    }
-    return aPoint.IsPreviousCharNBSP() ? CharPointType::NoBreakingSpace
-                                       : CharPointType::VisibleChar;
-  }
+      const EditorDOMPointType& aPoint);
   template <typename EditorDOMPointType>
-  static CharPointType GetCharPointType(const EditorDOMPointType& aPoint) {
-    MOZ_ASSERT(aPoint.IsInTextNode());
-    if (aPoint.IsEndOfContainer()) {
-      return CharPointType::TextEnd;
-    }
-    if (aPoint.IsCharPreformattedNewLine()) {
-      return CharPointType::PreformattedLineBreak;
-    }
-    if (EditorUtils::IsWhiteSpacePreformatted(
-            *aPoint.template ContainerAs<Text>())) {
-      return CharPointType::PreformattedChar;
-    }
-    if (aPoint.IsCharASCIISpace()) {
-      return CharPointType::ASCIIWhiteSpace;
-    }
-    return aPoint.IsCharNBSP() ? CharPointType::NoBreakingSpace
-                               : CharPointType::VisibleChar;
-  }
+  static CharPointType GetCharPointType(const EditorDOMPointType& aPoint);
 
   /**
    * CharPointData let the following helper methods of
