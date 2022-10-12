@@ -7,6 +7,7 @@
 #include "Key.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <stdint.h>          // for UINT32_MAX, uintptr_t
 #include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{IsArrayBufferObject,NewArrayBuffer{,WithContents},GetArrayBufferLengthAndData}
@@ -31,6 +32,7 @@
 #include "mozIStorageStatement.h"
 #include "mozIStorageValueArray.h"
 #include "nsJSUtils.h"
+#include "nsTStringRepr.h"
 #include "ReportInternalError.h"
 #include "xpcpublic.h"
 
@@ -555,20 +557,22 @@ Result<Ok, nsresult> Key::EncodeString(const Span<const T> aInput,
   return EncodeAsString(aInput, eString + aTypeOffset);
 }
 
+// nsCString maximum length is limited by INT32_MAX.
+// XXX: We probably want to enforce even shorter keys, though.
+#define KEY_MAXIMUM_BUFFER_LENGTH \
+  ::mozilla::detail::nsTStringLengthStorage<char>::kMax
+
 template <typename T>
 Result<Ok, nsresult> Key::EncodeAsString(const Span<const T> aInput,
                                          uint8_t aType) {
-  // First measure how long the encoded string will be.
-  if (NS_WARN_IF(UINT32_MAX - 2 < uintptr_t(aInput.Length()))) {
-    IDB_REPORT_INTERNAL_ERR();
-    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
+  // Please note that the input buffer can either be based on two-byte UTF-16
+  // values or on arbitrary single byte binary values. Only the first case
+  // needs to account for the TWO_BYTE_LIMIT of UTF-8.
+  // First we measure how long the encoded string will be.
 
-  // The +2 is for initial aType and trailing 0. We'll compensate for multi-byte
+  // The 2 is for initial aType and trailing 0. We'll compensate for multi-byte
   // chars below.
-  CheckedUint32 size = 2;
-
-  MOZ_ASSERT(size.isValid());
+  uint32_t size = 2;
 
   // We construct a range over the raw pointers here because this loop is
   // time-critical.
@@ -577,32 +581,32 @@ Result<Ok, nsresult> Key::EncodeAsString(const Span<const T> aInput,
   const auto inputRange = mozilla::detail::IteratorRange(
       aInput.Elements(), aInput.Elements() + aInput.Length());
 
-  CheckedUint32 payloadSize = aInput.Length();
+  uint32_t payloadSize = aInput.Length();
   bool anyMultibyte = false;
-  for (const auto val : inputRange) {
+  for (const T val : inputRange) {
     if (val > ONE_BYTE_LIMIT) {
       anyMultibyte = true;
       payloadSize += char16_t(val) > TWO_BYTE_LIMIT ? 2 : 1;
-      if (!payloadSize.isValid()) {
+      if (payloadSize > KEY_MAXIMUM_BUFFER_LENGTH) {
         IDB_REPORT_INTERNAL_ERR();
-        return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+        return Err(NS_ERROR_DOM_INDEXEDDB_KEY_ERR);
       }
     }
   }
 
   size += payloadSize;
 
-  // Allocate memory for the new size
+  // Now we allocate memory for the new size
   uint32_t oldLen = mBuffer.Length();
   size += oldLen;
 
-  if (!size.isValid()) {
+  if (size > KEY_MAXIMUM_BUFFER_LENGTH) {
     IDB_REPORT_INTERNAL_ERR();
-    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    return Err(NS_ERROR_DOM_INDEXEDDB_KEY_ERR);
   }
 
   char* buffer;
-  if (!mBuffer.GetMutableData(&buffer, size.value())) {
+  if (!mBuffer.GetMutableData(&buffer, size)) {
     IDB_REPORT_INTERNAL_ERR();
     return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
@@ -634,7 +638,7 @@ Result<Ok, nsresult> Key::EncodeAsString(const Span<const T> aInput,
     // the T==uint8_t resp. T==char16_t cases (for the char16_t case, copying
     // and then adjusting could even be slightly faster, but then we would need
     // another case distinction here)
-    const auto inputLen = std::distance(inputRange.cbegin(), inputRange.cend());
+    uint32_t inputLen = std::distance(inputRange.cbegin(), inputRange.cend());
     MOZ_ASSERT(inputLen == payloadSize);
     std::transform(inputRange.cbegin(), inputRange.cend(), buffer,
                    [](auto value) { return value + ONE_BYTE_ADJUST; });
