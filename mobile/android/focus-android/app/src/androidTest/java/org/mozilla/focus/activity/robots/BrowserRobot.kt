@@ -108,29 +108,7 @@ class BrowserRobot {
     fun verifyEraseBrowsingButton(): ViewInteraction =
         eraseBrowsingButton.check(matches(isDisplayed()))
 
-    fun longPressLink(linkText: String) {
-        for (i in 1..RETRY_COUNT) {
-            try {
-                webPageItemContainingText(linkText)
-                    .also {
-                        it.waitForExists(waitingTime)
-                        it.longClick()
-                    }
-
-                break
-            } catch (e: UiObjectNotFoundException) {
-                if (i == RETRY_COUNT) {
-                    throw e
-                } else {
-                    browserScreen {
-                    }.openMainMenu {
-                    }.clickReloadButton {
-                    }
-                    progressBar.waitUntilGone(waitingTime)
-                }
-            }
-        }
-    }
+    fun longPressLink(linkText: String) = longClickPageObject(webPageItemWithText(linkText))
 
     fun openLinkInNewTab() {
         mDevice.findObject(
@@ -299,35 +277,19 @@ class BrowserRobot {
         }
     }
 
-    fun longPressTextInputBox() {
-        textInputBox.waitForExists(waitingTime)
-        textInputBox.longClick()
-    }
+    fun longPressTextInputBox() = longClickPageObject(textInputBox)
 
-    fun longClickText(expectedText: String) {
-        var currentTries = 0
-        while (currentTries++ < 3) {
-            try {
-                webPageItemContainingText(expectedText).also { it.waitForExists(waitingTime) }
-                mDevice.findObject(By.textContains(expectedText)).also { it.longClick() }
-                break
-            } catch (e: NullPointerException) {
-                browserScreen {
-                }.openMainMenu {
-                }.clickReloadButton {}
-            }
-        }
-    }
+    fun longClickText(expectedText: String) = longClickPageObject(webPageItemContainingText(expectedText))
 
     fun longClickAndCopyText(expectedText: String) {
         var currentTries = 0
         while (currentTries++ < 3) {
             try {
-                webPageItemContainingText(expectedText).also { it.waitForExists(waitingTime) }
-                mDevice.findObject(By.textContains(expectedText)).also { it.longClick() }
+                longClickPageObject(webPageItemContainingText(expectedText))
 
                 webPageItemContainingText("Copy").also { it.waitForExists(waitingTime) }
                 mDevice.findObject(By.textContains("Copy")).also { it.click() }
+
                 break
             } catch (e: NullPointerException) {
                 browserScreen {
@@ -423,6 +385,29 @@ class BrowserRobot {
                 webPageItem.also {
                     it.waitForExists(waitingTime)
                     it.click()
+                }
+
+                break
+            } catch (e: UiObjectNotFoundException) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    browserScreen {
+                    }.openMainMenu {
+                    }.clickReloadButton {
+                    }
+                    progressBar.waitUntilGone(waitingTime)
+                }
+            }
+        }
+    }
+
+    fun longClickPageObject(webPageItem: UiObject) {
+        for (i in 1..RETRY_COUNT) {
+            try {
+                webPageItem.also {
+                    it.waitForExists(waitingTime)
+                    it.longClick()
                 }
 
                 break
