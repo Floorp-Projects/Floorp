@@ -149,7 +149,8 @@ class TextRangeData;
 void ProxyTextSelectionChangeEvent(RemoteAccessible* aTarget,
                                    const nsTArray<TextRangeData>& aSelection);
 
-void ProxyRoleChangedEvent(RemoteAccessible* aTarget, const a11y::role& aRole);
+void ProxyRoleChangedEvent(RemoteAccessible* aTarget, const a11y::role& aRole,
+                           uint8_t aRoleMapEntryIndex);
 #endif
 
 }  // namespace a11y
