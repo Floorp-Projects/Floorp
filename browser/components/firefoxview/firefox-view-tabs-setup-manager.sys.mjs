@@ -310,9 +310,11 @@ export const TabsSetupFlowManager = new (class {
         break;
       case SYNC_SERVICE_ERROR:
         this.logger.debug(`Handling ${SYNC_SERVICE_ERROR}`);
-        this._waitingForTabs = false;
-        this.syncIsWorking = false;
-        this.maybeUpdateUI(true);
+        if (lazy.UIState.get().status == lazy.UIState.STATUS_SIGNED_IN) {
+          this._waitingForTabs = false;
+          this.syncIsWorking = false;
+          this.maybeUpdateUI(true);
+        }
         break;
       case NETWORK_STATUS_CHANGED:
         this.networkIsOnline = data == "online";

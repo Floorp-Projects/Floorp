@@ -5,9 +5,9 @@ const { TabsSetupFlowManager } = ChromeUtils.importESModule(
   "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
 );
 
-async function setupWithDesktopDevices() {
+async function setupWithDesktopDevices(state = UIState.STATUS_SIGNED_IN) {
   const sandbox = setupSyncFxAMocks({
-    state: UIState.STATUS_SIGNED_IN,
+    state,
     fxaDevices: [
       {
         id: 1,
@@ -199,6 +199,21 @@ add_task(async function test_sync_error() {
   });
   Services.prefs.clearUserPref("services.sync.lastTabFetch");
 
+  await tearDown(sandbox);
+});
+
+add_task(async function test_sync_error_signed_out() {
+  // sync error should not show if user is not signed in
+  let sandbox = await setupWithDesktopDevices(UIState.STATUS_NOT_CONFIGURED);
+  await withFirefoxView({}, async browser => {
+    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+    Services.obs.notifyObservers(null, "weave:service:sync:error");
+
+    await waitForElementVisible(browser, "#tabpickup-steps", true);
+    await waitForVisibleSetupStep(browser, {
+      expectedVisible: "#tabpickup-steps-view1",
+    });
+  });
   await tearDown(sandbox);
 });
 
