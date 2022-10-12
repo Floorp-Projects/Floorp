@@ -166,6 +166,12 @@ JS_PUBLIC_API bool js::ToBooleanSlow(HandleValue v) {
   if (v.isBigInt()) {
     return !v.toBigInt()->isZero();
   }
+#ifdef ENABLE_RECORD_TUPLE
+  // proposal-record-tuple Section 3.1.1
+  if (v.isExtendedPrimitive()) {
+    return true;
+  }
+#endif
 
   MOZ_ASSERT(v.isObject());
   return !EmulatesUndefined(&v.toObject());
