@@ -39,7 +39,7 @@
  * Note: Basically, makeGetter returns 2 functions that do "get" and "numForm"
  */
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const L10N = new LocalizationHelper("toolkit/locales/intl.properties");
 
 // These are the available plural functions that give the appropriate index

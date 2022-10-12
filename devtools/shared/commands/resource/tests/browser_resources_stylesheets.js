@@ -5,7 +5,7 @@
 
 // Test the ResourceCommand API around STYLESHEET.
 
-const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
+const ResourceCommand = require("resource://devtools/shared/commands/resource/resource-command.js");
 
 const STYLE_TEST_URL = URL_ROOT_SSL + "style_document.html";
 

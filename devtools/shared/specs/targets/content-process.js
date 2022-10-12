@@ -9,7 +9,7 @@ const {
   Option,
   RetVal,
   generateActorSpec,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 types.addDictType("contentProcessTarget.workers", {
   error: "nullable:string",

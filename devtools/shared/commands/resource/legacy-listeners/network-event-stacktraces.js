@@ -4,7 +4,7 @@
 
 "use strict";
 
-const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
+const ResourceCommand = require("resource://devtools/shared/commands/resource/resource-command.js");
 const stacktraces = new Set();
 module.exports = async function({ targetCommand, targetFront, onAvailable }) {
   function onNetworkEventStackTrace(packet) {

@@ -9,8 +9,12 @@ const { loader, require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
 const xpcInspector = require("xpcInspector");
-const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DevToolsClient } = require("devtools/client/devtools-client");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+const {
+  DevToolsClient,
+} = require("resource://devtools/client/devtools-client.js");
 // We need to require lazily since will be crashed if we load SocketListener too early
 // in xpc shell test due to SocketListener loads PSM module.
 loader.lazyRequireGetter(

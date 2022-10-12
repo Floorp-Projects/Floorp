@@ -3,7 +3,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 add_task(function testAbortSingleListener() {
   // Test a simple case with AbortController

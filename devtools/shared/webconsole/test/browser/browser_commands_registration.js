@@ -18,7 +18,7 @@ add_task(async function() {
     );
     const {
       WebConsoleCommands,
-    } = require("devtools/server/actors/webconsole/utils");
+    } = require("resource://devtools/server/actors/webconsole/utils.js");
 
     // Bind the symbol on this in order to make it available for next tasks
     this.WebConsoleCommands = WebConsoleCommands;

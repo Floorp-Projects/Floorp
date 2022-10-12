@@ -10,7 +10,7 @@
  * Initially copied from unit tests at https://github.com/alexei/sprintf.js
  */
 
-const { sprintf } = require("devtools/shared/sprintfjs/sprintf");
+const { sprintf } = require("resource://devtools/shared/sprintfjs/sprintf.js");
 const PI = 3.141592653589793;
 
 function run_test() {

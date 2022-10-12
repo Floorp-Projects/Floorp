@@ -9,10 +9,10 @@ const {
   RetVal,
   generateActorSpec,
   types,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 // Load the shared types for style actors
-require("devtools/shared/specs/style/style-types");
+require("resource://devtools/shared/specs/style/style-types.js");
 
 const pageStyleSpec = generateActorSpec({
   typeName: "pagestyle",

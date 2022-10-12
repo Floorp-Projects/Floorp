@@ -7,7 +7,7 @@
 const {
   getAdHocFrontOrPrimitiveGrip,
   // eslint-disable-next-line mozilla/reject-some-requires
-} = require("devtools/client/fronts/object");
+} = require("resource://devtools/client/fronts/object.js");
 
 class ScriptCommand {
   constructor({ commands }) {

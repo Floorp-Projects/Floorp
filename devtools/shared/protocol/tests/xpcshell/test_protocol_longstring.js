@@ -7,13 +7,15 @@
 /**
  * Test simple requests using the protocol helpers.
  */
-var protocol = require("devtools/shared/protocol");
+var protocol = require("resource://devtools/shared/protocol.js");
 var { RetVal, Arg } = protocol;
-var EventEmitter = require("devtools/shared/event-emitter");
-var { LongStringActor } = require("devtools/server/actors/string");
+var EventEmitter = require("resource://devtools/shared/event-emitter.js");
+var {
+  LongStringActor,
+} = require("resource://devtools/server/actors/string.js");
 
 // The test implicitly relies on this.
-require("devtools/client/fronts/string");
+require("resource://devtools/client/fronts/string.js");
 
 function simpleHello() {
   return {

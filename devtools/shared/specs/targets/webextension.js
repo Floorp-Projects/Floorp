@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { generateActorSpec } = require("devtools/shared/protocol");
-const { extend } = require("devtools/shared/extend");
+const { generateActorSpec } = require("resource://devtools/shared/protocol.js");
+const { extend } = require("resource://devtools/shared/extend.js");
 const {
   parentProcessTargetSpecPrototype,
-} = require("devtools/shared/specs/targets/parent-process");
+} = require("resource://devtools/shared/specs/targets/parent-process.js");
 
 const webExtensionTargetSpec = generateActorSpec(
   extend(parentProcessTargetSpecPrototype, {

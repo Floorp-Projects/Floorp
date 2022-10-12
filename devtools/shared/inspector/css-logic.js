@@ -29,7 +29,7 @@ loader.lazyRequireGetter(
   "resource://devtools/shared/indentation.js",
   true
 );
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const styleInspectorL10N = new LocalizationHelper(
   "devtools/shared/locales/styleinspector.properties"
 );

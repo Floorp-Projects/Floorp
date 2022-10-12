@@ -4,23 +4,26 @@
 
 "use strict";
 
-var { Actor, ActorClassWithSpec } = require("devtools/shared/protocol/Actor");
-var { Pool } = require("devtools/shared/protocol/Pool");
+var {
+  Actor,
+  ActorClassWithSpec,
+} = require("resource://devtools/shared/protocol/Actor.js");
+var { Pool } = require("resource://devtools/shared/protocol/Pool.js");
 var {
   types,
   registerFront,
   getFront,
   createRootFront,
-} = require("devtools/shared/protocol/types");
-var { Front } = require("devtools/shared/protocol/Front");
+} = require("resource://devtools/shared/protocol/types.js");
+var { Front } = require("resource://devtools/shared/protocol/Front.js");
 var {
   FrontClassWithSpec,
-} = require("devtools/shared/protocol/Front/FrontClassWithSpec");
-var { Arg, Option } = require("devtools/shared/protocol/Request");
-const { RetVal } = require("devtools/shared/protocol/Response");
+} = require("resource://devtools/shared/protocol/Front/FrontClassWithSpec.js");
+var { Arg, Option } = require("resource://devtools/shared/protocol/Request.js");
+const { RetVal } = require("resource://devtools/shared/protocol/Response.js");
 const {
   generateActorSpec,
-} = require("devtools/shared/protocol/Actor/generateActorSpec");
+} = require("resource://devtools/shared/protocol/Actor/generateActorSpec.js");
 
 exports.Front = Front;
 exports.Pool = Pool;

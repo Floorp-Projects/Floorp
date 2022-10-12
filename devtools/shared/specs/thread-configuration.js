@@ -4,7 +4,11 @@
 
 "use strict";
 
-const { generateActorSpec, Arg, types } = require("devtools/shared/protocol");
+const {
+  generateActorSpec,
+  Arg,
+  types,
+} = require("resource://devtools/shared/protocol.js");
 
 types.addDictType("thread-configuration.configuration", {
   pauseOnExceptions: "nullable:boolean",

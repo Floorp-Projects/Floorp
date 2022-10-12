@@ -31,7 +31,7 @@
  * is then available to scanning devices.
  */
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 const UDPSocket = Components.Constructor(
   "@mozilla.org/network/udp-socket;1",

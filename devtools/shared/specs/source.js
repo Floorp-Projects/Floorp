@@ -8,7 +8,7 @@ const {
   RetVal,
   generateActorSpec,
   types,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 const longstringType = types.getType("longstring");
 const arraybufferType = types.getType("arraybuffer");

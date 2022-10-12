@@ -6,20 +6,23 @@
 
 // Lazily require encoder and decoder in case only one is needed
 Object.defineProperty(this, "Encoder", {
-  get: () => require("devtools/shared/qrcode/encoder/index").Encoder,
+  get: () =>
+    require("resource://devtools/shared/qrcode/encoder/index.js").Encoder,
 });
 Object.defineProperty(this, "QRRSBlock", {
-  get: () => require("devtools/shared/qrcode/encoder/index").QRRSBlock,
+  get: () =>
+    require("resource://devtools/shared/qrcode/encoder/index.js").QRRSBlock,
 });
 Object.defineProperty(this, "QRErrorCorrectLevel", {
   get: () =>
-    require("devtools/shared/qrcode/encoder/index").QRErrorCorrectLevel,
+    require("resource://devtools/shared/qrcode/encoder/index.js")
+      .QRErrorCorrectLevel,
 });
 Object.defineProperty(this, "decoder", {
   get: () => {
     // Some applications don't ship the decoder, see moz.build
     try {
-      return require("devtools/shared/qrcode/decoder/index");
+      return require("resource://devtools/shared/qrcode/decoder/index.js");
     } catch (e) {
       return null;
     }

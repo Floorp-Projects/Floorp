@@ -5,7 +5,7 @@
 
 // Test the ResourceCommand API around WEBSOCKET.
 
-const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
+const ResourceCommand = require("resource://devtools/shared/commands/resource/resource-command.js");
 
 const IS_NUMBER = "IS_NUMBER";
 const SHOULD_EXIST = "SHOULD_EXIST";
