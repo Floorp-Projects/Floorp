@@ -73,7 +73,6 @@ extern crate fluent_langneg_ffi;
 extern crate fluent;
 extern crate fluent_ffi;
 
-extern crate regex_ffi;
 extern crate rure;
 
 extern crate fluent_fallback;
