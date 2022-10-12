@@ -118,7 +118,7 @@ TEST(TestRustRegex, Flags)
     ASSERT_FALSE(re.IsMatch("\xFF"));
   }
   {
-    RustRegex re(".", RustRegex::ALL_DISABLED);
+    RustRegex re(".", RustRegexOptions().Unicode(false));
     ASSERT_TRUE(re);
     ASSERT_TRUE(re.IsMatch("\xFF"));
   }
@@ -126,9 +126,7 @@ TEST(TestRustRegex, Flags)
 
 TEST(TestRustRegex, CompileErrorSizeLimit)
 {
-  RustRegexOptions options;
-  options.SizeLimit(0);
-  RustRegex re("\\w{100}", RustRegex::DEFAULT_FLAGS, options);
+  RustRegex re("\\w{100}", RustRegexOptions().SizeLimit(0));
   EXPECT_FALSE(re);
 }
 
@@ -175,10 +173,8 @@ TEST(TestRustRegex, SetMatchStart)
 
 TEST(TestRustRegex, RegexSetOptions)
 {
-  RustRegexOptions options;
-  options.SizeLimit(0);
   RustRegexSet re(nsTArray<std::string_view>{"\\w{100}"},
-                  RustRegex::DEFAULT_FLAGS, options);
+                  RustRegexOptions().SizeLimit(0));
   EXPECT_FALSE(re);
 }
 
