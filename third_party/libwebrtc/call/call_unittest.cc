@@ -31,7 +31,6 @@
 #include "call/audio_state.h"
 #include "modules/audio_device/include/mock_audio_device.h"
 #include "modules/audio_processing/include/mock_audio_processing.h"
-#include "modules/include/module.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
 #include "test/fake_encoder.h"
 #include "test/gtest.h"
@@ -474,61 +473,6 @@ TEST(CallTest, AddAdaptationResourceBeforeCreatingVideoSendStream) {
   fake_resource->SetUsageState(ResourceUsageState::kUnderuse);
   call->DestroyVideoSendStream(stream1);
   call->DestroyVideoSendStream(stream2);
-}
-
-TEST(CallTest, SharedModuleThread) {
-  class SharedModuleThreadUser : public Module {
-   public:
-    SharedModuleThreadUser(ProcessThread* expected_thread,
-                           rtc::scoped_refptr<SharedModuleThread> thread)
-        : expected_thread_(expected_thread), thread_(std::move(thread)) {
-      thread_->EnsureStarted();
-      thread_->process_thread()->RegisterModule(this, RTC_FROM_HERE);
-    }
-
-    ~SharedModuleThreadUser() override {
-      thread_->process_thread()->DeRegisterModule(this);
-      EXPECT_TRUE(thread_was_checked_);
-    }
-
-   private:
-    int64_t TimeUntilNextProcess() override { return 1000; }
-    void Process() override {}
-    void ProcessThreadAttached(ProcessThread* process_thread) override {
-      if (!process_thread) {
-        // Being detached.
-        return;
-      }
-      EXPECT_EQ(process_thread, expected_thread_);
-      thread_was_checked_ = true;
-    }
-
-    bool thread_was_checked_ = false;
-    ProcessThread* const expected_thread_;
-    rtc::scoped_refptr<SharedModuleThread> thread_;
-  };
-
-  // Create our test instance and pass a lambda to it that gets executed when
-  // the reference count goes back to 1 - meaning `shared` again is the only
-  // reference, which means we can free the variable and deallocate the thread.
-  rtc::scoped_refptr<SharedModuleThread> shared;
-  shared =
-      SharedModuleThread::Create(ProcessThread::Create("MySharedProcessThread"),
-                                 [&shared]() { shared = nullptr; });
-  ProcessThread* process_thread = shared->process_thread();
-
-  ASSERT_TRUE(shared.get());
-
-  {
-    // Create a couple of users of the thread.
-    // These instances are in a separate scope to trigger the callback to our
-    // lambda, which will run when these go out of scope.
-    SharedModuleThreadUser user1(process_thread, shared);
-    SharedModuleThreadUser user2(process_thread, shared);
-  }
-
-  // The thread should now have been stopped and freed.
-  EXPECT_FALSE(shared);
 }
 
 }  // namespace webrtc

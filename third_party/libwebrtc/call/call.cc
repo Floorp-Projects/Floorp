@@ -50,7 +50,6 @@
 #include "modules/rtp_rtcp/source/byte_io.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_util.h"
-#include "modules/utility/include/process_thread.h"
 #include "modules/video_coding/fec_controller_default.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
@@ -492,131 +491,20 @@ class Call final : public webrtc::Call,
 
 /* Mozilla: Avoid this since it could use GetRealTimeClock().
 Call* Call::Create(const Call::Config& config) {
-  rtc::scoped_refptr<SharedModuleThread> call_thread =
-      SharedModuleThread::Create(ProcessThread::Create("ModuleProcessThread"),
-                                 nullptr);
-  return Create(config, Clock::GetRealTimeClock(), std::move(call_thread),
-                ProcessThread::Create("PacerThread"));
+  Clock* clock = Clock::GetRealTimeClock();
+  return Create(config, clock,
+                RtpTransportControllerSendFactory().Create(
+                    config.ExtractTransportConfig(), clock));
 }
  */
 
 Call* Call::Create(const Call::Config& config,
                    Clock* clock,
-                   rtc::scoped_refptr<SharedModuleThread> /*call_thread*/,
-                   std::unique_ptr<ProcessThread> pacer_thread) {
-  RTC_DCHECK(config.task_queue_factory);
-
-  RtpTransportControllerSendFactory transport_controller_factory_;
-
-  RtpTransportConfig transportConfig = config.ExtractTransportConfig();
-
-  return new internal::Call(
-      clock, config,
-      transport_controller_factory_.Create(transportConfig, clock),
-      config.task_queue_factory);
-}
-
-Call* Call::Create(const Call::Config& config,
-                   Clock* clock,
-                   rtc::scoped_refptr<SharedModuleThread> /*call_thread*/,
                    std::unique_ptr<RtpTransportControllerSendInterface>
                        transportControllerSend) {
   RTC_DCHECK(config.task_queue_factory);
   return new internal::Call(clock, config, std::move(transportControllerSend),
                             config.task_queue_factory);
-}
-
-class SharedModuleThread::Impl {
- public:
-  Impl(std::unique_ptr<ProcessThread> process_thread,
-       std::function<void()> on_one_ref_remaining)
-      : module_thread_(std::move(process_thread)),
-        on_one_ref_remaining_(std::move(on_one_ref_remaining)) {}
-
-  void EnsureStarted() {
-    RTC_DCHECK_RUN_ON(&sequence_checker_);
-    if (started_)
-      return;
-    started_ = true;
-    module_thread_->Start();
-  }
-
-  ProcessThread* process_thread() {
-    RTC_DCHECK_RUN_ON(&sequence_checker_);
-    return module_thread_.get();
-  }
-
-  void AddRef() const {
-    RTC_DCHECK_RUN_ON(&sequence_checker_);
-    ++ref_count_;
-  }
-
-  rtc::RefCountReleaseStatus Release() const {
-    RTC_DCHECK_RUN_ON(&sequence_checker_);
-    --ref_count_;
-
-    if (ref_count_ == 0) {
-      module_thread_->Stop();
-      return rtc::RefCountReleaseStatus::kDroppedLastRef;
-    }
-
-    if (ref_count_ == 1 && on_one_ref_remaining_) {
-      auto moved_fn = std::move(on_one_ref_remaining_);
-      // NOTE: after this function returns, chances are that `this` has been
-      // deleted - do not touch any member variables.
-      // If the owner of the last reference implements a lambda that releases
-      // that last reference inside of the callback (which is legal according
-      // to this implementation), we will recursively enter Release() above,
-      // call Stop() and release the last reference.
-      moved_fn();
-    }
-
-    return rtc::RefCountReleaseStatus::kOtherRefsRemained;
-  }
-
- private:
-  RTC_NO_UNIQUE_ADDRESS SequenceChecker sequence_checker_;
-  mutable int ref_count_ RTC_GUARDED_BY(sequence_checker_) = 0;
-  std::unique_ptr<ProcessThread> const module_thread_;
-  std::function<void()> const on_one_ref_remaining_;
-  bool started_ = false;
-};
-
-SharedModuleThread::SharedModuleThread(
-    std::unique_ptr<ProcessThread> process_thread,
-    std::function<void()> on_one_ref_remaining)
-    : impl_(std::make_unique<Impl>(std::move(process_thread),
-                                   std::move(on_one_ref_remaining))) {}
-
-SharedModuleThread::~SharedModuleThread() = default;
-
-// static
-
-rtc::scoped_refptr<SharedModuleThread> SharedModuleThread::Create(
-    std::unique_ptr<ProcessThread> process_thread,
-    std::function<void()> on_one_ref_remaining) {
-  // Using `new` to access a non-public constructor.
-  return rtc::scoped_refptr<SharedModuleThread>(new SharedModuleThread(
-      std::move(process_thread), std::move(on_one_ref_remaining)));
-}
-
-void SharedModuleThread::EnsureStarted() {
-  impl_->EnsureStarted();
-}
-
-ProcessThread* SharedModuleThread::process_thread() {
-  return impl_->process_thread();
-}
-
-void SharedModuleThread::AddRef() const {
-  impl_->AddRef();
-}
-
-rtc::RefCountReleaseStatus SharedModuleThread::Release() const {
-  auto ret = impl_->Release();
-  if (ret == rtc::RefCountReleaseStatus::kDroppedLastRef)
-    delete this;
-  return ret;
 }
 
 // This method here to avoid subclasses has to implement this method.
