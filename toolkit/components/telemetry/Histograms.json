@@ -3404,6 +3404,17 @@
     "description": "Does CRLite and OCSP fetching agree when a certificate is revoked?",
     "labels": ["CRLiteOkOCSPFail", "CRLiteRevOCSPFail", "CRLiteOkOCSPOk", "CRLiteOkOCSPRev", "CRLiteRevOCSPOk", "CRLiteRevOCSPRev", "CRLiteOkOCSPUnk", "CRLiteRevOCSPUnk", "CRLiteOkOCSPSoft", "CRLiteRevOCSPSoft" ]
   },
+  "CERT_REVOCATION_MECHANISMS": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "jschanck@mozilla.com"],
+    "bug_numbers": [1794450],
+    "expires_in_version": "113",
+    "kind": "categorical",
+    "releaseChannelCollection": "opt-out",
+    "description": "Which revocation checking mechanisms were used?",
+    "labels": ["CRLite", "StapledOCSP", "CachedOCSP", "OCSP", "OneCRL", "ShortValidity"]
+  },
   "WEBSOCKETS_HANDSHAKE_TYPE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
