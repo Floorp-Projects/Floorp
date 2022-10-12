@@ -799,3 +799,81 @@ add_task(async function test_updateRecipes_recipeAppId() {
     "Should call .onFinalize with no validation issues"
   );
 });
+
+add_task(async function test_updateRecipes_featureValidationOptOut() {
+  const invalidTestRecipe = ExperimentFakes.recipe("invalid-recipe", {
+    branches: [
+      {
+        slug: "control",
+        ratio: 1,
+        features: [
+          {
+            featureId: "testFeature",
+            value: {
+              enabled: "true",
+              testInt: false,
+            },
+          },
+        ],
+      },
+    ],
+  });
+
+  const message = await PanelTestProvider.getMessages().then(msgs =>
+    msgs.find(m => m.id === "SPOTLIGHT_MESSAGE_93")
+  );
+  delete message.template;
+
+  const invalidMsgRecipe = ExperimentFakes.recipe("invalid-recipe", {
+    branches: [
+      {
+        slug: "control",
+        ratio: 1,
+        features: [
+          {
+            featureId: "spotlight",
+            value: message,
+          },
+        ],
+      },
+    ],
+  });
+
+  for (const invalidRecipe of [invalidTestRecipe, invalidMsgRecipe]) {
+    const optOutRecipe = {
+      ...invalidMsgRecipe,
+      slug: "optout-recipe",
+      featureValidationOptOut: true,
+    };
+
+    const loader = ExperimentFakes.rsLoader();
+    const manager = loader.manager;
+
+    sinon.stub(loader, "setTimer");
+    sinon
+      .stub(loader.remoteSettingsClient, "get")
+      .resolves([invalidRecipe, optOutRecipe]);
+
+    sinon.stub(manager, "onRecipe");
+    sinon.stub(manager, "onFinalize");
+    sinon.stub(manager.store, "ready").resolves();
+    sinon.stub(manager.store, "getAllActive").returns([]);
+    sinon.stub(manager.store, "getAllRollouts").returns([]);
+
+    await loader.init();
+    ok(
+      manager.onRecipe.calledOnceWith(optOutRecipe, "rs-loader"),
+      "should call .onRecipe for the opt-out recipe"
+    );
+    ok(
+      manager.onFinalize.calledOnceWith("rs-loader", {
+        recipeMismatches: [],
+        invalidRecipes: [],
+        invalidBranches: new Map([[invalidRecipe.slug, ["control"]]]),
+        invalidFeatures: new Map(),
+        validationEnabled: true,
+      }),
+      "should call .onFinalize with only one invalid recipe"
+    );
+  }
+});
