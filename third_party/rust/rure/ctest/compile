@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -ex
+
+cargo build --manifest-path ../Cargo.toml
+gcc -DDEBUG -o test test.c -ansi -Wall -I../include -L../../target/debug -lrure
+# If you're using librure.a, then you'll need to link other stuff:
+# -lutil -ldl -lpthread -lgcc_s -lc -lm -lrt -lutil -lrure
