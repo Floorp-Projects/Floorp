@@ -35,7 +35,7 @@ origin-controls-option-always-on =
 
 origin-controls-state-no-access = Can’t read and change data on this site
 
-origin-controls-state-always-on = Can always read and change data
+origin-controls-state-always-on = Can always read and change data on this site
 
 origin-controls-state-when-clicked = Permission needed to read and change data
 
