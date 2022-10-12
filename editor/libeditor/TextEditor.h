@@ -106,6 +106,17 @@ class TextEditor final : public EditorBase,
     return aEditor ? aEditor->GetAsTextEditor() : nullptr;
   }
 
+  /**
+   * Helper method for `AppendString()` and `AppendSubString()`.  This should
+   * be called only when `aText` is in a password field.  This method masks
+   * A part of or all of `aText` (`aStartOffsetInText` and later) should've
+   * been copied (appended) to `aString`.  `aStartOffsetInString` is where
+   * the password was appended into `aString`.
+   */
+  static void MaskString(nsString& aString, const dom::Text& aTextNode,
+                         uint32_t aStartOffsetInString,
+                         uint32_t aStartOffsetInText);
+
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSINAMED
 

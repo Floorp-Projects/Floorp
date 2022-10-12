@@ -9,12 +9,12 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ContentIterator.h"
-#include "mozilla/EditorUtils.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RangeUtils.h"
 #include "mozilla/TextComposition.h"
+#include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
@@ -524,7 +524,7 @@ static void AppendString(nsString& aString, const Text& aTextNode) {
   const uint32_t oldXPLength = aString.Length();
   aTextNode.TextFragment().AppendTo(aString);
   if (aTextNode.HasFlag(NS_MAYBE_MASKED)) {
-    EditorUtils::MaskString(aString, aTextNode, oldXPLength, 0);
+    TextEditor::MaskString(aString, aTextNode, oldXPLength, 0);
   }
 }
 
@@ -533,7 +533,7 @@ static void AppendSubString(nsString& aString, const Text& aTextNode,
   const uint32_t oldXPLength = aString.Length();
   aTextNode.TextFragment().AppendTo(aString, aXPOffset, aXPLength);
   if (aTextNode.HasFlag(NS_MAYBE_MASKED)) {
-    EditorUtils::MaskString(aString, aTextNode, oldXPLength, aXPOffset);
+    TextEditor::MaskString(aString, aTextNode, oldXPLength, aXPOffset);
   }
 }
 
