@@ -19,7 +19,8 @@ class ProcessPower;
 
 class PowerCounters {
  public:
-#if defined(_MSC_VER) || defined(GP_PLAT_arm64_darwin)
+#if defined(_MSC_VER) || defined(GP_PLAT_arm64_darwin) || \
+    defined(GP_PLAT_amd64_linux)
   explicit PowerCounters();
   ~PowerCounters();
   void Sample();
