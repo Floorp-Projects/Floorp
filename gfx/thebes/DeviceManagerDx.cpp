@@ -145,9 +145,6 @@ bool DeviceManagerDx::LoadDcomp() {
 }
 
 void DeviceManagerDx::ReleaseD3D11() {
-#ifdef DEBUG
-  MutexAutoLock lock(mDeviceLock);
-#endif
   MOZ_ASSERT(!mCompositorDevice);
   MOZ_ASSERT(!mContentDevice);
   MOZ_ASSERT(!mVRDevice);
@@ -1046,7 +1043,7 @@ bool DeviceManagerDx::MaybeResetAndReacquireDevices() {
 
   ResetDevicesLocked();
 
-  if (createCompositorDevice && !CreateCompositorDevices()) {
+  if (createCompositorDevice && !CreateCompositorDevicesLocked()) {
     // Just stop, don't try anything more
     return true;
   }
