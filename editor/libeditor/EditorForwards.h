@@ -77,8 +77,8 @@ using EditorRawDOMPointInText = EditorDOMPointBase<dom::Text*, nsIContent*>;
 class AutoPendingStyleCacheArray;  // mozilla/PendingStyles.h
 class AutoSelectionRangeArray;     // EditorUtils.h
 class CaretPoint;                  // EditorUtils.h
-class ChangeStyleTransaction;      // mozilla/ChangeStyleTransaction.h
-class CSSEditUtils;                // mozilla/CSSEditUtils.h
+class ChangeStyleTransaction;      // ChangeStyleTransaction.h
+class CSSEditUtils;                // CSSEditUtils.h
 class EditActionResult;            // EditorUtils.h
 class EditTransactionBase;         // mozilla/EditTransactionBase.h
 class EditorBase;                  // mozilla/EditorBase.h

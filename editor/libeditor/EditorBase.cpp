@@ -11,7 +11,6 @@
 #include "AutoRangeArray.h"              // for AutoRangeArray
 #include "ChangeAttributeTransaction.h"  // for ChangeAttributeTransaction
 #include "CompositionTransaction.h"      // for CompositionTransaction
-#include "CSSEditUtils.h"                // for CSSEditUtils
 #include "DeleteNodeTransaction.h"       // for DeleteNodeTransaction
 #include "DeleteRangeTransaction.h"      // for DeleteRangeTransaction
 #include "DeleteTextTransaction.h"       // for DeleteTextTransaction
