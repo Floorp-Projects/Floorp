@@ -517,17 +517,27 @@ TestArray.addTest(
         x, tv.aes_cbc_enc.data);
     }
 
-    function doEncrypt(x) {
-      return encrypt(x, new Uint8Array(15))
-        .catch(function() { return encrypt(new Uint8Array(17)); });
+    function checkPromises(promises) {
+      for (var promise of promises) {
+        if (promise.status != "rejected") {
+          return false;
+        }
+        if (promise.reason.name != "OperationError") {
+          return false;
+        }
+      }
+
+      return true;
     }
 
     crypto.subtle.importKey("raw", tv.aes_cbc_enc.key, "AES-CBC", false, ["encrypt"])
-      .then(doEncrypt)
-      .then(
-        error(that),
-        complete(that)
-      );
+      .then(function(key) {
+        var p1 = encrypt(key, new Uint8Array(15));
+        var p2 = encrypt(key, new Uint8Array(17));
+
+        Promise.allSettled([p1, p2])
+          .then(complete(that, checkPromises));
+      });
   }
 );
 
@@ -564,17 +574,27 @@ TestArray.addTest(
         x, tv.aes_cbc_dec.data);
     }
 
-    function doDecrypt(x) {
-      return decrypt(x, new Uint8Array(15))
-        .catch(function() { return decrypt(x, new Uint8Array(17)); });
+    function checkPromises(promises) {
+      for (var promise of promises) {
+        if (promise.status != "rejected") {
+          return false;
+        }
+        if (promise.reason.name != "OperationError") {
+          return false;
+        }
+      }
+
+      return true;
     }
 
     crypto.subtle.importKey("raw", tv.aes_cbc_dec.key, "AES-CBC", false, ["decrypt"])
-      .then(doDecrypt)
-      .then(
-        error(that),
-        complete(that)
-      );
+      .then(function(key) {
+        var p1 = decrypt(key, new Uint8Array(15));
+        var p2 = decrypt(key, new Uint8Array(17));
+
+        Promise.allSettled([p1, p2])
+          .then(complete(that, checkPromises));
+      });
   }
 );
 
@@ -611,17 +631,27 @@ TestArray.addTest(
         x, tv.aes_ctr_enc.data);
     }
 
-    function doEncrypt(x) {
-      return encrypt(x, new Uint8Array(15))
-        .catch(function() { return encrypt(x, new Uint8Array(17)); });
+    function checkPromises(promises) {
+      for (var promise of promises) {
+        if (promise.status != "rejected") {
+          return false;
+        }
+        if (promise.reason.name != "OperationError") {
+          return false;
+        }
+      }
+
+      return true;
     }
 
     crypto.subtle.importKey("raw", tv.aes_ctr_enc.key, "AES-CTR", false, ["encrypt"])
-      .then(doEncrypt)
-      .then(
-        error(that),
-        complete(that)
-      );
+      .then(function(key) {
+        var p1 = encrypt(key, new Uint8Array(15));
+        var p2 = encrypt(key, new Uint8Array(17));
+
+        Promise.allSettled([p1, p2])
+          .then(complete(that, checkPromises));
+      });
   }
 );
 
@@ -652,18 +682,33 @@ TestArray.addTest(
   function() {
     var that = this;
 
-    function doDecrypt(x, iv) {
+    function decrypt(x, iv) {
       return crypto.subtle.decrypt(
         { name: "AES-CTR", counter: iv, length: 32 },
         x, tv.aes_ctr_dec.data);
     }
 
+    function checkPromises(promises) {
+      for (var promise of promises) {
+        if (promise.status != "rejected") {
+          return false;
+        }
+        if (promise.reason.name != "OperationError") {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
     crypto.subtle.importKey("raw", tv.aes_ctr_dec.key, "AES-CTR", false, ["decrypt"])
-      .then(doDecrypt)
-      .then(
-        error(that),
-        complete(that)
-      );
+      .then(function(key) {
+        var p1 = decrypt(key, new Uint8Array(15));
+        var p2 = decrypt(key, new Uint8Array(17));
+
+        Promise.allSettled([p1, p2])
+          .then(complete(that, checkPromises));
+      });
   }
 );
 
