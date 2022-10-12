@@ -2807,12 +2807,20 @@ RefPtr<MediaFormatReader::SeekPromise> MediaFormatReader::Seek(
   LOG("aTarget=(%" PRId64 ")", aTarget.GetTime().ToMicroseconds());
 
   MOZ_DIAGNOSTIC_ASSERT(mSeekPromise.IsEmpty());
-  MOZ_DIAGNOSTIC_ASSERT(!mVideo.HasPromise());
-  MOZ_DIAGNOSTIC_ASSERT(aTarget.IsVideoOnly() || !mAudio.HasPromise());
   MOZ_DIAGNOSTIC_ASSERT(mPendingSeekTime.isNothing());
-  MOZ_DIAGNOSTIC_ASSERT(mVideo.mTimeThreshold.isNothing());
-  MOZ_DIAGNOSTIC_ASSERT(aTarget.IsVideoOnly() ||
-                        mAudio.mTimeThreshold.isNothing());
+  // Should reset data request, and no pending internal seek.
+  if (aTarget.IsAllTracks()) {
+    MOZ_DIAGNOSTIC_ASSERT(!mVideo.HasPromise());
+    MOZ_DIAGNOSTIC_ASSERT(!mAudio.HasPromise());
+    MOZ_DIAGNOSTIC_ASSERT(mVideo.mTimeThreshold.isNothing());
+    MOZ_DIAGNOSTIC_ASSERT(mAudio.mTimeThreshold.isNothing());
+  } else if (aTarget.IsVideoOnly()) {
+    MOZ_DIAGNOSTIC_ASSERT(!mVideo.HasPromise());
+    MOZ_DIAGNOSTIC_ASSERT(mVideo.mTimeThreshold.isNothing());
+  } else if (aTarget.IsAudioOnly()) {
+    MOZ_DIAGNOSTIC_ASSERT(!mAudio.HasPromise());
+    MOZ_DIAGNOSTIC_ASSERT(mAudio.mTimeThreshold.isNothing());
+  }
 
   if (!mInfo.mMediaSeekable && !mInfo.mMediaSeekableOnlyInBufferedRanges) {
     LOG("Seek() END (Unseekable)");
@@ -2860,22 +2868,24 @@ void MediaFormatReader::AttemptSeek() {
     return;
   }
 
-  if (HasVideo()) {
+  // Only reset the demuxers targeted by this SeekTarget, to avoid A/V sync
+  // issues.
+  const bool isSeekingAudio = HasAudio() && !mOriginalSeekTarget.IsVideoOnly();
+  const bool isSeekingVideo = HasVideo() && !mOriginalSeekTarget.IsAudioOnly();
+  if (isSeekingVideo) {
     mVideo.ResetDemuxer();
     mVideo.ResetState();
   }
-
-  // Don't reset the audio demuxer not state when seeking video only
-  // as it will cause the audio to seek back to the beginning
-  // resulting in out-of-sync audio from video.
-  if (HasAudio() && !mOriginalSeekTarget.IsVideoOnly()) {
+  if (isSeekingAudio) {
     mAudio.ResetDemuxer();
     mAudio.ResetState();
   }
 
-  if (HasVideo()) {
+  // If seeking both tracks, seek the video track, and then the audio track when
+  // the video track seek has completed. Otherwise, only seek a specific track.
+  if (isSeekingVideo) {
     DoVideoSeek();
-  } else if (HasAudio()) {
+  } else if (isSeekingAudio) {
     DoAudioSeek();
   } else {
     MOZ_CRASH();
