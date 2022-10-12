@@ -304,6 +304,7 @@ nsNSSComponent::~nsNSSComponent() {
 
   ShutdownNSS();
   SharedSSLState::GlobalCleanup();
+  RememberCertErrorsTable::Cleanup();
   --mInstanceCount;
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::dtor finished\n"));
@@ -1197,7 +1198,10 @@ nsresult CommonInit() {
   DisableMD5();
 
   mozilla::pkix::RegisterErrorTable();
+
   SharedSSLState::GlobalInit();
+  RememberCertErrorsTable::Init();
+
   SetValidationOptionsCommon();
 
   return NS_OK;
@@ -1206,6 +1210,7 @@ nsresult CommonInit() {
 void NSSShutdownForSocketProcess() {
   MOZ_ASSERT(XRE_IsSocketProcess());
   SharedSSLState::GlobalCleanup();
+  RememberCertErrorsTable::Cleanup();
 }
 
 bool HandleTLSPrefChange(const nsCString& prefName) {

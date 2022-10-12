@@ -235,11 +235,7 @@ void CommonSocketControl::RebuildCertificateInfoFromSSLTokenCache() {
   mozilla::net::SessionCacheInfo& info = *mSessionCacheInfo;
   nsCOMPtr<nsIX509Cert> cert(
       new nsNSSCertificate(std::move(info.mServerCertBytes)));
-  if (info.mOverridableErrorCategory == OverridableErrorCategory::ERROR_UNSET) {
-    SetServerCert(cert, info.mEVStatus);
-  } else {
-    SetStatusErrorBits(cert, info.mOverridableErrorCategory);
-  }
+  SetServerCert(cert, info.mEVStatus);
   SetCertificateTransparencyStatus(info.mCertificateTransparencyStatus);
   if (info.mSucceededCertChainBytes) {
     SetSucceededCertChain(std::move(*info.mSucceededCertChainBytes));
@@ -247,10 +243,6 @@ void CommonSocketControl::RebuildCertificateInfoFromSSLTokenCache() {
 
   if (info.mIsBuiltCertChainRootBuiltInRoot) {
     SetIsBuiltCertChainRootBuiltInRoot(*info.mIsBuiltCertChainRootBuiltInRoot);
-  }
-
-  if (info.mFailedCertChainBytes) {
-    SetFailedCertChain(std::move(*info.mFailedCertChainBytes));
   }
 }
 
