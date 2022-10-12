@@ -7,7 +7,7 @@ interface URI;
 interface WindowProxy;
 
 typedef (MatchPatternSet or sequence<DOMString>) MatchPatternSetOrStringSequence;
-typedef (MatchGlob or DOMString) MatchGlobOrString;
+typedef (MatchGlob or UTF8String) MatchGlobOrString;
 
 [ChromeOnly, Exposed=Window]
 interface MozDocumentMatcher {
