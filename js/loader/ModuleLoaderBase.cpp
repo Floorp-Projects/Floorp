@@ -1001,11 +1001,13 @@ void ModuleLoaderBase::CancelDynamicImport(ModuleLoadRequest* aRequest,
   MOZ_ASSERT(aRequest->mLoader == this);
 
   RefPtr<ScriptLoadRequest> req = mDynamicImportRequests.Steal(aRequest);
-  aRequest->Cancel();
-  // FinishDynamicImport must happen exactly once for each dynamic import
-  // request. If the load is aborted we do it when we remove the request
-  // from mDynamicImportRequests.
-  FinishDynamicImportAndReject(aRequest, aResult);
+  if (!aRequest->IsCanceled()) {
+    aRequest->Cancel();
+    // FinishDynamicImport must happen exactly once for each dynamic import
+    // request. If the load is aborted we do it when we remove the request
+    // from mDynamicImportRequests.
+    FinishDynamicImportAndReject(aRequest, aResult);
+  }
 }
 
 void ModuleLoaderBase::RemoveDynamicImport(ModuleLoadRequest* aRequest) {
@@ -1245,15 +1247,10 @@ nsresult ModuleLoaderBase::EvaluateModuleInContext(
 }
 
 void ModuleLoaderBase::CancelAndClearDynamicImports() {
-  for (ScriptLoadRequest* req = mDynamicImportRequests.getFirst(); req;
-       req = req->getNext()) {
-    req->Cancel();
-    // FinishDynamicImport must happen exactly once for each dynamic import
-    // request. If the load is aborted we do it when we remove the request
-    // from mDynamicImportRequests.
-    FinishDynamicImportAndReject(req->AsModuleRequest(), NS_ERROR_ABORT);
+  while (ScriptLoadRequest* req = mDynamicImportRequests.getFirst()) {
+    // This also removes the request from the list.
+    CancelDynamicImport(req->AsModuleRequest(), NS_ERROR_ABORT);
   }
-  mDynamicImportRequests.CancelRequestsAndClear();
 }
 
 UniquePtr<ImportMap> ModuleLoaderBase::ParseImportMap(
