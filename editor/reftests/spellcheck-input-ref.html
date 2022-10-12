@@ -1,11 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html class="reftest-wait">
 <body>
     <input type="text" value="blahblahblah" spellcheck="true">
     <script>
       var i = document.getElementsByTagName("input")[0];
       i.focus(); // init the editor
       i.blur();  // we actually don't need the focus
+
+      // Try to ensure the input element is repainted.
+      let rAFCounter = 0;
+      (function rAF() {
+        if (rAFCounter < 10) {
+          ++rAFCounter;
+          requestAnimationFrame(rAF);
+        } else {
+          document.documentElement.removeAttribute("class");
+        }
+      })();
     </script>
 </body>
 </html>
