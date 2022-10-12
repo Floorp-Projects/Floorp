@@ -755,3 +755,47 @@ add_task(async function test_updateRecipes_withPropNotInManifest() {
   );
   equal(loader.manager.onRecipe.callCount, 1, "should only call onRecipe once");
 });
+
+add_task(async function test_updateRecipes_recipeAppId() {
+  const loader = ExperimentFakes.rsLoader();
+  const manager = loader.manager;
+
+  const recipe = ExperimentFakes.recipe("mobile-experiment", {
+    appId: "org.mozilla.firefox",
+    branches: [
+      {
+        slug: "control",
+        ratio: 1,
+        features: [
+          {
+            featureId: "mobile-feature",
+            value: {
+              enabled: true,
+            },
+          },
+        ],
+      },
+    ],
+  });
+
+  sinon.stub(loader, "setTimer");
+  sinon.stub(loader.remoteSettingsClient, "get").resolves([recipe]);
+
+  sinon.stub(manager, "onRecipe");
+  sinon.stub(manager, "onFinalize");
+  sinon.stub(manager.store, "ready").resolves();
+
+  await loader.init();
+
+  Assert.equal(manager.onRecipe.callCount, 0, ".onRecipe was never called");
+  Assert.ok(
+    manager.onFinalize.calledWith("rs-loader", {
+      recipeMismatches: [],
+      invalidRecipes: [],
+      invalidBranches: new Map(),
+      invalidFeatures: new Map(),
+      validationEnabled: true,
+    }),
+    "Should call .onFinalize with no validation issues"
+  );
+});
