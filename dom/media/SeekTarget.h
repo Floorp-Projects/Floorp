@@ -37,12 +37,6 @@ struct SeekTarget {
         mVideoOnly(aOther.mVideoOnly) {
     MOZ_ASSERT(mTime.IsValid());
   }
-  bool IsValid() const { return mType != SeekTarget::Invalid; }
-  void Reset() {
-    mTime = media::TimeUnit::Invalid();
-    mType = SeekTarget::Invalid;
-    mVideoOnly = false;
-  }
   media::TimeUnit GetTime() const {
     MOZ_ASSERT(mTime.IsValid(), "Invalid SeekTarget");
     return mTime;
@@ -52,7 +46,6 @@ struct SeekTarget {
     mTime = aTime;
   }
   void SetType(Type aType) { mType = aType; }
-  void SetVideoOnly(bool aVideoOnly) { mVideoOnly = aVideoOnly; }
   bool IsFast() const { return mType == SeekTarget::Type::PrevSyncPoint; }
   bool IsAccurate() const { return mType == SeekTarget::Type::Accurate; }
   bool IsNextFrame() const { return mType == SeekTarget::Type::NextFrame; }
