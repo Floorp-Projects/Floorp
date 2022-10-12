@@ -14,7 +14,6 @@
 
 #include "call/rtp_transport_config.h"
 #include "call/rtp_transport_controller_send_interface.h"
-#include "modules/utility/include/process_thread.h"
 
 namespace webrtc {
 // A factory used for dependency injection on the send side of the transport
