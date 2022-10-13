@@ -53,7 +53,7 @@ void nsMenuGroupOwnerX::ContentAppended(nsIContent* aFirstNewContent) {
   }
 }
 
-void nsMenuGroupOwnerX::NodeWillBeDestroyed(const nsINode* aNode) {}
+void nsMenuGroupOwnerX::NodeWillBeDestroyed(nsINode* aNode) {}
 
 void nsMenuGroupOwnerX::AttributeWillChange(dom::Element* aElement, int32_t aNameSpaceID,
                                             nsAtom* aAttribute, int32_t aModType) {}

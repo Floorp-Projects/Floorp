@@ -236,7 +236,7 @@ void SVGUseElement::ContentRemoved(nsIContent* aChild,
   }
 }
 
-void SVGUseElement::NodeWillBeDestroyed(const nsINode* aNode) {
+void SVGUseElement::NodeWillBeDestroyed(nsINode* aNode) {
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   UnlinkSource();
 }

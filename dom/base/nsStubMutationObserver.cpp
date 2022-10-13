@@ -100,11 +100,12 @@ class MutationObserverWrapper final : public nsIMutationObserver {
     mOwner->ContentRemoved(aChild, aPreviousSibling);
   }
 
-  void NodeWillBeDestroyed(const nsINode* aNode) override {
+  void NodeWillBeDestroyed(nsINode* aNode) override {
     MOZ_ASSERT(mOwner);
+    AddRefWrapper();
     RefPtr<nsMultiMutationObserver> owner = mOwner;
     owner->NodeWillBeDestroyed(aNode);
-    owner->mWrapperForNode.Remove(const_cast<nsINode*>(aNode));
+    owner->RemoveMutationObserverFromNode(aNode);
     mOwner = nullptr;
     ReleaseWrapper();
   }
@@ -115,8 +116,9 @@ class MutationObserverWrapper final : public nsIMutationObserver {
   }
 
   MozExternalRefCountType AddRefWrapper() {
-    NS_LOG_ADDREF(this, mRefCnt, "MutationObserverWrapper", sizeof(*this));
-    return ++mRefCnt;
+    nsrefcnt count = ++mRefCnt;
+    NS_LOG_ADDREF(this, count, "MutationObserverWrapper", sizeof(*this));
+    return count;
   }
 
   MozExternalRefCountType ReleaseWrapper() {
@@ -124,9 +126,8 @@ class MutationObserverWrapper final : public nsIMutationObserver {
     NS_LOG_RELEASE(this, mRefCnt, "MutationObserverWrapper");
     if (mRefCnt == 0) {
       mRefCnt = 1;
-      auto refCnt = MozExternalRefCountType(mRefCnt);
       delete this;
-      return refCnt;
+      return MozExternalRefCountType(0);
     }
     return mRefCnt;
   }

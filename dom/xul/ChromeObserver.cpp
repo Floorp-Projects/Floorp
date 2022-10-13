@@ -199,7 +199,7 @@ void ChromeObserver::AttributeChanged(dom::Element* aElement,
   }
 }
 
-void ChromeObserver::NodeWillBeDestroyed(const nsINode* aNode) {
+void ChromeObserver::NodeWillBeDestroyed(nsINode* aNode) {
   mDocument = nullptr;
 }
 
