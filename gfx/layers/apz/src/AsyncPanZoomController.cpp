@@ -1855,6 +1855,7 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(
 }
 
 nsEventStatus AsyncPanZoomController::HandleEndOfPan() {
+  MOZ_ASSERT(mAnimation == nullptr);
   MOZ_ASSERT(GetCurrentTouchBlock() || GetCurrentPanGestureBlock());
   GetCurrentInputBlock()->GetOverscrollHandoffChain()->FlushRepaints();
   ParentLayerPoint flingVelocity = GetVelocityVector();
@@ -2870,6 +2871,13 @@ nsEventStatus AsyncPanZoomController::OnPan(
 nsEventStatus AsyncPanZoomController::OnPanEnd(const PanGestureInput& aEvent) {
   APZC_LOG_DETAIL("got a pan-end in state %s\n", this,
                   ToString(mState).c_str());
+
+  // This can happen if the OS sends a second pan-end event after
+  // the first one has already started an overscroll animation.
+  // This has been observed on some Wayland versions.
+  if (mState == OVERSCROLL_ANIMATION || mState == NOTHING) {
+    return nsEventStatus_eIgnore;
+  }
 
   if (aEvent.mPanDisplacement != ScreenPoint{}) {
     // Call into OnPan in order to process the delta included in this event.
@@ -3945,6 +3953,8 @@ void AsyncPanZoomController::SmoothMsdScrollTo(
 
 void AsyncPanZoomController::StartOverscrollAnimation(
     const ParentLayerPoint& aVelocity, SideBits aOverscrollSideBits) {
+  MOZ_ASSERT(mState != OVERSCROLL_ANIMATION);
+
   SetState(OVERSCROLL_ANIMATION);
 
   ParentLayerPoint velocity = aVelocity;
