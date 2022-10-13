@@ -163,8 +163,9 @@ def _purge_vendor_dir(vendor_dir):
         "dlmanager",
         # gyp's package on PyPI doesn't have any downloadable files.
         "gyp",
-        # We keep some wheels vendored in "_venv" for use in Mozharness
-        "_venv",
+        # We manage installing "virtualenv" package manually, and we have a custom
+        # "virtualenv.py" entry module.
+        "virtualenv",
         # We manage vendoring "vsdownload" with a moz.yaml file (there is no module
         # on PyPI).
         "vsdownload",

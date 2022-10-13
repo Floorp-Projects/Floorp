@@ -1,7 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import os
+
 import shutil
 import subprocess
 import sys
@@ -10,7 +10,6 @@ from pathlib import Path
 import mozunit
 from buildconfig import topsrcdir
 from mach.requirements import MachEnvRequirements
-from mach.site import PythonVirtualenv
 
 
 def _resolve_command_site_names():
@@ -118,28 +117,20 @@ def test_sites_compatible(tmpdir: str):
     mach_requirements = _requirement_definition_to_pip_format("mach", cache, True)
 
     # Create virtualenv to try to install all dependencies into.
-    virtualenv = PythonVirtualenv(str(work_dir / "env"))
     subprocess.check_call(
         [
             sys.executable,
-            "-m",
-            "venv",
-            "--without-pip",
-            virtualenv.prefix,
+            str(
+                Path(topsrcdir)
+                / "third_party"
+                / "python"
+                / "virtualenv"
+                / "virtualenv.py"
+            ),
+            "--no-download",
+            str(work_dir / "env"),
         ]
     )
-    platlib_dir = virtualenv.resolve_sysconfig_packages_path("platlib")
-    third_party = Path(topsrcdir) / "third_party" / "python"
-    with open(os.path.join(platlib_dir, "site.pth"), "w") as pthfile:
-        pthfile.write(
-            "\n".join(
-                [
-                    str(third_party / "pip"),
-                    str(third_party / "wheel"),
-                    str(third_party / "setuptools"),
-                ]
-            )
-        )
 
     for name in command_site_names:
         print(f'Checking compatibility of "{name}" site')
@@ -155,9 +146,7 @@ def test_sites_compatible(tmpdir: str):
         # command)
         subprocess.check_call(
             [
-                virtualenv.python_path,
-                "-m",
-                "pip",
+                str(work_dir / "env" / "bin" / "pip"),
                 "install",
                 "-r",
                 str(work_dir / "requirements.txt"),
