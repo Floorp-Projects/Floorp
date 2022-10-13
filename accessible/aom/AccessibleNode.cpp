@@ -106,7 +106,7 @@ void AccessibleNode::GetAttributes(nsTArray<nsString>& aAttributes) {
 
   RefPtr<AccAttributes> attrs = mIntl->Attributes();
 
-  for (auto iter : *attrs) {
+  for (const auto& iter : *attrs) {
     aAttributes.AppendElement(nsAtomString(iter.Name()));
   }
 }
