@@ -1307,6 +1307,9 @@ SimpleTest.testInChaosMode = function() {
   }
   SpecialPowers.DOMWindowUtils.enterChaosMode();
   SimpleTest._inChaosMode = true;
+  // increase timeout here as chaosmode is very slow (i.e. 10x)
+  // doing 20x as this overwrites anything the tests set
+  SimpleTest.requestLongerTimeout(20);
 };
 
 SimpleTest.timeout = async function() {

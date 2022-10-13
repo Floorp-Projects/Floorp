@@ -3429,6 +3429,9 @@ toolbar#nav-bar {
                 # See bug 479518 and bug 1414063.
                 timeout = 370.0
 
+            if "MOZ_CHAOSMODE=0xfb" in options.environment and timeout:
+                timeout *= 2
+
             # Detect shutdown leaks for m-bc runs if
             # code coverage is not enabled.
             detectShutdownLeaks = False
