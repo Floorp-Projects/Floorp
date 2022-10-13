@@ -20,7 +20,7 @@ use crate::prim_store::gradient::{
     FastLinearGradientInstance, LinearGradientInstance, RadialGradientInstance,
     ConicGradientInstance,
 };
-use crate::renderer::{GpuBuffer, GpuBufferBuilder};
+use crate::renderer::{GpuBufferBuilder};
 use crate::render_backend::DataStores;
 use crate::render_task::{RenderTaskKind, RenderTaskAddress};
 use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo};
@@ -598,7 +598,6 @@ pub struct PictureCacheTarget {
     pub clear_color: Option<ColorF>,
     pub dirty_rect: DeviceIntRect,
     pub valid_rect: DeviceIntRect,
-    pub gpu_buffer: GpuBuffer,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
