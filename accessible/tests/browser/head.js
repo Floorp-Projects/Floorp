@@ -14,8 +14,8 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const { CommonUtils } = ChromeUtils.import(
-  "chrome://mochitests/content/browser/accessible/tests/browser/Common.jsm"
+const { CommonUtils } = ChromeUtils.importESModule(
+  "chrome://mochitests/content/browser/accessible/tests/browser/Common.sys.mjs"
 );
 
 /**

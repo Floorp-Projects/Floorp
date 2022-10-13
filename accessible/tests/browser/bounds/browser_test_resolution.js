@@ -19,8 +19,8 @@ async function testScaledBounds(browser, accDoc, scale, id, type = "object") {
       : getBounds(acc);
 
   await invokeContentTask(browser, [scale], _scale => {
-    const { Layout } = ChromeUtils.import(
-      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+    const { Layout } = ChromeUtils.importESModule(
+      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.sys.mjs"
     );
     Layout.setResolution(content.document, _scale);
   });
@@ -37,8 +37,8 @@ async function testScaledBounds(browser, accDoc, scale, id, type = "object") {
   isWithin(scaledY - docY, (y - docY) * scale, 2, "Wrong scaled y of " + name);
 
   await invokeContentTask(browser, [], () => {
-    const { Layout } = ChromeUtils.import(
-      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+    const { Layout } = ChromeUtils.importESModule(
+      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.sys.mjs"
     );
     Layout.setResolution(content.document, 1.0);
   });

@@ -46,8 +46,8 @@ async function runTests(browser, accDoc) {
       "because it's not a child of the accessible even though visually it is."
   );
   await invokeContentTask(browser, [], () => {
-    const { CommonUtils } = ChromeUtils.import(
-      "chrome://mochitests/content/browser/accessible/tests/browser/Common.jsm"
+    const { CommonUtils } = ChromeUtils.importESModule(
+      "chrome://mochitests/content/browser/accessible/tests/browser/Common.sys.mjs"
     );
     const doc = content.document;
     const rectArea = CommonUtils.getNode("area", doc).getBoundingClientRect();

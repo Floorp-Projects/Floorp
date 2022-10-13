@@ -333,7 +333,7 @@ async function loadContentScripts(target, ...scripts) {
       target,
       [contentScript, symbol],
       async (_contentScript, importSymbol) => {
-        let module = ChromeUtils.import(_contentScript);
+        let module = ChromeUtils.importESModule(_contentScript);
         content.window[importSymbol] = module[importSymbol];
       }
     );
@@ -513,7 +513,7 @@ function accessibleTask(doc, task, options = {}) {
 
         await SimpleTest.promiseFocus(browser);
         await loadContentScripts(browser, {
-          script: "Common.jsm",
+          script: "Common.sys.mjs",
           symbol: "CommonUtils",
         });
 
@@ -811,8 +811,8 @@ async function waitForImageMap(browser, accDoc, id = "imgmap") {
 
 async function getContentBoundsForDOMElm(browser, id) {
   return invokeContentTask(browser, [id], contentId => {
-    const { Layout: LayoutUtils } = ChromeUtils.import(
-      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+    const { Layout: LayoutUtils } = ChromeUtils.importESModule(
+      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.sys.mjs"
     );
 
     return LayoutUtils.getBoundsForDOMElm(contentId, content.document);
@@ -887,8 +887,8 @@ async function waitForContentPaint(browser) {
 async function testBoundsWithContent(iframeDocAcc, id, browser) {
   // Retrieve layout bounds from content
   let expectedBounds = await invokeContentTask(browser, [id], _id => {
-    const { Layout: LayoutUtils } = ChromeUtils.import(
-      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+    const { Layout: LayoutUtils } = ChromeUtils.importESModule(
+      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.sys.mjs"
     );
     return LayoutUtils.getBoundsForDOMElm(_id, content.document);
   });

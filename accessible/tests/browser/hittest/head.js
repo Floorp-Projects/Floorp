@@ -21,12 +21,12 @@ loadScripts(
   { name: "promisified-events.js", dir: MOCHITESTS_DIR }
 );
 
-const { CommonUtils } = ChromeUtils.import(
-  "chrome://mochitests/content/browser/accessible/tests/browser/Common.jsm"
+const { CommonUtils } = ChromeUtils.importESModule(
+  "chrome://mochitests/content/browser/accessible/tests/browser/Common.sys.mjs"
 );
 
-const { Layout } = ChromeUtils.import(
-  "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+const { Layout } = ChromeUtils.importESModule(
+  "chrome://mochitests/content/browser/accessible/tests/browser/Layout.sys.mjs"
 );
 
 function getChildAtPoint(container, x, y, findDeepestChild) {

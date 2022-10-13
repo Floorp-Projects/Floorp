@@ -2,15 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["CommonUtils"];
-
 const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 
 const MAX_TRIM_LENGTH = 100;
 
-const CommonUtils = {
+export const CommonUtils = {
   /**
    * Constant passed to getAccessible to indicate that it shouldn't fail if
    * there is no accessible.
