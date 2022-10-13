@@ -4511,6 +4511,12 @@ void HTMLInputElement::HandleTypeChange(FormControlType aNewType,
       // Switch to date/time type.
       AttachAndSetUAShadowRoot(NotifyUAWidgetSetup::Yes, DelegatesFocus::Yes);
     }
+    // If we're becoming a text control and have focus, make sure to show focus
+    // rings.
+    if (State().HasState(ElementState::FOCUS) && IsSingleLineTextControl() &&
+        !IsSingleLineTextControl(/* aExcludePassword = */ false, oldType)) {
+      AddStates(ElementState::FOCUSRING);
+    }
   }
 }
 
