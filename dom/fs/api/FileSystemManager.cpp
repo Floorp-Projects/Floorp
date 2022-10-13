@@ -75,15 +75,35 @@ NS_IMPL_CYCLE_COLLECTION(FileSystemManager, mGlobal, mStorageManager);
 
 void FileSystemManager::Shutdown() { mBackgroundRequestHandler->Shutdown(); }
 
-FileSystemManagerChild* FileSystemManager::Actor() const {
-  return mBackgroundRequestHandler->GetFileSystemManagerChild();
+void FileSystemManager::BeginRequest(
+    std::function<void(const RefPtr<FileSystemManagerChild>&)>&& aSuccess,
+    std::function<void(nsresult)>&& aFailure) {
+  if (mBackgroundRequestHandler->FileSystemManagerChildStrongRef()) {
+    aSuccess(mBackgroundRequestHandler->FileSystemManagerChildStrongRef());
+    return;
+  }
+
+  MOZ_ASSERT(mGlobal);
+
+  QM_TRY_INSPECT(const auto& principalInfo, GetPrincipalInfo(mGlobal), QM_VOID,
+                 [&aFailure](nsresult rv) { aFailure(rv); });
+
+  mBackgroundRequestHandler->CreateFileSystemManagerChild(principalInfo)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr<FileSystemManager>(this),
+              success = std::move(aSuccess), failure = std::move(aFailure)](
+                 const BoolPromise::ResolveOrRejectValue& aValue) {
+               if (aValue.IsResolve()) {
+                 success(self->mBackgroundRequestHandler
+                             ->FileSystemManagerChildStrongRef());
+               } else {
+                 failure(aValue.RejectValue());
+               }
+             });
 }
 
 already_AddRefed<Promise> FileSystemManager::GetDirectory(ErrorResult& aRv) {
   MOZ_ASSERT(mGlobal);
-
-  QM_TRY_INSPECT(const auto& principalInfo, GetPrincipalInfo(mGlobal), nullptr,
-                 [&aRv](const nsresult rv) { aRv.Throw(rv); });
 
   RefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -92,21 +112,7 @@ already_AddRefed<Promise> FileSystemManager::GetDirectory(ErrorResult& aRv) {
 
   MOZ_ASSERT(promise);
 
-  if (Actor()) {
-    mRequestHandler->GetRootHandle(this, promise);
-    return promise.forget();
-  }
-
-  mBackgroundRequestHandler->CreateFileSystemManagerChild(principalInfo)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr<FileSystemManager>(this), promise](bool) {
-            self->mRequestHandler->GetRootHandle(self, promise);
-          },
-          [promise](nsresult) {
-            promise->MaybeRejectWithUnknownError(
-                "Could not create the file system manager");
-          });
+  mRequestHandler->GetRootHandle(this, promise);
 
   return promise.forget();
 }

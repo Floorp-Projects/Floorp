@@ -42,7 +42,7 @@ class FileSystemBackgroundRequestHandler {
 
   void Shutdown();
 
-  FileSystemManagerChild* GetFileSystemManagerChild() const;
+  const RefPtr<FileSystemManagerChild>& FileSystemManagerChildStrongRef() const;
 
   virtual RefPtr<mozilla::BoolPromise> CreateFileSystemManagerChild(
       const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
