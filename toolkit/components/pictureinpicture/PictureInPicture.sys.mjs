@@ -198,6 +198,10 @@ export var PictureInPicture = {
     let count = this.browserWeakMap.get(browser);
     if (count <= 1) {
       this.browserWeakMap.delete(browser);
+      let tabbrowser = browser.getTabBrowser();
+      if (tabbrowser && !tabbrowser.shouldActivateDocShell(browser)) {
+        browser.docShellIsActive = false;
+      }
     } else {
       this.browserWeakMap.set(browser, count - 1);
     }
@@ -242,7 +246,7 @@ export var PictureInPicture = {
       return;
     }
 
-    let gBrowser = browser.ownerGlobal.gBrowser;
+    let gBrowser = browser.getTabBrowser();
     let tab = gBrowser.getTabForBrowser(browser);
 
     // focus the tab's window
@@ -276,8 +280,8 @@ export var PictureInPicture = {
       }
     }
 
-    let gBrowser = browser.ownerGlobal.gBrowser;
-    let tab = gBrowser.getTabForBrowser(browser);
+    let gBrowser = browser.getTabBrowser();
+    let tab = gBrowser?.getTabForBrowser(browser);
     if (tab) {
       tab.removeAttribute("pictureinpicture");
     }
