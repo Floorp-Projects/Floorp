@@ -46,6 +46,8 @@ public interface AsyncCodec {
 
   public abstract ByteBuffer getInputBuffer(int index);
 
+  public abstract MediaFormat getInputFormat();
+
   public abstract ByteBuffer getOutputBuffer(int index);
 
   public abstract void queueInputBuffer(
