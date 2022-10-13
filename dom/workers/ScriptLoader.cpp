@@ -606,8 +606,13 @@ void WorkerScriptLoader::MaybeMoveToLoadedList(ScriptLoadRequest* aRequest) {
   mWorkerRef->Private()->AssertIsOnWorkerThread();
   aRequest->SetReady();
 
+  // If the request is not in a list, we are in an illegal state.
+  MOZ_RELEASE_ASSERT(aRequest->isInList());
+
   while (!mLoadingRequests.isEmpty()) {
     ScriptLoadRequest* request = mLoadingRequests.getFirst();
+    // We need to move requests in post order. If prior requests have not
+    // completed, delay execution.
     if (!request->IsReadyToRun()) {
       break;
     }
@@ -711,6 +716,7 @@ void WorkerScriptLoader::CancelMainThread(
         // This will trigger LoadingFinished if we do not set the cancel flag
         // ahead of time. But, as we do that above, this should not be a
         // concern.
+        MOZ_ASSERT(mWorkerRef->Private()->IsServiceWorker());
         loadContext->mCachePromise->MaybeReject(NS_BINDING_ABORTED);
         loadContext->mCachePromise = nullptr;
       }
@@ -1208,6 +1214,15 @@ bool ScriptExecutorRunnable::PreRun(WorkerPrivate* aWorkerPrivate) {
 bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
                                        WorkerPrivate* aWorkerPrivate) {
   aWorkerPrivate->AssertIsOnWorkerThread();
+
+  // There is a possibility that we cleaned up while this task was waiting to
+  // run. If this has happened, return and exit.
+  {
+    MutexAutoLock lock(mScriptLoader.CleanUpLock());
+    if (mScriptLoader.CleanedUp()) {
+      return true;
+    }
+  }
 
   // We must be on the same worker as we started on.
   MOZ_ASSERT(
