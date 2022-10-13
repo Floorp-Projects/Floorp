@@ -463,6 +463,12 @@ var OriginControls = {
     };
   },
 
+  // Whether to show the attention indicator for extension on current tab.
+  getAttention(policy, window) {
+    let state = this.getState(policy, window.gBrowser.currentURI);
+    return !!state.whenClicked && !state.hasAccess;
+  },
+
   // Grant extension host permission to always run on this host.
   setAlwaysOn(policy, uri) {
     if (!policy.active) {

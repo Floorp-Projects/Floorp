@@ -57,24 +57,27 @@ async function makeExtension({ id, permissions, host_permissions, granted }) {
 async function testOriginControls(
   extension,
   { win, contextMenuId },
-  { items, selected, click, granted, revoked }
+  { items, selected, click, granted, revoked, attention }
 ) {
   info(
     `Testing ${extension.id} on ${gBrowser.currentURI.spec} with contextMenuId=${contextMenuId}.`
   );
 
+  let button;
   let menu;
   let manageExtensionClassName;
 
   switch (contextMenuId) {
     case "toolbar-context-menu":
       let target = `#${CSS.escape(makeWidgetId(extension.id))}-browser-action`;
+      button = win.document.querySelector(target);
       menu = await openChromeContextMenu(contextMenuId, target);
       manageExtensionClassName = "customize-context-manageExtension";
       break;
 
     case "unified-extensions-context-menu":
       await openExtensionsPanel(win);
+      button = getUnifiedExtensionsItem(win, extension.id);
       menu = await openUnifiedExtensionsContextMenu(win, extension.id);
       manageExtensionClassName =
         "unified-extensions-context-menu-manage-extension";
@@ -100,6 +103,12 @@ async function testOriginControls(
     menu.children[items.length + 1].className,
     manageExtensionClassName,
     "All items accounted for."
+  );
+
+  is(
+    button.getAttribute("attention"),
+    attention ? "true" : "false",
+    "Expected attention badge before clicking."
   );
 
   let itemToClick;
@@ -178,18 +187,21 @@ const originControlsInContextMenu = async options => {
     await testOriginControls(ext2, options, {
       items: [ACCESS_OPTIONS, WHEN_CLICKED],
       selected: 1,
+      attention: true,
     });
 
     // Could access mochi.test when clicked.
     await testOriginControls(ext3, options, {
       items: [ACCESS_OPTIONS, WHEN_CLICKED, ALWAYS_ON],
       selected: 1,
+      attention: true,
     });
 
     // Has <all_urls> granted.
     await testOriginControls(ext4, options, {
       items: [ACCESS_OPTIONS, ALL_SITES],
       selected: 1,
+      attention: false,
     });
   });
 
@@ -206,16 +218,19 @@ const originControlsInContextMenu = async options => {
       items: [ACCESS_OPTIONS, WHEN_CLICKED, ALWAYS_ON],
       selected: 1,
       click: 1,
+      attention: true,
     });
     await testOriginControls(ext3, options, {
       items: [ACCESS_OPTIONS, WHEN_CLICKED, ALWAYS_ON],
       selected: 2,
       click: 2,
+      attention: false,
     });
     await testOriginControls(ext4, options, {
       items: [ACCESS_OPTIONS, ALL_SITES],
       selected: 1,
       click: 1,
+      attention: false,
     });
 
     // Click the other option, expect example.com permission granted/revoked.
@@ -224,22 +239,26 @@ const originControlsInContextMenu = async options => {
       selected: 1,
       click: 2,
       granted: ["*://example.com/*"],
+      attention: true,
     });
     await testOriginControls(ext3, options, {
       items: [ACCESS_OPTIONS, WHEN_CLICKED, ALWAYS_ON],
       selected: 2,
       click: 1,
       revoked: ["*://example.com/*"],
+      attention: false,
     });
 
     // Other option is now selected.
     await testOriginControls(ext2, options, {
       items: [ACCESS_OPTIONS, WHEN_CLICKED, ALWAYS_ON],
       selected: 2,
+      attention: false,
     });
     await testOriginControls(ext3, options, {
       items: [ACCESS_OPTIONS, WHEN_CLICKED, ALWAYS_ON],
       selected: 1,
+      attention: true,
     });
   });
 

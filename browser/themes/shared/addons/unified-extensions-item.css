@@ -4,9 +4,31 @@
 
 /* Style for the custom element "unified-extensions-item". */
 
+:root {
+  --icon-size: 32px;
+  --dot-position: calc(var(--icon-size) / 2 + var(--arrowpanel-menuitem-margin-inline) + var(--arrowpanel-menuitem-padding-inline) - 4px);
+}
+
+:root[uidensity="compact"] {
+  --icon-size: 24px;
+}
+
 unified-extensions-item {
   align-items: center;
   display: flex;
+}
+
+/* Larger attention indicator for use below larger icons, see for reference:
+ * https://searchfox.org/mozilla-central/rev/560b7b1b17/browser/themes/shared/tabs.css#624 */
+unified-extensions-item[attention="true"] {
+  background-image: radial-gradient(circle, var(--tab-attention-icon-color), var(--tab-attention-icon-color) 3px, transparent 3px);
+  background-position: left var(--dot-position) bottom 3px;
+  background-size: 8px 8px;
+  background-repeat: no-repeat;
+}
+
+unified-extensions-item[attention="true"]:-moz-locale-dir(rtl) {
+  background-position-x: right var(--dot-position);
 }
 
 .unified-extensions-item-action {
@@ -33,8 +55,8 @@ unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-ite
 }
 
 .unified-extensions-item-icon {
-  height: 32px;
-  width: 32px;
+  height: var(--icon-size);
+  width: var(--icon-size);
   margin-inline-end: 6px;
 }
 
