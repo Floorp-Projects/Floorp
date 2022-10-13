@@ -68,4 +68,3 @@ add_task(function test_iframeWindowOpen() {
 add_task(function test_parentWindowOpenExistWindow() {
   return testWindowOpenExistingWindow();
 });
-
