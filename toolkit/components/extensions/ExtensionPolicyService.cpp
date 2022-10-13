@@ -24,6 +24,7 @@
 #include "mozIExtensionProcessScript.h"
 #include "nsEscape.h"
 #include "nsGkAtoms.h"
+#include "nsHashKeys.h"
 #include "nsIChannel.h"
 #include "nsIContentPolicy.h"
 #include "mozilla/dom/Document.h"
@@ -62,6 +63,13 @@ static const char kDocElementInserted[] = "initial-document-element-inserted";
  * ExtensionPolicyService
  *****************************************************************************/
 
+using CoreByHostMap = nsTHashMap<nsCStringASCIICaseInsensitiveHashKey,
+                                 RefPtr<extensions::WebExtensionPolicyCore>>;
+
+static StaticMutex sCoreByHostMutex;
+static StaticAutoPtr<CoreByHostMap> sCoreByHost
+    MOZ_GUARDED_BY(sCoreByHostMutex);
+
 /* static */
 mozIExtensionProcessScript& ExtensionPolicyService::ProcessScript() {
   static nsCOMPtr<mozIExtensionProcessScript> sProcessScript;
@@ -78,6 +86,8 @@ mozIExtensionProcessScript& ExtensionPolicyService::ProcessScript() {
 }
 
 /* static */ ExtensionPolicyService& ExtensionPolicyService::GetSingleton() {
+  MOZ_ASSERT(NS_IsMainThread());
+
   static RefPtr<ExtensionPolicyService> sExtensionPolicyService;
 
   if (MOZ_UNLIKELY(!sExtensionPolicyService)) {
@@ -88,6 +98,13 @@ mozIExtensionProcessScript& ExtensionPolicyService::ProcessScript() {
   return *sExtensionPolicyService.get();
 }
 
+/* static */
+RefPtr<extensions::WebExtensionPolicyCore>
+ExtensionPolicyService::GetCoreByHost(const nsACString& aHost) {
+  StaticMutexAutoLock lock(sCoreByHostMutex);
+  return sCoreByHost ? sCoreByHost->Get(aHost) : nullptr;
+}
+
 ExtensionPolicyService::ExtensionPolicyService() {
   mObs = services::GetObserverService();
   MOZ_RELEASE_ASSERT(mObs);
@@ -96,10 +113,22 @@ ExtensionPolicyService::ExtensionPolicyService() {
   mDefaultCSPV3.SetIsVoid(true);
 
   RegisterObservers();
+
+  {
+    StaticMutexAutoLock lock(sCoreByHostMutex);
+    MOZ_DIAGNOSTIC_ASSERT(!sCoreByHost,
+                          "ExtensionPolicyService created twice?");
+    sCoreByHost = new CoreByHostMap();
+  }
 }
 
 ExtensionPolicyService::~ExtensionPolicyService() {
   UnregisterWeakMemoryReporter(this);
+
+  {
+    StaticMutexAutoLock lock(sCoreByHostMutex);
+    sCoreByHost = nullptr;
+  }
 }
 
 bool ExtensionPolicyService::UseRemoteExtensions() const {
@@ -144,6 +173,11 @@ bool ExtensionPolicyService::RegisterExtension(WebExtensionPolicy& aPolicy) {
   mExtensions.InsertOrUpdate(aPolicy.Id(), RefPtr{&aPolicy});
   mExtensionHosts.InsertOrUpdate(aPolicy.MozExtensionHostname(),
                                  RefPtr{&aPolicy});
+
+  {
+    StaticMutexAutoLock lock(sCoreByHostMutex);
+    sCoreByHost->InsertOrUpdate(aPolicy.MozExtensionHostname(), aPolicy.Core());
+  }
   return true;
 }
 
@@ -158,6 +192,11 @@ bool ExtensionPolicyService::UnregisterExtension(WebExtensionPolicy& aPolicy) {
 
   mExtensions.Remove(aPolicy.Id());
   mExtensionHosts.Remove(aPolicy.MozExtensionHostname());
+
+  {
+    StaticMutexAutoLock lock(sCoreByHostMutex);
+    sCoreByHost->Remove(aPolicy.MozExtensionHostname());
+  }
   return true;
 }
 
