@@ -171,12 +171,9 @@ impl ContainerCondition {
             return None;
         }
 
-        // Filter by container-name.
-        let container_name = box_style.clone_container_name();
-        for filter_name in self.name.0.iter() {
-            if !container_name.0.contains(filter_name) {
-                return None;
-            }
+        // Check on container-name.
+        if !self.name.is_none() && box_style.clone_container_name() != self.name {
+            return None;
         }
 
         let size = potential_container.primary_box_size();
