@@ -50,8 +50,6 @@ class UtilityProcessChild final : public PUtilityProcessChild {
   mozilla::ipc::IPCResult RecvTestTriggerMetrics(
       TestTriggerMetricsResolver&& aResolve);
 
-  mozilla::ipc::IPCResult RecvTestTelemetryProbes();
-
   mozilla::ipc::IPCResult RecvStartUtilityAudioDecoderService(
       Endpoint<PUtilityAudioDecoderParent>&& aEndpoint);
 

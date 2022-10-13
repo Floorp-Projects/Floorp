@@ -21,7 +21,6 @@ KNOWN_PROCESS_FLAGS = {
     "content": "Content",
     "gpu": "Gpu",
     "socket": "Socket",
-    "utility": "Utility",
     # Historical Values
     "all_childs": "AllChildren",  # Supporting files from before bug 1363725
 }

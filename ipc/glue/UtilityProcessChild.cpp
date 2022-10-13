@@ -214,13 +214,6 @@ mozilla::ipc::IPCResult UtilityProcessChild::RecvTestTriggerMetrics(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult UtilityProcessChild::RecvTestTelemetryProbes() {
-  const uint32_t kExpectedUintValue = 42;
-  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_UTILITY_ONLY_UINT,
-                       kExpectedUintValue);
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult
 UtilityProcessChild::RecvStartUtilityAudioDecoderService(
     Endpoint<PUtilityAudioDecoderParent>&& aEndpoint) {
