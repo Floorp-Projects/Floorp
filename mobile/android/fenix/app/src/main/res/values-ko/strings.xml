@@ -310,6 +310,9 @@
     <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
     <string name="sync_cfr_message">탭이 동기화 중입니다! 다른 기기에서 중단한 부분부터 다시 시작하세요.</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">닫기</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">새 %1$s 탭 열기</string>
@@ -398,8 +401,6 @@
     <string name="preferences_gestures">제스처</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">사용자 지정</string>
-    <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Firefox 계정으로 북마크, 기록 등을 동기화하세요</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">탭, 북마크, 비밀번호 등을 동기화하려면 로그인하세요.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -599,9 +600,6 @@
     <string name="preference_experiments_summary_2">Mozilla가 연구를 설치하고 실행하도록 허용</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Sync 켜기</string>
-
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">데이터 동기화 및 저장</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -820,9 +818,6 @@
     <string name="delete_from_history">기록에서 삭제</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (사생활 보호 모드)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">기타 탭</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1108,6 +1103,8 @@
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">공유</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">PDF로 저장</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">기기로 보내기</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1257,8 +1254,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">종료</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">탐색 데이터가 모두 삭제됩니다.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">삭제할 시간 범위</string>
     <!-- Body text of a delete browsing data dialog. -->
@@ -2001,4 +1996,12 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">설정으로 이동</string>
     <string name="firefox_suggest_header">Firefox 제안</string>
+
+    <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
+    <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
+    <string name="a11y_action_label_collapse">접기</string>
+    <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
+    <string name="a11y_action_label_expand">펼치기</string>
+    <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
+    <string name="a11y_action_label_wallpaper_collection_learn_more">이 모음집에 대해 더 알아보려면 링크를 여세요</string>
 </resources>

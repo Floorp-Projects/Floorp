@@ -310,6 +310,9 @@
     <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
     <string name="sync_cfr_message">Οι καρτέλες σας συγχρονίζονται! Συνεχίστε από εκεί που σταματήσατε στην άλλη συσκευή σας.</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">Κλείσιμο</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Άνοιγμα νέας καρτέλας %1$s</string>
@@ -399,8 +402,6 @@
     <string name="preferences_gestures">Χειρονομίες</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Προσαρμογή</string>
-    <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Συγχρονισμός σελιδοδεικτών, ιστορικού και άλλων δεδομένων με τον λογαριασμό Firefox σας</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Συνδεθείτε για να συγχρονίσετε τις καρτέλες, τους σελιδοδείκτες, τους κωδικούς πρόσβασης και πολλά άλλα.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -597,9 +598,6 @@
     <string name="preference_experiments_summary_2">Επιτρέπει στο Mozilla την εγκατάσταση και εκτέλεση μελετών</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Ενεργοποίηση Sync</string>
-
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">Συγχρονισμός και αποθήκευση δεδομένων</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -816,9 +814,6 @@
     <string name="delete_from_history">Διαγραφή από ιστορικό</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Ιδιωτική λειτουργία)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Άλλες καρτέλες</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1087,6 +1082,8 @@
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Κοινή χρήση</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">Αποθήκευση ως PDF</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Αποστολή σε συσκευή</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1228,8 +1225,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Έξοδος</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Αυτό θα διαγράψει όλα τα δεδομένα περιήγησής σας.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Χρονικό διάστημα διαγραφής</string>
     <!-- Body text of a delete browsing data dialog. -->
@@ -1974,4 +1969,5 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Μετάβαση στις ρυθμίσεις</string>
     <string name="firefox_suggest_header">Προτάσεις Firefox</string>
-</resources>
+
+    </resources>

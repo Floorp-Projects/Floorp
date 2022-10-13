@@ -309,6 +309,9 @@
     <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
     <string name="sync_cfr_message">Ihre Tabs werden synchronisiert! Machen Sie dort weiter, wo Sie auf Ihrem anderen Gerät aufgehört haben.</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">Schließen</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Neuen %1$s-Tab öffnen</string>
@@ -397,8 +400,6 @@
     <string name="preferences_gestures">Gesten</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Anpassen</string>
-    <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Synchronisieren Sie Lesezeichen, Chronik und mehr mit Ihrem Firefox-Konto</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Melden Sie sich an, um Tabs, Lesezeichen, Passwörter und mehr zu synchronisieren.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -598,9 +599,6 @@
     <string name="preference_experiments_summary_2">Ermöglicht Mozilla die Installation und Durchführung von Studien</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Sync aktivieren</string>
-
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">Ihre Daten synchronisieren und speichern</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -819,9 +817,6 @@
     <string name="delete_from_history">Aus Chronik löschen</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Privater Modus)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Andere Tabs</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1105,6 +1100,8 @@
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Teilen</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">Als PDF speichern</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">An Gerät senden</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1251,8 +1248,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Beenden</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Dadurch werden alle Ihre Browser-Daten gelöscht.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Zu löschender Zeitraum</string>
     <!-- Body text of a delete browsing data dialog. -->
@@ -1986,4 +1981,12 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Einstellungen öffnen</string>
     <string name="firefox_suggest_header">Firefox-Vorschläge</string>
+
+    <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
+    <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
+    <string name="a11y_action_label_collapse">Einklappen</string>
+    <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
+    <string name="a11y_action_label_expand">Ausklappen</string>
+    <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
+    <string name="a11y_action_label_wallpaper_collection_learn_more">Link öffnen, um mehr über diese Sammlung zu erfahren</string>
 </resources>
