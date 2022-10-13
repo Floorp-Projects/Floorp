@@ -7,9 +7,9 @@
  * Test simple requests using the protocol helpers.
  */
 
-var protocol = require("devtools/shared/protocol");
+var protocol = require("resource://devtools/shared/protocol.js");
 var { Arg, Option, RetVal } = protocol;
-var EventEmitter = require("devtools/shared/event-emitter");
+var EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 function simpleHello() {
   return {

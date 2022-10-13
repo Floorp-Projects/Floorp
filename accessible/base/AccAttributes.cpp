@@ -184,10 +184,10 @@ void AccAttributes::CopyTo(AccAttributes* aDest) const {
 
 #ifdef A11Y_LOG
 void AccAttributes::DebugPrint(const char* aPrefix,
-                               AccAttributes& aAttributes) {
+                               const AccAttributes& aAttributes) {
   nsAutoString prettyString;
   prettyString.AssignLiteral("{\n");
-  for (auto iter : aAttributes) {
+  for (const auto& iter : aAttributes) {
     nsAutoString name;
     iter.NameAsString(name);
 

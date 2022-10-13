@@ -2,7 +2,7 @@
 
 const { require } = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
 
-this.validator = require("devtools/shared/storage/vendor/stringvalidator/validator");
+this.validator = require("resource://devtools/shared/storage/vendor/stringvalidator/validator.js");
 
 function describe(suite, testFunc) {
   info(`\n                            Test suite: ${suite}`.toUpperCase());

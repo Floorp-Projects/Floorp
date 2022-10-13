@@ -4,7 +4,9 @@
 "use strict";
 
 // Testing evaluating thowing expressions
-const { DevToolsServer } = require("devtools/server/devtools-server");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
 
 add_task(async () => {
   const tab = await addTab(`data:text/html;charset=utf-8,Test throw`);

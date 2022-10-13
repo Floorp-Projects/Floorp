@@ -15,7 +15,6 @@ load("../unit/test_http3_prio_helpers.js");
 // otherwise the wrapper will handle
 if (!inChildProcess()) {
   registerCleanupFunction(async () => {
-    Services.prefs.clearUserPref("network.ssl_tokens_cache_enabled");
     Services.prefs.clearUserPref("network.http.http3.priority");
     http3_clear_prefs();
   });

@@ -4,7 +4,11 @@
 
 "use strict";
 
-const { Arg, generateActorSpec, RetVal } = require("devtools/shared/protocol");
+const {
+  Arg,
+  generateActorSpec,
+  RetVal,
+} = require("resource://devtools/shared/protocol.js");
 
 const flexboxSpec = generateActorSpec({
   typeName: "flexbox",

@@ -137,6 +137,16 @@ function createValueGrip(value, pool, makeObjectGrip) {
         text: value.toString(),
       };
 
+    // TODO(bug 1772157)
+    // Record/tuple grips aren't fully implemented yet.
+    case "record":
+      return {
+        class: "Record",
+      };
+    case "tuple":
+      return {
+        class: "Tuple",
+      };
     case "undefined":
       return { type: "undefined" };
 

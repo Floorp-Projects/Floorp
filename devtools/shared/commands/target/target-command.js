@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 const BROWSERTOOLBOX_FISSION_ENABLED = "devtools.browsertoolbox.fission";
 const BROWSERTOOLBOX_SCOPE_PREF = "devtools.browsertoolbox.scope";
@@ -13,8 +13,8 @@ const BROWSERTOOLBOX_SCOPE_EVERYTHING = "everything";
 const BROWSERTOOLBOX_SCOPE_PARENTPROCESS = "parent-process";
 
 // eslint-disable-next-line mozilla/reject-some-requires
-const createStore = require("devtools/client/shared/redux/create-store");
-const reducer = require("devtools/shared/commands/target/reducers/targets");
+const createStore = require("resource://devtools/client/shared/redux/create-store.js");
+const reducer = require("resource://devtools/shared/commands/target/reducers/targets.js");
 
 loader.lazyRequireGetter(
   this,

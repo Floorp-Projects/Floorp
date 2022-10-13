@@ -4,7 +4,7 @@
 
 "use strict";
 
-const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
+const ResourceCommand = require("resource://devtools/shared/commands/resource/resource-command.js");
 
 /**
  * Emit SOURCE resources, which represents a Javascript source and has the following attributes set on "available":

@@ -7,7 +7,7 @@ const {
   RetVal,
   generateActorSpec,
   Option,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 const webExtensionDescriptorSpec = generateActorSpec({
   typeName: "webExtensionDescriptor",

@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const StreamUtils = require("devtools/shared/transport/stream-utils");
+const StreamUtils = require("resource://devtools/shared/transport/stream-utils.js");
 
 const StringInputStream = Components.Constructor(
   "@mozilla.org/io/string-input-stream;1",

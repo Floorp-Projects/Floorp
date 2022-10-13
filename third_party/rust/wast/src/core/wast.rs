@@ -76,6 +76,8 @@ pub enum WastRetCore<'a> {
     RefExtern(u32),
     /// A non-null funcref is expected.
     RefFunc(Option<Index<'a>>),
+
+    Either(Vec<WastRetCore<'a>>),
 }
 
 static RETS: &[(&str, fn(Parser<'_>) -> Result<WastRetCore<'_>>)] = {
@@ -89,6 +91,14 @@ static RETS: &[(&str, fn(Parser<'_>) -> Result<WastRetCore<'_>>)] = {
         ("ref.null", |p| Ok(RefNull(p.parse()?))),
         ("ref.extern", |p| Ok(RefExtern(p.parse()?))),
         ("ref.func", |p| Ok(RefFunc(p.parse()?))),
+        ("either", |p| {
+            p.depth_check()?;
+            let mut cases = Vec::new();
+            while !p.is_empty() {
+                cases.push(p.parens(|p| p.parse())?);
+            }
+            Ok(Either(cases))
+        }),
     ]
 };
 

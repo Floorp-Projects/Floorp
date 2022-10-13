@@ -202,8 +202,16 @@ static void OnLeaveIonFrame(JSContext* cx, const InlineFrameIterator& frame,
   }
 
   JitActivation* act = cx->activation()->asJit();
-  RematerializedFrame* rematFrame =
-      act->getRematerializedFrame(cx, frame.frame(), frame.frameNo());
+  RematerializedFrame* rematFrame = nullptr;
+  {
+    JS::AutoSaveExceptionState savedExc(cx);
+    rematFrame =
+        act->getRematerializedFrame(cx, frame.frame(), frame.frameNo());
+    if (!rematFrame) {
+      return;
+    }
+  }
+
   MOZ_ASSERT(!frame.more());
 
   if (cx->isClosingGenerator()) {

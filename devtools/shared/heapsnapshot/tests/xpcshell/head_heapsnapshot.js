@@ -20,16 +20,16 @@ const { addDebuggerToGlobal } = ChromeUtils.importESModule(
   "resource://gre/modules/jsdebugger.sys.mjs"
 );
 
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClient");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
+const HeapAnalysesClient = require("resource://devtools/shared/heapsnapshot/HeapAnalysesClient.js");
 const {
   censusReportToCensusTreeNode,
-} = require("devtools/shared/heapsnapshot/census-tree-node");
-const CensusUtils = require("devtools/shared/heapsnapshot/CensusUtils");
-const DominatorTreeNode = require("devtools/shared/heapsnapshot/DominatorTreeNode");
+} = require("resource://devtools/shared/heapsnapshot/census-tree-node.js");
+const CensusUtils = require("resource://devtools/shared/heapsnapshot/CensusUtils.js");
+const DominatorTreeNode = require("resource://devtools/shared/heapsnapshot/DominatorTreeNode.js");
 const {
   deduplicatePaths,
-} = require("devtools/shared/heapsnapshot/shortest-paths");
+} = require("resource://devtools/shared/heapsnapshot/shortest-paths.js");
 const { LabelAndShallowSizeVisitor } = DominatorTreeNode;
 
 // Always log packets when running tests. runxpcshelltests.py will throw

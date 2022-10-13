@@ -3,10 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Arg, RetVal, generateActorSpec } = require("devtools/shared/protocol");
+const {
+  Arg,
+  RetVal,
+  generateActorSpec,
+} = require("resource://devtools/shared/protocol.js");
 
 // Load the "stylesheet" type used in this file.
-require("devtools/shared/specs/style-sheet");
+require("resource://devtools/shared/specs/style-sheet.js");
 
 const styleSheetsSpec = generateActorSpec({
   typeName: "stylesheets",

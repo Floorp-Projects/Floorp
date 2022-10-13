@@ -522,8 +522,8 @@ instructions! {
         ReturnCallIndirect(CallIndirect<'a>) : [0x13] : "return_call_indirect",
 
         // function-references proposal
-        CallRef : [0x14] : "call_ref",
-        ReturnCallRef : [0x15] : "return_call_ref",
+        CallRef(HeapType<'a>) : [0x14] : "call_ref",
+        ReturnCallRef(HeapType<'a>) : [0x15] : "return_call_ref",
         FuncBind(FuncBindType<'a>) : [0x16] : "func.bind",
         Let(LetType<'a>) : [0x17] : "let",
 
@@ -1139,23 +1139,27 @@ instructions! {
         CatchAll : [0x19] : "catch_all",
 
         // Relaxed SIMD proposal
-        I8x16RelaxedSwizzle : [0xfd, 0xa2]: "i8x16.relaxed_swizzle",
-        I32x4RelaxedTruncSatF32x4S : [0xfd, 0xa5]: "i32x4.relaxed_trunc_f32x4_s",
-        I32x4RelaxedTruncSatF32x4U : [0xfd, 0xa6]: "i32x4.relaxed_trunc_f32x4_u",
-        I32x4RelaxedTruncSatF64x2SZero : [0xfd, 0xc5]: "i32x4.relaxed_trunc_f64x2_s_zero",
-        I32x4RelaxedTruncSatF64x2UZero : [0xfd, 0xc6]: "i32x4.relaxed_trunc_f64x2_u_zero",
-        F32x4Fma : [0xfd, 0xaf]: "f32x4.fma",
-        F32x4Fms : [0xfd, 0xb0]: "f32x4.fms",
-        F64x4Fma : [0xfd, 0xcf]: "f64x2.fma",
-        F64x4Fms : [0xfd, 0xd0]: "f64x2.fms",
-        I8x16LaneSelect : [0xfd, 0xb2]: "i8x16.laneselect",
-        I16x8LaneSelect : [0xfd, 0xb3]: "i16x8.laneselect",
-        I32x4LaneSelect : [0xfd, 0xd2]: "i32x4.laneselect",
-        I64x2LaneSelect : [0xfd, 0xd3]: "i64x2.laneselect",
-        F32x4RelaxedMin : [0xfd, 0xb4]: "f32x4.relaxed_min",
-        F32x4RelaxedMax : [0xfd, 0xe2]: "f32x4.relaxed_max",
-        F64x2RelaxedMin : [0xfd, 0xd4]: "f64x2.relaxed_min",
-        F64x2RelaxedMax : [0xfd, 0xee]: "f64x2.relaxed_max",
+        I8x16RelaxedSwizzle : [0xfd, 0x100]: "i8x16.relaxed_swizzle",
+        I32x4RelaxedTruncF32x4S : [0xfd, 0x101]: "i32x4.relaxed_trunc_f32x4_s",
+        I32x4RelaxedTruncF32x4U : [0xfd, 0x102]: "i32x4.relaxed_trunc_f32x4_u",
+        I32x4RelaxedTruncF64x2SZero : [0xfd, 0x103]: "i32x4.relaxed_trunc_f64x2_s_zero",
+        I32x4RelaxedTruncF64x2UZero : [0xfd, 0x104]: "i32x4.relaxed_trunc_f64x2_u_zero",
+        F32x4RelaxedFma : [0xfd, 0x105]: "f32x4.relaxed_fma",
+        F32x4RelaxedFnma : [0xfd, 0x106]: "f32x4.relaxed_fnma",
+        F64x2RelaxedFma : [0xfd, 0x107]: "f64x2.relaxed_fma",
+        F64x2RelaxedFnma : [0xfd, 0x108]: "f64x2.relaxed_fnma",
+        I8x16RelaxedLaneselect : [0xfd, 0x109]: "i8x16.relaxed_laneselect",
+        I16x8RelaxedLaneselect : [0xfd, 0x10A]: "i16x8.relaxed_laneselect",
+        I32x4RelaxedLaneselect : [0xfd, 0x10B]: "i32x4.relaxed_laneselect",
+        I64x2RelaxedLaneselect : [0xfd, 0x10C]: "i64x2.relaxed_laneselect",
+        F32x4RelaxedMin : [0xfd, 0x10D]: "f32x4.relaxed_min",
+        F32x4RelaxedMax : [0xfd, 0x10E]: "f32x4.relaxed_max",
+        F64x2RelaxedMin : [0xfd, 0x10F]: "f64x2.relaxed_min",
+        F64x2RelaxedMax : [0xfd, 0x110]: "f64x2.relaxed_max",
+        I16x8RelaxedQ15mulrS: [0xfd, 0x111]: "i16x8.relaxed_q15mulr_s",
+        I16x8DotI8x16I7x16S: [0xfd, 0x112]: "i16x8.dot_i8x16_i7x16_s",
+        I32x4DotI8x16I7x16AddS: [0xfd, 0x113]: "i32x4.dot_i8x16_i7x16_add_s",
+        F32x4RelaxedDotBf16x8AddF32x4: [0xfd, 0x114]: "f32x4.relaxed_dot_bf16x8_add_f32x4",
     }
 }
 
@@ -1659,7 +1663,6 @@ impl<'a> Parse<'a> for BrOnCast<'a> {
 
 /// Different ways to specify a `v128.const` instruction
 #[derive(Debug)]
-#[rustfmt::skip]
 #[allow(missing_docs)]
 pub enum V128Const {
     I8x16([i8; 16]),

@@ -519,7 +519,7 @@ def main(argv):
     if options.remote:
         prologue = posixpath.join(options.remote_test_root, "lib", "prologue.js")
 
-    prefix += ["-f", prologue]
+    prefix += ["-p", prologue]
 
     if options.debugger:
         if job_count > 1:

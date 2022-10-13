@@ -891,7 +891,8 @@ class MediaDecoderStateMachine::LoopingDecodingState
   void RequestAudioDataFromStartPosition() {
     Reader()->ResetDecode(TrackInfo::kAudioTrack);
     Reader()
-        ->Seek(SeekTarget(media::TimeUnit::Zero(), SeekTarget::Accurate))
+        ->Seek(SeekTarget(media::TimeUnit::Zero(), SeekTarget::Type::Accurate,
+                          SeekTarget::Track::AudioOnly))
         ->Then(
             OwnerThread(), __func__,
             [this]() -> void {
@@ -2251,7 +2252,7 @@ void MediaDecoderStateMachine::StateObject::HandleResumeVideoDecoding(
                         ? SeekTarget::Type::Accurate
                         : SeekTarget::Type::PrevSyncPoint;
 
-  seekJob.mTarget.emplace(aTarget, type, true /* aVideoOnly */);
+  seekJob.mTarget.emplace(aTarget, type, SeekTarget::Track::VideoOnly);
 
   // Hold mMaster->mAbstractMainThread here because this->mMaster will be
   // invalid after the current state object is deleted in SetState();

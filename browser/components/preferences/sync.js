@@ -445,6 +445,9 @@ var gSyncPane = {
   },
 
   async signIn() {
+    if (!(await FxAccounts.canConnectAccount())) {
+      return;
+    }
     const url = await FxAccounts.config.promiseConnectAccountURI(
       this._getEntryPoint()
     );
@@ -456,6 +459,10 @@ var gSyncPane = {
     // lost the FxA account data - in which case we'll not get a URL as the re-auth
     // URL embeds account info and the server endpoint complains if we don't
     // supply it - So we just use the regular "sign in" URL in that case.
+    if (!(await FxAccounts.canConnectAccount())) {
+      return;
+    }
+
     let entryPoint = this._getEntryPoint();
     const url =
       (await FxAccounts.config.promiseForceSigninURI(entryPoint)) ||

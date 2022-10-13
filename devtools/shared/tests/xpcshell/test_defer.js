@@ -3,7 +3,7 @@
 
 "use strict";
 
-const defer = require("devtools/shared/defer");
+const defer = require("resource://devtools/shared/defer.js");
 
 function testResolve() {
   const deferred = defer();

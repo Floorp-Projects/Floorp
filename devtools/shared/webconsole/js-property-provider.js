@@ -4,11 +4,11 @@
 
 "use strict";
 
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 
 const {
   evalWithDebugger,
-} = require("devtools/server/actors/webconsole/eval-with-debugger");
+} = require("resource://devtools/server/actors/webconsole/eval-with-debugger.js");
 
 if (!isWorker) {
   loader.lazyRequireGetter(

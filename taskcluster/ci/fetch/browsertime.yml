@@ -2,32 +2,32 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-win64-ffmpeg-4.1.1:
+win64-ffmpeg-4.4.1:
     description: 'Win64 ffmpeg'
     fetch:
         type: static-url
-        # url: https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-4.1.1-win64-static.zip is 403 (from AWS only?).
-        url: https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.1-win64-static.zip
-        sha256: 2c19658d69de08ea7ef585fbf801ef6a364795b5288e23d79066876ff0465df6
-        size: 66347524
+        # url: https://github.com/GyanD/codexffmpeg/releases/tag/4.4.1
+        url: https://github.com/mozilla/perf-automation/releases/download/FFMPEG-v4.4.1/ffmpeg-4.4.1-full_build.zip
+        sha256: f0f407041f82905c310b79f4f76973815700d1e438a10c3cbce66a345ff4f457
+        size: 134760541
 
-linux64-ffmpeg-4.1.4:
+linux64-ffmpeg-4.4.1:
     description: 'Linux64 ffmpeg'
     fetch:
         type: static-url
-        # url: https://www.johnvansickle.com/ffmpeg/old-releases/ffmpeg-4.1.4-i686-static.tar.xz is 406 (from AWS only?).
-        url: https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.4-i686-static.tar.xz
-        sha256: f7a2f0f8f91506d67f80fbe5b8a5c264d0fb60cb3cd258d03344890fbd55e6fd
-        size: 16633296
+        # url: https://www.johnvansickle.com/ffmpeg/old-releases/
+        url: https://github.com/mozilla/perf-automation/releases/download/FFMPEG-v4.4.1/ffmpeg-4.4.1-i686-static.tar.xz
+        sha256: 1f38d1c99b6eb3d36f709a481f5a5526448567a800ee9cddcfe4be54f8b68e62
+        size: 17592088
 
-mac64-ffmpeg-4.1.1:
+mac64-ffmpeg-4.4.1:
     description: 'Mac64 ffmpeg'
     fetch:
         type: static-url
-        # url: https://ffmpeg.zeranoe.com/builds/macos64/static/ffmpeg-4.1.1-macos64-static.zip is 403 (from AWS only?).
-        url: https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.1-macos64-static.zip
-        sha256: 8612d1e07901779e7ed0eeb5433aea37c7bbaf308d725741f432f454a9f97275
-        size: 66853411
+        # url: https://evermeet.cx/pub/ffmpeg/
+        url: https://github.com/mozilla/perf-automation/releases/download/FFMPEG-v4.4.1/ffmpeg-macos.zip
+        sha256: 9d07411bce176f56314cc5624f5df51f9cffa76a59e3e81abe2175d4ebaf87ae
+        size: 49100208
 
 linux64-chromedriver:
     description: 'Linux64 chromedriver'

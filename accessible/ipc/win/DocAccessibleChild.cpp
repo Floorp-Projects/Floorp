@@ -256,12 +256,14 @@ bool DocAccessibleChild::SendSelectionEvent(const uint64_t& aID,
   return true;
 }
 
-bool DocAccessibleChild::SendRoleChangedEvent(const a11y::role& aRole) {
+bool DocAccessibleChild::SendRoleChangedEvent(const a11y::role& aRole,
+                                              uint8_t aRoleMapEntryIndex) {
   if (IsConstructedInParentProcess()) {
-    return PDocAccessibleChild::SendRoleChangedEvent(aRole);
+    return PDocAccessibleChild::SendRoleChangedEvent(aRole, aRoleMapEntryIndex);
   }
 
-  PushDeferredEvent(MakeUnique<SerializedRoleChanged>(this, aRole));
+  PushDeferredEvent(
+      MakeUnique<SerializedRoleChanged>(this, aRole, aRoleMapEntryIndex));
   return true;
 }
 

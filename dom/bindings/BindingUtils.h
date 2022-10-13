@@ -320,6 +320,9 @@ struct MutableValueHandleWrapper {
 
   void operator=(JSObject* aObject) {
     MOZ_ASSERT(aObject);
+#ifdef ENABLE_RECORD_TUPLE
+    MOZ_ASSERT(!js::gc::MaybeForwardedIsExtendedPrimitive(*aObject));
+#endif
     mHandle.setObject(*aObject);
   }
 
@@ -872,6 +875,12 @@ struct CheckWrapperCacheCast<T, true> {
 #endif
 
 inline bool TryToOuterize(JS::MutableHandle<JS::Value> rval) {
+#ifdef ENABLE_RECORD_TUPLE
+  if (rval.isExtendedPrimitive()) {
+    return true;
+  }
+#endif
+  MOZ_ASSERT(rval.isObject());
   if (js::IsWindow(&rval.toObject())) {
     JSObject* obj = js::ToWindowProxyIfWindow(&rval.toObject());
     MOZ_ASSERT(obj);
@@ -907,10 +916,10 @@ bool MaybeWrapStringValue(JSContext* cx, JS::MutableHandle<JS::Value> rval) {
 // needed.  This will work correctly, but possibly slowly, on all objects.
 MOZ_ALWAYS_INLINE
 bool MaybeWrapObjectValue(JSContext* cx, JS::MutableHandle<JS::Value> rval) {
-  MOZ_ASSERT(rval.isObject());
+  MOZ_ASSERT(rval.hasObjectPayload());
 
   // Cross-compartment always requires wrapping.
-  JSObject* obj = &rval.toObject();
+  JSObject* obj = &rval.getObjectPayload();
   if (JS::GetCompartment(obj) != js::GetContextCompartment(cx)) {
     return JS_WrapValue(cx, rval);
   }
@@ -982,7 +991,7 @@ MOZ_ALWAYS_INLINE bool MaybeWrapValue(JSContext* cx,
     if (rval.isString()) {
       return MaybeWrapStringValue(cx, rval);
     }
-    if (rval.isObject()) {
+    if (rval.hasObjectPayload()) {
       return MaybeWrapObjectValue(cx, rval);
     }
     // This could be optimized by checking the zone first, similar to
@@ -1104,6 +1113,9 @@ MOZ_ALWAYS_INLINE bool DoGetOrCreateDOMReflector(
   }
 #endif
 
+#ifdef ENABLE_RECORD_TUPLE
+  MOZ_ASSERT(!js::gc::MaybeForwardedIsExtendedPrimitive(*obj));
+#endif
   rval.set(JS::ObjectValue(*obj));
 
   if (JS::GetCompartment(obj) == js::GetContextCompartment(cx)) {
@@ -1152,6 +1164,21 @@ MOZ_ALWAYS_INLINE bool GetOrCreateDOMReflectorNoWrap(
       cx, value, nullptr, rval);
 }
 
+// Helper for different overloadings of WrapNewBindingNonWrapperCachedObject()
+inline bool FinishWrapping(JSContext* cx, JS::Handle<JSObject*> obj,
+                           JS::MutableHandle<JS::Value> rval) {
+#ifdef ENABLE_RECORD_TUPLE
+  // If calling an (object) value's WrapObject() method returned a record/tuple,
+  // then something is very wrong.
+  MOZ_ASSERT(!js::gc::MaybeForwardedIsExtendedPrimitive(*obj));
+#endif
+
+  // We can end up here in all sorts of compartments, per comments in
+  // WrapNewBindingNonWrapperCachedObject(). Make sure to JS_WrapValue!
+  rval.set(JS::ObjectValue(*obj));
+  return MaybeWrapObjectValue(cx, rval);
+}
+
 // Create a JSObject wrapping "value", for cases when "value" is a
 // non-wrapper-cached object using WebIDL bindings.  "value" must implement a
 // WrapObject() method taking a JSContext and a prototype (possibly null) and
@@ -1198,10 +1225,7 @@ inline bool WrapNewBindingNonWrapperCachedObject(
     }
   }
 
-  // We can end up here in all sorts of compartments, per above.  Make
-  // sure to JS_WrapValue!
-  rval.set(JS::ObjectValue(*obj));
-  return MaybeWrapObjectValue(cx, rval);
+  return FinishWrapping(cx, obj, rval);
 }
 
 // Create a JSObject wrapping "value", for cases when "value" is a
@@ -1259,10 +1283,7 @@ inline bool WrapNewBindingNonWrapperCachedObject(
     Unused << value.release();
   }
 
-  // We can end up here in all sorts of compartments, per above.  Make
-  // sure to JS_WrapValue!
-  rval.set(JS::ObjectValue(*obj));
-  return MaybeWrapObjectValue(cx, rval);
+  return FinishWrapping(cx, obj, rval);
 }
 
 // Helper for smart pointers (nsRefPtr/nsCOMPtr).

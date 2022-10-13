@@ -1563,6 +1563,8 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
 
 // https://w3c.github.io/webcodecs/#dom-videoframe-format
 Nullable<VideoPixelFormat> VideoFrame::GetFormat() const {
+  AssertIsOnOwningThread();
+
   // TODO: Return Nullable<T>() if this is _detached_ (bug 1774306).
   return mResource
              ? Nullable<VideoPixelFormat>(mResource->mFormat.PixelFormat())
@@ -1571,16 +1573,22 @@ Nullable<VideoPixelFormat> VideoFrame::GetFormat() const {
 
 // https://w3c.github.io/webcodecs/#dom-videoframe-codedwidth
 uint32_t VideoFrame::CodedWidth() const {
+  AssertIsOnOwningThread();
+
   return static_cast<uint32_t>(mCodedSize.Width());
 }
 
 // https://w3c.github.io/webcodecs/#dom-videoframe-codedheight
 uint32_t VideoFrame::CodedHeight() const {
+  AssertIsOnOwningThread();
+
   return static_cast<uint32_t>(mCodedSize.Height());
 }
 
 // https://w3c.github.io/webcodecs/#dom-videoframe-codedrect
 already_AddRefed<DOMRectReadOnly> VideoFrame::GetCodedRect() const {
+  AssertIsOnOwningThread();
+
   // TODO: Return nullptr if this is _detached_ (bug 1774306).
   return MakeAndAddRef<DOMRectReadOnly>(
       mParent, 0.0f, 0.0f, static_cast<double>(mCodedSize.Width()),
@@ -1589,6 +1597,8 @@ already_AddRefed<DOMRectReadOnly> VideoFrame::GetCodedRect() const {
 
 // https://w3c.github.io/webcodecs/#dom-videoframe-visiblerect
 already_AddRefed<DOMRectReadOnly> VideoFrame::GetVisibleRect() const {
+  AssertIsOnOwningThread();
+
   // TODO: Return nullptr if this is _detached_ instead of checking resource
   // (bug 1774306).
   return mResource ? MakeAndAddRef<DOMRectReadOnly>(
@@ -1601,32 +1611,44 @@ already_AddRefed<DOMRectReadOnly> VideoFrame::GetVisibleRect() const {
 
 // https://w3c.github.io/webcodecs/#dom-videoframe-displaywidth
 uint32_t VideoFrame::DisplayWidth() const {
+  AssertIsOnOwningThread();
+
   return static_cast<uint32_t>(mDisplaySize.Width());
 }
 
 // https://w3c.github.io/webcodecs/#dom-videoframe-displayheight
 uint32_t VideoFrame::DisplayHeight() const {
+  AssertIsOnOwningThread();
+
   return static_cast<uint32_t>(mDisplaySize.Height());
 }
 
 // https://w3c.github.io/webcodecs/#dom-videoframe-duration
 Nullable<uint64_t> VideoFrame::GetDuration() const {
+  AssertIsOnOwningThread();
+
   return mDuration ? Nullable<uint64_t>(*mDuration) : Nullable<uint64_t>();
 }
 
 // https://w3c.github.io/webcodecs/#dom-videoframe-timestamp
 Nullable<int64_t> VideoFrame::GetTimestamp() const {
+  AssertIsOnOwningThread();
+
   return mTimestamp ? Nullable<int64_t>(*mTimestamp) : Nullable<int64_t>();
 }
 
 // https://w3c.github.io/webcodecs/#dom-videoframe-colorspace
 already_AddRefed<VideoColorSpace> VideoFrame::ColorSpace() const {
+  AssertIsOnOwningThread();
+
   return MakeAndAddRef<VideoColorSpace>(mParent, mColorSpace);
 }
 
 // https://w3c.github.io/webcodecs/#dom-videoframe-allocationsize
 uint32_t VideoFrame::AllocationSize(const VideoFrameCopyToOptions& aOptions,
                                     ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
   // TODO: Throw error if this is _detached_ instead of checking resource (bug
   // 1774306).
   if (!mResource) {
@@ -1650,6 +1672,8 @@ uint32_t VideoFrame::AllocationSize(const VideoFrameCopyToOptions& aOptions,
 already_AddRefed<Promise> VideoFrame::CopyTo(
     const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aDestination,
     const VideoFrameCopyToOptions& aOptions, ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
   // TODO: Throw error if this is _detached_ instead of checking resource (bug
   // 1774306).
   if (!mResource) {
@@ -1733,6 +1757,8 @@ already_AddRefed<Promise> VideoFrame::CopyTo(
 
 // https://w3c.github.io/webcodecs/#dom-videoframe-clone
 already_AddRefed<VideoFrame> VideoFrame::Clone(ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
   // TODO: Throw error if this is _detached_ instead of checking resource (bug
   // 1774306).
   if (!mResource) {
@@ -1746,6 +1772,8 @@ already_AddRefed<VideoFrame> VideoFrame::Clone(ErrorResult& aRv) {
 
 // https://w3c.github.io/webcodecs/#close-videoframe
 void VideoFrame::Close() {
+  AssertIsOnOwningThread();
+
   // TODO: Set _detached_ to `true` (bug 1774306).
   mResource.reset();
   mCodedSize = gfx::IntSize();

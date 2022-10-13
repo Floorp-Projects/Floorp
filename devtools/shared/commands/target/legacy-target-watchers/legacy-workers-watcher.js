@@ -4,7 +4,7 @@
 
 "use strict";
 
-const LegacyProcessesWatcher = require("devtools/shared/commands/target/legacy-target-watchers/legacy-processes-watcher");
+const LegacyProcessesWatcher = require("resource://devtools/shared/commands/target/legacy-target-watchers/legacy-processes-watcher.js");
 
 class LegacyWorkersWatcher {
   constructor(targetCommand, onTargetAvailable, onTargetDestroyed) {

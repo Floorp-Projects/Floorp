@@ -248,9 +248,19 @@ pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
         }
     }
     for (id, records) in ipc_payload.events.into_iter() {
-        // TODO(bug XXX): Implement events in JOG
-        for (timestamp, extra) in records.into_iter() {
-            let _ = __glean_metric_maps::record_event_by_id_with_time(id, timestamp, extra);
+        if id.0 & (1 << crate::factory::DYNAMIC_METRIC_BIT) > 0 {
+            let map = crate::factory::__jog_metric_maps::EVENT_MAP
+                .read()
+                .expect("Read lock for dynamic event map was poisoned");
+            if let Some(metric) = map.get(&id) {
+                for (timestamp, extra) in records.into_iter() {
+                    metric.record_with_time(timestamp, extra);
+                }
+            }
+        } else {
+            for (timestamp, extra) in records.into_iter() {
+                let _ = __glean_metric_maps::record_event_by_id_with_time(id, timestamp, extra);
+            }
         }
     }
     for (id, labeled_counts) in ipc_payload.labeled_counters.into_iter() {

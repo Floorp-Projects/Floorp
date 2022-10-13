@@ -9,7 +9,7 @@ const TEST_URL = "https://example.org/document-builder.sjs?html=org";
 const SECOND_TEST_URL = "https://example.com/document-builder.sjs?html=org";
 const CHROME_WORKER_URL = CHROME_URL_ROOT + "test_worker.js";
 
-const DESCRIPTOR_TYPES = require("devtools/client/fronts/descriptors/descriptor-types");
+const DESCRIPTOR_TYPES = require("resource://devtools/client/fronts/descriptors/descriptor-types.js");
 
 add_task(async function() {
   // Enabled fission prefs

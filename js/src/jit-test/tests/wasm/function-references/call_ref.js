@@ -3,6 +3,7 @@
 let { plusOne } = wasmEvalText(`(module
   (; forward declaration so that ref.func works ;)
   (elem declare $plusOneRef)
+  (type $t (func (param i32) (result i32)))
 
   (func $plusOneRef (param i32) (result i32)
     (i32.add
@@ -13,7 +14,7 @@ let { plusOne } = wasmEvalText(`(module
   (func (export "plusOne") (param i32) (result i32)
     local.get 0
     ref.func $plusOneRef
-    call_ref
+    call_ref $t
   )
 )`).exports;
 
@@ -21,29 +22,33 @@ assertEq(plusOne(3), 4);
 
 // pass non-funcref type
 wasmFailValidateText(`(module
+  (type $t (func (param i32)))
   (func (param $a i32)
     local.get $a
-    call_ref
+    call_ref $t
   )
-)`, /type mismatch: expression has type i32 but expected a reference type/);
+)`, /type mismatch: expression has type i32 but expected \(ref null \d+\)/);
 
 wasmFailValidateText(`(module
+  (type $t (func (param externref)))
   (func (param $a (ref extern))
     local.get $a
-    call_ref
+    call_ref $t
   )
-)`, /type mismatch: reference expected to be a subtype of funcref/);
+)`, /type mismatch: expression has type \(ref extern\) but expected \(ref null \d+\)/);
 
 // pass (non-subtype of) funcref
 wasmFailValidateText(`(module
+  (type $t (func (param i32) (result i32)))
   (func (param funcref)
     local.get 0
-    call_ref
+    call_ref $t
   )
-)`, /type mismatch: reference expected to be a subtype of funcref/);  
+)`, /type mismatch: expression has type funcref but expected \(ref null \d+\)/);  
   
 // signature mismatch
 wasmFailValidateText(`(module
+  (type $t (func (param i32) (result i32)))
   (elem declare $plusOneRef)
   (func $plusOneRef (param f32) (result f32)
     (f32.add
@@ -54,17 +59,9 @@ wasmFailValidateText(`(module
   (func (export "plusOne") (param i32) (result i32)
     local.get 0
     ref.func $plusOneRef
-    call_ref
+    call_ref $t
   )
-)`, /type mismatch/);
-
-// TODO fix call_ref is not allowed in dead code
-wasmFailValidateText(`(module
-  (func (param $a i32)
-    unreachable
-    call_ref
-  )
-)`, /gc instruction temporarily not allowed in dead code/);
+)`, /type mismatch: expression has type \(ref \d+\) but expected \(ref null \d+\)/);
 
 // Cross-instance calls
 let { loadInt } = wasmEvalText(`(module
@@ -77,11 +74,12 @@ let { loadInt } = wasmEvalText(`(module
 )`).exports;
 
 let { callLoadInt } = wasmEvalText(`(module
+  (type $t (func (result i32)))
   (elem declare 0)
   (import "" "loadInt" (func (result i32)))
   (func (export "callLoadInt") (result i32)
     ref.func 0
-    call_ref
+    call_ref $t
   )
 )`, {"": { loadInt, }}).exports;
 
@@ -95,7 +93,7 @@ assertErrorMessage(function() {
     (func (export "nullCall") (param i32) (result i32)
       local.get 0
       ref.null $t
-      call_ref
+      call_ref $t
     )
   )`).exports;
   nullCall(3);

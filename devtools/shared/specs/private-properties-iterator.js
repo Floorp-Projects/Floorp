@@ -9,7 +9,7 @@ const {
   Option,
   RetVal,
   types,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 types.addDictType("privatepropertiesiterator.data", {
   privateProperties: "array:privatepropertiesiterator.privateProperties",

@@ -7,7 +7,7 @@ const {
   generateActorSpec,
   Option,
   RetVal,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 const tabDescriptorSpec = generateActorSpec({
   typeName: "tabDescriptor",

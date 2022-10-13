@@ -176,25 +176,25 @@ host_fetches = {
     "darwin": {
         "ffmpeg": {
             "type": "static-url",
-            "url": "https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.1-macos64-static.zip",  # noqa
+            "url": "https://github.com/mozilla/perf-automation/releases/download/FFMPEG-v4.4.1/ffmpeg-macos.zip",  # noqa
             # An extension to `fetch` syntax.
-            "path": "ffmpeg-4.1.1-macos64-static",
+            "path": "ffmpeg-macos",
         },
     },
     "linux64": {
         "ffmpeg": {
             "type": "static-url",
-            "url": "https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.4-i686-static.tar.xz",  # noqa
+            "url": "https://github.com/mozilla/perf-automation/releases/download/FFMPEG-v4.4.1/ffmpeg-4.4.1-i686-static.tar.xz",  # noqa
             # An extension to `fetch` syntax.
-            "path": "ffmpeg-4.1.4-i686-static",
+            "path": "ffmpeg-4.4.1-i686-static",
         },
     },
     "win64": {
         "ffmpeg": {
             "type": "static-url",
-            "url": "https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.1-win64-static.zip",  # noqa
+            "url": "https://github.com/mozilla/perf-automation/releases/download/FFMPEG-v4.4.1/ffmpeg-4.4.1-full_build.zip",  # noqa
             # An extension to `fetch` syntax.
-            "path": "ffmpeg-4.1.1-win64-static",
+            "path": "ffmpeg-4.4.1-full_build-win",
         },
     },
 }

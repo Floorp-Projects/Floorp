@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGViewSpec;
-
 [Exposed=Window]
 interface SVGSVGElement : SVGGraphicsElement {
 
@@ -23,9 +21,6 @@ interface SVGSVGElement : SVGGraphicsElement {
   readonly attribute SVGAnimatedLength width;
   [Constant]
   readonly attribute SVGAnimatedLength height;
-  // readonly attribute SVGRect viewport;
-  readonly attribute boolean useCurrentView;
-  // readonly attribute SVGViewSpec currentView;
   [UseCounter]
            attribute float currentScale;
   readonly attribute SVGPoint currentTranslate;

@@ -3056,7 +3056,7 @@
     "description": "Count of the HTTP redirection that triggered by top-level document or by subresource, keyed by the URL scheme redirected to.",
     "labels": ["topLevel", "subresource"]
   },
-  "NETWORK_ASYNC_OPEN_TO_TRANSACTION_PENDING_MS" :{
+  "NETWORK_ASYNC_OPEN_CHILD_TO_TRANSACTION_PENDING_MS" :{
     "record_in_processes": ["content"],
     "products": [ "firefox", "fennec" ],
     "alert_emails": ["necko@mozilla.com", "acreskey@mozilla.com"],
@@ -3068,6 +3068,18 @@
     "n_buckets": 50,
     "description": "The time spent from HttpChannelChild::AsyncOpen to adding the transactionto the nsHttpConnectionMgr, in milliseconds, keyed by classOfService"
   },
+  "NETWORK_RESPONSE_START_PARENT_TO_CONTENT_MS" :{
+      "record_in_processes": ["content"],
+      "products": [ "firefox", "fennec" ],
+      "alert_emails": ["necko@mozilla.com", "acreskey@mozilla.com"],
+      "bug_numbers": [1793975],
+      "expires_in_version": "never",
+      "keyed": true,
+      "kind": "linear",
+      "high": 5000,
+      "n_buckets": 50,
+      "description": "The time spent relaying response start from the socket thread of the parent process to the content process, in milliseconds, keyed by classOfService"
+    },
   "NETWORK_DNS_END_TO_CONNECT_START_MS" :{
     "record_in_processes": ["main"],
     "products": [ "firefox", "fennec" ],
@@ -3391,6 +3403,17 @@
     "releaseChannelCollection": "opt-out",
     "description": "Does CRLite and OCSP fetching agree when a certificate is revoked?",
     "labels": ["CRLiteOkOCSPFail", "CRLiteRevOCSPFail", "CRLiteOkOCSPOk", "CRLiteOkOCSPRev", "CRLiteRevOCSPOk", "CRLiteRevOCSPRev", "CRLiteOkOCSPUnk", "CRLiteRevOCSPUnk", "CRLiteOkOCSPSoft", "CRLiteRevOCSPSoft" ]
+  },
+  "CERT_REVOCATION_MECHANISMS": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "jschanck@mozilla.com"],
+    "bug_numbers": [1794450],
+    "expires_in_version": "113",
+    "kind": "categorical",
+    "releaseChannelCollection": "opt-out",
+    "description": "Which revocation checking mechanisms were used?",
+    "labels": ["CRLite", "StapledOCSP", "CachedOCSP", "OCSP", "OneCRL", "ShortValidity"]
   },
   "WEBSOCKETS_HANDSHAKE_TYPE": {
     "record_in_processes": ["main", "content"],

@@ -54,26 +54,24 @@ pub enum ComponentSectionId {
     CoreModule = 1,
     /// The section is a core instance section.
     CoreInstance = 2,
-    /// The section is a core alias section.
-    CoreAlias = 3,
     /// The section is a core type section.
-    CoreType = 4,
+    CoreType = 3,
     /// The section is a component section.
-    Component = 5,
+    Component = 4,
     /// The section is an instance section.
-    Instance = 6,
+    Instance = 5,
     /// The section is an alias section.
-    Alias = 7,
+    Alias = 6,
     /// The section is a type section.
-    Type = 8,
+    Type = 7,
     /// The section is a canonical function section.
-    CanonicalFunction = 9,
+    CanonicalFunction = 8,
     /// The section is a start section.
-    Start = 10,
+    Start = 9,
     /// The section is an import section.
-    Import = 11,
+    Import = 10,
     /// The section is an export section.
-    Export = 12,
+    Export = 11,
 }
 
 impl From<ComponentSectionId> for u8 {

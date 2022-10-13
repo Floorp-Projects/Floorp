@@ -12,8 +12,12 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const { DevToolsClient } = require("devtools/client/devtools-client");
-const { DevToolsServer } = require("devtools/server/devtools-server");
+const {
+  DevToolsClient,
+} = require("resource://devtools/client/devtools-client.js");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
 
 async function _initResourceCommandFromCommands(
   commands,

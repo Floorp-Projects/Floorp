@@ -144,6 +144,21 @@ impl Encode for i64 {
     }
 }
 
+impl<T> Encode for Option<T>
+where
+    T: Encode,
+{
+    fn encode(&self, sink: &mut Vec<u8>) {
+        match self {
+            Some(v) => {
+                sink.push(0x01);
+                v.encode(sink);
+            }
+            None => sink.push(0x00),
+        }
+    }
+}
+
 fn encoding_size(n: u32) -> usize {
     let mut buf = [0u8; 5];
     leb128::write::unsigned(&mut &mut buf[..], n.into()).unwrap()

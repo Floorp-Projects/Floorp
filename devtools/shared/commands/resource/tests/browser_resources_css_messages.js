@@ -6,7 +6,7 @@
 // Test the ResourceCommand API around CSS_MESSAGE
 // Reproduces the CSS message assertions from devtools/shared/webconsole/test/chrome/test_page_errors.html
 
-const { MESSAGE_CATEGORY } = require("devtools/shared/constants");
+const { MESSAGE_CATEGORY } = require("resource://devtools/shared/constants.js");
 
 // Create a simple server so we have a nice sourceName in the resources packets.
 const httpServer = createTestHTTPServer();

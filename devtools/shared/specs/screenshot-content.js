@@ -8,7 +8,7 @@ const {
   Arg,
   generateActorSpec,
   types,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 types.addDictType("screenshot-content.args", {
   fullpage: "nullable:boolean",

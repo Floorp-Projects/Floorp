@@ -2,7 +2,7 @@ use crate::component::*;
 use crate::core;
 use crate::token::{Id, Index, NameAnnotation};
 use wasm_encoder::{
-    AliasSection, CanonicalFunctionSection, ComponentAliasSection, ComponentDefinedTypeEncoder,
+    CanonicalFunctionSection, ComponentAliasSection, ComponentDefinedTypeEncoder,
     ComponentExportSection, ComponentImportSection, ComponentInstanceSection, ComponentSection,
     ComponentSectionId, ComponentStartSection, ComponentTypeEncoder, ComponentTypeSection,
     CoreTypeEncoder, CoreTypeSection, InstanceSection, NestedComponentSection, RawSection,
@@ -30,7 +30,6 @@ fn encode_fields(
         match field {
             ComponentField::CoreModule(m) => e.encode_core_module(m),
             ComponentField::CoreInstance(i) => e.encode_core_instance(i),
-            ComponentField::CoreAlias(a) => e.encode_core_alias(a),
             ComponentField::CoreType(t) => e.encode_core_type(t),
             ComponentField::Component(c) => e.encode_component(c),
             ComponentField::Instance(i) => e.encode_instance(i),
@@ -78,7 +77,14 @@ fn encode_type(encoder: ComponentTypeEncoder, ty: &TypeDef) {
             encode_defined_type(encoder.defined_type(), t);
         }
         TypeDef::Func(f) => {
-            encoder.function(f.params.iter().map(|p| (p.name, &p.ty)), &f.result);
+            let mut encoder = encoder.function();
+            encoder.params(f.params.iter().map(|p| (p.name, &p.ty)));
+
+            if f.results.len() == 1 && f.results[0].name.is_none() {
+                encoder.result(&f.results[0].ty);
+            } else {
+                encoder.results(f.results.iter().map(|r| (r.name.unwrap_or(""), &r.ty)));
+            }
         }
         TypeDef::Component(c) => {
             encoder.component(&c.into());
@@ -96,11 +102,13 @@ fn encode_defined_type(encoder: ComponentDefinedTypeEncoder, ty: &ComponentDefin
             encoder.record(r.fields.iter().map(|f| (f.name, &f.ty)));
         }
         ComponentDefinedType::Variant(v) => {
-            encoder.variant(
-                v.cases
-                    .iter()
-                    .map(|c| (c.name, &c.ty, c.refines.as_ref().map(Into::into))),
-            );
+            encoder.variant(v.cases.iter().map(|c| {
+                (
+                    c.name,
+                    c.ty.as_ref().map(Into::into),
+                    c.refines.as_ref().map(Into::into),
+                )
+            }));
         }
         ComponentDefinedType::List(l) => {
             encoder.list(l.element.as_ref());
@@ -118,8 +126,11 @@ fn encode_defined_type(encoder: ComponentDefinedTypeEncoder, ty: &ComponentDefin
         ComponentDefinedType::Option(o) => {
             encoder.option(o.element.as_ref());
         }
-        ComponentDefinedType::Expected(e) => {
-            encoder.expected(e.ok.as_ref(), e.err.as_ref());
+        ComponentDefinedType::Result(e) => {
+            encoder.result(
+                e.ok.as_deref().map(Into::into),
+                e.err.as_deref().map(Into::into),
+            );
         }
     }
 }
@@ -132,7 +143,6 @@ struct Encoder {
     // Core sections
     // Note: module sections are written immediately
     core_instances: InstanceSection,
-    core_aliases: AliasSection,
     core_types: CoreTypeSection,
 
     // Component sections
@@ -186,25 +196,6 @@ impl Encoder {
         }
 
         self.flush(Some(self.core_instances.id()));
-    }
-
-    fn encode_core_alias(&mut self, alias: &CoreAlias) {
-        match &alias.target {
-            CoreAliasTarget::Export {
-                instance,
-                name,
-                kind,
-            } => {
-                self.core_aliases
-                    .instance_export((*instance).into(), (*kind).into(), name);
-            }
-            CoreAliasTarget::Outer { outer, index, kind } => {
-                self.core_aliases
-                    .outer((*outer).into(), (*kind).into(), (*index).into());
-            }
-        }
-
-        self.flush(Some(self.core_aliases.id()));
     }
 
     fn encode_core_type(&mut self, ty: &CoreType) {
@@ -262,6 +253,14 @@ impl Encoder {
                 self.aliases
                     .instance_export((*instance).into(), (*kind).into(), name);
             }
+            AliasTarget::CoreExport {
+                instance,
+                name,
+                kind,
+            } => {
+                self.aliases
+                    .core_instance_export((*instance).into(), (*kind).into(), name);
+            }
             AliasTarget::Outer { outer, index, kind } => {
                 self.aliases
                     .outer((*outer).into(), (*kind).into(), (*index).into());
@@ -278,6 +277,7 @@ impl Encoder {
         self.component.section(&ComponentStartSection {
             function_index: start.func.into(),
             args: start.args.iter().map(|a| a.idx.into()).collect::<Vec<_>>(),
+            results: start.results.len() as u32,
         });
     }
 
@@ -330,43 +330,38 @@ impl Encoder {
                     self.core_instances = Default::default();
                 }
                 3 => {
-                    assert_eq!(id, self.core_aliases.id());
-                    self.component.section(&self.core_aliases);
-                    self.core_aliases = Default::default();
-                }
-                4 => {
                     assert_eq!(id, self.core_types.id());
                     self.component.section(&self.core_types);
                     self.core_types = Default::default();
                 }
-                // 5 => components sections are written immediately
-                6 => {
+                // 4 => components sections are written immediately
+                5 => {
                     assert_eq!(id, self.instances.id());
                     self.component.section(&self.instances);
                     self.instances = Default::default();
                 }
-                7 => {
+                6 => {
                     assert_eq!(id, self.aliases.id());
                     self.component.section(&self.aliases);
                     self.aliases = Default::default();
                 }
-                8 => {
+                7 => {
                     assert_eq!(id, self.types.id());
                     self.component.section(&self.types);
                     self.types = Default::default();
                 }
-                9 => {
+                8 => {
                     assert_eq!(id, self.funcs.id());
                     self.component.section(&self.funcs);
                     self.funcs = Default::default();
                 }
-                // 10 => start sections are written immediately
-                11 => {
+                // 9 => start sections are written immediately
+                10 => {
                     assert_eq!(id, self.imports.id());
                     self.component.section(&self.imports);
                     self.imports = Default::default();
                 }
-                12 => {
+                11 => {
                     assert_eq!(id, self.exports.id());
                     self.component.section(&self.exports);
                     self.exports = Default::default();
@@ -590,7 +585,6 @@ impl From<&ComponentValType<'_>> for wasm_encoder::ComponentValType {
 impl From<PrimitiveValType> for wasm_encoder::PrimitiveValType {
     fn from(p: PrimitiveValType) -> Self {
         match p {
-            PrimitiveValType::Unit => Self::Unit,
             PrimitiveValType::Bool => Self::Bool,
             PrimitiveValType::S8 => Self::S8,
             PrimitiveValType::U8 => Self::U8,
@@ -729,10 +723,10 @@ impl From<&ModuleType<'_>> for wasm_encoder::ModuleType {
                     }
                 },
                 ModuleTypeDecl::Alias(a) => match &a.target {
-                    CoreAliasTarget::Outer {
+                    AliasTarget::Outer {
                         outer,
                         index,
-                        kind: CoreOuterAliasKind::Type,
+                        kind: ComponentOuterAliasKind::CoreType,
                     } => {
                         encoded.alias_outer_core_type(u32::from(*outer), u32::from(*index));
                     }
@@ -777,14 +771,6 @@ impl From<&ComponentExportKind<'_>> for (wasm_encoder::ComponentExportKind, u32)
             ComponentExportKind::Instance(i) => {
                 (wasm_encoder::ComponentExportKind::Instance, i.idx.into())
             }
-        }
-    }
-}
-
-impl From<CoreOuterAliasKind> for wasm_encoder::CoreOuterAliasKind {
-    fn from(kind: CoreOuterAliasKind) -> Self {
-        match kind {
-            CoreOuterAliasKind::Type => Self::Type,
         }
     }
 }

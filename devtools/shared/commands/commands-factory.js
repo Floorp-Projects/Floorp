@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { createCommandsDictionary } = require("devtools/shared/commands/index");
+const {
+  createCommandsDictionary,
+} = require("resource://devtools/shared/commands/index.js");
 const { DevToolsLoader } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );

@@ -50,6 +50,7 @@ class nsSplitterInfo {
   nscoord min;
   nscoord max;
   nscoord current;
+  nscoord pref;
   nscoord changed;
   nsCOMPtr<nsIContent> childElem;
 };
@@ -64,11 +65,16 @@ enum class ResizeType {
   // No space should be taken out of any children in that direction.
   // FIXME(emilio): This is a rather odd name...
   Grow,
+  // Only resize adjacent siblings.
+  Sibling,
+  // Don't resize anything in a given direction.
+  None,
 };
 static ResizeType ResizeTypeFromAttribute(const Element& aElement,
                                           nsAtom* aAttribute) {
   static Element::AttrValuesArray strings[] = {
-      nsGkAtoms::farthest, nsGkAtoms::flex, nsGkAtoms::grow, nullptr};
+      nsGkAtoms::farthest, nsGkAtoms::flex, nsGkAtoms::grow,
+      nsGkAtoms::sibling,  nsGkAtoms::none, nullptr};
   switch (aElement.FindAttrValueIn(kNameSpaceID_None, aAttribute, strings,
                                    eCaseMatters)) {
     case 0:
@@ -81,6 +87,10 @@ static ResizeType ResizeTypeFromAttribute(const Element& aElement,
         return ResizeType::Grow;
       }
       break;
+    case 3:
+      return ResizeType::Sibling;
+    case 4:
+      return ResizeType::None;
     default:
       break;
   }
@@ -115,7 +125,7 @@ class nsSplitterFrameInner final : public nsIDOMEventListener {
   void AddRemoveSpace(nscoord aDiff, nsTArray<nsSplitterInfo>& aChildInfos,
                       int32_t& aSpaceLeft);
 
-  void ResizeChildTo(nscoord& aDiff, bool aBounded);
+  void ResizeChildTo(nscoord& aDiff);
 
   void UpdateState();
 
@@ -133,7 +143,7 @@ class nsSplitterFrameInner final : public nsIDOMEventListener {
 
   void EnsureOrient();
   void SetPreferredSize(nsBoxLayoutState& aState, nsIFrame* aChildBox,
-                        bool aIsHorizontal, nscoord* aSize);
+                        bool aIsHorizontal, nscoord aSize);
 
   nsSplitterFrame* mOuter;
   bool mDidDrag = false;
@@ -394,10 +404,6 @@ void nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext,
   // mDragStart is in parent-box relative coordinates already.
   pos -= mDragStart;
 
-  ResizeType resizeAfter = GetResizeAfter();
-
-  const bool bounded = resizeAfter != ResizeType::Grow;
-
   for (auto& info : mChildInfosBefore) {
     info.changed = info.current;
   }
@@ -407,7 +413,7 @@ void nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext,
   }
   nscoord oldPos = pos;
 
-  ResizeChildTo(pos, bounded);
+  ResizeChildTo(pos);
 
   State currentState = GetState();
   bool supportsBefore = SupportsCollapseDirection(Before);
@@ -549,6 +555,8 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
   EnsureOrient();
   const bool isHorizontal = !mOuter->IsXULHorizontal();
 
+  const nsIContent* outerContent = mOuter->GetContent();
+
   const ResizeType resizeBefore = GetResizeBefore();
   const ResizeType resizeAfter = GetResizeAfter();
   const int32_t childCount = mParentBox->PrincipalChildList().GetLength();
@@ -595,9 +603,23 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
           return false;
         }
       }
+
+      // We need to check this here rather than in the switch before because we
+      // want `sibling` to work in the DOM order, not frame tree order.
+      if (resizeBefore == ResizeType::Sibling &&
+          content->GetNextElementSibling() == outerContent) {
+        return true;
+      }
+      if (resizeAfter == ResizeType::Sibling &&
+          content->GetPreviousElementSibling() == outerContent) {
+        return true;
+      }
+
       const ResizeType resizeType = isBefore ? resizeBefore : resizeAfter;
       switch (resizeType) {
         case ResizeType::Grow:
+        case ResizeType::None:
+        case ResizeType::Sibling:
           return false;
         case ResizeType::Flex:
           return flex > 0;
@@ -613,35 +635,37 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
     }
 
     nsSize minSize;
+    nsSize prefSize;
     nsSize maxSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+    nsSize curSize = childBox->GetSize();
     if (childBox->IsXULBoxFrame()) {
-      nsSize prefSize = childBox->GetXULPrefSize(state);
       minSize = childBox->GetXULMinSize(state);
-      maxSize = nsIFrame::XULBoundsCheckMinMax(minSize,
-                                               childBox->GetXULMaxSize(state));
-      prefSize = nsIFrame::XULBoundsCheck(minSize, prefSize, maxSize);
-
-      nsSplitterFrame::AddXULMargin(childBox, minSize);
-      nsSplitterFrame::AddXULMargin(childBox, prefSize);
-      nsSplitterFrame::AddXULMargin(childBox, maxSize);
+      maxSize = childBox->GetXULMaxSize(state);
+      prefSize = childBox->GetXULPrefSize(state);
     } else {
       const auto& pos = *childBox->StylePosition();
       minSize = ToLengthWithFallback(pos.mMinWidth, pos.mMinHeight);
       maxSize = ToLengthWithFallback(pos.mMaxWidth, pos.mMaxHeight,
                                      NS_UNCONSTRAINEDSIZE);
+      prefSize.width = ToLengthWithFallback(pos.mWidth, curSize.width);
+      prefSize.height = ToLengthWithFallback(pos.mHeight, curSize.height);
     }
 
-    nsMargin margin;
-    childBox->GetXULMargin(margin);
-    nsRect r(childBox->GetRect());
-    r.Inflate(margin);
+    maxSize = nsIFrame::XULBoundsCheckMinMax(minSize, maxSize);
+    prefSize = nsIFrame::XULBoundsCheck(minSize, prefSize, maxSize);
+
+    nsSplitterFrame::AddXULMargin(childBox, minSize);
+    nsSplitterFrame::AddXULMargin(childBox, maxSize);
+    nsSplitterFrame::AddXULMargin(childBox, prefSize);
+    nsSplitterFrame::AddXULMargin(childBox, curSize);
 
     auto& list = isBefore ? mChildInfosBefore : mChildInfosAfter;
     nsSplitterInfo& info = *list.AppendElement();
     info.childElem = content;
     info.min = isHorizontal ? minSize.width : minSize.height;
     info.max = isHorizontal ? maxSize.width : maxSize.height;
-    info.current = info.changed = isHorizontal ? r.width : r.height;
+    info.pref = isHorizontal ? prefSize.width : prefSize.height;
+    info.current = info.changed = isHorizontal ? curSize.width : curSize.height;
   }
 
   if (!foundOuter) {
@@ -832,37 +856,24 @@ void nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext,
   nsBoxLayoutState state(aPresContext);
 
   for (auto& info : aChildInfos) {
-    nscoord pref = info.changed;
+    nscoord newPref = info.pref + (info.changed - info.current);
     if (nsIFrame* childBox =
             GetChildBoxForContent(mParentBox, info.childElem)) {
-      SetPreferredSize(state, childBox, aIsHorizontal, &pref);
+      SetPreferredSize(state, childBox, aIsHorizontal, newPref);
     }
   }
 }
 
 void nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState,
                                             nsIFrame* aChildBox,
-                                            bool aIsHorizontal,
-                                            nscoord* aSize) {
-  nsRect rect(aChildBox->GetRect());
-  nscoord pref = 0;
-
-  if (!aSize) {
-    if (aIsHorizontal)
-      pref = rect.width;
-    else
-      pref = rect.height;
-  } else {
-    pref = *aSize;
-  }
-
+                                            bool aIsHorizontal, nscoord aSize) {
   nsMargin margin(0, 0, 0, 0);
   aChildBox->GetXULMargin(margin);
 
   if (aIsHorizontal) {
-    pref -= (margin.left + margin.right);
+    aSize -= (margin.left + margin.right);
   } else {
-    pref -= (margin.top + margin.bottom);
+    aSize -= (margin.top + margin.bottom);
   }
 
   RefPtr element = nsStyledElement::FromNode(aChildBox->GetContent());
@@ -873,7 +884,7 @@ void nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState,
   // We set both the attribute and the CSS value, so that XUL persist="" keeps
   // working, see bug 1790712.
 
-  int32_t pixels = pref / AppUnitsPerCSSPixel();
+  int32_t pixels = aSize / AppUnitsPerCSSPixel();
   nsAutoString attrValue;
   attrValue.AppendInt(pixels);
   element->SetAttr(aIsHorizontal ? nsGkAtoms::width : nsGkAtoms::height,
@@ -921,22 +932,24 @@ void nsSplitterFrameInner::AddRemoveSpace(nscoord aDiff,
 
 /**
  * Ok if we want to resize a child we will know the actual size in pixels we
- * want it to be. This is not the preferred size. But they only way we can
- * change a child is my manipulating its preferred size. So give the actual
- * pixel size this return method will return figure out the preferred size and
- * set it.
+ * want it to be. This is not the preferred size. But the only way we can change
+ * a child is by manipulating its preferred size. So give the actual pixel size
+ * this method will figure out the preferred size and set it.
  */
 
-void nsSplitterFrameInner::ResizeChildTo(nscoord& aDiff, bool aBounded) {
-  nscoord spaceLeft;
-  AddRemoveSpace(aDiff, mChildInfosBefore, spaceLeft);
+void nsSplitterFrameInner::ResizeChildTo(nscoord& aDiff) {
+  nscoord spaceLeft = 0;
 
-  // if there is any space left over remove it from the dif we were originally
-  // given
-  aDiff -= spaceLeft;
+  if (!mChildInfosBefore.IsEmpty()) {
+    AddRemoveSpace(aDiff, mChildInfosBefore, spaceLeft);
+    // If there is any space left over remove it from the diff we were
+    // originally given.
+    aDiff -= spaceLeft;
+  }
+
   AddRemoveSpace(-aDiff, mChildInfosAfter, spaceLeft);
 
-  if (spaceLeft != 0 && aBounded) {
+  if (spaceLeft != 0 && !mChildInfosAfter.IsEmpty()) {
     aDiff += spaceLeft;
     AddRemoveSpace(spaceLeft, mChildInfosBefore, spaceLeft);
   }

@@ -418,6 +418,8 @@ Result NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     if (revocationState == nsICertStorage::STATE_ENFORCE) {
       MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
               ("NSSCertDBTrustDomain: certificate is in blocklist"));
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_CERT_REVOCATION_MECHANISMS::OneCRL);
       return Result::ERROR_REVOKED_CERTIFICATE;
     }
   }
@@ -744,6 +746,8 @@ Result NSSCertDBTrustDomain::CheckRevocation(
     }
 
     if (crliteCoversCertificate) {
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_CERT_REVOCATION_MECHANISMS::CRLite);
       // If we don't return here we will consult OCSP.
       // In Enforce CRLite mode we can return "Revoked" or "Not Revoked"
       // without consulting OCSP.
@@ -844,6 +848,8 @@ Result NSSCertDBTrustDomain::CheckRevocationByOCSP(
     stapledOCSPResponseResult = VerifyAndMaybeCacheEncodedOCSPResponse(
         certID, time, maxOCSPLifetimeInDays, *stapledOCSPResponse,
         ResponseWasStapled, expired);
+    Telemetry::AccumulateCategorical(
+        Telemetry::LABELS_CERT_REVOCATION_MECHANISMS::StapledOCSP);
     if (stapledOCSPResponseResult == Success) {
       // stapled OCSP response present and good
       mOCSPStaplingStatus = CertVerifier::OCSP_STAPLING_GOOD;
@@ -888,6 +894,8 @@ Result NSSCertDBTrustDomain::CheckRevocationByOCSP(
       mOCSPCache.Get(certID, mOriginAttributes, cachedResponseResult,
                      cachedResponseValidThrough);
   if (cachedResponsePresent) {
+    Telemetry::AccumulateCategorical(
+        Telemetry::LABELS_CERT_REVOCATION_MECHANISMS::CachedOCSP);
     if (cachedResponseResult == Success && cachedResponseValidThrough >= time) {
       MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
               ("NSSCertDBTrustDomain: cached OCSP response: good"));
@@ -936,6 +944,10 @@ Result NSSCertDBTrustDomain::CheckRevocationByOCSP(
   // Additionally, this doesn't properly handle OCSP-must-staple when OCSP
   // fetching is disabled.
   Duration shortLifetime(mCertShortLifetimeInDays * Time::ONE_DAY_IN_SECONDS);
+  if (validityDuration < shortLifetime) {
+    Telemetry::AccumulateCategorical(
+        Telemetry::LABELS_CERT_REVOCATION_MECHANISMS::ShortValidity);
+  }
   if ((mOCSPFetching == NeverFetchOCSP) || (validityDuration < shortLifetime)) {
     // We're not going to be doing any fetching, so if there was a cached
     // "unknown" response, say so.
@@ -1016,6 +1028,8 @@ Result NSSCertDBTrustDomain::SynchronousCheckRevocationWithServer(
   mOCSPFetchStatus = OCSPFetchStatus::Fetched;
   rv = DoOCSPRequest(aiaLocation, mOriginAttributes, ocspRequestBytes,
                      ocspRequestLength, GetOCSPTimeout(), ocspResponse);
+  Telemetry::AccumulateCategorical(
+      Telemetry::LABELS_CERT_REVOCATION_MECHANISMS::OCSP);
   if (rv == Success &&
       response.Init(ocspResponse.begin(), ocspResponse.length()) != Success) {
     rv = Result::ERROR_OCSP_MALFORMED_RESPONSE;  // too big

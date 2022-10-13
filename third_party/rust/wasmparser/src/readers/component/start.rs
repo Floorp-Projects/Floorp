@@ -10,6 +10,8 @@ pub struct ComponentStartFunction {
     ///
     /// The arguments are specified by value index.
     pub arguments: Box<[u32]>,
+    /// The number of expected results for the start function.
+    pub results: u32,
 }
 
 /// A reader for the start section of a WebAssembly component.
@@ -33,7 +35,7 @@ impl<'a> ComponentStartSectionReader<'a> {
     /// ```
     /// use wasmparser::ComponentStartSectionReader;
     ///
-    /// # let data: &[u8] = &[0x00, 0x03, 0x01, 0x02, 0x03];
+    /// # let data: &[u8] = &[0x00, 0x03, 0x01, 0x02, 0x03, 0x01];
     /// let mut reader = ComponentStartSectionReader::new(data, 0).unwrap();
     /// let start = reader.read().expect("start");
     /// println!("Start: {:?}", start);

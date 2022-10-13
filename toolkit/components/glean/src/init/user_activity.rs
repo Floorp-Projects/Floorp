@@ -34,6 +34,8 @@ impl UserActivityObserver {
         // First and foremost, even if we can't get the ObserverService,
         // init always means client activity.
         glean::handle_client_active();
+        // send emulation ping at startup
+        glean::submit_ping_by_name("new-metric-capture-emulation", Some("active"));
 
         // SAFETY: Everything here is self-contained.
         //
@@ -96,6 +98,7 @@ impl UserActivityObserver {
                     inactivity.as_secs()
                 );
                 glean::handle_client_active();
+                glean::submit_ping_by_name("new-metric-capture-emulation", Some("active"));
             }
             let mut edge = self.last_edge.write().expect("Edge lock poisoned.");
             *edge = Instant::now();
@@ -120,6 +123,7 @@ impl UserActivityObserver {
                     activity.as_secs()
                 );
                 glean::handle_client_inactive();
+                glean::submit_ping_by_name("new-metric-capture-emulation", Some("inactive"));
             }
             let mut edge = self.last_edge.write().expect("Edge lock poisoned.");
             *edge = Instant::now();

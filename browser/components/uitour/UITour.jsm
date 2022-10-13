@@ -457,6 +457,13 @@ var UITour = {
       case "showFirefoxAccounts": {
         Promise.resolve()
           .then(() => {
+            return lazy.FxAccounts.canConnectAccount();
+          })
+          .then(canConnect => {
+            if (!canConnect) {
+              lazy.log.warn("showFirefoxAccounts: can't currently connect");
+              return null;
+            }
             return data.email
               ? lazy.FxAccounts.config.promiseEmailURI(
                   data.email,
@@ -467,6 +474,9 @@ var UITour = {
                 );
           })
           .then(uri => {
+            if (!uri) {
+              return;
+            }
             const url = new URL(uri);
             // Call our helper to validate extraURLParams and populate URLSearchParams
             if (!this._populateURLParams(url, data.extraURLParams)) {

@@ -9,7 +9,9 @@
  */
 "use strict";
 
-const { RawPacket } = require("devtools/shared/transport/packets");
+const {
+  RawPacket,
+} = require("resource://devtools/shared/transport/packets.js");
 
 function run_test() {
   info("Starting test at " + new Date().toTimeString());

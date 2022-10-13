@@ -11,7 +11,7 @@
 // And especially cover sources being GC-ed before DevTools are opened
 // which are later recreated by `ThreadActor.resurrectSource`.
 
-const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
+const ResourceCommand = require("resource://devtools/shared/commands/resource/resource-command.js");
 
 const TEST_URL = URL_ROOT_SSL + "sources.html";
 

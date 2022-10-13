@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { throttle } = require("devtools/shared/throttle");
+const { throttle } = require("resource://devtools/shared/throttle.js");
 
 class RootResourceCommand {
   /**

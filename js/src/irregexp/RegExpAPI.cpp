@@ -635,7 +635,8 @@ bool InitializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
 
   // Allocate the capture index array.
   uint32_t arraySize = numNamedCaptures * sizeof(uint32_t);
-  uint32_t* captureIndices = static_cast<uint32_t*>(js_malloc(arraySize));
+  UniquePtr<uint32_t[], JS::FreePolicy> captureIndices(
+      static_cast<uint32_t*>(js_malloc(arraySize)));
   if (!captureIndices) {
     js::ReportOutOfMemory(cx);
     return false;
@@ -660,8 +661,8 @@ bool InitializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
     captureIndices[i] = capture->index();
   }
 
-  RegExpShared::InitializeNamedCaptures(cx, re, numNamedCaptures,
-                                        templateObject, captureIndices);
+  RegExpShared::InitializeNamedCaptures(
+      cx, re, numNamedCaptures, templateObject, captureIndices.release());
   return true;
 }
 

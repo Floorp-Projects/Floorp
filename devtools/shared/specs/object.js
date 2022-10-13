@@ -9,7 +9,7 @@ const {
   Arg,
   RetVal,
   types,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 types.addDictType("object.descriptor", {
   configurable: "boolean",

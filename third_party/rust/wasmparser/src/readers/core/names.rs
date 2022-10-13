@@ -68,7 +68,14 @@ impl<'a> SingleName<'a> {
         'a: 'b,
     {
         let mut reader = BinaryReader::new_with_offset(self.data, self.offset);
-        reader.read_string()
+        let result = reader.read_string()?;
+        if !reader.eof() {
+            return Err(BinaryReaderError::new(
+                "trailing data at the end of a name",
+                reader.original_position(),
+            ));
+        }
+        Ok(result)
     }
 
     /// Gets the original position of the name.

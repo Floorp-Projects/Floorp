@@ -410,3 +410,9 @@ mr2022-onboarding-gratitude-title = You’re helping us build a better web
 mr2022-onboarding-gratitude-subtitle = Thank you for using { -brand-short-name }, backed by the Mozilla Foundation. With your support, we’re working to make the internet more open, accessible, and better for everyone.
 mr2022-onboarding-gratitude-primary-button-label = See what’s new
 mr2022-onboarding-gratitude-secondary-button-label = Start browsing
+
+## Onboarding spotlight for infrequent users
+
+onboarding-infrequent-import-title = Make yourself at home
+onboarding-infrequent-import-subtitle = Whether you’re settling in or just stopping by, remember you can import your bookmarks, passwords, and more.
+onboarding-infrequent-import-primary-button = Import to { -brand-short-name }

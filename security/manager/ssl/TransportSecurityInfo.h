@@ -16,7 +16,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/ipc/TransportSecurityInfoUtils.h"
 #include "mozpkix/pkixtypes.h"
-#include "nsTHashMap.h"
 #include "nsIClassInfo.h"
 #include "nsIObjectInputStream.h"
 #include "nsIInterfaceRequestor.h"
@@ -217,37 +216,6 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
                                       uint32_t aSize,
                                       nsTArray<RefPtr<nsIX509Cert>>& aCertList,
                                       MutexAutoLock& aProofOfLock);
-};
-
-class RememberCertErrorsTable {
- private:
-  RememberCertErrorsTable();
-
-  nsTHashMap<nsCStringHashKey,
-             nsITransportSecurityInfo::OverridableErrorCategory>
-      mErrorHosts MOZ_GUARDED_BY(mMutex);
-
- public:
-  void RememberCertHasError(TransportSecurityInfo* infoObject,
-                            SECStatus certVerificationResult);
-  void LookupCertErrorBits(TransportSecurityInfo* infoObject);
-
-  static void Init() { sInstance = new RememberCertErrorsTable(); }
-
-  static RememberCertErrorsTable& GetInstance() {
-    MOZ_ASSERT(sInstance);
-    return *sInstance;
-  }
-
-  static void Cleanup() {
-    delete sInstance;
-    sInstance = nullptr;
-  }
-
- private:
-  Mutex mMutex;
-
-  static RememberCertErrorsTable* sInstance;
 };
 
 }  // namespace psm

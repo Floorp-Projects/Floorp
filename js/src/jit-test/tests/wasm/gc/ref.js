@@ -87,7 +87,7 @@ assertErrorMessage(() => wasmEvalText(`
 (module
  (func (param (ref null $odd)) (unreachable)))
 `),
-SyntaxError, /failed to find type/);
+SyntaxError, /failed to find name/);
 
 // Ref type mismatch in parameter is allowed through the prefix rule
 // but not if the structs are incompatible.

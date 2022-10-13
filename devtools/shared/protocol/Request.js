@@ -4,9 +4,12 @@
 
 "use strict";
 
-const { extend } = require("devtools/shared/extend");
-var { findPlaceholders, getPath } = require("devtools/shared/protocol/utils");
-var { types } = require("devtools/shared/protocol/types");
+const { extend } = require("resource://devtools/shared/extend.js");
+var {
+  findPlaceholders,
+  getPath,
+} = require("resource://devtools/shared/protocol/utils.js");
+var { types } = require("resource://devtools/shared/protocol/types.js");
 
 /**
  * Manages a request template.

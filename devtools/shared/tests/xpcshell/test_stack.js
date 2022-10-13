@@ -9,7 +9,9 @@ function run_test() {
   const loader = new DevToolsLoader();
   const require = loader.require;
 
-  const { StackFrameCache } = require("devtools/server/actors/utils/stack");
+  const {
+    StackFrameCache,
+  } = require("resource://devtools/server/actors/utils/stack.js");
 
   const cache = new StackFrameCache();
   cache.initFrames();

@@ -5,7 +5,7 @@
 
 // Test the ResourceCommand API around NETWORK_EVENT
 
-const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
+const ResourceCommand = require("resource://devtools/shared/commands/resource/resource-command.js");
 
 // We are borrowing tests from the netmonitor frontend
 const NETMONITOR_TEST_FOLDER =

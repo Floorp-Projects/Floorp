@@ -5,8 +5,8 @@
 
 const {
   ConsoleAPIListener,
-} = require("devtools/server/actors/webconsole/listeners/console-api");
-const EventEmitter = require("devtools/shared/event-emitter");
+} = require("resource://devtools/server/actors/webconsole/listeners/console-api.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const hasMethod = (target, method) =>
   method in target && typeof target[method] === "function";
 

@@ -39,6 +39,7 @@ browser.engagement:
     send_in_pings:
       - baseline
       - metrics
+      - new-metric-capture-emulation
     no_lint:
       - BASELINE_PING
 
@@ -67,5 +68,6 @@ browser.engagement:
     send_in_pings:
       - baseline
       - metrics
+      - new-metric-capture-emulation
     no_lint:
       - BASELINE_PING

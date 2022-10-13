@@ -50,8 +50,8 @@ addAccessibleTask(
   `,
   async function(browser, docAcc) {
     ok(docAcc, "iframe document acc is present");
-    await testBoundsInContent(docAcc, "square", browser);
-    await testBoundsInContent(docAcc, "rect", browser);
+    await testBoundsWithContent(docAcc, "square", browser);
+    await testBoundsWithContent(docAcc, "rect", browser);
 
     await invokeContentTask(browser, [], () => {
       content.document.getElementById("square").scrollIntoView();
@@ -59,8 +59,8 @@ addAccessibleTask(
 
     await waitForContentPaint(browser);
 
-    await testBoundsInContent(docAcc, "square", browser);
-    await testBoundsInContent(docAcc, "rect", browser);
+    await testBoundsWithContent(docAcc, "square", browser);
+    await testBoundsWithContent(docAcc, "rect", browser);
 
     // Scroll rect into view, but also make it reflow so we can be sure the
     // bounds are correct for reflowed frames.
@@ -74,8 +74,8 @@ addAccessibleTask(
     });
 
     await waitForContentPaint(browser);
-    await testBoundsInContent(docAcc, "square", browser);
-    await testBoundsInContent(docAcc, "rect", browser);
+    await testBoundsWithContent(docAcc, "square", browser);
+    await testBoundsWithContent(docAcc, "rect", browser);
   },
   { iframe: true, remoteIframe: true, chrome: true }
 );

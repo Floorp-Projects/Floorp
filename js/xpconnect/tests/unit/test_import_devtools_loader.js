@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const { addDebuggerToGlobal } = ChromeUtils.importESModule(
   "resource://gre/modules/jsdebugger.sys.mjs"
 );
@@ -10,10 +12,12 @@ addDebuggerToGlobal(this);
 const ESM_URL = "resource://test/es6module_devtoolsLoader.sys.mjs";
 
 // Toggle the following pref to enable Cu.getModuleImportStack()
-Services.prefs.setBoolPref("browser.startup.record", true);
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("browser.startup.record");
-});
+if (AppConstants.NIGHTLY_BUILD) {
+  Services.prefs.setBoolPref("browser.startup.record", true);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.startup.record");
+  });
+}
 
 add_task(async function testDevToolsModuleLoader() {
   const dbg = new Debugger();
@@ -68,11 +72,14 @@ add_task(async function testDevToolsModuleLoader() {
   const ns4Global = Cu.getGlobalForObject(ns4);
   Assert.equal(ns4Global, ns2Global, "The module is loaded in the same devtools global");
 
-  info("Assert the behavior of getModuleImportStack on modules loaded in the devtools loader");
-  Assert.ok(Cu.getModuleImportStack(ESM_URL).includes("testDevToolsModuleLoader"));
-  Assert.ok(Cu.getModuleImportStack("resource://test/es6module_devtoolsLoader.js").includes("testDevToolsModuleLoader"));
-  Assert.ok(Cu.getModuleImportStack("resource://test/es6module_devtoolsLoader.js").includes(ESM_URL));
-  // Previous import stack were for module loaded via the shared jsm loader.
-  // Let's also assert that we get stack traces for modules loaded via the devtools loader.
-  Assert.ok(Cu.getModuleImportStack("resource://test/es6module_devtoolsLoader_only.js").includes("testDevToolsModuleLoader"));
+  // getModuleImportStack only works on nightly builds
+  if (AppConstants.NIGHTLY_BUILD) {
+    info("Assert the behavior of getModuleImportStack on modules loaded in the devtools loader");
+    Assert.ok(Cu.getModuleImportStack(ESM_URL).includes("testDevToolsModuleLoader"));
+    Assert.ok(Cu.getModuleImportStack("resource://test/es6module_devtoolsLoader.js").includes("testDevToolsModuleLoader"));
+    Assert.ok(Cu.getModuleImportStack("resource://test/es6module_devtoolsLoader.js").includes(ESM_URL));
+    // Previous import stack were for module loaded via the shared jsm loader.
+    // Let's also assert that we get stack traces for modules loaded via the devtools loader.
+    Assert.ok(Cu.getModuleImportStack("resource://test/es6module_devtoolsLoader_only.js").includes("testDevToolsModuleLoader"));
+  }
 });

@@ -7,7 +7,7 @@
 const {
   getUrlDetails,
   // eslint-disable-next-line mozilla/reject-some-requires
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 
 module.exports = function({ resource }) {
   resource.urlDetails = getUrlDetails(resource.url);
