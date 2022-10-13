@@ -908,7 +908,6 @@ class InterfaceAttributes(object):
     scriptable = False
     builtinclass = False
     function = False
-    noscript = False
     main_process_scriptable_only = False
 
     def setuuid(self, value):
@@ -919,9 +918,6 @@ class InterfaceAttributes(object):
 
     def setfunction(self):
         self.function = True
-
-    def setnoscript(self):
-        self.noscript = True
 
     def setbuiltinclass(self):
         self.builtinclass = True
@@ -934,7 +930,6 @@ class InterfaceAttributes(object):
         "scriptable": (False, setscriptable),
         "builtinclass": (False, setbuiltinclass),
         "function": (False, setfunction),
-        "noscript": (False, setnoscript),
         "object": (False, lambda self: True),
         "main_process_scriptable_only": (False, setmain_process_scriptable_only),
     }
