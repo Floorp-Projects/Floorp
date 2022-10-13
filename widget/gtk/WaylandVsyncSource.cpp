@@ -20,8 +20,9 @@
 #    include "nsTArray.h"
 #    include "Units.h"
 extern mozilla::LazyLogModule gWidgetVsync;
-#    define LOG(...) \
-      MOZ_LOG(gWidgetVsync, mozilla::LogLevel::Debug, (__VA_ARGS__))
+#    define LOG(str, ...)                             \
+      MOZ_LOG(gWidgetVsync, mozilla::LogLevel::Debug, \
+              ("[nsWindow %p]: " str, GetWindow(), ##__VA_ARGS__))
 #  else
 #    define LOG(...)
 #  endif /* MOZ_LOGGING */
@@ -68,13 +69,14 @@ Maybe<TimeDuration> WaylandVsyncSource::GetFastestVsyncRate() {
   return retVal;
 }
 
-WaylandVsyncSource::WaylandVsyncSource()
+WaylandVsyncSource::WaylandVsyncSource(nsWindow* aWindow)
     : mMutex("WaylandVsyncSource"),
       mIsShutdown(false),
       mVsyncEnabled(false),
       mMonitorEnabled(false),
       mCallbackRequested(false),
       mContainer(nullptr),
+      mWindow(aWindow),
       mVsyncRate(TimeDuration::FromMilliseconds(1000.0 / 60.0)),
       mLastVsyncTimeStamp(TimeStamp::Now()) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -89,9 +91,7 @@ WaylandVsyncSource::~WaylandVsyncSource() {
 void WaylandVsyncSource::MaybeUpdateSource(MozContainer* aContainer) {
   MutexAutoLock lock(mMutex);
 
-  LOG("WaylandVsyncSource::MaybeUpdateSource mContainer (nsWindow %p) fps %f",
-      aContainer ? moz_container_get_nsWindow(aContainer) : nullptr,
-      GetFPS(mVsyncRate));
+  LOG("WaylandVsyncSource::MaybeUpdateSource fps %f", GetFPS(mVsyncRate));
 
   if (aContainer == mContainer) {
     LOG("  mContainer is the same, quit.");
