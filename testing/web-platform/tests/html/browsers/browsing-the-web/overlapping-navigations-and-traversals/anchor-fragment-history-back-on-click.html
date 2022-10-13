@@ -22,8 +22,9 @@ promise_test(async t => {
   let navigationsPromise = new Promise(resolve => {
     onpopstate = () => {
       navigations.push(location.hash);
-      if (navigations.length == 2)
-          resolve();
+      if (navigations.length === 2) {
+        resolve();
+      }
     }
   });
 

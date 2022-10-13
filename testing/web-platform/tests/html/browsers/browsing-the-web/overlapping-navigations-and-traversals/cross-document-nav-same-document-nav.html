@@ -6,8 +6,8 @@
 
 <!--
   According to the spec, the "URL and history update steps" (used by
-  pushState()) and the fragment navigation steps, both cancel any ongoing
-  history traversals, but do *not* cancel any ongoing navigations.
+  pushState()) and the fragment navigation steps, do *not* modify the ongoing
+  navigation, i.e. do not cancel any navigations.
 -->
 
 <body>
