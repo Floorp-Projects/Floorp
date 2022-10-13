@@ -581,6 +581,14 @@ TextPropertyEditor.prototype = {
 
     this.valueSpan.innerHTML = "";
     this.valueSpan.appendChild(frag);
+    if (
+      this.valueSpan.textProperty?.name === "grid-template-areas" &&
+      this.isValid() &&
+      (this.valueSpan.innerText.includes(`"`) ||
+        this.valueSpan.innerText.includes(`'`))
+    ) {
+      this._formatGridTemplateAreasValue();
+    }
 
     this.ruleView.emit("property-value-updated", {
       rule: this.prop.rule,
@@ -1541,6 +1549,43 @@ TextPropertyEditor.prototype = {
    */
   isNameValid() {
     return this.prop.isNameValid();
+  },
+
+  /**
+   * Display grid-template-area value strings each on their own line
+   * to display it in an ascii-art style matrix
+   */
+  _formatGridTemplateAreasValue() {
+    this.valueSpan.classList.add("ruleview-propertyvalue-break-spaces");
+
+    let quoteSymbolsUsed = [];
+
+    const getQuoteSymbolsUsed = cssValue => {
+      const regex = /\"|\'/g;
+      const found = cssValue.match(regex);
+      quoteSymbolsUsed = found.filter((_, i) => i % 2 === 0);
+    };
+
+    getQuoteSymbolsUsed(this.valueSpan.innerText);
+
+    this.valueSpan.innerText = this.valueSpan.innerText
+      .split('"')
+      .filter(s => s !== "")
+      .map(s => s.split("'"))
+      .flat()
+      .map(s => s.trim().replace(/\s+/g, " "))
+      .filter(s => s.length)
+      .map(line => line.split(" "))
+      .map((line, i, lines) =>
+        line.map((col, j) =>
+          col.padEnd(Math.max(...lines.map(l => l[j].length)), " ")
+        )
+      )
+      .map(
+        (line, i) =>
+          `\n${quoteSymbolsUsed[i]}` + line.join(" ") + quoteSymbolsUsed[i]
+      )
+      .join(" ");
   },
 };
 
