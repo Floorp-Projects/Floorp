@@ -8,7 +8,7 @@
 const { require, DevToolsLoader } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 
 Services.prefs.setBoolPref("devtools.testing", true);
 registerCleanupFunction(() => {

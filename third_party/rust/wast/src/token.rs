@@ -161,10 +161,7 @@ impl Index<'_> {
     }
 
     pub(crate) fn is_resolved(&self) -> bool {
-        match self {
-            Index::Num(..) => true,
-            _ => false,
-        }
+        matches!(self, Index::Num(..))
     }
 }
 
@@ -257,7 +254,7 @@ impl<'a, K: Peek> Peek for ItemRef<'a, K> {
 }
 
 /// An `@name` annotation in source, currently of the form `@name "foo"`
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct NameAnnotation<'a> {
     /// The name specified for the item
     pub name: &'a str,

@@ -21,10 +21,9 @@ var svg = $("svg");
 
 SimpleTest.waitForExplicitFinish();
 
-function Test(svgFragmentIdentifier, valid, viewBoxString,
+function Test(svgFragmentIdentifier, viewBoxString,
               preserveAspectRatioString, zoomAndPanString) {
     this.svgFragmentIdentifier = svgFragmentIdentifier;
-    this.valid = valid;
 }
 
 function runTests() {
@@ -32,32 +31,12 @@ function runTests() {
   var rootElement = doc.documentElement;
 
   var tests = [
-      new Test("unknown", false),
-      new Test("svgView(viewBox(0,0,200,200))", true),
-      new Test("svgView(preserveAspectRatio(xMaxYMin slice))", true),
-      new Test("svgView(viewBox(1,2,3,4);preserveAspectRatio(xMinYMax))", true),
-      new Test("svgView(viewBox(none))", true),
-      new Test("svgView(zoomAndPan(disable))", true),
-      new Test("svgView(transform(translate(-10,-20) scale(2) rotate(45) translate(5,10)))", true),
-      // No duplicates allowed
-      new Test("svgView(zoomAndPan(disable);zoomAndPan(disable))", false),
-      new Test("svgView(viewBox(0,0,200,200);viewBox(0,0,200,200))", false),
-      new Test("svgView(preserveAspectRatio(xMaxYMin);preserveAspectRatio(xMaxYMin))", false),
-      new Test("svgView(transform(translate(0,200));transform(translate(0,200)))", false),
-      // No invalid values allowed
-      new Test("svgView(viewBox(bad)", false),
-      new Test("svgView(preserveAspectRatio(bad))", false),
-      new Test("svgView(zoomAndPan(bad))", false),
-      new Test("svgView(transform(bad))", false),
-      new Test("svgView", false),
-      new Test("svgView(", false),
-      new Test("svgView()", false),
-      // Be sure we verify that there's a closing paren for svgView()
-      // (and not too many closing parens)
-      new Test("svgView(zoomAndPan(disable)", false),
-      new Test("svgView(zoomAndPan(disable) ", false),
-      new Test("svgView(zoomAndPan(disable)]", false),
-      new Test("svgView(zoomAndPan(disable)))", false),
+      new Test("svgView(viewBox(0,0,200,200))"),
+      new Test("svgView(preserveAspectRatio(xMaxYMin slice))"),
+      new Test("svgView(viewBox(1,2,3,4);preserveAspectRatio(xMinYMax))"),
+      new Test("svgView(viewBox(none))"),
+      new Test("svgView(zoomAndPan(disable))"),
+      new Test("svgView(transform(translate(-10,-20) scale(2) rotate(45) translate(5,10)))"),
   ];
 
   var src = svg.getAttribute("src");
@@ -79,9 +58,6 @@ function runTests() {
     for (var i = 0; i < tests.length; i++) {
       var test = tests[i];
       svg.setAttribute("src", src + "#" + test.svgFragmentIdentifier);
-      is(rootElement.useCurrentView, test.valid,
-         "Expected " + test.svgFragmentIdentifier + " to be " +
-         (test.valid ? "valid" : "invalid"));
 
       // check that assigning a viewSpec does not modify the underlying
       // attribute values.

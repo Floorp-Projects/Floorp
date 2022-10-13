@@ -13,9 +13,9 @@ namespace mozilla {
 
 enum class MediaDecoderEventVisibility : int8_t { Observable, Suppressed };
 
-// Stores the seek target; the time to seek to, and whether an Accurate,
-// "Fast" (nearest keyframe), or "Video Only" (no audio seek) seek was
-// requested.
+// Stores the seek target. It includes (1) the time to seek to (2) type of seek
+// (accurate, previous keyframe, next keyframe) (3) the type of track needs to
+// performs seeking.
 struct SeekTarget {
   enum Type {
     Invalid,
@@ -23,25 +23,25 @@ struct SeekTarget {
     Accurate,
     NextFrame,
   };
+  enum Track {
+    All,
+    AudioOnly,
+    VideoOnly,
+  };
   SeekTarget()
       : mTime(media::TimeUnit::Invalid()),
         mType(SeekTarget::Invalid),
-        mVideoOnly(false) {}
-  SeekTarget(const media::TimeUnit& aTime, Type aType, bool aVideoOnly = false)
-      : mTime(aTime), mType(aType), mVideoOnly(aVideoOnly) {
+        mTargetTrack(Track::All) {}
+  SeekTarget(const media::TimeUnit& aTime, Type aType,
+             Track aTrack = Track::All)
+      : mTime(aTime), mType(aType), mTargetTrack(aTrack) {
     MOZ_ASSERT(mTime.IsValid());
   }
   SeekTarget(const SeekTarget& aOther)
       : mTime(aOther.mTime),
         mType(aOther.mType),
-        mVideoOnly(aOther.mVideoOnly) {
+        mTargetTrack(aOther.mTargetTrack) {
     MOZ_ASSERT(mTime.IsValid());
-  }
-  bool IsValid() const { return mType != SeekTarget::Invalid; }
-  void Reset() {
-    mTime = media::TimeUnit::Invalid();
-    mType = SeekTarget::Invalid;
-    mVideoOnly = false;
   }
   media::TimeUnit GetTime() const {
     MOZ_ASSERT(mTime.IsValid(), "Invalid SeekTarget");
@@ -52,11 +52,12 @@ struct SeekTarget {
     mTime = aTime;
   }
   void SetType(Type aType) { mType = aType; }
-  void SetVideoOnly(bool aVideoOnly) { mVideoOnly = aVideoOnly; }
   bool IsFast() const { return mType == SeekTarget::Type::PrevSyncPoint; }
   bool IsAccurate() const { return mType == SeekTarget::Type::Accurate; }
   bool IsNextFrame() const { return mType == SeekTarget::Type::NextFrame; }
-  bool IsVideoOnly() const { return mVideoOnly; }
+  bool IsVideoOnly() const { return mTargetTrack == Track::VideoOnly; }
+  bool IsAudioOnly() const { return mTargetTrack == Track::AudioOnly; }
+  bool IsAllTracks() const { return mTargetTrack == Track::All; }
   Type GetType() const { return mType; }
 
  private:
@@ -66,7 +67,7 @@ struct SeekTarget {
   // "Fast" seeks to the seek point preceding mTime, whereas
   // "Accurate" seeks as close as possible to mTime.
   Type mType;
-  bool mVideoOnly;
+  Track mTargetTrack;
 };
 
 }  // namespace mozilla

@@ -69,7 +69,8 @@ class DocAccessibleChild : public DocAccessibleChildBase {
                            const bool aDoSync = false);
   bool SendSelectionEvent(const uint64_t& aID, const uint64_t& aWidgetID,
                           const uint32_t& aType);
-  bool SendRoleChangedEvent(const a11y::role& aRole);
+  bool SendRoleChangedEvent(const a11y::role& aRole,
+                            uint8_t aRoleMapEntryIndex);
   bool SendScrollingEvent(const uint64_t& aID, const uint64_t& aType,
                           const uint32_t& aScrollX, const uint32_t& aScrollY,
                           const uint32_t& aMaxScrollX,
@@ -258,14 +259,17 @@ class DocAccessibleChild : public DocAccessibleChildBase {
 
   struct SerializedRoleChanged final : public DeferredEvent {
     explicit SerializedRoleChanged(DocAccessibleChild* aTarget,
-                                   a11y::role aRole)
-        : DeferredEvent(aTarget), mRole(aRole) {}
+                                   a11y::role aRole, uint8_t aRoleMapEntryIndex)
+        : DeferredEvent(aTarget),
+          mRole(aRole),
+          mRoleMapEntryIndex(aRoleMapEntryIndex) {}
 
     void Dispatch(DocAccessibleChild* aIPCDoc) override {
-      Unused << aIPCDoc->SendRoleChangedEvent(mRole);
+      Unused << aIPCDoc->SendRoleChangedEvent(mRole, mRoleMapEntryIndex);
     }
 
     a11y::role mRole;
+    uint8_t mRoleMapEntryIndex;
   };
 
   struct SerializedScrolling final : public DeferredEvent {

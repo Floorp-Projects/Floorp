@@ -288,6 +288,21 @@ class _RemoteSettingsExperimentLoader {
 
     if (recipes && !loadingError) {
       for (const r of recipes) {
+        if (r.appId !== "firefox-desktop") {
+          // Skip over recipes not intended for desktop. Experimenter publishes
+          // recipes into a collection per application (desktop goes to
+          // `nimbus-desktop-experiments`) but all preview experiments share the
+          // same collection (`nimbus-preview`).
+          //
+          // This is *not* the same as `lazy.APP_ID` which is used to
+          // distinguish between desktop Firefox and the desktop background
+          // updater.
+          continue;
+        }
+
+        const validateFeatures =
+          validationEnabled && !r.featureValidationOptOut;
+
         if (validationEnabled) {
           let validation = recipeValidator.validate(r);
           if (!validation.valid) {
@@ -336,7 +351,7 @@ class _RemoteSettingsExperimentLoader {
 
         let type = r.isRollout ? "rollout" : "experiment";
 
-        if (validationEnabled) {
+        if (validateFeatures) {
           const result = await this._validateBranches(r, validatorCache);
           if (!result.valid) {
             if (result.invalidBranchSlugs.length) {

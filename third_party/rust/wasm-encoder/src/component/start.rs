@@ -7,7 +7,7 @@ use crate::{ComponentSection, ComponentSectionId, Encode};
 /// ```
 /// use wasm_encoder::{Component, ComponentStartSection};
 ///
-/// let start = ComponentStartSection { function_index: 0, args: [] };
+/// let start = ComponentStartSection { function_index: 0, args: [0, 1], results: 1 };
 ///
 /// let mut component = Component::new();
 /// component.section(&start);
@@ -22,6 +22,11 @@ pub struct ComponentStartSection<A> {
     ///
     /// An argument is an index to a value.
     pub args: A,
+    /// The number of expected results for the start function.
+    ///
+    /// This should match the number of results for the type of
+    /// the function referenced by `function_index`.
+    pub results: u32,
 }
 
 impl<A> Encode for ComponentStartSection<A>
@@ -32,6 +37,7 @@ where
         let mut bytes = Vec::new();
         self.function_index.encode(&mut bytes);
         self.args.as_ref().encode(&mut bytes);
+        self.results.encode(&mut bytes);
         bytes.encode(sink);
     }
 }

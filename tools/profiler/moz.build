@@ -78,6 +78,10 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
                 SOURCES += [
                     "/toolkit/crashreporter/google-breakpad/src/common/linux/breakpad_getcontext.S"
                 ]
+        if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
+            UNIFIED_SOURCES += [
+                "core/PowerCounters-linux.cpp",
+            ]
         if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] != "FreeBSD":
             SOURCES += [
                 "core/EHABIStackWalk.cpp",

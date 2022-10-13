@@ -55,7 +55,8 @@ use self::component::*;
 pub use self::core::ValidatorResources;
 use self::core::*;
 use self::types::{TypeList, Types, TypesRef};
-pub use func::FuncValidator;
+pub use func::{FuncToValidate, FuncValidator, FuncValidatorAllocations};
+pub use operators::{Frame, FrameKind};
 
 fn check_max(cur_len: usize, amt_added: u32, max: usize, desc: &str, offset: usize) -> Result<()> {
     if max
@@ -64,13 +65,10 @@ fn check_max(cur_len: usize, amt_added: u32, max: usize, desc: &str, offset: usi
         .is_none()
     {
         if max == 1 {
-            return Err(BinaryReaderError::new(format!("multiple {}", desc), offset));
+            bail!(offset, "multiple {desc}");
         }
 
-        return Err(BinaryReaderError::new(
-            format!("{} count exceeds limit of {}", desc, max),
-            offset,
-        ));
+        bail!(offset, "{desc} count exceeds limit of {max}");
     }
 
     Ok(())
@@ -79,9 +77,9 @@ fn check_max(cur_len: usize, amt_added: u32, max: usize, desc: &str, offset: usi
 fn combine_type_sizes(a: usize, b: usize, offset: usize) -> Result<usize> {
     match a.checked_add(b) {
         Some(sum) if sum < MAX_WASM_TYPE_SIZE => Ok(sum),
-        _ => Err(BinaryReaderError::new(
-            format!("effective type size exceeds the limit of {MAX_WASM_TYPE_SIZE}"),
+        _ => Err(format_err!(
             offset,
+            "effective type size exceeds the limit of {MAX_WASM_TYPE_SIZE}",
         )),
     }
 }
@@ -170,12 +168,9 @@ impl State {
 
         match self {
             Self::Module => Ok(()),
-            Self::Component => Err(BinaryReaderError::new(
-                format!(
-                    "unexpected module {} section while parsing a component",
-                    section
-                ),
+            Self::Component => Err(format_err!(
                 offset,
+                "unexpected module {section} section while parsing a component",
             )),
             _ => unreachable!(),
         }
@@ -186,12 +181,9 @@ impl State {
 
         match self {
             Self::Component => Ok(()),
-            Self::Module => Err(BinaryReaderError::new(
-                format!(
-                    "unexpected component {} section while parsing a module",
-                    section
-                ),
+            Self::Module => Err(format_err!(
                 offset,
+                "unexpected component {section} section while parsing a module",
             )),
             _ => unreachable!(),
         }
@@ -300,7 +292,7 @@ pub enum ValidPayload<'a> {
     /// of the currently-used parser until this returned one ends.
     Parser(Parser),
     /// A function was found to be validate.
-    Func(FuncValidator<ValidatorResources>, FunctionBody<'a>),
+    Func(FuncToValidate<ValidatorResources>, FunctionBody<'a>),
     /// The end payload was validated and the types known to the validator
     /// are provided.
     End(Types),
@@ -359,8 +351,11 @@ impl Validator {
             }
         }
 
-        for (mut validator, body) in functions_to_validate {
+        let mut allocs = FuncValidatorAllocations::default();
+        for (func, body) in functions_to_validate {
+            let mut validator = func.into_validator(allocs);
             validator.validate(&body)?;
+            allocs = validator.into_allocations();
         }
 
         Ok(last_types.unwrap())
@@ -441,7 +436,6 @@ impl Validator {
                 return Ok(ValidPayload::Parser(parser.clone()));
             }
             InstanceSection(s) => self.instance_section(s)?,
-            AliasSection(s) => self.alias_section(s)?,
             CoreTypeSection(s) => self.core_type_section(s)?,
             ComponentSection { parser, range, .. } => {
                 self.component_section(range)?;
@@ -469,16 +463,14 @@ impl Validator {
             State::Unparsed(expected) => {
                 if let Some(expected) = expected {
                     if *expected != encoding {
-                        return Err(BinaryReaderError::new(
-                            format!(
-                                "expected a version header for a {}",
-                                match expected {
-                                    Encoding::Module => "module",
-                                    Encoding::Component => "component",
-                                }
-                            ),
+                        bail!(
                             range.start,
-                        ));
+                            "expected a version header for a {}",
+                            match expected {
+                                Encoding::Module => "module",
+                                Encoding::Component => "component",
+                            }
+                        );
                     }
                 }
             }
@@ -736,7 +728,7 @@ impl Validator {
         state.update_order(Order::Start, offset)?;
 
         let ty = state.module.get_func_type(func, &self.types, offset)?;
-        if !ty.params.is_empty() || !ty.returns.is_empty() {
+        if !ty.params().is_empty() || !ty.results().is_empty() {
             return Err(BinaryReaderError::new(
                 "invalid start function type",
                 offset,
@@ -833,37 +825,33 @@ impl Validator {
 
     /// Validates [`Payload::CodeSectionEntry`](crate::Payload).
     ///
-    /// This function will prepare a [`FuncValidator`] which can be used to
-    /// validate the function. The function body provided will be parsed only
-    /// enough to create the function validation context. After this the
-    /// [`OperatorsReader`](crate::readers::OperatorsReader) returned can be used to read the
-    /// opcodes of the function as well as feed information into the validator.
+    /// This function will prepare a [`FuncToValidate`] which can be used to
+    /// create a [`FuncValidator`] to validate the function. The function body
+    /// provided will not be parsed or validated by this function.
     ///
-    /// Note that the returned [`FuncValidator`] is "connected" to this
+    /// Note that the returned [`FuncToValidate`] is "connected" to this
     /// [`Validator`] in that it uses the internal context of this validator for
-    /// validating the function. The [`FuncValidator`] can be sent to
-    /// another thread, for example, to offload actual processing of functions
+    /// validating the function. The [`FuncToValidate`] can be sent to another
+    /// thread, for example, to offload actual processing of functions
     /// elsewhere.
     ///
     /// This method should only be called when parsing a module.
     pub fn code_section_entry(
         &mut self,
         body: &crate::FunctionBody,
-    ) -> Result<FuncValidator<ValidatorResources>> {
+    ) -> Result<FuncToValidate<ValidatorResources>> {
         let offset = body.range().start;
         self.state.ensure_module("code", offset)?;
 
         let state = self.module.as_mut().unwrap();
 
         let (index, ty) = state.next_code_index_and_type(offset)?;
-        Ok(FuncValidator::new(
+        Ok(FuncToValidate::new(
             index,
             ty,
-            0,
             ValidatorResources(state.module.arc().clone()),
             &self.features,
-        )
-        .unwrap())
+        ))
     }
 
     /// Validates [`Payload::DataSection`](crate::Payload).
@@ -876,13 +864,7 @@ impl Validator {
             "data",
             |state, _, _, count, offset| {
                 state.data_segment_count = count;
-                check_max(
-                    state.module.data_count.unwrap_or(0) as usize,
-                    count,
-                    MAX_WASM_DATA_SEGMENTS,
-                    "data segments",
-                    offset,
-                )
+                check_max(0, count, MAX_WASM_DATA_SEGMENTS, "data segments", offset)
             },
             |state, features, types, d, offset| state.add_data_segment(d, features, types, offset),
         )
@@ -935,20 +917,6 @@ impl Validator {
                     .last_mut()
                     .unwrap()
                     .add_core_instance(instance, types, offset)
-            },
-        )
-    }
-
-    /// Validates [`Payload::AliasSection`](crate::Payload).
-    ///
-    /// This method should only be called when parsing a component.
-    pub fn alias_section(&mut self, section: &crate::AliasSectionReader) -> Result<()> {
-        self.process_component_section(
-            section,
-            "core alias",
-            |_, _, _, _| Ok(()), // maximums checked via `add_alias`
-            |components, types, _, alias, offset| -> Result<(), BinaryReaderError> {
-                ComponentState::add_core_alias(components, alias, types, offset)
             },
         )
     }
@@ -1126,11 +1094,20 @@ impl Validator {
         let range = section.range();
         self.state.ensure_component("start", range.start)?;
 
-        let f = section.clone().read()?;
+        let mut section = section.clone();
+        let f = section.read()?;
+
+        if !section.eof() {
+            return Err(BinaryReaderError::new(
+                "trailing data at the end of the start section",
+                section.original_position(),
+            ));
+        }
 
         self.components.last_mut().unwrap().add_start(
             f.func_index,
             &f.arguments,
+            f.results,
             &self.types,
             range.start,
         )
@@ -1190,10 +1167,7 @@ impl Validator {
     ///
     /// Currently always returns an error.
     pub fn unknown_section(&mut self, id: u8, range: &Range<usize>) -> Result<()> {
-        Err(BinaryReaderError::new(
-            format!("malformed section id: {}", id),
-            range.start,
-        ))
+        Err(format_err!(range.start, "malformed section id: {id}"))
     }
 
     /// Validates [`Payload::End`](crate::Payload).
@@ -1230,10 +1204,10 @@ impl Validator {
 
                 // Validate that all values were used for the component
                 if let Some(index) = component.values.iter().position(|(_, used)| !*used) {
-                    return Err(BinaryReaderError::new(
-                        format!("value index {index} was not used as part of an instantiation, start function, or export"),
-                        offset,
-                    ));
+                    return Err(
+                        format_err!(offset,"value index {index} was not used as part of an instantiation, start function, or export"
+                            )
+                    );
                 }
 
                 // If there's a parent component, pop the stack, add it to the parent,
@@ -1311,7 +1285,7 @@ impl Validator {
         ) -> Result<()>,
     ) -> Result<()>
     where
-        T: SectionReader + Clone + SectionWithLimitedItems,
+        T: Clone + SectionWithLimitedItems,
     {
         let offset = section.range().start;
 
@@ -1391,16 +1365,16 @@ mod tests {
 
         match types.func_type_at(0) {
             Some(ty) => {
-                assert_eq!(ty.params.as_ref(), [ValType::I32, ValType::I64]);
-                assert_eq!(ty.returns.as_ref(), [ValType::I32]);
+                assert_eq!(ty.params(), [ValType::I32, ValType::I64]);
+                assert_eq!(ty.results(), [ValType::I32]);
             }
             _ => unreachable!(),
         }
 
         match types.func_type_at(1) {
             Some(ty) => {
-                assert_eq!(ty.params.as_ref(), [ValType::I64, ValType::I32]);
-                assert_eq!(ty.returns.as_ref(), []);
+                assert_eq!(ty.params(), [ValType::I64, ValType::I32]);
+                assert_eq!(ty.results(), []);
             }
             _ => unreachable!(),
         }
@@ -1434,16 +1408,16 @@ mod tests {
 
         match types.function_at(0) {
             Some(ty) => {
-                assert_eq!(ty.params.as_ref(), [ValType::I32, ValType::I64]);
-                assert_eq!(ty.returns.as_ref(), [ValType::I32]);
+                assert_eq!(ty.params(), [ValType::I32, ValType::I64]);
+                assert_eq!(ty.results(), [ValType::I32]);
             }
             _ => unreachable!(),
         }
 
         match types.tag_at(0) {
             Some(ty) => {
-                assert_eq!(ty.params.as_ref(), [ValType::I64, ValType::I32]);
-                assert_eq!(ty.returns.as_ref(), []);
+                assert_eq!(ty.params(), [ValType::I64, ValType::I32]);
+                assert_eq!(ty.results(), []);
             }
             _ => unreachable!(),
         }

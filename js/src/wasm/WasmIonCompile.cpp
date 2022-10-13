@@ -5770,11 +5770,10 @@ static bool EmitCallRef(FunctionCompiler& f) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
   const FuncType* funcType;
-  bool maybeNull;
   MDefinition* callee;
   DefVector args;
 
-  if (!f.iter().readCallRef(&funcType, &maybeNull, &callee, &args)) {
+  if (!f.iter().readCallRef(&funcType, &callee, &args)) {
     return false;
   }
 
@@ -5782,7 +5781,7 @@ static bool EmitCallRef(FunctionCompiler& f) {
     return true;
   }
 
-  if (maybeNull && !f.refAsNonNull(callee)) {
+  if (!f.refAsNonNull(callee)) {
     return false;
   }
 

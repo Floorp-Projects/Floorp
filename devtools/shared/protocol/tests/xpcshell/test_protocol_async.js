@@ -9,8 +9,8 @@
  * complete.
  */
 
-const { waitForTick } = require("devtools/shared/DevToolsUtils");
-const protocol = require("devtools/shared/protocol");
+const { waitForTick } = require("resource://devtools/shared/DevToolsUtils.js");
+const protocol = require("resource://devtools/shared/protocol.js");
 const { Arg, RetVal } = protocol;
 
 function simpleHello() {

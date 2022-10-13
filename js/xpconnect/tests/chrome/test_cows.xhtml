@@ -92,7 +92,6 @@ function COWTests() {
 
     // Test function objects.
     var func = function(x) { return 42; };
-    func.__exposedProps__ = { foo: "r" };
     func.foo = "foo property";
     var funcCOW = getCOW(func);
     try {
@@ -103,28 +102,8 @@ function COWTests() {
     }
     is(funcCOW(), 42, "Chrome functions should be callable");
 
-    // Test object with empty exposedProps
-    var strict = { __exposedProps__: {}, foo: "foo property" };
-    var strictCOW = getCOW(strict);
-    PROPS_TO_TEST.forEach(function(name) {
-        isPropHidden(strictCOW, name, "object with empty exposedProps");
-    });
-    is(getNames(strictCOW).length, 0,
-       "object with empty exposedProps shouldn't have any properties");
-
-    // Test object with one exposed property
-    var strict2 = { __exposedProps__: { foo: "r" }, foo: "foo property" };
-    var strictCOWr = getCOW(strict2);
-    PROPS_TO_TEST.forEach(function(name) {
-        isPropHidden(strictCOW, name, "object with exposed 'foo'");
-    });
-    is(getNames(strictCOWr).length, 0,
-       "exposed props does not enumerate anything");
-    is(getNames(strictCOWr)[0], undefined,
-       "exposed props does not enumerate anything");
-
     // Test writable property
-    var writable = getCOW({ __exposedProps__: {foo: 'w'}});
+    var writable = getCOW({});
     try {
         ok(!("foo" in writable),
            "non-existing write-only property shouldn't exist");
@@ -144,8 +123,7 @@ function COWTests() {
     }
 
     // Test readable property
-    var readable = { __exposedProps__: {foo: 'r'},
-                     foo: 5,
+    var readable = { foo: 5,
                      bar: 6 };
     try {
         isPropHidden(getCOW(readable), "foo", undefined,
@@ -177,7 +155,7 @@ function COWTests() {
     }
 
     // Test read/write property
-    var readwrite = getCOW({ __exposedProps__: {foo: 'rw'}});
+    var readwrite = getCOW({});
     try {
         ok(!("foo" in readwrite),
            "non-existing readwrite property shouldn't exist");
@@ -209,8 +187,7 @@ Cu.evalInSandbox('(' + COWTests.toString() + ')()', sandbox);
 
 // Test that COWed objects passing from content to chrome get unwrapped.
 function returnCOW() {
-    return getCOW({__exposedProps__: {},
-                  bar: 6});
+    return getCOW({bar: 6});
 }
 
 var unwrapped = Cu.evalInSandbox(

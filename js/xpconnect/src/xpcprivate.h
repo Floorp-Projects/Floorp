@@ -210,7 +210,6 @@ class nsXPConnect final : public nsIXPConnect {
  public:
   // all the interface method declarations...
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIXPCONNECT
 
   // non-interface implementation
  public:
@@ -1335,12 +1334,14 @@ class XPCWrappedNativeTearOff final {
 class XPCWrappedNative final : public nsIXPConnectWrappedNative {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
-  NS_DECL_NSIXPCONNECTWRAPPEDNATIVE
 
   NS_DECL_CYCLE_COLLECTION_CLASS(XPCWrappedNative)
 
+  JSObject* GetJSObject() override;
+
   bool IsValid() const { return mFlatJSObject.hasFlag(FLAT_JS_OBJECT_VALID); }
+
+  nsresult DebugDump(int16_t depth);
 
 #define XPC_SCOPE_WORD(s) (intptr_t(s))
 #define XPC_SCOPE_MASK (intptr_t(0x3))
@@ -1572,13 +1573,12 @@ class nsXPCWrappedJS final : protected nsAutoXPTCStub,
                              public mozilla::LinkedListElement<nsXPCWrappedJS> {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
-  NS_DECL_NSIXPCONNECTWRAPPEDJS
-  NS_DECL_NSIXPCONNECTWRAPPEDJSUNMARKGRAY
   NS_DECL_NSISUPPORTSWEAKREFERENCE
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(
       nsXPCWrappedJS, nsIXPConnectWrappedJS)
+
+  JSObject* GetJSObject() override;
 
   // This method is defined in XPCWrappedJSClass.cpp to preserve VCS blame.
   NS_IMETHOD CallMethod(uint16_t methodIndex, const nsXPTMethodInfo* info,
@@ -1594,6 +1594,8 @@ class nsXPCWrappedJS final : protected nsAutoXPTCStub,
                                REFNSIID aIID, nsXPCWrappedJS** wrapper);
 
   nsISomeInterface* GetXPTCStub() { return mXPTCStub; }
+
+  nsresult DebugDump(int16_t depth);
 
   /**
    * This getter does not change the color of the JSObject meaning that the
@@ -1673,6 +1675,8 @@ class nsXPCWrappedJS final : protected nsAutoXPTCStub,
   void Unlink();
 
  private:
+  friend class nsIXPConnectWrappedJS;
+
   JS::Compartment* Compartment() const {
     return JS::GetCompartment(mJSObj.unbarrieredGet());
   }

@@ -32,7 +32,7 @@ pub enum CustomPlace {
 }
 
 /// Known sections that custom sections can be placed relative to.
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 #[allow(missing_docs)]
 pub enum CustomPlaceAnchor {
     Type,

@@ -5,7 +5,7 @@
 
 // Test the ResourceCommand API around THREAD_STATE
 
-const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
+const ResourceCommand = require("resource://devtools/shared/commands/resource/resource-command.js");
 
 const BREAKPOINT_TEST_URL = URL_ROOT_SSL + "breakpoint_document.html";
 const REMOTE_IFRAME_URL =

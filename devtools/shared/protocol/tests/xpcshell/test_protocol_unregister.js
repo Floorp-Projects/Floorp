@@ -1,6 +1,6 @@
 "use strict";
 
-const { types } = require("devtools/shared/protocol");
+const { types } = require("resource://devtools/shared/protocol.js");
 
 function run_test() {
   types.addType("test", {

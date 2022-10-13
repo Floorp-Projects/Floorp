@@ -255,7 +255,7 @@ static nsresult GetDownloadDirectory(nsIFile** _directory,
               "chrome://mozapps/locale/downloads/downloads.properties",
               getter_AddRefs(downloadBundle));
           if (NS_SUCCEEDED(rv)) {
-            rv = downloadBundle->GetStringFromName("DownloadsFolder",
+            rv = downloadBundle->GetStringFromName("downloadsFolder",
                                                    downloadLocalized);
           }
           if (NS_FAILED(rv)) {

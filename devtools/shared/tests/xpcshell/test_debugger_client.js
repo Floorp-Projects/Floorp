@@ -5,8 +5,12 @@
 
 // DevToolsClient tests
 
-const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DevToolsClient } = require("devtools/client/devtools-client");
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+const {
+  DevToolsClient,
+} = require("resource://devtools/client/devtools-client.js");
 
 add_task(async function() {
   await testCloseLoops();

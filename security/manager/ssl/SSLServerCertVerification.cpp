@@ -104,7 +104,7 @@
 #include "ScopedNSSTypes.h"
 #include "SharedCertVerifier.h"
 #include "SharedSSLState.h"
-#include "TransportSecurityInfo.h"  // For RememberCertErrorsTable
+#include "TransportSecurityInfo.h"
 #include "VerifySSLServerCertChild.h"
 #include "cert.h"
 #include "mozilla/Assertions.h"
@@ -1094,11 +1094,6 @@ SSLServerCertVerificationResult::Run() {
   mInfoObject->SetMadeOCSPRequest(mMadeOCSPRequests);
 
   if (mSucceeded) {
-    // Certificate verification succeeded. Delete any potential record of
-    // certificate error bits.
-    RememberCertErrorsTable::GetInstance().RememberCertHasError(mInfoObject,
-                                                                SECSuccess);
-
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("SSLServerCertVerificationResult::Run setting NEW cert"));
     nsTArray<uint8_t> certBytes(mBuiltChain.ElementAt(0).Clone());

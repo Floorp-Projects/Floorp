@@ -107,7 +107,7 @@ instructions! {
     (Some(throw_valid), throw, Control, 850),
     (Some(rethrow_valid), rethrow, Control),
     // Parametric instructions.
-    (Some(drop_valid), drop, Parametric),
+    (Some(drop_valid), drop, Parametric, 990),
     (Some(select_valid), select, Parametric),
     // Variable instructions.
     (Some(local_get_valid), local_get, Variable),
@@ -425,8 +425,8 @@ instructions! {
     (Some(simd_v128_v128_on_stack), i8x16_max_s, Vector),
     (Some(simd_v128_v128_on_stack), i8x16_max_u, Vector),
     (Some(simd_v128_v128_on_stack), i8x16_rounding_average_u, Vector),
-    (Some(simd_v128_on_stack), i16x8_ext_add_pairwise_i8x16s, Vector),
-    (Some(simd_v128_on_stack), i16x8_ext_add_pairwise_i8x16u, Vector),
+    (Some(simd_v128_on_stack), i16x8_extadd_pairwise_i8x16s, Vector),
+    (Some(simd_v128_on_stack), i16x8_extadd_pairwise_i8x16u, Vector),
     (Some(simd_v128_on_stack), i16x8_abs, Vector),
     (Some(simd_v128_on_stack), i16x8_neg, Vector),
     (Some(simd_v128_v128_on_stack), i16x8q15_mulr_sat_s, Vector),
@@ -453,12 +453,12 @@ instructions! {
     (Some(simd_v128_v128_on_stack), i16x8_max_s, Vector),
     (Some(simd_v128_v128_on_stack), i16x8_max_u, Vector),
     (Some(simd_v128_v128_on_stack), i16x8_rounding_average_u, Vector),
-    (Some(simd_v128_v128_on_stack), i16x8_ext_mul_low_i8x16s, Vector),
-    (Some(simd_v128_v128_on_stack), i16x8_ext_mul_high_i8x16s, Vector),
-    (Some(simd_v128_v128_on_stack), i16x8_ext_mul_low_i8x16u, Vector),
-    (Some(simd_v128_v128_on_stack), i16x8_ext_mul_high_i8x16u, Vector),
-    (Some(simd_v128_on_stack), i32x4_ext_add_pairwise_i16x8s, Vector),
-    (Some(simd_v128_on_stack), i32x4_ext_add_pairwise_i16x8u, Vector),
+    (Some(simd_v128_v128_on_stack), i16x8_extmul_low_i8x16s, Vector),
+    (Some(simd_v128_v128_on_stack), i16x8_extmul_high_i8x16s, Vector),
+    (Some(simd_v128_v128_on_stack), i16x8_extmul_low_i8x16u, Vector),
+    (Some(simd_v128_v128_on_stack), i16x8_extmul_high_i8x16u, Vector),
+    (Some(simd_v128_on_stack), i32x4_extadd_pairwise_i16x8s, Vector),
+    (Some(simd_v128_on_stack), i32x4_extadd_pairwise_i16x8u, Vector),
     (Some(simd_v128_on_stack), i32x4_abs, Vector),
     (Some(simd_v128_on_stack), i32x4_neg, Vector),
     (Some(simd_v128_on_stack), i32x4_all_true, Vector),
@@ -478,10 +478,10 @@ instructions! {
     (Some(simd_v128_v128_on_stack), i32x4_max_s, Vector),
     (Some(simd_v128_v128_on_stack), i32x4_max_u, Vector),
     (Some(simd_v128_v128_on_stack), i32x4_dot_i16x8s, Vector),
-    (Some(simd_v128_v128_on_stack), i32x4_ext_mul_low_i16x8s, Vector),
-    (Some(simd_v128_v128_on_stack), i32x4_ext_mul_high_i16x8s, Vector),
-    (Some(simd_v128_v128_on_stack), i32x4_ext_mul_low_i16x8u, Vector),
-    (Some(simd_v128_v128_on_stack), i32x4_ext_mul_high_i16x8u, Vector),
+    (Some(simd_v128_v128_on_stack), i32x4_extmul_low_i16x8s, Vector),
+    (Some(simd_v128_v128_on_stack), i32x4_extmul_high_i16x8s, Vector),
+    (Some(simd_v128_v128_on_stack), i32x4_extmul_low_i16x8u, Vector),
+    (Some(simd_v128_v128_on_stack), i32x4_extmul_high_i16x8u, Vector),
     (Some(simd_v128_on_stack), i64x2_abs, Vector),
     (Some(simd_v128_on_stack), i64x2_neg, Vector),
     (Some(simd_v128_on_stack), i64x2_all_true, Vector),
@@ -496,10 +496,10 @@ instructions! {
     (Some(simd_v128_v128_on_stack), i64x2_add, Vector),
     (Some(simd_v128_v128_on_stack), i64x2_sub, Vector),
     (Some(simd_v128_v128_on_stack), i64x2_mul, Vector),
-    (Some(simd_v128_v128_on_stack), i64x2_ext_mul_low_i32x4s, Vector),
-    (Some(simd_v128_v128_on_stack), i64x2_ext_mul_high_i32x4s, Vector),
-    (Some(simd_v128_v128_on_stack), i64x2_ext_mul_low_i32x4u, Vector),
-    (Some(simd_v128_v128_on_stack), i64x2_ext_mul_high_i32x4u, Vector),
+    (Some(simd_v128_v128_on_stack), i64x2_extmul_low_i32x4s, Vector),
+    (Some(simd_v128_v128_on_stack), i64x2_extmul_high_i32x4s, Vector),
+    (Some(simd_v128_v128_on_stack), i64x2_extmul_low_i32x4u, Vector),
+    (Some(simd_v128_v128_on_stack), i64x2_extmul_high_i32x4u, Vector),
     (Some(simd_v128_on_stack), f32x4_ceil, Vector),
     (Some(simd_v128_on_stack), f32x4_floor, Vector),
     (Some(simd_v128_on_stack), f32x4_trunc, Vector),
@@ -545,13 +545,17 @@ instructions! {
     (Some(simd_v128_on_stack_relaxed), i32x4_relaxed_trunc_sat_f64x2s_zero, Vector),
     (Some(simd_v128_on_stack_relaxed), i32x4_relaxed_trunc_sat_f64x2u_zero, Vector),
     (Some(simd_v128_v128_v128_on_stack_relaxed), f32x4_fma, Vector),
-    (Some(simd_v128_v128_v128_on_stack_relaxed), f32x4_fms, Vector),
+    (Some(simd_v128_v128_v128_on_stack_relaxed), f32x4_fnma, Vector),
     (Some(simd_v128_v128_v128_on_stack_relaxed), f64x2_fma, Vector),
-    (Some(simd_v128_v128_v128_on_stack_relaxed), f64x2_fms, Vector),
+    (Some(simd_v128_v128_v128_on_stack_relaxed), f64x2_fnma, Vector),
     (Some(simd_v128_v128_on_stack_relaxed), f32x4_relaxed_min, Vector),
     (Some(simd_v128_v128_on_stack_relaxed), f32x4_relaxed_max, Vector),
     (Some(simd_v128_v128_on_stack_relaxed), f64x2_relaxed_min, Vector),
     (Some(simd_v128_v128_on_stack_relaxed), f64x2_relaxed_max, Vector),
+    (Some(simd_v128_v128_on_stack_relaxed), i16x8_relaxed_q15mulr_s, Vector),
+    (Some(simd_v128_v128_on_stack_relaxed), i16x8_dot_i8x16_i7x16_s, Vector),
+    (Some(simd_v128_v128_v128_on_stack_relaxed), i32x4_dot_i8x16_i7x16_add_s, Vector),
+    (Some(simd_v128_v128_v128_on_stack_relaxed), f32x4_relaxed_dot_bf16x8_add_f32x4, Vector),
 }
 
 pub(crate) struct CodeBuilderAllocations {
@@ -3829,8 +3833,8 @@ simd_binop!(I8x16MinU, i8x16_min_u);
 simd_binop!(I8x16MaxS, i8x16_max_s);
 simd_binop!(I8x16MaxU, i8x16_max_u);
 simd_binop!(I8x16RoundingAverageU, i8x16_rounding_average_u);
-simd_unop!(I16x8ExtAddPairwiseI8x16S, i16x8_ext_add_pairwise_i8x16s);
-simd_unop!(I16x8ExtAddPairwiseI8x16U, i16x8_ext_add_pairwise_i8x16u);
+simd_unop!(I16x8ExtAddPairwiseI8x16S, i16x8_extadd_pairwise_i8x16s);
+simd_unop!(I16x8ExtAddPairwiseI8x16U, i16x8_extadd_pairwise_i8x16u);
 simd_unop!(I16x8Abs, i16x8_abs);
 simd_unop!(I16x8Neg, i16x8_neg);
 simd_binop!(I16x8Q15MulrSatS, i16x8q15_mulr_sat_s);
@@ -3857,12 +3861,12 @@ simd_binop!(I16x8MinU, i16x8_min_u);
 simd_binop!(I16x8MaxS, i16x8_max_s);
 simd_binop!(I16x8MaxU, i16x8_max_u);
 simd_binop!(I16x8RoundingAverageU, i16x8_rounding_average_u);
-simd_binop!(I16x8ExtMulLowI8x16S, i16x8_ext_mul_low_i8x16s);
-simd_binop!(I16x8ExtMulHighI8x16S, i16x8_ext_mul_high_i8x16s);
-simd_binop!(I16x8ExtMulLowI8x16U, i16x8_ext_mul_low_i8x16u);
-simd_binop!(I16x8ExtMulHighI8x16U, i16x8_ext_mul_high_i8x16u);
-simd_unop!(I32x4ExtAddPairwiseI16x8S, i32x4_ext_add_pairwise_i16x8s);
-simd_unop!(I32x4ExtAddPairwiseI16x8U, i32x4_ext_add_pairwise_i16x8u);
+simd_binop!(I16x8ExtMulLowI8x16S, i16x8_extmul_low_i8x16s);
+simd_binop!(I16x8ExtMulHighI8x16S, i16x8_extmul_high_i8x16s);
+simd_binop!(I16x8ExtMulLowI8x16U, i16x8_extmul_low_i8x16u);
+simd_binop!(I16x8ExtMulHighI8x16U, i16x8_extmul_high_i8x16u);
+simd_unop!(I32x4ExtAddPairwiseI16x8S, i32x4_extadd_pairwise_i16x8s);
+simd_unop!(I32x4ExtAddPairwiseI16x8U, i32x4_extadd_pairwise_i16x8u);
 simd_unop!(I32x4Abs, i32x4_abs);
 simd_unop!(I32x4Neg, i32x4_neg);
 simd_unop!(I32x4AllTrue, i32x4_all_true, V128 -> I32);
@@ -3882,10 +3886,10 @@ simd_binop!(I32x4MinU, i32x4_min_u);
 simd_binop!(I32x4MaxS, i32x4_max_s);
 simd_binop!(I32x4MaxU, i32x4_max_u);
 simd_binop!(I32x4DotI16x8S, i32x4_dot_i16x8s);
-simd_binop!(I32x4ExtMulLowI16x8S, i32x4_ext_mul_low_i16x8s);
-simd_binop!(I32x4ExtMulHighI16x8S, i32x4_ext_mul_high_i16x8s);
-simd_binop!(I32x4ExtMulLowI16x8U, i32x4_ext_mul_low_i16x8u);
-simd_binop!(I32x4ExtMulHighI16x8U, i32x4_ext_mul_high_i16x8u);
+simd_binop!(I32x4ExtMulLowI16x8S, i32x4_extmul_low_i16x8s);
+simd_binop!(I32x4ExtMulHighI16x8S, i32x4_extmul_high_i16x8s);
+simd_binop!(I32x4ExtMulLowI16x8U, i32x4_extmul_low_i16x8u);
+simd_binop!(I32x4ExtMulHighI16x8U, i32x4_extmul_high_i16x8u);
 simd_unop!(I64x2Abs, i64x2_abs);
 simd_unop!(I64x2Neg, i64x2_neg);
 simd_unop!(I64x2AllTrue, i64x2_all_true, V128 -> I32);
@@ -3900,10 +3904,10 @@ simd_shift!(I64x2ShrU, i64x2_shr_u);
 simd_binop!(I64x2Add, i64x2_add);
 simd_binop!(I64x2Sub, i64x2_sub);
 simd_binop!(I64x2Mul, i64x2_mul);
-simd_binop!(I64x2ExtMulLowI32x4S, i64x2_ext_mul_low_i32x4s);
-simd_binop!(I64x2ExtMulHighI32x4S, i64x2_ext_mul_high_i32x4s);
-simd_binop!(I64x2ExtMulLowI32x4U, i64x2_ext_mul_low_i32x4u);
-simd_binop!(I64x2ExtMulHighI32x4U, i64x2_ext_mul_high_i32x4u);
+simd_binop!(I64x2ExtMulLowI32x4S, i64x2_extmul_low_i32x4s);
+simd_binop!(I64x2ExtMulHighI32x4S, i64x2_extmul_high_i32x4s);
+simd_binop!(I64x2ExtMulLowI32x4U, i64x2_extmul_low_i32x4u);
+simd_binop!(I64x2ExtMulHighI32x4U, i64x2_extmul_high_i32x4u);
 simd_unop!(F32x4Ceil, f32x4_ceil);
 simd_unop!(F32x4Floor, f32x4_floor);
 simd_unop!(F32x4Trunc, f32x4_trunc);
@@ -3956,15 +3960,22 @@ simd_unop!(
     I32x4RelaxedTruncSatF64x2UZero,
     i32x4_relaxed_trunc_sat_f64x2u_zero
 );
-simd_ternop!(F32x4Fma, f32x4_fma);
-simd_ternop!(F32x4Fms, f32x4_fms);
-simd_ternop!(F64x2Fma, f64x2_fma);
-simd_ternop!(F64x2Fms, f64x2_fms);
-simd_ternop!(I8x16LaneSelect, i8x16_laneselect);
-simd_ternop!(I16x8LaneSelect, i16x8_laneselect);
-simd_ternop!(I32x4LaneSelect, i32x4_laneselect);
-simd_ternop!(I64x2LaneSelect, i64x2_laneselect);
+simd_ternop!(F32x4RelaxedFma, f32x4_fma);
+simd_ternop!(F32x4RelaxedFnma, f32x4_fnma);
+simd_ternop!(F64x2RelaxedFma, f64x2_fma);
+simd_ternop!(F64x2RelaxedFnma, f64x2_fnma);
+simd_ternop!(I8x16RelaxedLaneselect, i8x16_laneselect);
+simd_ternop!(I16x8RelaxedLaneselect, i16x8_laneselect);
+simd_ternop!(I32x4RelaxedLaneselect, i32x4_laneselect);
+simd_ternop!(I64x2RelaxedLaneselect, i64x2_laneselect);
 simd_binop!(F32x4RelaxedMin, f32x4_relaxed_min);
 simd_binop!(F32x4RelaxedMax, f32x4_relaxed_max);
 simd_binop!(F64x2RelaxedMin, f64x2_relaxed_min);
 simd_binop!(F64x2RelaxedMax, f64x2_relaxed_max);
+simd_binop!(I16x8RelaxedQ15mulrS, i16x8_relaxed_q15mulr_s);
+simd_binop!(I16x8DotI8x16I7x16S, i16x8_dot_i8x16_i7x16_s);
+simd_ternop!(I32x4DotI8x16I7x16AddS, i32x4_dot_i8x16_i7x16_add_s);
+simd_ternop!(
+    F32x4RelaxedDotBf16x8AddF32x4,
+    f32x4_relaxed_dot_bf16x8_add_f32x4
+);

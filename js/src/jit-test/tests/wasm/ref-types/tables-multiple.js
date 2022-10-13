@@ -404,7 +404,7 @@ assertErrorMessage(() => wasmEvalText(
       (func $f (result i32)
        (table.init $t0 (i32.const 0) (i32.const 0) (i32.const 0))))`), // no segment
                    SyntaxError,
-                   /failed to find elem/);
+                   /failed to find name/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module

@@ -1773,7 +1773,7 @@ bool DocAccessible::UpdateAccessibleOnAttrChange(dom::Element* aElement,
     if (mContent == aElement) {
       SetRoleMapEntryForDoc(aElement);
       if (mIPCDoc) {
-        mIPCDoc->SendRoleChangedEvent(Role());
+        mIPCDoc->SendRoleChangedEvent(Role(), mRoleMapEntryIndex);
       }
 
       return true;
@@ -1826,7 +1826,7 @@ void DocAccessible::UpdateRootElIfNeeded() {
     mContent = rootEl;
     SetRoleMapEntryForDoc(rootEl);
     if (mIPCDoc) {
-      mIPCDoc->SendRoleChangedEvent(Role());
+      mIPCDoc->SendRoleChangedEvent(Role(), mRoleMapEntryIndex);
     }
   }
 }

@@ -5,16 +5,17 @@
 #ifndef SSLTokensCache_h_
 #define SSLTokensCache_h_
 
-#include "nsIMemoryReporter.h"
-#include "nsClassHashtable.h"
-#include "nsTArray.h"
+#include "CertVerifier.h"  // For EVStatus
+#include "TransportSecurityInfo.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPtr.h"
+#include "nsClassHashtable.h"
+#include "nsIMemoryReporter.h"
+#include "nsTArray.h"
+#include "nsTHashMap.h"
 #include "nsXULAppAPI.h"
-#include "TransportSecurityInfo.h"
-#include "CertVerifier.h"  // For EVStatus
 
 namespace mozilla {
 namespace net {
@@ -28,6 +29,8 @@ struct SessionCacheInfo {
   nsTArray<uint8_t> mServerCertBytes;
   Maybe<nsTArray<nsTArray<uint8_t>>> mSucceededCertChainBytes;
   Maybe<bool> mIsBuiltCertChainRootBuiltInRoot;
+  nsITransportSecurityInfo::OverridableErrorCategory mOverridableErrorCategory;
+  Maybe<nsTArray<nsTArray<uint8_t>>> mFailedCertChainBytes;
 };
 
 class SSLTokensCache : public nsIMemoryReporter {

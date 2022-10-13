@@ -12,7 +12,7 @@ const {
 } = require("resource://devtools/shared/heapsnapshot/CensusUtils.js");
 const {
   deduplicatePaths,
-} = require("resource://devtools/shared/heapsnapshot/shortest-paths");
+} = require("resource://devtools/shared/heapsnapshot/shortest-paths.js");
 
 const DEFAULT_MAX_DEPTH = 4;
 const DEFAULT_MAX_SIBLINGS = 15;

@@ -1008,126 +1008,6 @@ static void AccumulateCipherSuite(Telemetry::HistogramID probe,
   Telemetry::Accumulate(probe, value);
 }
 
-// In the case of session resumption, the AuthCertificate hook has been bypassed
-// (because we've previously successfully connected to our peer). That being the
-// case, we unfortunately don't know what the verified certificate chain was, if
-// the peer's server certificate verified as extended validation, or what its CT
-// status is (if enabled). To address this, we attempt to build a certificate
-// chain here using as much of the original context as possible (e.g. stapled
-// OCSP responses, SCTs, the hostname, the first party domain, etc.). Note that
-// because we are on the socket thread, this must not cause any network
-// requests, hence the use of FLAG_LOCAL_ONLY.
-static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
-                                                  nsNSSSocketInfo* infoObject) {
-  MOZ_ASSERT(fd);
-  MOZ_ASSERT(infoObject);
-
-  if (!fd || !infoObject) {
-    return;
-  }
-
-  UniqueCERTCertificate cert(SSL_PeerCertificate(fd));
-  MOZ_ASSERT(cert, "SSL_PeerCertificate failed in TLS handshake callback?");
-  if (!cert) {
-    return;
-  }
-
-  Maybe<nsTArray<nsTArray<uint8_t>>> maybePeerCertsBytes;
-  UniqueCERTCertList peerCertChain(SSL_PeerCertificateChain(fd));
-  if (!peerCertChain) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("RebuildVerifiedCertificateInformation: failed to get peer "
-             "certificate chain"));
-  } else {
-    nsTArray<nsTArray<uint8_t>> peerCertsBytes;
-    for (CERTCertListNode* n = CERT_LIST_HEAD(peerCertChain);
-         !CERT_LIST_END(n, peerCertChain); n = CERT_LIST_NEXT(n)) {
-      // Don't include the end-entity certificate.
-      if (n == CERT_LIST_HEAD(peerCertChain)) {
-        continue;
-      }
-      nsTArray<uint8_t> certBytes;
-      certBytes.AppendElements(n->cert->derCert.data, n->cert->derCert.len);
-      peerCertsBytes.AppendElement(std::move(certBytes));
-    }
-    maybePeerCertsBytes.emplace(std::move(peerCertsBytes));
-  }
-
-  RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
-  MOZ_ASSERT(certVerifier,
-             "Certificate verifier uninitialized in TLS handshake callback?");
-  if (!certVerifier) {
-    return;
-  }
-
-  // We don't own these pointers.
-  const SECItemArray* stapledOCSPResponses = SSL_PeerStapledOCSPResponses(fd);
-  Maybe<nsTArray<uint8_t>> stapledOCSPResponse;
-  // we currently only support single stapled responses
-  if (stapledOCSPResponses && stapledOCSPResponses->len == 1) {
-    stapledOCSPResponse.emplace();
-    stapledOCSPResponse->SetCapacity(stapledOCSPResponses->items[0].len);
-    stapledOCSPResponse->AppendElements(stapledOCSPResponses->items[0].data,
-                                        stapledOCSPResponses->items[0].len);
-  }
-
-  Maybe<nsTArray<uint8_t>> sctsFromTLSExtension;
-  const SECItem* sctsFromTLSExtensionSECItem = SSL_PeerSignedCertTimestamps(fd);
-  if (sctsFromTLSExtensionSECItem) {
-    sctsFromTLSExtension.emplace();
-    sctsFromTLSExtension->SetCapacity(sctsFromTLSExtensionSECItem->len);
-    sctsFromTLSExtension->AppendElements(sctsFromTLSExtensionSECItem->data,
-                                         sctsFromTLSExtensionSECItem->len);
-  }
-
-  int flags = mozilla::psm::CertVerifier::FLAG_LOCAL_ONLY;
-  if (!infoObject->SharedState().IsOCSPStaplingEnabled() ||
-      !infoObject->SharedState().IsOCSPMustStapleEnabled()) {
-    flags |= CertVerifier::FLAG_TLS_IGNORE_STATUS_REQUEST;
-  }
-
-  EVStatus evStatus;
-  CertificateTransparencyInfo certificateTransparencyInfo;
-  nsTArray<nsTArray<uint8_t>> builtChainCertBytes;
-  nsTArray<uint8_t> certBytes(cert->derCert.data, cert->derCert.len);
-  bool isBuiltCertChainRootBuiltInRoot = false;
-  mozilla::pkix::Result rv = certVerifier->VerifySSLServerCert(
-      certBytes, mozilla::pkix::Now(), infoObject, infoObject->GetHostName(),
-      builtChainCertBytes, flags, maybePeerCertsBytes, stapledOCSPResponse,
-      sctsFromTLSExtension, Nothing(), infoObject->GetOriginAttributes(),
-      &evStatus,
-      nullptr,  // OCSP stapling telemetry
-      nullptr,  // key size telemetry
-      nullptr,  // pinning telemetry
-      &certificateTransparencyInfo, &isBuiltCertChainRootBuiltInRoot);
-
-  if (rv != Success) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("HandshakeCallback: couldn't rebuild verified certificate info"));
-  }
-
-  nsCOMPtr<nsIX509Cert> x509Cert(new nsNSSCertificate(cert.get()));
-  if (rv == Success && evStatus == EVStatus::EV) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("HandshakeCallback using NEW cert (is EV)"));
-    infoObject->SetServerCert(x509Cert, EVStatus::EV);
-  } else {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("HandshakeCallback using NEW cert (is not EV)"));
-    infoObject->SetServerCert(x509Cert, EVStatus::NotEV);
-  }
-
-  if (rv == Success) {
-    uint16_t status =
-        TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(
-            certificateTransparencyInfo);
-    infoObject->SetCertificateTransparencyStatus(status);
-    infoObject->SetSucceededCertChain(std::move(builtChainCertBytes));
-    infoObject->SetIsBuiltCertChainRootBuiltInRoot(
-        isBuiltCertChainRootBuiltInRoot);
-  }
-}
-
 void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   SECStatus rv;
 
@@ -1245,7 +1125,6 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
   bool deprecatedTlsVer =
       (channelInfo.protocolVersion < SSL_LIBRARY_VERSION_TLS_1_2);
-  RememberCertErrorsTable::GetInstance().LookupCertErrorBits(infoObject);
 
   uint32_t state;
   if (renegotiationUnsafe || deprecatedTlsVer) {
@@ -1265,11 +1144,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("HandshakeCallback KEEPING existing cert\n"));
   } else {
-    if (StaticPrefs::network_ssl_tokens_cache_enabled()) {
-      infoObject->RebuildCertificateInfoFromSSLTokenCache();
-    } else {
-      RebuildVerifiedCertificateInformation(fd, infoObject);
-    }
+    infoObject->RebuildCertificateInfoFromSSLTokenCache();
   }
 
   nsITransportSecurityInfo::OverridableErrorCategory overridableErrorCategory;

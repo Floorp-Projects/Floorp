@@ -248,7 +248,6 @@ figure > img {
 
 #homepage-reset-success > span {
   position: relative;
-  padding-inline-start: calc(22px + .5em);
 }
 
 #homepage-reset-success > span::before {
@@ -262,7 +261,7 @@ figure > img {
   width: 22px;
   height: 22px;
 
-  position: absolute;
-  inset-inline-start: 0;
-  inset-block-start: calc((1em - 22px) / 2);
+  display: inline-block;
+  margin-inline-end: 0.5em;
+  vertical-align: middle;
 }

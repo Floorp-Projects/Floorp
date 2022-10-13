@@ -750,7 +750,7 @@ var PanelMultiView = class extends AssociatedToNode {
         viewNode.classList.add("PanelUI-subView");
       }
 
-      await this._transitionViews(prevPanelView.node, viewNode, false, anchor);
+      await this._transitionViews(prevPanelView.node, viewNode, false);
     } finally {
       if (anchor) {
         anchor.removeAttribute("open");

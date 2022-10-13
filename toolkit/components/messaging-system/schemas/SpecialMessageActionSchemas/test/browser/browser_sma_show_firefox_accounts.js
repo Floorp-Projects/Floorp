@@ -43,4 +43,24 @@ add_task(async function test_SHOW_FIREFOX_ACCOUNTS() {
       "should load fxa with a custom endpoint and extra parameters in url"
     );
   });
+
+  add_task(async function test_SHOW_FIREFOX_ACCOUNTS_where() {
+    // Open FXA with a 'where' prop
+    const action = {
+      type: "SHOW_FIREFOX_ACCOUNTS",
+      data: {
+        entrypoint: "activity-stream-firstrun",
+        where: "tab",
+      },
+    };
+    const tabPromise = BrowserTestUtils.waitForNewTab(
+      gBrowser,
+      "https://example.com/?context=fx_desktop_v3&entrypoint=activity-stream-firstrun&action=email&service=sync"
+    );
+
+    await SpecialMessageActions.handleAction(action, gBrowser);
+    const browser = await tabPromise;
+    ok(browser, "should open FXA in a new tab");
+    BrowserTestUtils.removeTab(browser);
+  });
 });

@@ -8,7 +8,7 @@ const {
   RetVal,
   types,
   generateActorSpec,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 types.addDictType("AllocationsRecordingOptions", {
   // The probability we sample any given allocation when recording

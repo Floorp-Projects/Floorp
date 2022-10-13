@@ -89,6 +89,15 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/FxAccountsTelemetry.jsm"
 );
 
+XPCOMUtils.defineLazyGetter(lazy, "mpLocked", () => {
+  return ChromeUtils.import("resource://services-sync/util.js").Utils.mpLocked;
+});
+
+XPCOMUtils.defineLazyGetter(lazy, "ensureMPUnlocked", () => {
+  return ChromeUtils.import("resource://services-sync/util.js").Utils
+    .ensureMPUnlocked;
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Preferences: "resource://gre/modules/Preferences.jsm",
 });
@@ -627,6 +636,23 @@ class FxAccounts {
       let data = await state.getUserAccountData(["sessionToken"]);
       return !!(data && data.sessionToken);
     });
+  }
+
+  /** Returns a promise that resolves to true if we can currently connect (ie,
+   *  sign in, or re-connect after a password change) to a Firefox Account.
+   *  If this returns false, the caller can assume that some UI was shown
+   *  which tells the user why we could not connect.
+   *
+   *  Currently, the primary password being locked is the only reason why
+   *  this returns false, and in this scenario, the primary password unlock
+   *  dialog will have been shown.
+   *
+   *  This currently doesn't need to return a promise, but does so that
+   *  future enhancements, such as other explanatory UI which requires
+   *  async can work without modification of the call-sites.
+   */
+  static canConnectAccount() {
+    return Promise.resolve(!lazy.mpLocked() || lazy.ensureMPUnlocked());
   }
 
   /**

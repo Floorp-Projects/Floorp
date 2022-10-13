@@ -27,7 +27,6 @@ impl Section {
                 });
             }
             Self::CoreInstance(_) => todo!(),
-            Self::CoreAlias(_) => todo!(),
             Self::CoreType(sec) => sec.encode(component),
             Self::Component(comp) => {
                 let bytes = comp.to_bytes();
@@ -128,15 +127,10 @@ impl CoreType {
                                 func_ty.results.iter().copied(),
                             );
                         }
-                        ModuleTypeDef::Alias(alias) => match alias {
-                            CoreAlias::Outer {
-                                count,
-                                i,
-                                kind: CoreOuterAliasKind::Type(_),
-                            } => {
+                        ModuleTypeDef::OuterAlias { count, i, kind } => match kind {
+                            CoreOuterAliasKind::Type(_) => {
                                 enc_mod_ty.alias_outer_core_type(*count, *i);
                             }
-                            CoreAlias::InstanceExport { .. } => unreachable!(),
                         },
                         ModuleTypeDef::Import(imp) => {
                             enc_mod_ty.import(
@@ -163,10 +157,20 @@ impl Type {
                 ty.encode(enc.defined_type());
             }
             Self::Func(func_ty) => {
-                enc.function(
-                    func_ty.params.iter().map(translate_optional_named_type),
-                    func_ty.result,
-                );
+                let mut f = enc.function();
+
+                f.params(func_ty.params.iter().map(|(name, ty)| (name.as_str(), *ty)));
+
+                if let Some(ty) = func_ty.unnamed_result_ty() {
+                    f.result(ty);
+                } else {
+                    f.results(
+                        func_ty
+                            .results
+                            .iter()
+                            .map(|(name, ty)| (name.as_deref().unwrap(), *ty)),
+                    );
+                }
             }
             Self::Component(comp_ty) => {
                 let mut enc_comp_ty = wasm_encoder::ComponentType::new();
@@ -207,30 +211,30 @@ impl Type {
                 let mut enc_inst_ty = wasm_encoder::InstanceType::new();
                 for def in &inst_ty.defs {
                     match def {
-                        InstanceTypeDef::CoreType(ty) => {
+                        InstanceTypeDecl::CoreType(ty) => {
                             ty.encode(enc_inst_ty.core_type());
                         }
-                        InstanceTypeDef::Type(ty) => {
+                        InstanceTypeDecl::Type(ty) => {
                             ty.encode(enc_inst_ty.ty());
                         }
-                        InstanceTypeDef::Export { name, ty } => {
+                        InstanceTypeDecl::Export { name, ty } => {
                             enc_inst_ty.export(name, *ty);
                         }
-                        InstanceTypeDef::Alias(Alias::Outer {
+                        InstanceTypeDecl::Alias(Alias::Outer {
                             count,
                             i,
                             kind: OuterAliasKind::Type(_),
                         }) => {
                             enc_inst_ty.alias_outer_type(*count, *i);
                         }
-                        InstanceTypeDef::Alias(Alias::Outer {
+                        InstanceTypeDecl::Alias(Alias::Outer {
                             count,
                             i,
                             kind: OuterAliasKind::CoreType(_),
                         }) => {
                             enc_inst_ty.alias_outer_core_type(*count, *i);
                         }
-                        InstanceTypeDef::Alias(_) => unreachable!(),
+                        InstanceTypeDecl::Alias(_) => unreachable!(),
                     }
                 }
                 enc.instance(&enc_inst_ty);
@@ -244,13 +248,13 @@ impl DefinedType {
         match self {
             Self::Primitive(ty) => enc.primitive(*ty),
             Self::Record(ty) => {
-                enc.record(ty.fields.iter().map(translate_named_type));
+                enc.record(ty.fields.iter().map(|(name, ty)| (name.as_str(), *ty)));
             }
             Self::Variant(ty) => {
                 enc.variant(
                     ty.cases
                         .iter()
-                        .map(|(ty, refines)| (ty.name.as_str(), ty.ty, *refines)),
+                        .map(|(name, ty, refines)| (name.as_str(), *ty, *refines)),
                 );
             }
             Self::List(ty) => {
@@ -271,19 +275,11 @@ impl DefinedType {
             Self::Option(ty) => {
                 enc.option(ty.inner_ty);
             }
-            Self::Expected(ty) => {
-                enc.expected(ty.ok_ty, ty.err_ty);
+            Self::Result(ty) => {
+                enc.result(ty.ok_ty, ty.err_ty);
             }
         }
     }
-}
-
-fn translate_named_type(ty: &NamedType) -> (&str, ComponentValType) {
-    (&ty.name, ty.ty)
-}
-
-fn translate_optional_named_type(ty: &OptionalNamedType) -> (Option<&str>, ComponentValType) {
-    (ty.name.as_deref(), ty.ty)
 }
 
 fn translate_canon_opt(options: &[CanonOpt]) -> Vec<wasm_encoder::CanonicalOption> {

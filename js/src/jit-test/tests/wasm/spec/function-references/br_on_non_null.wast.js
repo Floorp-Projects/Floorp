@@ -20,7 +20,7 @@ let $0 = instantiate(`(module
   (type $$t (func (result i32)))
 
   (func $$nn (param $$r (ref $$t)) (result i32)
-    (call_ref
+    (call_ref $$t
       (block $$l (result (ref $$t))
         (br_on_non_null $$l (local.get $$r))
         (return (i32.const -1))
@@ -28,7 +28,7 @@ let $0 = instantiate(`(module
     )
   )
   (func $$n (param $$r (ref null $$t)) (result i32)
-    (call_ref
+    (call_ref $$t
       (block $$l (result (ref $$t))
         (br_on_non_null $$l (local.get $$r))
         (return (i32.const -1))
@@ -44,27 +44,27 @@ let $0 = instantiate(`(module
   (func (export "nullable-f") (result i32) (call $$n (ref.func $$f)))
 
   (func (export "unreachable") (result i32)
-    (block $$l (result (ref func))
-      (return (br_on_non_null $$l (unreachable)))
+    (block $$l (result (ref $$t))
+      (br_on_non_null $$l (unreachable))
+      (return (i32.const -1))
     )
-    (drop)
-    (i32.const -1)
+    (call_ref $$t)
   )
 )`);
 
-// ./test/core/br_on_non_null.wast:36
+// ./test/core/br_on_non_null.wast:37
 assert_trap(() => invoke($0, `unreachable`, []), `unreachable`);
 
-// ./test/core/br_on_non_null.wast:38
+// ./test/core/br_on_non_null.wast:39
 assert_return(() => invoke($0, `nullable-null`, []), [value("i32", -1)]);
 
-// ./test/core/br_on_non_null.wast:39
+// ./test/core/br_on_non_null.wast:40
 assert_return(() => invoke($0, `nonnullable-f`, []), [value("i32", 7)]);
 
-// ./test/core/br_on_non_null.wast:40
+// ./test/core/br_on_non_null.wast:41
 assert_return(() => invoke($0, `nullable-f`, []), [value("i32", 7)]);
 
-// ./test/core/br_on_non_null.wast:42
+// ./test/core/br_on_non_null.wast:43
 let $1 = instantiate(`(module
   (type $$t (func))
   (func (param $$r (ref null $$t)) (drop (block (result (ref $$t)) (br_on_non_null 0 (local.get $$r)) (unreachable))))
@@ -72,14 +72,14 @@ let $1 = instantiate(`(module
   (func (param $$r (ref null extern)) (drop (block (result (ref extern)) (br_on_non_null 0 (local.get $$r)) (unreachable))))
 )`);
 
-// ./test/core/br_on_non_null.wast:50
+// ./test/core/br_on_non_null.wast:51
 let $2 = instantiate(`(module
   (type $$t (func (param i32) (result i32)))
   (elem func $$f)
   (func $$f (param i32) (result i32) (i32.mul (local.get 0) (local.get 0)))
 
   (func $$a (param $$n i32) (param $$r (ref null $$t)) (result i32)
-    (call_ref
+    (call_ref $$t
       (block $$l (result i32 (ref $$t))
         (return (br_on_non_null $$l (local.get $$n) (local.get $$r)))
       )
@@ -94,8 +94,8 @@ let $2 = instantiate(`(module
   )
 )`);
 
-// ./test/core/br_on_non_null.wast:71
+// ./test/core/br_on_non_null.wast:72
 assert_return(() => invoke($2, `args-null`, [3]), [value("i32", 3)]);
 
-// ./test/core/br_on_non_null.wast:72
+// ./test/core/br_on_non_null.wast:73
 assert_return(() => invoke($2, `args-f`, [3]), [value("i32", 9)]);

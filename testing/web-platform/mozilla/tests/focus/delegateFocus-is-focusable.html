@@ -1,0 +1,19 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>focus move tests caused by a call of Selection.addRange()</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="host"></div>
+<script>
+let host = document.getElementById("host");
+let shadow = host.attachShadow({ mode: "open", delegatesFocus: true });
+shadow.innerHTML = `<button>Focusable</button>`;
+
+test(function() {
+  assert_true(SpecialPowers.Services.focus.elementIsFocusable(host, 0), "host is focusable");
+  host.focus();
+  assert_equals(document.activeElement, host, "Host is focused");
+  assert_equals(shadow.activeElement, shadow.querySelector("button"), "Button is focused");
+  assert_true(SpecialPowers.Services.focus.elementIsFocusable(host, 0), "host is still focusable");
+}, "isElementFocusable with delegateFocus");
+</script>

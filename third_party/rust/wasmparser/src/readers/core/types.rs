@@ -14,6 +14,7 @@
  */
 
 use crate::{BinaryReader, Result, SectionIteratorLimited, SectionReader, SectionWithLimitedItems};
+use std::fmt::Debug;
 use std::ops::Range;
 
 /// Represents the types of values in a WebAssembly module.
@@ -35,6 +36,16 @@ pub enum ValType {
     ExternRef,
 }
 
+impl ValType {
+    /// Returns whether this value type is a "reference type".
+    ///
+    /// Only reference types are allowed in tables, for example, and with some
+    /// instructions. Current reference types include `funcref` and `externref`.
+    pub fn is_reference_type(&self) -> bool {
+        matches!(self, ValType::FuncRef | ValType::ExternRef)
+    }
+}
+
 /// Represents a type in a WebAssembly module.
 #[derive(Debug, Clone)]
 pub enum Type {
@@ -43,12 +54,63 @@ pub enum Type {
 }
 
 /// Represents a type of a function in a WebAssembly module.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Clone, Eq, PartialEq, Hash)]
 pub struct FuncType {
-    /// The function parameter types.
-    pub params: Box<[ValType]>,
-    /// The function result types.
-    pub returns: Box<[ValType]>,
+    /// The combined parameters and result types.
+    params_results: Box<[ValType]>,
+    /// The number of paramter types.
+    len_params: usize,
+}
+
+impl Debug for FuncType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FuncType")
+            .field("params", &self.params())
+            .field("returns", &self.results())
+            .finish()
+    }
+}
+
+impl FuncType {
+    /// Creates a new [`FuncType`] from the given `params` and `results`.
+    pub fn new<P, R>(params: P, results: R) -> Self
+    where
+        P: IntoIterator<Item = ValType>,
+        R: IntoIterator<Item = ValType>,
+    {
+        let mut buffer = params.into_iter().collect::<Vec<_>>();
+        let len_params = buffer.len();
+        buffer.extend(results);
+        Self {
+            params_results: buffer.into(),
+            len_params,
+        }
+    }
+
+    /// Creates a new [`FuncType`] fom its raw parts.
+    ///
+    /// # Panics
+    ///
+    /// If `len_params` is greater than the length of `params_results` combined.
+    pub(crate) fn from_raw_parts(params_results: Box<[ValType]>, len_params: usize) -> Self {
+        assert!(len_params <= params_results.len());
+        Self {
+            params_results,
+            len_params,
+        }
+    }
+
+    /// Returns a shared slice to the parameter types of the [`FuncType`].
+    #[inline]
+    pub fn params(&self) -> &[ValType] {
+        &self.params_results[..self.len_params]
+    }
+
+    /// Returns a shared slice to the result types of the [`FuncType`].
+    #[inline]
+    pub fn results(&self) -> &[ValType] {
+        &self.params_results[self.len_params..]
+    }
 }
 
 /// Represents a table's type.

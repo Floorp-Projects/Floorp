@@ -63,10 +63,6 @@ void Queue::WriteBuffer(const Buffer& aBuffer, uint64_t aBufferOffset,
     length = ab.Length();
     data = ab.Data();
   }
-  if (!length) {
-    aRv.ThrowAbortError("Input size cannot be zero.");
-    return;
-  }
 
   MOZ_ASSERT(data != nullptr);
 
@@ -74,7 +70,7 @@ void Queue::WriteBuffer(const Buffer& aBuffer, uint64_t aBufferOffset,
                                ? CheckedInt<size_t>(aSize.Value())
                                : CheckedInt<size_t>(length) - aDataOffset;
   if (!checkedSize.isValid()) {
-    aRv.ThrowRangeError("Mapped size is too large");
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
@@ -84,10 +80,19 @@ void Queue::WriteBuffer(const Buffer& aBuffer, uint64_t aBufferOffset,
     return;
   }
 
+  if (size % 4 != 0) {
+    aRv.ThrowAbortError("Byte size must be a multiple of 4");
+    return;
+  }
+
+  // Shmem can't be zero sized. Work around it by allocating a non-zero shmem
+  // (it will round up to a few pages). The expectation is that since there is
+  // no point copying zero bytes, this case should be too rare to be wroth
+  // optimizing.
+  size_t allocSize = size > 0 ? size : 1;
   ipc::Shmem shmem;
-  if (!mBridge->AllocShmem(size, &shmem)) {
-    aRv.ThrowAbortError(
-        nsPrintfCString("Unable to allocate shmem of size %" PRIuPTR, size));
+  if (!mBridge->AllocShmem(allocSize, &shmem)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 

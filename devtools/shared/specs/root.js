@@ -9,7 +9,7 @@ const {
   RetVal,
   Arg,
   Option,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 types.addDictType("root.listWorkers", {
   workers: "array:workerDescriptor",

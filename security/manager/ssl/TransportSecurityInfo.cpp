@@ -938,85 +938,6 @@ TransportSecurityInfo::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
   return NS_OK;
 }
 
-// RememberCertErrorsTable
-
-/*static*/
-RememberCertErrorsTable* RememberCertErrorsTable::sInstance = nullptr;
-
-RememberCertErrorsTable::RememberCertErrorsTable()
-    : mErrorHosts(), mMutex("RememberCertErrorsTable::mMutex") {}
-
-static nsresult GetHostPortKey(TransportSecurityInfo* infoObject,
-                               /*out*/ nsCString& result) {
-  MOZ_ASSERT(infoObject);
-  NS_ENSURE_ARG(infoObject);
-
-  result.Truncate();
-
-  result.Assign(infoObject->GetHostName());
-  result.Append(':');
-  result.AppendInt(infoObject->GetPort());
-
-  return NS_OK;
-}
-
-void RememberCertErrorsTable::RememberCertHasError(
-    TransportSecurityInfo* infoObject, SECStatus certVerificationResult) {
-  nsresult rv;
-
-  nsAutoCString hostPortKey;
-  rv = GetHostPortKey(infoObject, hostPortKey);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  if (certVerificationResult != SECSuccess) {
-    MOZ_ASSERT(infoObject->mHaveCertErrorBits,
-               "Must have error bits when remembering flags");
-    if (!infoObject->mHaveCertErrorBits) {
-      return;
-    }
-
-    MutexAutoLock lock(mMutex);
-    mErrorHosts.InsertOrUpdate(hostPortKey,
-                               infoObject->mOverridableErrorCategory);
-  } else {
-    MutexAutoLock lock(mMutex);
-    mErrorHosts.Remove(hostPortKey);
-  }
-}
-
-void RememberCertErrorsTable::LookupCertErrorBits(
-    TransportSecurityInfo* infoObject) {
-  // Get remembered error bits from our cache, because of SSL session caching
-  // the NSS library potentially hasn't notified us for this socket.
-  if (infoObject->mHaveCertErrorBits) {
-    // Rather do not modify bits if already set earlier
-    return;
-  }
-
-  nsresult rv;
-
-  nsAutoCString hostPortKey;
-  rv = GetHostPortKey(infoObject, hostPortKey);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  nsITransportSecurityInfo::OverridableErrorCategory overridableErrorCategory;
-  {
-    MutexAutoLock lock(mMutex);
-    if (!mErrorHosts.Get(hostPortKey, &overridableErrorCategory)) {
-      // No record was found, this host had no cert errors
-      return;
-    }
-  }
-
-  // This host had cert errors, update the bits correctly
-  infoObject->mHaveCertErrorBits = true;
-  infoObject->mOverridableErrorCategory = overridableErrorCategory;
-}
-
 void TransportSecurityInfo::SetStatusErrorBits(
     const nsCOMPtr<nsIX509Cert>& cert,
     OverridableErrorCategory overridableErrorCategory) {
@@ -1024,8 +945,6 @@ void TransportSecurityInfo::SetStatusErrorBits(
 
   mHaveCertErrorBits = true;
   mOverridableErrorCategory = overridableErrorCategory;
-
-  RememberCertErrorsTable::GetInstance().RememberCertHasError(this, SECFailure);
 }
 
 NS_IMETHODIMP

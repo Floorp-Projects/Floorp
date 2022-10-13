@@ -1865,9 +1865,9 @@ var AddonManagerInternal = {
     }
 
     // Install origin cannot be on a known etld (e.g. github.io).
-    if (lazy.isKnownPublicSuffix(aInstallingPrincipal.siteOrigin)) {
+    if (lazy.isKnownPublicSuffix(aInstallingPrincipal.siteOriginNoSuffix)) {
       throw Components.Exception(
-        `SitePermsAddon can't be installed from public eTLDs ${aInstallingPrincipal.siteOrigin}`,
+        `SitePermsAddon can't be installed from public eTLDs ${aInstallingPrincipal.siteOriginNoSuffix}`,
         Cr.NS_ERROR_INVALID_ARG
       );
     }

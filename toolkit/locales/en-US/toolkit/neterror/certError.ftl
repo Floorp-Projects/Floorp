@@ -61,8 +61,17 @@ cert-error-expired-now = Websites prove their identity via certificates, which a
 cert-error-not-yet-valid-now = Websites prove their identity via certificates, which are valid for a set time period. The certificate for { $hostname } will not be valid until { $not-before-local-time }.
 
 # Variables:
+# $error (string) - NSS error code string that specifies type of cert error. e.g. unknown issuer, invalid cert, etc.
+cert-error-code-prefix = Error code: { $error }
+
+# Variables:
 # $error (String) - NSS error code string that specifies type of cert error. e.g. unknown issuer, invalid cert, etc.
 cert-error-code-prefix-link = Error code: <a data-l10n-name="error-code-link">{ $error }</a>
+
+# Variables:
+# $hostname (String) - Hostname of the website with SSL error.
+# $errorMessage (String) - Error message corresponding to the type of error we are experiencing.
+cert-error-ssl-connection-error = An error occurred during a connection to { $hostname }. { $errorMessage }
 
 # Variables:
 # $hostname (String) - Hostname of the website with cert error.

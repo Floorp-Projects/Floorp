@@ -425,6 +425,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readGcTypeIndex(uint32_t* typeIndex);
   [[nodiscard]] bool readStructTypeIndex(uint32_t* typeIndex);
   [[nodiscard]] bool readArrayTypeIndex(uint32_t* typeIndex);
+  [[nodiscard]] bool readFuncTypeIndex(uint32_t* typeIndex);
   [[nodiscard]] bool readFieldIndex(uint32_t* fieldIndex,
                                     const StructType& structType);
 
@@ -438,8 +439,6 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   template <typename ValTypeSpanT>
   [[nodiscard]] bool popWithTypes(ValTypeSpanT expected, ValueVector* values);
   [[nodiscard]] bool popWithRefType(Value* value, StackType* type);
-  [[nodiscard]] bool popWithFuncType(Value* value, FuncType** funcType,
-                                     bool* maybeNull);
   // Check that the top of the value stack has type `expected`, bearing in
   // mind that it may be a block type, hence involving multiple values.
   //
@@ -658,8 +657,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                       uint32_t* tableIndex, Value* callee,
                                       ValueVector* argValues);
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
-  [[nodiscard]] bool readCallRef(const FuncType** funcType, bool* maybeNull,
-                                 Value* callee, ValueVector* argValues);
+  [[nodiscard]] bool readCallRef(const FuncType** funcType, Value* callee,
+                                 ValueVector* argValues);
 #endif
   [[nodiscard]] bool readOldCallDirect(uint32_t numFuncImports,
                                        uint32_t* funcTypeIndex,
@@ -1006,37 +1005,6 @@ inline bool OpIter<Policy>::popWithRefType(Value* value, StackType* type) {
   }
 
   return fail(error.get());
-}
-
-// This function pops exactly one value from the stack, checking that it is a
-// subtype of the function type.
-template <typename Policy>
-inline bool OpIter<Policy>::popWithFuncType(Value* value, FuncType** funcType,
-                                            bool* maybeNull) {
-  StackType ty;
-  if (!popWithRefType(value, &ty)) {
-    return false;
-  }
-
-  if (ty.isBottom()) {
-    return fail("gc instruction temporarily not allowed in dead code");
-  }
-
-  if (!ty.valType().isTypeIndex() ||
-      !env_.types->isFuncType(ty.valType().typeIndex())) {
-    return fail("type mismatch: reference expected to be a subtype of funcref");
-  }
-
-  *funcType = &env_.types->funcType(ty.valType().typeIndex());
-  *maybeNull = ty.valType().isNullable();
-
-#ifdef WASM_PRIVATE_REFTYPES
-  if ((*funcType)->exposesTypeIndex()) {
-    return fail("cannot expose indexed reference type");
-  }
-#endif
-
-  return true;
 }
 
 template <typename Policy>
@@ -2504,15 +2472,20 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
 template <typename Policy>
 inline bool OpIter<Policy>::readCallRef(const FuncType** funcType,
-                                        bool* maybeNull, Value* callee,
-                                        ValueVector* argValues) {
+                                        Value* callee, ValueVector* argValues) {
   MOZ_ASSERT(Classify(op_) == OpKind::CallRef);
 
-  FuncType* funcType_;
-  if (!popWithFuncType(callee, &funcType_, maybeNull)) {
+  uint32_t funcTypeIndex;
+  if (!readFuncTypeIndex(&funcTypeIndex)) {
     return false;
   }
 
+  if (!popWithType(ValType(RefType::fromTypeIndex(funcTypeIndex, true)),
+                   callee)) {
+    return false;
+  }
+
+  const FuncType* funcType_ = &env_.types->funcType(funcTypeIndex);
   *funcType = funcType_;
 
   if (!popCallArgs(funcType_->args(), argValues)) {
@@ -3039,6 +3012,23 @@ inline bool OpIter<Policy>::readArrayTypeIndex(uint32_t* typeIndex) {
 
   if (!env_.types->isArrayType(*typeIndex)) {
     return fail("not an array type");
+  }
+
+  return true;
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readFuncTypeIndex(uint32_t* typeIndex) {
+  if (!readVarU32(typeIndex)) {
+    return fail("unable to read type index");
+  }
+
+  if (*typeIndex >= env_.types->length()) {
+    return fail("type index out of range");
+  }
+
+  if (!env_.types->isFuncType(*typeIndex)) {
+    return fail("not an func type");
   }
 
   return true;

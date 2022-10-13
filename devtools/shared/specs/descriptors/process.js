@@ -7,7 +7,7 @@ const {
   generateActorSpec,
   RetVal,
   Option,
-} = require("devtools/shared/protocol");
+} = require("resource://devtools/shared/protocol.js");
 
 const processDescriptorSpec = generateActorSpec({
   typeName: "processDescriptor",

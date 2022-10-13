@@ -3,7 +3,6 @@
 //
 
 registerCleanupFunction(async () => {
-  Services.prefs.clearUserPref("network.ssl_tokens_cache_enabled");
   Services.prefs.clearUserPref("network.http.http3.priority");
   http3_clear_prefs();
 });

@@ -326,7 +326,7 @@ addAccessibleTask(
 );
 
 /**
- * Test caching of the stale state.
+ * Test caching of the stale and busy states.
  */
 addAccessibleTask(
   `<iframe id="iframe"></iframe>`,
@@ -342,7 +342,7 @@ addAccessibleTask(
         'data:text/html,<img src="http://example.com/a11y/accessible/tests/mochitest/events/slow_image.sjs">';
     });
     const iframeDoc = (await reordered).accessible.firstChild;
-    testStates(iframeDoc, 0, EXT_STATE_STALE, 0, 0);
+    testStates(iframeDoc, STATE_BUSY, EXT_STATE_STALE, 0, 0);
 
     info("Finishing load of iframe doc");
     let loadCompleted = waitForEvent(EVENT_DOCUMENT_LOAD_COMPLETE, iframeDoc);
@@ -350,7 +350,7 @@ addAccessibleTask(
       "https://example.com/a11y/accessible/tests/mochitest/events/slow_image.sjs?complete"
     );
     await loadCompleted;
-    testStates(iframeDoc, 0, 0, 0, EXT_STATE_STALE);
+    testStates(iframeDoc, 0, 0, STATE_BUSY, EXT_STATE_STALE);
   },
   { topLevel: true, chrome: true }
 );

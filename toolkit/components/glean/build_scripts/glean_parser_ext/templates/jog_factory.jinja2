@@ -21,8 +21,7 @@ use crate::private::{
     TimeUnit,
     Ping,
     LabeledMetric,
-    {# No EventMetric for us yet because ExtraKeys are hard #}
-{% for metric_type_name in metric_types.keys() if metric_type_name != 'event' and not metric_type_name.startswith('labeled_') %}
+{% for metric_type_name in metric_types.keys() if not metric_type_name.startswith('labeled_') %}
     {{ metric_type_name|Camelize }}Metric,
 {% endfor %}};
 use crate::private::traits::HistogramType;
@@ -40,8 +39,8 @@ pub(crate) mod __jog_metric_maps {
     use crate::private::{
         Ping,
         LabeledMetric,
-    {# No EventMetric for us yet because ExtraKeys are hard #}
-    {% for metric_type_name in metric_types.keys() if metric_type_name != "event"%}
+        NoExtraKeys,
+    {% for metric_type_name in metric_types.keys() %}
         {{ metric_type_name|Camelize }}Metric,
     {% endfor %}
     };
@@ -49,19 +48,22 @@ pub(crate) mod __jog_metric_maps {
     use std::collections::HashMap;
     use std::sync::{Arc, RwLock};
 
-{# No EventMetric for us yet because ExtraKeys are hard #}
 {% for metric_type_name in metric_types.keys() if metric_type_name != "event" and not metric_type_name.startswith('labeled_') %}
     pub static {{ metric_type_name.upper() }}_MAP: Lazy<Arc<RwLock<HashMap<MetricId, {{ metric_type_name|Camelize }}Metric>>>> =
         Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
 
 {% endfor %}
 {# Labeled metrics are special because they're LabeledMetric<Labeled{Counter|Boolean|...}Metric> #}
-{% for metric_type_name in metric_types.keys() if metric_type_name != "event" and metric_type_name.startswith('labeled_') %}
+{% for metric_type_name in metric_types.keys() if metric_type_name.startswith('labeled_') %}
     pub static {{ metric_type_name.upper() }}_MAP: Lazy<Arc<RwLock<HashMap<MetricId, LabeledMetric<{{ metric_type_name|Camelize }}Metric>>>>> =
         Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
 
 {% endfor %}
     pub static PING_MAP: Lazy<Arc<RwLock<HashMap<u32, Ping>>>> =
+        Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
+
+{# Event metrics are special because they're EventMetric<K> #}
+    pub static EVENT_MAP: Lazy<Arc<RwLock<HashMap<MetricId, EventMetric<NoExtraKeys>>>>> =
         Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
 }
 
@@ -87,8 +89,7 @@ map of argument name to argument type. I may regret this if I need it again. #}
     disabled: bool,
     time_unit: Option<TimeUnit>,
     memory_unit: Option<MemoryUnit>,
-{# No EventMetric for us yet because ExtraKeys are hard #}
-    _allowed_extra_keys: Option<Vec<String>>,
+    allowed_extra_keys: Option<Vec<String>>,
 {# Skipping reason_codes since that's a ping thing. #}
     range_min: Option<u64>,
     range_max: Option<u64>,
@@ -100,10 +101,9 @@ map of argument name to argument type. I may regret this if I need it again. #}
 ) -> Result<u32, Box<dyn std::error::Error>> {
     let metric_id = NEXT_METRIC_ID.fetch_add(1, Ordering::SeqCst);
     let metric32 = match metric_type {
-{# No EventMetric for us yet because ExtraKeys are hard #}
-{% for metric_type_name, metric_type in metric_types.items() if metric_type_name != "event" %}
+{% for metric_type_name, metric_type in metric_types.items() %}
         "{{ metric_type_name }}" => {
-            let metric = {{ metric_type_name|Camelize if not metric_type_name.startswith('labeled_') else "Labeled"}}Metric::new(metric_id.into(), CommonMetricData {
+            let metric = {{ metric_type_name|Camelize if not metric_type_name.startswith('labeled_') else "Labeled"}}Metric::{% if metric_type_name == 'event' %}with_runtime_extra_keys{% else %}new{% endif %}(metric_id.into(), CommonMetricData {
                 {% for arg_name in common_metric_data_args if arg_name in metric_type.args %}
                 {{ arg_name }},
                 {% endfor %}

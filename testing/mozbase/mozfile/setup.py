@@ -2,12 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 from setuptools import setup
 
 PACKAGE_NAME = "mozfile"
-PACKAGE_VERSION = "2.1.0"
+PACKAGE_VERSION = "3.0.0"
 
 setup(
     name=PACKAGE_NAME,
@@ -15,10 +13,12 @@ setup(
     description="Library of file utilities for use in Mozilla testing",
     long_description="see https://firefox-source-docs.mozilla.org/mozbase/index.html",
     classifiers=[
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
     ],
     keywords="mozilla",

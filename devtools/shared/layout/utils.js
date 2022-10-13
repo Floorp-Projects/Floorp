@@ -4,7 +4,7 @@
 
 "use strict";
 
-const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
+const nodeFilterConstants = require("resource://devtools/shared/dom-node-filter-constants.js");
 loader.lazyRequireGetter(
   this,
   "DevToolsUtils",

@@ -29,12 +29,16 @@ class SitePermsAddonWrapper {
   #permissionsByPermissionType = new Map();
 
   /**
-   * @param {string} siteOrigin: The origin this addon is installed for
-   * @param {Array<nsIPermission>} permissions: An array of the initial permissions the user
-   *                               granted for the addon origin.
+   * @param {string} siteOriginNoSuffix: The origin this addon is installed for
+   *                                     WITHOUT the suffix generated from the
+   *                                     origin attributes (see:
+   *                                     nsIPrincipal.siteOriginNoSuffix).
+   * @param {Array<nsIPermission>} permissions: An array of the initial
+   *                                            permissions the user granted
+   *                                            for the addon origin.
    */
-  constructor(siteOrigin, permissions = []) {
-    this.siteOrigin = siteOrigin;
+  constructor(siteOriginNoSuffix, permissions = []) {
+    this.siteOrigin = siteOriginNoSuffix;
     this.principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
       this.siteOrigin
     );
@@ -191,12 +195,15 @@ class SitePermsAddonInstalling extends SitePermsAddonWrapper {
   #install = null;
 
   /**
-   * @param {string} siteOrigin: The origin this addon is installed for
+   * @param {string} siteOriginNoSuffix: The origin this addon is installed
+   *                                     for, WITHOUT the suffix generated from
+   *                                     the origin attributes (see:
+   *                                     nsIPrincipal.siteOriginNoSuffix).
    * @param {SitePermsAddonInstall} install: The SitePermsAddonInstall instance
-   *        calling this constructor.
+   *                                         calling this constructor.
    */
-  constructor(siteOrigin, install) {
-    super(siteOrigin);
+  constructor(siteOriginNoSuffix, install) {
+    super(siteOriginNoSuffix);
     this.#install = install;
   }
 
@@ -228,7 +235,10 @@ class SitePermsAddonInstall {
     this.principal = installingPrincipal;
     this.newSitePerm = sitePerm;
     this.state = lazy.AddonManager.STATE_DOWNLOADED;
-    this.addon = new SitePermsAddonInstalling(this.principal.siteOrigin, this);
+    this.addon = new SitePermsAddonInstalling(
+      this.principal.siteOriginNoSuffix,
+      this
+    );
   }
 
   get installTelemetryInfo() {
@@ -369,42 +379,46 @@ const SitePermsAddonProvider = {
       return;
     }
 
+    const { siteOriginNoSuffix } = permission.principal;
+
     // Install origin cannot be on a known etld (e.g. github.io).
     // We shouldn't get a permission change for those here, but let's
     // be  extra safe
-    if (isKnownPublicSuffix(permission.principal.siteOrigin)) {
+    if (isKnownPublicSuffix(siteOriginNoSuffix)) {
       return;
     }
 
-    const { siteOrigin } = permission.principal;
-
     // Pipe the change to the existing addon is there is one.
-    if (this.wrappersMapByOrigin.has(siteOrigin)) {
+    if (this.wrappersMapByOrigin.has(siteOriginNoSuffix)) {
       this.wrappersMapByOrigin
-        .get(siteOrigin)
+        .get(siteOriginNoSuffix)
         .handlePermissionChange(permission, action);
     }
 
     if (action == "added") {
       // We only have one SitePermsAddon per origin, handling multiple permissions.
-      if (this.wrappersMapByOrigin.has(siteOrigin)) {
+      if (this.wrappersMapByOrigin.has(siteOriginNoSuffix)) {
         return;
       }
 
-      const addonWrapper = new SitePermsAddonWrapper(siteOrigin, [permission]);
-      this.wrappersMapByOrigin.set(siteOrigin, addonWrapper);
+      const addonWrapper = new SitePermsAddonWrapper(siteOriginNoSuffix, [
+        permission,
+      ]);
+      this.wrappersMapByOrigin.set(siteOriginNoSuffix, addonWrapper);
       return;
     }
 
     if (action == "deleted") {
-      if (!this.wrappersMapByOrigin.has(siteOrigin)) {
+      if (!this.wrappersMapByOrigin.has(siteOriginNoSuffix)) {
         return;
       }
       // Only remove the addon if it doesn't have any permissions left.
-      if (this.wrappersMapByOrigin.get(siteOrigin).sitePermissions.length) {
+      if (
+        this.wrappersMapByOrigin.get(siteOriginNoSuffix).sitePermissions.length
+      ) {
         return;
       }
-      this.wrappersMapByOrigin.delete(siteOrigin);
+      this.wrappersMapByOrigin.delete(siteOriginNoSuffix);
     }
   },
 
@@ -492,6 +506,10 @@ const SitePermsAddonProvider = {
   },
 
   observe(subject, topic, data) {
+    if (!this.isEnabled) {
+      return;
+    }
+
     if (topic == FIRST_CONTENT_PROCESS_TOPIC) {
       Services.obs.removeObserver(this, FIRST_CONTENT_PROCESS_TOPIC);
 
@@ -510,5 +528,7 @@ const SitePermsAddonProvider = {
   },
 };
 
-// We want to register the SitePermsAddonProvider once the first content process gets created.
+// We want to register the SitePermsAddonProvider once the first content process gets created
+// (and only if the feature is also enabled through the "dom.sitepermsaddon-provider.enabled"
+// about:config pref).
 SitePermsAddonProvider.addFirstContentProcessObserver();

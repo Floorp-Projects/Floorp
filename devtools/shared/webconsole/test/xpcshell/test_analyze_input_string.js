@@ -4,7 +4,7 @@
 "use strict";
 const {
   analyzeInputString,
-} = require("devtools/shared/webconsole/analyze-input-string");
+} = require("resource://devtools/shared/webconsole/analyze-input-string.js");
 
 add_task(() => {
   const tests = [

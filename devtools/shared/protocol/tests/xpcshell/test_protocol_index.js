@@ -2,9 +2,10 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
-const { lazyLoadFront } = require("devtools/shared/specs/index");
-const Types = require("devtools/shared/specs/index").__TypesForTests;
-const { getType } = require("devtools/shared/protocol").types;
+const { lazyLoadFront } = require("resource://devtools/shared/specs/index.js");
+const Types = require("resource://devtools/shared/specs/index.js")
+  .__TypesForTests;
+const { getType } = require("resource://devtools/shared/protocol.js").types;
 
 function run_test() {
   test_index_is_alphabetically_sorted();

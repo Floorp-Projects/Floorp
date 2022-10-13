@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { generateActorSpec } = require("devtools/shared/protocol");
+const { generateActorSpec } = require("resource://devtools/shared/protocol.js");
 
 const symbolSpec = generateActorSpec({
   typeName: "symbol",

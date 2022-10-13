@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { generateActorSpec } = require("devtools/shared/protocol");
+const { generateActorSpec } = require("resource://devtools/shared/protocol.js");
 
 const pushSubscriptionSpec = generateActorSpec({
   typeName: "pushSubscription",

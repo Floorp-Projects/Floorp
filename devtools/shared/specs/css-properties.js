@@ -3,7 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { RetVal, generateActorSpec } = require("devtools/shared/protocol");
+const {
+  RetVal,
+  generateActorSpec,
+} = require("resource://devtools/shared/protocol.js");
 
 const cssPropertiesSpec = generateActorSpec({
   typeName: "cssProperties",

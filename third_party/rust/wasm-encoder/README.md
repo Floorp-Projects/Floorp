@@ -16,18 +16,17 @@
 
 ## Usage
 
-Add this to your `Cargo.toml`:
+Add `wasm-encoder` to your `Cargo.toml`
 
-```toml
-[dependencies]
-wasm-encoder = "0.3"
+```sh
+$ cargo add wasm-encoder
 ```
 
 And then you can encode WebAssembly binaries via:
 
 ```rust
 use wasm_encoder::{
-    CodeSection, Export, ExportSection, Function, FunctionSection, Instruction,
+    CodeSection, ExportKind, ExportSection, Function, FunctionSection, Instruction,
     Module, TypeSection, ValType,
 };
 
@@ -48,17 +47,17 @@ module.section(&functions);
 
 // Encode the export section.
 let mut exports = ExportSection::new();
-exports.export("f", Export::Function(0));
+exports.export("f", ExportKind::Func, 0);
 module.section(&exports);
 
 // Encode the code section.
 let mut codes = CodeSection::new();
 let locals = vec![];
 let mut f = Function::new(locals);
-f.instruction(Instruction::LocalGet(0));
-f.instruction(Instruction::LocalGet(1));
-f.instruction(Instruction::I32Add);
-f.instruction(Instruction::End);
+f.instruction(&Instruction::LocalGet(0));
+f.instruction(&Instruction::LocalGet(1));
+f.instruction(&Instruction::I32Add);
+f.instruction(&Instruction::End);
 codes.function(&f);
 module.section(&codes);
 

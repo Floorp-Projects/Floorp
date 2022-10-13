@@ -4,15 +4,15 @@
 
 "use strict";
 
-var { settleAll } = require("devtools/shared/DevToolsUtils");
-var EventEmitter = require("devtools/shared/event-emitter");
+var { settleAll } = require("resource://devtools/shared/DevToolsUtils.js");
+var EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
-var { Pool } = require("devtools/shared/protocol/Pool");
+var { Pool } = require("resource://devtools/shared/protocol/Pool.js");
 var {
   getStack,
   callFunctionWithAsyncStack,
-} = require("devtools/shared/platform/stack");
-const defer = require("devtools/shared/defer");
+} = require("resource://devtools/shared/platform/stack.js");
+const defer = require("resource://devtools/shared/defer.js");
 
 /**
  * Base class for client-side actor fronts.

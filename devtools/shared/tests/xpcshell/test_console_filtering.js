@@ -8,7 +8,7 @@ const { console, ConsoleAPI } = ChromeUtils.import(
 );
 const {
   ConsoleAPIListener,
-} = require("devtools/server/actors/webconsole/listeners/console-api");
+} = require("resource://devtools/server/actors/webconsole/listeners/console-api.js");
 
 var seenMessages = 0;
 var seenTypes = 0;

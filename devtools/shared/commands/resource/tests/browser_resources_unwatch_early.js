@@ -6,7 +6,7 @@
 // Test that calling unwatchResources before watchResources could resolve still
 // removes watcher entries correctly.
 
-const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
+const ResourceCommand = require("resource://devtools/shared/commands/resource/resource-command.js");
 
 const TEST_URI = "data:text/html;charset=utf-8,";
 

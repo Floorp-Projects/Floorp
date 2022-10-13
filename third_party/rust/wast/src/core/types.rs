@@ -691,8 +691,7 @@ impl<'a> Type<'a> {
 
 impl<'a> Peek for Type<'a> {
     fn peek(cursor: Cursor<'_>) -> bool {
-        kw::r#type::peek(cursor) ||
-        kw::sub::peek(cursor)
+        kw::r#type::peek(cursor) || kw::sub::peek(cursor)
     }
     fn display() -> &'static str {
         "type"
@@ -708,9 +707,7 @@ impl<'a> Parse<'a> for Type<'a> {
             } else {
                 None
             };
-            return parser.parens(|parser| {
-                Type::parse_inner(parser, parent)
-            });
+            return parser.parens(|parser| Type::parse_inner(parser, parent));
         }
         Type::parse_inner(parser, None)
     }
@@ -730,14 +727,9 @@ impl<'a> Parse<'a> for Rec<'a> {
         let span = parser.parse::<kw::r#rec>()?.0;
         let mut types = Vec::new();
         while parser.peek2::<Type<'a>>() {
-            types.push(parser.parens(|p| {
-                p.parse()
-            })?);
+            types.push(parser.parens(|p| p.parse())?);
         }
-        Ok(Rec {
-            span,
-            types
-        })
+        Ok(Rec { span, types })
     }
 }
 

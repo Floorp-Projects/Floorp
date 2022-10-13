@@ -43,6 +43,20 @@ impl<K: 'static + ExtraKeys + Send + Sync> EventMetric<K> {
         }
     }
 
+    pub fn with_runtime_extra_keys(
+        id: MetricId,
+        meta: CommonMetricData,
+        allowed_extra_keys: Vec<String>,
+    ) -> Self {
+        if need_ipc() {
+            EventMetric::Child(EventMetricIpc(id))
+        } else {
+            let inner =
+                glean::private::EventMetric::with_runtime_extra_keys(meta, allowed_extra_keys);
+            EventMetric::Parent { id, inner }
+        }
+    }
+
     #[cfg(test)]
     pub(crate) fn child_metric(&self) -> Self {
         match self {

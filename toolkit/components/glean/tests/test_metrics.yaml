@@ -734,3 +734,47 @@ test_only.ipc:
     no_lint:
       - COMMON_PREFIX
     telemetry_mirror: TELEMETRY_TEST_MIRROR_FOR_URL
+
+test_only.jog:
+  a_counter:
+    type: counter
+    description: |
+      This is a test-only metric.
+      Just counting things.
+      Tied closely to test_jog_name_collision.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1767039
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1767039
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - glean-team@mozilla.com
+    expires: never
+    send_in_pings:
+      - store1
+
+  an_event:
+    type: event
+    extra_keys:
+      extra1:
+        type: string
+        description: "Some extra data"
+      extra2:
+        type: string
+        description: "Some extra data again"
+    description: |
+      This is a test-only metric.
+      Just recording some events.
+      Tied closely to test_jog_name_collision.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1767039
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1767039
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - glean-team@mozilla.com
+    expires: never
+    send_in_pings:
+      - store1
