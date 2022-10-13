@@ -489,7 +489,7 @@ void TableRowsCollection::ContentRemoved(nsIContent* aChild,
   }
 }
 
-void TableRowsCollection::NodeWillBeDestroyed(const nsINode* aNode) {
+void TableRowsCollection::NodeWillBeDestroyed(nsINode* aNode) {
   // Set mInitialized to false so CleanUp doesn't try to remove our mutation
   // observer, as we're going away. CleanUp() will reset mInitialized to true as
   // it returns.

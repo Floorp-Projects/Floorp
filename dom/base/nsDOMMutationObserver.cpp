@@ -374,7 +374,7 @@ void nsMutationReceiver::ContentRemoved(nsIContent* aChild,
   Observer()->ScheduleForRun();
 }
 
-void nsMutationReceiver::NodeWillBeDestroyed(const nsINode* aNode) {
+void nsMutationReceiver::NodeWillBeDestroyed(nsINode* aNode) {
   NS_ASSERTION(!mParent, "Shouldn't have mParent here!");
   Disconnect(true);
 }
