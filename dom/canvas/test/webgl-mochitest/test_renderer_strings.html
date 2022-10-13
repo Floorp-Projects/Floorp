@@ -54,6 +54,7 @@ async function testKnownCiStrings() {
   const KNOWN_ON_CI = {
     renderer: [
       'Adreno (TM) 540', // Android
+      'Adreno (TM) 650', // Android pixel5
       'llvmpipe', // Linux
       'Intel(R) HD Graphics 400', // Mac
       'Apple M1', // Mac
@@ -64,6 +65,7 @@ async function testKnownCiStrings() {
     ],
     unmasked_renderer: [
       'Adreno (TM) 540', // Android
+      'Adreno (TM) 620', // Android pixel5
       'llvmpipe (LLVM 10.0.0, 256 bits)', // Linux
       'Intel(R) UHD Graphics 630', // Mac
       'Apple M1', // Mac
@@ -109,6 +111,7 @@ async function testPrefBehavior() {
   ];
   const KNOWN_CI_RENDERERS = [
     'Adreno (TM) 540', // Android
+    'Adreno (TM) 650', // Android
     'Intel(R) HD Graphics 400', // Mac
     'Apple M1', // Mac
     'llvmpipe', // Linux
