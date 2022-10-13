@@ -826,11 +826,7 @@
     }
 
     getTabBrowser() {
-      if (
-        this.ownerGlobal.gBrowser &&
-        this.ownerGlobal.gBrowser.getTabForBrowser &&
-        this.ownerGlobal.gBrowser.getTabForBrowser(this)
-      ) {
+      if (this?.ownerGlobal?.gBrowser?.getTabForBrowser(this)) {
         return this.ownerGlobal.gBrowser;
       }
       return null;

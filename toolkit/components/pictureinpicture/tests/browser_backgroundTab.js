@@ -28,8 +28,27 @@ add_task(async () => {
         switcher.STATE_LOADED,
         "The originating browser tab should be in STATE_LOADED."
       );
+      Assert.equal(
+        browser.docShellIsActive,
+        true,
+        "The docshell should be active in the originating tab"
+      );
 
-      await BrowserTestUtils.closeWindow(pipWin);
+      // We need to destroy the current AsyncTabSwitcher to avoid
+      // tabrowser.shouldActivateDocShell going in the
+      // AsyncTabSwitcher.shouldActivateDocShell code path which isn't PiP aware.
+      switcher.destroy();
+
+      // Closing with window.close doesn't actually pause the video, so click
+      // the close button instead.
+      pipWin.document.getElementById("close").click();
+      await BrowserTestUtils.windowClosed(pipWin);
+
+      Assert.equal(
+        browser.docShellIsActive,
+        false,
+        "The docshell should be inactive in the originating tab"
+      );
     }
   );
 });
