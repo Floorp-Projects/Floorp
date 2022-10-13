@@ -295,7 +295,7 @@ class NameMap(object):
         try:
             return self[id]
         except KeyError:
-            raise IDLError("Name '%s' not found", location)
+            raise IDLError(f"Name '{id}' not found", location)
 
 
 class RustNoncompat(Exception):
@@ -1991,7 +1991,7 @@ class IDLParser(object):
             type=p[3],
             name=p[4],
             attlist=p[1]["attlist"],
-            location=self.getLocation(p, 3),
+            location=self.getLocation(p, 4),
         )
 
     def p_paramtype(self, p):
