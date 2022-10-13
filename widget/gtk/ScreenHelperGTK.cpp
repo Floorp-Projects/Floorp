@@ -223,7 +223,7 @@ static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
 }
 
 void ScreenGetterGtk::RefreshScreens() {
-  LOG_SCREEN("Refreshing screens");
+  LOG_SCREEN("ScreenGetterGtk::RefreshScreens()");
   AutoTArray<RefPtr<Screen>, 4> screenList;
 
   GdkScreen* defaultScreen = gdk_screen_get_default();
@@ -389,12 +389,12 @@ already_AddRefed<Screen> ScreenGetterWayland::MakeScreenWayland(gint aMonitor) {
 }
 
 void ScreenGetterWayland::RefreshScreens() {
-  LOG_SCREEN("Refreshing screens");
+  LOG_SCREEN("ScreenGetterWayland::RefreshScreens()");
   AutoTArray<RefPtr<Screen>, 4> managerScreenList;
 
   mScreenList.Clear();
   const gint numScreens = mMonitors.Length();
-  LOG_SCREEN("Wayland reports %d screens", numScreens);
+  LOG_SCREEN("Wayland reports %d monitors", numScreens);
   for (gint i = 0; i < numScreens; i++) {
     RefPtr<Screen> screen = MakeScreenWayland(i);
     mScreenList.AppendElement(screen);
@@ -448,7 +448,7 @@ int ScreenGetterWayland::GetMonitorForWindow(nsWindow* aWindow) {
 }
 
 RefPtr<nsIScreen> ScreenGetterWayland::GetScreenForWindow(nsWindow* aWindow) {
-  if (mScreenList.IsEmpty()) {
+  if (mMonitors.IsEmpty()) {
     return nullptr;
   }
 
@@ -456,6 +456,15 @@ RefPtr<nsIScreen> ScreenGetterWayland::GetScreenForWindow(nsWindow* aWindow) {
   if (monitor < 0) {
     return nullptr;
   }
+
+  if (mMonitors.Length() != mScreenList.Length()) {
+    // Gtk list of GtkScreens are out of sync with our monitor list.
+    // Try to refresh it now.
+    RefreshScreens();
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT((unsigned)monitor < mScreenList.Length(),
+                        "We're missing screen?");
   return mScreenList[monitor];
 }
 
