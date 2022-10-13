@@ -396,7 +396,11 @@ void Accessible::DebugPrint(const char* aPrefix,
                             const Accessible* aAccessible) {
   nsAutoCString desc;
   aAccessible->DebugDescription(desc);
+#  if defined(ANDROID)
+  printf_stderr("%s %s\n", aPrefix, desc.get());
+#  else
   printf("%s %s\n", aPrefix, desc.get());
+#  endif
 }
 
 #endif
