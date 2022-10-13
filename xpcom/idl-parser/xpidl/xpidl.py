@@ -1341,22 +1341,11 @@ class Method(object):
                     self.location,
                 )
             if p.size_is:
-                found_size_param = False
-                for size_param in self.params:
-                    if p.size_is == size_param.name:
-                        found_size_param = True
-                        if (
-                            getBuiltinOrNativeTypeName(size_param.realtype)
-                            != "unsigned long"
-                        ):
-                            raise IDLError(
-                                "is_size parameter must have type 'unsigned long'",
-                                self.location,
-                            )
-                if not found_size_param:
+                size_param = self.namemap.get(p.size_is, p.location)
+                if getBuiltinOrNativeTypeName(size_param.realtype) != "unsigned long":
                     raise IDLError(
-                        "could not find is_size parameter '%s'" % p.size_is,
-                        self.location,
+                        "size_is parameter must have type 'unsigned long'",
+                        p.location,
                     )
 
     def isScriptable(self):
