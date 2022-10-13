@@ -26,7 +26,7 @@ import kotlinx.coroutines.async
 class PublicSuffixList(
     context: Context,
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val scope: CoroutineScope = CoroutineScope(dispatcher)
+    private val scope: CoroutineScope = CoroutineScope(dispatcher),
 ) {
     private val data: PublicSuffixListData by lazy { PublicSuffixListLoader.load(context) }
 

@@ -30,13 +30,13 @@ import java.util.Locale.US
 
 internal sealed class MimeType(
     private val type: String,
-    val permission: String
+    val permission: String,
 ) {
 
     data class Image(
         private val getUri: (Context, String, java.io.File) -> Uri = { context, authority, file ->
             getUriForFile(context, authority, file)
-        }
+        },
     ) : MimeType("image/", CAMERA) {
         /**
          * Build an image capture intent using the application FileProvider.

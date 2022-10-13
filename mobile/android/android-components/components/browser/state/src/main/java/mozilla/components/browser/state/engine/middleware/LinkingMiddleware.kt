@@ -24,14 +24,14 @@ import java.lang.IllegalArgumentException
  * [Middleware] that handles side-effects of linking a session to an engine session.
  */
 internal class LinkingMiddleware(
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
 ) : Middleware<BrowserState, BrowserAction> {
 
     @Suppress("ComplexMethod")
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         var engineObserver: Pair<String, EngineObserver>? = null
         when (action) {
@@ -76,7 +76,7 @@ internal class LinkingMiddleware(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         engineSession: EngineSession,
         tab: SessionState,
-        skipLoading: Boolean = true
+        skipLoading: Boolean = true,
     ): Pair<String, EngineObserver> {
         val observer = EngineObserver(tab.id, context.store)
         engineSession.register(observer)
@@ -101,7 +101,7 @@ internal class LinkingMiddleware(
                 engineSession,
                 tab.content.url,
                 parentEngineSession,
-                loadFlags = tab.engineState.initialLoadFlags
+                loadFlags = tab.engineState.initialLoadFlags,
             )
         }
 
@@ -112,14 +112,14 @@ internal class LinkingMiddleware(
         engineSession: EngineSession,
         url: String,
         parent: EngineSession? = null,
-        loadFlags: EngineSession.LoadUrlFlags
+        loadFlags: EngineSession.LoadUrlFlags,
     ) = scope.launch {
         engineSession.loadUrl(url, parent = parent, flags = loadFlags)
     }
 
     private fun unlink(
         store: MiddlewareContext<BrowserState, BrowserAction>,
-        action: EngineAction.UnlinkEngineSessionAction
+        action: EngineAction.UnlinkEngineSessionAction,
     ) {
         val tab = store.state.findTabOrCustomTab(action.tabId) ?: return
 

@@ -50,15 +50,15 @@ class TabsUseCasesKtTest {
         whenever(engine.createSession(anyBoolean(), any())).thenReturn(engineSession)
         store = BrowserStore(
             middleware = EngineMiddleware.create(
-                engine = engine
-            )
+                engine = engine,
+            ),
         )
         tabsUseCases = TabsUseCases(store)
 
         val recoveredTab = createTab(
             id = "123",
             url = "https://mozilla.org",
-            lastAccess = 3735928559L
+            lastAccess = 3735928559L,
         ).toRecoverableTab()
 
         tab = mock<Tab>().apply {

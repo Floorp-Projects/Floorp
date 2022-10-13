@@ -36,7 +36,6 @@ class AuthenticationDialogFragmentTest {
 
     @Test
     fun `build dialog`() {
-
         val fragment = spy(
             AuthenticationDialogFragment.newInstance(
                 "sessionId",
@@ -47,8 +46,8 @@ class AuthenticationDialogFragmentTest {
                 "username",
                 "password",
                 onlyShowPassword = false,
-                url = "https://mozilla.com"
-            )
+                url = "https://mozilla.com",
+            ),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -86,7 +85,6 @@ class AuthenticationDialogFragmentTest {
 
     @Test
     fun `dialog with onlyShowPassword must not have a username field`() {
-
         val fragment = spy(
             AuthenticationDialogFragment.newInstance(
                 "sessionId",
@@ -97,8 +95,8 @@ class AuthenticationDialogFragmentTest {
                 "username",
                 "password",
                 true,
-                url = "https://mozilla.com"
-            )
+                url = "https://mozilla.com",
+            ),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -114,7 +112,6 @@ class AuthenticationDialogFragmentTest {
 
     @Test
     fun `when the title is not provided the dialog must has a default value`() {
-
         val fragment = spy(
             AuthenticationDialogFragment.newInstance(
                 "sessionId",
@@ -125,8 +122,8 @@ class AuthenticationDialogFragmentTest {
                 "username",
                 "password",
                 true,
-                url = "https://mozilla.com"
-            )
+                url = "https://mozilla.com",
+            ),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -153,8 +150,8 @@ class AuthenticationDialogFragmentTest {
                 "username",
                 "password",
                 false,
-                url = "https://mozilla.com"
-            )
+                url = "https://mozilla.com",
+            ),
         )
 
         fragment.feature = mockFeature
@@ -183,8 +180,8 @@ class AuthenticationDialogFragmentTest {
                 "username",
                 "password",
                 false,
-                url = "https://mozilla.com"
-            )
+                url = "https://mozilla.com",
+            ),
         )
 
         fragment.feature = mockFeature

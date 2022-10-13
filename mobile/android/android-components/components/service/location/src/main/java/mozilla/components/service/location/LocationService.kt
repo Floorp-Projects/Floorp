@@ -30,7 +30,7 @@ interface LocationService {
      */
     data class Region(
         val countryCode: String,
-        val countryName: String
+        val countryName: String,
     )
 
     companion object {

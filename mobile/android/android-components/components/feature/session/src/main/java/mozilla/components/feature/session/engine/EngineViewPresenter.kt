@@ -24,7 +24,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 internal class EngineViewPresenter(
     private val store: BrowserStore,
     private val engineView: EngineView,
-    private val tabId: String?
+    private val tabId: String?,
 ) {
     private var scope: CoroutineScope? = null
 
@@ -40,7 +40,7 @@ internal class EngineViewPresenter(
                         tab?.id,
                         tab?.engineState?.engineSession,
                         tab?.engineState?.crashed,
-                        tab?.content?.firstContentfulPaint
+                        tab?.content?.firstContentfulPaint,
                     )
                 }
                 .collect { tab -> onTabToRender(tab) }

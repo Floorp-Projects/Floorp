@@ -52,11 +52,11 @@ internal interface SpocsDao {
             "INSERT INTO spocs_impressions(spocId, impressionDateInSeconds) " +
             "SELECT impression.spocId, impression.impressionDateInSeconds " +
             "FROM newImpression impression " +
-            "WHERE EXISTS (SELECT 1 FROM spocs spoc WHERE spoc.id = impression.spocId)"
+            "WHERE EXISTS (SELECT 1 FROM spocs spoc WHERE spoc.id = impression.spocId)",
     )
     suspend fun recordImpression(
         targetSpocId: Int,
-        targetImpressionDateInSeconds: Long = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
+        targetImpressionDateInSeconds: Long = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()),
     )
 
     @Query("DELETE FROM ${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}")

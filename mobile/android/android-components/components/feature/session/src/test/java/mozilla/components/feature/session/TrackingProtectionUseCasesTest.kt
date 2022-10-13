@@ -62,11 +62,11 @@ class TrackingProtectionUseCasesTest {
                     TabSessionState(
                         id = "A",
                         content = ContentState("https://www.mozilla.org"),
-                        engineState = EngineState(engineSession)
-                    )
+                        engineState = EngineState(engineSession),
+                    ),
                 ),
-                selectedTabId = "A"
-            )
+                selectedTabId = "A",
+            ),
         )
 
         useCases = TrackingProtectionUseCases(store, engine)
@@ -96,7 +96,7 @@ class TrackingProtectionUseCasesTest {
             },
             onError = {
                 onErrorCalled = true
-            }
+            },
         )
 
         assertNotNull(trackersLog)
@@ -115,7 +115,7 @@ class TrackingProtectionUseCasesTest {
         }
 
         store.dispatch(
-            EngineAction.UnlinkEngineSessionAction("A")
+            EngineAction.UnlinkEngineSessionAction("A"),
         ).joinBlocking()
 
         whenever(engine.getTrackersLog(any(), any(), any())).then {
@@ -130,7 +130,7 @@ class TrackingProtectionUseCasesTest {
             },
             onError = {
                 onErrorCalled = true
-            }
+            },
         )
 
         assertNull(trackersLog)
@@ -148,7 +148,7 @@ class TrackingProtectionUseCasesTest {
     @Test
     fun `add exception with a null engine session will not call the store`() {
         store.dispatch(
-            EngineAction.UnlinkEngineSessionAction("A")
+            EngineAction.UnlinkEngineSessionAction("A"),
         ).joinBlocking()
 
         useCases.addException("A")
@@ -219,7 +219,7 @@ class TrackingProtectionUseCasesTest {
     @Test
     fun `remove exception with a null engine session will not call the store`() {
         store.dispatch(
-            EngineAction.UnlinkEngineSessionAction("A")
+            EngineAction.UnlinkEngineSessionAction("A"),
         ).joinBlocking()
 
         useCases.removeException("A")
@@ -247,7 +247,7 @@ class TrackingProtectionUseCasesTest {
         var contains = true
 
         store.dispatch(
-            EngineAction.UnlinkEngineSessionAction("A")
+            EngineAction.UnlinkEngineSessionAction("A"),
         ).joinBlocking()
 
         useCases.containsException("A") {

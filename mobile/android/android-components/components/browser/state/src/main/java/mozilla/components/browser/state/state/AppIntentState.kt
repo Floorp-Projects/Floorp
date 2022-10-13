@@ -14,5 +14,5 @@ import android.content.Intent
  */
 data class AppIntentState(
     val url: String,
-    val appIntent: Intent?
+    val appIntent: Intent?,
 )

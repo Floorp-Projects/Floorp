@@ -54,7 +54,7 @@ class ContainerDaoTest {
                 contextId = UUID.randomUUID().toString(),
                 name = "Personal",
                 color = Color.RED,
-                icon = Icon.FINGERPRINT
+                icon = Icon.FINGERPRINT,
             )
         containerDao.insertContainer(container)
 
@@ -76,14 +76,14 @@ class ContainerDaoTest {
                 contextId = UUID.randomUUID().toString(),
                 name = "Personal",
                 color = Color.RED,
-                icon = Icon.FINGERPRINT
+                icon = Icon.FINGERPRINT,
             )
         val container2 =
             ContainerEntity(
                 contextId = UUID.randomUUID().toString(),
                 name = "Shopping",
                 color = Color.BLUE,
-                icon = Icon.CART
+                icon = Icon.CART,
             )
 
         containerDao.insertContainer(container1)

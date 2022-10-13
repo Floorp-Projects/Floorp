@@ -48,8 +48,8 @@ class DefaultIconGeneratorTest {
         val icon = generator.generate(
             testContext,
             IconRequest(
-                url = "https://m.facebook.com"
-            )
+                url = "https://m.facebook.com",
+            ),
         )
 
         assertNotNull(icon.bitmap)

@@ -23,7 +23,7 @@ import mozilla.components.support.base.log.logger.Logger
 class DefaultLoginValidationDelegate(
     private val storage: Lazy<LoginsStorage>,
     private val scope: CoroutineScope = CoroutineScope(IO),
-    private val crashReporting: CrashReporting? = null
+    private val crashReporting: CrashReporting? = null,
 ) : LoginValidationDelegate {
     private val logger = Logger("DefaultAddonUpdater")
 

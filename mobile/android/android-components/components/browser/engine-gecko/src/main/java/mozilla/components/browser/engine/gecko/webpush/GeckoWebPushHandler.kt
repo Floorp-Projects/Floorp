@@ -12,7 +12,7 @@ import org.mozilla.geckoview.GeckoRuntime
  * controller object provided by GeckoView.
  */
 internal class GeckoWebPushHandler(
-    private val runtime: GeckoRuntime
+    private val runtime: GeckoRuntime,
 ) : WebPushHandler {
 
     /**

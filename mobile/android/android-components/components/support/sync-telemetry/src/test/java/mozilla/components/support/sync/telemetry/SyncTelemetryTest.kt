@@ -75,7 +75,7 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = null,
-                                validation = null
+                                validation = null,
                             ),
                             EngineInfo(
                                 name = "history",
@@ -85,23 +85,23 @@ class SyncTelemetryTest {
                                     applied = 5,
                                     failed = 4,
                                     newFailed = 3,
-                                    reconciled = 2
+                                    reconciled = 2,
                                 ),
                                 outgoing = listOf(
                                     OutgoingInfo(
                                         sent = 10,
-                                        failed = 5
+                                        failed = 5,
                                     ),
                                     OutgoingInfo(
                                         sent = 4,
-                                        failed = 2
-                                    )
+                                        failed = 2,
+                                    ),
                                 ),
                                 failureReason = null,
-                                validation = null
-                            )
+                                validation = null,
+                            ),
                         ),
-                        failureReason = null
+                        failureReason = null,
                     ),
                     SyncInfo(
                         at = now + 10,
@@ -114,14 +114,14 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = null,
-                                validation = null
-                            )
+                                validation = null,
+                            ),
                         ),
-                        failureReason = null
-                    )
+                        failureReason = null,
+                    ),
                 ),
-                events = emptyList()
-            )
+                events = emptyList(),
+            ),
         ) {
             when (pingCount) {
                 0 -> {
@@ -150,8 +150,8 @@ class SyncTelemetryTest {
                                 incoming["reconciled"],
                                 outgoing["uploaded"],
                                 outgoing["failed_to_upload"],
-                                outgoingBatches
-                            ).none { it.testGetValue() != null }
+                                outgoingBatches,
+                            ).none { it.testGetValue() != null },
                         )
                         assertNull(Sync.syncUuid.testGetValue("history-sync"))
                     }
@@ -188,7 +188,7 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Unknown, "Boxes not locked"),
-                                validation = null
+                                validation = null,
                             ),
                             // Multiple history engine syncs per sync isn't
                             // expected, but it's easier to test the
@@ -202,7 +202,7 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Shutdown),
-                                validation = null
+                                validation = null,
                             ),
                             EngineInfo(
                                 name = "history",
@@ -211,7 +211,7 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned"),
-                                validation = null
+                                validation = null,
                             ),
                             EngineInfo(
                                 name = "history",
@@ -220,10 +220,10 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Http, code = 418),
-                                validation = null
-                            )
+                                validation = null,
+                            ),
                         ),
-                        failureReason = null
+                        failureReason = null,
                     ),
                     // ...But, just in case, we also test multiple top-level
                     // syncs.
@@ -238,7 +238,7 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Auth, "Splines not reticulated", 999),
-                                validation = null
+                                validation = null,
                             ),
                             EngineInfo(
                                 name = "history",
@@ -247,7 +247,7 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Unexpected, "Kaboom!"),
-                                validation = null
+                                validation = null,
                             ),
                             EngineInfo(
                                 name = "history",
@@ -256,14 +256,14 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Other, "Qualia unsynchronized"), // other
-                                validation = null
-                            )
+                                validation = null,
+                            ),
                         ),
-                        failureReason = null
-                    )
+                        failureReason = null,
+                    ),
                 ),
-                events = emptyList()
-            )
+                events = emptyList(),
+            ),
         ) {
             when (pingCount) {
                 0 -> {
@@ -272,8 +272,8 @@ class SyncTelemetryTest {
                         listOf(
                             "other",
                             "unexpected",
-                            "auth"
-                        ).none { HistorySync.failureReason[it].testGetValue() != null }
+                            "auth",
+                        ).none { HistorySync.failureReason[it].testGetValue() != null },
                     )
                 }
                 1 -> HistorySync.apply {
@@ -329,11 +329,11 @@ class SyncTelemetryTest {
                         at = now,
                         took = 5000,
                         engines = emptyList(),
-                        failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned")
-                    )
+                        failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned"),
+                    ),
                 ),
-                events = emptyList()
-            )
+                events = emptyList(),
+            ),
         ) {
             when (pingCount) {
                 0 -> HistorySync.apply {
@@ -373,11 +373,11 @@ class SyncTelemetryTest {
                                     applied = 10,
                                     failed = 2,
                                     newFailed = 3,
-                                    reconciled = 2
+                                    reconciled = 2,
                                 ),
                                 outgoing = emptyList(),
                                 failureReason = null,
-                                validation = null
+                                validation = null,
                             ),
                             EngineInfo(
                                 name = "passwords",
@@ -387,23 +387,23 @@ class SyncTelemetryTest {
                                     applied = 5,
                                     failed = 4,
                                     newFailed = 3,
-                                    reconciled = 2
+                                    reconciled = 2,
                                 ),
                                 outgoing = listOf(
                                     OutgoingInfo(
                                         sent = 10,
-                                        failed = 5
+                                        failed = 5,
                                     ),
                                     OutgoingInfo(
                                         sent = 4,
-                                        failed = 2
-                                    )
+                                        failed = 2,
+                                    ),
                                 ),
                                 failureReason = null,
-                                validation = null
-                            )
+                                validation = null,
+                            ),
                         ),
-                        failureReason = null
+                        failureReason = null,
                     ),
                     SyncInfo(
                         at = now + 10,
@@ -416,14 +416,14 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = null,
-                                validation = null
-                            )
+                                validation = null,
+                            ),
                         ),
-                        failureReason = null
-                    )
+                        failureReason = null,
+                    ),
                 ),
-                events = emptyList()
-            )
+                events = emptyList(),
+            ),
         ) {
             when (pingCount) {
                 0 -> {
@@ -452,8 +452,8 @@ class SyncTelemetryTest {
                                 incoming["reconciled"],
                                 outgoing["uploaded"],
                                 outgoing["failed_to_upload"],
-                                outgoingBatches
-                            ).none { it.testGetValue() != null }
+                                outgoingBatches,
+                            ).none { it.testGetValue() != null },
                         )
                         assertNull(Sync.syncUuid.testGetValue("logins-sync"))
                     }
@@ -490,7 +490,7 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Unknown, "Boxes not locked"),
-                                validation = null
+                                validation = null,
                             ),
                             // Multiple passwords engine syncs per sync isn't
                             // expected, but it's easier to test the
@@ -504,7 +504,7 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Shutdown),
-                                validation = null
+                                validation = null,
                             ),
                             EngineInfo(
                                 name = "passwords",
@@ -513,7 +513,7 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned"),
-                                validation = null
+                                validation = null,
                             ),
                             EngineInfo(
                                 name = "passwords",
@@ -522,10 +522,10 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Http, code = 418),
-                                validation = null
-                            )
+                                validation = null,
+                            ),
                         ),
-                        failureReason = null
+                        failureReason = null,
                     ),
                     // ...But, just in case, we also test multiple top-level
                     // syncs.
@@ -540,7 +540,7 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Auth, "Splines not reticulated", 999),
-                                validation = null
+                                validation = null,
                             ),
                             EngineInfo(
                                 name = "passwords",
@@ -549,7 +549,7 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Unexpected, "Kaboom!"),
-                                validation = null
+                                validation = null,
                             ),
                             EngineInfo(
                                 name = "passwords",
@@ -558,14 +558,14 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Other, "Qualia unsynchronized"), // other
-                                validation = null
-                            )
+                                validation = null,
+                            ),
                         ),
-                        failureReason = null
-                    )
+                        failureReason = null,
+                    ),
                 ),
-                events = emptyList()
-            )
+                events = emptyList(),
+            ),
         ) {
             when (pingCount) {
                 0 -> {
@@ -574,8 +574,8 @@ class SyncTelemetryTest {
                         listOf(
                             "other",
                             "unexpected",
-                            "auth"
-                        ).none { LoginsSync.failureReason[it].testGetValue() != null }
+                            "auth",
+                        ).none { LoginsSync.failureReason[it].testGetValue() != null },
                     )
                 }
                 1 -> LoginsSync.apply {
@@ -631,11 +631,11 @@ class SyncTelemetryTest {
                         at = now,
                         took = 5000,
                         engines = emptyList(),
-                        failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned")
-                    )
+                        failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned"),
+                    ),
                 ),
-                events = emptyList()
-            )
+                events = emptyList(),
+            ),
         ) {
             when (pingCount) {
                 0 -> LoginsSync.apply {
@@ -675,8 +675,8 @@ class SyncTelemetryTest {
                                 outgoing = listOf(
                                     OutgoingInfo(
                                         sent = 10,
-                                        failed = 5
-                                    )
+                                        failed = 5,
+                                    ),
                                 ),
                                 failureReason = null,
                                 validation = ValidationInfo(
@@ -684,22 +684,22 @@ class SyncTelemetryTest {
                                     problems = listOf(
                                         ProblemInfo(
                                             name = "missingParents",
-                                            count = 5
+                                            count = 5,
                                         ),
                                         ProblemInfo(
                                             name = "missingChildren",
-                                            count = 7
-                                        )
+                                            count = 7,
+                                        ),
                                     ),
-                                    failureReason = null
-                                )
-                            )
+                                    failureReason = null,
+                                ),
+                            ),
                         ),
-                        failureReason = null
-                    )
+                        failureReason = null,
+                    ),
                 ),
-                events = emptyList()
-            )
+                events = emptyList(),
+            ),
         ) {
             when (pingCount) {
                 0 -> {
@@ -744,7 +744,7 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Unknown, "Boxes not locked"),
-                                validation = null
+                                validation = null,
                             ),
                             EngineInfo(
                                 name = "bookmarks",
@@ -753,7 +753,7 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Shutdown),
-                                validation = null
+                                validation = null,
                             ),
                             EngineInfo(
                                 name = "bookmarks",
@@ -762,7 +762,7 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned"),
-                                validation = null
+                                validation = null,
                             ),
                             EngineInfo(
                                 name = "bookmarks",
@@ -771,10 +771,10 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Http, code = 418),
-                                validation = null
-                            )
+                                validation = null,
+                            ),
                         ),
-                        failureReason = null
+                        failureReason = null,
                     ),
                     SyncInfo(
                         at = now + 5,
@@ -787,7 +787,7 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Auth, "Splines not reticulated", 999),
-                                validation = null
+                                validation = null,
                             ),
                             EngineInfo(
                                 name = "bookmarks",
@@ -796,7 +796,7 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Unexpected, "Kaboom!"),
-                                validation = null
+                                validation = null,
                             ),
                             EngineInfo(
                                 name = "bookmarks",
@@ -805,14 +805,14 @@ class SyncTelemetryTest {
                                 incoming = null,
                                 outgoing = emptyList(),
                                 failureReason = FailureReason(FailureName.Other, "Qualia unsynchronized"), // other
-                                validation = null
-                            )
+                                validation = null,
+                            ),
                         ),
-                        failureReason = null
-                    )
+                        failureReason = null,
+                    ),
                 ),
-                events = emptyList()
-            )
+                events = emptyList(),
+            ),
         ) {
             when (pingCount) {
                 0 -> {
@@ -821,8 +821,8 @@ class SyncTelemetryTest {
                         listOf(
                             "other",
                             "unexpected",
-                            "auth"
-                        ).none { BookmarksSync.failureReason[it].testGetValue() != null }
+                            "auth",
+                        ).none { BookmarksSync.failureReason[it].testGetValue() != null },
                     )
                 }
                 1 -> BookmarksSync.apply {
@@ -878,11 +878,11 @@ class SyncTelemetryTest {
                         at = now,
                         took = 5000,
                         engines = emptyList(),
-                        failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned")
-                    )
+                        failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned"),
+                    ),
                 ),
-                events = emptyList()
-            )
+                events = emptyList(),
+            ),
         ) {
             when (pingCount) {
                 0 -> BookmarksSync.apply {
@@ -925,20 +925,20 @@ class SyncTelemetryTest {
                                 applied = 5,
                                 failed = 4,
                                 newFailed = 3,
-                                reconciled = 2
+                                reconciled = 2,
                             ),
                             outgoing = listOf(
                                 OutgoingInfo(
                                     sent = 10,
-                                    failed = 5
+                                    failed = 5,
                                 ),
                                 OutgoingInfo(
                                     sent = 4,
-                                    failed = 2
-                                )
+                                    failed = 2,
+                                ),
                             ),
                             failureReason = null,
-                            validation = null
+                            validation = null,
                         ),
                         EngineInfo(
                             name = "history",
@@ -948,23 +948,23 @@ class SyncTelemetryTest {
                                 applied = 5,
                                 failed = 4,
                                 newFailed = 3,
-                                reconciled = 2
+                                reconciled = 2,
                             ),
                             outgoing = listOf(
                                 OutgoingInfo(
                                     sent = 10,
-                                    failed = 5
+                                    failed = 5,
                                 ),
                                 OutgoingInfo(
                                     sent = 4,
-                                    failed = 2
-                                )
+                                    failed = 2,
+                                ),
                             ),
                             failureReason = null,
-                            validation = null
-                        )
+                            validation = null,
+                        ),
                     ),
-                    failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned")
+                    failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned"),
                 ),
                 SyncInfo(
                     at = now + 10,
@@ -977,10 +977,10 @@ class SyncTelemetryTest {
                             incoming = null,
                             outgoing = emptyList(),
                             failureReason = null,
-                            validation = null
-                        )
+                            validation = null,
+                        ),
                     ),
-                    failureReason = null
+                    failureReason = null,
                 ),
                 SyncInfo(
                     at = now + 20,
@@ -994,8 +994,8 @@ class SyncTelemetryTest {
                             outgoing = listOf(
                                 OutgoingInfo(
                                     sent = 10,
-                                    failed = 5
-                                )
+                                    failed = 5,
+                                ),
                             ),
                             failureReason = null,
                             validation = ValidationInfo(
@@ -1003,21 +1003,21 @@ class SyncTelemetryTest {
                                 problems = listOf(
                                     ProblemInfo(
                                         name = "missingParents",
-                                        count = 5
+                                        count = 5,
                                     ),
                                     ProblemInfo(
                                         name = "missingChildren",
-                                        count = 7
-                                    )
+                                        count = 7,
+                                    ),
                                 ),
-                                failureReason = null
-                            )
-                        )
+                                failureReason = null,
+                            ),
+                        ),
                     ),
-                    failureReason = null
-                )
+                    failureReason = null,
+                ),
             ),
-            events = emptyList()
+            events = emptyList(),
         )
 
         fun setOrAssertGlobalSyncUuid(currentPingIndex: Int, pingName: String) {
@@ -1091,8 +1091,8 @@ class SyncTelemetryTest {
                                     incoming["reconciled"],
                                     outgoing["uploaded"],
                                     outgoing["failed_to_upload"],
-                                    outgoingBatches
-                                ).none { it.testGetValue() != null }
+                                    outgoingBatches,
+                                ).none { it.testGetValue() != null },
                             )
                         }
                         Pings.historySync.submit()
@@ -1140,16 +1140,16 @@ class SyncTelemetryTest {
                         Pings.bookmarksSync.submit()
                     }
                 }
-            }
+            },
         )
 
         assertEquals(
             listOf(
                 mapOf("history" to 1, "passwords" to 1),
                 mapOf("history" to 1),
-                mapOf("bookmarks" to 1)
+                mapOf("bookmarks" to 1),
             ),
-            pings
+            pings,
         )
     }
 

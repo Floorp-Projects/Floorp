@@ -16,7 +16,7 @@ private val BOOLEAN_VIEW_MATCHER_TO_UNDERLYING_MATCHER: List<Pair<(Boolean) -> M
     ::isChecked to ViewMatchers.isChecked(),
     ::isDisplayed to ViewMatchers.isDisplayed(),
     ::isEnabled to ViewMatchers.isEnabled(),
-    ::isSelected to ViewMatchers.isSelected()
+    ::isSelected to ViewMatchers.isSelected(),
 )
 
 class ViewMatchersKtTest {

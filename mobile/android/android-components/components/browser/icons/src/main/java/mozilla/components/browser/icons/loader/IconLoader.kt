@@ -23,12 +23,12 @@ interface IconLoader {
 
         class BitmapResult(
             val bitmap: Bitmap,
-            val source: Icon.Source
+            val source: Icon.Source,
         ) : Result()
 
         class BytesResult(
             val bytes: ByteArray,
-            val source: Icon.Source
+            val source: Icon.Source,
         ) : Result()
     }
 }

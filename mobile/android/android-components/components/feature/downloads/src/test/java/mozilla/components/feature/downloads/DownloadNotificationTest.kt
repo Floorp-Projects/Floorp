@@ -25,14 +25,15 @@ class DownloadNotificationTest {
         val downloadJobState = DownloadJobState(
             job = null,
             state = DownloadState(
-                url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                url = "mozilla.org/mozilla.txt",
+                contentLength = 100L,
                 currentBytesCopied = 10,
-                status = DownloadState.Status.DOWNLOADING
+                status = DownloadState.Status.DOWNLOADING,
             ),
             foregroundServiceId = 1,
             downloadDeleted = false,
             currentBytesCopied = 10,
-            status = DownloadState.Status.DOWNLOADING
+            status = DownloadState.Status.DOWNLOADING,
         )
 
         assertEquals("10%", downloadJobState.getProgress())
@@ -75,14 +76,16 @@ class DownloadNotificationTest {
         var downloadJobState = DownloadJobState(
             job = null,
             state = DownloadState(
-                fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                fileName = "mozilla.txt",
+                url = "mozilla.org/mozilla.txt",
+                contentLength = 100L,
                 currentBytesCopied = 10,
-                status = DownloadState.Status.DOWNLOADING
+                status = DownloadState.Status.DOWNLOADING,
             ),
             foregroundServiceId = 1,
             downloadDeleted = false,
             status = DownloadState.Status.DOWNLOADING,
-            currentBytesCopied = 10
+            currentBytesCopied = 10,
         )
 
         assertEquals(downloadJobState.getProgress(), downloadJobState.getStatusDescription(testContext))
@@ -90,13 +93,15 @@ class DownloadNotificationTest {
         downloadJobState = DownloadJobState(
             job = null,
             state = DownloadState(
-                fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                fileName = "mozilla.txt",
+                url = "mozilla.org/mozilla.txt",
+                contentLength = 100L,
                 currentBytesCopied = 10,
-                status = DownloadState.Status.PAUSED
+                status = DownloadState.Status.PAUSED,
             ),
             foregroundServiceId = 1,
             downloadDeleted = false,
-            status = DownloadState.Status.PAUSED
+            status = DownloadState.Status.PAUSED,
         )
 
         assertEquals(pausedText, downloadJobState.getStatusDescription(testContext))
@@ -104,13 +109,15 @@ class DownloadNotificationTest {
         downloadJobState = DownloadJobState(
             job = null,
             state = DownloadState(
-                fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                fileName = "mozilla.txt",
+                url = "mozilla.org/mozilla.txt",
+                contentLength = 100L,
                 currentBytesCopied = 10,
-                status = DownloadState.Status.COMPLETED
+                status = DownloadState.Status.COMPLETED,
             ),
             foregroundServiceId = 1,
             downloadDeleted = false,
-            status = DownloadState.Status.COMPLETED
+            status = DownloadState.Status.COMPLETED,
         )
 
         assertEquals(completedText, downloadJobState.getStatusDescription(testContext))
@@ -118,13 +125,15 @@ class DownloadNotificationTest {
         downloadJobState = DownloadJobState(
             job = null,
             state = DownloadState(
-                fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                fileName = "mozilla.txt",
+                url = "mozilla.org/mozilla.txt",
+                contentLength = 100L,
                 currentBytesCopied = 10,
-                status = DownloadState.Status.FAILED
+                status = DownloadState.Status.FAILED,
             ),
             foregroundServiceId = 1,
             downloadDeleted = false,
-            status = DownloadState.Status.FAILED
+            status = DownloadState.Status.FAILED,
         )
 
         assertEquals(failedText, downloadJobState.getStatusDescription(testContext))
@@ -132,13 +141,15 @@ class DownloadNotificationTest {
         downloadJobState = DownloadJobState(
             job = null,
             state = DownloadState(
-                fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                fileName = "mozilla.txt",
+                url = "mozilla.org/mozilla.txt",
+                contentLength = 100L,
                 currentBytesCopied = 10,
-                status = DownloadState.Status.CANCELLED
+                status = DownloadState.Status.CANCELLED,
             ),
             foregroundServiceId = 1,
             downloadDeleted = false,
-            status = DownloadState.Status.CANCELLED
+            status = DownloadState.Status.CANCELLED,
         )
 
         assertEquals("", downloadJobState.getStatusDescription(testContext))
@@ -149,26 +160,30 @@ class DownloadNotificationTest {
         val download1 = DownloadJobState(
             job = null,
             state = DownloadState(
-                fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                fileName = "mozilla.txt",
+                url = "mozilla.org/mozilla.txt",
+                contentLength = 100L,
                 currentBytesCopied = 10,
-                status = DownloadState.Status.DOWNLOADING
+                status = DownloadState.Status.DOWNLOADING,
             ),
             foregroundServiceId = 1,
             downloadDeleted = false,
             currentBytesCopied = 10,
-            status = DownloadState.Status.DOWNLOADING
+            status = DownloadState.Status.DOWNLOADING,
         )
         val download2 = DownloadJobState(
             job = null,
             state = DownloadState(
-                fileName = "mozilla2.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                fileName = "mozilla2.txt",
+                url = "mozilla.org/mozilla.txt",
+                contentLength = 100L,
                 currentBytesCopied = 20,
-                status = DownloadState.Status.DOWNLOADING
+                status = DownloadState.Status.DOWNLOADING,
             ),
             foregroundServiceId = 1,
             downloadDeleted = false,
             currentBytesCopied = 20,
-            status = DownloadState.Status.DOWNLOADING
+            status = DownloadState.Status.DOWNLOADING,
         )
 
         val summary = DownloadNotification.getSummaryList(testContext, listOf(download1, download2))
@@ -180,14 +195,16 @@ class DownloadNotificationTest {
         val download = DownloadJobState(
             job = null,
             state = DownloadState(
-                fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                fileName = "mozilla.txt",
+                url = "mozilla.org/mozilla.txt",
+                contentLength = 100L,
                 currentBytesCopied = 10,
-                status = DownloadState.Status.DOWNLOADING
+                status = DownloadState.Status.DOWNLOADING,
             ),
             foregroundServiceId = 1,
             downloadDeleted = false,
             currentBytesCopied = 10,
-            status = DownloadState.Status.DOWNLOADING
+            status = DownloadState.Status.DOWNLOADING,
         )
 
         val style = AbstractFetchDownloadService.Style()
@@ -195,7 +212,7 @@ class DownloadNotificationTest {
         val notification = DownloadNotification.createOngoingDownloadNotification(
             testContext,
             download,
-            notificationAccentColor = style.notificationAccentColor
+            notificationAccentColor = style.notificationAccentColor,
         )
 
         val accentColor = ContextCompat.getColor(testContext, style.notificationAccentColor)
@@ -208,14 +225,16 @@ class DownloadNotificationTest {
         val download = DownloadJobState(
             job = null,
             state = DownloadState(
-                fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                fileName = "mozilla.txt",
+                url = "mozilla.org/mozilla.txt",
+                contentLength = 100L,
                 currentBytesCopied = 10,
-                status = DownloadState.Status.PAUSED
+                status = DownloadState.Status.PAUSED,
             ),
             foregroundServiceId = 1,
             downloadDeleted = false,
             currentBytesCopied = 10,
-            status = DownloadState.Status.PAUSED
+            status = DownloadState.Status.PAUSED,
         )
 
         val style = AbstractFetchDownloadService.Style()
@@ -223,7 +242,7 @@ class DownloadNotificationTest {
         val notification = DownloadNotification.createPausedDownloadNotification(
             testContext,
             download,
-            notificationAccentColor = style.notificationAccentColor
+            notificationAccentColor = style.notificationAccentColor,
         )
 
         val accentColor = ContextCompat.getColor(testContext, style.notificationAccentColor)
@@ -236,14 +255,16 @@ class DownloadNotificationTest {
         val download = DownloadJobState(
             job = null,
             state = DownloadState(
-                fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                fileName = "mozilla.txt",
+                url = "mozilla.org/mozilla.txt",
+                contentLength = 100L,
                 currentBytesCopied = 10,
-                status = DownloadState.Status.COMPLETED
+                status = DownloadState.Status.COMPLETED,
             ),
             foregroundServiceId = 1,
             downloadDeleted = false,
             currentBytesCopied = 10,
-            status = DownloadState.Status.COMPLETED
+            status = DownloadState.Status.COMPLETED,
         )
 
         val style = AbstractFetchDownloadService.Style()
@@ -251,7 +272,7 @@ class DownloadNotificationTest {
         val notification = DownloadNotification.createDownloadCompletedNotification(
             testContext,
             download,
-            notificationAccentColor = style.notificationAccentColor
+            notificationAccentColor = style.notificationAccentColor,
         )
 
         val accentColor = ContextCompat.getColor(testContext, style.notificationAccentColor)
@@ -264,14 +285,16 @@ class DownloadNotificationTest {
         val download = DownloadJobState(
             job = null,
             state = DownloadState(
-                fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                fileName = "mozilla.txt",
+                url = "mozilla.org/mozilla.txt",
+                contentLength = 100L,
                 currentBytesCopied = 10,
-                status = DownloadState.Status.FAILED
+                status = DownloadState.Status.FAILED,
             ),
             foregroundServiceId = 1,
             downloadDeleted = false,
             currentBytesCopied = 10,
-            status = DownloadState.Status.FAILED
+            status = DownloadState.Status.FAILED,
         )
 
         val style = AbstractFetchDownloadService.Style()
@@ -279,7 +302,7 @@ class DownloadNotificationTest {
         val notification = DownloadNotification.createDownloadFailedNotification(
             testContext,
             download,
-            notificationAccentColor = style.notificationAccentColor
+            notificationAccentColor = style.notificationAccentColor,
         )
 
         val accentColor = ContextCompat.getColor(testContext, style.notificationAccentColor)
@@ -292,27 +315,31 @@ class DownloadNotificationTest {
         val download1 = DownloadJobState(
             job = null,
             state = DownloadState(
-                fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                fileName = "mozilla.txt",
+                url = "mozilla.org/mozilla.txt",
+                contentLength = 100L,
                 currentBytesCopied = 10,
-                status = DownloadState.Status.DOWNLOADING
+                status = DownloadState.Status.DOWNLOADING,
             ),
             foregroundServiceId = 1,
             downloadDeleted = false,
             currentBytesCopied = 10,
-            status = DownloadState.Status.DOWNLOADING
+            status = DownloadState.Status.DOWNLOADING,
         )
 
         val download2 = DownloadJobState(
             job = null,
             state = DownloadState(
-                fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                fileName = "mozilla.txt",
+                url = "mozilla.org/mozilla.txt",
+                contentLength = 100L,
                 currentBytesCopied = 10,
-                status = DownloadState.Status.DOWNLOADING
+                status = DownloadState.Status.DOWNLOADING,
             ),
             foregroundServiceId = 1,
             downloadDeleted = false,
             currentBytesCopied = 10,
-            status = DownloadState.Status.DOWNLOADING
+            status = DownloadState.Status.DOWNLOADING,
         )
 
         val style = AbstractFetchDownloadService.Style()
@@ -320,7 +347,7 @@ class DownloadNotificationTest {
         val notification = DownloadNotification.createDownloadGroupNotification(
             testContext,
             listOf(download1, download2),
-            notificationAccentColor = style.notificationAccentColor
+            notificationAccentColor = style.notificationAccentColor,
         )
 
         val accentColor = ContextCompat.getColor(testContext, style.notificationAccentColor)

@@ -42,7 +42,7 @@ private val Uri.hostWithCommonDomain: String?
  * https://github.com/mozilla/tippy-top-sites
  */
 class TippyTopIconPreparer(
-    assetManager: AssetManager
+    assetManager: AssetManager,
 ) : IconPreprarer {
     private val iconMap: Map<String, String> by lazy { parseList(assetManager) }
 
@@ -57,7 +57,7 @@ class TippyTopIconPreparer(
         return if (host != null && iconMap.containsKey(host)) {
             val resource = IconRequest.Resource(
                 url = iconMap.getValue(host),
-                type = IconRequest.Resource.Type.TIPPY_TOP
+                type = IconRequest.Resource.Type.TIPPY_TOP,
             )
 
             request.copy(resources = request.resources + resource)
@@ -83,7 +83,7 @@ private fun parseList(assetManager: AssetManager): Map<String, String> = try {
         priority = Log.Priority.ERROR,
         tag = "TippyTopIconPreparer",
         message = "Could not load tippy top list from assets",
-        throwable = e
+        throwable = e,
     )
     emptyMap()
 }

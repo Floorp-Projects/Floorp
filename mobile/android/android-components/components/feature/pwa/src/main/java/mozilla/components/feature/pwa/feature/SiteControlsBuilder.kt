@@ -67,7 +67,7 @@ interface SiteControlsBuilder {
                         Toast.makeText(
                             context,
                             context.getString(R.string.mozac_feature_pwa_copy_success),
-                            Toast.LENGTH_SHORT
+                            Toast.LENGTH_SHORT,
                         ).show()
                     }
                 }
@@ -90,7 +90,7 @@ interface SiteControlsBuilder {
      * copies the URL of the site when tapped.
      */
     class CopyAndRefresh(
-        private val reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase
+        private val reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase,
     ) : Default() {
 
         override fun getFilter() = super.getFilter().apply {
@@ -106,7 +106,7 @@ interface SiteControlsBuilder {
                 Notification.Action.Builder(
                     Icon.createWithResource(context, R.drawable.ic_refresh),
                     title,
-                    intent
+                    intent,
                 )
             } else {
                 @Suppress("Deprecation")

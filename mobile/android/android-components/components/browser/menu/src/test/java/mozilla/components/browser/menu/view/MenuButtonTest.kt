@@ -135,7 +135,7 @@ class MenuButtonTest {
         assertFalse(notificationIconView.isVisible)
 
         menuButton.setHighlight(
-            BrowserMenuHighlight.HighPriority(Color.RED)
+            BrowserMenuHighlight.HighPriority(Color.RED),
         )
 
         assertTrue(highlightView.isVisible)
@@ -150,7 +150,7 @@ class MenuButtonTest {
         assertFalse(notificationIconView.isVisible)
 
         menuButton.setHighlight(
-            BrowserMenuHighlight.LowPriority(Color.BLUE)
+            BrowserMenuHighlight.LowPriority(Color.BLUE),
         )
 
         assertFalse(highlightView.isVisible)

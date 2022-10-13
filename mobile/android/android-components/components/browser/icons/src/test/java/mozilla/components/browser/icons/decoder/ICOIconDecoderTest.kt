@@ -52,20 +52,55 @@ class ICOIconDecoderTest {
 
         val expectedEntries = arrayOf(
             IconDirectoryEntry(
-                16, 16, 0, 32, 1128, 39520, false, 4
+                16,
+                16,
+                0,
+                32,
+                1128,
+                39520,
+                false,
+                4,
             ),
             IconDirectoryEntry(
-                24, 24, 0, 32, 2488, 37032, false, 3
+                24,
+                24,
+                0,
+                32,
+                2488,
+                37032,
+                false,
+                3,
             ),
             IconDirectoryEntry(
-                32, 32, 0, 32, 4392, 32640, false, 2
+                32,
+                32,
+                0,
+                32,
+                4392,
+                32640,
+                false,
+                2,
             ),
             IconDirectoryEntry(
-                48, 48, 0, 32, 9832, 22808, false, 1
+                48,
+                48,
+                0,
+                32,
+                9832,
+                22808,
+                false,
+                1,
             ),
             IconDirectoryEntry(
-                256, 256, 0, 32, 22722, 86, true, 0
-            )
+                256,
+                256,
+                0,
+                32,
+                22722,
+                86,
+                true,
+                0,
+            ),
         )
 
         entries
@@ -85,14 +120,35 @@ class ICOIconDecoderTest {
         // Verify the best entry is correctly chosen for each width. We expect 32 bpp in all cases.
         val expectedEntries = arrayOf(
             IconDirectoryEntry(
-                16, 16, 0, 32, 1128, 24086, false, 8
+                16,
+                16,
+                0,
+                32,
+                1128,
+                24086,
+                false,
+                8,
             ),
             IconDirectoryEntry(
-                32, 32, 0, 32, 4264, 19822, false, 7
+                32,
+                32,
+                0,
+                32,
+                4264,
+                19822,
+                false,
+                7,
             ),
             IconDirectoryEntry(
-                48, 48, 0, 32, 9640, 10182, false, 6
-            )
+                48,
+                48,
+                0,
+                32,
+                9640,
+                10182,
+                false,
+                6,
+            ),
         )
 
         entries
@@ -109,23 +165,65 @@ class ICOIconDecoderTest {
 
         val expectedEntries = arrayOf(
             IconDirectoryEntry(
-                128, 128, 16, 0, 10344, 102, false, 0
+                128,
+                128,
+                16,
+                0,
+                10344,
+                102,
+                false,
+                0,
             ),
             IconDirectoryEntry(
-                72, 72, 16, 0, 3560, 10446, false, 1
+                72,
+                72,
+                16,
+                0,
+                3560,
+                10446,
+                false,
+                1,
             ),
             IconDirectoryEntry(
-                48, 48, 16, 0, 1640, 14006, false, 2
+                48,
+                48,
+                16,
+                0,
+                1640,
+                14006,
+                false,
+                2,
             ),
             IconDirectoryEntry(
-                32, 32, 16, 0, 744, 15646, false, 3
+                32,
+                32,
+                16,
+                0,
+                744,
+                15646,
+                false,
+                3,
             ),
             IconDirectoryEntry(
-                24, 24, 16, 0, 488, 16390, false, 4
+                24,
+                24,
+                16,
+                0,
+                488,
+                16390,
+                false,
+                4,
             ),
             IconDirectoryEntry(
-                16, 16, 16, 0, 296, 16878, false, 5
-            )
+                16,
+                16,
+                16,
+                0,
+                296,
+                16878,
+                false,
+                5,
+            ),
         )
 
         entries

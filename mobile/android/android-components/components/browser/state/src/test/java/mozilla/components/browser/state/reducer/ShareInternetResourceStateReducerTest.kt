@@ -27,7 +27,7 @@ class ShareInternetResourceStateReducerTest {
         val response: Response = mock()
         val action = ShareInternetResourceAction.AddShareAction(
             "tabId",
-            ShareInternetResourceState("internetResourceUrl", "type", true, response)
+            ShareInternetResourceState("internetResourceUrl", "type", true, response),
         )
 
         assertNull(state.tabs[0].content.share)
@@ -47,8 +47,8 @@ class ShareInternetResourceStateReducerTest {
         val shareState: ShareInternetResourceState = mock()
         val state = BrowserState(
             tabs = listOf(
-                TabSessionState("tabId", ContentState("contentStateUrl", share = shareState))
-            )
+                TabSessionState("tabId", ContentState("contentStateUrl", share = shareState)),
+            ),
         )
         val action = ShareInternetResourceAction.ConsumeShareAction("tabId")
 

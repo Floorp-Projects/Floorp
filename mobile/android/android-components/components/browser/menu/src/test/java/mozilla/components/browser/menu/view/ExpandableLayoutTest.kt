@@ -51,7 +51,10 @@ class ExpandableLayoutTest {
         }
 
         val result = ExpandableLayout.wrapContentInExpandableView(
-            wrappedView, 42, 33, blankTouchListener
+            wrappedView,
+            42,
+            33,
+            blankTouchListener,
         )
 
         assertEquals(FrameLayout.LayoutParams.WRAP_CONTENT, result.wrappedView.layoutParams.height)
@@ -80,8 +83,9 @@ class ExpandableLayoutTest {
     fun `GIVEN ExpandableLayout WHEN onMeasure is called THEN it delegates the parent for measuring`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
         expandableLayout.isCollapsed = false
 
@@ -94,8 +98,9 @@ class ExpandableLayoutTest {
     fun `GIVEN ExpandableLayout in the collapsed state and the height values available WHEN onMeasure is called THEN it will trigger collapse()`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
         expandableLayout.isCollapsed = true
         doReturn(100).`when`(expandableLayout).getOrCalculateCollapsedHeight()
@@ -110,8 +115,9 @@ class ExpandableLayoutTest {
     fun `GIVEN ExpandableLayout not in the collapsed state but all height values known WHEN onMeasure is called THEN collapse() is not called`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
         expandableLayout.isCollapsed = false
         doReturn(100).`when`(expandableLayout).getOrCalculateCollapsedHeight()
@@ -126,8 +132,9 @@ class ExpandableLayoutTest {
     fun `GIVEN ExpandableLayout in the collapsed state but with collapsedHeight unknown WHEN onMeasure is called THEN collapse() is be called`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
         expandableLayout.isCollapsed = true
         doReturn(ExpandableLayout.NOT_CALCULATED_DEFAULT_HEIGHT).`when`(expandableLayout).getOrCalculateCollapsedHeight()
@@ -142,8 +149,9 @@ class ExpandableLayoutTest {
     fun `GIVEN ExpandableLayout in the collapsed state but with expandedHeight unknown WHEN onMeasure is called THEN collapse() is not be called`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
         expandableLayout.isCollapsed = true
         doReturn(100).`when`(expandableLayout).getOrCalculateCollapsedHeight()
@@ -159,8 +167,10 @@ class ExpandableLayoutTest {
         val blankTouchListener = spy {}
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1, blankTouchListener = blankTouchListener
-            )
+                FrameLayout(testContext),
+                1,
+                blankTouchListener = blankTouchListener,
+            ),
         )
         val event: MotionEvent = mock()
         doReturn(false).`when`(expandableLayout).shouldInterceptTouches()
@@ -177,8 +187,10 @@ class ExpandableLayoutTest {
         val blankTouchListener = spy {}
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1, blankTouchListener = blankTouchListener
-            )
+                FrameLayout(testContext),
+                1,
+                blankTouchListener = blankTouchListener,
+            ),
         )
         val event: MotionEvent = mock()
         doReturn(false).`when`(expandableLayout).shouldInterceptTouches()
@@ -196,8 +208,10 @@ class ExpandableLayoutTest {
         val blankTouchListener = spy {}
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1, blankTouchListener = blankTouchListener
-            )
+                FrameLayout(testContext),
+                1,
+                blankTouchListener = blankTouchListener,
+            ),
         )
         val event: MotionEvent = mock()
         doReturn(false).`when`(expandableLayout).shouldInterceptTouches()
@@ -213,8 +227,9 @@ class ExpandableLayoutTest {
     fun `GIVEN ExpandableLayout WHEN onInterceptTouchEvent is called for ACTION_CANCEL or ACTION_UP THEN the events are not intercepted`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
         val actionCancel = MotionEvent.obtain(0, 0, ACTION_UP, 0f, 0f, 0)
         val actionUp = MotionEvent.obtain(0, 0, ACTION_CANCEL, 0f, 0f, 0)
@@ -230,8 +245,9 @@ class ExpandableLayoutTest {
     fun `GIVEN the wrappedView is in the expand process WHEN onInterceptTouchEvent is called while for new touches THEN they are intercepted`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
         val actionDown = MotionEvent.obtain(0, 0, ACTION_DOWN, 0f, 0f, 0)
         doReturn(true).`when`(expandableLayout).shouldInterceptTouches()
@@ -245,8 +261,9 @@ class ExpandableLayoutTest {
     fun `GIVEN the wrappedView not in the expand process WHEN onInterceptTouchEvent is called for new touches THEN they are not intercepted`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
         val actionDown = MotionEvent.obtain(0, 0, ACTION_DOWN, 0f, 0f, 0)
         doReturn(true).`when`(expandableLayout).shouldInterceptTouches()
@@ -262,8 +279,10 @@ class ExpandableLayoutTest {
         val listener = spy { listenerCalled = true }
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1, blankTouchListener = listener
-            )
+                FrameLayout(testContext),
+                1,
+                blankTouchListener = listener,
+            ),
         )
         doReturn(false).`when`(expandableLayout).isTouchingTheWrappedView(any())
         val actionDown = MotionEvent.obtain(0, 0, ACTION_DOWN, 0f, 0f, 0)
@@ -279,8 +298,10 @@ class ExpandableLayoutTest {
         val listener = spy { listenerCalled = true }
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1, blankTouchListener = listener
-            )
+                FrameLayout(testContext),
+                1,
+                blankTouchListener = listener,
+            ),
         )
         doReturn(true).`when`(expandableLayout).isTouchingTheWrappedView(any())
         val actionDown = MotionEvent.obtain(0, 0, ACTION_DOWN, 0f, 0f, 0)
@@ -293,7 +314,8 @@ class ExpandableLayoutTest {
     @Test
     fun `GIVEN initialYCoord set WHEN onInterceptTouchEvent is called for ACTION_DOWN THEN initialYCoord will be reset to the new value`() {
         val expandableLayout = ExpandableLayout.wrapContentInExpandableView(
-            FrameLayout(testContext), 1
+            FrameLayout(testContext),
+            1,
         ) { }
 
         val actionDown1 = MotionEvent.obtain(0, 0, ACTION_DOWN, 0f, 22f, 0)
@@ -309,8 +331,9 @@ class ExpandableLayoutTest {
     fun `GIVEN ExpandableLayout is in the expand process WHEN onInterceptTouchEvent is called for scroll events THEN these events are intercepted`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
         val actionDown = MotionEvent.obtain(0, 0, ACTION_MOVE, 0f, 0f, 0)
         doReturn(false).`when`(expandableLayout).shouldInterceptTouches()
@@ -325,8 +348,9 @@ class ExpandableLayoutTest {
     fun `GIVEN the wrappedView is not expanding WHEN onInterceptTouchEvent is called for an event that is not a scroll THEN this event is not intercepted`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
         val actionDown = MotionEvent.obtain(0, 0, ACTION_MOVE, 0f, 0f, 0)
         doReturn(true).`when`(expandableLayout).shouldInterceptTouches()
@@ -341,8 +365,9 @@ class ExpandableLayoutTest {
     fun `GIVEN the wrappedView is not expanding WHEN onInterceptTouchEvent is called for scroll up events THEN the events are intercepted and expand() is called`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
         val actionDown = MotionEvent.obtain(0, 0, ACTION_MOVE, 0f, 0f, 0)
         doReturn(true).`when`(expandableLayout).shouldInterceptTouches()
@@ -361,7 +386,8 @@ class ExpandableLayoutTest {
             rect.set(0, 0, 100, 100)
         }.`when`(wrappedView).getHitRect(any())
         val expandableLayout = ExpandableLayout.wrapContentInExpandableView(
-            wrappedView, 1
+            wrappedView,
+            1,
         ) { }
         val inBoundsEvent = MotionEvent.obtain(0, 0, ACTION_DOWN, 5f, 5f, 0)
 
@@ -376,7 +402,8 @@ class ExpandableLayoutTest {
             rect.set(0, 0, 100, 100)
         }.`when`(wrappedView).getHitRect(any())
         val expandableLayout = ExpandableLayout.wrapContentInExpandableView(
-            wrappedView, 1
+            wrappedView,
+            1,
         ) { }
         val outOfBoundsEvent = MotionEvent.obtain(0, 0, ACTION_DOWN, 105f, 105f, 0)
 
@@ -386,7 +413,8 @@ class ExpandableLayoutTest {
     @Test
     fun `GIVEN ExpandableLayout in the collapsed state WHEN shouldInterceptTouches is called THEN it returns true`() {
         val expandableLayout = ExpandableLayout.wrapContentInExpandableView(
-            FrameLayout(testContext), 1
+            FrameLayout(testContext),
+            1,
         ) { }
         expandableLayout.isCollapsed = true
 
@@ -396,7 +424,8 @@ class ExpandableLayoutTest {
     @Test
     fun `GIVEN ExpandableLayout not collapsed WHEN shouldInterceptTouches is called THEN it returns false`() {
         val expandableLayout = ExpandableLayout.wrapContentInExpandableView(
-            FrameLayout(testContext), 1
+            FrameLayout(testContext),
+            1,
         ) { }
         expandableLayout.isCollapsed = false
 
@@ -406,7 +435,8 @@ class ExpandableLayoutTest {
     @Test
     fun `GIVEN ExpandableLayout currently expanding WHEN shouldInterceptTouches is called THEN it returns false`() {
         val expandableLayout = ExpandableLayout.wrapContentInExpandableView(
-            FrameLayout(testContext), 1
+            FrameLayout(testContext),
+            1,
         ) { }
         expandableLayout.isCollapsed = true
         expandableLayout.isExpandInProgress = false
@@ -417,7 +447,8 @@ class ExpandableLayoutTest {
     @Test
     fun `GIVEN ExpandableLayout WHEN collapse is called THEN it sets a positive translation and a smaller height for the wrappedView`() {
         val expandableLayout = ExpandableLayout.wrapContentInExpandableView(
-            spy(FrameLayout(testContext)), 1
+            spy(FrameLayout(testContext)),
+            1,
         ) { }
         expandableLayout.wrappedView.updateLayoutParams {
             height = 100
@@ -436,7 +467,8 @@ class ExpandableLayoutTest {
     @Test
     fun `GIVEN ExpandableLayout WHEN getExpandViewAnimator is called THEN it returns a new ValueAnimator`() {
         val expandableLayout = ExpandableLayout.wrapContentInExpandableView(
-            FrameLayout(testContext), 1
+            FrameLayout(testContext),
+            1,
         ) { }
 
         val result = expandableLayout.getExpandViewAnimator(100)
@@ -449,8 +481,9 @@ class ExpandableLayoutTest {
     fun `GIVEN ExpandableLayout WHEN expand is called THEN it updates the translationY and height to show the wrappedView with expandedHeight`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
         val animator = ValueAnimator.ofInt(0, 100)
         doAnswer {
@@ -473,8 +506,9 @@ class ExpandableLayoutTest {
     fun `GIVEN collapsedHeight if already calculated WHEN getOrCalculateCollapsedHeight is called THEN it returns collapsedHeight`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
         expandableLayout.collapsedHeight = 123
 
@@ -488,8 +522,9 @@ class ExpandableLayoutTest {
     fun `GIVEN collapsedHeight is not already calculated WHEN getOrCalculateCollapsedHeight is called THEN it delegates calculateCollapsedHeight and returns the value from that`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
         doReturn(42).`when`(expandableLayout).calculateCollapsedHeight()
 
@@ -504,8 +539,9 @@ class ExpandableLayoutTest {
         val wrappedView = spy(FrameLayout(testContext))
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                wrappedView, 1
-            ) { }
+                wrappedView,
+                1,
+            ) { },
         )
 
         doReturn(100).`when`(wrappedView).measuredHeight
@@ -521,8 +557,9 @@ class ExpandableLayoutTest {
     fun `GIVEN parentHeight not already calculated WHEN getOrCalculateExpandedHeight is called THEN it sets parentHeight with the value from the heightSpec size`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
 
         expandableLayout.getOrCalculateExpandedHeight(View.MeasureSpec.makeMeasureSpec(123, View.MeasureSpec.EXACTLY))
@@ -536,8 +573,9 @@ class ExpandableLayoutTest {
     fun `GIVEN parentHeight not calculated WHEN getOrCalculateExpandedHeight is called with a parent height THEN it sets the expandedHeight as the minimum of between expandedHeight and parent height`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
         expandableLayout.expandedHeight = 123
 
@@ -552,8 +590,9 @@ class ExpandableLayoutTest {
     fun `GIVEN getOrCalculateExpandedHeight() WHEN calculating the collapsed height to be bigger than the available screen height THEN it cancels collapsing`() {
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                FrameLayout(testContext), 1
-            ) { }
+                FrameLayout(testContext),
+                1,
+            ) { },
         )
         expandableLayout.collapsedHeight = 50
         expandableLayout.expandedHeight = 100
@@ -575,7 +614,8 @@ class ExpandableLayoutTest {
     @Test
     fun `GIVEN a set touchSlop WHEN isScrollingUp calculates that is was exceeded THEN it returns true `() {
         val expandableLayout = ExpandableLayout.wrapContentInExpandableView(
-            FrameLayout(testContext), 1
+            FrameLayout(testContext),
+            1,
         ) { }
         expandableLayout.initialYCoord = 0f
         expandableLayout.touchSlop = 10f
@@ -602,8 +642,9 @@ class ExpandableLayoutTest {
         val measuredHeight = -42
         val expandableLayout = spy(
             ExpandableLayout.wrapContentInExpandableView(
-                wrappedView, 0
-            ) { }
+                wrappedView,
+                0,
+            ) { },
         )
 
         doReturn(measuredHeight).`when`(expandableLayout).measuredHeight
@@ -744,7 +785,7 @@ class ExpandableLayoutTest {
                 addView(View(testContext).apply { setLayoutParams(ViewGroup.LayoutParams(10, 10)) })
                 addView(View(testContext).apply { setLayoutParams(ViewGroup.LayoutParams(10, 10)) })
                 addView(View(testContext).apply { setLayoutParams(ViewGroup.LayoutParams(10, 10)) })
-            }
+            },
         )
         val wrappedView = FrameLayout(testContext).apply { addView(list) }
         val expandableLayout = spy(ExpandableLayout.wrapContentInExpandableView(wrappedView))

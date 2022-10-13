@@ -86,9 +86,11 @@ import kotlin.math.min
 @Suppress("LargeClass")
 class QrFragment : Fragment() {
     private val logger = Logger("mozac-qr")
+
     @VisibleForTesting
     internal var multiFormatReader = MultiFormatReader()
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
+
     /**
      * [TextureView.SurfaceTextureListener] handles several lifecycle events on a [TextureView].
      */
@@ -139,7 +141,7 @@ class QrFragment : Fragment() {
                         post {
                             context?.let {
                                 customViewFinder.setViewFinderColor(
-                                    getColor(it, R.color.mozac_feature_qr_scan_success_color)
+                                    getColor(it, R.color.mozac_feature_qr_scan_success_color),
                                 )
                             }
                             value?.onScanComplete(result)
@@ -179,6 +181,7 @@ class QrFragment : Fragment() {
      */
     private var backgroundThread: HandlerThread? = null
     private var backgroundHandler: Handler? = null
+
     @VisibleForTesting
     internal var backgroundExecutor: ExecutorService? = null
     private var previewRequestBuilder: CaptureRequest.Builder? = null
@@ -350,8 +353,11 @@ class QrFragment : Fragment() {
 
             val optimalSize = chooseOptimalSize(
                 map.getOutputSizes(SurfaceTexture::class.java),
-                rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
-                maxPreviewHeight, largest
+                rotatedPreviewWidth,
+                rotatedPreviewHeight,
+                maxPreviewWidth,
+                maxPreviewHeight,
+                largest,
             )
 
             adjustPreviewSize(optimalSize)
@@ -500,7 +506,7 @@ class QrFragment : Fragment() {
 
                         previewRequestBuilder?.set(
                             CaptureRequest.CONTROL_AF_MODE,
-                            CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
+                            CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE,
                         )
 
                         previewRequest = previewRequestBuilder?.build()
@@ -510,7 +516,7 @@ class QrFragment : Fragment() {
                             cameraCaptureSession.setRepeatingRequest(
                                 previewRequest as CaptureRequest,
                                 captureCallback,
-                                backgroundHandler
+                                backgroundHandler,
                             )
                         }
                     }
@@ -529,7 +535,7 @@ class QrFragment : Fragment() {
         camera: CameraDevice,
         imageSurface: Surface,
         surface: Surface,
-        stateCallback: CameraCaptureSession.StateCallback
+        stateCallback: CameraCaptureSession.StateCallback,
     ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             if (shouldStartExecutorService()) {
@@ -539,7 +545,7 @@ class QrFragment : Fragment() {
                 SessionConfiguration.SESSION_REGULAR,
                 listOf(OutputConfiguration(imageSurface), OutputConfiguration(surface)),
                 backgroundExecutor as Executor,
-                stateCallback
+                stateCallback,
             )
             camera.createCaptureSession(sessionConfig)
         } else {
@@ -618,9 +624,8 @@ class QrFragment : Fragment() {
             textureViewHeight: Int,
             maxWidth: Int,
             maxHeight: Int,
-            aspectRatio: Size
+            aspectRatio: Size,
         ): Size {
-
             // Collect the supported resolutions that are at least as big as the preview Surface
             val bigEnough = ArrayList<Size>()
             // Collect the supported resolutions that are smaller than the preview Surface
@@ -728,7 +733,7 @@ internal fun WindowManager.getDisplaySize(): Point {
         val windowInsets: WindowInsetsCompat = WindowInsetsCompat.toWindowInsetsCompat(windowMetrics.windowInsets)
 
         val insets = windowInsets.getInsetsIgnoringVisibility(
-            WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.displayCutout()
+            WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.displayCutout(),
         )
         val insetsWidth = insets.right + insets.left
         val insetsHeight = insets.top + insets.bottom

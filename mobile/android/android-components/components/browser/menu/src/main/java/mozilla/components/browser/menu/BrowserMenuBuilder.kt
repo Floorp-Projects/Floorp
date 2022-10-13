@@ -17,7 +17,7 @@ import android.content.Context
 open class BrowserMenuBuilder(
     val items: List<BrowserMenuItem>,
     val extras: Map<String, Any> = emptyMap(),
-    val endOfMenuAlwaysVisible: Boolean = false
+    val endOfMenuAlwaysVisible: Boolean = false,
 ) {
     /**
      * Builds and returns a browser menu with [items]

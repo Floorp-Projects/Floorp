@@ -29,5 +29,5 @@ interface AddressDelegate {
  */
 class DefaultAddressDelegate(
     override val addressPickerView: SelectablePromptView<Address>? = null,
-    override val onManageAddresses: () -> Unit = {}
+    override val onManageAddresses: () -> Unit = {},
 ) : AddressDelegate

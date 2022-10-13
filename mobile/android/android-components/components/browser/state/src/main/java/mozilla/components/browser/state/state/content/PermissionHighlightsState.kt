@@ -42,7 +42,7 @@ data class PermissionHighlightsState(
     val autoPlayAudibleChanged: Boolean = false,
     val autoPlayInaudibleChanged: Boolean = false,
     val autoPlayAudibleBlocking: Boolean = false,
-    val autoPlayInaudibleBlocking: Boolean = false
+    val autoPlayInaudibleBlocking: Boolean = false,
 ) : Parcelable {
     val isAutoPlayBlocking get() = autoPlayAudibleBlocking || autoPlayInaudibleBlocking
     val permissionsChanged

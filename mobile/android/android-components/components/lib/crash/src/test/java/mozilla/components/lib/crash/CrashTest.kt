@@ -24,7 +24,7 @@ class CrashTest {
             true,
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
             Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
-            arrayListOf()
+            arrayListOf(),
         )
 
         val intent = Intent()
@@ -39,11 +39,11 @@ class CrashTest {
         assertEquals(recoveredCrash.processType, Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD)
         assertEquals(
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
-            recoveredCrash.minidumpPath
+            recoveredCrash.minidumpPath,
         )
         assertEquals(
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
-            recoveredCrash.extrasPath
+            recoveredCrash.extrasPath,
         )
     }
 
@@ -71,16 +71,16 @@ class CrashTest {
         assertFalse(
             Crash.isCrashIntent(
                 Intent()
-                    .putExtra("crash", "I am a crash!")
-            )
+                    .putExtra("crash", "I am a crash!"),
+            ),
         )
 
         assertTrue(
             Crash.isCrashIntent(
                 Intent().apply {
                     Crash.UncaughtExceptionCrash(0, RuntimeException(), arrayListOf()).fillIn(this)
-                }
-            )
+                },
+            ),
         )
 
         assertTrue(
@@ -88,8 +88,8 @@ class CrashTest {
                 Intent().apply {
                     val crash = Crash.NativeCodeCrash(0, "", true, "", "", arrayListOf())
                     crash.fillIn(this)
-                }
-            )
+                },
+            ),
         )
     }
 }

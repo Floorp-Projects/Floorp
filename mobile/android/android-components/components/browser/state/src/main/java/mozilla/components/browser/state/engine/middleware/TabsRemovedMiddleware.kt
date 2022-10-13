@@ -25,13 +25,13 @@ import mozilla.components.lib.state.MiddlewareContext
  * removed.
  */
 internal class TabsRemovedMiddleware(
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
 ) : Middleware<BrowserState, BrowserAction> {
     @Suppress("ComplexMethod")
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         when (action) {
             is TabListAction.RemoveAllNormalTabsAction -> onTabsRemoved(context, context.state.normalTabs)
@@ -57,14 +57,14 @@ internal class TabsRemovedMiddleware(
 
     private fun onTabsRemoved(
         context: MiddlewareContext<BrowserState, BrowserAction>,
-        tabs: List<SessionState>
+        tabs: List<SessionState>,
     ) {
         tabs.forEach { tab ->
             if (tab.engineState.engineSession != null) {
                 context.dispatch(
                     EngineAction.UnlinkEngineSessionAction(
-                        tab.id
-                    )
+                        tab.id,
+                    ),
                 )
                 scope.launch {
                     tab.engineState.engineSession?.close()

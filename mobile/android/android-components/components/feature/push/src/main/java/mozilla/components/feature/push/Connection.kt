@@ -76,7 +76,7 @@ interface PushConnection : Closeable {
         body: String?,
         encoding: String = "",
         salt: String = "",
-        cryptoKey: String = ""
+        cryptoKey: String = "",
     ): DecryptedMessage?
 
     /**
@@ -115,7 +115,7 @@ internal class RustPushConnection(
     private val senderId: String,
     private val serverHost: String,
     private val socketProtocol: Protocol,
-    private val serviceType: ServiceType
+    private val serviceType: ServiceType,
 ) : PushConnection {
 
     private val databasePath by lazy { File(context.filesDir, DB_NAME).canonicalPath }
@@ -126,7 +126,7 @@ internal class RustPushConnection(
     @GuardedBy("this")
     override suspend fun subscribe(
         scope: PushScope,
-        appServerKey: AppServerKey?
+        appServerKey: AppServerKey?,
     ): AutoPushSubscription = synchronized(this) {
         val pushApi = api
         check(pushApi != null) { "Rust API is not initiated; updateToken hasn't been called yet." }
@@ -175,7 +175,7 @@ internal class RustPushConnection(
                 httpProtocol = socketProtocol.asString(),
                 bridgeType = serviceType.toBridgeType(),
                 registrationId = token,
-                databasePath = databasePath
+                databasePath = databasePath,
             )
             pushApi = api!!
             // This may be a new token, so we must tell the server about it even if this is the
@@ -217,7 +217,7 @@ internal class RustPushConnection(
         body: String?,
         encoding: String,
         salt: String,
-        cryptoKey: String
+        cryptoKey: String,
     ): DecryptedMessage? = synchronized(this) {
         val pushApi = api
         check(pushApi != null) { "Rust API is not initiated; updateToken hasn't been called yet." }
@@ -235,7 +235,7 @@ internal class RustPushConnection(
                 body = body,
                 encoding = encoding,
                 salt = salt,
-                dh = cryptoKey
+                dh = cryptoKey,
             )
 
             return DecryptedMessage(scope, data.toByteArray())
@@ -285,14 +285,14 @@ internal fun PushScope.toChannelId() =
  */
 internal fun SubscriptionResponse.toPushSubscription(
     scope: String,
-    appServerKey: AppServerKey? = null
+    appServerKey: AppServerKey? = null,
 ): AutoPushSubscription {
     return AutoPushSubscription(
         scope = scope,
         endpoint = subscriptionInfo.endpoint,
         authKey = subscriptionInfo.keys.auth,
         publicKey = subscriptionInfo.keys.p256dh,
-        appServerKey = appServerKey
+        appServerKey = appServerKey,
     )
 }
 
@@ -301,7 +301,7 @@ internal fun SubscriptionResponse.toPushSubscription(
  */
 internal fun SubscriptionChanged.toPushSubscriptionChanged() = AutoPushSubscriptionChanged(
     scope = scope,
-    channelId = channelId
+    channelId = channelId,
 )
 
 /**

@@ -34,23 +34,23 @@ class AutofillFacts {
 
 internal fun emitAutofillRequestFact(
     hasLogins: Boolean,
-    needsConfirmation: Boolean? = null
+    needsConfirmation: Boolean? = null,
 ) {
     Fact(
         Component.FEATURE_AUTOFILL,
         Action.SYSTEM,
         AutofillFacts.Items.AUTOFILL_REQUEST,
-        metadata = requestMetadata(hasLogins, needsConfirmation)
+        metadata = requestMetadata(hasLogins, needsConfirmation),
     ).collect()
 }
 
 internal fun emitAutofillConfirmationFact(
-    confirmed: Boolean
+    confirmed: Boolean,
 ) {
     Fact(
         Component.FEATURE_AUTOFILL,
         if (confirmed) { Action.CONFIRM } else { Action.CANCEL },
-        AutofillFacts.Items.AUTOFILL_CONFIRMATION
+        AutofillFacts.Items.AUTOFILL_CONFIRMATION,
     ).collect()
 }
 
@@ -58,7 +58,7 @@ internal fun emitAutofillSearchDisplayedFact() {
     Fact(
         Component.FEATURE_AUTOFILL,
         Action.DISPLAY,
-        AutofillFacts.Items.AUTOFILL_SEARCH
+        AutofillFacts.Items.AUTOFILL_SEARCH,
     ).collect()
 }
 
@@ -66,26 +66,26 @@ internal fun emitAutofillSearchSelectedFact() {
     Fact(
         Component.FEATURE_AUTOFILL,
         Action.SELECT,
-        AutofillFacts.Items.AUTOFILL_SEARCH
+        AutofillFacts.Items.AUTOFILL_SEARCH,
     ).collect()
 }
 
 internal fun emitAutofillLock(
-    unlocked: Boolean
+    unlocked: Boolean,
 ) {
     Fact(
         Component.FEATURE_AUTOFILL,
         if (unlocked) { Action.CONFIRM } else { Action.CANCEL },
-        AutofillFacts.Items.AUTOFILL_LOCK
+        AutofillFacts.Items.AUTOFILL_LOCK,
     ).collect()
 }
 
 private fun requestMetadata(
     hasLogins: Boolean,
-    needsConfirmation: Boolean? = null
+    needsConfirmation: Boolean? = null,
 ): Map<String, Any> {
     val metadata = mutableMapOf<String, Any>(
-        AutofillFacts.Metadata.HAS_MATCHING_LOGINS to hasLogins
+        AutofillFacts.Metadata.HAS_MATCHING_LOGINS to hasLogins,
     )
 
     needsConfirmation?.let {

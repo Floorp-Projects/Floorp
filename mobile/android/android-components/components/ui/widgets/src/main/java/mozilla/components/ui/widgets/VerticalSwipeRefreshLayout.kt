@@ -27,10 +27,11 @@ import kotlin.math.abs
  */
 class VerticalSwipeRefreshLayout @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null
+    attrs: AttributeSet? = null,
 ) : SwipeRefreshLayout(context, attrs) {
     @VisibleForTesting
     internal var isQuickScaleInProgress = false
+
     @VisibleForTesting
     internal var quickScaleEvents = QuickScaleEvents()
     private var previousX = 0f
@@ -61,7 +62,6 @@ class VerticalSwipeRefreshLayout @JvmOverloads constructor(
         if (MotionEvent.ACTION_CANCEL == eventAction ||
             (MotionEvent.ACTION_UP == eventAction && isQuickScaleInProgress)
         ) {
-
             forgetQuickScaleEvents()
             return callSuperOnInterceptTouchEvent(event)
         }
@@ -162,7 +162,7 @@ class VerticalSwipeRefreshLayout @JvmOverloads constructor(
     internal fun isQuickScaleInProgress(
         firstDown: MotionEvent,
         firstUp: MotionEvent,
-        secondDown: MotionEvent
+        secondDown: MotionEvent,
     ): Boolean {
         if (secondDown.eventTime - firstUp.eventTime > doubleTapTimeout) {
             return false
@@ -193,6 +193,6 @@ class VerticalSwipeRefreshLayout @JvmOverloads constructor(
     internal data class QuickScaleEvents(
         var firstDownEvent: MotionEvent? = null,
         var upEvent: MotionEvent? = null,
-        var secondDownEvent: MotionEvent? = null
+        var secondDownEvent: MotionEvent? = null,
     )
 }

@@ -24,7 +24,7 @@ private fun GeckoChoice.toChoice(): Choice {
  * @return array of Choice
  */
 fun convertToChoices(
-    geckoChoices: Array<out GeckoChoice>
+    geckoChoices: Array<out GeckoChoice>,
 ): Array<Choice> = geckoChoices.map { geckoChoice ->
     val choice = geckoChoice.toChoice()
     choice

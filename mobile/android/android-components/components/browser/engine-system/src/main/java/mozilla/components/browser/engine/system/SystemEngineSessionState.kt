@@ -12,7 +12,7 @@ import mozilla.components.concept.engine.EngineSessionState
 import org.json.JSONObject
 
 class SystemEngineSessionState(
-    internal val bundle: Bundle?
+    internal val bundle: Bundle?,
 ) : EngineSessionState {
     override fun writeTo(writer: JsonWriter) {
         writer.beginObject()

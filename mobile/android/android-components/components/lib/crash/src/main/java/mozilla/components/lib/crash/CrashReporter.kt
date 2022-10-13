@@ -68,7 +68,7 @@ class CrashReporter(
     internal val promptConfiguration: PromptConfiguration = PromptConfiguration(),
     private val nonFatalCrashIntent: PendingIntent? = null,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
-    private val maxBreadCrumbs: Int = 30
+    private val maxBreadCrumbs: Int = 30,
 ) : CrashReporting {
     private val database: CrashDatabase by lazy { CrashDatabase.get(context) }
 
@@ -292,7 +292,7 @@ class CrashReporter(
         /**
          * Always prompt the user for confirmation before sending crash reports.
          */
-        ALWAYS
+        ALWAYS,
     }
 
     /**
@@ -302,7 +302,7 @@ class CrashReporter(
         internal val appName: String = "App",
         internal val organizationName: String = "Mozilla",
         internal val message: String? = null,
-        @StyleRes internal val theme: Int = R.style.Theme_Mozac_CrashReporter
+        @StyleRes internal val theme: Int = R.style.Theme_Mozac_CrashReporter,
     )
 
     companion object {
@@ -316,7 +316,7 @@ class CrashReporter(
 
         internal val requireInstance: CrashReporter
             get() = instance ?: throw IllegalStateException(
-                "You need to call install() on your CrashReporter instance from Application.onCreate()."
+                "You need to call install() on your CrashReporter instance from Application.onCreate().",
             )
     }
 }
@@ -330,6 +330,6 @@ internal abstract class CrashReporterException(message: String, cause: Throwable
      */
     internal class UnexpectedlyMissingStacktrace(
         message: String,
-        cause: Throwable?
+        cause: Throwable?,
     ) : CrashReporterException(message, cause)
 }

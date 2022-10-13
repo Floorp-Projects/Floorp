@@ -21,7 +21,7 @@ import mozilla.components.service.digitalassetlinks.local.StatementRelationCheck
  */
 class CredentialAccessVerifier(
     private val checker: StatementRelationChecker,
-    private val assetsFinder: AndroidAssetFinder = AndroidAssetFinder()
+    private val assetsFinder: AndroidAssetFinder = AndroidAssetFinder(),
 ) {
     /**
      * Verifies and returns `true` if the application with [packageName] is allowed to receive
@@ -32,7 +32,7 @@ class CredentialAccessVerifier(
     fun hasCredentialRelationship(
         context: Context,
         domain: String,
-        packageName: String
+        packageName: String,
     ): Boolean {
         val assets = assetsFinder.getAndroidAppAsset(packageName, context.packageManager).toList()
 
@@ -44,7 +44,7 @@ class CredentialAccessVerifier(
         return checker.checkRelationship(
             AssetDescriptor.Web("https://$domain"),
             Relation.GET_LOGIN_CREDS,
-            asset
+            asset,
         )
     }
 }

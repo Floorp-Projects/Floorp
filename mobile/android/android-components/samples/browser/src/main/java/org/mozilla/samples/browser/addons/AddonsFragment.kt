@@ -44,7 +44,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentAddOnsBinding.inflate(inflater, container, false)
         return binding.root
@@ -83,7 +83,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
 
                 val style = AddonsManagerAdapter.Style(
                     dividerColor = R.color.browser_actions_divider_color,
-                    dividerHeight = R.dimen.mozac_browser_menu_item_divider_height
+                    dividerHeight = R.dimen.mozac_browser_menu_item_divider_height,
                 )
 
                 scope.launch(Dispatchers.Main) {
@@ -92,7 +92,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                             addonCollectionProvider = addonCollectionProvider,
                             addonsManagerDelegate = this@AddonsFragment,
                             addons = addons,
-                            style = style
+                            style = style,
                         )
                         recyclerView.adapter = adapter
                     } else {
@@ -104,7 +104,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                     Toast.makeText(
                         activity,
                         R.string.mozac_feature_addons_failed_to_query_add_ons,
-                        Toast.LENGTH_SHORT
+                        Toast.LENGTH_SHORT,
                     ).show()
                 }
             }
@@ -141,13 +141,13 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
 
     private fun findPreviousPermissionDialogFragment(): PermissionsDialogFragment? {
         return parentFragmentManager.findFragmentByTag(
-            PERMISSIONS_DIALOG_FRAGMENT_TAG
+            PERMISSIONS_DIALOG_FRAGMENT_TAG,
         ) as? PermissionsDialogFragment
     }
 
     private fun findPreviousInstallationDialogFragment(): AddonInstallationDialogFragment? {
         return parentFragmentManager.findFragmentByTag(
-            INSTALLATION_DIALOG_FRAGMENT_TAG
+            INSTALLATION_DIALOG_FRAGMENT_TAG,
         ) as? AddonInstallationDialogFragment
     }
 
@@ -158,7 +158,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
 
         val dialog = PermissionsDialogFragment.newInstance(
             addon = addon,
-            onPositiveButtonClicked = onConfirmPermissionButtonClicked
+            onPositiveButtonClicked = onConfirmPermissionButtonClicked,
         )
 
         if (!isAlreadyADialogCreated() && isAdded) {
@@ -174,7 +174,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
         val dialog = AddonInstallationDialogFragment.newInstance(
             addon = addon,
             addonCollectionProvider = addonCollectionProvider,
-            onConfirmButtonClicked = onConfirmInstallationButtonClicked
+            onConfirmButtonClicked = onConfirmInstallationButtonClicked,
         )
 
         if (!isAlreadyADialogCreated() && isAdded) {
@@ -186,7 +186,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
         if (allowInPrivateBrowsing) {
             requireContext().components.addonManager.setAddonAllowedInPrivateBrowsing(
                 addon,
-                allowInPrivateBrowsing
+                allowInPrivateBrowsing,
             )
         }
     }
@@ -214,15 +214,15 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                         requireContext(),
                         getString(
                             R.string.mozac_feature_addons_failed_to_install,
-                            addon.translateName(requireContext())
+                            addon.translateName(requireContext()),
                         ),
-                        Toast.LENGTH_SHORT
+                        Toast.LENGTH_SHORT,
                     ).show()
                 }
 
                 includedBinding.root.visibility = View.GONE
                 isInstallationInProgress = false
-            }
+            },
         )
 
         includedBinding.cancelButton.setOnClickListener {

@@ -27,13 +27,13 @@ import org.json.JSONObject
  */
 class DigitalAssetLinksApi(
     private val httpClient: Client,
-    private val apiKey: String?
+    private val apiKey: String?,
 ) : RelationChecker, StatementListFetcher {
 
     override fun checkRelationship(
         source: AssetDescriptor.Web,
         relation: Relation,
-        target: AssetDescriptor
+        target: AssetDescriptor,
     ): Boolean {
         val request = buildCheckApiRequest(source, relation, target)
         val response = httpClient.safeFetch(request)
@@ -67,7 +67,7 @@ class DigitalAssetLinksApi(
     internal fun buildCheckApiRequest(
         source: AssetDescriptor,
         relation: Relation,
-        target: AssetDescriptor
+        target: AssetDescriptor,
     ): Request {
         val uriBuilder = apiUrlBuilder(CHECK_PATH)
             .appendQueryParameter("relation", relation.kindAndDetail)
@@ -80,7 +80,7 @@ class DigitalAssetLinksApi(
             url = uriBuilder.build().toString().sanitizeURL(),
             method = Request.Method.GET,
             connectTimeout = TIMEOUT,
-            readTimeout = TIMEOUT
+            readTimeout = TIMEOUT,
         )
     }
 
@@ -93,7 +93,7 @@ class DigitalAssetLinksApi(
             url = uriBuilder.build().toString().sanitizeURL(),
             method = Request.Method.GET,
             connectTimeout = TIMEOUT,
-            readTimeout = TIMEOUT
+            readTimeout = TIMEOUT,
         )
     }
 
@@ -106,7 +106,7 @@ class DigitalAssetLinksApi(
                 appendQueryParameter("$prefix.androidApp.packageName", asset.packageName)
                 appendQueryParameter(
                     "$prefix.androidApp.certificate.sha256Fingerprint",
-                    asset.sha256CertFingerprint
+                    asset.sha256CertFingerprint,
                 )
             }
         }

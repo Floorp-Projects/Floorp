@@ -22,7 +22,7 @@ internal class MenuIconAdapter(
     private val parent: ConstraintLayout,
     private val inflater: LayoutInflater,
     private val side: Side,
-    private val dismiss: () -> Unit
+    private val dismiss: () -> Unit,
 ) {
 
     private var viewHolder: MenuIconViewHolder<out MenuIcon>? = null

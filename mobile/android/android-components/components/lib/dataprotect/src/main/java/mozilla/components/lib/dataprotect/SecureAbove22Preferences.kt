@@ -90,7 +90,7 @@ class SecureAbove22Preferences(context: Context, name: String, forceInsecure: Bo
 private class InsecurePreferencesImpl21(
     context: Context,
     name: String,
-    migrateFromSecureStorage: Boolean = true
+    migrateFromSecureStorage: Boolean = true,
 ) : KeyValuePreferences {
     companion object {
         private const val SUFFIX = "_kp_pre_m"
@@ -146,7 +146,7 @@ private class InsecurePreferencesImpl21(
 private class SecurePreferencesImpl23(
     context: Context,
     name: String,
-    migrateFromPlaintextStorage: Boolean = true
+    migrateFromPlaintextStorage: Boolean = true,
 ) : KeyValuePreferences {
     companion object {
         private const val SUFFIX = "_kp_post_m"

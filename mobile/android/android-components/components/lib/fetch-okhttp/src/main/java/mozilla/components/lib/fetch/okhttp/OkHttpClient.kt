@@ -29,11 +29,11 @@ typealias RequestBuilder = okhttp3.Request.Builder
  */
 class OkHttpClient(
     private val client: OkHttpClient = OkHttpClient(),
-    private val context: Context? = null
+    private val context: Context? = null,
 ) : Client() {
     private val defaultHeaders: Headers = MutableHeaders(
         "User-Agent" to "MozacFetch/${BuildConfig.LIBRARY_VERSION}",
-        "Accept-Encoding" to "gzip"
+        "Accept-Encoding" to "gzip",
     )
 
     override fun fetch(request: Request): Response {
@@ -55,7 +55,7 @@ class OkHttpClient(
         }
 
         val actualResponse = requestClient.newCall(
-            requestBuilder.build()
+            requestBuilder.build(),
         ).execute()
 
         return actualResponse.toResponse()
@@ -111,7 +111,7 @@ private fun okhttp3.Response.toResponse(): Response {
         url = request().url().toString(),
         headers = headers,
         status = code(),
-        body = if (body != null) Response.Body(body.byteStream(), headers["Content-Type"]) else Response.Body.empty()
+        body = if (body != null) Response.Body(body.byteStream(), headers["Content-Type"]) else Response.Body.empty(),
     )
 }
 

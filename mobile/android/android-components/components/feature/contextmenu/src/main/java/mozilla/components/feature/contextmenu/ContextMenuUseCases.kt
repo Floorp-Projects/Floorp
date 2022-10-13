@@ -17,10 +17,10 @@ import mozilla.components.concept.engine.HitResult
  * @param store the application's [BrowserStore].
  */
 class ContextMenuUseCases(
-    store: BrowserStore
+    store: BrowserStore,
 ) {
     class ConsumeHitResultUseCase(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Consumes the [HitResult] from the [BrowserStore] with the given [tabId].
@@ -31,7 +31,7 @@ class ContextMenuUseCases(
     }
 
     class InjectDownloadUseCase(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Adds a [DownloadState] to the [BrowserStore] with the given [tabId].
@@ -42,8 +42,9 @@ class ContextMenuUseCases(
         operator fun invoke(tabId: String, download: DownloadState) {
             store.dispatch(
                 ContentAction.UpdateDownloadAction(
-                    tabId, download
-                )
+                    tabId,
+                    download,
+                ),
             )
         }
     }
@@ -52,7 +53,7 @@ class ContextMenuUseCases(
      * Usecase allowing adding a new [ShareInternetResourceState] to the [BrowserStore]
      */
     class InjectShareInternetResourceUseCase(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Adds a specific [ShareInternetResourceState] to the [BrowserStore].

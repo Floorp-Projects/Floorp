@@ -73,7 +73,7 @@ class AddonUpdaterWorkerTest {
         val worker = spy(
             TestListenableWorkerBuilder<AddonUpdaterWorker>(testContext)
                 .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
-                .build()
+                .build(),
         )
 
         doReturn(updateAttemptStorage).`when`((worker as AddonUpdaterWorker)).updateAttemptStorage

@@ -15,7 +15,7 @@ import mozilla.components.concept.menu.candidate.SmallMenuCandidate
 
 internal class SmallMenuCandidateViewHolder(
     itemView: View,
-    private val dismiss: () -> Unit
+    private val dismiss: () -> Unit,
 ) : LastItemViewHolder<SmallMenuCandidate>(itemView),
     View.OnClickListener,
     View.OnLongClickListener {

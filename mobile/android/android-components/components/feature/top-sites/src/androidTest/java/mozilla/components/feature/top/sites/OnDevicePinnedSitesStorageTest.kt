@@ -42,7 +42,7 @@ class OnDevicePinnedSitesStorageTest {
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
         TopSiteDatabase::class.java.canonicalName,
-        FrameworkSQLiteOpenHelperFactory()
+        FrameworkSQLiteOpenHelperFactory(),
     )
 
     @Before
@@ -67,7 +67,7 @@ class OnDevicePinnedSitesStorageTest {
             Pair("Mozilla", "https://www.mozilla.org"),
             Pair("Firefox", "https://www.firefox.com"),
             Pair("Wikipedia", "https://www.wikipedia.com"),
-            Pair("Pocket", "https://www.getpocket.com")
+            Pair("Pocket", "https://www.getpocket.com"),
         )
 
         storage.addAllPinnedSites(defaultTopSites, isDefault = true)
@@ -192,7 +192,7 @@ class OnDevicePinnedSitesStorageTest {
                     "('Mozilla','mozilla.org',1)," +
                     "('Top Articles','https://getpocket.com/fenix-top-articles',2)," +
                     "('Wikipedia','https://www.wikipedia.org/',3)," +
-                    "('YouTube','https://www.youtube.com/',4)"
+                    "('YouTube','https://www.youtube.com/',4)",
             )
         }
 
@@ -201,7 +201,10 @@ class OnDevicePinnedSitesStorageTest {
         }
 
         val dbVersion2 = helper.runMigrationsAndValidate(
-            MIGRATION_TEST_DB, 2, true, Migrations.migration_1_2
+            MIGRATION_TEST_DB,
+            2,
+            true,
+            Migrations.migration_1_2,
         ).apply {
             execSQL(
                 "INSERT INTO " +
@@ -209,7 +212,7 @@ class OnDevicePinnedSitesStorageTest {
                     "(title, url, is_default, created_at) " +
                     "VALUES " +
                     "('Firefox','firefox.com',1,5)," +
-                    "('Monitor','https://monitor.firefox.com/',0,5)"
+                    "('Monitor','https://monitor.firefox.com/',0,5)",
             )
         }
 
@@ -253,7 +256,7 @@ class OnDevicePinnedSitesStorageTest {
                     "('Mozilla','mozilla.org',0,1)," +
                     "('Top Articles','https://getpocket.com/fenix-top-articles',0,2)," +
                     "('Wikipedia','https://www.wikipedia.org/',0,3)," +
-                    "('YouTube','https://www.youtube.com/',0,4)"
+                    "('YouTube','https://www.youtube.com/',0,4)",
             )
         }
 
@@ -262,7 +265,10 @@ class OnDevicePinnedSitesStorageTest {
         }
 
         val dbVersion3 = helper.runMigrationsAndValidate(
-            MIGRATION_TEST_DB, 3, true, Migrations.migration_2_3
+            MIGRATION_TEST_DB,
+            3,
+            true,
+            Migrations.migration_2_3,
         )
 
         dbVersion3.query("SELECT * FROM top_sites").use { cursor ->
@@ -281,7 +287,7 @@ class OnDevicePinnedSitesStorageTest {
             assertEquals("Top Articles", cursor.getString(cursor.getColumnIndexOrThrow("title")))
             assertEquals(
                 "https://getpocket.com/fenix-top-articles",
-                cursor.getString(cursor.getColumnIndexOrThrow("url"))
+                cursor.getString(cursor.getColumnIndexOrThrow("url")),
             )
             assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("is_default")))
             assertEquals(2, cursor.getInt(cursor.getColumnIndexOrThrow("created_at")))
@@ -291,7 +297,7 @@ class OnDevicePinnedSitesStorageTest {
             assertEquals("Wikipedia", cursor.getString(cursor.getColumnIndexOrThrow("title")))
             assertEquals(
                 "https://www.wikipedia.org/",
-                cursor.getString(cursor.getColumnIndexOrThrow("url"))
+                cursor.getString(cursor.getColumnIndexOrThrow("url")),
             )
             assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("is_default")))
             assertEquals(3, cursor.getInt(cursor.getColumnIndexOrThrow("created_at")))
@@ -301,7 +307,7 @@ class OnDevicePinnedSitesStorageTest {
             assertEquals("YouTube", cursor.getString(cursor.getColumnIndexOrThrow("title")))
             assertEquals(
                 "https://www.youtube.com/",
-                cursor.getString(cursor.getColumnIndexOrThrow("url"))
+                cursor.getString(cursor.getColumnIndexOrThrow("url")),
             )
             assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("is_default")))
             assertEquals(4, cursor.getInt(cursor.getColumnIndexOrThrow("created_at")))

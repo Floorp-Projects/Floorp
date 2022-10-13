@@ -78,10 +78,11 @@ class GeckoEngine(
     private val runtime: GeckoRuntime = GeckoRuntime.getDefault(context),
     executorProvider: () -> GeckoWebExecutor = { GeckoWebExecutor(runtime) },
     override val trackingProtectionExceptionStore: TrackingProtectionExceptionStorage =
-        GeckoTrackingProtectionExceptionStorage(runtime)
+        GeckoTrackingProtectionExceptionStorage(runtime),
 ) : Engine, WebExtensionRuntime {
     private val executor by lazy { executorProvider.invoke() }
     private val localeUpdater = LocaleSettingUpdater(context, runtime)
+
     @VisibleForTesting internal val speculativeConnectionFactory = SpeculativeSessionFactory()
     private var webExtensionDelegate: WebExtensionDelegate? = null
     private val webExtensionActionHandler = object : ActionHandler {
@@ -98,9 +99,9 @@ class GeckoEngine(
                 extension,
                 GeckoEngineSession(
                     runtime,
-                    defaultSettings = defaultSettings
+                    defaultSettings = defaultSettings,
                 ),
-                action
+                action,
             )
         }
     }
@@ -134,7 +135,7 @@ class GeckoEngine(
     override fun getTrackersLog(
         session: EngineSession,
         onSuccess: (List<TrackerLog>) -> Unit,
-        onError: (Throwable) -> Unit
+        onError: (Throwable) -> Unit,
     ) {
         val geckoSession = (session as GeckoEngineSession).geckoSession
         runtime.contentBlockingController.getLog(geckoSession).then(
@@ -154,7 +155,7 @@ class GeckoEngine(
             { throwable ->
                 onError(throwable)
                 GeckoResult<Void>()
-            }
+            },
         )
     }
 
@@ -222,9 +223,8 @@ class GeckoEngine(
         id: String,
         url: String,
         onSuccess: ((WebExtension) -> Unit),
-        onError: ((String, Throwable) -> Unit)
+        onError: ((String, Throwable) -> Unit),
     ): CancellableOperation {
-
         val onInstallSuccess: ((org.mozilla.geckoview.WebExtension) -> Unit) = {
             val installedExtension = GeckoWebExtension(it, runtime)
             webExtensionDelegate?.onInstalled(installedExtension)
@@ -243,7 +243,7 @@ class GeckoEngine(
                     { throwable ->
                         onError(id, throwable)
                         GeckoResult<Void>()
-                    }
+                    },
                 )
             }
         } else {
@@ -256,7 +256,7 @@ class GeckoEngine(
                     { throwable ->
                         onError(id, throwable)
                         GeckoResult<Void>()
-                    }
+                    },
                 )
             }
         }
@@ -269,7 +269,7 @@ class GeckoEngine(
     override fun uninstallWebExtension(
         ext: WebExtension,
         onSuccess: () -> Unit,
-        onError: (String, Throwable) -> Unit
+        onError: (String, Throwable) -> Unit,
     ) {
         runtime.webExtensionController.uninstall((ext as GeckoWebExtension).nativeExtension).then(
             {
@@ -280,7 +280,7 @@ class GeckoEngine(
             { throwable ->
                 onError(ext.id, throwable)
                 GeckoResult<Void>()
-            }
+            },
         )
     }
 
@@ -290,7 +290,7 @@ class GeckoEngine(
     override fun updateWebExtension(
         extension: WebExtension,
         onSuccess: (WebExtension?) -> Unit,
-        onError: (String, Throwable) -> Unit
+        onError: (String, Throwable) -> Unit,
     ) {
         runtime.webExtensionController.update((extension as GeckoWebExtension).nativeExtension).then(
             { geckoExtension ->
@@ -308,7 +308,7 @@ class GeckoEngine(
             { throwable ->
                 onError(extension.id, GeckoWebExtensionException(throwable))
                 GeckoResult<Void>()
-            }
+            },
         )
     }
 
@@ -317,7 +317,7 @@ class GeckoEngine(
      */
     @Suppress("Deprecation")
     override fun registerWebExtensionDelegate(
-        webExtensionDelegate: WebExtensionDelegate
+        webExtensionDelegate: WebExtensionDelegate,
     ) {
         this.webExtensionDelegate = webExtensionDelegate
 
@@ -335,15 +335,15 @@ class GeckoEngine(
                 current: org.mozilla.geckoview.WebExtension,
                 updated: org.mozilla.geckoview.WebExtension,
                 newPermissions: Array<out String>,
-                newOrigins: Array<out String>
+                newOrigins: Array<out String>,
             ): GeckoResult<AllowOrDeny>? {
                 val result = GeckoResult<AllowOrDeny>()
                 webExtensionDelegate.onUpdatePermissionRequest(
                     GeckoWebExtension(current, runtime),
                     GeckoWebExtension(updated, runtime),
-                    newPermissions.toList() + newOrigins.toList()
+                    newPermissions.toList() + newOrigins.toList(),
                 ) {
-                    allow ->
+                        allow ->
                     if (allow) result.complete(AllowOrDeny.ALLOW) else result.complete(AllowOrDeny.DENY)
                 }
                 return result
@@ -367,7 +367,7 @@ class GeckoEngine(
         runtime.webExtensionController.list().then(
             {
                 val extensions = it?.map {
-                    extension ->
+                        extension ->
                     GeckoWebExtension(extension, runtime)
                 } ?: emptyList()
 
@@ -382,7 +382,7 @@ class GeckoEngine(
             { throwable ->
                 onError(throwable)
                 GeckoResult<Void>()
-            }
+            },
         )
     }
 
@@ -393,7 +393,7 @@ class GeckoEngine(
         extension: WebExtension,
         source: EnableSource,
         onSuccess: (WebExtension) -> Unit,
-        onError: (Throwable) -> Unit
+        onError: (Throwable) -> Unit,
     ) {
         runtime.webExtensionController.enable((extension as GeckoWebExtension).nativeExtension, source.id).then(
             {
@@ -405,7 +405,7 @@ class GeckoEngine(
             { throwable ->
                 onError(throwable)
                 GeckoResult<Void>()
-            }
+            },
         )
     }
 
@@ -416,7 +416,7 @@ class GeckoEngine(
         extension: WebExtension,
         source: EnableSource,
         onSuccess: (WebExtension) -> Unit,
-        onError: (Throwable) -> Unit
+        onError: (Throwable) -> Unit,
     ) {
         runtime.webExtensionController.disable((extension as GeckoWebExtension).nativeExtension, source.id).then(
             {
@@ -428,7 +428,7 @@ class GeckoEngine(
             { throwable ->
                 onError(throwable)
                 GeckoResult<Void>()
-            }
+            },
         )
     }
 
@@ -439,11 +439,11 @@ class GeckoEngine(
         extension: WebExtension,
         allowed: Boolean,
         onSuccess: (WebExtension) -> Unit,
-        onError: (Throwable) -> Unit
+        onError: (Throwable) -> Unit,
     ) {
         runtime.webExtensionController.setAllowedInPrivateBrowsing(
             (extension as GeckoWebExtension).nativeExtension,
-            allowed
+            allowed,
         ).then(
             {
                 val ext = GeckoWebExtension(it!!, runtime)
@@ -454,7 +454,7 @@ class GeckoEngine(
             { throwable ->
                 onError(throwable)
                 GeckoResult<Void>()
-            }
+            },
         )
     }
 
@@ -462,7 +462,7 @@ class GeckoEngine(
      * See [Engine.registerWebNotificationDelegate].
      */
     override fun registerWebNotificationDelegate(
-        webNotificationDelegate: WebNotificationDelegate
+        webNotificationDelegate: WebNotificationDelegate,
     ) {
         runtime.webNotificationDelegate = GeckoWebNotificationDelegate(webNotificationDelegate)
     }
@@ -471,7 +471,7 @@ class GeckoEngine(
      * See [Engine.registerWebPushDelegate].
      */
     override fun registerWebPushDelegate(
-        webPushDelegate: WebPushDelegate
+        webPushDelegate: WebPushDelegate,
     ): WebPushHandler {
         runtime.webPushController.setDelegate(GeckoWebPushDelegate(webPushDelegate))
 
@@ -486,7 +486,7 @@ class GeckoEngine(
      * See [Engine.registerActivityDelegate].
      */
     override fun registerActivityDelegate(
-        activityDelegate: ActivityDelegate
+        activityDelegate: ActivityDelegate,
     ) {
         /**
          * Having the activity delegate on the engine can cause issues with resolving multiple requests to the delegate
@@ -514,7 +514,7 @@ class GeckoEngine(
      * See [Engine.registerScreenOrientationDelegate].
      */
     override fun registerScreenOrientationDelegate(
-        delegate: OrientationDelegate
+        delegate: OrientationDelegate,
     ) {
         runtime.orientationController.delegate = GeckoScreenOrientationDelegate(delegate)
     }
@@ -530,7 +530,7 @@ class GeckoEngine(
         runtime.serviceWorkerDelegate = GeckoServiceWorkerDelegate(
             delegate = serviceWorkerDelegate,
             runtime = runtime,
-            engineSettings = defaultSettings
+            engineSettings = defaultSettings,
         )
     }
 
@@ -549,7 +549,7 @@ class GeckoEngine(
         data: Engine.BrowsingData,
         host: String?,
         onSuccess: () -> Unit,
-        onError: (Throwable) -> Unit
+        onError: (Throwable) -> Unit,
     ) {
         val flags = data.types.toLong()
         if (host != null) {
@@ -562,10 +562,10 @@ class GeckoEngine(
                 GeckoResult<Void>()
             },
             {
-                throwable ->
+                    throwable ->
                 onError(throwable)
                 GeckoResult<Void>()
-            }
+            },
         )
     }
 
@@ -605,10 +605,10 @@ class GeckoEngine(
         override var safeBrowsingPolicy: Array<SafeBrowsingPolicy> =
             arrayOf(SafeBrowsingPolicy.RECOMMENDED)
             set(value) {
-                    val policy = value.sumOf { it.id }
-                    runtime.settings.contentBlocking.setSafeBrowsing(policy)
-                    field = value
-                }
+                val policy = value.sumOf { it.id }
+                runtime.settings.contentBlocking.setSafeBrowsing(policy)
+                field = value
+            }
 
         override var trackingProtectionPolicy: TrackingProtectionPolicy? = null
             set(value) {
@@ -763,7 +763,6 @@ class GeckoEngine(
             }
             Event.LOADED_LEVEL_1_TRACKING_CONTENT -> TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
             Event.LOADED_LEVEL_2_TRACKING_CONTENT -> {
-
                 // We are making sure that we are only showing trackers that our settings are
                 // taking into consideration.
                 val isContentListActive =
@@ -800,6 +799,7 @@ class GeckoEngine(
         val loadedCategories = blockingData.map { it.getLoadedCategory() }
             .filterNot { it == TrackingCategory.NONE }
             .distinct()
+
         /**
          *  When a resource is shimmed we'll received a [REPLACED_TRACKING_CONTENT] event with
          *  the quantity [BlockingData.count] of categories that were shimmed, but it doesn't
@@ -846,7 +846,7 @@ class GeckoEngine(
             loadedCategories = loadedCategories.filterNot { it in shimmedCategories },
             blockedCategories = (blockedCategories + shimmedCategories).distinct(),
             cookiesHasBeenBlocked = cookiesHasBeenBlocked,
-            unBlockedBySmartBlock = this.blockingData.any { it.unBlockedBySmartBlock() }
+            unBlockedBySmartBlock = this.blockingData.any { it.unBlockedBySmartBlock() },
         )
     }
 }

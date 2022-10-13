@@ -27,14 +27,14 @@ internal data class ContainerEntity(
     var color: Color,
 
     @ColumnInfo(name = "icon")
-    var icon: Icon
+    var icon: Icon,
 ) {
     internal fun toContainer(): Container {
         return Container(
             contextId,
             name,
             color,
-            icon
+            icon,
         )
     }
 }
@@ -44,6 +44,6 @@ internal fun Container.toContainerEntity(): ContainerEntity {
         contextId,
         name,
         color,
-        icon
+        icon,
     )
 }

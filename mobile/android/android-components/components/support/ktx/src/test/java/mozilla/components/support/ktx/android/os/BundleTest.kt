@@ -19,11 +19,11 @@ class BundleTest {
     @Test
     fun `bundles with different sizes should not be equals`() {
         val small = bundleOf(
-            "hello" to "world"
+            "hello" to "world",
         )
         val big = bundleOf(
             "hello" to "world",
-            "foo" to "bar"
+            "foo" to "bar",
         )
         assertFalse(small.contentEquals(big))
     }
@@ -43,7 +43,7 @@ class BundleTest {
                 "longArray" to longArrayOf(0L, 1L),
                 "shortArray" to shortArrayOf(1, 2),
                 "typedArray" to arrayOf("foo", "bar"),
-                "nestedBundle" to bundleOf()
+                "nestedBundle" to bundleOf(),
             )
         }
         assertTrue(bundle1.contentEquals(bundle2))
@@ -57,8 +57,8 @@ class BundleTest {
                 "crumbs" to Breadcrumb(
                     message = "msg",
                     level = Breadcrumb.Level.DEBUG,
-                    date = date
-                )
+                    date = date,
+                ),
             )
         }
         assertTrue(bundle1.contentEquals(bundle2))

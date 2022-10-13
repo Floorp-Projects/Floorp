@@ -46,7 +46,7 @@ class RestoringBrowsingSessionsTest {
         val engine = GeckoEngine(context)
 
         assertTrue(
-            getFileForEngine(context, engine).writeString { json }
+            getFileForEngine(context, engine).writeString { json },
         )
 
         val storage = SessionStorage(context, engine)
@@ -93,7 +93,7 @@ class RestoringBrowsingSessionsTest {
             val engine = GeckoEngine(context)
 
             assertTrue(
-                getFileForEngine(context, engine).writeString { json }
+                getFileForEngine(context, engine).writeString { json },
             )
 
             val storage = SessionStorage(context, engine)
@@ -168,7 +168,7 @@ class RestoringBrowsingSessionsTest {
             val engine = GeckoEngine(context)
 
             assertTrue(
-                getFileForEngine(context, engine).writeString { json }
+                getFileForEngine(context, engine).writeString { json },
             )
 
             val storage = SessionStorage(context, engine)
@@ -219,7 +219,7 @@ class RestoringBrowsingSessionsTest {
             val engine = GeckoEngine(context)
 
             assertTrue(
-                getFileForEngine(context, engine).writeString { json }
+                getFileForEngine(context, engine).writeString { json },
             )
 
             val storage = SessionStorage(context, engine)
@@ -270,7 +270,7 @@ class RestoringBrowsingSessionsTest {
             val engine = GeckoEngine(context)
 
             assertTrue(
-                getFileForEngine(context, engine).writeString { json }
+                getFileForEngine(context, engine).writeString { json },
             )
 
             val storage = SessionStorage(context, engine)

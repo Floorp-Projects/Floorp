@@ -94,7 +94,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
     override suspend fun getRecentBookmarks(
         limit: Int,
         maxAge: Long?,
-        @VisibleForTesting currentTime: Long
+        @VisibleForTesting currentTime: Long,
     ): List<BookmarkNode> {
         return withContext(readScope.coroutineContext) {
             val threshold = if (maxAge != null) {

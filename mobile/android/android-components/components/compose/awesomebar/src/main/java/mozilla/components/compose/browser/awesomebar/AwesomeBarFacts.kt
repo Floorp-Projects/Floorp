@@ -31,14 +31,14 @@ object AwesomeBarFacts {
         action: Action,
         item: String,
         value: String? = null,
-        metadata: Map<String, Any>? = null
+        metadata: Map<String, Any>? = null,
     ) {
         Fact(
             Component.COMPOSE_AWESOMEBAR,
             action,
             item,
             value,
-            metadata
+            metadata,
         ).collect()
     }
 }

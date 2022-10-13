@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit
 class ContileTopSitesUpdater(
     private val context: Context,
     private val provider: ContileTopSitesProvider,
-    private val frequency: Frequency = Frequency(1, TimeUnit.DAYS)
+    private val frequency: Frequency = Frequency(1, TimeUnit.DAYS),
 ) {
 
     private val logger = Logger("ContileTopSitesUpdater")
@@ -42,7 +42,7 @@ class ContileTopSitesUpdater(
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             PERIODIC_WORK_TAG,
             ExistingPeriodicWorkPolicy.KEEP,
-            createPeriodicWorkRequest()
+            createPeriodicWorkRequest(),
         )
 
         logger.info("Started periodic work to update Contile top sites")
@@ -63,7 +63,7 @@ class ContileTopSitesUpdater(
     internal fun createPeriodicWorkRequest() =
         PeriodicWorkRequestBuilder<ContileTopSitesUpdaterWorker>(
             repeatInterval = frequency.repeatInterval,
-            repeatIntervalTimeUnit = frequency.repeatIntervalTimeUnit
+            repeatIntervalTimeUnit = frequency.repeatIntervalTimeUnit,
         ).apply {
             setConstraints(getWorkerConstraints())
             addTag(PERIODIC_WORK_TAG)

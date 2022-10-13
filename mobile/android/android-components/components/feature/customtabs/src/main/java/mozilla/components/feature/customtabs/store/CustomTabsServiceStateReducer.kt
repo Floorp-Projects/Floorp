@@ -20,8 +20,8 @@ internal object CustomTabsServiceStateReducer {
                 state.copy(
                     relationships = state.relationships + Pair(
                         OriginRelationPair(action.origin, action.relation),
-                        action.status
-                    )
+                        action.status,
+                    ),
                 )
         }
     }

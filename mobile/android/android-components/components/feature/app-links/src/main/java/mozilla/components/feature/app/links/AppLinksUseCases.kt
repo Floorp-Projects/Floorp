@@ -49,7 +49,7 @@ internal const val APP_LINKS_CACHE_INTERVAL = 30 * 1000L // 30 seconds
 class AppLinksUseCases(
     private val context: Context,
     private val launchInApp: () -> Boolean = { false },
-    private val alwaysDeniedSchemes: Set<String> = ALWAYS_DENY_SCHEMES
+    private val alwaysDeniedSchemes: Set<String> = ALWAYS_DENY_SCHEMES,
 ) {
     @Suppress(
         "QueryPermissionsNeeded", // We expect our browsers to have the QUERY_ALL_PACKAGES permission

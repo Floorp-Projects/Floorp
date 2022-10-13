@@ -24,7 +24,7 @@ class FlowKtTest {
 
         assertEquals(
             listOf("A", "B", "C", "A", "D", "A"),
-            items
+            items,
         )
     }
 
@@ -36,7 +36,7 @@ class FlowKtTest {
 
         assertEquals(
             listOf("banana", "apple", "big", "coconut", "home"),
-            items
+            items,
         )
     }
 
@@ -51,7 +51,7 @@ class FlowKtTest {
             StringState("A"),
             StringState("A"),
             StringState("D"),
-            StringState("A")
+            StringState("A"),
         )
 
         val items = originalFlow.ifChanged().toList()
@@ -63,9 +63,9 @@ class FlowKtTest {
                 StringState("C"),
                 StringState("A"),
                 StringState("D"),
-                StringState("A")
+                StringState("A"),
             ),
-            items
+            items,
         )
     }
 
@@ -77,7 +77,7 @@ class FlowKtTest {
 
         assertEquals(
             listOf("banana", "bus", "apple", "big", "coconut", "circle", "home"),
-            items
+            items,
         )
     }
 
@@ -87,13 +87,13 @@ class FlowKtTest {
 
         val items =
             originalFlow.ifAnyChanged {
-                item ->
+                    item ->
                 arrayOf(CharState(item[0]), CharState(item[1]))
             }.toList()
 
         assertEquals(
             listOf("banana", "bus", "apple", "big", "coconut", "circle", "home"),
-            items
+            items,
         )
     }
 
@@ -122,7 +122,7 @@ class FlowKtTest {
             listOf(IntState(0), IntState(1)),
             listOf(IntState(0), IntState(1), IntState(2), IntState(3)),
             listOf(IntState(4)),
-            listOf(IntState(5), IntState(6), IntState(7), IntState(8))
+            listOf(IntState(5), IntState(6), IntState(7), IntState(8)),
         )
 
         val identityItems = intFlow.filterChanged { item -> item }.toList()
@@ -136,9 +136,9 @@ class FlowKtTest {
                 IntState(5),
                 IntState(6),
                 IntState(7),
-                IntState(8)
+                IntState(8),
             ),
-            identityItems
+            identityItems,
         )
     }
 }

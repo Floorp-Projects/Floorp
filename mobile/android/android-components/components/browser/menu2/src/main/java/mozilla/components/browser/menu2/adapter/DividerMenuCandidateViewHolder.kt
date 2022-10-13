@@ -15,7 +15,7 @@ import mozilla.components.concept.menu.candidate.DividerMenuCandidate
  */
 internal class DividerMenuCandidateViewHolder(
     itemView: View,
-    inflater: LayoutInflater
+    inflater: LayoutInflater,
 ) : MenuCandidateViewHolder<DividerMenuCandidate>(itemView, inflater) {
 
     companion object {

@@ -15,14 +15,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.ArgumentMatchers.eq
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
 class ActivityKtTest {
     private val baseManifest = WebAppManifest(
         name = "Test Manifest",
-        startUrl = "/"
+        startUrl = "/",
     )
 
     private lateinit var activity: Activity

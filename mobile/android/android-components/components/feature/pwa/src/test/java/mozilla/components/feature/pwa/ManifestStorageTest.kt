@@ -22,10 +22,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -34,19 +34,19 @@ class ManifestStorageTest {
     private val firefoxManifest = WebAppManifest(
         name = "Firefox",
         startUrl = "https://firefox.com",
-        scope = "/"
+        scope = "/",
     )
 
     private val googleMapsManifest = WebAppManifest(
         name = "Google Maps",
         startUrl = "https://google.com/maps",
-        scope = "https://google.com/maps/"
+        scope = "https://google.com/maps/",
     )
 
     private val exampleWebAppManifest = WebAppManifest(
         name = "Example Web App",
         startUrl = "https://pwa.example.com/dashboard",
-        scope = "https://pwa.example.com/"
+        scope = "https://pwa.example.com/",
     )
 
     @Test
@@ -126,7 +126,7 @@ class ManifestStorageTest {
 
         assertEquals(
             listOf(manifest1, manifest2, manifest3),
-            storage.loadManifestsByScope("https://mozilla.org/index.html?key=value")
+            storage.loadManifestsByScope("https://mozilla.org/index.html?key=value"),
         )
     }
 
@@ -137,12 +137,12 @@ class ManifestStorageTest {
         val manifest1 = WebAppManifest(
             name = "Mozilla",
             startUrl = "https://mozilla.org",
-            shareTarget = WebAppManifest.ShareTarget("https://mozilla.org/share")
+            shareTarget = WebAppManifest.ShareTarget("https://mozilla.org/share"),
         )
         val manifest2 = WebAppManifest(
             name = "Firefox",
             startUrl = "https://firefox.com",
-            shareTarget = WebAppManifest.ShareTarget("https://firefox.com/share")
+            shareTarget = WebAppManifest.ShareTarget("https://firefox.com/share"),
         )
         val timeout = ManifestStorage.ACTIVE_THRESHOLD_MS
         val currentTime = System.currentTimeMillis()
@@ -153,7 +153,7 @@ class ManifestStorageTest {
 
         assertEquals(
             listOf(manifest1, manifest2),
-            storage.loadShareableManifests(currentTime)
+            storage.loadShareableManifests(currentTime),
         )
     }
 
@@ -235,8 +235,8 @@ class ManifestStorageTest {
             3,
             storage.recentManifestsCount(
                 activeThresholdMs = testThreshold + 10L,
-                currentTimeMs = currentTime
-            )
+                currentTimeMs = currentTime,
+            ),
         )
     }
 
@@ -257,9 +257,9 @@ class ManifestStorageTest {
             mapOf(
                 Pair("/", "https://firefox.com"),
                 Pair("https://google.com/maps/", "https://google.com/maps"),
-                Pair("https://pwa.example.com/", "https://pwa.example.com/dashboard")
+                Pair("https://pwa.example.com/", "https://pwa.example.com/dashboard"),
             ),
-            storage.installedScopes
+            storage.installedScopes,
         )
     }
 

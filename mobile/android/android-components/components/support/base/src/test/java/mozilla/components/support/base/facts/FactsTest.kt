@@ -24,8 +24,8 @@ class FactsTest {
             Fact(
                 Component.SUPPORT_TEST,
                 Action.CLICK,
-                "test"
-            )
+                "test",
+            ),
         )
     }
 
@@ -41,7 +41,7 @@ class FactsTest {
         val fact1 = Fact(
             Component.SUPPORT_TEST,
             Action.CLICK,
-            "test"
+            "test",
         )
 
         Facts.collect(fact1)
@@ -52,7 +52,7 @@ class FactsTest {
         val fact2 = Fact(
             Component.SUPPORT_BASE,
             Action.TOGGLE,
-            "test"
+            "test",
         )
 
         Facts.collect(fact2)

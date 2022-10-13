@@ -33,5 +33,5 @@ data class WebExtensionState(
     val browserAction: WebExtensionBrowserAction? = null,
     val pageAction: WebExtensionPageAction? = null,
     val popupSessionId: String? = null,
-    val popupSession: EngineSession? = null
+    val popupSession: EngineSession? = null,
 )

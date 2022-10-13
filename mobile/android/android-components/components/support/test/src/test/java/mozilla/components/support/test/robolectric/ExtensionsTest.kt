@@ -17,7 +17,7 @@ class ExtensionsTest {
     fun getProvidedAppContext() {
         Assert.assertEquals(
             ApplicationProvider.getApplicationContext(),
-            testContext
+            testContext,
         )
     }
 }

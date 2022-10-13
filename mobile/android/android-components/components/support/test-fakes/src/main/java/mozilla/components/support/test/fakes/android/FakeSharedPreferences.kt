@@ -12,7 +12,7 @@ import android.content.SharedPreferences
  */
 @Suppress("UNCHECKED_CAST")
 class FakeSharedPreferences(
-    internal val values: MutableMap<String, Any> = mutableMapOf()
+    internal val values: MutableMap<String, Any> = mutableMapOf(),
 ) : SharedPreferences {
     override fun getAll(): Map<String, *> = values
     override fun getString(key: String, defValue: String?): String? = values[key]?.toString() ?: defValue
@@ -25,15 +25,15 @@ class FakeSharedPreferences(
     override fun contains(key: String): Boolean = values.containsKey(key)
     override fun edit(): SharedPreferences.Editor = FakeEditor(this)
     override fun registerOnSharedPreferenceChangeListener(
-        listener: SharedPreferences.OnSharedPreferenceChangeListener
+        listener: SharedPreferences.OnSharedPreferenceChangeListener,
     ) = throw NotImplementedError()
     override fun unregisterOnSharedPreferenceChangeListener(
-        listener: SharedPreferences.OnSharedPreferenceChangeListener
+        listener: SharedPreferences.OnSharedPreferenceChangeListener,
     ) = throw NotImplementedError()
 }
 
 internal class FakeEditor(
-    private val preferences: FakeSharedPreferences
+    private val preferences: FakeSharedPreferences,
 ) : SharedPreferences.Editor {
     override fun putString(key: String, value: String?): SharedPreferences.Editor {
         if (value == null) {

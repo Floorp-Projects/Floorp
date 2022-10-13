@@ -56,9 +56,9 @@ class WebExtensionActionTest {
         assertEquals(
             extension.copy(
                 browserAction = mockedBrowserAction,
-                pageAction = mockedPageAction
+                pageAction = mockedPageAction,
             ),
-            store.state.extensions.values.first()
+            store.state.extensions.values.first(),
         )
     }
 
@@ -68,8 +68,8 @@ class WebExtensionActionTest {
         val tab2 = createTab("url")
         val store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(tab1, tab2)
-            )
+                tabs = listOf(tab1, tab2),
+            ),
         )
 
         assertTrue(store.state.extensions.isEmpty())
@@ -108,8 +108,8 @@ class WebExtensionActionTest {
         val tab2 = createTab("url")
         val store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(tab1, tab2)
-            )
+                tabs = listOf(tab1, tab2),
+            ),
         )
         assertTrue(store.state.extensions.isEmpty())
 
@@ -155,8 +155,8 @@ class WebExtensionActionTest {
         val tab = createTab("url")
         val store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
         val mockedBrowserAction = mock<WebExtensionBrowserAction>()
 
@@ -168,8 +168,8 @@ class WebExtensionActionTest {
             WebExtensionAction.UpdateTabBrowserAction(
                 tab.id,
                 extension.id,
-                mockedBrowserAction
-            )
+                mockedBrowserAction,
+            ),
         ).joinBlocking()
 
         val extensions = store.state.tabs.first().extensionState
@@ -190,22 +190,22 @@ class WebExtensionActionTest {
                     "url",
                     "name",
                     true,
-                    browserAction = mockedBrowserAction1
-                )
-            )
+                    browserAction = mockedBrowserAction1,
+                ),
+            ),
         )
         val store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         store.dispatch(
             WebExtensionAction.UpdateTabBrowserAction(
                 tab.id,
                 "extensionId",
-                mockedBrowserAction2
-            )
+                mockedBrowserAction2,
+            ),
         ).joinBlocking()
 
         val extensions = store.state.tabs.first().extensionState
@@ -237,8 +237,8 @@ class WebExtensionActionTest {
         val tab = createTab("url")
         val store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
         val mockedPageAction = mock<WebExtensionPageAction>()
 
@@ -250,8 +250,8 @@ class WebExtensionActionTest {
             WebExtensionAction.UpdateTabPageAction(
                 tab.id,
                 extension.id,
-                mockedPageAction
-            )
+                mockedPageAction,
+            ),
         ).joinBlocking()
 
         val extensions = store.state.tabs.first().extensionState
@@ -272,22 +272,22 @@ class WebExtensionActionTest {
                     "url",
                     "name",
                     true,
-                    pageAction = mockedPageAction1
-                )
-            )
+                    pageAction = mockedPageAction1,
+                ),
+            ),
         )
         val store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         store.dispatch(
             WebExtensionAction.UpdateTabPageAction(
                 tab.id,
                 "extensionId",
-                mockedPageAction2
-            )
+                mockedPageAction2,
+            ),
         ).joinBlocking()
 
         val extensions = store.state.tabs.first().extensionState
@@ -342,8 +342,8 @@ class WebExtensionActionTest {
 
         val store = BrowserStore(
             initialState = BrowserState(
-                extensions = mapOf("id" to existingExtension)
-            )
+                extensions = mapOf("id" to existingExtension),
+            ),
         )
 
         store.dispatch(WebExtensionAction.UpdateWebExtensionAction(updatedExtension)).joinBlocking()
@@ -371,8 +371,8 @@ class WebExtensionActionTest {
         val tab = createTab(url = "https://mozilla.org")
         val store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         assertNull(store.state.activeWebExtensionTabId)

@@ -7,9 +7,9 @@ package mozilla.components.feature.customtabs.store
 import mozilla.components.lib.state.Store
 
 class CustomTabsServiceStore(
-    initialState: CustomTabsServiceState = CustomTabsServiceState()
+    initialState: CustomTabsServiceState = CustomTabsServiceState(),
 ) : Store<CustomTabsServiceState, CustomTabsAction>(
     initialState,
     CustomTabsServiceStateReducer::reduce,
-    threadNamePrefix = "CustomTabsService"
+    threadNamePrefix = "CustomTabsService",
 )

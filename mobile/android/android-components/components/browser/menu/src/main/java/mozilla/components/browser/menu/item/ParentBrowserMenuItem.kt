@@ -46,7 +46,7 @@ class ParentBrowserMenuItem(
     internal val subMenu: BrowserMenu,
     override val isCollapsingMenuLimit: Boolean = false,
     override val isSticky: Boolean = false,
-    endOfMenuAlwaysVisible: Boolean = false
+    endOfMenuAlwaysVisible: Boolean = false,
 ) : AbstractParentBrowserMenuItem(subMenu, isCollapsingMenuLimit, endOfMenuAlwaysVisible) {
 
     override var visible: () -> Boolean = { true }
@@ -95,12 +95,12 @@ class ParentBrowserMenuItem(
         start = DrawableMenuIcon(
             context,
             resource = imageResource,
-            tint = if (iconTintColorResource == NO_ID) null else ContextCompat.getColor(context, iconTintColorResource)
+            tint = if (iconTintColorResource == NO_ID) null else ContextCompat.getColor(context, iconTintColorResource),
         ),
         subMenuItems = subMenu.adapter.visibleItems.asCandidateList(context),
         textStyle = TextStyle(
-            color = if (textColorResource == NO_ID) null else ContextCompat.getColor(context, textColorResource)
+            color = if (textColorResource == NO_ID) null else ContextCompat.getColor(context, textColorResource),
         ),
-        containerStyle = ContainerStyle(isVisible = visible())
+        containerStyle = ContainerStyle(isVisible = visible()),
     )
 }

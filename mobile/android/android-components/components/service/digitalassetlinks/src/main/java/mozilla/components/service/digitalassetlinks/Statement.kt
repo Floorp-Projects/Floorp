@@ -14,12 +14,12 @@ sealed class StatementResult
  */
 data class Statement(
     val relation: Relation,
-    val target: AssetDescriptor
+    val target: AssetDescriptor,
 ) : StatementResult()
 
 /**
  * Include statements point to another Digital Asset Links statement file.
  */
 data class IncludeStatement(
-    val include: String
+    val include: String,
 ) : StatementResult()

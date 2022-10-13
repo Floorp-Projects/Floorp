@@ -43,7 +43,7 @@ internal object TabListReducer {
                         action.tab.id
                     } else {
                         state.selectedTabId
-                    }
+                    },
                 )
             }
 
@@ -60,7 +60,7 @@ internal object TabListReducer {
                         action.tabs.find { tab -> !tab.content.private }?.id
                     } else {
                         state.selectedTabId
-                    }
+                    },
                 )
             }
 
@@ -113,7 +113,7 @@ internal object TabListReducer {
                     state.copy(
                         tabs = updatedTabList,
                         selectedTabId = updatedSelection,
-                        tabPartitions = state.tabPartitions.removeTabs(listOf(action.tabId))
+                        tabPartitions = state.tabPartitions.removeTabs(listOf(action.tabId)),
                     )
                 }
             }
@@ -140,7 +140,7 @@ internal object TabListReducer {
                             findNewSelectedTabId(
                                 updatedTabList,
                                 removedSelectedTab.content.private,
-                                previousIndex
+                                previousIndex,
                             )
                         } else {
                             // The selected tab is not affected and can stay the same
@@ -150,7 +150,7 @@ internal object TabListReducer {
                     state.copy(
                         tabs = updatedTabList,
                         selectedTabId = updatedSelection,
-                        tabPartitions = state.tabPartitions.removeTabs(action.tabIds)
+                        tabPartitions = state.tabPartitions.removeTabs(action.tabIds),
                     )
                 }
             }
@@ -192,7 +192,7 @@ internal object TabListReducer {
                         action.selectedTabId
                     } else {
                         state.selectedTabId
-                    }
+                    },
                 )
             }
 
@@ -200,7 +200,7 @@ internal object TabListReducer {
                 state.copy(
                     tabs = emptyList(),
                     selectedTabId = null,
-                    tabPartitions = state.tabPartitions.removeAllTabs()
+                    tabPartitions = state.tabPartitions.removeAllTabs(),
                 )
             }
 
@@ -216,7 +216,7 @@ internal object TabListReducer {
                     } else {
                         state.selectedTabId
                     },
-                    tabPartitions = state.tabPartitions.removeTabs(partition.first.map { it.id })
+                    tabPartitions = state.tabPartitions.removeTabs(partition.first.map { it.id }),
                 )
             }
 
@@ -233,7 +233,7 @@ internal object TabListReducer {
                     } else {
                         state.selectedTabId
                     },
-                    tabPartitions = state.tabPartitions.removeTabs(partition.second.map { it.id })
+                    tabPartitions = state.tabPartitions.removeTabs(partition.second.map { it.id }),
                 )
             }
         }
@@ -246,13 +246,13 @@ internal object TabListReducer {
  */
 private fun findNewParentId(
     tabToFindNewParent: TabSessionState,
-    tabsToBeRemoved: List<TabSessionState>
+    tabsToBeRemoved: List<TabSessionState>,
 ): String? {
     return if (tabsToBeRemoved.map { it.id }.contains(tabToFindNewParent.parentId)) {
         // The parent tab is being removed, let's check the parent's parent
         findNewParentId(
             tabsToBeRemoved.first { tabToFindNewParent.parentId == it.id },
-            tabsToBeRemoved
+            tabsToBeRemoved,
         )
     } else {
         tabToFindNewParent.parentId
@@ -265,7 +265,7 @@ private fun findNewParentId(
 private fun findNewSelectedTabId(
     tabs: List<TabSessionState>,
     isPrivate: Boolean,
-    previousIndex: Int
+    previousIndex: Int,
 ): String? {
     if (tabs.isEmpty()) {
         // There's no tab left to select.
@@ -301,7 +301,7 @@ private fun findNewSelectedTabId(
 private fun findNearbyTab(
     tabs: List<TabSessionState>,
     index: Int,
-    predicate: (TabSessionState) -> Boolean
+    predicate: (TabSessionState) -> Boolean,
 ): TabSessionState? {
     val maxSteps = max(tabs.lastIndex - index, index)
     if (maxSteps < 0) {
@@ -344,7 +344,7 @@ private fun Map<String, TabPartition>.removeTabs(removedTabIds: List<String>) =
         partition.copy(
             tabGroups = partition.tabGroups.map { group ->
                 group.copy(tabIds = group.tabIds.filterNot { tabId -> removedTabIds.contains(tabId) })
-            }
+            },
         )
     }
 
@@ -355,6 +355,6 @@ private fun Map<String, TabPartition>.removeAllTabs() =
     mapValues {
         val partition = it.value
         partition.copy(
-            tabGroups = partition.tabGroups.map { group -> group.copy(tabIds = emptyList()) }
+            tabGroups = partition.tabGroups.map { group -> group.copy(tabIds = emptyList()) },
         )
     }

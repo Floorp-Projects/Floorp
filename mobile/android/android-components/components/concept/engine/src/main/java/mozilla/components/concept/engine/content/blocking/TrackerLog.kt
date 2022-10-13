@@ -19,5 +19,5 @@ data class TrackerLog(
     val loadedCategories: List<TrackingCategory> = emptyList(),
     val blockedCategories: List<TrackingCategory> = emptyList(),
     val cookiesHasBeenBlocked: Boolean = false,
-    val unBlockedBySmartBlock: Boolean = false
+    val unBlockedBySmartBlock: Boolean = false,
 )

@@ -37,7 +37,7 @@ abstract class DownloadDialogFragment : AppCompatDialogFragment() {
         args.putString(
             KEY_FILE_NAME,
             download.fileName
-                ?: DownloadUtils.guessFileName(null, download.destinationDirectory, download.url, download.contentType)
+                ?: DownloadUtils.guessFileName(null, download.destinationDirectory, download.url, download.contentType),
         )
         args.putString(KEY_URL, download.url)
         args.putLong(KEY_CONTENT_LENGTH, download.contentLength ?: 0)

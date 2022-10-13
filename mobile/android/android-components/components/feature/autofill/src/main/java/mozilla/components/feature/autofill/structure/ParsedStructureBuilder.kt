@@ -10,7 +10,7 @@ import androidx.annotation.RequiresApi
 
 @RequiresApi(Build.VERSION_CODES.O)
 internal class ParsedStructureBuilder<ViewNode, AutofillId>(
-    private val navigator: AutofillNodeNavigator<ViewNode, AutofillId>
+    private val navigator: AutofillNodeNavigator<ViewNode, AutofillId>,
 ) {
     fun build(): ParsedStructure {
         val formNode = findFocusedForm()
@@ -21,7 +21,7 @@ internal class ParsedStructureBuilder<ViewNode, AutofillId>(
             usernameId,
             passwordId,
             getWebDomain(hostnameClue),
-            getPackageName(hostnameClue) ?: navigator.activityPackageName
+            getPackageName(hostnameClue) ?: navigator.activityPackageName,
         )
     }
 
@@ -49,8 +49,8 @@ internal class ParsedStructureBuilder<ViewNode, AutofillId>(
                 "username",
                 "user name",
                 "identifier",
-                "account_name"
-            )
+                "account_name",
+            ),
         )
     }
 

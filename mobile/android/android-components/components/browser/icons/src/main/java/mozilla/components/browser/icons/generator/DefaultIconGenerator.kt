@@ -31,7 +31,7 @@ import kotlin.math.abs
 class DefaultIconGenerator(
     @DimenRes private val cornerRadiusDimen: Int? = R.dimen.mozac_browser_icons_generator_default_corner_radius,
     @ColorRes private val textColorRes: Int = R.color.mozac_browser_icons_generator_default_text_color,
-    @ArrayRes private val backgroundColorsRes: Int = R.array.mozac_browser_icons_photon_palette
+    @ArrayRes private val backgroundColorsRes: Int = R.array.mozac_browser_icons_photon_palette,
 ) : IconGenerator {
 
     override fun generate(context: Context, request: IconRequest): Icon {
@@ -57,7 +57,7 @@ class DefaultIconGenerator(
         val textSize = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             size * TARGET_ICON_RATIO,
-            context.resources.displayMetrics
+            context.resources.displayMetrics,
         )
 
         paint.color = ContextCompat.getColor(context, textColorRes)
@@ -69,14 +69,14 @@ class DefaultIconGenerator(
             character,
             canvas.width / 2f,
             (canvas.height / 2f) - ((paint.descent() + paint.ascent()) / 2f),
-            paint
+            paint,
         )
 
         return Icon(
             bitmap = bitmap,
             color = backgroundColor,
             source = Icon.Source.GENERATOR,
-            maskable = cornerRadius == 0f
+            maskable = cornerRadius == 0f,
         )
     }
 

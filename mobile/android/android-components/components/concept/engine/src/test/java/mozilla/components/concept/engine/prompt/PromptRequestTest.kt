@@ -83,7 +83,7 @@ class PromptRequestTest {
             "value",
             true,
             { _, _ -> },
-            {}
+            {},
         )
 
         assertEquals(textPrompt.title, "title")
@@ -106,7 +106,7 @@ class PromptRequestTest {
             Type.DATE,
             { _ -> },
             {},
-            {}
+            {},
         )
 
         assertEquals(dateRequest.title, "title")
@@ -128,7 +128,7 @@ class PromptRequestTest {
             PromptRequest.File.FacingMode.NONE,
             { _, _ -> },
             { _, _ -> },
-            {}
+            {},
         )
 
         assertTrue(filePickerRequest.mimeTypes.isEmpty())
@@ -154,7 +154,7 @@ class PromptRequestTest {
             false,
             false,
             { _, _ -> },
-            {}
+            {},
         )
 
         assertEquals(promptRequest.title, "title")
@@ -208,7 +208,7 @@ class PromptRequestTest {
             onConfirmPositiveButton,
             onConfirmNegativeButton,
             onConfirmNeutralButton,
-            {}
+            {},
         )
 
         assertEquals(confirmRequest.title, "title")
@@ -263,7 +263,7 @@ class PromptRequestTest {
             },
             onDismiss = {
                 onDismissWasCalled = true
-            }
+            },
         )
 
         repostRequest.onConfirm()
@@ -281,7 +281,7 @@ class PromptRequestTest {
             number = "4111111111111110",
             expiryMonth = "5",
             expiryYear = "2030",
-            cardType = "amex"
+            cardType = "amex",
         )
         var onDismissCalled = false
         var onConfirmCalled = false
@@ -295,7 +295,7 @@ class PromptRequestTest {
             onConfirm = {
                 confirmedCreditCard = it
                 onConfirmCalled = true
-            }
+            },
         )
 
         assertEquals(selectCreditCardRequest.creditCards, listOf(creditCard))
@@ -331,7 +331,7 @@ class PromptRequestTest {
             postalCode = "1",
             country = "Country",
             tel = "1",
-            email = "@"
+            email = "@",
         )
         var onDismissCalled = false
         var onConfirmCalled = false
@@ -345,7 +345,7 @@ class PromptRequestTest {
             onConfirm = {
                 confirmedAddress = it
                 onConfirmCalled = true
-            }
+            },
         )
 
         assertEquals(selectAddresPromptRequest.addresses, listOf(address))

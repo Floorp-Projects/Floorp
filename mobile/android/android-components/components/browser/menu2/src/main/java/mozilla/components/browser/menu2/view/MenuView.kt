@@ -29,14 +29,14 @@ import mozilla.components.support.ktx.android.view.onNextGlobalLayout
 class MenuView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : FrameLayout(context, attrs, defStyleAttr) {
 
     private val layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
     private val menuAdapter = MenuCandidateListAdapter(
         inflater = LayoutInflater.from(context),
         dismiss = { onDismiss() },
-        reopenMenu = { onReopenMenu(it) }
+        reopenMenu = { onReopenMenu(it) },
     )
     private val cardView: CardView
     private val recyclerView: RecyclerView

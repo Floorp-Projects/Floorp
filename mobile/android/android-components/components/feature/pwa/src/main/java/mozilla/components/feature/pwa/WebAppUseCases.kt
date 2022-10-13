@@ -16,7 +16,7 @@ import mozilla.components.feature.pwa.ext.installableManifest
 class WebAppUseCases(
     private val applicationContext: Context,
     private val store: BrowserStore,
-    private val shortcutManager: WebAppShortcutManager
+    private val shortcutManager: WebAppShortcutManager,
 ) {
     /**
      * Checks if the launcher supports adding shortcuts.
@@ -42,7 +42,7 @@ class WebAppUseCases(
     class AddToHomescreenUseCase internal constructor(
         private val applicationContext: Context,
         private val store: BrowserStore,
-        private val shortcutManager: WebAppShortcutManager
+        private val shortcutManager: WebAppShortcutManager,
     ) {
 
         /**
@@ -69,13 +69,13 @@ class WebAppUseCases(
      */
     class GetInstallStateUseCase internal constructor(
         private val store: BrowserStore,
-        private val shortcutManager: WebAppShortcutManager
+        private val shortcutManager: WebAppShortcutManager,
     ) {
         /**
          * @param currentTimeMs the current time against which manifest usage timeouts will be validated
          */
         suspend operator fun invoke(
-            currentTimeMs: Long = System.currentTimeMillis()
+            currentTimeMs: Long = System.currentTimeMillis(),
         ): WebAppShortcutManager.WebAppInstallState? {
             val session = store.state.selectedTab ?: return null
             return shortcutManager.getWebAppInstallState(session.content.url, currentTimeMs)

@@ -21,12 +21,12 @@ fun DefaultSelectionActionDelegate(
     context: Context,
     shareTextClicked: ((String) -> Unit)? = { context.share(it) },
     emailTextClicked: ((String) -> Unit)? = { context.email(it) },
-    callTextClicked: ((String) -> Unit)? = { context.call(it) }
+    callTextClicked: ((String) -> Unit)? = { context.call(it) },
 ) =
     DefaultSelectionActionDelegate(
         BrowserStoreSearchAdapter(store),
         context.resources,
         shareTextClicked,
         emailTextClicked,
-        callTextClicked
+        callTextClicked,
     )

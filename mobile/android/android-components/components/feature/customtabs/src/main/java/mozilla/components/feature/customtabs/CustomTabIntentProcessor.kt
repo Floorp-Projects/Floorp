@@ -23,7 +23,7 @@ import mozilla.components.support.utils.toSafeIntent
 class CustomTabIntentProcessor(
     private val addCustomTabUseCase: CustomTabsUseCases.AddCustomTabUseCase,
     private val resources: Resources,
-    private val isPrivate: Boolean = false
+    private val isPrivate: Boolean = false,
 ) : IntentProcessor {
 
     private fun matches(intent: Intent): Boolean {
@@ -62,7 +62,7 @@ class CustomTabIntentProcessor(
                 config,
                 isPrivate,
                 getAdditionalHeaders(safeIntent),
-                source = SessionState.Source.External.CustomTab(caller)
+                source = SessionState.Source.External.CustomTab(caller),
             )
             intent.putSessionId(customTabId)
 

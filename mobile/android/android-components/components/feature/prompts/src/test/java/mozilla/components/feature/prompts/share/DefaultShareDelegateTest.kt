@@ -41,7 +41,7 @@ class DefaultShareDelegateTest {
             context,
             ShareData(title = "Title", text = "Text", url = null),
             onDismiss = { dismissed = true },
-            onSuccess = { succeeded = true }
+            onSuccess = { succeeded = true },
         )
 
         verify(context).startActivity(any())
@@ -61,7 +61,7 @@ class DefaultShareDelegateTest {
             context,
             ShareData(title = null, text = "Text", url = "https://example.com"),
             onDismiss = { dismissed = true },
-            onSuccess = { succeeded = true }
+            onSuccess = { succeeded = true },
         )
 
         assertTrue(dismissed)

@@ -32,8 +32,8 @@ internal object ShareTargetParser {
                     title = params?.tryGetString("title"),
                     text = params?.tryGetString("text"),
                     url = params?.tryGetString("url"),
-                    files = parseFiles(params)
-                )
+                    files = parseFiles(params),
+                ),
             )
         } else {
             null
@@ -64,7 +64,7 @@ internal object ShareTargetParser {
                             }
                         }
                         .asIterable()
-                        .toJSONArray()
+                        .toJSONArray(),
                 )
             }
             put("params", params)
@@ -96,7 +96,7 @@ internal object ShareTargetParser {
      */
     private fun validMethodAndEncType(
         method: ShareTarget.RequestMethod,
-        encType: ShareTarget.EncodingType
+        encType: ShareTarget.EncodingType,
     ) = when (encType) {
         ShareTarget.EncodingType.URL_ENCODED -> true
         ShareTarget.EncodingType.MULTIPART -> method == ShareTarget.RequestMethod.POST
@@ -123,7 +123,7 @@ internal object ShareTargetParser {
                 is String -> listOf(accept)
                 is JSONArray -> accept.asSequence { i -> getString(i) }.toList()
                 else -> emptyList()
-            }
+            },
         )
     }
 }

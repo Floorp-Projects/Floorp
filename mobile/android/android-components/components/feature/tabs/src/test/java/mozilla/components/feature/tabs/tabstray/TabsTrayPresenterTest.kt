@@ -37,10 +37,10 @@ class TabsTrayPresenterTest {
             BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b")
+                    createTab("https://getpocket.com", id = "b"),
                 ),
-                selectedTabId = "a"
-            )
+                selectedTabId = "a",
+            ),
         )
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
@@ -49,7 +49,7 @@ class TabsTrayPresenterTest {
             store,
             closeTabsTray = {},
             tabPartitionsFilter = { null },
-            tabsFilter = { true }
+            tabsFilter = { true },
         )
 
         verifyNoMoreInteractions(tabsTray)
@@ -74,10 +74,10 @@ class TabsTrayPresenterTest {
             BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b")
+                    createTab("https://getpocket.com", id = "b"),
                 ),
-                selectedTabId = "a"
-            )
+                selectedTabId = "a",
+            ),
         )
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
@@ -86,7 +86,7 @@ class TabsTrayPresenterTest {
             store,
             closeTabsTray = {},
             tabPartitionsFilter = { null },
-            tabsFilter = { true }
+            tabsFilter = { true },
         )
 
         presenter.start()
@@ -97,8 +97,8 @@ class TabsTrayPresenterTest {
 
         store.dispatch(
             TabListAction.AddTabAction(
-                createTab("https://developer.mozilla.org/")
-            )
+                createTab("https://developer.mozilla.org/"),
+            ),
         ).joinBlocking()
 
         assertEquals(3, tabsTray.updateTabs!!.size)
@@ -112,10 +112,10 @@ class TabsTrayPresenterTest {
             BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b")
+                    createTab("https://getpocket.com", id = "b"),
                 ),
-                selectedTabId = "a"
-            )
+                selectedTabId = "a",
+            ),
         )
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
@@ -124,7 +124,7 @@ class TabsTrayPresenterTest {
             store,
             closeTabsTray = {},
             tabPartitionsFilter = { null },
-            tabsFilter = { true }
+            tabsFilter = { true },
         )
 
         presenter.start()
@@ -152,10 +152,10 @@ class TabsTrayPresenterTest {
             BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b")
+                    createTab("https://getpocket.com", id = "b"),
                 ),
-                selectedTabId = "a"
-            )
+                selectedTabId = "a",
+            ),
         )
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
@@ -164,7 +164,7 @@ class TabsTrayPresenterTest {
             store,
             closeTabsTray = {},
             tabPartitionsFilter = { null },
-            tabsFilter = { true }
+            tabsFilter = { true },
         )
 
         presenter.start()
@@ -190,10 +190,10 @@ class TabsTrayPresenterTest {
                     createTab("https://getpocket.com", id = "b"),
                     createTab("https://developer.mozilla.org", id = "c"),
                     createTab("https://www.firefox.com", id = "d"),
-                    createTab("https://www.google.com", id = "e")
+                    createTab("https://www.google.com", id = "e"),
                 ),
-                selectedTabId = "a"
-            )
+                selectedTabId = "a",
+            ),
         )
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
@@ -202,7 +202,7 @@ class TabsTrayPresenterTest {
             store,
             closeTabsTray = {},
             tabPartitionsFilter = { null },
-            tabsFilter = { true }
+            tabsFilter = { true },
         )
 
         presenter.start()
@@ -224,10 +224,10 @@ class TabsTrayPresenterTest {
             BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b", private = true)
+                    createTab("https://getpocket.com", id = "b", private = true),
                 ),
-                selectedTabId = "a"
-            )
+                selectedTabId = "a",
+            ),
         )
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
@@ -236,7 +236,7 @@ class TabsTrayPresenterTest {
             store,
             closeTabsTray = {},
             tabPartitionsFilter = { null },
-            tabsFilter = { it.content.private }
+            tabsFilter = { it.content.private },
         )
 
         presenter.start()
@@ -254,10 +254,10 @@ class TabsTrayPresenterTest {
                     createTab("https://getpocket.com", id = "b"),
                     createTab("https://developer.mozilla.org", id = "c"),
                     createTab("https://www.firefox.com", id = "d"),
-                    createTab("https://www.google.com", id = "e")
+                    createTab("https://www.google.com", id = "e"),
                 ),
-                selectedTabId = "a"
-            )
+                selectedTabId = "a",
+            ),
         )
 
         var closed = false
@@ -268,7 +268,7 @@ class TabsTrayPresenterTest {
             store,
             tabPartitionsFilter = { null },
             tabsFilter = { true },
-            closeTabsTray = { closed = true }
+            closeTabsTray = { closed = true },
         )
 
         presenter.start()
@@ -290,10 +290,10 @@ class TabsTrayPresenterTest {
             BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b")
+                    createTab("https://getpocket.com", id = "b"),
                 ),
-                selectedTabId = "a"
-            )
+                selectedTabId = "a",
+            ),
         )
 
         var closed = false
@@ -304,7 +304,7 @@ class TabsTrayPresenterTest {
             store,
             tabPartitionsFilter = { null },
             tabsFilter = { true },
-            closeTabsTray = { closed = true }
+            closeTabsTray = { closed = true },
         )
 
         presenter.start()
@@ -330,8 +330,8 @@ class TabsTrayPresenterTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = emptyList(),
-                selectedTabId = null
-            )
+                selectedTabId = null,
+            ),
         )
 
         var invoked = false
@@ -341,7 +341,7 @@ class TabsTrayPresenterTest {
             store,
             tabPartitionsFilter = { null },
             tabsFilter = { it.content.private },
-            closeTabsTray = { invoked = true }
+            closeTabsTray = { invoked = true },
         )
 
         presenter.start()

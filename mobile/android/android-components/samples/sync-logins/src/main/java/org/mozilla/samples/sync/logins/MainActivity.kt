@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
             applicationContext,
             ServerConfig(Server.RELEASE, CLIENT_ID, REDIRECT_URL),
             DeviceConfig("A-C Logins Sync Sample", DeviceType.MOBILE, setOf()),
-            SyncConfig(setOf(SyncEngine.Passwords), PeriodicSyncConfig())
+            SyncConfig(setOf(SyncEngine.Passwords), PeriodicSyncConfig()),
         )
     }
 
@@ -150,7 +150,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
     override fun onLoginComplete(code: String, state: String, action: String, fragment: LoginFragment) {
         launch {
             accountManager.finishAuthentication(
-                FxaAuthData(action.toAuthType(), code = code, state = state)
+                FxaAuthData(action.toAuthType(), code = code, state = state),
             )
             supportFragmentManager.popBackStack()
         }
@@ -175,7 +175,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         Toast.makeText(
             this@MainActivity,
             "Logins sync error ${error?.localizedMessage}",
-            Toast.LENGTH_SHORT
+            Toast.LENGTH_SHORT,
         ).show()
     }
 }

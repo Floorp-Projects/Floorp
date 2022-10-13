@@ -26,14 +26,14 @@ private fun emitWebExtensionFact(
     action: Action,
     item: String,
     value: String? = null,
-    metadata: Map<String, Any>? = null
+    metadata: Map<String, Any>? = null,
 ) {
     Fact(
         Component.SUPPORT_WEBEXTENSIONS,
         action,
         item,
         value,
-        metadata
+        metadata,
     ).collect()
 }
 
@@ -45,7 +45,7 @@ internal fun emitWebExtensionsInitializedFact(extensions: List<WebExtension>) {
         WebExtensionFacts.Items.WEB_EXTENSIONS_INITIALIZED,
         metadata = mapOf(
             "installed" to installedAddons.map { it.id },
-            "enabled" to enabledAddons.map { it.id }
-        )
+            "enabled" to enabledAddons.map { it.id },
+        ),
     )
 }

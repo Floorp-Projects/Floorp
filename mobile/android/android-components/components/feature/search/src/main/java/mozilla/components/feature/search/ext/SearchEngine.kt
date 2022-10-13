@@ -25,7 +25,7 @@ fun createSearchEngine(
     name: String,
     url: String,
     icon: Bitmap,
-    suggestUrl: String? = null
+    suggestUrl: String? = null,
 ): SearchEngine {
     if (!url.contains(OS_SEARCH_ENGINE_TERMS_PARAM)) {
         throw IllegalArgumentException("URL does not contain search terms placeholder")
@@ -37,7 +37,7 @@ fun createSearchEngine(
         icon = icon,
         type = SearchEngine.Type.CUSTOM,
         resultUrls = listOf(url),
-        suggestUrl = suggestUrl
+        suggestUrl = suggestUrl,
     )
 }
 

@@ -44,12 +44,12 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import java.nio.ByteBuffer
@@ -400,7 +400,7 @@ class QrFragmentTest {
             480,
             QrFragment.MAX_PREVIEW_WIDTH,
             QrFragment.MAX_PREVIEW_HEIGHT,
-            Size(16, 9)
+            Size(16, 9),
         )
 
         assertEquals(640, size.width)
@@ -412,7 +412,7 @@ class QrFragmentTest {
             768,
             QrFragment.MAX_PREVIEW_WIDTH,
             QrFragment.MAX_PREVIEW_HEIGHT,
-            Size(4, 3)
+            Size(4, 3),
         )
 
         assertEquals(640, size.width)
@@ -424,7 +424,7 @@ class QrFragmentTest {
             768,
             QrFragment.MAX_PREVIEW_WIDTH,
             QrFragment.MAX_PREVIEW_HEIGHT,
-            Size(4, 3)
+            Size(4, 3),
         )
 
         assertEquals(640, size.width)
@@ -436,7 +436,7 @@ class QrFragmentTest {
             1024,
             QrFragment.MAX_PREVIEW_WIDTH,
             QrFragment.MAX_PREVIEW_HEIGHT,
-            Size(4, 3)
+            Size(4, 3),
         )
 
         assertEquals(640, size.width)
@@ -448,7 +448,7 @@ class QrFragmentTest {
             1024,
             QrFragment.MAX_PREVIEW_WIDTH,
             QrFragment.MAX_PREVIEW_HEIGHT,
-            Size(16, 9)
+            Size(16, 9),
         )
 
         assertEquals(1024, size.width)
@@ -493,7 +493,7 @@ class QrFragmentTest {
             480,
             QrFragment.MAX_PREVIEW_WIDTH,
             QrFragment.MAX_PREVIEW_HEIGHT,
-            Size(16, 9)
+            Size(16, 9),
         )
         qrFragment.adjustPreviewSize(optimalSize)
         verify(textureView).setAspectRatio(480, 480)
@@ -506,7 +506,7 @@ class QrFragmentTest {
             1024,
             QrFragment.MAX_PREVIEW_WIDTH,
             QrFragment.MAX_PREVIEW_HEIGHT,
-            Size(16, 9)
+            Size(16, 9),
         )
         qrFragment.adjustPreviewSize(optimalSize)
         verify(textureView).setAspectRatio(768, 768)

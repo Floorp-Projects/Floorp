@@ -14,7 +14,7 @@ import mozilla.components.support.images.DesiredSize
  * [IconProcessor] implementation that saves icons in the disk cache.
  */
 class DiskIconProcessor(
-    private val cache: ProcessorDiskCache
+    private val cache: ProcessorDiskCache,
 ) : IconProcessor {
     interface ProcessorDiskCache {
         /**
@@ -33,7 +33,7 @@ class DiskIconProcessor(
         request: IconRequest,
         resource: IconRequest.Resource?,
         icon: Icon,
-        desiredSize: DesiredSize
+        desiredSize: DesiredSize,
     ): Icon {
         if (resource != null && !request.isPrivate) {
             cache.putResources(context, request)

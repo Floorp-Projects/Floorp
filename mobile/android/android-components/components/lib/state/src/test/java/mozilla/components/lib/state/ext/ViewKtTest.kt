@@ -41,7 +41,7 @@ class ViewKtTest {
 
         val store = Store(
             TestState(counter = 23),
-            ::reducer
+            ::reducer,
         )
 
         val onAttachListener = argumentCaptor<View.OnAttachStateChangeListener>()

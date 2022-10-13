@@ -30,55 +30,55 @@ private fun emitAwesomebarFact(
     action: Action,
     item: String,
     value: String? = null,
-    metadata: Map<String, Any>? = null
+    metadata: Map<String, Any>? = null,
 ) {
     Fact(
         Component.FEATURE_AWESOMEBAR,
         action,
         item,
         value,
-        metadata
+        metadata,
     ).collect()
 }
 
 internal fun emitBookmarkSuggestionClickedFact() {
     emitAwesomebarFact(
         Action.INTERACTION,
-        AwesomeBarFacts.Items.BOOKMARK_SUGGESTION_CLICKED
+        AwesomeBarFacts.Items.BOOKMARK_SUGGESTION_CLICKED,
     )
 }
 
 internal fun emitClipboardSuggestionClickedFact() {
     emitAwesomebarFact(
         Action.INTERACTION,
-        AwesomeBarFacts.Items.CLIPBOARD_SUGGESTION_CLICKED
+        AwesomeBarFacts.Items.CLIPBOARD_SUGGESTION_CLICKED,
     )
 }
 
 internal fun emitHistorySuggestionClickedFact() {
     emitAwesomebarFact(
         Action.INTERACTION,
-        AwesomeBarFacts.Items.HISTORY_SUGGESTION_CLICKED
+        AwesomeBarFacts.Items.HISTORY_SUGGESTION_CLICKED,
     )
 }
 
 internal fun emitSearchActionClickedFact() {
     emitAwesomebarFact(
         Action.INTERACTION,
-        AwesomeBarFacts.Items.SEARCH_ACTION_CLICKED
+        AwesomeBarFacts.Items.SEARCH_ACTION_CLICKED,
     )
 }
 
 internal fun emitSearchSuggestionClickedFact() {
     emitAwesomebarFact(
         Action.INTERACTION,
-        AwesomeBarFacts.Items.SEARCH_SUGGESTION_CLICKED
+        AwesomeBarFacts.Items.SEARCH_SUGGESTION_CLICKED,
     )
 }
 
 internal fun emitOpenTabSuggestionClickedFact() {
     emitAwesomebarFact(
         Action.INTERACTION,
-        AwesomeBarFacts.Items.OPENED_TAB_SUGGESTION_CLICKED
+        AwesomeBarFacts.Items.OPENED_TAB_SUGGESTION_CLICKED,
     )
 }

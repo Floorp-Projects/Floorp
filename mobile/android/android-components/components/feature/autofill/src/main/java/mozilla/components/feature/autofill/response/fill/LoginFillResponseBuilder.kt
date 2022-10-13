@@ -23,14 +23,14 @@ import mozilla.components.feature.autofill.structure.ParsedStructure
 internal data class LoginFillResponseBuilder(
     val parsedStructure: ParsedStructure,
     val logins: List<Login>,
-    val needsConfirmation: Boolean
+    val needsConfirmation: Boolean,
 ) : FillResponseBuilder {
     private val searchDatasetBuilder = SearchDatasetBuilder(parsedStructure)
 
     override fun build(
         context: Context,
         configuration: AutofillConfiguration,
-        imeSpec: InlinePresentationSpec?
+        imeSpec: InlinePresentationSpec?,
     ): FillResponse {
         val builder = FillResponse.Builder()
 
@@ -39,20 +39,20 @@ internal data class LoginFillResponseBuilder(
                 parsedStructure,
                 login,
                 needsConfirmation,
-                requestOffset = index
+                requestOffset = index,
             )
 
             val dataset = datasetBuilder.build(
                 context,
                 configuration,
-                imeSpec
+                imeSpec,
             )
 
             builder.addDataset(dataset)
         }
 
         builder.addDataset(
-            searchDatasetBuilder.build(context, configuration, imeSpec)
+            searchDatasetBuilder.build(context, configuration, imeSpec),
         )
 
         return builder.build()

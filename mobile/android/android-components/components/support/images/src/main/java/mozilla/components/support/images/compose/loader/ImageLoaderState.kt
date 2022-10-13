@@ -19,7 +19,7 @@ sealed class ImageLoaderState {
      * The [ImageLoader] succesfully loaded the image.
      */
     data class Image(
-        val painter: BitmapPainter
+        val painter: BitmapPainter,
     ) : ImageLoaderState()
 
     /**

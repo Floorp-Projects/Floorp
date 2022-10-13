@@ -31,7 +31,13 @@ class PocketStoryTest {
     @Test
     fun `GIVEN a PocketRecommendedStory WHEN it's title is accessed from parent THEN it returns the previously set value`() {
         val pocketRecommendedStory = PocketRecommendedStory(
-            title = "testTitle", url = "", imageUrl = "", publisher = "", category = "", timeToRead = 0, timesShown = 0
+            title = "testTitle",
+            url = "",
+            imageUrl = "",
+            publisher = "",
+            category = "",
+            timeToRead = 0,
+            timesShown = 0,
         )
 
         val result = (pocketRecommendedStory as PocketStory).title
@@ -42,7 +48,13 @@ class PocketStoryTest {
     @Test
     fun `GIVEN a PocketRecommendedStory WHEN it's url is accessed from parent THEN it returns the previously set value`() {
         val pocketRecommendedStory = PocketRecommendedStory(
-            title = "", url = "testUrl", imageUrl = "", publisher = "", category = "", timeToRead = 0, timesShown = 0
+            title = "",
+            url = "testUrl",
+            imageUrl = "",
+            publisher = "",
+            category = "",
+            timeToRead = 0,
+            timesShown = 0,
         )
 
         val result = (pocketRecommendedStory as PocketStory).url

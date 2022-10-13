@@ -91,11 +91,11 @@ internal class CrashReporterOnLog(private val crashReporter: CrashReporting? = n
         crashReporter: CrashReporting,
         priority: Log.Priority,
         tag: String?,
-        msg: String
+        msg: String,
     ) {
         val ignoredTags = listOf(
             // Majority of these are likely to be various network issues.
-            "viaduct::backend::ffi"
+            "viaduct::backend::ffi",
         )
         if (priority != Log.Priority.ERROR) {
             return

@@ -21,17 +21,20 @@ import mozilla.components.service.pocket.update.SpocsRefreshScheduler
  */
 class PocketStoriesService(
     private val context: Context,
-    private val pocketStoriesConfig: PocketStoriesConfig
+    private val pocketStoriesConfig: PocketStoriesConfig,
 ) {
     @VisibleForTesting
     internal var storiesRefreshScheduler = PocketStoriesRefreshScheduler(pocketStoriesConfig)
+
     @VisibleForTesting
     internal var spocsRefreshscheduler = SpocsRefreshScheduler(pocketStoriesConfig)
+
     @VisibleForTesting
     internal var storiesUseCases = PocketStoriesUseCases(
         appContext = context,
-        fetchClient = pocketStoriesConfig.client
+        fetchClient = pocketStoriesConfig.client,
     )
+
     @VisibleForTesting
     internal var spocsUseCases = when (pocketStoriesConfig.profile) {
         null -> {
@@ -42,7 +45,7 @@ class PocketStoriesService(
             appContext = context,
             fetchClient = pocketStoriesConfig.client,
             profileId = pocketStoriesConfig.profile.profileId,
-            appId = pocketStoriesConfig.profile.appId
+            appId = pocketStoriesConfig.profile.appId,
         )
     }
 

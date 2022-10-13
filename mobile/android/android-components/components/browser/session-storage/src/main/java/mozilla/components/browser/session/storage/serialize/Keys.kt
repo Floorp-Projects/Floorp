@@ -27,6 +27,7 @@ internal object Keys {
     const val SESSION_LAST_MEDIA_URL = "lastMediaUrl"
     const val SESSION_LAST_MEDIA_ACCESS = "lastMediaAccess"
     const val SESSION_LAST_MEDIA_SESSION_ACTIVE = "mediaSessionActive"
+
     // Deprecated for SESSION_SOURCE_ID, kept around for backwards compatibility.
     const val SESSION_DEPRECATED_SOURCE_KEY = "source"
 

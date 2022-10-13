@@ -63,8 +63,8 @@ class SystemEngineTest {
             testContext,
             DefaultSettings(
                 remoteDebuggingEnabled = true,
-                trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.strict()
-            )
+                trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.strict(),
+            ),
         )
 
         assertTrue(engine.settings.remoteDebuggingEnabled)
@@ -73,7 +73,7 @@ class SystemEngineTest {
 
         assertEquals(
             engine.settings.trackingProtectionPolicy,
-            EngineSession.TrackingProtectionPolicy.strict()
+            EngineSession.TrackingProtectionPolicy.strict(),
         )
         engine.settings.trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.none()
         assertEquals(engine.settings.trackingProtectionPolicy, EngineSession.TrackingProtectionPolicy.none())
@@ -96,8 +96,8 @@ class SystemEngineTest {
             testContext,
             DefaultSettings(
                 remoteDebuggingEnabled = true,
-                trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.strict()
-            )
+                trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.strict(),
+            ),
         )
 
         engine.settings.safeBrowsingPolicy

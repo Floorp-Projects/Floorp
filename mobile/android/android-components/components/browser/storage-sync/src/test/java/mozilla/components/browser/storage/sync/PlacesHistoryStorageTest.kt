@@ -104,9 +104,9 @@ class PlacesHistoryStorageTest {
             listOf(
                 "http://www.firefox.com/1", "http://www.firefox.com/2", "http://www.firefox.com/3",
                 "http://www.firefox.com/4", "http://www.firefox.com/5", "http://www.firefox.com/6",
-                "http://www.firefox.com/7", "http://www.firefox.com/8", "http://www.firefox.com/9"
+                "http://www.firefox.com/7", "http://www.firefox.com/8", "http://www.firefox.com/9",
             ),
-            history.getVisited()
+            history.getVisited(),
         )
 
         // Can use GeckoView-style getVisited API.
@@ -118,9 +118,9 @@ class PlacesHistoryStorageTest {
                     "http://www.firefox.com/1", "http://www.firefox.com/2", "http://www.firefox.com/3",
                     "http://www.firefox.com/4", "http://www.firefox.com/5", "http://www.firefox.com/6",
                     "http://www.firefox.com/oops",
-                    "http://www.firefox.com/7", "http://www.firefox.com/8", "http://www.firefox.com/9"
-                )
-            )
+                    "http://www.firefox.com/7", "http://www.firefox.com/8", "http://www.firefox.com/9",
+                ),
+            ),
         )
 
         // Can query using pagination.
@@ -182,7 +182,7 @@ class PlacesHistoryStorageTest {
             "https://www.mozilla.com/foo/bar/baz",
             "https://mozilla.com/a1/b2/c3",
             "https://news.ycombinator.com/",
-            "https://www.mozilla.com/foo/bar/baz"
+            "https://www.mozilla.com/foo/bar/baz",
         )
 
         for (url in toAdd) {
@@ -242,7 +242,7 @@ class PlacesHistoryStorageTest {
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.RELOAD))
         history.recordObservation(
             "http://www.mozilla.org",
-            PageObservation("Mozilla", "https://test.com/og-image-url")
+            PageObservation("Mozilla", "https://test.com/og-image-url"),
         )
         history.recordVisit("http://www.firefox.com", PageVisit(VisitType.LINK))
 
@@ -290,7 +290,7 @@ class PlacesHistoryStorageTest {
         history.recordVisit("https://www.wikipedia.org", PageVisit(VisitType.LINK))
         assertEquals(
             listOf("https://www.mozilla.org/", "https://www.firefox.com/", "https://www.wikipedia.org/"),
-            history.getVisited()
+            history.getVisited(),
         )
     }
 
@@ -323,7 +323,7 @@ class PlacesHistoryStorageTest {
         history.recordVisit("https://www.wikipedia.org", PageVisit(VisitType.TYPED))
         history.recordObservation(
             "https://www.wikipedia.org",
-            PageObservation("Wikipedia", "https://test.com/og-image-url")
+            PageObservation("Wikipedia", "https://test.com/og-image-url"),
         )
         var recorded = history.getDetailedVisits(0)
         assertEquals(1, recorded.size)
@@ -882,9 +882,9 @@ class PlacesHistoryStorageTest {
                     "https://news.ycombinator.com/",
                     "https://www.theguardian.com/film/2017/jul/24/stranger-things-thor-ragnarok-comic-con-2017",
                     "http://www.bbc.com/news/world-us-canada-40662772",
-                    "https://mobile.reuters.com/"
-                )
-            )
+                    "https://mobile.reuters.com/",
+                ),
+            ),
         )
 
         with(visits[0]) {
@@ -915,9 +915,9 @@ class PlacesHistoryStorageTest {
                     "https://mobile.twitter.com/random_walker/status/1182635589604171776",
                     "https://www.mozilla.org/en-US/",
                     "https://www.mozilla.org/en-US/firefox/accounts/",
-                    "https://mobile.reuters.com/"
-                )
-            )
+                    "https://mobile.reuters.com/",
+                ),
+            ),
         )
 
         with(visits[0]) {
@@ -976,9 +976,9 @@ class PlacesHistoryStorageTest {
                     "https://news.ycombinator.com/",
                     "https://terrytao.wordpress.com/2020/04/12/john-conway/",
                     "https://news.ycombinator.com/item?id=22862053",
-                    "https://malleable.systems/"
-                )
-            )
+                    "https://malleable.systems/",
+                ),
+            ),
         )
 
         with(visits[0]) {
@@ -1024,7 +1024,7 @@ class PlacesHistoryStorageTest {
         val metaKey = HistoryMetadataKey(
             url = "https://doc.rust-lang.org/std/macro.assert_eq.html",
             searchTerm = "rust assert_eq",
-            referrerUrl = "http://www.google.com/"
+            referrerUrl = "http://www.google.com/",
         )
 
         assertNull(history.getLatestHistoryMetadataForUrl(metaKey.url))
@@ -1043,7 +1043,7 @@ class PlacesHistoryStorageTest {
         val metaKey1 = HistoryMetadataKey(
             url = "https://sql.telemetry.mozilla.org/dashboard/android-keystore-reliability-experiment",
             searchTerm = "keystore reliability",
-            referrerUrl = "http://self.mozilla.com/"
+            referrerUrl = "http://self.mozilla.com/",
         )
         history.noteHistoryMetadataObservation(metaKey1, HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular))
         history.noteHistoryMetadataObservation(metaKey1, HistoryMetadataObservation.ViewTimeObservation(20000))
@@ -1051,7 +1051,7 @@ class PlacesHistoryStorageTest {
         val metaKey2 = HistoryMetadataKey(
             url = "https://www.youtube.com/watch?v=F7PQdCDiE44",
             searchTerm = "crisis",
-            referrerUrl = "https://www.google.com/search?client=firefox-b-d&q=dw+crisis"
+            referrerUrl = "https://www.google.com/search?client=firefox-b-d&q=dw+crisis",
         )
         history.noteHistoryMetadataObservation(metaKey2, HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Media))
         history.noteHistoryMetadataObservation(metaKey2, HistoryMetadataObservation.ViewTimeObservation(30000))
@@ -1060,14 +1060,14 @@ class PlacesHistoryStorageTest {
             VisitObservation(
                 url = "https://www.youtube.com/watch?v=F7PQdCDiE44",
                 title = "DW next crisis",
-                visitType = mozilla.appservices.places.uniffi.VisitTransition.LINK
-            )
+                visitType = mozilla.appservices.places.uniffi.VisitTransition.LINK,
+            ),
         )
 
         val metaKey3 = HistoryMetadataKey(
             url = "https://www.cbc.ca/news/canada/toronto/covid-19-ontario-april-16-2021-new-restrictions-modelling-1.5990092",
             searchTerm = "ford covid19",
-            referrerUrl = "https://duckduckgo.com/?q=ford+covid19&t=hc&va=u&ia=web"
+            referrerUrl = "https://duckduckgo.com/?q=ford+covid19&t=hc&va=u&ia=web",
         )
         history.noteHistoryMetadataObservation(metaKey3, HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular))
         history.noteHistoryMetadataObservation(metaKey3, HistoryMetadataObservation.ViewTimeObservation(20000))
@@ -1075,7 +1075,7 @@ class PlacesHistoryStorageTest {
         val metaKey4 = HistoryMetadataKey(
             url = "https://www.youtube.com/watch?v=TfXbzbJQHuw",
             searchTerm = "dw nyc rich",
-            referrerUrl = "https://duckduckgo.com/?q=dw+nyc+rich&t=hc&va=u&ia=web"
+            referrerUrl = "https://duckduckgo.com/?q=dw+nyc+rich&t=hc&va=u&ia=web",
         )
         history.noteHistoryMetadataObservation(metaKey4, HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Media))
         history.noteHistoryMetadataObservation(metaKey4, HistoryMetadataObservation.ViewTimeObservation(20000))
@@ -1125,7 +1125,7 @@ class PlacesHistoryStorageTest {
 
         val metaKey1 = HistoryMetadataKey(
             url = "https://www.youtube.com/watch?v=lNeRQuiKBd4",
-            referrerUrl = "http://www.twitter.com"
+            referrerUrl = "http://www.twitter.com",
         )
         history.noteHistoryMetadataObservation(metaKey1, HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Media))
         history.noteHistoryMetadataObservation(metaKey1, HistoryMetadataObservation.ViewTimeObservation(20000))
@@ -1134,7 +1134,7 @@ class PlacesHistoryStorageTest {
         val metaKey2 = HistoryMetadataKey(
             url = "https://www.youtube.com/watch?v=Cs1b5qvCZ54",
             searchTerm = "путин валдай",
-            referrerUrl = "http://www.yandex.ru"
+            referrerUrl = "http://www.yandex.ru",
         )
         history.noteHistoryMetadataObservation(metaKey2, HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Media))
         history.noteHistoryMetadataObservation(metaKey2, HistoryMetadataObservation.ViewTimeObservation(200))
@@ -1143,7 +1143,7 @@ class PlacesHistoryStorageTest {
         val metaKey3 = HistoryMetadataKey(
             url = "https://www.ifixit.com/News/35377/which-wireless-earbuds-are-the-least-evil",
             searchTerm = "repairable wireless headset",
-            referrerUrl = "http://www.google.com"
+            referrerUrl = "http://www.google.com",
         )
         history.noteHistoryMetadataObservation(metaKey3, HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular))
         history.noteHistoryMetadataObservation(metaKey3, HistoryMetadataObservation.ViewTimeObservation(2000))
@@ -1179,7 +1179,7 @@ class PlacesHistoryStorageTest {
 
         val metaKey1 = HistoryMetadataKey(
             url = "https://www.youtube.com/watch?v=lNeRQuiKBd4",
-            referrerUrl = "http://www.twitter.com/"
+            referrerUrl = "http://www.twitter.com/",
         )
         history.noteHistoryMetadataObservation(metaKey1, HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Media))
         history.noteHistoryMetadataObservation(metaKey1, HistoryMetadataObservation.ViewTimeObservation(20000))
@@ -1189,7 +1189,7 @@ class PlacesHistoryStorageTest {
         val metaKey2 = HistoryMetadataKey(
             url = "https://www.ifixit.com/News/35377/which-wireless-earbuds-are-the-least-evil",
             searchTerm = "repairable wireless headset",
-            referrerUrl = "http://www.google.com/"
+            referrerUrl = "http://www.google.com/",
         )
         history.noteHistoryMetadataObservation(metaKey2, HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular))
         history.noteHistoryMetadataObservation(metaKey2, HistoryMetadataObservation.ViewTimeObservation(2000))
@@ -1199,7 +1199,7 @@ class PlacesHistoryStorageTest {
         val metaKey3 = HistoryMetadataKey(
             url = "https://www.youtube.com/watch?v=Cs1b5qvCZ54",
             searchTerm = "путин валдай",
-            referrerUrl = "http://www.yandex.ru/"
+            referrerUrl = "http://www.yandex.ru/",
         )
         history.noteHistoryMetadataObservation(metaKey3, HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Media))
         history.noteHistoryMetadataObservation(metaKey3, HistoryMetadataObservation.ViewTimeObservation(200))
@@ -1235,16 +1235,16 @@ class PlacesHistoryStorageTest {
         with(
             HistoryMetadataKey(
                 url = "https://www.youtube.com/watch?v=lNeRQuiKBd4",
-                referrerUrl = "http://www.twitter.com/"
-            )
+                referrerUrl = "http://www.twitter.com/",
+            ),
         ) {
             history.noteHistoryMetadataObservation(
                 this,
-                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Media)
+                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Media),
             )
             history.noteHistoryMetadataObservation(
                 this,
-                HistoryMetadataObservation.ViewTimeObservation(20000)
+                HistoryMetadataObservation.ViewTimeObservation(20000),
             )
         }
 
@@ -1256,16 +1256,16 @@ class PlacesHistoryStorageTest {
             HistoryMetadataKey(
                 url = "https://www.ifixit.com/News/35377/which-wireless-earbuds-are-the-least-evil",
                 searchTerm = "repairable wireless headset",
-                referrerUrl = "http://www.google.com/"
-            )
+                referrerUrl = "http://www.google.com/",
+            ),
         ) {
             history.noteHistoryMetadataObservation(
                 this,
-                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular)
+                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular),
             )
             history.noteHistoryMetadataObservation(
                 this,
-                HistoryMetadataObservation.ViewTimeObservation(2000)
+                HistoryMetadataObservation.ViewTimeObservation(2000),
             )
         }
         // Same search term as above, different url/referrer.
@@ -1273,16 +1273,16 @@ class PlacesHistoryStorageTest {
             HistoryMetadataKey(
                 url = "https://www.youtube.com/watch?v=rfdshufsSfsd",
                 searchTerm = "repairable wireless headset",
-                referrerUrl = null
-            )
+                referrerUrl = null,
+            ),
         ) {
             history.noteHistoryMetadataObservation(
                 this,
-                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Media)
+                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Media),
             )
             history.noteHistoryMetadataObservation(
                 this,
-                HistoryMetadataObservation.ViewTimeObservation(25000)
+                HistoryMetadataObservation.ViewTimeObservation(25000),
             )
         }
         // Same search term as above, same url, different referrer.
@@ -1290,16 +1290,16 @@ class PlacesHistoryStorageTest {
             HistoryMetadataKey(
                 url = "https://www.ifixit.com/News/35377/which-wireless-earbuds-are-the-least-evil",
                 searchTerm = "repairable wireless headset",
-                referrerUrl = "http://www.yandex.ru/"
-            )
+                referrerUrl = "http://www.yandex.ru/",
+            ),
         ) {
             history.noteHistoryMetadataObservation(
                 this,
-                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular)
+                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular),
             )
             history.noteHistoryMetadataObservation(
                 this,
-                HistoryMetadataObservation.ViewTimeObservation(1000)
+                HistoryMetadataObservation.ViewTimeObservation(1000),
             )
         }
         // Again, but without view time.
@@ -1307,12 +1307,12 @@ class PlacesHistoryStorageTest {
             HistoryMetadataKey(
                 url = "https://www.ifixit.com/News/35377/which-wireless-earbuds-are-the-least-evil",
                 searchTerm = "repairable wireless headset",
-                referrerUrl = null
-            )
+                referrerUrl = null,
+            ),
         ) {
             history.noteHistoryMetadataObservation(
                 this,
-                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular)
+                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular),
             )
         }
 
@@ -1321,12 +1321,12 @@ class PlacesHistoryStorageTest {
             HistoryMetadataKey(
                 url = "https://www.youtube.com/watch?v=Cs1b5qvCZ54",
                 searchTerm = "путин валдай",
-                referrerUrl = "http://www.yandex.ru/"
-            )
+                referrerUrl = "http://www.yandex.ru/",
+            ),
         ) {
             history.noteHistoryMetadataObservation(
                 this,
-                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Media)
+                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Media),
             )
         }
 
@@ -1390,16 +1390,16 @@ class PlacesHistoryStorageTest {
         // Observe some items.
         with(
             HistoryMetadataKey(
-                url = "https://firefox.com/"
-            )
+                url = "https://firefox.com/",
+            ),
         ) {
             history.noteHistoryMetadataObservation(
                 this,
-                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular)
+                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular),
             )
             history.noteHistoryMetadataObservation(
                 this,
-                HistoryMetadataObservation.ViewTimeObservation(20000)
+                HistoryMetadataObservation.ViewTimeObservation(20000),
             )
         }
 
@@ -1407,31 +1407,31 @@ class PlacesHistoryStorageTest {
             HistoryMetadataKey(
                 url = "https://mozilla.org/",
                 searchTerm = "firefox",
-                referrerUrl = "https://google.com/"
-            )
+                referrerUrl = "https://google.com/",
+            ),
         ) {
             history.noteHistoryMetadataObservation(
                 this,
-                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular)
+                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular),
             )
             history.noteHistoryMetadataObservation(
                 this,
-                HistoryMetadataObservation.ViewTimeObservation(20000)
+                HistoryMetadataObservation.ViewTimeObservation(20000),
             )
         }
 
         with(
             HistoryMetadataKey(
-                url = "https://getpocket.com/"
-            )
+                url = "https://getpocket.com/",
+            ),
         ) {
             history.noteHistoryMetadataObservation(
                 this,
-                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular)
+                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular),
             )
             history.noteHistoryMetadataObservation(
                 this,
-                HistoryMetadataObservation.ViewTimeObservation(20000)
+                HistoryMetadataObservation.ViewTimeObservation(20000),
             )
         }
 
@@ -1454,7 +1454,7 @@ class PlacesHistoryStorageTest {
         expectedKey: HistoryMetadataKey,
         expectedTotalViewTime: Int,
         expectedDocumentType: DocumentType,
-        db_meta: HistoryMetadata
+        db_meta: HistoryMetadata,
     ) {
         assertEquals(expectedKey, db_meta.key)
         assertEquals(expectedTotalViewTime, db_meta.totalViewTime)

@@ -11,7 +11,7 @@ import org.mozilla.geckoview.MediaSession as GeckoViewMediaSession
  * [MediaSession.Controller] (`concept-engine`) implementation for GeckoView.
  */
 internal class GeckoMediaSessionController(
-    private val mediaSession: GeckoViewMediaSession
+    private val mediaSession: GeckoViewMediaSession,
 ) : MediaSession.Controller {
 
     override fun pause() {

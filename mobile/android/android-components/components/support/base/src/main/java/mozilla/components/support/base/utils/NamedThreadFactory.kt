@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * creation details to [Executors.defaultThreadFactory].
  */
 class NamedThreadFactory(
-    private val prefix: String
+    private val prefix: String,
 ) : ThreadFactory {
 
     private val backingFactory = Executors.defaultThreadFactory()

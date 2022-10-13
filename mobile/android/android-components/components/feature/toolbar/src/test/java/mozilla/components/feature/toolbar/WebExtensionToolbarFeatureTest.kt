@@ -55,24 +55,25 @@ class WebExtensionToolbarFeatureTest {
             WebExtensionBrowserAction("overridden_browser_action_title", true, mock(), "", 0, 0) {}
         val toolbar: Toolbar = mock()
         val extensions: Map<String, WebExtensionState> = mapOf(
-            "id" to WebExtensionState("id", "url", "name", true, browserAction = defaultBrowserAction, pageAction = defaultPageAction)
+            "id" to WebExtensionState("id", "url", "name", true, browserAction = defaultBrowserAction, pageAction = defaultPageAction),
         )
         val overriddenExtensions: Map<String, WebExtensionState> = mapOf(
-            "id" to WebExtensionState("id", "url", "name", true, browserAction = overriddenBrowserAction, pageAction = overriddenPageAction)
+            "id" to WebExtensionState("id", "url", "name", true, browserAction = overriddenBrowserAction, pageAction = overriddenPageAction),
         )
         val store = spy(
             BrowserStore(
                 BrowserState(
                     tabs = listOf(
                         createTab(
-                            "https://www.example.org", id = "tab1",
-                            extensions = overriddenExtensions
-                        )
+                            "https://www.example.org",
+                            id = "tab1",
+                            extensions = overriddenExtensions,
+                        ),
                     ),
                     selectedTabId = "tab1",
-                    extensions = extensions
-                )
-            )
+                    extensions = extensions,
+                ),
+            ),
         )
         val webExtToolbarFeature = getWebExtensionToolbarFeature(toolbar, store)
         dispatcher.scheduler.advanceUntilIdle()
@@ -105,7 +106,7 @@ class WebExtensionToolbarFeatureTest {
                 "name",
                 true,
                 browserAction = enabledAction,
-                pageAction = enablePageAction
+                pageAction = enablePageAction,
             ),
             "disabled" to WebExtensionState(
                 "disabled",
@@ -113,16 +114,16 @@ class WebExtensionToolbarFeatureTest {
                 "name",
                 false,
                 browserAction = disabledAction,
-                pageAction = disablePageAction
-            )
+                pageAction = disablePageAction,
+            ),
         )
 
         val store = spy(
             BrowserStore(
                 BrowserState(
-                    extensions = extensions
-                )
-            )
+                    extensions = extensions,
+                ),
+            ),
         )
         val webExtToolbarFeature = getWebExtensionToolbarFeature(toolbar, store)
         dispatcher.scheduler.advanceUntilIdle()
@@ -150,7 +151,7 @@ class WebExtensionToolbarFeatureTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val pageActionOverride = Action(
@@ -159,7 +160,7 @@ class WebExtensionToolbarFeatureTest {
             enabled = true,
             badgeText = "updatedText",
             badgeTextColor = Color.RED,
-            badgeBackgroundColor = Color.GREEN
+            badgeBackgroundColor = Color.GREEN,
         ) {}
 
         val browserAction = Action(
@@ -168,7 +169,7 @@ class WebExtensionToolbarFeatureTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val browserActionOverride = Action(
@@ -177,7 +178,7 @@ class WebExtensionToolbarFeatureTest {
             enabled = false,
             badgeText = "updatedText",
             badgeTextColor = Color.RED,
-            badgeBackgroundColor = Color.GREEN
+            badgeBackgroundColor = Color.GREEN,
         ) {}
 
         // Verify rendering global default browser action
@@ -213,7 +214,7 @@ class WebExtensionToolbarFeatureTest {
 
         val tabSessionState = TabSessionState(
             content = mock(),
-            extensionState = tabExtensions
+            extensionState = tabExtensions,
         )
         webExtToolbarFeature.renderWebExtensionActions(browserState, tabSessionState)
 
@@ -248,7 +249,7 @@ class WebExtensionToolbarFeatureTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val pageAction = Action(
@@ -257,7 +258,7 @@ class WebExtensionToolbarFeatureTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         browserExtensions["1"] =
@@ -303,7 +304,7 @@ class WebExtensionToolbarFeatureTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val actionExt2 = Action(
@@ -312,7 +313,7 @@ class WebExtensionToolbarFeatureTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val browserExtensions = HashMap<String, WebExtensionState>()
@@ -344,12 +345,12 @@ class WebExtensionToolbarFeatureTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val tabSessionState = TabSessionState(
             content = mock(),
-            extensionState = emptyMap()
+            extensionState = emptyMap(),
         )
 
         whenever(tabSessionState.content.private).thenReturn(true)
@@ -384,23 +385,23 @@ class WebExtensionToolbarFeatureTest {
                 "url",
                 "name",
                 true,
-                pageAction = enablePageAction
+                pageAction = enablePageAction,
             ),
             "ext2" to WebExtensionState(
                 "ext2",
                 "url",
                 "name",
                 true,
-                pageAction = disablePageAction
-            )
+                pageAction = disablePageAction,
+            ),
         )
 
         val store = spy(
             BrowserStore(
                 BrowserState(
-                    extensions = extensions
-                )
-            )
+                    extensions = extensions,
+                ),
+            ),
         )
         val webExtToolbarFeature = getWebExtensionToolbarFeature(toolbar, store)
         dispatcher.scheduler.advanceUntilIdle()
@@ -415,7 +416,7 @@ class WebExtensionToolbarFeatureTest {
 
     private fun getWebExtensionToolbarFeature(
         toolbar: Toolbar = mock(),
-        store: BrowserStore = BrowserStore()
+        store: BrowserStore = BrowserStore(),
     ): WebExtensionToolbarFeature {
         val webExtToolbarFeature = spy(WebExtensionToolbarFeature(toolbar, store))
         val handler: Handler = mock()

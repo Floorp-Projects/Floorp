@@ -38,7 +38,7 @@ import mozilla.components.lib.state.Store
 @MainThread
 fun <S : State, A : Action> Store<S, A>.observe(
     owner: LifecycleOwner,
-    observer: Observer<S>
+    observer: Observer<S>,
 ): Store.Subscription<S, A>? {
     if (owner.lifecycle.currentState == Lifecycle.State.DESTROYED) {
         // This owner is already destroyed. No need to register.
@@ -71,7 +71,7 @@ fun <S : State, A : Action> Store<S, A>.observe(
 @MainThread
 fun <S : State, A : Action> Store<S, A>.observe(
     view: View,
-    observer: Observer<S>
+    observer: Observer<S>,
 ) {
     val subscription = observeManually(observer)
 
@@ -92,7 +92,7 @@ fun <S : State, A : Action> Store<S, A>.observe(
  * Right after registering the [Observer] will be invoked with the current [State].
  */
 fun <S : State, A : Action> Store<S, A>.observeForever(
-    observer: Observer<S>
+    observer: Observer<S>,
 ) {
     observeManually(observer).resume()
 }
@@ -111,7 +111,7 @@ fun <S : State, A : Action> Store<S, A>.observeForever(
 @ExperimentalCoroutinesApi
 @MainThread
 fun <S : State, A : Action> Store<S, A>.channel(
-    owner: LifecycleOwner = ProcessLifecycleOwner.get()
+    owner: LifecycleOwner = ProcessLifecycleOwner.get(),
 ): ReceiveChannel<S> {
     if (owner.lifecycle.currentState == Lifecycle.State.DESTROYED) {
         // This owner is already destroyed. No need to register.
@@ -151,9 +151,8 @@ fun <S : State, A : Action> Store<S, A>.channel(
  */
 @MainThread
 fun <S : State, A : Action> Store<S, A>.flow(
-    owner: LifecycleOwner? = null
+    owner: LifecycleOwner? = null,
 ): Flow<S> {
-
     var destroyed = owner?.lifecycle?.currentState == Lifecycle.State.DESTROYED
     val ownerDestroyedObserver = object : DefaultLifecycleObserver {
         override fun onDestroy(owner: LifecycleOwner) {
@@ -212,7 +211,7 @@ fun <S : State, A : Action> Store<S, A>.flow(
 @MainThread
 fun <S : State, A : Action> Store<S, A>.flowScoped(
     owner: LifecycleOwner? = null,
-    block: suspend (Flow<S>) -> Unit
+    block: suspend (Flow<S>) -> Unit,
 ): CoroutineScope {
     return MainScope().apply {
         launch {
@@ -226,7 +225,7 @@ fun <S : State, A : Action> Store<S, A>.flowScoped(
  */
 private class SubscriptionLifecycleBinding<S : State, A : Action>(
     private val owner: LifecycleOwner,
-    private val subscription: Store.Subscription<S, A>
+    private val subscription: Store.Subscription<S, A>,
 ) : DefaultLifecycleObserver, Store.Subscription.Binding {
     override fun onStart(owner: LifecycleOwner) {
         subscription.resume()
@@ -250,7 +249,7 @@ private class SubscriptionLifecycleBinding<S : State, A : Action>(
  */
 private class SubscriptionViewBinding<S : State, A : Action>(
     private val view: View,
-    private val subscription: Store.Subscription<S, A>
+    private val subscription: Store.Subscription<S, A>,
 ) : View.OnAttachStateChangeListener, Store.Subscription.Binding {
     override fun onViewAttachedToWindow(v: View?) {
         subscription.resume()

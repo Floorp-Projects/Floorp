@@ -31,7 +31,7 @@ class AppSearchWidgetProviderTest {
             192 to SearchWidgetProviderSize.MEDIUM,
             255 to SearchWidgetProviderSize.MEDIUM,
             256 to SearchWidgetProviderSize.LARGE,
-            1000 to SearchWidgetProviderSize.LARGE
+            1000 to SearchWidgetProviderSize.LARGE,
         )
 
         for ((dp, layoutSize) in sizes) {
@@ -43,11 +43,11 @@ class AppSearchWidgetProviderTest {
     fun testGetLargeLayout() {
         assertEquals(
             R.layout.mozac_search_widget_large,
-            getLayout(SearchWidgetProviderSize.LARGE, showMic = false)
+            getLayout(SearchWidgetProviderSize.LARGE, showMic = false),
         )
         assertEquals(
             R.layout.mozac_search_widget_large,
-            getLayout(SearchWidgetProviderSize.LARGE, showMic = true)
+            getLayout(SearchWidgetProviderSize.LARGE, showMic = true),
         )
     }
 
@@ -55,11 +55,11 @@ class AppSearchWidgetProviderTest {
     fun testGetMediumLayout() {
         assertEquals(
             R.layout.mozac_search_widget_medium,
-            getLayout(SearchWidgetProviderSize.MEDIUM, showMic = false)
+            getLayout(SearchWidgetProviderSize.MEDIUM, showMic = false),
         )
         assertEquals(
             R.layout.mozac_search_widget_medium,
-            getLayout(SearchWidgetProviderSize.MEDIUM, showMic = true)
+            getLayout(SearchWidgetProviderSize.MEDIUM, showMic = true),
         )
     }
 
@@ -67,11 +67,11 @@ class AppSearchWidgetProviderTest {
     fun testGetSmallLayout() {
         assertEquals(
             R.layout.mozac_search_widget_small_no_mic,
-            getLayout(SearchWidgetProviderSize.SMALL, showMic = false)
+            getLayout(SearchWidgetProviderSize.SMALL, showMic = false),
         )
         assertEquals(
             R.layout.mozac_search_widget_small,
-            getLayout(SearchWidgetProviderSize.SMALL, showMic = true)
+            getLayout(SearchWidgetProviderSize.SMALL, showMic = true),
         )
     }
 
@@ -81,15 +81,15 @@ class AppSearchWidgetProviderTest {
             R.layout.mozac_search_widget_extra_small_v2,
             getLayout(
                 SearchWidgetProviderSize.EXTRA_SMALL_V2,
-                showMic = false
-            )
+                showMic = false,
+            ),
         )
         assertEquals(
             R.layout.mozac_search_widget_extra_small_v2,
             getLayout(
                 SearchWidgetProviderSize.EXTRA_SMALL_V2,
-                showMic = true
-            )
+                showMic = true,
+            ),
         )
     }
 
@@ -99,15 +99,15 @@ class AppSearchWidgetProviderTest {
             R.layout.mozac_search_widget_extra_small_v1,
             getLayout(
                 SearchWidgetProviderSize.EXTRA_SMALL_V1,
-                showMic = false
-            )
+                showMic = false,
+            ),
         )
         assertEquals(
             R.layout.mozac_search_widget_extra_small_v1,
             getLayout(
                 SearchWidgetProviderSize.EXTRA_SMALL_V1,
-                showMic = true
-            )
+                showMic = true,
+            ),
         )
     }
 
@@ -117,33 +117,33 @@ class AppSearchWidgetProviderTest {
             testContext.getString(R.string.search_widget_text_long),
             AppSearchWidgetProvider.getText(
                 SearchWidgetProviderSize.LARGE,
-                testContext
-            )
+                testContext,
+            ),
         )
         assertEquals(
             testContext.getString(R.string.search_widget_text_short),
             AppSearchWidgetProvider.getText(
                 SearchWidgetProviderSize.MEDIUM,
-                testContext
-            )
+                testContext,
+            ),
         )
         assertNull(
             AppSearchWidgetProvider.getText(
                 SearchWidgetProviderSize.SMALL,
-                testContext
-            )
+                testContext,
+            ),
         )
         assertNull(
             AppSearchWidgetProvider.getText(
                 SearchWidgetProviderSize.EXTRA_SMALL_V1,
-                testContext
-            )
+                testContext,
+            ),
         )
         assertNull(
             AppSearchWidgetProvider.getText(
                 SearchWidgetProviderSize.EXTRA_SMALL_V2,
-                testContext
-            )
+                testContext,
+            ),
         )
     }
 

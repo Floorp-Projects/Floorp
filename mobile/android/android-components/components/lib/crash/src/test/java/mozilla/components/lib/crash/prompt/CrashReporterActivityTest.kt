@@ -59,7 +59,7 @@ class CrashReporterActivityTest {
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
-            scope = scope
+            scope = scope,
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
@@ -83,7 +83,7 @@ class CrashReporterActivityTest {
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
-            scope = scope
+            scope = scope,
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
@@ -108,9 +108,9 @@ class CrashReporterActivityTest {
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             promptConfiguration = CrashReporter.PromptConfiguration(
                 message = "Hello World!",
-                theme = android.R.style.Theme_DeviceDefault // Yolo!
+                theme = android.R.style.Theme_DeviceDefault, // Yolo!
             ),
-            services = listOf(mock())
+            services = listOf(mock()),
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
@@ -128,7 +128,7 @@ class CrashReporterActivityTest {
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
-            scope = scope
+            scope = scope,
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
@@ -155,7 +155,7 @@ class CrashReporterActivityTest {
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
-            scope = scope
+            scope = scope,
         ).install(testContext)
 
         val crash = Crash.NativeCodeCrash(
@@ -164,7 +164,7 @@ class CrashReporterActivityTest {
             true,
             "",
             Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-            arrayListOf()
+            arrayListOf(),
         )
         val scenario = coroutineContext.launchActivityWithCrash(crash)
 
@@ -179,7 +179,7 @@ class CrashReporterActivityTest {
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
-            scope = scope
+            scope = scope,
         ).install(testContext)
 
         val crash = Crash.NativeCodeCrash(
@@ -188,7 +188,7 @@ class CrashReporterActivityTest {
             true,
             "",
             Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
-            arrayListOf()
+            arrayListOf(),
         )
         val scenario = coroutineContext.launchActivityWithCrash(crash)
 
@@ -203,7 +203,7 @@ class CrashReporterActivityTest {
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
-            scope = scope
+            scope = scope,
         ).install(testContext)
 
         val crash = Crash.NativeCodeCrash(
@@ -212,7 +212,7 @@ class CrashReporterActivityTest {
             true,
             "",
             Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
-            arrayListOf()
+            arrayListOf(),
         )
 
         val scenario = coroutineContext.launchActivityWithCrash(crash)
@@ -228,7 +228,7 @@ class CrashReporterActivityTest {
  */
 @ExperimentalCoroutinesApi
 private fun CoroutineContext.launchActivityWithCrash(
-    crash: Crash
+    crash: Crash,
 ): ActivityScenario<CrashReporterActivity> = run {
     val intent = Intent(testContext, CrashReporterActivity::class.java)
         .also { crash.fillIn(it) }

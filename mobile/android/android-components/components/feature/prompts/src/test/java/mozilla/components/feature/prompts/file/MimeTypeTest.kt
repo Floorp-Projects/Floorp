@@ -34,8 +34,8 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.ArgumentMatchers.notNull
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
@@ -45,7 +45,7 @@ class MimeTypeTest {
         mimeTypes = emptyArray(),
         onSingleFileSelected = { _, _ -> },
         onMultipleFilesSelected = { _, _ -> },
-        onDismiss = {}
+        onDismiss = {},
     )
     private val capture = PromptRequest.File.FacingMode.ANY
 
@@ -236,7 +236,7 @@ class MimeTypeTest {
 
         `when`(
             packageManager
-                .resolveContentProvider(eq("org.mozilla.browser.fileprovider"), anyInt())
+                .resolveContentProvider(eq("org.mozilla.browser.fileprovider"), anyInt()),
         )
             .thenReturn(mock(ProviderInfo::class.java))
         mockResolveActivity()
@@ -335,7 +335,7 @@ class MimeTypeTest {
         // with EXTRA_ALLOW_MULTIPLE and EXTRA_MIME_TYPES
         val multiJpegRequest = request.copy(
             mimeTypes = arrayOf("image/jpeg"),
-            isMultipleFilesSelection = true
+            isMultipleFilesSelection = true,
         )
         with(MimeType.Wildcard.buildIntent(testContext, multiJpegRequest)) {
             assertEquals(action, ACTION_GET_CONTENT)
@@ -356,7 +356,7 @@ class MimeTypeTest {
             addExtensionMimeTypMapping(".gif", "image/gif")
             addExtensionMimeTypMapping(
                 "docx",
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             )
         }
 

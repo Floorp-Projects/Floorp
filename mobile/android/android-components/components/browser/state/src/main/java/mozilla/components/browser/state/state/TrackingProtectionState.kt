@@ -20,5 +20,5 @@ data class TrackingProtectionState(
     val enabled: Boolean = false,
     val blockedTrackers: List<Tracker> = emptyList(),
     val loadedTrackers: List<Tracker> = emptyList(),
-    val ignoredOnTrackingProtection: Boolean = false
+    val ignoredOnTrackingProtection: Boolean = false,
 )

@@ -37,8 +37,8 @@ internal object GleanBuildInfo {
             versionCode = "0.0.1",
             versionName = "0.0.1",
             buildDate = Calendar.getInstance(
-                TimeZone.getTimeZone("GMT+0")
-            ).also { cal -> cal.set(2019, 9, 23, 12, 52, 8) }
+                TimeZone.getTimeZone("GMT+0"),
+            ).also { cal -> cal.set(2019, 9, 23, 12, 52, 8) },
         )
     }
 }
@@ -55,7 +55,7 @@ class CrashApplication : Application() {
         crashReporter = CrashReporter(
             context = this,
             services = listOf(
-                createDummyCrashService(this)
+                createDummyCrashService(this),
             ),
             telemetryServices = listOf(GleanCrashReporterService(applicationContext)),
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
@@ -63,10 +63,10 @@ class CrashApplication : Application() {
                 appName = "Sample App",
                 organizationName = "Mozilla",
                 message = "As a private browser, we never save and cannot restore your last browsing session.",
-                theme = R.style.CrashDialogTheme
+                theme = R.style.CrashDialogTheme,
             ),
             nonFatalCrashIntent = createNonFatalPendingIntent(this),
-            enabled = true
+            enabled = true,
         ).install(this)
 
         // Initialize Glean for recording by the GleanCrashReporterService
@@ -76,7 +76,7 @@ class CrashApplication : Application() {
             applicationContext,
             uploadEnabled = true,
             configuration = config,
-            buildInfo = GleanBuildInfo.buildInfo
+            buildInfo = GleanBuildInfo.buildInfo,
         )
     }
 
@@ -133,7 +133,7 @@ private fun createNonFatalPendingIntent(context: Context): PendingIntent {
         context,
         0,
         Intent(CrashApplication.NON_FATAL_CRASH_BROADCAST),
-        PendingIntentUtils.defaultFlags
+        PendingIntentUtils.defaultFlags,
     )
 }
 

@@ -21,13 +21,13 @@ import mozilla.components.support.base.worker.Frequency
  * Class used to schedule Pocket recommended stories refresh.
  */
 internal class PocketStoriesRefreshScheduler(
-    private val pocketStoriesConfig: PocketStoriesConfig
+    private val pocketStoriesConfig: PocketStoriesConfig,
 ) {
     internal fun schedulePeriodicRefreshes(context: Context) {
         logger.info("Scheduling pocket recommendations background refresh")
 
         val refreshWork = createPeriodicWorkerRequest(
-            frequency = pocketStoriesConfig.frequency
+            frequency = pocketStoriesConfig.frequency,
         )
 
         getWorkManager(context)
@@ -41,13 +41,13 @@ internal class PocketStoriesRefreshScheduler(
 
     @VisibleForTesting
     internal fun createPeriodicWorkerRequest(
-        frequency: Frequency
+        frequency: Frequency,
     ): PeriodicWorkRequest {
         val constraints = getWorkerConstrains()
 
         return PeriodicWorkRequestBuilder<RefreshPocketWorker>(
             frequency.repeatInterval,
-            frequency.repeatIntervalTimeUnit
+            frequency.repeatIntervalTimeUnit,
         ).apply {
             setConstraints(constraints)
             addTag(REFRESH_WORK_TAG)

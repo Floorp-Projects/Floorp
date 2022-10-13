@@ -16,6 +16,7 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_TRACKING
 val ContentPermission.isExcludedForTrackingProtection: Boolean
     get() = this.permission == PERMISSION_TRACKING &&
         value == VALUE_ALLOW
+
 /**
  * Provides the tracking protection permission for the given [GeckoEngineSession].
  * This is available after every onLocationChange call.

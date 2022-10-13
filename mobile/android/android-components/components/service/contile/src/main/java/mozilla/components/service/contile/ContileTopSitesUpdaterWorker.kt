@@ -16,7 +16,7 @@ import mozilla.components.support.base.log.logger.Logger
  */
 internal class ContileTopSitesUpdaterWorker(
     context: Context,
-    params: WorkerParameters
+    params: WorkerParameters,
 ) : CoroutineWorker(context, params) {
 
     private val logger = Logger("ContileTopSitesUpdaterWorker")

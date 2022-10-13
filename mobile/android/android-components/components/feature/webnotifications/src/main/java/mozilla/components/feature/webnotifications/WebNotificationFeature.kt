@@ -56,7 +56,7 @@ class WebNotificationFeature(
     @DrawableRes smallIcon: Int,
     private val sitePermissionsStorage: SitePermissionsStorage,
     private val activityClass: Class<out Activity>?,
-    private val coroutineContext: CoroutineContext = Dispatchers.IO
+    private val coroutineContext: CoroutineContext = Dispatchers.IO,
 ) : WebNotificationDelegate {
     private val logger = Logger("WebNotificationFeature")
     private val notificationManager = context.getSystemService<NotificationManager>()
@@ -89,8 +89,11 @@ class WebNotificationFeature(
             notificationManager?.cancel(webNotification.tag, NOTIFICATION_ID)
 
             val notification = nativeNotificationBridge.convertToAndroidNotification(
-                webNotification, context, NOTIFICATION_CHANNEL_ID, activityClass,
-                SharedIdsHelper.getNextIdForTag(context, PENDING_INTENT_TAG)
+                webNotification,
+                context,
+                NOTIFICATION_CHANNEL_ID,
+                activityClass,
+                SharedIdsHelper.getNextIdForTag(context, PENDING_INTENT_TAG),
             )
             notificationManager?.notify(webNotification.tag, NOTIFICATION_ID, notification)
         }
@@ -105,7 +108,7 @@ class WebNotificationFeature(
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
                 context.getString(R.string.mozac_feature_notification_channel_name),
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_LOW,
             )
             channel.setShowBadge(true)
             channel.lockscreenVisibility = NotificationCompat.VISIBILITY_PRIVATE

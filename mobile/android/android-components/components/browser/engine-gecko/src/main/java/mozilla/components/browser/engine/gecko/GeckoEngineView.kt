@@ -27,7 +27,7 @@ import org.mozilla.geckoview.GeckoSession
 class GeckoEngineView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : FrameLayout(context, attrs, defStyleAttr), EngineView {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var geckoView = object : NestedGeckoView(context) {
@@ -190,7 +190,7 @@ class GeckoEngineView @JvmOverloads constructor(
                 {
                     onFinish(null)
                     GeckoResult<Void>()
-                }
+                },
             )
         } catch (e: Exception) {
             // There's currently no reliable way for consumers of GeckoView to

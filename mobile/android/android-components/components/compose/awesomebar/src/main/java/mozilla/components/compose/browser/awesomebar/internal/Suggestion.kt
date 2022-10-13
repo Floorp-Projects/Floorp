@@ -49,20 +49,20 @@ internal fun Suggestion(
     colors: AwesomeBarColors,
     orientation: AwesomeBarOrientation,
     onSuggestionClicked: () -> Unit,
-    onAutoComplete: () -> Unit
+    onAutoComplete: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .clickable { onSuggestionClicked() }
             .defaultMinSize(minHeight = 56.dp)
             .testTag("mozac.awesomebar.suggestion")
-            .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 8.dp)
+            .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 8.dp),
     ) {
         val icon = suggestion.icon
         if (icon != null) {
             SuggestionIcon(
                 icon = icon,
-                indicator = suggestion.indicatorIcon
+                indicator = suggestion.indicatorIcon,
             )
         }
         SuggestionTitleAndDescription(
@@ -71,14 +71,14 @@ internal fun Suggestion(
             colors = colors,
             modifier = Modifier
                 .weight(1f)
-                .align(Alignment.CenterVertically)
+                .align(Alignment.CenterVertically),
         )
         if (suggestion.editSuggestion != null) {
             AutocompleteButton(
                 onAutoComplete = onAutoComplete,
                 orientation = orientation,
                 colors = colors,
-                modifier = Modifier.align(Alignment.CenterVertically)
+                modifier = Modifier.align(Alignment.CenterVertically),
             )
         }
     }
@@ -89,10 +89,10 @@ private fun SuggestionTitleAndDescription(
     title: String?,
     description: String?,
     colors: AwesomeBarColors,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
+        modifier = modifier,
     ) {
         Text(
             text = if (title.isNullOrEmpty()) {
@@ -106,7 +106,7 @@ private fun SuggestionTitleAndDescription(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .width(IntrinsicSize.Max)
-                .padding(start = 2.dp, end = 8.dp)
+                .padding(start = 2.dp, end = 8.dp),
         )
         if (description?.isNotEmpty() == true) {
             Text(
@@ -117,7 +117,7 @@ private fun SuggestionTitleAndDescription(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .width(IntrinsicSize.Max)
-                    .padding(start = 2.dp, end = 8.dp)
+                    .padding(start = 2.dp, end = 8.dp),
             )
         }
     }
@@ -126,12 +126,12 @@ private fun SuggestionTitleAndDescription(
 @Composable
 private fun SuggestionIcon(
     icon: Bitmap,
-    indicator: Drawable?
+    indicator: Drawable?,
 ) {
     Box(
         modifier = Modifier
             .width(30.dp)
-            .height(38.dp)
+            .height(38.dp),
     ) {
         Image(
             icon.asImageBitmap(),
@@ -150,7 +150,7 @@ private fun SuggestionIcon(
                 modifier = Modifier
                     .padding(top = 22.dp, start = 14.dp)
                     .width(16.dp)
-                    .height(16.dp)
+                    .height(16.dp),
             )
         }
     }
@@ -162,7 +162,7 @@ private fun AutocompleteButton(
     onAutoComplete: () -> Unit,
     colors: AwesomeBarColors,
     orientation: AwesomeBarOrientation,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     Image(
         painterResource(R.drawable.mozac_ic_edit_suggestion),
@@ -175,9 +175,9 @@ private fun AutocompleteButton(
                     270f
                 } else {
                     0f
-                }
+                },
             )
             .clickable { onAutoComplete() }
-            .padding(12.dp)
+            .padding(12.dp),
     )
 }

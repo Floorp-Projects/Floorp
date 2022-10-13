@@ -20,7 +20,7 @@ import mozilla.components.concept.menu.candidate.CompoundMenuCandidate.ButtonTyp
 internal abstract class CompoundMenuCandidateViewHolder(
     itemView: View,
     inflater: LayoutInflater,
-    private val dismiss: () -> Unit
+    private val dismiss: () -> Unit,
 ) : MenuCandidateViewHolder<CompoundMenuCandidate>(itemView, inflater), CompoundButton.OnCheckedChangeListener {
 
     private val layout = itemView as ConstraintLayout
@@ -59,7 +59,7 @@ internal abstract class CompoundMenuCandidateViewHolder(
 internal class CompoundCheckboxMenuCandidateViewHolder(
     itemView: View,
     inflater: LayoutInflater,
-    dismiss: () -> Unit
+    dismiss: () -> Unit,
 ) : CompoundMenuCandidateViewHolder(itemView, inflater, dismiss) {
 
     companion object {
@@ -71,7 +71,7 @@ internal class CompoundCheckboxMenuCandidateViewHolder(
 internal class CompoundSwitchMenuCandidateViewHolder(
     itemView: View,
     inflater: LayoutInflater,
-    dismiss: () -> Unit
+    dismiss: () -> Unit,
 ) : CompoundMenuCandidateViewHolder(itemView, inflater, dismiss) {
 
     companion object {

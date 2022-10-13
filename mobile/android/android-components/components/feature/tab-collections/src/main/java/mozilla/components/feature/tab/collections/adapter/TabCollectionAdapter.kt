@@ -14,7 +14,7 @@ import mozilla.components.feature.tab.collections.db.TabCollectionWithTabs
 import mozilla.components.feature.tab.collections.db.TabEntity
 
 internal class TabCollectionAdapter(
-    internal val entity: TabCollectionWithTabs
+    internal val entity: TabCollectionWithTabs,
 ) : TabCollection {
     override val title: String
         get() = entity.collection.title
@@ -32,7 +32,7 @@ internal class TabCollectionAdapter(
     override fun restore(
         context: Context,
         engine: Engine,
-        restoreSessionId: Boolean
+        restoreSessionId: Boolean,
     ): List<RecoverableTab> {
         return restore(context, engine, entity.tabs, restoreSessionId)
     }
@@ -41,10 +41,10 @@ internal class TabCollectionAdapter(
         context: Context,
         engine: Engine,
         tabs: List<Tab>,
-        restoreSessionId: Boolean
+        restoreSessionId: Boolean,
     ): List<RecoverableTab> {
         val entities = entity.tabs.filter {
-            candidate ->
+                candidate ->
             tabs.find { tab -> tab.id == candidate.id } != null
         }
         return restore(context, engine, entities, restoreSessionId)
@@ -54,7 +54,7 @@ internal class TabCollectionAdapter(
         context: Context,
         engine: Engine,
         tabs: List<TabEntity>,
-        restoreSessionId: Boolean
+        restoreSessionId: Boolean,
     ): List<RecoverableTab> {
         val reader = BrowserStateReader()
         return tabs.mapNotNull { tab ->

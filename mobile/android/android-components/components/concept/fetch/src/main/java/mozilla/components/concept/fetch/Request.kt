@@ -48,7 +48,7 @@ data class Request(
     val redirect: Redirect = Redirect.FOLLOW,
     val cookiePolicy: CookiePolicy = CookiePolicy.INCLUDE,
     val useCaches: Boolean = true,
-    val private: Boolean = false
+    val private: Boolean = false,
 ) {
     /**
      * A [Body] to be send with the [Request].
@@ -56,7 +56,7 @@ data class Request(
      * @param stream A stream that will be read and send to the resource.
      */
     class Body(
-        private val stream: InputStream
+        private val stream: InputStream,
     ) : Closeable {
         companion object {
             /**
@@ -124,7 +124,7 @@ data class Request(
         DELETE,
         CONNECT,
         OPTIONS,
-        TRACE
+        TRACE,
     }
 
     enum class Redirect {
@@ -136,7 +136,7 @@ data class Request(
         /**
          * Do not follow redirects and let caller handle them manually.
          */
-        MANUAL
+        MANUAL,
     }
 
     enum class CookiePolicy {
@@ -148,7 +148,7 @@ data class Request(
         /**
          * Do not send cookies with the request.
          */
-        OMIT
+        OMIT,
     }
 }
 

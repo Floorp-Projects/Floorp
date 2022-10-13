@@ -59,7 +59,7 @@ class ContextMenuFragmentTest {
 
         assertEquals(
             "Hello World",
-            view.findViewById<TextView>(R.id.titleView).text
+            view.findViewById<TextView>(R.id.titleView).text,
         )
     }
 
@@ -81,7 +81,7 @@ class ContextMenuFragmentTest {
 
         assertEquals(
             15,
-            titleView.maxLines
+            titleView.maxLines,
         )
     }
 

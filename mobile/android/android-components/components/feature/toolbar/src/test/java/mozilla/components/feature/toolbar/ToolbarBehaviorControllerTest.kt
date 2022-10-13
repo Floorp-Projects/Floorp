@@ -38,8 +38,8 @@ class ToolbarBehaviorControllerTest {
             BrowserState(
                 tabs = listOf(TabSessionState("123", normalTabContent)),
                 customTabs = listOf(CustomTabSessionState("ct", customTabContent, config = mock())),
-                selectedTabId = "123"
-            )
+                selectedTabId = "123",
+            ),
         )
         val store = BrowserStore(state)
         val controller = ToolbarBehaviorController(mock(), store, "ct")
@@ -62,8 +62,8 @@ class ToolbarBehaviorControllerTest {
             BrowserState(
                 tabs = listOf(TabSessionState("123", normalTabContent)),
                 customTabs = listOf(CustomTabSessionState("ct", customTabContent, config = mock())),
-                selectedTabId = "123"
-            )
+                selectedTabId = "123",
+            ),
         )
         val store = BrowserStore(state)
         val controller = ToolbarBehaviorController(mock(), store)
@@ -84,8 +84,8 @@ class ToolbarBehaviorControllerTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(TabSessionState("123", normalTabContent)),
-                selectedTabId = "123"
-            )
+                selectedTabId = "123",
+            ),
         )
         val controller = spy(ToolbarBehaviorController(mock(), store))
 
@@ -101,8 +101,8 @@ class ToolbarBehaviorControllerTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(TabSessionState("123", normalTabContent)),
-                selectedTabId = "123"
-            )
+                selectedTabId = "123",
+            ),
         )
         val controller = spy(ToolbarBehaviorController(mock(), store))
 
@@ -151,9 +151,9 @@ class ToolbarBehaviorControllerTest {
             BrowserStore(
                 BrowserState(
                     tabs = listOf(TabSessionState("123", normalTabContent)),
-                    selectedTabId = "123"
-                )
-            )
+                    selectedTabId = "123",
+                ),
+            ),
         )
         val controller = spy(ToolbarBehaviorController(mock(), store))
 
@@ -170,8 +170,8 @@ class ToolbarBehaviorControllerTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(TabSessionState("123", normalTabContent)),
-                selectedTabId = "123"
-            )
+                selectedTabId = "123",
+            ),
         )
         val controller = spy(ToolbarBehaviorController(mock(), store))
 
@@ -187,8 +187,8 @@ class ToolbarBehaviorControllerTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(TabSessionState("tab_1", tabContent)),
-                selectedTabId = "tab_1"
-            )
+                selectedTabId = "tab_1",
+            ),
         )
         val controller = spy(ToolbarBehaviorController(mock(), store))
 

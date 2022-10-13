@@ -70,6 +70,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import java.security.InvalidParameterException
 
 internal const val FRAGMENT_TAG = "mozac_feature_sitepermissions_prompt_dialog"
+
 @VisibleForTesting
 internal const val STORAGE_ACCESS_DOCUMENTATION_URL =
     "https://developer.mozilla.org/en-US/docs/Web/API/Storage_Access_API"
@@ -183,7 +184,7 @@ class SitePermissionsFeature(
                             if (permissionRequest.permissions.all { it.isSupported() }) {
                                 onContentPermissionRequested(
                                     permissionRequest,
-                                    origin
+                                    origin,
                                 )
                             } else {
                                 permissionRequest.consumeAndReject()
@@ -201,7 +202,7 @@ class SitePermissionsFeature(
     @VisibleForTesting
     internal fun consumePermissionRequest(
         permissionRequest: PermissionRequest,
-        optionalSessionId: String? = null
+        optionalSessionId: String? = null,
     ) {
         val thisSessionId = optionalSessionId ?: getCurrentTabState()?.id
         thisSessionId?.let { sessionId ->
@@ -212,15 +213,15 @@ class SitePermissionsFeature(
     @VisibleForTesting
     internal fun consumeAppPermissionRequest(
         appPermissionRequest: PermissionRequest,
-        optionalSessionId: String? = null
+        optionalSessionId: String? = null,
     ) {
         val thisSessionId = optionalSessionId ?: getCurrentTabState()?.id
         thisSessionId?.let { sessionId ->
             store.dispatch(
                 ContentAction.ConsumeAppPermissionsRequest(
                     sessionId,
-                    appPermissionRequest
-                )
+                    appPermissionRequest,
+                ),
             )
         }
     }
@@ -257,7 +258,7 @@ class SitePermissionsFeature(
                         storeSitePermissions(
                             currentContentSate,
                             appPermissionRequest,
-                            status = BLOCKED
+                            status = BLOCKED,
                         )
                     }
                 }
@@ -289,7 +290,7 @@ class SitePermissionsFeature(
     @VisibleForTesting
     internal fun onContentPermissionGranted(
         permissionRequest: PermissionRequest,
-        shouldStore: Boolean
+        shouldStore: Boolean,
     ) {
         permissionRequest.grant()
         if (shouldStore) {
@@ -304,7 +305,7 @@ class SitePermissionsFeature(
     internal fun onPositiveButtonPress(
         permissionId: String,
         sessionId: String,
-        shouldStore: Boolean
+        shouldStore: Boolean,
     ) {
         findRequestedPermission(permissionId)?.let { permissionRequest ->
             consumePermissionRequest(permissionRequest, sessionId)
@@ -321,7 +322,7 @@ class SitePermissionsFeature(
     internal fun onNegativeButtonPress(
         permissionId: String,
         sessionId: String,
-        shouldStore: Boolean
+        shouldStore: Boolean,
     ) {
         findRequestedPermission(permissionId)?.let { permissionRequest ->
             consumePermissionRequest(permissionRequest, sessionId)
@@ -349,7 +350,7 @@ class SitePermissionsFeature(
                     selectOrAddUseCase.invoke(
                         url = STORAGE_ACCESS_DOCUMENTATION_URL,
                         private = it.content.private,
-                        source = SessionState.Source.Internal.TextSelection
+                        source = SessionState.Source.Internal.TextSelection,
                     )
                 }
             }
@@ -358,7 +359,7 @@ class SitePermissionsFeature(
 
     internal fun onDismiss(
         permissionId: String,
-        sessionId: String
+        sessionId: String,
     ) {
         findRequestedPermission(permissionId)?.let { permissionRequest ->
             consumePermissionRequest(permissionRequest, sessionId)
@@ -370,7 +371,7 @@ class SitePermissionsFeature(
         contentState: ContentState,
         request: PermissionRequest,
         status: SitePermissions.Status,
-        coroutineScope: CoroutineScope = ioCoroutineScope
+        coroutineScope: CoroutineScope = ioCoroutineScope,
     ) {
         if (contentState.private) {
             return
@@ -386,7 +387,7 @@ class SitePermissionsFeature(
                         request.toSitePermissions(
                             origin,
                             status = status,
-                            permissions = request.permissions
+                            permissions = request.permissions,
                         )
                     storage.save(sitePermissions, request)
                 } else {
@@ -399,7 +400,7 @@ class SitePermissionsFeature(
 
     internal fun onContentPermissionDeny(
         permissionRequest: PermissionRequest,
-        shouldStore: Boolean
+        shouldStore: Boolean,
     ) {
         permissionRequest.reject()
         if (shouldStore) {
@@ -414,7 +415,7 @@ class SitePermissionsFeature(
     internal suspend fun onContentPermissionRequested(
         permissionRequest: PermissionRequest,
         origin: String,
-        coroutineScope: CoroutineScope = ioCoroutineScope
+        coroutineScope: CoroutineScope = ioCoroutineScope,
     ): SitePermissionsDialogFragment? {
         // We want to warranty that all media permissions have the required system
         // permissions are granted first, otherwise, we reject the request
@@ -441,7 +442,7 @@ class SitePermissionsFeature(
     internal fun handleNoRuledFlow(
         permissionFromStorage: SitePermissions?,
         permissionRequest: PermissionRequest,
-        host: String
+        host: String,
     ): SitePermissionsDialogFragment? {
         return if (shouldShowPrompt(permissionRequest, permissionFromStorage)) {
             createPrompt(permissionRequest, host)
@@ -456,7 +457,7 @@ class SitePermissionsFeature(
             updatePermissionToolbarIndicator(
                 permissionRequest,
                 status,
-                permissionFromStorage != null
+                permissionFromStorage != null,
             )
             consumePermissionRequest(permissionRequest)
             null
@@ -466,7 +467,7 @@ class SitePermissionsFeature(
     @VisibleForTesting
     internal fun shouldShowPrompt(
         permissionRequest: PermissionRequest,
-        permissionFromStorage: SitePermissions?
+        permissionFromStorage: SitePermissions?,
     ): Boolean {
         return if (permissionRequest.isForAutoplay()) {
             false
@@ -481,7 +482,7 @@ class SitePermissionsFeature(
     @VisibleForTesting
     internal fun handleRuledFlow(
         permissionRequest: PermissionRequest,
-        origin: String
+        origin: String,
     ): SitePermissionsDialogFragment? {
         return when (sitePermissionsRules?.getActionFrom(permissionRequest)) {
             SitePermissionsRules.Action.ALLOWED -> {
@@ -511,7 +512,7 @@ class SitePermissionsFeature(
     internal fun updatePermissionToolbarIndicator(
         request: PermissionRequest,
         value: SitePermissions.Status,
-        permanent: Boolean = false
+        permanent: Boolean = false,
     ) {
         val isAutoPlayAudibleBlocking: Boolean? =
             if (request.isForAutoplayAudible()) value == BLOCKED else null
@@ -532,37 +533,37 @@ class SitePermissionsFeature(
                 val action = when {
                     request.isForNotification() -> NotificationChangedAction(
                         tab.id,
-                        value != sitePermissionsRules?.notification?.toStatus()
+                        value != sitePermissionsRules?.notification?.toStatus(),
                     )
                     request.isForCamera() -> CameraChangedAction(
                         tab.id,
-                        value != sitePermissionsRules?.camera?.toStatus()
+                        value != sitePermissionsRules?.camera?.toStatus(),
                     )
                     request.isForLocation() -> LocationChangedAction(
                         tab.id,
-                        value != sitePermissionsRules?.location?.toStatus()
+                        value != sitePermissionsRules?.location?.toStatus(),
                     )
                     request.isForMicrophone() -> MicrophoneChangedAction(
                         tab.id,
-                        value != sitePermissionsRules?.microphone?.toStatus()
+                        value != sitePermissionsRules?.microphone?.toStatus(),
                     )
                     request.isForPersistentStorage() -> PersistentStorageChangedAction(
                         tab.id,
-                        value != sitePermissionsRules?.persistentStorage?.toStatus()
+                        value != sitePermissionsRules?.persistentStorage?.toStatus(),
                     )
                     request.isForMediaKeySystemAccess() -> MediaKeySystemAccesChangedAction(
                         tab.id,
-                        value != sitePermissionsRules?.mediaKeySystemAccess?.toStatus()
+                        value != sitePermissionsRules?.mediaKeySystemAccess?.toStatus(),
                     )
                     request.isForAutoplayAudible() -> AutoPlayAudibleChangedAction(
                         tab.id,
                         value != sitePermissionsRules?.autoplayAudible?.toAutoplayStatus()
-                            ?.toStatus()
+                            ?.toStatus(),
                     )
                     request.isForAutoplayInaudible() -> AutoPlayInAudibleChangedAction(
                         tab.id,
                         value != sitePermissionsRules?.autoplayInaudible?.toAutoplayStatus()
-                            ?.toStatus()
+                            ?.toStatus(),
                     )
                     else -> null
                 }
@@ -616,7 +617,7 @@ class SitePermissionsFeature(
         host: String,
         status: SitePermissions.Status,
         initialSitePermission: SitePermissions = getInitialSitePermissions(host),
-        permissions: List<Permission> = this.permissions
+        permissions: List<Permission> = this.permissions,
     ): SitePermissions {
         var sitePermissions = initialSitePermission
         for (permission in permissions) {
@@ -627,12 +628,12 @@ class SitePermissionsFeature(
 
     @VisibleForTesting
     internal fun getInitialSitePermissions(
-        host: String
+        host: String,
     ): SitePermissions {
         val rules = sitePermissionsRules
         return rules?.toSitePermissions(
             host,
-            savedAt = System.currentTimeMillis()
+            savedAt = System.currentTimeMillis(),
         )
             ?: SitePermissions(host, savedAt = System.currentTimeMillis())
     }
@@ -677,7 +678,7 @@ class SitePermissionsFeature(
     internal fun updateSitePermissionsStatus(
         status: SitePermissions.Status,
         permission: Permission,
-        sitePermissions: SitePermissions
+        sitePermissions: SitePermissions,
     ): SitePermissions {
         return when (permission) {
             is ContentGeoLocation, is AppLocationCoarse, is AppLocationFine -> {
@@ -715,7 +716,7 @@ class SitePermissionsFeature(
     @VisibleForTesting
     internal fun createPrompt(
         permissionRequest: PermissionRequest,
-        host: String
+        host: String,
     ): SitePermissionsDialogFragment {
         return if (!permissionRequest.containsVideoAndAudioSources()) {
             val permission = permissionRequest.permissions.first()
@@ -731,7 +732,7 @@ class SitePermissionsFeature(
                 R.drawable.mozac_ic_microphone,
                 showDoNotAskAgainCheckBox = shouldShowDoNotAskAgainCheckBox,
                 shouldSelectRememberChoice = dialogConfig?.shouldPreselectDoNotAskAgain
-                    ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN
+                    ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN,
             ).also {
                 emitPermissionsDialogDisplayed(permissionRequest.permissions)
             }
@@ -743,7 +744,7 @@ class SitePermissionsFeature(
     internal fun handlingSingleContentPermissions(
         permissionRequest: PermissionRequest,
         permission: Permission,
-        host: String
+        host: String,
     ): SitePermissionsDialogFragment {
         return when (permission) {
             is ContentGeoLocation -> {
@@ -755,7 +756,7 @@ class SitePermissionsFeature(
                     R.drawable.mozac_ic_location,
                     showDoNotAskAgainCheckBox = shouldShowDoNotAskAgainCheckBox,
                     shouldSelectRememberChoice = dialogConfig?.shouldPreselectDoNotAskAgain
-                        ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN
+                        ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN,
                 )
             }
             is ContentNotification -> {
@@ -767,7 +768,7 @@ class SitePermissionsFeature(
                     R.drawable.mozac_ic_notification,
                     showDoNotAskAgainCheckBox = false,
                     shouldSelectRememberChoice = false,
-                    isNotificationRequest = true
+                    isNotificationRequest = true,
                 )
             }
             is ContentAudioCapture, is ContentAudioMicrophone -> {
@@ -779,7 +780,7 @@ class SitePermissionsFeature(
                     R.drawable.mozac_ic_microphone,
                     showDoNotAskAgainCheckBox = shouldShowDoNotAskAgainCheckBox,
                     shouldSelectRememberChoice = dialogConfig?.shouldPreselectDoNotAskAgain
-                        ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN
+                        ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN,
                 )
             }
             is ContentVideoCamera, is ContentVideoCapture -> {
@@ -791,7 +792,7 @@ class SitePermissionsFeature(
                     R.drawable.mozac_ic_video,
                     showDoNotAskAgainCheckBox = shouldShowDoNotAskAgainCheckBox,
                     shouldSelectRememberChoice = dialogConfig?.shouldPreselectDoNotAskAgain
-                        ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN
+                        ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN,
                 )
             }
             is ContentPersistentStorage -> {
@@ -802,7 +803,7 @@ class SitePermissionsFeature(
                     R.string.mozac_feature_sitepermissions_persistent_storage_title,
                     R.drawable.mozac_ic_storage,
                     showDoNotAskAgainCheckBox = false,
-                    shouldSelectRememberChoice = true
+                    shouldSelectRememberChoice = true,
                 )
             }
             is ContentMediaKeySystemAccess -> {
@@ -813,7 +814,7 @@ class SitePermissionsFeature(
                     R.string.mozac_feature_sitepermissions_media_key_system_access_title,
                     R.drawable.mozac_ic_link,
                     showDoNotAskAgainCheckBox = false,
-                    shouldSelectRememberChoice = true
+                    shouldSelectRememberChoice = true,
                 )
             }
             is ContentCrossOriginStorageAccess -> {
@@ -822,7 +823,7 @@ class SitePermissionsFeature(
                     host = host,
                     permissionRequest = permissionRequest,
                     showDoNotAskAgainCheckBox = false,
-                    shouldSelectRememberChoice = true
+                    shouldSelectRememberChoice = true,
                 )
             }
             else ->
@@ -840,7 +841,7 @@ class SitePermissionsFeature(
         @DrawableRes iconId: Int,
         showDoNotAskAgainCheckBox: Boolean,
         shouldSelectRememberChoice: Boolean,
-        isNotificationRequest: Boolean = false
+        isNotificationRequest: Boolean = false,
     ): SitePermissionsDialogFragment {
         val title = context.getString(titleId, host)
 
@@ -855,7 +856,7 @@ class SitePermissionsFeature(
             this,
             showDoNotAskAgainCheckBox,
             isNotificationRequest = isNotificationRequest,
-            shouldSelectDoNotAskAgainCheckBox = shouldSelectRememberChoice
+            shouldSelectDoNotAskAgainCheckBox = shouldSelectRememberChoice,
         )
     }
 
@@ -873,11 +874,11 @@ class SitePermissionsFeature(
         val title = context.getString(
             R.string.mozac_feature_sitepermissions_storage_access_title,
             host.stripDefaultPort(),
-            currentSession.content.url.stripDefaultPort()
+            currentSession.content.url.stripDefaultPort(),
         )
         val message = context.getString(
             R.string.mozac_feature_sitepermissions_storage_access_message,
-            host.stripDefaultPort()
+            host.stripDefaultPort(),
         )
         val negativeButtonText = context.getString(R.string.mozac_feature_sitepermissions_storage_access_not_allow)
 
@@ -892,7 +893,7 @@ class SitePermissionsFeature(
             shouldShowDoNotAskAgainCheckBox = showDoNotAskAgainCheckBox,
             isNotificationRequest = false,
             shouldSelectDoNotAskAgainCheckBox = shouldSelectRememberChoice,
-            shouldShowLearnMoreLink = true
+            shouldShowLearnMoreLink = true,
         )
     }
 
@@ -900,7 +901,8 @@ class SitePermissionsFeature(
         get() {
             return when (permissions.first()) {
                 is ContentVideoCamera, is ContentVideoCapture,
-                is ContentAudioCapture, is ContentAudioMicrophone -> true
+                is ContentAudioCapture, is ContentAudioMicrophone,
+                -> true
                 else -> false
             }
         }
@@ -930,7 +932,7 @@ class SitePermissionsFeature(
         @ColorRes
         val positiveButtonBackgroundColor: Int? = null,
         @ColorRes
-        val positiveButtonTextColor: Int? = null
+        val positiveButtonTextColor: Int? = null,
     )
 
     /**
@@ -938,7 +940,7 @@ class SitePermissionsFeature(
      */
     data class DialogConfig(
         /** Use **true** to pre-select "Do not ask again" checkbox. */
-        val shouldPreselectDoNotAskAgain: Boolean = false
+        val shouldPreselectDoNotAskAgain: Boolean = false,
     ) {
 
         companion object {
@@ -982,7 +984,7 @@ internal fun SitePermissions?.isGranted(permissionRequest: PermissionRequest): B
 @VisibleForTesting
 internal fun isPermissionGranted(
     permission: Permission,
-    permissionFromStorage: SitePermissions
+    permissionFromStorage: SitePermissions,
 ): Boolean {
     return when (permission) {
         is ContentGeoLocation -> {
@@ -1026,7 +1028,8 @@ private fun Permission.isSupported(): Boolean {
         is ContentAudioCapture, is ContentAudioMicrophone,
         is ContentVideoCamera, is ContentVideoCapture,
         is ContentAutoPlayAudible, is ContentAutoPlayInaudible,
-        is ContentMediaKeySystemAccess -> true
+        is ContentMediaKeySystemAccess,
+        -> true
         else -> false
     }
 }

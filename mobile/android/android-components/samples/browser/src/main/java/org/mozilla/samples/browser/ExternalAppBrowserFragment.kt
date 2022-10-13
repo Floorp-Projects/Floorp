@@ -47,10 +47,10 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 components.customTabsUseCases,
                 components.menuBuilder,
                 window = activity?.window,
-                closeListener = { activity?.finish() }
+                closeListener = { activity?.finish() },
             ),
             owner = this,
-            view = binding.root
+            view = binding.root,
         )
 
         hideToolbarFeature.set(
@@ -58,18 +58,18 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 components.store,
                 components.customTabsStore,
                 sessionId,
-                manifest
+                manifest,
             ) { toolbarVisible ->
                 binding.toolbar.isVisible = toolbarVisible
             },
             owner = this,
-            view = binding.toolbar
+            view = binding.toolbar,
         )
 
         val windowFeature = CustomTabWindowFeature(
             requireActivity(),
             components.store,
-            sessionId!!
+            sessionId!!,
         ) {
             // No-op. Client may override this
         }
@@ -80,7 +80,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 WebAppActivityFeature(
                     requireActivity(),
                     components.icons,
-                    manifest
+                    manifest,
                 ),
                 ManifestUpdateFeature(
                     requireContext(),
@@ -88,8 +88,8 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                     components.webAppShortcutManager,
                     components.webAppManifestStorage,
                     sessionId!!,
-                    manifest
-                )
+                    manifest,
+                ),
             )
             viewLifecycleOwner.lifecycle.addObserver(
                 WebAppSiteControlsFeature(
@@ -98,8 +98,8 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                     components.sessionUseCases.reload,
                     sessionId!!,
                     manifest,
-                    icons = components.icons
-                )
+                    icons = components.icons,
+                ),
             )
         }
 
@@ -116,7 +116,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
     companion object {
         fun create(
             sessionId: String,
-            manifest: WebAppManifest?
+            manifest: WebAppManifest?,
         ) = ExternalAppBrowserFragment().apply {
             arguments = Bundle().apply {
                 putSessionId(sessionId)

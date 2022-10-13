@@ -47,7 +47,7 @@ internal class FilePicker(
     private val container: PromptContainer,
     private val store: BrowserStore,
     private var sessionId: String? = null,
-    override val onNeedToRequestPermissions: OnNeedToRequestPermissions
+    override val onNeedToRequestPermissions: OnNeedToRequestPermissions,
 ) : PermissionsFeature {
 
     private val logger = Logger("FilePicker")
@@ -135,7 +135,7 @@ internal class FilePicker(
 
     private fun getActivePromptRequest(): PromptRequest? =
         store.state.findCustomTabOrSelectedTab(sessionId)?.content?.promptRequests?.lastOrNull {
-            prompt ->
+                prompt ->
             prompt is File
         }
 

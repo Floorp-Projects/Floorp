@@ -12,7 +12,7 @@ import mozilla.components.browser.icons.IconRequest
  * if the request doesn't contain a list of resources yet.
  */
 class DiskIconPreparer(
-    private val cache: PreparerDiskCache
+    private val cache: PreparerDiskCache,
 ) : IconPreprarer {
     interface PreparerDiskCache {
         fun getResources(context: Context, request: IconRequest): List<IconRequest.Resource>

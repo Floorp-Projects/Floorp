@@ -34,8 +34,8 @@ class BrowserMenuHighlightableSwitchTest {
             label = "label",
             startImageResource = android.R.drawable.ic_menu_report_image,
             highlight = BrowserMenuHighlight.LowPriority(
-                notificationTint = Color.RED
-            )
+                notificationTint = Color.RED,
+            ),
         ) {}
 
         assertEquals(R.layout.mozac_browser_menu_highlightable_switch, item.getLayoutResource())
@@ -49,8 +49,8 @@ class BrowserMenuHighlightableSwitchTest {
             label = "label",
             startImageResource = android.R.drawable.ic_menu_report_image,
             highlight = BrowserMenuHighlight.LowPriority(
-                notificationTint = Color.RED
-            )
+                notificationTint = Color.RED,
+            ),
         ) {
             onClickWasPress = true
         }
@@ -71,9 +71,9 @@ class BrowserMenuHighlightableSwitchTest {
             textColorResource = android.R.color.black,
             highlight = BrowserMenuHighlight.LowPriority(
                 notificationTint = R.color.photonRed50,
-                label = "highlight"
+                label = "highlight",
             ),
-            isHighlighted = { shouldHighlight }
+            isHighlighted = { shouldHighlight },
         ) {}
 
         val view = inflate(item)
@@ -100,8 +100,8 @@ class BrowserMenuHighlightableSwitchTest {
             "label",
             startImageResource = android.R.drawable.ic_menu_report_image,
             highlight = BrowserMenuHighlight.LowPriority(
-                notificationTint = Color.RED
-            )
+                notificationTint = Color.RED,
+            ),
         ) {}
 
         val view = inflate(item)

@@ -33,8 +33,8 @@ class ImageViewAndroidTintXmlDetectorTest : LintDetectorTest() {
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     />
-"""
-                )
+""",
+                ),
             ).allowMissingSdk(true)
             .run()
             .expectClean()
@@ -53,8 +53,8 @@ class ImageViewAndroidTintXmlDetectorTest : LintDetectorTest() {
     android:src="@drawable/ic_close"
     android:tint="@color/photonBlue90"
     />
-"""
-                )
+""",
+                ),
             ).allowMissingSdk(true)
             .run()
             .expect(
@@ -63,7 +63,7 @@ res/layout/layout.xml:6: Error: Using android:tint to tint ImageView instead of 
     android:tint="@color/photonBlue90"
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 1 errors, 0 warnings
-            """
+            """,
             )
     }
 }

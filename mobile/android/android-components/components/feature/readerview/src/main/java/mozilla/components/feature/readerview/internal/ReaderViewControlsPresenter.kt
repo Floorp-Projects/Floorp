@@ -12,7 +12,7 @@ import mozilla.components.feature.readerview.view.ReaderViewControlsView
  */
 internal class ReaderViewControlsPresenter(
     private val view: ReaderViewControlsView,
-    private val config: ReaderViewConfig
+    private val config: ReaderViewConfig,
 ) {
     /**
      * Sets the initial state of the ReaderView controls and makes the controls visible.

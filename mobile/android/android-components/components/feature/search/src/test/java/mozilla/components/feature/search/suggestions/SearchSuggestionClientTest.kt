@@ -29,7 +29,7 @@ class SearchSuggestionClientTest {
         name = "Test",
         url = "https://localhost?q={searchTerms}",
         suggestUrl = "https://localhost/suggestions?q={searchTerms}",
-        icon = mock()
+        icon = mock(),
     )
 
     @Test
@@ -48,7 +48,7 @@ class SearchSuggestionClientTest {
             name = "Qwant",
             url = "https://localhost?q={searchTerms}",
             suggestUrl = "https://localhost/suggestions?q={searchTerms}",
-            icon = mock()
+            icon = mock(),
         )
         val client = SearchSuggestionClient(qwant, QWANT_MOCK_RESPONSE)
         val expectedResults = listOf("firefox (video game)", "firefox addons", "firefox", "firefox quantum", "firefox focus")
@@ -77,7 +77,7 @@ class SearchSuggestionClientTest {
         val searchEngine = createSearchEngine(
             name = "Test",
             url = "https://localhost?q={searchTerms}",
-            icon = mock()
+            icon = mock(),
         )
         val client = SearchSuggestionClient(searchEngine) { "no-op" }
 
@@ -91,15 +91,15 @@ class SearchSuggestionClientTest {
         val store = BrowserStore(
             BrowserState(
                 search = SearchState(
-                    regionSearchEngines = listOf(searchEngine)
-                )
-            )
+                    regionSearchEngines = listOf(searchEngine),
+                ),
+            ),
         )
 
         val client = SearchSuggestionClient(
             testContext,
             store,
-            GOOGLE_MOCK_RESPONSE
+            GOOGLE_MOCK_RESPONSE,
         )
         val expectedResults = listOf("firefox", "firefox for mac", "firefox quantum", "firefox update", "firefox esr", "firefox focus", "firefox addons", "firefox extensions", "firefox nightly", "firefox clear cache")
 

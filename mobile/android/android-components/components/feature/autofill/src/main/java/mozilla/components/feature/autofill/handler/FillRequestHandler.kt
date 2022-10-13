@@ -25,6 +25,7 @@ import mozilla.components.feature.autofill.structure.parseStructure
 import kotlin.math.min
 
 internal const val EXTRA_LOGIN_ID = "loginId"
+
 // Maximum number of logins we are going to display in the autofill overlay.
 internal const val MAX_LOGINS = 10
 
@@ -34,7 +35,7 @@ internal const val MAX_LOGINS = 10
 @RequiresApi(Build.VERSION_CODES.O)
 internal class FillRequestHandler(
     private val context: Context,
-    private val configuration: AutofillConfiguration
+    private val configuration: AutofillConfiguration,
 ) {
     /**
      * Handles a fill request for the given [AssistStructure] and returns a matching [FillResponse]
@@ -45,7 +46,7 @@ internal class FillRequestHandler(
     suspend fun handle(
         structure: RawStructure?,
         forceUnlock: Boolean = false,
-        maxSuggestionCount: Int = MAX_LOGINS
+        maxSuggestionCount: Int = MAX_LOGINS,
     ): FillResponseBuilder? {
         if (structure == null) {
             return null
@@ -58,13 +59,13 @@ internal class FillRequestHandler(
     suspend fun handle(
         parsedStructure: ParsedStructure,
         forceUnlock: Boolean = false,
-        maxSuggestionCount: Int = MAX_LOGINS
+        maxSuggestionCount: Int = MAX_LOGINS,
     ): FillResponseBuilder {
         val lookupDomain = parsedStructure.getLookupDomain(configuration.publicSuffixList)
         val needsConfirmation = !configuration.verifier.hasCredentialRelationship(
             context,
             lookupDomain,
-            parsedStructure.packageName
+            parsedStructure.packageName,
         )
 
         val logins = configuration.storage

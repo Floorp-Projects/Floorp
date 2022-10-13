@@ -44,6 +44,6 @@ internal fun DownloadState.withResponse(headers: Headers, stream: InputStream?):
     return copy(
         fileName = newFileName?.sanitizeFileName(),
         contentType = contentType,
-        contentLength = contentLength ?: headers[CONTENT_LENGTH]?.toLongOrNull()
+        contentLength = contentLength ?: headers[CONTENT_LENGTH]?.toLongOrNull(),
     )
 }

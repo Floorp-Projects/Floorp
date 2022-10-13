@@ -34,7 +34,7 @@ data class Response(
     val url: String,
     val status: Int,
     val headers: Headers,
-    val body: Body
+    val body: Body,
 ) : Closeable {
     /**
      * Closes this [Response] and its [Body] and releases any system resources associated with it.
@@ -56,7 +56,7 @@ data class Response(
      */
     open class Body(
         private val stream: InputStream,
-        contentType: String? = null
+        contentType: String? = null,
     ) : Closeable, AutoCloseable {
 
         @Suppress("TooGenericExceptionCaught")

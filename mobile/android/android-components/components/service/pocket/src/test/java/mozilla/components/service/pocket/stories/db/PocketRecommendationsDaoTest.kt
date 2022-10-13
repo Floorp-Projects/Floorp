@@ -64,7 +64,7 @@ class PocketRecommendationsDaoTest {
     fun `GIVEN a story already persisted WHEN another story with identical url is tried to be inserted THEN add that to the table`() = runTest {
         val story = PocketTestResources.dbExpectedPocketStory
         val newStory = story.copy(
-            url = "updated" + story.url
+            url = "updated" + story.url,
         )
         dao.insertPocketStories(listOf(story))
 
@@ -78,7 +78,7 @@ class PocketRecommendationsDaoTest {
     fun `GIVEN a story with the same url exists WHEN another story with updated title is tried to be inserted THEN don't update the table`() = runTest {
         val story = PocketTestResources.dbExpectedPocketStory
         val updatedStory = story.copy(
-            title = "updated" + story.title
+            title = "updated" + story.title,
         )
         dao.insertPocketStories(listOf(story))
 
@@ -93,7 +93,7 @@ class PocketRecommendationsDaoTest {
     fun `GIVEN a story with the same url exists WHEN another story with updated imageUrl is tried to be inserted THEN don't update the table`() = runTest {
         val story = PocketTestResources.dbExpectedPocketStory
         val updatedStory = story.copy(
-            imageUrl = "updated" + story.imageUrl
+            imageUrl = "updated" + story.imageUrl,
         )
         dao.insertPocketStories(listOf(story))
 
@@ -107,7 +107,7 @@ class PocketRecommendationsDaoTest {
     fun `GIVEN a story with the same url exists WHEN another story with updated publisher is tried to be inserted THEN don't update the table`() = runTest {
         val story = PocketTestResources.dbExpectedPocketStory
         val updatedStory = story.copy(
-            publisher = "updated" + story.publisher
+            publisher = "updated" + story.publisher,
         )
         dao.insertPocketStories(listOf(story))
 
@@ -121,7 +121,7 @@ class PocketRecommendationsDaoTest {
     fun `GIVEN a story with the same url exists WHEN another story with updated category is tried to be inserted THEN don't update the table`() = runTest {
         val story = PocketTestResources.dbExpectedPocketStory
         val updatedStory = story.copy(
-            category = "updated" + story.category
+            category = "updated" + story.category,
         )
         dao.insertPocketStories(listOf(story))
 
@@ -135,7 +135,7 @@ class PocketRecommendationsDaoTest {
     fun `GIVEN a story with the same url exists WHEN another story with updated timeToRead is tried to be inserted THEN don't update the table`() = runTest {
         val story = PocketTestResources.dbExpectedPocketStory
         val updatedStory = story.copy(
-            timesShown = story.timesShown * 2
+            timesShown = story.timesShown * 2,
         )
         dao.insertPocketStories(listOf(story))
 
@@ -149,7 +149,7 @@ class PocketRecommendationsDaoTest {
     fun `GIVEN a story with the same url exists WHEN another story with updated timesShown is tried to be inserted THEN don't update the table`() = runTest {
         val story = PocketTestResources.dbExpectedPocketStory
         val updatedStory = story.copy(
-            timesShown = story.timesShown * 2
+            timesShown = story.timesShown * 2,
         )
         dao.insertPocketStories(listOf(story))
 
@@ -192,15 +192,15 @@ class PocketRecommendationsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(
             url = story1.url + "2",
-            timesShown = story1.timesShown * 2
+            timesShown = story1.timesShown * 2,
         )
         val story3 = PocketTestResources.dbExpectedPocketStory.copy(
             url = story1.url + "3",
-            timesShown = story1.timesShown * 3
+            timesShown = story1.timesShown * 3,
         )
         val story4 = PocketTestResources.dbExpectedPocketStory.copy(
             url = story1.url + "4",
-            timesShown = story1.timesShown * 4
+            timesShown = story1.timesShown * 4,
         )
         val updatedStory2 = PocketLocalStoryTimesShown(story2.url, 222)
         val updatedStory4 = PocketLocalStoryTimesShown(story4.url, 444)
@@ -214,9 +214,9 @@ class PocketRecommendationsDaoTest {
                 story1,
                 story2.copy(timesShown = 222),
                 story3,
-                story4.copy(timesShown = 444)
+                story4.copy(timesShown = 444),
             ),
-            result
+            result,
         )
     }
 
@@ -225,15 +225,15 @@ class PocketRecommendationsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(
             url = story1.url + "2",
-            timesShown = story1.timesShown * 2
+            timesShown = story1.timesShown * 2,
         )
         val story3 = PocketTestResources.dbExpectedPocketStory.copy(
             url = story1.url + "3",
-            timesShown = story1.timesShown * 3
+            timesShown = story1.timesShown * 3,
         )
         val story4 = PocketTestResources.dbExpectedPocketStory.copy(
             url = story1.url + "4",
-            timesShown = story1.timesShown * 4
+            timesShown = story1.timesShown * 4,
         )
         val otherStoryUpdateDetails = PocketLocalStoryTimesShown("differentUrl", 111)
         dao.insertPocketStories(listOf(story1, story2, story3, story4))
@@ -265,7 +265,7 @@ class PocketRecommendationsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
         val updatedStory1 = story1.copy(
-            url = "updated" + story1.url
+            url = "updated" + story1.url,
         )
         dao.insertPocketStories(listOf(story1, story2))
 
@@ -282,7 +282,7 @@ class PocketRecommendationsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
         val updatedStory2 = story2.copy(
-            imageUrl = "updated" + story2.url
+            imageUrl = "updated" + story2.url,
         )
         dao.insertPocketStories(listOf(story1, story2))
 
@@ -298,7 +298,7 @@ class PocketRecommendationsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
         val updatedStory1 = story1.copy(
-            title = "updated" + story1.title
+            title = "updated" + story1.title,
         )
         dao.insertPocketStories(listOf(story1, story2))
 
@@ -314,7 +314,7 @@ class PocketRecommendationsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
         val updatedStory2 = story2.copy(
-            publisher = "updated" + story2.publisher
+            publisher = "updated" + story2.publisher,
         )
         dao.insertPocketStories(listOf(story1, story2))
 
@@ -330,7 +330,7 @@ class PocketRecommendationsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
         val updatedStory1 = story1.copy(
-            category = "updated" + story1.category
+            category = "updated" + story1.category,
         )
         dao.insertPocketStories(listOf(story1, story2))
 
@@ -346,7 +346,7 @@ class PocketRecommendationsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
         val updatedStory1 = story1.copy(
-            timeToRead = story1.timeToRead * 2
+            timeToRead = story1.timeToRead * 2,
         )
         dao.insertPocketStories(listOf(story1, story2))
 
@@ -362,7 +362,7 @@ class PocketRecommendationsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
         val updatedStory2 = story2.copy(
-            timesShown = story2.timesShown * 2
+            timesShown = story2.timesShown * 2,
         )
         dao.insertPocketStories(listOf(story1, story2))
 

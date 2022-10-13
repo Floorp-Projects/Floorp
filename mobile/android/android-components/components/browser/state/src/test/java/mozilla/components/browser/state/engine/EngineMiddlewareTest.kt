@@ -35,18 +35,18 @@ class EngineMiddlewareTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla")
-                )
+                    createTab("https://www.mozilla.org", id = "mozilla"),
+                ),
             ),
-            middleware = EngineMiddleware.create(engine, scope)
+            middleware = EngineMiddleware.create(engine, scope),
         )
 
         store.dispatch(
-            EngineAction.CreateEngineSessionAction("mozilla")
+            EngineAction.CreateEngineSessionAction("mozilla"),
         )
 
         store.dispatch(
-            EngineAction.CreateEngineSessionAction("mozilla")
+            EngineAction.CreateEngineSessionAction("mozilla"),
         )
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -58,7 +58,7 @@ class EngineMiddlewareTest {
     @Test
     fun `TrimMemoryMiddleware will be added by default`() {
         val list = EngineMiddleware.create(
-            engine = mock()
+            engine = mock(),
         )
 
         assertTrue(list.any { it is TrimMemoryMiddleware })
@@ -68,7 +68,7 @@ class EngineMiddlewareTest {
     fun `TrimMemoryMiddleware will not be added if trimMemoryAutomatically is set to false`() {
         val list = EngineMiddleware.create(
             engine = mock(),
-            trimMemoryAutomatically = false
+            trimMemoryAutomatically = false,
         )
 
         assertTrue(list.none { it is TrimMemoryMiddleware })

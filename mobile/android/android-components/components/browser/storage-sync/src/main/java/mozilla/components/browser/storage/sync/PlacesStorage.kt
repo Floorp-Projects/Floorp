@@ -28,13 +28,13 @@ import java.util.concurrent.Executors
  */
 abstract class PlacesStorage(
     context: Context,
-    val crashReporter: CrashReporting? = null
+    val crashReporter: CrashReporting? = null,
 ) : Storage, SyncableStore {
     internal var writeScope =
         CoroutineScope(
             Executors.newSingleThreadExecutor(
-                NamedThreadFactory("PlacesStorageWriteScope")
-            ).asCoroutineDispatcher()
+                NamedThreadFactory("PlacesStorageWriteScope"),
+            ).asCoroutineDispatcher(),
         )
         @VisibleForTesting internal set
 
@@ -71,7 +71,7 @@ abstract class PlacesStorage(
     @Deprecated(
         "Use `cancelWrites` and `cancelReads` to get a similar functionality. " +
             "See https://github.com/mozilla-mobile/android-components/issues/7348 for a description of the issues " +
-            "for when using this method"
+            "for when using this method",
     )
     override fun cleanup() {
         writeScope.coroutineContext.cancelChildren()
@@ -143,7 +143,7 @@ abstract class PlacesStorage(
     inline fun <T> handlePlacesExceptions(
         operation: String,
         default: T,
-        block: () -> T
+        block: () -> T,
     ): T {
         return try {
             block()

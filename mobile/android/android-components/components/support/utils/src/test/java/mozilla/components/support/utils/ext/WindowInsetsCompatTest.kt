@@ -37,10 +37,10 @@ class WindowInsetsCompatTest {
         mandatorySystemGestureInsets = Insets.of(leftPixels, topPixels, rightPixels, bottomPixels)
 
         whenever(windowInsetsCompat.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.systemBars())).thenReturn(
-            insets
+            insets,
         )
         whenever(windowInsetsCompat.getInsets(WindowInsetsCompat.Type.mandatorySystemGestures())).thenReturn(
-            mandatorySystemGestureInsets
+            mandatorySystemGestureInsets,
         )
     }
 

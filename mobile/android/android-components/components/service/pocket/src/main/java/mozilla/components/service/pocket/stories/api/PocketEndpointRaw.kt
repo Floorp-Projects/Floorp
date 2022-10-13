@@ -18,7 +18,7 @@ import mozilla.components.service.pocket.stories.api.PocketEndpointRaw.Companion
  * @see [newInstance] to retrieve an instance.
  */
 internal class PocketEndpointRaw internal constructor(
-    @get:VisibleForTesting internal val client: Client
+    @get:VisibleForTesting internal val client: Client,
 ) {
     /**
      * Gets the current stories recommendations from the Pocket server.

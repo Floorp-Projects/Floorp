@@ -64,7 +64,7 @@ class ProvidersTest {
         domainSource: DomainList,
         sourceSize: Int,
         completion: String,
-        expectedUrl: String
+        expectedUrl: String,
     ) {
         val result = provider.getAutocompleteSuggestion(text)!!
         assertFalse(result.text.isEmpty())

@@ -12,8 +12,9 @@ enum class Side {
      * Starting side (top or left).
      */
     START,
+
     /**
      * Ending side (bottom or right).
      */
-    END
+    END,
 }

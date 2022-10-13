@@ -24,10 +24,10 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 
@@ -59,7 +59,7 @@ class AccountObserverTest {
             pushScope,
             crashReporter,
             lifecycleOwner,
-            false
+            false,
         )
         `when`(lifecycle.currentState).thenReturn(Lifecycle.State.STARTED)
         `when`(lifecycleOwner.lifecycle).thenReturn(lifecycle)
@@ -85,7 +85,7 @@ class AccountObserverTest {
             pushScope,
             crashReporter,
             mock(),
-            false
+            false,
         )
 
         preference(testContext).edit()
@@ -109,7 +109,7 @@ class AccountObserverTest {
             pushScope,
             crashReporter,
             mock(),
-            false
+            false,
         )
 
         observer.onAuthenticated(account, AuthType.Existing)
@@ -139,7 +139,7 @@ class AccountObserverTest {
             pushScope,
             crashReporter,
             mock(),
-            false
+            false,
         )
 
         observer.onLoggedOut()
@@ -155,7 +155,7 @@ class AccountObserverTest {
             pushScope,
             crashReporter,
             mock(),
-            false
+            false,
         )
 
         observer.onAuthenticationProblems()

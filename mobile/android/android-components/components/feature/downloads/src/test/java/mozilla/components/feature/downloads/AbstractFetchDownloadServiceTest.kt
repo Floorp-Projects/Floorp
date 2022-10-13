@@ -116,6 +116,7 @@ class AbstractFetchDownloadServiceTest {
 
     @Mock private lateinit var client: Client
     private lateinit var browserStore: BrowserStore
+
     @Mock private lateinit var broadcastManager: LocalBroadcastManager
     private lateinit var service: AbstractFetchDownloadService
 
@@ -125,10 +126,12 @@ class AbstractFetchDownloadServiceTest {
     fun setup() {
         openMocks(this)
         browserStore = BrowserStore()
-        service = spy(object : AbstractFetchDownloadService() {
-            override val httpClient = client
-            override val store = browserStore
-        })
+        service = spy(
+            object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = browserStore
+            },
+        )
 
         doReturn(broadcastManager).`when`(service).broadcastManager
         doReturn(testContext).`when`(service).context
@@ -145,7 +148,7 @@ class AbstractFetchDownloadServiceTest {
             "https://example.com/file.txt",
             200,
             MutableHeaders(),
-            Response.Body(mock())
+            Response.Body(mock()),
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
 
@@ -226,10 +229,12 @@ class AbstractFetchDownloadServiceTest {
         val downloadState = DownloadState(url = "mozilla.org/mozilla.txt", private = true)
         val downloadJobState = DownloadJobState(state = downloadState, status = COMPLETED)
         val browserStore = mock<BrowserStore>()
-        val service = spy(object : AbstractFetchDownloadService() {
-            override val httpClient = client
-            override val store = browserStore
-        })
+        val service = spy(
+            object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = browserStore
+            },
+        )
 
         doAnswer { Unit }.`when`(service).removeDownloadJob(any())
 
@@ -246,10 +251,12 @@ class AbstractFetchDownloadServiceTest {
         val downloadState = DownloadState(url = "mozilla.org/mozilla.txt", private = false)
         val downloadJobState = DownloadJobState(state = downloadState, status = COMPLETED)
         val browserStore = mock<BrowserStore>()
-        val service = spy(object : AbstractFetchDownloadService() {
-            override val httpClient = client
-            override val store = browserStore
-        })
+        val service = spy(
+            object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = browserStore
+            },
+        )
 
         doAnswer { Unit }.`when`(service).removeDownloadJob(any())
 
@@ -276,7 +283,7 @@ class AbstractFetchDownloadServiceTest {
             url = "mozilla.org/mozilla.txt",
             contentLength = 50L,
             currentBytesCopied = 5,
-            status = DOWNLOADING
+            status = DOWNLOADING,
         )
 
         val downloadJobState = DownloadJobState(
@@ -285,7 +292,7 @@ class AbstractFetchDownloadServiceTest {
             foregroundServiceId = 1,
             downloadDeleted = false,
             currentBytesCopied = 5,
-            status = DOWNLOADING
+            status = DOWNLOADING,
         )
 
         service.verifyDownload(downloadJobState)
@@ -301,7 +308,7 @@ class AbstractFetchDownloadServiceTest {
             url = "mozilla.org/mozilla.txt",
             contentLength = 50L,
             currentBytesCopied = 5,
-            status = DownloadState.Status.PAUSED
+            status = DownloadState.Status.PAUSED,
         )
 
         val downloadJobState = DownloadJobState(
@@ -310,7 +317,7 @@ class AbstractFetchDownloadServiceTest {
             currentBytesCopied = 5,
             status = DownloadState.Status.PAUSED,
             foregroundServiceId = 1,
-            downloadDeleted = false
+            downloadDeleted = false,
         )
 
         service.verifyDownload(downloadJobState)
@@ -326,7 +333,7 @@ class AbstractFetchDownloadServiceTest {
             url = "mozilla.org/mozilla.txt",
             contentLength = 50L,
             currentBytesCopied = 50,
-            status = DOWNLOADING
+            status = DOWNLOADING,
         )
 
         val downloadJobState = DownloadJobState(
@@ -335,7 +342,7 @@ class AbstractFetchDownloadServiceTest {
             currentBytesCopied = 50,
             status = DOWNLOADING,
             foregroundServiceId = 1,
-            downloadDeleted = false
+            downloadDeleted = false,
         )
 
         service.verifyDownload(downloadJobState)
@@ -351,7 +358,7 @@ class AbstractFetchDownloadServiceTest {
             url = "mozilla.org/mozilla.txt",
             contentLength = 50L,
             currentBytesCopied = 50,
-            status = DownloadState.Status.CANCELLED
+            status = DownloadState.Status.CANCELLED,
         )
 
         val downloadJobState = DownloadJobState(
@@ -360,7 +367,7 @@ class AbstractFetchDownloadServiceTest {
             currentBytesCopied = 50,
             status = DownloadState.Status.CANCELLED,
             foregroundServiceId = 1,
-            downloadDeleted = false
+            downloadDeleted = false,
         )
 
         service.verifyDownload(downloadJobState)
@@ -376,7 +383,7 @@ class AbstractFetchDownloadServiceTest {
             url = "mozilla.org/mozilla.txt",
             contentLength = 50L,
             currentBytesCopied = 50,
-            status = DownloadState.Status.COMPLETED
+            status = DownloadState.Status.COMPLETED,
         )
 
         val downloadJobState = DownloadJobState(
@@ -385,7 +392,7 @@ class AbstractFetchDownloadServiceTest {
             currentBytesCopied = 50,
             status = DownloadState.Status.COMPLETED,
             foregroundServiceId = 1,
-            downloadDeleted = false
+            downloadDeleted = false,
         )
 
         service.verifyDownload(downloadJobState)
@@ -400,7 +407,7 @@ class AbstractFetchDownloadServiceTest {
             url = "mozilla.org/mozilla.txt",
             contentLength = 0L,
             currentBytesCopied = 50,
-            status = DOWNLOADING
+            status = DOWNLOADING,
         )
         val downloadJobState = DownloadJobState(
             job = null,
@@ -408,7 +415,7 @@ class AbstractFetchDownloadServiceTest {
             currentBytesCopied = 50,
             status = DOWNLOADING,
             foregroundServiceId = 1,
-            downloadDeleted = false
+            downloadDeleted = false,
         )
 
         browserStore.dispatch(DownloadAction.AddDownloadAction(downloadState)).joinBlocking()
@@ -427,7 +434,7 @@ class AbstractFetchDownloadServiceTest {
             "https://example.com/file.txt",
             200,
             MutableHeaders(),
-            Response.Body(mock())
+            Response.Body(mock()),
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
 
@@ -466,7 +473,7 @@ class AbstractFetchDownloadServiceTest {
             "https://example.com/file.txt",
             200,
             MutableHeaders(),
-            Response.Body(mock())
+            Response.Body(mock()),
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
 
@@ -504,13 +511,13 @@ class AbstractFetchDownloadServiceTest {
             "https://example.com/file.txt",
             200,
             MutableHeaders(),
-            Response.Body(mock())
+            Response.Body(mock()),
         )
         val resumeResponse = Response(
             "https://example.com/file.txt",
             206,
             MutableHeaders("Content-Range" to "1-67589/67589"),
-            Response.Body(mock())
+            Response.Body(mock()),
         )
         doReturn(downloadResponse).`when`(client)
             .fetch(Request("https://example.com/file.txt"))
@@ -566,7 +573,7 @@ class AbstractFetchDownloadServiceTest {
             "https://example.com/file.txt",
             200,
             MutableHeaders(),
-            Response.Body(mock())
+            Response.Body(mock()),
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
 
@@ -617,7 +624,7 @@ class AbstractFetchDownloadServiceTest {
             "https://example.com/file.txt",
             400,
             MutableHeaders(),
-            Response.Body(mock())
+            Response.Body(mock()),
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
 
@@ -643,7 +650,7 @@ class AbstractFetchDownloadServiceTest {
         val download = DownloadState(
             url = "mozilla.org",
             fileName = "example.apk",
-            destinationDirectory = folder.root.path
+            destinationDirectory = folder.root.path,
         )
         val transformedDownload = service.makeUniqueFileNameIfNecessary(download, false)
 
@@ -657,7 +664,7 @@ class AbstractFetchDownloadServiceTest {
         val download = DownloadState(
             url = "mozilla.org",
             fileName = "example.apk",
-            destinationDirectory = folder.root.path
+            destinationDirectory = folder.root.path,
         )
         val transformedDownload = service.makeUniqueFileNameIfNecessary(download, true)
 
@@ -671,7 +678,7 @@ class AbstractFetchDownloadServiceTest {
             "https://example.com/file.txt",
             200,
             MutableHeaders(),
-            Response.Body(mock())
+            Response.Body(mock()),
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
 
@@ -746,13 +753,15 @@ class AbstractFetchDownloadServiceTest {
     @Test
     fun `sets the notification foreground in devices that support notification group`() = runTest(testsDispatcher) {
         val download = DownloadState(
-            id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-            status = DOWNLOADING
+            id = "1",
+            url = "https://example.com/file.txt",
+            fileName = "file.txt",
+            status = DOWNLOADING,
         )
         val downloadState = DownloadJobState(
             state = download,
             status = DOWNLOADING,
-            foregroundServiceId = Random.nextInt()
+            foregroundServiceId = Random.nextInt(),
         )
         val notification = mock<Notification>()
 
@@ -769,13 +778,15 @@ class AbstractFetchDownloadServiceTest {
     @Config(sdk = [Build.VERSION_CODES.M])
     fun `sets the notification foreground in devices that DO NOT support notification group`() {
         val download = DownloadState(
-            id = "1", url = "https://example.com/file.txt",
-            fileName = "file.txt", status = DOWNLOADING
+            id = "1",
+            url = "https://example.com/file.txt",
+            fileName = "file.txt",
+            status = DOWNLOADING,
         )
         val downloadState = DownloadJobState(
             state = download,
             status = DOWNLOADING,
-            foregroundServiceId = Random.nextInt()
+            foregroundServiceId = Random.nextInt(),
         )
         val notification = mock<Notification>()
 
@@ -792,13 +803,15 @@ class AbstractFetchDownloadServiceTest {
     @Config(sdk = [Build.VERSION_CODES.M])
     fun createCompactForegroundNotification() {
         val download = DownloadState(
-            id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-            status = DOWNLOADING
+            id = "1",
+            url = "https://example.com/file.txt",
+            fileName = "file.txt",
+            status = DOWNLOADING,
         )
         val downloadState = DownloadJobState(
             state = download,
             status = DOWNLOADING,
-            foregroundServiceId = Random.nextInt()
+            foregroundServiceId = Random.nextInt(),
         )
 
         assertEquals(0, shadowNotificationService.size())
@@ -850,13 +863,15 @@ class AbstractFetchDownloadServiceTest {
     @Config(sdk = [Build.VERSION_CODES.M])
     fun `updateNotificationGroup will do nothing on devices that do not support notificaiton groups`() = runTest(testsDispatcher) {
         val download = DownloadState(
-            id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-            status = DOWNLOADING
+            id = "1",
+            url = "https://example.com/file.txt",
+            fileName = "file.txt",
+            status = DOWNLOADING,
         )
         val downloadState = DownloadJobState(
             state = download,
             status = DOWNLOADING,
-            foregroundServiceId = Random.nextInt()
+            foregroundServiceId = Random.nextInt(),
         )
 
         service.downloadJobs["1"] = downloadState
@@ -870,13 +885,15 @@ class AbstractFetchDownloadServiceTest {
     @Test
     fun `removeDownloadJob will update the background notification if there are other pending downloads`() {
         val download = DownloadState(
-            id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-            status = DOWNLOADING
+            id = "1",
+            url = "https://example.com/file.txt",
+            fileName = "file.txt",
+            status = DOWNLOADING,
         )
         val downloadState = DownloadJobState(
             state = download,
             status = DOWNLOADING,
-            foregroundServiceId = Random.nextInt()
+            foregroundServiceId = Random.nextInt(),
         )
 
         service.downloadJobs["1"] = downloadState
@@ -894,23 +911,27 @@ class AbstractFetchDownloadServiceTest {
     @Test
     fun `WHEN all downloads are completed stopForeground must be called`() {
         val download1 = DownloadState(
-            id = "1", url = "https://example.com/file1.txt", fileName = "file1.txt",
-            status = COMPLETED
+            id = "1",
+            url = "https://example.com/file1.txt",
+            fileName = "file1.txt",
+            status = COMPLETED,
         )
         val download2 = DownloadState(
-            id = "2", url = "https://example.com/file2.txt", fileName = "file2.txt",
-            status = COMPLETED
+            id = "2",
+            url = "https://example.com/file2.txt",
+            fileName = "file2.txt",
+            status = COMPLETED,
         )
         val downloadState1 = DownloadJobState(
             state = download1,
             status = COMPLETED,
-            foregroundServiceId = Random.nextInt()
+            foregroundServiceId = Random.nextInt(),
         )
 
         val downloadState2 = DownloadJobState(
             state = download2,
             status = COMPLETED,
-            foregroundServiceId = Random.nextInt()
+            foregroundServiceId = Random.nextInt(),
         )
 
         service.downloadJobs["1"] = downloadState1
@@ -924,23 +945,27 @@ class AbstractFetchDownloadServiceTest {
     @Test
     fun `Until all downloads are NOT completed stopForeground must NOT be called`() {
         val download1 = DownloadState(
-            id = "1", url = "https://example.com/file1.txt", fileName = "file1.txt",
-            status = COMPLETED
+            id = "1",
+            url = "https://example.com/file1.txt",
+            fileName = "file1.txt",
+            status = COMPLETED,
         )
         val download2 = DownloadState(
-            id = "2", url = "https://example.com/file2.txt", fileName = "file2.txt",
-            status = DOWNLOADING
+            id = "2",
+            url = "https://example.com/file2.txt",
+            fileName = "file2.txt",
+            status = DOWNLOADING,
         )
         val downloadState1 = DownloadJobState(
             state = download1,
             status = COMPLETED,
-            foregroundServiceId = Random.nextInt()
+            foregroundServiceId = Random.nextInt(),
         )
 
         val downloadState2 = DownloadJobState(
             state = download2,
             status = DOWNLOADING,
-            foregroundServiceId = Random.nextInt()
+            foregroundServiceId = Random.nextInt(),
         )
 
         service.downloadJobs["1"] = downloadState1
@@ -954,13 +979,15 @@ class AbstractFetchDownloadServiceTest {
     @Test
     fun `removeDownloadJob will stop the service if there are none pending downloads`() {
         val download = DownloadState(
-            id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-            status = DOWNLOADING
+            id = "1",
+            url = "https://example.com/file.txt",
+            fileName = "file.txt",
+            status = DOWNLOADING,
         )
         val downloadState = DownloadJobState(
             state = download,
             status = DOWNLOADING,
-            foregroundServiceId = Random.nextInt()
+            foregroundServiceId = Random.nextInt(),
         )
 
         doNothing().`when`(service).stopForeground(false)
@@ -990,19 +1017,23 @@ class AbstractFetchDownloadServiceTest {
     fun `updateForegroundNotification will select a new foreground notification`() {
         val downloadState1 = DownloadJobState(
             state = DownloadState(
-                id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-                status = DownloadState.Status.COMPLETED
+                id = "1",
+                url = "https://example.com/file.txt",
+                fileName = "file.txt",
+                status = DownloadState.Status.COMPLETED,
             ),
             status = DownloadState.Status.COMPLETED,
-            foregroundServiceId = Random.nextInt()
+            foregroundServiceId = Random.nextInt(),
         )
         val downloadState2 = DownloadJobState(
             state = DownloadState(
-                id = "2", url = "https://example.com/file.txt", fileName = "file.txt",
-                status = DOWNLOADING
+                id = "2",
+                url = "https://example.com/file.txt",
+                fileName = "file.txt",
+                status = DOWNLOADING,
             ),
             status = DOWNLOADING,
-            foregroundServiceId = Random.nextInt()
+            foregroundServiceId = Random.nextInt(),
         )
 
         service.compatForegroundNotificationId = downloadState1.foregroundServiceId
@@ -1021,19 +1052,23 @@ class AbstractFetchDownloadServiceTest {
     fun `updateForegroundNotification will NOT select a new foreground notification`() {
         val downloadState1 = DownloadJobState(
             state = DownloadState(
-                id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-                status = DOWNLOADING
+                id = "1",
+                url = "https://example.com/file.txt",
+                fileName = "file.txt",
+                status = DOWNLOADING,
             ),
             status = DOWNLOADING,
-            foregroundServiceId = Random.nextInt()
+            foregroundServiceId = Random.nextInt(),
         )
         val downloadState2 = DownloadJobState(
             state = DownloadState(
-                id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-                status = DOWNLOADING
+                id = "1",
+                url = "https://example.com/file.txt",
+                fileName = "file.txt",
+                status = DOWNLOADING,
             ),
             status = DOWNLOADING,
-            foregroundServiceId = Random.nextInt()
+            foregroundServiceId = Random.nextInt(),
         )
 
         service.compatForegroundNotificationId = downloadState1.foregroundServiceId
@@ -1055,7 +1090,7 @@ class AbstractFetchDownloadServiceTest {
             "https://example.com/file.txt",
             200,
             MutableHeaders(),
-            Response.Body(mock())
+            Response.Body(mock()),
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
 
@@ -1088,7 +1123,7 @@ class AbstractFetchDownloadServiceTest {
             "https://example.com/file.txt",
             200,
             MutableHeaders(),
-            Response.Body(mock())
+            Response.Body(mock()),
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
 
@@ -1120,7 +1155,7 @@ class AbstractFetchDownloadServiceTest {
             "https://example.com/file.txt",
             200,
             MutableHeaders(),
-            Response.Body(mock())
+            Response.Body(mock()),
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
 
@@ -1153,7 +1188,7 @@ class AbstractFetchDownloadServiceTest {
             "https://example.com/file.txt",
             200,
             MutableHeaders(),
-            Response.Body(mock())
+            Response.Body(mock()),
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
 
@@ -1204,7 +1239,7 @@ class AbstractFetchDownloadServiceTest {
             "https://example.com/file.txt",
             200,
             MutableHeaders(),
-            Response.Body(mock())
+            Response.Body(mock()),
         )
         doReturn(response).`when`(client).fetch(any())
         val download = DownloadState("https://example.com/file.txt", "file.txt", private = true)
@@ -1277,12 +1312,14 @@ class AbstractFetchDownloadServiceTest {
             200,
             MutableHeaders(),
             // Simulate a long running reading operation by sleeping for 5 seconds.
-            Response.Body(object : InputStream() {
-                override fun read(): Int {
-                    Thread.sleep(5000)
-                    return 0
-                }
-            })
+            Response.Body(
+                object : InputStream() {
+                    override fun read(): Int {
+                        Thread.sleep(5000)
+                        return 0
+                    }
+                },
+            ),
         )
         // Call the real method to force the reading of the response's body.
         doCallRealMethod().`when`(service).useFileStream(any(), anyBoolean(), any())
@@ -1322,15 +1359,18 @@ class AbstractFetchDownloadServiceTest {
     @Test
     fun `updateDownloadState must update the download state in the store and in the downloadJobs`() {
         val download = DownloadState(
-            "https://example.com/file.txt", "file1.txt",
-            status = DOWNLOADING
+            "https://example.com/file.txt",
+            "file1.txt",
+            status = DOWNLOADING,
         )
         val downloadJob = DownloadJobState(state = mock(), status = DOWNLOADING)
         val mockStore = mock<BrowserStore>()
-        val service = spy(object : AbstractFetchDownloadService() {
-            override val httpClient = client
-            override val store = mockStore
-        })
+        val service = spy(
+            object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = mockStore
+            },
+        )
 
         service.downloadJobs[download.id] = downloadJob
 
@@ -1347,7 +1387,7 @@ class AbstractFetchDownloadServiceTest {
             "https://example.com/file.txt",
             200,
             MutableHeaders(),
-            Response.Body(mock())
+            Response.Body(mock()),
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
 
@@ -1378,14 +1418,16 @@ class AbstractFetchDownloadServiceTest {
     @Test
     fun `clearAllDownloadsNotificationsAndJobs cancels all running jobs and remove all notifications`() = runTest(testsDispatcher) {
         val download = DownloadState(
-            id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-            status = DOWNLOADING
+            id = "1",
+            url = "https://example.com/file.txt",
+            fileName = "file.txt",
+            status = DOWNLOADING,
         )
         val downloadState = DownloadJobState(
             state = download,
             foregroundServiceId = Random.nextInt(),
             status = DOWNLOADING,
-            job = CoroutineScope(IO).launch { while (true) { } }
+            job = CoroutineScope(IO).launch { while (true) { } },
         )
 
         service.registerNotificationActionsReceiver()
@@ -1395,7 +1437,7 @@ class AbstractFetchDownloadServiceTest {
         val notification = DownloadNotification.createOngoingDownloadNotification(
             testContext,
             downloadState,
-            notificationStyle.notificationAccentColor
+            notificationStyle.notificationAccentColor,
         )
 
         NotificationManagerCompat.from(testContext).notify(downloadState.foregroundServiceId, notification)
@@ -1417,10 +1459,12 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     fun `onDestroy will remove all download notifications, jobs and will call unregisterNotificationActionsReceiver`() = runTest(testsDispatcher) {
-        val service = spy(object : AbstractFetchDownloadService() {
-            override val httpClient = client
-            override val store = browserStore
-        })
+        val service = spy(
+            object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = browserStore
+            },
+        )
 
         doReturn(testContext).`when`(service).context
 
@@ -1434,10 +1478,12 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     fun `register and unregister notification actions receiver`() {
-        val service = spy(object : AbstractFetchDownloadService() {
-            override val httpClient = client
-            override val store = browserStore
-        })
+        val service = spy(
+            object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = browserStore
+            },
+        )
 
         doReturn(testContext).`when`(service).context
 
@@ -1457,12 +1503,14 @@ class AbstractFetchDownloadServiceTest {
             url = "http://www.mozilla.org",
             fileName = "example.apk",
             destinationDirectory = folder.root.path,
-            status = DownloadState.Status.COMPLETED
+            status = DownloadState.Status.COMPLETED,
         )
-        val service = spy(object : AbstractFetchDownloadService() {
-            override val httpClient = client
-            override val store = browserStore
-        })
+        val service = spy(
+            object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = browserStore
+            },
+        )
 
         val downloadJobState = DownloadJobState(state = download, status = DownloadState.Status.COMPLETED)
 
@@ -1477,7 +1525,7 @@ class AbstractFetchDownloadServiceTest {
             path = any(),
             length = anyLong(),
             showNotification = anyBoolean(),
-            download = any()
+            download = any(),
         )
     }
 
@@ -1487,12 +1535,14 @@ class AbstractFetchDownloadServiceTest {
             url = "http://www.mozilla.org",
             fileName = "example.apk",
             destinationDirectory = folder.root.path,
-            status = DownloadState.Status.COMPLETED
+            status = DownloadState.Status.COMPLETED,
         )
-        val service = spy(object : AbstractFetchDownloadService() {
-            override val httpClient = client
-            override val store = browserStore
-        })
+        val service = spy(
+            object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = browserStore
+            },
+        )
 
         val downloadJobState = DownloadJobState(state = download, status = DownloadState.Status.COMPLETED)
 
@@ -1505,7 +1555,7 @@ class AbstractFetchDownloadServiceTest {
             path = any(),
             length = anyLong(),
             showNotification = anyBoolean(),
-            download = any()
+            download = any(),
         )
         doReturn(true).`when`(service).shouldUseScopedStorage()
 
@@ -1519,16 +1569,18 @@ class AbstractFetchDownloadServiceTest {
             path = any(),
             length = anyLong(),
             showNotification = anyBoolean(),
-            download = any()
+            download = any(),
         )
     }
 
     @Test
     fun `WHEN we download on devices with version higher than Q THEN we use scoped storage`() {
-        val service = spy(object : AbstractFetchDownloadService() {
-            override val httpClient = client
-            override val store = browserStore
-        })
+        val service = spy(
+            object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = browserStore
+            },
+        )
         val uniqueFile: DownloadState = mock()
         val qSdkVersion = 29
         doReturn(uniqueFile).`when`(service).makeUniqueFileNameIfNecessary(any(), anyBoolean())
@@ -1543,10 +1595,12 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     fun `WHEN we download on devices with version lower than Q THEN we use legacy file stream`() {
-        val service = spy(object : AbstractFetchDownloadService() {
-            override val httpClient = client
-            override val store = browserStore
-        })
+        val service = spy(
+            object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = browserStore
+            },
+        )
         val uniqueFile: DownloadState = mock()
         val qSdkVersion = 27
         doReturn(uniqueFile).`when`(service).makeUniqueFileNameIfNecessary(any(), anyBoolean())
@@ -1566,13 +1620,15 @@ class AbstractFetchDownloadServiceTest {
         val download = DownloadState(
             url = "blob:moz-extension://d5ea9baa-64c9-4c3d-bb38-49308c47997c/",
             fileName = "example.apk",
-            destinationDirectory = folder.root.path
+            destinationDirectory = folder.root.path,
         )
 
-        val service = spy(object : AbstractFetchDownloadService() {
-            override val httpClient = client
-            override val store = browserStore
-        })
+        val service = spy(
+            object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = browserStore
+            },
+        )
 
         val spyContext = spy(testContext)
         val downloadManager: DownloadManager = mock()
@@ -1592,13 +1648,15 @@ class AbstractFetchDownloadServiceTest {
             val download = DownloadState(
                 url = "url",
                 fileName = "example.apk",
-                destinationDirectory = folder.root.path
+                destinationDirectory = folder.root.path,
             )
 
-            val service = spy(object : AbstractFetchDownloadService() {
-                override val httpClient = client
-                override val store = browserStore
-            })
+            val service = spy(
+                object : AbstractFetchDownloadService() {
+                    override val httpClient = client
+                    override val store = browserStore
+                },
+            )
 
             val spyContext = spy(testContext)
             val downloadManager: DownloadManager = mock()
@@ -1609,7 +1667,7 @@ class AbstractFetchDownloadServiceTest {
             doAnswer { throw IllegalArgumentException() }.`when`(downloadManager)
                 .addCompletedDownload(
                     anyString(), anyString(), anyBoolean(), anyString(),
-                    anyString(), anyLong(), anyBoolean(), isNull(), any()
+                    anyString(), anyLong(), anyBoolean(), isNull(), any(),
                 )
 
             try {
@@ -1626,13 +1684,15 @@ class AbstractFetchDownloadServiceTest {
         val download = DownloadState(
             url = "https://mozilla.com",
             fileName = "example.apk",
-            destinationDirectory = folder.root.path
+            destinationDirectory = folder.root.path,
         )
 
-        val service = spy(object : AbstractFetchDownloadService() {
-            override val httpClient = client
-            override val store = browserStore
-        })
+        val service = spy(
+            object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = browserStore
+            },
+        )
 
         val spyContext = spy(testContext)
         val downloadManager: DownloadManager = mock()
@@ -1648,10 +1708,12 @@ class AbstractFetchDownloadServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P], shadows = [ShadowFileProvider::class])
     @Suppress("Deprecation")
     fun `always call addCompletedDownload with a not empty or null mimeType`() = runTest(testsDispatcher) {
-        val service = spy(object : AbstractFetchDownloadService() {
-            override val httpClient = client
-            override val store = browserStore
-        })
+        val service = spy(
+            object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = browserStore
+            },
+        )
         val spyContext = spy(testContext)
         var downloadManager: DownloadManager = mock()
         doReturn(spyContext).`when`(service).context
@@ -1660,7 +1722,7 @@ class AbstractFetchDownloadServiceTest {
             url = "blob:moz-extension://d5ea9baa-64c9-4c3d-bb38-49308c47997c/",
             fileName = "example.apk",
             destinationDirectory = folder.root.path,
-            contentType = null
+            contentType = null,
         )
         val downloadWithEmptyMimeType = downloadWithNullMimeType.copy(contentType = "")
         val defaultMimeType = "*/*"
@@ -1668,7 +1730,7 @@ class AbstractFetchDownloadServiceTest {
         service.addToDownloadSystemDatabaseCompat(downloadWithNullMimeType, this)
         verify(downloadManager).addCompletedDownload(
             anyString(), anyString(), anyBoolean(), eq(defaultMimeType),
-            anyString(), anyLong(), anyBoolean(), isNull(), any()
+            anyString(), anyLong(), anyBoolean(), isNull(), any(),
         )
 
         downloadManager = mock()
@@ -1676,7 +1738,7 @@ class AbstractFetchDownloadServiceTest {
         service.addToDownloadSystemDatabaseCompat(downloadWithEmptyMimeType, this)
         verify(downloadManager).addCompletedDownload(
             anyString(), anyString(), anyBoolean(), eq(defaultMimeType),
-            anyString(), anyLong(), anyBoolean(), isNull(), any()
+            anyString(), anyLong(), anyBoolean(), isNull(), any(),
         )
     }
 
@@ -1687,7 +1749,7 @@ class AbstractFetchDownloadServiceTest {
             "https://example.com/file.txt",
             200,
             MutableHeaders(),
-            Response.Body(mock())
+            Response.Body(mock()),
         )
 
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
@@ -2008,6 +2070,6 @@ object ShadowFileProvider {
     fun getUriForFile(
         context: Context?,
         authority: String?,
-        file: File
+        file: File,
     ) = "content://authority/random/location/${file.name}".toUri()
 }

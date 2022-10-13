@@ -32,7 +32,7 @@ class ContileTopSitesUpdaterTest {
     fun setUp() {
         WorkManagerTestInitHelper.initializeTestWorkManager(
             testContext,
-            Configuration.Builder().build()
+            Configuration.Builder().build(),
         )
     }
 

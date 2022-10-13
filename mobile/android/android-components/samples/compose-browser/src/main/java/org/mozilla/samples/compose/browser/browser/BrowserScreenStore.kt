@@ -10,17 +10,17 @@ import mozilla.components.lib.state.Store
  * [Store] for maintaining the state of the browser screen.
  */
 class BrowserScreenStore(
-    initialState: BrowserScreenState = BrowserScreenState()
+    initialState: BrowserScreenState = BrowserScreenState(),
 ) : Store<BrowserScreenState, BrowserScreenAction>(
     initialState = initialState,
-    reducer = ::reduce
+    reducer = ::reduce,
 )
 
 private fun reduce(state: BrowserScreenState, action: BrowserScreenAction): BrowserScreenState {
     return when (action) {
         is BrowserScreenAction.ToggleEditMode -> state.copy(
             editMode = action.editMode,
-            editText = if (action.editMode) null else state.editText
+            editText = if (action.editMode) null else state.editText,
         )
         is BrowserScreenAction.UpdateEditText -> state.copy(editText = action.text)
         is BrowserScreenAction.ShowTabs -> state.copy(showTabs = true)

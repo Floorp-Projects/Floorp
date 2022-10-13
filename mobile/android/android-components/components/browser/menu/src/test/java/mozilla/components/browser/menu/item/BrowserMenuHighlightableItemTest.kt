@@ -50,8 +50,8 @@ class BrowserMenuHighlightableItemTest {
             highlight = BrowserMenuHighlightableItem.Highlight(
                 endImageResource = android.R.drawable.ic_menu_report_image,
                 backgroundResource = R.color.photonRed50,
-                colorResource = R.color.photonRed50
-            )
+                colorResource = R.color.photonRed50,
+            ),
         ) {
             onClickWasPress = true
         }
@@ -75,9 +75,9 @@ class BrowserMenuHighlightableItemTest {
                 startImageResource = android.R.drawable.ic_menu_camera,
                 endImageResource = android.R.drawable.ic_menu_add,
                 backgroundResource = R.color.photonRed50,
-                colorResource = R.color.photonRed50
+                colorResource = R.color.photonRed50,
             ),
-            isHighlighted = { shouldHighlight }
+            isHighlighted = { shouldHighlight },
         )
 
         val view = inflate(item)
@@ -112,9 +112,9 @@ class BrowserMenuHighlightableItemTest {
             highlight = BrowserMenuHighlight.HighPriority(
                 endImageResource = android.R.drawable.ic_menu_add,
                 backgroundTint = Color.RED,
-                label = "highlight"
+                label = "highlight",
             ),
-            isHighlighted = { shouldHighlight }
+            isHighlighted = { shouldHighlight },
         )
 
         val view = inflate(item)
@@ -148,9 +148,9 @@ class BrowserMenuHighlightableItemTest {
             textColorResource = android.R.color.black,
             highlight = BrowserMenuHighlight.LowPriority(
                 notificationTint = Color.RED,
-                label = "highlight"
+                label = "highlight",
             ),
-            isHighlighted = { shouldHighlight }
+            isHighlighted = { shouldHighlight },
         )
 
         val view = inflate(item)
@@ -182,8 +182,8 @@ class BrowserMenuHighlightableItemTest {
             startImageResource = android.R.drawable.ic_menu_report_image,
             highlight = BrowserMenuHighlight.HighPriority(
                 endImageResource = android.R.drawable.ic_menu_report_image,
-                backgroundTint = Color.RED
-            )
+                backgroundTint = Color.RED,
+            ),
         )
 
         val view = inflate(item)
@@ -199,8 +199,8 @@ class BrowserMenuHighlightableItemTest {
             "label",
             startImageResource = android.R.drawable.ic_menu_report_image,
             highlight = BrowserMenuHighlight.HighPriority(
-                backgroundTint = Color.RED
-            )
+                backgroundTint = Color.RED,
+            ),
         )
 
         val view = inflate(item)
@@ -218,7 +218,7 @@ class BrowserMenuHighlightableItemTest {
         val item = BrowserMenuHighlightableItem(
             "label",
             android.R.drawable.ic_menu_report_image,
-            highlight = null
+            highlight = null,
         )
 
         val view = inflate(item)
@@ -241,10 +241,10 @@ class BrowserMenuHighlightableItemTest {
             highlight = BrowserMenuHighlight.HighPriority(
                 endImageResource = android.R.drawable.ic_menu_add,
                 backgroundTint = Color.RED,
-                label = "highlight"
+                label = "highlight",
             ),
             isHighlighted = { shouldHighlight },
-            listener = listener
+            listener = listener,
         )
 
         assertEquals(
@@ -252,14 +252,14 @@ class BrowserMenuHighlightableItemTest {
                 "label",
                 start = DrawableMenuIcon(
                     null,
-                    tint = getColor(testContext, android.R.color.black)
+                    tint = getColor(testContext, android.R.color.black),
                 ),
                 textStyle = TextStyle(
-                    color = getColor(testContext, android.R.color.black)
+                    color = getColor(testContext, android.R.color.black),
                 ),
-                onClick = listener
+                onClick = listener,
             ),
-            highPriorityItem.asCandidate(testContext).removeDrawables()
+            highPriorityItem.asCandidate(testContext).removeDrawables(),
         )
 
         shouldHighlight = true
@@ -268,18 +268,18 @@ class BrowserMenuHighlightableItemTest {
                 "highlight",
                 start = DrawableMenuIcon(
                     null,
-                    tint = getColor(testContext, android.R.color.black)
+                    tint = getColor(testContext, android.R.color.black),
                 ),
                 end = DrawableMenuIcon(null),
                 textStyle = TextStyle(
-                    color = getColor(testContext, android.R.color.black)
+                    color = getColor(testContext, android.R.color.black),
                 ),
                 effect = HighPriorityHighlightEffect(
-                    backgroundTint = Color.RED
+                    backgroundTint = Color.RED,
                 ),
-                onClick = listener
+                onClick = listener,
             ),
-            highPriorityItem.asCandidate(testContext).removeDrawables()
+            highPriorityItem.asCandidate(testContext).removeDrawables(),
         )
 
         assertEquals(
@@ -289,13 +289,13 @@ class BrowserMenuHighlightableItemTest {
                     null,
                     tint = getColor(testContext, android.R.color.black),
                     effect = LowPriorityHighlightEffect(
-                        notificationTint = Color.RED
-                    )
+                        notificationTint = Color.RED,
+                    ),
                 ),
                 textStyle = TextStyle(
-                    color = getColor(testContext, android.R.color.black)
+                    color = getColor(testContext, android.R.color.black),
                 ),
-                onClick = listener
+                onClick = listener,
             ),
             BrowserMenuHighlightableItem(
                 label = "label",
@@ -304,11 +304,11 @@ class BrowserMenuHighlightableItemTest {
                 textColorResource = android.R.color.black,
                 highlight = BrowserMenuHighlight.LowPriority(
                     notificationTint = Color.RED,
-                    label = "highlight"
+                    label = "highlight",
                 ),
                 isHighlighted = { true },
-                listener = listener
-            ).asCandidate(testContext).removeDrawables()
+                listener = listener,
+            ).asCandidate(testContext).removeDrawables(),
         )
     }
 
@@ -326,6 +326,6 @@ class BrowserMenuHighlightableItemTest {
 
     private fun TextMenuCandidate.removeDrawables() = copy(
         start = (start as? DrawableMenuIcon)?.copy(drawable = null),
-        end = (end as? DrawableMenuIcon)?.copy(drawable = null)
+        end = (end as? DrawableMenuIcon)?.copy(drawable = null),
     )
 }

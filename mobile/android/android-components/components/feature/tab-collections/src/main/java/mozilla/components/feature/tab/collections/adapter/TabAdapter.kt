@@ -12,7 +12,7 @@ import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.db.TabEntity
 
 internal class TabAdapter(
-    val entity: TabEntity
+    val entity: TabEntity,
 ) : Tab {
     override val id: Long
         get() = entity.id!!
@@ -26,7 +26,7 @@ internal class TabAdapter(
     override fun restore(
         context: Context,
         engine: Engine,
-        restoreSessionId: Boolean
+        restoreSessionId: Boolean,
     ): RecoverableTab? {
         val reader = BrowserStateReader()
         val file = entity.getStateFile(context.filesDir)

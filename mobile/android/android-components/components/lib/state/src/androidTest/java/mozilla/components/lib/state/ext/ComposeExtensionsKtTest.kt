@@ -24,7 +24,7 @@ class ComposeExtensionsKtTest {
     fun usingInitialValue() {
         val store = Store(
             initialState = TestState(counter = 42),
-            reducer = ::reducer
+            reducer = ::reducer,
         )
 
         var value: Int? = null
@@ -41,7 +41,7 @@ class ComposeExtensionsKtTest {
     fun receivingUpdates() {
         val store = Store(
             initialState = TestState(counter = 42),
-            reducer = ::reducer
+            reducer = ::reducer,
         )
 
         var value: Int? = null
@@ -62,7 +62,7 @@ class ComposeExtensionsKtTest {
     fun receivingUpdatesForPartialStateUpdateOnly() {
         val store = Store(
             initialState = TestState(counter = 42),
-            reducer = ::reducer
+            reducer = ::reducer,
         )
 
         var value: Int? = null
@@ -70,7 +70,7 @@ class ComposeExtensionsKtTest {
         rule.setContent {
             val composeState = store.observeAsComposableState(
                 map = { state -> state.counter * 2 },
-                observe = { state -> state.text }
+                observe = { state -> state.text },
             )
             value = composeState.value
         }
@@ -130,7 +130,7 @@ fun reducer(state: TestState, action: TestAction): TestState = when (action) {
 
 data class TestState(
     val counter: Int,
-    val text: String = ""
+    val text: String = "",
 ) : State
 
 sealed class TestAction : Action {

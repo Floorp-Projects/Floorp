@@ -60,8 +60,8 @@ class InterceptorTest {
                     order.add("A")
                     return chain.proceed(
                         chain.request.copy(
-                            url = chain.request.url + "/a"
-                        )
+                            url = chain.request.url + "/a",
+                        ),
                     )
                 }
             },
@@ -71,8 +71,8 @@ class InterceptorTest {
                     order.add("B")
                     return chain.proceed(
                         chain.request.copy(
-                            url = chain.request.url + "/b"
-                        )
+                            url = chain.request.url + "/b",
+                        ),
                     )
                 }
             },
@@ -82,11 +82,11 @@ class InterceptorTest {
                     order.add("C")
                     return chain.proceed(
                         chain.request.copy(
-                            url = chain.request.url + "/c"
-                        )
+                            url = chain.request.url + "/c",
+                        ),
                     )
                 }
-            }
+            },
         )
 
         val response = client.fetch(Request(url = "https://www.mozilla.org"))
@@ -105,7 +105,7 @@ class InterceptorTest {
                 override fun intercept(chain: Interceptor.Chain): Response {
                     return Response("https://www.firefox.com", 203, MutableHeaders(), Response.Body.empty())
                 }
-            }
+            },
         )
 
         val response = client.fetch(Request(url = "https://www.mozilla.org"))
@@ -116,7 +116,7 @@ class InterceptorTest {
 }
 
 private class FakeClient(
-    val response: Response? = null
+    val response: Response? = null,
 ) : Client() {
     var resourceFetched = false
 
@@ -126,7 +126,7 @@ private class FakeClient(
             url = request.url,
             status = 200,
             body = Response.Body.empty(),
-            headers = MutableHeaders()
+            headers = MutableHeaders(),
         )
     }
 }

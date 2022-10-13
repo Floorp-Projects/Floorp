@@ -50,7 +50,7 @@ class RecentlyClosedTabDaoTest {
             title = "RecentlyClosedTab One",
             url = "https://www.mozilla.org",
             uuid = UUID.randomUUID().toString(),
-            createdAt = 200
+            createdAt = 200,
         ).also {
             tabDao.insertTab(it)
         }
@@ -59,7 +59,7 @@ class RecentlyClosedTabDaoTest {
             title = "RecentlyClosedTab Two",
             url = "https://www.firefox.com",
             uuid = UUID.randomUUID().toString(),
-            createdAt = 100
+            createdAt = 100,
         ).also {
             tabDao.insertTab(it)
         }
@@ -78,7 +78,7 @@ class RecentlyClosedTabDaoTest {
             title = "RecentlyClosedTab One",
             url = "https://www.mozilla.org",
             uuid = UUID.randomUUID().toString(),
-            createdAt = 200
+            createdAt = 200,
         ).also {
             tabDao.insertTab(it)
         }
@@ -87,7 +87,7 @@ class RecentlyClosedTabDaoTest {
             title = "RecentlyClosedTab Two",
             url = "https://www.firefox.com",
             uuid = UUID.randomUUID().toString(),
-            createdAt = 100
+            createdAt = 100,
         ).also {
             tabDao.insertTab(it)
         }
@@ -107,7 +107,7 @@ class RecentlyClosedTabDaoTest {
             title = "RecentlyClosedTab One",
             url = "https://www.mozilla.org",
             uuid = UUID.randomUUID().toString(),
-            createdAt = 200
+            createdAt = 200,
         ).also {
             tabDao.insertTab(it)
         }
@@ -116,7 +116,7 @@ class RecentlyClosedTabDaoTest {
             title = "RecentlyClosedTab Two",
             url = "https://www.firefox.com",
             uuid = UUID.randomUUID().toString(),
-            createdAt = 100
+            createdAt = 100,
         ).also {
             tabDao.insertTab(it)
         }

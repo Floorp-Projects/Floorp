@@ -50,7 +50,7 @@ class NotYetSupportedAddonActivity : AppCompatActivity() {
         override fun onCreateView(
             inflater: LayoutInflater,
             container: ViewGroup?,
-            savedInstanceState: Bundle?
+            savedInstanceState: Bundle?,
         ): View? {
             addons = requireNotNull(arguments?.getParcelableArrayList("add_ons"))
             return inflater.inflate(R.layout.fragment_not_yet_supported_addons, container, false)
@@ -64,7 +64,7 @@ class NotYetSupportedAddonActivity : AppCompatActivity() {
             adapter = UnsupportedAddonsAdapter(
                 addonManager = context.components.addonManager,
                 unsupportedAddonsAdapterDelegate = this@NotYetSupportedAddonFragment,
-                addons = addons
+                addons = addons,
             )
 
             recyclerView.layoutManager = LinearLayoutManager(context)

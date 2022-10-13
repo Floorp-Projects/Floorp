@@ -21,7 +21,7 @@ class DebugActionTest {
 
         val state = BrowserState(
             tabs = listOf(existingTab),
-            selectedTabId = existingTab.id
+            selectedTabId = existingTab.id,
         )
 
         val store = BrowserStore(state)

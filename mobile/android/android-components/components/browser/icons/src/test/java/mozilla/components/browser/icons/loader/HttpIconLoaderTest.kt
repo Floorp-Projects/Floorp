@@ -39,7 +39,7 @@ class HttpIconLoaderTest {
     fun `Loader downloads data and uses appropriate headers`() {
         val clients = listOf(
             HttpURLConnectionClient(),
-            OkHttpClient()
+            OkHttpClient(),
         )
 
         clients.forEach { client ->
@@ -49,8 +49,8 @@ class HttpIconLoaderTest {
                 MockResponse().setBody(
                     javaClass.getResourceAsStream("/misc/test.txt")!!
                         .bufferedReader()
-                        .use { it.readText() }
-                )
+                        .use { it.readText() },
+                ),
             )
 
             server.start()
@@ -58,11 +58,12 @@ class HttpIconLoaderTest {
             try {
                 val loader = HttpIconLoader(client)
                 val result = loader.load(
-                    mock(), mock(),
+                    mock(),
+                    mock(),
                     IconRequest.Resource(
                         url = server.url("/some/path").toString(),
-                        type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
-                    )
+                        type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
+                    ),
                 )
 
                 assertTrue(result is IconLoader.Result.BytesResult)
@@ -94,12 +95,13 @@ class HttpIconLoaderTest {
         val client: Client = mock()
 
         val result = HttpIconLoader(client).load(
-            mock(), mock(),
+            mock(),
+            mock(),
             IconRequest.Resource(
                 url = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAA" +
                     "AAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-                type = IconRequest.Resource.Type.FAVICON
-            )
+                type = IconRequest.Resource.Type.FAVICON,
+            ),
         )
 
         assertEquals(IconLoader.Result.NoResult, result)
@@ -116,16 +118,17 @@ class HttpIconLoaderTest {
                 url = "https://www.example.org",
                 headers = MutableHeaders(),
                 status = 404,
-                body = Response.Body.empty()
-            )
+                body = Response.Body.empty(),
+            ),
         ).`when`(client).fetch(any())
 
         loader.load(
-            mock(), mock(),
+            mock(),
+            mock(),
             IconRequest.Resource(
                 url = "https://www.example.org",
-                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
-            )
+                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
+            ),
         )
 
         val captor = argumentCaptor<Request>()
@@ -147,16 +150,17 @@ class HttpIconLoaderTest {
                 url = "https://www.example.org",
                 headers = MutableHeaders(),
                 status = 404,
-                body = Response.Body.empty()
-            )
+                body = Response.Body.empty(),
+            ),
         ).`when`(client).fetch(any())
 
         val result = loader.load(
-            mock(), mock(),
+            mock(),
+            mock(),
             IconRequest.Resource(
                 url = "https://www.example.org",
-                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
-            )
+                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
+            ),
         )
 
         assertEquals(IconLoader.Result.NoResult, result)
@@ -172,13 +176,13 @@ class HttpIconLoaderTest {
                 url = "https://www.example.org",
                 headers = MutableHeaders(),
                 status = 404,
-                body = Response.Body.empty()
-            )
+                body = Response.Body.empty(),
+            ),
         ).`when`(client).fetch(any())
 
         val resource = IconRequest.Resource(
             url = "https://www.example.org",
-            type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
+            type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
         )
 
         assertEquals(IconLoader.Result.NoResult, loader.load(mock(), mock(), resource))
@@ -203,7 +207,7 @@ class HttpIconLoaderTest {
 
         val resource = IconRequest.Resource(
             url = "https://www.example.org",
-            type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
+            type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
         )
 
         assertEquals(IconLoader.Result.NoResult, loader.load(testContext, mock(), resource))
@@ -225,13 +229,13 @@ class HttpIconLoaderTest {
                 url = "https://www.example.org",
                 headers = MutableHeaders(),
                 status = 200,
-                body = Response.Body(failingStream)
-            )
+                body = Response.Body(failingStream),
+            ),
         ).`when`(client).fetch(any())
 
         val resource = IconRequest.Resource(
             url = "https://www.example.org",
-            type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
+            type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
         )
 
         assertEquals(IconLoader.Result.NoResult, loader.load(mock(), mock(), resource))
@@ -247,16 +251,17 @@ class HttpIconLoaderTest {
                 url = "https://www.example.org",
                 headers = MutableHeaders(),
                 status = 404,
-                body = Response.Body.empty()
-            )
+                body = Response.Body.empty(),
+            ),
         ).`when`(client).fetch(any())
 
         loader.load(
-            mock(), mock(),
+            mock(),
+            mock(),
             IconRequest.Resource(
                 url = " \n\n https://www.example.org  \n\n ",
-                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
-            )
+                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
+            ),
         )
 
         val captor = argumentCaptor<Request>()

@@ -47,7 +47,7 @@ data class Breadcrumb(
     /**
      * Date of of the crash breadcrumb.
      */
-    val date: Date = Date()
+    val date: Date = Date(),
 ) : Parcelable, Comparable<Breadcrumb> {
     /**
      * Crash breadcrumb priority level.
@@ -76,7 +76,7 @@ data class Breadcrumb(
         /**
          * CRITICAL level.
          */
-        CRITICAL("Critical")
+        CRITICAL("Critical"),
     }
 
     /**
@@ -101,7 +101,7 @@ data class Breadcrumb(
         /**
          * USER type.
          */
-        USER("User")
+        USER("User"),
     }
 
     override fun compareTo(other: Breadcrumb): Int {

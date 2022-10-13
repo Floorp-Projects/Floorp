@@ -96,7 +96,7 @@ fun String.sha1(): String {
         separator = "",
         transform = { byte ->
             String(charArrayOf(characters[byte.toInt() shr 4 and 0x0f], characters[byte.toInt() and 0x0f]))
-        }
+        },
     )
 }
 
@@ -112,8 +112,8 @@ fun String.toDate(
         "yyyy-MM-dd",
         "yyyy-'W'ww",
         "yyyy-MM",
-        "HH:mm"
-    )
+        "HH:mm",
+    ),
 ): Date? {
     possibleFormats.forEach {
         try {
@@ -209,7 +209,9 @@ fun String.sanitizeFileName(): String {
 fun String.stripMailToProtocol(): String {
     return if (this.startsWith(MAILTO)) {
         this.replaceFirst(MAILTO, "")
-    } else this
+    } else {
+        this
+    }
 }
 
 /**

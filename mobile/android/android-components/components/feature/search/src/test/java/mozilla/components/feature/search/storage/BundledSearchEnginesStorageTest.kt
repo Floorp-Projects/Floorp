@@ -102,7 +102,7 @@ class BundledSearchEnginesStorageTest {
 
         assertEquals(
             listOf("google-b-m", "bing", "baidu", "ddg", "wikipedia-zh-CN"),
-            searchEngines.map { it.id }
+            searchEngines.map { it.id },
         )
 
         // searchDefault: "百度"
@@ -119,7 +119,7 @@ class BundledSearchEnginesStorageTest {
 
         assertEquals(
             listOf("google-com-nocodes", "ddg", "wikipedia-ru"),
-            searchEngines.map { it.id }
+            searchEngines.map { it.id },
         )
 
         // searchDefault: "Google"
@@ -139,7 +139,7 @@ class BundledSearchEnginesStorageTest {
 
         assertEquals(
             listOf("google-b-m", "bing", "amazondotcom", "ddg", "wikipedia-es"),
-            searchEngines.map { it.id }
+            searchEngines.map { it.id },
         )
 
         // searchDefault (default): "Google"

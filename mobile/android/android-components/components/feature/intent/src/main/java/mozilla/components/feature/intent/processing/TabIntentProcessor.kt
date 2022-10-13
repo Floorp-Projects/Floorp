@@ -34,7 +34,7 @@ import mozilla.components.support.utils.WebURLFinder
 class TabIntentProcessor(
     private val tabsUseCases: TabsUseCases,
     private val newTabSearchUseCase: SearchUseCases.NewTabSearchUseCase,
-    private val isPrivate: Boolean = false
+    private val isPrivate: Boolean = false,
 ) : IntentProcessor {
 
     /**
@@ -51,7 +51,7 @@ class TabIntentProcessor(
                 url.toNormalizedUrl(),
                 private = isPrivate,
                 source = SessionState.Source.External.ActionView(caller),
-                flags = LoadUrlFlags.external()
+                flags = LoadUrlFlags.external(),
             )
             true
         }
@@ -97,7 +97,9 @@ class TabIntentProcessor(
     private fun addNewTab(url: String, source: SessionState.Source) {
         tabsUseCases.addTab(
             url.toNormalizedUrl(),
-            source = source, flags = LoadUrlFlags.external(), private = isPrivate
+            source = source,
+            flags = LoadUrlFlags.external(),
+            private = isPrivate,
         )
     }
 

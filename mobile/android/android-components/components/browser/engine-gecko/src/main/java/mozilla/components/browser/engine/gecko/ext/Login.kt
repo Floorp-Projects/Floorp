@@ -16,7 +16,7 @@ fun Autocomplete.LoginEntry.toLoginEntry() = LoginEntry(
     formActionOrigin = formActionOrigin,
     httpRealm = httpRealm,
     username = username,
-    password = password
+    password = password,
 )
 
 /**

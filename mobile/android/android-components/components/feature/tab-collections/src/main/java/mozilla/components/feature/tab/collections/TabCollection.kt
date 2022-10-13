@@ -37,7 +37,7 @@ interface TabCollection {
     fun restore(
         context: Context,
         engine: Engine,
-        restoreSessionId: Boolean = false
+        restoreSessionId: Boolean = false,
     ): List<RecoverableTab>
 
     /**
@@ -52,6 +52,6 @@ interface TabCollection {
         context: Context,
         engine: Engine,
         tabs: List<Tab>,
-        restoreSessionId: Boolean = false
+        restoreSessionId: Boolean = false,
     ): List<RecoverableTab>
 }

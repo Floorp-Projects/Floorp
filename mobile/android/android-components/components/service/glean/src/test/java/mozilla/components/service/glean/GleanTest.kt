@@ -33,8 +33,8 @@ class GleanTest {
                 category = "telemetry",
                 lifetime = Lifetime.APPLICATION,
                 name = "boolean_metric",
-                sendInPings = listOf("store1")
-            )
+                sendInPings = listOf("store1"),
+            ),
         )
 
         booleanMetric.set(true)

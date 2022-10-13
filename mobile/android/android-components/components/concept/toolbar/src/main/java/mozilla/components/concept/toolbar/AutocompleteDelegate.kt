@@ -36,5 +36,5 @@ data class AutocompleteResult(
     val text: String,
     val url: String,
     val source: String,
-    val totalItems: Int
+    val totalItems: Int,
 )

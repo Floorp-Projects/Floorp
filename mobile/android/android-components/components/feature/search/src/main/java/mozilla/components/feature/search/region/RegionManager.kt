@@ -43,10 +43,10 @@ internal class RegionManager(
     private val preferences: Lazy<SharedPreferences> = lazy {
         context.getSharedPreferences(
             PREFERENCE_FILE,
-            Context.MODE_PRIVATE
+            Context.MODE_PRIVATE,
         )
     },
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private var homeRegion: String?
         get() = preferences.value.getString(PREFERENCE_KEY_HOME_REGION, null)
@@ -68,7 +68,7 @@ internal class RegionManager(
         return homeRegion?.let { region ->
             RegionState(
                 region,
-                currentRegion ?: region
+                currentRegion ?: region,
             )
         }
     }

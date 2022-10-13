@@ -29,20 +29,22 @@ object ServiceWorkerSupport {
      */
     fun install(
         engine: Engine,
-        addTabUseCase: AddNewTabUseCase
+        addTabUseCase: AddNewTabUseCase,
     ) {
         try {
-            engine.registerServiceWorkerDelegate(object : ServiceWorkerDelegate {
-                override fun addNewTab(engineSession: EngineSession): Boolean {
-                    addTabUseCase(
-                        flags = LoadUrlFlags.external(),
-                        engineSession = engineSession,
-                        source = SessionState.Source.Internal.None
-                    )
+            engine.registerServiceWorkerDelegate(
+                object : ServiceWorkerDelegate {
+                    override fun addNewTab(engineSession: EngineSession): Boolean {
+                        addTabUseCase(
+                            flags = LoadUrlFlags.external(),
+                            engineSession = engineSession,
+                            source = SessionState.Source.Internal.None,
+                        )
 
-                    return true
-                }
-            })
+                        return true
+                    }
+                },
+            )
         } catch (e: UnsupportedOperationException) {
             logger.error("failed to register a service worker delegate", e)
         }

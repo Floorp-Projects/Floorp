@@ -63,7 +63,6 @@ class ChoiceDialogFragmentTest {
 
     @Test
     fun `Build single choice dialog`() {
-
         val fragment = spy(newInstance(arrayOf(), "sessionId", "uid", true, SINGLE_CHOICE_DIALOG_TYPE))
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -98,7 +97,6 @@ class ChoiceDialogFragmentTest {
 
     @Test
     fun `Build menu choice dialog`() {
-
         val fragment = spy(newInstance(arrayOf(), "sessionId", "uid", true, MENU_CHOICE_DIALOG_TYPE))
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -110,7 +108,6 @@ class ChoiceDialogFragmentTest {
 
     @Test
     fun `Build multiple choice dialog`() {
-
         val fragment = spy(newInstance(arrayOf(), "sessionId", "uid", false, MULTIPLE_CHOICE_DIALOG_TYPE))
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -122,7 +119,6 @@ class ChoiceDialogFragmentTest {
 
     @Test(expected = Exception::class)
     fun `Building a unknown dialog type will throw an exception`() {
-
         val fragment = spy(newInstance(arrayOf(), "sessionId", "uid", true, -1))
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -132,7 +128,6 @@ class ChoiceDialogFragmentTest {
 
     @Test
     fun `Will show a single choice item`() {
-
         val choices = arrayOf(item)
 
         val fragment = spy(newInstance(choices, "sessionId", "uid", false, SINGLE_CHOICE_DIALOG_TYPE))
@@ -150,7 +145,6 @@ class ChoiceDialogFragmentTest {
 
     @Test
     fun `Will show a menu choice item`() {
-
         val choices = arrayOf(item)
 
         val fragment = spy(newInstance(choices, "sessionId", "uid", true, MENU_CHOICE_DIALOG_TYPE))
@@ -168,7 +162,6 @@ class ChoiceDialogFragmentTest {
 
     @Test
     fun `Will show a menu choice separator item`() {
-
         val choices = arrayOf(separator)
 
         val fragment = spy(newInstance(choices, "sessionId", "uid", false, MENU_CHOICE_DIALOG_TYPE))
@@ -185,7 +178,6 @@ class ChoiceDialogFragmentTest {
 
     @Test(expected = Exception::class)
     fun `Will throw an exception to try to create a invalid choice type item`() {
-
         val choices = arrayOf(separator)
 
         val fragment = spy(newInstance(choices, "sessionId", "uid", true, MENU_CHOICE_DIALOG_TYPE))
@@ -198,13 +190,12 @@ class ChoiceDialogFragmentTest {
 
     @Test
     fun `Will adapter will return correct view type `() {
-
         val choices = arrayOf(
             item,
             Choice(id = "", label = "item1", children = arrayOf()),
             Choice(id = "", label = "menu", children = arrayOf()),
             Choice(id = "", label = "separator", children = arrayOf(), isASeparator = true),
-            Choice(id = "", label = "multiple choice")
+            Choice(id = "", label = "multiple choice"),
         )
 
         var fragment = spy(newInstance(choices, "sessionId", "uid", false, SINGLE_CHOICE_DIALOG_TYPE))
@@ -246,7 +237,6 @@ class ChoiceDialogFragmentTest {
 
     @Test
     fun `Will show a multiple choice item`() {
-
         val choices =
             arrayOf(Choice(id = "", label = "item1", children = arrayOf(Choice(id = "", label = "sub-item1"))))
 
@@ -270,12 +260,12 @@ class ChoiceDialogFragmentTest {
 
     @Test
     fun `Will show a multiple choice item with selected element`() {
-
         val choices = arrayOf(
             Choice(
-                id = "", label = "item1",
-                children = arrayOf(Choice(id = "", label = "sub-item1", selected = true))
-            )
+                id = "",
+                label = "item1",
+                children = arrayOf(Choice(id = "", label = "sub-item1", selected = true)),
+            ),
         )
 
         val fragment = spy(newInstance(choices, "sessionId", "uid", true, MULTIPLE_CHOICE_DIALOG_TYPE))
@@ -300,7 +290,6 @@ class ChoiceDialogFragmentTest {
 
     @Test
     fun `Clicking on single choice item notifies the feature`() {
-
         val choices = arrayOf(item)
 
         val fragment = spy(newInstance(choices, "sessionId", "uid", false, SINGLE_CHOICE_DIALOG_TYPE))
@@ -330,7 +319,6 @@ class ChoiceDialogFragmentTest {
 
     @Test
     fun `Clicking on menu choice item notifies the feature`() {
-
         val choices = arrayOf(item)
 
         val fragment = spy(newInstance(choices, "sessionId", "uid", true, MENU_CHOICE_DIALOG_TYPE))
@@ -362,7 +350,6 @@ class ChoiceDialogFragmentTest {
 
     @Test
     fun `Clicking on multiple choice item notifies the feature`() {
-
         val choices =
             arrayOf(Choice(id = "", label = "item1", children = arrayOf(subItem)))
         val fragment = spy(newInstance(choices, "sessionId", "uid", false, MULTIPLE_CHOICE_DIALOG_TYPE))
@@ -399,7 +386,6 @@ class ChoiceDialogFragmentTest {
 
     @Test
     fun `Clicking on selected multiple choice item will notify feature`() {
-
         val choices =
             arrayOf(item.copy(selected = true))
         val fragment = spy(newInstance(choices, "sessionId", "uid", true, MULTIPLE_CHOICE_DIALOG_TYPE))
@@ -433,18 +419,17 @@ class ChoiceDialogFragmentTest {
 
     @Test
     fun `single choice item with multiple sub-menu groups`() {
-
         val choices = arrayOf(
             Choice(
                 id = "group1",
                 label = "group1",
-                children = arrayOf(Choice(id = "item_group_1", label = "item group 1"))
+                children = arrayOf(Choice(id = "item_group_1", label = "item group 1")),
             ),
             Choice(
                 id = "group2",
                 label = "group2",
-                children = arrayOf(Choice(id = "item_group_2", label = "item group 2"))
-            )
+                children = arrayOf(Choice(id = "item_group_2", label = "item group 2")),
+            ),
         )
 
         val fragment = spy(newInstance(choices, "sessionId", "uid", false, SINGLE_CHOICE_DIALOG_TYPE))
@@ -485,7 +470,7 @@ class ChoiceDialogFragmentTest {
     fun `disabled single choice item is not clickable`() {
         val choices = arrayOf(
             Choice(id = "item1", label = "Enabled choice"),
-            Choice(id = "item2", enable = false, label = "Disabled choice")
+            Choice(id = "item2", enable = false, label = "Disabled choice"),
         )
 
         val fragment =
@@ -517,7 +502,7 @@ class ChoiceDialogFragmentTest {
     fun `enabled single choice item is clickable`() {
         val choices = arrayOf(
             Choice(id = "item1", label = "Enabled choice"),
-            Choice(id = "item2", enable = false, label = "Disabled choice")
+            Choice(id = "item2", enable = false, label = "Disabled choice"),
         )
 
         val fragment = spy(newInstance(choices, "sessionId", "uid", false, SINGLE_CHOICE_DIALOG_TYPE))
@@ -547,7 +532,7 @@ class ChoiceDialogFragmentTest {
     fun `disabled multiple choice item is not clickable`() {
         val choices = arrayOf(
             Choice(id = "item1", label = "Enabled choice"),
-            Choice(id = "item2", enable = false, label = "Disabled choice")
+            Choice(id = "item2", enable = false, label = "Disabled choice"),
         )
 
         val fragment =
@@ -579,7 +564,7 @@ class ChoiceDialogFragmentTest {
     fun `enabled multiple choice item is clickable`() {
         val choices = arrayOf(
             Choice(id = "item1", label = "Enabled choice"),
-            Choice(id = "item2", enable = false, label = "Disabled choice")
+            Choice(id = "item2", enable = false, label = "Disabled choice"),
         )
 
         val fragment = spy(newInstance(choices, "sessionId", "uid", false, MULTIPLE_CHOICE_DIALOG_TYPE))
@@ -609,7 +594,7 @@ class ChoiceDialogFragmentTest {
     fun `disabled menu choice item is not clickable`() {
         val choices = arrayOf(
             Choice(id = "item1", label = "Enabled choice"),
-            Choice(id = "item2", enable = false, label = "Disabled choice")
+            Choice(id = "item2", enable = false, label = "Disabled choice"),
         )
 
         val fragment =
@@ -641,7 +626,7 @@ class ChoiceDialogFragmentTest {
     fun `enabled menu choice item is clickable`() {
         val choices = arrayOf(
             Choice(id = "item1", label = "Enabled choice"),
-            Choice(id = "item2", enable = false, label = "Disabled choice")
+            Choice(id = "item2", enable = false, label = "Disabled choice"),
         )
 
         val fragment = spy(newInstance(choices, "sessionId", "uid", false, MENU_CHOICE_DIALOG_TYPE))

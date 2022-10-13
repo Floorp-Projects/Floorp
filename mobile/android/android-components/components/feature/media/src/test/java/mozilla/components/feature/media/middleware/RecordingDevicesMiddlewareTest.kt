@@ -36,7 +36,7 @@ class RecordingDevicesMiddlewareTest {
 
         applicationManager.addIntentFilterForActivity(
             activityComponent,
-            IntentFilter(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_INFO) }
+            IntentFilter(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_INFO) },
         )
     }
 
@@ -89,10 +89,10 @@ class RecordingDevicesMiddlewareTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla")
-                )
+                    createTab("https://www.mozilla.org", id = "mozilla"),
+                ),
             ),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         store.waitUntilIdle()
@@ -103,9 +103,9 @@ class RecordingDevicesMiddlewareTest {
             ContentAction.SetRecordingDevices(
                 sessionId = "mozilla",
                 devices = listOf(
-                    RecordingDevice(RecordingDevice.Type.CAMERA, RecordingDevice.Status.RECORDING)
-                )
-            )
+                    RecordingDevice(RecordingDevice.Type.CAMERA, RecordingDevice.Status.RECORDING),
+                ),
+            ),
         ).joinBlocking()
 
         assertEquals(1, notificationManager.size())
@@ -113,8 +113,8 @@ class RecordingDevicesMiddlewareTest {
         store.dispatch(
             ContentAction.SetRecordingDevices(
                 sessionId = "mozilla",
-                devices = emptyList()
-            )
+                devices = emptyList(),
+            ),
         ).joinBlocking()
 
         assertEquals(0, notificationManager.size())

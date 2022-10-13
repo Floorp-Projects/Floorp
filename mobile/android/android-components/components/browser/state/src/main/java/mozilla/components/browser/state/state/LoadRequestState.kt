@@ -14,5 +14,5 @@ package mozilla.components.browser.state.state
 data class LoadRequestState(
     val url: String,
     val triggeredByRedirect: Boolean,
-    val triggeredByUser: Boolean
+    val triggeredByUser: Boolean,
 )

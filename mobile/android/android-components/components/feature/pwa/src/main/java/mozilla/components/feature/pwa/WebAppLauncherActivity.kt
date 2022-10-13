@@ -54,7 +54,8 @@ class WebAppLauncherActivity : AppCompatActivity() {
         when (manifest?.display) {
             WebAppManifest.DisplayMode.FULLSCREEN,
             WebAppManifest.DisplayMode.STANDALONE,
-            WebAppManifest.DisplayMode.MINIMAL_UI -> {
+            WebAppManifest.DisplayMode.MINIMAL_UI,
+            -> {
                 emitHomescreenIconTapFact()
                 launchWebAppShell(startUrl)
             }

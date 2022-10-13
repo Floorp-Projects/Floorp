@@ -71,7 +71,7 @@ class SimpleBrowserMenuItemTest {
         val item = SimpleBrowserMenuItem(
             "Powered by Mozilla",
             10f,
-            android.R.color.holo_green_dark
+            android.R.color.holo_green_dark,
         )
 
         val view = inflate(item)
@@ -89,12 +89,12 @@ class SimpleBrowserMenuItemTest {
         assertEquals(
             TextMenuCandidate(
                 "Hello",
-                onClick = listener
+                onClick = listener,
             ),
             SimpleBrowserMenuItem(
                 "Hello",
-                listener = listener
-            ).asCandidate(testContext)
+                listener = listener,
+            ).asCandidate(testContext),
         )
 
         assertEquals(
@@ -102,14 +102,14 @@ class SimpleBrowserMenuItemTest {
                 "Powered by Mozilla",
                 textStyle = TextStyle(
                     size = 10f,
-                    color = getColor(testContext, android.R.color.holo_green_dark)
-                )
+                    color = getColor(testContext, android.R.color.holo_green_dark),
+                ),
             ),
             SimpleBrowserMenuItem(
                 "Powered by Mozilla",
                 10f,
-                android.R.color.holo_green_dark
-            ).asCandidate(testContext)
+                android.R.color.holo_green_dark,
+            ).asCandidate(testContext),
         )
     }
 

@@ -38,7 +38,7 @@ class LintLogChecks : Detector(), Detector.UastScanner {
                     ISSUE_LOG_USAGE,
                     node,
                     context.getLocation(node),
-                    ERROR_MESSAGE
+                    ERROR_MESSAGE,
                 )
             }
         }
@@ -55,7 +55,7 @@ class LintLogChecks : Detector(), Detector.UastScanner {
             Category.MESSAGES,
             5,
             Severity.WARNING,
-            Implementation(LintLogChecks::class.java, EnumSet.of(Scope.JAVA_FILE))
+            Implementation(LintLogChecks::class.java, EnumSet.of(Scope.JAVA_FILE)),
         )
     }
 }

@@ -12,7 +12,7 @@ import mozilla.components.concept.menu.candidate.MenuCandidate
 
 internal abstract class MenuCandidateViewHolder<T : MenuCandidate>(
     itemView: View,
-    protected val inflater: LayoutInflater
+    protected val inflater: LayoutInflater,
 ) : LastItemViewHolder<T>(itemView) {
 
     @CallSuper

@@ -16,7 +16,7 @@ import mozilla.components.service.pocket.stories.api.PocketEndpoint.Companion.ne
  */
 internal class PocketEndpoint internal constructor(
     @get:VisibleForTesting internal val rawEndpoint: PocketEndpointRaw,
-    private val jsonParser: PocketJSONParser
+    private val jsonParser: PocketJSONParser,
 ) {
 
     /**

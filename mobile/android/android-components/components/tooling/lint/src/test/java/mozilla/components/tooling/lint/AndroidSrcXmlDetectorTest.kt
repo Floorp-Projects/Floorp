@@ -33,8 +33,8 @@ class AndroidSrcXmlDetectorTest : LintDetectorTest() {
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     />
-"""
-                )
+""",
+                ),
             ).allowMissingSdk(true)
             .run()
             .expectClean()
@@ -52,8 +52,8 @@ class AndroidSrcXmlDetectorTest : LintDetectorTest() {
     android:layout_height="wrap_content"
     android:src="@drawable/ic_close"
     />
-"""
-                )
+""",
+                ),
             ).allowMissingSdk(true)
             .run()
             .expect(
@@ -62,7 +62,7 @@ res/layout/layout.xml:5: Error: Using android:src to define resource instead of 
     android:src="@drawable/ic_close"
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 1 errors, 0 warnings
-            """
+            """,
             )
     }
 }

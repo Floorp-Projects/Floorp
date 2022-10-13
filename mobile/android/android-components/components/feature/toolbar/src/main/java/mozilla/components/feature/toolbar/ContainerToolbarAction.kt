@@ -30,7 +30,7 @@ import mozilla.components.support.utils.DrawableUtils.loadAndTintDrawable
 class ContainerToolbarAction(
     internal val container: ContainerState,
     internal val padding: Padding? = null,
-    private var listener: (() -> Unit)? = null
+    private var listener: (() -> Unit)? = null,
 ) : Action {
     override fun createView(parent: ViewGroup): View {
         val rootView = LayoutInflater.from(parent.context)

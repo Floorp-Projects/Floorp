@@ -31,17 +31,17 @@ class SecurePrefsReliabilityExperimentTest {
         triggerAndAssertFacts(
             processor,
             Actions.GET to Values.SUCCESS_MISSING,
-            Actions.WRITE to Values.SUCCESS_WRITE
+            Actions.WRITE to Values.SUCCESS_WRITE,
         )
 
         triggerAndAssertFacts(
             processor,
-            Actions.GET to Values.SUCCESS_PRESENT
+            Actions.GET to Values.SUCCESS_PRESENT,
         )
 
         triggerAndAssertFacts(
             processor,
-            Actions.GET to Values.SUCCESS_PRESENT
+            Actions.GET to Values.SUCCESS_PRESENT,
         )
     }
 
@@ -55,27 +55,27 @@ class SecurePrefsReliabilityExperimentTest {
         triggerAndAssertFacts(
             processor,
             Actions.GET to Values.SUCCESS_MISSING,
-            Actions.WRITE to Values.SUCCESS_WRITE
+            Actions.WRITE to Values.SUCCESS_WRITE,
         )
 
         // Now, let's corrupt the value manually
         val securePrefs = SecureAbove22Preferences(
             testContext,
-            SecurePrefsReliabilityExperiment.SECURE_PREFS_NAME
+            SecurePrefsReliabilityExperiment.SECURE_PREFS_NAME,
         )
         securePrefs.putString(SecurePrefsReliabilityExperiment.PREF_KEY, "wrong test string")
 
         triggerAndAssertFacts(
             processor,
             Actions.GET to Values.CORRUPTED,
-            Actions.RESET to Values.SUCCESS_RESET
+            Actions.RESET to Values.SUCCESS_RESET,
         )
 
         // ... and we should be reset now:
         triggerAndAssertFacts(
             processor,
             Actions.GET to Values.SUCCESS_MISSING,
-            Actions.WRITE to Values.SUCCESS_WRITE
+            Actions.WRITE to Values.SUCCESS_WRITE,
         )
     }
 
@@ -89,13 +89,13 @@ class SecurePrefsReliabilityExperimentTest {
         triggerAndAssertFacts(
             processor,
             Actions.GET to Values.SUCCESS_MISSING,
-            Actions.WRITE to Values.SUCCESS_WRITE
+            Actions.WRITE to Values.SUCCESS_WRITE,
         )
 
         // Now, let's corrupt the store manually
         val securePrefs = SecureAbove22Preferences(
             testContext,
-            SecurePrefsReliabilityExperiment.SECURE_PREFS_NAME
+            SecurePrefsReliabilityExperiment.SECURE_PREFS_NAME,
         )
         securePrefs.clear()
 
@@ -103,19 +103,19 @@ class SecurePrefsReliabilityExperimentTest {
         triggerAndAssertFacts(
             processor,
             Actions.GET to Values.LOST,
-            Actions.RESET to Values.SUCCESS_RESET
+            Actions.RESET to Values.SUCCESS_RESET,
         )
 
         // we should be reset now:
         triggerAndAssertFacts(
             processor,
             Actions.GET to Values.SUCCESS_MISSING,
-            Actions.WRITE to Values.SUCCESS_WRITE
+            Actions.WRITE to Values.SUCCESS_WRITE,
         )
 
         triggerAndAssertFacts(
             processor,
-            Actions.GET to Values.SUCCESS_PRESENT
+            Actions.GET to Values.SUCCESS_PRESENT,
         )
     }
 
@@ -129,14 +129,14 @@ class SecurePrefsReliabilityExperimentTest {
         // First, let's add the correct value manually:
         val securePrefs = SecureAbove22Preferences(
             testContext,
-            SecurePrefsReliabilityExperiment.SECURE_PREFS_NAME
+            SecurePrefsReliabilityExperiment.SECURE_PREFS_NAME,
         )
         securePrefs.putString(SecurePrefsReliabilityExperiment.PREF_KEY, SecurePrefsReliabilityExperiment.PREF_VALUE)
 
         triggerAndAssertFacts(
             processor,
             Actions.GET to Values.PRESENT_UNEXPECTED,
-            Actions.RESET to Values.SUCCESS_RESET
+            Actions.RESET to Values.SUCCESS_RESET,
         )
 
         // Let's try an incorrect value, as well:
@@ -145,19 +145,19 @@ class SecurePrefsReliabilityExperimentTest {
         triggerAndAssertFacts(
             processor,
             Actions.GET to Values.PRESENT_UNEXPECTED,
-            Actions.RESET to Values.SUCCESS_RESET
+            Actions.RESET to Values.SUCCESS_RESET,
         )
 
         // subsequently, it's all good:
         triggerAndAssertFacts(
             processor,
             Actions.GET to Values.SUCCESS_MISSING,
-            Actions.WRITE to Values.SUCCESS_WRITE
+            Actions.WRITE to Values.SUCCESS_WRITE,
         )
 
         triggerAndAssertFacts(
             processor,
-            Actions.GET to Values.SUCCESS_PRESENT
+            Actions.GET to Values.SUCCESS_PRESENT,
         )
     }
 
@@ -180,7 +180,7 @@ class SecurePrefsReliabilityExperimentTest {
             captor.allValues[0],
             Actions.GET,
             Values.FAIL,
-            mapOf("javaClass" to "java.security.KeyStoreException")
+            mapOf("javaClass" to "java.security.KeyStoreException"),
         )
     }
 
@@ -200,7 +200,7 @@ class SecurePrefsReliabilityExperimentTest {
         fact: Fact,
         item: String,
         value: Values,
-        metadata: Map<String, Any>? = null
+        metadata: Map<String, Any>? = null,
     ) {
         assertEquals(Component.LIB_DATAPROTECT, fact.component)
         assertEquals(Action.IMPLEMENTATION_DETAIL, fact.action)

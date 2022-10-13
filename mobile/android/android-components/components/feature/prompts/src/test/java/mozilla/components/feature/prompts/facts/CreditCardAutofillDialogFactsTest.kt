@@ -105,7 +105,7 @@ class CreditCardAutofillDialogFactsTest {
             assertEquals(Action.CONFIRM, fact.action)
             assertEquals(
                 CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_CREATED,
-                fact.item
+                fact.item,
             )
         }
     }
@@ -123,7 +123,7 @@ class CreditCardAutofillDialogFactsTest {
             assertEquals(Action.CONFIRM, fact.action)
             assertEquals(
                 CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_UPDATED,
-                fact.item
+                fact.item,
             )
         }
     }
@@ -140,7 +140,7 @@ class CreditCardAutofillDialogFactsTest {
             assertEquals(Action.DISPLAY, fact.action)
             assertEquals(
                 CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_SAVE_PROMPT_SHOWN,
-                fact.item
+                fact.item,
             )
         }
     }

@@ -13,7 +13,7 @@ import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 
 class ProtectedDataAdapter(
     private val prefs: SecureAbove22Preferences,
-    private val itemKeys: List<String>
+    private val itemKeys: List<String>,
 ) : RecyclerView.Adapter<ProtectedDataAdapter.Holder>() {
     override fun getItemCount(): Int = itemKeys.size
 

@@ -18,5 +18,5 @@ data class SmallMenuCandidate(
     val icon: DrawableMenuIcon,
     val containerStyle: ContainerStyle = ContainerStyle(),
     val onLongClick: (() -> Boolean)? = null,
-    val onClick: () -> Unit = {}
+    val onClick: () -> Unit = {},
 )

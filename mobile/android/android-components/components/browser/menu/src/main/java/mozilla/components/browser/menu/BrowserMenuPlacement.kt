@@ -29,7 +29,7 @@ internal sealed class BrowserMenuPlacement {
          */
         data class Dropdown(
             override val anchor: View,
-            override val animation: Int = R.style.Mozac_Browser_Menu_Animation_OverflowMenuTop
+            override val animation: Int = R.style.Mozac_Browser_Menu_Animation_OverflowMenuTop,
         ) : BrowserMenuPlacement()
 
         /**
@@ -37,7 +37,7 @@ internal sealed class BrowserMenuPlacement {
          */
         data class ManualAnchoring(
             override val anchor: View,
-            override val animation: Int = R.style.Mozac_Browser_Menu_Animation_OverflowMenuTop
+            override val animation: Int = R.style.Mozac_Browser_Menu_Animation_OverflowMenuTop,
         ) : BrowserMenuPlacement()
     }
 
@@ -50,7 +50,7 @@ internal sealed class BrowserMenuPlacement {
          */
         data class Dropdown(
             override val anchor: View,
-            override val animation: Int = R.style.Mozac_Browser_Menu_Animation_OverflowMenuBottom
+            override val animation: Int = R.style.Mozac_Browser_Menu_Animation_OverflowMenuBottom,
         ) : BrowserMenuPlacement()
 
         /**
@@ -58,7 +58,7 @@ internal sealed class BrowserMenuPlacement {
          */
         data class ManualAnchoring(
             override val anchor: View,
-            override val animation: Int = R.style.Mozac_Browser_Menu_Animation_OverflowMenuBottom
+            override val animation: Int = R.style.Mozac_Browser_Menu_Animation_OverflowMenuBottom,
         ) : BrowserMenuPlacement()
     }
 }

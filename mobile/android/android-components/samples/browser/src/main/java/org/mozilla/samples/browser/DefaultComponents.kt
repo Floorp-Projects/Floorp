@@ -111,7 +111,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             confirmActivity = AutofillConfirmActivity::class.java,
             searchActivity = AutofillSearchActivity::class.java,
             applicationName = "Sample Browser",
-            httpClient = client
+            httpClient = client,
         )
     }
 
@@ -160,14 +160,14 @@ open class DefaultComponents(private val applicationContext: Context) {
                 UndoMiddleware(),
                 RegionMiddleware(
                     applicationContext,
-                    LocationService.default()
+                    LocationService.default(),
                 ),
                 SearchMiddleware(applicationContext),
                 RecordingDevicesMiddleware(applicationContext),
                 LastAccessMiddleware(),
                 PromptMiddleware(),
-                SessionPrioritizationMiddleware()
-            ) + EngineMiddleware.create(engine)
+                SessionPrioritizationMiddleware(),
+            ) + EngineMiddleware.create(engine),
         )
     }
 
@@ -187,7 +187,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             applicationContext,
             client,
             collectionName = "7dfae8669acc4312a65e8ba5553036",
-            maxCacheAgeInMinutes = DAY_IN_MINUTES
+            maxCacheAgeInMinutes = DAY_IN_MINUTES,
         )
     }
 
@@ -204,7 +204,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             searchUseCases.defaultSearch.invoke(
                 searchTerms = searchTerms,
                 searchEngine = null,
-                parentSessionId = null
+                parentSessionId = null,
             )
         }
     }
@@ -216,14 +216,14 @@ open class DefaultComponents(private val applicationContext: Context) {
             interceptLinkClicks = true,
             launchInApp = {
                 applicationContext.components.preferences.getBoolean(PREF_LAUNCH_EXTERNAL_APP, false)
-            }
+            },
         )
     }
 
     val webAppInterceptor by lazy {
         WebAppInterceptor(
             applicationContext,
-            webAppManifestStorage
+            webAppManifestStorage,
         )
     }
 
@@ -243,7 +243,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     val externalAppIntentProcessors by lazy {
         listOf(
             WebAppIntentProcessor(store, customTabsUseCases.addWebApp, sessionUseCases.loadUrl, webAppManifestStorage),
-            CustomTabIntentProcessor(customTabsUseCases.add, applicationContext.resources)
+            CustomTabIntentProcessor(customTabsUseCases.add, applicationContext.resources),
         )
     }
 
@@ -253,13 +253,13 @@ open class DefaultComponents(private val applicationContext: Context) {
             menuItems,
             store = store,
             style = WebExtensionBrowserMenuBuilder.Style(
-                webExtIconTintColorResource = R.color.photonGrey90
+                webExtIconTintColorResource = R.color.photonGrey90,
             ),
             onAddonsManagerTapped = {
                 val intent = Intent(applicationContext, AddonsActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 applicationContext.startActivity(intent)
-            }
+            },
         )
     }
 
@@ -267,11 +267,13 @@ open class DefaultComponents(private val applicationContext: Context) {
         val items = mutableListOf(
             menuToolbar,
             BrowserMenuHighlightableItem(
-                "No Highlight", R.drawable.mozac_ic_share, android.R.color.black,
+                "No Highlight",
+                R.drawable.mozac_ic_share,
+                android.R.color.black,
                 highlight = BrowserMenuHighlight.LowPriority(
                     notificationTint = ContextCompat.getColor(applicationContext, android.R.color.holo_green_dark),
-                    label = "Highlight"
-                )
+                    label = "Highlight",
+                ),
             ) {
                 Toast.makeText(applicationContext, "Highlight", Toast.LENGTH_SHORT).show()
             },
@@ -290,7 +292,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             SimpleBrowserMenuItem("Restore after crash") {
                 sessionUseCases.crashRecovery.invoke()
             },
-            BrowserMenuDivider()
+            BrowserMenuDivider(),
         )
 
         items.add(
@@ -300,7 +302,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                 }
             }.apply {
                 visible = { webAppUseCases.isPinningSupported() && store.state.selectedTabId != null }
-            }
+            },
         )
 
         items.add(
@@ -317,7 +319,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                         appLinksUseCases.appLinkRedirect(it.content.url).hasExternalApp()
                     } ?: false
                 }
-            }
+            },
         )
 
         items.add(
@@ -325,22 +327,22 @@ open class DefaultComponents(private val applicationContext: Context) {
                 "Request desktop site",
                 {
                     store.state.selectedTab?.content?.desktopMode == true
-                }
+                },
             ) { checked ->
                 sessionUseCases.requestDesktopSite(checked)
             }.apply {
                 visible = { store.state.selectedTab != null }
-            }
+            },
         )
         items.add(
             BrowserMenuCheckbox(
                 "Open links in apps",
                 {
                     preferences.getBoolean(PREF_LAUNCH_EXTERNAL_APP, false)
-                }
+                },
             ) { checked ->
                 preferences.edit().putBoolean(PREF_LAUNCH_EXTERNAL_APP, checked).apply()
-            }
+            },
         )
 
         items
@@ -355,7 +357,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                 store.state.selectedTab?.content?.canGoBack ?: true
             },
             disableInSecondaryState = true,
-            secondaryImageTintResource = R.color.photonGrey40
+            secondaryImageTintResource = R.color.photonGrey40,
         ) {
             sessionUseCases.goBack()
         }
@@ -368,7 +370,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                 store.state.selectedTab?.content?.canGoForward ?: true
             },
             disableInSecondaryState = true,
-            secondaryImageTintResource = R.color.photonGrey40
+            secondaryImageTintResource = R.color.photonGrey40,
         ) {
             sessionUseCases.goForward()
         }
@@ -383,7 +385,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             secondaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
             secondaryContentDescription = "Stop",
             secondaryImageTintResource = R.color.photonBlue90,
-            disableInSecondaryState = false
+            disableInSecondaryState = false,
         ) {
             if (store.state.selectedTab?.content?.loading == true) {
                 sessionUseCases.stopLoading()
@@ -427,12 +429,12 @@ open class DefaultComponents(private val applicationContext: Context) {
 
                     override fun report(
                         throwable: Throwable,
-                        breadcrumbs: ArrayList<Breadcrumb>
+                        breadcrumbs: ArrayList<Breadcrumb>,
                     ): String? {
                         return null
                     }
-                }
-            )
+                },
+            ),
         ).install(applicationContext)
     }
 }

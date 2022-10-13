@@ -10,7 +10,7 @@ import org.mozilla.geckoview.WebNotification as GeckoViewWebNotification
 import org.mozilla.geckoview.WebNotificationDelegate as GeckoViewWebNotificationDelegate
 
 internal class GeckoWebNotificationDelegate(
-    private val webNotificationDelegate: WebNotificationDelegate
+    private val webNotificationDelegate: WebNotificationDelegate,
 ) : GeckoViewWebNotificationDelegate {
     override fun onShowNotification(webNotification: GeckoViewWebNotification) {
         webNotificationDelegate.onShowNotification(webNotification.toWebNotification())
@@ -31,7 +31,7 @@ internal class GeckoWebNotificationDelegate(
             lang = lang,
             requireInteraction = requireInteraction,
             triggeredByWebExtension = source == null,
-            engineNotification = this@toWebNotification
+            engineNotification = this@toWebNotification,
         )
     }
 }

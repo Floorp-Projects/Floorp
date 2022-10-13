@@ -37,7 +37,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 class MenuButton @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : FrameLayout(context, attrs, defStyleAttr),
     MenuButton,
     View.OnClickListener,
@@ -62,6 +62,7 @@ class MenuButton @JvmOverloads constructor(
      */
     @Deprecated("Use the Observable interface to listen for onShow")
     var onShow: () -> Unit = {}
+
     /**
      * Listener called when the menu is dismissed.
      */
@@ -146,7 +147,7 @@ class MenuButton @JvmOverloads constructor(
             menu?.show(
                 anchor = this,
                 orientation = getOrientation(),
-                endOfMenuAlwaysVisible = endAlwaysVisible
+                endOfMenuAlwaysVisible = endAlwaysVisible,
             ) {
                 menu = null
                 notifyObservers { onDismiss() }

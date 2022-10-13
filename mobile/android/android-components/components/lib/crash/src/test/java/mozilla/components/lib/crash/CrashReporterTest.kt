@@ -55,7 +55,7 @@ class CrashReporterTest {
 
         CrashReporter(
             context = testContext,
-            services = listOf(mock())
+            services = listOf(mock()),
         ).install(testContext)
 
         val newHandler = Thread.getDefaultUncaughtExceptionHandler()
@@ -68,7 +68,7 @@ class CrashReporterTest {
     fun `CrashReporter throws if no service is defined`() {
         CrashReporter(
             context = testContext,
-            services = emptyList()
+            services = emptyList(),
         ).install(testContext)
     }
 
@@ -83,8 +83,8 @@ class CrashReporterTest {
                 services = listOf(service),
                 telemetryServices = listOf(telemetryService),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
-                scope = scope
-            ).install(testContext)
+                scope = scope,
+            ).install(testContext),
         )
 
         val crash: Crash.UncaughtExceptionCrash = createUncaughtExceptionCrash()
@@ -107,8 +107,8 @@ class CrashReporterTest {
                 services = listOf(service),
                 telemetryServices = listOf(telemetryService),
                 shouldPrompt = CrashReporter.Prompt.ALWAYS,
-                scope = scope
-            ).install(testContext)
+                scope = scope,
+            ).install(testContext),
         )
 
         val crash: Crash.UncaughtExceptionCrash = createUncaughtExceptionCrash()
@@ -131,8 +131,8 @@ class CrashReporterTest {
                 services = listOf(service),
                 telemetryServices = listOf(telemetryService),
                 shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH,
-                scope = scope
-            ).install(testContext)
+                scope = scope,
+            ).install(testContext),
         )
 
         val crash: Crash.UncaughtExceptionCrash = createUncaughtExceptionCrash()
@@ -155,8 +155,8 @@ class CrashReporterTest {
                 services = listOf(service),
                 telemetryServices = listOf(telemetryService),
                 shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH,
-                scope = scope
-            ).install(testContext)
+                scope = scope,
+            ).install(testContext),
         )
 
         val crash = Crash.NativeCodeCrash(
@@ -165,7 +165,7 @@ class CrashReporterTest {
             true,
             "extras.path",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-            breadcrumbs = arrayListOf()
+            breadcrumbs = arrayListOf(),
         )
 
         reporter.onCrash(testContext, crash)
@@ -186,8 +186,8 @@ class CrashReporterTest {
                 context = testContext,
                 services = listOf(service),
                 telemetryServices = listOf(telemetryService),
-                shouldPrompt = CrashReporter.Prompt.ALWAYS
-            ).install(testContext)
+                shouldPrompt = CrashReporter.Prompt.ALWAYS,
+            ).install(testContext),
         )
 
         val crash: Crash.UncaughtExceptionCrash = createUncaughtExceptionCrash()
@@ -207,8 +207,8 @@ class CrashReporterTest {
             CrashReporter(
                 context = testContext,
                 telemetryServices = listOf(telemetryService),
-                shouldPrompt = CrashReporter.Prompt.ALWAYS
-            ).install(testContext)
+                shouldPrompt = CrashReporter.Prompt.ALWAYS,
+            ).install(testContext),
         )
 
         val crash: Crash.UncaughtExceptionCrash = createUncaughtExceptionCrash()
@@ -228,8 +228,8 @@ class CrashReporterTest {
             CrashReporter(
                 context = testContext,
                 services = listOf(service),
-                shouldPrompt = CrashReporter.Prompt.ALWAYS
-            ).install(testContext)
+                shouldPrompt = CrashReporter.Prompt.ALWAYS,
+            ).install(testContext),
         )
 
         val crash: Crash.UncaughtExceptionCrash = createUncaughtExceptionCrash()
@@ -247,7 +247,7 @@ class CrashReporterTest {
         try {
             CrashReporter(
                 context = testContext,
-                shouldPrompt = CrashReporter.Prompt.ALWAYS
+                shouldPrompt = CrashReporter.Prompt.ALWAYS,
             ).install(testContext)
         } catch (e: IllegalArgumentException) {
             exceptionThrown = true
@@ -263,7 +263,7 @@ class CrashReporterTest {
         try {
             CrashReporter(
                 context = testContext,
-                services = listOf(mock())
+                services = listOf(mock()),
             ).install(testContext)
         } catch (e: IllegalArgumentException) {
             exceptionThrown = true
@@ -273,7 +273,7 @@ class CrashReporterTest {
         try {
             CrashReporter(
                 context = testContext,
-                telemetryServices = listOf(mock())
+                telemetryServices = listOf(mock()),
             ).install(testContext)
         } catch (e: IllegalArgumentException) {
             exceptionThrown = true
@@ -287,8 +287,8 @@ class CrashReporterTest {
             CrashReporter(
                 context = testContext,
                 services = listOf(mock()),
-                shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH
-            ).install(testContext)
+                shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH,
+            ).install(testContext),
         )
 
         assertTrue(reporter.enabled)
@@ -303,8 +303,8 @@ class CrashReporterTest {
                 context = testContext,
                 services = listOf(service),
                 shouldPrompt = CrashReporter.Prompt.ALWAYS,
-                scope = scope
-            ).install(testContext)
+                scope = scope,
+            ).install(testContext),
         )
 
         reporter.enabled = false
@@ -329,8 +329,8 @@ class CrashReporterTest {
                 context = testContext,
                 services = listOf(service),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
-                scope = scope
-            ).install(testContext)
+                scope = scope,
+            ).install(testContext),
         )
 
         reporter.onCrash(testContext, crash)
@@ -362,12 +362,12 @@ class CrashReporterTest {
             CrashReporter(
                 context = testContext,
                 services = listOf(service),
-                shouldPrompt = CrashReporter.Prompt.NEVER
-            ).install(testContext)
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+            ).install(testContext),
         )
 
         reporter.submitReport(
-            Crash.UncaughtExceptionCrash(0, RuntimeException(), arrayListOf())
+            Crash.UncaughtExceptionCrash(0, RuntimeException(), arrayListOf()),
         ).joinBlocking()
         assertTrue(exceptionCrash)
     }
@@ -397,12 +397,12 @@ class CrashReporterTest {
             CrashReporter(
                 context = testContext,
                 services = listOf(service),
-                shouldPrompt = CrashReporter.Prompt.NEVER
-            ).install(testContext)
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+            ).install(testContext),
         )
 
         reporter.submitReport(
-            Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf())
+            Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf()),
         ).joinBlocking()
         assertTrue(nativeCrash)
     }
@@ -440,8 +440,8 @@ class CrashReporterTest {
             CrashReporter(
                 context = testContext,
                 services = listOf(service),
-                shouldPrompt = CrashReporter.Prompt.NEVER
-            ).install(testContext)
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+            ).install(testContext),
         )
 
         val throwable = RuntimeException()
@@ -450,7 +450,7 @@ class CrashReporterTest {
             testData,
             testCategory,
             testLevel,
-            testType
+            testType,
         )
         reporter.recordCrashBreadcrumb(breadcrumb)
 
@@ -494,8 +494,8 @@ class CrashReporterTest {
             CrashReporter(
                 context = testContext,
                 services = listOf(service),
-                shouldPrompt = CrashReporter.Prompt.NEVER
-            ).install(testContext)
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+            ).install(testContext),
         )
 
         val throwable = RuntimeException()
@@ -505,7 +505,7 @@ class CrashReporterTest {
             testData,
             testCategory,
             testLevel,
-            testType
+            testType,
         )
         reporter.recordCrashBreadcrumb(breadcrumb)
 
@@ -535,12 +535,12 @@ class CrashReporterTest {
             CrashReporter(
                 context = testContext,
                 telemetryServices = listOf(telemetryService),
-                shouldPrompt = CrashReporter.Prompt.NEVER
-            ).install(testContext)
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+            ).install(testContext),
         )
 
         reporter.submitCrashTelemetry(
-            Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf())
+            Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf()),
         ).joinBlocking()
         assertTrue(nativeCrash)
     }
@@ -553,7 +553,7 @@ class CrashReporterTest {
 
         val reporter = CrashReporter(
             context = testContext,
-            services = listOf(mock())
+            services = listOf(mock()),
         )
 
         expectException(IllegalStateException::class) {
@@ -576,7 +576,7 @@ class CrashReporterTest {
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(mock()),
-            nonFatalCrashIntent = pendingIntent
+            nonFatalCrashIntent = pendingIntent,
         ).install(context)
 
         val nativeCrash = Crash.NativeCodeCrash(
@@ -585,7 +585,7 @@ class CrashReporterTest {
             true,
             "extras.path",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
-            breadcrumbs = arrayListOf()
+            breadcrumbs = arrayListOf(),
         )
         reporter.onCrash(context, nativeCrash)
 
@@ -615,7 +615,7 @@ class CrashReporterTest {
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(mock()),
-            nonFatalCrashIntent = pendingIntent
+            nonFatalCrashIntent = pendingIntent,
         ).install(context)
 
         val nativeCrash = Crash.NativeCodeCrash(
@@ -624,7 +624,7 @@ class CrashReporterTest {
             true,
             "extras.path",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-            breadcrumbs = arrayListOf()
+            breadcrumbs = arrayListOf(),
         )
         reporter.onCrash(context, nativeCrash)
 
@@ -642,7 +642,7 @@ class CrashReporterTest {
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(mock()),
-            nonFatalCrashIntent = pendingIntent
+            nonFatalCrashIntent = pendingIntent,
         ).install(context)
 
         val nativeCrash = Crash.NativeCodeCrash(
@@ -651,7 +651,7 @@ class CrashReporterTest {
             true,
             "extras.path",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
-            breadcrumbs = arrayListOf()
+            breadcrumbs = arrayListOf(),
         )
         reporter.onCrash(context, nativeCrash)
 
@@ -670,8 +670,8 @@ class CrashReporterTest {
                 telemetryServices = listOf(telemetryService),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
                 nonFatalCrashIntent = mock(),
-                scope = scope
-            ).install(testContext)
+                scope = scope,
+            ).install(testContext),
         )
 
         val nativeCrash = Crash.NativeCodeCrash(
@@ -680,7 +680,7 @@ class CrashReporterTest {
             true,
             "extras.path",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
-            breadcrumbs = arrayListOf()
+            breadcrumbs = arrayListOf(),
         )
         reporter.onCrash(testContext, nativeCrash)
 
@@ -700,8 +700,8 @@ class CrashReporterTest {
                 services = listOf(service),
                 telemetryServices = listOf(telemetryService),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
-                scope = scope
-            ).install(testContext)
+                scope = scope,
+            ).install(testContext),
         )
 
         val nativeCrash = Crash.NativeCodeCrash(
@@ -710,7 +710,7 @@ class CrashReporterTest {
             true,
             "extras.path",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
-            breadcrumbs = arrayListOf()
+            breadcrumbs = arrayListOf(),
         )
         reporter.onCrash(testContext, nativeCrash)
 
@@ -736,7 +736,7 @@ class CrashReporterTest {
         var crashReporter = CrashReporter(
             context = testContext,
             services = listOf(mock()),
-            maxBreadCrumbs = 5
+            maxBreadCrumbs = 5,
         )
 
         repeat(10) {
@@ -747,7 +747,7 @@ class CrashReporterTest {
         crashReporter = CrashReporter(
             context = testContext,
             services = listOf(mock()),
-            maxBreadCrumbs = 5
+            maxBreadCrumbs = 5,
         )
         repeat(15) {
             crashReporter.recordCrashBreadcrumb(Breadcrumb(testMessage, testData, testCategory, testLevel, testType))
@@ -766,12 +766,12 @@ class CrashReporterTest {
         var crashReporter = CrashReporter(
             context = testContext,
             services = listOf(mock()),
-            maxBreadCrumbs = maxNum
+            maxBreadCrumbs = maxNum,
         )
 
         repeat(maxNum) {
             crashReporter.recordCrashBreadcrumb(
-                Breadcrumb(testMessage, testData, testCategory, Breadcrumb.Level.CRITICAL, testType)
+                Breadcrumb(testMessage, testData, testCategory, Breadcrumb.Level.CRITICAL, testType),
             )
             sleep(10) /* make sure time elapsed */
         }
@@ -788,7 +788,7 @@ class CrashReporterTest {
 
         repeat(maxNum) {
             crashReporter.recordCrashBreadcrumb(
-                Breadcrumb(testMessage, testData, testCategory, Breadcrumb.Level.DEBUG, testType)
+                Breadcrumb(testMessage, testData, testCategory, Breadcrumb.Level.DEBUG, testType),
             )
             sleep(10) /* make sure time elapsed */
         }
@@ -815,12 +815,12 @@ class CrashReporterTest {
         var crashReporter = CrashReporter(
             context = testContext,
             services = listOf(mock()),
-            maxBreadCrumbs = 5
+            maxBreadCrumbs = 5,
         )
 
         repeat(maxNum) {
             crashReporter.recordCrashBreadcrumb(
-                Breadcrumb(testMessage, testData, testCategory, Breadcrumb.Level.DEBUG, testType)
+                Breadcrumb(testMessage, testData, testCategory, Breadcrumb.Level.DEBUG, testType),
             )
             sleep(10) /* make sure time elapsed */
         }
@@ -833,7 +833,7 @@ class CrashReporterTest {
 
         repeat(maxNum / 2) {
             crashReporter.recordCrashBreadcrumb(
-                Breadcrumb(testMessage, testData, testCategory, Breadcrumb.Level.INFO, testType)
+                Breadcrumb(testMessage, testData, testCategory, Breadcrumb.Level.INFO, testType),
             )
             sleep(10) /* make sure time elapsed */
         }
@@ -848,6 +848,8 @@ class CrashReporterTest {
 
 private fun createUncaughtExceptionCrash(): Crash.UncaughtExceptionCrash {
     return Crash.UncaughtExceptionCrash(
-        0, RuntimeException(), ArrayList()
+        0,
+        RuntimeException(),
+        ArrayList(),
     )
 }

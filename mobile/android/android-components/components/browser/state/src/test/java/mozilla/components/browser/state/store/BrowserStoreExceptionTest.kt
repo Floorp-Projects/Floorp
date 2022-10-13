@@ -64,17 +64,17 @@ class BrowserStoreExceptionTest {
             val store = BrowserStore(
                 BrowserState(
                     tabs = listOf(
-                        createTab(id = "a", url = "https://www.mozilla.org")
-                    )
-                )
+                        createTab(id = "a", url = "https://www.mozilla.org"),
+                    ),
+                ),
             )
 
             store.dispatch(
                 TabListAction.AddMultipleTabsAction(
                     tabs = listOf(
-                        createTab(id = "a", url = "https://www.example.org")
-                    )
-                )
+                        createTab(id = "a", url = "https://www.example.org"),
+                    ),
+                ),
             ).joinBlocking()
         }
     }
@@ -86,20 +86,20 @@ class BrowserStoreExceptionTest {
 
             val tab1 = createTab(
                 id = "a",
-                url = "https://www.mozilla.org"
+                url = "https://www.mozilla.org",
             )
 
             val tab2 = createTab(
                 id = "b",
                 url = "https://www.firefox.com",
                 private = true,
-                parent = tab1
+                parent = tab1,
             )
 
             store.dispatch(
                 TabListAction.AddMultipleTabsAction(
-                    tabs = listOf(tab1, tab2)
-                )
+                    tabs = listOf(tab1, tab2),
+                ),
             ).joinBlocking()
         }
     }
@@ -111,15 +111,15 @@ class BrowserStoreExceptionTest {
             val testGroup = TabGroup("test")
             val store = BrowserStore(
                 BrowserState(
-                    tabPartitions = mapOf(partitionId to TabPartition(partitionId, tabGroups = listOf(testGroup)))
-                )
+                    tabPartitions = mapOf(partitionId to TabPartition(partitionId, tabGroups = listOf(testGroup))),
+                ),
             )
 
             store.dispatch(
                 TabGroupAction.AddTabGroupAction(
                     partition = partitionId,
-                    group = testGroup
-                )
+                    group = testGroup,
+                ),
             ).joinBlocking()
         }
     }
@@ -134,8 +134,8 @@ class BrowserStoreExceptionTest {
             store.dispatch(
                 TabGroupAction.AddTabGroupAction(
                     partition = partition,
-                    group = testGroup
-                )
+                    group = testGroup,
+                ),
             ).joinBlocking()
         }
     }
@@ -149,8 +149,8 @@ class BrowserStoreExceptionTest {
             val store = BrowserStore(
                 BrowserState(
                     tabs = listOf(),
-                    tabPartitions = mapOf("testFeaturePartition" to tabPartition)
-                )
+                    tabPartitions = mapOf("testFeaturePartition" to tabPartition),
+                ),
             )
 
             val tab = createTab(id = "tab1", url = "https://firefox.com")
@@ -169,12 +169,12 @@ class BrowserStoreExceptionTest {
             val store = BrowserStore(
                 BrowserState(
                     tabs = listOf(tab1),
-                    tabPartitions = mapOf("testFeaturePartition" to tabPartition)
-                )
+                    tabPartitions = mapOf("testFeaturePartition" to tabPartition),
+                ),
             )
 
             store.dispatch(
-                TabGroupAction.AddTabsAction(tabPartition.id, tabGroup.id, listOf(tab1.id, tab2.id))
+                TabGroupAction.AddTabsAction(tabPartition.id, tabGroup.id, listOf(tab1.id, tab2.id)),
             ).joinBlocking()
         }
     }

@@ -33,7 +33,7 @@ class BrowserStoreTest {
     fun `Initial state is validated and rejected if selected tab does not exist`() {
         val initialState = BrowserState(
             tabs = listOf(createTab("https://www.mozilla.org")),
-            selectedTabId = "invalid"
+            selectedTabId = "invalid",
         )
         BrowserStore(initialState)
     }
@@ -43,7 +43,7 @@ class BrowserStoreTest {
         val tabs = listOf(
             createTab(id = "1", url = "https://www.mozilla.org"),
             createTab(id = "2", url = "https://www.getpocket.com"),
-            createTab(id = "1", url = "https://www.mozilla.org")
+            createTab(id = "1", url = "https://www.mozilla.org"),
         )
         val initialState = BrowserState(tabs)
         BrowserStore(initialState)

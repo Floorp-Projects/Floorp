@@ -41,9 +41,10 @@ class PocketStoriesRefreshSchedulerTest {
         val scheduler = spy(
             PocketStoriesRefreshScheduler(
                 PocketStoriesConfig(
-                    client, Frequency(1, TimeUnit.HOURS)
-                )
-            )
+                    client,
+                    Frequency(1, TimeUnit.HOURS),
+                ),
+            ),
         )
         val workManager = mock<WorkManager>()
         val worker = mock<PeriodicWorkRequest>()
@@ -72,7 +73,7 @@ class PocketStoriesRefreshSchedulerTest {
         val scheduler = spy(PocketStoriesRefreshScheduler(mock()))
 
         val result = scheduler.createPeriodicWorkerRequest(
-            Frequency(1, TimeUnit.HOURS)
+            Frequency(1, TimeUnit.HOURS),
         )
 
         verify(scheduler).getWorkerConstrains()

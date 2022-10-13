@@ -17,13 +17,13 @@ import mozilla.components.lib.state.MiddlewareContext
  * the thumbnail to the disk cache.
  */
 class ThumbnailsMiddleware(
-    private val thumbnailStorage: ThumbnailStorage
+    private val thumbnailStorage: ThumbnailStorage,
 ) : Middleware<BrowserState, BrowserAction> {
     @Suppress("ComplexMethod")
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         when (action) {
             is ContentAction.UpdateThumbnailAction -> {

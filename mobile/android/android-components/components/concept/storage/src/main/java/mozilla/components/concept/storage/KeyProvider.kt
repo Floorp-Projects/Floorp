@@ -24,7 +24,7 @@ interface KeyProvider {
  */
 data class ManagedKey(
     val key: String,
-    val wasGenerated: KeyGenerationReason? = null
+    val wasGenerated: KeyGenerationReason? = null,
 )
 
 /**

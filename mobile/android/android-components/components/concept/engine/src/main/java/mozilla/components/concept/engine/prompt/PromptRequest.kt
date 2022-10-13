@@ -25,7 +25,7 @@ import java.util.UUID
  */
 sealed class PromptRequest(
     val shouldDismissOnLoad: Boolean = true,
-    val uid: String = UUID.randomUUID().toString()
+    val uid: String = UUID.randomUUID().toString(),
 ) {
     /**
      * Value type that represents a request for a single choice prompt.
@@ -36,7 +36,7 @@ sealed class PromptRequest(
     data class SingleChoice(
         val choices: Array<Choice>,
         val onConfirm: (Choice) -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(), Dismissible
 
     /**
@@ -48,7 +48,7 @@ sealed class PromptRequest(
     data class MultipleChoice(
         val choices: Array<Choice>,
         val onConfirm: (Array<Choice>) -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(), Dismissible
 
     /**
@@ -60,7 +60,7 @@ sealed class PromptRequest(
     data class MenuChoice(
         val choices: Array<Choice>,
         val onConfirm: (Choice) -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(), Dismissible
 
     /**
@@ -76,7 +76,7 @@ sealed class PromptRequest(
         val message: String,
         val hasShownManyDialogs: Boolean = false,
         val onConfirm: (Boolean) -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(), Dismissible
 
     /**
@@ -90,7 +90,7 @@ sealed class PromptRequest(
     data class BeforeUnload(
         val title: String,
         val onLeave: () -> Unit,
-        val onStay: () -> Unit
+        val onStay: () -> Unit,
     ) : PromptRequest()
 
     /**
@@ -102,7 +102,7 @@ sealed class PromptRequest(
     data class SaveCreditCard(
         val creditCard: CreditCardEntry,
         val onConfirm: (CreditCardEntry) -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(shouldDismissOnLoad = false), Dismissible
 
     /**
@@ -114,7 +114,7 @@ sealed class PromptRequest(
     data class SelectCreditCard(
         val creditCards: List<CreditCardEntry>,
         val onConfirm: (CreditCardEntry) -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(), Dismissible
 
     /**
@@ -128,7 +128,7 @@ sealed class PromptRequest(
         val hint: Int,
         val logins: List<LoginEntry>,
         val onConfirm: (LoginEntry) -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(shouldDismissOnLoad = false), Dismissible
 
     /**
@@ -140,7 +140,7 @@ sealed class PromptRequest(
     data class SelectLoginPrompt(
         val logins: List<Login>,
         val onConfirm: (Login) -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(), Dismissible
 
     /**
@@ -155,7 +155,7 @@ sealed class PromptRequest(
     data class SelectAddress(
         val addresses: List<Address>,
         val onConfirm: (Address) -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(), Dismissible
 
     /**
@@ -173,7 +173,7 @@ sealed class PromptRequest(
         val inputValue: String,
         val hasShownManyDialogs: Boolean = false,
         val onConfirm: (Boolean, String) -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(), Dismissible
 
     /**
@@ -197,7 +197,7 @@ sealed class PromptRequest(
         val type: Type = Type.DATE,
         val onConfirm: (java.util.Date) -> Unit,
         val onClear: () -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(), Dismissible {
         enum class Type {
             DATE, DATE_AND_TIME, TIME, MONTH
@@ -220,7 +220,7 @@ sealed class PromptRequest(
         val captureMode: FacingMode = FacingMode.NONE,
         val onSingleFileSelected: (Context, Uri) -> Unit,
         val onMultipleFilesSelected: (Context, Array<Uri>) -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(), Dismissible {
 
         /**
@@ -231,14 +231,14 @@ sealed class PromptRequest(
             isMultipleFilesSelection: Boolean,
             onSingleFileSelected: (Context, Uri) -> Unit,
             onMultipleFilesSelected: (Context, Array<Uri>) -> Unit,
-            onDismiss: () -> Unit
+            onDismiss: () -> Unit,
         ) : this(
             mimeTypes,
             isMultipleFilesSelection,
             FacingMode.NONE,
             onSingleFileSelected,
             onMultipleFilesSelected,
-            onDismiss
+            onDismiss,
         )
 
         enum class FacingMode {
@@ -276,7 +276,7 @@ sealed class PromptRequest(
         val previousFailed: Boolean = false,
         val isCrossOrigin: Boolean = false,
         val onConfirm: (String, String) -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(), Dismissible {
 
         enum class Level {
@@ -297,7 +297,7 @@ sealed class PromptRequest(
     data class Color(
         val defaultColor: String,
         val onConfirm: (String) -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(), Dismissible
 
     /**
@@ -313,7 +313,7 @@ sealed class PromptRequest(
         val targetUri: String,
         val onAllow: () -> Unit,
         val onDeny: () -> Unit,
-        override val onDismiss: () -> Unit = { onDeny() }
+        override val onDismiss: () -> Unit = { onDeny() },
     ) : PromptRequest(), Dismissible
 
     /**
@@ -343,7 +343,7 @@ sealed class PromptRequest(
         val onConfirmPositiveButton: (Boolean) -> Unit,
         val onConfirmNegativeButton: (Boolean) -> Unit,
         val onConfirmNeutralButton: (Boolean) -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(), Dismissible
 
     /**
@@ -358,7 +358,7 @@ sealed class PromptRequest(
         val data: ShareData,
         val onSuccess: () -> Unit,
         val onFailure: () -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(), Dismissible
 
     /**
@@ -372,7 +372,7 @@ sealed class PromptRequest(
      */
     data class Repost(
         val onConfirm: () -> Unit,
-        override val onDismiss: () -> Unit
+        override val onDismiss: () -> Unit,
     ) : PromptRequest(), Dismissible
 
     interface Dismissible {

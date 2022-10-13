@@ -27,17 +27,17 @@ import mozilla.components.lib.crash.db.ReportEntity
  */
 internal class CrashListAdapter(
     private val crashReporter: CrashReporter,
-    private val onSelection: (String) -> Unit
+    private val onSelection: (String) -> Unit,
 ) : RecyclerView.Adapter<CrashViewHolder>() {
     private var crashes: List<CrashWithReports> = emptyList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CrashViewHolder {
         val view = LayoutInflater.from(
-            parent.context
+            parent.context,
         ).inflate(
             R.layout.mozac_lib_crash_item_crash,
             parent,
-            false
+            false,
         )
 
         return CrashViewHolder(view)
@@ -59,7 +59,7 @@ internal class CrashListAdapter(
             crashWithReports.crash.createdAt,
             DateUtils.MINUTE_IN_MILLIS,
             DateUtils.WEEK_IN_MILLIS,
-            0
+            0,
         )
 
         holder.footerView.text = SpannableStringBuilder(time).apply {
@@ -72,7 +72,7 @@ internal class CrashListAdapter(
                         shareCrash(widget.context, crashWithReports)
                     }
                 },
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
             )
 
             if (crashWithReports.reports.isNotEmpty()) {
@@ -118,9 +118,9 @@ internal class CrashListAdapter(
 }
 
 internal class CrashViewHolder(
-    view: View
+    view: View,
 ) : RecyclerView.ViewHolder(
-    view
+    view,
 ) {
     val titleView = view.findViewById<TextView>(R.id.mozac_lib_crash_title)
     val idView = view.findViewById<TextView>(R.id.mozac_lib_crash_id)
@@ -132,7 +132,7 @@ internal class CrashViewHolder(
 private fun SpannableStringBuilder.append(
     crashReporter: CrashReporter,
     services: List<ReportEntity>,
-    onSelection: (String) -> Unit
+    onSelection: (String) -> Unit,
 ): SpannableStringBuilder {
     services.forEachIndexed { index, entity ->
         val service = crashReporter.getCrashReporterServiceById(entity.serviceId)
@@ -147,7 +147,7 @@ private fun SpannableStringBuilder.append(
                         onSelection(url)
                     }
                 },
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
             )
         } else {
             append(name)

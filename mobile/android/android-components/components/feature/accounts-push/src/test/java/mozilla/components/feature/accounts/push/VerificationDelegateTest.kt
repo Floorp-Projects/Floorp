@@ -123,8 +123,8 @@ class VerificationDelegateTest {
                 val stringResult = requireNotNull(
                     preference(testContext).getString(
                         PREF_LAST_VERIFIED,
-                        "{\"timestamp\": ${System.currentTimeMillis()}, \"totalCount\": 0}"
-                    )
+                        "{\"timestamp\": ${System.currentTimeMillis()}, \"totalCount\": 0}",
+                    ),
                 )
                 val json = JSONObject(stringResult)
                 return Pair(json.getLong("timestamp"), json.getInt("totalCount"))

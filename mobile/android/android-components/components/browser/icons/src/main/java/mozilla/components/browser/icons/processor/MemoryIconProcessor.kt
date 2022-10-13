@@ -14,7 +14,7 @@ import mozilla.components.support.images.DesiredSize
  * An [IconProcessor] implementation that saves icons in the in-memory cache.
  */
 class MemoryIconProcessor(
-    private val cache: ProcessorMemoryCache
+    private val cache: ProcessorMemoryCache,
 ) : IconProcessor {
     interface ProcessorMemoryCache {
         fun put(request: IconRequest, resource: IconRequest.Resource, icon: Icon)
@@ -25,7 +25,7 @@ class MemoryIconProcessor(
         request: IconRequest,
         resource: IconRequest.Resource?,
         icon: Icon,
-        desiredSize: DesiredSize
+        desiredSize: DesiredSize,
     ): Icon {
         if (resource != null && icon.shouldCacheInMemory) {
             cache.put(request, resource, icon)

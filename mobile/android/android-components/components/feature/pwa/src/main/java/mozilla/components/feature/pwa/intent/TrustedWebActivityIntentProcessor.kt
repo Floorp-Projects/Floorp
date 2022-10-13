@@ -38,7 +38,7 @@ class TrustedWebActivityIntentProcessor(
     private val addNewTabUseCase: CustomTabsUseCases.AddCustomTabUseCase,
     packageManager: PackageManager,
     relationChecker: RelationChecker,
-    private val store: CustomTabsServiceStore
+    private val store: CustomTabsServiceStore,
 ) : IntentProcessor {
 
     private val verifier = OriginVerifierFeature(packageManager, relationChecker) { store.dispatch(it) }
@@ -55,13 +55,13 @@ class TrustedWebActivityIntentProcessor(
 
         return if (!url.isNullOrEmpty() && matches(intent)) {
             val customTabConfig = createCustomTabConfigFromIntent(intent, null).copy(
-                externalAppType = ExternalAppType.TRUSTED_WEB_ACTIVITY
+                externalAppType = ExternalAppType.TRUSTED_WEB_ACTIVITY,
             )
 
             val tabId = addNewTabUseCase.invoke(
                 url,
                 source = SessionState.Source.Internal.HomeScreen,
-                customTabConfig = customTabConfig
+                customTabConfig = customTabConfig,
             )
 
             intent.putSessionId(tabId)

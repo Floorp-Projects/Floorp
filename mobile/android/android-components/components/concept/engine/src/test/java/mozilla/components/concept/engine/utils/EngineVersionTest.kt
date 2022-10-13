@@ -76,7 +76,7 @@ private fun EngineVersion?.assertIs(
     major: Int,
     minor: Int,
     patch: Long,
-    metadata: String? = null
+    metadata: String? = null,
 ) {
     assertNotNull(this!!)
 

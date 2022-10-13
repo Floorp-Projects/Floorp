@@ -21,7 +21,7 @@ sealed class AssetDescriptor {
      * )
      */
     data class Web(
-        val site: String
+        val site: String,
     ) : AssetDescriptor()
 
     /**
@@ -36,6 +36,6 @@ sealed class AssetDescriptor {
      */
     data class Android(
         val packageName: String,
-        val sha256CertFingerprint: String
+        val sha256CertFingerprint: String,
     ) : AssetDescriptor()
 }

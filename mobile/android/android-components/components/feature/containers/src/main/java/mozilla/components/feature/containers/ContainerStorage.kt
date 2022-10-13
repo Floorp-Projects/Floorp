@@ -33,15 +33,15 @@ internal class ContainerStorage(context: Context) : ContainerMiddleware.Storage 
         contextId: String,
         name: String,
         color: Color,
-        icon: Icon
+        icon: Icon,
     ) {
         containerDao.insertContainer(
             ContainerEntity(
                 contextId = contextId,
                 name = name,
                 color = color,
-                icon = icon
-            )
+                icon = icon,
+            ),
         )
     }
 

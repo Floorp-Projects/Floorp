@@ -59,7 +59,7 @@ class QrFeatureTest {
         val feature = QrFeature(
             testContext,
             fragmentManager,
-            onNeedToRequestPermissions = permissionsCallback
+            onNeedToRequestPermissions = permissionsCallback,
         )
 
         // When
@@ -76,7 +76,7 @@ class QrFeatureTest {
         grantPermission(CAMERA)
         val feature = QrFeature(
             testContext,
-            fragmentManager
+            fragmentManager,
         )
 
         // When
@@ -92,7 +92,7 @@ class QrFeatureTest {
         // Given
         val feature = QrFeature(
             testContext,
-            fragmentManager
+            fragmentManager,
         )
 
         // When
@@ -119,7 +119,7 @@ class QrFeatureTest {
         val feature = QrFeature(
             testContext,
             fragmentManager,
-            onScanResult = scanResultCallback
+            onScanResult = scanResultCallback,
         )
 
         // When
@@ -138,8 +138,8 @@ class QrFeatureTest {
         val feature = spy(
             QrFeature(
                 testContext,
-                fragmentManager
-            )
+                fragmentManager,
+            ),
         )
 
         // When
@@ -159,8 +159,8 @@ class QrFeatureTest {
         val feature = spy(
             QrFeature(
                 testContext,
-                fragmentManager
-            )
+                fragmentManager,
+            ),
         )
         val listener = feature.scanCompleteListener
 
@@ -180,8 +180,8 @@ class QrFeatureTest {
         val feature = spy(
             QrFeature(
                 testContext,
-                fragmentManager
-            )
+                fragmentManager,
+            ),
         )
 
         // When
@@ -199,7 +199,7 @@ class QrFeatureTest {
             .thenReturn(fragment)
         val feature = QrFeature(
             testContext,
-            fragmentManager
+            fragmentManager,
         )
         fragment.scanCompleteListener = feature.scanCompleteListener
 
@@ -217,7 +217,7 @@ class QrFeatureTest {
             .thenReturn(fragment)
         val feature = QrFeature(
             testContext,
-            fragmentManager
+            fragmentManager,
         )
         fragment.scanCompleteListener = null
 
@@ -230,12 +230,12 @@ class QrFeatureTest {
 
 private enum class PermissionResolution(val value: Int) {
     GRANTED(PackageManager.PERMISSION_GRANTED),
-    DENIED(PackageManager.PERMISSION_DENIED)
+    DENIED(PackageManager.PERMISSION_DENIED),
 }
 
 private fun resolvePermissionRequestFrom(
     feature: QrFeature,
-    resolution: () -> PermissionResolution
+    resolution: () -> PermissionResolution,
 ) {
     feature.onPermissionsResult(emptyArray(), IntArray(1) { resolution().value })
 }

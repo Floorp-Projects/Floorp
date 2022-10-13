@@ -15,7 +15,7 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  */
 class ScreenOrientationFeature(
     private val engine: Engine,
-    private val activity: Activity
+    private val activity: Activity,
 ) : LifecycleAwareFeature, OrientationDelegate {
     override fun start() {
         engine.registerScreenOrientationDelegate(this)

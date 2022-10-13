@@ -71,8 +71,8 @@ class TabCounterToolbarButtonTest {
                 false,
                 showTabs = showTabs,
                 store = BrowserStore(),
-                menu = tabCounterMenu
-            )
+                menu = tabCounterMenu,
+            ),
         )
 
         val view = button.createView(LinearLayout(testContext) as ViewGroup) as TabCounter
@@ -89,15 +89,15 @@ class TabCounterToolbarButtonTest {
                 false,
                 showTabs = showTabs,
                 store = store,
-                menu = tabCounterMenu
-            )
+                menu = tabCounterMenu,
+            ),
         )
 
         whenever(button.updateCount(anyInt())).then { }
         button.createView(LinearLayout(testContext) as ViewGroup) as TabCounter
 
         store.dispatch(
-            TabListAction.AddTabAction(createTab("https://www.mozilla.org"))
+            TabListAction.AddTabAction(createTab("https://www.mozilla.org")),
         ).joinBlocking()
 
         verify(button).updateCount(eq(1))
@@ -112,8 +112,8 @@ class TabCounterToolbarButtonTest {
                 false,
                 showTabs = showTabs,
                 store = store,
-                menu = tabCounterMenu
-            )
+                menu = tabCounterMenu,
+            ),
         )
 
         whenever(button.updateCount(anyInt())).then { }
@@ -124,11 +124,11 @@ class TabCounterToolbarButtonTest {
                 listOf(
                     RecoverableTab(
                         engineSessionState = null,
-                        state = TabState("a", "https://www.mozilla.org")
-                    )
+                        state = TabState("a", "https://www.mozilla.org"),
+                    ),
                 ),
-                restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING
-            )
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING,
+            ),
         ).joinBlocking()
 
         verify(button).updateCount(eq(1))
@@ -144,8 +144,8 @@ class TabCounterToolbarButtonTest {
                 false,
                 showTabs = showTabs,
                 store = store,
-                menu = tabCounterMenu
-            )
+                menu = tabCounterMenu,
+            ),
         )
 
         whenever(button.updateCount(anyInt())).then { }
@@ -164,8 +164,8 @@ class TabCounterToolbarButtonTest {
                 false,
                 showTabs = showTabs,
                 store = store,
-                menu = tabCounterMenu
-            )
+                menu = tabCounterMenu,
+            ),
         )
 
         whenever(button.updateCount(anyInt())).then { }
@@ -174,7 +174,7 @@ class TabCounterToolbarButtonTest {
         button.createView(LinearLayout(testContext) as ViewGroup) as TabCounter
 
         store.dispatch(
-            TabListAction.AddTabAction(createTab("https://www.mozilla.org", private = true))
+            TabListAction.AddTabAction(createTab("https://www.mozilla.org", private = true)),
         ).joinBlocking()
 
         verify(button).updateCount(eq(1))
@@ -190,8 +190,8 @@ class TabCounterToolbarButtonTest {
                 false,
                 showTabs = showTabs,
                 store = store,
-                menu = tabCounterMenu
-            )
+                menu = tabCounterMenu,
+            ),
         )
 
         whenever(button.updateCount(anyInt())).then { }
@@ -215,8 +215,8 @@ class TabCounterToolbarButtonTest {
                     callbackInvoked = true
                 },
                 store = store,
-                menu = tabCounterMenu
-            )
+                menu = tabCounterMenu,
+            ),
         )
 
         val parent = spy(LinearLayout(testContext))

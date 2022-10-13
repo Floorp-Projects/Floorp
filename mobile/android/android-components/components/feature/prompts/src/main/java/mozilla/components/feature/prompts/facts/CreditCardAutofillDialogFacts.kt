@@ -32,69 +32,69 @@ private fun emitCreditCardAutofillDialogFact(
     action: Action,
     item: String,
     value: String? = null,
-    metadata: Map<String, Any>? = null
+    metadata: Map<String, Any>? = null,
 ) {
     Fact(
         Component.FEATURE_PROMPTS,
         action,
         item,
         value,
-        metadata
+        metadata,
     ).collect()
 }
 
 internal fun emitSuccessfulCreditCardAutofillFormDetectedFact() {
     emitCreditCardAutofillDialogFact(
         Action.INTERACTION,
-        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_FORM_DETECTED
+        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_FORM_DETECTED,
     )
 }
 
 internal fun emitSuccessfulCreditCardAutofillSuccessFact() {
     emitCreditCardAutofillDialogFact(
         Action.INTERACTION,
-        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_SUCCESS
+        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_SUCCESS,
     )
 }
 
 internal fun emitCreditCardAutofillShownFact() {
     emitCreditCardAutofillDialogFact(
         Action.INTERACTION,
-        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_PROMPT_SHOWN
+        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_PROMPT_SHOWN,
     )
 }
 
 internal fun emitCreditCardAutofillExpandedFact() {
     emitCreditCardAutofillDialogFact(
         Action.INTERACTION,
-        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_PROMPT_EXPANDED
+        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_PROMPT_EXPANDED,
     )
 }
 
 internal fun emitCreditCardAutofillDismissedFact() {
     emitCreditCardAutofillDialogFact(
         Action.INTERACTION,
-        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_PROMPT_DISMISSED
+        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_PROMPT_DISMISSED,
     )
 }
 
 internal fun emitCreditCardAutofillCreatedFact() {
     emitCreditCardAutofillDialogFact(
         Action.CONFIRM,
-        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_CREATED
+        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_CREATED,
     )
 }
 
 internal fun emitCreditCardAutofillUpdatedFact() {
     emitCreditCardAutofillDialogFact(
         Action.CONFIRM,
-        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_UPDATED
+        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_UPDATED,
     )
 }
 
 internal fun emitCreditCardSaveShownFact() {
     emitCreditCardAutofillDialogFact(
         Action.DISPLAY,
-        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_SAVE_PROMPT_SHOWN
+        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_SAVE_PROMPT_SHOWN,
     )
 }

@@ -95,13 +95,13 @@ interface AutocompleteView {
 open class InlineAutocompleteEditText @JvmOverloads constructor(
     ctx: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = R.attr.editTextStyle
+    defStyleAttr: Int = R.attr.editTextStyle,
 ) : AppCompatEditText(ctx, attrs, defStyleAttr), AutocompleteView {
 
     data class AutocompleteResult(
         val text: String,
         val source: String,
-        val totalItems: Int
+        val totalItems: Int,
     ) {
         fun startsWith(text: String): Boolean = this.text.startsWith(text)
     }
@@ -132,14 +132,18 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
 
     // The previous autocomplete result returned to us
     var autocompleteResult: AutocompleteResult? = null
-        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE) set
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        set
 
     // Length of the user-typed portion of the result
     private var autoCompletePrefixLength: Int = 0
+
     // If text change is due to us setting autocomplete
     private var settingAutoComplete: Boolean = false
+
     // Spans used for marking the autocomplete text
     private var autoCompleteSpans: List<Any>? = null
+
     // Do not process autocomplete result
     private var discardAutoCompleteResult: Boolean = false
 
@@ -156,7 +160,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         val a = context.obtainStyledAttributes(attrs, R.styleable.InlineAutocompleteEditText)
         val color = a.getColor(
             R.styleable.InlineAutocompleteEditText_autocompleteBackgroundColor,
-            DEFAULT_AUTOCOMPLETE_BACKGROUND_COLOR
+            DEFAULT_AUTOCOMPLETE_BACKGROUND_COLOR,
         )
         a.recycle()
         color
@@ -335,7 +339,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     private fun resetAutocompleteState() {
         autoCompleteSpans = mutableListOf(
             AUTOCOMPLETE_SPAN,
-            BackgroundColorSpan(autoCompleteBackgroundColor)
+            BackgroundColorSpan(autoCompleteBackgroundColor),
         ).apply {
             autoCompleteForegroundColor?.let { add(ForegroundColorSpan(it)) }
         }

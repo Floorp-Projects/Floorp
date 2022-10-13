@@ -26,15 +26,15 @@ class StatementRelationCheckerTest {
                 yield(
                     Statement(
                         relation = Relation.USE_AS_ORIGIN,
-                        target = target
-                    )
+                        target = target,
+                    ),
                 )
                 numYields = 2
                 yield(
                     Statement(
                         relation = Relation.USE_AS_ORIGIN,
-                        target = target
-                    )
+                        target = target,
+                    ),
                 )
             }
         }
@@ -58,8 +58,8 @@ class StatementRelationCheckerTest {
             override fun listStatements(source: AssetDescriptor.Web) = sequenceOf(
                 Statement(
                     relation = Relation.USE_AS_ORIGIN,
-                    target = target
-                )
+                    target = target,
+                ),
             )
         }
 
@@ -74,12 +74,12 @@ class StatementRelationCheckerTest {
             override fun listStatements(source: AssetDescriptor.Web) = sequenceOf(
                 Statement(
                     relation = Relation.HANDLE_ALL_URLS,
-                    target = AssetDescriptor.Web("https://mozilla.com")
+                    target = AssetDescriptor.Web("https://mozilla.com"),
                 ),
                 Statement(
                     relation = Relation.HANDLE_ALL_URLS,
-                    target = AssetDescriptor.Web("http://mozilla.org")
-                )
+                    target = AssetDescriptor.Web("http://mozilla.org"),
+                ),
             )
         }
 

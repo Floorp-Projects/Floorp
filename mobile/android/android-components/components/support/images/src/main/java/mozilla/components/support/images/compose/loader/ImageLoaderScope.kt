@@ -26,7 +26,7 @@ interface ImageLoaderScope {
  */
 @Composable
 fun ImageLoaderScope.WithImage(
-    content: @Composable (Painter) -> Unit
+    content: @Composable (Painter) -> Unit,
 ) {
     WithInternalScope {
         val state = loaderState.value
@@ -41,7 +41,7 @@ fun ImageLoaderScope.WithImage(
  */
 @Composable
 fun ImageLoaderScope.Placeholder(
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     WithInternalScope {
         val state = loaderState.value
@@ -56,7 +56,7 @@ fun ImageLoaderScope.Placeholder(
  */
 @Composable
 fun ImageLoaderScope.Fallback(
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     WithInternalScope {
         val state = loaderState.value
@@ -74,12 +74,12 @@ internal class InternalImageLoaderScope(
     val connectTimeout: Pair<Long, TimeUnit>,
     val readTimeout: Pair<Long, TimeUnit>,
     val desiredSize: DesiredSize,
-    override val loaderState: MutableState<ImageLoaderState> = mutableStateOf(ImageLoaderState.Loading)
+    override val loaderState: MutableState<ImageLoaderState> = mutableStateOf(ImageLoaderState.Loading),
 ) : ImageLoaderScope
 
 @Composable
 private fun ImageLoaderScope.WithInternalScope(
-    content: @Composable InternalImageLoaderScope.() -> Unit
+    content: @Composable InternalImageLoaderScope.() -> Unit,
 ) {
     val internalScope = this as InternalImageLoaderScope
     internalScope.content()

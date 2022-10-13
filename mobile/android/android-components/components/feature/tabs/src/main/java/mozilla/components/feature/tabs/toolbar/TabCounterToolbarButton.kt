@@ -32,7 +32,7 @@ open class TabCounterToolbarButton(
     private val countBasedOnSelectedTabType: Boolean = true,
     private val showTabs: () -> Unit,
     private val store: BrowserStore,
-    private val menu: TabCounterMenu? = null
+    private val menu: TabCounterMenu? = null,
 ) : Toolbar.Action {
 
     private var reference = WeakReference<TabCounter>(null)
@@ -42,7 +42,7 @@ open class TabCounterToolbarButton(
             flow.map { state -> getTabCount(state) }
                 .ifChanged()
                 .collect {
-                    tabs ->
+                        tabs ->
                     updateCount(tabs)
                 }
         }
@@ -60,13 +60,15 @@ open class TabCounterToolbarButton(
                 }
             }
 
-            addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-                override fun onViewAttachedToWindow(v: View?) {
-                    setCount(getTabCount(store.state))
-                }
+            addOnAttachStateChangeListener(
+                object : View.OnAttachStateChangeListener {
+                    override fun onViewAttachedToWindow(v: View?) {
+                        setCount(getTabCount(store.state))
+                    }
 
-                override fun onViewDetachedFromWindow(v: View?) { /* no-op */ }
-            })
+                    override fun onViewDetachedFromWindow(v: View?) { /* no-op */ }
+                },
+            )
 
             contentDescription = parent.context.getString(R.string.mozac_feature_tabs_toolbar_tabs_button)
         }
@@ -74,8 +76,8 @@ open class TabCounterToolbarButton(
         // Set selectableItemBackgroundBorderless
         tabCounter.setBackgroundResource(
             parent.context.theme.resolveAttribute(
-                android.R.attr.selectableItemBackgroundBorderless
-            )
+                android.R.attr.selectableItemBackgroundBorderless,
+            ),
         )
 
         return tabCounter

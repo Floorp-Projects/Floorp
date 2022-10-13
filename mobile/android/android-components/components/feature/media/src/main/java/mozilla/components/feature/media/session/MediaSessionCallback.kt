@@ -10,7 +10,7 @@ import mozilla.components.feature.media.ext.findActiveMediaTab
 import mozilla.components.support.base.log.logger.Logger
 
 internal class MediaSessionCallback(
-    private val store: BrowserStore
+    private val store: BrowserStore,
 ) : MediaSessionCompat.Callback() {
     private val logger = Logger("MediaSessionCallback")
 

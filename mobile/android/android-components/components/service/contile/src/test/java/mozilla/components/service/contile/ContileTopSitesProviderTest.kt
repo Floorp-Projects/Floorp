@@ -93,8 +93,8 @@ class ContileTopSitesProviderTest {
             ContileTopSitesProvider(
                 context = testContext,
                 client = client,
-                maxCacheAgeInMinutes = 1L
-            )
+                maxCacheAgeInMinutes = 1L,
+            ),
         )
 
         assertNull(provider.diskCacheLastModified)
@@ -182,8 +182,8 @@ class ContileTopSitesProviderTest {
             ContileTopSitesProvider(
                 testContext,
                 client = prepareClient(),
-                maxCacheAgeInMinutes = 10
-            )
+                maxCacheAgeInMinutes = 10,
+            ),
         )
 
         whenever(provider.isCacheExpired()).thenReturn(false)
@@ -200,8 +200,8 @@ class ContileTopSitesProviderTest {
             ContileTopSitesProvider(
                 testContext,
                 client = prepareClient(jsonResponse),
-                maxCacheAgeInMinutes = 10
-            )
+                maxCacheAgeInMinutes = 10,
+            ),
         )
 
         whenever(provider.isCacheExpired()).thenReturn(true)
@@ -214,7 +214,7 @@ class ContileTopSitesProviderTest {
 
     private fun prepareClient(
         jsonResponse: String = loadResourceAsString("/contile/contile.json"),
-        status: Int = 200
+        status: Int = 200,
     ): Client {
         val mockedClient = mock<Client>()
         val mockedResponse = mock<Response>()

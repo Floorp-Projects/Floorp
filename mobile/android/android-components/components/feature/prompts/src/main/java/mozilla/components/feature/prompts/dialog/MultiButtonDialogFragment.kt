@@ -69,9 +69,8 @@ internal class MultiButtonDialogFragment : AbstractPromptTextDialogFragment() {
             shouldDismissOnLoad: Boolean,
             positiveButton: String = "",
             negativeButton: String = "",
-            neutralButton: String = ""
+            neutralButton: String = "",
         ): MultiButtonDialogFragment {
-
             val fragment = MultiButtonDialogFragment()
             val arguments = fragment.arguments ?: Bundle()
 
@@ -94,6 +93,6 @@ internal class MultiButtonDialogFragment : AbstractPromptTextDialogFragment() {
     enum class ButtonType {
         POSITIVE,
         NEGATIVE,
-        NEUTRAL
+        NEUTRAL,
     }
 }

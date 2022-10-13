@@ -19,7 +19,7 @@ internal data class PocketStoryEntity(
     val publisher: String,
     val category: String,
     val timeToRead: Int,
-    val timesShown: Long
+    val timesShown: Long,
 )
 
 /**
@@ -27,5 +27,5 @@ internal data class PocketStoryEntity(
  */
 internal data class PocketLocalStoryTimesShown(
     val url: String,
-    val timesShown: Long
+    val timesShown: Long,
 )

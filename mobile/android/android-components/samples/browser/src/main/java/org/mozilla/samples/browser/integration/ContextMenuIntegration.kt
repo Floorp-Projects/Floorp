@@ -33,7 +33,7 @@ class ContextMenuIntegration(
     tabsUseCases: TabsUseCases,
     contextMenuUseCases: ContextMenuUseCases,
     parentView: View,
-    sessionId: String? = null
+    sessionId: String? = null,
 ) : LifecycleAwareFeature {
 
     private val candidates = run {
@@ -46,27 +46,27 @@ class ContextMenuIntegration(
                     context,
                     tabsUseCases,
                     parentView,
-                    snackbarDelegate
+                    snackbarDelegate,
                 ),
                 createSaveImageCandidate(context, contextMenuUseCases),
                 createCopyImageLocationCandidate(context, parentView, snackbarDelegate),
                 createAddContactCandidate(context),
                 createShareEmailAddressCandidate(context),
-                createCopyEmailAddressCandidate(context, parentView, snackbarDelegate)
+                createCopyEmailAddressCandidate(context, parentView, snackbarDelegate),
             )
         } else {
             val appLinksCandidate = ContextMenuCandidate.createOpenInExternalAppCandidate(
                 context = context,
                 appLinksUseCases = AppLinksUseCases(
                     context = context,
-                    launchInApp = { true }
-                )
+                    launchInApp = { true },
+                ),
             )
             ContextMenuCandidate.defaultCandidates(
                 context,
                 tabsUseCases,
                 contextMenuUseCases,
-                parentView
+                parentView,
             ) + appLinksCandidate
         }
     }
@@ -76,7 +76,7 @@ class ContextMenuIntegration(
         browserStore,
         candidates,
         FragmentBrowserBinding.bind(parentView).engineView,
-        contextMenuUseCases
+        contextMenuUseCases,
     )
 
     override fun start() {

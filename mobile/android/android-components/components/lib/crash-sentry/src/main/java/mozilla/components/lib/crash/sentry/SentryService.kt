@@ -161,7 +161,7 @@ class SentryService(
     @VisibleForTesting
     internal fun prepareReport(
         breadcrumbs: ArrayList<MozillaBreadcrumb>,
-        level: SentryLevel? = null
+        level: SentryLevel? = null,
     ) {
         initIfNeeded()
 

@@ -20,8 +20,8 @@ class OnDeviceAndroidImageDecoderTest {
                 targetSize = 32,
                 minSize = 32,
                 maxSize = 256,
-                maxScaleFactor = 2.0f
-            )
+                maxScaleFactor = 2.0f,
+            ),
         )
 
         assertNotNull(bitmap!!)
@@ -39,8 +39,8 @@ class OnDeviceAndroidImageDecoderTest {
                 targetSize = 64,
                 minSize = 64,
                 maxSize = 256,
-                maxScaleFactor = 2.0f
-            )
+                maxScaleFactor = 2.0f,
+            ),
         )
 
         assertNotNull(bitmap!!)
@@ -58,8 +58,8 @@ class OnDeviceAndroidImageDecoderTest {
                 targetSize = 64,
                 minSize = 64,
                 maxSize = 512,
-                maxScaleFactor = 2.0f
-            )
+                maxScaleFactor = 2.0f,
+            ),
         )
 
         assertNotNull(bitmap!!)
@@ -77,8 +77,8 @@ class OnDeviceAndroidImageDecoderTest {
                 targetSize = 64,
                 minSize = 64,
                 maxSize = 256,
-                maxScaleFactor = 2.0f
-            )
+                maxScaleFactor = 2.0f,
+            ),
         )
 
         assertNotNull(bitmap!!)
@@ -96,8 +96,8 @@ class OnDeviceAndroidImageDecoderTest {
                 targetSize = 64,
                 minSize = 64,
                 maxSize = 256,
-                maxScaleFactor = 2.0f
-            )
+                maxScaleFactor = 2.0f,
+            ),
         )
 
         assertNotNull(bitmap!!)

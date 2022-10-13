@@ -28,7 +28,7 @@ class LogTest {
             priority = Log.Priority.DEBUG,
             tag = "Tag",
             throwable = exception,
-            message = "Hello World!"
+            message = "Hello World!",
         )
     }
 
@@ -59,7 +59,7 @@ class LogTest {
             priority = Log.Priority.WARN,
             tag = "Tag",
             throwable = exception,
-            message = "Hello World!"
+            message = "Hello World!",
         )
     }
 
@@ -77,7 +77,7 @@ class LogTest {
             priority = Log.Priority.ERROR,
             tag = "Tag",
             throwable = exception,
-            message = "Hello World!"
+            message = "Hello World!",
         )
     }
 }

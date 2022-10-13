@@ -43,7 +43,7 @@ class ClipboardSuggestionProvider(
     private val icon: Bitmap? = null,
     private val title: String? = null,
     private val requireEmptyText: Boolean = true,
-    internal val engine: Engine? = null
+    internal val engine: Engine? = null,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -74,8 +74,8 @@ class ClipboardSuggestionProvider(
                 onSuggestionClicked = {
                     loadUrlUseCase.invoke(url)
                     emitClipboardSuggestionClickedFact()
-                }
-            )
+                },
+            ),
         )
     }
 }

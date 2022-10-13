@@ -54,7 +54,7 @@ class SearchMiddleware(
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         when (action) {
             is SearchAction.SetRegionAction -> loadSearchEngines(context.store, action.regionState)
@@ -81,7 +81,7 @@ class SearchMiddleware(
 
     private fun loadSearchEngines(
         store: Store<BrowserState, BrowserAction>,
-        region: RegionState
+        region: RegionState,
     ) = scope.launch {
         val migrationValues = migration?.getValuesToMigrate()
         performCustomSearchEnginesMigration(migrationValues)
@@ -118,7 +118,7 @@ class SearchMiddleware(
 
         performDefaultSearchEngineMigration(
             migrationValues,
-            filteredRegionSearchEngines + customSearchEngines.await() + additionalSearchEngines
+            filteredRegionSearchEngines + customSearchEngines.await() + additionalSearchEngines,
         )
         val userChoice = async(ioDispatcher) { metadataStorage.getUserSelectedSearchEngine() }
 
@@ -131,46 +131,46 @@ class SearchMiddleware(
             hiddenSearchEngines = hiddenSearchEngines,
             additionalSearchEngines = additionalSearchEngines,
             additionalAvailableSearchEngines = additionalAvailableSearchEngines,
-            regionSearchEnginesOrder = regionSearchEngineIds
+            regionSearchEnginesOrder = regionSearchEngineIds,
         )
 
         store.dispatch(action)
     }
 
     private fun updateSearchEngineSelection(
-        action: SearchAction.SelectSearchEngineAction
+        action: SearchAction.SelectSearchEngineAction,
     ) = scope.launch {
         metadataStorage.setUserSelectedSearchEngine(
             action.searchEngineId,
-            action.searchEngineName
+            action.searchEngineName,
         )
     }
 
     private fun removeCustomSearchEngine(
-        action: SearchAction.RemoveCustomSearchEngineAction
+        action: SearchAction.RemoveCustomSearchEngineAction,
     ) = scope.launch {
         customStorage.removeSearchEngine(action.searchEngineId)
     }
 
     private fun saveCustomSearchEngine(
-        action: SearchAction.UpdateCustomSearchEngineAction
+        action: SearchAction.UpdateCustomSearchEngineAction,
     ) = scope.launch {
         customStorage.saveSearchEngine(action.searchEngine)
     }
 
     private fun updateHiddenSearchEngines(
-        hiddenSearchEngines: List<SearchEngine>
+        hiddenSearchEngines: List<SearchEngine>,
     ) = scope.launch {
         metadataStorage.setHiddenSearchEngines(
-            hiddenSearchEngines.map { searchEngine -> searchEngine.id }
+            hiddenSearchEngines.map { searchEngine -> searchEngine.id },
         )
     }
 
     private fun updateAdditionalSearchEngines(
-        additionalSearchEngines: List<SearchEngine>
+        additionalSearchEngines: List<SearchEngine>,
     ) = scope.launch {
         metadataStorage.setAdditionalSearchEngines(
-            additionalSearchEngines.map { searchEngine -> searchEngine.id }
+            additionalSearchEngines.map { searchEngine -> searchEngine.id },
         )
     }
 
@@ -186,7 +186,7 @@ class SearchMiddleware(
 
     private suspend fun performDefaultSearchEngineMigration(
         values: Migration.MigrationValues?,
-        engines: List<SearchEngine>
+        engines: List<SearchEngine>,
     ) {
         if (values == null) {
             return
@@ -209,7 +209,7 @@ class SearchMiddleware(
                 default.name
             } else {
                 null
-            }
+            },
         )
     }
 
@@ -244,7 +244,7 @@ class SearchMiddleware(
         suspend fun load(
             region: RegionState,
             locale: Locale = Locale.getDefault(),
-            coroutineContext: CoroutineContext = Dispatchers.IO
+            coroutineContext: CoroutineContext = Dispatchers.IO,
         ): Bundle
 
         /**
@@ -252,7 +252,7 @@ class SearchMiddleware(
          */
         suspend fun load(
             ids: List<String>,
-            coroutineContext: CoroutineContext = Dispatchers.IO
+            coroutineContext: CoroutineContext = Dispatchers.IO,
         ): List<SearchEngine>
 
         /**
@@ -261,7 +261,7 @@ class SearchMiddleware(
          */
         data class Bundle(
             val list: List<SearchEngine>,
-            val defaultSearchEngineId: String
+            val defaultSearchEngineId: String,
         )
     }
 
@@ -305,7 +305,7 @@ class SearchMiddleware(
          */
         data class UserChoice(
             val searchEngineId: String,
-            val searchEngineName: String?
+            val searchEngineName: String?,
         )
     }
 
@@ -329,7 +329,7 @@ class SearchMiddleware(
          */
         data class MigrationValues(
             val customSearchEngines: List<SearchEngine>,
-            val defaultSearchEngineName: String?
+            val defaultSearchEngineName: String?,
         )
     }
 }

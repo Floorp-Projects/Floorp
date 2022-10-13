@@ -30,7 +30,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 class AddressSelectBar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr), SelectablePromptView<Address> {
 
     private var view: View? = null
@@ -54,12 +54,12 @@ class AddressSelectBar @JvmOverloads constructor(
             attrs,
             R.styleable.AddressSelectBar,
             defStyleAttr,
-            0
+            0,
         ) {
             val textStyle =
                 getResourceId(
                     R.styleable.AddressSelectBar_mozacSelectAddressHeaderTextStyle,
-                    0
+                    0,
                 )
 
             if (textStyle > 0) {

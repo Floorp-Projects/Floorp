@@ -36,7 +36,7 @@ class ReaderViewMiddlewareTest {
     fun `state is updated to connect content script port when tab is added and engine session linked`() {
         val store = BrowserStore(
             initialState = BrowserState(),
-            middleware = listOf(ReaderViewMiddleware())
+            middleware = listOf(ReaderViewMiddleware()),
         )
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab")
@@ -57,7 +57,7 @@ class ReaderViewMiddlewareTest {
         }
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession)).joinBlocking()
@@ -73,12 +73,13 @@ class ReaderViewMiddlewareTest {
     fun `state is updated to reconnect and trigger readerable check when new tab is selected`() {
         val tab1 = createTab("https://www.mozilla.org", id = "test-tab1")
         val tab2 = createTab(
-            "https://www.firefox.com", id = "test-tab2",
-            readerState = ReaderState(readerable = true)
+            "https://www.firefox.com",
+            id = "test-tab2",
+            readerState = ReaderState(readerable = true),
         )
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab1, tab2)),
-            middleware = listOf(ReaderViewMiddleware())
+            middleware = listOf(ReaderViewMiddleware()),
         )
         assertFalse(store.state.findTab(tab1.id)!!.readerState.connectRequired)
         assertFalse(store.state.findTab(tab1.id)!!.readerState.checkRequired)
@@ -101,7 +102,7 @@ class ReaderViewMiddlewareTest {
         val tab = createTab("https://www.mozilla.org", id = "test-tab1")
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(ReaderViewMiddleware())
+            middleware = listOf(ReaderViewMiddleware()),
         )
         assertFalse(store.state.findTab(tab.id)!!.readerState.checkRequired)
 
@@ -112,12 +113,13 @@ class ReaderViewMiddlewareTest {
     @Test
     fun `state is updated to enter and leave reader view when URL changes`() {
         val tab = createTab(
-            "https://www.mozilla.org", id = "test-tab1",
-            readerState = ReaderState(active = false, baseUrl = "moz-extension://123")
+            "https://www.mozilla.org",
+            id = "test-tab1",
+            readerState = ReaderState(active = false, baseUrl = "moz-extension://123"),
         )
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(ReaderViewMiddleware())
+            middleware = listOf(ReaderViewMiddleware()),
         )
         assertFalse(store.state.findTab(tab.id)!!.readerState.active)
 
@@ -134,23 +136,24 @@ class ReaderViewMiddlewareTest {
     @Test
     fun `state is updated to mask extension page URL when navigating to reader view page`() {
         val tab = createTab(
-            "https://www.mozilla.org", id = "test-tab1",
+            "https://www.mozilla.org",
+            id = "test-tab1",
             readerState = ReaderState(
                 active = true,
                 baseUrl = "moz-extension://123",
-                activeUrl = "https://mozilla.org/article1"
-            )
+                activeUrl = "https://mozilla.org/article1",
+            ),
         )
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(ReaderViewMiddleware())
+            middleware = listOf(ReaderViewMiddleware()),
         )
 
         store.dispatch(
             ContentAction.UpdateUrlAction(
                 tab.id,
-                "moz-extension://123?url=https%3A%2F%2Fmozilla.org%2Farticle1"
-            )
+                "moz-extension://123?url=https%3A%2F%2Fmozilla.org%2Farticle1",
+            ),
         ).joinBlocking()
 
         assertTrue(store.state.findTab(tab.id)!!.readerState.active)
@@ -160,22 +163,23 @@ class ReaderViewMiddlewareTest {
     @Test
     fun `state is updated to mask extension page URL when reader view connects`() {
         val tab = createTab(
-            "moz-extension://123?url=https%3A%2F%2Fmozilla.org%2Farticle1", id = "test-tab1",
+            "moz-extension://123?url=https%3A%2F%2Fmozilla.org%2Farticle1",
+            id = "test-tab1",
             readerState = ReaderState(
                 active = true,
-                baseUrl = "moz-extension://123"
-            )
+                baseUrl = "moz-extension://123",
+            ),
         )
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(ReaderViewMiddleware())
+            middleware = listOf(ReaderViewMiddleware()),
         )
 
         store.dispatch(
             ReaderAction.UpdateReaderActiveUrlAction(
                 tab.id,
-                activeUrl = "https://mozilla.org/article1"
-            )
+                activeUrl = "https://mozilla.org/article1",
+            ),
         ).joinBlocking()
 
         assertEquals("https://mozilla.org/article1", store.state.findTab(tab.id)!!.content.url)

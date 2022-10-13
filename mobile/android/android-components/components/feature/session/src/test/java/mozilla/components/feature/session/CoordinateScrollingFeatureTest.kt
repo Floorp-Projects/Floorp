@@ -37,10 +37,10 @@ class CoordinateScrollingFeatureTest {
         store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla")
+                    createTab("https://www.mozilla.org", id = "mozilla"),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         mockEngineView = mock()

@@ -17,7 +17,7 @@ class LocaleUseCases(browserStore: BrowserStore) {
      * Updates the [Locale] to the most recent user selection.
      */
     class UpdateLocaleUseCase internal constructor(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Updates the locale for [BrowserStore] observers.
@@ -33,7 +33,7 @@ class LocaleUseCases(browserStore: BrowserStore) {
      * Use case for restoring the [Locale].
      */
     class RestoreUseCase(
-        private val browserStore: BrowserStore
+        private val browserStore: BrowserStore,
     ) {
         /**
          * Restores the given [Locale] from storage.

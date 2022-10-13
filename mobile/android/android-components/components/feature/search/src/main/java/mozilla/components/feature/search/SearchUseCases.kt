@@ -22,7 +22,7 @@ import mozilla.components.support.base.log.logger.Logger
 class SearchUseCases(
     store: BrowserStore,
     tabsUseCases: TabsUseCases,
-    sessionUseCases: SessionUseCases
+    sessionUseCases: SessionUseCases,
 ) {
     interface SearchUseCase {
         /**
@@ -31,14 +31,14 @@ class SearchUseCases(
         fun invoke(
             searchTerms: String,
             searchEngine: SearchEngine? = null,
-            parentSessionId: String? = null
+            parentSessionId: String? = null,
         )
     }
 
     class DefaultSearchUseCase(
         private val store: BrowserStore,
         private val tabsUseCases: TabsUseCases,
-        private val sessionUseCases: SessionUseCases
+        private val sessionUseCases: SessionUseCases,
     ) : SearchUseCase {
         private val logger = Logger("DefaultSearchUseCase")
 
@@ -48,7 +48,7 @@ class SearchUseCases(
         override fun invoke(
             searchTerms: String,
             searchEngine: SearchEngine?,
-            parentSessionId: String?
+            parentSessionId: String?,
         ) {
             invoke(searchTerms, store.state.selectedTabId, searchEngine)
         }
@@ -64,7 +64,7 @@ class SearchUseCases(
         operator fun invoke(
             searchTerms: String,
             sessionId: String? = store.state.selectedTabId,
-            searchEngine: SearchEngine? = null
+            searchEngine: SearchEngine? = null,
         ) {
             val searchUrl = searchEngine?.let {
                 searchEngine.buildSearchUrl(searchTerms)
@@ -97,14 +97,14 @@ class SearchUseCases(
     class NewTabSearchUseCase(
         private val store: BrowserStore,
         private val tabsUseCases: TabsUseCases,
-        private val isPrivate: Boolean
+        private val isPrivate: Boolean,
     ) : SearchUseCase {
         private val logger = Logger("NewTabSearchUseCase")
 
         override fun invoke(
             searchTerms: String,
             searchEngine: SearchEngine?,
-            parentSessionId: String?
+            parentSessionId: String?,
         ) {
             invoke(
                 searchTerms,
@@ -112,7 +112,7 @@ class SearchUseCases(
                 selected = true,
                 private = isPrivate,
                 searchEngine = searchEngine,
-                parentSessionId = parentSessionId
+                parentSessionId = parentSessionId,
             )
         }
 
@@ -133,7 +133,7 @@ class SearchUseCases(
             selected: Boolean = true,
             private: Boolean = false,
             searchEngine: SearchEngine? = null,
-            parentSessionId: String? = null
+            parentSessionId: String? = null,
         ) {
             val searchUrl = searchEngine?.let {
                 searchEngine.buildSearchUrl(searchTerms)
@@ -149,7 +149,7 @@ class SearchUseCases(
                 parentId = parentSessionId,
                 source = source,
                 selectTab = selected,
-                private = private
+                private = private,
             )
 
             store.dispatch(ContentAction.UpdateSearchTermsAction(id, searchTerms))
@@ -160,25 +160,25 @@ class SearchUseCases(
      * Adds a new search engine to the list of search engines the user can use for searches.
      */
     class AddNewSearchEngineUseCase(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Adds the given [searchEngine] to the list of search engines the user can use for searches.
          */
         operator fun invoke(
-            searchEngine: SearchEngine
+            searchEngine: SearchEngine,
         ) {
             when (searchEngine.type) {
                 SearchEngine.Type.BUNDLED -> store.dispatch(
-                    SearchAction.ShowSearchEngineAction(searchEngine.id)
+                    SearchAction.ShowSearchEngineAction(searchEngine.id),
                 )
 
                 SearchEngine.Type.BUNDLED_ADDITIONAL -> store.dispatch(
-                    SearchAction.AddAdditionalSearchEngineAction(searchEngine.id)
+                    SearchAction.AddAdditionalSearchEngineAction(searchEngine.id),
                 )
 
                 SearchEngine.Type.CUSTOM -> store.dispatch(
-                    SearchAction.UpdateCustomSearchEngineAction(searchEngine)
+                    SearchAction.UpdateCustomSearchEngineAction(searchEngine),
                 )
 
                 SearchEngine.Type.APPLICATION -> { /* Do nothing */ }
@@ -190,26 +190,26 @@ class SearchUseCases(
      * Removes a search engine from the list of search engines the user can use for searches.
      */
     class RemoveExistingSearchEngineUseCase(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Removes the given [searchEngine] from the list of search engines the user can use for
          * searches.
          */
         operator fun invoke(
-            searchEngine: SearchEngine
+            searchEngine: SearchEngine,
         ) {
             when (searchEngine.type) {
                 SearchEngine.Type.BUNDLED -> store.dispatch(
-                    SearchAction.HideSearchEngineAction(searchEngine.id)
+                    SearchAction.HideSearchEngineAction(searchEngine.id),
                 )
 
                 SearchEngine.Type.BUNDLED_ADDITIONAL -> store.dispatch(
-                    SearchAction.RemoveAdditionalSearchEngineAction(searchEngine.id)
+                    SearchAction.RemoveAdditionalSearchEngineAction(searchEngine.id),
                 )
 
                 SearchEngine.Type.CUSTOM -> store.dispatch(
-                    SearchAction.RemoveCustomSearchEngineAction(searchEngine.id)
+                    SearchAction.RemoveCustomSearchEngineAction(searchEngine.id),
                 )
 
                 SearchEngine.Type.APPLICATION -> { /* Do nothing */ }
@@ -222,14 +222,14 @@ class SearchUseCases(
      * searches with.
      */
     class SelectSearchEngineUseCase(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Marks the given [searchEngine] as "selected" by the user to be the default search engine
          * to perform searches with.
          */
         operator fun invoke(
-            searchEngine: SearchEngine
+            searchEngine: SearchEngine,
         ) {
             val name = if (searchEngine.type == SearchEngine.Type.BUNDLED) {
                 // For bundled search engines we additionally save the name of the search engine.
@@ -247,7 +247,7 @@ class SearchUseCases(
             }
 
             store.dispatch(
-                SearchAction.SelectSearchEngineAction(searchEngine.id, name)
+                SearchAction.SelectSearchEngineAction(searchEngine.id, name),
             )
         }
     }

@@ -40,7 +40,7 @@ class RowMenuCandidateViewHolderTest {
         doReturn(button).`when`(inflater).inflate(
             SmallMenuCandidateViewHolder.layoutResource,
             view,
-            false
+            false,
         )
     }
 
@@ -62,9 +62,9 @@ class RowMenuCandidateViewHolderTest {
             RowMenuCandidate(
                 listOf(
                     SmallMenuCandidate("hello", DrawableMenuIcon(null)),
-                    SmallMenuCandidate("hello", DrawableMenuIcon(null))
-                )
-            )
+                    SmallMenuCandidate("hello", DrawableMenuIcon(null)),
+                ),
+            ),
         )
         verify(view, times(2)).addView(button)
 
@@ -74,9 +74,9 @@ class RowMenuCandidateViewHolderTest {
             RowMenuCandidate(
                 listOf(
                     SmallMenuCandidate("test", DrawableMenuIcon(null)),
-                    SmallMenuCandidate("hello", DrawableMenuIcon(null))
-                )
-            )
+                    SmallMenuCandidate("hello", DrawableMenuIcon(null)),
+                ),
+            ),
         )
         verify(view, never()).removeAllViews()
         verify(view, never()).addView(button)
@@ -89,9 +89,9 @@ class RowMenuCandidateViewHolderTest {
         holder.bind(
             RowMenuCandidate(
                 listOf(
-                    SmallMenuCandidate("hello", DrawableMenuIcon(null))
-                )
-            )
+                    SmallMenuCandidate("hello", DrawableMenuIcon(null)),
+                ),
+            ),
         )
 
         verify(button).contentDescription = "hello"

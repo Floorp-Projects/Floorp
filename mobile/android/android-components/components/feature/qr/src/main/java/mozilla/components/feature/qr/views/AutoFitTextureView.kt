@@ -27,7 +27,7 @@ import androidx.annotation.VisibleForTesting
 open class AutoFitTextureView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyle: Int = 0
+    defStyle: Int = 0,
 ) : TextureView(context, attrs, defStyle) {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var mRatioWidth = 0

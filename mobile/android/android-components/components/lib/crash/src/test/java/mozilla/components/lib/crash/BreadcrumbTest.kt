@@ -38,8 +38,8 @@ class BreadcrumbTest {
             CrashReporter(
                 context = testContext,
                 services = listOf(mock()),
-                shouldPrompt = CrashReporter.Prompt.NEVER
-            ).install(testContext)
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+            ).install(testContext),
         )
 
         reporter.recordCrashBreadcrumb(
@@ -48,8 +48,8 @@ class BreadcrumbTest {
                 testData,
                 testCategory,
                 testLevel,
-                testType
-            )
+                testType,
+            ),
         )
 
         assertEquals(reporter.crashBreadcrumbs.elementAt(0).message, testMessage)
@@ -72,8 +72,8 @@ class BreadcrumbTest {
             CrashReporter(
                 context = testContext,
                 services = listOf(mock()),
-                shouldPrompt = CrashReporter.Prompt.NEVER
-            ).install(testContext)
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+            ).install(testContext),
         )
 
         reporter.recordCrashBreadcrumb(
@@ -82,8 +82,8 @@ class BreadcrumbTest {
                 testData,
                 testCategory,
                 testLevel,
-                testType
-            )
+                testType,
+            ),
         )
         assertEquals(reporter.crashBreadcrumbs.size, 1)
 
@@ -93,8 +93,8 @@ class BreadcrumbTest {
                 testData,
                 testCategory,
                 testLevel,
-                testType
-            )
+                testType,
+            ),
         )
         assertEquals(reporter.crashBreadcrumbs.size, 2)
 
@@ -104,8 +104,8 @@ class BreadcrumbTest {
                 testData,
                 testCategory,
                 testLevel,
-                testType
-            )
+                testType,
+            ),
         )
         assertEquals(reporter.crashBreadcrumbs.size, 3)
     }
@@ -122,8 +122,8 @@ class BreadcrumbTest {
             CrashReporter(
                 context = testContext,
                 services = listOf(mock()),
-                shouldPrompt = CrashReporter.Prompt.NEVER
-            ).install(testContext)
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+            ).install(testContext),
         )
 
         val beginDate = Date()
@@ -134,8 +134,8 @@ class BreadcrumbTest {
                 testData,
                 testCategory,
                 testLevel,
-                testType
-            )
+                testType,
+            ),
         )
         sleep(100) /* make sure time elapsed */
         val afterDate = Date()
@@ -151,8 +151,8 @@ class BreadcrumbTest {
                 testCategory,
                 testLevel,
                 testType,
-                date
-            )
+                date,
+            ),
         )
         assertEquals(reporter.crashBreadcrumbs.elementAt(1).date.compareTo(date), 0)
     }
@@ -175,7 +175,7 @@ class BreadcrumbTest {
             testCategory,
             testLevel,
             testType,
-            testDate
+            testDate,
         )
         assertEquals(breadcrumb.toJson().toString(), testString)
     }

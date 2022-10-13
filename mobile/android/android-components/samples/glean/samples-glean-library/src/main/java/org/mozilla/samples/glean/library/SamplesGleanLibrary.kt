@@ -25,7 +25,7 @@ object SamplesGleanLibrary {
     fun recordExperiment() {
         Glean.setExperimentActive(
             "third_party_library",
-            "enabled"
+            "enabled",
         )
     }
 }

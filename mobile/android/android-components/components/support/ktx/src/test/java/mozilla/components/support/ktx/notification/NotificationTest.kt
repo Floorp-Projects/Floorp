@@ -36,7 +36,7 @@ class NotificationTest {
         val channelData = ChannelData(
             NOTIFICATION_CHANNEL_ID,
             android.R.string.ok,
-            NotificationManagerCompat.IMPORTANCE_LOW
+            NotificationManagerCompat.IMPORTANCE_LOW,
         )
 
         val setupChannel: NotificationChannel.() -> Unit = {

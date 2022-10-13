@@ -39,7 +39,7 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
     private val store: BrowserStore,
     private val service: KClass<T>,
     private val broadcastManager: LocalBroadcastManager = LocalBroadcastManager.getInstance(applicationContext),
-    override var onDownloadStopped: onDownloadStopped = noop
+    override var onDownloadStopped: onDownloadStopped = noop,
 ) : BroadcastReceiver(), DownloadManager {
 
     private var isSubscribedReceiver = false

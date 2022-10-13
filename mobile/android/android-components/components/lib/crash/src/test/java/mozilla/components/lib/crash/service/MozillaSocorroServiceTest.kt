@@ -39,8 +39,8 @@ class MozillaSocorroServiceTest {
         val service = spy(
             MozillaSocorroService(
                 testContext,
-                "Test App"
-            )
+                "Test App",
+            ),
         )
         doReturn("").`when`(service).sendReport(anyLong(), any(), any(), any(), anyBoolean(), anyBoolean(), any())
 
@@ -56,7 +56,7 @@ class MozillaSocorroServiceTest {
         val service = MozillaSocorroService(
             testContext,
             "Test App",
-            versionName = "test version name"
+            versionName = "test version name",
         )
 
         assertFalse(service.serverUrl!!.contains(" "))
@@ -69,8 +69,8 @@ class MozillaSocorroServiceTest {
         val service = spy(
             MozillaSocorroService(
                 testContext,
-                "Test App"
-            )
+                "Test App",
+            ),
         )
         doReturn("").`when`(service).sendReport(anyLong(), any(), any(), any(), anyBoolean(), anyBoolean(), any())
 
@@ -86,8 +86,8 @@ class MozillaSocorroServiceTest {
         val service = spy(
             MozillaSocorroService(
                 testContext,
-                "Test App"
-            )
+                "Test App",
+            ),
         )
         doReturn("").`when`(service).sendReport(anyLong(), any(), any(), any(), anyBoolean(), anyBoolean(), any())
         val throwable = RuntimeException("Test")
@@ -106,7 +106,7 @@ class MozillaSocorroServiceTest {
         try {
             mockWebServer.enqueue(
                 MockResponse().setResponseCode(200)
-                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -115,8 +115,8 @@ class MozillaSocorroServiceTest {
                     testContext,
                     "Test App",
                     appId = "{aa3c5121-dab2-40e2-81ca-7ea25febc110}",
-                    serverUrl = serverUrl.toString()
-                )
+                    serverUrl = serverUrl.toString(),
+                ),
             )
 
             val crash = Crash.NativeCodeCrash(
@@ -125,7 +125,7 @@ class MozillaSocorroServiceTest {
                 true,
                 "extras.path",
                 processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-                breadcrumbs = arrayListOf()
+                breadcrumbs = arrayListOf(),
             )
             service.report(crash)
 
@@ -160,7 +160,7 @@ class MozillaSocorroServiceTest {
         try {
             mockWebServer.enqueue(
                 MockResponse().setResponseCode(200)
-                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -169,8 +169,8 @@ class MozillaSocorroServiceTest {
                     testContext,
                     "Test App",
                     appId = "{aa3c5121-dab2-40e2-81ca-7ea25febc110}",
-                    serverUrl = serverUrl.toString()
-                )
+                    serverUrl = serverUrl.toString(),
+                ),
             )
 
             val crash = Crash.NativeCodeCrash(
@@ -179,7 +179,7 @@ class MozillaSocorroServiceTest {
                 true,
                 "test/file/66dd8af2-643c-ca11-5178-e61c6819f827",
                 processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-                breadcrumbs = arrayListOf()
+                breadcrumbs = arrayListOf(),
             )
 
             doReturn(HashMap<String, String>()).`when`(service).readExtrasFromFile(any())
@@ -201,7 +201,7 @@ class MozillaSocorroServiceTest {
         try {
             mockWebServer.enqueue(
                 MockResponse().setResponseCode(200)
-                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -210,8 +210,8 @@ class MozillaSocorroServiceTest {
                     testContext,
                     "Test App",
                     appId = "{aa3c5121-dab2-40e2-81ca-7ea25febc110}",
-                    serverUrl = serverUrl.toString()
-                )
+                    serverUrl = serverUrl.toString(),
+                ),
             )
 
             val crash = Crash.NativeCodeCrash(
@@ -220,7 +220,7 @@ class MozillaSocorroServiceTest {
                 true,
                 "test/file/test.extra",
                 processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-                breadcrumbs = arrayListOf()
+                breadcrumbs = arrayListOf(),
             )
 
             doReturn(HashMap<String, String>()).`when`(service).readExtrasFromFile(any())
@@ -242,7 +242,7 @@ class MozillaSocorroServiceTest {
         try {
             mockWebServer.enqueue(
                 MockResponse().setResponseCode(200)
-                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -251,8 +251,8 @@ class MozillaSocorroServiceTest {
                     testContext,
                     "Test App",
                     appId = "{aa3c5121-dab2-40e2-81ca-7ea25febc110}",
-                    serverUrl = serverUrl.toString()
-                )
+                    serverUrl = serverUrl.toString(),
+                ),
             )
 
             val crash = Crash.NativeCodeCrash(
@@ -261,7 +261,7 @@ class MozillaSocorroServiceTest {
                 true,
                 "test/file/66dd8af2-643c-ca11-5178-e61c6819f827.extra",
                 processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-                breadcrumbs = arrayListOf()
+                breadcrumbs = arrayListOf(),
             )
 
             doReturn(HashMap<String, String>()).`when`(service).readExtrasFromFile(any())
@@ -283,7 +283,7 @@ class MozillaSocorroServiceTest {
         try {
             mockWebServer.enqueue(
                 MockResponse().setResponseCode(200)
-                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -299,8 +299,8 @@ class MozillaSocorroServiceTest {
                     versionName = "1.0.1",
                     versionCode = "1000",
                     releaseChannel = "test channel",
-                    distributionId = "test distribution id"
-                )
+                    distributionId = "test distribution id",
+                ),
             )
 
             val crash = Crash.NativeCodeCrash(
@@ -309,7 +309,7 @@ class MozillaSocorroServiceTest {
                 true,
                 "extras.path",
                 processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-                breadcrumbs = arrayListOf()
+                breadcrumbs = arrayListOf(),
             )
             service.report(crash)
 
@@ -349,7 +349,7 @@ class MozillaSocorroServiceTest {
         try {
             mockWebServer.enqueue(
                 MockResponse().setResponseCode(200)
-                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -360,8 +360,8 @@ class MozillaSocorroServiceTest {
                     appId = "{aa3c5121-dab2-40e2-81ca-7ea25febc110}",
                     vendor = "Mozilla",
                     releaseChannel = "nightly",
-                    serverUrl = serverUrl.toString()
-                )
+                    serverUrl = serverUrl.toString(),
+                ),
             )
 
             val crash = Crash.NativeCodeCrash(
@@ -370,7 +370,7 @@ class MozillaSocorroServiceTest {
                 true,
                 "extras.path",
                 processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
-                breadcrumbs = arrayListOf()
+                breadcrumbs = arrayListOf(),
             )
             service.report(crash)
 
@@ -405,7 +405,7 @@ class MozillaSocorroServiceTest {
         try {
             mockWebServer.enqueue(
                 MockResponse().setResponseCode(200)
-                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -416,8 +416,8 @@ class MozillaSocorroServiceTest {
                     appId = "{aa3c5121-dab2-40e2-81ca-7ea25febc110}",
                     vendor = "Mozilla",
                     releaseChannel = "nightly",
-                    serverUrl = serverUrl.toString()
-                )
+                    serverUrl = serverUrl.toString(),
+                ),
             )
 
             val crash = Crash.UncaughtExceptionCrash(123456, RuntimeException("Test"), arrayListOf())
@@ -456,7 +456,7 @@ class MozillaSocorroServiceTest {
         try {
             mockWebServer.enqueue(
                 MockResponse().setResponseCode(200)
-                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -464,8 +464,8 @@ class MozillaSocorroServiceTest {
                 MozillaSocorroService(
                     testContext,
                     "Test App",
-                    serverUrl = serverUrl.toString()
-                )
+                    serverUrl = serverUrl.toString(),
+                ),
             )
 
             val crash = Crash.UncaughtExceptionCrash(123, RuntimeException("Test"), arrayListOf())
@@ -491,8 +491,8 @@ class MozillaSocorroServiceTest {
                 MozillaSocorroService(
                     testContext,
                     "Test App",
-                    serverUrl = serverUrl.toString()
-                )
+                    serverUrl = serverUrl.toString(),
+                ),
             )
 
             val crash = Crash.NativeCodeCrash(123, null, true, null, Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf())
@@ -511,8 +511,8 @@ class MozillaSocorroServiceTest {
         val service = spy(
             MozillaSocorroService(
                 testContext,
-                "Test App"
-            )
+                "Test App",
+            ),
         )
         val file = File(getResource("TestExtrasFile").file)
         val extrasMap = service.readExtrasFromFile(file)
@@ -552,8 +552,8 @@ class MozillaSocorroServiceTest {
         val service = spy(
             MozillaSocorroService(
                 testContext,
-                "Test App"
-            )
+                "Test App",
+            ),
         )
         val file = File(getResource("TestLegacyExtrasFile").file)
         val extrasMap = service.readExtrasFromFile(file)
@@ -593,8 +593,8 @@ class MozillaSocorroServiceTest {
         val service = spy(
             MozillaSocorroService(
                 testContext,
-                "Test App"
-            )
+                "Test App",
+            ),
         )
         val file = File(getResource("BadTestExtrasFile").file)
         val extrasMap = service.readExtrasFromFile(file)
@@ -607,8 +607,8 @@ class MozillaSocorroServiceTest {
         val service = spy(
             MozillaSocorroService(
                 testContext,
-                "Test App"
-            )
+                "Test App",
+            ),
         )
         val test1 = "\\\\\\\\"
         val expected1 = "\\"
@@ -634,7 +634,7 @@ class MozillaSocorroServiceTest {
         try {
             mockWebServer.enqueue(
                 MockResponse().setResponseCode(200)
-                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
 
@@ -649,7 +649,7 @@ class MozillaSocorroServiceTest {
                 "0.0.1",
                 "123",
                 "test channel",
-                "test distribution id"
+                "test distribution id",
             )
 
             val crash = Crash.NativeCodeCrash(
@@ -658,7 +658,7 @@ class MozillaSocorroServiceTest {
                 true,
                 "extras.path",
                 processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-                breadcrumbs = arrayListOf()
+                breadcrumbs = arrayListOf(),
             )
             val id = service.report(crash)
 

@@ -39,8 +39,10 @@ class DownloadAppChooserDialogTest {
         mockFragmentManager = mock()
         download = DownloadState(
             "http://ipv4.download.thinkbroadband.com/5MB.zip",
-            "5MB.zip", "application/zip", 5242880,
-            userAgent = "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"
+            "5MB.zip",
+            "application/zip",
+            5242880,
+            userAgent = "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36",
         )
         dialog = DownloadAppChooserDialog.newInstance()
     }

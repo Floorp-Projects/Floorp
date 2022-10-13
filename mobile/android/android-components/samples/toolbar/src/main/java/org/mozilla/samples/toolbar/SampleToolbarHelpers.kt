@@ -30,11 +30,11 @@ enum class ToolbarConfiguration(val label: String) {
     CUSTOM_MENU("Custom Menu"),
     PRIVATE_MODE("Private Mode"),
     FENIX("Fenix"),
-    FENIX_CUSTOMTAB("Fenix (Custom Tab)")
+    FENIX_CUSTOMTAB("Fenix (Custom Tab)"),
 }
 
 class ConfigurationAdapter(
-    private val configuration: ToolbarConfiguration
+    private val configuration: ToolbarConfiguration,
 ) : RecyclerView.Adapter<ConfigurationViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ConfigurationViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_toolbar_configuration, parent, false)
@@ -83,7 +83,7 @@ object Extra {
  * A custom view to be drawn behind the URL and page actions. Acts as a custom progress view.
  */
 class UrlBoxProgressView(
-    context: Context
+    context: Context,
 ) : View(context) {
     var progress: Int = 0
         set(value) {
@@ -116,7 +116,7 @@ class UrlBoxProgressView(
     private var backgroundDrawable = ClipDrawable(
         ResourcesCompat.getDrawable(resources, R.drawable.sample_url_background, context.theme),
         Gravity.END,
-        ClipDrawable.HORIZONTAL
+        ClipDrawable.HORIZONTAL,
     ).apply {
         level = MAX_LEVEL
     }
@@ -124,7 +124,7 @@ class UrlBoxProgressView(
     private var progressDrawable = ClipDrawable(
         ResourcesCompat.getDrawable(resources, R.drawable.sample_url_progress, context.theme),
         Gravity.START,
-        ClipDrawable.HORIZONTAL
+        ClipDrawable.HORIZONTAL,
     ).apply {
         level = 0
     }

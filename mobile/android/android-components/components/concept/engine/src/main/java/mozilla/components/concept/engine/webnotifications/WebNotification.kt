@@ -36,5 +36,5 @@ data class WebNotification(
     val requireInteraction: Boolean,
     val engineNotification: Parcelable,
     val timestamp: Long = System.currentTimeMillis(),
-    val triggeredByWebExtension: Boolean = false
+    val triggeredByWebExtension: Boolean = false,
 )

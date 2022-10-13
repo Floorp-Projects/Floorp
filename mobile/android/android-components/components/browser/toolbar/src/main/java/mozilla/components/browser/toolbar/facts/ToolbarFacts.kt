@@ -27,14 +27,14 @@ private fun emitToolbarFact(
     action: Action,
     item: String,
     value: String? = null,
-    metadata: Map<String, Any>? = null
+    metadata: Map<String, Any>? = null,
 ) {
     Fact(
         Component.BROWSER_TOOLBAR,
         action,
         item,
         value,
-        metadata
+        metadata,
     ).collect()
 }
 
@@ -43,16 +43,16 @@ internal fun emitOpenMenuFact(extras: Map<String, Any>?) {
 }
 
 internal fun emitCommitFact(
-    autocompleteResult: InlineAutocompleteEditText.AutocompleteResult?
+    autocompleteResult: InlineAutocompleteEditText.AutocompleteResult?,
 ) {
     val metadata = if (autocompleteResult == null) {
         mapOf(
-            "autocomplete" to false
+            "autocomplete" to false,
         )
     } else {
         mapOf(
             "autocomplete" to true,
-            "source" to autocompleteResult.source
+            "source" to autocompleteResult.source,
         )
     }
 

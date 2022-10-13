@@ -18,15 +18,15 @@ import androidx.annotation.Px
 data class MenuStyle(
     val backgroundColor: ColorStateList? = null,
     @Px val minWidth: Int? = null,
-    @Px val maxWidth: Int? = null
+    @Px val maxWidth: Int? = null,
 ) {
     constructor(
         @ColorInt backgroundColor: Int,
         @Px minWidth: Int? = null,
-        @Px maxWidth: Int? = null
+        @Px maxWidth: Int? = null,
     ) : this(
         backgroundColor = ColorStateList.valueOf(backgroundColor),
         minWidth = minWidth,
-        maxWidth = maxWidth
+        maxWidth = maxWidth,
     )
 }

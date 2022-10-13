@@ -19,10 +19,10 @@ import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.Mockito.`when`
 import org.mockito.stubbing.OngoingStubbing
 
 @ExperimentalCoroutinesApi // for runTestOnMain
@@ -119,7 +119,6 @@ class AutoPushObserverTest {
     @Suppress("UNCHECKED_CAST")
     private fun whenSubscribe(): OngoingStubbing<Unit>? {
         return `when`(pushFeature.subscribe(any(), nullable(), any(), any())).thenAnswer {
-
             // Invoke the `onSubscribe` lambda with a fake subscription.
             (it.arguments[3] as ((AutoPushSubscription) -> Unit)).invoke(
                 AutoPushSubscription(
@@ -127,8 +126,8 @@ class AutoPushObserverTest {
                     endpoint = "https://foo",
                     publicKey = "p256dh",
                     authKey = "auth",
-                    appServerKey = null
-                )
+                    appServerKey = null,
+                ),
             )
         }
     }

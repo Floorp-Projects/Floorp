@@ -17,7 +17,7 @@ import mozilla.components.feature.readerview.view.ReaderViewControlsView
  */
 internal class ReaderViewControlsInteractor(
     private val view: ReaderViewControlsView,
-    private val config: ReaderViewConfig
+    private val config: ReaderViewConfig,
 ) : ReaderViewControlsView.Listener {
     fun start() {
         view.listener = this

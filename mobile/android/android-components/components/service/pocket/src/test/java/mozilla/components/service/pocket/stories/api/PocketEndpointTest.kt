@@ -49,8 +49,8 @@ class PocketEndpointTest {
         whenever(raw.getRecommendedStories()).thenReturn(null)
         whenever(jsonParser.jsonToPocketApiStories(any())).thenThrow(
             AssertionError(
-                "We assume this won't get called so we don't mock it"
-            )
+                "We assume this won't get called so we don't mock it",
+            ),
         )
 
         assertResponseIsFailure(endpoint.getRecommendedStories())
@@ -70,7 +70,7 @@ class PocketEndpointTest {
             "",
             " ",
             "{}",
-            """{"expectedJSON": 101}"""
+            """{"expectedJSON": 101}""",
         ).forEach { expected ->
             whenever(raw.getRecommendedStories()).thenReturn(expected)
 

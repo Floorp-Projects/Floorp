@@ -24,7 +24,7 @@ import mozilla.components.concept.toolbar.Toolbar
 class ToolbarAutocompleteFeature(
     val toolbar: Toolbar,
     val engine: Engine? = null,
-    val shouldAutocomplete: () -> Boolean = { true }
+    val shouldAutocomplete: () -> Boolean = { true },
 ) {
     private val historyProviders: MutableList<HistoryStorage> = mutableListOf()
     private val domainProviders: MutableList<DomainAutocompleteProvider> = mutableListOf()
@@ -60,9 +60,17 @@ class ToolbarAutocompleteFeature(
     }
 
     private fun HistoryAutocompleteResult.into() = AutocompleteResult(
-        input = input, text = text, url = url, source = source, totalItems = totalItems
+        input = input,
+        text = text,
+        url = url,
+        source = source,
+        totalItems = totalItems,
     )
     private fun DomainAutocompleteResult.into() = AutocompleteResult(
-        input = input, text = text, url = url, source = source, totalItems = totalItems
+        input = input,
+        text = text,
+        url = url,
+        source = source,
+        totalItems = totalItems,
     )
 }

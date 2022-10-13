@@ -19,7 +19,7 @@ interface PreferencesHolder {
 
 private class BooleanPreference(
     private val key: String,
-    private val default: Boolean
+    private val default: Boolean,
 ) : ReadWriteProperty<PreferencesHolder, Boolean> {
 
     override fun getValue(thisRef: PreferencesHolder, property: KProperty<*>): Boolean =
@@ -31,7 +31,7 @@ private class BooleanPreference(
 
 private class FloatPreference(
     private val key: String,
-    private val default: Float
+    private val default: Float,
 ) : ReadWriteProperty<PreferencesHolder, Float> {
 
     override fun getValue(thisRef: PreferencesHolder, property: KProperty<*>): Float =
@@ -43,7 +43,7 @@ private class FloatPreference(
 
 private class IntPreference(
     private val key: String,
-    private val default: Int
+    private val default: Int,
 ) : ReadWriteProperty<PreferencesHolder, Int> {
 
     override fun getValue(thisRef: PreferencesHolder, property: KProperty<*>): Int =
@@ -55,7 +55,7 @@ private class IntPreference(
 
 private class LongPreference(
     private val key: String,
-    private val default: Long
+    private val default: Long,
 ) : ReadWriteProperty<PreferencesHolder, Long> {
 
     override fun getValue(thisRef: PreferencesHolder, property: KProperty<*>): Long =
@@ -89,7 +89,7 @@ private class StringPreference(
 
 private class StringSetPreference(
     private val key: String,
-    private val default: Set<String>
+    private val default: Set<String>,
 ) : ReadWriteProperty<PreferencesHolder, Set<String>> {
 
     override fun getValue(thisRef: PreferencesHolder, property: KProperty<*>): Set<String> =

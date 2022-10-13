@@ -14,9 +14,9 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyBoolean
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
 @ExperimentalCoroutinesApi
 class SendTabFeatureKtTest {
@@ -26,7 +26,7 @@ class SendTabFeatureKtTest {
 
         SendTabFeature(
             accountManager = accountManager,
-            onTabsReceived = mock()
+            onTabsReceived = mock(),
         )
 
         verify(accountManager).registerForAccountEvents(any(), any(), anyBoolean())
@@ -38,7 +38,7 @@ class SendTabFeatureKtTest {
 
         SendTabFeature(
             accountManager = accountManager,
-            onTabsReceived = mock()
+            onTabsReceived = mock(),
         )
 
         verify(accountManager).registerForAccountEvents(any(), any(), anyBoolean())

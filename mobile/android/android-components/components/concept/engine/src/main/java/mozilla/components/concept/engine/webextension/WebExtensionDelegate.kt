@@ -93,7 +93,7 @@ interface WebExtensionDelegate {
     fun onToggleActionPopup(
         extension: WebExtension,
         engineSession: EngineSession,
-        action: Action
+        action: Action,
     ): EngineSession? = null
 
     /**
@@ -121,7 +121,7 @@ interface WebExtensionDelegate {
         current: WebExtension,
         updated: WebExtension,
         newPermissions: List<String>,
-        onPermissionsGranted: ((Boolean) -> Unit)
+        onPermissionsGranted: ((Boolean) -> Unit),
     ) = Unit
 
     /**

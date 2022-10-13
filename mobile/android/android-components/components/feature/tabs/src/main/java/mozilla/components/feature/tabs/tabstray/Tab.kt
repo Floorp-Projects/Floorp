@@ -36,5 +36,5 @@ internal data class Tab(
     val controller: MediaSession.Controller? = null,
     val lastAccess: Long = 0L,
     val createdAt: Long = 0L,
-    val searchTerm: String = ""
+    val searchTerm: String = "",
 )

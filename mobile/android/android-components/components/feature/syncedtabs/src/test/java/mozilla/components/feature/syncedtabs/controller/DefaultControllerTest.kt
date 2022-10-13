@@ -21,10 +21,10 @@ import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 class DefaultControllerTest {
@@ -41,7 +41,7 @@ class DefaultControllerTest {
             storage,
             accountManager,
             view,
-            coroutineContext
+            coroutineContext,
         )
 
         controller.refreshSyncedTabs()
@@ -57,7 +57,7 @@ class DefaultControllerTest {
             storage,
             accountManager,
             view,
-            coroutineContext
+            coroutineContext,
         )
         val account: OAuthAccount = mock()
         val constellation: DeviceConstellation = mock()
@@ -81,7 +81,7 @@ class DefaultControllerTest {
             storage,
             accountManager,
             view,
-            coroutineContext
+            coroutineContext,
         )
         val account: OAuthAccount = mock()
         val constellation: DeviceConstellation = mock()
@@ -106,7 +106,7 @@ class DefaultControllerTest {
             storage,
             accountManager,
             view,
-            coroutineContext
+            coroutineContext,
         )
         val account: OAuthAccount = mock()
         val constellation: DeviceConstellation = mock()
@@ -134,7 +134,7 @@ class DefaultControllerTest {
             storage,
             accountManager,
             view,
-            coroutineContext
+            coroutineContext,
         )
         val account: OAuthAccount = mock()
         val constellation: DeviceConstellation = mock()

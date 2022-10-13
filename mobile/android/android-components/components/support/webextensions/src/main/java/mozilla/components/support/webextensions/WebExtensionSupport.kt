@@ -45,7 +45,7 @@ typealias onUpdatePermissionRequest = (
     current: WebExtension,
     updated: WebExtension,
     newPermissions: List<String>,
-    onPermissionsGranted: ((Boolean) -> Unit)
+    onPermissionsGranted: ((Boolean) -> Unit),
 ) -> Unit
 
 /**
@@ -78,7 +78,7 @@ object WebExtensionSupport {
      */
     private class SessionActionHandler(
         private val store: BrowserStore,
-        private val sessionId: String
+        private val sessionId: String,
     ) : ActionHandler {
 
         override fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: Action) {
@@ -98,7 +98,7 @@ object WebExtensionSupport {
         private val store: BrowserStore,
         private val sessionId: String,
         private val onCloseTabOverride: ((WebExtension?, String) -> Unit)? = null,
-        private val onSelectTabOverride: ((WebExtension?, String) -> Unit)? = null
+        private val onSelectTabOverride: ((WebExtension?, String) -> Unit)? = null,
     ) : TabHandler {
 
         override fun onCloseTab(webExtension: WebExtension, engineSession: EngineSession): Boolean {
@@ -115,7 +115,7 @@ object WebExtensionSupport {
             webExtension: WebExtension,
             engineSession: EngineSession,
             active: Boolean,
-            url: String?
+            url: String?,
         ): Boolean {
             val tab = store.state.findTabOrCustomTab(sessionId)
             return if (tab != null) {
@@ -173,7 +173,7 @@ object WebExtensionSupport {
         onCloseTabOverride: ((WebExtension?, String) -> Unit)? = null,
         onSelectTabOverride: ((WebExtension?, String) -> Unit)? = null,
         onUpdatePermissionRequest: onUpdatePermissionRequest? = { _, _, _, _ -> },
-        onExtensionsLoaded: ((List<WebExtension>) -> Unit)? = null
+        onExtensionsLoaded: ((List<WebExtension>) -> Unit)? = null,
     ) {
         this.onUpdatePermissionRequest = onUpdatePermissionRequest
         this.onExtensionsLoaded = onExtensionsLoaded
@@ -186,100 +186,103 @@ object WebExtensionSupport {
         // Observes the store and registers action and tab handlers for newly added engine sessions
         registerHandlersForNewSessions(store)
 
-        runtime.registerWebExtensionDelegate(object : WebExtensionDelegate {
-            override fun onNewTab(extension: WebExtension, engineSession: EngineSession, active: Boolean, url: String) {
-                openTab(store, onNewTabOverride, onSelectTabOverride, extension, engineSession, url, active)
-            }
+        runtime.registerWebExtensionDelegate(
+            object : WebExtensionDelegate {
+                override fun onNewTab(extension: WebExtension, engineSession: EngineSession, active: Boolean, url: String) {
+                    openTab(store, onNewTabOverride, onSelectTabOverride, extension, engineSession, url, active)
+                }
 
-            override fun onBrowserActionDefined(extension: WebExtension, action: Action) {
-                store.dispatch(WebExtensionAction.UpdateBrowserAction(extension.id, action))
-            }
+                override fun onBrowserActionDefined(extension: WebExtension, action: Action) {
+                    store.dispatch(WebExtensionAction.UpdateBrowserAction(extension.id, action))
+                }
 
-            override fun onPageActionDefined(extension: WebExtension, action: Action) {
-                store.dispatch(WebExtensionAction.UpdatePageAction(extension.id, action))
-            }
+                override fun onPageActionDefined(extension: WebExtension, action: Action) {
+                    store.dispatch(WebExtensionAction.UpdatePageAction(extension.id, action))
+                }
 
-            override fun onToggleActionPopup(
-                extension: WebExtension,
-                engineSession: EngineSession,
-                action: Action
-            ): EngineSession? {
-                return if (!openPopupInTab) {
-                    store.dispatch(WebExtensionAction.UpdatePopupSessionAction(extension.id, null, engineSession))
-                    engineSession
-                } else {
-                    val popupSessionId = store.state.extensions[extension.id]?.popupSessionId
-                    if (popupSessionId != null && store.state.tabs.find { it.id == popupSessionId } != null) {
-                        if (popupSessionId == store.state.selectedTabId) {
-                            closeTab(popupSessionId, false, store, onCloseTabOverride, extension)
-                        } else {
-                            onSelectTabOverride?.invoke(extension, popupSessionId)
-                                ?: store.dispatch(TabListAction.SelectTabAction(popupSessionId))
-                        }
-                        null
-                    } else {
-                        val sessionId = openTab(store, onNewTabOverride, onSelectTabOverride, extension, engineSession)
-                        store.dispatch(WebExtensionAction.UpdatePopupSessionAction(extension.id, sessionId))
+                override fun onToggleActionPopup(
+                    extension: WebExtension,
+                    engineSession: EngineSession,
+                    action: Action,
+                ): EngineSession? {
+                    return if (!openPopupInTab) {
+                        store.dispatch(WebExtensionAction.UpdatePopupSessionAction(extension.id, null, engineSession))
                         engineSession
+                    } else {
+                        val popupSessionId = store.state.extensions[extension.id]?.popupSessionId
+                        if (popupSessionId != null && store.state.tabs.find { it.id == popupSessionId } != null) {
+                            if (popupSessionId == store.state.selectedTabId) {
+                                closeTab(popupSessionId, false, store, onCloseTabOverride, extension)
+                            } else {
+                                onSelectTabOverride?.invoke(extension, popupSessionId)
+                                    ?: store.dispatch(TabListAction.SelectTabAction(popupSessionId))
+                            }
+                            null
+                        } else {
+                            val sessionId = openTab(store, onNewTabOverride, onSelectTabOverride, extension, engineSession)
+                            store.dispatch(WebExtensionAction.UpdatePopupSessionAction(extension.id, sessionId))
+                            engineSession
+                        }
                     }
                 }
-            }
 
-            override fun onInstalled(extension: WebExtension) {
-                registerInstalledExtension(store, extension)
-            }
+                override fun onInstalled(extension: WebExtension) {
+                    registerInstalledExtension(store, extension)
+                }
 
-            override fun onUninstalled(extension: WebExtension) {
-                installedExtensions.remove(extension.id)
-                store.dispatch(WebExtensionAction.UninstallWebExtensionAction(extension.id))
-            }
+                override fun onUninstalled(extension: WebExtension) {
+                    installedExtensions.remove(extension.id)
+                    store.dispatch(WebExtensionAction.UninstallWebExtensionAction(extension.id))
+                }
 
-            override fun onEnabled(extension: WebExtension) {
-                installedExtensions[extension.id] = extension
-                store.dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction(extension.id, true))
-            }
+                override fun onEnabled(extension: WebExtension) {
+                    installedExtensions[extension.id] = extension
+                    store.dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction(extension.id, true))
+                }
 
-            override fun onDisabled(extension: WebExtension) {
-                installedExtensions[extension.id] = extension
-                store.dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction(extension.id, false))
-            }
+                override fun onDisabled(extension: WebExtension) {
+                    installedExtensions[extension.id] = extension
+                    store.dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction(extension.id, false))
+                }
 
-            override fun onAllowedInPrivateBrowsingChanged(extension: WebExtension) {
-                installedExtensions[extension.id] = extension
-                store.dispatch(
-                    WebExtensionAction.UpdateWebExtensionAllowedInPrivateBrowsingAction(
-                        extension.id, extension.isAllowedInPrivateBrowsing()
+                override fun onAllowedInPrivateBrowsingChanged(extension: WebExtension) {
+                    installedExtensions[extension.id] = extension
+                    store.dispatch(
+                        WebExtensionAction.UpdateWebExtensionAllowedInPrivateBrowsingAction(
+                            extension.id,
+                            extension.isAllowedInPrivateBrowsing(),
+                        ),
                     )
-                )
-            }
+                }
 
-            override fun onInstallPermissionRequest(extension: WebExtension): Boolean {
-                // Our current installation flow has us approve permissions before we call
-                // install on the engine. Therefore we can just approve the permission request
-                // here during installation.
-                return true
-            }
+                override fun onInstallPermissionRequest(extension: WebExtension): Boolean {
+                    // Our current installation flow has us approve permissions before we call
+                    // install on the engine. Therefore we can just approve the permission request
+                    // here during installation.
+                    return true
+                }
 
-            override fun onUpdatePermissionRequest(
-                current: WebExtension,
-                updated: WebExtension,
-                newPermissions: List<String>,
-                onPermissionsGranted: ((Boolean) -> Unit)
-            ) {
-                this@WebExtensionSupport.onUpdatePermissionRequest?.invoke(
-                    current,
-                    updated,
-                    newPermissions,
-                    onPermissionsGranted
-                )
-            }
+                override fun onUpdatePermissionRequest(
+                    current: WebExtension,
+                    updated: WebExtension,
+                    newPermissions: List<String>,
+                    onPermissionsGranted: ((Boolean) -> Unit),
+                ) {
+                    this@WebExtensionSupport.onUpdatePermissionRequest?.invoke(
+                        current,
+                        updated,
+                        newPermissions,
+                        onPermissionsGranted,
+                    )
+                }
 
-            override fun onExtensionListUpdated() {
-                installedExtensions.clear()
-                store.dispatch(WebExtensionAction.UninstallAllWebExtensionsAction)
-                registerInstalledExtensions(store, runtime)
-            }
-        })
+                override fun onExtensionListUpdated() {
+                    installedExtensions.clear()
+                    store.dispatch(WebExtensionAction.UninstallAllWebExtensionsAction)
+                    registerInstalledExtensions(store, runtime)
+                }
+            },
+        )
     }
 
     /**
@@ -294,7 +297,7 @@ object WebExtensionSupport {
     private fun registerInstalledExtensions(store: BrowserStore, runtime: WebExtensionRuntime) {
         runtime.listInstalledWebExtensions(
             onSuccess = {
-                extensions ->
+                    extensions ->
                 extensions.forEach { registerInstalledExtension(store, it) }
                 emitWebExtensionsInitializedFact(extensions)
                 closeUnsupportedTabs(store, extensions)
@@ -302,10 +305,10 @@ object WebExtensionSupport {
                 onExtensionsLoaded?.invoke(extensions.filter { !it.isBuiltIn() })
             },
             onError = {
-                throwable ->
+                    throwable ->
                 logger.error("Failed to query installed extension", throwable)
                 initializationResult.completeExceptionally(throwable)
-            }
+            },
         )
     }
 
@@ -402,7 +405,7 @@ object WebExtensionSupport {
         extension: WebExtension,
         store: BrowserStore,
         session: EngineSession,
-        sessionId: String
+        sessionId: String,
     ) {
         if (extension.supportActions && !extension.hasActionHandler(session)) {
             val actionHandler = SessionActionHandler(store, sessionId)
@@ -423,7 +426,7 @@ object WebExtensionSupport {
         webExtension: WebExtension?,
         engineSession: EngineSession,
         url: String = "",
-        selected: Boolean = true
+        selected: Boolean = true,
     ): String {
         return if (onNewTabOverride != null) {
             val sessionId = onNewTabOverride.invoke(webExtension, engineSession, url)
@@ -444,7 +447,7 @@ object WebExtensionSupport {
         customTab: Boolean,
         store: BrowserStore,
         onCloseTabOverride: ((WebExtension?, String) -> Unit)? = null,
-        webExtension: WebExtension? = null
+        webExtension: WebExtension? = null,
     ) {
         if (onCloseTabOverride != null) {
             onCloseTabOverride.invoke(webExtension, id)
@@ -466,7 +469,7 @@ object WebExtensionSupport {
             url,
             getMetadata()?.name,
             isEnabled(),
-            isAllowedInPrivateBrowsing()
+            isAllowedInPrivateBrowsing(),
         )
 
     private fun SessionState.isCustomTab() = this is CustomTabSessionState

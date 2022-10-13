@@ -21,7 +21,7 @@ internal fun SessionState?.getTitleOrUrl(context: Context, title: String? = null
 
 @Suppress("TooGenericExceptionCaught")
 internal suspend fun SessionState?.getNonPrivateIcon(
-    getArtwork: (suspend () -> Bitmap?)?
+    getArtwork: (suspend () -> Bitmap?)?,
 ): Bitmap? = when {
     this == null -> null
     content.private -> null

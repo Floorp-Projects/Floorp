@@ -11,7 +11,7 @@ object TestUtils {
         action: Int,
         x: Float = 0f,
         y: Float = 0f,
-        previousEvent: MotionEvent? = null
+        previousEvent: MotionEvent? = null,
     ): MotionEvent {
         val currentTime = System.currentTimeMillis()
         val downTime = previousEvent?.downTime ?: System.currentTimeMillis()
@@ -29,7 +29,7 @@ object TestUtils {
         return MotionEvent.obtain(
             downTime, currentTime,
             action, pointerCount, properties,
-            pointerCoords, 0, 0, 1f, 1f, 0, 0, 0, 0
+            pointerCoords, 0, 0, 1f, 1f, 0, 0, 0, 0,
         )
     }
 
@@ -37,7 +37,7 @@ object TestUtils {
         x: Float,
         y: Float,
         pointerCount: Int,
-        previousEvent: MotionEvent? = null
+        previousEvent: MotionEvent? = null,
     ): Array<MotionEvent.PointerCoords?> {
         val currentEventCoords = MotionEvent.PointerCoords().apply {
             this.x = x; this.y = y; pressure = 1f; size = 1f
@@ -48,7 +48,7 @@ object TestUtils {
                 MotionEvent.PointerCoords().apply {
                     this.x = previousEvent.x; this.y = previousEvent.y; pressure = 1f; size = 1f
                 },
-                currentEventCoords
+                currentEventCoords,
             )
         } else {
             arrayOf(currentEventCoords)

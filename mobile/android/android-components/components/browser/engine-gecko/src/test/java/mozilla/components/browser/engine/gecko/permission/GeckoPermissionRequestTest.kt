@@ -88,7 +88,7 @@ class GeckoPermissionRequestTest {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO,
-            "unknown app permission"
+            "unknown app permission",
         )
 
         val mappedPermissions = listOf(
@@ -96,7 +96,7 @@ class GeckoPermissionRequestTest {
             Permission.AppLocationFine(Manifest.permission.ACCESS_FINE_LOCATION),
             Permission.AppCamera(Manifest.permission.CAMERA),
             Permission.AppAudio(Manifest.permission.RECORD_AUDIO),
-            Permission.Generic("unknown app permission")
+            Permission.Generic("unknown app permission"),
         )
 
         val request = GeckoPermissionRequest.App(permissions, callback)
@@ -127,29 +127,41 @@ class GeckoPermissionRequestTest {
         val uri = "https://mozilla.org"
 
         val audioMicrophone = MockMediaSource(
-            "audioMicrophone", "audioMicrophone",
-            MediaSource.SOURCE_MICROPHONE, MediaSource.TYPE_AUDIO
+            "audioMicrophone",
+            "audioMicrophone",
+            MediaSource.SOURCE_MICROPHONE,
+            MediaSource.TYPE_AUDIO,
         )
         val audioCapture = MockMediaSource(
-            "audioCapture", "audioCapture",
-            MediaSource.SOURCE_AUDIOCAPTURE, MediaSource.TYPE_AUDIO
+            "audioCapture",
+            "audioCapture",
+            MediaSource.SOURCE_AUDIOCAPTURE,
+            MediaSource.TYPE_AUDIO,
         )
         val audioOther = MockMediaSource(
-            "audioOther", "audioOther",
-            MediaSource.SOURCE_OTHER, MediaSource.TYPE_AUDIO
+            "audioOther",
+            "audioOther",
+            MediaSource.SOURCE_OTHER,
+            MediaSource.TYPE_AUDIO,
         )
 
         val videoCamera = MockMediaSource(
-            "videoCamera", "videoCamera",
-            MediaSource.SOURCE_CAMERA, MediaSource.TYPE_VIDEO
+            "videoCamera",
+            "videoCamera",
+            MediaSource.SOURCE_CAMERA,
+            MediaSource.TYPE_VIDEO,
         )
         val videoScreen = MockMediaSource(
-            "videoScreen", "videoScreen",
-            MediaSource.SOURCE_SCREEN, MediaSource.TYPE_VIDEO
+            "videoScreen",
+            "videoScreen",
+            MediaSource.SOURCE_SCREEN,
+            MediaSource.TYPE_VIDEO,
         )
         val videoOther = MockMediaSource(
-            "videoOther", "videoOther",
-            MediaSource.SOURCE_OTHER, MediaSource.TYPE_VIDEO
+            "videoOther",
+            "videoOther",
+            MediaSource.SOURCE_OTHER,
+            MediaSource.TYPE_VIDEO,
         )
 
         val audioSources = listOf(audioCapture, audioMicrophone, audioOther)
@@ -161,7 +173,7 @@ class GeckoPermissionRequestTest {
             Permission.ContentVideoOther("videoOther", "videoOther"),
             Permission.ContentAudioMicrophone("audioMicrophone", "audioMicrophone"),
             Permission.ContentAudioCapture("audioCapture", "audioCapture"),
-            Permission.ContentAudioOther("audioOther", "audioOther")
+            Permission.ContentAudioOther("audioOther", "audioOther"),
         )
 
         val request = GeckoPermissionRequest.Media(uri, videoSources, audioSources, callback)
@@ -176,12 +188,16 @@ class GeckoPermissionRequestTest {
         val uri = "https://mozilla.org"
 
         val audioMicrophone = MockMediaSource(
-            "audioMicrophone", "audioMicrophone",
-            MediaSource.SOURCE_MICROPHONE, MediaSource.TYPE_AUDIO
+            "audioMicrophone",
+            "audioMicrophone",
+            MediaSource.SOURCE_MICROPHONE,
+            MediaSource.TYPE_AUDIO,
         )
         val videoCamera = MockMediaSource(
-            "videoCamera", "videoCamera",
-            MediaSource.SOURCE_CAMERA, MediaSource.TYPE_VIDEO
+            "videoCamera",
+            "videoCamera",
+            MediaSource.SOURCE_CAMERA,
+            MediaSource.TYPE_VIDEO,
         )
 
         val audioSources = listOf(audioMicrophone)
@@ -198,12 +214,16 @@ class GeckoPermissionRequestTest {
         val uri = "https://mozilla.org"
 
         val audioMicrophone = MockMediaSource(
-            "audioMicrophone", "audioMicrophone",
-            MediaSource.SOURCE_MICROPHONE, MediaSource.TYPE_AUDIO
+            "audioMicrophone",
+            "audioMicrophone",
+            MediaSource.SOURCE_MICROPHONE,
+            MediaSource.TYPE_AUDIO,
         )
         val videoCamera = MockMediaSource(
-            "videoCamera", "videoCamera",
-            MediaSource.SOURCE_CAMERA, MediaSource.TYPE_VIDEO
+            "videoCamera",
+            "videoCamera",
+            MediaSource.SOURCE_CAMERA,
+            MediaSource.TYPE_VIDEO,
         )
 
         val audioSources = listOf(audioMicrophone)

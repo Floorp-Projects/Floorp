@@ -19,7 +19,7 @@ internal class GeckoMediaDelegate(private val geckoEngineSession: GeckoEngineSes
 
     override fun onRecordingStatusChanged(
         session: GeckoSession,
-        geckoDevices: Array<out GeckoRecordingDevice>
+        geckoDevices: Array<out GeckoRecordingDevice>,
     ) {
         val devices = geckoDevices.map { geckoRecording ->
             val type = geckoRecording.toType()

@@ -91,14 +91,16 @@ class GeckoPromptDelegateTest {
             "title",
             "message",
             GECKO_PROMPT_CHOICE_TYPE.SINGLE,
-            arrayOf(geckoChoice)
+            arrayOf(geckoChoice),
         )
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                promptRequestSingleChoice = promptRequest
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    promptRequestSingleChoice = promptRequest
+                }
+            },
+        )
 
         val geckoResult = gecko.onChoicePrompt(mock(), geckoPrompt)
 
@@ -131,14 +133,16 @@ class GeckoPromptDelegateTest {
             "title",
             "message",
             GECKO_PROMPT_CHOICE_TYPE.MULTIPLE,
-            arrayOf(mockGeckoChoice)
+            arrayOf(mockGeckoChoice),
         )
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                promptRequestSingleChoice = promptRequest
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    promptRequestSingleChoice = promptRequest
+                }
+            },
+        )
 
         val geckoResult = gecko.onChoicePrompt(mock(), geckoPrompt)
 
@@ -170,7 +174,7 @@ class GeckoPromptDelegateTest {
             "title",
             "message",
             GECKO_PROMPT_CHOICE_TYPE.MENU,
-            arrayOf(geckoChoice)
+            arrayOf(geckoChoice),
         )
 
         mockSession.register(
@@ -178,7 +182,8 @@ class GeckoPromptDelegateTest {
                 override fun onPromptRequest(promptRequest: PromptRequest) {
                     promptRequestSingleChoice = promptRequest
                 }
-            })
+            },
+        )
 
         val geckoResult = gecko.onChoicePrompt(mock(), geckoPrompt)
         geckoResult!!.accept {
@@ -206,7 +211,7 @@ class GeckoPromptDelegateTest {
             "title",
             "message",
             -1,
-            arrayOf()
+            arrayOf(),
         )
         promptDelegate.onChoicePrompt(mock(), geckoPrompt)
     }
@@ -219,11 +224,13 @@ class GeckoPromptDelegateTest {
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                alertRequest = promptRequest
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    alertRequest = promptRequest
+                }
+            },
+        )
 
         val geckoResult = promptDelegate.onAlertPrompt(mock(), geckoAlertPrompt())
         geckoResult.accept {
@@ -255,11 +262,13 @@ class GeckoPromptDelegateTest {
         var geckoPrompt = geckoDateTimePrompt("title", DATE, "", "", "")
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                dateRequest = promptRequest
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    dateRequest = promptRequest
+                }
+            },
+        )
 
         promptDelegate.onDateTimePrompt(mock(), geckoPrompt)
 
@@ -288,14 +297,16 @@ class GeckoPromptDelegateTest {
                 type = DATE,
                 defaultValue = "2019-11-29",
                 minValue = "2019-11-28",
-                maxValue = "2019-11-30"
+                maxValue = "2019-11-30",
             )
         val promptDelegate = GeckoPromptDelegate(mockSession)
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                timeSelectionRequest = promptRequest as PromptRequest.TimeSelection
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    timeSelectionRequest = promptRequest as PromptRequest.TimeSelection
+                }
+            },
+        )
 
         promptDelegate.onDateTimePrompt(mock(), geckoPrompt)
 
@@ -319,11 +330,13 @@ class GeckoPromptDelegateTest {
         var confirmCalled = false
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                dateRequest = promptRequest
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    dateRequest = promptRequest
+                }
+            },
+        )
         val geckoPrompt = geckoDateTimePrompt(type = MONTH)
 
         val geckoResult = promptDelegate.onDateTimePrompt(mock(), geckoPrompt)
@@ -348,17 +361,19 @@ class GeckoPromptDelegateTest {
         val confirmCaptor = argumentCaptor<String>()
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                timeSelectionRequest = promptRequest as PromptRequest.TimeSelection
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    timeSelectionRequest = promptRequest as PromptRequest.TimeSelection
+                }
+            },
+        )
         val geckoPrompt = geckoDateTimePrompt(
             title = "title",
             type = MONTH,
             defaultValue = "2019-11",
             minValue = "2019-11",
-            maxValue = "2019-11"
+            maxValue = "2019-11",
         )
         promptDelegate.onDateTimePrompt(mock(), geckoPrompt)
 
@@ -381,11 +396,13 @@ class GeckoPromptDelegateTest {
         var dateRequest: PromptRequest? = null
         var confirmCalled = false
         val promptDelegate = GeckoPromptDelegate(mockSession)
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                dateRequest = promptRequest
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    dateRequest = promptRequest
+                }
+            },
+        )
         val geckoPrompt = geckoDateTimePrompt(type = WEEK)
 
         val geckoResult = promptDelegate.onDateTimePrompt(mock(), geckoPrompt)
@@ -408,18 +425,20 @@ class GeckoPromptDelegateTest {
         var timeSelectionRequest: PromptRequest.TimeSelection? = null
         val confirmCaptor = argumentCaptor<String>()
         val promptDelegate = GeckoPromptDelegate(mockSession)
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                timeSelectionRequest = promptRequest as PromptRequest.TimeSelection
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    timeSelectionRequest = promptRequest as PromptRequest.TimeSelection
+                }
+            },
+        )
 
         val geckoPrompt = geckoDateTimePrompt(
             title = "title",
             type = WEEK,
             defaultValue = "2018-W18",
             minValue = "2018-W18",
-            maxValue = "2018-W26"
+            maxValue = "2018-W26",
         )
         promptDelegate.onDateTimePrompt(mock(), geckoPrompt)
 
@@ -443,11 +462,13 @@ class GeckoPromptDelegateTest {
         var confirmCalled = false
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                dateRequest = promptRequest
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    dateRequest = promptRequest
+                }
+            },
+        )
         val geckoPrompt = geckoDateTimePrompt(type = TIME)
 
         val geckoResult = promptDelegate.onDateTimePrompt(mock(), geckoPrompt)
@@ -469,18 +490,20 @@ class GeckoPromptDelegateTest {
         val confirmCaptor = argumentCaptor<String>()
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                timeSelectionRequest = promptRequest as PromptRequest.TimeSelection
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    timeSelectionRequest = promptRequest as PromptRequest.TimeSelection
+                }
+            },
+        )
 
         val geckoPrompt = geckoDateTimePrompt(
             title = "title",
             type = TIME,
             defaultValue = "17:00",
             minValue = "9:00",
-            maxValue = "18:00"
+            maxValue = "18:00",
         )
         promptDelegate.onDateTimePrompt(mock(), geckoPrompt)
 
@@ -504,11 +527,13 @@ class GeckoPromptDelegateTest {
         val confirmCaptor = argumentCaptor<String>()
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                timeSelectionRequest = promptRequest as PromptRequest.TimeSelection
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    timeSelectionRequest = promptRequest as PromptRequest.TimeSelection
+                }
+            },
+        )
         val minutesGeckoPrompt = geckoDateTimePrompt(
             type = TIME,
             defaultValue = "17:00",

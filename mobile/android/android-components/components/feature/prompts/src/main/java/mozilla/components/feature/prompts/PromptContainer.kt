@@ -30,7 +30,7 @@ internal sealed class PromptContainer {
     abstract fun getString(@StringRes res: Int): String
 
     internal class Activity(
-        private val activity: android.app.Activity
+        private val activity: android.app.Activity,
     ) : PromptContainer() {
 
         override val context get() = activity
@@ -42,7 +42,7 @@ internal sealed class PromptContainer {
     }
 
     internal class Fragment(
-        private val fragment: androidx.fragment.app.Fragment
+        private val fragment: androidx.fragment.app.Fragment,
     ) : PromptContainer() {
 
         override val context get() = fragment.requireContext()

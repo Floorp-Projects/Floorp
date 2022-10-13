@@ -95,9 +95,9 @@ class ShareDownloadFeatureTest {
         val store = spy(
             BrowserStore(
                 BrowserState(
-                    tabs = listOf(TabSessionState("123", ContentState(url = "https://www.mozilla.org")))
-                )
-            )
+                    tabs = listOf(TabSessionState("123", ContentState(url = "https://www.mozilla.org"))),
+                ),
+            ),
         )
         val shareFeature = spy(ShareDownloadFeature(context, mock(), store, "123"))
         doNothing().`when`(shareFeature).startSharing(any())

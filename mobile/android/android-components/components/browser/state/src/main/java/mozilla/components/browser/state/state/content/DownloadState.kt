@@ -48,12 +48,13 @@ data class DownloadState(
     val private: Boolean = false,
     val createdTime: Long = System.currentTimeMillis(),
     val response: Response? = null,
-    val notificationId: Int? = null
+    val notificationId: Int? = null,
 ) {
     val filePath: String get() =
         Environment.getExternalStoragePublicDirectory(destinationDirectory).path + File.separatorChar + fileName
 
     val directoryPath: String get() = Environment.getExternalStoragePublicDirectory(destinationDirectory).path
+
     /**
      * Status that represents every state that a download can be in.
      */
@@ -63,26 +64,31 @@ data class DownloadState(
          * Indicates that the download is in the first state after creation but not yet [DOWNLOADING].
          */
         INITIATED(1),
+
         /**
          * Indicates that an [INITIATED] download is now actively being downloaded.
          */
         DOWNLOADING(2),
+
         /**
          * Indicates that the download that has been [DOWNLOADING] has been paused.
          */
         PAUSED(3),
+
         /**
          * Indicates that the download that has been [DOWNLOADING] has been cancelled.
          */
         CANCELLED(4),
+
         /**
          * Indicates that the download that has been [DOWNLOADING] has moved to failed because
          * something unexpected has happened.
          */
         FAILED(5),
+
         /**
          * Indicates that the [DOWNLOADING] download has been completed.
          */
-        COMPLETED(6)
+        COMPLETED(6),
     }
 }

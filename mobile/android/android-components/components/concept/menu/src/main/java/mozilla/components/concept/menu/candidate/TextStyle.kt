@@ -20,7 +20,7 @@ data class TextStyle(
     @Dimension(unit = Dimension.PX) val size: Float? = null,
     @ColorInt val color: Int? = null,
     @TypefaceStyle val textStyle: Int = Typeface.NORMAL,
-    @TextAlignment val textAlignment: Int = View.TEXT_ALIGNMENT_INHERIT
+    @TextAlignment val textAlignment: Int = View.TEXT_ALIGNMENT_INHERIT,
 )
 
 /**
@@ -40,7 +40,7 @@ annotation class TypefaceStyle
         View.TEXT_ALIGNMENT_TEXT_START,
         View.TEXT_ALIGNMENT_TEXT_END,
         View.TEXT_ALIGNMENT_VIEW_START,
-        View.TEXT_ALIGNMENT_VIEW_END
-    ]
+        View.TEXT_ALIGNMENT_VIEW_END,
+    ],
 )
 annotation class TextAlignment

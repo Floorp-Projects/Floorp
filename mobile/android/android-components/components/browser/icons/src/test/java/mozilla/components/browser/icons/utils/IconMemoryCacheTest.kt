@@ -31,7 +31,8 @@ class IconMemoryCacheTest {
 
         val icon = Icon(bitmap = mock(), source = Icon.Source.DOWNLOAD)
         val resource = IconRequest.Resource(
-            url = "https://www.mozilla.org/favicon64.ico", type = IconRequest.Resource.Type.FAVICON
+            url = "https://www.mozilla.org/favicon64.ico",
+            type = IconRequest.Resource.Type.FAVICON,
         )
         val request = IconRequest("https://www.mozilla.org", resources = listOf(resource))
 

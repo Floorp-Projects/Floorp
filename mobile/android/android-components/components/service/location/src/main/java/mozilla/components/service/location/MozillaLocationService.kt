@@ -51,7 +51,7 @@ class MozillaLocationService(
     private val context: Context,
     private val client: Client,
     apiKey: String,
-    serviceUrl: String = GEOIP_SERVICE_URL
+    serviceUrl: String = GEOIP_SERVICE_URL,
 ) : LocationService {
     private val regionServiceUrl = (serviceUrl + "country?key=%s").format(apiKey)
 
@@ -64,7 +64,7 @@ class MozillaLocationService(
      * (default) or whether a request to the service should always be made.
      */
     override suspend fun fetchRegion(
-        readFromCache: Boolean
+        readFromCache: Boolean,
     ): LocationService.Region? = withContext(Dispatchers.IO) {
         if (readFromCache) {
             context.loadCachedRegion()?.let { return@withContext it }
@@ -89,7 +89,7 @@ private fun Context.loadCachedRegion(): LocationService.Region? {
     return if (cache.contains(KEY_COUNTRY_CODE) && cache.contains(KEY_COUNTRY_NAME)) {
         LocationService.Region(
             cache.getString(KEY_COUNTRY_CODE, null)!!,
-            cache.getString(KEY_COUNTRY_NAME, null)!!
+            cache.getString(KEY_COUNTRY_NAME, null)!!,
         )
     } else {
         null
@@ -127,14 +127,14 @@ private fun Client.fetchRegion(regionServiceUrl: String): LocationService.Region
         method = Request.Method.POST,
         headers = MutableHeaders(
             Headers.Names.CONTENT_TYPE to Headers.Values.CONTENT_TYPE_APPLICATION_JSON,
-            Headers.Names.USER_AGENT to USER_AGENT
+            Headers.Names.USER_AGENT to USER_AGENT,
         ),
         // We are posting an empty request body here. This means the service will only use the IP
         // address to provide a region response. Technically it's possible to also provide data
         // about nearby Bluetooth, cell or WiFi networks.
         body = Request.Body.fromString(EMPTY_REQUEST_BODY),
         connectTimeout = Pair(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS),
-        readTimeout = Pair(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        readTimeout = Pair(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS),
     )
 
     return try {
@@ -155,7 +155,7 @@ private fun Response.toRegion(): LocationService.Region? {
             val json = JSONObject(body.string(Charsets.UTF_8))
             LocationService.Region(
                 json.getString(KEY_COUNTRY_CODE),
-                json.getString(KEY_COUNTRY_NAME)
+                json.getString(KEY_COUNTRY_NAME),
             )
         } catch (e: JSONException) {
             Logger.debug(message = "Could not parse JSON returned from location service", throwable = e)

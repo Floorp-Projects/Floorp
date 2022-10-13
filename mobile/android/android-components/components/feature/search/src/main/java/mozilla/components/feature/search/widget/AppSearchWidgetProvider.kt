@@ -33,7 +33,7 @@ abstract class AppSearchWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
-        appWidgetIds: IntArray
+        appWidgetIds: IntArray,
     ) {
         val textSearchIntent = createTextSearchIntent(context)
         val voiceSearchIntent = createVoiceSearchIntent(context)
@@ -44,7 +44,7 @@ abstract class AppSearchWidgetProvider : AppWidgetProvider() {
                 appWidgetId = appWidgetId,
                 appWidgetManager = appWidgetManager,
                 voiceSearchIntent = voiceSearchIntent,
-                textSearchIntent = textSearchIntent
+                textSearchIntent = textSearchIntent,
             )
         }
     }
@@ -53,7 +53,7 @@ abstract class AppSearchWidgetProvider : AppWidgetProvider() {
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int,
-        newOptions: Bundle?
+        newOptions: Bundle?,
     ) {
         val textSearchIntent = createTextSearchIntent(context)
         val voiceSearchIntent = createVoiceSearchIntent(context)
@@ -63,7 +63,7 @@ abstract class AppSearchWidgetProvider : AppWidgetProvider() {
             appWidgetId = appWidgetId,
             appWidgetManager = appWidgetManager,
             voiceSearchIntent = voiceSearchIntent,
-            textSearchIntent = textSearchIntent
+            textSearchIntent = textSearchIntent,
         )
     }
 
@@ -103,7 +103,9 @@ abstract class AppSearchWidgetProvider : AppWidgetProvider() {
 
         return PendingIntent.getActivity(
             context,
-            REQUEST_CODE_VOICE, voiceIntent, PendingIntentUtils.defaultFlags
+            REQUEST_CODE_VOICE,
+            voiceIntent,
+            PendingIntentUtils.defaultFlags,
         )
     }
 
@@ -112,7 +114,7 @@ abstract class AppSearchWidgetProvider : AppWidgetProvider() {
         appWidgetId: Int,
         appWidgetManager: AppWidgetManager,
         voiceSearchIntent: PendingIntent?,
-        textSearchIntent: PendingIntent
+        textSearchIntent: PendingIntent,
     ) {
         val currentWidth =
             appWidgetManager.getAppWidgetOptions(appWidgetId).getInt(OPTION_APPWIDGET_MIN_WIDTH)
@@ -133,7 +135,7 @@ abstract class AppSearchWidgetProvider : AppWidgetProvider() {
         layout: Int,
         textSearchIntent: PendingIntent,
         voiceSearchIntent: PendingIntent?,
-        text: String?
+        text: String?,
     ): RemoteViews {
         return RemoteViews(context.packageName, layout).apply {
             setSearchWidgetIcon(context)
@@ -141,36 +143,37 @@ abstract class AppSearchWidgetProvider : AppWidgetProvider() {
             when (layout) {
                 R.layout.mozac_search_widget_extra_small_v1,
                 R.layout.mozac_search_widget_extra_small_v2,
-                R.layout.mozac_search_widget_small_no_mic -> {
+                R.layout.mozac_search_widget_small_no_mic,
+                -> {
                     setOnClickPendingIntent(
                         R.id.mozac_button_search_widget_new_tab,
-                        textSearchIntent
+                        textSearchIntent,
                     )
                 }
                 R.layout.mozac_search_widget_small -> {
                     setOnClickPendingIntent(
                         R.id.mozac_button_search_widget_new_tab,
-                        textSearchIntent
+                        textSearchIntent,
                     )
                     setOnClickPendingIntent(
                         R.id.mozac_button_search_widget_voice,
-                        voiceSearchIntent
+                        voiceSearchIntent,
                     )
                 }
                 R.layout.mozac_search_widget_medium,
-                R.layout.mozac_search_widget_large -> {
-
+                R.layout.mozac_search_widget_large,
+                -> {
                     setOnClickPendingIntent(
                         R.id.mozac_button_search_widget_new_tab,
-                        textSearchIntent
+                        textSearchIntent,
                     )
                     setOnClickPendingIntent(
                         R.id.mozac_button_search_widget_voice,
-                        voiceSearchIntent
+                        voiceSearchIntent,
                     )
                     setOnClickPendingIntent(
                         R.id.mozac_button_search_widget_new_tab_icon,
-                        textSearchIntent
+                        textSearchIntent,
                     )
                     setTextViewText(R.id.mozac_button_search_widget_new_tab, text)
 
@@ -188,7 +191,7 @@ abstract class AppSearchWidgetProvider : AppWidgetProvider() {
         setImageView(
             context,
             R.id.mozac_button_search_widget_voice,
-            config.searchWidgetMicrophoneResource
+            config.searchWidgetMicrophoneResource,
         )
     }
 
@@ -196,12 +199,12 @@ abstract class AppSearchWidgetProvider : AppWidgetProvider() {
         setImageView(
             context,
             R.id.mozac_button_search_widget_new_tab_icon,
-            config.searchWidgetIconResource
+            config.searchWidgetIconResource,
         )
         val appName = context.getString(config.appName)
         setContentDescription(
             R.id.mozac_button_search_widget_new_tab_icon,
-            context.getString(R.string.search_widget_content_description, appName)
+            context.getString(R.string.search_widget_content_description, appName),
         )
     }
 
@@ -210,15 +213,15 @@ abstract class AppSearchWidgetProvider : AppWidgetProvider() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             setImageViewResource(
                 viewId,
-                resourceId
+                resourceId,
             )
         } else {
             setImageViewBitmap(
                 viewId,
                 AppCompatResources.getDrawable(
                     context,
-                    resourceId
-                )?.toBitmap()
+                    resourceId,
+                )?.toBitmap(),
             )
         }
     }
@@ -239,15 +242,15 @@ abstract class AppSearchWidgetProvider : AppWidgetProvider() {
             val widgetIds = widgetManager.getAppWidgetIds(
                 ComponentName(
                     context,
-                    clazz
-                )
+                    clazz,
+                ),
             )
             if (widgetIds.isNotEmpty()) {
                 context.sendBroadcast(
                     Intent(context, clazz).apply {
                         action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
                         putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, widgetIds)
-                    }
+                    },
                 )
             }
         }
@@ -297,7 +300,7 @@ abstract class AppSearchWidgetProvider : AppWidgetProvider() {
 data class SearchWidgetConfig(
     val searchWidgetIconResource: Int,
     val searchWidgetMicrophoneResource: Int,
-    val appName: Int
+    val appName: Int,
 )
 
 internal enum class SearchWidgetProviderSize {

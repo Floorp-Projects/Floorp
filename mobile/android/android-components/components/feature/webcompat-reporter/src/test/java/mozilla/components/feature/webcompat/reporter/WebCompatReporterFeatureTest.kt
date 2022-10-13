@@ -90,7 +90,7 @@ class WebCompatReporterFeatureTest {
     private fun installFeatureForTest(
         engine: Engine,
         controller: WebExtensionController,
-        productName: String? = null
+        productName: String? = null,
     ): WebCompatReporterFeature {
         val reporterFeature = spy(WebCompatReporterFeature)
         reporterFeature.extensionController = controller
@@ -106,7 +106,7 @@ class WebCompatReporterFeatureTest {
         verify(controller, times(1)).install(
             eq(engine),
             onSuccess.capture(),
-            onError.capture()
+            onError.capture(),
         )
 
         onSuccess.value.invoke(mock())

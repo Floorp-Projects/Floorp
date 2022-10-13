@@ -39,7 +39,7 @@ class QrFeature(
     private val onScanResult: OnScanResult = { },
     override val onNeedToRequestPermissions: OnNeedToRequestPermissions = { },
     @StringRes
-    private var scanMessage: Int? = null
+    private var scanMessage: Int? = null,
 ) : LifecycleAwareFeature, UserInteractionHandler, PermissionsFeature {
     private var containerViewId: Int = 0
 

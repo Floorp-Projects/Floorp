@@ -45,7 +45,7 @@ internal fun PopupWindow.displayPopup(
                 fitsUp,
                 fitsDown,
                 reversed,
-                containerHeight
+                containerHeight,
             )
         }
     }
@@ -57,7 +57,7 @@ private fun PopupWindow.showPopupWhereBestFits(
     fitsUp: Boolean,
     fitsDown: Boolean,
     reversed: Boolean,
-    containerHeight: Int
+    containerHeight: Int,
 ) {
     when {
         // Not enough space to show the menu UP neither DOWN.

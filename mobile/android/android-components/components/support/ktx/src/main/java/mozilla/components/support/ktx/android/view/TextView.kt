@@ -21,7 +21,7 @@ inline fun TextView.putCompoundDrawablesRelative(
     start: Drawable? = null,
     top: Drawable? = null,
     end: Drawable? = null,
-    bottom: Drawable? = null
+    bottom: Drawable? = null,
 ) = setCompoundDrawablesRelative(start, top, end, bottom)
 
 /**
@@ -37,5 +37,5 @@ inline fun TextView.putCompoundDrawablesRelativeWithIntrinsicBounds(
     start: Drawable? = null,
     top: Drawable? = null,
     end: Drawable? = null,
-    bottom: Drawable? = null
+    bottom: Drawable? = null,
 ) = setCompoundDrawablesRelativeWithIntrinsicBounds(start, top, end, bottom)

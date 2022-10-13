@@ -55,7 +55,7 @@ class AppLinksFeature(
     private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp),
     private val failedToLaunchAction: () -> Unit = {},
     private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase? = null,
-    private val engineSupportedSchemes: Set<String> = ENGINE_SUPPORTED_SCHEMES
+    private val engineSupportedSchemes: Set<String> = ENGINE_SUPPORTED_SCHEMES,
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null
@@ -99,7 +99,7 @@ class AppLinksFeature(
         val doOpenApp = {
             useCases.openAppLink(
                 appIntent,
-                failedToLaunchAction = failedToLaunchAction
+                failedToLaunchAction = failedToLaunchAction,
             )
         }
 

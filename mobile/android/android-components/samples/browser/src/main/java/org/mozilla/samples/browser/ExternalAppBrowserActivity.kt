@@ -19,7 +19,7 @@ class ExternalAppBrowserActivity : BrowserActivity() {
 
             ExternalAppBrowserFragment.create(
                 sessionId,
-                manifest = manifest
+                manifest = manifest,
             )
         } else {
             // Fall back to browser fragment

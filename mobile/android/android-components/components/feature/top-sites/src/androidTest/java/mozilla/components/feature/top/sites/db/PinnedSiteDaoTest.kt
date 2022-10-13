@@ -46,7 +46,7 @@ class PinnedSiteDaoTest {
             title = "Mozilla",
             url = "https://www.mozilla.org",
             isDefault = false,
-            createdAt = 200
+            createdAt = 200,
         ).also {
             it.id = pinnedSiteDao.insertPinnedSite(it)
         }
@@ -64,7 +64,7 @@ class PinnedSiteDaoTest {
             title = "Mozilla",
             url = "https://www.mozilla.org",
             isDefault = false,
-            createdAt = 200
+            createdAt = 200,
         ).also {
             it.id = pinnedSiteDao.insertPinnedSite(it)
         }
@@ -88,7 +88,7 @@ class PinnedSiteDaoTest {
             title = "Mozilla",
             url = "https://www.mozilla.org",
             isDefault = false,
-            createdAt = 200
+            createdAt = 200,
         ).also {
             it.id = pinnedSiteDao.insertPinnedSite(it)
         }
@@ -97,7 +97,7 @@ class PinnedSiteDaoTest {
             title = "Firefox",
             url = "https://www.firefox.com",
             isDefault = false,
-            createdAt = 100
+            createdAt = 100,
         ).also {
             it.id = pinnedSiteDao.insertPinnedSite(it)
         }

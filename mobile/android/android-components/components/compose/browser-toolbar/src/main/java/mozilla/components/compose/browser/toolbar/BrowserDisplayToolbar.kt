@@ -34,13 +34,13 @@ fun BrowserDisplayToolbar(
     url: String,
     onUrlClicked: () -> Unit = {},
     onMenuClicked: () -> Unit = {},
-    browserActions: @Composable () -> Unit = {}
+    browserActions: @Composable () -> Unit = {},
 ) {
     val backgroundColor = MaterialTheme.colors.primarySurface
     val foregroundColor = contentColorFor(backgroundColor)
 
     Row(
-        Modifier.background(backgroundColor)
+        Modifier.background(backgroundColor),
     ) {
         Text(
             url,
@@ -50,7 +50,7 @@ fun BrowserDisplayToolbar(
                 .padding(8.dp)
                 .weight(1f)
                 .align(Alignment.CenterVertically),
-            maxLines = 1
+            maxLines = 1,
         )
 
         browserActions()

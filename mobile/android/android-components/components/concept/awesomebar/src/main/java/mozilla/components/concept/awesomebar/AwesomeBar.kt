@@ -104,14 +104,14 @@ interface AwesomeBar {
         val flags: Set<Flag> = emptySet(),
         val onSuggestionClicked: (() -> Unit)? = null,
         val onChipClicked: ((Chip) -> Unit)? = null,
-        val score: Int = 0
+        val score: Int = 0,
     ) {
         /**
          * Chips are compact actions that are shown as part of a suggestion. For example a [Suggestion] from a search
          * engine may offer multiple search suggestion chips for different search terms.
          */
         data class Chip(
-            val title: String
+            val title: String,
         )
 
         /**
@@ -123,7 +123,7 @@ interface AwesomeBar {
             BOOKMARK,
             OPEN_TAB,
             CLIPBOARD,
-            SYNC_TAB
+            SYNC_TAB,
         }
 
         /**
@@ -199,6 +199,6 @@ interface AwesomeBar {
         val providers: List<SuggestionProvider>,
         val title: String? = null,
         val limit: Int = Integer.MAX_VALUE,
-        val id: String = UUID.randomUUID().toString()
+        val id: String = UUID.randomUUID().toString(),
     )
 }

@@ -50,7 +50,7 @@ class NonBlockingHttpIconLoaderTest {
     fun `Loader will return IconLoader#Result#NoResult for a load request and respond with the result through a callback`() = runTestOnMain {
         val clients = listOf(
             HttpURLConnectionClient(),
-            OkHttpClient()
+            OkHttpClient(),
         )
 
         clients.forEach { client ->
@@ -61,8 +61,8 @@ class NonBlockingHttpIconLoaderTest {
                 MockResponse().setBody(
                     javaClass.getResourceAsStream("/misc/test.txt")!!
                         .bufferedReader()
-                        .use { it.readText() }
-                )
+                        .use { it.readText() },
+                ),
             )
 
             server.start()
@@ -79,11 +79,12 @@ class NonBlockingHttpIconLoaderTest {
                 val iconRequest: IconRequest = mock()
 
                 val result = loader.load(
-                    mock(), iconRequest,
+                    mock(),
+                    iconRequest,
                     IconRequest.Resource(
                         url = server.url("/some/path").toString(),
-                        type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
-                    )
+                        type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
+                    ),
                 )
 
                 assertTrue(result is IconLoader.Result.NoResult)
@@ -112,12 +113,13 @@ class NonBlockingHttpIconLoaderTest {
         }
 
         val result = loader.load(
-            mock(), mock(),
+            mock(),
+            mock(),
             IconRequest.Resource(
                 url = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAA" +
                     "AAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-                type = IconRequest.Resource.Type.FAVICON
-            )
+                type = IconRequest.Resource.Type.FAVICON,
+            ),
         )
 
         assertEquals(IconLoader.Result.NoResult, result)
@@ -136,16 +138,17 @@ class NonBlockingHttpIconLoaderTest {
                 url = "https://www.example.org",
                 headers = MutableHeaders(),
                 status = 404,
-                body = Response.Body.empty()
-            )
+                body = Response.Body.empty(),
+            ),
         ).`when`(client).fetch(any())
 
         loader.load(
-            mock(), mock(),
+            mock(),
+            mock(),
             IconRequest.Resource(
                 url = "https://www.example.org",
-                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
-            )
+                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
+            ),
         )
 
         val captor = argumentCaptor<Request>()
@@ -172,16 +175,17 @@ class NonBlockingHttpIconLoaderTest {
                 url = "https://www.example.org",
                 headers = MutableHeaders(),
                 status = 404,
-                body = Response.Body.empty()
-            )
+                body = Response.Body.empty(),
+            ),
         ).`when`(client).fetch(any())
 
         val result = loader.load(
-            mock(), mock(),
+            mock(),
+            mock(),
             IconRequest.Resource(
                 url = "https://www.example.org",
-                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
-            )
+                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
+            ),
         )
 
         assertEquals(IconLoader.Result.NoResult, result)
@@ -200,12 +204,12 @@ class NonBlockingHttpIconLoaderTest {
                 url = "https://www.example.org",
                 headers = MutableHeaders(),
                 status = 404,
-                body = Response.Body.empty()
-            )
+                body = Response.Body.empty(),
+            ),
         ).`when`(client).fetch(any())
         val resource = IconRequest.Resource(
             url = "https://www.example.org",
-            type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
+            type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
         )
 
         val result = loader.load(mock(), mock(), resource)
@@ -235,7 +239,7 @@ class NonBlockingHttpIconLoaderTest {
 
         val resource = IconRequest.Resource(
             url = "https://www.example.org",
-            type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
+            type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
         )
 
         val result = loader.load(testContext, mock(), resource)
@@ -267,12 +271,12 @@ class NonBlockingHttpIconLoaderTest {
                 url = "https://www.example.org",
                 headers = MutableHeaders(),
                 status = 200,
-                body = Response.Body(failingStream)
-            )
+                body = Response.Body(failingStream),
+            ),
         ).`when`(client).fetch(any())
         val resource = IconRequest.Resource(
             url = "https://www.example.org",
-            type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
+            type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
         )
 
         val result = loader.load(testContext, mock(), resource)
@@ -294,16 +298,17 @@ class NonBlockingHttpIconLoaderTest {
                 url = "https://www.example.org",
                 headers = MutableHeaders(),
                 status = 404,
-                body = Response.Body.empty()
-            )
+                body = Response.Body.empty(),
+            ),
         ).`when`(client).fetch(any())
 
         loader.load(
-            mock(), mock(),
+            mock(),
+            mock(),
             IconRequest.Resource(
                 url = " \n\n https://www.example.org  \n\n ",
-                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
-            )
+                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
+            ),
         )
 
         verify(client).fetch(captor.capture())

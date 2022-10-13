@@ -27,7 +27,7 @@ class SystemWindowRequest(
     val openAsDialog: Boolean = false,
     val triggeredByUser: Boolean = false,
     private val resultMsg: Message? = null,
-    override val type: WindowRequest.Type = WindowRequest.Type.OPEN
+    override val type: WindowRequest.Type = WindowRequest.Type.OPEN,
 ) : WindowRequest {
 
     override val url: String = ""

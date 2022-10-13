@@ -25,6 +25,6 @@ class BrowserMenuDivider : BrowserMenuItem {
     override fun bind(menu: BrowserMenu, view: View) = Unit
 
     override fun asCandidate(context: Context) = DividerMenuCandidate(
-        containerStyle = ContainerStyle(isVisible = visible())
+        containerStyle = ContainerStyle(isVisible = visible()),
     )
 }

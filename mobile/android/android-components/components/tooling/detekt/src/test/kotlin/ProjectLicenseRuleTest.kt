@@ -17,7 +17,7 @@ class ProjectLicenseRuleTest {
         assertEquals(1, findings.size)
         assertEquals(
             "Expected license not found or incorrect in the file: Test.kt.",
-            findings.first().message
+            findings.first().message,
         )
     }
 
@@ -34,7 +34,7 @@ class ProjectLicenseRuleTest {
         assertEquals(1, findings.size)
         assertEquals(
             "Expected license not found or incorrect in the file: Test.kt.",
-            findings.first().message
+            findings.first().message,
         )
     }
 

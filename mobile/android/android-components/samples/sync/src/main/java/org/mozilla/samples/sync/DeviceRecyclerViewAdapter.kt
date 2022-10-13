@@ -19,7 +19,7 @@ import org.mozilla.samples.sync.databinding.FragmentDeviceBinding
  * specified [OnDeviceListInteractionListener].
  */
 class DeviceRecyclerViewAdapter(
-    var mListenerDevice: OnDeviceListInteractionListener?
+    var mListenerDevice: OnDeviceListInteractionListener?,
 ) : RecyclerView.Adapter<DeviceRecyclerViewAdapter.ViewHolder>() {
 
     val devices = mutableListOf<Device>()

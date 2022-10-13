@@ -25,7 +25,7 @@ internal interface BranchNode {
 // node types
 
 internal data class Literal(
-    val value: Any?
+    val value: Any?,
 ) : AstNode() {
 
     override fun toString(level: Int, isTopLevel: Boolean) =
@@ -37,7 +37,7 @@ internal data class Literal(
 internal data class BinaryExpression(
     override val operator: String?,
     var left: AstNode?,
-    override var right: AstNode? = null
+    override var right: AstNode? = null,
 ) : AstNode(), OperatorNode, BranchNode {
 
     override fun toString(level: Int, isTopLevel: Boolean) =
@@ -51,7 +51,7 @@ internal data class BinaryExpression(
 
 internal data class UnaryExpression(
     override val operator: String?,
-    override var right: AstNode? = null
+    override var right: AstNode? = null,
 ) : AstNode(), OperatorNode, BranchNode {
 
     override fun toString(level: Int, isTopLevel: Boolean) =
@@ -65,15 +65,17 @@ internal data class UnaryExpression(
 internal data class Identifier(
     var value: Any?,
     var from: AstNode? = null,
-    var relative: Boolean = false
+    var relative: Boolean = false,
 ) : AstNode() {
 
     override fun toString(level: Int, isTopLevel: Boolean) =
         buildNodeDescription(
-            "< $value >", "IDENTIFIER", level, isTopLevel,
-            withinHeader = { append(" [ relative = $relative ]") }
+            "< $value >",
+            "IDENTIFIER",
+            level,
+            isTopLevel,
+            withinHeader = { append(" [ relative = $relative ]") },
         ) {
-
             appendChildNode(from, "from", level + 1)
         }
 
@@ -81,7 +83,7 @@ internal data class Identifier(
 }
 
 internal data class ObjectLiteral(
-    val properties: Map<String, AstNode>
+    val properties: Map<String, AstNode>,
 ) : AstNode() {
 
     constructor(vararg properties: Pair<String, AstNode>) : this(properties.toMap())
@@ -97,7 +99,7 @@ internal data class ObjectLiteral(
 internal data class ConditionalExpression(
     var test: AstNode?,
     var consequent: AstNode? = null,
-    var alternate: AstNode? = null
+    var alternate: AstNode? = null,
 ) : AstNode() {
 
     override fun toString(level: Int, isTopLevel: Boolean) =
@@ -111,15 +113,18 @@ internal data class ConditionalExpression(
 }
 
 internal data class ArrayLiteral(
-    val values: MutableList<Any?>
+    val values: MutableList<Any?>,
 ) : AstNode() {
 
     constructor(vararg values: Any?) : this(values.toMutableList())
 
     override fun toString(level: Int, isTopLevel: Boolean) =
         buildNodeDescription(
-            "[Array]", "ARRAY_LITERAL", level, isTopLevel,
-            withinHeader = { append(" [ size = ${values.size} ]") }
+            "[Array]",
+            "ARRAY_LITERAL",
+            level,
+            isTopLevel,
+            withinHeader = { append(" [ size = ${values.size} ]") },
         ) {
             appendNodeListValues(this@ArrayLiteral, level + 1)
         }
@@ -130,7 +135,7 @@ internal data class ArrayLiteral(
 internal data class Transformation(
     var name: String?,
     val arguments: MutableList<AstNode> = mutableListOf(),
-    var subject: AstNode? = null
+    var subject: AstNode? = null,
 ) : AstNode() {
 
     override fun toString(level: Int, isTopLevel: Boolean) =
@@ -148,15 +153,17 @@ internal data class Transformation(
 internal data class FilterExpression(
     var expression: AstNode?,
     var subject: AstNode?,
-    var relative: Boolean
+    var relative: Boolean,
 ) : AstNode() {
 
     override fun toString(level: Int, isTopLevel: Boolean) =
         buildNodeDescription(
-            "[ . ]", "FILTER_EXPRESSION", level, isTopLevel,
-            withinHeader = { append(" [ relative = $relative ]") }
+            "[ . ]",
+            "FILTER_EXPRESSION",
+            level,
+            isTopLevel,
+            withinHeader = { append(" [ relative = $relative ]") },
         ) {
-
             appendChildNode(expression, "expression", level + 1)
             appendChildNode(subject, "subject", level + 1)
         }
@@ -173,7 +180,7 @@ private fun buildNodeDescription(
     level: Int,
     isTopLevel: Boolean = true,
     withinHeader: StringBuilder.() -> Unit = {},
-    block: StringBuilder.() -> Unit = {}
+    block: StringBuilder.() -> Unit = {},
 ) = buildString {
     if (isTopLevel) {
         appendLevelPad(level)

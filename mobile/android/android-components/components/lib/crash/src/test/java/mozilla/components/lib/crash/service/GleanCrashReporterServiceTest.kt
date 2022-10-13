@@ -54,7 +54,8 @@ class GleanCrashReporterServiceTest {
             val lines = service.file.readLines()
             assertEquals(
                 "Must be main process native code crash",
-                GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY, lines.first()
+                GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY,
+                lines.first(),
             )
         }
 
@@ -65,7 +66,7 @@ class GleanCrashReporterServiceTest {
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialValue
+                CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialValue,
             )
         }
     }
@@ -93,7 +94,8 @@ class GleanCrashReporterServiceTest {
             val lines = service.file.readLines()
             assertEquals(
                 "Must be foreground child process native code crash",
-                GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY, lines.first()
+                GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY,
+                lines.first(),
             )
         }
 
@@ -104,7 +106,7 @@ class GleanCrashReporterServiceTest {
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialValue
+                CrashMetrics.crashCount[GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialValue,
             )
         }
     }
@@ -132,7 +134,8 @@ class GleanCrashReporterServiceTest {
             val lines = service.file.readLines()
             assertEquals(
                 "Must be background child process native code crash",
-                GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY, lines.first()
+                GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY,
+                lines.first(),
             )
         }
 
@@ -143,7 +146,7 @@ class GleanCrashReporterServiceTest {
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialValue
+                CrashMetrics.crashCount[GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialValue,
             )
         }
     }
@@ -171,7 +174,8 @@ class GleanCrashReporterServiceTest {
             val lines = service.file.readLines()
             assertEquals(
                 "Must be uncaught exception",
-                GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY, lines.first()
+                GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY,
+                lines.first(),
             )
         }
 
@@ -182,7 +186,7 @@ class GleanCrashReporterServiceTest {
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue()!! - initialValue
+                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue()!! - initialValue,
             )
         }
     }
@@ -210,7 +214,8 @@ class GleanCrashReporterServiceTest {
             val lines = service.file.readLines()
             assertEquals(
                 "Must be caught exception",
-                GleanCrashReporterService.CAUGHT_EXCEPTION_KEY, lines.first()
+                GleanCrashReporterService.CAUGHT_EXCEPTION_KEY,
+                lines.first(),
             )
         }
 
@@ -221,7 +226,7 @@ class GleanCrashReporterServiceTest {
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.CAUGHT_EXCEPTION_KEY].testGetValue()!! - initialValue
+                CrashMetrics.crashCount[GleanCrashReporterService.CAUGHT_EXCEPTION_KEY].testGetValue()!! - initialValue,
             )
         }
     }
@@ -276,23 +281,28 @@ class GleanCrashReporterServiceTest {
             assertEquals(5, lines.count())
             assertEquals(
                 "First element must be uncaught exception",
-                GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY, lines[0]
+                GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY,
+                lines[0],
             )
             assertEquals(
                 "Second element must be main process native code crash",
-                GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY, lines[1]
+                GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY,
+                lines[1],
             )
             assertEquals(
                 "Third element must be uncaught exception",
-                GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY, lines[2]
+                GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY,
+                lines[2],
             )
             assertEquals(
                 "Fourth element must be foreground child process native code crash",
-                GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY, lines[3]
+                GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY,
+                lines[3],
             )
             assertEquals(
                 "Fifth element must be background child process native code crash",
-                GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY, lines[4]
+                GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY,
+                lines[4],
             )
         }
 
@@ -303,22 +313,22 @@ class GleanCrashReporterServiceTest {
             assertEquals(
                 "Glean must record correct value",
                 2,
-                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue()!! - initialExceptionValue
+                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue()!! - initialExceptionValue,
             )
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialMainProcessNativeCrashValue
+                CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialMainProcessNativeCrashValue,
             )
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialForegroundChildProcessNativeCrashValue
+                CrashMetrics.crashCount[GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialForegroundChildProcessNativeCrashValue,
             )
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialBackgroundChildProcessNativeCrashValue
+                CrashMetrics.crashCount[GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialBackgroundChildProcessNativeCrashValue,
             )
         }
     }
@@ -366,7 +376,8 @@ class GleanCrashReporterServiceTest {
             val lines = service.file.readLines()
             assertEquals(
                 "First must be native code crash",
-                GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY, lines.first()
+                GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY,
+                lines.first(),
             )
             assertEquals("bad data in here", lines[1])
         }
@@ -377,7 +388,7 @@ class GleanCrashReporterServiceTest {
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialValue
+                CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialValue,
             )
         }
     }

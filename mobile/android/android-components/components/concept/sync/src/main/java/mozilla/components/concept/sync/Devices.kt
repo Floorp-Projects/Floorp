@@ -123,7 +123,7 @@ enum class DeviceType {
     TABLET,
     TV,
     VR,
-    UNKNOWN
+    UNKNOWN,
 }
 
 /**
@@ -132,7 +132,7 @@ enum class DeviceType {
 data class DevicePushSubscription(
     val endpoint: String,
     val publicKey: String,
-    val authKey: String
+    val authKey: String,
 )
 
 /**
@@ -150,14 +150,14 @@ data class DeviceConfig(
     val name: String,
     val type: DeviceType,
     val capabilities: Set<DeviceCapability>,
-    val secureStateAtRest: Boolean = false
+    val secureStateAtRest: Boolean = false,
 )
 
 /**
  * Capabilities that a [Device] may have.
  */
 enum class DeviceCapability {
-    SEND_TAB
+    SEND_TAB,
 }
 
 /**
@@ -171,5 +171,5 @@ data class Device(
     val lastAccessTime: Long?,
     val capabilities: List<DeviceCapability>,
     val subscriptionExpired: Boolean,
-    val subscription: DevicePushSubscription?
+    val subscription: DevicePushSubscription?,
 )

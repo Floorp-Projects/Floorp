@@ -22,7 +22,7 @@ class ErrorPagesTest {
         val errorPage = createUrlEncodedErrorPage(
             testContext,
             ErrorType.ERROR_HTTPS_ONLY,
-            "https://localhost/"
+            "https://localhost/",
         )
 
         assertFalse(errorPage.contains("radio"))
@@ -39,7 +39,7 @@ class ErrorPagesTest {
             descriptionOverride = { errorType ->
                 assertEquals(ErrorType.ERROR_HTTPS_ONLY, errorType)
                 "spider"
-            }
+            },
         )
 
         assertTrue(customErrorPage.contains("radio"))
@@ -87,7 +87,7 @@ class ErrorPagesTest {
             testContext,
             errorType,
             uri,
-            htmlFilename
+            htmlFilename,
         )
 
         val expectedImageName = if (errorType.imageNameRes != null) {

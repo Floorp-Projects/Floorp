@@ -37,7 +37,7 @@ abstract class TabViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         tab: TabSessionState,
         isSelected: Boolean,
         styling: TabsTrayStyling,
-        delegate: TabsTray.Delegate
+        delegate: TabsTray.Delegate,
     )
 
     /**
@@ -58,18 +58,21 @@ abstract class TabViewHolder(view: View) : RecyclerView.ViewHolder(view) {
  */
 class DefaultTabViewHolder(
     itemView: View,
-    private val thumbnailLoader: ImageLoader? = null
+    private val thumbnailLoader: ImageLoader? = null,
 ) : TabViewHolder(itemView) {
     @VisibleForTesting
     internal val iconView: ImageView? = itemView.findViewById(R.id.mozac_browser_tabstray_icon)
+
     @VisibleForTesting
     internal val titleView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_title)
+
     @VisibleForTesting
     internal val closeView: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
     private val thumbnailView: TabThumbnailView = itemView.findViewById(R.id.mozac_browser_tabstray_thumbnail)
     private val urlView: TextView? = itemView.findViewById(R.id.mozac_browser_tabstray_url)
 
     override var tab: TabSessionState? = null
+
     @VisibleForTesting
     internal var styling: TabsTrayStyling? = null
 
@@ -80,7 +83,7 @@ class DefaultTabViewHolder(
         tab: TabSessionState,
         isSelected: Boolean,
         styling: TabsTrayStyling,
-        delegate: TabsTray.Delegate
+        delegate: TabsTray.Delegate,
     ) {
         this.tab = tab
         this.styling = styling
@@ -109,7 +112,7 @@ class DefaultTabViewHolder(
             val thumbnailSize = THUMBNAIL_SIZE.dpToPx(thumbnailView.context.resources.displayMetrics)
             thumbnailLoader.loadIntoView(
                 thumbnailView,
-                ImageLoadRequest(id = tab.id, size = thumbnailSize)
+                ImageLoadRequest(id = tab.id, size = thumbnailSize),
             )
         } else if (tab.content.thumbnail != null) {
             thumbnailView.setImageBitmap(tab.content.thumbnail)
@@ -145,6 +148,7 @@ class DefaultTabViewHolder(
     }
 
     companion object {
-        @Dimension(unit = DP) private const val THUMBNAIL_SIZE = 100
+        @Dimension(unit = DP)
+        private const val THUMBNAIL_SIZE = 100
     }
 }

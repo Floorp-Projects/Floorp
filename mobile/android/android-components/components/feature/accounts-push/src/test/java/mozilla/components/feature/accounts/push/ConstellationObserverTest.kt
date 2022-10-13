@@ -27,10 +27,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.`when`
 import org.mockito.stubbing.OngoingStubbing
 
 @ExperimentalCoroutinesApi // for runTestOnMain
@@ -158,16 +158,15 @@ class ConstellationObserverTest {
         endpoint = "https://example.com/foobar",
         publicKey = "",
         authKey = "",
-        appServerKey = null
+        appServerKey = null,
     )
 
     @Suppress("UNCHECKED_CAST")
     private fun whenSubscribe(): OngoingStubbing<Unit>? {
         return `when`(push.subscribe(any(), nullable(), any(), any())).thenAnswer {
-
             // Invoke the `onSubscribe` lambda with a fake subscription.
             (it.arguments[3] as ((AutoPushSubscription) -> Unit)).invoke(
-                testSubscription()
+                testSubscription(),
             )
         }
     }
@@ -175,10 +174,9 @@ class ConstellationObserverTest {
     @Suppress("UNCHECKED_CAST")
     private fun whenSubscribeError(): OngoingStubbing<Unit>? {
         return `when`(push.subscribe(any(), nullable(), any(), any())).thenAnswer {
-
             // Invoke the `onSubscribeError` lambda with a fake exception.
             (it.arguments[2] as ((Exception) -> Unit)).invoke(
-                IllegalStateException("test")
+                IllegalStateException("test"),
             )
         }
     }

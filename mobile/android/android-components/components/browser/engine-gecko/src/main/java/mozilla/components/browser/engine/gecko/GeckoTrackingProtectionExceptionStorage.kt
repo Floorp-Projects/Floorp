@@ -24,7 +24,7 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission.V
  * A [TrackingProtectionExceptionStorage] implementation to store tracking protection exceptions.
  */
 internal class GeckoTrackingProtectionExceptionStorage(
-    private val runtime: GeckoRuntime
+    private val runtime: GeckoRuntime,
 ) : TrackingProtectionExceptionStorage {
     internal var scope = CoroutineScope(Dispatchers.IO)
 

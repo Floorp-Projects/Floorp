@@ -16,7 +16,7 @@ import mozilla.components.feature.autofill.response.dataset.usernamePresentation
  */
 internal class LoginViewHolder(
     itemView: View,
-    private val onLoginSelected: (Login) -> Unit
+    private val onLoginSelected: (Login) -> Unit,
 ) : RecyclerView.ViewHolder(itemView) {
     private val usernameView = itemView.findViewById<TextView>(R.id.mozac_feature_autofill_username)
     private val originView = itemView.findViewById<TextView>(R.id.mozac_feature_autofill_origin)

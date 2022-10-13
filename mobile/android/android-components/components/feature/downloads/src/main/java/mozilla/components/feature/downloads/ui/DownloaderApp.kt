@@ -27,5 +27,5 @@ data class DownloaderApp(
     val packageName: String,
     val activityName: String,
     val url: String,
-    val contentType: String?
+    val contentType: String?,
 ) : Parcelable

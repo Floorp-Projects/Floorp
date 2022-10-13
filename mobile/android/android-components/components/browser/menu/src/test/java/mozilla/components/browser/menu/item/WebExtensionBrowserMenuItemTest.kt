@@ -80,7 +80,7 @@ class WebExtensionBrowserMenuItemTest {
             enabled = false,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val action = WebExtensionBrowserMenuItem(browserAction, {})
@@ -113,7 +113,7 @@ class WebExtensionBrowserMenuItemTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val action = WebExtensionBrowserMenuItem(browserAction, {})
@@ -153,7 +153,7 @@ class WebExtensionBrowserMenuItemTest {
             enabled = true,
             badgeText = badgeText,
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val action = WebExtensionBrowserMenuItem(browserAction, {})
@@ -184,7 +184,7 @@ class WebExtensionBrowserMenuItemTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val action = WebExtensionBrowserMenuItem(browserAction, {})
@@ -217,7 +217,7 @@ class WebExtensionBrowserMenuItemTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val item = WebExtensionBrowserMenuItem(browserAction, { callbackInvoked = true })
@@ -254,7 +254,7 @@ class WebExtensionBrowserMenuItemTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val item = WebExtensionBrowserMenuItem(browserAction, {})
@@ -273,7 +273,7 @@ class WebExtensionBrowserMenuItemTest {
             enabled = true,
             badgeText = "overrideBadge",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         item.action = browserActionOverride

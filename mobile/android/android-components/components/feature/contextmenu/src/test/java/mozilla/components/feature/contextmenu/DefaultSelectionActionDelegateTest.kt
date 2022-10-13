@@ -45,7 +45,7 @@ class DefaultSelectionActionDelegateTest {
             getTestResources(),
             shareClicked,
             emailClicked,
-            phoneClicked
+            phoneClicked,
         )
 
         assertTrue(delegate.isActionAvailable(SEARCH, selectedRegularText))
@@ -62,7 +62,7 @@ class DefaultSelectionActionDelegateTest {
         }
         val delegate = DefaultSelectionActionDelegate(
             searchAdapter,
-            getTestResources()
+            getTestResources(),
         )
 
         assertTrue(delegate.isActionAvailable(SEARCH, selectedRegularText))
@@ -78,7 +78,7 @@ class DefaultSelectionActionDelegateTest {
         val delegate = DefaultSelectionActionDelegate(
             searchAdapter,
             getTestResources(),
-            emailTextClicked = emailClicked
+            emailTextClicked = emailClicked,
         )
 
         assertTrue(delegate.isActionAvailable(EMAIL, selectedEmailText))
@@ -96,7 +96,7 @@ class DefaultSelectionActionDelegateTest {
         val delegate = DefaultSelectionActionDelegate(
             searchAdapter,
             getTestResources(),
-            callTextClicked = phoneClicked
+            callTextClicked = phoneClicked,
         )
 
         assertTrue(delegate.isActionAvailable(CALL, selectedPhoneText))
@@ -112,7 +112,7 @@ class DefaultSelectionActionDelegateTest {
         val delegate = DefaultSelectionActionDelegate(
             searchAdapter,
             getTestResources(),
-            shareClicked
+            shareClicked,
         )
 
         assertTrue(delegate.isActionAvailable(SEARCH_PRIVATELY, selectedRegularText))
@@ -233,11 +233,13 @@ class DefaultSelectionActionDelegateTest {
         val delegate =
             DefaultSelectionActionDelegate(adapter, getTestResources(), shareClicked)
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         assertEquals(0, facts.size)
 

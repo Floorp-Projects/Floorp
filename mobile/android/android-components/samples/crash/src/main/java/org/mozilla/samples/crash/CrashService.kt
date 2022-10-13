@@ -65,13 +65,13 @@ class CrashService : Service() {
     private fun ensureChannelExists(): String {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager: NotificationManager = getSystemService(
-                Context.NOTIFICATION_SERVICE
+                Context.NOTIFICATION_SERVICE,
             ) as NotificationManager
 
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
                 "Crash Service",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_DEFAULT,
             )
 
             notificationManager.createNotificationChannel(channel)

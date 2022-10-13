@@ -114,10 +114,10 @@ class BrowserMenuCategoryTest {
                 label,
                 textStyle = TextStyle(
                     textStyle = Typeface.BOLD,
-                    textAlignment = View.TEXT_ALIGNMENT_VIEW_START
-                )
+                    textAlignment = View.TEXT_ALIGNMENT_VIEW_START,
+                ),
             ),
-            BrowserMenuCategory(label).asCandidate(context)
+            BrowserMenuCategory(label).asCandidate(context),
         )
 
         assertEquals(
@@ -126,10 +126,10 @@ class BrowserMenuCategoryTest {
                 textStyle = TextStyle(
                     size = 12f,
                     textStyle = Typeface.BOLD,
-                    textAlignment = View.TEXT_ALIGNMENT_VIEW_START
-                )
+                    textAlignment = View.TEXT_ALIGNMENT_VIEW_START,
+                ),
             ),
-            BrowserMenuCategory(label, 12f).asCandidate(context)
+            BrowserMenuCategory(label, 12f).asCandidate(context),
         )
 
         assertEquals(
@@ -138,13 +138,13 @@ class BrowserMenuCategoryTest {
                 textStyle = TextStyle(
                     color = ContextCompat.getColor(context, android.R.color.holo_red_dark),
                     textStyle = Typeface.BOLD,
-                    textAlignment = View.TEXT_ALIGNMENT_VIEW_START
-                )
+                    textAlignment = View.TEXT_ALIGNMENT_VIEW_START,
+                ),
             ),
             BrowserMenuCategory(
                 label,
-                textColorResource = android.R.color.holo_red_dark
-            ).asCandidate(context)
+                textColorResource = android.R.color.holo_red_dark,
+            ).asCandidate(context),
         )
 
         assertEquals(
@@ -152,10 +152,10 @@ class BrowserMenuCategoryTest {
                 label,
                 textStyle = TextStyle(
                     textStyle = Typeface.ITALIC,
-                    textAlignment = View.TEXT_ALIGNMENT_VIEW_START
-                )
+                    textAlignment = View.TEXT_ALIGNMENT_VIEW_START,
+                ),
             ),
-            BrowserMenuCategory(label, textStyle = Typeface.ITALIC).asCandidate(context)
+            BrowserMenuCategory(label, textStyle = Typeface.ITALIC).asCandidate(context),
         )
 
         assertEquals(
@@ -163,10 +163,10 @@ class BrowserMenuCategoryTest {
                 label,
                 textStyle = TextStyle(
                     textStyle = Typeface.BOLD,
-                    textAlignment = View.TEXT_ALIGNMENT_VIEW_END
-                )
+                    textAlignment = View.TEXT_ALIGNMENT_VIEW_END,
+                ),
             ),
-            BrowserMenuCategory(label, textAlignment = View.TEXT_ALIGNMENT_VIEW_END).asCandidate(context)
+            BrowserMenuCategory(label, textAlignment = View.TEXT_ALIGNMENT_VIEW_END).asCandidate(context),
         )
     }
 

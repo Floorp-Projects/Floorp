@@ -17,7 +17,7 @@ data class EngineVersion(
     val major: Int,
     val minor: Int,
     val patch: Long,
-    val metadata: String? = null
+    val metadata: String? = null,
 ) {
     operator fun compareTo(other: EngineVersion): Int {
         return when {
@@ -85,7 +85,7 @@ data class EngineVersion(
                     major.toInt(),
                     minor.toInt(),
                     patch.toLong(),
-                    metadata
+                    metadata,
                 )
             } catch (e: NumberFormatException) {
                 null

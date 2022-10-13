@@ -54,12 +54,12 @@ class DownloadMiddlewareTest {
                 applicationContext,
                 AbstractFetchDownloadService::class.java,
                 coroutineContext = dispatcher,
-                downloadStorage = mock()
-            )
+                downloadStorage = mock(),
+            ),
         )
         val store = BrowserStore(
             initialState = BrowserState(),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         val download = DownloadState("https://mozilla.org/download", destinationDirectory = "")
@@ -90,12 +90,12 @@ class DownloadMiddlewareTest {
                 applicationContext,
                 AbstractFetchDownloadService::class.java,
                 coroutineContext = dispatcher,
-                downloadStorage = mock()
-            )
+                downloadStorage = mock(),
+            ),
         )
         val store = BrowserStore(
             initialState = BrowserState(),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         val privateDownload = DownloadState("https://mozilla.org/download", private = true)
@@ -113,11 +113,11 @@ class DownloadMiddlewareTest {
             applicationContext,
             AbstractFetchDownloadService::class.java,
             downloadStorage = downloadStorage,
-            coroutineContext = dispatcher
+            coroutineContext = dispatcher,
         )
         val store = BrowserStore(
             initialState = BrowserState(),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         var download = DownloadState("https://mozilla.org/download", destinationDirectory = "")
@@ -140,13 +140,13 @@ class DownloadMiddlewareTest {
             applicationContext,
             AbstractFetchDownloadService::class.java,
             downloadStorage = downloadStorage,
-            coroutineContext = dispatcher
+            coroutineContext = dispatcher,
         )
         val store = BrowserStore(
             initialState = BrowserState(
-                downloads = mapOf(download.id to download)
+                downloads = mapOf(download.id to download),
             ),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         store.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
@@ -162,11 +162,11 @@ class DownloadMiddlewareTest {
             applicationContext,
             AbstractFetchDownloadService::class.java,
             downloadStorage = downloadStorage,
-            coroutineContext = dispatcher
+            coroutineContext = dispatcher,
         )
         val store = BrowserStore(
             initialState = BrowserState(),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         val download = DownloadState("https://mozilla.org/download", destinationDirectory = "")
@@ -185,11 +185,11 @@ class DownloadMiddlewareTest {
             applicationContext,
             AbstractFetchDownloadService::class.java,
             downloadStorage = downloadStorage,
-            coroutineContext = dispatcher
+            coroutineContext = dispatcher,
         )
         val store = BrowserStore(
             initialState = BrowserState(),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         val download = DownloadState("https://mozilla.org/download", destinationDirectory = "")
@@ -208,11 +208,11 @@ class DownloadMiddlewareTest {
             applicationContext,
             AbstractFetchDownloadService::class.java,
             downloadStorage = downloadStorage,
-            coroutineContext = dispatcher
+            coroutineContext = dispatcher,
         )
         val store = BrowserStore(
             initialState = BrowserState(),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         val download = DownloadState("https://mozilla.org/download", status = INITIATED)
@@ -249,11 +249,11 @@ class DownloadMiddlewareTest {
             applicationContext,
             AbstractFetchDownloadService::class.java,
             downloadStorage = downloadStorage,
-            coroutineContext = dispatcher
+            coroutineContext = dispatcher,
         )
         val store = BrowserStore(
             initialState = BrowserState(),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         val download = DownloadState("https://mozilla.org/download")
@@ -277,11 +277,11 @@ class DownloadMiddlewareTest {
             applicationContext,
             AbstractFetchDownloadService::class.java,
             downloadStorage = downloadStorage,
-            coroutineContext = dispatcher
+            coroutineContext = dispatcher,
         )
         val store = BrowserStore(
             initialState = BrowserState(),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         val download = DownloadState("https://mozilla.org/download", private = true)
@@ -303,8 +303,8 @@ class DownloadMiddlewareTest {
         val downloadMiddleware = spy(
             DownloadMiddleware(
                 applicationContext,
-                AbstractFetchDownloadService::class.java
-            )
+                AbstractFetchDownloadService::class.java,
+            ),
         )
 
         val ignoredStatus = listOf(COMPLETED, CANCELLED, FAILED)
@@ -333,12 +333,12 @@ class DownloadMiddlewareTest {
                 applicationContext,
                 AbstractFetchDownloadService::class.java,
                 coroutineContext = dispatcher,
-                downloadStorage = mock()
-            )
+                downloadStorage = mock(),
+            ),
         )
         val store = BrowserStore(
             initialState = BrowserState(),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         val actions = listOf(TabListAction.RemoveAllTabsAction(), TabListAction.RemoveAllPrivateTabsAction)
@@ -362,18 +362,18 @@ class DownloadMiddlewareTest {
                 applicationContext,
                 AbstractFetchDownloadService::class.java,
                 coroutineContext = dispatcher,
-                downloadStorage = mock()
-            )
+                downloadStorage = mock(),
+            ),
         )
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "test-tab1"),
                     createTab("https://www.firefox.com", id = "test-tab2"),
-                    createTab("https://www.wikipedia.com", private = true, id = "test-tab3")
-                )
+                    createTab("https://www.wikipedia.com", private = true, id = "test-tab3"),
+                ),
             ),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         store.dispatch(TabListAction.RemoveTabsAction(listOf("test-tab1", "test-tab3"))).joinBlocking()
@@ -393,18 +393,18 @@ class DownloadMiddlewareTest {
                 applicationContext,
                 AbstractFetchDownloadService::class.java,
                 coroutineContext = dispatcher,
-                downloadStorage = mock()
-            )
+                downloadStorage = mock(),
+            ),
         )
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "test-tab1"),
                     createTab("https://www.firefox.com", id = "test-tab2"),
-                    createTab("https://www.wikipedia.com", private = true, id = "test-tab3")
-                )
+                    createTab("https://www.wikipedia.com", private = true, id = "test-tab3"),
+                ),
             ),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         store.dispatch(TabListAction.RemoveTabsAction(listOf("test-tab1", "test-tab2"))).joinBlocking()
@@ -424,18 +424,18 @@ class DownloadMiddlewareTest {
                 applicationContext,
                 AbstractFetchDownloadService::class.java,
                 coroutineContext = dispatcher,
-                downloadStorage = mock()
-            )
+                downloadStorage = mock(),
+            ),
         )
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "test-tab1"),
                     createTab("https://www.firefox.com", id = "test-tab2"),
-                    createTab("https://www.wikipedia.com", private = true, id = "test-tab3")
-                )
+                    createTab("https://www.wikipedia.com", private = true, id = "test-tab3"),
+                ),
             ),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         store.dispatch(TabListAction.RemoveTabAction("test-tab3")).joinBlocking()
@@ -454,8 +454,8 @@ class DownloadMiddlewareTest {
                 applicationContext,
                 AbstractFetchDownloadService::class.java,
                 coroutineContext = dispatcher,
-                downloadStorage = mock()
-            )
+                downloadStorage = mock(),
+            ),
         )
         val store = BrowserStore(
             initialState = BrowserState(
@@ -463,9 +463,9 @@ class DownloadMiddlewareTest {
                     createTab("https://www.mozilla.org", id = "test-tab1"),
                     createTab("https://www.firefox.com", private = true, id = "test-tab2"),
                     createTab("https://www.wikipedia.com", private = true, id = "test-tab3"),
-                )
+                ),
             ),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         store.dispatch(TabListAction.RemoveTabAction("test-tab3")).joinBlocking()
@@ -484,8 +484,8 @@ class DownloadMiddlewareTest {
                 applicationContext,
                 AbstractFetchDownloadService::class.java,
                 coroutineContext = dispatcher,
-                downloadStorage = mock()
-            )
+                downloadStorage = mock(),
+            ),
         )
         val download = DownloadState("https://mozilla.org/download", notificationId = 100)
         val store = mock<BrowserStore>()
@@ -504,16 +504,16 @@ class DownloadMiddlewareTest {
                 applicationContext,
                 AbstractFetchDownloadService::class.java,
                 coroutineContext = dispatcher,
-                downloadStorage = mock()
-            )
+                downloadStorage = mock(),
+            ),
         )
         val download = DownloadState("https://mozilla.org/download", notificationId = 100)
         val privateDownload = DownloadState("https://mozilla.org/download", notificationId = 100, private = true)
         val store = BrowserStore(
             initialState = BrowserState(
-                downloads = mapOf(download.id to download, privateDownload.id to privateDownload)
+                downloads = mapOf(download.id to download, privateDownload.id to privateDownload),
             ),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         downloadMiddleware.removePrivateNotifications(store)
@@ -529,17 +529,17 @@ class DownloadMiddlewareTest {
                 applicationContext,
                 AbstractFetchDownloadService::class.java,
                 coroutineContext = dispatcher,
-                downloadStorage = mock()
-            )
+                downloadStorage = mock(),
+            ),
         )
         val download = DownloadState("https://mozilla.org/download", notificationId = 100, sessionId = "tab1")
         val privateDownload = DownloadState("https://mozilla.org/download", notificationId = 100, private = true, sessionId = "tab2")
         val anotherPrivateDownload = DownloadState("https://mozilla.org/download", notificationId = 100, private = true, sessionId = "tab3")
         val store = BrowserStore(
             initialState = BrowserState(
-                downloads = mapOf(download.id to download, privateDownload.id to privateDownload, anotherPrivateDownload.id to anotherPrivateDownload)
+                downloads = mapOf(download.id to download, privateDownload.id to privateDownload, anotherPrivateDownload.id to anotherPrivateDownload),
             ),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         downloadMiddleware.removePrivateNotifications(store)
@@ -557,12 +557,12 @@ class DownloadMiddlewareTest {
                 applicationContext,
                 AbstractFetchDownloadService::class.java,
                 coroutineContext = dispatcher,
-                downloadStorage = mock()
-            )
+                downloadStorage = mock(),
+            ),
         )
         val store = BrowserStore(
             initialState = BrowserState(),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         val tab = createTab("https://www.mozilla.org")
@@ -586,12 +586,12 @@ class DownloadMiddlewareTest {
                 applicationContext,
                 AbstractFetchDownloadService::class.java,
                 coroutineContext = dispatcher,
-                downloadStorage = mock()
-            )
+                downloadStorage = mock(),
+            ),
         )
         val store = BrowserStore(
             initialState = BrowserState(),
-            middleware = listOf(downloadMiddleware)
+            middleware = listOf(downloadMiddleware),
         )
 
         val tab = createTab("https://www.mozilla.org")

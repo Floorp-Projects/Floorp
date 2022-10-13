@@ -14,7 +14,7 @@ class PermissionHighlightsStateTest {
     fun `WHEN a site has blocked both autoplay audible and inaudible THEN isAutoplayBlocking is true`() {
         val highlightsState = PermissionHighlightsState(
             autoPlayAudibleBlocking = true,
-            autoPlayInaudibleBlocking = true
+            autoPlayInaudibleBlocking = true,
         )
 
         assertTrue(highlightsState.isAutoPlayBlocking)
@@ -24,21 +24,21 @@ class PermissionHighlightsStateTest {
     fun `WHEN a site has blocked either autoplay audible or inaudible autoplay THEN isAutoplayBlocking is true`() {
         var highlightsState = PermissionHighlightsState(
             autoPlayAudibleBlocking = true,
-            autoPlayInaudibleBlocking = false
+            autoPlayInaudibleBlocking = false,
         )
 
         assertTrue(highlightsState.isAutoPlayBlocking)
 
         highlightsState = highlightsState.copy(
             autoPlayAudibleBlocking = false,
-            autoPlayInaudibleBlocking = true
+            autoPlayInaudibleBlocking = true,
         )
 
         assertTrue(highlightsState.isAutoPlayBlocking)
 
         highlightsState = highlightsState.copy(
             autoPlayAudibleBlocking = false,
-            autoPlayInaudibleBlocking = false
+            autoPlayInaudibleBlocking = false,
         )
 
         assertFalse(highlightsState.isAutoPlayBlocking)
@@ -54,7 +54,7 @@ class PermissionHighlightsStateTest {
             persistentStorageChanged = false,
             mediaKeySystemAccessChanged = false,
             autoPlayAudibleChanged = false,
-            autoPlayInaudibleChanged = false
+            autoPlayInaudibleChanged = false,
         )
 
         assertFalse(highlightsState.permissionsChanged)
@@ -70,7 +70,7 @@ class PermissionHighlightsStateTest {
             persistentStorageChanged = true,
             mediaKeySystemAccessChanged = true,
             autoPlayAudibleChanged = true,
-            autoPlayInaudibleChanged = true
+            autoPlayInaudibleChanged = true,
         )
 
         assertTrue(highlightsState.permissionsChanged)

@@ -29,11 +29,11 @@ internal abstract class TopSiteDatabase : RoomDatabase() {
             return Room.databaseBuilder(
                 context,
                 TopSiteDatabase::class.java,
-                "top_sites"
+                "top_sites",
             ).addMigrations(
-                Migrations.migration_1_2
+                Migrations.migration_1_2,
             ).addMigrations(
-                Migrations.migration_2_3
+                Migrations.migration_2_3,
             ).build().also {
                 instance = it
             }
@@ -46,7 +46,7 @@ internal object Migrations {
         override fun migrate(database: SupportSQLiteDatabase) {
             // Add the new is_default column and set is_default to 0 (false) for every entry.
             database.execSQL(
-                "ALTER TABLE top_sites ADD COLUMN is_default INTEGER NOT NULL DEFAULT 0"
+                "ALTER TABLE top_sites ADD COLUMN is_default INTEGER NOT NULL DEFAULT 0",
             )
 
             // Prior to version 2, pocket top sites, wikipedia and youtube were added as default
@@ -57,7 +57,7 @@ internal object Migrations {
                     "WHERE url IN " +
                     "('https://getpocket.com/fenix-top-articles', " +
                     "'https://www.wikipedia.org/', " +
-                    "'https://www.youtube.com/')"
+                    "'https://www.youtube.com/')",
             )
         }
     }
@@ -72,24 +72,24 @@ internal object Migrations {
                     "`title` TEXT NOT NULL, " +
                     "`url` TEXT NOT NULL, " +
                     "`is_default` INTEGER NOT NULL, " +
-                    "`created_at` INTEGER NOT NULL)"
+                    "`created_at` INTEGER NOT NULL)",
             )
 
             // Insert every entry from the old table into the temporary top sites table.
             database.execSQL(
                 "INSERT INTO top_sites_temp (title, url, created_at, is_default) " +
-                    "SELECT title, url, created_at, 0 FROM top_sites"
+                    "SELECT title, url, created_at, 0 FROM top_sites",
             )
 
             // Assume there are consumers of version 2 with the mismatched isDefault and is_default
             // column name. Drop the old table.
             database.execSQL(
-                "DROP TABLE top_sites"
+                "DROP TABLE top_sites",
             )
 
             // Rename the temporary table to top_sites.
             database.execSQL(
-                "ALTER TABLE top_sites_temp RENAME TO top_sites"
+                "ALTER TABLE top_sites_temp RENAME TO top_sites",
             )
 
             // Prior to version 2, pocket top sites, wikipedia and youtube were added as default
@@ -100,7 +100,7 @@ internal object Migrations {
                     "WHERE url IN " +
                     "('https://getpocket.com/fenix-top-articles', " +
                     "'https://www.wikipedia.org/', " +
-                    "'https://www.youtube.com/')"
+                    "'https://www.youtube.com/')",
             )
         }
     }

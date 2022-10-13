@@ -23,7 +23,7 @@ class SearchActionProvider(
     private val searchUseCase: SearchUseCases.SearchUseCase,
     private val icon: Bitmap? = null,
     private val showDescription: Boolean = true,
-    private val searchEngine: SearchEngine? = null
+    private val searchEngine: SearchEngine? = null,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = java.util.UUID.randomUUID().toString()
 
@@ -47,8 +47,8 @@ class SearchActionProvider(
                 onSuggestionClicked = {
                     searchUseCase.invoke(text)
                     emitSearchActionClickedFact()
-                }
-            )
+                },
+            ),
         )
     }
 }

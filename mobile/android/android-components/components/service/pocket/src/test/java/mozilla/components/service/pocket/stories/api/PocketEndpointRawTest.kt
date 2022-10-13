@@ -65,7 +65,7 @@ class PocketEndpointRawTest {
             },
             assertParams = { request ->
                 assertEquals(expectedUrl, request.url)
-            }
+            },
         )
     }
 

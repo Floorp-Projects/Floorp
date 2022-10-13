@@ -41,7 +41,7 @@ import mozilla.components.lib.state.Store
 @Suppress("TooManyFunctions", "LargeClass")
 internal class EngineObserver(
     private val tabId: String,
-    private val store: Store<BrowserState, BrowserAction>
+    private val store: Store<BrowserState, BrowserAction>,
 ) : EngineSession.Observer {
     override fun onNavigateBack() {
         store.dispatch(ContentAction.UpdateSearchTermsAction(tabId, ""))
@@ -63,7 +63,7 @@ internal class EngineObserver(
     override fun onLoadRequest(
         url: String,
         triggeredByRedirect: Boolean,
-        triggeredByWebContent: Boolean
+        triggeredByWebContent: Boolean,
     ) {
         if (triggeredByRedirect || triggeredByWebContent) {
             store.dispatch(ContentAction.UpdateSearchTermsAction(tabId, ""))
@@ -112,8 +112,8 @@ internal class EngineObserver(
         store.dispatch(
             ContentAction.UpdateSecurityInfoAction(
                 tabId,
-                SecurityInfoState(secure, host ?: "", issuer ?: "")
-            )
+                SecurityInfoState(secure, host ?: "", issuer ?: ""),
+            ),
         )
     }
 
@@ -135,7 +135,7 @@ internal class EngineObserver(
 
     override fun onLongPress(hitResult: HitResult) {
         store.dispatch(
-            ContentAction.UpdateHitResultAction(tabId, hitResult)
+            ContentAction.UpdateHitResultAction(tabId, hitResult),
         )
     }
 
@@ -150,9 +150,9 @@ internal class EngineObserver(
                 FindResultState(
                     activeMatchOrdinal,
                     numberOfMatches,
-                    isDoneCounting
-                )
-            )
+                    isDoneCounting,
+                ),
+            ),
         )
     }
 
@@ -164,7 +164,7 @@ internal class EngineObserver(
         cookie: String?,
         userAgent: String?,
         isPrivate: Boolean,
-        response: Response?
+        response: Response?,
     ) {
         // We want to avoid negative contentLength values
         // For more info see https://bugzilla.mozilla.org/show_bug.cgi?id=1632594
@@ -179,38 +179,41 @@ internal class EngineObserver(
             userAgent,
             Environment.DIRECTORY_DOWNLOADS,
             private = isPrivate,
-            response = response
+            response = response,
         )
 
         store.dispatch(
             ContentAction.UpdateDownloadAction(
                 tabId,
-                download
-            )
+                download,
+            ),
         )
     }
 
     override fun onDesktopModeChange(enabled: Boolean) {
         store.dispatch(
             ContentAction.UpdateDesktopModeAction(
-                tabId, enabled
-            )
+                tabId,
+                enabled,
+            ),
         )
     }
 
     override fun onFullScreenChange(enabled: Boolean) {
         store.dispatch(
             ContentAction.FullScreenChangedAction(
-                tabId, enabled
-            )
+                tabId,
+                enabled,
+            ),
         )
     }
 
     override fun onMetaViewportFitChanged(layoutInDisplayCutoutMode: Int) {
         store.dispatch(
             ContentAction.ViewportFitChangedAction(
-                tabId, layoutInDisplayCutoutMode
-            )
+                tabId,
+                layoutInDisplayCutoutMode,
+            ),
         )
     }
 
@@ -220,7 +223,7 @@ internal class EngineObserver(
                 ContentAction.RemoveThumbnailAction(tabId)
             } else {
                 ContentAction.UpdateThumbnailAction(tabId, bitmap)
-            }
+            },
         )
     }
 
@@ -228,8 +231,8 @@ internal class EngineObserver(
         store.dispatch(
             ContentAction.UpdatePermissionsRequest(
                 tabId,
-                permissionRequest
-            )
+                permissionRequest,
+            ),
         )
     }
 
@@ -237,8 +240,8 @@ internal class EngineObserver(
         store.dispatch(
             ContentAction.ConsumePermissionsRequest(
                 tabId,
-                permissionRequest
-            )
+                permissionRequest,
+            ),
         )
     }
 
@@ -246,8 +249,8 @@ internal class EngineObserver(
         store.dispatch(
             ContentAction.UpdateAppPermissionsRequest(
                 tabId,
-                permissionRequest
-            )
+                permissionRequest,
+            ),
         )
     }
 
@@ -255,20 +258,20 @@ internal class EngineObserver(
         store.dispatch(
             ContentAction.UpdatePromptRequestAction(
                 tabId,
-                promptRequest
-            )
+                promptRequest,
+            ),
         )
     }
 
     override fun onPromptDismissed(promptRequest: PromptRequest) {
         store.dispatch(
-            ContentAction.ConsumePromptRequestAction(tabId, promptRequest)
+            ContentAction.ConsumePromptRequestAction(tabId, promptRequest),
         )
     }
 
     override fun onPromptUpdate(previousPromptRequestUid: String, promptRequest: PromptRequest) {
         store.dispatch(
-            ContentAction.ReplacePromptRequestAction(tabId, previousPromptRequestUid, promptRequest)
+            ContentAction.ReplacePromptRequestAction(tabId, previousPromptRequestUid, promptRequest),
         )
     }
 
@@ -284,14 +287,14 @@ internal class EngineObserver(
         store.dispatch(
             ContentAction.UpdateWindowRequestAction(
                 tabId,
-                windowRequest
-            )
+                windowRequest,
+            ),
         )
     }
 
     override fun onShowDynamicToolbar() {
         store.dispatch(
-            ContentAction.UpdateExpandedToolbarStateAction(tabId, true)
+            ContentAction.UpdateExpandedToolbarStateAction(tabId, true),
         )
     }
 
@@ -299,8 +302,8 @@ internal class EngineObserver(
         store.dispatch(
             MediaSessionAction.ActivatedMediaSessionAction(
                 tabId,
-                mediaSessionController
-            )
+                mediaSessionController,
+            ),
         )
     }
 
@@ -316,8 +319,8 @@ internal class EngineObserver(
         store.dispatch(
             MediaSessionAction.UpdateMediaPlaybackStateAction(
                 tabId,
-                playbackState
-            )
+                playbackState,
+            ),
         )
     }
 
@@ -325,8 +328,8 @@ internal class EngineObserver(
         store.dispatch(
             MediaSessionAction.UpdateMediaFeatureAction(
                 tabId,
-                features
-            )
+                features,
+            ),
         )
     }
 
@@ -334,8 +337,8 @@ internal class EngineObserver(
         store.dispatch(
             MediaSessionAction.UpdateMediaPositionStateAction(
                 tabId,
-                positionState
-            )
+                positionState,
+            ),
         )
     }
 
@@ -343,21 +346,21 @@ internal class EngineObserver(
         store.dispatch(
             MediaSessionAction.UpdateMediaMutedAction(
                 tabId,
-                muted
-            )
+                muted,
+            ),
         )
     }
 
     override fun onMediaFullscreenChanged(
         fullscreen: Boolean,
-        elementMetadata: MediaSession.ElementMetadata?
+        elementMetadata: MediaSession.ElementMetadata?,
     ) {
         store.dispatch(
             MediaSessionAction.UpdateMediaFullscreenAction(
                 tabId,
                 fullscreen,
-                elementMetadata
-            )
+                elementMetadata,
+            ),
         )
     }
 
@@ -368,32 +371,34 @@ internal class EngineObserver(
     override fun onCrash() {
         store.dispatch(
             CrashAction.SessionCrashedAction(
-                tabId
-            )
+                tabId,
+            ),
         )
     }
 
     override fun onProcessKilled() {
         store.dispatch(
             EngineAction.KillEngineSessionAction(
-                tabId
-            )
+                tabId,
+            ),
         )
     }
 
     override fun onStateUpdated(state: EngineSessionState) {
         store.dispatch(
             EngineAction.UpdateEngineSessionStateAction(
-                tabId, state
-            )
+                tabId,
+                state,
+            ),
         )
     }
 
     override fun onRecordingStateChanged(devices: List<RecordingDevice>) {
         store.dispatch(
             ContentAction.SetRecordingDevices(
-                tabId, devices
-            )
+                tabId,
+                devices,
+            ),
         )
     }
 
@@ -402,8 +407,8 @@ internal class EngineObserver(
             ContentAction.UpdateHistoryStateAction(
                 tabId,
                 historyList,
-                currentIndex
-            )
+                currentIndex,
+            ),
         )
     }
 }

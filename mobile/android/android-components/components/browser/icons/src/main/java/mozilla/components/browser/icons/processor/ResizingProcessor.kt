@@ -16,7 +16,7 @@ import kotlin.math.roundToInt
  * [IconProcessor] implementation for resizing the loaded icon based on the target size.
  */
 class ResizingProcessor(
-    private val discardSmallIcons: Boolean = true
+    private val discardSmallIcons: Boolean = true,
 ) : IconProcessor {
 
     override fun process(
@@ -24,7 +24,7 @@ class ResizingProcessor(
         request: IconRequest,
         resource: IconRequest.Resource?,
         icon: Icon,
-        desiredSize: DesiredSize
+        desiredSize: DesiredSize,
     ): Icon? {
         val originalBitmap = icon.bitmap
         val size = originalBitmap.width

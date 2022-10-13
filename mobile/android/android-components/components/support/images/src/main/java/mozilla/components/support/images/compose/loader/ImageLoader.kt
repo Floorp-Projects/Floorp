@@ -57,14 +57,14 @@ fun ImageLoader(
     minSize: Dp = targetSize / DEFAULT_MIN_MAX_MULTIPLIER,
     maxSize: Dp = targetSize * DEFAULT_MIN_MAX_MULTIPLIER,
     maxScaleFactor: Float = DEFAULT_MAXIMUM_SCALE_FACTOR,
-    content: @Composable ImageLoaderScope.() -> Unit
+    content: @Composable ImageLoaderScope.() -> Unit,
 ) {
     val desiredSize = with(LocalDensity.current) {
         DesiredSize(
             targetSize = targetSize.roundToPx(),
             minSize = minSize.roundToPx(),
             maxSize = maxSize.roundToPx(),
-            maxScaleFactor = maxScaleFactor
+            maxScaleFactor = maxScaleFactor,
         )
     }
 
@@ -75,7 +75,7 @@ fun ImageLoader(
             private,
             connectTimeout,
             readTimeout,
-            desiredSize
+            desiredSize,
         )
     }
 
@@ -94,7 +94,7 @@ private suspend fun InternalImageLoaderScope.load() {
             private,
             connectTimeout,
             readTimeout,
-            desiredSize
+            desiredSize,
         )
     }
 
@@ -112,14 +112,14 @@ private suspend fun fetchAndDecode(
     private: Boolean,
     connectTimeout: Pair<Long, TimeUnit>,
     readTimeout: Pair<Long, TimeUnit>,
-    desiredSize: DesiredSize
+    desiredSize: DesiredSize,
 ): Bitmap? = withContext(Dispatchers.IO) {
     val data = fetch(
         client,
         url,
         private,
         connectTimeout,
-        readTimeout
+        readTimeout,
     ) ?: return@withContext null
 
     decoders.firstNotNullOfOrNull { decoder ->
@@ -146,7 +146,7 @@ private fun fetch(
         readTimeout = readTimeout,
         redirect = Request.Redirect.FOLLOW,
         useCaches = true,
-        private = private
+        private = private,
     )
 
     return try {
@@ -169,5 +169,5 @@ private const val DEFAULT_MIN_MAX_MULTIPLIER = 3
 private val defaultTargetSize = 100.dp
 
 private val decoders = listOf(
-    AndroidImageDecoder()
+    AndroidImageDecoder(),
 )

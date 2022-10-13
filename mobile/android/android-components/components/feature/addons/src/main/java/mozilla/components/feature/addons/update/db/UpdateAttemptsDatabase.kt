@@ -27,7 +27,7 @@ internal abstract class UpdateAttemptsDatabase : RoomDatabase() {
             return Room.databaseBuilder(
                 context,
                 UpdateAttemptsDatabase::class.java,
-                "addons_updater_attempts_database"
+                "addons_updater_attempts_database",
             ).build().also { instance = it }
         }
     }

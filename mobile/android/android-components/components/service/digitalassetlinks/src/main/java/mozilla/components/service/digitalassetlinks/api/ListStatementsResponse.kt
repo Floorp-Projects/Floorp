@@ -19,7 +19,7 @@ import org.json.JSONObject
 data class ListStatementsResponse(
     val statements: List<Statement>,
     val maxAge: String,
-    val debug: String
+    val debug: String,
 )
 
 internal fun parseListStatementsJson(json: JSONObject): ListStatementsResponse {
@@ -37,7 +37,7 @@ internal fun parseListStatementsJson(json: JSONObject): ListStatementsResponse {
                 androidJson != null -> AssetDescriptor.Android(
                     packageName = androidJson.getString("packageName"),
                     sha256CertFingerprint = androidJson.getJSONObject("certificate")
-                        .getString("sha256Fingerprint")
+                        .getString("sha256Fingerprint"),
                 )
                 else -> null
             }
@@ -51,6 +51,6 @@ internal fun parseListStatementsJson(json: JSONObject): ListStatementsResponse {
     return ListStatementsResponse(
         statements = statements.toList(),
         maxAge = json.getString("maxAge"),
-        debug = json.optString("debugString")
+        debug = json.optString("debugString"),
     )
 }

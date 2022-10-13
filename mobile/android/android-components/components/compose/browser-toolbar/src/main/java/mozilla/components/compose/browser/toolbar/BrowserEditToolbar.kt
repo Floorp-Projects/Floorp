@@ -39,7 +39,7 @@ fun BrowserEditToolbar(
     url: String,
     onUrlEdit: (String) -> Unit = {},
     onUrlCommitted: (String) -> Unit = {},
-    editActions: @Composable () -> Unit = {}
+    editActions: @Composable () -> Unit = {},
 ) {
     val backgroundColor = MaterialTheme.colors.surface
     val foregroundColor = contentColorFor(backgroundColor)
@@ -51,15 +51,15 @@ fun BrowserEditToolbar(
         },
         colors = TextFieldDefaults.textFieldColors(
             textColor = foregroundColor,
-            backgroundColor = backgroundColor
+            backgroundColor = backgroundColor,
         ),
         singleLine = true,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Uri,
-            imeAction = ImeAction.Go
+            imeAction = ImeAction.Go,
         ),
         keyboardActions = KeyboardActions(
-            onGo = { onUrlCommitted(url) }
+            onGo = { onUrlCommitted(url) },
         ),
         modifier = Modifier.fillMaxWidth(),
         trailingIcon = {
@@ -68,7 +68,7 @@ fun BrowserEditToolbar(
             if (url.isNotEmpty()) {
                 ClearButton(onButtonClicked = { onUrlEdit("") })
             }
-        }
+        },
     )
 }
 
@@ -81,12 +81,12 @@ fun BrowserEditToolbar(
 fun ClearButton(onButtonClicked: () -> Unit = {}) {
     IconButton(
         modifier = Modifier.requiredSize(40.dp),
-        onClick = { onButtonClicked() }
+        onClick = { onButtonClicked() },
     ) {
         Icon(
             painter = painterResource(R.drawable.mozac_ic_clear),
             contentDescription = stringResource(R.string.mozac_clear_button_description),
-            tint = Color.Black
+            tint = Color.Black,
         )
     }
 }

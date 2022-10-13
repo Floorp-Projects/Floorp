@@ -27,9 +27,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 class CustomTabConfigHelperTest {
@@ -59,8 +59,8 @@ class CustomTabConfigHelperTest {
         assertFalse(isTrustedWebActivityIntent(mock<Intent>()))
         assertFalse(
             isTrustedWebActivityIntent(
-                Intent().putExtra(TrustedWebUtils.EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY, true)
-            )
+                Intent().putExtra(TrustedWebUtils.EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY, true),
+            ),
         )
     }
 

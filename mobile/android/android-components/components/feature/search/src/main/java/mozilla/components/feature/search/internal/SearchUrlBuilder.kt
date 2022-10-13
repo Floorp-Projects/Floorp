@@ -29,7 +29,7 @@ private const val OS_PARAM_OUTPUT_ENCODING = "{" + "outputEncoding" + "}"
 private const val OS_PARAM_OPTIONAL = "\\{" + "(?:\\w+:)?\\w+?" + "\\}"
 
 internal class SearchUrlBuilder(
-    private val searchEngine: SearchEngine
+    private val searchEngine: SearchEngine,
 ) {
     fun buildSearchUrl(searchTerms: String): String {
         // The parser should have put the best URL for this device at the beginning of the list.

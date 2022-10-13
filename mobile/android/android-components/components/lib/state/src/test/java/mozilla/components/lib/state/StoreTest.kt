@@ -17,7 +17,7 @@ class StoreTest {
     fun `Dispatching Action executes reducers and creates new State`() {
         val store = Store(
             TestState(counter = 23),
-            ::reducer
+            ::reducer,
         )
 
         store.dispatch(TestAction.IncrementAction).joinBlocking()
@@ -34,7 +34,7 @@ class StoreTest {
     fun `Observer gets notified about state changes`() {
         val store = Store(
             TestState(counter = 23),
-            ::reducer
+            ::reducer,
         )
 
         var observedValue = 0
@@ -52,7 +52,7 @@ class StoreTest {
     fun `Observer gets initial value before state changes`() {
         val store = Store(
             TestState(counter = 23),
-            ::reducer
+            ::reducer,
         )
 
         var observedValue = 0
@@ -68,7 +68,7 @@ class StoreTest {
     fun `Observer does not get notified if state does not change`() {
         val store = Store(
             TestState(counter = 23),
-            ::reducer
+            ::reducer,
         )
 
         var stateChangeObserved = false
@@ -90,7 +90,7 @@ class StoreTest {
     fun `Observer does not get notified after unsubscribe`() {
         val store = Store(
             TestState(counter = 23),
-            ::reducer
+            ::reducer,
         )
 
         var observedValue = 0
@@ -140,8 +140,8 @@ class StoreTest {
             ::reducer,
             listOf(
                 incrementMiddleware,
-                doubleMiddleware
-            )
+                doubleMiddleware,
+            ),
         )
 
         store.dispatch(TestAction.DoNothingAction).joinBlocking()
@@ -170,7 +170,7 @@ class StoreTest {
         val store = Store(
             TestState(counter = 0),
             ::reducer,
-            listOf(interceptingMiddleware)
+            listOf(interceptingMiddleware),
         )
 
         store.dispatch(TestAction.IncrementAction).joinBlocking()
@@ -192,7 +192,7 @@ class StoreTest {
         val store = Store(
             TestState(counter = 0),
             ::reducer,
-            listOf(rewritingMiddleware)
+            listOf(rewritingMiddleware),
         )
 
         store.dispatch(TestAction.IncrementAction).joinBlocking()
@@ -218,7 +218,7 @@ class StoreTest {
         val store = Store(
             TestState(counter = 0),
             ::reducer,
-            listOf(rewritingMiddleware)
+            listOf(rewritingMiddleware),
         )
 
         store.dispatch(TestAction.IncrementAction).joinBlocking()
@@ -245,7 +245,7 @@ class StoreTest {
         val store = Store(
             TestState(counter = 0),
             ::reducer,
-            listOf(observingMiddleware)
+            listOf(observingMiddleware),
         )
 
         store.dispatch(TestAction.IncrementAction).joinBlocking()
@@ -280,7 +280,7 @@ class StoreTest {
         val store = Store(
             TestState(counter = 0),
             { _: State, _: Action -> throw IOException() },
-            listOf(catchingMiddleware)
+            listOf(catchingMiddleware),
         )
 
         store.dispatch(TestAction.IncrementAction).joinBlocking()
@@ -299,7 +299,7 @@ fun reducer(state: TestState, action: TestAction): TestState = when (action) {
 }
 
 data class TestState(
-    val counter: Int
+    val counter: Int,
 ) : State
 
 sealed class TestAction : Action {

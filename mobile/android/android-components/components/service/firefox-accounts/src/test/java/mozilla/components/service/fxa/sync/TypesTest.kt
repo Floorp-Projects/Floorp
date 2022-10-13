@@ -27,27 +27,27 @@ class TypesTest {
     fun `a list of raw strings are correctly mapped to a set of SyncEngine engines`() {
         assertEquals(
             setOf(SyncEngine.History),
-            listOf("history").toSyncEngines()
+            listOf("history").toSyncEngines(),
         )
 
         assertEquals(
             setOf(SyncEngine.Bookmarks, SyncEngine.History),
-            listOf("history", "bookmarks").toSyncEngines()
+            listOf("history", "bookmarks").toSyncEngines(),
         )
 
         assertEquals(
             setOf(SyncEngine.History, SyncEngine.CreditCards),
-            listOf("history", "creditcards").toSyncEngines()
+            listOf("history", "creditcards").toSyncEngines(),
         )
 
         assertEquals(
             setOf(SyncEngine.Other("other"), SyncEngine.CreditCards),
-            listOf("other", "creditcards").toSyncEngines()
+            listOf("other", "creditcards").toSyncEngines(),
         )
 
         assertEquals(
             setOf(SyncEngine.Bookmarks, SyncEngine.History),
-            listOf("history", "bookmarks", "bookmarks", "history").toSyncEngines()
+            listOf("history", "bookmarks", "bookmarks", "history").toSyncEngines(),
         )
     }
 

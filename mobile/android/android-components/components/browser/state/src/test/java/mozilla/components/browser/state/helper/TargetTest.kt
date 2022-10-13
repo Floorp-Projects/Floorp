@@ -22,66 +22,66 @@ class TargetTest {
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "mozilla"),
                     createTab("https://www.example.org", id = "example"),
-                    createTab("https://theverge.com", id = "theverge", private = true)
+                    createTab("https://theverge.com", id = "theverge", private = true),
                 ),
                 customTabs = listOf(
-                    createCustomTab("https://www.reddit.com/r/firefox/", id = "reddit")
+                    createCustomTab("https://www.reddit.com/r/firefox/", id = "reddit"),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         assertEquals(
             "https://www.mozilla.org",
-            Target.SelectedTab.lookupIn(store)?.content?.url
+            Target.SelectedTab.lookupIn(store)?.content?.url,
         )
 
         assertEquals(
             "https://www.mozilla.org",
-            Target.Tab("mozilla").lookupIn(store)?.content?.url
+            Target.Tab("mozilla").lookupIn(store)?.content?.url,
         )
 
         assertEquals(
             "https://theverge.com",
-            Target.Tab("theverge").lookupIn(store)?.content?.url
+            Target.Tab("theverge").lookupIn(store)?.content?.url,
         )
 
         assertNull(
-            Target.Tab("unknown").lookupIn(store)
+            Target.Tab("unknown").lookupIn(store),
         )
 
         assertNull(
-            Target.Tab("reddit").lookupIn(store)
+            Target.Tab("reddit").lookupIn(store),
         )
 
         assertEquals(
             "https://www.reddit.com/r/firefox/",
-            Target.CustomTab("reddit").lookupIn(store)?.content?.url
+            Target.CustomTab("reddit").lookupIn(store)?.content?.url,
         )
 
         assertNull(
-            Target.CustomTab("unknown").lookupIn(store)
+            Target.CustomTab("unknown").lookupIn(store),
         )
 
         assertNull(
-            Target.CustomTab("mozilla").lookupIn(store)
+            Target.CustomTab("mozilla").lookupIn(store),
         )
 
         store.dispatch(
-            TabListAction.SelectTabAction("example")
+            TabListAction.SelectTabAction("example"),
         ).joinBlocking()
 
         assertEquals(
             "https://www.example.org",
-            Target.SelectedTab.lookupIn(store)?.content?.url
+            Target.SelectedTab.lookupIn(store)?.content?.url,
         )
 
         store.dispatch(
-            TabListAction.RemoveAllTabsAction()
+            TabListAction.RemoveAllTabsAction(),
         ).joinBlocking()
 
         assertNull(
-            Target.SelectedTab.lookupIn(store)
+            Target.SelectedTab.lookupIn(store),
         )
     }
 
@@ -91,48 +91,48 @@ class TargetTest {
             tabs = listOf(
                 createTab("https://www.mozilla.org", id = "mozilla"),
                 createTab("https://www.example.org", id = "example"),
-                createTab("https://theverge.com", id = "theverge", private = true)
+                createTab("https://theverge.com", id = "theverge", private = true),
             ),
             customTabs = listOf(
-                createCustomTab("https://www.reddit.com/r/firefox/", id = "reddit")
+                createCustomTab("https://www.reddit.com/r/firefox/", id = "reddit"),
             ),
-            selectedTabId = "mozilla"
+            selectedTabId = "mozilla",
         )
 
         assertEquals(
             "https://www.mozilla.org",
-            Target.SelectedTab.lookupIn(state)?.content?.url
+            Target.SelectedTab.lookupIn(state)?.content?.url,
         )
 
         assertEquals(
             "https://www.mozilla.org",
-            Target.Tab("mozilla").lookupIn(state)?.content?.url
+            Target.Tab("mozilla").lookupIn(state)?.content?.url,
         )
 
         assertEquals(
             "https://theverge.com",
-            Target.Tab("theverge").lookupIn(state)?.content?.url
+            Target.Tab("theverge").lookupIn(state)?.content?.url,
         )
 
         assertNull(
-            Target.Tab("unknown").lookupIn(state)
+            Target.Tab("unknown").lookupIn(state),
         )
 
         assertNull(
-            Target.Tab("reddit").lookupIn(state)
+            Target.Tab("reddit").lookupIn(state),
         )
 
         assertEquals(
             "https://www.reddit.com/r/firefox/",
-            Target.CustomTab("reddit").lookupIn(state)?.content?.url
+            Target.CustomTab("reddit").lookupIn(state)?.content?.url,
         )
 
         assertNull(
-            Target.CustomTab("unknown").lookupIn(state)
+            Target.CustomTab("unknown").lookupIn(state),
         )
 
         assertNull(
-            Target.CustomTab("mozilla").lookupIn(state)
+            Target.CustomTab("mozilla").lookupIn(state),
         )
     }
 }

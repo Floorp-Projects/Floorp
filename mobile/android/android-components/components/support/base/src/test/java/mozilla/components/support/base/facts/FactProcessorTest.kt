@@ -26,7 +26,7 @@ class FactProcessorTest {
         val fact = Fact(
             Component.SUPPORT_TEST,
             Action.CLICK,
-            "test"
+            "test",
         )
 
         fact.collect()

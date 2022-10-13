@@ -64,7 +64,7 @@ class SyncedTabsStorage(
                     tabsStorage.store(tabs)
                     accountManager.syncNow(
                         reason = SyncReason.User,
-                        customEngineSubset = listOf(SyncEngine.Tabs)
+                        customEngineSubset = listOf(SyncEngine.Tabs),
                     )
                 }
         }

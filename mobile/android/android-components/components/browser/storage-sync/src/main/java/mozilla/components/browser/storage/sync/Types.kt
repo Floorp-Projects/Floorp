@@ -32,7 +32,7 @@ internal fun mozilla.components.concept.sync.SyncAuthInfo.into(): SyncAuthInfo {
         kid = this.kid,
         fxaAccessToken = this.fxaAccessToken,
         syncKey = this.syncKey,
-        tokenserverURL = this.tokenServerUrl
+        tokenserverURL = this.tokenServerUrl,
     )
 }
 
@@ -113,7 +113,7 @@ internal fun mozilla.appservices.places.uniffi.HistoryVisitInfo.into(): VisitInf
 internal fun mozilla.appservices.places.uniffi.TopFrecentSiteInfo.into(): TopFrecentSiteInfo {
     return TopFrecentSiteInfo(
         url = this.url,
-        title = this.title
+        title = this.title,
     )
 }
 
@@ -128,7 +128,7 @@ internal fun BookmarkItem.asBookmarkNode(): BookmarkNode {
                 this.b.title,
                 this.b.url,
                 this.b.dateAdded,
-                null
+                null,
             )
         }
         is BookmarkItem.Folder -> {
@@ -140,7 +140,7 @@ internal fun BookmarkItem.asBookmarkNode(): BookmarkNode {
                 this.f.title,
                 null,
                 this.f.dateAdded,
-                this.f.childNodes?.map(BookmarkItem::asBookmarkNode)
+                this.f.childNodes?.map(BookmarkItem::asBookmarkNode),
             )
         }
         is BookmarkItem.Separator -> {
@@ -152,7 +152,7 @@ internal fun BookmarkItem.asBookmarkNode(): BookmarkNode {
                 null,
                 null,
                 this.s.dateAdded,
-                null
+                null,
             )
         }
     }
@@ -162,7 +162,7 @@ internal fun HistoryMetadataKey.into(): mozilla.appservices.places.HistoryMetada
     return mozilla.appservices.places.HistoryMetadataKey(
         url = this.url,
         referrerUrl = this.referrerUrl,
-        searchTerm = this.searchTerm
+        searchTerm = this.searchTerm,
     )
 }
 
@@ -170,7 +170,7 @@ internal fun mozilla.appservices.places.HistoryMetadataKey.into(): HistoryMetada
     return HistoryMetadataKey(
         url = this.url,
         referrerUrl = if (this.referrerUrl.isNullOrEmpty()) { null } else { this.referrerUrl },
-        searchTerm = if (this.searchTerm.isNullOrEmpty()) { null } else { this.searchTerm }
+        searchTerm = if (this.searchTerm.isNullOrEmpty()) { null } else { this.searchTerm },
     )
 }
 
@@ -193,7 +193,7 @@ internal fun mozilla.appservices.places.uniffi.HistoryMetadata.into(): HistoryMe
         updatedAt = this.updatedAt,
         totalViewTime = this.totalViewTime,
         documentType = this.documentType.into(),
-        previewImageUrl = this.previewImageUrl
+        previewImageUrl = this.previewImageUrl,
     )
 }
 
@@ -207,7 +207,7 @@ internal fun mozilla.appservices.places.uniffi.HistoryHighlight.into(): HistoryH
         placeId = this.placeId,
         url = this.url,
         title = this.title,
-        previewImageUrl = this.previewImageUrl
+        previewImageUrl = this.previewImageUrl,
     )
 }
 
@@ -218,7 +218,7 @@ internal fun List<mozilla.appservices.places.uniffi.HistoryHighlight>.intoHighli
 internal fun HistoryHighlightWeights.into(): mozilla.appservices.places.uniffi.HistoryHighlightWeights {
     return mozilla.appservices.places.uniffi.HistoryHighlightWeights(
         viewTime = this.viewTime,
-        frequency = this.frequency
+        frequency = this.frequency,
     )
 }
 
@@ -239,12 +239,12 @@ internal fun HistoryMetadata.into(): mozilla.appservices.places.uniffi.HistoryMe
         updatedAt = this.updatedAt,
         totalViewTime = this.totalViewTime,
         documentType = this.documentType.into(),
-        previewImageUrl = this.previewImageUrl
+        previewImageUrl = this.previewImageUrl,
     )
 }
 
 internal fun HistoryMetadataObservation.into(
-    key: HistoryMetadataKey
+    key: HistoryMetadataKey,
 ): mozilla.appservices.places.uniffi.HistoryMetadataObservation {
     return when (this) {
         is HistoryMetadataObservation.ViewTimeObservation -> {
@@ -252,7 +252,7 @@ internal fun HistoryMetadataObservation.into(
                 url = key.url,
                 searchTerm = key.searchTerm,
                 referrerUrl = key.referrerUrl,
-                viewTime = this.viewTime
+                viewTime = this.viewTime,
             )
         }
         is HistoryMetadataObservation.DocumentTypeObservation -> {
@@ -260,7 +260,7 @@ internal fun HistoryMetadataObservation.into(
                 url = key.url,
                 searchTerm = key.searchTerm,
                 referrerUrl = key.referrerUrl,
-                documentType = this.documentType.into()
+                documentType = this.documentType.into(),
             )
         }
     }

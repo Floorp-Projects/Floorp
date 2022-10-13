@@ -30,14 +30,14 @@ import mozilla.components.support.base.log.logger.Logger
 class AutofillCrypto(
     private val context: Context,
     private val securePrefs: SecureAbove22Preferences,
-    private val storage: AutofillCreditCardsAddressesStorage
+    private val storage: AutofillCreditCardsAddressesStorage,
 ) : CreditCardCrypto, KeyManager() {
     private val logger = Logger("AutofillCrypto")
     private val plaintextPrefs by lazy { context.getSharedPreferences(AUTOFILL_PREFS, Context.MODE_PRIVATE) }
 
     override fun encrypt(
         key: ManagedKey,
-        plaintextCardNumber: CreditCardNumber.Plaintext
+        plaintextCardNumber: CreditCardNumber.Plaintext,
     ): CreditCardNumber.Encrypted? {
         return try {
             CreditCardNumber.Encrypted(encryptString(key.key, plaintextCardNumber.number))
@@ -52,7 +52,7 @@ class AutofillCrypto(
 
     override fun decrypt(
         key: ManagedKey,
-        encryptedCardNumber: CreditCardNumber.Encrypted
+        encryptedCardNumber: CreditCardNumber.Encrypted,
     ): CreditCardNumber.Plaintext? {
         return try {
             CreditCardNumber.Plaintext(decryptString(key.key, encryptedCardNumber.number))

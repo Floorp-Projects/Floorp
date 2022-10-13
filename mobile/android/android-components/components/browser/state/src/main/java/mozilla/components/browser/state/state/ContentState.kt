@@ -97,5 +97,5 @@ data class ContentState(
     val desktopMode: Boolean = false,
     val appIntent: AppIntentState? = null,
     val showToolbarAsExpanded: Boolean = false,
-    val previewImageUrl: String? = null
+    val previewImageUrl: String? = null,
 )

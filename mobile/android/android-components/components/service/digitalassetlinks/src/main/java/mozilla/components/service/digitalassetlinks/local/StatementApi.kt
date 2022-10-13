@@ -49,7 +49,7 @@ class StatementApi(private val httpClient: Client) : StatementListFetcher {
      */
     private fun getWebsiteStatementList(
         assetLinksUrl: String,
-        seenSoFar: MutableSet<String>
+        seenSoFar: MutableSet<String>,
     ): Sequence<Statement> {
         if (assetLinksUrl in seenSoFar) {
             return emptySequence()
@@ -61,7 +61,7 @@ class StatementApi(private val httpClient: Client) : StatementListFetcher {
             url = assetLinksUrl.sanitizeURL(),
             method = Request.Method.GET,
             connectTimeout = TIMEOUT,
-            readTimeout = TIMEOUT
+            readTimeout = TIMEOUT,
         )
         val response = httpClient.safeFetch(request)?.let { res ->
             val contentTypes = res.headers.getAll(CONTENT_TYPE)
@@ -86,7 +86,7 @@ class StatementApi(private val httpClient: Client) : StatementListFetcher {
             yieldAll(
                 includeStatements.asSequence().flatMap {
                     getWebsiteStatementList(it.include, seenSoFar)
-                }
+                },
             )
         }
     }
@@ -125,7 +125,7 @@ class StatementApi(private val httpClient: Client) : StatementListFetcher {
             val target = json.getJSONObject("target")
             val assets = when (target.getString("namespace")) {
                 "web" -> sequenceOf(
-                    AssetDescriptor.Web(site = target.getString("site"))
+                    AssetDescriptor.Web(site = target.getString("site")),
                 )
                 "android_app" -> {
                     val packageName = target.getString("package_name")

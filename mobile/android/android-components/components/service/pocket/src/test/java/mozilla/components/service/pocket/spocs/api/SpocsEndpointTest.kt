@@ -59,7 +59,7 @@ class SpocsEndpointTest {
         doReturn(null).`when`(raw).getSponsoredStories()
 
         doThrow(
-            AssertionError("JSONParser should not be called for a null endpoint response")
+            AssertionError("JSONParser should not be called for a null endpoint response"),
         ).`when`(jsonParser).jsonToSpocs(any())
 
         endpoint.getSponsoredStories()
@@ -99,7 +99,7 @@ class SpocsEndpointTest {
         ).forEach { response ->
             doReturn(response).`when`(raw).getSponsoredStories()
             doThrow(
-                AssertionError("JSONParser should not be called for an empty endpoint response")
+                AssertionError("JSONParser should not be called for an empty endpoint response"),
             ).`when`(jsonParser).jsonToSpocs(any())
 
             endpoint.getSponsoredStories()
@@ -111,7 +111,7 @@ class SpocsEndpointTest {
         arrayOf(
             "{}",
             """{"expectedJSON": 101}""",
-            """{ "spocs": [] }"""
+            """{ "spocs": [] }""",
         ).forEach { response ->
             doReturn(response).`when`(raw).getSponsoredStories()
 

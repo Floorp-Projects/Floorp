@@ -19,7 +19,7 @@ object DrawableUtils {
     fun loadAndTintDrawable(
         context: Context,
         @DrawableRes resourceId: Int,
-        @ColorInt color: Int
+        @ColorInt color: Int,
     ): Drawable {
         val drawable = ResourcesCompat.getDrawable(context.resources, resourceId, context.theme)
         val wrapped = DrawableCompat.wrap(drawable!!.mutate())
@@ -33,7 +33,7 @@ object DrawableUtils {
     fun loadAndTintDrawable(
         context: Context,
         @DrawableRes resourceId: Int,
-        colorStateList: ColorStateList
+        colorStateList: ColorStateList,
     ): Drawable {
         val drawable = ResourcesCompat.getDrawable(context.resources, resourceId, context.theme)
         val wrapped = DrawableCompat.wrap(drawable!!.mutate())

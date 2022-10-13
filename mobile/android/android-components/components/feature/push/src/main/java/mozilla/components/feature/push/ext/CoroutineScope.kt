@@ -14,7 +14,7 @@ import mozilla.appservices.push.PushException
  */
 internal fun CoroutineScope.launchAndTry(
     errorBlock: (Exception) -> Unit = {},
-    block: suspend CoroutineScope.() -> Unit
+    block: suspend CoroutineScope.() -> Unit,
 ): Job {
     return launch {
         try {

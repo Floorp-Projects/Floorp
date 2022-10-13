@@ -25,5 +25,5 @@ package mozilla.components.browser.state.state
 data class LastMediaAccessState(
     val lastMediaUrl: String = "",
     val lastMediaAccess: Long = 0,
-    val mediaSessionActive: Boolean = false
+    val mediaSessionActive: Boolean = false,
 )

@@ -18,9 +18,9 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.Mockito.`when`
 import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
@@ -41,7 +41,7 @@ class DefaultPresenterTest {
             controller,
             accountManager,
             view,
-            lifecycleOwner
+            lifecycleOwner,
         )
 
         presenter.start()
@@ -56,7 +56,7 @@ class DefaultPresenterTest {
             controller,
             accountManager,
             view,
-            lifecycleOwner
+            lifecycleOwner,
         )
 
         // disable sync storage
@@ -75,7 +75,7 @@ class DefaultPresenterTest {
             controller,
             accountManager,
             view,
-            lifecycleOwner
+            lifecycleOwner,
         )
 
         `when`(accountManager.authenticatedAccount()).thenReturn(mock())
@@ -93,7 +93,7 @@ class DefaultPresenterTest {
             controller,
             accountManager,
             view,
-            lifecycleOwner
+            lifecycleOwner,
         )
 
         prefs.edit().putBoolean("tabs", true).apply()
@@ -113,7 +113,7 @@ class DefaultPresenterTest {
             controller,
             accountManager,
             view,
-            lifecycleOwner
+            lifecycleOwner,
         )
 
         prefs.edit().putBoolean("tabs", true).apply()
@@ -133,7 +133,7 @@ class DefaultPresenterTest {
             controller,
             accountManager,
             view,
-            lifecycleOwner
+            lifecycleOwner,
         )
 
         presenter.accountObserver.onLoggedOut()
@@ -149,7 +149,7 @@ class DefaultPresenterTest {
             controller,
             accountManager,
             view,
-            lifecycleOwner
+            lifecycleOwner,
         )
 
         presenter.accountObserver.onAuthenticated(mock(), mock())
@@ -165,7 +165,7 @@ class DefaultPresenterTest {
             controller,
             accountManager,
             view,
-            lifecycleOwner
+            lifecycleOwner,
         )
 
         presenter.accountObserver.onAuthenticationProblems()
@@ -181,7 +181,7 @@ class DefaultPresenterTest {
             controller,
             accountManager,
             view,
-            lifecycleOwner
+            lifecycleOwner,
         )
 
         prefs.edit().putBoolean("tabs", true).apply()
@@ -197,7 +197,7 @@ class DefaultPresenterTest {
             controller,
             accountManager,
             view,
-            lifecycleOwner
+            lifecycleOwner,
         )
 
         prefs.edit().putBoolean("tabs", false).apply()
@@ -214,7 +214,7 @@ class DefaultPresenterTest {
             controller,
             accountManager,
             view,
-            lifecycleOwner
+            lifecycleOwner,
         )
 
         presenter.eventObserver.onStarted()
@@ -229,7 +229,7 @@ class DefaultPresenterTest {
             controller,
             accountManager,
             view,
-            lifecycleOwner
+            lifecycleOwner,
         )
 
         presenter.eventObserver.onError(mock())

@@ -25,5 +25,5 @@ enum class Relation(val kindAndDetail: String) {
     /**
      * Grants the target permission to retrieve sign-in credentials stored for the source.
      */
-    GET_LOGIN_CREDS("delegate_permission/common.get_login_creds")
+    GET_LOGIN_CREDS("delegate_permission/common.get_login_creds"),
 }

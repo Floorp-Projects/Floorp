@@ -18,7 +18,7 @@ private const val ARTWORK_IMAGE_SIZE = 48
 private const val ARTWORK_ERROR_SIZE = 1
 
 internal class GeckoMediaSessionDelegate(
-    private val engineSession: GeckoEngineSession
+    private val engineSession: GeckoEngineSession,
 ) : GeckoViewMediaSession.Delegate {
 
     override fun onActivated(geckoSession: GeckoSession, mediaSession: GeckoViewMediaSession) {
@@ -36,7 +36,7 @@ internal class GeckoMediaSessionDelegate(
     override fun onMetadata(
         session: GeckoSession,
         mediaSession: GeckoViewMediaSession,
-        metaData: GeckoViewMediaSession.Metadata
+        metaData: GeckoViewMediaSession.Metadata,
     ) {
         val getArtwork: (suspend () -> Bitmap?)? = metaData.artwork?.let {
             {
@@ -61,7 +61,7 @@ internal class GeckoMediaSessionDelegate(
 
         engineSession.notifyObservers {
             onMediaMetadataChanged(
-                MediaSession.Metadata(metaData.title, metaData.artist, metaData.album, getArtwork)
+                MediaSession.Metadata(metaData.title, metaData.artist, metaData.album, getArtwork),
             )
         }
     }
@@ -69,7 +69,7 @@ internal class GeckoMediaSessionDelegate(
     override fun onFeatures(
         session: GeckoSession,
         mediaSession: GeckoViewMediaSession,
-        features: Long
+        features: Long,
     ) {
         engineSession.notifyObservers {
             onMediaFeatureChanged(MediaSession.Feature(features))
@@ -97,14 +97,15 @@ internal class GeckoMediaSessionDelegate(
     override fun onPositionState(
         session: GeckoSession,
         mediaSession: GeckoViewMediaSession,
-        positionState: GeckoViewMediaSession.PositionState
+        positionState: GeckoViewMediaSession.PositionState,
     ) {
         engineSession.notifyObservers {
             onMediaPositionStateChanged(
                 MediaSession.PositionState(
-                    positionState.duration, positionState.position,
-                    positionState.playbackRate
-                )
+                    positionState.duration,
+                    positionState.position,
+                    positionState.playbackRate,
+                ),
             )
         }
     }
@@ -113,7 +114,7 @@ internal class GeckoMediaSessionDelegate(
         session: GeckoSession,
         mediaSession: GeckoViewMediaSession,
         enabled: Boolean,
-        elementMetaData: GeckoViewMediaSession.ElementMetadata?
+        elementMetaData: GeckoViewMediaSession.ElementMetadata?,
     ) {
         val sessionElementMetaData =
             elementMetaData?.let {
@@ -123,7 +124,7 @@ internal class GeckoMediaSessionDelegate(
                     elementMetaData.width,
                     elementMetaData.height,
                     elementMetaData.audioTrackCount,
-                    elementMetaData.videoTrackCount
+                    elementMetaData.videoTrackCount,
                 )
             }
 

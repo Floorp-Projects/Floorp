@@ -30,13 +30,13 @@ import java.util.HashMap
 @SuppressLint("QueryPermissionsNeeded") // Yes, this class needs the permission to read all packages
 class Browsers private constructor(
     context: Context,
-    uri: Uri
+    uri: Uri,
 ) {
     /**
      * Enum of known browsers and their package names.
      */
     enum class KnownBrowser constructor(
-        val packageName: String
+        val packageName: String,
     ) {
         FIREFOX("org.mozilla.firefox"),
 
@@ -226,7 +226,7 @@ class Browsers private constructor(
     private fun resolveBrowsers(
         context: Context,
         packageManager: PackageManager,
-        uri: Uri
+        uri: Uri,
     ): MutableMap<String, ActivityInfo> {
         val browsers = HashMap<String, ActivityInfo>()
         val resolvers = findResolvers(context, packageManager, includeThisApp = false, url = uri.toString())
@@ -241,7 +241,7 @@ class Browsers private constructor(
     private fun findKnownBrowsers(
         packageManager: PackageManager,
         browsers: MutableMap<String, ActivityInfo>,
-        uri: Uri
+        uri: Uri,
     ) {
         for (browser in KnownBrowser.values()) {
             if (browsers.containsKey(browser.packageName)) {
@@ -292,13 +292,16 @@ class Browsers private constructor(
             // This default browser wasn't returned when we asked for *all* browsers. It's likely
             // that this is actually the resolver activity (aka intent chooser). Let's ignore it.
             null
-        } else resolveInfo.activityInfo
+        } else {
+            resolveInfo.activityInfo
+        }
     }
 
     companion object {
         @VisibleForTesting
         internal const val SAMPLE_BROWSER_HTTP_URL = "http://www.mozilla.org/index.html"
         private const val SAMPLE_BROWSER_HTTPS_URL = "https://www.mozilla.org/index.html"
+
         // Sample URL handled by traditional web browsers. Used to find installed (basic) web browsers.
         private val SAMPLE_BROWSER_URI = Uri.parse(SAMPLE_BROWSER_HTTP_URL)
 
@@ -329,7 +332,7 @@ class Browsers private constructor(
         fun findResolvers(
             context: Context,
             packageManager: PackageManager,
-            includeThisApp: Boolean = true
+            includeThisApp: Boolean = true,
         ): List<ResolveInfo> {
             val httpIntent = Intent.parseUri(SAMPLE_BROWSER_HTTP_URL, Intent.URI_INTENT_SCHEME)
             val httpsIntent = Intent.parseUri(SAMPLE_BROWSER_HTTPS_URL, Intent.URI_INTENT_SCHEME)
@@ -368,7 +371,7 @@ class Browsers private constructor(
             packageManager: PackageManager,
             url: String,
             includeThisApp: Boolean = true,
-            contentType: String? = null
+            contentType: String? = null,
         ): List<ResolveInfo> {
             val uri = url.toUri()
             val intent = Intent(Intent.ACTION_VIEW).apply {

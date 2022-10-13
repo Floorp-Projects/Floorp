@@ -16,5 +16,5 @@ import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.
 class Tracker(
     val url: String,
     val trackingCategories: List<TrackingCategory> = emptyList(),
-    val cookiePolicies: List<CookiePolicy> = emptyList()
+    val cookiePolicies: List<CookiePolicy> = emptyList(),
 )

@@ -24,9 +24,9 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 import java.net.CookieHandler
@@ -47,11 +47,13 @@ class ConceptFetchHttpUploaderTest {
      */
     private fun getMockWebServer(): MockWebServer {
         val server = MockWebServer()
-        server.setDispatcher(object : Dispatcher() {
-            override fun dispatch(request: RecordedRequest): MockResponse {
-                return MockResponse().setBody("OK")
-            }
-        })
+        server.setDispatcher(
+            object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse {
+                    return MockResponse().setBody("OK")
+                }
+            },
+        )
         return server
     }
 
@@ -64,11 +66,11 @@ class ConceptFetchHttpUploaderTest {
 
         assertEquals(
             Pair(ConceptFetchHttpUploader.DEFAULT_READ_TIMEOUT, TimeUnit.MILLISECONDS),
-            request.readTimeout
+            request.readTimeout,
         )
         assertEquals(
             Pair(ConceptFetchHttpUploader.DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MILLISECONDS),
-            request.connectTimeout
+            request.connectTimeout,
         )
     }
 
@@ -76,13 +78,13 @@ class ConceptFetchHttpUploaderTest {
     fun `Glean headers are correctly dispatched`() {
         val mockClient: Client = mock()
         `when`(mockClient.fetch(any())).thenReturn(
-            Response("URL", 200, mock(), mock())
+            Response("URL", 200, mock(), mock()),
         )
 
         val expectedHeaders = mapOf(
             "Content-Type" to "application/json; charset=utf-8",
             "Test-header" to "SomeValue",
-            "OtherHeader" to "Glean/Test 25.0.2"
+            "OtherHeader" to "Glean/Test 25.0.2",
         )
 
         val uploader = ConceptFetchHttpUploader(lazy { mockClient })
@@ -93,7 +95,7 @@ class ConceptFetchHttpUploaderTest {
         expectedHeaders.forEach { (headerName, headerValue) ->
             assertEquals(
                 headerValue,
-                requestCaptor.value.headers!![headerName]
+                requestCaptor.value.headers!![headerName],
             )
         }
     }
@@ -113,22 +115,29 @@ class ConceptFetchHttpUploaderTest {
         val mockClient: Client = mock()
         `when`(mockClient.fetch(any())).thenReturn(
             Response(
-                "URL", 200, mock(), mock()
-            )
+                "URL",
+                200,
+                mock(),
+                mock(),
+            ),
         )
 
         val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
 
         assertEquals(HttpStatus(200), uploader.upload(testPath, testPing.toByteArray(), emptyMap()))
     }
+
     @Test
     fun `upload() returns false for server errors (5xx)`() {
         for (responseCode in 500..527) {
             val mockClient: Client = mock()
             `when`(mockClient.fetch(any())).thenReturn(
                 Response(
-                    "URL", responseCode, mock(), mock()
-                )
+                    "URL",
+                    responseCode,
+                    mock(),
+                    mock(),
+                ),
             )
 
             val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
@@ -143,8 +152,11 @@ class ConceptFetchHttpUploaderTest {
             val mockClient: Client = mock()
             `when`(mockClient.fetch(any())).thenReturn(
                 Response(
-                    "URL", responseCode, mock(), mock()
-                )
+                    "URL",
+                    responseCode,
+                    mock(),
+                    mock(),
+                ),
             )
 
             val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
@@ -159,8 +171,11 @@ class ConceptFetchHttpUploaderTest {
             val mockClient: Client = mock()
             `when`(mockClient.fetch(any())).thenReturn(
                 Response(
-                    "URL", responseCode, mock(), mock()
-                )
+                    "URL",
+                    responseCode,
+                    mock(),
+                    mock(),
+                ),
             )
 
             val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
@@ -230,7 +245,7 @@ class ConceptFetchHttpUploaderTest {
         val server = getMockWebServer()
 
         val testConfig = testDefaultConfig.copy(
-            serverEndpoint = "http://localhost:" + server.port
+            serverEndpoint = "http://localhost:" + server.port,
         )
 
         // Set the default cookie manager/handler to be used for the http upload.
@@ -293,7 +308,7 @@ class ConceptFetchHttpUploaderTest {
     fun `the lazy client should only be instantiated after the first upload`() {
         val mockClient: Client = mock()
         `when`(mockClient.fetch(any())).thenReturn(
-            Response("URL", 200, mock(), mock())
+            Response("URL", 200, mock(), mock()),
         )
         val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
         assertFalse(uploader.client.isInitialized())
@@ -307,13 +322,13 @@ class ConceptFetchHttpUploaderTest {
     fun `usePrivateRequest sends all requests with private flag`() {
         val mockClient: Client = mock()
         `when`(mockClient.fetch(any())).thenReturn(
-            Response("URL", 200, mock(), mock())
+            Response("URL", 200, mock(), mock()),
         )
 
         val expectedHeaders = mapOf(
             "Content-Type" to "application/json; charset=utf-8",
             "Test-header" to "SomeValue",
-            "OtherHeader" to "Glean/Test 25.0.2"
+            "OtherHeader" to "Glean/Test 25.0.2",
         )
 
         val uploader = ConceptFetchHttpUploader(lazy { mockClient }, true)

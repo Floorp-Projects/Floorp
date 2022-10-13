@@ -289,7 +289,7 @@ class GeckoSitePermissionsStorageTest {
             mediaKeySystemAccess = ALLOWED,
             autoplayAudible = AutoplayStatus.ALLOWED,
             autoplayInaudible = AutoplayStatus.ALLOWED,
-            savedAt = 0
+            savedAt = 0,
         )
         val geckoPermissions = listOf(
             geckoContentPermission(type = PERMISSION_GEOLOCATION),
@@ -298,7 +298,7 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_PERSISTENT_STORAGE),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE),
-            geckoContentPermission(type = PERMISSION_STORAGE_ACCESS)
+            geckoContentPermission(type = PERMISSION_STORAGE_ACCESS),
         )
 
         doReturn(geckoPermissions).`when`(geckoStorage).findGeckoContentPermissionBy(anyString(), anyBoolean())
@@ -336,7 +336,7 @@ class GeckoSitePermissionsStorageTest {
             mediaKeySystemAccess = ALLOWED,
             autoplayAudible = AutoplayStatus.ALLOWED,
             autoplayInaudible = AutoplayStatus.ALLOWED,
-            savedAt = 0
+            savedAt = 0,
         )
         val geckoPermissions = listOf(
             geckoContentPermission(type = PERMISSION_GEOLOCATION, value = VALUE_ALLOW),
@@ -345,7 +345,7 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_PERSISTENT_STORAGE, value = VALUE_ALLOW),
             geckoContentPermission(type = PERMISSION_STORAGE_ACCESS, value = VALUE_ALLOW),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE, value = VALUE_ALLOW),
-            geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE, value = VALUE_ALLOW)
+            geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE, value = VALUE_ALLOW),
         )
 
         doReturn(sitePermissions).`when`(onDiskStorage).findSitePermissionsBy("mozilla.dev", false)
@@ -378,7 +378,7 @@ class GeckoSitePermissionsStorageTest {
             mediaKeySystemAccess = ALLOWED,
             autoplayAudible = AutoplayStatus.ALLOWED,
             autoplayInaudible = AutoplayStatus.ALLOWED,
-            savedAt = 0
+            savedAt = 0,
         )
         val geckoPermissions = listOf(
             geckoContentPermission(type = PERMISSION_GEOLOCATION, value = VALUE_DENY),
@@ -387,7 +387,7 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_PERSISTENT_STORAGE, value = VALUE_DENY),
             geckoContentPermission(type = PERMISSION_STORAGE_ACCESS, value = VALUE_DENY),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE, value = VALUE_DENY),
-            geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE, value = VALUE_DENY)
+            geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE, value = VALUE_DENY),
         ).groupByType()
 
         val mergedPermissions = geckoStorage.mergePermissions(onDiskPermissions, geckoPermissions)!!
@@ -417,10 +417,10 @@ class GeckoSitePermissionsStorageTest {
             mediaKeySystemAccess = ALLOWED,
             autoplayAudible = AutoplayStatus.ALLOWED,
             autoplayInaudible = AutoplayStatus.ALLOWED,
-            savedAt = 0
+            savedAt = 0,
         )
         val geckoPermissions = listOf(
-            geckoContentPermission(type = PERMISSION_GEOLOCATION, value = VALUE_DENY)
+            geckoContentPermission(type = PERMISSION_GEOLOCATION, value = VALUE_DENY),
         ).groupByType()
 
         val mergedPermissions = geckoStorage.mergePermissions(onDiskPermissions, geckoPermissions)!!
@@ -450,21 +450,27 @@ class GeckoSitePermissionsStorageTest {
             mediaKeySystemAccess = ALLOWED,
             autoplayAudible = AutoplayStatus.ALLOWED,
             autoplayInaudible = AutoplayStatus.ALLOWED,
-            savedAt = 0
+            savedAt = 0,
         )
         val geckoPermission1 = geckoContentPermission(
-            type = PERMISSION_STORAGE_ACCESS, value = VALUE_DENY, thirdPartyOrigin = "mozilla.com"
+            type = PERMISSION_STORAGE_ACCESS,
+            value = VALUE_DENY,
+            thirdPartyOrigin = "mozilla.com",
         )
         val geckoPermission2 = geckoContentPermission(
-            type = PERMISSION_STORAGE_ACCESS, value = VALUE_ALLOW, thirdPartyOrigin = "mozilla.dev"
+            type = PERMISSION_STORAGE_ACCESS,
+            value = VALUE_ALLOW,
+            thirdPartyOrigin = "mozilla.dev",
         )
         val geckoPermission3 = geckoContentPermission(
-            type = PERMISSION_STORAGE_ACCESS, value = VALUE_PROMPT, thirdPartyOrigin = "mozilla.org"
+            type = PERMISSION_STORAGE_ACCESS,
+            value = VALUE_PROMPT,
+            thirdPartyOrigin = "mozilla.org",
         )
 
         val mergedPermissions = geckoStorage.mergePermissions(
             onDiskPermissions,
-            mapOf(PERMISSION_STORAGE_ACCESS to listOf(geckoPermission1, geckoPermission2, geckoPermission3))
+            mapOf(PERMISSION_STORAGE_ACCESS to listOf(geckoPermission1, geckoPermission2, geckoPermission3)),
         )
 
         assertEquals(onDiskPermissions.copy(crossOriginStorageAccess = ALLOWED), mergedPermissions!!)
@@ -492,7 +498,7 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_STORAGE_ACCESS),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE),
-            geckoContentPermission(type = PERMISSION_TRACKING)
+            geckoContentPermission(type = PERMISSION_TRACKING),
         )
 
         doReturn(geckoPermissions).`when`(geckoStorage).findGeckoContentPermissionBy(anyString(), anyBoolean())
@@ -522,7 +528,7 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_STORAGE_ACCESS),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE),
-            geckoContentPermission(type = PERMISSION_TRACKING)
+            geckoContentPermission(type = PERMISSION_TRACKING),
         )
 
         assertTrue(geckoStorage.geckoTemporaryPermissions.isEmpty())
@@ -540,7 +546,6 @@ class GeckoSitePermissionsStorageTest {
 
     @Test
     fun `WHEN removing all THEN all permissions should be removed from the on disk and gecko storage`() = runTest {
-
         doReturn(Unit).`when`(geckoStorage).removeGeckoAllContentPermissions()
 
         geckoStorage.removeAll()
@@ -559,7 +564,7 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_STORAGE_ACCESS),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE),
-            geckoContentPermission(type = PERMISSION_TRACKING)
+            geckoContentPermission(type = PERMISSION_TRACKING),
         )
 
         doReturn(geckoPermissions).`when`(geckoStorage).findAllGeckoContentPermissions()
@@ -587,7 +592,7 @@ class GeckoSitePermissionsStorageTest {
             mediaKeySystemAccess = ALLOWED,
             autoplayAudible = AutoplayStatus.ALLOWED,
             autoplayInaudible = AutoplayStatus.ALLOWED,
-            savedAt = 0
+            savedAt = 0,
         )
         val geckoPermissions = listOf(
             geckoContentPermission(type = PERMISSION_GEOLOCATION, value = VALUE_DENY),
@@ -596,7 +601,7 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_PERSISTENT_STORAGE, value = VALUE_DENY),
             geckoContentPermission(type = PERMISSION_STORAGE_ACCESS, value = VALUE_DENY),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE, value = VALUE_DENY),
-            geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE, value = VALUE_DENY)
+            geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE, value = VALUE_DENY),
         )
 
         doReturn(listOf(onDiskPermissions)).`when`(onDiskStorage).all()
@@ -627,7 +632,7 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_PERSISTENT_STORAGE),
             geckoContentPermission(type = PERMISSION_STORAGE_ACCESS),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE),
-            geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE)
+            geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE),
         )
 
         val filteredPermissions = geckoPermissions.filterNotTemporaryPermissions(temporary)!!
@@ -683,7 +688,7 @@ class GeckoSitePermissionsStorageTest {
             microphone = NO_DECISION,
             camera = NO_DECISION,
             bluetooth = ALLOWED,
-            savedAt = 0
+            savedAt = 0,
         )
     }
 }
@@ -692,7 +697,7 @@ internal fun geckoContentPermission(
     uri: String = "mozilla.dev",
     type: Int,
     value: Int = VALUE_PROMPT,
-    thirdPartyOrigin: String = "mozilla.dev"
+    thirdPartyOrigin: String = "mozilla.dev",
 ): ContentPermission {
     val prompt: ContentPermission = mock()
     ReflectionUtils.setField(prompt, "uri", uri)

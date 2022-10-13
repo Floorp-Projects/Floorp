@@ -23,6 +23,7 @@ internal class ConfirmDialogFragment : AbstractPromptTextDialogFragment() {
 
     @VisibleForTesting
     internal val positiveButtonText: String by lazy { safeArguments.getString(KEY_POSITIVE_BUTTON)!! }
+
     @VisibleForTesting
     internal val negativeButtonText: String by lazy { safeArguments.getString(KEY_NEGATIVE_BUTTON)!! }
 
@@ -59,9 +60,8 @@ internal class ConfirmDialogFragment : AbstractPromptTextDialogFragment() {
             message: String,
             positiveButtonText: String,
             negativeButtonText: String,
-            hasShownManyDialogs: Boolean = false
+            hasShownManyDialogs: Boolean = false,
         ): ConfirmDialogFragment {
-
             val fragment = ConfirmDialogFragment()
             val arguments = fragment.arguments ?: Bundle()
 

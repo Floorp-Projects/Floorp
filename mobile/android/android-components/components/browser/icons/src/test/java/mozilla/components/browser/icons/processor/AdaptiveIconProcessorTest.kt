@@ -39,7 +39,7 @@ class AdaptiveIconProcessorTest {
 
         assertEquals(
             icon,
-            AdaptiveIconProcessor().process(mock(), mock(), mock(), icon, mock())
+            AdaptiveIconProcessor().process(mock(), mock(), mock(), icon, mock()),
         )
     }
 
@@ -53,7 +53,7 @@ class AdaptiveIconProcessorTest {
             mock(),
             IconRequest.Resource("", MANIFEST_ICON, maskable = false),
             Icon(bitmap, source = Icon.Source.DISK),
-            mock()
+            mock(),
         )
 
         assertEquals(228, icon.bitmap.width)
@@ -73,7 +73,7 @@ class AdaptiveIconProcessorTest {
             mock(),
             IconRequest.Resource("", MANIFEST_ICON, maskable = true),
             Icon(bitmap, source = Icon.Source.INLINE),
-            mock()
+            mock(),
         )
 
         assertEquals(334, icon.bitmap.width)

@@ -39,7 +39,7 @@ data class SyncAuthInfo(
     val fxaAccessToken: String,
     val fxaAccessTokenExpiresAt: Long,
     val syncKey: String,
-    val tokenServerUrl: String
+    val tokenServerUrl: String,
 )
 
 /**

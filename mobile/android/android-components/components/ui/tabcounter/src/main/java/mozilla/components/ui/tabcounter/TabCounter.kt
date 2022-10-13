@@ -26,7 +26,7 @@ import java.text.NumberFormat
 class TabCounter @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyle: Int = 0
+    defStyle: Int = 0,
 ) : RelativeLayout(context, attrs, defStyle) {
 
     private val animationSet: AnimatorSet
@@ -44,7 +44,7 @@ class TabCounter @JvmOverloads constructor(
 
         context.obtainStyledAttributes(attrs, R.styleable.TabCounter, defStyle, 0).apply {
             val counterColor = getColorStateList(
-                R.styleable.TabCounter_tabCounterTintColor
+                R.styleable.TabCounter_tabCounterTintColor,
             ) ?: ContextCompat.getColorStateList(context, R.color.mozac_ui_tabcounter_default_tint)
 
             counterColor?.let {
@@ -74,7 +74,7 @@ class TabCounter @JvmOverloads constructor(
         } else {
             String.format(
                 context.getString(R.string.mozac_tab_counter_open_tab_tray_plural),
-                count.toString()
+                count.toString(),
             )
         }
     }
@@ -114,57 +114,75 @@ class TabCounter @JvmOverloads constructor(
     private fun createBoxAnimatorSet(animatorSet: AnimatorSet) {
         // The first animator, fadeout in 33 ms (49~51, 2 frames).
         val fadeOut = ObjectAnimator.ofFloat(
-            counterBox, "alpha",
-            ANIM_BOX_FADEOUT_FROM, ANIM_BOX_FADEOUT_TO
+            counterBox,
+            "alpha",
+            ANIM_BOX_FADEOUT_FROM,
+            ANIM_BOX_FADEOUT_TO,
         ).setDuration(ANIM_BOX_FADEOUT_DURATION)
 
         // Move up on y-axis, from 0.0 to -5.3 in 50ms, with fadeOut (49~52, 3 frames).
         val moveUp1 = ObjectAnimator.ofFloat(
-            counterBox, "translationY",
-            ANIM_BOX_MOVEUP1_TO, ANIM_BOX_MOVEUP1_FROM
+            counterBox,
+            "translationY",
+            ANIM_BOX_MOVEUP1_TO,
+            ANIM_BOX_MOVEUP1_FROM,
         ).setDuration(ANIM_BOX_MOVEUP1_DURATION)
 
         // Move down on y-axis, from -5.3 to -1.0 in 116ms, after moveUp1 (52~59, 7 frames).
         val moveDown2 = ObjectAnimator.ofFloat(
-            counterBox, "translationY",
-            ANIM_BOX_MOVEDOWN2_FROM, ANIM_BOX_MOVEDOWN2_TO
+            counterBox,
+            "translationY",
+            ANIM_BOX_MOVEDOWN2_FROM,
+            ANIM_BOX_MOVEDOWN2_TO,
         ).setDuration(ANIM_BOX_MOVEDOWN2_DURATION)
 
         // FadeIn in 66ms, with moveDown2 (52~56, 4 frames).
         val fadeIn = ObjectAnimator.ofFloat(
-            counterBox, "alpha",
-            ANIM_BOX_FADEIN_FROM, ANIM_BOX_FADEIN_TO
+            counterBox,
+            "alpha",
+            ANIM_BOX_FADEIN_FROM,
+            ANIM_BOX_FADEIN_TO,
         ).setDuration(ANIM_BOX_FADEIN_DURATION)
 
         // Move down on y-axis, from -1.0 to 2.7 in 116ms, after moveDown2 (59~66, 7 frames).
         val moveDown3 = ObjectAnimator.ofFloat(
-            counterBox, "translationY",
-            ANIM_BOX_MOVEDOWN3_FROM, ANIM_BOX_MOVEDOWN3_TO
+            counterBox,
+            "translationY",
+            ANIM_BOX_MOVEDOWN3_FROM,
+            ANIM_BOX_MOVEDOWN3_TO,
         ).setDuration(ANIM_BOX_MOVEDOWN3_DURATION)
 
         // Move up on y-axis, from 2.7 to 0 in 133ms, after moveDown3 (66~74, 8 frames).
         val moveUp4 = ObjectAnimator.ofFloat(
-            counterBox, "translationY",
-            ANIM_BOX_MOVEDOWN4_FROM, ANIM_BOX_MOVEDOWN4_TO
+            counterBox,
+            "translationY",
+            ANIM_BOX_MOVEDOWN4_FROM,
+            ANIM_BOX_MOVEDOWN4_TO,
         ).setDuration(ANIM_BOX_MOVEDOWN4_DURATION)
 
         // Scale up height from 2% to 105% in 100ms, after moveUp1 and delay 16ms (53~59, 6 frames).
         val scaleUp1 = ObjectAnimator.ofFloat(
-            counterBox, "scaleY",
-            ANIM_BOX_SCALEUP1_FROM, ANIM_BOX_SCALEUP1_TO
+            counterBox,
+            "scaleY",
+            ANIM_BOX_SCALEUP1_FROM,
+            ANIM_BOX_SCALEUP1_TO,
         ).setDuration(ANIM_BOX_SCALEUP1_DURATION)
         scaleUp1.startDelay = ANIM_BOX_SCALEUP1_DELAY // delay 1 frame after moveUp1
 
         // Scale down height from 105% to 99% in 116ms, after scaleUp1 (59~66, 7 frames).
         val scaleDown2 = ObjectAnimator.ofFloat(
-            counterBox, "scaleY",
-            ANIM_BOX_SCALEDOWN2_FROM, ANIM_BOX_SCALEDOWN2_TO
+            counterBox,
+            "scaleY",
+            ANIM_BOX_SCALEDOWN2_FROM,
+            ANIM_BOX_SCALEDOWN2_TO,
         ).setDuration(ANIM_BOX_SCALEDOWN2_DURATION)
 
         // Scale up height from 99% to 100% in 133ms, after scaleDown2 (66~74, 8 frames).
         val scaleUp3 = ObjectAnimator.ofFloat(
-            counterBox, "scaleY",
-            ANIM_BOX_SCALEUP3_FROM, ANIM_BOX_SCALEUP3_TO
+            counterBox,
+            "scaleY",
+            ANIM_BOX_SCALEUP3_FROM,
+            ANIM_BOX_SCALEUP3_TO,
         ).setDuration(ANIM_BOX_SCALEUP3_DURATION)
 
         animatorSet.play(fadeOut).with(moveUp1)
@@ -183,28 +201,36 @@ class TabCounter @JvmOverloads constructor(
 
         // Fadeout in 100ms, with firstAnimator (49~51, 2 frames).
         val fadeOut = ObjectAnimator.ofFloat(
-            counterText, "alpha",
-            ANIM_TEXT_FADEOUT_FROM, ANIM_TEXT_FADEOUT_TO
+            counterText,
+            "alpha",
+            ANIM_TEXT_FADEOUT_FROM,
+            ANIM_TEXT_FADEOUT_TO,
         ).setDuration(ANIM_TEXT_FADEOUT_DURATION)
 
         // FadeIn in 66 ms, after fadeOut with delay 96ms (57~61, 4 frames).
         val fadeIn = ObjectAnimator.ofFloat(
-            counterText, "alpha",
-            ANIM_TEXT_FADEIN_FROM, ANIM_TEXT_FADEIN_TO
+            counterText,
+            "alpha",
+            ANIM_TEXT_FADEIN_FROM,
+            ANIM_TEXT_FADEIN_TO,
         ).setDuration(ANIM_TEXT_FADEIN_DURATION)
         fadeIn.startDelay = (ANIM_TEXT_FADEIN_DELAY) // delay 6 frames after fadeOut
 
         // Move down on y-axis, from 0 to 4.4 in 66ms, with fadeIn (57~61, 4 frames).
         val moveDown = ObjectAnimator.ofFloat(
-            counterText, "translationY",
-            ANIM_TEXT_MOVEDOWN_FROM, ANIM_TEXT_MOVEDOWN_TO
+            counterText,
+            "translationY",
+            ANIM_TEXT_MOVEDOWN_FROM,
+            ANIM_TEXT_MOVEDOWN_TO,
         ).setDuration(ANIM_TEXT_MOVEDOWN_DURATION)
         moveDown.startDelay = (ANIM_TEXT_MOVEDOWN_DELAY) // delay 6 frames after fadeOut
 
         // Move up on y-axis, from 0 to 4.4 in 66ms, after moveDown (61~69, 8 frames).
         val moveUp = ObjectAnimator.ofFloat(
-            counterText, "translationY",
-            ANIM_TEXT_MOVEUP_FROM, ANIM_TEXT_MOVEUP_TO
+            counterText,
+            "translationY",
+            ANIM_TEXT_MOVEUP_FROM,
+            ANIM_TEXT_MOVEUP_TO,
         ).setDuration(ANIM_TEXT_MOVEUP_DURATION)
 
         animatorSet.play(firstAnimator).with(fadeOut)

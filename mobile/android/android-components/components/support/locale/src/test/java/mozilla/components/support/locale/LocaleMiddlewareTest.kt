@@ -50,13 +50,13 @@ class LocaleMiddlewareTest {
             LocaleMiddleware(
                 testContext,
                 coroutineContext = dispatcher,
-                localeManager = localeManager
-            )
+                localeManager = localeManager,
+            ),
         )
 
         val store = BrowserStore(
             initialState = BrowserState(),
-            middleware = listOf(localeMiddleware)
+            middleware = listOf(localeMiddleware),
         )
 
         assertEquals(store.state.locale, null)
@@ -79,13 +79,13 @@ class LocaleMiddlewareTest {
             LocaleMiddleware(
                 testContext,
                 coroutineContext = dispatcher,
-                localeManager = localeManager
-            )
+                localeManager = localeManager,
+            ),
         )
 
         val store = BrowserStore(
             initialState = BrowserState(),
-            middleware = listOf(localeMiddleware)
+            middleware = listOf(localeMiddleware),
         )
 
         assertEquals(store.state.locale, null)

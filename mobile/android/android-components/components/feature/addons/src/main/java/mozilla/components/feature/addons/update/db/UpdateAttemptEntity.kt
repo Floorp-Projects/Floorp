@@ -37,7 +37,7 @@ internal data class UpdateAttemptEntity(
     var errorMessage: String = "",
 
     @ColumnInfo(name = "error_trace")
-    var errorTrace: String = ""
+    var errorTrace: String = "",
 ) {
     internal fun toUpdateAttempt(): AddonUpdater.UpdateAttempt {
         return AddonUpdater.UpdateAttempt(addonId, Date(date), toStatus())
@@ -51,7 +51,6 @@ internal data class UpdateAttemptEntity(
     }
 
     internal fun toStatus(): AddonUpdater.Status? {
-
         return when (status) {
             NOT_INSTALLED_DB -> NotInstalled
             SUCCESSFULLY_UPDATED_DB -> SuccessfullyUpdated

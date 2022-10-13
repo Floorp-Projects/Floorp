@@ -86,26 +86,26 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
     private val preparers: List<IconPreprarer> = listOf(
         TippyTopIconPreparer(context.assets),
         MemoryIconPreparer(sharedMemoryCache),
-        DiskIconPreparer(sharedDiskCache)
+        DiskIconPreparer(sharedDiskCache),
     ),
     internal var loaders: List<IconLoader> = listOf(
         MemoryIconLoader(sharedMemoryCache),
         DiskIconLoader(sharedDiskCache),
         HttpIconLoader(httpClient),
-        DataUriIconLoader()
+        DataUriIconLoader(),
     ),
     private val decoders: List<ImageDecoder> = listOf(
         AndroidImageDecoder(),
-        ICOIconDecoder()
+        ICOIconDecoder(),
     ),
     private val processors: List<IconProcessor> = listOf(
         MemoryIconProcessor(sharedMemoryCache),
-        DiskIconProcessor(sharedDiskCache)
+        DiskIconProcessor(sharedDiskCache),
     ),
     jobDispatcher: CoroutineDispatcher = Executors.newFixedThreadPool(
         THREADS,
-        NamedThreadFactory("BrowserIcons")
-    ).asCoroutineDispatcher()
+        NamedThreadFactory("BrowserIcons"),
+    ).asCoroutineDispatcher(),
 ) : MemoryConsumer {
     private val logger = Logger("BrowserIcons")
     private val maximumSize = context.resources.getDimensionPixelSize(R.dimen.mozac_browser_icons_maximum_size)
@@ -148,7 +148,7 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
     @VisibleForTesting
     internal fun loadIconInternalAsync(
         initialRequest: IconRequest,
-        size: DesiredSize? = null
+        size: DesiredSize? = null,
     ): Deferred<Icon> = scope.async {
         val desiredSize = size ?: desiredSizeForRequest(initialRequest)
 
@@ -187,7 +187,7 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
             },
             onError = { _, throwable ->
                 Logger.error("Could not install browser-icons extension", throwable)
-            }
+            },
         )
     }
 
@@ -205,7 +205,7 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
         view: ImageView,
         request: IconRequest,
         placeholder: Drawable? = null,
-        error: Drawable? = null
+        error: Drawable? = null,
     ): Job {
         return loadIntoViewInternal(WeakReference(view), request, placeholder, error)
     }
@@ -215,7 +215,7 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
         view: WeakReference<ImageView>,
         request: IconRequest,
         placeholder: Drawable?,
-        error: Drawable?
+        error: Drawable?,
     ): Job {
         // If we previously started loading into the view, cancel the job.
         val existingJob = view.get()?.getTag(R.id.mozac_browser_icons_tag_job) as? Job
@@ -256,7 +256,7 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
         targetSize = context.resources.getDimensionPixelSize(request.size.dimen),
         minSize = minimumSize,
         maxSize = maximumSize,
-        maxScaleFactor = MAXIMUM_SCALE_FACTOR
+        maxScaleFactor = MAXIMUM_SCALE_FACTOR,
     )
 
     /**
@@ -274,14 +274,16 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
             ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW,
             // Foreground: The device is running extremely low on memory. The app is not yet considered a killable
             // process, but the system will begin killing background processes if apps do not release resources.
-            ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL -> true
+            ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL,
+            -> true
 
             // Background: The system is running low on memory and our process is near the middle of the LRU list.
             // If the system becomes further constrained for memory, there's a chance our process will be killed.
             ComponentCallbacks2.TRIM_MEMORY_MODERATE,
             // Background: The system is running low on memory and our process is one of the first to be killed
             // if the system does not recover memory now.
-            ComponentCallbacks2.TRIM_MEMORY_COMPLETE -> true
+            ComponentCallbacks2.TRIM_MEMORY_COMPLETE,
+            -> true
 
             else -> false
         }
@@ -306,7 +308,7 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
     private suspend fun subscribeToUpdates(
         store: BrowserStore,
         flow: Flow<BrowserState>,
-        extension: WebExtension
+        extension: WebExtension,
     ) {
         // Whenever we see a new EngineSession in the store then we register our content message
         // handler if it has not been added yet.
@@ -336,7 +338,7 @@ private fun load(
     request: IconRequest,
     loaders: List<IconLoader>,
     decoders: List<ImageDecoder>,
-    desiredSize: DesiredSize
+    desiredSize: DesiredSize,
 ): Pair<Icon, IconRequest.Resource>? {
     request.resources
         .asSequence()
@@ -360,7 +362,7 @@ private fun load(
 private fun decodeIconLoaderResult(
     result: IconLoader.Result,
     decoders: List<ImageDecoder>,
-    desiredSize: DesiredSize
+    desiredSize: DesiredSize,
 ): Icon? = when (result) {
     IconLoader.Result.NoResult -> null
 
@@ -376,13 +378,13 @@ internal fun IconRequest.getDesiredSize(context: Context, minimumSize: Int, maxi
         targetSize = context.resources.getDimensionPixelSize(size.dimen),
         minSize = minimumSize,
         maxSize = maximumSize,
-        maxScaleFactor = MAXIMUM_SCALE_FACTOR
+        maxScaleFactor = MAXIMUM_SCALE_FACTOR,
     )
 
 private fun decodeBytes(
     data: ByteArray,
     decoders: List<ImageDecoder>,
-    desiredSize: DesiredSize
+    desiredSize: DesiredSize,
 ): Bitmap? {
     decoders.forEach { decoder ->
         val bitmap = decoder.decode(data, desiredSize)
@@ -402,7 +404,7 @@ private fun process(
     request: IconRequest,
     resource: IconRequest.Resource?,
     icon: Icon?,
-    desiredSize: DesiredSize
+    desiredSize: DesiredSize,
 ): Icon? =
     processors.fold(icon) { processedIcon, processor ->
         if (processedIcon == null) return null

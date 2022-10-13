@@ -360,7 +360,7 @@ class InlineAutocompleteEditTextTest {
         et.autocompleteResult = AutocompleteResult(
             text = "google.com",
             source = "test-source",
-            totalItems = 100
+            totalItems = 100,
         )
 
         et.setText("g")
@@ -376,7 +376,7 @@ class InlineAutocompleteEditTextTest {
         et.autocompleteResult = AutocompleteResult(
             text = "google.com",
             source = "test-source",
-            totalItems = 100
+            totalItems = 100,
         )
 
         et.setText("g ")
@@ -392,7 +392,7 @@ class InlineAutocompleteEditTextTest {
         et.autocompleteResult = AutocompleteResult(
             text = "google.com",
             source = "test-source",
-            totalItems = 100
+            totalItems = 100,
         )
 
         et.setText("googl")
@@ -408,7 +408,7 @@ class InlineAutocompleteEditTextTest {
         et.autocompleteResult = AutocompleteResult(
             text = "google.com",
             source = "test-source",
-            totalItems = 100
+            totalItems = 100,
         )
 
         et.setText("g")
@@ -424,7 +424,7 @@ class InlineAutocompleteEditTextTest {
         et.autocompleteResult = AutocompleteResult(
             text = "google.com",
             source = "test-source",
-            totalItems = 100
+            totalItems = 100,
         )
 
         et.setText("g")
@@ -534,7 +534,7 @@ class InlineAutocompleteEditTextTest {
         et.autocompleteResult = AutocompleteResult(
             text = "google.com",
             source = "test-source",
-            totalItems = 100
+            totalItems = 100,
         )
         et.setText("g")
         var callbackInvoked = false

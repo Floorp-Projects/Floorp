@@ -16,7 +16,7 @@ import androidx.core.os.LocaleListCompat as LocaleList
  */
 class LocaleSettingUpdater(
     private val context: Context,
-    private val runtime: GeckoRuntime
+    private val runtime: GeckoRuntime,
 ) : SettingUpdater<Array<String>>() {
 
     override var value: Array<String> = findValue()

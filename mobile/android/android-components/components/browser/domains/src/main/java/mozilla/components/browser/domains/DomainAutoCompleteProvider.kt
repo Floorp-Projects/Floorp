@@ -22,8 +22,8 @@ import java.util.Locale
     ReplaceWith(
         "ShippedDomainsProvider()/CustomDomainsProvider()",
         "mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider",
-        "mozilla.components.browser.domains.autocomplete.CustomDomainsProvider"
-    )
+        "mozilla.components.browser.domains.autocomplete.CustomDomainsProvider",
+    ),
 )
 class DomainAutoCompleteProvider {
 
@@ -48,6 +48,7 @@ class DomainAutoCompleteProvider {
     // We compute these on worker threads; make sure results are immediately visible on the UI thread.
     @Volatile
     internal var customDomains = emptyList<Domain>()
+
     @Volatile
     internal var shippedDomains = emptyList<Domain>()
     private var useCustomDomains = false
@@ -96,7 +97,7 @@ class DomainAutoCompleteProvider {
         context: Context,
         useShippedDomains: Boolean = true,
         useCustomDomains: Boolean = false,
-        loadDomainsFromDisk: Boolean = true
+        loadDomainsFromDisk: Boolean = true,
     ) {
         this.useCustomDomains = useCustomDomains
         this.useShippedDomains = useShippedDomains

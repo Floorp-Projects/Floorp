@@ -16,7 +16,7 @@ import mozilla.components.service.pocket.GlobalDependencyProvider
  */
 internal class RefreshPocketWorker(
     context: Context,
-    params: WorkerParameters
+    params: WorkerParameters,
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {

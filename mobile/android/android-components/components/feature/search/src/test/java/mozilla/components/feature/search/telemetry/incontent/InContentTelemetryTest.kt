@@ -74,11 +74,13 @@ class InContentTelemetryTest {
     fun `GIVEN a Google search WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://www.google.com/search?q=aaa&client=firefox-b-m"
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.trackPartnerUrlTypeMetric(url, listOf())
 
@@ -93,11 +95,13 @@ class InContentTelemetryTest {
     fun `GIVEN a DuckDuckGo search WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://duckduckgo.com/?q=aaa&t=fpas"
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.trackPartnerUrlTypeMetric(url, listOf())
 
@@ -112,11 +116,13 @@ class InContentTelemetryTest {
     fun `GIVEN a Baidu search WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://m.baidu.com/s?from=1000969a&word=aaa"
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.trackPartnerUrlTypeMetric(url, listOf())
 
@@ -131,11 +137,13 @@ class InContentTelemetryTest {
     fun `GIVEN an invalid Bing search WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://www.bing.com/search?q=aaa&pc=MOZMBA"
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.trackPartnerUrlTypeMetric(url, listOf())
 
@@ -150,11 +158,13 @@ class InContentTelemetryTest {
     fun `GIVEN a Google sap-follow-on WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://www.google.com/search?q=aaa&client=firefox-b-m&oq=random"
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.trackPartnerUrlTypeMetric(url, listOf())
 
@@ -169,11 +179,13 @@ class InContentTelemetryTest {
     fun `GIVEN an invalid Google sap-follow-on WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://www.google.com/search?q=aaa&client=firefox-b-mTesting&oq=random"
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.trackPartnerUrlTypeMetric(url, listOf())
 
@@ -188,11 +200,13 @@ class InContentTelemetryTest {
     fun `GIVEN a Google sap-follow-on from topSite WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://www.google.com/search?q=aaa&client=firefox-b-m&channel=ts&oq=random"
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.trackPartnerUrlTypeMetric(url, listOf())
 
@@ -207,11 +221,13 @@ class InContentTelemetryTest {
     fun `GIVEN an invalid Google channel from topSite WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://www.google.com/search?q=aaa&client=firefox-b-m&channel=tsTest&oq=random"
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.trackPartnerUrlTypeMetric(url, listOf())
 
@@ -226,11 +242,13 @@ class InContentTelemetryTest {
     fun `GIVEN a Baidu sap-follow-on WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://m.baidu.com/s?from=1000969a&word=aaa&oq=random"
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.trackPartnerUrlTypeMetric(url, listOf())
 
@@ -245,11 +263,13 @@ class InContentTelemetryTest {
     fun `GIVEN a Bing sap-follow-on with cookies WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://www.bing.com/search?q=aaa&pc=MOZMBA&form=QBRERANDOM"
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.trackPartnerUrlTypeMetric(url, createCookieList())
 
@@ -264,11 +284,13 @@ class InContentTelemetryTest {
     fun `GIVEN a Google organic search WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://www.google.com/search?q=aaa"
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.trackPartnerUrlTypeMetric(url, listOf())
 
@@ -283,11 +305,13 @@ class InContentTelemetryTest {
     fun `GIVEN a DuckDuckGo organic search WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://duckduckgo.com/?q=aaa"
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.trackPartnerUrlTypeMetric(url, listOf())
 
@@ -302,11 +326,13 @@ class InContentTelemetryTest {
     fun `GIVEN a Bing organic search WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://www.bing.com/search?q=aaa"
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.trackPartnerUrlTypeMetric(url, listOf())
 
@@ -321,11 +347,13 @@ class InContentTelemetryTest {
     fun `GIVEN a Baidu organic search WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://m.baidu.com/s?word=aaa"
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.trackPartnerUrlTypeMetric(url, listOf())
 

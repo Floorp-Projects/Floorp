@@ -18,5 +18,5 @@ internal data class LoginExceptionEntity(
     var id: Long? = null,
 
     @ColumnInfo(name = "origin")
-    var origin: String
+    var origin: String,
 )

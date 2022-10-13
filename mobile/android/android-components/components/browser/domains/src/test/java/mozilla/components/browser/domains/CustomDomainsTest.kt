@@ -39,8 +39,8 @@ class CustomDomainsTest {
             listOf(
                 "mozilla.org",
                 "example.org",
-                "example.com"
-            )
+                "example.com",
+            ),
         )
 
         var domains = CustomDomains.load(testContext)
@@ -67,8 +67,8 @@ class CustomDomainsTest {
             listOf(
                 "mozilla.org",
                 "example.org",
-                "example.com"
-            )
+                "example.com",
+            ),
         )
 
         val domains = CustomDomains.load(testContext)

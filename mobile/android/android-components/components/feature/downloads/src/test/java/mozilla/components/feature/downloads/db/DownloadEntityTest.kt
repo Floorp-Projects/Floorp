@@ -25,7 +25,7 @@ class DownloadEntityTest {
             contentLength = 5242880,
             status = DownloadState.Status.DOWNLOADING,
             destinationDirectory = Environment.DIRECTORY_MUSIC,
-            createdAt = 33
+            createdAt = 33,
         )
 
         val downloadState = downloadEntity.toDownloadState()
@@ -51,7 +51,7 @@ class DownloadEntityTest {
             status = DownloadState.Status.DOWNLOADING,
             destinationDirectory = Environment.DIRECTORY_MUSIC,
             private = true,
-            createdTime = 33
+            createdTime = 33,
         )
 
         val downloadEntity = downloadState.toDownloadEntity()
@@ -70,7 +70,7 @@ class DownloadEntityTest {
     fun `GIVEN a download with data URL WHEN converting a DownloadState to DownloadEntity THEN data url is removed`() {
         val downloadState = DownloadState(
             id = "1",
-            url = "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ=="
+            url = "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ==",
         )
 
         val downloadEntity = downloadState.toDownloadEntity()
@@ -83,7 +83,7 @@ class DownloadEntityTest {
     fun `GIVEN a download with no data URL WHEN converting a DownloadState to DownloadEntity THEN data url is not removed`() {
         val downloadState = DownloadState(
             id = "1",
-            url = "url"
+            url = "url",
         )
 
         val downloadEntity = downloadState.toDownloadEntity()

@@ -52,7 +52,7 @@ class ContextMenuFeature(
     private val engineView: EngineView,
     private val useCases: ContextMenuUseCases,
     private val tabId: String? = null,
-    private val additionalNote: (HitResult) -> String? = { null }
+    private val additionalNote: (HitResult) -> String? = { null },
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null
 

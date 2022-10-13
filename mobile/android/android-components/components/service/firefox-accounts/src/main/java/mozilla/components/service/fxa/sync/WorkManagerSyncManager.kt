@@ -44,12 +44,12 @@ import mozilla.appservices.syncmanager.SyncManager as RustSyncManager
 private enum class SyncWorkerTag {
     Common,
     Immediate, // will not debounce a sync
-    Debounce // will debounce if another sync happened recently
+    Debounce, // will debounce if another sync happened recently
 }
 
 private enum class SyncWorkerName {
     Periodic,
-    Immediate
+    Immediate,
 }
 
 private const val KEY_DATA_STORES = "stores"
@@ -64,7 +64,7 @@ private const val SYNC_WORKER_BACKOFF_DELAY_MINUTES = 3L
  */
 internal class WorkManagerSyncManager(
     private val context: Context,
-    syncConfig: SyncConfig
+    syncConfig: SyncConfig,
 ) : SyncManager(syncConfig) {
     override val logger = Logger("BgSyncManager")
 
@@ -134,7 +134,7 @@ internal object WorkersLiveDataObserver {
 
 internal class WorkManagerSyncDispatcher(
     private val context: Context,
-    private val supportedEngines: Set<SyncEngine>
+    private val supportedEngines: Set<SyncEngine>,
 ) : SyncDispatcher, Observable<SyncStatusObserver> by ObserverRegistry(), Closeable {
     private val logger = Logger("WMSyncDispatcher")
 
@@ -181,7 +181,7 @@ internal class WorkManagerSyncDispatcher(
             // Use the 'keep' policy to minimize overhead from multiple "sync now" operations coming in
             // at the same time.
             ExistingWorkPolicy.KEEP,
-            regularSyncWorkRequest(reason, delayMs, debounce, customEngineSubset)
+            regularSyncWorkRequest(reason, delayMs, debounce, customEngineSubset),
         ).enqueue()
     }
 
@@ -201,7 +201,7 @@ internal class WorkManagerSyncDispatcher(
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             SyncWorkerName.Periodic.name,
             ExistingPeriodicWorkPolicy.REPLACE,
-            periodicSyncWorkRequest(unit, period, initialDelay)
+            periodicSyncWorkRequest(unit, period, initialDelay),
         )
     }
 
@@ -222,7 +222,7 @@ internal class WorkManagerSyncDispatcher(
             .setConstraints(
                 Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
+                    .build(),
             )
             .setInputData(data)
             .addTag(SyncWorkerTag.Common.name)
@@ -230,7 +230,7 @@ internal class WorkManagerSyncDispatcher(
             .setBackoffCriteria(
                 BackoffPolicy.EXPONENTIAL,
                 SYNC_WORKER_BACKOFF_DELAY_MINUTES,
-                TimeUnit.MINUTES
+                TimeUnit.MINUTES,
             )
             .build()
     }
@@ -239,14 +239,14 @@ internal class WorkManagerSyncDispatcher(
         reason: SyncReason,
         delayMs: Long = 0L,
         debounce: Boolean = false,
-        customEngineSubset: List<SyncEngine> = listOf()
+        customEngineSubset: List<SyncEngine> = listOf(),
     ): OneTimeWorkRequest {
         val data = getWorkerData(reason, customEngineSubset)
         return OneTimeWorkRequestBuilder<WorkManagerSyncWorker>()
             .setConstraints(
                 Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
+                    .build(),
             )
             .setInputData(data)
             .addTag(SyncWorkerTag.Common.name)
@@ -255,7 +255,7 @@ internal class WorkManagerSyncDispatcher(
             .setBackoffCriteria(
                 BackoffPolicy.EXPONENTIAL,
                 SYNC_WORKER_BACKOFF_DELAY_MINUTES,
-                TimeUnit.MINUTES
+                TimeUnit.MINUTES,
             )
             .build()
     }
@@ -274,7 +274,7 @@ internal class WorkManagerSyncDispatcher(
 
 internal class WorkManagerSyncWorker(
     private val context: Context,
-    private val params: WorkerParameters
+    private val params: WorkerParameters,
 ) : CoroutineWorker(context, params) {
     private val logger = Logger("SyncWorker")
 
@@ -428,7 +428,7 @@ internal class WorkManagerSyncWorker(
             enabledChanges = enabledChanges,
             persistedState = currentSyncState,
             deviceSettings = deviceSettings,
-            localEncryptionKeys = localEncryptionKeys
+            localEncryptionKeys = localEncryptionKeys,
         )
 
         val syncResult = syncManager.sync(syncParams)

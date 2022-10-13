@@ -16,7 +16,7 @@ class StoreTest {
     fun `waitUntilIdle blocks and returns once reducers were executed`() {
         val store = Store(
             TestState(counter = 23),
-            ::reducer
+            ::reducer,
         )
 
         store.dispatch(TestAction.IncrementAction)

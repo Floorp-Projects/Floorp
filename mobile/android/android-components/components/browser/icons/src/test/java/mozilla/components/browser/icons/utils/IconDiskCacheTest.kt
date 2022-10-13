@@ -34,19 +34,19 @@ class IconDiskCacheTest {
                 url = "https://www.mozilla.org/icon64.png",
                 sizes = listOf(Size(64, 64)),
                 mimeType = "image/png",
-                type = IconRequest.Resource.Type.FAVICON
+                type = IconRequest.Resource.Type.FAVICON,
             ),
             IconRequest.Resource(
                 url = "https://www.mozilla.org/icon128.png",
                 sizes = listOf(Size(128, 128)),
                 mimeType = "image/png",
-                type = IconRequest.Resource.Type.FAVICON
+                type = IconRequest.Resource.Type.FAVICON,
             ),
             IconRequest.Resource(
                 url = "https://www.mozilla.org/icon128.png",
                 sizes = listOf(Size(180, 180)),
-                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
-            )
+                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
+            ),
         )
 
         val request = IconRequest("https://www.mozilla.org", resources = resources)
@@ -65,7 +65,7 @@ class IconDiskCacheTest {
             url = "https://www.mozilla.org/icon64.png",
             sizes = listOf(Size(64, 64)),
             mimeType = "image/png",
-            type = IconRequest.Resource.Type.FAVICON
+            type = IconRequest.Resource.Type.FAVICON,
         )
 
         val bitmap: Bitmap = mock()

@@ -91,8 +91,11 @@ class AutoPushFeatureTest {
         preference(testContext).edit().putString(PREF_TOKEN, "token").apply()
 
         val feature = AutoPushFeature(
-            testContext, mock(), mock(), connection = connection,
-            coroutineContext = coroutineContext
+            testContext,
+            mock(),
+            mock(),
+            connection = connection,
+            coroutineContext = coroutineContext,
         )
         feature.initialize()
 
@@ -191,7 +194,7 @@ class AutoPushFeatureTest {
             },
             onSubscribe = {
                 invoked = true
-            }
+            },
         )
 
         assertFalse(invoked)
@@ -208,7 +211,7 @@ class AutoPushFeatureTest {
             },
             onSubscribe = {
                 invoked = true
-            }
+            },
         )
 
         assertFalse(invoked)
@@ -230,7 +233,7 @@ class AutoPushFeatureTest {
             },
             onUnsubscribe = {
                 invoked = true
-            }
+            },
         )
 
         assertFalse(errorInvoked)
@@ -246,7 +249,7 @@ class AutoPushFeatureTest {
             },
             onUnsubscribe = {
                 invoked = true
-            }
+            },
         )
 
         assertTrue(errorInvoked)
@@ -261,7 +264,7 @@ class AutoPushFeatureTest {
             },
             onUnsubscribe = {
                 invoked = true
-            }
+            },
         )
 
         assertTrue(invoked)
@@ -283,7 +286,7 @@ class AutoPushFeatureTest {
             },
             onUnsubscribe = {
                 invoked = true
-            }
+            },
         )
 
         assertFalse(invoked)
@@ -299,7 +302,7 @@ class AutoPushFeatureTest {
 
         feature.getSubscription(
             scope = "testScope",
-            appServerKey = null
+            appServerKey = null,
         ) {
             invoked = it == null
         }
@@ -315,7 +318,7 @@ class AutoPushFeatureTest {
 
         feature.getSubscription(
             scope = "testScope",
-            appServerKey = null
+            appServerKey = null,
         ) {
             invoked = it != null
         }
@@ -376,7 +379,7 @@ class AutoPushFeatureTest {
                 config = mock(),
                 coroutineContext = coroutineContext,
                 connection = mock(),
-            )
+            ),
         )
 
         lastVerified = System.currentTimeMillis() - VERIFY_NOW
@@ -398,8 +401,8 @@ class AutoPushFeatureTest {
                 service = mock(),
                 config = mock(),
                 coroutineContext = coroutineContext,
-                connection = mock()
-            )
+                connection = mock(),
+            ),
         )
 
         lastVerified = System.currentTimeMillis() - SKIP_INTERVAL
@@ -423,8 +426,8 @@ class AutoPushFeatureTest {
                 service = mock(),
                 config = mock(),
                 coroutineContext = coroutineContext,
-                connection = mock()
-            )
+                connection = mock(),
+            ),
         )
 
         lastVerified = 0
@@ -445,8 +448,8 @@ class AutoPushFeatureTest {
                 service = mock(),
                 config = mock(),
                 coroutineContext = coroutineContext,
-                connection = mock()
-            )
+                connection = mock(),
+            ),
         )
 
         feature.initialize()
@@ -464,7 +467,7 @@ class AutoPushFeatureTest {
             config = mock(),
             coroutineContext = coroutineContext,
             connection = native,
-            crashReporter = crashReporter
+            crashReporter = crashReporter,
         )
 
         feature.onError(PushError.Rust(PushError.MalformedMessage("Bad things happened!")))
@@ -481,7 +484,7 @@ class AutoPushFeatureTest {
             config = mock(),
             coroutineContext = coroutineContext,
             connection = connection,
-            crashReporter = crashReporter
+            crashReporter = crashReporter,
         )
 
         whenever(connection.unsubscribe(any())).thenAnswer { throw GeneralException("test") }
@@ -500,7 +503,7 @@ class AutoPushFeatureTest {
             config = mock(),
             coroutineContext = coroutineContext,
             connection = connection,
-            crashReporter = crashReporter
+            crashReporter = crashReporter,
         )
 
         whenever(connection.unsubscribe(any())).thenAnswer { throw MissingRegistrationTokenException("") }
@@ -525,7 +528,7 @@ class AutoPushFeatureTest {
             endpoint = "https://foo",
             publicKey = "p256dh",
             authKey = "auth",
-            appServerKey = null
+            appServerKey = null,
         )
 
         override suspend fun unsubscribe(scope: String): Boolean = true
@@ -543,7 +546,7 @@ class AutoPushFeatureTest {
             body: String?,
             encoding: String,
             salt: String,
-            cryptoKey: String
+            cryptoKey: String,
         ): DecryptedMessage? = null
 
         override fun isInitialized() = init

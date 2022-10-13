@@ -40,7 +40,7 @@ class ManifestUpdateFeatureTest {
     private val baseManifest = WebAppManifest(
         name = "Mozilla",
         startUrl = "https://mozilla.org",
-        scope = "https://mozilla.org"
+        scope = "https://mozilla.org",
     )
 
     @Before
@@ -51,9 +51,9 @@ class ManifestUpdateFeatureTest {
         store = BrowserStore(
             BrowserState(
                 customTabs = listOf(
-                    createCustomTab("https://mozilla.org", id = sessionId)
-                )
-            )
+                    createCustomTab("https://mozilla.org", id = sessionId),
+                ),
+            ),
         )
     }
 
@@ -65,7 +65,7 @@ class ManifestUpdateFeatureTest {
             shortcutManager,
             storage,
             "not existing",
-            baseManifest
+            baseManifest,
         )
 
         feature.start()
@@ -86,15 +86,15 @@ class ManifestUpdateFeatureTest {
             shortcutManager,
             storage,
             sessionId,
-            baseManifest
+            baseManifest,
         )
 
         // Insert base manifest
         store.dispatch(
             ContentAction.UpdateWebAppManifestAction(
                 sessionId,
-                baseManifest
-            )
+                baseManifest,
+            ),
         ).joinBlocking()
 
         feature.start()
@@ -112,15 +112,15 @@ class ManifestUpdateFeatureTest {
             shortcutManager,
             storage,
             sessionId,
-            baseManifest
+            baseManifest,
         )
 
         // Insert base manifest
         store.dispatch(
             ContentAction.UpdateWebAppManifestAction(
                 sessionId,
-                baseManifest
-            )
+                baseManifest,
+            ),
         ).joinBlocking()
 
         feature.start()
@@ -131,8 +131,8 @@ class ManifestUpdateFeatureTest {
         store.dispatch(
             ContentAction.UpdateWebAppManifestAction(
                 sessionId,
-                newManifest
-            )
+                newManifest,
+            ),
         ).joinBlocking()
 
         feature.updateJob!!.joinBlocking()
@@ -148,7 +148,7 @@ class ManifestUpdateFeatureTest {
             shortcutManager,
             storage,
             sessionId,
-            baseManifest
+            baseManifest,
         )
 
         feature.start()
@@ -157,8 +157,8 @@ class ManifestUpdateFeatureTest {
         store.dispatch(
             ContentAction.UpdateWebAppManifestAction(
                 sessionId,
-                baseManifest
-            )
+                baseManifest,
+            ),
         ).joinBlocking()
 
         feature.updateJob?.joinBlocking()
@@ -174,15 +174,15 @@ class ManifestUpdateFeatureTest {
             shortcutManager,
             storage,
             sessionId,
-            baseManifest
+            baseManifest,
         )
 
         // Insert base manifest
         store.dispatch(
             ContentAction.UpdateWebAppManifestAction(
                 sessionId,
-                baseManifest
-            )
+                baseManifest,
+            ),
         ).joinBlocking()
 
         feature.start()
@@ -190,8 +190,8 @@ class ManifestUpdateFeatureTest {
         // Update manifest
         store.dispatch(
             ContentAction.RemoveWebAppManifestAction(
-                sessionId
-            )
+                sessionId,
+            ),
         ).joinBlocking()
 
         feature.updateJob?.joinBlocking()
@@ -207,15 +207,15 @@ class ManifestUpdateFeatureTest {
             shortcutManager,
             storage,
             sessionId,
-            baseManifest
+            baseManifest,
         )
 
         // Insert base manifest
         store.dispatch(
             ContentAction.UpdateWebAppManifestAction(
                 sessionId,
-                baseManifest
-            )
+                baseManifest,
+            ),
         ).joinBlocking()
 
         feature.start()
@@ -224,8 +224,8 @@ class ManifestUpdateFeatureTest {
         store.dispatch(
             ContentAction.UpdateWebAppManifestAction(
                 sessionId,
-                WebAppManifest(name = "Mozilla", startUrl = "https://netscape.com")
-            )
+                WebAppManifest(name = "Mozilla", startUrl = "https://netscape.com"),
+            ),
         ).joinBlocking()
 
         feature.updateJob?.joinBlocking()

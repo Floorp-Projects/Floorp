@@ -31,15 +31,15 @@ class UndoMiddlewareTest {
     fun `Undo scenario - Removing single tab`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
-                UndoMiddleware(clearAfterMillis = 60000)
+                UndoMiddleware(clearAfterMillis = 60000),
             ),
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "mozilla"),
-                    createTab("https://getpocket.com", id = "pocket")
+                    createTab("https://getpocket.com", id = "pocket"),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         assertEquals(2, store.state.tabs.size)
@@ -47,7 +47,7 @@ class UndoMiddlewareTest {
         assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
 
         store.dispatch(
-            TabListAction.RemoveTabAction(tabId = "mozilla")
+            TabListAction.RemoveTabAction(tabId = "mozilla"),
         ).joinBlocking()
 
         assertEquals(1, store.state.tabs.size)
@@ -63,23 +63,23 @@ class UndoMiddlewareTest {
     fun `Undo scenario - Removing list of tabs`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
-                UndoMiddleware(clearAfterMillis = 60000)
+                UndoMiddleware(clearAfterMillis = 60000),
             ),
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "mozilla"),
                     createTab("https://getpocket.com", id = "pocket"),
-                    createTab("https://firefox.com", id = "firefox")
+                    createTab("https://firefox.com", id = "firefox"),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         assertEquals(3, store.state.tabs.size)
         assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
 
         store.dispatch(
-            TabListAction.RemoveTabsAction(listOf("mozilla", "pocket"))
+            TabListAction.RemoveTabsAction(listOf("mozilla", "pocket")),
         ).joinBlocking()
 
         assertEquals(1, store.state.tabs.size)
@@ -95,23 +95,23 @@ class UndoMiddlewareTest {
     fun `Undo scenario - Removing all normal tabs`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
-                UndoMiddleware(clearAfterMillis = 60000)
+                UndoMiddleware(clearAfterMillis = 60000),
             ),
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "mozilla"),
                     createTab("https://getpocket.com", id = "pocket"),
-                    createTab("https://reddit.com/r/firefox", id = "reddit", private = true)
+                    createTab("https://reddit.com/r/firefox", id = "reddit", private = true),
                 ),
-                selectedTabId = "pocket"
-            )
+                selectedTabId = "pocket",
+            ),
         )
 
         assertEquals(3, store.state.tabs.size)
         assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
 
         store.dispatch(
-            TabListAction.RemoveAllNormalTabsAction
+            TabListAction.RemoveAllNormalTabsAction,
         ).joinBlocking()
 
         assertEquals(1, store.state.tabs.size)
@@ -127,23 +127,23 @@ class UndoMiddlewareTest {
     fun `Undo scenario - Removing all tabs`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
-                UndoMiddleware(clearAfterMillis = 60000)
+                UndoMiddleware(clearAfterMillis = 60000),
             ),
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "mozilla"),
                     createTab("https://getpocket.com", id = "pocket"),
-                    createTab("https://reddit.com/r/firefox", id = "reddit", private = true)
+                    createTab("https://reddit.com/r/firefox", id = "reddit", private = true),
                 ),
-                selectedTabId = "pocket"
-            )
+                selectedTabId = "pocket",
+            ),
         )
 
         assertEquals(3, store.state.tabs.size)
         assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
 
         store.dispatch(
-            TabListAction.RemoveAllTabsAction()
+            TabListAction.RemoveAllTabsAction(),
         ).joinBlocking()
 
         assertEquals(0, store.state.tabs.size)
@@ -159,23 +159,23 @@ class UndoMiddlewareTest {
     fun `Undo scenario - Removing all tabs non-recoverable`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
-                UndoMiddleware(clearAfterMillis = 60000)
+                UndoMiddleware(clearAfterMillis = 60000),
             ),
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "mozilla"),
                     createTab("https://getpocket.com", id = "pocket"),
-                    createTab("https://reddit.com/r/firefox", id = "reddit", private = true)
+                    createTab("https://reddit.com/r/firefox", id = "reddit", private = true),
                 ),
-                selectedTabId = "pocket"
-            )
+                selectedTabId = "pocket",
+            ),
         )
 
         assertEquals(3, store.state.tabs.size)
         assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
 
         store.dispatch(
-            TabListAction.RemoveAllTabsAction(false)
+            TabListAction.RemoveAllTabsAction(false),
         ).joinBlocking()
 
         assertEquals(0, store.state.tabs.size)
@@ -192,16 +192,16 @@ class UndoMiddlewareTest {
     fun `Undo History in State is written`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
-                UndoMiddleware(clearAfterMillis = 60000)
+                UndoMiddleware(clearAfterMillis = 60000),
             ),
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "mozilla"),
                     createTab("https://getpocket.com", id = "pocket"),
-                    createTab("https://reddit.com/r/firefox", id = "reddit", private = true)
+                    createTab("https://reddit.com/r/firefox", id = "reddit", private = true),
                 ),
-                selectedTabId = "pocket"
-            )
+                selectedTabId = "pocket",
+            ),
         )
 
         assertNull(store.state.undoHistory.selectedTabId)
@@ -209,7 +209,7 @@ class UndoMiddlewareTest {
         assertEquals(3, store.state.tabs.size)
 
         store.dispatch(
-            TabListAction.RemoveAllPrivateTabsAction
+            TabListAction.RemoveAllPrivateTabsAction,
         ).joinBlocking()
 
         assertNull(store.state.undoHistory.selectedTabId)
@@ -218,7 +218,7 @@ class UndoMiddlewareTest {
         assertEquals(2, store.state.tabs.size)
 
         store.dispatch(
-            TabListAction.RemoveAllNormalTabsAction
+            TabListAction.RemoveAllNormalTabsAction,
         ).joinBlocking()
 
         assertEquals("pocket", store.state.undoHistory.selectedTabId)
@@ -239,25 +239,24 @@ class UndoMiddlewareTest {
 
     @Test
     fun `Undo History gets cleared after time`() = runTestOnMain {
-
         val store = BrowserStore(
             middleware = listOf(
-                UndoMiddleware(clearAfterMillis = 60000, waitScope = coroutinesTestRule.scope)
+                UndoMiddleware(clearAfterMillis = 60000, waitScope = coroutinesTestRule.scope),
             ),
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "mozilla"),
                     createTab("https://getpocket.com", id = "pocket"),
-                    createTab("https://reddit.com/r/firefox", id = "reddit", private = true)
+                    createTab("https://reddit.com/r/firefox", id = "reddit", private = true),
                 ),
-                selectedTabId = "pocket"
-            )
+                selectedTabId = "pocket",
+            ),
         )
         assertEquals(3, store.state.tabs.size)
         assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
 
         store.dispatch(
-            TabListAction.RemoveAllNormalTabsAction
+            TabListAction.RemoveAllNormalTabsAction,
         ).joinBlocking()
 
         assertEquals(1, store.state.tabs.size)

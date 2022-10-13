@@ -55,7 +55,7 @@ class OnDiskSitePermissionsStorageTest {
         storage = spy(
             OnDiskSitePermissionsStorage(mock(), mockDataCleanable).apply {
                 databaseInitializer = { mockDatabase(mockDAO) }
-            }
+            },
         )
     }
 
@@ -130,11 +130,13 @@ class OnDiskSitePermissionsStorageTest {
     fun `get all SitePermissions paged`() = runTest {
         val mockDataSource: DataSource<Int, SitePermissionsEntity> = mock()
 
-        doReturn(object : DataSource.Factory<Int, SitePermissionsEntity>() {
-            override fun create(): DataSource<Int, SitePermissionsEntity> {
-                return mockDataSource
-            }
-        }).`when`(mockDAO).getSitePermissionsPaged()
+        doReturn(
+            object : DataSource.Factory<Int, SitePermissionsEntity>() {
+                override fun create(): DataSource<Int, SitePermissionsEntity> {
+                    return mockDataSource
+                }
+            },
+        ).`when`(mockDAO).getSitePermissionsPaged()
 
         storage.getSitePermissionsPaged()
 
@@ -150,7 +152,7 @@ class OnDiskSitePermissionsStorageTest {
             microphone = NO_DECISION,
             camera = NO_DECISION,
             bluetooth = ALLOWED,
-            savedAt = 0
+            savedAt = 0,
         )
     }
 
@@ -168,7 +170,7 @@ class OnDiskSitePermissionsStorageTest {
                 autoplayAudible = AutoplayStatus.BLOCKED,
                 autoplayInaudible = AutoplayStatus.BLOCKED,
                 mediaKeySystemAccess = NO_DECISION,
-                savedAt = 0
+                savedAt = 0,
             ),
             SitePermissionsEntity(
                 origin = "mozilla.dev",
@@ -182,8 +184,8 @@ class OnDiskSitePermissionsStorageTest {
                 autoplayAudible = AutoplayStatus.BLOCKED,
                 autoplayInaudible = AutoplayStatus.BLOCKED,
                 mediaKeySystemAccess = NO_DECISION,
-                savedAt = 0
-            )
+                savedAt = 0,
+            ),
         )
     }
 

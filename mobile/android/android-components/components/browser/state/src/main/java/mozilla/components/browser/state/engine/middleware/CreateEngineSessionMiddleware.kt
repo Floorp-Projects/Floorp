@@ -25,14 +25,14 @@ import mozilla.components.support.base.log.logger.Logger
  */
 internal class CreateEngineSessionMiddleware(
     private val engine: Engine,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
 ) : Middleware<BrowserState, BrowserAction> {
     private val logger = Logger("CreateEngineSessionMiddleware")
 
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         if (action is EngineAction.CreateEngineSessionAction) {
             if (context.state.findTabOrCustomTab(action.tabId)?.engineState?.initializing == false) {
@@ -56,7 +56,7 @@ internal class CreateEngineSessionMiddleware(
 
     private fun createEngineSession(
         store: Store<BrowserState, BrowserAction>,
-        action: EngineAction.CreateEngineSessionAction
+        action: EngineAction.CreateEngineSessionAction,
     ) {
         logger.debug("Request to create engine session for tab ${action.tabId}")
 
@@ -67,7 +67,7 @@ internal class CreateEngineSessionMiddleware(
                 engine,
                 logger,
                 store,
-                action.tabId
+                action.tabId,
             )
 
             action.followupAction?.let {
@@ -83,7 +83,7 @@ private fun getOrCreateEngineSession(
     engine: Engine,
     logger: Logger,
     store: Store<BrowserState, BrowserAction>,
-    tabId: String
+    tabId: String,
 ): EngineSession? {
     val tab = store.state.findTabOrCustomTab(tabId)
     if (tab == null) {
@@ -109,7 +109,7 @@ private fun createEngineSession(
     engine: Engine,
     logger: Logger,
     store: Store<BrowserState, BrowserAction>,
-    tab: SessionState
+    tab: SessionState,
 ): EngineSession {
     val engineSession = engine.createSession(tab.content.private, tab.contextId)
     logger.debug("Created engine session for tab ${tab.id}")
@@ -125,8 +125,8 @@ private fun createEngineSession(
         EngineAction.LinkEngineSessionAction(
             tab.id,
             engineSession,
-            skipLoading = skipLoading
-        )
+            skipLoading = skipLoading,
+        ),
     )
 
     return engineSession

@@ -59,7 +59,7 @@ internal object ContentStateReducer {
                         emptyList()
                     } else {
                         it.permissionRequestsList
-                    }
+                    },
                 )
             }
             is ContentAction.UpdateProgressAction -> updateContentState(state, action.sessionId) {
@@ -115,7 +115,7 @@ internal object ContentStateReducer {
             }
             is ContentAction.ReplacePromptRequestAction -> updateContentState(
                 state,
-                action.sessionId
+                action.sessionId,
             ) { contentState ->
                 val updated = contentState.promptRequests
                     .filter { it.uid != action.previousPromptUid }
@@ -169,11 +169,11 @@ internal object ContentStateReducer {
             }
             is ContentAction.UpdatePermissionsRequest -> updateContentState(
                 state,
-                action.sessionId
+                action.sessionId,
             ) {
                 if (!it.permissionRequestsList.containsPermission(action.permissionRequest)) {
                     it.copy(
-                        permissionRequestsList = it.permissionRequestsList + action.permissionRequest
+                        permissionRequestsList = it.permissionRequestsList + action.permissionRequest,
                     )
                 } else {
                     it
@@ -181,11 +181,11 @@ internal object ContentStateReducer {
             }
             is ContentAction.ConsumePermissionsRequest -> updateContentState(
                 state,
-                action.sessionId
+                action.sessionId,
             ) {
                 if (it.permissionRequestsList.containsPermission(action.permissionRequest)) {
                     it.copy(
-                        permissionRequestsList = it.permissionRequestsList - action.permissionRequest
+                        permissionRequestsList = it.permissionRequestsList - action.permissionRequest,
                     )
                 } else {
                     it
@@ -193,11 +193,11 @@ internal object ContentStateReducer {
             }
             is ContentAction.UpdateAppPermissionsRequest -> updateContentState(
                 state,
-                action.sessionId
+                action.sessionId,
             ) {
                 if (!it.appPermissionRequestsList.containsPermission(action.appPermissionRequest)) {
                     it.copy(
-                        appPermissionRequestsList = it.appPermissionRequestsList + action.appPermissionRequest
+                        appPermissionRequestsList = it.appPermissionRequestsList + action.appPermissionRequest,
                     )
                 } else {
                     it
@@ -205,11 +205,11 @@ internal object ContentStateReducer {
             }
             is ContentAction.ConsumeAppPermissionsRequest -> updateContentState(
                 state,
-                action.sessionId
+                action.sessionId,
             ) {
                 if (it.appPermissionRequestsList.containsPermission(action.appPermissionRequest)) {
                     it.copy(
-                        appPermissionRequestsList = it.appPermissionRequestsList - action.appPermissionRequest
+                        appPermissionRequestsList = it.appPermissionRequestsList - action.appPermissionRequest,
                     )
                 } else {
                     it
@@ -217,13 +217,13 @@ internal object ContentStateReducer {
             }
             is ContentAction.ClearPermissionRequests -> updateContentState(
                 state,
-                action.sessionId
+                action.sessionId,
             ) {
                 it.copy(permissionRequestsList = emptyList())
             }
             is ContentAction.ClearAppPermissionRequests -> updateContentState(
                 state,
-                action.sessionId
+                action.sessionId,
             ) {
                 it.copy(appPermissionRequestsList = emptyList())
             }
@@ -315,7 +315,7 @@ internal object ContentStateReducer {
 private inline fun updatePermissionHighlightsState(
     state: BrowserState,
     tabId: String,
-    crossinline update: (PermissionHighlightsState) -> PermissionHighlightsState
+    crossinline update: (PermissionHighlightsState) -> PermissionHighlightsState,
 ): BrowserState {
     return updateContentState(state, tabId) {
         it.copy(permissionHighlights = update(it.permissionHighlights))
@@ -325,7 +325,7 @@ private inline fun updatePermissionHighlightsState(
 private inline fun updateContentState(
     state: BrowserState,
     tabId: String,
-    crossinline update: (ContentState) -> ContentState
+    crossinline update: (ContentState) -> ContentState,
 ): BrowserState {
     return state.updateTabOrCustomTabState(tabId) { current ->
         current.createCopy(content = update(current.content))

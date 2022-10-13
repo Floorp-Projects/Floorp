@@ -56,7 +56,7 @@ class URLRendererTest {
             val configuration = ToolbarFeature.UrlRenderConfiguration(
                 publicSuffixList = PublicSuffixList(testContext, Dispatchers.Unconfined),
                 registrableDomainColor = Color.RED,
-                urlColor = Color.GREEN
+                urlColor = Color.GREEN,
             )
 
             val toolbar: Toolbar = mock()

@@ -43,7 +43,7 @@ class CreditCardSaveDialogFragmentTest {
         number = "4111111111111110",
         expiryMonth = "5",
         expiryYear = "2030",
-        cardType = "amex"
+        cardType = "amex",
     )
     private val sessionId = "sessionId"
     private val promptRequestUID = "uid"
@@ -55,8 +55,8 @@ class CreditCardSaveDialogFragmentTest {
                 sessionId = sessionId,
                 promptRequestUID = promptRequestUID,
                 shouldDismissOnLoad = true,
-                creditCard = creditCard
-            )
+                creditCard = creditCard,
+            ),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -65,12 +65,12 @@ class CreditCardSaveDialogFragmentTest {
                 addView(
                     AppCompatTextView(appCompatContext).apply {
                         id = R.id.save_credit_card_header
-                    }
+                    },
                 )
                 addView(
                     AppCompatTextView(appCompatContext).apply {
                         id = R.id.save_credit_card_message
-                    }
+                    },
                 )
                 addView(Button(appCompatContext).apply { id = R.id.save_confirm })
                 addView(Button(appCompatContext).apply { id = R.id.save_cancel })
@@ -99,8 +99,8 @@ class CreditCardSaveDialogFragmentTest {
                 sessionId = sessionId,
                 promptRequestUID = promptRequestUID,
                 shouldDismissOnLoad = true,
-                creditCard = creditCard
-            )
+                creditCard = creditCard,
+            ),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -109,12 +109,12 @@ class CreditCardSaveDialogFragmentTest {
                 addView(
                     AppCompatTextView(appCompatContext).apply {
                         id = R.id.save_credit_card_header
-                    }
+                    },
                 )
                 addView(
                     AppCompatTextView(appCompatContext).apply {
                         id = R.id.save_credit_card_message
-                    }
+                    },
                 )
                 addView(Button(appCompatContext).apply { id = R.id.save_confirm })
                 addView(Button(appCompatContext).apply { id = R.id.save_cancel })
@@ -141,7 +141,7 @@ class CreditCardSaveDialogFragmentTest {
             header = header,
             cancelButtonText = cancelButtonText,
             confirmButtonText = confirmButtonText,
-            showMessageBody = false
+            showMessageBody = false,
         )
 
         assertEquals(header, headerTextView.text)
@@ -154,7 +154,7 @@ class CreditCardSaveDialogFragmentTest {
             header = header,
             cancelButtonText = cancelButtonText,
             confirmButtonText = confirmButtonText,
-            showMessageBody = true
+            showMessageBody = true,
         )
 
         assertTrue(messageTextView.isVisible)
@@ -168,8 +168,8 @@ class CreditCardSaveDialogFragmentTest {
                 sessionId = sessionId,
                 promptRequestUID = promptRequestUID,
                 shouldDismissOnLoad = true,
-                creditCard = creditCard
-            )
+                creditCard = creditCard,
+            ),
         )
 
         fragment.feature = mockFeature
@@ -180,12 +180,12 @@ class CreditCardSaveDialogFragmentTest {
                 addView(
                     AppCompatTextView(appCompatContext).apply {
                         id = R.id.save_credit_card_header
-                    }
+                    },
                 )
                 addView(
                     AppCompatTextView(appCompatContext).apply {
                         id = R.id.save_credit_card_message
-                    }
+                    },
                 )
                 addView(Button(appCompatContext).apply { id = R.id.save_confirm })
                 addView(Button(appCompatContext).apply { id = R.id.save_cancel })
@@ -206,7 +206,7 @@ class CreditCardSaveDialogFragmentTest {
         verify(mockFeature).onConfirm(
             sessionId = sessionId,
             promptRequestUID = promptRequestUID,
-            value = creditCard
+            value = creditCard,
         )
     }
 
@@ -218,8 +218,8 @@ class CreditCardSaveDialogFragmentTest {
                 sessionId = sessionId,
                 promptRequestUID = promptRequestUID,
                 shouldDismissOnLoad = true,
-                creditCard = creditCard
-            )
+                creditCard = creditCard,
+            ),
         )
 
         fragment.feature = mockFeature
@@ -230,12 +230,12 @@ class CreditCardSaveDialogFragmentTest {
                 addView(
                     AppCompatTextView(appCompatContext).apply {
                         id = R.id.save_credit_card_header
-                    }
+                    },
                 )
                 addView(
                     AppCompatTextView(appCompatContext).apply {
                         id = R.id.save_credit_card_message
-                    }
+                    },
                 )
                 addView(Button(appCompatContext).apply { id = R.id.save_confirm })
                 addView(Button(appCompatContext).apply { id = R.id.save_cancel })
@@ -255,7 +255,7 @@ class CreditCardSaveDialogFragmentTest {
 
         verify(mockFeature).onCancel(
             sessionId = sessionId,
-            promptRequestUID = promptRequestUID
+            promptRequestUID = promptRequestUID,
         )
     }
 
@@ -266,8 +266,8 @@ class CreditCardSaveDialogFragmentTest {
                 sessionId = sessionId,
                 promptRequestUID = promptRequestUID,
                 shouldDismissOnLoad = true,
-                creditCard = creditCard
-            )
+                creditCard = creditCard,
+            ),
         )
 
         fragment.confirmResult = CreditCardValidationDelegate.Result.CanBeCreated
@@ -281,7 +281,7 @@ class CreditCardSaveDialogFragmentTest {
             assertEquals(Action.CONFIRM, fact.action)
             assertEquals(
                 CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_CREATED,
-                fact.item
+                fact.item,
             )
         }
     }
@@ -293,8 +293,8 @@ class CreditCardSaveDialogFragmentTest {
                 sessionId = sessionId,
                 promptRequestUID = promptRequestUID,
                 shouldDismissOnLoad = true,
-                creditCard = creditCard
-            )
+                creditCard = creditCard,
+            ),
         )
 
         fragment.confirmResult = CreditCardValidationDelegate.Result.CanBeUpdated(mock())
@@ -308,7 +308,7 @@ class CreditCardSaveDialogFragmentTest {
             assertEquals(Action.CONFIRM, fact.action)
             assertEquals(
                 CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_UPDATED,
-                fact.item
+                fact.item,
             )
         }
     }

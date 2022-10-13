@@ -49,7 +49,7 @@ internal abstract class ManifestDatabase : RoomDatabase() {
                 database.execSQL("ALTER TABLE manifests ADD COLUMN has_share_targets INTEGER NOT NULL DEFAULT 0")
 
                 database.execSQL(
-                    "CREATE INDEX IF NOT EXISTS index_manifests_has_share_targets ON manifests (has_share_targets)"
+                    "CREATE INDEX IF NOT EXISTS index_manifests_has_share_targets ON manifests (has_share_targets)",
                 )
             }
         }
@@ -61,7 +61,7 @@ internal abstract class ManifestDatabase : RoomDatabase() {
             return Room.databaseBuilder(
                 context,
                 ManifestDatabase::class.java,
-                "manifests"
+                "manifests",
             ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also {
                 instance = it
             }

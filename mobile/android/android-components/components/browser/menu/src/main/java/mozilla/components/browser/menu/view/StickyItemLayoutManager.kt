@@ -66,7 +66,7 @@ enum class StickyItemPlacement {
      * If the list is scrolled down past the sticky item's position that view
      * will be anchored to the bottom of the list, always being shown as the last item.
      */
-    BOTTOM
+    BOTTOM,
 }
 
 /**
@@ -81,7 +81,7 @@ enum class StickyItemPlacement {
 abstract class StickyItemsLinearLayoutManager<T> constructor(
     context: Context,
     private val stickyItemPlacement: StickyItemPlacement,
-    reverseLayout: Boolean = false
+    reverseLayout: Boolean = false,
 ) : LinearLayoutManager(context, RecyclerView.VERTICAL, reverseLayout)
     where T : RecyclerView.Adapter<*>, T : StickyItemsAdapter {
 
@@ -90,6 +90,7 @@ abstract class StickyItemsLinearLayoutManager<T> constructor(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     internal var stickyItemPosition = RecyclerView.NO_POSITION
+
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     internal var stickyItemView: View? = null
 
@@ -100,6 +101,7 @@ abstract class StickyItemsLinearLayoutManager<T> constructor(
     // Save / Restore scroll state
     @VisibleForTesting
     internal var scrollPosition = RecyclerView.NO_POSITION
+
     @VisibleForTesting
     internal var scrollOffset = 0
 
@@ -116,7 +118,7 @@ abstract class StickyItemsLinearLayoutManager<T> constructor(
     abstract fun scrollToIndicatedPositionWithOffset(
         position: Int,
         offset: Int,
-        actuallyScrollToPositionWithOffset: (Int, Int) -> Unit
+        actuallyScrollToPositionWithOffset: (Int, Int) -> Unit,
     )
 
     /**
@@ -140,7 +142,7 @@ abstract class StickyItemsLinearLayoutManager<T> constructor(
 
     override fun onAdapterChanged(
         oldAdapter: RecyclerView.Adapter<*>?,
-        newAdapter: RecyclerView.Adapter<*>?
+        newAdapter: RecyclerView.Adapter<*>?,
     ) {
         super.onAdapterChanged(oldAdapter, newAdapter)
         setAdapter(newAdapter)
@@ -150,7 +152,7 @@ abstract class StickyItemsLinearLayoutManager<T> constructor(
         return SavedState(
             superState = super.onSaveInstanceState(),
             scrollPosition = scrollPosition,
-            scrollOffset = scrollOffset
+            scrollOffset = scrollOffset,
         )
     }
 
@@ -173,7 +175,7 @@ abstract class StickyItemsLinearLayoutManager<T> constructor(
     override fun scrollVerticallyBy(
         dy: Int,
         recycler: RecyclerView.Recycler,
-        state: RecyclerView.State?
+        state: RecyclerView.State?,
     ): Int {
         val distanceScrolled = restoreView { super.scrollVerticallyBy(dy, recycler, state) }
         if (distanceScrolled != 0) {
@@ -234,7 +236,7 @@ abstract class StickyItemsLinearLayoutManager<T> constructor(
         focused: View,
         focusDirection: Int,
         recycler: RecyclerView.Recycler,
-        state: RecyclerView.State
+        state: RecyclerView.State,
     ): View? = restoreView { super.onFocusSearchFailed(focused, focusDirection, recycler, state) }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
@@ -331,7 +333,8 @@ abstract class StickyItemsLinearLayoutManager<T> constructor(
 
         // If we have a pending scroll wait until the end of layout and scroll again.
         if (scrollPosition != RecyclerView.NO_POSITION) {
-            stickyItem.viewTreeObserver.addOnGlobalLayoutListener(object :
+            stickyItem.viewTreeObserver.addOnGlobalLayoutListener(
+                object :
                     ViewTreeObserver.OnGlobalLayoutListener {
                     override fun onGlobalLayout() {
                         stickyItem.viewTreeObserver.removeOnGlobalLayoutListener(this)
@@ -340,7 +343,8 @@ abstract class StickyItemsLinearLayoutManager<T> constructor(
                             setScrollState(RecyclerView.NO_POSITION, INVALID_OFFSET)
                         }
                     }
-                })
+                },
+            )
         }
     }
 
@@ -354,7 +358,7 @@ abstract class StickyItemsLinearLayoutManager<T> constructor(
             paddingLeft,
             0,
             width - paddingRight,
-            stickyItem.measuredHeight
+            stickyItem.measuredHeight,
         )
     }
 
@@ -449,18 +453,17 @@ abstract class StickyItemsLinearLayoutManager<T> constructor(
         fun <T> get(
             context: Context,
             stickyItemPlacement: StickyItemPlacement = StickyItemPlacement.TOP,
-            reverseLayout: Boolean = false
+            reverseLayout: Boolean = false,
         ): StickyItemsLinearLayoutManager<T>
             where T : RecyclerView.Adapter<*>, T : StickyItemsAdapter {
-
             return when (stickyItemPlacement) {
                 StickyItemPlacement.TOP -> StickyHeaderLinearLayoutManager(
                     context,
-                    reverseLayout
+                    reverseLayout,
                 )
                 StickyItemPlacement.BOTTOM -> StickyFooterLinearLayoutManager(
                     context,
-                    reverseLayout
+                    reverseLayout,
                 )
             }
         }
@@ -476,5 +479,5 @@ abstract class StickyItemsLinearLayoutManager<T> constructor(
 internal data class SavedState(
     val superState: Parcelable?,
     val scrollPosition: Int,
-    val scrollOffset: Int
+    val scrollOffset: Int,
 ) : Parcelable

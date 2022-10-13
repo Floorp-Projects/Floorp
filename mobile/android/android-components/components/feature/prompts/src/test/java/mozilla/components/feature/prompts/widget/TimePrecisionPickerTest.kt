@@ -29,7 +29,7 @@ class TimePrecisionPickerTest {
         val timePicker = TimePrecisionPicker(
             context = testContext,
             selectedTime = initialTime,
-            stepValue = stepValue
+            stepValue = stepValue,
         )
 
         assertEquals(initialTime.hour, timePicker.hourView.value)
@@ -44,7 +44,7 @@ class TimePrecisionPickerTest {
             selectedTime = initialTime,
             minTime = minTime,
             maxTime = maxTime,
-            stepValue = stepValue
+            stepValue = stepValue,
         )
 
         assertEquals(minTime.hour, timePicker.hourView.value)
@@ -60,7 +60,7 @@ class TimePrecisionPickerTest {
             selectedTime = initialTime,
             minTime = minTime,
             maxTime = maxTime,
-            stepValue = stepValue
+            stepValue = stepValue,
         )
 
         assertEquals(initialTime.hour, timePicker.hourView.value)
@@ -69,7 +69,6 @@ class TimePrecisionPickerTest {
 
     @Test
     fun `WHEN changing the selected time THEN timeSetListener MUST be notified`() {
-
         val updatedTime = now()
 
         val timePicker = TimePrecisionPicker(
@@ -84,14 +83,14 @@ class TimePrecisionPickerTest {
                     hour: Int,
                     minute: Int,
                     second: Int,
-                    millisecond: Int
+                    millisecond: Int,
                 ) {
                     updatedTime.hour = hour
                     updatedTime.minute = minute
                     updatedTime.second = second
                     updatedTime.millisecond = millisecond
                 }
-            }
+            },
         )
 
         timePicker.onValueChange(timePicker.hourView, initialTime.hour, 13)

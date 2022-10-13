@@ -20,7 +20,7 @@ import mozilla.components.support.base.log.logger.Logger
  * in search results is clicked.
  */
 class AdsTelemetryMiddleware(
-    private val adsTelemetry: AdsTelemetry
+    private val adsTelemetry: AdsTelemetry,
 ) : Middleware<BrowserState, BrowserAction> {
     @VisibleForTesting
     internal val redirectChain = mutableMapOf<String, RedirectChain>()
@@ -30,7 +30,7 @@ class AdsTelemetryMiddleware(
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         when (action) {
             is ContentAction.UpdateLoadRequestAction -> {

@@ -20,7 +20,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
  */
 class WindowFeature(
     private val store: BrowserStore,
-    private val tabsUseCases: TabsUseCases
+    private val tabsUseCases: TabsUseCases,
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null
@@ -48,7 +48,7 @@ class WindowFeature(
                                 selectTab = true,
                                 parentId = state.id,
                                 engineSession = windowRequest.prepare(),
-                                private = state.content.private
+                                private = state.content.private,
                             )
                             windowRequest.start()
                         }
@@ -62,7 +62,7 @@ class WindowFeature(
 
     private fun consumeWindowRequest(
         tabId: String,
-        consume: () -> Unit
+        consume: () -> Unit,
     ) {
         consume()
         store.dispatch(ContentAction.ConsumeWindowRequestAction(tabId))

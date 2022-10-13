@@ -14,7 +14,7 @@ package mozilla.components.browser.engine.system.matcher
 abstract class ReversibleString private constructor(
     protected val string: String,
     protected val offsetStart: Int,
-    protected val offsetEnd: Int
+    protected val offsetEnd: Int,
 ) {
     abstract val isReversed: Boolean
     abstract fun charAt(position: Int): Char
@@ -44,7 +44,7 @@ abstract class ReversibleString private constructor(
     private class ForwardString(
         string: String,
         offsetStart: Int,
-        offsetEnd: Int
+        offsetEnd: Int,
     ) : ReversibleString(string, offsetStart, offsetEnd) {
         override val isReversed: Boolean = false
 
@@ -63,7 +63,7 @@ abstract class ReversibleString private constructor(
     private class ReverseString(
         string: String,
         offsetStart: Int,
-        offsetEnd: Int
+        offsetEnd: Int,
     ) : ReversibleString(string, offsetStart, offsetEnd) {
         override val isReversed: Boolean = true
 

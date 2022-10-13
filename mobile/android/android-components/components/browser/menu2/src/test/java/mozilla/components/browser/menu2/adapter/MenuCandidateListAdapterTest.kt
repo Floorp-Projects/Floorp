@@ -45,7 +45,7 @@ class MenuCandidateListAdapterTest {
             CompoundMenuCandidate("three", false, end = CompoundMenuCandidate.ButtonType.CHECKBOX),
             CompoundMenuCandidate("four", false, end = CompoundMenuCandidate.ButtonType.SWITCH),
             DividerMenuCandidate(),
-            RowMenuCandidate(emptyList())
+            RowMenuCandidate(emptyList()),
         )
         adapter.submitList(items)
 
@@ -62,8 +62,8 @@ class MenuCandidateListAdapterTest {
     fun `bind will be forwarded to item implementation`() {
         adapter.submitList(
             listOf(
-                DividerMenuCandidate()
-            )
+                DividerMenuCandidate(),
+            ),
         )
 
         val holder: DividerMenuCandidateViewHolder = mock()

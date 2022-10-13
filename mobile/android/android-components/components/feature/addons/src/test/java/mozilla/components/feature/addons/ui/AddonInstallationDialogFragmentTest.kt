@@ -33,11 +33,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
@@ -50,8 +50,9 @@ class AddonInstallationDialogFragmentTest {
     @Test
     fun `build dialog`() {
         val addon = Addon(
-            "id", translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"),
-            permissions = listOf("privacy", "<all_urls>", "tabs")
+            "id",
+            translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"),
+            permissions = listOf("privacy", "<all_urls>", "tabs"),
         )
         val mockedCollectionProvider = mock<AddonCollectionProvider>()
         val fragment = createAddonInstallationDialogFragment(addon, mockedCollectionProvider)
@@ -202,7 +203,7 @@ class AddonInstallationDialogFragmentTest {
     private fun createAddonInstallationDialogFragment(
         addon: Addon,
         addonCollectionProvider: AddonCollectionProvider,
-        promptsStyling: AddonInstallationDialogFragment.PromptsStyling? = null
+        promptsStyling: AddonInstallationDialogFragment.PromptsStyling? = null,
     ): AddonInstallationDialogFragment {
         return spy(AddonInstallationDialogFragment.newInstance(addon, addonCollectionProvider, promptsStyling = promptsStyling)).apply {
             doNothing().`when`(this).dismiss()

@@ -24,7 +24,7 @@ data class Action(
     val badgeText: String?,
     val badgeTextColor: Int?,
     val badgeBackgroundColor: Int?,
-    val onClick: () -> Unit
+    val onClick: () -> Unit,
 ) {
     /**
      * Returns a copy of this [Action] with the provided override applied e.g. for tab-specific overrides.
@@ -43,7 +43,7 @@ data class Action(
             badgeBackgroundColor = override.badgeBackgroundColor ?: badgeBackgroundColor,
             badgeTextColor = override.badgeTextColor ?: badgeTextColor,
             loadIcon = override.loadIcon ?: loadIcon,
-            onClick = override.onClick
+            onClick = override.onClick,
         )
     } else {
         this

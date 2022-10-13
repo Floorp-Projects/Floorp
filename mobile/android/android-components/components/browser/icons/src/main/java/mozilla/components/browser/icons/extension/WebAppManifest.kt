@@ -23,7 +23,7 @@ fun WebAppManifest.toIconRequest() = IconRequest(
     resources = icons
         .filter { Purpose.MASKABLE in it.purpose || Purpose.ANY in it.purpose }
         .map { it.toIconResource() },
-    color = backgroundColor
+    color = backgroundColor,
 )
 
 /**
@@ -35,7 +35,7 @@ fun WebAppManifest.toMonochromeIconRequest() = IconRequest(
     resources = icons
         .filter { Purpose.MONOCHROME in it.purpose }
         .map { it.toIconResource() },
-    color = Color.WHITE
+    color = Color.WHITE,
 )
 
 private fun WebAppManifest.Icon.toIconResource(): IconRequest.Resource {
@@ -44,6 +44,6 @@ private fun WebAppManifest.Icon.toIconResource(): IconRequest.Resource {
         type = MANIFEST_ICON,
         sizes = sizes,
         mimeType = type,
-        maskable = Purpose.MASKABLE in purpose
+        maskable = Purpose.MASKABLE in purpose,
     )
 }

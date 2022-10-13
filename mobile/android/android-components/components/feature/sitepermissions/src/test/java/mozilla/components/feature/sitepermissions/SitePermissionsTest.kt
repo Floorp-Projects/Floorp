@@ -42,7 +42,7 @@ class SitePermissionsTest {
             notification = BLOCKED,
             microphone = NO_DECISION,
             autoplayAudible = AutoplayStatus.ALLOWED,
-            autoplayInaudible = AutoplayStatus.BLOCKED
+            autoplayInaudible = AutoplayStatus.BLOCKED,
         )
 
         assertEquals(BLOCKED, sitePermissions[NOTIFICATION])
@@ -61,7 +61,7 @@ class SitePermissionsTest {
             origin = "mozilla.dev",
             autoplayInaudible = AutoplayStatus.BLOCKED,
             autoplayAudible = AutoplayStatus.BLOCKED,
-            savedAt = 0
+            savedAt = 0,
         )
 
         assertEquals(BLOCKED, sitePermissions.autoplayAudible.toStatus())
@@ -69,7 +69,7 @@ class SitePermissionsTest {
 
         sitePermissions = sitePermissions.copy(
             autoplayAudible = AutoplayStatus.ALLOWED,
-            autoplayInaudible = AutoplayStatus.ALLOWED
+            autoplayInaudible = AutoplayStatus.ALLOWED,
         )
 
         assertEquals(ALLOWED, sitePermissions.autoplayAudible.toStatus())

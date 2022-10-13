@@ -29,12 +29,12 @@ class CustomTabMenuCandidatesTest {
     fun `return an empty list if there are no menu items`() {
         val customTabSessionState = createCustomTab(
             url = "https://mozilla.org",
-            config = CustomTabConfig(menuItems = emptyList())
+            config = CustomTabConfig(menuItems = emptyList()),
         )
 
         assertEquals(
             emptyList<MenuCandidate>(),
-            customTabSessionState.createCustomTabMenuCandidates(mock())
+            customTabSessionState.createCustomTabMenuCandidates(mock()),
         )
     }
 
@@ -48,14 +48,14 @@ class CustomTabMenuCandidatesTest {
                 menuItems = listOf(
                     CustomTabMenuItem(
                         name = "item1",
-                        pendingIntent = pendingIntent1
+                        pendingIntent = pendingIntent1,
                     ),
                     CustomTabMenuItem(
                         name = "item2",
-                        pendingIntent = pendingIntent2
-                    )
-                )
-            )
+                        pendingIntent = pendingIntent2,
+                    ),
+                ),
+            ),
         )
 
         val context = mock<Context>()

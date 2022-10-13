@@ -27,8 +27,8 @@ class TrackingProtectionActionTest {
 
         store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
     }
 
@@ -67,8 +67,8 @@ class TrackingProtectionActionTest {
         store.dispatch(
             TrackingProtectionAction.ToggleExclusionListAction(
                 tabId = tab.id,
-                excluded = true
-            )
+                excluded = true,
+            ),
         ).joinBlocking()
 
         assertTrue(trackingProtectionState().ignoredOnTrackingProtection)
@@ -76,8 +76,8 @@ class TrackingProtectionActionTest {
         store.dispatch(
             TrackingProtectionAction.ToggleExclusionListAction(
                 tabId = tab.id,
-                excluded = true
-            )
+                excluded = true,
+            ),
         ).joinBlocking()
 
         assertTrue(trackingProtectionState().ignoredOnTrackingProtection)
@@ -85,8 +85,8 @@ class TrackingProtectionActionTest {
         store.dispatch(
             TrackingProtectionAction.ToggleExclusionListAction(
                 tabId = tab.id,
-                excluded = false
-            )
+                excluded = false,
+            ),
         ).joinBlocking()
 
         assertFalse(trackingProtectionState().ignoredOnTrackingProtection)
@@ -94,8 +94,8 @@ class TrackingProtectionActionTest {
         store.dispatch(
             TrackingProtectionAction.ToggleExclusionListAction(
                 tabId = tab.id,
-                excluded = true
-            )
+                excluded = true,
+            ),
         ).joinBlocking()
 
         assertTrue(trackingProtectionState().ignoredOnTrackingProtection)

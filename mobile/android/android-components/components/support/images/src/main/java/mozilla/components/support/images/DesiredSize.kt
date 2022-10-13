@@ -20,5 +20,5 @@ data class DesiredSize(
     @Px val targetSize: Int,
     @Px val minSize: Int,
     @Px val maxSize: Int,
-    val maxScaleFactor: Float
+    val maxScaleFactor: Float,
 )

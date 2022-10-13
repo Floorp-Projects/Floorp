@@ -48,7 +48,7 @@ class BrowserMenuHighlightableItem(
     override val isSticky: Boolean = false,
     override val highlight: BrowserMenuHighlight,
     override val isHighlighted: () -> Boolean = { true },
-    private val listener: () -> Unit = {}
+    private val listener: () -> Unit = {},
 ) : BrowserMenuImageText(
     label,
     startImageResource,
@@ -56,7 +56,7 @@ class BrowserMenuHighlightableItem(
     textColorResource,
     isCollapsingMenuLimit,
     isSticky,
-    listener
+    listener,
 ),
     HighlightableMenuItem {
 
@@ -73,7 +73,7 @@ class BrowserMenuHighlightableItem(
         isCollapsingMenuLimit: Boolean = false,
         isSticky: Boolean = false,
         highlight: Highlight? = null,
-        listener: () -> Unit = {}
+        listener: () -> Unit = {},
     ) : this(
         label,
         imageResource,
@@ -83,7 +83,7 @@ class BrowserMenuHighlightableItem(
         isSticky,
         highlight ?: defaultHighlight,
         { highlight != null },
-        listener
+        listener,
     )
 
     private var wasHighlighted = false
@@ -171,18 +171,18 @@ class BrowserMenuHighlightableItem(
                 } else {
                     DrawableMenuIcon(
                         context,
-                        highlight.endImageResource
+                        highlight.endImageResource,
                     )
                 },
                 effect = HighPriorityHighlightEffect(
-                    backgroundTint = highlight.backgroundTint
-                )
+                    backgroundTint = highlight.backgroundTint,
+                ),
             )
             is BrowserMenuHighlight.LowPriority -> base.copy(
                 text = highlight.label ?: label,
                 start = (base.start as? DrawableMenuIcon)?.copy(
-                    effect = LowPriorityHighlightEffect(notificationTint = highlight.notificationTint)
-                )
+                    effect = LowPriorityHighlightEffect(notificationTint = highlight.notificationTint),
+                ),
             )
             is BrowserMenuHighlight.ClassicHighlight -> base
         }
@@ -198,11 +198,11 @@ class BrowserMenuHighlightableItem(
         @DrawableRes startImageResource: Int = NO_ID,
         @DrawableRes endImageResource: Int = NO_ID,
         @DrawableRes backgroundResource: Int,
-        @ColorRes colorResource: Int
+        @ColorRes colorResource: Int,
     ) : BrowserMenuHighlight.ClassicHighlight(
         startImageResource,
         endImageResource,
         backgroundResource,
-        colorResource
+        colorResource,
     )
 }

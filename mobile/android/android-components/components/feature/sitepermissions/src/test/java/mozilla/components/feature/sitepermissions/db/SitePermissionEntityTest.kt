@@ -28,7 +28,7 @@ class SitePermissionEntityTest {
             autoplayInaudible = AutoplayStatus.ALLOWED,
             autoplayAudible = AutoplayStatus.BLOCKED,
             mediaKeySystemAccess = NO_DECISION,
-            savedAt = 0
+            savedAt = 0,
         )
 
         val domainClass = dbEntity.toSitePermission()
@@ -63,7 +63,7 @@ class SitePermissionEntityTest {
             autoplayInaudible = AutoplayStatus.ALLOWED,
             autoplayAudible = AutoplayStatus.BLOCKED,
             mediaKeySystemAccess = NO_DECISION,
-            savedAt = 0
+            savedAt = 0,
         )
 
         val dbEntity = domainClass.toSitePermissionsEntity()

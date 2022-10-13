@@ -69,8 +69,8 @@ class ContentActionTest {
                 },
                 createTab(url = "https://www.firefox.com").also {
                     otherTabId = it.id
-                }
-            )
+                },
+            ),
         )
 
         store = BrowserStore(state)
@@ -84,7 +84,7 @@ class ContentActionTest {
         assertNotEquals(newUrl, otherTab.content.url)
 
         store.dispatch(
-            ContentAction.UpdateUrlAction(tab.id, newUrl)
+            ContentAction.UpdateUrlAction(tab.id, newUrl),
         ).joinBlocking()
 
         assertEquals(newUrl, tab.content.url)
@@ -99,13 +99,13 @@ class ContentActionTest {
         assertNotEquals(icon, otherTab.content.icon)
 
         store.dispatch(
-            ContentAction.UpdateIconAction(tab.id, tab.content.url, icon)
+            ContentAction.UpdateIconAction(tab.id, tab.content.url, icon),
         ).joinBlocking()
 
         assertEquals(icon, tab.content.icon)
 
         store.dispatch(
-            ContentAction.UpdateUrlAction(tab.id, "https://www.example.org")
+            ContentAction.UpdateUrlAction(tab.id, "https://www.example.org"),
         ).joinBlocking()
 
         assertNull(tab.content.icon)
@@ -119,13 +119,13 @@ class ContentActionTest {
         assertNotEquals(icon, otherTab.content.icon)
 
         store.dispatch(
-            ContentAction.UpdateIconAction(tab.id, tab.content.url, icon)
+            ContentAction.UpdateIconAction(tab.id, tab.content.url, icon),
         ).joinBlocking()
 
         assertEquals(icon, tab.content.icon)
 
         store.dispatch(
-            ContentAction.UpdateUrlAction(tab.id, "https://www.mozilla.org/firefox")
+            ContentAction.UpdateUrlAction(tab.id, "https://www.mozilla.org/firefox"),
         ).joinBlocking()
 
         assertEquals(icon, tab.content.icon)
@@ -137,25 +137,25 @@ class ContentActionTest {
         assertFalse(otherTab.content.loading)
 
         store.dispatch(
-            ContentAction.UpdateLoadingStateAction(tab.id, true)
+            ContentAction.UpdateLoadingStateAction(tab.id, true),
         ).joinBlocking()
 
         assertTrue(tab.content.loading)
         assertFalse(otherTab.content.loading)
 
         store.dispatch(
-            ContentAction.UpdateLoadingStateAction(tab.id, false)
+            ContentAction.UpdateLoadingStateAction(tab.id, false),
         ).joinBlocking()
 
         assertFalse(tab.content.loading)
         assertFalse(otherTab.content.loading)
 
         store.dispatch(
-            ContentAction.UpdateLoadingStateAction(tab.id, true)
+            ContentAction.UpdateLoadingStateAction(tab.id, true),
         ).joinBlocking()
 
         store.dispatch(
-            ContentAction.UpdateLoadingStateAction(otherTab.id, true)
+            ContentAction.UpdateLoadingStateAction(otherTab.id, true),
         ).joinBlocking()
 
         assertTrue(tab.content.loading)
@@ -192,7 +192,7 @@ class ContentActionTest {
         assertNotEquals(newTitle, otherTab.content.title)
 
         store.dispatch(
-            ContentAction.UpdateTitleAction(tab.id, newTitle)
+            ContentAction.UpdateTitleAction(tab.id, newTitle),
         ).joinBlocking()
 
         assertEquals(newTitle, tab.content.title)
@@ -207,7 +207,7 @@ class ContentActionTest {
         assertNotEquals(newPreviewImageUrl, otherTab.content.previewImageUrl)
 
         store.dispatch(
-            ContentAction.UpdatePreviewImageAction(tab.id, newPreviewImageUrl)
+            ContentAction.UpdatePreviewImageAction(tab.id, newPreviewImageUrl),
         ).joinBlocking()
 
         assertEquals(newPreviewImageUrl, tab.content.previewImageUrl)
@@ -239,7 +239,7 @@ class ContentActionTest {
         assertNotEquals(searchTerms, otherTab.content.searchTerms)
 
         store.dispatch(
-            ContentAction.UpdateSearchTermsAction(tab.id, searchTerms)
+            ContentAction.UpdateSearchTermsAction(tab.id, searchTerms),
         ).joinBlocking()
 
         assertEquals(searchTerms, tab.content.searchTerms)
@@ -254,7 +254,7 @@ class ContentActionTest {
         assertNotEquals(newSecurityInfo, otherTab.content.securityInfo)
 
         store.dispatch(
-            ContentAction.UpdateSecurityInfoAction(tab.id, newSecurityInfo)
+            ContentAction.UpdateSecurityInfoAction(tab.id, newSecurityInfo),
         ).joinBlocking()
 
         assertEquals(newSecurityInfo, tab.content.securityInfo)
@@ -273,7 +273,7 @@ class ContentActionTest {
         assertNotEquals(thumbnail, otherTab.content.thumbnail)
 
         store.dispatch(
-            ContentAction.UpdateThumbnailAction(tab.id, thumbnail)
+            ContentAction.UpdateThumbnailAction(tab.id, thumbnail),
         ).joinBlocking()
 
         assertEquals(thumbnail, tab.content.thumbnail)
@@ -287,13 +287,13 @@ class ContentActionTest {
         assertNotEquals(thumbnail, tab.content.thumbnail)
 
         store.dispatch(
-            ContentAction.UpdateThumbnailAction(tab.id, thumbnail)
+            ContentAction.UpdateThumbnailAction(tab.id, thumbnail),
         ).joinBlocking()
 
         assertEquals(thumbnail, tab.content.thumbnail)
 
         store.dispatch(
-            ContentAction.RemoveThumbnailAction(tab.id)
+            ContentAction.RemoveThumbnailAction(tab.id),
         ).joinBlocking()
 
         assertNull(tab.content.thumbnail)
@@ -307,7 +307,7 @@ class ContentActionTest {
         assertNotEquals(icon, otherTab.content.icon)
 
         store.dispatch(
-            ContentAction.UpdateIconAction(tab.id, tab.content.url, icon)
+            ContentAction.UpdateIconAction(tab.id, tab.content.url, icon),
         ).joinBlocking()
 
         assertEquals(icon, tab.content.icon)
@@ -322,7 +322,7 @@ class ContentActionTest {
         assertNotEquals(icon, otherTab.content.icon)
 
         store.dispatch(
-            ContentAction.UpdateIconAction(tab.id, "https://different.example.org", icon)
+            ContentAction.UpdateIconAction(tab.id, "https://different.example.org", icon),
         ).joinBlocking()
 
         assertNull(tab.content.icon)
@@ -335,13 +335,13 @@ class ContentActionTest {
         assertNotEquals(icon, tab.content.icon)
 
         store.dispatch(
-            ContentAction.UpdateIconAction(tab.id, tab.content.url, icon)
+            ContentAction.UpdateIconAction(tab.id, tab.content.url, icon),
         ).joinBlocking()
 
         assertEquals(icon, tab.content.icon)
 
         store.dispatch(
-            ContentAction.RemoveIconAction(tab.id)
+            ContentAction.RemoveIconAction(tab.id),
         ).joinBlocking()
 
         assertNull(tab.content.icon)
@@ -377,22 +377,24 @@ class ContentActionTest {
         assertNull(tab.content.download)
 
         val download1 = DownloadState(
-            url = "https://www.mozilla.org", sessionId = tab.id
+            url = "https://www.mozilla.org",
+            sessionId = tab.id,
         )
 
         store.dispatch(
-            ContentAction.UpdateDownloadAction(tab.id, download1)
+            ContentAction.UpdateDownloadAction(tab.id, download1),
         ).joinBlocking()
 
         assertEquals(download1.url, tab.content.download?.url)
         assertEquals(download1.sessionId, tab.content.download?.sessionId)
 
         val download2 = DownloadState(
-            url = "https://www.wikipedia.org", sessionId = tab.id
+            url = "https://www.wikipedia.org",
+            sessionId = tab.id,
         )
 
         store.dispatch(
-            ContentAction.UpdateDownloadAction(tab.id, download2)
+            ContentAction.UpdateDownloadAction(tab.id, download2),
         ).joinBlocking()
 
         assertEquals(download2.url, tab.content.download?.url)
@@ -403,17 +405,18 @@ class ContentActionTest {
     fun `ConsumeDownloadAction removes download`() {
         val download = DownloadState(
             id = "1337",
-            url = "https://www.mozilla.org", sessionId = tab.id
+            url = "https://www.mozilla.org",
+            sessionId = tab.id,
         )
 
         store.dispatch(
-            ContentAction.UpdateDownloadAction(tab.id, download)
+            ContentAction.UpdateDownloadAction(tab.id, download),
         ).joinBlocking()
 
         assertEquals(download, tab.content.download)
 
         store.dispatch(
-            ContentAction.ConsumeDownloadAction(tab.id, downloadId = "1337")
+            ContentAction.ConsumeDownloadAction(tab.id, downloadId = "1337"),
         ).joinBlocking()
 
         assertNull(tab.content.download)
@@ -423,17 +426,18 @@ class ContentActionTest {
     fun `CancelDownloadAction removes download`() {
         val download = DownloadState(
             id = "1337",
-            url = "https://www.mozilla.org", sessionId = tab.id
+            url = "https://www.mozilla.org",
+            sessionId = tab.id,
         )
 
         store.dispatch(
-            ContentAction.UpdateDownloadAction(tab.id, download)
+            ContentAction.UpdateDownloadAction(tab.id, download),
         ).joinBlocking()
 
         assertEquals(download, tab.content.download)
 
         store.dispatch(
-            ContentAction.CancelDownloadAction(tab.id, downloadId = "1337")
+            ContentAction.CancelDownloadAction(tab.id, downloadId = "1337"),
         ).joinBlocking()
 
         assertNull(tab.content.download)
@@ -443,17 +447,18 @@ class ContentActionTest {
     fun `ConsumeDownloadAction does not remove download with different id`() {
         val download = DownloadState(
             id = "1337",
-            url = "https://www.mozilla.org", sessionId = tab.id
+            url = "https://www.mozilla.org",
+            sessionId = tab.id,
         )
 
         store.dispatch(
-            ContentAction.UpdateDownloadAction(tab.id, download)
+            ContentAction.UpdateDownloadAction(tab.id, download),
         ).joinBlocking()
 
         assertEquals(download, tab.content.download)
 
         store.dispatch(
-            ContentAction.ConsumeDownloadAction(tab.id, downloadId = "4223")
+            ContentAction.ConsumeDownloadAction(tab.id, downloadId = "4223"),
         ).joinBlocking()
 
         assertNotNull(tab.content.download)
@@ -466,7 +471,7 @@ class ContentActionTest {
         val hitResult1: HitResult = mock()
 
         store.dispatch(
-            ContentAction.UpdateHitResultAction(tab.id, hitResult1)
+            ContentAction.UpdateHitResultAction(tab.id, hitResult1),
         ).joinBlocking()
 
         assertEquals(hitResult1, tab.content.hitResult)
@@ -474,7 +479,7 @@ class ContentActionTest {
         val hitResult2: HitResult = mock()
 
         store.dispatch(
-            ContentAction.UpdateHitResultAction(tab.id, hitResult2)
+            ContentAction.UpdateHitResultAction(tab.id, hitResult2),
         ).joinBlocking()
 
         assertEquals(hitResult2, tab.content.hitResult)
@@ -485,13 +490,13 @@ class ContentActionTest {
         val hitResult: HitResult = mock()
 
         store.dispatch(
-            ContentAction.UpdateHitResultAction(tab.id, hitResult)
+            ContentAction.UpdateHitResultAction(tab.id, hitResult),
         ).joinBlocking()
 
         assertEquals(hitResult, tab.content.hitResult)
 
         store.dispatch(
-            ContentAction.ConsumeHitResultAction(tab.id)
+            ContentAction.ConsumeHitResultAction(tab.id),
         ).joinBlocking()
 
         assertNull(tab.content.hitResult)
@@ -504,7 +509,7 @@ class ContentActionTest {
         val promptRequest1: PromptRequest = mock()
 
         store.dispatch(
-            ContentAction.UpdatePromptRequestAction(tab.id, promptRequest1)
+            ContentAction.UpdatePromptRequestAction(tab.id, promptRequest1),
         ).joinBlocking()
 
         assertEquals(1, tab.content.promptRequests.size)
@@ -513,7 +518,7 @@ class ContentActionTest {
         val promptRequest2: PromptRequest = mock()
 
         store.dispatch(
-            ContentAction.UpdatePromptRequestAction(tab.id, promptRequest2)
+            ContentAction.UpdatePromptRequestAction(tab.id, promptRequest2),
         ).joinBlocking()
 
         assertEquals(2, tab.content.promptRequests.size)
@@ -526,14 +531,14 @@ class ContentActionTest {
         val promptRequest: PromptRequest = mock()
 
         store.dispatch(
-            ContentAction.UpdatePromptRequestAction(tab.id, promptRequest)
+            ContentAction.UpdatePromptRequestAction(tab.id, promptRequest),
         ).joinBlocking()
 
         assertEquals(1, tab.content.promptRequests.size)
         assertEquals(promptRequest, tab.content.promptRequests[0])
 
         store.dispatch(
-            ContentAction.ConsumePromptRequestAction(tab.id, promptRequest)
+            ContentAction.ConsumePromptRequestAction(tab.id, promptRequest),
         ).joinBlocking()
 
         assertTrue(tab.content.promptRequests.isEmpty())
@@ -545,7 +550,7 @@ class ContentActionTest {
 
         val result: FindResultState = mock()
         store.dispatch(
-            ContentAction.AddFindResultAction(tab.id, result)
+            ContentAction.AddFindResultAction(tab.id, result),
         ).joinBlocking()
 
         assertEquals(1, tab.content.findResults.size)
@@ -553,7 +558,7 @@ class ContentActionTest {
 
         val result2: FindResultState = mock()
         store.dispatch(
-            ContentAction.AddFindResultAction(tab.id, result2)
+            ContentAction.AddFindResultAction(tab.id, result2),
         ).joinBlocking()
 
         assertEquals(2, tab.content.findResults.size)
@@ -563,17 +568,17 @@ class ContentActionTest {
     @Test
     fun `ClearFindResultsAction removes all results`() {
         store.dispatch(
-            ContentAction.AddFindResultAction(tab.id, mock())
+            ContentAction.AddFindResultAction(tab.id, mock()),
         ).joinBlocking()
 
         store.dispatch(
-            ContentAction.AddFindResultAction(tab.id, mock())
+            ContentAction.AddFindResultAction(tab.id, mock()),
         ).joinBlocking()
 
         assertEquals(2, tab.content.findResults.size)
 
         store.dispatch(
-            ContentAction.ClearFindResultsAction(tab.id)
+            ContentAction.ClearFindResultsAction(tab.id),
         ).joinBlocking()
 
         assertTrue(tab.content.findResults.isEmpty())
@@ -586,7 +591,7 @@ class ContentActionTest {
         val windowRequest1: WindowRequest = mock()
 
         store.dispatch(
-            ContentAction.UpdateWindowRequestAction(tab.id, windowRequest1)
+            ContentAction.UpdateWindowRequestAction(tab.id, windowRequest1),
         ).joinBlocking()
 
         assertEquals(windowRequest1, tab.content.windowRequest)
@@ -594,7 +599,7 @@ class ContentActionTest {
         val windowRequest2: WindowRequest = mock()
 
         store.dispatch(
-            ContentAction.UpdateWindowRequestAction(tab.id, windowRequest2)
+            ContentAction.UpdateWindowRequestAction(tab.id, windowRequest2),
         ).joinBlocking()
 
         assertEquals(windowRequest2, tab.content.windowRequest)
@@ -605,13 +610,13 @@ class ContentActionTest {
         val windowRequest: WindowRequest = mock()
 
         store.dispatch(
-            ContentAction.UpdateWindowRequestAction(tab.id, windowRequest)
+            ContentAction.UpdateWindowRequestAction(tab.id, windowRequest),
         ).joinBlocking()
 
         assertEquals(windowRequest, tab.content.windowRequest)
 
         store.dispatch(
-            ContentAction.ConsumeWindowRequestAction(tab.id)
+            ContentAction.ConsumeWindowRequestAction(tab.id),
         ).joinBlocking()
 
         assertNull(tab.content.windowRequest)
@@ -653,14 +658,14 @@ class ContentActionTest {
     fun `UpdateWebAppManifestAction updates web app manifest`() {
         val manifest = WebAppManifest(
             name = "Mozilla",
-            startUrl = "https://mozilla.org"
+            startUrl = "https://mozilla.org",
         )
 
         assertNotEquals(manifest, tab.content.webAppManifest)
         assertNotEquals(manifest, otherTab.content.webAppManifest)
 
         store.dispatch(
-            ContentAction.UpdateWebAppManifestAction(tab.id, manifest)
+            ContentAction.UpdateWebAppManifestAction(tab.id, manifest),
         ).joinBlocking()
 
         assertEquals(manifest, tab.content.webAppManifest)
@@ -671,19 +676,19 @@ class ContentActionTest {
     fun `RemoveWebAppManifestAction removes web app manifest`() {
         val manifest = WebAppManifest(
             name = "Mozilla",
-            startUrl = "https://mozilla.org"
+            startUrl = "https://mozilla.org",
         )
 
         assertNotEquals(manifest, tab.content.webAppManifest)
 
         store.dispatch(
-            ContentAction.UpdateWebAppManifestAction(tab.id, manifest)
+            ContentAction.UpdateWebAppManifestAction(tab.id, manifest),
         ).joinBlocking()
 
         assertEquals(manifest, tab.content.webAppManifest)
 
         store.dispatch(
-            ContentAction.RemoveWebAppManifestAction(tab.id)
+            ContentAction.RemoveWebAppManifestAction(tab.id),
         ).joinBlocking()
 
         assertNull(tab.content.webAppManifest)
@@ -694,16 +699,16 @@ class ContentActionTest {
         val historyState = HistoryState(
             items = listOf(
                 HistoryItem("Mozilla", "https://mozilla.org"),
-                HistoryItem("Firefox", "https://firefox.com")
+                HistoryItem("Firefox", "https://firefox.com"),
             ),
-            currentIndex = 1
+            currentIndex = 1,
         )
 
         assertNotEquals(historyState, tab.content.history)
         assertNotEquals(historyState, otherTab.content.history)
 
         store.dispatch(
-            ContentAction.UpdateHistoryStateAction(tab.id, historyState.items, historyState.currentIndex)
+            ContentAction.UpdateHistoryStateAction(tab.id, historyState.items, historyState.currentIndex),
         ).joinBlocking()
 
         assertEquals(historyState, tab.content.history)
@@ -715,7 +720,7 @@ class ContentActionTest {
         val loadRequestUrl = "https://mozilla.org"
 
         store.dispatch(
-            ContentAction.UpdateLoadRequestAction(tab.id, LoadRequestState(loadRequestUrl, true, false))
+            ContentAction.UpdateLoadRequestAction(tab.id, LoadRequestState(loadRequestUrl, true, false)),
         ).joinBlocking()
 
         assertNotNull(tab.content.loadRequest)
@@ -832,12 +837,11 @@ class ContentActionTest {
 
     @Test
     fun `WHEN dispatching Reset THEN permissionHighlights state will be update to its default value`() {
-
         store.dispatch(AutoPlayInAudibleBlockingAction(tab.id, true)).joinBlocking()
 
         assertEquals(
             PermissionHighlightsState(autoPlayInaudibleBlocking = true),
-            tab.content.permissionHighlights
+            tab.content.permissionHighlights,
         )
 
         with(store) { dispatch(Reset(tab.id)).joinBlocking() }
@@ -852,7 +856,7 @@ class ContentActionTest {
         val appIntent1: AppIntentState = mock()
 
         store.dispatch(
-            ContentAction.UpdateAppIntentAction(tab.id, appIntent1)
+            ContentAction.UpdateAppIntentAction(tab.id, appIntent1),
         ).joinBlocking()
 
         assertEquals(appIntent1, tab.content.appIntent)
@@ -860,7 +864,7 @@ class ContentActionTest {
         val appIntent2: AppIntentState = mock()
 
         store.dispatch(
-            ContentAction.UpdateAppIntentAction(tab.id, appIntent2)
+            ContentAction.UpdateAppIntentAction(tab.id, appIntent2),
         ).joinBlocking()
 
         assertEquals(appIntent2, tab.content.appIntent)
@@ -871,13 +875,13 @@ class ContentActionTest {
         val appIntent: AppIntentState = mock()
 
         store.dispatch(
-            ContentAction.UpdateAppIntentAction(tab.id, appIntent)
+            ContentAction.UpdateAppIntentAction(tab.id, appIntent),
         ).joinBlocking()
 
         assertEquals(appIntent, tab.content.appIntent)
 
         store.dispatch(
-            ContentAction.ConsumeAppIntentAction(tab.id)
+            ContentAction.ConsumeAppIntentAction(tab.id),
         ).joinBlocking()
 
         assertNull(tab.content.appIntent)

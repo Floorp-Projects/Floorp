@@ -19,11 +19,11 @@ private const val POCKET_DIR = "pocket"
  */
 internal object PocketTestResources {
     val pocketEndointFiveStoriesResponse = this::class.java.classLoader!!.getResource(
-        "$POCKET_DIR/stories_recommendations_response.json"
+        "$POCKET_DIR/stories_recommendations_response.json",
     )!!.readText()
 
     val pocketEndpointThreeSpocsResponse = this::class.java.classLoader!!.getResource(
-        "$POCKET_DIR/sponsored_stories_response.json"
+        "$POCKET_DIR/sponsored_stories_response.json",
     )!!.readText()
 
     val apiExpectedPocketStoriesRecommendations: List<PocketApiStory> = listOf(
@@ -33,7 +33,7 @@ internal object PocketTestResources {
             imageUrl = "https://img-getpocket.cdn.mozilla.net/{wh}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fpocket-image-cache.com%2F1200x%2Ffilters%3Aformat(jpg)%3Aextract_focal()%2Fhttps%253A%252F%252Fwww.incimages.com%252Fuploaded_files%252Fimage%252F1920x1080%252Fgetty-862457080_394628.jpg",
             publisher = "Pocket",
             category = "general",
-            timeToRead = 3
+            timeToRead = 3,
         ),
         PocketApiStory(
             title = "‘I Don’t Want to Be Like a Family With My Co-Workers’",
@@ -41,7 +41,7 @@ internal object PocketTestResources {
             imageUrl = "https://img-getpocket.cdn.mozilla.net/{wh}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fpyxis.nymag.com%2Fv1%2Fimgs%2Fac8%2Fd22%2F315cd0cf1e3a43edfe0e0548f2edbcb1a1-ask-a-boss.1x.rsocial.w1200.jpg",
             publisher = "The Cut",
             category = "general",
-            timeToRead = 5
+            timeToRead = 5,
         ),
         PocketApiStory(
             title = "How America Failed in Afghanistan",
@@ -49,7 +49,7 @@ internal object PocketTestResources {
             imageUrl = "https://img-getpocket.cdn.mozilla.net/{wh}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fmedia.newyorker.com%2Fphotos%2F6119484157b611aec9c99b43%2F16%3A9%2Fw_1280%2Cc_limit%2FChotiner-Afghanistan01.jpg",
             publisher = "The New Yorker",
             category = "general",
-            timeToRead = 14
+            timeToRead = 14,
         ),
         PocketApiStory(
             title = "How digital beauty filters perpetuate colorism",
@@ -57,7 +57,7 @@ internal object PocketTestResources {
             imageUrl = "https://img-getpocket.cdn.mozilla.net/{wh}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fwp.technologyreview.com%2Fwp-content%2Fuploads%2F2021%2F08%2FBeautyScoreColorism.jpg%3Fresize%3D1200%2C600",
             publisher = "MIT Technology Review",
             category = "general",
-            timeToRead = 11
+            timeToRead = 11,
         ),
         PocketApiStory(
             title = "How to Get Rid of Black Mold Naturally",
@@ -65,8 +65,8 @@ internal object PocketTestResources {
             imageUrl = "https://img-getpocket.cdn.mozilla.net/{wh}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fpocket-image-cache.com%2F1200x%2Ffilters%3Aformat(jpg)%3Aextract_focal()%2Fhttps%253A%252F%252Fpocket-syndicated-images.s3.amazonaws.com%252Farticles%252F6757%252F1628024495_6109ae86db6cc.png",
             publisher = "Pocket",
             category = "general",
-            timeToRead = 4
-        )
+            timeToRead = 4,
+        ),
     )
 
     val apiExpectedPocketSpocs: List<ApiSpoc> = listOf(
@@ -78,7 +78,7 @@ internal object PocketTestResources {
             sponsor = "Green Chef",
             shim = ApiSpocShim(
                 click = "193815086ClickShim",
-                impression = "193815086ImpressionShim"
+                impression = "193815086ImpressionShim",
             ),
             priority = 3,
             caps = ApiSpocCaps(
@@ -95,7 +95,7 @@ internal object PocketTestResources {
             sponsor = "The Ascent",
             shim = ApiSpocShim(
                 click = "177986195ClickShim",
-                impression = "177986195ImpressionShim"
+                impression = "177986195ImpressionShim",
             ),
             priority = 2,
             caps = ApiSpocCaps(
@@ -112,7 +112,7 @@ internal object PocketTestResources {
             sponsor = "Sunday",
             shim = ApiSpocShim(
                 click = "192560056ClickShim",
-                impression = "192560056ImpressionShim"
+                impression = "192560056ImpressionShim",
             ),
             priority = 1,
             caps = ApiSpocCaps(
@@ -120,7 +120,7 @@ internal object PocketTestResources {
                 flightPeriod = 86400,
                 flightCount = 10,
             ),
-        )
+        ),
     )
 
     val dbExpectedPocketStory = PocketStoryEntity(
@@ -130,7 +130,7 @@ internal object PocketTestResources {
         publisher = "Pocket",
         category = "general",
         timeToRead = 4,
-        timesShown = 23
+        timesShown = 23,
     )
 
     val clientExpectedPocketStory = PocketRecommendedStory(
@@ -140,7 +140,7 @@ internal object PocketTestResources {
         publisher = "MIT Technology Review",
         category = "general",
         timeToRead = 11,
-        timesShown = 3
+        timesShown = 3,
     )
 
     val dbExpectedPocketSpoc = SpocEntity(

@@ -78,14 +78,14 @@ class ContextTest {
 
         assertEquals(
             testContext.isPermissionGranted(WRITE_EXTERNAL_STORAGE),
-            testContext.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED
+            testContext.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED,
         )
 
         application.grantPermissions(WRITE_EXTERNAL_STORAGE)
 
         assertEquals(
             testContext.isPermissionGranted(WRITE_EXTERNAL_STORAGE),
-            testContext.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED
+            testContext.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED,
         )
     }
 
@@ -132,10 +132,12 @@ class ContextTest {
     @Test
     @Config(shadows = [ShadowFileProvider::class])
     fun `shareMedia returns false if the chooser could not be shown`() {
-        val context = spy(object : FakeContext() {
-            override fun startActivity(intent: Intent?) = throw ActivityNotFoundException()
-            override fun getApplicationContext() = testContext
-        })
+        val context = spy(
+            object : FakeContext() {
+                override fun startActivity(intent: Intent?) = throw ActivityNotFoundException()
+                override fun getApplicationContext() = testContext
+            },
+        )
         doReturn(testContext.resources).`when`(context).resources
 
         val result = context.shareMedia("filePath", "*/*", "subject", "message")
@@ -276,6 +278,6 @@ object ShadowFileProvider {
     fun getUriForFile(
         context: Context?,
         authority: String?,
-        file: File
+        file: File,
     ) = FAKE_URI_RESULT
 }

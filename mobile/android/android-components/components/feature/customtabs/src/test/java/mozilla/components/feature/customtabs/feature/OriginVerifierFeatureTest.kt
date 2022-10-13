@@ -52,8 +52,8 @@ class OriginVerifierFeatureTest {
             relationships = mapOf(
                 OriginRelationPair(origin, RELATION_HANDLE_ALL_URLS) to SUCCESS,
                 OriginRelationPair(origin, RELATION_USE_AS_ORIGIN) to FAILURE,
-                OriginRelationPair("https://sample.com".toUri(), RELATION_HANDLE_ALL_URLS) to PENDING
-            )
+                OriginRelationPair("https://sample.com".toUri(), RELATION_HANDLE_ALL_URLS) to PENDING,
+            ),
         )
 
         assertTrue(feature.verify(state, mock(), RELATION_HANDLE_ALL_URLS, origin))

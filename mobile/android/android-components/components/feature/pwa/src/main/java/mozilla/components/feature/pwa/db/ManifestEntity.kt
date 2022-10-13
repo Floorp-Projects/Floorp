@@ -33,11 +33,11 @@ internal data class ManifestEntity(
     val updatedAt: Long,
 
     @ColumnInfo(name = "used_at")
-    val usedAt: Long
+    val usedAt: Long,
 ) {
     constructor(
         manifest: WebAppManifest,
-        currentTime: Long = System.currentTimeMillis()
+        currentTime: Long = System.currentTimeMillis(),
     ) : this(
         manifest,
         startUrl = manifest.startUrl,
@@ -45,6 +45,6 @@ internal data class ManifestEntity(
         hasShareTargets = if (manifest.shareTarget != null) 1 else 0,
         createdAt = currentTime,
         updatedAt = currentTime,
-        usedAt = currentTime
+        usedAt = currentTime,
     )
 }

@@ -29,7 +29,7 @@ abstract class BrowserMenuCompoundButton(
     override val isCollapsingMenuLimit: Boolean = false,
     override val isSticky: Boolean = false,
     private val initialState: () -> Boolean = { false },
-    private val listener: (Boolean) -> Unit
+    private val listener: (Boolean) -> Unit,
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
 
@@ -48,7 +48,8 @@ abstract class BrowserMenuCompoundButton(
                         view.layoutDirection = View.LAYOUT_DIRECTION_INHERIT
                         return true
                     }
-                })
+                },
+            )
         }
 
         (view as CompoundButton).apply {
@@ -66,6 +67,6 @@ abstract class BrowserMenuCompoundButton(
         isChecked = initialState(),
         end = CompoundMenuCandidate.ButtonType.CHECKBOX,
         containerStyle = ContainerStyle(isVisible = visible()),
-        onCheckedChange = listener
+        onCheckedChange = listener,
     )
 }

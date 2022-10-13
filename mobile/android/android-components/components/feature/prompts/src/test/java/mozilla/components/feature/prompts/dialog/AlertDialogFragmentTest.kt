@@ -42,7 +42,7 @@ class AlertDialogFragmentTest {
     @Test
     fun `build dialog`() {
         val fragment = spy(
-            AlertDialogFragment.newInstance("sessionId", "uid", true, "title", "message", true)
+            AlertDialogFragment.newInstance("sessionId", "uid", true, "title", "message", true),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -69,7 +69,7 @@ class AlertDialogFragmentTest {
     @Test
     fun `Alert with hasShownManyDialogs equals false should not have a checkbox`() {
         val fragment = spy(
-            AlertDialogFragment.newInstance("sessionId", "uid", false, "title", "message", false)
+            AlertDialogFragment.newInstance("sessionId", "uid", false, "title", "message", false),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -85,11 +85,10 @@ class AlertDialogFragmentTest {
 
     @Test
     fun `Clicking on positive button notifies the feature`() {
-
         val mockFeature: PromptFeature = mock()
 
         val fragment = spy(
-            AlertDialogFragment.newInstance("sessionId", "uid", true, "title", "message", false)
+            AlertDialogFragment.newInstance("sessionId", "uid", true, "title", "message", false),
         )
 
         fragment.feature = mockFeature
@@ -109,7 +108,7 @@ class AlertDialogFragmentTest {
     @Test
     fun `After checking no more dialogs checkbox feature onNoMoreDialogsChecked must be called`() {
         val fragment = spy(
-            AlertDialogFragment.newInstance("sessionId", "uid", false, "title", "message", true)
+            AlertDialogFragment.newInstance("sessionId", "uid", false, "title", "message", true),
         )
 
         fragment.feature = mockFeature
@@ -133,7 +132,7 @@ class AlertDialogFragmentTest {
     @Test
     fun `touching outside of the dialog must notify the feature onCancel`() {
         val fragment = spy(
-            AlertDialogFragment.newInstance("sessionId", "uid", true, "title", "message", true)
+            AlertDialogFragment.newInstance("sessionId", "uid", true, "title", "message", true),
         )
 
         fragment.feature = mockFeature

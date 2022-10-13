@@ -14,7 +14,7 @@ import mozilla.components.concept.engine.window.WindowRequest
 class GeckoWindowRequest(
     override val url: String = "",
     private val engineSession: GeckoEngineSession,
-    override val type: WindowRequest.Type = WindowRequest.Type.OPEN
+    override val type: WindowRequest.Type = WindowRequest.Type.OPEN,
 ) : WindowRequest {
 
     override fun prepare(): EngineSession {

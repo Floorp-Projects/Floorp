@@ -39,7 +39,7 @@ class RegionMiddlewareTest {
             context = FakeContext(),
             locationService = locationService,
             currentTime = clock::time,
-            preferences = lazy { FakeSharedPreferences() }
+            preferences = lazy { FakeSharedPreferences() },
         )
     }
 
@@ -51,7 +51,7 @@ class RegionMiddlewareTest {
         locationService.region = LocationService.Region("FR", "France")
 
         val store = BrowserStore(
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         store.waitUntilIdle()
@@ -69,7 +69,7 @@ class RegionMiddlewareTest {
         middleware.regionManager = regionManager
 
         val store = BrowserStore(
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         store.dispatch(InitAction).joinBlocking()
@@ -91,7 +91,7 @@ class RegionMiddlewareTest {
         regionManager.update()
 
         val store = BrowserStore(
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         store.dispatch(InitAction).joinBlocking()

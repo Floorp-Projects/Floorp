@@ -44,7 +44,7 @@ fun PocketSponsoredStory.hasFlightImpressionsLimitReached(): Boolean {
 fun PocketSponsoredStory.recordNewImpression(): PocketSponsoredStory {
     return this.copy(
         caps = caps.copy(
-            currentImpressions = caps.currentImpressions + TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
-        )
+            currentImpressions = caps.currentImpressions + TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()),
+        ),
     )
 }

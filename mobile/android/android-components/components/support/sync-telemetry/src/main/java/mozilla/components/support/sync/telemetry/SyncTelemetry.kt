@@ -30,6 +30,7 @@ const val MAX_FAILURE_REASON_LENGTH = 100
 internal sealed class InvalidTelemetryException(cause: Exception) : Exception(cause) {
     // The top-level data passed in is invalid.
     class InvalidData(cause: JSONException) : InvalidTelemetryException(cause)
+
     // The sent or received tabs data is invalid.
     class InvalidEvents(cause: JSONException) : InvalidTelemetryException(cause)
 }
@@ -56,7 +57,7 @@ object SyncTelemetry {
         submitLoginsPing: () -> Unit = { Pings.loginsSync.submit() },
         submitCreditCardsPing: () -> Unit = { Pings.creditcardsSync.submit() },
         submitAddressesPing: () -> Unit = { Pings.addressesSync.submit() },
-        submitTabsPing: () -> Unit = { Pings.tabsSync.submit() }
+        submitTabsPing: () -> Unit = { Pings.tabsSync.submit() },
     ) {
         syncTelemetry.syncs.forEach { syncInfo ->
             // Note that `syncUuid` is configured to be submitted in all of the sync pings (it's set
@@ -118,7 +119,7 @@ object SyncTelemetry {
     @Suppress("ComplexMethod", "NestedBlockDepth")
     fun processHistoryPing(
         ping: SyncTelemetryPing,
-        sendPing: () -> Unit = { Pings.historySync.submit() }
+        sendPing: () -> Unit = { Pings.historySync.submit() },
     ): Boolean {
         ping.syncs.forEach eachSync@{ sync ->
             sync.failureReason?.let {
@@ -144,7 +145,7 @@ object SyncTelemetry {
     @Suppress("ComplexMethod", "NestedBlockDepth")
     fun processLoginsPing(
         ping: SyncTelemetryPing,
-        sendPing: () -> Unit = { Pings.loginsSync.submit() }
+        sendPing: () -> Unit = { Pings.loginsSync.submit() },
     ): Boolean {
         ping.syncs.forEach eachSync@{ sync ->
             sync.failureReason?.let {
@@ -170,7 +171,7 @@ object SyncTelemetry {
     @Suppress("ComplexMethod", "NestedBlockDepth")
     fun processBookmarksPing(
         ping: SyncTelemetryPing,
-        sendPing: () -> Unit = { Pings.bookmarksSync.submit() }
+        sendPing: () -> Unit = { Pings.bookmarksSync.submit() },
     ): Boolean {
         // This function is almost identical to `recordHistoryPing`, with additional
         // reporting for validation problems. Unfortunately, since the
@@ -438,7 +439,7 @@ object SyncTelemetry {
                 val one = sent.getJSONObject(i)
                 val extras = FxaTab.SentExtra(
                     flowId = one.getString("flow_id"),
-                    streamId = one.getString("stream_id")
+                    streamId = one.getString("stream_id"),
                 )
                 FxaTab.sent.record(extras)
             }
@@ -454,7 +455,7 @@ object SyncTelemetry {
                 val extras = FxaTab.ReceivedExtra(
                     flowId = one.getString("flow_id"),
                     streamId = one.getString("stream_id"),
-                    reason = one.getString("reason")
+                    reason = one.getString("reason"),
                 )
                 FxaTab.received.record(extras)
             }

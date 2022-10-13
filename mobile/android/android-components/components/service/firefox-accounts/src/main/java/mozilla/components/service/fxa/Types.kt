@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 @file:SuppressWarnings("MatchingDeclarationName")
+
 package mozilla.components.service.fxa
 
 import mozilla.appservices.fxaclient.AccessTokenInfo
@@ -49,7 +50,7 @@ data class FxaAuthData(
     val authType: AuthType,
     val code: String,
     val state: String,
-    val declinedEngines: Set<SyncEngine>? = null
+    val declinedEngines: Set<SyncEngine>? = null,
 ) {
     override fun toString(): String {
         return "authType: $authType, code: XXX, state: XXX, declinedEngines: $declinedEngines"
@@ -66,7 +67,7 @@ fun AccessTokenInfo.into(): mozilla.components.concept.sync.AccessTokenInfo {
         scope = this.scope,
         token = this.token,
         key = this.key?.into(),
-        expiresAt = this.expiresAt
+        expiresAt = this.expiresAt,
     )
 }
 
@@ -85,7 +86,7 @@ fun mozilla.components.concept.sync.AccessTokenInfo.asSyncAuthInfo(tokenServerUr
         fxaAccessToken = this.token,
         fxaAccessTokenExpiresAt = this.expiresAt,
         syncKey = keyInfo.k,
-        tokenServerUrl = tokenServerUrl
+        tokenServerUrl = tokenServerUrl,
     )
 }
 
@@ -100,10 +101,10 @@ fun Profile.into(): mozilla.components.concept.sync.Profile {
         avatar = this.avatar.let {
             Avatar(
                 url = it,
-                isDefault = this.isDefaultAvatar
+                isDefault = this.isDefaultAvatar,
             )
         },
-        displayName = this.displayName
+        displayName = this.displayName,
     )
 }
 
@@ -176,7 +177,7 @@ fun mozilla.components.concept.sync.DevicePushSubscription.into(): RustDevicePus
     return RustDevicePushSubscription(
         endpoint = this.endpoint,
         authKey = this.authKey,
-        publicKey = this.publicKey
+        publicKey = this.publicKey,
     )
 }
 
@@ -188,7 +189,7 @@ fun RustDevicePushSubscription.into(): mozilla.components.concept.sync.DevicePus
     return mozilla.components.concept.sync.DevicePushSubscription(
         endpoint = this.endpoint,
         authKey = this.authKey,
-        publicKey = this.publicKey
+        publicKey = this.publicKey,
     )
 }
 
@@ -201,7 +202,7 @@ fun Device.into(): mozilla.components.concept.sync.Device {
         lastAccessTime = this.lastAccessTime,
         subscriptionExpired = this.pushEndpointExpired,
         capabilities = this.capabilities.map { it.into() },
-        subscription = this.pushSubscription?.into()
+        subscription = this.pushSubscription?.into(),
     )
 }
 
@@ -214,21 +215,21 @@ fun mozilla.components.concept.sync.Device.into(): Device {
         lastAccessTime = this.lastAccessTime,
         pushEndpointExpired = this.subscriptionExpired,
         capabilities = this.capabilities.map { it.into() },
-        pushSubscription = this.subscription?.into()
+        pushSubscription = this.subscription?.into(),
     )
 }
 
 fun TabHistoryEntry.into(): mozilla.components.concept.sync.TabData {
     return mozilla.components.concept.sync.TabData(
         title = this.title,
-        url = this.url
+        url = this.url,
     )
 }
 
 fun mozilla.components.concept.sync.TabData.into(): TabHistoryEntry {
     return TabHistoryEntry(
         title = this.title,
-        url = this.url
+        url = this.url,
     )
 }
 
@@ -247,7 +248,7 @@ fun AccountEvent.into(): mozilla.components.concept.sync.AccountEvent {
         is AccountEvent.DeviceDisconnected ->
             mozilla.components.concept.sync.AccountEvent.DeviceDisconnected(
                 deviceId = this.deviceId,
-                isLocalDevice = this.isLocalDevice
+                isLocalDevice = this.isLocalDevice,
             )
     }
 }
@@ -261,7 +262,7 @@ fun IncomingDeviceCommand.into(): mozilla.components.concept.sync.DeviceCommandI
 fun IncomingDeviceCommand.TabReceived.into(): mozilla.components.concept.sync.DeviceCommandIncoming.TabReceived {
     return mozilla.components.concept.sync.DeviceCommandIncoming.TabReceived(
         from = this.sender?.into(),
-        entries = this.payload.entries.map { it.into() }
+        entries = this.payload.entries.map { it.into() },
     )
 }
 

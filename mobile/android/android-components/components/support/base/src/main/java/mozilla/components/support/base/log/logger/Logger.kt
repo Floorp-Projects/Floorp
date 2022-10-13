@@ -13,7 +13,7 @@ import mozilla.components.support.base.log.Log
  * @param tag The tag to be used for log messages send via this logger.
  */
 class Logger(
-    private val tag: String? = null
+    private val tag: String? = null,
 ) {
     /**
      * Send a DEBUG log message.

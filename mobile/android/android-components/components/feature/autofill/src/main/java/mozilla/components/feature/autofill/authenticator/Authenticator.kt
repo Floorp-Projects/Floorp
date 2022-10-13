@@ -51,7 +51,7 @@ internal interface Authenticator {
  */
 internal fun createAuthenticator(
     context: Context,
-    configuration: AutofillConfiguration
+    configuration: AutofillConfiguration,
 ): Authenticator? {
     return when {
         BiometricAuthenticator.isAvailable(context) -> BiometricAuthenticator(configuration)

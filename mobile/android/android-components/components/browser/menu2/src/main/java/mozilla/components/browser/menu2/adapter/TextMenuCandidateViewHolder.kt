@@ -19,7 +19,7 @@ import mozilla.components.concept.menu.candidate.TextMenuCandidate
 internal class TextMenuCandidateViewHolder(
     itemView: View,
     inflater: LayoutInflater,
-    private val dismiss: () -> Unit
+    private val dismiss: () -> Unit,
 ) : MenuCandidateViewHolder<TextMenuCandidate>(itemView, inflater), View.OnClickListener {
 
     private val layout = itemView as ConstraintLayout

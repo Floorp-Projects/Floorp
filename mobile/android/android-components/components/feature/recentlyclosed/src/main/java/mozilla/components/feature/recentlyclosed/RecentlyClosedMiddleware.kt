@@ -28,14 +28,14 @@ import mozilla.components.lib.state.Store
 class RecentlyClosedMiddleware(
     private val storage: Lazy<Storage>,
     private val maxSavedTabs: Int,
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : Middleware<BrowserState, BrowserAction> {
 
     @Suppress("ComplexMethod")
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         when (action) {
             is UndoAction.ClearRecoverableTabs -> {
@@ -44,8 +44,8 @@ class RecentlyClosedMiddleware(
                     // private tabs.
                     context.store.dispatch(
                         RecentlyClosedAction.AddClosedTabsAction(
-                            context.state.undoHistory.tabs.filter { tab -> !tab.state.private }
-                        )
+                            context.state.undoHistory.tabs.filter { tab -> !tab.state.private },
+                        ),
                     )
                 }
             }
@@ -56,8 +56,8 @@ class RecentlyClosedMiddleware(
                     // the clear call above.
                     context.store.dispatch(
                         RecentlyClosedAction.AddClosedTabsAction(
-                            context.state.undoHistory.tabs.filter { tab -> !tab.state.private }
-                        )
+                            context.state.undoHistory.tabs.filter { tab -> !tab.state.private },
+                        ),
                     )
                 }
             }
@@ -90,7 +90,7 @@ class RecentlyClosedMiddleware(
     }
 
     private fun initializeRecentlyClosed(
-        store: Store<BrowserState, BrowserAction>
+        store: Store<BrowserState, BrowserAction>,
     ) = scope.launch {
         storage.value.getTabs().collect { tabs ->
             store.dispatch(RecentlyClosedAction.ReplaceTabsAction(tabs))
@@ -98,15 +98,16 @@ class RecentlyClosedMiddleware(
     }
 
     private fun addTabsToStorage(
-        tabList: List<RecoverableTab>
+        tabList: List<RecoverableTab>,
     ) = scope.launch {
         storage.value.addTabsToCollectionWithMax(
-            tabList, maxSavedTabs
+            tabList,
+            maxSavedTabs,
         )
     }
 
     private fun removeTab(
-        action: RecentlyClosedAction.RemoveClosedTabAction
+        action: RecentlyClosedAction.RemoveClosedTabAction,
     ) = scope.launch {
         storage.value.removeTab(action.tab)
     }

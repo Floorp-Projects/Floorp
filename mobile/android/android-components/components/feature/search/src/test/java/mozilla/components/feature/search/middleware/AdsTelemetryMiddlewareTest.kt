@@ -34,7 +34,7 @@ class AdsTelemetryMiddlewareTest {
     fun setup() {
         adsMiddleware = AdsTelemetryMiddleware(mock())
         browserState = BrowserState(
-            tabs = listOf(TabSessionState(content = ContentState("https://mozilla.org"), id = sessionId))
+            tabs = listOf(TabSessionState(content = ContentState("https://mozilla.org"), id = sessionId)),
         )
     }
 
@@ -42,16 +42,18 @@ class AdsTelemetryMiddlewareTest {
     fun `GIVEN redirectChain empty WHEN a new URL loads THEN the redirectChain starts from the current tab url`() {
         val store = BrowserStore(
             initialState = browserState,
-            middleware = listOf(adsMiddleware)
+            middleware = listOf(adsMiddleware),
         )
 
         store.dispatch(
             ContentAction.UpdateLoadRequestAction(
                 sessionId,
                 LoadRequestState(
-                    url = "https://mozilla.org/firefox", triggeredByRedirect = false, triggeredByUser = false
-                )
-            )
+                    url = "https://mozilla.org/firefox",
+                    triggeredByRedirect = false,
+                    triggeredByUser = false,
+                ),
+            ),
         ).joinBlocking()
 
         assertEquals(1, adsMiddleware.redirectChain.size)
@@ -63,16 +65,18 @@ class AdsTelemetryMiddlewareTest {
         adsMiddleware.redirectChain[sessionId] = RedirectChain("https://mozilla.org")
         val store = BrowserStore(
             initialState = browserState,
-            middleware = listOf(adsMiddleware)
+            middleware = listOf(adsMiddleware),
         )
 
         store.dispatch(
             ContentAction.UpdateLoadRequestAction(
                 sessionId,
                 LoadRequestState(
-                    url = "https://mozilla.org/firefox", triggeredByRedirect = false, triggeredByUser = false
-                )
-            )
+                    url = "https://mozilla.org/firefox",
+                    triggeredByRedirect = false,
+                    triggeredByUser = false,
+                ),
+            ),
         ).joinBlocking()
 
         assertEquals(1, adsMiddleware.redirectChain.size)
@@ -89,7 +93,7 @@ class AdsTelemetryMiddlewareTest {
         adsMiddleware.redirectChain[sessionId]!!.chain.add("https://mozilla.org/firefox")
         val store = BrowserStore(
             initialState = browserState,
-            middleware = listOf(adsMiddleware)
+            middleware = listOf(adsMiddleware),
         )
 
         store
@@ -97,7 +101,8 @@ class AdsTelemetryMiddlewareTest {
             .joinBlocking()
 
         verify(adsTelemetry).checkIfAddWasClicked(
-            "https://mozilla.org", listOf("https://mozilla.org/firefox")
+            "https://mozilla.org",
+            listOf("https://mozilla.org/firefox"),
         )
     }
 
@@ -106,13 +111,14 @@ class AdsTelemetryMiddlewareTest {
         val tab = createTab(id = "1", url = "http://mozilla.org")
         val store = BrowserStore(
             initialState = browserState,
-            middleware = listOf(adsMiddleware)
+            middleware = listOf(adsMiddleware),
         )
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
         store.dispatch(
             ContentAction.UpdateLoadRequestAction(
-                tab.id, LoadRequestState("https://mozilla.org", true, true)
-            )
+                tab.id,
+                LoadRequestState("https://mozilla.org", true, true),
+            ),
         ).joinBlocking()
 
         assertNotNull(adsMiddleware.redirectChain[tab.id])

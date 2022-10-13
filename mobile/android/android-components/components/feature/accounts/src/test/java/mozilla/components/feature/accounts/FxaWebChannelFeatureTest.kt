@@ -67,7 +67,7 @@ class FxaWebChannelFeatureTest {
             eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
             eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_URL),
             onSuccess.capture(),
-            onError.capture()
+            onError.capture(),
         )
 
         onSuccess.value.invoke(mock())
@@ -78,7 +78,7 @@ class FxaWebChannelFeatureTest {
             eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
             eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_URL),
             any(),
-            any()
+            any(),
         )
     }
 
@@ -159,7 +159,7 @@ class FxaWebChannelFeatureTest {
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab", engineSession = engineSession)
         val store = spy(
-            BrowserStore(initialState = BrowserState(tabs = listOf(tab), selectedTabId = tab.id))
+            BrowserStore(initialState = BrowserState(tabs = listOf(tab), selectedTabId = tab.id)),
         )
 
         val webchannelFeature = FxaWebChannelFeature(null, engine, store, accountManager, serverConfig)
@@ -186,7 +186,7 @@ class FxaWebChannelFeatureTest {
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
             eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
-            messageHandler.capture()
+            messageHandler.capture(),
         )
         messageHandler.value.onPortConnected(port)
 
@@ -197,7 +197,7 @@ class FxaWebChannelFeatureTest {
                 "messageId":123
              }
             }
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
@@ -213,8 +213,11 @@ class FxaWebChannelFeatureTest {
         val messageHandler = argumentCaptor<MessageHandler>()
         val responseToTheWebChannel = argumentCaptor<JSONObject>()
         val webchannelFeature = prepareFeatureForTest(
-            ext, port, engineSession, expectedEngines,
-            setOf(FxaCapability.CHOOSE_WHAT_TO_SYNC)
+            ext,
+            port,
+            engineSession,
+            expectedEngines,
+            setOf(FxaCapability.CHOOSE_WHAT_TO_SYNC),
         )
         webchannelFeature.start()
         shadowOf(getMainLooper()).idle()
@@ -222,7 +225,7 @@ class FxaWebChannelFeatureTest {
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
             eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
-            messageHandler.capture()
+            messageHandler.capture(),
         )
         messageHandler.value.onPortConnected(port)
 
@@ -233,7 +236,7 @@ class FxaWebChannelFeatureTest {
                 "messageId":123
              }
             }
-            """.trimIndent()
+            """.trimIndent(),
         )
         messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
         verify(port).postMessage(responseToTheWebChannel.capture())
@@ -256,7 +259,7 @@ class FxaWebChannelFeatureTest {
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
             eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
-            messageHandler.capture()
+            messageHandler.capture(),
         )
         messageHandler.value.onPortConnected(port)
 
@@ -267,7 +270,7 @@ class FxaWebChannelFeatureTest {
                 "messageId":123
              }
             }
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
@@ -296,7 +299,7 @@ class FxaWebChannelFeatureTest {
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
             eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
-            messageHandler.capture()
+            messageHandler.capture(),
         )
         messageHandler.value.onPortConnected(port)
 
@@ -307,7 +310,7 @@ class FxaWebChannelFeatureTest {
                 "messageId":123
              }
             }
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
@@ -317,7 +320,7 @@ class FxaWebChannelFeatureTest {
         assertTrue(
             expectedEngines.all {
                 capabilitiesFromWebChannel.contains(it.nativeName)
-            }
+            },
         )
 
         assertNull(responseToTheWebChannel.value.getCWTSSupport())
@@ -349,7 +352,7 @@ class FxaWebChannelFeatureTest {
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
             eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
-            messageHandler.capture()
+            messageHandler.capture(),
         )
         messageHandler.value.onPortConnected(port)
 
@@ -360,7 +363,7 @@ class FxaWebChannelFeatureTest {
                 "messageId":123
              }
             }
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
@@ -370,7 +373,7 @@ class FxaWebChannelFeatureTest {
         assertTrue(
             expectedEngines.all {
                 capabilitiesFromWebChannel.contains(it.nativeName)
-            }
+            },
         )
 
         assertNull(responseToTheWebChannel.value.getCWTSSupport())
@@ -405,7 +408,7 @@ class FxaWebChannelFeatureTest {
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
             eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
-            messageHandler.capture()
+            messageHandler.capture(),
         )
         messageHandler.value.onPortConnected(port)
 
@@ -416,7 +419,7 @@ class FxaWebChannelFeatureTest {
                 "messageId":123
              }
             }
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
@@ -426,7 +429,7 @@ class FxaWebChannelFeatureTest {
         assertTrue(
             expectedEngines.all {
                 capabilitiesFromWebChannel.contains(it.nativeName)
-            }
+            },
         )
 
         assertNull(responseToTheWebChannel.value.getCWTSSupport())
@@ -460,7 +463,7 @@ class FxaWebChannelFeatureTest {
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
             eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
-            messageHandler.capture()
+            messageHandler.capture(),
         )
         messageHandler.value.onPortConnected(port)
 
@@ -471,7 +474,7 @@ class FxaWebChannelFeatureTest {
                 "messageId":123
              }
             }
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
@@ -481,7 +484,7 @@ class FxaWebChannelFeatureTest {
         assertTrue(
             expectedEngines.all {
                 capabilitiesFromWebChannel.contains(it.nativeName)
-            }
+            },
         )
 
         assertNull(responseToTheWebChannel.value.getCWTSSupport())
@@ -508,7 +511,7 @@ class FxaWebChannelFeatureTest {
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
             eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
-            messageHandler.capture()
+            messageHandler.capture(),
         )
         messageHandler.value.onPortConnected(port)
 
@@ -519,7 +522,7 @@ class FxaWebChannelFeatureTest {
                 "messageId":123
              }
             }
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
@@ -529,7 +532,7 @@ class FxaWebChannelFeatureTest {
         assertTrue(
             expectedEngines.all {
                 capabilitiesFromWebChannel.contains(it.nativeName)
-            }
+            },
         )
 
         assertNull(responseToTheWebChannel.value.getCWTSSupport())
@@ -555,7 +558,7 @@ class FxaWebChannelFeatureTest {
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
             eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
-            messageHandler.capture()
+            messageHandler.capture(),
         )
         messageHandler.value.onPortConnected(port)
 
@@ -566,7 +569,7 @@ class FxaWebChannelFeatureTest {
                 "messageId":123
              }
             }
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
@@ -596,7 +599,7 @@ class FxaWebChannelFeatureTest {
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
             eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
-            messageHandler.capture()
+            messageHandler.capture(),
         )
         messageHandler.value.onPortConnected(port)
 
@@ -629,7 +632,7 @@ class FxaWebChannelFeatureTest {
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
             eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
-            messageHandler.capture()
+            messageHandler.capture(),
         )
         messageHandler.value.onPortConnected(port)
 
@@ -664,7 +667,7 @@ class FxaWebChannelFeatureTest {
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
             eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
-            messageHandler.capture()
+            messageHandler.capture(),
         )
         messageHandler.value.onPortConnected(port)
 
@@ -675,7 +678,7 @@ class FxaWebChannelFeatureTest {
                 "messageId":123
              }
             }
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         messageHandler.value.onPortMessage(jsonToWebChannel, port)
@@ -745,7 +748,7 @@ class FxaWebChannelFeatureTest {
             email = email,
             uid = uid,
             sessionToken = obj.getString("sessionToken"),
-            verified = obj.getBoolean("verified")
+            verified = obj.getBoolean("verified"),
         )
     }
 
@@ -771,7 +774,7 @@ class FxaWebChannelFeatureTest {
             authType = expectedAuthType,
             code = code,
             state = state,
-            declinedEngines = declined ?: emptySet()
+            declinedEngines = declined ?: emptySet(),
         )
         shadowOf(getMainLooper()).idle()
 
@@ -793,7 +796,7 @@ class FxaWebChannelFeatureTest {
                 }
              }
             }
-            """.trimIndent()
+            """.trimIndent(),
         )
     }
 
@@ -803,7 +806,7 @@ class FxaWebChannelFeatureTest {
         engineSession: EngineSession = mock(),
         expectedEngines: Set<SyncEngine>? = setOf(SyncEngine.History),
         fxaCapabilities: Set<FxaCapability> = emptySet(),
-        accountManager: FxaAccountManager = mock()
+        accountManager: FxaAccountManager = mock(),
     ): FxaWebChannelFeature {
         val serverConfig: ServerConfig = mock()
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
@@ -811,12 +814,12 @@ class FxaWebChannelFeatureTest {
         val tab = createTab(
             url = "https://www.mozilla.org",
             id = "test-tab",
-            engineSession = engineSession
+            engineSession = engineSession,
         )
         val store = spy(
             BrowserStore(
-                initialState = BrowserState(tabs = listOf(tab), selectedTabId = tab.id)
-            )
+                initialState = BrowserState(tabs = listOf(tab), selectedTabId = tab.id),
+            ),
         )
 
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)

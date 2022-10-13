@@ -19,11 +19,11 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.robolectric.annotation.Config
 
@@ -32,7 +32,9 @@ class AndroidAssetFinderTest {
 
     private lateinit var assetFinder: AndroidAssetFinder
     private lateinit var packageInfo: PackageInfo
+
     @Mock lateinit var packageManager: PackageManager
+
     @Mock lateinit var signingInfo: SigningInfo
 
     @Before
@@ -51,7 +53,7 @@ class AndroidAssetFinderTest {
 
         assertEquals(
             emptyList<AssetDescriptor.Android>(),
-            assetFinder.getAndroidAppAsset("com.test.app", packageManager).toList()
+            assetFinder.getAndroidAppAsset("com.test.app", packageManager).toList(),
         )
     }
 
@@ -66,7 +68,7 @@ class AndroidAssetFinderTest {
 
         assertEquals(
             listOf(AssetDescriptor.Android("com.test.app", "01:BB:AA:10:30")),
-            assetFinder.getAndroidAppAsset("com.test.app", packageManager).toList()
+            assetFinder.getAndroidAppAsset("com.test.app", packageManager).toList(),
         )
     }
 
@@ -84,9 +86,9 @@ class AndroidAssetFinderTest {
         assertEquals(
             listOf(
                 AssetDescriptor.Android("org.test.app", "01:BB:AA:10:30"),
-                AssetDescriptor.Android("org.test.app", "FF:CC:AA:99:77")
+                AssetDescriptor.Android("org.test.app", "FF:CC:AA:99:77"),
             ),
-            assetFinder.getAndroidAppAsset("org.test.app", packageManager).toList()
+            assetFinder.getAndroidAppAsset("org.test.app", packageManager).toList(),
         )
     }
 
@@ -99,7 +101,7 @@ class AndroidAssetFinderTest {
 
         assertEquals(
             emptyList<AssetDescriptor.Android>(),
-            assetFinder.getAndroidAppAsset("com.test.app", packageManager).toList()
+            assetFinder.getAndroidAppAsset("com.test.app", packageManager).toList(),
         )
     }
 
@@ -113,7 +115,7 @@ class AndroidAssetFinderTest {
 
         assertEquals(
             listOf(AssetDescriptor.Android("com.test.app", "01:BB:AA:10:30")),
-            assetFinder.getAndroidAppAsset("com.test.app", packageManager).toList()
+            assetFinder.getAndroidAppAsset("com.test.app", packageManager).toList(),
         )
     }
 
@@ -130,9 +132,9 @@ class AndroidAssetFinderTest {
         assertEquals(
             listOf(
                 AssetDescriptor.Android("org.test.app", "01:BB:AA:10:30"),
-                AssetDescriptor.Android("org.test.app", "FF:CC:AA:99:77")
+                AssetDescriptor.Android("org.test.app", "FF:CC:AA:99:77"),
             ),
-            assetFinder.getAndroidAppAsset("org.test.app", packageManager).toList()
+            assetFinder.getAndroidAppAsset("org.test.app", packageManager).toList(),
         )
     }
 
@@ -149,7 +151,7 @@ class AndroidAssetFinderTest {
         val result = assetFinder.getAndroidAppAsset("android.package", packageManager).first()
         assertEquals(
             AssetDescriptor.Android("android.package", "01:BB:AA:10:30"),
-            result
+            result,
         )
 
         verify(assetFinder, times(1)).getCertificateSHA256Fingerprint(any())
@@ -160,7 +162,7 @@ class AndroidAssetFinderTest {
         val array = byteArrayOf(0xaa.toByte(), 0xbb.toByte(), 0xcc.toByte(), 0x10, 0x20, 0x30, 0x01, 0x02)
         assertEquals(
             "AA:BB:CC:10:20:30:01:02",
-            assetFinder.byteArrayToHexString(array)
+            assetFinder.byteArrayToHexString(array),
         )
     }
 }

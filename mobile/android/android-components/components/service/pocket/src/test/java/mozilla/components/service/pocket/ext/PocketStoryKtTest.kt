@@ -26,7 +26,7 @@ class PocketStoryKtTest {
     private val currentImpressions = listOf(
         nowInSeconds - flightPeriod * 2, // older impression that doesn't fit the flight period
         flightImpression1,
-        flightImpression2
+        flightImpression2,
     )
 
     @Test
@@ -35,7 +35,7 @@ class PocketStoryKtTest {
             currentImpressions = currentImpressions,
             lifetimeCount = 10,
             flightCount = 5,
-            flightPeriod = flightPeriod
+            flightPeriod = flightPeriod,
         )
         val story: PocketSponsoredStory = mock()
         doReturn(storyCaps).`when`(story).caps
@@ -51,7 +51,7 @@ class PocketStoryKtTest {
             currentImpressions = currentImpressions,
             lifetimeCount = 10,
             flightCount = 5,
-            flightPeriod = flightPeriod
+            flightPeriod = flightPeriod,
         )
         val story: PocketSponsoredStory = mock()
         doReturn(storyCaps).`when`(story).caps
@@ -67,7 +67,7 @@ class PocketStoryKtTest {
             currentImpressions = currentImpressions,
             lifetimeCount = 3,
             flightCount = 3,
-            flightPeriod = flightPeriod
+            flightPeriod = flightPeriod,
         )
         val story: PocketSponsoredStory = mock()
         doReturn(storyCaps).`when`(story).caps
@@ -83,7 +83,7 @@ class PocketStoryKtTest {
             currentImpressions = currentImpressions,
             lifetimeCount = 10,
             flightCount = 5,
-            flightPeriod = flightPeriod
+            flightPeriod = flightPeriod,
         )
         val story: PocketSponsoredStory = mock()
         doReturn(storyCaps).`when`(story).caps
@@ -99,7 +99,7 @@ class PocketStoryKtTest {
             currentImpressions = currentImpressions,
             lifetimeCount = 3,
             flightCount = 2,
-            flightPeriod = flightPeriod
+            flightPeriod = flightPeriod,
         )
         val story: PocketSponsoredStory = mock()
         doReturn(storyCaps).`when`(story).caps
@@ -132,7 +132,7 @@ class PocketStoryKtTest {
         // Check if a new impression has been added for around this current time.
         assertTrue(
             LongRange(nowInSeconds - 5, nowInSeconds + 5)
-                .contains(result.caps.currentImpressions[3])
+                .contains(result.caps.currentImpressions[3]),
         )
     }
 }

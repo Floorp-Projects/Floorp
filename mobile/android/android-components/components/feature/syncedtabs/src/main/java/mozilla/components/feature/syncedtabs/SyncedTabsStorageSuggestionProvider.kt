@@ -50,8 +50,8 @@ class SyncedTabsStorageSuggestionProvider(
                             clientName = client.displayName,
                             tab = activeTabEntry,
                             lastUsed = tab.lastUsed,
-                            deviceType = client.deviceType
-                        )
+                            deviceType = client.deviceType,
+                        ),
                     )
                 }
             }
@@ -66,7 +66,7 @@ class SyncedTabsStorageSuggestionProvider(
         val iconRequests = this.map { client ->
             client.tab.iconUrl?.let { iconUrl ->
                 icons?.loadIcon(
-                    IconRequest(url = iconUrl, waitOnNetworkLoad = false)
+                    IconRequest(url = iconUrl, waitOnNetworkLoad = false),
                 )
             }
         }
@@ -87,7 +87,7 @@ class SyncedTabsStorageSuggestionProvider(
                 onSuggestionClicked = {
                     loadUrlUseCase.invoke(result.tab.url)
                     emitSyncedTabSuggestionClickedFact()
-                }
+                },
             )
         }
     }
@@ -99,12 +99,12 @@ class SyncedTabsStorageSuggestionProvider(
 data class DeviceIndicators(
     val desktop: Drawable? = null,
     val mobile: Drawable? = null,
-    val tablet: Drawable? = null
+    val tablet: Drawable? = null,
 )
 
 private data class ClientTabPair(
     val clientName: String,
     val tab: TabEntry,
     val lastUsed: Long,
-    val deviceType: DeviceType
+    val deviceType: DeviceType,
 )

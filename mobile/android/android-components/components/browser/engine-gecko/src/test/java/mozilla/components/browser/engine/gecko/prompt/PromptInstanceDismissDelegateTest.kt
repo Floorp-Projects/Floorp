@@ -21,12 +21,14 @@ class PromptInstanceDismissDelegateTest {
     fun `GIVEN delegate with promptRequest WHEN onPromptDismiss called from geckoview THEN notifyObservers the prompt is dismissed`() {
         val mockSession = GeckoEngineSession(mock())
         var onDismissWasCalled = false
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptDismissed(promptRequest: PromptRequest) {
-                super.onPromptDismissed(promptRequest)
-                onDismissWasCalled = true
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptDismissed(promptRequest: PromptRequest) {
+                    super.onPromptDismissed(promptRequest)
+                    onDismissWasCalled = true
+                }
+            },
+        )
         val basePrompt: GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSaveOption> = mock()
         val prompt: PromptRequest = mock()
         val delegate = PromptInstanceDismissDelegate(mockSession, prompt)

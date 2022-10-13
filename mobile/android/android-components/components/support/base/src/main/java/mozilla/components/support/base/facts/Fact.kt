@@ -20,7 +20,7 @@ data class Fact(
     val action: Action,
     val item: String,
     val value: String? = null,
-    val metadata: Map<String, Any>? = null
+    val metadata: Map<String, Any>? = null,
 )
 
 /**

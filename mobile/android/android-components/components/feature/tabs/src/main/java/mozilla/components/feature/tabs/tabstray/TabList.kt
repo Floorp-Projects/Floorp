@@ -8,5 +8,5 @@ import mozilla.components.browser.state.state.TabSessionState
 
 internal data class TabList(
     val list: List<TabSessionState>,
-    val selectedTabId: String?
+    val selectedTabId: String?,
 )

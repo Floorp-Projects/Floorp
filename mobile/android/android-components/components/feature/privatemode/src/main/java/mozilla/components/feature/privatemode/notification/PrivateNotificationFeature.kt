@@ -26,7 +26,7 @@ import kotlin.reflect.KClass
 class PrivateNotificationFeature<T : AbstractPrivateNotificationService>(
     context: Context,
     private val store: BrowserStore,
-    private val notificationServiceClass: KClass<T>
+    private val notificationServiceClass: KClass<T>,
 ) : LifecycleAwareFeature {
 
     private val applicationContext = context.applicationContext

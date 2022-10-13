@@ -32,14 +32,14 @@ private const val PENDING_INTENT_TAG = "mozac.feature.media.pendingintent"
  * are used by web content.
  */
 class RecordingDevicesMiddleware(
-    private val context: Context
+    private val context: Context,
 ) : Middleware<BrowserState, BrowserAction> {
     private var isShowingNotification: Boolean = false
 
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         next(action)
 
@@ -96,7 +96,7 @@ class RecordingDevicesMiddleware(
             context,
             SharedIdsHelper.getIdForTag(context, PENDING_INTENT_TAG),
             intent,
-            PendingIntentUtils.defaultFlags or PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntentUtils.defaultFlags or PendingIntent.FLAG_UPDATE_CURRENT,
         )
 
         val notification = NotificationCompat.Builder(context, channelId)

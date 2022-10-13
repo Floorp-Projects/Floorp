@@ -28,7 +28,7 @@ class ParserTest {
 
         assertExpressionYieldsTree(
             expression,
-            Literal(42)
+            Literal(42),
         )
     }
 
@@ -41,8 +41,8 @@ class ParserTest {
             BinaryExpression(
                 left = Literal(42),
                 right = Literal(23),
-                operator = "+"
-            )
+                operator = "+",
+            ),
         )
     }
 
@@ -61,8 +61,8 @@ class ParserTest {
             BinaryExpression(
                 operator = ">",
                 left = Identifier("age"),
-                right = Literal(21)
-            )
+                right = Literal(21),
+            ),
         )
     }
 
@@ -77,10 +77,10 @@ class ParserTest {
                 left = BinaryExpression(
                     operator = "+",
                     left = Identifier("age"),
-                    right = Literal(5)
+                    right = Literal(5),
                 ),
-                right = Literal(42)
-            )
+                right = Literal(42),
+            ),
         )
     }
 
@@ -94,9 +94,9 @@ class ParserTest {
                 right = BinaryExpression(
                     operator = "*",
                     left = Literal(7),
-                    right = Literal(2)
-                )
-            )
+                    right = Literal(2),
+                ),
+            ),
         )
 
         assertExpressionYieldsTree(
@@ -106,10 +106,10 @@ class ParserTest {
                 left = BinaryExpression(
                     operator = "*",
                     left = Literal(5),
-                    right = Literal(7)
+                    right = Literal(7),
                 ),
-                right = Literal(2)
-            )
+                right = Literal(2),
+            ),
         )
     }
 
@@ -125,19 +125,19 @@ class ParserTest {
                     right = BinaryExpression(
                         operator = "*",
                         left = Literal(3),
-                        right = Literal(4)
-                    )
+                        right = Literal(4),
+                    ),
                 ),
                 right = BinaryExpression(
                     operator = "-",
                     left = BinaryExpression(
                         operator = "/",
                         left = Literal(5),
-                        right = Literal(6)
+                        right = Literal(6),
                     ),
-                    right = Literal(7)
-                )
-            )
+                    right = Literal(7),
+                ),
+            ),
         )
     }
 
@@ -154,12 +154,12 @@ class ParserTest {
                         operator = "!",
                         right = UnaryExpression(
                             operator = "!",
-                            right = Literal(true)
-                        )
-                    )
+                            right = Literal(true),
+                        ),
+                    ),
                 ),
-                right = Literal(2)
-            )
+                right = Literal(2),
+            ),
         )
     }
 
@@ -175,11 +175,11 @@ class ParserTest {
                     right = BinaryExpression(
                         operator = "+",
                         left = Literal(2),
-                        right = Literal(3)
-                    )
+                        right = Literal(3),
+                    ),
                 ),
-                right = Literal(5)
-            )
+                right = Literal(5),
+            ),
         )
     }
 
@@ -190,8 +190,8 @@ class ParserTest {
             BinaryExpression(
                 operator = "+",
                 left = Literal(2),
-                right = Literal(3)
-            )
+                right = Literal(3),
+            ),
         )
     }
 
@@ -204,9 +204,9 @@ class ParserTest {
                 "tek" to BinaryExpression(
                     operator = "+",
                     left = Literal(1),
-                    right = Literal(2)
-                )
-            )
+                    right = Literal(2),
+                ),
+            ),
         )
     }
 
@@ -222,9 +222,9 @@ class ParserTest {
             ObjectLiteral(
                 "foo" to ObjectLiteral(
                     "bar" to Literal("tek"),
-                    "baz" to Literal(42)
-                )
-            )
+                    "baz" to Literal(42),
+                ),
+            ),
         )
     }
 
@@ -232,7 +232,7 @@ class ParserTest {
     fun `Should handle empty object literals`() {
         assertExpressionYieldsTree(
             "{}",
-            ObjectLiteral()
+            ObjectLiteral(),
         )
     }
 
@@ -245,9 +245,9 @@ class ParserTest {
                 BinaryExpression(
                     operator = "+",
                     left = Literal(1),
-                    right = Literal(2)
-                )
-            )
+                    right = Literal(2),
+                ),
+            ),
         )
     }
 
@@ -259,9 +259,9 @@ class ParserTest {
                 Literal("foo"),
                 ArrayLiteral(
                     Literal("bar"),
-                    Literal("tek")
-                )
-            )
+                    Literal("tek"),
+                ),
+            ),
         )
     }
 
@@ -269,7 +269,7 @@ class ParserTest {
     fun `Should handle empty array literals`() {
         assertExpressionYieldsTree(
             "[]",
-            ArrayLiteral()
+            ArrayLiteral(),
         )
     }
 
@@ -283,11 +283,11 @@ class ParserTest {
                     "baz",
                     from = Identifier(
                         "bar",
-                        from = Identifier("foo")
-                    )
+                        from = Identifier("foo"),
+                    ),
                 ),
-                right = Literal(1)
-            )
+                right = Literal(1),
+            ),
         )
     }
 
@@ -299,8 +299,8 @@ class ParserTest {
                 name = "tr3",
                 arguments = mutableListOf(
                     ObjectLiteral(
-                        "bar" to Literal("tek")
-                    )
+                        "bar" to Literal("tek"),
+                    ),
                 ),
                 subject = Identifier(
                     value = "baz",
@@ -308,11 +308,11 @@ class ParserTest {
                         name = "tr2",
                         subject = Transformation(
                             name = "tr1",
-                            subject = Identifier("foo")
-                        )
-                    )
-                )
-            )
+                            subject = Identifier("foo"),
+                        ),
+                    ),
+                ),
+            ),
         )
     }
 
@@ -326,9 +326,9 @@ class ParserTest {
                 arguments = mutableListOf(
                     Literal("tek"),
                     Literal(5),
-                    Literal(true)
-                )
-            )
+                    Literal(true),
+                ),
+            ),
         )
     }
 
@@ -347,18 +347,18 @@ class ParserTest {
                             expression = Literal(0),
                             subject = Identifier(
                                 value = "bar",
-                                relative = true
-                            )
+                                relative = true,
+                            ),
                         ),
-                        right = Literal("tek")
+                        right = Literal("tek"),
                     ),
                     subject = FilterExpression(
                         relative = false,
                         expression = Literal(1),
-                        subject = Identifier("foo")
-                    )
-                )
-            )
+                        subject = Identifier("foo"),
+                    ),
+                ),
+            ),
         )
     }
 
@@ -372,10 +372,10 @@ class ParserTest {
                 right = Identifier(
                     "foo",
                     from = ObjectLiteral(
-                        "foo" to Literal("bar")
-                    )
-                )
-            )
+                        "foo" to Literal("bar"),
+                    ),
+                ),
+            ),
         )
     }
 
@@ -388,9 +388,9 @@ class ParserTest {
                 from = BinaryExpression(
                     operator = "+",
                     left = Literal("foo"),
-                    right = Literal("bar")
-                )
-            )
+                    right = Literal("bar"),
+                ),
+            ),
         )
     }
 
@@ -402,9 +402,9 @@ class ParserTest {
                 "length",
                 from = ArrayLiteral(
                     Literal("foo"),
-                    Literal("bar")
-                )
-            )
+                    Literal("bar"),
+                ),
+            ),
         )
     }
 
@@ -415,8 +415,8 @@ class ParserTest {
             ConditionalExpression(
                 test = Identifier("foo"),
                 consequent = Literal(1),
-                alternate = Literal(0)
-            )
+                alternate = Literal(0),
+            ),
         )
     }
 
@@ -429,10 +429,10 @@ class ParserTest {
                 consequent = ConditionalExpression(
                     test = Identifier("bar"),
                     consequent = Literal(1),
-                    alternate = Literal(2)
+                    alternate = Literal(2),
                 ),
-                alternate = Literal(3)
-            )
+                alternate = Literal(3),
+            ),
         )
     }
 
@@ -445,10 +445,10 @@ class ParserTest {
                 consequent = ConditionalExpression(
                     test = Identifier("bar"),
                     consequent = Literal(1),
-                    alternate = Literal(2)
+                    alternate = Literal(2),
                 ),
-                alternate = Literal(3)
-            )
+                alternate = Literal(3),
+            ),
         )
     }
 
@@ -459,10 +459,10 @@ class ParserTest {
             ConditionalExpression(
                 test = Identifier("foo"),
                 consequent = ObjectLiteral(
-                    "bar" to Literal("tek")
+                    "bar" to Literal("tek"),
                 ),
-                alternate = Literal("baz")
-            )
+                alternate = Literal("baz"),
+            ),
         )
     }
 
@@ -474,13 +474,13 @@ class ParserTest {
                 operator = "==",
                 left = Identifier(
                     value = "b",
-                    from = Identifier("a")
+                    from = Identifier("a"),
                 ),
                 right = Identifier(
                     value = "d",
-                    from = Identifier("c")
-                )
-            )
+                    from = Identifier("c"),
+                ),
+            ),
         )
     }
 

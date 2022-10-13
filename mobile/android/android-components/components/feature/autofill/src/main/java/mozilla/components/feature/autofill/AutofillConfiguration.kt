@@ -39,7 +39,7 @@ data class AutofillConfiguration(
     val httpClient: Client,
     val lock: AutofillLock = AutofillLock(),
     val verifier: CredentialAccessVerifier = CredentialAccessVerifier(
-        StatementRelationChecker(StatementApi(httpClient))
+        StatementRelationChecker(StatementApi(httpClient)),
     ),
-    val activityRequestCode: Int = 1010
+    val activityRequestCode: Int = 1010,
 )

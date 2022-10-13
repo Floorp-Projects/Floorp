@@ -42,7 +42,7 @@ data class SearchState(
     val userSelectedSearchEngineName: String? = null,
     val regionDefaultSearchEngineId: String? = null,
     val regionSearchEnginesOrder: List<String> = emptyList(),
-    val complete: Boolean = false
+    val complete: Boolean = false,
 )
 
 /**

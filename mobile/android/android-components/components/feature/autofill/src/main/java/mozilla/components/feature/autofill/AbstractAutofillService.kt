@@ -33,7 +33,7 @@ abstract class AbstractAutofillService : AutofillService() {
     override fun onFillRequest(
         request: FillRequest,
         cancellationSignal: CancellationSignal,
-        callback: FillCallback
+        callback: FillCallback,
     ) {
         // We are using GlobalScope here instead of a scope bound to the service since the service
         // seems to get destroyed before we invoke a method on the callback. So we need a scope that
@@ -48,12 +48,12 @@ abstract class AbstractAutofillService : AutofillService() {
             val structure = request.fillContexts.last().structure.toRawStructure()
             val responseBuilder = fillHandler.handle(
                 structure,
-                maxSuggestionCount = request.getMaxSuggestionCount()
+                maxSuggestionCount = request.getMaxSuggestionCount(),
             )
             val response = responseBuilder?.build(
                 this@AbstractAutofillService,
                 configuration,
-                request.getInlinePresentationSpec()
+                request.getInlinePresentationSpec(),
             )
             callback.onSuccess(response)
         }

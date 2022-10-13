@@ -15,11 +15,11 @@ import org.json.JSONObject
 data class CheckAssetLinksResponse(
     val linked: Boolean,
     val maxAge: String,
-    val debug: String
+    val debug: String,
 )
 
 internal fun parseCheckAssetLinksJson(json: JSONObject) = CheckAssetLinksResponse(
     linked = json.getBoolean("linked"),
     maxAge = json.getString("maxAge"),
-    debug = json.optString("debugString")
+    debug = json.optString("debugString"),
 )

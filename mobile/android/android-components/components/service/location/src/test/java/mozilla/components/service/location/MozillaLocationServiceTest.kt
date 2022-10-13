@@ -52,7 +52,7 @@ class MozillaLocationServiceTest {
                 testContext,
                 HttpURLConnectionClient(),
                 apiKey = "test",
-                serviceUrl = server.url("/").toString()
+                serviceUrl = server.url("/").toString(),
             )
 
             val region = service.fetchRegion()
@@ -88,7 +88,7 @@ class MozillaLocationServiceTest {
             url = "http://example.org",
             status = 200,
             headers = MutableHeaders(),
-            body = Response.Body("{\"country_name\": \"France\", \"country_code\": \"FR\"}".byteInputStream())
+            body = Response.Body("{\"country_name\": \"France\", \"country_code\": \"FR\"}".byteInputStream()),
         )
         doReturn(response).`when`(client).fetch(any())
 
@@ -114,7 +114,7 @@ class MozillaLocationServiceTest {
             url = "http://example.org",
             status = 404,
             headers = MutableHeaders(),
-            body = Response.Body.empty()
+            body = Response.Body.empty(),
         )
         doReturn(response).`when`(client).fetch(any())
 
@@ -131,7 +131,7 @@ class MozillaLocationServiceTest {
             url = "http://example.org",
             status = 500,
             headers = MutableHeaders(),
-            body = Response.Body("Internal Server Error".byteInputStream())
+            body = Response.Body("Internal Server Error".byteInputStream()),
         )
         doReturn(response).`when`(client).fetch(any())
 
@@ -148,7 +148,7 @@ class MozillaLocationServiceTest {
             url = "http://example.org",
             status = 200,
             headers = MutableHeaders(),
-            body = Response.Body("{\"country_name\": \"France\",".byteInputStream())
+            body = Response.Body("{\"country_name\": \"France\",".byteInputStream()),
         )
         doReturn(response).`when`(client).fetch(any())
 
@@ -165,7 +165,7 @@ class MozillaLocationServiceTest {
             url = "http://example.org",
             status = 200,
             headers = MutableHeaders(),
-            body = Response.Body("{}".byteInputStream())
+            body = Response.Body("{}".byteInputStream()),
         )
         doReturn(response).`when`(client).fetch(any())
 
@@ -182,7 +182,7 @@ class MozillaLocationServiceTest {
             url = "http://example.org",
             status = 200,
             headers = MutableHeaders(),
-            body = Response.Body("{\"country_code\": \"DE\"}".byteInputStream())
+            body = Response.Body("{\"country_code\": \"DE\"}".byteInputStream()),
         )
         doReturn(response).`when`(client).fetch(any())
 
@@ -200,7 +200,7 @@ class MozillaLocationServiceTest {
                 url = "http://example.org",
                 status = 200,
                 headers = MutableHeaders(),
-                body = Response.Body("{\"country_name\": \"Nepal\", \"country_code\": \"NP\"}".byteInputStream())
+                body = Response.Body("{\"country_name\": \"Nepal\", \"country_code\": \"NP\"}".byteInputStream()),
             )
             doReturn(response).`when`(client).fetch(any())
 
@@ -238,7 +238,7 @@ class MozillaLocationServiceTest {
                 url = "http://example.org",
                 status = 200,
                 headers = MutableHeaders(),
-                body = Response.Body("{\"country_name\": \"Nepal\", \"country_code\": \"NP\"}".byteInputStream())
+                body = Response.Body("{\"country_name\": \"Nepal\", \"country_code\": \"NP\"}".byteInputStream()),
             )
             doReturn(response).`when`(client).fetch(any())
 
@@ -259,7 +259,7 @@ class MozillaLocationServiceTest {
                 url = "http://example.org",
                 status = 200,
                 headers = MutableHeaders(),
-                body = Response.Body("{\"country_name\": \"Liberia\", \"country_code\": \"LR\"}".byteInputStream())
+                body = Response.Body("{\"country_name\": \"Liberia\", \"country_code\": \"LR\"}".byteInputStream()),
             )
             doReturn(response).`when`(client).fetch(any())
 

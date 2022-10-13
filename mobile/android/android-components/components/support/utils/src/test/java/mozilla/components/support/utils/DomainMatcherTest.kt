@@ -25,74 +25,74 @@ class DomainMatcherTest {
             "http://192.168.254.254:8000", "http://192.168.254.254:8000/admin",
             "http://иННая.локаль", // TODO add more test data for non-english locales
             "about:config", "about:crashes", "http://localhost:8080/index.html",
-            "https://www.reddit.com/r/vancouver/comments/quu9lt/hwy_1_just_north_of_lytton_is_gone/"
+            "https://www.reddit.com/r/vancouver/comments/quu9lt/hwy_1_just_north_of_lytton_is_gone/",
         )
         // Full url matching.
         assertEquals(
             DomainMatch("http://www.mozilla.org", "http://www.mozilla.org"),
-            segmentAwareDomainMatch("http://www.m", urls)
+            segmentAwareDomainMatch("http://www.m", urls),
         )
         // Protocol stripping.
         assertEquals(
             DomainMatch("http://www.mozilla.org", "www.mozilla.org"),
-            segmentAwareDomainMatch("www.moz", urls)
+            segmentAwareDomainMatch("www.moz", urls),
         )
         // Subdomain stripping.
         assertEquals(
             DomainMatch("http://www.mozilla.org", "mozilla.org"),
-            segmentAwareDomainMatch("moz", urls)
+            segmentAwareDomainMatch("moz", urls),
         )
         assertEquals(
             DomainMatch("https://mobile.twitter.com", "twitter.com"),
-            segmentAwareDomainMatch("twit", urls)
+            segmentAwareDomainMatch("twit", urls),
         )
         assertEquals(
             DomainMatch("https://m.youtube.com", "youtube.com"),
-            segmentAwareDomainMatch("yo", urls)
+            segmentAwareDomainMatch("yo", urls),
         )
         // Subdomain stripping for sub-paths
         assertEquals(
             DomainMatch("https://www.github.com/mozilla-mobile/fenix", "github.com/mozilla-mobile/fenix"),
-            segmentAwareDomainMatch("github.com/moz", urls)
+            segmentAwareDomainMatch("github.com/moz", urls),
         )
         // Case insensitivity.
         assertEquals(
             DomainMatch("http://firefox.com", "firefox.com"),
-            segmentAwareDomainMatch("fire", urls)
+            segmentAwareDomainMatch("fire", urls),
         )
         // Urls with ports.
         assertEquals(
             DomainMatch("http://192.168.254.254:8000", "192.168.254.254:8000"),
-            segmentAwareDomainMatch("192", urls)
+            segmentAwareDomainMatch("192", urls),
         )
         assertEquals(
             DomainMatch("http://192.168.254.254:8000/admin", "192.168.254.254:8000/admin"),
-            segmentAwareDomainMatch("192.168.254.254:8000/a", urls)
+            segmentAwareDomainMatch("192.168.254.254:8000/a", urls),
         )
 
         assertEquals(
             DomainMatch("http://localhost:8080/index.html", "localhost:8080/index.html"),
-            segmentAwareDomainMatch("localhost", urls)
+            segmentAwareDomainMatch("localhost", urls),
         )
 
         // About urls.
         assertEquals(
             DomainMatch("about:config", "about:config"),
-            segmentAwareDomainMatch("abo", urls)
+            segmentAwareDomainMatch("abo", urls),
         )
         assertEquals(
             DomainMatch("about:config", "about:config"),
-            segmentAwareDomainMatch("about:", urls)
+            segmentAwareDomainMatch("about:", urls),
         )
         assertEquals(
             DomainMatch("about:crashes", "about:crashes"),
-            segmentAwareDomainMatch("about:cr", urls)
+            segmentAwareDomainMatch("about:cr", urls),
         )
 
         // Non-english locale.
         assertEquals(
             DomainMatch("http://инная.локаль", "инная.локаль"),
-            segmentAwareDomainMatch("ин", urls)
+            segmentAwareDomainMatch("ин", urls),
         )
 
         assertNull(segmentAwareDomainMatch("nomatch", urls))

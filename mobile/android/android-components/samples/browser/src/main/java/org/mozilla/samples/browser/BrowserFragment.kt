@@ -41,7 +41,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         super.onCreateView(inflater, container, savedInstanceState)
         val binding = super.binding
@@ -56,23 +56,23 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             sessionId = sessionId,
             lifecycleOwner = viewLifecycleOwner,
             showTabs = ::showTabs,
-            countBasedOnSelectedTabType = false
+            countBasedOnSelectedTabType = false,
         )
 
         AwesomeBarFeature(binding.awesomeBar, binding.toolbar, binding.engineView, components.icons)
             .addHistoryProvider(
                 components.historyStorage,
                 components.sessionUseCases.loadUrl,
-                components.engine
+                components.engine,
             )
             .addSessionProvider(
                 resources,
                 components.store,
-                components.tabsUseCases.selectTab
+                components.tabsUseCases.selectTab,
             )
             .addSearchActionProvider(
                 components.store,
-                searchUseCase = components.searchUseCases.defaultSearch
+                searchUseCase = components.searchUseCases.defaultSearch,
             )
             .addSearchProvider(
                 requireContext(),
@@ -81,12 +81,12 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 fetchClient = components.client,
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
                 engine = components.engine,
-                filterExactMatch = true
+                filterExactMatch = true,
             )
             .addClipboardProvider(
                 requireContext(),
                 components.sessionUseCases.loadUrl,
-                components.engine
+                components.engine,
             )
 
         readerViewFeature.set(
@@ -96,17 +96,17 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 components.store,
                 binding.toolbar,
                 binding.readerViewBar,
-                binding.readerViewAppearanceButton
+                binding.readerViewAppearanceButton,
             ),
             owner = this,
-            view = binding.root
+            view = binding.root,
         )
 
         fullScreenFeature.set(
             feature = FullScreenFeature(
                 components.store,
                 components.sessionUseCases,
-                sessionId
+                sessionId,
             ) { inFullScreen ->
                 if (inFullScreen) {
                     activity?.enterToImmersiveMode()
@@ -115,32 +115,32 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 }
             },
             owner = this,
-            view = binding.root
+            view = binding.root,
         )
 
         mediaSessionFullscreenFeature.set(
             feature = MediaSessionFullscreenFeature(
                 requireActivity(),
                 components.store,
-                sessionId
+                sessionId,
             ),
             owner = this,
-            view = binding.root
+            view = binding.root,
         )
 
         thumbnailsFeature.set(
             feature = BrowserThumbnails(requireContext(), binding.engineView, components.store),
             owner = this,
-            view = binding.root
+            view = binding.root,
         )
 
         webExtToolbarFeature.set(
             feature = WebExtensionToolbarFeature(
                 binding.toolbar,
-                components.store
+                components.store,
             ),
             owner = this,
-            view = binding.root
+            view = binding.root,
         )
 
         searchFeature.set(
@@ -152,7 +152,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 }
             },
             owner = this,
-            view = binding.root
+            view = binding.root,
         )
 
         val windowFeature = WindowFeature(components.store, components.tabsUseCases)

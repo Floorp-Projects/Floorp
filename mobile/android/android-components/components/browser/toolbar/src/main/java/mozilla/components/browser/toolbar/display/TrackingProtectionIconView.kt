@@ -27,7 +27,7 @@ import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection.ON_TRAC
 internal class TrackingProtectionIconView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : AppCompatImageView(context, attrs, defStyleAttr) {
     var siteTrackingProtection: SiteTrackingProtection? = null
         set(value) {
@@ -54,7 +54,7 @@ internal class TrackingProtectionIconView @JvmOverloads constructor(
     fun setIcons(
         iconOnNoTrackersBlocked: Drawable,
         iconOnTrackersBlocked: Drawable,
-        disabledForSite: Drawable
+        disabledForSite: Drawable,
     ) {
         this.iconOnNoTrackersBlocked = iconOnNoTrackersBlocked
         this.iconOnTrackersBlocked = iconOnTrackersBlocked
@@ -87,7 +87,9 @@ internal class TrackingProtectionIconView @JvmOverloads constructor(
     internal fun setOrClearColorFilter(drawable: Drawable?) {
         if (drawable is Animatable) {
             clearColorFilter()
-        } else trackingProtectionTint?.let { setColorFilter(it) }
+        } else {
+            trackingProtectionTint?.let { setColorFilter(it) }
+        }
     }
 
     companion object {
@@ -103,25 +105,25 @@ internal class TrackingProtectionIconView @JvmOverloads constructor(
         ON_NO_TRACKERS_BLOCKED -> Update(
             iconOnNoTrackersBlocked,
             R.string.mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked,
-            true
+            true,
         )
 
         ON_TRACKERS_BLOCKED -> Update(
             iconOnTrackersBlocked,
             R.string.mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1,
-            true
+            true,
         )
 
         OFF_FOR_A_SITE -> Update(
             disabledForSite,
             R.string.mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1,
-            true
+            true,
         )
 
         OFF_GLOBALLY -> Update(
             null,
             null,
-            false
+            false,
         )
     }
 }
@@ -129,5 +131,5 @@ internal class TrackingProtectionIconView @JvmOverloads constructor(
 internal class Update(
     val drawable: Drawable?,
     @StringRes val contentDescription: Int?,
-    val visible: Boolean
+    val visible: Boolean,
 )

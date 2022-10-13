@@ -67,7 +67,7 @@ class CustomTabsToolbarFeature(
     private val updateToolbarBackground: Boolean = true,
     private val forceActionButtonTinting: Boolean = false,
     private val shareListener: (() -> Unit)? = null,
-    private val closeListener: () -> Unit
+    private val closeListener: () -> Unit,
 ) : LifecycleAwareFeature, UserInteractionHandler {
     private var initialized: Boolean = false
     private val titleObserver = CustomTabSessionTitleObserver(toolbar)
@@ -147,7 +147,7 @@ class CustomTabsToolbarFeature(
                 securityIconSecure = readableColor,
                 securityIconInsecure = readableColor,
                 trackingProtection = readableColor,
-                menu = readableColor
+                menu = readableColor,
             )
 
             window?.setStatusBarTheme(toolbarColor)
@@ -170,7 +170,7 @@ class CustomTabsToolbarFeature(
 
         val button = Toolbar.ActionButton(
             drawableIcon,
-            context.getString(R.string.mozac_feature_customtabs_exit_button)
+            context.getString(R.string.mozac_feature_customtabs_exit_button),
         ) {
             emitCloseFact()
             useCases.remove(tab.id)
@@ -190,7 +190,7 @@ class CustomTabsToolbarFeature(
                 config.icon,
                 ACTION_BUTTON_DRAWABLE_WIDTH_DP.dpToPx(context.resources.displayMetrics),
                 ACTION_BUTTON_DRAWABLE_HEIGHT_DP.dpToPx(context.resources.displayMetrics),
-                true
+                true,
             )
                 .toDrawable(context.resources)
             if (config.tint || forceActionButtonTinting) {
@@ -199,7 +199,7 @@ class CustomTabsToolbarFeature(
 
             val button = Toolbar.ActionButton(
                 drawableIcon,
-                config.description
+                config.description,
             ) {
                 emitActionButtonFact()
                 config.pendingIntent.sendWithUrl(context, tab.content.url)
@@ -220,7 +220,7 @@ class CustomTabsToolbarFeature(
 
         val button = Toolbar.ActionButton(
             drawableIcon,
-            context.getString(R.string.mozac_feature_customtabs_share_link)
+            context.getString(R.string.mozac_feature_customtabs_share_link),
         ) {
             val listener = shareListener ?: { context.share(tab.content.url) }
             emitActionButtonFact()
@@ -237,7 +237,7 @@ class CustomTabsToolbarFeature(
     internal fun addMenuItems(
         tab: CustomTabSessionState,
         menuItems: List<CustomTabMenuItem>,
-        index: Int
+        index: Int,
     ) {
         menuItems.map { item ->
             SimpleBrowserMenuItem(item.name) {

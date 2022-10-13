@@ -42,7 +42,7 @@ class LinkingMiddlewareTest {
         val tab = createTab("https://www.mozilla.org", id = "1")
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val engineSession: EngineSession = mock()
@@ -61,9 +61,9 @@ class LinkingMiddlewareTest {
         val child = createTab("https://www.firefox.com", id = "2", parent = parent)
         val store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(parent, child)
+                tabs = listOf(parent, child),
             ),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val parentEngineSession: EngineSession = mock()
@@ -85,9 +85,9 @@ class LinkingMiddlewareTest {
         val child = createTab("moz-extension://1234", id = "2", parent = parent)
         val store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(parent, child)
+                tabs = listOf(parent, child),
             ),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val parentEngineSession: EngineSession = mock()
@@ -108,7 +108,7 @@ class LinkingMiddlewareTest {
         val tab = createTab("https://www.mozilla.org", id = "1")
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val engineSession: EngineSession = mock()
@@ -125,7 +125,7 @@ class LinkingMiddlewareTest {
 
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf()),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val engineSession: EngineSession = mock()
@@ -145,7 +145,7 @@ class LinkingMiddlewareTest {
 
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab1, tab2)),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val engineSession1: EngineSession = mock()
@@ -175,7 +175,7 @@ class LinkingMiddlewareTest {
 
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab1, tab2)),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val engineSession: EngineSession = mock()
@@ -201,7 +201,7 @@ class LinkingMiddlewareTest {
 
         val store = BrowserStore(
             initialState = BrowserState(),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         store.dispatch(TabListAction.AddTabAction(tab1)).joinBlocking()

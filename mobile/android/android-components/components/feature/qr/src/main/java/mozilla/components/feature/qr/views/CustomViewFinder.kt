@@ -36,7 +36,7 @@ import kotlin.math.roundToInt
 @Suppress("LargeClass")
 class CustomViewFinder @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null
+    attrs: AttributeSet? = null,
 ) : AppCompatImageView(context, attrs) {
     private var messageResource: Int? = null
     private val overlayPaint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -45,6 +45,7 @@ class CustomViewFinder @JvmOverloads constructor(
     private var viewFinderPathSaved: Boolean = false
     private var overlayPath: Path = Path()
     private var overlayPathSaved: Boolean = false
+
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal lateinit var viewFinderRectangle: Rect
     private var viewFinderCornersSize: Float = 0f
@@ -54,6 +55,7 @@ class CustomViewFinder @JvmOverloads constructor(
     private var viewFinderRight: Float = 0f
     private var viewFinderBottom: Float = 0f
     private var normalizedRadius: Float = 0f
+
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var scanMessageLayout: StaticLayout? = null
     private lateinit var messageTextPaint: TextPaint
@@ -67,7 +69,7 @@ class CustomViewFinder @JvmOverloads constructor(
 
         this.layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
+            ViewGroup.LayoutParams.MATCH_PARENT,
         )
         this.setOverlayColor(DEFAULT_OVERLAY_COLOR)
         this.setViewFinderColor(DEFAULT_VIEWFINDER_COLOR)
@@ -88,7 +90,7 @@ class CustomViewFinder @JvmOverloads constructor(
                 viewFinderLeftOrRight,
                 viewFinderTopOrBottom,
                 viewFinderLeftOrRight + viewFinderSide,
-                viewFinderTopOrBottom + viewFinderSide
+                viewFinderTopOrBottom + viewFinderSide,
             )
 
             this.setViewFinderCornerSize(DEFAULT_VIEWFINDER_CORNER_SIZE_RATIO * viewFinderRectangle.width())
@@ -190,7 +192,7 @@ class CustomViewFinder @JvmOverloads constructor(
         val scanMessage = if (scanMessageId != null) {
             HtmlCompat.fromHtml(
                 context.getString(scanMessageId),
-                HtmlCompat.FROM_HTML_MODE_LEGACY
+                HtmlCompat.FROM_HTML_MODE_LEGACY,
             )
         } else {
             ""
@@ -208,12 +210,17 @@ class CustomViewFinder @JvmOverloads constructor(
                     0,
                     scanMessage.length,
                     messageTextPaint,
-                    viewFinderRectangle.width()
+                    viewFinderRectangle.width(),
                 ).setAlignment(Layout.Alignment.ALIGN_CENTER).build()
             } else {
                 StaticLayout(
-                    scanMessage, messageTextPaint, viewFinderRectangle.width(),
-                    Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, true
+                    scanMessage,
+                    messageTextPaint,
+                    viewFinderRectangle.width(),
+                    Layout.Alignment.ALIGN_CENTER,
+                    1.0f,
+                    0.0f,
+                    true,
                 )
             }
 
@@ -226,7 +233,7 @@ class CustomViewFinder @JvmOverloads constructor(
         canvas.translate(
             viewFinderRectangle.left.toFloat(),
             viewFinderRectangle.bottom.toFloat() +
-                SCAN_MESSAGE_TOP_PADDING_DP.dpToPx(resources.displayMetrics)
+                SCAN_MESSAGE_TOP_PADDING_DP.dpToPx(resources.displayMetrics),
         )
         scanMessageLayout?.draw(canvas)
         canvas.restore()

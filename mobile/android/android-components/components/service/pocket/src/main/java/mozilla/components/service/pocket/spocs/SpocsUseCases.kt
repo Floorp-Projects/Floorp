@@ -113,7 +113,7 @@ internal class SpocsUseCases(
      */
     internal inner class RecordImpression(
         @get:VisibleForTesting
-        internal val context: Context = this@SpocsUseCases.appContext
+        internal val context: Context = this@SpocsUseCases.appContext,
     ) {
         /**
          * Update how many times certain stories were shown to the user.

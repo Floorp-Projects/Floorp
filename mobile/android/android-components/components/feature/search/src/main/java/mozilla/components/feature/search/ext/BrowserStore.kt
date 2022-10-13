@@ -16,7 +16,7 @@ import mozilla.components.lib.state.Store
  * (or `null` if no default could be loaded).
  */
 fun BrowserStore.waitForSelectedOrDefaultSearchEngine(
-    block: (mozilla.components.browser.state.search.SearchEngine?) -> Unit
+    block: (mozilla.components.browser.state.search.SearchEngine?) -> Unit,
 ) {
     // Did we already load the search state? In that case we can invoke `block` immediately.
     if (state.search.complete) {

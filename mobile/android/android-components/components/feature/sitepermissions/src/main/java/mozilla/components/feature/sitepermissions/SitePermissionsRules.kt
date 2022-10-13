@@ -46,6 +46,7 @@ data class SitePermissionsRules constructor(
             ALLOWED -> Action.ALLOWED
             BLOCKED -> Action.BLOCKED
         }
+
         /**
          * Convert from an AutoplayAction to an AutoplayStatus.
          */
@@ -119,7 +120,7 @@ data class SitePermissionsRules constructor(
             localStorage = persistentStorage.toStatus(),
             mediaKeySystemAccess = mediaKeySystemAccess.toStatus(),
             crossOriginStorageAccess = crossOriginStorageAccess.toStatus(),
-            savedAt = savedAt
+            savedAt = savedAt,
         )
     }
 }

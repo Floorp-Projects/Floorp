@@ -33,7 +33,7 @@ class SearchActionProviderTest {
         val provider = SearchActionProvider(
             store = mock(),
             searchEngine = mock(),
-            searchUseCase = mock()
+            searchUseCase = mock(),
         )
         val suggestions = provider.onInputChanged("firefox")
 

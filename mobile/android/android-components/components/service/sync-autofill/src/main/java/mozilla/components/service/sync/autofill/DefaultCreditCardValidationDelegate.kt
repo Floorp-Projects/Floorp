@@ -19,7 +19,7 @@ import mozilla.components.concept.storage.CreditCardsAddressesStorage
  * @param storage An instance of [CreditCardsAddressesStorage].
  */
 class DefaultCreditCardValidationDelegate(
-    private val storage: Lazy<CreditCardsAddressesStorage>
+    private val storage: Lazy<CreditCardsAddressesStorage>,
 ) : CreditCardValidationDelegate {
 
     private val coroutineContext by lazy { Dispatchers.IO }

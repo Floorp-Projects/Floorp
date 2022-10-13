@@ -46,11 +46,11 @@ class WindowFeatureTest {
                 BrowserState(
                     tabs = listOf(
                         createTab(id = tabId, url = "https://www.mozilla.org", engineSession = engineSession),
-                        createTab(id = privateTabId, url = "https://www.mozilla.org", private = true)
+                        createTab(id = privateTabId, url = "https://www.mozilla.org", private = true),
                     ),
-                    selectedTabId = tabId
-                )
-            )
+                    selectedTabId = tabId,
+                ),
+            ),
         )
         addTabUseCase = mock()
         removeTabUseCase = mock()

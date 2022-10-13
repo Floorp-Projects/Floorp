@@ -24,7 +24,7 @@ class SearchEngineReaderTest {
             name = "example",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            resultUrls = listOf("https://www.example.com/search")
+            resultUrls = listOf("https://www.example.com/search"),
         )
 
         val storage = CustomSearchEngineStorage(testContext)
@@ -46,7 +46,7 @@ class SearchEngineReaderTest {
             name = "example",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            resultUrls = listOf("https://www.example.com/search")
+            resultUrls = listOf("https://www.example.com/search"),
         )
         val reader = SearchEngineReader(type = SearchEngine.Type.CUSTOM)
         val invalidFile = AtomicFile(File("", ""))

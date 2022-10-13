@@ -23,7 +23,7 @@ fun Autocomplete.Address.toAddress() = Address(
     postalCode = postalCode,
     country = country,
     tel = tel,
-    email = email
+    email = email,
 )
 
 /**

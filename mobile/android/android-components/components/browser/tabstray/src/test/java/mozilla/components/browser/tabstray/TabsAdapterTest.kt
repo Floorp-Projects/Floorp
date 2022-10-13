@@ -28,7 +28,7 @@ private class TestTabViewHolder(view: View) : TabViewHolder(view) {
         tab: TabSessionState,
         isSelected: Boolean,
         styling: TabsTrayStyling,
-        delegate: TabsTray.Delegate
+        delegate: TabsTray.Delegate,
     ) { /* noop */
     }
 
@@ -52,7 +52,7 @@ class TabsAdapterTest {
     fun `onCreateViewHolder will create whatever TabViewHolder is provided`() {
         val adapter = TabsAdapter(
             viewHolderProvider = { _ -> TestTabViewHolder(View(testContext)) },
-            delegate = mock()
+            delegate = mock(),
         )
 
         val type = adapter.onCreateViewHolder(FrameLayout(testContext), 0)
@@ -68,10 +68,10 @@ class TabsAdapterTest {
         adapter.updateTabs(
             listOf(
                 createTab(id = "A", url = "https://www.mozilla.org"),
-                createTab(id = "B", url = "https://www.firefox.com")
+                createTab(id = "B", url = "https://www.firefox.com"),
             ),
             tabPartition = null,
-            selectedTabId = "A"
+            selectedTabId = "A",
         )
         assertEquals(2, adapter.itemCount)
     }
@@ -89,7 +89,7 @@ class TabsAdapterTest {
         adapter.updateTabs(
             listOf(tab),
             null,
-            "A"
+            "A",
         )
 
         adapter.onBindViewHolder(holder, 0)

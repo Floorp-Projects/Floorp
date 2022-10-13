@@ -35,19 +35,19 @@ object EngineMiddleware {
     fun create(
         engine: Engine,
         scope: CoroutineScope = MainScope(),
-        trimMemoryAutomatically: Boolean = true
+        trimMemoryAutomatically: Boolean = true,
     ): List<Middleware<BrowserState, BrowserAction>> {
         return listOf(
             EngineDelegateMiddleware(scope),
             CreateEngineSessionMiddleware(
                 engine,
-                scope
+                scope,
             ),
             LinkingMiddleware(scope),
             TabsRemovedMiddleware(scope),
             SuspendMiddleware(scope),
             WebExtensionMiddleware(),
-            CrashMiddleware()
+            CrashMiddleware(),
         ) + if (trimMemoryAutomatically) {
             listOf(TrimMemoryMiddleware())
         } else {

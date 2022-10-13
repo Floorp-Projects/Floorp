@@ -29,32 +29,32 @@ class JexlExtensionsTest {
     fun `Arrays`() {
         assertEquals(
             JexlArray(JexlInteger(1), JexlInteger(2), JexlInteger(3)),
-            listOf(1, 2, 3).toJexlArray()
+            listOf(1, 2, 3).toJexlArray(),
         )
 
         assertEquals(
             JexlArray(),
-            emptyList<String>().toJexlArray()
+            emptyList<String>().toJexlArray(),
         )
 
         assertEquals(
             JexlArray(JexlString("Hello"), JexlString("World")),
-            listOf("Hello", "World").toJexlArray()
+            listOf("Hello", "World").toJexlArray(),
         )
 
         assertEquals(
             JexlArray(JexlDouble(1.0), JexlDouble(23.0)),
-            listOf(1.0, 23.0).toJexlArray()
+            listOf(1.0, 23.0).toJexlArray(),
         )
 
         assertEquals(
             JexlArray(JexlDouble(52.0), JexlDouble(-2.0)),
-            listOf(52.0f, -2f).toJexlArray()
+            listOf(52.0f, -2f).toJexlArray(),
         )
 
         assertEquals(
             JexlArray(JexlBoolean(false), JexlBoolean(true)),
-            listOf(false, true).toJexlArray()
+            listOf(false, true).toJexlArray(),
         )
     }
 

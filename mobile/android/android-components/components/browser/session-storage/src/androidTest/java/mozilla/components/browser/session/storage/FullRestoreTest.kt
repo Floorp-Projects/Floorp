@@ -92,7 +92,7 @@ class FullRestoreTest {
     }
 
     private fun createStore(
-        engine: Engine
+        engine: Engine,
     ): BrowserStore {
         return runBlocking(Dispatchers.Main) {
             BrowserStore(middleware = EngineMiddleware.create(engine))

@@ -14,5 +14,5 @@ import java.util.concurrent.TimeUnit
  */
 data class Frequency(
     val repeatInterval: Long,
-    val repeatIntervalTimeUnit: TimeUnit
+    val repeatIntervalTimeUnit: TimeUnit,
 )

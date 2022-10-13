@@ -11,8 +11,10 @@ import java.util.concurrent.TimeUnit
 
 internal const val DEFAULT_REFRESH_INTERVAL = 4L
 internal const val DEFAULT_SPONSORED_STORIES_REFRESH_INTERVAL = 4L
+
 @Suppress("TopLevelPropertyNaming")
 internal val DEFAULT_REFRESH_TIMEUNIT = TimeUnit.HOURS
+
 @Suppress("TopLevelPropertyNaming")
 internal val DEFAULT_SPONSORED_STORIES_REFRESH_TIMEUNIT = TimeUnit.HOURS
 
@@ -29,13 +31,13 @@ class PocketStoriesConfig(
     val client: Client,
     val frequency: Frequency = Frequency(
         DEFAULT_REFRESH_INTERVAL,
-        DEFAULT_REFRESH_TIMEUNIT
+        DEFAULT_REFRESH_TIMEUNIT,
     ),
     val profile: Profile? = null,
     val sponsoredStoriesRefreshFrequency: Frequency = Frequency(
         DEFAULT_SPONSORED_STORIES_REFRESH_INTERVAL,
-        DEFAULT_SPONSORED_STORIES_REFRESH_TIMEUNIT
-    )
+        DEFAULT_SPONSORED_STORIES_REFRESH_TIMEUNIT,
+    ),
 )
 
 /**

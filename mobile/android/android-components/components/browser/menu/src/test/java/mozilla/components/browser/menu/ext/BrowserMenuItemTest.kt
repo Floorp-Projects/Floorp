@@ -23,24 +23,24 @@ class BrowserMenuItemTest {
                 label = "Test1",
                 startImageResource = 0,
                 highlight = highlightLow1,
-                isHighlighted = { true }
+                isHighlighted = { true },
             ),
             BrowserMenuHighlightableItem(
                 label = "Test2",
                 startImageResource = 0,
                 highlight = highlightLow2,
-                isHighlighted = { true }
+                isHighlighted = { true },
             ),
             BrowserMenuImageText(
                 label = "Test3",
-                imageResource = 0
+                imageResource = 0,
             ),
             BrowserMenuHighlightableItem(
                 label = "Test4",
                 startImageResource = 0,
                 highlight = highlightHigh,
-                isHighlighted = { true }
-            )
+                isHighlighted = { true },
+            ),
         )
         Assert.assertEquals(highlightHigh, list.getHighlight())
     }
@@ -51,13 +51,13 @@ class BrowserMenuItemTest {
             label = "Test1",
             startImageResource = 0,
             highlight = BrowserMenuHighlight.LowPriority(Color.YELLOW),
-            isHighlighted = { true }
+            isHighlighted = { true },
         )
         val highlightedInvisible = BrowserMenuHighlightableItem(
             label = "Test2",
             startImageResource = 0,
             highlight = BrowserMenuHighlight.HighPriority(Color.GREEN),
-            isHighlighted = { true }
+            isHighlighted = { true },
         )
         highlightedInvisible.visible = { false }
 
@@ -74,14 +74,14 @@ class BrowserMenuItemTest {
                 label = "Test1",
                 startImageResource = 0,
                 highlight = highlight,
-                isHighlighted = { true }
+                isHighlighted = { true },
             ),
             BrowserMenuHighlightableItem(
                 label = "Test2",
                 startImageResource = 0,
                 highlight = highlight2,
-                isHighlighted = { false }
-            )
+                isHighlighted = { false },
+            ),
         )
         Assert.assertEquals(highlight, list.getHighlight())
     }
@@ -91,21 +91,21 @@ class BrowserMenuItemTest {
         val highlight = BrowserMenuHighlight.LowPriority(Color.YELLOW)
         val highlightNonPropagate = BrowserMenuHighlight.HighPriority(
             Color.GREEN,
-            canPropagate = false
+            canPropagate = false,
         )
         val list = listOf(
             BrowserMenuHighlightableItem(
                 label = "Test1",
                 startImageResource = 0,
                 highlight = highlight,
-                isHighlighted = { true }
+                isHighlighted = { true },
             ),
             BrowserMenuHighlightableItem(
                 label = "Test2",
                 startImageResource = 0,
                 highlight = highlightNonPropagate,
-                isHighlighted = { true }
-            )
+                isHighlighted = { true },
+            ),
         )
         Assert.assertEquals(highlight, list.getHighlight())
     }

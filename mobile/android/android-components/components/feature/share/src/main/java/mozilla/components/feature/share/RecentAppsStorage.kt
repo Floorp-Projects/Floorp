@@ -54,7 +54,7 @@ class RecentAppsStorage(context: Context) {
         recentAppsDao.value.insertRecentApps(
             activityNames.map { activityName ->
                 RecentAppEntity(activityName)
-            }
+            },
         )
     }
 }

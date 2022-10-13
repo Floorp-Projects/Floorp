@@ -13,6 +13,6 @@ internal interface DatasetBuilder {
     fun build(
         context: Context,
         configuration: AutofillConfiguration,
-        imeSpec: InlinePresentationSpec? = null
+        imeSpec: InlinePresentationSpec? = null,
     ): Dataset
 }

@@ -13,12 +13,16 @@ import mozilla.components.feature.search.SearchAdapter
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal const val SEARCH = "CUSTOM_CONTEXT_MENU_SEARCH"
+
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal const val SEARCH_PRIVATELY = "CUSTOM_CONTEXT_MENU_SEARCH_PRIVATELY"
+
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal const val SHARE = "CUSTOM_CONTEXT_MENU_SHARE"
+
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal const val EMAIL = "CUSTOM_CONTEXT_MENU_EMAIL"
+
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal const val CALL = "CUSTOM_CONTEXT_MENU_CALL"
 
@@ -35,7 +39,7 @@ class DefaultSelectionActionDelegate(
     private val shareTextClicked: ((String) -> Unit)? = null,
     private val emailTextClicked: ((String) -> Unit)? = null,
     private val callTextClicked: ((String) -> Unit)? = null,
-    private val actionSorter: ((Array<String>) -> Array<String>)? = null
+    private val actionSorter: ((Array<String>) -> Array<String>)? = null,
 ) : SelectionActionDelegate {
 
     private val normalSearchText =

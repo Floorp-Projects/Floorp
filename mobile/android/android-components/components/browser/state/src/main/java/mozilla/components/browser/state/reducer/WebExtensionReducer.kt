@@ -21,7 +21,7 @@ internal object WebExtensionReducer {
                 val existingExtension = state.extensions[action.extension.id]
                 if (existingExtension == null) {
                     state.copy(
-                        extensions = state.extensions + (action.extension.id to action.extension)
+                        extensions = state.extensions + (action.extension.id to action.extension),
                     )
                 } else {
                     state.updateWebExtensionState(action.extension.id) {
@@ -33,13 +33,13 @@ internal object WebExtensionReducer {
             is WebExtensionAction.UninstallWebExtensionAction -> {
                 state.copy(
                     extensions = state.extensions - action.extensionId,
-                    tabs = state.tabs.map { it.copy(extensionState = it.extensionState - action.extensionId) }
+                    tabs = state.tabs.map { it.copy(extensionState = it.extensionState - action.extensionId) },
                 )
             }
             is WebExtensionAction.UninstallAllWebExtensionsAction -> {
                 state.copy(
                     extensions = emptyMap(),
-                    tabs = state.tabs.map { it.copy(extensionState = emptyMap()) }
+                    tabs = state.tabs.map { it.copy(extensionState = emptyMap()) },
                 )
             }
             is WebExtensionAction.UpdateWebExtensionEnabledAction -> {
@@ -89,20 +89,20 @@ internal object WebExtensionReducer {
     private fun BrowserState.updateWebExtensionTabState(
         tabId: String,
         extensionId: String,
-        update: (WebExtensionState) -> WebExtensionState
+        update: (WebExtensionState) -> WebExtensionState,
     ): BrowserState {
         return copy(
             tabs = tabs.updateTabs(tabId) { current ->
                 val existingExtension = current.extensionState[extensionId]
                 val newExtension = extensionId to update(existingExtension ?: WebExtensionState(extensionId))
                 current.copy(extensionState = current.extensionState + newExtension)
-            } ?: tabs
+            } ?: tabs,
         )
     }
 
     private fun BrowserState.updateWebExtensionState(
         extensionId: String,
-        update: (WebExtensionState) -> WebExtensionState
+        update: (WebExtensionState) -> WebExtensionState,
     ): BrowserState {
         val existingExtension = extensions[extensionId]
         val newExtension = extensionId to update(existingExtension ?: WebExtensionState(extensionId))

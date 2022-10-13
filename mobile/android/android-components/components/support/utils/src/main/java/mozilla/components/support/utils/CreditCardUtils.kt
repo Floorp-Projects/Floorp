@@ -17,7 +17,7 @@ import kotlin.math.log10
  */
 data class CreditCardIssuerNetwork(
     val name: String,
-    @DrawableRes val icon: Int
+    @DrawableRes val icon: Int,
 )
 
 /**
@@ -31,7 +31,7 @@ data class CreditCardIIN(
     val creditCardIssuerNetwork: CreditCardIssuerNetwork,
     val startRange: Int,
     val endRange: Int,
-    val cardNumberMaxLength: List<Int>
+    val cardNumberMaxLength: List<Int>,
 )
 
 /**
@@ -48,7 +48,7 @@ enum class CreditCardNetworkType(val cardName: String) {
     MIR("mir"),
     UNIONPAY("unionpay"),
     VISA("visa"),
-    GENERIC("")
+    GENERIC(""),
 }
 
 /**
@@ -59,43 +59,43 @@ internal object CreditCardUtils {
 
     private val GENERIC = CreditCardIssuerNetwork(
         name = CreditCardNetworkType.GENERIC.cardName,
-        icon = R.drawable.ic_icon_credit_card_generic
+        icon = R.drawable.ic_icon_credit_card_generic,
     )
     private val AMEX = CreditCardIssuerNetwork(
         name = CreditCardNetworkType.AMEX.cardName,
-        icon = R.drawable.ic_cc_logo_amex
+        icon = R.drawable.ic_cc_logo_amex,
     )
     private val CARTEBANCAIRE = CreditCardIssuerNetwork(
         name = CreditCardNetworkType.CARTEBANCAIRE.cardName,
-        icon = R.drawable.ic_icon_credit_card_generic
+        icon = R.drawable.ic_icon_credit_card_generic,
     )
     private val DINERS = CreditCardIssuerNetwork(
         name = CreditCardNetworkType.DINERS.cardName,
-        icon = R.drawable.ic_cc_logo_diners
+        icon = R.drawable.ic_cc_logo_diners,
     )
     private val DISCOVER = CreditCardIssuerNetwork(
         name = CreditCardNetworkType.DISCOVER.cardName,
-        icon = R.drawable.ic_cc_logo_discover
+        icon = R.drawable.ic_cc_logo_discover,
     )
     private val JCB = CreditCardIssuerNetwork(
         name = CreditCardNetworkType.JCB.cardName,
-        icon = R.drawable.ic_cc_logo_jcb
+        icon = R.drawable.ic_cc_logo_jcb,
     )
     private val MIR = CreditCardIssuerNetwork(
         name = CreditCardNetworkType.MIR.cardName,
-        icon = R.drawable.ic_cc_logo_mir
+        icon = R.drawable.ic_cc_logo_mir,
     )
     private val UNIONPAY = CreditCardIssuerNetwork(
         name = CreditCardNetworkType.UNIONPAY.cardName,
-        icon = R.drawable.ic_cc_logo_unionpay
+        icon = R.drawable.ic_cc_logo_unionpay,
     )
     private val VISA = CreditCardIssuerNetwork(
         name = CreditCardNetworkType.VISA.cardName,
-        icon = R.drawable.ic_cc_logo_visa
+        icon = R.drawable.ic_cc_logo_visa,
     )
     private val MASTERCARD = CreditCardIssuerNetwork(
         name = CreditCardNetworkType.MASTERCARD.cardName,
-        icon = R.drawable.ic_cc_logo_mastercard
+        icon = R.drawable.ic_cc_logo_mastercard,
     )
 
     /**
@@ -110,7 +110,7 @@ internal object CreditCardUtils {
         CreditCardNetworkType.MIR.cardName to MIR,
         CreditCardNetworkType.UNIONPAY.cardName to UNIONPAY,
         CreditCardNetworkType.VISA.cardName to VISA,
-        CreditCardNetworkType.MASTERCARD.cardName to MASTERCARD
+        CreditCardNetworkType.MASTERCARD.cardName to MASTERCARD,
     )
 
     /**
@@ -123,25 +123,25 @@ internal object CreditCardUtils {
             creditCardIssuerNetwork = AMEX,
             startRange = 34,
             endRange = 34,
-            cardNumberMaxLength = listOf(15)
+            cardNumberMaxLength = listOf(15),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = AMEX,
             startRange = 37,
             endRange = 37,
-            cardNumberMaxLength = listOf(15)
+            cardNumberMaxLength = listOf(15),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = CARTEBANCAIRE,
             startRange = 4035,
             endRange = 4035,
-            cardNumberMaxLength = listOf(16)
+            cardNumberMaxLength = listOf(16),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = CARTEBANCAIRE,
             startRange = 4360,
             endRange = 4360,
-            cardNumberMaxLength = listOf(16)
+            cardNumberMaxLength = listOf(16),
         ),
         // We diverge from Wikipedia here, because Diners card
         // support length of 14-19.
@@ -149,98 +149,98 @@ internal object CreditCardUtils {
             creditCardIssuerNetwork = DINERS,
             startRange = 300,
             endRange = 305,
-            cardNumberMaxLength = listOf(14, 19)
+            cardNumberMaxLength = listOf(14, 19),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = DINERS,
             startRange = 3095,
             endRange = 3095,
-            cardNumberMaxLength = listOf(14, 19)
+            cardNumberMaxLength = listOf(14, 19),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = DINERS,
             startRange = 36,
             endRange = 36,
-            cardNumberMaxLength = listOf(14, 19)
+            cardNumberMaxLength = listOf(14, 19),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = DINERS,
             startRange = 38,
             endRange = 39,
-            cardNumberMaxLength = listOf(14, 19)
+            cardNumberMaxLength = listOf(14, 19),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = DISCOVER,
             startRange = 6011,
             endRange = 6011,
-            cardNumberMaxLength = listOf(16, 19)
+            cardNumberMaxLength = listOf(16, 19),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = DISCOVER,
             startRange = 622126,
             endRange = 622925,
-            cardNumberMaxLength = listOf(16, 19)
+            cardNumberMaxLength = listOf(16, 19),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = DISCOVER,
             startRange = 624000,
             endRange = 626999,
-            cardNumberMaxLength = listOf(16, 19)
+            cardNumberMaxLength = listOf(16, 19),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = DISCOVER,
             startRange = 628200,
             endRange = 628899,
-            cardNumberMaxLength = listOf(16, 19)
+            cardNumberMaxLength = listOf(16, 19),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = DISCOVER,
             startRange = 64,
             endRange = 65,
-            cardNumberMaxLength = listOf(16, 19)
+            cardNumberMaxLength = listOf(16, 19),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = JCB,
             startRange = 3528,
             endRange = 3589,
-            cardNumberMaxLength = listOf(16, 19)
+            cardNumberMaxLength = listOf(16, 19),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = MASTERCARD,
             startRange = 2221,
             endRange = 2720,
-            cardNumberMaxLength = listOf(16)
+            cardNumberMaxLength = listOf(16),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = MASTERCARD,
             startRange = 51,
             endRange = 55,
-            cardNumberMaxLength = listOf(16)
+            cardNumberMaxLength = listOf(16),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = MIR,
             startRange = 2200,
             endRange = 2204,
-            cardNumberMaxLength = listOf(16)
+            cardNumberMaxLength = listOf(16),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = UNIONPAY,
             startRange = 62,
             endRange = 62,
-            cardNumberMaxLength = listOf(16, 19)
+            cardNumberMaxLength = listOf(16, 19),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = UNIONPAY,
             startRange = 81,
             endRange = 81,
-            cardNumberMaxLength = listOf(16, 19)
+            cardNumberMaxLength = listOf(16, 19),
         ),
         CreditCardIIN(
             creditCardIssuerNetwork = VISA,
             startRange = 4,
             endRange = 4,
-            cardNumberMaxLength = listOf(16)
-        )
+            cardNumberMaxLength = listOf(16),
+        ),
     ).sortedWith { a, b -> b.startRange - a.startRange }
 
     /**

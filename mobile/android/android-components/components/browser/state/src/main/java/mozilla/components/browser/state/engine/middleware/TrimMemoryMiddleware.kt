@@ -28,7 +28,7 @@ internal class TrimMemoryMiddleware : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         next(action)
 
@@ -39,7 +39,7 @@ internal class TrimMemoryMiddleware : Middleware<BrowserState, BrowserAction> {
 
     private fun trimMemory(
         context: MiddlewareContext<BrowserState, BrowserAction>,
-        action: SystemAction.LowMemoryAction
+        action: SystemAction.LowMemoryAction,
     ) {
         if (!shouldCloseEngineSessions(action.level)) {
             return
@@ -57,7 +57,7 @@ internal class TrimMemoryMiddleware : Middleware<BrowserState, BrowserAction> {
     }
 
     private fun determineTabsToSuspend(
-        state: BrowserState
+        state: BrowserState,
     ): List<SessionState> {
         return state.allTabs.filter { tab ->
             // We never suspend the currently selected tab

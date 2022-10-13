@@ -24,5 +24,5 @@ internal data class TabCollectionEntity(
     var updatedAt: Long = System.currentTimeMillis(),
 
     @ColumnInfo(name = "created_at")
-    var createdAt: Long = System.currentTimeMillis()
+    var createdAt: Long = System.currentTimeMillis(),
 )

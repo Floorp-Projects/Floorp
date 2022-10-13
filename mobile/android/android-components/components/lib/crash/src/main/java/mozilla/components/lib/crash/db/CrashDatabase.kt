@@ -14,7 +14,7 @@ import androidx.room.RoomDatabase
  */
 @Database(
     entities = [CrashEntity::class, ReportEntity::class],
-    version = 1
+    version = 1,
 )
 internal abstract class CrashDatabase : RoomDatabase() {
     abstract fun crashDao(): CrashDao

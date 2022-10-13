@@ -22,7 +22,7 @@ internal abstract class RecentAppsDao {
         """
         DELETE FROM recent_apps_table
         WHERE activityName = :activityName
-    """
+    """,
     )
     abstract fun deleteRecentApp(activityName: String)
 
@@ -31,7 +31,7 @@ internal abstract class RecentAppsDao {
         SELECT * FROM recent_apps_table
         ORDER BY score DESC
         LIMIT :limit
-    """
+    """,
     )
     abstract fun getRecentAppsUpTo(limit: Int): List<RecentAppEntity>
 
@@ -44,7 +44,7 @@ internal abstract class RecentAppsDao {
         UPDATE recent_apps_table
         SET score = score + 1
         WHERE activityName = :activityName
-    """
+    """,
     )
     abstract fun updateRecentAppScore(activityName: String)
 
@@ -58,11 +58,11 @@ internal abstract class RecentAppsDao {
         UPDATE recent_apps_table
         SET score = score * :decay
         WHERE activityName != :exceptActivity
-    """
+    """,
     )
     abstract fun decayAllRecentApps(
         exceptActivity: String,
-        decay: Double = DECAY_MULTIPLIER
+        decay: Double = DECAY_MULTIPLIER,
     )
 
     @Transaction

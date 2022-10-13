@@ -59,7 +59,7 @@ class CustomViewFinderTest {
         val mockHeight = 300
         val testScanMessage = HtmlCompat.fromHtml(
             testContext.getString(R.string.mozac_feature_qr_scanner),
-            HtmlCompat.FROM_HTML_MODE_LEGACY
+            HtmlCompat.FROM_HTML_MODE_LEGACY,
         )
 
         CustomViewFinder.setMessage(R.string.mozac_feature_qr_scanner)
@@ -67,22 +67,22 @@ class CustomViewFinderTest {
 
         assertEquals(
             ContextCompat.getColor(testContext, android.R.color.white),
-            customViewFinder.scanMessageLayout?.paint?.color
+            customViewFinder.scanMessageLayout?.paint?.color,
         )
 
         assertEquals(
             mockWidth * CustomViewFinder.DEFAULT_VIEWFINDER_WIDTH_RATIO,
-            customViewFinder.scanMessageLayout?.width?.toFloat()
+            customViewFinder.scanMessageLayout?.width?.toFloat(),
         )
 
         assertEquals(
             testScanMessage,
-            customViewFinder.scanMessageLayout?.text
+            customViewFinder.scanMessageLayout?.text,
         )
 
         assertEquals(
             CustomViewFinder.SCAN_MESSAGE_TEXT_SIZE_SP,
-            customViewFinder.scanMessageLayout?.paint?.textSize
+            customViewFinder.scanMessageLayout?.paint?.textSize,
         )
     }
 
@@ -96,7 +96,7 @@ class CustomViewFinderTest {
 
         assertEquals(
             android.R.color.holo_red_dark,
-            customViewFinder.viewFinderPaint.color
+            customViewFinder.viewFinderPaint.color,
         )
     }
 }

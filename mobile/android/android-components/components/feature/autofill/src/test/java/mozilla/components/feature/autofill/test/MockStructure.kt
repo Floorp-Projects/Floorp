@@ -22,7 +22,7 @@ internal fun FillRequestHandlerTest.createMockStructure(filename: String, packag
 
 private class MockStructure(
     private val packageName: String,
-    private val file: File
+    private val file: File,
 ) : RawStructure {
     override val activityPackageName: String = packageName
 

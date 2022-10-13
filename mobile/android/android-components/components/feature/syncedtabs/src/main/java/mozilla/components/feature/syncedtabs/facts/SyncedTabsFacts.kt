@@ -25,20 +25,20 @@ private fun emitSyncedTabsFact(
     action: Action,
     item: String,
     value: String? = null,
-    metadata: Map<String, Any>? = null
+    metadata: Map<String, Any>? = null,
 ) {
     Fact(
         Component.FEATURE_SYNCEDTABS,
         action,
         item,
         value,
-        metadata
+        metadata,
     ).collect()
 }
 
 internal fun emitSyncedTabSuggestionClickedFact() {
     emitSyncedTabsFact(
         Action.INTERACTION,
-        SyncedTabsFacts.Items.SYNCED_TABS_SUGGESTION_CLICKED
+        SyncedTabsFacts.Items.SYNCED_TABS_SUGGESTION_CLICKED,
     )
 }

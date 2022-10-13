@@ -34,8 +34,9 @@ class EditToolbarTest {
     private fun createEditToolbar(): Pair<BrowserToolbar, EditToolbar> {
         val toolbar: BrowserToolbar = mock()
         val displayToolbar = EditToolbar(
-            testContext, toolbar,
-            View.inflate(testContext, R.layout.mozac_browser_toolbar_edittoolbar, null)
+            testContext,
+            toolbar,
+            View.inflate(testContext, R.layout.mozac_browser_toolbar_edittoolbar, null),
         )
         return Pair(toolbar, displayToolbar)
     }
@@ -104,8 +105,8 @@ class EditToolbarTest {
                     System.currentTimeMillis(),
                     KeyEvent.ACTION_DOWN,
                     KeyEvent.KEYCODE_ENTER,
-                    0
-                )
+                    0,
+                ),
             )
 
             assertEquals(2, facts.size)
@@ -145,7 +146,7 @@ class EditToolbarTest {
             toolbar.edit.views.url.autocompleteResult = InlineAutocompleteEditText.AutocompleteResult(
                 text = "hello world",
                 source = "test-source",
-                totalItems = 100
+                totalItems = 100,
             )
 
             toolbar.edit.views.url.dispatchKeyEvent(
@@ -154,8 +155,8 @@ class EditToolbarTest {
                     System.currentTimeMillis(),
                     KeyEvent.ACTION_DOWN,
                     KeyEvent.KEYCODE_ENTER,
-                    0
-                )
+                    0,
+                ),
             )
 
             assertEquals(2, facts.size)

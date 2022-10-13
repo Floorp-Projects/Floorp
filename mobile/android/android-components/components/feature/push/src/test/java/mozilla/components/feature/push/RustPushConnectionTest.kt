@@ -26,10 +26,10 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
 @ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
@@ -76,9 +76,9 @@ class RustPushConnectionTest {
                 endpoint = "https://foo",
                 keys = KeyInfo(
                     auth = "auth",
-                    p256dh = "p256dh"
-                )
-            )
+                    p256dh = "p256dh",
+                ),
+            ),
         )
 
         connection.api = api
@@ -248,6 +248,6 @@ class RustPushConnectionTest {
         "push-test",
         "push.mozilla.com",
         Protocol.HTTPS,
-        ServiceType.FCM
+        ServiceType.FCM,
     )
 }

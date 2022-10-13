@@ -29,7 +29,7 @@ internal interface RecentlyClosedTabDao {
         SELECT *
         FROM recently_closed_tabs
         ORDER BY created_at DESC
-    """
+    """,
     )
     fun getTabs(): Flow<List<RecentlyClosedTabEntity>>
 
@@ -37,7 +37,7 @@ internal interface RecentlyClosedTabDao {
     @Query(
         """
         DELETE FROM recently_closed_tabs
-    """
+    """,
     )
     fun removeAllTabs()
 }

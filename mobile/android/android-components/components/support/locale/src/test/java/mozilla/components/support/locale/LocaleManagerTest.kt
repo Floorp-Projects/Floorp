@@ -67,7 +67,7 @@ class LocaleManagerTest {
         LocaleManager.setNewLocale(
             testContext,
             localeUseCases,
-            "fr".toLocale()
+            "fr".toLocale(),
         )
 
         val storedLocale = Locale.getDefault()
@@ -111,7 +111,7 @@ class LocaleManagerTest {
         LocaleManager.setNewLocale(
             testContext,
             localeUseCases,
-            "fr".toLocale()
+            "fr".toLocale(),
         )
 
         verify(localeUseCases, times(1)).notifyLocaleChanged
@@ -134,7 +134,7 @@ class LocaleManagerTest {
         val locale1 = "fr".toLocale()
         LocaleManager.setNewLocale(
             testContext,
-            locale = locale1
+            locale = locale1,
         )
 
         verify(localeUseCases, never()).notifyLocaleChanged
@@ -144,7 +144,7 @@ class LocaleManagerTest {
         LocaleManager.setNewLocale(
             testContext,
             localeUseCases,
-            locale2
+            locale2,
         )
 
         verify(localeUseCases, times(1)).notifyLocaleChanged

@@ -27,7 +27,7 @@ internal class Evaluator(
     internal val context: JexlContext = JexlContext(),
     internal val grammar: Grammar = Grammar(),
     internal val transforms: Map<String, Transform> = emptyMap(),
-    internal val relativeContext: JexlObject = JexlObject()
+    internal val relativeContext: JexlObject = JexlObject(),
 ) {
 
     @Throws(EvaluatorException::class)
@@ -46,7 +46,7 @@ internal class Evaluator(
 
     fun filterRelative(subject: JexlValue, expression: AstNode): JexlValue {
         val filterSubject = subject as? JexlArray ?: JexlArray(
-            subject
+            subject,
         )
 
         val values = filterSubject.value.filter { element ->

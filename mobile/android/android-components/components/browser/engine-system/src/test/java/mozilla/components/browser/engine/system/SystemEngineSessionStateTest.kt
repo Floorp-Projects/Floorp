@@ -61,14 +61,14 @@ class SystemEngineSessionStateTest {
                 putFloat("k5", 1.0f)
                 putFloat("k6", 42.25f)
                 putDouble("k7", 23.23)
-            }
+            },
         )
 
         val outputStream = ByteArrayOutputStream()
         state.writeTo(JsonWriter(outputStream.writer()))
 
         val bundle = SystemEngineSessionState.fromJSON(
-            JSONObject(outputStream.toString())
+            JSONObject(outputStream.toString()),
         ).bundle
 
         assertNotNull(bundle!!)
@@ -105,7 +105,7 @@ class SystemEngineSessionStateTest {
                 putFloat("k5", 1.0f)
                 putFloat("k6", 42.25f)
                 putDouble("k7", 23.23)
-            }
+            },
         )
 
         val outputStream = ByteArrayOutputStream()

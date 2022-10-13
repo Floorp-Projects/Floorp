@@ -41,7 +41,7 @@ class HighlightViewTest {
         assertNotNull(view.drawable)
         assertEquals(
             view.contentDescription,
-            testContext.getString(R.string.mozac_browser_toolbar_content_description_autoplay_blocked)
+            testContext.getString(R.string.mozac_browser_toolbar_content_description_autoplay_blocked),
         )
 
         view.state = NONE
@@ -58,8 +58,8 @@ class HighlightViewTest {
 
         view.setIcon(
             testContext.getDrawable(
-                TrackingProtectionIconView.DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED
-            )!!
+                TrackingProtectionIconView.DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED,
+            )!!,
         )
 
         verify(view).updateIcon()

@@ -43,8 +43,8 @@ class SendCrashReportService : Service() {
                 .setContentTitle(
                     getString(
                         R.string.mozac_lib_send_crash_report_in_progress,
-                        crashReporter.promptConfiguration.organizationName
-                    )
+                        crashReporter.promptConfiguration.organizationName,
+                    ),
                 )
                 .setSmallIcon(R.drawable.mozac_lib_crash_notification)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -76,7 +76,7 @@ class SendCrashReportService : Service() {
             context: Context,
             crash: Crash,
             notificationTag: String? = null,
-            notificationId: Int = 0
+            notificationId: Int = 0,
         ): Intent {
             val intent = Intent(context, SendCrashReportService::class.java)
 

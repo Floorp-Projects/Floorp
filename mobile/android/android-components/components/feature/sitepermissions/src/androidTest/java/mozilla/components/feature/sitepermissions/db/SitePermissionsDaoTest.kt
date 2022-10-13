@@ -80,8 +80,8 @@ class SitePermissionsDaoTest {
             siteFromDb.copy(
                 camera = ALLOWED,
                 autoplayInaudible = AutoplayStatus.ALLOWED,
-                autoplayAudible = AutoplayStatus.ALLOWED
-            ).toSitePermissionsEntity()
+                autoplayAudible = AutoplayStatus.ALLOWED,
+            ).toSitePermissionsEntity(),
         )
 
         siteFromDb = dao.getSitePermissionsBy(origin)!!.toSitePermission()
@@ -102,10 +102,10 @@ class SitePermissionsDaoTest {
         val sitePermissions = SitePermissions(
             origin = origin,
             camera = BLOCKED,
-            savedAt = System.currentTimeMillis()
+            savedAt = System.currentTimeMillis(),
         )
         dao.insert(
-            sitePermissions.toSitePermissionsEntity()
+            sitePermissions.toSitePermissionsEntity(),
         )
         return origin
     }

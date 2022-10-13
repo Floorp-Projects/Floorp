@@ -27,7 +27,7 @@ internal class LoginPicker(
     private val store: BrowserStore,
     private val loginSelectBar: SelectablePromptView<Login>,
     private val manageLoginsCallback: () -> Unit = {},
-    private var sessionId: String? = null
+    private var sessionId: String? = null,
 ) : SelectablePromptView.Listener<Login> {
 
     init {

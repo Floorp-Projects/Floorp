@@ -21,7 +21,7 @@ import mozilla.components.concept.menu.candidate.MenuIcon
  */
 internal abstract class MenuIconViewHolder<T : MenuIcon>(
     protected val parent: ConstraintLayout,
-    protected val inflater: LayoutInflater
+    protected val inflater: LayoutInflater,
 ) {
 
     @Suppress("Unchecked_Cast")

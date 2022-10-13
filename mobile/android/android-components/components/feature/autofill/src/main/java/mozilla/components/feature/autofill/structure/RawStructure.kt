@@ -25,7 +25,7 @@ internal fun AssistStructure.toRawStructure(): RawStructure {
 
 @RequiresApi(Build.VERSION_CODES.O)
 private class AssistStructureWrapper(
-    private val actual: AssistStructure
+    private val actual: AssistStructure,
 ) : RawStructure {
     override val activityPackageName: String
         get() = actual.activityComponent.packageName

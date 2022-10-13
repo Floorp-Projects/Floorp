@@ -49,6 +49,7 @@ internal fun ImageView.setTintResource(@ColorRes tintColorResource: Int) {
         imageTintList = ContextCompat.getColorStateList(context, tintColorResource)
     }
 }
+
 /**
  * A customizable toolbar for browsers.
  *
@@ -72,9 +73,10 @@ internal fun ImageView.setTintResource(@ColorRes tintColorResource: Int) {
 class BrowserToolbar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : ViewGroup(context, attrs, defStyleAttr), Toolbar {
     private var state: State = State.DISPLAY
+
     @VisibleForTesting
     internal var searchTerms: String = ""
     private var urlCommitListener: ((String) -> Boolean)? = null
@@ -88,10 +90,11 @@ class BrowserToolbar @JvmOverloads constructor(
         LayoutInflater.from(context).inflate(
             R.layout.mozac_browser_toolbar_displaytoolbar,
             this,
-            false
-        )
+            false,
+        ),
     )
-        @VisibleForTesting(otherwise = PRIVATE) internal set
+        @VisibleForTesting(otherwise = PRIVATE)
+        internal set
 
     /**
      * Toolbar in "edit mode".
@@ -102,10 +105,11 @@ class BrowserToolbar @JvmOverloads constructor(
         LayoutInflater.from(context).inflate(
             R.layout.mozac_browser_toolbar_edittoolbar,
             this,
-            false
-        )
+            false,
+        ),
     )
-        @VisibleForTesting(otherwise = PRIVATE) internal set
+        @VisibleForTesting(otherwise = PRIVATE)
+        internal set
 
     override var title: String
         get() = display.title
@@ -135,11 +139,11 @@ class BrowserToolbar @JvmOverloads constructor(
     override var siteTrackingProtection: Toolbar.SiteTrackingProtection =
         Toolbar.SiteTrackingProtection.OFF_GLOBALLY
         set(value) {
-                if (field != value) {
-                    display.setTrackingProtectionState(value)
-                    field = value
-                }
+            if (field != value) {
+                display.setTrackingProtectionState(value)
+                field = value
             }
+        }
 
     override var private: Boolean
         get() = edit.private
@@ -179,7 +183,7 @@ class BrowserToolbar @JvmOverloads constructor(
                 0 + paddingLeft,
                 0 + paddingTop,
                 paddingLeft + child.measuredWidth,
-                paddingTop + child.measuredHeight
+                paddingTop + child.measuredHeight,
             )
         }
     }
@@ -410,7 +414,7 @@ class BrowserToolbar @JvmOverloads constructor(
 
     private enum class State {
         DISPLAY,
-        EDIT
+        EDIT,
     }
 
     /**
@@ -436,7 +440,7 @@ class BrowserToolbar @JvmOverloads constructor(
         val padding: Padding = DEFAULT_PADDING,
         @ColorRes iconTintColorResource: Int = NO_ID,
         longClickListener: (() -> Unit)? = null,
-        listener: () -> Unit
+        listener: () -> Unit,
     ) : Toolbar.ActionButton(
         imageDrawable,
         contentDescription,
@@ -446,7 +450,7 @@ class BrowserToolbar @JvmOverloads constructor(
         padding,
         iconTintColorResource,
         longClickListener,
-        listener
+        listener,
     )
 
     /**
@@ -472,7 +476,7 @@ class BrowserToolbar @JvmOverloads constructor(
         selected: Boolean = false,
         @DrawableRes background: Int = 0,
         val padding: Padding = DEFAULT_PADDING,
-        listener: (Boolean) -> Unit
+        listener: (Boolean) -> Unit,
     ) : Toolbar.ActionToggleButton(
         image,
         imageSelected,
@@ -482,7 +486,7 @@ class BrowserToolbar @JvmOverloads constructor(
         selected,
         background,
         padding,
-        listener
+        listener,
     )
 
     /**
@@ -514,7 +518,7 @@ class BrowserToolbar @JvmOverloads constructor(
         val disableInSecondaryState: Boolean = true,
         background: Int = 0,
         longClickListener: (() -> Unit)? = null,
-        listener: () -> Unit
+        listener: () -> Unit,
     ) : BrowserToolbar.Button(
         primaryImage,
         primaryContentDescription,
@@ -558,7 +562,7 @@ class AsyncFilterListener(
     private val urlView: AutocompleteView,
     override val coroutineContext: CoroutineContext,
     private val filter: suspend (String, AutocompleteDelegate) -> Unit,
-    private val uiContext: CoroutineContext = Dispatchers.Main
+    private val uiContext: CoroutineContext = Dispatchers.Main,
 ) : OnFilterListener, CoroutineScope {
     override fun invoke(text: String) {
         // We got a new input, so whatever past autocomplete queries we still have running are
@@ -579,7 +583,7 @@ private class AsyncAutocompleteDelegate(
     private val urlView: AutocompleteView,
     private val parentScope: CoroutineScope,
     override val coroutineContext: CoroutineContext,
-    private val logger: Logger = Logger("AsyncAutocompleteDelegate")
+    private val logger: Logger = Logger("AsyncAutocompleteDelegate"),
 ) : AutocompleteDelegate, CoroutineScope {
     override fun applyAutocompleteResult(result: AutocompleteResult, onApplied: () -> Unit) {
         // Bail out if we were cancelled already.
@@ -596,8 +600,8 @@ private class AsyncAutocompleteDelegate(
                     InlineAutocompleteEditText.AutocompleteResult(
                         text = result.text,
                         source = result.source,
-                        totalItems = result.totalItems
-                    )
+                        totalItems = result.totalItems,
+                    ),
                 )
                 onApplied()
             } else {

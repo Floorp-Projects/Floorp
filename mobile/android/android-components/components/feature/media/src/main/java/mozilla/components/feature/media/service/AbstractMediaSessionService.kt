@@ -38,6 +38,7 @@ abstract class AbstractMediaSessionService : Service() {
 
     @VisibleForTesting
     internal var binder: MediaServiceBinder? = null
+
     @VisibleForTesting
     internal var delegate: MediaSessionServiceDelegate? = null
 
@@ -47,7 +48,7 @@ abstract class AbstractMediaSessionService : Service() {
         delegate = MediaSessionServiceDelegate(
             context = this,
             service = this,
-            store = store
+            store = store,
         ).also {
             binder = MediaServiceBinder(it)
         }

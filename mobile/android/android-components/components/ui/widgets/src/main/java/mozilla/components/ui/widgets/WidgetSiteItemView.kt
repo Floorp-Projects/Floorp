@@ -26,7 +26,7 @@ import androidx.core.view.isVisible
 class WidgetSiteItemView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
 
     private val labelView: TextView by lazy { findViewById<TextView>(R.id.label) }
@@ -72,7 +72,7 @@ class WidgetSiteItemView @JvmOverloads constructor(
     fun setSecondaryButton(
         icon: Drawable?,
         contentDescription: CharSequence,
-        onClickListener: (View) -> Unit
+        onClickListener: (View) -> Unit,
     ) {
         secondaryButton.isVisible = true
         secondaryButton.setImageDrawable(icon)
@@ -90,11 +90,11 @@ class WidgetSiteItemView @JvmOverloads constructor(
     fun setSecondaryButton(
         @DrawableRes icon: Int,
         @StringRes contentDescription: Int,
-        onClickListener: (View) -> Unit
+        onClickListener: (View) -> Unit,
     ) = setSecondaryButton(
         icon = getDrawable(context, icon),
         contentDescription = context.getString(contentDescription),
-        onClickListener = onClickListener
+        onClickListener = onClickListener,
     )
 
     /**

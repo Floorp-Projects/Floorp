@@ -36,7 +36,7 @@ class BrowserMenuPositioningTest {
             fitsDown = true, // availableHeightToBottom(470) is bigger than containerHeight(70)
             availableHeightToTop = 0,
             availableHeightToBottom = 100, // mocked by us above
-            containerViewHeight = 70 // mocked by us above
+            containerViewHeight = 70, // mocked by us above
         )
         Assert.assertEquals(expected, result)
     }
@@ -49,46 +49,52 @@ class BrowserMenuPositioningTest {
         var result = inferMenuPosition(view, data)
         Assert.assertEquals(
             BrowserMenuPlacement.AnchoredToTop.Dropdown(view),
-            result.inferredMenuPlacement
+            result.inferredMenuPlacement,
         )
 
         data = MenuPositioningData(askedOrientation = BrowserMenu.Orientation.UP, fitsUp = true)
         result = inferMenuPosition(view, data)
         Assert.assertEquals(
             BrowserMenuPlacement.AnchoredToBottom.Dropdown(view),
-            result.inferredMenuPlacement
+            result.inferredMenuPlacement,
         )
 
         data = MenuPositioningData(
-            fitsUp = false, fitsDown = false, availableHeightToTop = 1, availableHeightToBottom = 2
+            fitsUp = false,
+            fitsDown = false,
+            availableHeightToTop = 1,
+            availableHeightToBottom = 2,
         )
         result = inferMenuPosition(view, data)
         Assert.assertEquals(
             BrowserMenuPlacement.AnchoredToTop.ManualAnchoring(view),
-            result.inferredMenuPlacement
+            result.inferredMenuPlacement,
         )
 
         data = MenuPositioningData(
-            fitsUp = false, fitsDown = false, availableHeightToTop = 1, availableHeightToBottom = 0
+            fitsUp = false,
+            fitsDown = false,
+            availableHeightToTop = 1,
+            availableHeightToBottom = 0,
         )
         result = inferMenuPosition(view, data)
         Assert.assertEquals(
             BrowserMenuPlacement.AnchoredToBottom.ManualAnchoring(view),
-            result.inferredMenuPlacement
+            result.inferredMenuPlacement,
         )
 
         data = MenuPositioningData(askedOrientation = BrowserMenu.Orientation.DOWN, fitsUp = true)
         result = inferMenuPosition(view, data)
         Assert.assertEquals(
             BrowserMenuPlacement.AnchoredToBottom.Dropdown(view),
-            result.inferredMenuPlacement
+            result.inferredMenuPlacement,
         )
 
         data = MenuPositioningData(askedOrientation = BrowserMenu.Orientation.UP, fitsDown = true)
         result = inferMenuPosition(view, data)
         Assert.assertEquals(
             BrowserMenuPlacement.AnchoredToTop.Dropdown(view),
-            result.inferredMenuPlacement
+            result.inferredMenuPlacement,
         )
     }
 

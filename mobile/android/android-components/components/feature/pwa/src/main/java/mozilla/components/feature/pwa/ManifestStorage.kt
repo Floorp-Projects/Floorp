@@ -53,7 +53,7 @@ class ManifestStorage(context: Context, private val activeThresholdMs: Long = AC
      */
     suspend fun hasRecentManifest(
         url: String,
-        @VisibleForTesting currentTimeMs: Long = System.currentTimeMillis()
+        @VisibleForTesting currentTimeMs: Long = System.currentTimeMillis(),
     ): Boolean = withContext(IO) {
         manifestDao.value.hasRecentManifest(url, thresholdMs = currentTimeMs - activeThresholdMs) > 0
     }
@@ -66,7 +66,7 @@ class ManifestStorage(context: Context, private val activeThresholdMs: Long = AC
      */
     suspend fun recentManifestsCount(
         activeThresholdMs: Long = this.activeThresholdMs,
-        @VisibleForTesting currentTimeMs: Long = System.currentTimeMillis()
+        @VisibleForTesting currentTimeMs: Long = System.currentTimeMillis(),
     ): Int = withContext(IO) {
         manifestDao.value.recentManifestsCount(thresholdMs = currentTimeMs - activeThresholdMs)
     }

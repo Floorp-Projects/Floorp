@@ -33,7 +33,7 @@ class FactCollectDetector : Detector(), SourceCodeScanner {
 
         private val IMPLEMENTATION = Implementation(
             FactCollectDetector::class.java,
-            Scope.JAVA_FILE_SCOPE
+            Scope.JAVA_FILE_SCOPE,
         )
 
         val ISSUE_FACT_COLLECT_CALLED: Issue = Issue
@@ -47,7 +47,7 @@ class FactCollectDetector : Detector(), SourceCodeScanner {
                 category = Category.CORRECTNESS,
                 priority = 6,
                 severity = Severity.ERROR,
-                implementation = IMPLEMENTATION
+                implementation = IMPLEMENTATION,
             )
     }
 
@@ -58,7 +58,7 @@ class FactCollectDetector : Detector(), SourceCodeScanner {
     override fun visitConstructor(
         context: JavaContext,
         node: UCallExpression,
-        constructor: PsiMethod
+        constructor: PsiMethod,
     ) {
         var isCollectCalled = false
         var escapes = false
@@ -95,9 +95,9 @@ class FactCollectDetector : Detector(), SourceCodeScanner {
             location = context.getCallLocation(
                 call = node,
                 includeReceiver = true,
-                includeArguments = false
+                includeArguments = false,
             ),
-            message = "Fact created but not shown: did you forget to call `collect()` ?"
+            message = "Fact created but not shown: did you forget to call `collect()` ?",
         )
     }
 }

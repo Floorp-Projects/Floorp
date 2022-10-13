@@ -20,9 +20,7 @@ open class GitHubPlugin : Plugin<Project> {
     }
 
     override fun apply(project: Project) {
-
         project.tasks.register("openPR") {
-
             doLast {
                 init(project)
                 val title = project.property("title").toString()
@@ -38,7 +36,6 @@ open class GitHubPlugin : Plugin<Project> {
         }
 
         project.tasks.register("openIssue") {
-
             doLast {
                 init(project)
                 val title = project.property("title").toString()
@@ -58,7 +55,7 @@ open class GitHubPlugin : Plugin<Project> {
         baseBranch: String,
         owner: String,
         repoName: String,
-        user: String
+        user: String,
     ) {
         val bodyJson = (
             "{\n" +

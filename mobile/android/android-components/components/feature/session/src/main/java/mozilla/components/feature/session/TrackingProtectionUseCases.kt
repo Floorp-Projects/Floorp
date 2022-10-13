@@ -22,7 +22,7 @@ import java.lang.Exception
  */
 class TrackingProtectionUseCases(
     val store: BrowserStore,
-    val engine: Engine
+    val engine: Engine,
 ) {
 
     /**
@@ -30,7 +30,7 @@ class TrackingProtectionUseCases(
      */
     class AddExceptionUseCase internal constructor(
         private val store: BrowserStore,
-        private val engine: Engine
+        private val engine: Engine,
     ) {
         private val logger = Logger("TrackingProtectionUseCases")
 
@@ -54,7 +54,7 @@ class TrackingProtectionUseCases(
      */
     class RemoveExceptionUseCase internal constructor(
         private val store: BrowserStore,
-        private val engine: Engine
+        private val engine: Engine,
     ) {
         private val logger = Logger("TrackingProtectionUseCases")
 
@@ -92,7 +92,7 @@ class TrackingProtectionUseCases(
      */
     class RemoveAllExceptionsUseCase internal constructor(
         private val store: BrowserStore,
-        private val engine: Engine
+        private val engine: Engine,
     ) {
         /**
          * Removes all domains from the exception list.
@@ -111,7 +111,7 @@ class TrackingProtectionUseCases(
      */
     class ContainsExceptionUseCase internal constructor(
         private val store: BrowserStore,
-        private val engine: Engine
+        private val engine: Engine,
     ) {
         /**
          * Indicates if a given tab is in the exception list.
@@ -121,7 +121,7 @@ class TrackingProtectionUseCases(
          */
         operator fun invoke(
             tabId: String,
-            onResult: (Boolean) -> Unit
+            onResult: (Boolean) -> Unit,
         ) {
             val engineSession = store.state.findTabOrCustomTabOrSelectedTab(tabId)?.engineState?.engineSession
                 ?: return onResult(false)
@@ -134,7 +134,7 @@ class TrackingProtectionUseCases(
      * Use case for fetching all exceptions in the exception list.
      */
     class FetchExceptionsUseCase internal constructor(
-        private val engine: Engine
+        private val engine: Engine,
     ) {
         /**
          * Fetch all domains that will be ignored for tracking protection.
@@ -152,7 +152,7 @@ class TrackingProtectionUseCases(
      */
     class FetchTrackingLogUserCase internal constructor(
         private val store: BrowserStore,
-        private val engine: Engine
+        private val engine: Engine,
     ) {
         /**
          * Fetch all the tracking protection logged information of a given tab.
@@ -164,7 +164,7 @@ class TrackingProtectionUseCases(
         operator fun invoke(
             tabId: String,
             onSuccess: (List<TrackerLog>) -> Unit,
-            onError: (Throwable) -> Unit
+            onError: (Throwable) -> Unit,
         ) {
             val engineSession = store.state.findTabOrCustomTabOrSelectedTab(tabId)?.engineState?.engineSession
                 ?: return onError(Exception("The engine session should not be null"))

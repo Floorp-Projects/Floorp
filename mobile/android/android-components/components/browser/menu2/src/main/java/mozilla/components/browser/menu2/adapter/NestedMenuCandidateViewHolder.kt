@@ -20,7 +20,7 @@ internal class NestedMenuCandidateViewHolder(
     itemView: View,
     inflater: LayoutInflater,
     dismiss: () -> Unit,
-    private val reopenMenu: (NestedMenuCandidate) -> Unit
+    private val reopenMenu: (NestedMenuCandidate) -> Unit,
 ) : MenuCandidateViewHolder<NestedMenuCandidate>(itemView, inflater), View.OnClickListener {
 
     private val layout = itemView as ConstraintLayout

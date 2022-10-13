@@ -56,7 +56,7 @@ private const val AUTOCOMPLETE_QUERY_THREADS = 3
 class EditToolbar internal constructor(
     context: Context,
     private val toolbar: BrowserToolbar,
-    internal val rootView: View
+    internal val rootView: View,
 ) {
     private val logger = Logger("EditToolbar")
 
@@ -76,13 +76,13 @@ class EditToolbar internal constructor(
         @ColorInt val hint: Int,
         @ColorInt val text: Int,
         @ColorInt val suggestionBackground: Int,
-        @ColorInt val suggestionForeground: Int?
+        @ColorInt val suggestionForeground: Int?,
     )
 
     private val autocompleteDispatcher = SupervisorJob() +
         Executors.newFixedThreadPool(
             AUTOCOMPLETE_QUERY_THREADS,
-            NamedThreadFactory("EditToolbar")
+            NamedThreadFactory("EditToolbar"),
         ).asCoroutineDispatcher() +
         CoroutineExceptionHandler { _, throwable ->
             logger.error("Error while processing autocomplete input", throwable)
@@ -100,7 +100,7 @@ class EditToolbar internal constructor(
             }
         },
         url = rootView.findViewById<InlineAutocompleteEditText>(
-            R.id.mozac_browser_toolbar_edit_url_view
+            R.id.mozac_browser_toolbar_edit_url_view,
         ).apply {
             setOnCommitListener {
                 // We emit the fact before notifying the listener because otherwise the listener may cause a focus
@@ -116,7 +116,7 @@ class EditToolbar internal constructor(
 
             setUrlGoneMargin(
                 ConstraintSet.END,
-                context.resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_url_gone_margin_end)
+                context.resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_url_gone_margin_end),
             )
 
             setOnDispatchKeyEventPreImeListener { event ->
@@ -125,7 +125,7 @@ class EditToolbar internal constructor(
                 }
                 false
             }
-        }
+        },
     )
 
     /**
@@ -137,7 +137,7 @@ class EditToolbar internal constructor(
         hint = views.url.currentHintTextColor,
         text = views.url.currentTextColor,
         suggestionBackground = views.url.autoCompleteBackgroundColor,
-        suggestionForeground = views.url.autoCompleteForegroundColor
+        suggestionForeground = views.url.autoCompleteForegroundColor,
     )
         set(value) {
             field = value
@@ -231,7 +231,7 @@ class EditToolbar internal constructor(
 
     internal fun setAutocompleteListener(filter: suspend (String, AutocompleteDelegate) -> Unit) {
         views.url.setOnFilterListener(
-            AsyncFilterListener(views.url, autocompleteDispatcher, filter)
+            AsyncFilterListener(views.url, autocompleteDispatcher, filter),
         )
     }
 
@@ -307,7 +307,7 @@ class EditToolbar internal constructor(
     private fun setUrlGoneMargin(anchor: Int, dimen: Int) {
         val set = ConstraintSet()
         val container = rootView.findViewById<ConstraintLayout>(
-            R.id.mozac_browser_toolbar_container
+            R.id.mozac_browser_toolbar_container,
         )
         set.clone(container)
         set.setGoneMargin(R.id.mozac_browser_toolbar_edit_url_view, anchor, dimen)
@@ -328,8 +328,8 @@ class EditToolbar internal constructor(
             setUrlGoneMargin(
                 ConstraintSet.END,
                 rootView.resources.getDimensionPixelSize(
-                    R.dimen.mozac_browser_toolbar_url_gone_margin_end
-                )
+                    R.dimen.mozac_browser_toolbar_url_gone_margin_end,
+                ),
             )
         }
         editListener?.onTextChanged(text)
@@ -345,5 +345,5 @@ internal class EditToolbarViews(
     val editActionsStart: ActionContainer,
     val editActionsEnd: ActionContainer,
     val clear: ImageView,
-    val url: InlineAutocompleteEditText
+    val url: InlineAutocompleteEditText,
 )

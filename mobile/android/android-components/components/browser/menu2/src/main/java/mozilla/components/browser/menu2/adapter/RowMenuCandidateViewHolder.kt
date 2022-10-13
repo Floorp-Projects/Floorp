@@ -17,7 +17,7 @@ import mozilla.components.concept.menu.candidate.RowMenuCandidate
 internal class RowMenuCandidateViewHolder(
     itemView: View,
     inflater: LayoutInflater,
-    private val dismiss: () -> Unit
+    private val dismiss: () -> Unit,
 ) : MenuCandidateViewHolder<RowMenuCandidate>(itemView, inflater) {
 
     private val layout = itemView as LinearLayout
@@ -35,7 +35,7 @@ internal class RowMenuCandidateViewHolder(
                 val button = inflater.inflate(
                     SmallMenuCandidateViewHolder.layoutResource,
                     layout,
-                    false
+                    false,
                 )
                 layout.addView(button)
                 SmallMenuCandidateViewHolder(button, dismiss)

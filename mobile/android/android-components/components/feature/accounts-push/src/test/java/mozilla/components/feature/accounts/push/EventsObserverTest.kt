@@ -38,7 +38,7 @@ class EventsObserverTest {
         val events = listOf(
             AccountEvent.ProfileUpdated,
             AccountEvent.DeviceCommandIncoming(command = DeviceCommandIncoming.TabReceived(mock(), mock())),
-            AccountEvent.DeviceCommandIncoming(command = DeviceCommandIncoming.TabReceived(mock(), mock()))
+            AccountEvent.DeviceCommandIncoming(command = DeviceCommandIncoming.TabReceived(mock(), mock())),
         )
 
         observer.onEvents(events)

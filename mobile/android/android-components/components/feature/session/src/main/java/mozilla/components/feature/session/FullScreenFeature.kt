@@ -24,7 +24,7 @@ open class FullScreenFeature(
     private val sessionUseCases: SessionUseCases,
     private val tabId: String? = null,
     private val viewportFitChanged: (Int) -> Unit = {},
-    private val fullScreenChanged: (Boolean) -> Unit
+    private val fullScreenChanged: (Boolean) -> Unit,
 ) : LifecycleAwareFeature, UserInteractionHandler {
     private var scope: CoroutineScope? = null
     private var observation: Observation = createDefaultObservation()
@@ -80,7 +80,7 @@ open class FullScreenFeature(
 private data class Observation(
     val tabId: String?,
     val inFullScreen: Boolean,
-    val layoutInDisplayCutoutMode: Int
+    val layoutInDisplayCutoutMode: Int,
 )
 
 private fun SessionState?.toObservation(): Observation {
@@ -94,5 +94,5 @@ private fun SessionState?.toObservation(): Observation {
 private fun createDefaultObservation() = Observation(
     tabId = null,
     inFullScreen = false,
-    layoutInDisplayCutoutMode = 0
+    layoutInDisplayCutoutMode = 0,
 )

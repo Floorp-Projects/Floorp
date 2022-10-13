@@ -16,9 +16,8 @@ fun mockNativeWebExtension(
     location: String = "uri",
     flags: Int = 0,
     isBuiltIn: Boolean = false,
-    metaData: WebExtension.MetaData? = null
+    metaData: WebExtension.MetaData? = null,
 ): WebExtension {
-
     val extension: WebExtension = mock()
     ReflectionUtils.setField(extension, "id", id)
     ReflectionUtils.setField(extension, "location", location)
@@ -49,9 +48,8 @@ fun mockNativeWebExtensionMetaData(
     baseUrl: String = "",
     allowedInPrivateBrowsing: Boolean = false,
     enabled: Boolean = false,
-    temporary: Boolean = false
+    temporary: Boolean = false,
 ): WebExtension.MetaData {
-
     val metadata: WebExtension.MetaData = mock()
     ReflectionUtils.setField(metadata, "icon", icon)
     ReflectionUtils.setField(metadata, "permissions", permissions)
@@ -77,9 +75,8 @@ fun mockNativeWebExtensionMetaData(
 
 fun mockCreateTabDetails(
     active: Boolean,
-    url: String
+    url: String,
 ): WebExtension.CreateTabDetails {
-
     val createTabDetails: WebExtension.CreateTabDetails = mock()
     ReflectionUtils.setField(createTabDetails, "active", active)
     ReflectionUtils.setField(createTabDetails, "url", url)
@@ -87,9 +84,8 @@ fun mockCreateTabDetails(
 }
 
 fun mockUpdateTabDetails(
-    active: Boolean
+    active: Boolean,
 ): WebExtension.UpdateTabDetails {
-
     val updateTabDetails: WebExtension.UpdateTabDetails = mock()
     ReflectionUtils.setField(updateTabDetails, "active", active)
     return updateTabDetails

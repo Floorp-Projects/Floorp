@@ -32,13 +32,13 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 class AppLinksFeatureTest {
@@ -94,8 +94,8 @@ class AppLinksFeatureTest {
                 fragmentManager = mockFragmentManager,
                 useCases = mockUseCases,
                 dialog = mockDialog,
-                loadUrlUseCase = mockLoadUrlUseCase
-            )
+                loadUrlUseCase = mockLoadUrlUseCase,
+            ),
         ).also {
             it.start()
         }

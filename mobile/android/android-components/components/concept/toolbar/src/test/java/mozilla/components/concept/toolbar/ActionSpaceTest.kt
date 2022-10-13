@@ -28,7 +28,8 @@ class ActionSpaceTest {
         assertEquals(view.paddingBottom, 0)
 
         space = Toolbar.ActionSpace(
-            0, padding = Padding(16, 20, 24, 28)
+            0,
+            padding = Padding(16, 20, 24, 28),
         )
 
         view = space.createView(linearLayout)

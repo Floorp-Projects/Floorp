@@ -19,7 +19,7 @@ import mozilla.components.support.utils.creditCardIssuerNetwork
  */
 class CreditCardItemViewHolder(
     view: View,
-    private val onCreditCardSelected: (CreditCardEntry) -> Unit
+    private val onCreditCardSelected: (CreditCardEntry) -> Unit,
 ) : RecyclerView.ViewHolder(view) {
 
     /**

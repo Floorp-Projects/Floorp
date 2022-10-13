@@ -28,7 +28,7 @@ class SendCrashTelemetryService : Service() {
             val channel = CrashNotification.ensureChannelExists(this)
             val notification = NotificationCompat.Builder(this, channel)
                 .setContentTitle(
-                    getString(R.string.mozac_lib_gathering_crash_telemetry_in_progress)
+                    getString(R.string.mozac_lib_gathering_crash_telemetry_in_progress),
                 )
                 .setSmallIcon(R.drawable.mozac_lib_crash_notification)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)

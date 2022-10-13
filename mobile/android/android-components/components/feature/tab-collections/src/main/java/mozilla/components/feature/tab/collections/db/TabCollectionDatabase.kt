@@ -27,7 +27,7 @@ internal abstract class TabCollectionDatabase : RoomDatabase() {
             return Room.databaseBuilder(
                 context,
                 TabCollectionDatabase::class.java,
-                "tab_collections"
+                "tab_collections",
             ).build().also {
                 instance = it
             }

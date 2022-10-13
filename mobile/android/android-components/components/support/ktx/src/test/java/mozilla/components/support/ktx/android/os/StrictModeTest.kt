@@ -21,7 +21,7 @@ class StrictModeTest {
             StrictMode.ThreadPolicy.Builder()
                 .detectDiskReads()
                 .penaltyLog()
-                .build()
+                .build(),
         )
         val policy = StrictMode.getThreadPolicy()
         assertEquals(
@@ -31,7 +31,7 @@ class StrictModeTest {
                 // setThreadPolicy is called a new ThreadPolicy object is created (although the mask is the same)
                 assertNotEquals(policy.toString(), StrictMode.getThreadPolicy().toString())
                 27
-            }
+            },
         )
         assertEquals(policy.toString(), StrictMode.getThreadPolicy().toString())
     }

@@ -26,13 +26,13 @@ import mozilla.components.concept.engine.search.SearchRequest
  */
 class BrowserStoreSearchAdapter(
     private val browserStore: BrowserStore,
-    private val tabId: String? = null
+    private val tabId: String? = null,
 ) : SearchAdapter {
 
     override fun sendSearch(isPrivate: Boolean, text: String) {
         val selectedTabId = tabId ?: browserStore.state.selectedTabId ?: return
         browserStore.dispatch(
-            ContentAction.UpdateSearchRequestAction(selectedTabId, SearchRequest(isPrivate, text))
+            ContentAction.UpdateSearchRequestAction(selectedTabId, SearchRequest(isPrivate, text)),
         )
     }
 

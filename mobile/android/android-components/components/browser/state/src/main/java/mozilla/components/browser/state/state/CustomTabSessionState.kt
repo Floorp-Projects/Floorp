@@ -31,7 +31,7 @@ data class CustomTabSessionState(
     override val mediaSessionState: MediaSessionState? = null,
     override val contextId: String? = null,
     override val source: SessionState.Source = SessionState.Source.Internal.CustomTab,
-    override val restored: Boolean = false
+    override val restored: Boolean = false,
 ) : SessionState {
 
     override fun createCopy(
@@ -41,7 +41,7 @@ data class CustomTabSessionState(
         engineState: EngineState,
         extensionState: Map<String, WebExtensionState>,
         mediaSessionState: MediaSessionState?,
-        contextId: String?
+        contextId: String?,
     ) = copy(
         id = id,
         content = content,
@@ -49,7 +49,7 @@ data class CustomTabSessionState(
         engineState = engineState,
         extensionState = extensionState,
         mediaSessionState = mediaSessionState,
-        contextId = contextId
+        contextId = contextId,
     )
 }
 
@@ -69,7 +69,7 @@ fun createCustomTab(
     source: SessionState.Source = SessionState.Source.Internal.CustomTab,
     private: Boolean = false,
     webAppManifest: WebAppManifest? = null,
-    initialLoadFlags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
+    initialLoadFlags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
 ): CustomTabSessionState {
     return CustomTabSessionState(
         id = id,
@@ -78,7 +78,7 @@ fun createCustomTab(
             url = url,
             title = title,
             private = private,
-            webAppManifest = webAppManifest
+            webAppManifest = webAppManifest,
         ),
         config = config,
         mediaSessionState = mediaSessionState,
@@ -86,7 +86,7 @@ fun createCustomTab(
         engineState = EngineState(
             engineSession = engineSession,
             crashed = crashed,
-            initialLoadFlags = initialLoadFlags
-        )
+            initialLoadFlags = initialLoadFlags,
+        ),
     )
 }

@@ -21,11 +21,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyFloat
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 class BrowserGestureDetectorTest {
@@ -46,7 +46,7 @@ class BrowserGestureDetectorTest {
         onHorizontalScroll = horizontalScrollListener,
         onScaleBegin = scaleBeginListener,
         onScale = scaleInProgressListener,
-        onScaleEnd = scaleEndListener
+        onScaleEnd = scaleEndListener,
     )
 
     @Test
@@ -93,7 +93,7 @@ class BrowserGestureDetectorTest {
         // Neither the scale detector, nor the scroll detector should be interested
         // in a one of a time ACTION_CANCEL MotionEvent
         val wasEventHandled = detector.handleTouchEvent(
-            TestUtils.getMotionEvent(ACTION_CANCEL, previousEvent = unhandledEvent)
+            TestUtils.getMotionEvent(ACTION_CANCEL, previousEvent = unhandledEvent),
         )
 
         assertFalse(wasEventHandled)

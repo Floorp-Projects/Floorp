@@ -28,7 +28,7 @@ class ToolbarPresenter(
     private val toolbar: Toolbar,
     private val store: BrowserStore,
     private val customTabId: String? = null,
-    urlRenderConfiguration: ToolbarFeature.UrlRenderConfiguration? = null
+    urlRenderConfiguration: ToolbarFeature.UrlRenderConfiguration? = null,
 ) {
     @VisibleForTesting
     internal var renderer = URLRenderer(toolbar, urlRenderConfiguration)

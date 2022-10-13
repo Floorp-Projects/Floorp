@@ -120,7 +120,7 @@ class ThumbnailDiskCache {
             getThumbnailCacheDirectory(context),
             THUMBNAIL_DISK_CACHE_VERSION,
             1,
-            MAXIMUM_CACHE_THUMBNAIL_DATA_BYTES
+            MAXIMUM_CACHE_THUMBNAIL_DATA_BYTES,
         ).also { thumbnailCache = it }
     }
 }

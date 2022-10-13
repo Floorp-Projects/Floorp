@@ -84,6 +84,6 @@ interface SyncedTabsView {
         /**
          * The Firefox Sync account requires user-intervention to re-authenticate the account.
          */
-        SYNC_NEEDS_REAUTHENTICATION
+        SYNC_NEEDS_REAUTHENTICATION,
     }
 }

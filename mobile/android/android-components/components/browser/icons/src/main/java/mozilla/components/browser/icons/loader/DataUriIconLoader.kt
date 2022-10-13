@@ -27,7 +27,7 @@ class DataUriIconLoader : IconLoader {
         return try {
             IconLoader.Result.BytesResult(
                 Base64.decode(resource.url.substring(offset), Base64.DEFAULT),
-                Icon.Source.INLINE
+                Icon.Source.INLINE,
             )
         } catch (e: Exception) {
             IconLoader.Result.NoResult

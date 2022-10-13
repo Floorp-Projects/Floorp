@@ -28,7 +28,7 @@ internal data class PinnedSiteEntity(
     var isDefault: Boolean = false,
 
     @ColumnInfo(name = "created_at")
-    var createdAt: Long = System.currentTimeMillis()
+    var createdAt: Long = System.currentTimeMillis(),
 ) {
     internal fun toTopSite(): TopSite =
         if (isDefault) {
@@ -36,14 +36,14 @@ internal data class PinnedSiteEntity(
                 id = id,
                 title = title,
                 url = url,
-                createdAt = createdAt
+                createdAt = createdAt,
             )
         } else {
             TopSite.Pinned(
                 id = id,
                 title = title,
                 url = url,
-                createdAt = createdAt
+                createdAt = createdAt,
             )
         }
 }
@@ -54,6 +54,6 @@ internal fun TopSite.toPinnedSite(): PinnedSiteEntity {
         title = title ?: "",
         url = url,
         isDefault = this is TopSite.Default,
-        createdAt = createdAt ?: 0
+        createdAt = createdAt ?: 0,
     )
 }

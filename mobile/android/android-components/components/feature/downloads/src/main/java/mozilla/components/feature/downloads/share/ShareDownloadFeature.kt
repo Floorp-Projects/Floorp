@@ -92,7 +92,7 @@ class ShareDownloadFeature(
     private val httpClient: Client,
     private val store: BrowserStore,
     private val tabId: String?,
-    cleanupCacheCoroutineDispatcher: CoroutineDispatcher = IO
+    cleanupCacheCoroutineDispatcher: CoroutineDispatcher = IO,
 ) : LifecycleAwareFeature {
     private val logger = Logger("ShareDownloadMiddleware")
 
@@ -134,7 +134,8 @@ class ShareDownloadFeature(
                 }
                 is IOException,
                 is RuntimeException,
-                is NullPointerException -> {
+                is NullPointerException,
+                -> {
                     logger.warn("Share failed: $throwable")
                 }
             }
@@ -146,7 +147,7 @@ class ShareDownloadFeature(
                 share(
                     contentType = internetResource.contentType,
                     filePath = download.canonicalPath,
-                    message = sanitizeLongUrls(internetResource.url)
+                    message = sanitizeLongUrls(internetResource.url),
                 )
             }
         }
@@ -182,7 +183,7 @@ class ShareDownloadFeature(
         filePath: String,
         contentType: String?,
         subject: String? = null,
-        message: String? = null
+        message: String? = null,
     ) = context.shareMedia(filePath, contentType, subject, message)
 
     @VisibleForTesting

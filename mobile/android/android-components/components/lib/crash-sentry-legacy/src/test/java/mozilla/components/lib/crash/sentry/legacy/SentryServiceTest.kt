@@ -27,13 +27,13 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import java.util.Date
 
 @RunWith(AndroidJUnit4::class)
@@ -61,8 +61,8 @@ class SentryServiceTest {
             clientFactory = factory,
             tags = mapOf(
                 "test" to "world",
-                "house" to "boat"
-            )
+                "house" to "boat",
+            ),
         ).report(uncaughtExceptionCrash)
 
         assertNotNull(usedDsn)
@@ -91,7 +91,7 @@ class SentryServiceTest {
         val service = SentryService(
             testContext,
             "https://not:real6@sentry.prod.example.net/405",
-            clientFactory = factory
+            clientFactory = factory,
         )
 
         val exception = RuntimeException("Hello World")
@@ -116,7 +116,7 @@ class SentryServiceTest {
         val service = SentryService(
             testContext,
             "https://not:real6@sentry.prod.example.net/405",
-            clientFactory = factory
+            clientFactory = factory,
         )
 
         val exception = RuntimeException("Hello World")
@@ -139,7 +139,7 @@ class SentryServiceTest {
             clientFactory = object : SentryClientFactory() {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client
             },
-            sendEventForNativeCrashes = true
+            sendEventForNativeCrashes = true,
         )
 
         service.report(Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf()))
@@ -161,7 +161,7 @@ class SentryServiceTest {
             clientFactory = object : SentryClientFactory() {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client
             },
-            sendEventForNativeCrashes = true
+            sendEventForNativeCrashes = true,
         )
 
         service.report(Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_MAIN, arrayListOf()))
@@ -187,7 +187,7 @@ class SentryServiceTest {
             clientFactory = object : SentryClientFactory() {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client
             },
-            sendEventForNativeCrashes = true
+            sendEventForNativeCrashes = true,
         )
 
         service.report(Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf()))
@@ -213,7 +213,7 @@ class SentryServiceTest {
             clientFactory = object : SentryClientFactory() {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client
             },
-            sendEventForNativeCrashes = true
+            sendEventForNativeCrashes = true,
         )
 
         service.report(Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD, arrayListOf()))
@@ -238,7 +238,7 @@ class SentryServiceTest {
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = object : SentryClientFactory() {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client
-            }
+            },
         )
 
         service.report(Crash.UncaughtExceptionCrash(0, RuntimeException("test"), arrayListOf()))
@@ -263,7 +263,7 @@ class SentryServiceTest {
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = object : SentryClientFactory() {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client
-            }
+            },
         )
 
         val throwable = RuntimeException("Test")
@@ -287,7 +287,7 @@ class SentryServiceTest {
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = object : SentryClientFactory() {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client
-            }
+            },
         )
 
         service.report(Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf()))
@@ -308,7 +308,7 @@ class SentryServiceTest {
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = object : SentryClientFactory() {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client
-            }
+            },
         ).report(uncaughtExceptionCrash)
 
         verify(client).addTag(eq("ac.version"), any())
@@ -334,7 +334,7 @@ class SentryServiceTest {
             clientFactory = object : SentryClientFactory() {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client
             },
-            environment = environmentString
+            environment = environmentString,
         ).report(uncaughtExceptionCrash)
         verify(client).sendEvent(any<EventBuilder>())
         verify(client).environment = eq(environmentString)
@@ -345,7 +345,7 @@ class SentryServiceTest {
             "https://fake:notreal@sentry.prod.example.net/405",
             clientFactory = object : SentryClientFactory() {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client
-            }
+            },
         ).report(uncaughtExceptionCrash)
         verify(client).environment = null
     }
@@ -370,15 +370,15 @@ class SentryServiceTest {
             testContext,
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = factory,
-            sendEventForNativeCrashes = true
+            sendEventForNativeCrashes = true,
         )
 
         val reporter = spy(
             CrashReporter(
                 context = testContext,
                 services = listOf(service),
-                shouldPrompt = CrashReporter.Prompt.NEVER
-            ).install(testContext)
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+            ).install(testContext),
         )
 
         `when`(client.context).thenReturn(clientContext)
@@ -389,8 +389,8 @@ class SentryServiceTest {
                 testData,
                 testCategory,
                 testLevel,
-                testType
-            )
+                testType,
+            ),
         )
         val crashBreadCrumbs = arrayListOf<Breadcrumb>()
         crashBreadCrumbs.addAll(reporter.crashBreadcrumbsCopy())
@@ -400,7 +400,7 @@ class SentryServiceTest {
             true,
             "extras.path",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
-            breadcrumbs = crashBreadCrumbs
+            breadcrumbs = crashBreadCrumbs,
         )
 
         service.report(nativeCrash)
@@ -427,15 +427,15 @@ class SentryServiceTest {
             testContext,
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = factory,
-            sendEventForNativeCrashes = true
+            sendEventForNativeCrashes = true,
         )
 
         val reporter = spy(
             CrashReporter(
                 testContext,
                 services = listOf(service),
-                shouldPrompt = CrashReporter.Prompt.NEVER
-            ).install(testContext)
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+            ).install(testContext),
         )
 
         `when`(client.context).thenReturn(clientContext)
@@ -446,8 +446,8 @@ class SentryServiceTest {
                 testData,
                 testCategory,
                 testLevel,
-                testType
-            )
+                testType,
+            ),
         )
         val throwable = RuntimeException("Test")
         val crashBreadCrumbs = arrayListOf<Breadcrumb>()
@@ -477,7 +477,7 @@ class SentryServiceTest {
             testContext,
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = factory,
-            sendEventForNativeCrashes = true
+            sendEventForNativeCrashes = true,
         )
 
         val breadcrumb = Breadcrumb(
@@ -486,7 +486,7 @@ class SentryServiceTest {
             testCategory,
             testLevel,
             testType,
-            testDate
+            testDate,
         )
         service.apply {
             val sentryBreadCrumb = breadcrumb.toSentryBreadcrumb()
@@ -503,7 +503,7 @@ class SentryServiceTest {
     fun `SentryService#client is lazily instantiated (for Fenix perf reasons)`() {
         val service = SentryService(
             testContext,
-            "https://not:real6@sentry.prod.example.net/405"
+            "https://not:real6@sentry.prod.example.net/405",
         )
 
         assertFalse(service::client.isLazyInitialized)

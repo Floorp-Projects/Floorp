@@ -49,10 +49,10 @@ class SwipeRefreshFeatureTest {
             BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "A"),
-                    createTab("https://www.firefox.com", id = "B")
+                    createTab("https://www.firefox.com", id = "B"),
                 ),
-                selectedTabId = "B"
-            )
+                selectedTabId = "B",
+            ),
         )
 
         refreshFeature = SwipeRefreshFeature(store, useCase, mockLayout)

@@ -170,8 +170,8 @@ class AccountSharingTest {
             MigratingAccountInfo(
                 "sessionToken".toByteArray().toHexString(),
                 "ksync".toByteArray().toHexString(),
-                "kxscs"
-            )
+                "kxscs",
+            ),
         )
         assertEquals(expectedAccountRelease, result[0])
 
@@ -181,8 +181,8 @@ class AccountSharingTest {
             MigratingAccountInfo(
                 "sessionToken".toByteArray().toHexString(),
                 "ksync".toByteArray().toHexString(),
-                "kxscs"
-            )
+                "kxscs",
+            ),
         )
         assertEquals(expectedAccountBeta, result[1])
     }
@@ -191,7 +191,7 @@ class AccountSharingTest {
         email: String? = null,
         sessionToken: String? = null,
         ksync: String? = null,
-        kxscs: String? = null
+        kxscs: String? = null,
     ): Cursor {
         val cursor: Cursor = mock()
         `when`(cursor.getColumnIndex(KEY_EMAIL)).thenReturn(0)

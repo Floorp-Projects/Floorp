@@ -13,8 +13,8 @@ import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
 @ExperimentalCoroutinesApi // for runTest
 class PinnedSitesStorageTest {
@@ -31,9 +31,9 @@ class PinnedSitesStorageTest {
                 Pair("Mozilla", "https://www.mozilla.org"),
                 Pair("Firefox", "https://www.firefox.com"),
                 Pair("Wikipedia", "https://www.wikipedia.com"),
-                Pair("Pocket", "https://www.getpocket.com")
+                Pair("Pocket", "https://www.getpocket.com"),
             ),
-            isDefault = true
+            isDefault = true,
         )
 
         verify(dao).insertAllPinnedSites(
@@ -41,8 +41,8 @@ class PinnedSitesStorageTest {
                 PinnedSiteEntity(title = "Mozilla", url = "https://www.mozilla.org", isDefault = true, createdAt = 42),
                 PinnedSiteEntity(title = "Firefox", url = "https://www.firefox.com", isDefault = true, createdAt = 42),
                 PinnedSiteEntity(title = "Wikipedia", url = "https://www.wikipedia.com", isDefault = true, createdAt = 42),
-                PinnedSiteEntity(title = "Pocket", url = "https://www.getpocket.com", isDefault = true, createdAt = 42)
-            )
+                PinnedSiteEntity(title = "Pocket", url = "https://www.getpocket.com", isDefault = true, createdAt = 42),
+            ),
         )
 
         Unit
@@ -87,8 +87,8 @@ class PinnedSitesStorageTest {
         `when`(dao.getPinnedSites()).thenReturn(
             listOf(
                 PinnedSiteEntity(1, "Mozilla", "https://www.mozilla.org", false, 10),
-                PinnedSiteEntity(2, "Firefox", "https://www.firefox.com", true, 10)
-            )
+                PinnedSiteEntity(2, "Firefox", "https://www.firefox.com", true, 10),
+            ),
         )
         `when`(dao.getPinnedSitesCount()).thenReturn(2)
 

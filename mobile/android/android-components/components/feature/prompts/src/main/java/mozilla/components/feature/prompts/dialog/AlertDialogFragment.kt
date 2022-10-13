@@ -15,7 +15,6 @@ import androidx.appcompat.app.AlertDialog
 internal class AlertDialogFragment : AbstractPromptTextDialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-
         val builder = AlertDialog.Builder(requireContext())
             .setTitle(title)
             .setCancelable(true)
@@ -59,9 +58,8 @@ internal class AlertDialogFragment : AbstractPromptTextDialogFragment() {
             shouldDismissOnLoad: Boolean,
             title: String,
             message: String,
-            hasShownManyDialogs: Boolean
+            hasShownManyDialogs: Boolean,
         ): AlertDialogFragment {
-
             val fragment = AlertDialogFragment()
             val arguments = fragment.arguments ?: Bundle()
 

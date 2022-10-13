@@ -44,7 +44,7 @@ fun Tab(
     tab: TabSessionState,
     selected: Boolean = false,
     onClick: (String) -> Unit = {},
-    onClose: (String) -> Unit = {}
+    onClose: (String) -> Unit = {},
 ) {
     Box(
         modifier = Modifier
@@ -52,44 +52,44 @@ fun Tab(
             .size(width = Dp.Unspecified, height = 72.dp)
             .fillMaxWidth()
             .clickable { onClick.invoke(tab.id) }
-            .padding(8.dp)
+            .padding(8.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround
+            horizontalArrangement = Arrangement.SpaceAround,
         ) {
             // BrowserThumbnail(tab)
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .align(Alignment.CenterVertically)
-                    .padding(8.dp)
+                    .padding(8.dp),
             ) {
                 Text(
                     text = tab.content.title,
                     fontWeight = FontWeight.Bold,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
-                    color = Color.White
+                    color = Color.White,
                 )
                 Text(
                     text = tab.content.url,
                     style = MaterialTheme.typography.body2,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
-                    color = Color.White.copy(alpha = ContentAlpha.medium)
+                    color = Color.White.copy(alpha = ContentAlpha.medium),
                 )
             }
             IconButton(
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
                     .requiredSize(24.dp),
-                onClick = { onClose.invoke(tab.id) }
+                onClick = { onClose.invoke(tab.id) },
             ) {
                 Icon(
                     painter = painterResource(R.drawable.mozac_ic_close),
                     contentDescription = "close",
-                    tint = Color.White
+                    tint = Color.White,
                 )
             }
         }

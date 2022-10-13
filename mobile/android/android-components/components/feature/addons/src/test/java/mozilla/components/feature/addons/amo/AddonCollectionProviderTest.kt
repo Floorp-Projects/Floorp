@@ -51,31 +51,31 @@ class AddonCollectionProviderTest {
         assertEquals("2019-10-24T09:28:41Z", addon.updatedAt)
         assertEquals(
             "https://addons.cdn.mozilla.net/user-media/addon_icons/607/607454-64.png?modified=mcrushed",
-            addon.iconUrl
+            addon.iconUrl,
         )
         assertEquals(
             "https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/",
-            addon.siteUrl
+            addon.siteUrl,
         )
         assertEquals(
             "3428595",
-            addon.downloadId
+            addon.downloadId,
         )
         assertEquals(
             "https://addons.mozilla.org/firefox/downloads/file/3428595/ublock_origin-1.23.0-an+fx.xpi?src=",
-            addon.downloadUrl
+            addon.downloadUrl,
         )
         assertEquals(
             "menus",
-            addon.permissions.first()
+            addon.permissions.first(),
         )
         assertEquals(
             "uBlock Origin",
-            addon.translatableName["ca"]
+            addon.translatableName["ca"],
         )
         assertEquals(
             "Finalment, un blocador eficient que utilitza pocs recursos de memòria i processador.",
-            addon.translatableSummary["ca"]
+            addon.translatableSummary["ca"],
         )
         assertTrue(addon.translatableDescription.getValue("ca").isNotBlank())
         assertEquals("1.23.0", addon.version)
@@ -87,7 +87,7 @@ class AddonCollectionProviderTest {
         assertEquals("gorhill", addon.authors.first().username)
         assertEquals(
             "https://addons.mozilla.org/en-US/firefox/user/11423598/",
-            addon.authors.first().url
+            addon.authors.first().url,
         )
 
         // Ratings
@@ -126,8 +126,8 @@ class AddonCollectionProviderTest {
             Request(
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "7e8d6dc651b54ab385fb8791bf9dac/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
-                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-            )
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+            ),
         )
 
         // Ratings
@@ -150,32 +150,32 @@ class AddonCollectionProviderTest {
         assertEquals("2021-02-04T12:05:14Z", addon.updatedAt)
         assertEquals(
             "https://addons.cdn.mozilla.net/user-media/addon_icons/607/607454-64.png?modified=mcrushed",
-            addon.iconUrl
+            addon.iconUrl,
         )
         assertEquals(
             "https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/",
-            addon.siteUrl
+            addon.siteUrl,
         )
         assertEquals(
             "3719054",
-            addon.downloadId
+            addon.downloadId,
         )
         assertEquals(
             "https://addons.mozilla.org/firefox/downloads/file/3719054/ublock_origin-1.33.2-an+fx.xpi",
-            addon.downloadUrl
+            addon.downloadUrl,
         )
         assertEquals(
             "dns",
-            addon.permissions.first()
+            addon.permissions.first(),
         )
         assertEquals(
             "uBlock Origin",
-            addon.translatableName["en"]
+            addon.translatableName["en"],
         )
 
         assertEquals(
             "Finally, an efficient wide-spectrum content blocker. Easy on CPU and memory.",
-            addon.translatableSummary["en"]
+            addon.translatableSummary["en"],
         )
 
         assertTrue(addon.translatableDescription.getValue("en").isNotBlank())
@@ -189,7 +189,7 @@ class AddonCollectionProviderTest {
         assertEquals("gorhill", addon.authors.first().username)
         assertEquals(
             "https://addons.mozilla.org/en-US/firefox/user/11423598/",
-            addon.authors.first().url
+            addon.authors.first().url,
         )
 
         // Ratings
@@ -200,8 +200,8 @@ class AddonCollectionProviderTest {
             Request(
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "7e8d6dc651b54ab385fb8791bf9dac/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}&lang=en",
-                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-            )
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+            ),
         )
 
         Unit
@@ -217,8 +217,8 @@ class AddonCollectionProviderTest {
             Request(
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "7e8d6dc651b54ab385fb8791bf9dac/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
-                readTimeout = Pair(5, TimeUnit.SECONDS)
-            )
+                readTimeout = Pair(5, TimeUnit.SECONDS),
+            ),
         )
         Unit
     }
@@ -433,7 +433,7 @@ class AddonCollectionProviderTest {
             version = "version",
             iconUrl = "https://example.com/image.png",
             createdAt = "0",
-            updatedAt = "0"
+            updatedAt = "0",
         )
 
         val bitmap = provider.getAddonIconBitmap(addon)
@@ -452,7 +452,7 @@ class AddonCollectionProviderTest {
             version = "version",
             iconUrl = "https://example.com/image.png",
             createdAt = "0",
-            updatedAt = "0"
+            updatedAt = "0",
         )
 
         val bitmap = provider.getAddonIconBitmap(addon)
@@ -467,7 +467,7 @@ class AddonCollectionProviderTest {
         val provider = AddonCollectionProvider(
             testContext,
             client = mockedClient,
-            collectionName = collectionName
+            collectionName = collectionName,
         )
 
         provider.getAvailableAddons()
@@ -475,8 +475,8 @@ class AddonCollectionProviderTest {
             Request(
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
-                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-            )
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+            ),
         )
 
         assertEquals(COLLECTION_FILE_NAME.format(collectionName), provider.getCacheFileName())
@@ -491,7 +491,7 @@ class AddonCollectionProviderTest {
             testContext,
             client = mockedClient,
             collectionName = collectionName,
-            sortOption = SortOption.POPULARITY
+            sortOption = SortOption.POPULARITY,
         ).also {
             it.getAvailableAddons()
         }
@@ -500,15 +500,15 @@ class AddonCollectionProviderTest {
             Request(
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY.value}",
-                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-            )
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+            ),
         )
 
         AddonCollectionProvider(
             testContext,
             client = mockedClient,
             collectionName = collectionName,
-            sortOption = SortOption.POPULARITY_DESC
+            sortOption = SortOption.POPULARITY_DESC,
         ).also {
             it.getAvailableAddons()
         }
@@ -517,15 +517,15 @@ class AddonCollectionProviderTest {
             Request(
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
-                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-            )
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+            ),
         )
 
         AddonCollectionProvider(
             testContext,
             client = mockedClient,
             collectionName = collectionName,
-            sortOption = SortOption.NAME
+            sortOption = SortOption.NAME,
         ).also {
             it.getAvailableAddons()
         }
@@ -534,15 +534,15 @@ class AddonCollectionProviderTest {
             Request(
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.NAME.value}",
-                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-            )
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+            ),
         )
 
         AddonCollectionProvider(
             testContext,
             client = mockedClient,
             collectionName = collectionName,
-            sortOption = SortOption.NAME_DESC
+            sortOption = SortOption.NAME_DESC,
         ).also {
             it.getAvailableAddons()
         }
@@ -551,15 +551,15 @@ class AddonCollectionProviderTest {
             Request(
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.NAME_DESC.value}",
-                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-            )
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+            ),
         )
 
         AddonCollectionProvider(
             testContext,
             client = mockedClient,
             collectionName = collectionName,
-            sortOption = SortOption.DATE_ADDED
+            sortOption = SortOption.DATE_ADDED,
         ).also {
             it.getAvailableAddons()
         }
@@ -568,15 +568,15 @@ class AddonCollectionProviderTest {
             Request(
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.DATE_ADDED.value}",
-                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-            )
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+            ),
         )
 
         AddonCollectionProvider(
             testContext,
             client = mockedClient,
             collectionName = collectionName,
-            sortOption = SortOption.DATE_ADDED_DESC
+            sortOption = SortOption.DATE_ADDED_DESC,
         ).also {
             it.getAvailableAddons()
         }
@@ -585,8 +585,8 @@ class AddonCollectionProviderTest {
             Request(
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.DATE_ADDED_DESC.value}",
-                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-            )
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+            ),
         )
 
         Unit
@@ -601,7 +601,7 @@ class AddonCollectionProviderTest {
             testContext,
             client = mockedClient,
             collectionUser = collectionUser,
-            collectionName = collectionName
+            collectionName = collectionName,
         )
 
         provider.getAvailableAddons()
@@ -611,13 +611,13 @@ class AddonCollectionProviderTest {
                     "$collectionUser/collections/$collectionName/addons/" +
                     "?page_size=$PAGE_SIZE" +
                     "&sort=${SortOption.POPULARITY_DESC.value}",
-                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-            )
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+            ),
         )
 
         assertEquals(
             COLLECTION_FILE_NAME.format("${collectionUser}_$collectionName"),
-            provider.getCacheFileName()
+            provider.getCacheFileName(),
         )
     }
 
@@ -627,7 +627,7 @@ class AddonCollectionProviderTest {
 
         val provider = AddonCollectionProvider(
             testContext,
-            client = mockedClient
+            client = mockedClient,
         )
 
         provider.getAvailableAddons()
@@ -637,8 +637,8 @@ class AddonCollectionProviderTest {
                     "$DEFAULT_COLLECTION_USER/collections/$DEFAULT_COLLECTION_NAME/addons/" +
                     "?page_size=$PAGE_SIZE" +
                     "&sort=${SortOption.POPULARITY_DESC.value}",
-                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-            )
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+            ),
         )
 
         assertEquals(COLLECTION_FILE_NAME.format(DEFAULT_COLLECTION_NAME), provider.getCacheFileName())
@@ -653,18 +653,18 @@ class AddonCollectionProviderTest {
             testContext,
             client = mockedClient,
             collectionUser = collectionUser,
-            collectionName = collectionName
+            collectionName = collectionName,
         )
 
         assertEquals(
             COLLECTION_FILE_NAME.format("user_collection"),
-            provider.getCacheFileName()
+            provider.getCacheFileName(),
         )
     }
 
     private fun prepareClient(
         jsonResponse: String = loadResourceAsString("/collection_with_empty_values.json"),
-        status: Int = 200
+        status: Int = 200,
     ): Client {
         val mockedClient = mock<Client>()
         val mockedResponse = mock<Response>()

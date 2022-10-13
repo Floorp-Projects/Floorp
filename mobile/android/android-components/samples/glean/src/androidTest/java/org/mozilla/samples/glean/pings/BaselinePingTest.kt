@@ -72,18 +72,20 @@ class BaselinePingTest {
      */
     private fun createMockWebServer(): MockWebServer {
         val server = MockWebServer()
-        server.setDispatcher(object : Dispatcher() {
-            override fun dispatch(request: RecordedRequest): MockResponse {
-                return MockResponse().setBody("OK")
-            }
-        })
+        server.setDispatcher(
+            object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse {
+                    return MockResponse().setBody("OK")
+                }
+            },
+        )
         return server
     }
 
     private fun waitForPingContent(
         pingName: String,
         pingReason: String?,
-        maxAttempts: Int = 3
+        maxAttempts: Int = 3,
     ): JSONObject? {
         var attempts = 0
         do {

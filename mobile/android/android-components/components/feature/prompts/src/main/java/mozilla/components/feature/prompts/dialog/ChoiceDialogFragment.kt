@@ -56,7 +56,7 @@ internal class ChoiceDialogFragment : PromptDialogFragment() {
             sessionId: String,
             promptRequestUID: String,
             shouldDismissOnLoad: Boolean,
-            dialogType: Int
+            dialogType: Int,
         ): ChoiceDialogFragment {
             val fragment = ChoiceDialogFragment()
             val arguments = fragment.arguments ?: Bundle()

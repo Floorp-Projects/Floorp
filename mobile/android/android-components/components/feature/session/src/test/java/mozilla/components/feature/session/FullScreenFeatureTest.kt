@@ -42,7 +42,7 @@ class FullScreenFeatureTest {
             sessionUseCases = mock(),
             tabId = null,
             viewportFitChanged = { value -> viewPort = value },
-            fullScreenChanged = { value -> fullscreen = value }
+            fullScreenChanged = { value -> fullscreen = value },
         )
 
         feature.start()
@@ -60,8 +60,8 @@ class FullScreenFeatureTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
-                selectedTabId = "A"
-            )
+                selectedTabId = "A",
+            ),
         )
 
         val feature = FullScreenFeature(
@@ -69,7 +69,7 @@ class FullScreenFeatureTest {
             sessionUseCases = mock(),
             tabId = null,
             viewportFitChanged = { value -> viewPort = value },
-            fullScreenChanged = { value -> fullscreen = value }
+            fullScreenChanged = { value -> fullscreen = value },
         )
 
         feature.start()
@@ -87,22 +87,22 @@ class FullScreenFeatureTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
-                selectedTabId = "A"
-            )
+                selectedTabId = "A",
+            ),
         )
 
         store.dispatch(
             ContentAction.FullScreenChangedAction(
                 "A",
-                true
-            )
+                true,
+            ),
         ).joinBlocking()
 
         store.dispatch(
             ContentAction.ViewportFitChangedAction(
                 "A",
-                42
-            )
+                42,
+            ),
         ).joinBlocking()
 
         val feature = FullScreenFeature(
@@ -110,7 +110,7 @@ class FullScreenFeatureTest {
             sessionUseCases = mock(),
             tabId = null,
             viewportFitChanged = { value -> viewPort = value },
-            fullScreenChanged = { value -> fullscreen = value }
+            fullScreenChanged = { value -> fullscreen = value },
         )
 
         feature.start()
@@ -128,8 +128,8 @@ class FullScreenFeatureTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
-                selectedTabId = "A"
-            )
+                selectedTabId = "A",
+            ),
         )
 
         val feature = FullScreenFeature(
@@ -137,7 +137,7 @@ class FullScreenFeatureTest {
             sessionUseCases = mock(),
             tabId = null,
             viewportFitChanged = { value -> viewPort = value },
-            fullScreenChanged = { value -> fullscreen = value }
+            fullScreenChanged = { value -> fullscreen = value },
         )
 
         feature.start()
@@ -145,8 +145,8 @@ class FullScreenFeatureTest {
         store.dispatch(
             ContentAction.FullScreenChangedAction(
                 "A",
-                true
-            )
+                true,
+            ),
         ).joinBlocking()
 
         assertNull(viewPort)
@@ -161,8 +161,8 @@ class FullScreenFeatureTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
-                selectedTabId = "A"
-            )
+                selectedTabId = "A",
+            ),
         )
 
         val feature = FullScreenFeature(
@@ -170,7 +170,7 @@ class FullScreenFeatureTest {
             sessionUseCases = mock(),
             tabId = null,
             viewportFitChanged = { value -> viewPort = value },
-            fullScreenChanged = { value -> fullscreen = value }
+            fullScreenChanged = { value -> fullscreen = value },
         )
 
         feature.start()
@@ -178,15 +178,15 @@ class FullScreenFeatureTest {
         store.dispatch(
             ContentAction.FullScreenChangedAction(
                 "A",
-                true
-            )
+                true,
+            ),
         ).joinBlocking()
 
         store.dispatch(
             ContentAction.ViewportFitChangedAction(
                 "A",
-                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-            )
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES,
+            ),
         ).joinBlocking()
 
         assertNotEquals(0, viewPort)
@@ -204,10 +204,10 @@ class FullScreenFeatureTest {
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "A"),
                     createTab("https://www.firefox.com", id = "B"),
-                    createTab("https://getpocket.com", id = "C")
+                    createTab("https://getpocket.com", id = "C"),
                 ),
-                selectedTabId = "A"
-            )
+                selectedTabId = "A",
+            ),
         )
 
         val feature = FullScreenFeature(
@@ -215,7 +215,7 @@ class FullScreenFeatureTest {
             sessionUseCases = mock(),
             tabId = "B",
             viewportFitChanged = { value -> viewPort = value },
-            fullScreenChanged = { value -> fullscreen = value }
+            fullScreenChanged = { value -> fullscreen = value },
         )
 
         feature.start()
@@ -223,15 +223,15 @@ class FullScreenFeatureTest {
         store.dispatch(
             ContentAction.FullScreenChangedAction(
                 "B",
-                true
-            )
+                true,
+            ),
         ).joinBlocking()
 
         store.dispatch(
             ContentAction.ViewportFitChangedAction(
                 "B",
-                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-            )
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES,
+            ),
         ).joinBlocking()
 
         assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES, viewPort)
@@ -240,15 +240,15 @@ class FullScreenFeatureTest {
         store.dispatch(
             ContentAction.FullScreenChangedAction(
                 "B",
-                false
-            )
+                false,
+            ),
         ).joinBlocking()
 
         store.dispatch(
             ContentAction.ViewportFitChangedAction(
                 "B",
-                0
-            )
+                0,
+            ),
         ).joinBlocking()
 
         assertEquals(0, viewPort)
@@ -265,10 +265,10 @@ class FullScreenFeatureTest {
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "A"),
                     createTab("https://www.firefox.com", id = "B"),
-                    createTab("https://getpocket.com", id = "C")
+                    createTab("https://getpocket.com", id = "C"),
                 ),
-                selectedTabId = "A"
-            )
+                selectedTabId = "A",
+            ),
         )
 
         val feature = FullScreenFeature(
@@ -276,21 +276,21 @@ class FullScreenFeatureTest {
             sessionUseCases = mock(),
             tabId = "B",
             viewportFitChanged = { value -> viewPort = value },
-            fullScreenChanged = { value -> fullscreen = value }
+            fullScreenChanged = { value -> fullscreen = value },
         )
 
         store.dispatch(
             ContentAction.FullScreenChangedAction(
                 "B",
-                true
-            )
+                true,
+            ),
         ).joinBlocking()
 
         store.dispatch(
             ContentAction.ViewportFitChangedAction(
                 "B",
-                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
-            )
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER,
+            ),
         ).joinBlocking()
 
         feature.start()
@@ -303,15 +303,15 @@ class FullScreenFeatureTest {
         store.dispatch(
             ContentAction.FullScreenChangedAction(
                 "B",
-                false
-            )
+                false,
+            ),
         ).joinBlocking()
 
         store.dispatch(
             ContentAction.ViewportFitChangedAction(
                 "B",
-                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-            )
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES,
+            ),
         ).joinBlocking()
 
         assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER, viewPort)
@@ -330,10 +330,10 @@ class FullScreenFeatureTest {
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "A"),
                     createTab("https://www.firefox.com", id = "B"),
-                    createTab("https://getpocket.com", id = "C")
+                    createTab("https://getpocket.com", id = "C"),
                 ),
-                selectedTabId = "A"
-            )
+                selectedTabId = "A",
+            ),
         )
 
         val exitUseCase: SessionUseCases.ExitFullScreenUseCase = mock()
@@ -344,7 +344,7 @@ class FullScreenFeatureTest {
             store = store,
             sessionUseCases = useCases,
             tabId = "B",
-            fullScreenChanged = {}
+            fullScreenChanged = {},
         )
 
         feature.start()
@@ -352,15 +352,15 @@ class FullScreenFeatureTest {
         store.dispatch(
             ContentAction.FullScreenChangedAction(
                 "B",
-                true
-            )
+                true,
+            ),
         ).joinBlocking()
 
         store.dispatch(
             ContentAction.ViewportFitChangedAction(
                 "B",
-                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-            )
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES,
+            ),
         ).joinBlocking()
 
         assertTrue(feature.onBackPressed())
@@ -376,8 +376,8 @@ class FullScreenFeatureTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
-                selectedTabId = "A"
-            )
+                selectedTabId = "A",
+            ),
         )
 
         val feature = FullScreenFeature(
@@ -385,7 +385,7 @@ class FullScreenFeatureTest {
             sessionUseCases = mock(),
             tabId = null,
             viewportFitChanged = { value -> viewPort = value },
-            fullScreenChanged = { value -> fullscreen = value }
+            fullScreenChanged = { value -> fullscreen = value },
         )
 
         feature.start()
@@ -393,22 +393,22 @@ class FullScreenFeatureTest {
         store.dispatch(
             ContentAction.FullScreenChangedAction(
                 "A",
-                true
-            )
+                true,
+            ),
         ).joinBlocking()
 
         store.dispatch(
             ContentAction.ViewportFitChangedAction(
                 "A",
-                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-            )
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES,
+            ),
         ).joinBlocking()
 
         assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES, viewPort)
         assertTrue(fullscreen!!)
 
         store.dispatch(
-            TabListAction.RemoveTabAction(tabId = "A")
+            TabListAction.RemoveTabAction(tabId = "A"),
         ).joinBlocking()
 
         assertEquals(0, viewPort)
@@ -422,10 +422,10 @@ class FullScreenFeatureTest {
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "A"),
                     createTab("https://www.firefox.com", id = "B"),
-                    createTab("https://getpocket.com", id = "C")
+                    createTab("https://getpocket.com", id = "C"),
                 ),
-                selectedTabId = "A"
-            )
+                selectedTabId = "A",
+            ),
         )
 
         val exitUseCase: SessionUseCases.ExitFullScreenUseCase = mock()
@@ -435,7 +435,7 @@ class FullScreenFeatureTest {
         val feature = FullScreenFeature(
             store = store,
             sessionUseCases = useCases,
-            fullScreenChanged = {}
+            fullScreenChanged = {},
         )
 
         feature.start()
@@ -454,7 +454,7 @@ class FullScreenFeatureTest {
         val feature = FullScreenFeature(
             store = BrowserStore(),
             sessionUseCases = useCases,
-            fullScreenChanged = {}
+            fullScreenChanged = {},
         )
 
         // Invoking onBackPressed without fullscreen mode

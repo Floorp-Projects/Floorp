@@ -31,7 +31,7 @@ class GeckoWebNotificationDelegateTest {
             textDirection = "textDirection",
             lang = "lang",
             requireInteraction = true,
-            source = "source"
+            source = "source",
         )
         val geckoWebNotificationDelegate = GeckoWebNotificationDelegate(webNotificationDelegate)
 
@@ -62,7 +62,7 @@ class GeckoWebNotificationDelegateTest {
             textDirection = "textDirection",
             lang = "lang",
             requireInteraction = true,
-            source = "source"
+            source = "source",
         )
         val geckoWebNotificationDelegate = GeckoWebNotificationDelegate(webNotificationDelegate)
 
@@ -92,7 +92,7 @@ class GeckoWebNotificationDelegateTest {
             textDirection = "textDirection",
             lang = "lang",
             requireInteraction = true,
-            source = null
+            source = null,
         )
         val geckoWebNotificationDelegate = GeckoWebNotificationDelegate(webNotificationDelegate)
 

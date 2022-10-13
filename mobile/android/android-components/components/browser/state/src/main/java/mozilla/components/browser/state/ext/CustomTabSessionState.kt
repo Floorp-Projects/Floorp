@@ -14,6 +14,6 @@ internal fun CustomTabSessionState.toTab(): TabSessionState {
         trackingProtection = trackingProtection,
         engineState = engineState,
         extensionState = extensionState,
-        contextId = contextId
+        contextId = contextId,
     )
 }

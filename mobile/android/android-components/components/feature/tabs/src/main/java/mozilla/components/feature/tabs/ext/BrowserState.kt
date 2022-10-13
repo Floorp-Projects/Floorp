@@ -15,7 +15,7 @@ import mozilla.components.feature.tabs.tabstray.Tabs
  * few properties have changed.
  */
 internal fun BrowserState.toTabs(
-    tabsFilter: (TabSessionState) -> Boolean = { true }
+    tabsFilter: (TabSessionState) -> Boolean = { true },
 ): Tabs {
     val (tabStates, selectedTabId) = toTabList(tabsFilter)
     val tabs = tabStates.map { it.toTab() }
@@ -26,7 +26,7 @@ internal fun BrowserState.toTabs(
  * Returns a list of tabs with the applied [tabsFilter] and the selected tab ID.
  */
 internal fun BrowserState.toTabList(
-    tabsFilter: (TabSessionState) -> Boolean = { true }
+    tabsFilter: (TabSessionState) -> Boolean = { true },
 ): Pair<List<TabSessionState>, String?> {
     val tabStates = tabs.filter(tabsFilter)
     val selectedTabId = tabStates

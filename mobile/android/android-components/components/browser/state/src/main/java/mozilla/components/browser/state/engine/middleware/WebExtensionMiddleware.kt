@@ -25,7 +25,7 @@ internal class WebExtensionMiddleware : Middleware<BrowserState, BrowserAction> 
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         when (action) {
             is EngineAction.UnlinkEngineSessionAction -> {
@@ -43,7 +43,8 @@ internal class WebExtensionMiddleware : Middleware<BrowserState, BrowserAction> 
 
         when (action) {
             is TabListAction,
-            is EngineAction.LinkEngineSessionAction -> {
+            is EngineAction.LinkEngineSessionAction,
+            -> {
                 switchActiveStateIfNeeded(context)
             }
             else -> {

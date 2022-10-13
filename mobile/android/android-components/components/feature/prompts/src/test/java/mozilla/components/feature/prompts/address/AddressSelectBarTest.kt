@@ -48,7 +48,7 @@ class AddressSelectBarTest {
         postalCode = "90237",
         country = "USA",
         tel = "00",
-        email = "email"
+        email = "email",
     )
 
     @Before
@@ -77,11 +77,13 @@ class AddressSelectBarTest {
     @Test
     fun `WHEN the selectBar header is clicked two times THEN the list of addresses is shown, then hidden`() {
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         addressSelectBar.showPrompt(listOf(address))
 
@@ -112,11 +114,13 @@ class AddressSelectBarTest {
         addressSelectBar.listener = listener
 
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         addressSelectBar.showPrompt(listOf(address))
         val adapter = addressSelectBar.findViewById<RecyclerView>(R.id.address_list).adapter as AddressAdapter

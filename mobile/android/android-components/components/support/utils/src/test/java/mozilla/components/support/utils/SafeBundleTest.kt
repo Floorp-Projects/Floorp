@@ -29,7 +29,6 @@ class SafeBundleTest {
 
     @Test
     fun `getInt returns default value if bundle throws OutOfMemoryError`() {
-
         doThrow(OutOfMemoryError::class.java).`when`(bundle).getInt(anyString(), anyInt())
 
         val expected = 1
@@ -38,7 +37,6 @@ class SafeBundleTest {
 
     @Test
     fun `getString returns null if bundle throws OutOfMemoryError`() {
-
         doThrow(OutOfMemoryError::class.java).`when`(bundle).getString(anyString())
 
         assertNull(bundle.toSafeBundle().getString(""))
@@ -46,7 +44,6 @@ class SafeBundleTest {
 
     @Test
     fun `getParcelable returns null if bundle throws OutOfMemoryError`() {
-
         doThrow(OutOfMemoryError::class.java).`when`(bundle).getParcelable<Parcelable>(anyString())
 
         assertNull(SafeBundle(bundle).getParcelable(""))
@@ -54,13 +51,11 @@ class SafeBundleTest {
 
     @Test
     fun `getUnsafe returns original bundle`() {
-
         assertEquals(bundle, SafeBundle(bundle).unsafe)
     }
 
     @Test
     fun `WHEN toSafeBundle wraps an bundle THEN it has the same unsafe bundle as the SafeBundle constructor`() {
-
         // SafeBundle does not override .equals so we have to do comparison with their underlying unsafe bundles.
         assertEquals(SafeBundle(bundle).unsafe, bundle.toSafeBundle().unsafe)
     }

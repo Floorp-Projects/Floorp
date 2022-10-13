@@ -42,7 +42,7 @@ class SimpleBrowserMenuHighlightableItem(
     override val isCollapsingMenuLimit: Boolean = false,
     override val isSticky: Boolean = false,
     var isHighlighted: () -> Boolean = { true },
-    private val listener: () -> Unit = {}
+    private val listener: () -> Unit = {},
 ) : BrowserMenuItem {
 
     override var visible: () -> Boolean = { true }
@@ -97,14 +97,14 @@ class SimpleBrowserMenuHighlightableItem(
     override fun asCandidate(context: Context): MenuCandidate {
         val textStyle = TextStyle(
             size = if (textSize == NO_ID.toFloat()) null else textSize,
-            color = if (textColorResource == NO_ID) null else ContextCompat.getColor(context, textColorResource)
+            color = if (textColorResource == NO_ID) null else ContextCompat.getColor(context, textColorResource),
         )
         val containerStyle = ContainerStyle(isVisible = visible())
         return TextMenuCandidate(
             label,
             textStyle = textStyle,
             containerStyle = containerStyle,
-            onClick = listener
+            onClick = listener,
         )
     }
 }

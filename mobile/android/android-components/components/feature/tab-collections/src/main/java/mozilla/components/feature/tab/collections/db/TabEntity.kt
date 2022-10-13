@@ -22,12 +22,12 @@ import java.io.File
             entity = TabCollectionEntity::class,
             parentColumns = ["id"],
             childColumns = ["tab_collection_id"],
-            onDelete = ForeignKey.CASCADE
-        )
+            onDelete = ForeignKey.CASCADE,
+        ),
     ],
     indices = [
-        Index(value = ["tab_collection_id"])
-    ]
+        Index(value = ["tab_collection_id"]),
+    ],
 )
 internal data class TabEntity(
     @PrimaryKey(autoGenerate = true)
@@ -47,7 +47,7 @@ internal data class TabEntity(
     var tabCollectionId: Long,
 
     @ColumnInfo(name = "created_at")
-    var createdAt: Long
+    var createdAt: Long,
 ) {
     internal fun getStateFile(filesDir: File): AtomicFile {
         return AtomicFile(File(getStateDirectory(filesDir), stateFile))

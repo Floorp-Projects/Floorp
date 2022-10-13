@@ -85,7 +85,7 @@ class GeckoViewFetchUnitTestCases : FetchTestCases() {
     override fun get200WithDuplicatedCacheControlResponseHeaders() {
         val responseHeaderMap = mapOf(
             "Cache-Control" to "no-cache, no-store",
-            "Content-Length" to "16"
+            "Content-Length" to "16",
         )
         mockResponse(200, responseHeaderMap)
 
@@ -99,7 +99,7 @@ class GeckoViewFetchUnitTestCases : FetchTestCases() {
             "Accept" to "text/html",
             "Accept-Encoding" to "deflate",
             "User-Agent" to "SuperBrowser/1.0",
-            "Connection" to "close"
+            "Connection" to "close",
         )
         mockRequest(headerMap)
         mockResponse(200)
@@ -125,7 +125,7 @@ class GeckoViewFetchUnitTestCases : FetchTestCases() {
             "Accept-Encoding" to "gzip, deflate",
             "Accept-Language" to "en-US,en;q=0.5",
             "Connection" to "keep-alive",
-            "User-Agent" to "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:65.0) Gecko/20100101 Firefox/65.0"
+            "User-Agent" to "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:65.0) Gecko/20100101 Firefox/65.0",
         )
         mockRequest(requestHeaders)
         mockResponse(200)
@@ -257,7 +257,7 @@ class GeckoViewFetchUnitTestCases : FetchTestCases() {
             200,
             headerMap = mapOf("Content-Type" to "text/html; charset=ISO-8859-1"),
             body = "ÄäÖöÜü",
-            charset = Charsets.ISO_8859_1
+            charset = Charsets.ISO_8859_1,
         )
 
         val response = createNewClient().fetch(request)
@@ -326,7 +326,7 @@ class GeckoViewFetchUnitTestCases : FetchTestCases() {
         statusCode: Int,
         headerMap: Map<String, String>? = null,
         body: String? = null,
-        charset: Charset = Charsets.UTF_8
+        charset: Charset = Charsets.UTF_8,
     ) {
         val executor = mock<GeckoWebExecutor>()
         val builder = WebResponse.Builder("").statusCode(statusCode)

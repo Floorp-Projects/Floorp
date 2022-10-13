@@ -31,7 +31,7 @@ sealed class MenuIconEffect : MenuEffect()
  * @property notificationTint Tint for the notification dot displayed on the icon and menu button.
  */
 data class LowPriorityHighlightEffect(
-    @ColorInt val notificationTint: Int
+    @ColorInt val notificationTint: Int,
 ) : MenuIconEffect()
 
 /**
@@ -42,5 +42,5 @@ data class LowPriorityHighlightEffect(
  * Also used to highlight the menu button.
  */
 data class HighPriorityHighlightEffect(
-    @ColorInt val backgroundTint: Int
+    @ColorInt val backgroundTint: Int,
 ) : MenuCandidateEffect()

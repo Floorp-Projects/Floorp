@@ -108,7 +108,8 @@ class UrlMatcherTest {
                 val url = "http://category$currentCategory.com"
                 assertEquals(
                     "Incorrect category matched for combo=$categoryPattern url=$url",
-                    enabled, matcher.matches(url, "http://www.mozilla.org").first
+                    enabled,
+                    matcher.matches(url, "http://www.mozilla.org").first,
                 )
             }
         }
@@ -195,11 +196,12 @@ class UrlMatcherTest {
         ]
       }
     }"""
+
     @Test
     fun createMatcher() {
         val matcher = UrlMatcher.createMatcher(
             StringReader(BLOCK_LIST),
-            StringReader(SAFE_LIST)
+            StringReader(SAFE_LIST),
         )
 
         // Check returns correct category
@@ -215,7 +217,7 @@ class UrlMatcherTest {
 
         val (matchesSocial, categorySocial) = matcher.matches(
             "http://socialtest1.com/",
-            "http://www.socialtest1.com/"
+            "http://www.socialtest1.com/",
         )
 
         assertTrue(matchesSocial)
@@ -223,7 +225,7 @@ class UrlMatcherTest {
 
         val (matchesContent, categoryContent) = matcher.matches(
             "http://contenttest1.com/",
-            "http://www.contenttest1.com/"
+            "http://www.contenttest1.com/",
         )
 
         assertTrue(matchesContent)
@@ -231,7 +233,7 @@ class UrlMatcherTest {
 
         val (matchesAnalytics, categoryAnalytics) = matcher.matches(
             "http://analyticsTest1.com/",
-            "http://www.analyticsTest1.com/"
+            "http://www.analyticsTest1.com/",
         )
 
         assertTrue(matchesAnalytics)
@@ -263,8 +265,8 @@ class UrlMatcherTest {
             UrlMatcher.createMatcher(
                 StringReader(BLOCK_LIST),
                 StringReader(SAFE_LIST),
-                setOf("Advertising", "Analytics")
-            )
+                setOf("Advertising", "Analytics"),
+            ),
         )
 
         matcher.setCategoriesEnabled(setOf("Advertising", "Analytics"))
@@ -281,14 +283,14 @@ class UrlMatcherTest {
         val matcher = UrlMatcher.createMatcher(
             StringReader(BLOCK_LIST),
             StringReader(SAFE_LIST),
-            setOf(UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS, UrlMatcher.SOCIAL, UrlMatcher.CONTENT)
+            setOf(UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS, UrlMatcher.SOCIAL, UrlMatcher.CONTENT),
         )
 
         assertFalse(
             matcher.matches(
                 "http://mozilla.org/fonts/test.woff2",
-                "http://mozilla.org"
-            ).first
+                "http://mozilla.org",
+            ).first,
         )
     }
 }

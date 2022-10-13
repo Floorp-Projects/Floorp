@@ -41,7 +41,7 @@ class BrowserMenuHighlightableSwitch(
     override val highlight: BrowserMenuHighlight.LowPriority,
     override val isHighlighted: () -> Boolean = { true },
     initialState: () -> Boolean = { false },
-    listener: (Boolean) -> Unit
+    listener: (Boolean) -> Unit,
 ) : BrowserMenuCompoundButton(label, isCollapsingMenuLimit, isSticky, initialState, listener), HighlightableMenuItem {
 
     private var wasHighlighted = false
@@ -90,8 +90,8 @@ class BrowserMenuHighlightableSwitch(
             base.copy(
                 text = highlight.label ?: label,
                 start = (base.start as? DrawableMenuIcon)?.copy(
-                    effect = LowPriorityHighlightEffect(notificationTint = highlight.notificationTint)
-                )
+                    effect = LowPriorityHighlightEffect(notificationTint = highlight.notificationTint),
+                ),
             )
         } else {
             base

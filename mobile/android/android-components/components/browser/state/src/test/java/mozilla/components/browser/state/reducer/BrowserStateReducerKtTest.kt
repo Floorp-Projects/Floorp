@@ -21,7 +21,9 @@ class BrowserStateReducerKtTest {
         val normalTab = TabSessionState(id = "tab1", content = ContentState(url = initialUrl))
         val privateTab = TabSessionState(id = "tab2", content = ContentState(url = initialUrl, private = true))
         val customTab = CustomTabSessionState(
-            id = "tab3", content = ContentState(url = initialUrl), config = mock()
+            id = "tab3",
+            content = ContentState(url = initialUrl),
+            config = mock(),
         )
         var browserState = BrowserState(tabs = listOf(normalTab, privateTab), customTabs = listOf(customTab))
 
@@ -84,10 +86,14 @@ class BrowserStateReducerKtTest {
     @Test
     fun `GIVEN a private custom tab exists WHEN updateTabOrCustomTabState is called with the id of that tab THEN the tab is updated`() {
         val tab1 = CustomTabSessionState(
-            id = "tab1", content = ContentState(url = initialUrl, private = true), config = mock()
+            id = "tab1",
+            content = ContentState(url = initialUrl, private = true),
+            config = mock(),
         )
         val tab2 = CustomTabSessionState(
-            id = "tab2", content = ContentState(url = initialUrl, private = true), config = mock()
+            id = "tab2",
+            content = ContentState(url = initialUrl, private = true),
+            config = mock(),
         )
         var browserState = BrowserState(customTabs = listOf(tab1, tab2))
 
@@ -105,7 +111,9 @@ class BrowserStateReducerKtTest {
         val normalTab = TabSessionState(id = "tab1", content = ContentState(url = initialUrl, private = true))
         val privateTab = TabSessionState(id = "tab2", content = ContentState(url = initialUrl))
         val customTab = CustomTabSessionState(
-            id = "tab3", content = ContentState(url = initialUrl), config = mock()
+            id = "tab3",
+            content = ContentState(url = initialUrl),
+            config = mock(),
         )
         var browserState = BrowserState(tabs = listOf(normalTab, privateTab), customTabs = listOf(customTab))
 
@@ -155,7 +163,9 @@ class BrowserStateReducerKtTest {
         val normalTab = TabSessionState(id = "tab1", content = ContentState(url = initialUrl, private = true))
         val privateTab = TabSessionState(id = "tab2", content = ContentState(url = initialUrl))
         val customTab = CustomTabSessionState(
-            id = "tab3", content = ContentState(url = initialUrl), config = mock()
+            id = "tab3",
+            content = ContentState(url = initialUrl),
+            config = mock(),
         )
         var browserState = BrowserState(tabs = listOf(normalTab, privateTab), customTabs = listOf(customTab))
 
@@ -175,7 +185,9 @@ class BrowserStateReducerKtTest {
         val normalTab = TabSessionState(id = "tab1", content = ContentState(url = initialUrl, private = true))
         val privateTab = TabSessionState(id = "tab2", content = ContentState(url = initialUrl))
         val customTab = CustomTabSessionState(
-            id = "tab3", content = ContentState(url = initialUrl), config = mock()
+            id = "tab3",
+            content = ContentState(url = initialUrl),
+            config = mock(),
         )
         var browserState = BrowserState(tabs = listOf(normalTab, privateTab), customTabs = listOf(customTab))
 
@@ -208,10 +220,14 @@ class BrowserStateReducerKtTest {
     @Test
     fun `GIVEN a private tab exists WHEN updateCustomTabState is called with the id of that tab THEN the tab is updated`() {
         val tab1 = CustomTabSessionState(
-            id = "tab1", content = ContentState(url = initialUrl, private = true), config = mock()
+            id = "tab1",
+            content = ContentState(url = initialUrl, private = true),
+            config = mock(),
         )
         val tab2 = CustomTabSessionState(
-            id = "tab2", content = ContentState(url = initialUrl, private = true), config = mock()
+            id = "tab2",
+            content = ContentState(url = initialUrl, private = true),
+            config = mock(),
         )
         var browserState = BrowserState(customTabs = listOf(tab1, tab2))
 

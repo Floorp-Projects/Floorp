@@ -16,7 +16,7 @@ class NimbusExperimentItemViewHolder(
     view: View,
     private val nimbusExperimentsDelegate: NimbusExperimentsAdapterDelegate,
     private val titleView: TextView,
-    private val summaryView: TextView
+    private val summaryView: TextView,
 ) : RecyclerView.ViewHolder(view) {
 
     internal fun bind(experiment: AvailableExperiment) {

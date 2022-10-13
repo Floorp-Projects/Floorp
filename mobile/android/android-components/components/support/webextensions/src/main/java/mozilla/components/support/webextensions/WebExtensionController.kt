@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap
 class WebExtensionController(
     private val extensionId: String,
     private val extensionUrl: String,
-    private val defaultPort: String
+    private val defaultPort: String,
 ) {
     private val logger = Logger("mozac-webextensions")
     private var registerContentMessageHandler: (WebExtension) -> Unit? = { }
@@ -47,12 +47,13 @@ class WebExtensionController(
     fun install(
         runtime: WebExtensionRuntime,
         onSuccess: ((WebExtension) -> Unit) = { },
-        onError: ((Throwable) -> Unit) = { _ -> }
+        onError: ((Throwable) -> Unit) = { _ -> },
     ) {
         val installedExtension = installedExtensions[extensionId]
         if (installedExtension == null) {
             runtime.installWebExtension(
-                extensionId, extensionUrl,
+                extensionId,
+                extensionUrl,
                 onSuccess = {
                     logger.debug("Installed extension: ${it.id}")
                     synchronized(this@WebExtensionController) {
@@ -65,7 +66,7 @@ class WebExtensionController(
                 onError = { ext, throwable ->
                     logger.error("Failed to install extension: $ext", throwable)
                     onError(throwable)
-                }
+                },
             )
         } else {
             onSuccess(installedExtension)
@@ -84,7 +85,7 @@ class WebExtensionController(
     fun registerContentMessageHandler(
         engineSession: EngineSession,
         messageHandler: MessageHandler,
-        name: String = defaultPort
+        name: String = defaultPort,
     ) {
         synchronized(this) {
             registerContentMessageHandler = {
@@ -104,7 +105,7 @@ class WebExtensionController(
      * */
     fun registerBackgroundMessageHandler(
         messageHandler: MessageHandler,
-        name: String = defaultPort
+        name: String = defaultPort,
     ) {
         synchronized(this) {
             registerBackgroundMessageHandler = {
@@ -140,7 +141,7 @@ class WebExtensionController(
      */
     fun sendBackgroundMessage(
         msg: JSONObject,
-        name: String = defaultPort
+        name: String = defaultPort,
     ) {
         installedExtensions[extensionId]?.let { ext ->
             val port = ext.getConnectedPort(name)

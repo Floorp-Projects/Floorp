@@ -31,7 +31,7 @@ import kotlin.coroutines.CoroutineContext
  * A Firebase Cloud Messaging implementation of the [PushService] for Android devices that support Google Play Services.
  */
 abstract class AbstractFirebasePushService(
-    internal val coroutineContext: CoroutineContext = Dispatchers.IO
+    internal val coroutineContext: CoroutineContext = Dispatchers.IO,
 ) : FirebaseMessagingService(), PushService {
 
     private val logger = Logger("AbstractFirebasePushService")
@@ -67,7 +67,7 @@ abstract class AbstractFirebasePushService(
             encoding = message.data[MESSAGE_KEY_ENCODING],
             body = message.data[MESSAGE_KEY_BODY],
             salt = message.data[MESSAGE_KEY_SALT],
-            cryptoKey = message.data[MESSAGE_KEY_CRYPTO_KEY]
+            cryptoKey = message.data[MESSAGE_KEY_CRYPTO_KEY],
         )
 
         // In case of any errors, let the PushProcessor handle this exception. Instead of crashing

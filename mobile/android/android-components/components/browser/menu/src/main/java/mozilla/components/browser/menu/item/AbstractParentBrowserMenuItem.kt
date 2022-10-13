@@ -23,12 +23,13 @@ abstract class AbstractParentBrowserMenuItem(
     private val subMenu: BrowserMenu,
     private val endOfMenuAlwaysVisible: Boolean,
     override val isCollapsingMenuLimit: Boolean = false,
-    override val isSticky: Boolean = false
+    override val isSticky: Boolean = false,
 ) : BrowserMenuItem {
     /**
      * Listener called when the sub menu is shown.
      */
     var onSubMenuShow: () -> Unit = {}
+
     /**
      * Listener called when the sub menu is dismissed.
      */
@@ -42,7 +43,7 @@ abstract class AbstractParentBrowserMenuItem(
             subMenu.show(
                 anchor = menu.currAnchor ?: view,
                 orientation = BrowserMenu.determineMenuOrientation(view.parent as? View?),
-                endOfMenuAlwaysVisible = endOfMenuAlwaysVisible
+                endOfMenuAlwaysVisible = endOfMenuAlwaysVisible,
             ) {
                 onSubMenuDismiss()
             }
@@ -58,7 +59,7 @@ abstract class AbstractParentBrowserMenuItem(
             menu.show(
                 anchor = menu.currAnchor ?: view,
                 orientation = BrowserMenu.determineMenuOrientation(view.parent as? View?),
-                endOfMenuAlwaysVisible = endOfMenuAlwaysVisible
+                endOfMenuAlwaysVisible = endOfMenuAlwaysVisible,
             )
         }
     }

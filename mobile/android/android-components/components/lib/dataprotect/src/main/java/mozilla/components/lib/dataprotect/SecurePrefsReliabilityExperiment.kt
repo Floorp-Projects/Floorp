@@ -53,7 +53,7 @@ class SecurePrefsReliabilityExperiment(private val context: Context) {
             CORRUPTED(5),
             PRESENT_UNEXPECTED(6),
             SUCCESS_WRITE(7),
-            SUCCESS_RESET(8)
+            SUCCESS_RESET(8),
         }
     }
 
@@ -135,14 +135,14 @@ class SecurePrefsReliabilityExperiment(private val context: Context) {
 private fun emitFact(
     item: String,
     value: SecurePrefsReliabilityExperiment.Companion.Values,
-    metadata: Map<String, Any>? = null
+    metadata: Map<String, Any>? = null,
 ) {
     Fact(
         Component.LIB_DATAPROTECT,
         Action.IMPLEMENTATION_DETAIL,
         item,
         "${value.v}",
-        metadata
+        metadata,
     ).collect()
 }
 

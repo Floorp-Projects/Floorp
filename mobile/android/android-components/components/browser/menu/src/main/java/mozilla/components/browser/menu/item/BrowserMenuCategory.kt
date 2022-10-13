@@ -43,7 +43,7 @@ class BrowserMenuCategory(
     @TypefaceStyle private val textStyle: Int = Typeface.BOLD,
     @TextAlignment private val textAlignment: Int = View.TEXT_ALIGNMENT_VIEW_START,
     override val isCollapsingMenuLimit: Boolean = false,
-    override val isSticky: Boolean = false
+    override val isSticky: Boolean = false,
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
 
@@ -75,8 +75,8 @@ class BrowserMenuCategory(
             size = if (textSize == NO_ID.toFloat()) null else textSize,
             color = if (textColorResource == NO_ID) null else getColor(context, textColorResource),
             textStyle = textStyle,
-            textAlignment = textAlignment
+            textAlignment = textAlignment,
         ),
-        containerStyle = ContainerStyle(isVisible = visible())
+        containerStyle = ContainerStyle(isVisible = visible()),
     )
 }

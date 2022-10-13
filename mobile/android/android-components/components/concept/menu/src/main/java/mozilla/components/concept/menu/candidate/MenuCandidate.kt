@@ -29,7 +29,7 @@ data class TextMenuCandidate(
     val textStyle: TextStyle = TextStyle(),
     override val containerStyle: ContainerStyle = ContainerStyle(),
     val effect: MenuCandidateEffect? = null,
-    val onClick: () -> Unit = {}
+    val onClick: () -> Unit = {},
 ) : MenuCandidate()
 
 /**
@@ -44,7 +44,7 @@ data class DecorativeTextMenuCandidate(
     val text: String,
     val height: Int? = null,
     val textStyle: TextStyle = TextStyle(),
-    override val containerStyle: ContainerStyle = ContainerStyle()
+    override val containerStyle: ContainerStyle = ContainerStyle(),
 ) : MenuCandidate()
 
 /**
@@ -66,7 +66,7 @@ data class CompoundMenuCandidate(
     val textStyle: TextStyle = TextStyle(),
     override val containerStyle: ContainerStyle = ContainerStyle(),
     val effect: MenuCandidateEffect? = null,
-    val onCheckedChange: (Boolean) -> Unit = {}
+    val onCheckedChange: (Boolean) -> Unit = {},
 ) : MenuCandidate() {
 
     /**
@@ -74,7 +74,7 @@ data class CompoundMenuCandidate(
      */
     enum class ButtonType {
         CHECKBOX,
-        SWITCH
+        SWITCH,
     }
 }
 
@@ -99,7 +99,7 @@ data class NestedMenuCandidate(
     val subMenuItems: List<MenuCandidate>? = emptyList(),
     val textStyle: TextStyle = TextStyle(),
     override val containerStyle: ContainerStyle = ContainerStyle(),
-    val effect: MenuCandidateEffect? = null
+    val effect: MenuCandidateEffect? = null,
 ) : MenuCandidate()
 
 /**
@@ -110,7 +110,7 @@ data class NestedMenuCandidate(
  */
 data class RowMenuCandidate(
     val items: List<SmallMenuCandidate>,
-    override val containerStyle: ContainerStyle = ContainerStyle()
+    override val containerStyle: ContainerStyle = ContainerStyle(),
 ) : MenuCandidate()
 
 /**
@@ -119,5 +119,5 @@ data class RowMenuCandidate(
  * @property containerStyle Styling to apply to the divider.
  */
 data class DividerMenuCandidate(
-    override val containerStyle: ContainerStyle = ContainerStyle()
+    override val containerStyle: ContainerStyle = ContainerStyle(),
 ) : MenuCandidate()

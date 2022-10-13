@@ -75,8 +75,8 @@ class WebAppManifestParser {
                     orientation = parseOrientation(json),
                     relatedApplications = parseRelatedApplications(json),
                     preferRelatedApplications = json.optBoolean("prefer_related_applications", false),
-                    shareTarget = ShareTargetParser.parse(json.optJSONObject("share_target"))
-                )
+                    shareTarget = ShareTargetParser.parse(json.optJSONObject("share_target")),
+                ),
             )
         } catch (e: JSONException) {
             Result.Failure(e)
@@ -184,7 +184,7 @@ private fun parseRelatedApplication(app: JSONObject): WebAppManifest.ExternalApp
             url = url,
             id = id,
             minVersion = app.tryGetString("min_version"),
-            fingerprints = parseFingerprints(app)
+            fingerprints = parseFingerprints(app),
         )
     } else {
         null
@@ -199,7 +199,7 @@ private fun parseFingerprints(app: JSONObject): List<WebAppManifest.ExternalAppl
         .map {
             WebAppManifest.ExternalApplicationResource.Fingerprint(
                 type = it.getString("type"),
-                value = it.getString("value")
+                value = it.getString("value"),
             )
         }
         .toList()
@@ -211,7 +211,7 @@ private fun serializeColor(color: Int?): String? = color?.let {
 }
 
 private fun serializeRelatedApplications(
-    relatedApplications: List<WebAppManifest.ExternalApplicationResource>
+    relatedApplications: List<WebAppManifest.ExternalApplicationResource>,
 ): JSONArray {
     val list = relatedApplications.map { app ->
         JSONObject().apply {
@@ -226,7 +226,7 @@ private fun serializeRelatedApplications(
 }
 
 private fun serializeFingerprints(
-    fingerprints: List<WebAppManifest.ExternalApplicationResource.Fingerprint>
+    fingerprints: List<WebAppManifest.ExternalApplicationResource.Fingerprint>,
 ): JSONArray {
     val list = fingerprints.map {
         JSONObject().apply {

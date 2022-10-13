@@ -21,12 +21,12 @@ import java.lang.IllegalArgumentException
  */
 class BrowserStore(
     initialState: BrowserState = BrowserState(),
-    middleware: List<Middleware<BrowserState, BrowserAction>> = emptyList()
+    middleware: List<Middleware<BrowserState, BrowserAction>> = emptyList(),
 ) : Store<BrowserState, BrowserAction>(
     initialState,
     BrowserStateReducer::reduce,
     middleware,
-    "BrowserStore"
+    "BrowserStore",
 ) {
     init {
         initialState.selectedTabId?.let {

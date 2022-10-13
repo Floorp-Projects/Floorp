@@ -56,7 +56,7 @@ fun <S : State, A : Action, R> Store<S, A>.observeAsComposableState(map: (S) -> 
 @Composable
 fun <S : State, A : Action, O, R> Store<S, A>.observeAsComposableState(
     observe: (S) -> O,
-    map: (S) -> R
+    map: (S) -> R,
 ): ComposeState<R?> {
     val lifecycleOwner = LocalLifecycleOwner.current
     var lastValue = observe(state)
@@ -88,7 +88,7 @@ inline fun <reified S : State, A : Action> composableStore(
         } else {
             throw NotImplementedError(
                 "State of store does not implement Parcelable. Either implement Parcelable or pass " +
-                    "custom save function to composableStore()"
+                    "custom save function to composableStore()",
             )
         }
     },
@@ -98,11 +98,11 @@ inline fun <reified S : State, A : Action> composableStore(
         } else {
             throw NotImplementedError(
                 "Restored parcelable is not of same class as state. Either the state needs to " +
-                    "implement Parcelable or you need to provide a custom restore function to composableStore()"
+                    "implement Parcelable or you need to provide a custom restore function to composableStore()",
             )
         }
     },
-    crossinline init: (S?) -> Store<S, A>
+    crossinline init: (S?) -> Store<S, A>,
 ): Store<S, A> {
     return rememberSaveable(
         saver = Saver(
@@ -110,8 +110,8 @@ inline fun <reified S : State, A : Action> composableStore(
             restore = { parcelable ->
                 val state = restore(parcelable)
                 init(state)
-            }
+            },
         ),
-        init = { init(null) }
+        init = { init(null) },
     )
 }

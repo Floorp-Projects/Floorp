@@ -29,8 +29,9 @@ class PermissionsDialogFragmentTest {
     @Test
     fun `build dialog`() {
         val addon = Addon(
-            "id", translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"),
-            permissions = listOf("privacy", "<all_urls>", "tabs")
+            "id",
+            translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"),
+            permissions = listOf("privacy", "<all_urls>", "tabs"),
         )
         val fragment = createPermissionsDialogFragment(addon)
 
@@ -130,10 +131,10 @@ class PermissionsDialogFragmentTest {
 
     private fun createPermissionsDialogFragment(
         addon: Addon,
-        promptsStyling: PromptsStyling? = null
+        promptsStyling: PromptsStyling? = null,
     ): PermissionsDialogFragment {
         return spy(
-            PermissionsDialogFragment.newInstance(addon, promptsStyling = promptsStyling)
+            PermissionsDialogFragment.newInstance(addon, promptsStyling = promptsStyling),
         ).apply {
             doNothing().`when`(this).dismiss()
         }

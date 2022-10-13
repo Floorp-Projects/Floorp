@@ -38,7 +38,7 @@ class OnDeviceSitePermissionsStorageTest {
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
         SitePermissionsDatabase::class.java.canonicalName,
-        FrameworkSQLiteOpenHelperFactory()
+        FrameworkSQLiteOpenHelperFactory(),
     )
 
     @Before
@@ -61,7 +61,7 @@ class OnDeviceSitePermissionsStorageTest {
         val sitePermissions = SitePermissions(
             origin = origin,
             camera = Status.BLOCKED,
-            savedAt = System.currentTimeMillis()
+            savedAt = System.currentTimeMillis(),
         )
         storage.save(sitePermissions)
         val sitePermissionsFromStorage = storage.findSitePermissionsBy(origin)!!
@@ -78,7 +78,7 @@ class OnDeviceSitePermissionsStorageTest {
                     "site_permissions " +
                     "(origin, location, notification, microphone,camera_front,camera_back,bluetooth,local_storage,saved_at) " +
                     "VALUES " +
-                    "('mozilla.org',1,1,1,1,1,1,1,1)"
+                    "('mozilla.org',1,1,1,1,1,1,1,1)",
             )
         }
 
@@ -87,15 +87,17 @@ class OnDeviceSitePermissionsStorageTest {
         }
 
         val dbVersion2 = helper.runMigrationsAndValidate(
-            MIGRATION_TEST_DB, 2, true, Migrations.migration_1_2
+            MIGRATION_TEST_DB,
+            2,
+            true,
+            Migrations.migration_1_2,
         ).apply {
-
             execSQL(
                 "INSERT INTO " +
                     "site_permissions " +
                     "(origin, location, notification, microphone,camera,bluetooth,local_storage,saved_at) " +
                     "VALUES " +
-                    "('mozilla.org',1,1,1,1,1,1,1)"
+                    "('mozilla.org',1,1,1,1,1,1,1)",
             )
         }
 
@@ -118,7 +120,7 @@ class OnDeviceSitePermissionsStorageTest {
                     "site_permissions " +
                     "(origin, location, notification, microphone,camera,bluetooth,local_storage,saved_at) " +
                     "VALUES " +
-                    "('mozilla.org',1,1,1,1,1,1,1)"
+                    "('mozilla.org',1,1,1,1,1,1,1)",
             )
         }
 
@@ -144,7 +146,7 @@ class OnDeviceSitePermissionsStorageTest {
                     "site_permissions " +
                     "(origin, location, notification, microphone,camera,bluetooth,local_storage,autoplay_audible,autoplay_inaudible,saved_at) " +
                     "VALUES " +
-                    "('mozilla.org',1,1,1,1,1,1,1,1,1)"
+                    "('mozilla.org',1,1,1,1,1,1,1,1,1)",
             )
         }
 
@@ -166,7 +168,7 @@ class OnDeviceSitePermissionsStorageTest {
                     "site_permissions " +
                     "(origin, location, notification, microphone,camera,bluetooth,local_storage,autoplay_audible,autoplay_inaudible,media_key_system_access,saved_at) " +
                     "VALUES " +
-                    "('mozilla.org',1,1,1,1,1,1,0,0,1,1)"
+                    "('mozilla.org',1,1,1,1,1,1,0,0,1,1)",
             )
         }
 
@@ -189,7 +191,7 @@ class OnDeviceSitePermissionsStorageTest {
                     "site_permissions " +
                     "(origin, location, notification, microphone,camera,bluetooth,local_storage,autoplay_audible,autoplay_inaudible,media_key_system_access,saved_at) " +
                     "VALUES " +
-                    "('${url.tryGetHostFromUrl()}',1,1,1,1,1,1,0,0,1,1)"
+                    "('${url.tryGetHostFromUrl()}',1,1,1,1,1,1,0,0,1,1)",
             )
         }
 
@@ -213,7 +215,7 @@ class OnDeviceSitePermissionsStorageTest {
                     "site_permissions " +
                     "(origin, location, notification, microphone,camera,bluetooth,local_storage,autoplay_audible,autoplay_inaudible,media_key_system_access,saved_at) " +
                     "VALUES " +
-                    "('${url.tryGetHostFromUrl()}',1,1,1,1,1,1,-1,-1,1,1)"
+                    "('${url.tryGetHostFromUrl()}',1,1,1,1,1,1,-1,-1,1,1)",
             ) // Block audio and video.
         }
 

@@ -25,7 +25,7 @@ import mozilla.components.support.base.log.logger.Logger
 class BiometricPromptAuth(
     private val context: Context,
     private val fragment: Fragment,
-    private val authenticationDelegate: AuthenticationDelegate
+    private val authenticationDelegate: AuthenticationDelegate,
 ) : LifecycleAwareFeature {
     private val logger = Logger(javaClass.simpleName)
 
@@ -49,7 +49,7 @@ class BiometricPromptAuth(
      */
     fun requestAuthentication(
         title: String,
-        subtitle: String = ""
+        subtitle: String = "",
     ) {
         val promptInfo: BiometricPrompt.PromptInfo = BiometricPrompt.PromptInfo.Builder()
             .setAllowedAuthenticators(BIOMETRIC_WEAK or DEVICE_CREDENTIAL)

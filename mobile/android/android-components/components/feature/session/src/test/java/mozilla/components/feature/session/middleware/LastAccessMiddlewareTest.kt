@@ -48,11 +48,11 @@ class LastAccessMiddlewareTest {
             initialState = BrowserState(
                 listOf(
                     createTab("https://mozilla.org", id = "123"),
-                    createTab("https://firefox.com", id = "456")
+                    createTab("https://firefox.com", id = "456"),
                 ),
-                selectedTabId = "123"
+                selectedTabId = "123",
             ),
-            middleware = listOf(LastAccessMiddleware())
+            middleware = listOf(LastAccessMiddleware()),
         )
 
         assertEquals(0L, store.state.tabs[0].lastAccess)
@@ -69,11 +69,11 @@ class LastAccessMiddlewareTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 listOf(
-                    createTab("https://mozilla.org", id = "123")
+                    createTab("https://mozilla.org", id = "123"),
                 ),
-                selectedTabId = "123"
+                selectedTabId = "123",
             ),
-            middleware = listOf(LastAccessMiddleware())
+            middleware = listOf(LastAccessMiddleware()),
         )
 
         assertEquals(0L, store.state.selectedTab?.lastAccess)
@@ -90,11 +90,11 @@ class LastAccessMiddlewareTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 listOf(
-                    createTab("https://mozilla.org", id = "123")
+                    createTab("https://mozilla.org", id = "123"),
                 ),
-                selectedTabId = "123"
+                selectedTabId = "123",
             ),
-            middleware = listOf(LastAccessMiddleware())
+            middleware = listOf(LastAccessMiddleware()),
         )
 
         assertEquals(0L, store.state.selectedTab?.lastAccess)
@@ -113,9 +113,9 @@ class LastAccessMiddlewareTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 listOf(tab),
-                selectedTabId = tab.id
+                selectedTabId = tab.id,
             ),
-            middleware = listOf(LastAccessMiddleware())
+            middleware = listOf(LastAccessMiddleware()),
         )
         assertEquals(0L, store.state.selectedTab?.lastAccess)
 
@@ -129,9 +129,9 @@ class LastAccessMiddlewareTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 listOf(tab),
-                selectedTabId = tab.id
+                selectedTabId = tab.id,
             ),
-            middleware = listOf(LastAccessMiddleware())
+            middleware = listOf(LastAccessMiddleware()),
         )
         assertEquals(0L, store.state.selectedTab?.lastAccess)
 
@@ -148,11 +148,11 @@ class LastAccessMiddlewareTest {
             initialState = BrowserState(
                 listOf(
                     createTab("https://mozilla.org", id = "123"),
-                    createTab("https://firefox.com", id = "456")
+                    createTab("https://firefox.com", id = "456"),
                 ),
-                selectedTabId = "123"
+                selectedTabId = "123",
             ),
-            middleware = listOf(LastAccessMiddleware())
+            middleware = listOf(LastAccessMiddleware()),
         )
 
         assertEquals(0L, store.state.tabs[0].lastAccess)
@@ -172,11 +172,11 @@ class LastAccessMiddlewareTest {
             initialState = BrowserState(
                 listOf(
                     createTab("https://mozilla.org", id = "123"),
-                    createTab("https://firefox.com", id = "456")
+                    createTab("https://firefox.com", id = "456"),
                 ),
-                selectedTabId = "123"
+                selectedTabId = "123",
             ),
-            middleware = listOf(LastAccessMiddleware())
+            middleware = listOf(LastAccessMiddleware()),
         )
 
         assertEquals(0L, store.state.tabs[0].lastAccess)
@@ -196,11 +196,11 @@ class LastAccessMiddlewareTest {
                 listOf(
                     createTab("https://mozilla.org", id = "123"),
                     createTab("https://firefox.com", id = "456"),
-                    createTab("https://getpocket.com", id = "789")
+                    createTab("https://getpocket.com", id = "789"),
                 ),
-                selectedTabId = "123"
+                selectedTabId = "123",
             ),
-            middleware = listOf(LastAccessMiddleware())
+            middleware = listOf(LastAccessMiddleware()),
         )
 
         assertEquals(0L, store.state.tabs[0].lastAccess)
@@ -222,11 +222,11 @@ class LastAccessMiddlewareTest {
                 listOf(
                     createTab("https://mozilla.org", id = "123"),
                     createTab("https://firefox.com", id = "456"),
-                    createTab("https://getpocket.com", id = "789")
+                    createTab("https://getpocket.com", id = "789"),
                 ),
-                selectedTabId = "123"
+                selectedTabId = "123",
             ),
-            middleware = listOf(LastAccessMiddleware())
+            middleware = listOf(LastAccessMiddleware()),
         )
 
         assertEquals(0L, store.state.tabs[0].lastAccess)
@@ -246,11 +246,11 @@ class LastAccessMiddlewareTest {
                 listOf(
                     createTab("https://mozilla.org", id = "123", private = true),
                     createTab("https://firefox.com", id = "456", private = true),
-                    createTab("https://getpocket.com", id = "789")
+                    createTab("https://getpocket.com", id = "789"),
                 ),
-                selectedTabId = "123"
+                selectedTabId = "123",
             ),
-            middleware = listOf(LastAccessMiddleware())
+            middleware = listOf(LastAccessMiddleware()),
         )
 
         assertEquals(0L, store.state.tabs[0].lastAccess)
@@ -272,11 +272,11 @@ class LastAccessMiddlewareTest {
                 listOf(
                     createTab("https://mozilla.org", id = "123"),
                     createTab("https://firefox.com", id = "456", private = true),
-                    createTab("https://getpocket.com", id = "789", private = true)
+                    createTab("https://getpocket.com", id = "789", private = true),
                 ),
-                selectedTabId = "123"
+                selectedTabId = "123",
             ),
-            middleware = listOf(LastAccessMiddleware())
+            middleware = listOf(LastAccessMiddleware()),
         )
 
         assertEquals(0L, store.state.tabs[0].lastAccess)
@@ -296,25 +296,25 @@ class LastAccessMiddlewareTest {
         val recentTime = System.currentTimeMillis()
         val lastAccess = 3735928559
         val store = BrowserStore(
-            middleware = listOf(LastAccessMiddleware())
+            middleware = listOf(LastAccessMiddleware()),
         )
         val recoverableTabs = listOf(
             RecoverableTab(
                 engineSessionState = null,
-                state = TabState(url = "https://firefox.com", id = "1", lastAccess = lastAccess)
+                state = TabState(url = "https://firefox.com", id = "1", lastAccess = lastAccess),
             ),
             RecoverableTab(
                 engineSessionState = null,
-                state = TabState(url = "https://mozilla.org", id = "2", lastAccess = lastAccess)
-            )
+                state = TabState(url = "https://mozilla.org", id = "2", lastAccess = lastAccess),
+            ),
         )
 
         store.dispatch(
             TabListAction.RestoreAction(
                 recoverableTabs,
                 "2",
-                TabListAction.RestoreAction.RestoreLocation.BEGINNING
-            )
+                TabListAction.RestoreAction.RestoreLocation.BEGINNING,
+            ),
         ).joinBlocking()
 
         assertTrue(store.state.tabs.size == 2)

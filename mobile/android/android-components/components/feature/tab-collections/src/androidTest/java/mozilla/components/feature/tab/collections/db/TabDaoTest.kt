@@ -44,7 +44,7 @@ class TabDaoTest {
             url = "https://www.mozilla.org",
             stateFile = UUID.randomUUID().toString(),
             tabCollectionId = collection.id!!,
-            createdAt = 200
+            createdAt = 200,
         ).also {
             it.id = tabDao.insertTab(it)
         }
@@ -54,7 +54,7 @@ class TabDaoTest {
             url = "https://www.firefox.com",
             stateFile = UUID.randomUUID().toString(),
             tabCollectionId = collection.id!!,
-            createdAt = 100
+            createdAt = 100,
         ).also {
             it.id = tabDao.insertTab(it)
         }
@@ -84,7 +84,7 @@ class TabDaoTest {
             url = "https://www.mozilla.org",
             stateFile = UUID.randomUUID().toString(),
             tabCollectionId = collection.id!!,
-            createdAt = 200
+            createdAt = 200,
         ).also {
             it.id = tabDao.insertTab(it)
         }
@@ -94,7 +94,7 @@ class TabDaoTest {
             url = "https://www.firefox.com",
             stateFile = UUID.randomUUID().toString(),
             tabCollectionId = collection.id!!,
-            createdAt = 100
+            createdAt = 100,
         ).also {
             it.id = tabDao.insertTab(it)
         }

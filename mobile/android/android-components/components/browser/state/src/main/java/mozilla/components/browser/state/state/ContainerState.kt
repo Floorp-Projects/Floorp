@@ -16,7 +16,7 @@ data class ContainerState(
     val contextId: String,
     val name: String,
     val color: Color,
-    val icon: Icon
+    val icon: Icon,
 ) {
     /**
      * Enum of container color.
@@ -30,7 +30,7 @@ data class ContainerState(
         RED("red"),
         PINK("pink"),
         PURPLE("purple"),
-        TOOLBAR("toolbar")
+        TOOLBAR("toolbar"),
     }
 
     /**
@@ -49,7 +49,7 @@ data class ContainerState(
         PET("pet"),
         TREE("tree"),
         CHILL("chill"),
-        FENCE("fence")
+        FENCE("fence"),
     }
 }
 

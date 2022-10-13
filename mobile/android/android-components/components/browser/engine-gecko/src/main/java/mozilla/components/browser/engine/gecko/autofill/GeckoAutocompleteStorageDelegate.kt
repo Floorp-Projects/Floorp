@@ -30,7 +30,7 @@ import org.mozilla.geckoview.GeckoResult
  */
 class GeckoAutocompleteStorageDelegate(
     private val creditCardsAddressesStorageDelegate: CreditCardsAddressesStorageDelegate,
-    private val loginStorageDelegate: LoginStorageDelegate
+    private val loginStorageDelegate: LoginStorageDelegate,
 ) : Autocomplete.StorageDelegate {
 
     override fun onAddressFetch(): GeckoResult<Array<Autocomplete.Address>>? {

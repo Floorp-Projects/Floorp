@@ -15,5 +15,5 @@ import mozilla.components.browser.tabstray.TabsTray
  */
 internal data class Tabs(
     val list: List<Tab>,
-    val selectedTabId: String?
+    val selectedTabId: String?,
 )

@@ -22,8 +22,10 @@ private const val ENCRYPTED_VERSION = 0x02
 
 @TargetApi(M)
 internal const val CIPHER_ALG = KeyProperties.KEY_ALGORITHM_AES
+
 @TargetApi(M)
 internal const val CIPHER_MOD = KeyProperties.BLOCK_MODE_GCM
+
 @TargetApi(M)
 internal const val CIPHER_PAD = KeyProperties.ENCRYPTION_PADDING_NONE
 internal const val CIPHER_KEY_LEN = 256
@@ -87,7 +89,7 @@ open class KeyStoreWrapper {
     open fun makeKeyFor(label: String): SecretKey {
         val spec = KeyGenParameterSpec.Builder(
             label,
-            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
         )
             .setKeySize(CIPHER_KEY_LEN)
             .setBlockModes(CIPHER_MOD)
@@ -147,7 +149,7 @@ open class KeyStoreWrapper {
 open class Keystore(
     val label: String,
     manual: Boolean = false,
-    internal val wrapper: KeyStoreWrapper = KeyStoreWrapper()
+    internal val wrapper: KeyStoreWrapper = KeyStoreWrapper(),
 ) {
     init {
         if (!manual and !available()) {

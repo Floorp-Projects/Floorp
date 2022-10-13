@@ -32,8 +32,8 @@ class AndroidImageDecoderTest {
                 targetSize = 32,
                 minSize = 32,
                 maxSize = 256,
-                maxScaleFactor = 2.0f
-            )
+                maxScaleFactor = 2.0f,
+            ),
         )
 
         assertNotNull(bitmap!!)
@@ -50,8 +50,8 @@ class AndroidImageDecoderTest {
                 targetSize = 64,
                 minSize = 32,
                 maxSize = 256,
-                maxScaleFactor = 2.0f
-            )
+                maxScaleFactor = 2.0f,
+            ),
         )
 
         assertNull(bitmap)
@@ -68,8 +68,8 @@ class AndroidImageDecoderTest {
                 targetSize = 64,
                 minSize = 32,
                 maxSize = 256,
-                maxScaleFactor = 2.0f
-            )
+                maxScaleFactor = 2.0f,
+            ),
         )
 
         assertNull(decodedBitmap)
@@ -86,8 +86,8 @@ class AndroidImageDecoderTest {
                 targetSize = 64,
                 minSize = 32,
                 maxSize = 256,
-                maxScaleFactor = 2.0f
-            )
+                maxScaleFactor = 2.0f,
+            ),
         )
 
         assertNull(decodedBitmap)
@@ -104,8 +104,8 @@ class AndroidImageDecoderTest {
                 targetSize = 64,
                 minSize = 32,
                 maxSize = 256,
-                maxScaleFactor = 2.0f
-            )
+                maxScaleFactor = 2.0f,
+            ),
         )
 
         assertNull(decodedBitmap)
@@ -124,8 +124,8 @@ class AndroidImageDecoderTest {
                 targetSize = 256,
                 minSize = 64,
                 maxSize = 256,
-                maxScaleFactor = 1.0f
-            )
+                maxScaleFactor = 1.0f,
+            ),
         )
 
         assertNull(decodedBitmap)
@@ -144,8 +144,8 @@ class AndroidImageDecoderTest {
                 targetSize = 256,
                 minSize = 64,
                 maxSize = 256,
-                maxScaleFactor = 1.0f
-            )
+                maxScaleFactor = 1.0f,
+            ),
         )
 
         assertNull(decodedBitmap)
@@ -164,8 +164,8 @@ class AndroidImageDecoderTest {
                 targetSize = 256,
                 minSize = 64,
                 maxSize = 256,
-                maxScaleFactor = 0.9f
-            )
+                maxScaleFactor = 0.9f,
+            ),
         )
 
         assertNull(decodedBitmap)
@@ -184,8 +184,8 @@ class AndroidImageDecoderTest {
                 targetSize = 256,
                 minSize = 32,
                 maxSize = 256,
-                maxScaleFactor = 1.0f
-            )
+                maxScaleFactor = 1.0f,
+            ),
         )
 
         assertNull(decodedBitmap)
@@ -204,8 +204,8 @@ class AndroidImageDecoderTest {
                 targetSize = 256,
                 minSize = 32,
                 maxSize = 256,
-                maxScaleFactor = 1.0f
-            )
+                maxScaleFactor = 1.0f,
+            ),
         )
 
         assertNull(decodedBitmap)
@@ -224,8 +224,8 @@ class AndroidImageDecoderTest {
                 targetSize = 256,
                 minSize = 32,
                 maxSize = 256,
-                maxScaleFactor = 0.9f
-            )
+                maxScaleFactor = 0.9f,
+            ),
         )
 
         assertNull(decodedBitmap)
@@ -245,8 +245,8 @@ class AndroidImageDecoderTest {
                 targetSize = 256,
                 minSize = 64,
                 maxSize = 256,
-                maxScaleFactor = 2.0f
-            )
+                maxScaleFactor = 2.0f,
+            ),
         )
 
         assertNotNull(decodedBitmap)

@@ -19,7 +19,7 @@ import mozilla.components.support.base.log.logger.Logger
  */
 class WebAuthnFeature(
     private val engine: Engine,
-    private val activity: Activity
+    private val activity: Activity,
 ) : LifecycleAwareFeature, ActivityResultHandler, ActivityDelegate {
     private val logger = Logger("WebAuthnFeature")
     private var requestCodeCounter = ACTIVITY_REQUEST_CODE
@@ -37,7 +37,7 @@ class WebAuthnFeature(
         logger.info(
             "Received activity result with " +
                 "code: $requestCode " +
-                "and original request code: $requestCodeCounter"
+                "and original request code: $requestCodeCounter",
         )
 
         if (requestCode != requestCodeCounter) {

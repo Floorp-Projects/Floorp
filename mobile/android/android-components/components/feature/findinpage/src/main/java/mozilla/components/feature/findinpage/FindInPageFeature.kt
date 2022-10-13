@@ -21,9 +21,10 @@ class FindInPageFeature(
     store: BrowserStore,
     view: FindInPageView,
     engineView: EngineView,
-    private val onClose: (() -> Unit)? = null
+    private val onClose: (() -> Unit)? = null,
 ) : LifecycleAwareFeature, UserInteractionHandler {
     @VisibleForTesting internal var presenter = FindInPagePresenter(store, view)
+
     @VisibleForTesting internal var interactor = FindInPageInteractor(this, view, engineView)
 
     private var session: SessionState? = null

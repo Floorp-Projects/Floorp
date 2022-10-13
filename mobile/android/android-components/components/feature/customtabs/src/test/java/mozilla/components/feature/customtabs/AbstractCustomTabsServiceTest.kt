@@ -56,22 +56,23 @@ class AbstractCustomTabsServiceTest {
         assertFalse(stub.requestPostMessageChannel(mock(), mock()))
         assertEquals(
             CustomTabsService.RESULT_FAILURE_DISALLOWED,
-            stub.postMessage(mock(), "", mock())
+            stub.postMessage(mock(), "", mock()),
         )
         assertFalse(
             stub.validateRelationship(
                 mock(),
                 0,
                 mock(),
-                mock()
-            )
+                mock(),
+            ),
         )
         assertTrue(
             stub.mayLaunchUrl(
                 mock(),
                 mock(),
-                mock(), emptyList<Bundle>()
-            )
+                mock(),
+                emptyList<Bundle>(),
+            ),
         )
     }
 

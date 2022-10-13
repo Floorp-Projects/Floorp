@@ -44,7 +44,7 @@ class LoginExceptionDaoTest {
     @Test
     fun testAddingLoginException() {
         val exception = LoginExceptionEntity(
-            origin = "mozilla.org"
+            origin = "mozilla.org",
         ).also {
             it.id = loginExceptionDao.insertLoginException(it)
         }
@@ -63,13 +63,13 @@ class LoginExceptionDaoTest {
     @Test
     fun testRemovingLoginException() {
         val exception1 = LoginExceptionEntity(
-            origin = "mozilla.org"
+            origin = "mozilla.org",
         ).also {
             it.id = loginExceptionDao.insertLoginException(it)
         }
 
         val exception2 = LoginExceptionEntity(
-            origin = "firefox.com"
+            origin = "firefox.com",
         ).also {
             it.id = loginExceptionDao.insertLoginException(it)
         }

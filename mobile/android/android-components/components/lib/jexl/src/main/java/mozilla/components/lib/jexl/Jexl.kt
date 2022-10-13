@@ -17,7 +17,7 @@ import mozilla.components.lib.jexl.value.JexlUndefined
 import mozilla.components.lib.jexl.value.JexlValue
 
 class Jexl(
-    private val grammar: Grammar = Grammar()
+    private val grammar: Grammar = Grammar(),
 ) {
     private val lexer: Lexer = Lexer(grammar)
     private val transforms: MutableMap<String, Transform> = mutableMapOf()
@@ -73,7 +73,7 @@ class Jexl(
     fun evaluateBooleanExpression(
         expression: String,
         context: JexlContext = JexlContext(),
-        defaultValue: Boolean? = null
+        defaultValue: Boolean? = null,
     ): Boolean {
         val result = try {
             evaluate(expression, context)
@@ -98,5 +98,5 @@ class Jexl(
  */
 class JexlException(
     cause: Exception? = null,
-    message: String? = null
+    message: String? = null,
 ) : Exception(message, cause)

@@ -32,7 +32,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 class BrowserThumbnails(
     private val context: Context,
     private val engineView: EngineView,
-    private val store: BrowserStore
+    private val store: BrowserStore,
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null

@@ -22,7 +22,7 @@ import mozilla.components.concept.toolbar.Toolbar.Highlight.PERMISSIONS_CHANGED
 internal class HighlightView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : AppCompatImageView(context, attrs, defStyleAttr) {
 
     init {
@@ -79,13 +79,13 @@ internal class HighlightView @JvmOverloads constructor(
         PERMISSIONS_CHANGED -> Update(
             highlightIcon,
             R.string.mozac_browser_toolbar_content_description_autoplay_blocked,
-            true
+            true,
         )
 
         NONE -> Update(
             null,
             null,
-            false
+            false,
         )
     }
 }

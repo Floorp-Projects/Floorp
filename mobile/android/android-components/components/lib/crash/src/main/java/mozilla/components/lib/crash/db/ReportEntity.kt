@@ -14,7 +14,7 @@ import mozilla.components.lib.crash.service.CrashReporterService
  * Datanase entry describing a crash report that was sent to a crash reporting service.
  */
 @Entity(
-    tableName = "reports"
+    tableName = "reports",
 )
 internal data class ReportEntity(
     /**
@@ -40,13 +40,13 @@ internal data class ReportEntity(
      * The id of the crash report as returned by [CrashReporterService.report].
      */
     @ColumnInfo(name = "report_id")
-    var reportId: String
+    var reportId: String,
 )
 
 internal fun CrashReporterService.toReportEntity(crash: Crash, reportId: String): ReportEntity {
     return ReportEntity(
         crashUuid = crash.uuid,
         serviceId = id,
-        reportId = reportId
+        reportId = reportId,
     )
 }

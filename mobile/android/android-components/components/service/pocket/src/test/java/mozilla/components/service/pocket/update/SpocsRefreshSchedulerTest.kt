@@ -47,9 +47,10 @@ class SpocsRefreshSchedulerTest {
         val scheduler = spy(
             SpocsRefreshScheduler(
                 PocketStoriesConfig(
-                    client, Frequency(1, TimeUnit.HOURS)
-                )
-            )
+                    client,
+                    Frequency(1, TimeUnit.HOURS),
+                ),
+            ),
         )
         val workManager = mock<WorkManager>()
         val worker = mock<PeriodicWorkRequest>()
@@ -79,9 +80,10 @@ class SpocsRefreshSchedulerTest {
         val scheduler = spy(
             SpocsRefreshScheduler(
                 PocketStoriesConfig(
-                    client, Frequency(1, TimeUnit.HOURS)
-                )
-            )
+                    client,
+                    Frequency(1, TimeUnit.HOURS),
+                ),
+            ),
         )
         val workManager = mock<WorkManager>()
         val worker = mock<OneTimeWorkRequest>()
@@ -110,7 +112,7 @@ class SpocsRefreshSchedulerTest {
         val scheduler = spy(SpocsRefreshScheduler(mock()))
 
         val result = scheduler.createPeriodicRefreshWorkerRequest(
-            Frequency(1, TimeUnit.HOURS)
+            Frequency(1, TimeUnit.HOURS),
         )
 
         verify(scheduler).getWorkerConstrains()

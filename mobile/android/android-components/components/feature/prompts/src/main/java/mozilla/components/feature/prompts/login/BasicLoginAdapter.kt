@@ -27,7 +27,7 @@ private object LoginItemDiffCallback : DiffUtil.ItemCallback<Login>() {
  * RecyclerView adapter for displaying login items.
  */
 internal class BasicLoginAdapter(
-    private val onLoginSelected: (Login) -> Unit
+    private val onLoginSelected: (Login) -> Unit,
 ) : ListAdapter<Login, LoginViewHolder>(LoginItemDiffCallback) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LoginViewHolder {
         val view = LayoutInflater
@@ -46,7 +46,7 @@ internal class BasicLoginAdapter(
  */
 internal class LoginViewHolder(
     itemView: View,
-    private val onLoginSelected: (Login) -> Unit
+    private val onLoginSelected: (Login) -> Unit,
 ) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
     @VisibleForTesting
     lateinit var login: Login

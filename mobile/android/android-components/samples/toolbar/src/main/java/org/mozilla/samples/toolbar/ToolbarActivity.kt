@@ -100,7 +100,7 @@ class ToolbarActivity : AppCompatActivity() {
      */
     private fun setupDefaultToolbar(private: Boolean = false) {
         binding.toolbar.setBackgroundColor(
-            ContextCompat.getColor(this, mozilla.components.ui.colors.R.color.photonBlue80)
+            ContextCompat.getColor(this, mozilla.components.ui.colors.R.color.photonBlue80),
         )
 
         binding.toolbar.private = private
@@ -125,7 +125,7 @@ class ToolbarActivity : AppCompatActivity() {
 
         val back = BrowserToolbar.Button(
             resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_back)!!,
-            "Back"
+            "Back",
         ) {
             simulateReload()
         }
@@ -134,7 +134,7 @@ class ToolbarActivity : AppCompatActivity() {
 
         val forward = BrowserToolbar.Button(
             resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_forward)!!,
-            "Forward"
+            "Forward",
         ) {
             simulateReload()
         }
@@ -151,7 +151,7 @@ class ToolbarActivity : AppCompatActivity() {
             secondaryImage = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_stop)!!,
             secondaryContentDescription = "Stop",
             isInPrimaryState = { loading.value != true },
-            disableInSecondaryState = false
+            disableInSecondaryState = false,
         ) {
             if (loading.value == true) {
                 job?.cancel()
@@ -186,7 +186,7 @@ class ToolbarActivity : AppCompatActivity() {
      */
     private fun setupCustomMenu() {
         binding.toolbar.setBackgroundColor(
-            ContextCompat.getColor(this, mozilla.components.ui.colors.R.color.photonBlue80)
+            ContextCompat.getColor(this, mozilla.components.ui.colors.R.color.photonBlue80),
         )
 
         // //////////////////////////////////////////////////////////////////////////////////////////
@@ -195,12 +195,12 @@ class ToolbarActivity : AppCompatActivity() {
 
         val share = TextMenuCandidate(
             "Share",
-            start = DrawableMenuIcon(this, R.drawable.mozac_ic_share)
+            start = DrawableMenuIcon(this, R.drawable.mozac_ic_share),
         ) { /* Do nothing */ }
 
         val search = TextMenuCandidate(
             "Search",
-            start = DrawableMenuIcon(this, R.drawable.mozac_ic_search)
+            start = DrawableMenuIcon(this, R.drawable.mozac_ic_search),
         ) { /* Do nothing */ }
 
         binding.toolbar.display.menuController = BrowserMenuController(Side.START).apply {
@@ -232,7 +232,7 @@ class ToolbarActivity : AppCompatActivity() {
         val forward = BrowserMenuItemToolbar.Button(
             mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
             "Forward",
-            isEnabled = { canGoForward() }
+            isEnabled = { canGoForward() },
         ) {
             simulateReload()
         }
@@ -243,7 +243,7 @@ class ToolbarActivity : AppCompatActivity() {
             secondaryImageResource = R.drawable.mozac_ic_stop,
             secondaryContentDescription = "Stop",
             isInPrimaryState = { loading.value != true },
-            disableInSecondaryState = false
+            disableInSecondaryState = false,
         ) {
             if (loading.value == true) {
                 job?.cancel()
@@ -296,7 +296,7 @@ class ToolbarActivity : AppCompatActivity() {
         override fun createView(parent: ViewGroup): View = TabCounter(parent.context).apply {
             setCount(2)
             setBackgroundResource(
-                parent.context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless)
+                parent.context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless),
             )
         }
 
@@ -313,7 +313,7 @@ class ToolbarActivity : AppCompatActivity() {
         binding.toolbar.display.indicators = listOf(
             DisplayToolbar.Indicators.SECURITY,
             DisplayToolbar.Indicators.TRACKING_PROTECTION,
-            DisplayToolbar.Indicators.EMPTY
+            DisplayToolbar.Indicators.EMPTY,
         )
 
         binding.toolbar.display.colors = binding.toolbar.display.colors.copy(
@@ -324,7 +324,7 @@ class ToolbarActivity : AppCompatActivity() {
             separator = 0x1E15141a.toInt(),
             trackingProtection = 0xFF20123a.toInt(),
             emptyIcon = 0xFF20123a.toInt(),
-            hint = 0x1E15141a.toInt()
+            hint = 0x1E15141a.toInt(),
         )
 
         binding.toolbar.display.urlFormatter = { url ->
@@ -332,7 +332,7 @@ class ToolbarActivity : AppCompatActivity() {
         }
 
         binding.toolbar.display.setUrlBackground(
-            ContextCompat.getDrawable(this, R.drawable.fenix_url_background)
+            ContextCompat.getDrawable(this, R.drawable.fenix_url_background),
         )
         binding.toolbar.display.hint = "Search or enter address"
         binding.toolbar.display.setOnUrlLongClickListener {
@@ -349,8 +349,8 @@ class ToolbarActivity : AppCompatActivity() {
             subMenuItems = listOf(
                 NestedMenuCandidate(id = R.id.container, text = "Back", subMenuItems = null),
                 TextMenuCandidate("Setting 1") { /* Do nothing */ },
-                TextMenuCandidate("Setting 2") { /* Do nothing */ }
-            )
+                TextMenuCandidate("Setting 2") { /* Do nothing */ },
+            ),
         )
 
         val items = listOf(share, homeScreen, open, settings)
@@ -369,14 +369,15 @@ class ToolbarActivity : AppCompatActivity() {
         binding.toolbar.edit.colors = binding.toolbar.edit.colors.copy(
             text = 0xFF0c0c0d.toInt(),
             clear = 0xFF0c0c0d.toInt(),
-            icon = 0xFF0c0c0d.toInt()
+            icon = 0xFF0c0c0d.toInt(),
         )
 
         binding.toolbar.edit.setUrlBackground(
-            ContextCompat.getDrawable(this, R.drawable.fenix_url_background)
+            ContextCompat.getDrawable(this, R.drawable.fenix_url_background),
         )
         binding.toolbar.edit.setIcon(
-            ContextCompat.getDrawable(this, R.drawable.mozac_ic_search)!!, "Search"
+            ContextCompat.getDrawable(this, R.drawable.mozac_ic_search)!!,
+            "Search",
         )
 
         binding.toolbar.setOnUrlCommitListener { url ->
@@ -397,7 +398,7 @@ class ToolbarActivity : AppCompatActivity() {
 
         binding.toolbar.display.indicators = listOf(
             DisplayToolbar.Indicators.SECURITY,
-            DisplayToolbar.Indicators.TRACKING_PROTECTION
+            DisplayToolbar.Indicators.TRACKING_PROTECTION,
         )
 
         binding.toolbar.display.colors = binding.toolbar.display.colors.copy(
@@ -407,7 +408,7 @@ class ToolbarActivity : AppCompatActivity() {
             title = 0xFF0c0c0d.toInt(),
             menu = 0xFF20123a.toInt(),
             separator = 0x1E15141a.toInt(),
-            trackingProtection = 0xFF20123a.toInt()
+            trackingProtection = 0xFF20123a.toInt(),
         )
 
         val share = SimpleBrowserMenuItem("Share…") { /* Do nothing */ }
@@ -429,7 +430,8 @@ class ToolbarActivity : AppCompatActivity() {
             setTint(0xFF20123a.toInt())
         }.also {
             val button = Toolbar.ActionButton(
-                it, "Close"
+                it,
+                "Close",
             ) {
                 Toast.makeText(this, "Close!", Toast.LENGTH_SHORT).show()
             }
@@ -461,6 +463,7 @@ class ToolbarActivity : AppCompatActivity() {
     private var back = true
 
     private fun canGoForward(): Boolean = forward
+
     @Suppress("UnusedPrivateMember")
     private fun canGoBack(): Boolean = back
 

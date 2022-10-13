@@ -30,13 +30,14 @@ typealias PingUploader = CorePingUploader
  */
 class ConceptFetchHttpUploader(
     internal val client: Lazy<Client>,
-    private val usePrivateRequest: Boolean = false
+    private val usePrivateRequest: Boolean = false,
 ) : PingUploader {
     private val logger = Logger("glean/ConceptFetchHttpUploader")
 
     companion object {
         // The timeout, in milliseconds, to use when connecting to the server.
         const val DEFAULT_CONNECTION_TIMEOUT = 10000L
+
         // The timeout, in milliseconds, to use when reading from the server.
         const val DEFAULT_READ_TIMEOUT = 30000L
 
@@ -78,7 +79,7 @@ class ConceptFetchHttpUploader(
     internal fun buildRequest(
         url: String,
         data: ByteArray,
-        headers: HeadersList
+        headers: HeadersList,
     ): Request {
         val conceptHeaders = headers.map { (name, value) -> Header(name, value) }.toMutableHeaders()
 
@@ -93,7 +94,7 @@ class ConceptFetchHttpUploader(
             // endpoint.
             cookiePolicy = Request.CookiePolicy.OMIT,
             body = Request.Body(data.inputStream()),
-            private = usePrivateRequest
+            private = usePrivateRequest,
         )
     }
 

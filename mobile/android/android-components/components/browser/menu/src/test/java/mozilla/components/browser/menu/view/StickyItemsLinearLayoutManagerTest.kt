@@ -73,7 +73,7 @@ class StickyItemsLinearLayoutManagerTest {
         val newState = SavedState(
             null,
             scrollPosition = 222,
-            scrollOffset = 221
+            scrollOffset = 221,
         )
 
         manager.onRestoreInstanceState(newState)
@@ -584,7 +584,9 @@ class StickyItemsLinearLayoutManagerTest {
     @Test
     fun `WHEN get is called for a reversed StickyItemPlacement#TOP layout manager THEN a StickyHeaderLinearLayoutManager is returned`() {
         val result = StickyItemsLinearLayoutManager.get<FakeStickyItemsAdapter>(
-            mock(), StickyItemPlacement.TOP, true
+            mock(),
+            StickyItemPlacement.TOP,
+            true,
         )
 
         assertTrue(result is StickyHeaderLinearLayoutManager)
@@ -594,7 +596,9 @@ class StickyItemsLinearLayoutManagerTest {
     @Test
     fun `WHEN get is called for a not reversed StickyItemPlacement#TOP layout manager THEN a StickyHeaderLinearLayoutManager is returned`() {
         val result = StickyItemsLinearLayoutManager.get<FakeStickyItemsAdapter>(
-            mock(), StickyItemPlacement.TOP, false
+            mock(),
+            StickyItemPlacement.TOP,
+            false,
         )
 
         assertTrue(result is StickyHeaderLinearLayoutManager)
@@ -604,7 +608,9 @@ class StickyItemsLinearLayoutManagerTest {
     @Test
     fun `WHEN get is called for a reversed StickyItemPlacement#BOTTOM layout manager THEN a StickyFooterLinearLayoutManager is returned`() {
         val result = StickyItemsLinearLayoutManager.get<FakeStickyItemsAdapter>(
-            mock(), StickyItemPlacement.BOTTOM, true
+            mock(),
+            StickyItemPlacement.BOTTOM,
+            true,
         )
 
         assertTrue(result is StickyFooterLinearLayoutManager)
@@ -614,7 +620,9 @@ class StickyItemsLinearLayoutManagerTest {
     @Test
     fun `WHEN get is called for a not reversed StickyItemPlacement#BOTTOM layout manager THEN a StickyFooterLinearLayoutManager is returned`() {
         val result = StickyItemsLinearLayoutManager.get<FakeStickyItemsAdapter>(
-            mock(), StickyItemPlacement.BOTTOM, false
+            mock(),
+            StickyItemPlacement.BOTTOM,
+            false,
         )
 
         assertTrue(result is StickyFooterLinearLayoutManager)

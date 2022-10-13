@@ -19,6 +19,7 @@ import mozilla.components.service.pocket.stories.db.PocketRecommendationsDatabas
  */
 internal class SpocsRepository(context: Context) {
     private val database: Lazy<PocketRecommendationsDatabase> = lazy { PocketRecommendationsDatabase.get(context) }
+
     @VisibleForTesting
     internal val spocsDao by lazy { database.value.spocsDao() }
 
@@ -34,7 +35,7 @@ internal class SpocsRepository(context: Context) {
             spoc.toPocketSponsoredStory(
                 impressions[spoc.id]
                     ?.map { impression -> impression.impressionDateInSeconds }
-                    ?: emptyList()
+                    ?: emptyList(),
             )
         }
     }

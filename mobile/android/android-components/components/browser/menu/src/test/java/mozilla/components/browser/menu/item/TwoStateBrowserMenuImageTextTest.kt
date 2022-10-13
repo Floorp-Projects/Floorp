@@ -40,7 +40,7 @@ class TwoStateBrowserMenuImageTextTest {
             primaryStateIconResource = android.R.drawable.ic_delete,
             secondaryStateIconResource = android.R.drawable.ic_input_add,
             isInPrimaryState = { true },
-            primaryStateAction = { primaryPressed = true }
+            primaryStateAction = { primaryPressed = true },
         )
 
         menuItemSecondary = TwoStateBrowserMenuImageText(
@@ -50,7 +50,7 @@ class TwoStateBrowserMenuImageTextTest {
             secondaryStateIconResource = android.R.drawable.ic_input_add,
             isInPrimaryState = { false },
             isInSecondaryState = { true },
-            secondaryStateAction = { secondaryPressed = true }
+            secondaryStateAction = { secondaryPressed = true },
         )
     }
 

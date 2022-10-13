@@ -35,7 +35,7 @@ class WebAppInterceptorTest {
         webAppInterceptor = WebAppInterceptor(
             context = mockContext,
             manifestStorage = mockManifestStorage,
-            launchFromInterceptor = true
+            launchFromInterceptor = true,
         )
     }
 
@@ -74,7 +74,7 @@ class WebAppInterceptorTest {
         webAppInterceptor = WebAppInterceptor(
             context = mockContext,
             manifestStorage = mockManifestStorage,
-            launchFromInterceptor = false
+            launchFromInterceptor = false,
         )
 
         whenever(mockManifestStorage.getInstalledScope(webUrlWithWebApp)).thenReturn(webUrlWithWebApp)
@@ -89,7 +89,7 @@ class WebAppInterceptorTest {
     fun `launchFromInterceptor is enabled by default`() {
         webAppInterceptor = WebAppInterceptor(
             context = mockContext,
-            manifestStorage = mockManifestStorage
+            manifestStorage = mockManifestStorage,
         )
 
         whenever(mockManifestStorage.getInstalledScope(webUrlWithWebApp)).thenReturn(webUrlWithWebApp)

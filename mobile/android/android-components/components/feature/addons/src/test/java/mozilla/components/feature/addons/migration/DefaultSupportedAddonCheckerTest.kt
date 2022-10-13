@@ -46,7 +46,7 @@ class DefaultSupportedAddonCheckerTest {
         context = spy(testContext).also {
             val packageManager: PackageManager = mock()
             doReturn(Intent()).`when`(packageManager).getLaunchIntentForPackage(
-                ArgumentMatchers.anyString()
+                ArgumentMatchers.anyString(),
             )
             doReturn(packageManager).`when`(it).packageManager
         }

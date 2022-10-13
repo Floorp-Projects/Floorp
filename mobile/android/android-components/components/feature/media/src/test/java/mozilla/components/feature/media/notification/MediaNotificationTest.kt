@@ -46,10 +46,12 @@ class MediaNotificationTest {
         val state = BrowserState(
             tabs = listOf(
                 createTab(
-                    "https://www.mozilla.org", id = "test-tab", title = "Mozilla",
-                    mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PLAYING)
-                )
-            )
+                    "https://www.mozilla.org",
+                    id = "test-tab",
+                    title = "Mozilla",
+                    mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PLAYING),
+                ),
+            ),
         )
 
         val notification = MediaNotification(context, AbstractMediaSessionService::class.java).create(state.tabs[0], mock())
@@ -64,10 +66,12 @@ class MediaNotificationTest {
         val state = BrowserState(
             tabs = listOf(
                 createTab(
-                    "https://www.mozilla.org", id = "test-tab", title = "Mozilla",
-                    mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PAUSED)
-                )
-            )
+                    "https://www.mozilla.org",
+                    id = "test-tab",
+                    title = "Mozilla",
+                    mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PAUSED),
+                ),
+            ),
         )
 
         val notification = MediaNotification(context, AbstractMediaSessionService::class.java).create(state.tabs[0], mock())
@@ -82,10 +86,12 @@ class MediaNotificationTest {
         val state = BrowserState(
             tabs = listOf(
                 createTab(
-                    "https://www.mozilla.org", id = "test-tab", title = "Mozilla",
-                    mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.STOPPED)
-                )
-            )
+                    "https://www.mozilla.org",
+                    id = "test-tab",
+                    title = "Mozilla",
+                    mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.STOPPED),
+                ),
+            ),
         )
 
         val notification = MediaNotification(context, AbstractMediaSessionService::class.java).create(state.tabs[0], mock())
@@ -99,10 +105,13 @@ class MediaNotificationTest {
         val state = BrowserState(
             tabs = listOf(
                 createTab(
-                    "https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = true,
-                    mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PLAYING)
-                )
-            )
+                    "https://www.mozilla.org",
+                    id = "test-tab",
+                    title = "Mozilla",
+                    private = true,
+                    mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PLAYING),
+                ),
+            ),
         )
 
         val notification = MediaNotification(context, AbstractMediaSessionService::class.java).create(state.tabs[0], mock())
@@ -117,10 +126,13 @@ class MediaNotificationTest {
         val state = BrowserState(
             tabs = listOf(
                 createTab(
-                    "https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = true,
-                    mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PAUSED)
-                )
-            )
+                    "https://www.mozilla.org",
+                    id = "test-tab",
+                    title = "Mozilla",
+                    private = true,
+                    mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PAUSED),
+                ),
+            ),
         )
 
         val notification = MediaNotification(context, AbstractMediaSessionService::class.java).create(state.tabs[0], mock())
@@ -141,10 +153,13 @@ class MediaNotificationTest {
         val state = BrowserState(
             tabs = listOf(
                 createTab(
-                    "https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = false,
-                    mediaSessionState = mediaSessionState
-                )
-            )
+                    "https://www.mozilla.org",
+                    id = "test-tab",
+                    title = "Mozilla",
+                    private = false,
+                    mediaSessionState = mediaSessionState,
+                ),
+            ),
         )
 
         val notification = MediaNotification(context, AbstractMediaSessionService::class.java).create(state.tabs[0], mock())
@@ -165,10 +180,13 @@ class MediaNotificationTest {
         val state = BrowserState(
             tabs = listOf(
                 createTab(
-                    "https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = true,
-                    mediaSessionState = mediaSessionState
-                )
-            )
+                    "https://www.mozilla.org",
+                    id = "test-tab",
+                    title = "Mozilla",
+                    private = true,
+                    mediaSessionState = mediaSessionState,
+                ),
+            ),
         )
 
         val notification = MediaNotification(context, AbstractMediaSessionService::class.java).create(state.tabs[0], mock())

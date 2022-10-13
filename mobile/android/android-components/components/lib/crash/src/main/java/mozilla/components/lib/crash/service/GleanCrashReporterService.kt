@@ -22,7 +22,7 @@ import java.io.IOException
 class GleanCrashReporterService(
     val context: Context,
     @get:VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal val file: File = File(context.applicationInfo.dataDir, CRASH_FILE_NAME)
+    internal val file: File = File(context.applicationInfo.dataDir, CRASH_FILE_NAME),
 ) : CrashTelemetryService {
     companion object {
         // This file is stored in the application's data directory, so it should be located in the
@@ -161,17 +161,17 @@ class GleanCrashReporterService(
         }
         if (mainProcessNativeCodeCrashCount > 0) {
             CrashMetrics.crashCount[MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].add(
-                mainProcessNativeCodeCrashCount
+                mainProcessNativeCodeCrashCount,
             )
         }
         if (foregroundChildProcessNativeCodeCrashCount > 0) {
             CrashMetrics.crashCount[FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].add(
-                foregroundChildProcessNativeCodeCrashCount
+                foregroundChildProcessNativeCodeCrashCount,
             )
         }
         if (backgroundChildProcessNativeCodeCrashCount > 0) {
             CrashMetrics.crashCount[BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].add(
-                backgroundChildProcessNativeCodeCrashCount
+                backgroundChildProcessNativeCodeCrashCount,
             )
         }
         if (fatalNativeCodeCrashCount > 0) {

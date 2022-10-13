@@ -47,10 +47,10 @@ class AddonTest {
                 "topSites",
                 "unlimitedStorage",
                 "webNavigation",
-                "devtools"
+                "devtools",
             ),
             createdAt = "",
-            updatedAt = ""
+            updatedAt = "",
         )
 
         val translatedPermissions = addon.translatePermissions(testContext)
@@ -78,7 +78,7 @@ class AddonTest {
             R.string.mozac_feature_addons_permissions_top_sites_description,
             R.string.mozac_feature_addons_permissions_unlimited_storage_description,
             R.string.mozac_feature_addons_permissions_web_navigation_description,
-            R.string.mozac_feature_addons_permissions_devtools_description
+            R.string.mozac_feature_addons_permissions_devtools_description,
         ).map { testContext.getString(it) }
         assertEquals(expectedPermissions, translatedPermissions)
     }
@@ -93,7 +93,7 @@ class AddonTest {
             version = "version",
             permissions = emptyList(),
             createdAt = "",
-            updatedAt = ""
+            updatedAt = "",
         )
         assertFalse(addon.isInstalled())
 
@@ -111,7 +111,7 @@ class AddonTest {
             version = "version",
             permissions = emptyList(),
             createdAt = "",
-            updatedAt = ""
+            updatedAt = "",
         )
         assertFalse(addon.isEnabled())
 
@@ -135,7 +135,7 @@ class AddonTest {
             updatedAt = "",
             translatableName = mapOf(Addon.DEFAULT_LOCALE to "name", "de" to "Name", "es" to "nombre"),
             translatableDescription = mapOf(Addon.DEFAULT_LOCALE to "description", "de" to "Beschreibung", "es" to "descripción"),
-            translatableSummary = mapOf(Addon.DEFAULT_LOCALE to "summary", "de" to "Kurzfassung", "es" to "resumen")
+            translatableSummary = mapOf(Addon.DEFAULT_LOCALE to "summary", "de" to "Kurzfassung", "es" to "resumen"),
         )
 
         val addonEn = addon.filterTranslations(listOf())
@@ -154,7 +154,7 @@ class AddonTest {
         val permissions = listOf(
             "webRequest",
             "webRequestBlocking",
-            "<all_urls>"
+            "<all_urls>",
         )
 
         val result = Addon.localizedURLAccessPermissions(testContext, permissions).first()
@@ -168,7 +168,7 @@ class AddonTest {
         val permissions = listOf(
             "webRequest",
             "webRequestBlocking",
-            "*://*/*"
+            "*://*/*",
         )
 
         val result = Addon.localizedURLAccessPermissions(testContext, permissions).first()
@@ -186,7 +186,7 @@ class AddonTest {
             "webRequest",
             "webRequestBlocking",
             "*://tweetdeck.twitter.com/*",
-            "*://twitter.com/*"
+            "*://twitter.com/*",
         )
 
         val result = Addon.localizedURLAccessPermissions(testContext, permissions)
@@ -204,7 +204,7 @@ class AddonTest {
             "webRequest",
             "*://*.youtube.com/*",
             "*://*.youtube-nocookie.com/*",
-            "*://*.vimeo.com/*"
+            "*://*.vimeo.com/*",
         )
 
         val result = Addon.localizedURLAccessPermissions(testContext, permissions)
@@ -224,7 +224,7 @@ class AddonTest {
             "*://*.youtube-nocookie.com/*",
             "*://*.vimeo.com/*",
             "*://*.google.co.ao/*",
-            "*://*.google.com.do/*"
+            "*://*.google.com.do/*",
         )
 
         var result = Addon.localizedURLAccessPermissions(testContext, permissions)
@@ -243,7 +243,7 @@ class AddonTest {
             "*://*.vimeo.com/*",
             "*://*.google.co.ao/*",
             "*://*.google.com.do/*",
-            "*://*.google.co.ar/*"
+            "*://*.google.co.ar/*",
         )
 
         result = Addon.localizedURLAccessPermissions(testContext, permissions)
@@ -257,7 +257,7 @@ class AddonTest {
             "*://www.youtube-nocookie.com/*",
             "*://www.vimeo.com/*",
             "https://mozilla.org/a/b/c/",
-            "*://www.google.com.do/*"
+            "*://www.google.com.do/*",
         )
 
         expectedString = listOf("www.youtube.com", "www.youtube-nocookie.com", "www.vimeo.com", "mozilla.org").map {
@@ -276,7 +276,7 @@ class AddonTest {
             "*://www.vimeo.com/*",
             "https://mozilla.org/a/b/c/",
             "*://www.google.com.do/*",
-            "*://www.google.co.ar/*"
+            "*://www.google.co.ar/*",
         )
 
         expectedString = listOf("www.youtube.com", "www.youtube-nocookie.com", "www.vimeo.com", "mozilla.org").map {
@@ -293,7 +293,7 @@ class AddonTest {
             "*://www.youtube.com/*",
             "*://www.youtube-nocookie.com/*",
             "*://www.vimeo.com/*",
-            "https://mozilla.org/a/b/c/"
+            "https://mozilla.org/a/b/c/",
         )
 
         expectedString = listOf("www.youtube.com", "www.youtube-nocookie.com", "www.vimeo.com", "mozilla.org").map {
@@ -313,7 +313,7 @@ class AddonTest {
             "*://tweetdeck.twitter.com/*",
             "https://mozilla.org/a/b/c/",
             "https://www.google.com.ag/*",
-            "https://www.google.co.ck/*"
+            "https://www.google.co.ck/*",
         )
 
         siteAccess.forEach {
@@ -326,7 +326,7 @@ class AddonTest {
             "*://*.youtube.com/*",
             "*://*.youtube-nocookie.com/*",
             "*://*.vimeo.com/*",
-            "*://*.facebookcorewwwi.onion/*"
+            "*://*.facebookcorewwwi.onion/*",
         )
 
         domainAccess.forEach {
@@ -339,7 +339,7 @@ class AddonTest {
             "http://*/*",
             "https://*/*",
             "file://*/*",
-            "<all_urls>"
+            "<all_urls>",
         )
 
         allUrlsAccess.forEach {

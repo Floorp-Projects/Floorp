@@ -22,7 +22,7 @@ import mozilla.components.feature.addons.R
  */
 fun Action.createMenuCandidate(
     context: Context,
-    onClick: () -> Unit = this.onClick
+    onClick: () -> Unit = this.onClick,
 ): TextMenuCandidate {
     return TextMenuCandidate(
         title.orEmpty(),
@@ -33,7 +33,7 @@ fun Action.createMenuCandidate(
                     loadIcon(height)?.toDrawable(context.resources)
                 },
                 loadingDrawable = defaultIcon,
-                fallbackDrawable = defaultIcon
+                fallbackDrawable = defaultIcon,
             )
         },
         end = badgeText?.let { badgeText ->
@@ -41,14 +41,14 @@ fun Action.createMenuCandidate(
                 badgeText,
                 backgroundTint = badgeBackgroundColor,
                 textStyle = TextStyle(
-                    color = badgeTextColor
-                )
+                    color = badgeTextColor,
+                ),
             )
         },
         containerStyle = ContainerStyle(
             isVisible = true,
-            isEnabled = enabled ?: false
+            isEnabled = enabled ?: false,
         ),
-        onClick = onClick
+        onClick = onClick,
     )
 }

@@ -60,7 +60,7 @@ class HistoryDelegateTest {
         delegate.onPreviewImageChange("http://www.mozilla.org", previewImageUrl)
         verify(storage).recordObservation(
             "http://www.mozilla.org",
-            PageObservation(previewImageUrl = previewImageUrl)
+            PageObservation(previewImageUrl = previewImageUrl),
         )
     }
 
@@ -134,7 +134,7 @@ class HistoryDelegateTest {
 
         override suspend fun getTopFrecentSites(
             numItems: Int,
-            frecencyThreshold: FrecencyThresholdOption
+            frecencyThreshold: FrecencyThresholdOption,
         ): List<TopFrecentSiteInfo> {
             fail()
             return emptyList()

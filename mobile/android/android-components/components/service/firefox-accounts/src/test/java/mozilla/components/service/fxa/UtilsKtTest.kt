@@ -20,11 +20,11 @@ import org.junit.Assert.fail
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.Mockito.`when`
 
 @ExperimentalCoroutinesApi // for runTest
 class UtilsKtTest {
@@ -33,23 +33,27 @@ class UtilsKtTest {
         assertEquals(
             1,
             handleFxaExceptions(
-                mock(), "test op",
+                mock(),
+                "test op",
                 {
                     1
                 },
-                { fail() }, { fail() }
-            )
+                { fail() },
+                { fail() },
+            ),
         )
 
         assertEquals(
             "Hello",
             handleFxaExceptions(
-                mock(), "test op",
+                mock(),
+                "test op",
                 {
                     "Hello"
                 },
-                { fail() }, { fail() }
-            )
+                { fail() },
+                { fail() },
+            ),
         )
     }
 
@@ -62,7 +66,8 @@ class UtilsKtTest {
         assertEquals(
             "pass!",
             handleFxaExceptions(
-                mock(), "test op",
+                mock(),
+                "test op",
                 {
                     throw FxaNetworkException("oops")
                 },
@@ -71,8 +76,8 @@ class UtilsKtTest {
                     assertEquals("oops", error.message)
                     assertTrue(error is FxaNetworkException)
                     "pass!"
-                }
-            )
+                },
+            ),
         )
 
         verifyNoInteractions(accountManager)
@@ -80,7 +85,8 @@ class UtilsKtTest {
         assertEquals(
             "pass!",
             handleFxaExceptions(
-                mock(), "test op",
+                mock(),
+                "test op",
                 {
                     throw FxaUnauthorizedException("auth!")
                 },
@@ -89,8 +95,8 @@ class UtilsKtTest {
                 },
                 {
                     fail()
-                }
-            )
+                },
+            ),
         )
 
         verify(accountManager).encounteredAuthError(eq("test op"), anyInt())
@@ -99,7 +105,8 @@ class UtilsKtTest {
         assertEquals(
             "pass!",
             handleFxaExceptions(
-                mock(), "test op",
+                mock(),
+                "test op",
                 {
                     throw FxaUnspecifiedException("dunno")
                 },
@@ -108,8 +115,8 @@ class UtilsKtTest {
                     assertEquals("dunno", error.message)
                     assertTrue(error is FxaUnspecifiedException)
                     "pass!"
-                }
-            )
+                },
+            ),
         )
         verifyNoInteractions(accountManager)
     }
@@ -117,22 +124,26 @@ class UtilsKtTest {
     @Test(expected = IllegalStateException::class)
     fun `handleFxaExceptions form 1 re-throws non-fxa exceptions`() = runTest {
         handleFxaExceptions(
-            mock(), "test op",
+            mock(),
+            "test op",
             {
                 throw IllegalStateException("bad state")
             },
-            { fail() }, { fail() }
+            { fail() },
+            { fail() },
         )
     }
 
     @Test(expected = FxaPanicException::class)
     fun `handleFxaExceptions form 1 re-throws fxa panic exceptions`() = runTest {
         handleFxaExceptions(
-            mock(), "test op",
+            mock(),
+            "test op",
             {
                 throw FxaPanicException("don't panic!")
             },
-            { fail() }, { fail() }
+            { fail() },
+            { fail() },
         )
     }
 
@@ -144,13 +155,13 @@ class UtilsKtTest {
         assertTrue(
             handleFxaExceptions(mock(), "test op") {
                 Unit
-            }
+            },
         )
 
         assertFalse(
             handleFxaExceptions(mock(), "test op") {
                 throw FxaUnspecifiedException("dunno")
-            }
+            },
         )
 
         verifyNoInteractions(accountManager)
@@ -158,7 +169,7 @@ class UtilsKtTest {
         assertFalse(
             handleFxaExceptions(mock(), "test op") {
                 throw FxaUnauthorizedException("401")
-            }
+            },
         )
 
         verify(accountManager).encounteredAuthError("test op")
@@ -168,7 +179,7 @@ class UtilsKtTest {
         assertFalse(
             handleFxaExceptions(mock(), "test op") {
                 throw FxaNetworkException("dunno")
-            }
+            },
         )
 
         verifyNoInteractions(accountManager)
@@ -206,14 +217,14 @@ class UtilsKtTest {
             1,
             handleFxaExceptions(mock(), "test op", { 2 }) {
                 1
-            }
+            },
         )
 
         assertEquals(
             0,
             handleFxaExceptions(mock(), "test op", { 0 }) {
                 throw FxaUnspecifiedException("dunno")
-            }
+            },
         )
 
         verifyNoInteractions(accountManager)
@@ -222,7 +233,7 @@ class UtilsKtTest {
             -1,
             handleFxaExceptions(mock(), "test op", { -1 }) {
                 throw FxaUnauthorizedException("401")
-            }
+            },
         )
 
         verify(accountManager).encounteredAuthError(eq("test op"), anyInt())
@@ -233,7 +244,7 @@ class UtilsKtTest {
             "bad",
             handleFxaExceptions(mock(), "test op", { "bad" }) {
                 throw FxaNetworkException("dunno")
-            }
+            },
         )
 
         verifyNoInteractions(accountManager)

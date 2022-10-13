@@ -30,13 +30,13 @@ class FxaDeviceSettingsCacheTest {
         cache.setToCache(DeviceSettings("some id", "some name", DeviceType.VR))
         assertEquals(
             DeviceSettings("some id", "some name", DeviceType.VR),
-            cache.getCached()
+            cache.getCached(),
         )
 
         cache.updateCachedName("new name")
         assertEquals(
             DeviceSettings("some id", "new name", DeviceType.VR),
-            cache.getCached()
+            cache.getCached(),
         )
 
         cache.clear()
@@ -45,25 +45,25 @@ class FxaDeviceSettingsCacheTest {
         cache.setToCache(DeviceSettings("some id", "mobile", DeviceType.MOBILE))
         assertEquals(
             DeviceSettings("some id", "mobile", DeviceType.MOBILE),
-            cache.getCached()
+            cache.getCached(),
         )
 
         cache.setToCache(DeviceSettings("some id", "some tv", DeviceType.TV))
         assertEquals(
             DeviceSettings("some id", "some tv", DeviceType.TV),
-            cache.getCached()
+            cache.getCached(),
         )
 
         cache.setToCache(DeviceSettings("some id", "some tablet", DeviceType.TABLET))
         assertEquals(
             DeviceSettings("some id", "some tablet", DeviceType.TABLET),
-            cache.getCached()
+            cache.getCached(),
         )
 
         cache.setToCache(DeviceSettings("some id", "some desktop", DeviceType.DESKTOP))
         assertEquals(
             DeviceSettings("some id", "some desktop", DeviceType.DESKTOP),
-            cache.getCached()
+            cache.getCached(),
         )
     }
 }

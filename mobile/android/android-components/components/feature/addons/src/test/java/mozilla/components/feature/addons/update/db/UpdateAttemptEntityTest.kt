@@ -25,7 +25,7 @@ class UpdateAttemptEntityTest {
         val dbEntity = UpdateAttemptEntity(
             addonId = "mozilla-dev",
             date = Date().time,
-            status = SUCCESSFULLY_UPDATED_DB
+            status = SUCCESSFULLY_UPDATED_DB,
         )
 
         val domainClass = dbEntity.toUpdateAttempt()
@@ -42,7 +42,7 @@ class UpdateAttemptEntityTest {
         val domainClass = AddonUpdater.UpdateAttempt(
             addonId = "mozilla-dev",
             date = Date(),
-            status = Error("error", Exception())
+            status = Error("error", Exception()),
         )
 
         val dbEntity = domainClass.toEntity()
@@ -101,7 +101,7 @@ class UpdateAttemptEntityTest {
         val dbEntity = AddonUpdater.UpdateAttempt(
             addonId = "id",
             date = Date(),
-            status = Error("error message", exception)
+            status = Error("error message", exception),
         )
             .toEntity()
 

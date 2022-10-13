@@ -23,16 +23,18 @@ class BaseSearchTelemetryTest {
 
     @Before
     fun setup() {
-        baseTelemetry = spy(object : BaseSearchTelemetry() {
+        baseTelemetry = spy(
+            object : BaseSearchTelemetry() {
 
-            override fun install(engine: Engine, store: BrowserStore) {
-                // mock, do nothing
-            }
+                override fun install(engine: Engine, store: BrowserStore) {
+                    // mock, do nothing
+                }
 
-            override fun processMessage(message: JSONObject) {
-                // mock, do nothing
-            }
-        })
+                override fun processMessage(message: JSONObject) {
+                    // mock, do nothing
+                }
+            },
+        )
         handler = baseTelemetry.SearchTelemetryMessageHandler()
     }
 
@@ -51,7 +53,7 @@ class BaseSearchTelemetryTest {
             id = eq(id),
             url = eq(resourceUrl),
             onSuccess = any(),
-            onError = any()
+            onError = any(),
         )
     }
 

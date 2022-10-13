@@ -98,7 +98,7 @@ object DownloadUtils {
         contentDispositionType +
             "\\s*filename\\s*=\\s*(\"((?:\\\\.|[^\"\\\\])*)\"|[^;]*)\\s*" +
             "(?:;$contentDispositionFileNameAsterisk)?",
-        Pattern.CASE_INSENSITIVE
+        Pattern.CASE_INSENSITIVE,
     )
 
     /**
@@ -107,7 +107,7 @@ object DownloadUtils {
     private val fileNameAsteriskContentDispositionPattern = Pattern.compile(
         contentDispositionType +
             contentDispositionFileNameAsterisk,
-        Pattern.CASE_INSENSITIVE
+        Pattern.CASE_INSENSITIVE,
     )
 
     /**
@@ -136,7 +136,7 @@ object DownloadUtils {
     private val GENERIC_CONTENT_TYPES = arrayOf(
         "application/octet-stream",
         "binary/octet-stream",
-        "application/unknown"
+        "application/unknown",
     )
 
     /**
@@ -168,7 +168,7 @@ object DownloadUtils {
         contentDisposition: String?,
         destinationDirectory: String?,
         url: String?,
-        mimeType: String?
+        mimeType: String?,
     ): String {
         // Split fileName between base and extension
         // Add an extension if filename does not have one

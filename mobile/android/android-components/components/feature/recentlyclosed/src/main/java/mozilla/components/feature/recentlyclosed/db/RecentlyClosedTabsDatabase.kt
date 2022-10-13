@@ -27,7 +27,7 @@ internal abstract class RecentlyClosedTabsDatabase : RoomDatabase() {
             return Room.databaseBuilder(
                 context,
                 RecentlyClosedTabsDatabase::class.java,
-                "recently_closed_tabs"
+                "recently_closed_tabs",
             ).build().also {
                 instance = it
             }

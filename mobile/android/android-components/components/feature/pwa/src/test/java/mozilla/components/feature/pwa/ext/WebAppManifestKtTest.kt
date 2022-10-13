@@ -27,7 +27,7 @@ class WebAppManifestKtTest {
     fun `should use name as label`() {
         val taskDescription = WebAppManifest(
             name = "Demo",
-            startUrl = "https://example.com"
+            startUrl = "https://example.com",
         ).toTaskDescription(null)
         assertEquals("Demo", taskDescription.label)
         assertEquals(0, taskDescription.primaryColor)
@@ -38,7 +38,7 @@ class WebAppManifestKtTest {
         val taskDescription = WebAppManifest(
             name = "My App",
             startUrl = "https://example.com",
-            themeColor = rgb(255, 0, 255)
+            themeColor = rgb(255, 0, 255),
         ).toTaskDescription(null)
         assertEquals("My App", taskDescription.label)
         assertEquals(rgb(255, 0, 255), taskDescription.primaryColor)
@@ -50,7 +50,7 @@ class WebAppManifestKtTest {
             name = "My App",
             startUrl = "https://example.com",
             themeColor = rgb(255, 0, 255),
-            backgroundColor = rgb(230, 230, 230)
+            backgroundColor = rgb(230, 230, 230),
         ).toCustomTabConfig()
         assertEquals(rgb(255, 0, 255), config.toolbarColor)
         assertEquals(Color.WHITE, config.navigationBarColor)
@@ -67,14 +67,14 @@ class WebAppManifestKtTest {
             name = "My App",
             startUrl = "https://example.com/pwa",
             scope = "https://example.com/",
-            display = WebAppManifest.DisplayMode.STANDALONE
+            display = WebAppManifest.DisplayMode.STANDALONE,
         ).getTrustedScope()
         assertEquals("https://example.com/".toUri(), scope)
 
         val fallbackToStartUrl = WebAppManifest(
             name = "My App",
             startUrl = "https://example.com/pwa",
-            display = WebAppManifest.DisplayMode.STANDALONE
+            display = WebAppManifest.DisplayMode.STANDALONE,
         ).getTrustedScope()
         assertEquals("https://example.com/pwa".toUri(), fallbackToStartUrl)
     }
@@ -85,14 +85,14 @@ class WebAppManifestKtTest {
             name = "My App",
             startUrl = "https://example.com/pwa",
             scope = "https://example.com/",
-            display = WebAppManifest.DisplayMode.MINIMAL_UI
+            display = WebAppManifest.DisplayMode.MINIMAL_UI,
         ).getTrustedScope()
         assertNull(scope)
 
         val fallbackToStartUrl = WebAppManifest(
             name = "My App",
             startUrl = "https://example.com/pwa",
-            display = WebAppManifest.DisplayMode.MINIMAL_UI
+            display = WebAppManifest.DisplayMode.MINIMAL_UI,
         ).getTrustedScope()
         assertNull(fallbackToStartUrl)
     }
@@ -109,9 +109,9 @@ class WebAppManifestKtTest {
             icons = listOf(
                 demoIcon.copy(
                     sizes = listOf(Size(512, 512)),
-                    purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
-                )
-            )
+                    purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME),
+                ),
+            ),
         )
         assertFalse(onlyBadgeIconManifest.hasLargeIcons())
     }
@@ -120,29 +120,29 @@ class WebAppManifestKtTest {
     fun `web app must have 192x192 icons to be installable`() {
         val smallIconManifest = demoManifest.copy(
             icons = listOf(
-                demoIcon.copy(sizes = listOf(Size(32, 32)))
-            )
+                demoIcon.copy(sizes = listOf(Size(32, 32))),
+            ),
         )
         assertFalse(smallIconManifest.hasLargeIcons())
 
         val weirdSizeManifest = demoManifest.copy(
             icons = listOf(
-                demoIcon.copy(sizes = listOf(Size(50, 200)))
-            )
+                demoIcon.copy(sizes = listOf(Size(50, 200))),
+            ),
         )
         assertFalse(weirdSizeManifest.hasLargeIcons())
 
         val largeIconManifest = demoManifest.copy(
             icons = listOf(
-                demoIcon.copy(sizes = listOf(Size(192, 192)))
-            )
+                demoIcon.copy(sizes = listOf(Size(192, 192))),
+            ),
         )
         assertTrue(largeIconManifest.hasLargeIcons())
 
         val multiSizeIconManifest = demoManifest.copy(
             icons = listOf(
-                demoIcon.copy(sizes = listOf(Size(16, 16), Size(512, 512)))
-            )
+                demoIcon.copy(sizes = listOf(Size(16, 16), Size(512, 512))),
+            ),
         )
         assertTrue(multiSizeIconManifest.hasLargeIcons())
 
@@ -152,9 +152,9 @@ class WebAppManifestKtTest {
                 demoIcon.copy(sizes = listOf(Size(512, 512))),
                 demoIcon.copy(
                     sizes = listOf(Size(192, 192)),
-                    purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
-                )
-            )
+                    purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME),
+                ),
+            ),
         )
         assertTrue(multiIconManifest.hasLargeIcons())
 
@@ -163,9 +163,9 @@ class WebAppManifestKtTest {
                 demoIcon.copy(sizes = listOf(Size(191, 191))),
                 demoIcon.copy(
                     sizes = listOf(Size(192, 192)),
-                    purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
-                )
-            )
+                    purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME),
+                ),
+            ),
         )
         assertFalse(onlyBadgeManifest.hasLargeIcons())
     }

@@ -30,7 +30,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 class CreditCardSelectBar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr), SelectablePromptView<CreditCardEntry> {
 
     private var view: View? = null
@@ -54,12 +54,12 @@ class CreditCardSelectBar @JvmOverloads constructor(
             attrs,
             R.styleable.CreditCardSelectBar,
             defStyleAttr,
-            0
+            0,
         ) {
             val textStyle =
                 getResourceId(
                     R.styleable.CreditCardSelectBar_mozacSelectCreditCardHeaderTextStyle,
-                    0
+                    0,
                 )
 
             if (textStyle > 0) {

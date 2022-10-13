@@ -36,7 +36,7 @@ sealed class PocketStory {
         val publisher: String,
         val category: String,
         val timeToRead: Int,
-        val timesShown: Long
+        val timesShown: Long,
     ) : PocketStory()
 
     /**

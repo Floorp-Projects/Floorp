@@ -74,7 +74,7 @@ class DownloadsFeature(
     private val tabId: String? = null,
     private val fragmentManager: FragmentManager? = null,
     private val promptsStyling: PromptsStyling? = null,
-    private val shouldForwardToThirdParties: () -> Boolean = { false }
+    private val shouldForwardToThirdParties: () -> Boolean = { false },
 ) : LifecycleAwareFeature, PermissionsFeature {
 
     var onDownloadStopped: onDownloadStopped
@@ -89,6 +89,7 @@ class DownloadsFeature(
 
     @VisibleForTesting
     internal var dismissPromptScope: CoroutineScope? = null
+
     @VisibleForTesting
     internal var previousTab: SessionState? = null
 
@@ -222,9 +223,9 @@ class DownloadsFeature(
             applicationContext,
             applicationContext.getString(
                 R.string.mozac_feature_downloads_file_not_supported2,
-                applicationContext.appName
+                applicationContext.appName,
             ),
-            Toast.LENGTH_LONG
+            Toast.LENGTH_LONG,
         ).show()
     }
 
@@ -232,7 +233,7 @@ class DownloadsFeature(
     internal fun showDownloadDialog(
         tab: SessionState,
         download: DownloadState,
-        dialog: DownloadDialogFragment = getDownloadDialog()
+        dialog: DownloadDialogFragment = getDownloadDialog(),
     ) {
         dialog.setDownload(download)
 
@@ -252,7 +253,7 @@ class DownloadsFeature(
 
     private fun getDownloadDialog(): DownloadDialogFragment {
         return findPreviousDownloadDialogFragment() ?: SimpleDownloadDialogFragment.newInstance(
-            promptsStyling = promptsStyling
+            promptsStyling = promptsStyling,
         )
     }
 
@@ -261,7 +262,7 @@ class DownloadsFeature(
         tab: SessionState,
         download: DownloadState,
         apps: List<DownloaderApp>,
-        appChooserDialog: DownloadAppChooserDialog = getAppDownloaderDialog()
+        appChooserDialog: DownloadAppChooserDialog = getAppDownloaderDialog(),
     ) {
         appChooserDialog.setApps(apps)
         appChooserDialog.onAppSelected = { app ->
@@ -278,7 +279,7 @@ class DownloadsFeature(
                 } catch (error: ActivityNotFoundException) {
                     val errorMessage = applicationContext.getString(
                         R.string.mozac_feature_downloads_unable_to_open_third_party_app,
-                        app.name
+                        app.name,
                     )
                     Toast.makeText(applicationContext, errorMessage, Toast.LENGTH_SHORT).show()
                 }
@@ -298,7 +299,7 @@ class DownloadsFeature(
     private fun getAppDownloaderDialog() = findPreviousAppDownloaderDialogFragment()
         ?: DownloadAppChooserDialog.newInstance(
             promptsStyling?.gravity,
-            promptsStyling?.shouldWidthMatchParent
+            promptsStyling?.shouldWidthMatchParent,
         )
 
     @VisibleForTesting
@@ -350,7 +351,7 @@ class DownloadsFeature(
             packageManager,
             includeThisApp = false,
             url = download.url,
-            contentType = download.contentType
+            contentType = download.contentType,
         )
         // Remove browsers and returns only the apps that can perform a download plus this app.
         return apps.filter { !browsers.contains(it.activityInfo.identifier) }
@@ -385,14 +386,14 @@ class DownloadsFeature(
         @ColorRes
         val positiveButtonTextColor: Int? = null,
         val positiveButtonRadius: Float? = null,
-        val fileNameEndMargin: Int? = null
+        val fileNameEndMargin: Int? = null,
     )
 
     @VisibleForTesting
     internal fun showPermissionDeniedDialog() {
         fragmentManager?.let {
             val dialog = DeniedPermissionDialogFragment.newInstance(
-                R.string.mozac_feature_downloads_write_external_storage_permissions_needed_message
+                R.string.mozac_feature_downloads_write_external_storage_permissions_needed_message,
             )
             dialog.showNow(fragmentManager, DeniedPermissionDialogFragment.FRAGMENT_TAG)
         }
@@ -407,6 +408,6 @@ internal fun ResolveInfo.toDownloaderApp(context: Context, download: DownloadSta
         activityInfo.packageName,
         activityInfo.name,
         download.url,
-        download.contentType
+        download.contentType,
     )
 }

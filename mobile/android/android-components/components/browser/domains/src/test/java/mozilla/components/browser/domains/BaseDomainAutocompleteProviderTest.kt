@@ -111,7 +111,7 @@ private fun assertCompletion(
     input: String,
     expectedInput: String,
     completion: String,
-    expectedUrl: String
+    expectedUrl: String,
 ) {
     val result = provider.getAutocompleteSuggestion(input)!!
 

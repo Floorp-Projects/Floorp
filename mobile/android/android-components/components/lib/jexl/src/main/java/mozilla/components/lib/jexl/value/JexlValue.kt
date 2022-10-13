@@ -219,7 +219,7 @@ class JexlString(override val value: String) : JexlValue() {
  * JEXL Array type.
  */
 class JexlArray(
-    override val value: List<JexlValue>
+    override val value: List<JexlValue>,
 ) : JexlValue() {
     constructor(vararg elements: JexlValue) : this(elements.toList())
 
@@ -244,7 +244,7 @@ class JexlArray(
  * JEXL Object type.
  */
 class JexlObject(
-    override val value: Map<String, JexlValue>
+    override val value: Map<String, JexlValue>,
 ) : JexlValue() {
     constructor(vararg pairs: Pair<String, JexlValue>) : this(pairs.toMap())
 

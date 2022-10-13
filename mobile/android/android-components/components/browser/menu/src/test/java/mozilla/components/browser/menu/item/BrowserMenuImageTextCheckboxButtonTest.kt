@@ -46,7 +46,6 @@ class BrowserMenuImageTextCheckboxButtonTest {
 
     @Before
     fun setUp() {
-
         item = spy(
             BrowserMenuImageTextCheckboxButton(
                 imageResource = imageResource,
@@ -60,8 +59,8 @@ class BrowserMenuImageTextCheckboxButtonTest {
                 secondaryStateIconResource = secondaryStateIconResource,
                 tintColorResource = tintColorResource,
                 isInPrimaryState = isInPrimaryState,
-                onCheckedChangedListener = onCheckedChangedListener
-            )
+                onCheckedChangedListener = onCheckedChangedListener,
+            ),
         )
 
         secondaryItem = spy(
@@ -77,8 +76,8 @@ class BrowserMenuImageTextCheckboxButtonTest {
                 secondaryStateIconResource = secondaryStateIconResource,
                 tintColorResource = tintColorResource,
                 isInPrimaryState = { false },
-                onCheckedChangedListener = onCheckedChangedListener
-            )
+                onCheckedChangedListener = onCheckedChangedListener,
+            ),
         )
     }
 

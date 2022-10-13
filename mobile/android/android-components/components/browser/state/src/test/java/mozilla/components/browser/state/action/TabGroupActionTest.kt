@@ -42,9 +42,9 @@ class TabGroupActionTest {
             BrowserState(
                 tabs = listOf(
                     createTab(id = "tab1", url = "https://firefox.com"),
-                    createTab(id = "tab2", url = "https://mozilla.org")
-                )
-            )
+                    createTab(id = "tab2", url = "https://mozilla.org"),
+                ),
+            ),
         )
 
         val partition = "testFeaturePartition"
@@ -67,10 +67,10 @@ class TabGroupActionTest {
             BrowserState(
                 tabs = listOf(
                     createTab(id = "tab1", url = "https://firefox.com"),
-                    createTab(id = "tab2", url = "https://mozilla.org")
+                    createTab(id = "tab2", url = "https://mozilla.org"),
                 ),
-                tabPartitions = mapOf("testFeaturePartition" to tabPartition)
-            )
+                tabPartitions = mapOf("testFeaturePartition" to tabPartition),
+            ),
         )
 
         assertNotNull(store.state.tabPartitions[tabPartition.id]?.getGroupById(tabGroup1.id))
@@ -89,10 +89,10 @@ class TabGroupActionTest {
             BrowserState(
                 tabs = listOf(
                     createTab(id = "tab1", url = "https://firefox.com"),
-                    createTab(id = "tab2", url = "https://mozilla.org")
+                    createTab(id = "tab2", url = "https://mozilla.org"),
                 ),
-                tabPartitions = mapOf("testFeaturePartition" to tabPartition)
-            )
+                tabPartitions = mapOf("testFeaturePartition" to tabPartition),
+            ),
         )
 
         assertNotNull(store.state.tabPartitions[tabPartition.id]?.getGroupById(tabGroup.id))
@@ -109,8 +109,8 @@ class TabGroupActionTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(tab),
-                tabPartitions = mapOf("testFeaturePartition" to tabPartition)
-            )
+                tabPartitions = mapOf("testFeaturePartition" to tabPartition),
+            ),
         )
 
         store.dispatch(TabGroupAction.AddTabAction(tabPartition.id, tabGroup.id, tab.id)).joinBlocking()
@@ -130,8 +130,8 @@ class TabGroupActionTest {
 
         val store = BrowserStore(
             BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         store.dispatch(TabGroupAction.AddTabAction(tabPartition.id, tabGroup.id, tab.id)).joinBlocking()
@@ -152,8 +152,8 @@ class TabGroupActionTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(tab),
-                tabPartitions = mapOf("testFeaturePartition" to tabPartition)
-            )
+                tabPartitions = mapOf("testFeaturePartition" to tabPartition),
+            ),
         )
 
         store.dispatch(TabGroupAction.AddTabAction(tabPartition.id, tabGroup.id, tab.id)).joinBlocking()
@@ -176,12 +176,12 @@ class TabGroupActionTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(tab1, tab2),
-                tabPartitions = mapOf("testFeaturePartition" to tabPartition)
-            )
+                tabPartitions = mapOf("testFeaturePartition" to tabPartition),
+            ),
         )
 
         store.dispatch(
-            TabGroupAction.AddTabsAction(tabPartition.id, tabGroup.id, listOf(tab1.id, tab2.id))
+            TabGroupAction.AddTabsAction(tabPartition.id, tabGroup.id, listOf(tab1.id, tab2.id)),
         ).joinBlocking()
 
         val expectedPartition = store.state.tabPartitions[tabPartition.id]
@@ -201,12 +201,12 @@ class TabGroupActionTest {
 
         val store = BrowserStore(
             BrowserState(
-                tabs = listOf(tab1, tab2)
-            )
+                tabs = listOf(tab1, tab2),
+            ),
         )
 
         store.dispatch(
-            TabGroupAction.AddTabsAction(tabPartition.id, tabGroup.id, listOf(tab1.id, tab2.id))
+            TabGroupAction.AddTabsAction(tabPartition.id, tabGroup.id, listOf(tab1.id, tab2.id)),
         ).joinBlocking()
 
         val expectedPartition = store.state.tabPartitions[tabPartition.id]
@@ -227,12 +227,12 @@ class TabGroupActionTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(tab1, tab2),
-                tabPartitions = mapOf("testFeaturePartition" to tabPartition)
-            )
+                tabPartitions = mapOf("testFeaturePartition" to tabPartition),
+            ),
         )
 
         store.dispatch(
-            TabGroupAction.AddTabsAction(tabPartition.id, tabGroup.id, listOf(tab1.id, tab2.id))
+            TabGroupAction.AddTabsAction(tabPartition.id, tabGroup.id, listOf(tab1.id, tab2.id)),
         ).joinBlocking()
 
         val expectedPartition = store.state.tabPartitions[tabPartition.id]
@@ -252,12 +252,12 @@ class TabGroupActionTest {
 
         val store = BrowserStore(
             BrowserState(
-                tabs = listOf(tab1)
-            )
+                tabs = listOf(tab1),
+            ),
         )
 
         store.dispatch(
-            TabGroupAction.AddTabsAction(tabPartition.id, tabGroup.id, listOf(tab1.id, tab1.id))
+            TabGroupAction.AddTabsAction(tabPartition.id, tabGroup.id, listOf(tab1.id, tab1.id)),
         ).joinBlocking()
 
         val expectedPartition = store.state.tabPartitions[tabPartition.id]
@@ -278,8 +278,8 @@ class TabGroupActionTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(tab1, tab2),
-                tabPartitions = mapOf("testFeaturePartition" to tabPartition)
-            )
+                tabPartitions = mapOf("testFeaturePartition" to tabPartition),
+            ),
         )
 
         store.dispatch(TabGroupAction.RemoveTabAction(tabPartition.id, tabGroup.id, tab1.id)).joinBlocking()
@@ -302,12 +302,12 @@ class TabGroupActionTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(tab1, tab2),
-                tabPartitions = mapOf("testFeaturePartition" to tabPartition)
-            )
+                tabPartitions = mapOf("testFeaturePartition" to tabPartition),
+            ),
         )
 
         store.dispatch(
-            TabGroupAction.RemoveTabsAction(tabPartition.id, tabGroup.id, listOf(tab1.id, tab2.id))
+            TabGroupAction.RemoveTabsAction(tabPartition.id, tabGroup.id, listOf(tab1.id, tab2.id)),
         ).joinBlocking()
 
         val expectedPartition = store.state.tabPartitions[tabPartition.id]

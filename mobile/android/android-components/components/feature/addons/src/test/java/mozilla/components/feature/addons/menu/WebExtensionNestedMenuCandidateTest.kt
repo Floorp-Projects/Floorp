@@ -36,7 +36,7 @@ class WebExtensionNestedMenuCandidateTest {
         enabled = true,
         badgeText = "pageBadge",
         badgeTextColor = Color.WHITE,
-        badgeBackgroundColor = Color.BLUE
+        badgeBackgroundColor = Color.BLUE,
     ) {}
 
     private val browserAction = Action(
@@ -45,30 +45,30 @@ class WebExtensionNestedMenuCandidateTest {
         enabled = true,
         badgeText = "browserBadge",
         badgeTextColor = Color.WHITE,
-        badgeBackgroundColor = Color.BLUE
+        badgeBackgroundColor = Color.BLUE,
     ) {}
 
     @Test
     fun `create nested menu from browser extensions and actions`() {
         val state = BrowserState(
             extensions = mapOf(
-                "1" to WebExtensionState(id = "1", browserAction = browserAction, pageAction = pageAction)
-            )
+                "1" to WebExtensionState(id = "1", browserAction = browserAction, pageAction = pageAction),
+            ),
         )
         val candidate = state.createWebExtensionMenuCandidate(
             testContext,
-            appendExtensionSubMenuAt = Side.END
+            appendExtensionSubMenuAt = Side.END,
         ) as NestedMenuCandidate
 
         assertEquals(6, candidate.subMenuItems!!.size)
 
         assertEquals(
             "Add-ons Manager",
-            (candidate.subMenuItems!![0] as TextMenuCandidate).text
+            (candidate.subMenuItems!![0] as TextMenuCandidate).text,
         )
         assertEquals(
             DividerMenuCandidate(),
-            candidate.subMenuItems!![1]
+            candidate.subMenuItems!![1],
         )
 
         val ext1 = candidate.subMenuItems!![2] as TextMenuCandidate
@@ -77,7 +77,7 @@ class WebExtensionNestedMenuCandidateTest {
         assertTrue(ext1.start is AsyncDrawableMenuIcon)
         assertEquals(
             "browserBadge",
-            (ext1.end as TextMenuIcon).text
+            (ext1.end as TextMenuIcon).text,
         )
 
         val ext2 = candidate.subMenuItems!![3] as TextMenuCandidate
@@ -86,16 +86,16 @@ class WebExtensionNestedMenuCandidateTest {
         assertTrue(ext2.start is AsyncDrawableMenuIcon)
         assertEquals(
             "pageBadge",
-            (ext2.end as TextMenuIcon).text
+            (ext2.end as TextMenuIcon).text,
         )
 
         assertEquals(
             DividerMenuCandidate(),
-            candidate.subMenuItems!![4]
+            candidate.subMenuItems!![4],
         )
         assertEquals(
             "Add-ons",
-            (candidate.subMenuItems!![5] as NestedMenuCandidate).text
+            (candidate.subMenuItems!![5] as NestedMenuCandidate).text,
         )
     }
 
@@ -107,7 +107,7 @@ class WebExtensionNestedMenuCandidateTest {
             enabled = true,
             badgeText = "updatedText",
             badgeTextColor = Color.RED,
-            badgeBackgroundColor = Color.GREEN
+            badgeBackgroundColor = Color.GREEN,
         ) {}
         val browserActionOverride = Action(
             title = "updatedTitle",
@@ -115,12 +115,12 @@ class WebExtensionNestedMenuCandidateTest {
             enabled = false,
             badgeText = "updatedText",
             badgeTextColor = Color.RED,
-            badgeBackgroundColor = Color.GREEN
+            badgeBackgroundColor = Color.GREEN,
         ) {}
 
         val state = BrowserState(
             extensions = mapOf(
-                "1" to WebExtensionState(id = "1", browserAction = browserAction, pageAction = pageAction)
+                "1" to WebExtensionState(id = "1", browserAction = browserAction, pageAction = pageAction),
             ),
             tabs = listOf(
                 createTab(
@@ -130,28 +130,28 @@ class WebExtensionNestedMenuCandidateTest {
                         "1" to WebExtensionState(
                             id = "1",
                             browserAction = browserActionOverride,
-                            pageAction = pageActionOverride
-                        )
-                    )
-                )
-            )
+                            pageAction = pageActionOverride,
+                        ),
+                    ),
+                ),
+            ),
         )
         val candidate = state.createWebExtensionMenuCandidate(
             testContext,
             tabId = "tab-1",
-            appendExtensionSubMenuAt = Side.START
+            appendExtensionSubMenuAt = Side.START,
         ) as NestedMenuCandidate
 
         assertEquals(6, candidate.subMenuItems!!.size)
 
         assertEquals(
             "Add-ons",
-            (candidate.subMenuItems!![0] as NestedMenuCandidate).text
+            (candidate.subMenuItems!![0] as NestedMenuCandidate).text,
         )
         assertNull((candidate.subMenuItems!![0] as NestedMenuCandidate).subMenuItems)
         assertEquals(
             DividerMenuCandidate(),
-            candidate.subMenuItems!![1]
+            candidate.subMenuItems!![1],
         )
 
         val ext1 = candidate.subMenuItems!![2] as TextMenuCandidate
@@ -159,7 +159,7 @@ class WebExtensionNestedMenuCandidateTest {
         assertEquals("updatedTitle", ext1.text)
         assertEquals(
             "updatedText",
-            (ext1.end as TextMenuIcon).text
+            (ext1.end as TextMenuIcon).text,
         )
 
         val ext2 = candidate.subMenuItems!![3] as TextMenuCandidate
@@ -167,16 +167,16 @@ class WebExtensionNestedMenuCandidateTest {
         assertEquals("updatedTitle", ext2.text)
         assertEquals(
             "updatedText",
-            (ext2.end as TextMenuIcon).text
+            (ext2.end as TextMenuIcon).text,
         )
 
         assertEquals(
             DividerMenuCandidate(),
-            candidate.subMenuItems!![4]
+            candidate.subMenuItems!![4],
         )
         assertEquals(
             "Add-ons Manager",
-            (candidate.subMenuItems!![5] as TextMenuCandidate).text
+            (candidate.subMenuItems!![5] as TextMenuCandidate).text,
         )
     }
 }

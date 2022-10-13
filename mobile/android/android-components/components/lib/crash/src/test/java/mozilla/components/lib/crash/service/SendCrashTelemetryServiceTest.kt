@@ -40,16 +40,16 @@ class SendCrashTelemetryServiceTest {
     fun setUp() {
         intent.component = ComponentName(
             "org.mozilla.samples.browser",
-            "mozilla.components.lib.crash.handler.CrashHandlerService"
+            "mozilla.components.lib.crash.handler.CrashHandlerService",
         )
         intent.putExtra(
             "minidumpPath",
-            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp"
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
         )
         intent.putExtra("fatal", false)
         intent.putExtra(
             "extrasPath",
-            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra"
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
         )
         intent.putExtra("minidumpSuccess", true)
         intent.putParcelableArrayListExtra("breadcrumbs", null)
@@ -70,21 +70,23 @@ class SendCrashTelemetryServiceTest {
             CrashReporter(
                 context = testContext,
                 shouldPrompt = CrashReporter.Prompt.NEVER,
-                telemetryServices = listOf(object : CrashTelemetryService {
-                    override fun record(crash: Crash.UncaughtExceptionCrash) {
-                        fail("Didn't expect uncaught exception crash")
-                    }
+                telemetryServices = listOf(
+                    object : CrashTelemetryService {
+                        override fun record(crash: Crash.UncaughtExceptionCrash) {
+                            fail("Didn't expect uncaught exception crash")
+                        }
 
-                    override fun record(crash: Crash.NativeCodeCrash) {
-                        caughtCrash = crash
-                    }
+                        override fun record(crash: Crash.NativeCodeCrash) {
+                            caughtCrash = crash
+                        }
 
-                    override fun record(throwable: Throwable) {
-                        fail("Didn't expect caught exception")
-                    }
-                }),
-                scope = scope
-            )
+                        override fun record(throwable: Throwable) {
+                            fail("Didn't expect caught exception")
+                        }
+                    },
+                ),
+                scope = scope,
+            ),
         ).install(testContext)
         val originalCrash = Crash.NativeCodeCrash(
             123,
@@ -92,22 +94,22 @@ class SendCrashTelemetryServiceTest {
             true,
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
             Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
-            arrayListOf()
+            arrayListOf(),
         )
 
         val intent = Intent("org.mozilla.gecko.ACTION_CRASHED")
         intent.component = ComponentName(
             "org.mozilla.samples.browser",
-            "mozilla.components.lib.crash.handler.CrashHandlerService"
+            "mozilla.components.lib.crash.handler.CrashHandlerService",
         )
         intent.putExtra(
             "minidumpPath",
-            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp"
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
         )
         intent.putExtra("processType", "FOREGROUND_CHILD")
         intent.putExtra(
             "extrasPath",
-            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra"
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
         )
         intent.putExtra("minidumpSuccess", true)
         intent.putParcelableArrayListExtra("breadcrumbs", null)
@@ -127,11 +129,11 @@ class SendCrashTelemetryServiceTest {
         assertEquals(Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, nativeCrash.processType)
         assertEquals(
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
-            nativeCrash.minidumpPath
+            nativeCrash.minidumpPath,
         )
         assertEquals(
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
-            nativeCrash.extrasPath
+            nativeCrash.extrasPath,
         )
     }
 }

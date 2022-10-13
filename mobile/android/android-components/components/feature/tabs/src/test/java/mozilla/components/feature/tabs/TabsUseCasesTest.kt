@@ -66,8 +66,8 @@ class TabsUseCasesTest {
         whenever(engine.createSession(anyBoolean(), any())).thenReturn(engineSession)
         store = BrowserStore(
             middleware = EngineMiddleware.create(
-                engine = engine
-            )
+                engine = engine,
+            ),
         )
         tabsUseCases = TabsUseCases(store)
     }
@@ -201,7 +201,7 @@ class TabsUseCasesTest {
             "https://www.mozilla.org",
             flags = LoadUrlFlags.external(),
             startLoading = true,
-            engineSession = session
+            engineSession = session,
         )
 
         store.waitUntilIdle()
@@ -218,7 +218,7 @@ class TabsUseCasesTest {
             "https://www.mozilla.org",
             flags = LoadUrlFlags.external(),
             startLoading = true,
-            contextId = contextId
+            contextId = contextId,
         )
 
         store.waitUntilIdle()
@@ -233,14 +233,14 @@ class TabsUseCasesTest {
         val historyMetadata = HistoryMetadataKey(
             "https://www.mozilla.org",
             searchTerm = "test",
-            referrerUrl = "http://firefox.com"
+            referrerUrl = "http://firefox.com",
         )
 
         tabsUseCases.addTab.invoke(
             "https://www.mozilla.org",
             flags = LoadUrlFlags.external(),
             startLoading = true,
-            historyMetadata = historyMetadata
+            historyMetadata = historyMetadata,
         )
 
         store.waitUntilIdle()
@@ -305,7 +305,7 @@ class TabsUseCasesTest {
             "https://www.mozilla.org",
             flags = LoadUrlFlags.external(),
             startLoading = true,
-            engineSession = session
+            engineSession = session,
         )
 
         store.waitUntilIdle()
@@ -360,7 +360,7 @@ class TabsUseCasesTest {
             createTab("https://mozilla.org", lastAccess = 0).toRecoverableTab(),
             createTab("https://mozilla.org", lastAccess = now).toRecoverableTab(),
             createTab("https://firefox.com", lastAccess = twoDays, createdAt = threeDays).toRecoverableTab(),
-            createTab("https://getpocket.com", lastAccess = threeDays, createdAt = threeDays).toRecoverableTab()
+            createTab("https://getpocket.com", lastAccess = threeDays, createdAt = threeDays).toRecoverableTab(),
         )
 
         val sessionStorage: SessionStorage = mock()
@@ -400,7 +400,7 @@ class TabsUseCasesTest {
     fun `selectOrAddTab selects already existing tab with matching historyMetadata`() {
         val historyMetadata = HistoryMetadataKey(
             url = "https://mozilla.org",
-            referrerUrl = "https://firefox.com"
+            referrerUrl = "https://firefox.com",
         )
 
         val tab = createTab("https://mozilla.org", historyMetadata = historyMetadata)
@@ -445,7 +445,7 @@ class TabsUseCasesTest {
         val tab = createTab("https://mozilla.org")
         val historyMetadata = HistoryMetadataKey(
             url = "https://mozilla.org",
-            referrerUrl = "https://firefox.com"
+            referrerUrl = "https://firefox.com",
         )
 
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
@@ -476,14 +476,14 @@ class TabsUseCasesTest {
     fun `duplicateTab creates a duplicate of the given tab`() {
         store.dispatch(
             TabListAction.AddTabAction(
-                createTab(id = "mozilla", url = "https://www.mozilla.org")
-            )
+                createTab(id = "mozilla", url = "https://www.mozilla.org"),
+            ),
         ).joinBlocking()
         assertEquals(1, store.state.tabs.size)
 
         val engineSessionState: EngineSessionState = mock()
         store.dispatch(
-            EngineAction.UpdateEngineSessionStateAction("mozilla", engineSessionState)
+            EngineAction.UpdateEngineSessionStateAction("mozilla", engineSessionState),
         ).joinBlocking()
 
         val tab = store.state.findTab("mozilla")!!

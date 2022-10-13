@@ -46,7 +46,7 @@ class SyncStoreSupport(
         accountManager.registerForSyncEvents(
             AccountSyncObserver(store),
             owner = lifecycleOwner,
-            autoPause = autoPause
+            autoPause = autoPause,
         )
 
         val accountObserver = FxaAccountObserver(
@@ -54,7 +54,7 @@ class SyncStoreSupport(
             ConstellationObserver(store),
             lifecycleOwner,
             autoPause,
-            coroutineScope
+            coroutineScope,
         )
         accountManager.register(accountObserver, owner = lifecycleOwner, autoPause = autoPause)
     }
@@ -100,7 +100,7 @@ internal class FxaAccountObserver(
             account.deviceConstellation().registerDeviceObserver(
                 deviceConstellationObserver,
                 owner = lifecycleOwner,
-                autoPause = autoPause
+                autoPause = autoPause,
             )
         }
         coroutineScope.launch {

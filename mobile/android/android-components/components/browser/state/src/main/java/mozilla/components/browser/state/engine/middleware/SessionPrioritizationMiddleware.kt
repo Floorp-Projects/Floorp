@@ -30,9 +30,8 @@ class SessionPrioritizationMiddleware : Middleware<BrowserState, BrowserAction> 
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
-
         when (action) {
             is EngineAction.UnlinkEngineSessionAction -> {
                 val activeTab = context.state.findTab(action.tabId)
@@ -48,7 +47,8 @@ class SessionPrioritizationMiddleware : Middleware<BrowserState, BrowserAction> 
 
         when (action) {
             is TabListAction,
-            is EngineAction.LinkEngineSessionAction -> {
+            is EngineAction.LinkEngineSessionAction,
+            -> {
                 val state = context.state
                 if (previousHighestPriorityTabId != state.selectedTabId) {
                     updatePriorityIfNeeded(state)

@@ -55,7 +55,7 @@ class WebAppHideToolbarFeatureTest {
         val tab = CustomTabSessionState(
             id = customTabId,
             content = ContentState("https://mozilla.org"),
-            config = CustomTabConfig()
+            config = CustomTabConfig(),
         )
         val store = BrowserStore(BrowserState(customTabs = listOf(tab)))
 
@@ -63,7 +63,7 @@ class WebAppHideToolbarFeatureTest {
             store,
             CustomTabsServiceStore(),
             tabId = tab.id,
-            manifest = mockManifest("https://mozilla.org")
+            manifest = mockManifest("https://mozilla.org"),
         ) {
             toolbarVisible = it
         }
@@ -77,19 +77,19 @@ class WebAppHideToolbarFeatureTest {
         val tab = CustomTabSessionState(
             id = customTabId,
             content = ContentState("https://mozilla.org"),
-            config = CustomTabConfig(sessionToken = token)
+            config = CustomTabConfig(sessionToken = token),
         )
         val store = BrowserStore(BrowserState(customTabs = listOf(tab)))
         val customTabsStore = CustomTabsServiceStore(
             CustomTabsServiceState(
-                tabs = mapOf(token to mockCustomTabState("https://firefox.com", "https://mozilla.org"))
-            )
+                tabs = mapOf(token to mockCustomTabState("https://firefox.com", "https://mozilla.org")),
+            ),
         )
 
         val feature = WebAppHideToolbarFeature(
             store,
             customTabsStore,
-            tabId = tab.id
+            tabId = tab.id,
         ) {
             toolbarVisible = it
         }
@@ -125,8 +125,8 @@ class WebAppHideToolbarFeatureTest {
         val tab = TabSessionState(
             content = ContentState(
                 url = "https://mozilla.org",
-                fullScreen = true
-            )
+                fullScreen = true,
+            ),
         )
         val store = BrowserStore(BrowserState(tabs = listOf(tab)))
 
@@ -142,8 +142,8 @@ class WebAppHideToolbarFeatureTest {
         val tab = TabSessionState(
             content = ContentState(
                 url = "https://mozilla.org",
-                pictureInPictureEnabled = true
-            )
+                pictureInPictureEnabled = true,
+            ),
         )
         val store = BrowserStore(BrowserState(tabs = listOf(tab)))
 
@@ -160,19 +160,19 @@ class WebAppHideToolbarFeatureTest {
         val tab = createCustomTab(
             id = customTabId,
             url = "https://firefox.com",
-            config = CustomTabConfig(sessionToken = token)
+            config = CustomTabConfig(sessionToken = token),
         )
         val store = BrowserStore(BrowserState(customTabs = listOf(tab)))
         val customTabsStore = CustomTabsServiceStore(
             CustomTabsServiceState(
-                tabs = mapOf(token to mockCustomTabState("https://mozilla.org"))
-            )
+                tabs = mapOf(token to mockCustomTabState("https://mozilla.org")),
+            ),
         )
 
         val feature = WebAppHideToolbarFeature(
             store,
             customTabsStore,
-            tabId = tab.id
+            tabId = tab.id,
         ) {
             toolbarVisible = it
         }
@@ -186,40 +186,40 @@ class WebAppHideToolbarFeatureTest {
         val tab = createCustomTab(
             id = customTabId,
             url = "https://mozilla.org",
-            config = CustomTabConfig(sessionToken = token)
+            config = CustomTabConfig(sessionToken = token),
         )
         val store = BrowserStore(BrowserState(customTabs = listOf(tab)))
         val customTabsStore = CustomTabsServiceStore(
             CustomTabsServiceState(
-                tabs = mapOf(token to mockCustomTabState("https://mozilla.com", "https://m.mozilla.com"))
-            )
+                tabs = mapOf(token to mockCustomTabState("https://mozilla.com", "https://m.mozilla.com")),
+            ),
         )
         val feature = WebAppHideToolbarFeature(
             store,
             customTabsStore,
-            tabId = customTabId
+            tabId = customTabId,
         ) {
             toolbarVisible = it
         }
         feature.start()
 
         store.dispatch(
-            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.com/example-page")
+            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.com/example-page"),
         ).joinBlocking()
         assertFalse(toolbarVisible)
 
         store.dispatch(
-            ContentAction.UpdateUrlAction(customTabId, "https://firefox.com/out-of-scope")
+            ContentAction.UpdateUrlAction(customTabId, "https://firefox.com/out-of-scope"),
         ).joinBlocking()
         assertTrue(toolbarVisible)
 
         store.dispatch(
-            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.com/back-in-scope")
+            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.com/back-in-scope"),
         ).joinBlocking()
         assertFalse(toolbarVisible)
 
         store.dispatch(
-            ContentAction.UpdateUrlAction(customTabId, "https://m.mozilla.com/second-origin")
+            ContentAction.UpdateUrlAction(customTabId, "https://m.mozilla.com/second-origin"),
         ).joinBlocking()
         assertFalse(toolbarVisible)
     }
@@ -232,29 +232,29 @@ class WebAppHideToolbarFeatureTest {
             store,
             CustomTabsServiceStore(),
             tabId = customTabId,
-            manifest = mockManifest("https://mozilla.github.io/my-app/")
+            manifest = mockManifest("https://mozilla.github.io/my-app/"),
         ) {
             toolbarVisible = it
         }
         feature.start()
 
         store.dispatch(
-            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.github.io/my-app/")
+            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.github.io/my-app/"),
         ).joinBlocking()
         assertFalse(toolbarVisible)
 
         store.dispatch(
-            ContentAction.UpdateUrlAction(customTabId, "https://firefox.com/out-of-scope")
+            ContentAction.UpdateUrlAction(customTabId, "https://firefox.com/out-of-scope"),
         ).joinBlocking()
         assertTrue(toolbarVisible)
 
         store.dispatch(
-            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.github.io/my-app-almost-in-scope")
+            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.github.io/my-app-almost-in-scope"),
         ).joinBlocking()
         assertTrue(toolbarVisible)
 
         store.dispatch(
-            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.github.io/my-app/sub-page")
+            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.github.io/my-app/sub-page"),
         ).joinBlocking()
         assertFalse(toolbarVisible)
     }
@@ -267,19 +267,19 @@ class WebAppHideToolbarFeatureTest {
             store,
             CustomTabsServiceStore(),
             tabId = customTabId,
-            manifest = mockManifest("https://mozilla.github.io/prefix")
+            manifest = mockManifest("https://mozilla.github.io/prefix"),
         ) {
             toolbarVisible = it
         }
         feature.start()
 
         store.dispatch(
-            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.github.io/prefix/")
+            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.github.io/prefix/"),
         ).joinBlocking()
         assertFalse(toolbarVisible)
 
         store.dispatch(
-            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.github.io/prefix-of/resource.html")
+            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.github.io/prefix-of/resource.html"),
         ).joinBlocking()
         assertFalse(toolbarVisible)
     }
@@ -290,18 +290,18 @@ class WebAppHideToolbarFeatureTest {
         val tab = createCustomTab(
             id = customTabId,
             url = "https://mozilla.com/example-page",
-            config = CustomTabConfig(sessionToken = token)
+            config = CustomTabConfig(sessionToken = token),
         )
         val store = BrowserStore(BrowserState(customTabs = listOf(tab)))
         val customTabsStore = CustomTabsServiceStore(
             CustomTabsServiceState(
-                tabs = mapOf(token to mockCustomTabState())
-            )
+                tabs = mapOf(token to mockCustomTabState()),
+            ),
         )
         val feature = WebAppHideToolbarFeature(
             store,
             customTabsStore,
-            tabId = customTabId
+            tabId = customTabId,
         ) {
             toolbarVisible = it
         }
@@ -312,8 +312,8 @@ class WebAppHideToolbarFeatureTest {
                 token,
                 RELATION_HANDLE_ALL_URLS,
                 "https://m.mozilla.com".toUri(),
-                VerificationStatus.PENDING
-            )
+                VerificationStatus.PENDING,
+            ),
         ).joinBlocking()
         assertTrue(toolbarVisible)
 
@@ -322,8 +322,8 @@ class WebAppHideToolbarFeatureTest {
                 token,
                 RELATION_HANDLE_ALL_URLS,
                 "https://mozilla.com".toUri(),
-                VerificationStatus.PENDING
-            )
+                VerificationStatus.PENDING,
+            ),
         ).joinBlocking()
         assertFalse(toolbarVisible)
     }
@@ -331,13 +331,13 @@ class WebAppHideToolbarFeatureTest {
     private fun mockCustomTabState(vararg origins: String) = CustomTabState(
         relationships = origins.map { origin ->
             OriginRelationPair(origin.toUri(), RELATION_HANDLE_ALL_URLS) to VerificationStatus.PENDING
-        }.toMap()
+        }.toMap(),
     )
 
     private fun mockManifest(scope: String) = WebAppManifest(
         name = "Mock",
         startUrl = scope,
         scope = scope,
-        display = WebAppManifest.DisplayMode.STANDALONE
+        display = WebAppManifest.DisplayMode.STANDALONE,
     )
 }

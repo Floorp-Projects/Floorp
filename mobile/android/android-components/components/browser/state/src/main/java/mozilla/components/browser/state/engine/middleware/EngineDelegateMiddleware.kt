@@ -25,12 +25,12 @@ import mozilla.components.lib.state.Store
  * actions like [EngineAction.LoadUrlAction].
  */
 internal class EngineDelegateMiddleware(
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
 ) : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         when (action) {
             is EngineAction.LoadUrlAction -> loadUrl(context.store, action)
@@ -50,7 +50,7 @@ internal class EngineDelegateMiddleware(
 
     private fun loadUrl(
         store: Store<BrowserState, BrowserAction>,
-        action: EngineAction.LoadUrlAction
+        action: EngineAction.LoadUrlAction,
     ) = scope.launch {
         val tab = store.state.findTabOrCustomTab(action.tabId) ?: return@launch
         val engineSession = tab.engineState.engineSession
@@ -74,13 +74,13 @@ internal class EngineDelegateMiddleware(
             url = action.url,
             parent = parentEngineSession,
             flags = action.flags,
-            additionalHeaders = action.additionalHeaders
+            additionalHeaders = action.additionalHeaders,
         )
     }
 
     private fun loadData(
         store: Store<BrowserState, BrowserAction>,
-        action: EngineAction.LoadDataAction
+        action: EngineAction.LoadDataAction,
     ) = scope.launch {
         getEngineSessionOrDispatch(store, action)
             ?.loadData(action.data, action.mimeType, action.encoding)
@@ -88,7 +88,7 @@ internal class EngineDelegateMiddleware(
 
     private fun reload(
         store: Store<BrowserState, BrowserAction>,
-        action: EngineAction.ReloadAction
+        action: EngineAction.ReloadAction,
     ) = scope.launch {
         getEngineSessionOrDispatch(store, action)
             ?.reload(action.flags)
@@ -96,7 +96,7 @@ internal class EngineDelegateMiddleware(
 
     private fun goBack(
         store: Store<BrowserState, BrowserAction>,
-        action: EngineAction.GoBackAction
+        action: EngineAction.GoBackAction,
     ) = scope.launch {
         getEngineSessionOrDispatch(store, action)
             ?.goBack(action.userInteraction)
@@ -104,7 +104,7 @@ internal class EngineDelegateMiddleware(
 
     private fun goForward(
         store: Store<BrowserState, BrowserAction>,
-        action: EngineAction.GoForwardAction
+        action: EngineAction.GoForwardAction,
     ) = scope.launch {
         getEngineSessionOrDispatch(store, action)
             ?.goForward(action.userInteraction)
@@ -112,7 +112,7 @@ internal class EngineDelegateMiddleware(
 
     private fun goToHistoryIndex(
         store: Store<BrowserState, BrowserAction>,
-        action: EngineAction.GoToHistoryIndexAction
+        action: EngineAction.GoToHistoryIndexAction,
     ) = scope.launch {
         getEngineSessionOrDispatch(store, action)
             ?.goToHistoryIndex(action.index)
@@ -120,7 +120,7 @@ internal class EngineDelegateMiddleware(
 
     private fun toggleDesktopMode(
         store: Store<BrowserState, BrowserAction>,
-        action: EngineAction.ToggleDesktopModeAction
+        action: EngineAction.ToggleDesktopModeAction,
     ) = scope.launch {
         getEngineSessionOrDispatch(store, action)
             ?.toggleDesktopMode(action.enable, reload = true)
@@ -128,7 +128,7 @@ internal class EngineDelegateMiddleware(
 
     private fun exitFullScreen(
         store: Store<BrowserState, BrowserAction>,
-        action: EngineAction.ExitFullScreenModeAction
+        action: EngineAction.ExitFullScreenModeAction,
     ) = scope.launch {
         getEngineSessionOrDispatch(store, action)
             ?.exitFullScreenMode()
@@ -136,7 +136,7 @@ internal class EngineDelegateMiddleware(
 
     private fun saveToPdf(
         store: Store<BrowserState, BrowserAction>,
-        action: EngineAction.SaveToPdfAction
+        action: EngineAction.SaveToPdfAction,
     ) = scope.launch {
         getEngineSessionOrDispatch(store, action)
             ?.requestPdfToDownload()
@@ -144,14 +144,14 @@ internal class EngineDelegateMiddleware(
 
     private fun clearData(
         store: Store<BrowserState, BrowserAction>,
-        action: EngineAction.ClearDataAction
+        action: EngineAction.ClearDataAction,
     ) = scope.launch {
         getEngineSessionOrDispatch(store, action)
             ?.clearData(action.data)
     }
 
     private fun purgeHistory(
-        state: BrowserState
+        state: BrowserState,
     ) = scope.launch {
         state.allTabs
             .mapNotNull { tab -> tab.engineState.engineSession }
@@ -170,7 +170,7 @@ internal class EngineDelegateMiddleware(
  */
 private fun getEngineSessionOrDispatch(
     store: Store<BrowserState, BrowserAction>,
-    action: ActionWithTab
+    action: ActionWithTab,
 ): EngineSession? {
     val tab = action.lookupTabIn(store) ?: return null
 
@@ -180,8 +180,8 @@ private fun getEngineSessionOrDispatch(
         store.dispatch(
             EngineAction.CreateEngineSessionAction(
                 action.tabId,
-                followupAction = action.toBrowserAction()
-            )
+                followupAction = action.toBrowserAction(),
+            ),
         )
         null
     } else {

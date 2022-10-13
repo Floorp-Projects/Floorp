@@ -38,11 +38,12 @@ internal class DefaultPresenter(
     override val controller: SyncedTabsController,
     override val accountManager: FxaAccountManager,
     override val view: SyncedTabsView,
-    private val lifecycleOwner: LifecycleOwner
+    private val lifecycleOwner: LifecycleOwner,
 ) : SyncedTabsPresenter {
 
     @VisibleForTesting
     internal val eventObserver = SyncedTabsSyncObserver(context, view, controller)
+
     @VisibleForTesting
     internal val accountObserver = SyncedTabsAccountObserver(view, controller)
 
@@ -50,13 +51,13 @@ internal class DefaultPresenter(
         accountManager.registerForSyncEvents(
             observer = eventObserver,
             owner = lifecycleOwner,
-            autoPause = true
+            autoPause = true,
         )
 
         accountManager.register(
             observer = accountObserver,
             owner = lifecycleOwner,
-            autoPause = true
+            autoPause = true,
         )
 
         // No authenticated account present at all.

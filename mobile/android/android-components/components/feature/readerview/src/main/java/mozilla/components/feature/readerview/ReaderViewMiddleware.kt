@@ -31,13 +31,13 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
     internal var extensionController = WebExtensionController(
         READER_VIEW_EXTENSION_ID,
         READER_VIEW_EXTENSION_URL,
-        READER_VIEW_CONTENT_PORT
+        READER_VIEW_CONTENT_PORT,
     )
 
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         if (preProcess(context, action)) {
             next(action)
@@ -54,7 +54,7 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
      */
     private fun preProcess(
         context: MiddlewareContext<BrowserState, BrowserAction>,
-        action: BrowserAction
+        action: BrowserAction,
     ): Boolean {
         return when (action) {
             // We want to bind the feature instance to the lifecycle of the browser
@@ -100,7 +100,7 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
 
     private fun postProcess(
         context: MiddlewareContext<BrowserState, BrowserAction>,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         when (action) {
             is TabListAction.SelectTabAction -> {

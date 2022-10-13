@@ -30,7 +30,7 @@ class OriginVerifier(
     private val packageName: String,
     @Relation private val relation: Int,
     packageManager: PackageManager,
-    private val relationChecker: RelationChecker
+    private val relationChecker: RelationChecker,
 ) {
 
     @VisibleForTesting
@@ -61,7 +61,7 @@ class OriginVerifier(
         val originVerified = relationChecker.checkRelationship(
             source = AssetDescriptor.Web(site = origin.toString()),
             target = androidAsset ?: return false,
-            relation = relationship
+            relation = relationship,
         )
 
         if (originVerified && packageName !in cachedOriginMap) {

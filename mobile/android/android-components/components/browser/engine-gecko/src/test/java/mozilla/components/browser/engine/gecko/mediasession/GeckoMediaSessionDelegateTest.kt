@@ -33,11 +33,13 @@ class GeckoMediaSessionDelegateTest {
 
         var observedController: MediaSession.Controller? = null
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onMediaActivated(mediaSessionController: MediaSession.Controller) {
-                observedController = mediaSessionController
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onMediaActivated(mediaSessionController: MediaSession.Controller) {
+                    observedController = mediaSessionController
+                }
+            },
+        )
 
         engineSession.geckoSession.mediaSessionDelegate!!.onActivated(mock(), geckoViewMediaSession)
 
@@ -53,11 +55,13 @@ class GeckoMediaSessionDelegateTest {
 
         var observedActivated = true
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onMediaDeactivated() {
-                observedActivated = false
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onMediaDeactivated() {
+                    observedActivated = false
+                }
+            },
+        )
 
         engineSession.geckoSession.mediaSessionDelegate!!.onDeactivated(mock(), geckoViewMediaSession)
 
@@ -71,13 +75,15 @@ class GeckoMediaSessionDelegateTest {
 
         var observedMetadata: MediaSession.Metadata? = null
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onMediaMetadataChanged(
-                metadata: MediaSession.Metadata
-            ) {
-                observedMetadata = metadata
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onMediaMetadataChanged(
+                    metadata: MediaSession.Metadata,
+                ) {
+                    observedMetadata = metadata
+                }
+            },
+        )
 
         val metadata: GeckoViewMediaSession.Metadata = mock()
         engineSession.geckoSession.mediaSessionDelegate!!.onMetadata(mock(), geckoViewMediaSession, metadata)
@@ -96,13 +102,15 @@ class GeckoMediaSessionDelegateTest {
 
         var observedFeature: MediaSession.Feature? = null
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onMediaFeatureChanged(
-                features: MediaSession.Feature
-            ) {
-                observedFeature = features
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onMediaFeatureChanged(
+                    features: MediaSession.Feature,
+                ) {
+                    observedFeature = features
+                }
+            },
+        )
 
         engineSession.geckoSession.mediaSessionDelegate!!.onFeatures(mock(), geckoViewMediaSession, 123)
 
@@ -117,13 +125,15 @@ class GeckoMediaSessionDelegateTest {
 
         var observedPlaybackState: MediaSession.PlaybackState? = null
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onMediaPlaybackStateChanged(
-                playbackState: MediaSession.PlaybackState
-            ) {
-                observedPlaybackState = playbackState
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onMediaPlaybackStateChanged(
+                    playbackState: MediaSession.PlaybackState,
+                ) {
+                    observedPlaybackState = playbackState
+                }
+            },
+        )
 
         engineSession.geckoSession.mediaSessionDelegate!!.onPlay(mock(), geckoViewMediaSession)
 
@@ -150,13 +160,15 @@ class GeckoMediaSessionDelegateTest {
 
         var observedPositionState: MediaSession.PositionState? = null
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onMediaPositionStateChanged(
-                positionState: MediaSession.PositionState
-            ) {
-                observedPositionState = positionState
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onMediaPositionStateChanged(
+                    positionState: MediaSession.PositionState,
+                ) {
+                    observedPositionState = positionState
+                }
+            },
+        )
 
         val positionState: GeckoViewMediaSession.PositionState = mock()
         engineSession.geckoSession.mediaSessionDelegate!!.onPositionState(mock(), geckoViewMediaSession, positionState)
@@ -175,15 +187,17 @@ class GeckoMediaSessionDelegateTest {
         var observedFullscreen: Boolean? = null
         var observedElementMetadata: MediaSession.ElementMetadata? = null
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onMediaFullscreenChanged(
-                fullscreen: Boolean,
-                elementMetadata: MediaSession.ElementMetadata?
-            ) {
-                observedFullscreen = fullscreen
-                observedElementMetadata = elementMetadata
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onMediaFullscreenChanged(
+                    fullscreen: Boolean,
+                    elementMetadata: MediaSession.ElementMetadata?,
+                ) {
+                    observedFullscreen = fullscreen
+                    observedElementMetadata = elementMetadata
+                }
+            },
+        )
 
         val elementMetadata: GeckoViewMediaSession.ElementMetadata = mock()
         engineSession.geckoSession.mediaSessionDelegate!!.onFullscreen(mock(), geckoViewMediaSession, true, elementMetadata)

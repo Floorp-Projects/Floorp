@@ -28,7 +28,7 @@ import mozilla.components.service.location.LocationService
 class RegionMiddleware(
     context: Context,
     locationService: LocationService,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : Middleware<BrowserState, BrowserAction> {
     @VisibleForTesting
     internal var regionManager = RegionManager(context, locationService, dispatcher = ioDispatcher)
@@ -40,7 +40,7 @@ class RegionMiddleware(
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         if (action is InitAction) {
             updateJob = determineRegion(context.store)
@@ -51,7 +51,7 @@ class RegionMiddleware(
 
     @OptIn(DelicateCoroutinesApi::class)
     private fun determineRegion(
-        store: Store<BrowserState, BrowserAction>
+        store: Store<BrowserState, BrowserAction>,
     ) = GlobalScope.launch(ioDispatcher) {
         // Get the region state from the RegionManager. If there's none then dispatch the default
         // region to be used.

@@ -12,7 +12,7 @@ import java.net.IDN
  */
 internal class PublicSuffixListData(
     private val rules: ByteArray,
-    private val exceptions: ByteArray
+    private val exceptions: ByteArray,
 ) {
     private fun binarySearchRules(labels: List<ByteArray>, labelIndex: Int): String? {
         return rules.binarySearch(labels, labelIndex)

@@ -18,7 +18,7 @@ import mozilla.components.support.base.log.logger.Logger
  */
 internal class AudioFocus(
     audioManager: AudioManager,
-    val store: BrowserStore
+    val store: BrowserStore,
 ) : AudioManager.OnAudioFocusChangeListener {
     private val logger = Logger("AudioFocus")
     private var playDelayed = false

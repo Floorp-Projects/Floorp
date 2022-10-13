@@ -29,7 +29,7 @@ class RecentlyClosedTabsStorageOnDeviceTest {
         context = ApplicationProvider.getApplicationContext(),
         engine = FakeEngine(),
         crashReporting = FakeCrashReporting(),
-        engineStateStorage = FakeEngineSessionStateStorage()
+        engineStateStorage = FakeEngineSessionStateStorage(),
     )
 
     @Test
@@ -40,13 +40,13 @@ class RecentlyClosedTabsStorageOnDeviceTest {
                 id = "test",
                 title = "Pocket",
                 url = "test",
-                lastAccess = System.currentTimeMillis()
-            )
+                lastAccess = System.currentTimeMillis(),
+            ),
         )
         val closedTab2 = closedTab1.copy(
             state = closedTab1.state.copy(
                 url = "test".repeat(1_000_000), // much more than 2MB of data. Just to be sure.
-            )
+            ),
         )
 
         // First check what happens if too large tabs are persisted and then asked for
@@ -63,8 +63,8 @@ class RecentlyClosedTabsStorageOnDeviceTest {
                 id = "test2",
                 title = "Pocket2",
                 url = "test2",
-                lastAccess = System.currentTimeMillis()
-            )
+                lastAccess = System.currentTimeMillis(),
+            ),
         )
         storage.addTabState(closedTab3)
         val recentlyClosedTabsResult = storage.getTabs().first()

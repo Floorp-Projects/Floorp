@@ -40,14 +40,14 @@ class RequestTest {
             headers = MutableHeaders(
                 "Accept-Language" to "en-US,en;q=0.5",
                 "Connection" to "keep-alive",
-                "Dnt" to "1"
+                "Dnt" to "1",
             ),
             connectTimeout = Pair(10, TimeUnit.SECONDS),
             readTimeout = Pair(1, TimeUnit.MINUTES),
             body = Request.Body.fromString("Hello World!"),
             redirect = Request.Redirect.MANUAL,
             cookiePolicy = Request.CookiePolicy.INCLUDE,
-            useCaches = true
+            useCaches = true,
         )
 
         assertEquals("https://www.mozilla.org", request.url)
@@ -103,7 +103,7 @@ class RequestTest {
         val body = Request.Body.fromParamsForFormUrlEncoded(
             "" to "value",
             "hello" to "world",
-            "key" to ""
+            "key" to "",
         )
         assertEquals(expected, body.readText())
     }
@@ -116,7 +116,7 @@ class RequestTest {
 
         val body = Request.Body.fromParamsForFormUrlEncoded(
             "v" to "2",
-            "url" to inputUrl
+            "url" to inputUrl,
         )
         assertEquals(expected, body.readText())
     }

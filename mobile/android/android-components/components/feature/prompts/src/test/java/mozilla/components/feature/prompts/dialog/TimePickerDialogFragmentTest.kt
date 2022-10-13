@@ -57,7 +57,7 @@ class TimePickerDialogFragmentTest {
         val minDate = "2019-11-28".toDate("yyyy-MM-dd")
         val maxDate = "2019-11-30".toDate("yyyy-MM-dd")
         val fragment = spy(
-            TimePickerDialogFragment.newInstance("sessionId", "uid", true, initialDate, minDate, maxDate)
+            TimePickerDialogFragment.newInstance("sessionId", "uid", true, initialDate, minDate, maxDate),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -79,7 +79,7 @@ class TimePickerDialogFragmentTest {
     fun `Clicking on positive, neutral and negative button notifies the feature`() {
         val initialDate = "2019-11-29".toDate("yyyy-MM-dd")
         val fragment = spy(
-            TimePickerDialogFragment.newInstance("sessionId", "uid", false, initialDate, null, null)
+            TimePickerDialogFragment.newInstance("sessionId", "uid", false, initialDate, null, null),
         )
         fragment.feature = mockFeature
 
@@ -104,7 +104,7 @@ class TimePickerDialogFragmentTest {
     @Test
     fun `touching outside of the dialog must notify the feature onCancel`() {
         val fragment = spy(
-            TimePickerDialogFragment.newInstance("sessionId", "uid", true, Date(), null, null)
+            TimePickerDialogFragment.newInstance("sessionId", "uid", true, Date(), null, null),
         )
         fragment.feature = mockFeature
         doReturn(testContext).`when`(fragment).requireContext()
@@ -114,7 +114,6 @@ class TimePickerDialogFragmentTest {
 
     @Test
     fun `onTimeChanged must update the selectedDate`() {
-
         val dialogPicker = TimePickerDialogFragment.newInstance("sessionId", "uid", false, Date(), null, null)
 
         dialogPicker.onTimeChanged(mock(), 1, 12)
@@ -138,8 +137,8 @@ class TimePickerDialogFragmentTest {
                 initialDate,
                 minDate,
                 maxDate,
-                SELECTION_TYPE_DATE_AND_TIME
-            )
+                SELECTION_TYPE_DATE_AND_TIME,
+            ),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -180,8 +179,8 @@ class TimePickerDialogFragmentTest {
                 initialDate,
                 minDate,
                 maxDate,
-                SELECTION_TYPE_MONTH
-            )
+                SELECTION_TYPE_MONTH,
+            ),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -221,8 +220,8 @@ class TimePickerDialogFragmentTest {
                 initialDate,
                 minDate,
                 maxDate,
-                SELECTION_TYPE_TIME
-            )
+                SELECTION_TYPE_TIME,
+            ),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -245,8 +244,8 @@ class TimePickerDialogFragmentTest {
                 initialDate,
                 minDate,
                 maxDate,
-                -223
-            )
+                -223,
+            ),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -268,8 +267,8 @@ class TimePickerDialogFragmentTest {
                 initialDate,
                 minDate,
                 maxDate,
-                -223
-            )
+                -223,
+            ),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()

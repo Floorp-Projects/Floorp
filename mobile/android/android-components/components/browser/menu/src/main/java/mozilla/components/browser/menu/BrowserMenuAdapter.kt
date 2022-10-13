@@ -17,7 +17,7 @@ import mozilla.components.browser.menu.view.StickyItemsAdapter
  */
 internal class BrowserMenuAdapter(
     context: Context,
-    items: List<BrowserMenuItem>
+    items: List<BrowserMenuItem>,
 ) : RecyclerView.Adapter<BrowserMenuItemViewHolder>(), StickyItemsAdapter {
     var menu: BrowserMenu? = null
 

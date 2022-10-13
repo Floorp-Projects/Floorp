@@ -11,6 +11,6 @@ interface LogSink {
         priority: Log.Priority = Log.Priority.DEBUG,
         tag: String? = null,
         throwable: Throwable? = null,
-        message: String? = null
+        message: String? = null,
     )
 }

@@ -21,7 +21,7 @@ import mozilla.components.feature.addons.R
  */
 class AddonPermissionsAdapter(
     private val permissions: List<String>,
-    private val style: Style? = null
+    private val style: Style? = null,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PermissionViewHolder {
         val context = parent.context
@@ -30,7 +30,7 @@ class AddonPermissionsAdapter(
         val titleView = view.findViewById<TextView>(R.id.permission)
         return PermissionViewHolder(
             view,
-            titleView
+            titleView,
         )
     }
 
@@ -50,7 +50,7 @@ class AddonPermissionsAdapter(
      */
     class PermissionViewHolder(
         val view: View,
-        val textView: TextView
+        val textView: TextView,
     ) : RecyclerView.ViewHolder(view)
 
     /**

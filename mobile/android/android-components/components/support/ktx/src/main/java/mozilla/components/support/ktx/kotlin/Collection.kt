@@ -20,7 +20,7 @@ package mozilla.components.support.ktx.kotlin
  */
 inline fun <T, U, R> Collection<T>.crossProduct(
     other: Collection<U>,
-    block: (T, U) -> R
+    block: (T, U) -> R,
 ) = flatMap { first ->
     other.map { second -> first to second }.map { block(it.first, it.second) }
 }

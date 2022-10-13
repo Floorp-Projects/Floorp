@@ -33,5 +33,5 @@ data class EngineState(
     val engineObserver: EngineSession.Observer? = null,
     val crashed: Boolean = false,
     val timestamp: Long? = null,
-    val initialLoadFlags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
+    val initialLoadFlags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
 )

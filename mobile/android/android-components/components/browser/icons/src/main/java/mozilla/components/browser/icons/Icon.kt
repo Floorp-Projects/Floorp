@@ -18,7 +18,7 @@ data class Icon(
     val bitmap: Bitmap,
     val color: Int? = null,
     val source: Source,
-    val maskable: Boolean = false
+    val maskable: Boolean = false,
 ) {
     /**
      * The source of an [Icon].
@@ -47,6 +47,6 @@ data class Icon(
         /**
          * This icon was loaded from a disk cache.
          */
-        DISK
+        DISK,
     }
 }

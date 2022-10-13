@@ -18,7 +18,7 @@ import mozilla.components.lib.state.Store
 internal class ReducerChainBuilder<S : State, A : Action>(
     private val storeThreadFactory: StoreThreadFactory,
     private val reducer: Reducer<S, A>,
-    private val middleware: List<Middleware<S, A>>
+    private val middleware: List<Middleware<S, A>>,
 ) {
     private var chain: ((A) -> Unit)? = null
 

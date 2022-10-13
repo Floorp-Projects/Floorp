@@ -31,7 +31,7 @@ interface WebExtensionRuntime {
         id: String,
         url: String,
         onSuccess: ((WebExtension) -> Unit) = { },
-        onError: ((String, Throwable) -> Unit) = { _, _ -> }
+        onError: ((String, Throwable) -> Unit) = { _, _ -> },
     ): CancellableOperation {
         onError(id, UnsupportedOperationException("Web extension support is not available in this engine"))
         return CancellableOperation.Noop()
@@ -51,10 +51,10 @@ interface WebExtensionRuntime {
     fun updateWebExtension(
         extension: WebExtension,
         onSuccess: ((WebExtension?) -> Unit) = { },
-        onError: ((String, Throwable) -> Unit) = { _, _ -> }
+        onError: ((String, Throwable) -> Unit) = { _, _ -> },
     ): Unit = onError(
         extension.id,
-        UnsupportedOperationException("Web extension support is not available in this engine")
+        UnsupportedOperationException("Web extension support is not available in this engine"),
     )
 
     /**
@@ -69,7 +69,7 @@ interface WebExtensionRuntime {
     fun uninstallWebExtension(
         ext: WebExtension,
         onSuccess: (() -> Unit) = { },
-        onError: ((String, Throwable) -> Unit) = { _, _ -> }
+        onError: ((String, Throwable) -> Unit) = { _, _ -> },
     ): Unit = onError(ext.id, UnsupportedOperationException("Web extension support is not available in this engine"))
 
     /**
@@ -82,7 +82,7 @@ interface WebExtensionRuntime {
      */
     fun listInstalledWebExtensions(
         onSuccess: ((List<WebExtension>) -> Unit),
-        onError: ((Throwable) -> Unit) = { }
+        onError: ((Throwable) -> Unit) = { },
     ): Unit = onError(UnsupportedOperationException("Web extension support is not available in this engine"))
 
     /**
@@ -100,7 +100,7 @@ interface WebExtensionRuntime {
         extension: WebExtension,
         source: EnableSource = EnableSource.USER,
         onSuccess: ((WebExtension) -> Unit) = { },
-        onError: ((Throwable) -> Unit) = { }
+        onError: ((Throwable) -> Unit) = { },
     ): Unit = onError(UnsupportedOperationException("Web extension support is not available in this engine"))
 
     /**
@@ -118,7 +118,7 @@ interface WebExtensionRuntime {
         extension: WebExtension,
         source: EnableSource = EnableSource.USER,
         onSuccess: ((WebExtension) -> Unit),
-        onError: ((Throwable) -> Unit) = { }
+        onError: ((Throwable) -> Unit) = { },
     ): Unit = onError(UnsupportedOperationException("Web extension support is not available in this engine"))
 
     /**
@@ -128,7 +128,7 @@ interface WebExtensionRuntime {
      * @param webExtensionDelegate callback to be invoked for web extension events.
      */
     fun registerWebExtensionDelegate(
-        webExtensionDelegate: WebExtensionDelegate
+        webExtensionDelegate: WebExtensionDelegate,
     ): Unit = throw UnsupportedOperationException("Web extension support is not available in this engine")
 
     /**
@@ -145,6 +145,6 @@ interface WebExtensionRuntime {
         extension: WebExtension,
         allowed: Boolean,
         onSuccess: ((WebExtension) -> Unit) = { },
-        onError: ((Throwable) -> Unit) = { }
+        onError: ((Throwable) -> Unit) = { },
     ): Unit = throw UnsupportedOperationException("Web extension support is not available in this engine")
 }

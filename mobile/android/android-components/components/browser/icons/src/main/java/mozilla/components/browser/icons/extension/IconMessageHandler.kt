@@ -24,7 +24,7 @@ internal class IconMessageHandler(
     private val store: BrowserStore,
     private val sessionId: String,
     private val private: Boolean,
-    private val icons: BrowserIcons
+    private val icons: BrowserIcons,
 ) : MessageHandler {
     private val scope = CoroutineScope(Dispatchers.IO)
 

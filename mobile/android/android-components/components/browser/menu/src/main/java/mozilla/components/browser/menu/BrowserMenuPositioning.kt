@@ -48,7 +48,7 @@ internal data class MenuPositioningData(
     /**
      * [View#measuredHeight] of the menu. May be bigger than the available screen height.
      */
-    @Px val containerViewHeight: Int = 0
+    @Px val containerViewHeight: Int = 0,
 )
 
 /**
@@ -65,7 +65,7 @@ internal data class MenuPositioningData(
 internal fun inferMenuPositioningData(
     containerView: ViewGroup,
     anchor: View,
-    currentData: MenuPositioningData
+    currentData: MenuPositioningData,
 ): MenuPositioningData {
     // Measure the menu allowing it to expand entirely.
     val spec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -84,8 +84,8 @@ internal fun inferMenuPositioningData(
             fitsDown = fitsDown,
             availableHeightToTop = availableHeightToTop,
             availableHeightToBottom = availableHeightToBottom,
-            containerViewHeight = containerHeight
-        )
+            containerViewHeight = containerHeight,
+        ),
     )
 }
 

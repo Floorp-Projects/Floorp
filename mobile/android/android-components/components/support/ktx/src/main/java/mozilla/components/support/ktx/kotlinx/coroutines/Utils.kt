@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 fun <T> throttleLatest(
     skipTimeInMs: Long = 300L,
     coroutineScope: CoroutineScope,
-    block: (T) -> Unit
+    block: (T) -> Unit,
 ): (T) -> Unit {
     var throttleJob: Job? = null
     var latestParam: T

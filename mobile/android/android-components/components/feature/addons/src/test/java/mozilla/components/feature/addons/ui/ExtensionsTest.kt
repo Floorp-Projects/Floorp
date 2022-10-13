@@ -38,7 +38,7 @@ class ExtensionsTest {
             rating = Addon.Rating(4.5f, 1000),
             createdAt = "",
             updatedAt = "",
-            translatableName = mapOf(Addon.DEFAULT_LOCALE to "name", "de" to "Name", "es" to "nombre")
+            translatableName = mapOf(Addon.DEFAULT_LOCALE to "name", "de" to "Name", "es" to "nombre"),
         )
 
         Locale.setDefault(Locale("es"))
@@ -86,7 +86,7 @@ class ExtensionsTest {
         val addon = Addon(
             id = "id",
             createdAt = "2015-04-25T07:26:22Z",
-            updatedAt = "2020-06-28T12:45:18Z"
+            updatedAt = "2020-06-28T12:45:18Z",
         )
 
         val expectedCreatedAt = GregorianCalendar(TimeZone.getTimeZone("GMT")).apply {

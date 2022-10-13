@@ -84,7 +84,7 @@ class EngineObserverTest {
                 url: String,
                 parent: EngineSession?,
                 flags: LoadUrlFlags,
-                additionalHeaders: Map<String, String>?
+                additionalHeaders: Map<String, String>?,
             ) {
                 notifyObservers { onLocationChange(url) }
                 notifyObservers { onProgress(100) }
@@ -135,7 +135,7 @@ class EngineObserverTest {
                 url: String,
                 parent: EngineSession?,
                 flags: LoadUrlFlags,
-                additionalHeaders: Map<String, String>?
+                additionalHeaders: Map<String, String>?,
             ) {
                 if (url.startsWith("https://")) {
                     notifyObservers { onSecurityChange(true, "host", "issuer") }
@@ -148,9 +148,9 @@ class EngineObserverTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla")
-                )
-            )
+                    createTab("https://www.mozilla.org", id = "mozilla"),
+                ),
+            ),
         )
 
         engineSession.register(EngineObserver("mozilla", store))
@@ -180,7 +180,7 @@ class EngineObserverTest {
                 url: String,
                 parent: EngineSession?,
                 flags: LoadUrlFlags,
-                additionalHeaders: Map<String, String>?
+                additionalHeaders: Map<String, String>?,
             ) {}
             override fun loadData(data: String, mimeType: String, encoding: String) {}
             override fun requestPdfToDownload() = Unit
@@ -193,9 +193,9 @@ class EngineObserverTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla")
-                )
-            )
+                    createTab("https://www.mozilla.org", id = "mozilla"),
+                ),
+            ),
         )
         val observer = EngineObserver("mozilla", store)
         engineSession.register(observer)
@@ -224,8 +224,8 @@ class EngineObserverTest {
         verify(store).dispatch(
             TrackingProtectionAction.ToggleExclusionListAction(
                 "mozilla",
-                true
-            )
+                true,
+            ),
         )
     }
 
@@ -237,10 +237,10 @@ class EngineObserverTest {
                     createTab(
                         url = "https://www.mozilla.org",
                         id = "mozilla",
-                        title = "Hello World"
-                    )
-                )
-            )
+                        title = "Hello World",
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -263,10 +263,10 @@ class EngineObserverTest {
                     createTab(
                         url = "https://www.mozilla.org",
                         id = "mozilla",
-                        title = "Hello World"
-                    )
-                )
-            )
+                        title = "Hello World",
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -290,10 +290,10 @@ class EngineObserverTest {
                     createTab(
                         url = "https://www.mozilla.org",
                         id = "mozilla",
-                        title = "Hello World"
-                    )
-                )
-            )
+                        title = "Hello World",
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -317,10 +317,10 @@ class EngineObserverTest {
                     createTab(
                         url = "https://www.mozilla.org",
                         id = "mozilla",
-                        title = "Hello World"
-                    )
-                )
-            )
+                        title = "Hello World",
+                    ),
+                ),
+            ),
         )
         val previewImageUrl = "https://test.com/og-image-url"
 
@@ -344,10 +344,10 @@ class EngineObserverTest {
                     createTab(
                         url = "https://www.mozilla.org",
                         id = "mozilla",
-                        title = "Hello World"
-                    )
-                )
-            )
+                        title = "Hello World",
+                    ),
+                ),
+            ),
         )
         val previewImageUrl = "https://test.com/og-image-url"
 
@@ -376,10 +376,10 @@ class EngineObserverTest {
                 tabs = listOf(
                     createTab(
                         url = "https://www.mozilla.org",
-                        id = "mozilla"
-                    )
-                )
-            )
+                        id = "mozilla",
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -406,10 +406,10 @@ class EngineObserverTest {
                 tabs = listOf(
                     createTab(
                         url = "https://www.mozilla.org",
-                        id = "mozilla"
-                    )
-                )
-            )
+                        id = "mozilla",
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -436,10 +436,10 @@ class EngineObserverTest {
                 tabs = listOf(
                     createTab(
                         url = "https://www.mozilla.org",
-                        id = "mozilla"
-                    )
-                )
-            )
+                        id = "mozilla",
+                    ),
+                ),
+            ),
         )
 
         val manifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org")
@@ -464,10 +464,10 @@ class EngineObserverTest {
                 tabs = listOf(
                     createTab(
                         url = "https://www.mozilla.org",
-                        id = "mozilla"
-                    )
-                )
-            )
+                        id = "mozilla",
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -492,10 +492,10 @@ class EngineObserverTest {
                 tabs = listOf(
                     createTab(
                         url = "https://www.mozilla.org",
-                        id = "mozilla"
-                    )
-                )
-            )
+                        id = "mozilla",
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -520,10 +520,10 @@ class EngineObserverTest {
                 tabs = listOf(
                     createTab(
                         url = "https://www.mozilla.org",
-                        id = "mozilla"
-                    )
-                )
-            )
+                        id = "mozilla",
+                    ),
+                ),
+            ),
         )
 
         val manifest = WebAppManifest(name = "Mozilla", startUrl = "https://www.mozilla.org")
@@ -548,16 +548,16 @@ class EngineObserverTest {
                 tabs = listOf(
                     createTab(
                         url = "https://www.mozilla.org",
-                        id = "mozilla"
-                    )
-                )
-            )
+                        id = "mozilla",
+                    ),
+                ),
+            ),
         )
 
         val manifest = WebAppManifest(
             name = "Mozilla",
             startUrl = "https://www.mozilla.org",
-            scope = "https://www.mozilla.org/hello/"
+            scope = "https://www.mozilla.org/hello/",
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -584,10 +584,10 @@ class EngineObserverTest {
                 tabs = listOf(
                     createTab(
                         url = "https://www.mozilla.org",
-                        id = "mozilla"
-                    )
-                )
-            )
+                        id = "mozilla",
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -604,7 +604,7 @@ class EngineObserverTest {
     fun engineObserverClearsFindResults() {
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val store = BrowserStore(
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
         val observer = EngineObserver("tab", store)
 
@@ -626,7 +626,7 @@ class EngineObserverTest {
     fun engineObserverClearsFindResultIfNewPageStartsLoading() {
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val store = BrowserStore(
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
         val observer = EngineObserver("tab-id", store)
 
@@ -655,7 +655,7 @@ class EngineObserverTest {
     fun engineObserverClearsRefreshCanceledIfNewPageStartsLoading() {
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val store = BrowserStore(
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
         val observer = EngineObserver("tab-id", store)
 
@@ -696,7 +696,7 @@ class EngineObserverTest {
     fun engineObserverNotifiesFullscreenMode() {
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val store = BrowserStore(
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
         val observer = EngineObserver("tab-id", store)
 
@@ -719,7 +719,7 @@ class EngineObserverTest {
     fun engineObserverNotifiesDesktopMode() {
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val store = BrowserStore(
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
         val observer = EngineObserver("tab-id", store)
 
@@ -742,7 +742,7 @@ class EngineObserverTest {
     fun engineObserverNotifiesMetaViewportFitChange() {
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val store = BrowserStore(
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
         val observer = EngineObserver("tab-id", store)
 
@@ -752,7 +752,7 @@ class EngineObserverTest {
             assertEquals("tab-id", action.sessionId)
             assertEquals(
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT,
-                action.layoutInDisplayCutoutMode
+                action.layoutInDisplayCutoutMode,
             )
         }
 
@@ -762,7 +762,7 @@ class EngineObserverTest {
             assertEquals("tab-id", action.sessionId)
             assertEquals(
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES,
-                action.layoutInDisplayCutoutMode
+                action.layoutInDisplayCutoutMode,
             )
         }
 
@@ -772,7 +772,7 @@ class EngineObserverTest {
             assertEquals("tab-id", action.sessionId)
             assertEquals(
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER,
-                action.layoutInDisplayCutoutMode
+                action.layoutInDisplayCutoutMode,
             )
         }
 
@@ -793,8 +793,9 @@ class EngineObserverTest {
 
         verify(store).dispatch(
             ContentAction.UpdateThumbnailAction(
-                "tab-id", emptyBitmap
-            )
+                "tab-id",
+                emptyBitmap,
+            ),
         )
     }
 
@@ -805,16 +806,16 @@ class EngineObserverTest {
                 tabs = listOf(
                     createTab(
                         url = "https://www.mozilla.org",
-                        id = "mozilla"
-                    )
-                )
-            )
+                        id = "mozilla",
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
         val manifest = WebAppManifest(
             name = "Minimal",
-            startUrl = "/"
+            startUrl = "/",
         )
 
         observer.onWebAppManifestLoaded(manifest)
@@ -830,7 +831,7 @@ class EngineObserverTest {
         val observer = EngineObserver("tab-id", store)
         val action = ContentAction.UpdatePermissionsRequest(
             "tab-id",
-            permissionRequest
+            permissionRequest,
         )
         doReturn(Job()).`when`(store).dispatch(action)
 
@@ -845,7 +846,7 @@ class EngineObserverTest {
         val observer = EngineObserver("tab-id", store)
         val action = ContentAction.UpdateAppPermissionsRequest(
             "tab-id",
-            permissionRequest
+            permissionRequest,
         )
 
         observer.onAppPermissionRequest(permissionRequest)
@@ -862,8 +863,8 @@ class EngineObserverTest {
         verify(store).dispatch(
             ContentAction.UpdatePromptRequestAction(
                 "tab-id",
-                promptRequest
-            )
+                promptRequest,
+            ),
         )
     }
 
@@ -879,8 +880,8 @@ class EngineObserverTest {
             ContentAction.ReplacePromptRequestAction(
                 "tab-id",
                 previousPromptUID,
-                promptRequest
-            )
+                promptRequest,
+            ),
         )
     }
 
@@ -895,8 +896,8 @@ class EngineObserverTest {
         verify(store).dispatch(
             ContentAction.UpdateWindowRequestAction(
                 "tab-id",
-                windowRequest
-            )
+                windowRequest,
+            ),
         )
     }
 
@@ -910,8 +911,8 @@ class EngineObserverTest {
         verify(store).dispatch(
             ContentAction.UpdateFirstContentfulPaintStateAction(
                 "tab-id",
-                true
-            )
+                true,
+            ),
         )
     }
 
@@ -925,8 +926,8 @@ class EngineObserverTest {
         verify(store).dispatch(
             ContentAction.UpdateFirstContentfulPaintStateAction(
                 "tab-id",
-                false
-            )
+                false,
+            ),
         )
     }
 
@@ -946,10 +947,10 @@ class EngineObserverTest {
                 tabs = listOf(
                     createTab(
                         url = "https://www.mozilla.org",
-                        id = "mozilla"
-                    )
-                )
-            )
+                        id = "mozilla",
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -974,11 +975,11 @@ class EngineObserverTest {
                         url = "https://www.mozilla.org",
                         id = "mozilla",
                         mediaSessionState = MediaSessionState(
-                            controller = mock()
-                        )
-                    )
-                )
-            )
+                            controller = mock(),
+                        ),
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -1001,11 +1002,11 @@ class EngineObserverTest {
                         url = "https://www.mozilla.org",
                         id = "mozilla",
                         mediaSessionState = MediaSessionState(
-                            controller = mock()
-                        )
-                    )
-                )
-            )
+                            controller = mock(),
+                        ),
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -1032,11 +1033,11 @@ class EngineObserverTest {
                         url = "https://www.mozilla.org",
                         id = "mozilla",
                         mediaSessionState = MediaSessionState(
-                            controller = mock()
-                        )
-                    )
-                )
-            )
+                            controller = mock(),
+                        ),
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -1063,11 +1064,11 @@ class EngineObserverTest {
                         url = "https://www.mozilla.org",
                         id = "mozilla",
                         mediaSessionState = MediaSessionState(
-                            controller = mock()
-                        )
-                    )
-                )
-            )
+                            controller = mock(),
+                        ),
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -1094,11 +1095,11 @@ class EngineObserverTest {
                         url = "https://www.mozilla.org",
                         id = "mozilla",
                         mediaSessionState = MediaSessionState(
-                            controller = mock()
-                        )
-                    )
-                )
-            )
+                            controller = mock(),
+                        ),
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -1125,11 +1126,11 @@ class EngineObserverTest {
                         url = "https://www.mozilla.org",
                         id = "mozilla",
                         mediaSessionState = MediaSessionState(
-                            controller = mock()
-                        )
-                    )
-                )
-            )
+                            controller = mock(),
+                        ),
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -1155,11 +1156,11 @@ class EngineObserverTest {
                         url = "https://www.mozilla.org",
                         id = "mozilla",
                         mediaSessionState = MediaSessionState(
-                            controller = mock()
-                        )
-                    )
-                )
-            )
+                            controller = mock(),
+                        ),
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -1185,10 +1186,10 @@ class EngineObserverTest {
                 tabs = listOf(
                     createTab(
                         url = "https://www.mozilla.org",
-                        id = "mozilla"
-                    )
-                )
-            )
+                        id = "mozilla",
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -1215,11 +1216,11 @@ class EngineObserverTest {
                         url = "https://www.mozilla.org",
                         id = "mozilla",
                         mediaSessionState = MediaSessionState(
-                            controller = mock()
-                        )
-                    )
-                )
-            )
+                            controller = mock(),
+                        ),
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("mozilla", store)
@@ -1231,7 +1232,7 @@ class EngineObserverTest {
             contentType = "text/plain",
             isPrivate = true,
             contentLength = 100L,
-            response = response
+            response = response,
         )
 
         store.waitUntilIdle()
@@ -1256,11 +1257,11 @@ class EngineObserverTest {
                         url = "https://www.mozilla.org",
                         id = "test-tab",
                         mediaSessionState = MediaSessionState(
-                            controller = mock()
-                        )
-                    )
-                )
-            )
+                            controller = mock(),
+                        ),
+                    ),
+                ),
+            ),
         )
 
         val observer = EngineObserver("test-tab", store)
@@ -1283,8 +1284,8 @@ class EngineObserverTest {
 
         verify(store).dispatch(
             CrashAction.SessionCrashedAction(
-                "test-id"
-            )
+                "test-id",
+            ),
         )
     }
 
@@ -1292,7 +1293,7 @@ class EngineObserverTest {
     fun `onLocationChange does not clear search terms`() {
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val store = BrowserStore(
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val observer = EngineObserver("test-id", store)
@@ -1309,7 +1310,7 @@ class EngineObserverTest {
 
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val store = BrowserStore(
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val observer = EngineObserver("test-id", store)
@@ -1329,7 +1330,7 @@ class EngineObserverTest {
 
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val store = BrowserStore(
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val observer = EngineObserver("test-id", store)
@@ -1356,8 +1357,8 @@ class EngineObserverTest {
             .dispatch(
                 ContentAction.UpdateLoadRequestAction(
                     "test-id",
-                    LoadRequestState(url, triggeredByRedirect = true, triggeredByUser = false)
-                )
+                    LoadRequestState(url, triggeredByRedirect = true, triggeredByUser = false),
+                ),
             )
     }
 
@@ -1367,7 +1368,7 @@ class EngineObserverTest {
 
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val store = BrowserStore(
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val observer = EngineObserver("test-id", store)
@@ -1393,7 +1394,7 @@ class EngineObserverTest {
     fun `onNavigateBack clears search terms when navigating back`() {
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val store = BrowserStore(
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val observer = EngineObserver("test-id", store)
@@ -1416,16 +1417,16 @@ class EngineObserverTest {
             ContentAction.UpdateHistoryStateAction(
                 "test-id",
                 emptyList(),
-                currentIndex = 0
-            )
+                currentIndex = 0,
+            ),
         )
 
         observer.onHistoryStateChanged(
             listOf(
                 HistoryItem("Firefox", "https://firefox.com"),
-                HistoryItem("Mozilla", "http://mozilla.org")
+                HistoryItem("Mozilla", "http://mozilla.org"),
             ),
-            1
+            1,
         )
 
         verify(store).dispatch(
@@ -1433,10 +1434,10 @@ class EngineObserverTest {
                 "test-id",
                 listOf(
                     HistoryItem("Firefox", "https://firefox.com"),
-                    HistoryItem("Mozilla", "http://mozilla.org")
+                    HistoryItem("Mozilla", "http://mozilla.org"),
                 ),
-                currentIndex = 1
-            )
+                currentIndex = 1,
+            ),
         )
     }
 
@@ -1449,20 +1450,20 @@ class EngineObserverTest {
             trackingCategories = emptyArray(),
             cookiePolicy = EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ONLY_FIRST_PARTY,
             cookiePurging = true,
-            strictSocialTrackingProtection = true
+            strictSocialTrackingProtection = true,
         )
         val custom2 = EngineSession.TrackingProtectionPolicy.select(
             trackingCategories = emptyArray(),
             cookiePolicy = EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ONLY_FIRST_PARTY,
             cookiePurging = true,
-            strictSocialTrackingProtection = true
+            strictSocialTrackingProtection = true,
         )
 
         val customNone = EngineSession.TrackingProtectionPolicy.select(
             trackingCategories = none.trackingCategories,
             cookiePolicy = none.cookiePolicy,
             cookiePurging = none.cookiePurging,
-            strictSocialTrackingProtection = false
+            strictSocialTrackingProtection = false,
         )
 
         assertTrue(strict == EngineSession.TrackingProtectionPolicy.strict())

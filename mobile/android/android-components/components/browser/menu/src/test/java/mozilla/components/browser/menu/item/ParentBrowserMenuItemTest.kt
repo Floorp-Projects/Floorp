@@ -36,7 +36,7 @@ class ParentBrowserMenuItemTest {
             imageResource = android.R.drawable.ic_menu_report_image,
             iconTintColorResource = android.R.color.black,
             textColorResource = android.R.color.black,
-            subMenu = subMenu
+            subMenu = subMenu,
         )
         val view = LayoutInflater.from(testContext).inflate(parentMenuItem.getLayoutResource(), null)
         val nestedMenuAdapter = BrowserMenuAdapter(testContext, listOf(parentMenuItem))
@@ -61,7 +61,7 @@ class ParentBrowserMenuItemTest {
         val parentMenuItem = ParentBrowserMenuItem(
             label = "label",
             imageResource = android.R.drawable.ic_menu_report_image,
-            subMenu = subMenu
+            subMenu = subMenu,
         )
         val view = LayoutInflater.from(testContext).inflate(parentMenuItem.getLayoutResource(), null)
         val nestedMenuAdapter = BrowserMenuAdapter(testContext, listOf(parentMenuItem))
@@ -77,7 +77,7 @@ class ParentBrowserMenuItemTest {
     fun `onBackPressed after sub menu is shown will dismiss the sub menu`() {
         val backPressMenuItem = BackPressMenuItem(
             label = "back",
-            imageResource = R.drawable.mozac_ic_back
+            imageResource = R.drawable.mozac_ic_back,
         )
         val backPressView = LayoutInflater.from(testContext).inflate(backPressMenuItem.getLayoutResource(), null)
         val subMenuItem = SimpleBrowserMenuItem("test")
@@ -88,7 +88,7 @@ class ParentBrowserMenuItemTest {
         val parentMenuItem = ParentBrowserMenuItem(
             label = "label",
             imageResource = android.R.drawable.ic_menu_report_image,
-            subMenu = subMenu
+            subMenu = subMenu,
         )
         val view = LayoutInflater.from(testContext).inflate(parentMenuItem.getLayoutResource(), null)
         val nestedMenuAdapter = BrowserMenuAdapter(testContext, listOf(parentMenuItem))
@@ -109,7 +109,7 @@ class ParentBrowserMenuItemTest {
     fun `menu item image text item can be converted to candidate`() {
         val backPressMenuItem = BackPressMenuItem(
             label = "back",
-            imageResource = R.drawable.mozac_ic_back
+            imageResource = R.drawable.mozac_ic_back,
         )
         val subMenuItem = SimpleBrowserMenuItem("test")
         val subMenuAdapter = BrowserMenuAdapter(testContext, listOf(backPressMenuItem, subMenuItem))
@@ -117,7 +117,7 @@ class ParentBrowserMenuItemTest {
         val menuItem = ParentBrowserMenuItem(
             "label",
             android.R.drawable.ic_menu_report_image,
-            subMenu = subMenu
+            subMenu = subMenu,
         )
 
         val candidate = menuItem.asCandidate(testContext)
@@ -133,15 +133,15 @@ class ParentBrowserMenuItemTest {
                 id = backPressMenuItem.hashCode(),
                 text = "back",
                 start = DrawableMenuIcon(null),
-                subMenuItems = null
+                subMenuItems = null,
             ),
             backCandidate.run {
                 copy(start = (start as? DrawableMenuIcon)?.copy(drawable = null))
-            }
+            },
         )
         assertEquals(
             DecorativeTextMenuCandidate("test"),
-            testCandidate
+            testCandidate,
         )
     }
 }

@@ -19,6 +19,7 @@ import mozilla.components.service.pocket.stories.db.PocketRecommendationsDatabas
  */
 internal class PocketRecommendationsRepository(context: Context) {
     private val database: Lazy<PocketRecommendationsDatabase> = lazy { PocketRecommendationsDatabase.get(context) }
+
     @VisibleForTesting
     internal val pocketRecommendationsDao by lazy { database.value.pocketRecommendationsDao() }
 
@@ -31,7 +32,7 @@ internal class PocketRecommendationsRepository(context: Context) {
 
     suspend fun updateShownPocketRecommendedStories(updatedStories: List<PocketRecommendedStory>) {
         return pocketRecommendationsDao.updateTimesShown(
-            updatedStories.map { it.toPartialTimeShownUpdate() }
+            updatedStories.map { it.toPartialTimeShownUpdate() },
         )
     }
 

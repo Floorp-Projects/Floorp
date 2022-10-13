@@ -29,11 +29,11 @@ internal const val IMAGE_URI_PREFIX = "data:image/png;base64,"
  * @param type the [SearchEngine.Type] that the read [SearchEngine]s will get assigned.
  */
 internal class SearchEngineReader(
-    private val type: SearchEngine.Type
+    private val type: SearchEngine.Type,
 ) {
     private class SearchEngineBuilder(
         private val type: SearchEngine.Type,
-        private val identifier: String
+        private val identifier: String,
     ) {
         var resultsUrls: MutableList<String> = mutableListOf()
         var suggestUrl: String? = null
@@ -46,7 +46,7 @@ internal class SearchEngineReader(
             icon = icon!!,
             type = type,
             resultUrls = resultsUrls,
-            suggestUrl = suggestUrl
+            suggestUrl = suggestUrl,
         )
     }
 
@@ -84,7 +84,7 @@ internal class SearchEngineReader(
         val name = parser.name
         if ("SearchPlugin" != name && "OpenSearchDescription" != name) {
             throw XmlPullParserException(
-                "Expected <SearchPlugin> or <OpenSearchDescription> as root tag: ${parser.positionDescription}"
+                "Expected <SearchPlugin> or <OpenSearchDescription> as root tag: ${parser.positionDescription}",
             )
         }
 

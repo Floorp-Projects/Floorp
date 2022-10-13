@@ -33,7 +33,7 @@ internal object CustomTabListReducer {
                     val tab = customTab.toTab()
                     state.copy(
                         customTabs = state.customTabs - customTab,
-                        tabs = state.tabs + tab
+                        tabs = state.tabs + tab,
                     )
                 }
             }

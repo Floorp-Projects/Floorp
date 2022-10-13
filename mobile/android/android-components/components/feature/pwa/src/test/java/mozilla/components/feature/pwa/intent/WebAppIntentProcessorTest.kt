@@ -32,8 +32,8 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
@@ -66,7 +66,7 @@ class WebAppIntentProcessorTest {
 
         val manifest = WebAppManifest(
             name = "Test Manifest",
-            startUrl = "https://mozilla.com"
+            startUrl = "https://mozilla.com",
         )
         `when`(storage.loadManifest("https://mozilla.com")).thenReturn(manifest)
 
@@ -79,11 +79,11 @@ class WebAppIntentProcessorTest {
                     externalAppType = ExternalAppType.PROGRESSIVE_WEB_APP,
                     enableUrlbarHiding = true,
                     showCloseButton = false,
-                    showShareMenuItem = true
+                    showShareMenuItem = true,
 
                 ),
-                webAppManifest = manifest
-            )
+                webAppManifest = manifest,
+            ),
         ).thenReturn("42")
 
         val processor = WebAppIntentProcessor(store, addTabUseCase, mock(), storage)
@@ -105,7 +105,7 @@ class WebAppIntentProcessorTest {
 
         val manifest = WebAppManifest(
             name = "Test Manifest",
-            startUrl = "https://mozilla.com"
+            startUrl = "https://mozilla.com",
         )
         `when`(storage.loadManifest("https://mozilla.com")).thenReturn(manifest)
 
@@ -121,10 +121,10 @@ class WebAppIntentProcessorTest {
                 externalAppType = ExternalAppType.PROGRESSIVE_WEB_APP,
                 enableUrlbarHiding = true,
                 showCloseButton = false,
-                showShareMenuItem = true
+                showShareMenuItem = true,
 
             ),
-            webAppManifest = manifest
+            webAppManifest = manifest,
         )
     }
 
@@ -139,7 +139,7 @@ class WebAppIntentProcessorTest {
 
         val manifest = WebAppManifest(
             name = "Test Manifest",
-            startUrl = "https://mozilla.com"
+            startUrl = "https://mozilla.com",
         )
 
         `when`(storage.loadManifest("https://mozilla.com")).thenReturn(manifest)

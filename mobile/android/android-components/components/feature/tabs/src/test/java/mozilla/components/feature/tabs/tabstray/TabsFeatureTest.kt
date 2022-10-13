@@ -23,8 +23,8 @@ class TabsFeatureTest {
         val tabsFeature = spy(
             TabsFeature(
                 mock(),
-                store
-            ) { true }
+                store,
+            ) { true },
         )
 
         assertNotEquals(tabsFeature.presenter, presenter)
@@ -41,8 +41,8 @@ class TabsFeatureTest {
         val tabsFeature = spy(
             TabsFeature(
                 mock(),
-                store
-            ) { true }
+                store,
+            ) { true },
         )
 
         tabsFeature.presenter = presenter
@@ -59,8 +59,8 @@ class TabsFeatureTest {
         val tabsFeature = spy(
             TabsFeature(
                 mock(),
-                store
-            ) { true }
+                store,
+            ) { true },
         )
 
         tabsFeature.presenter = presenter
@@ -78,8 +78,8 @@ class TabsFeatureTest {
         val tabsFeature = spy(
             TabsFeature(
                 tabsTray,
-                store
-            ) { true }
+                store,
+            ) { true },
         )
 
         tabsFeature.presenter = presenter
@@ -100,8 +100,8 @@ class TabsFeatureTest {
             TabsFeature(
                 mock(),
                 store,
-                defaultTabsFilter = filter
-            )
+                defaultTabsFilter = filter,
+            ),
         )
         val presenter: TabsTrayPresenter = mock()
 

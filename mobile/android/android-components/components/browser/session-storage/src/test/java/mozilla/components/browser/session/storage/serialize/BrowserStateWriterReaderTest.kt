@@ -43,16 +43,16 @@ class BrowserStateWriterReaderTest {
         val tab = createTab(
             url = "https://www.mozilla.org",
             title = "Mozilla",
-            contextId = "work"
+            contextId = "work",
         ).copy(
-            engineState = EngineState(engineSessionState = engineState)
+            engineState = EngineState(engineSessionState = engineState),
         )
 
         val writer = BrowserStateWriter()
         val reader = BrowserStateReader()
 
         val file = AtomicFile(
-            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
         )
 
         assertTrue(writer.writeTab(tab, file))
@@ -77,14 +77,14 @@ class BrowserStateWriterReaderTest {
             url = "https://www.mozilla.org",
             title = "Mozilla",
             contextId = "work",
-            readerState = ReaderState(active = true, activeUrl = "https://www.example.org")
+            readerState = ReaderState(active = true, activeUrl = "https://www.example.org"),
         )
 
         val writer = BrowserStateWriter()
         val reader = BrowserStateReader()
 
         val file = AtomicFile(
-            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
         )
 
         assertTrue(writer.writeTab(tab, file))
@@ -105,7 +105,7 @@ class BrowserStateWriterReaderTest {
         val engine = createFakeEngine(engineState)
         val tab = createTab(url = "https://www.mozilla.org", title = "Mozilla")
         val file = AtomicFile(
-            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
         )
         writeTabWithDeprecatedSource(tab, file)
 
@@ -132,15 +132,15 @@ class BrowserStateWriterReaderTest {
             historyMetadata = HistoryMetadataKey(
                 "https://www.mozilla.org",
                 searchTerm = "test",
-                referrerUrl = "https://firefox.com"
-            )
+                referrerUrl = "https://firefox.com",
+            ),
         )
 
         val writer = BrowserStateWriter()
         val reader = BrowserStateReader()
 
         val file = AtomicFile(
-            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
         )
 
         assertTrue(writer.writeTab(tab, file))
@@ -162,15 +162,15 @@ class BrowserStateWriterReaderTest {
             title = "Mozilla",
             contextId = "work",
             source = SessionState.Source.External.CustomTab(
-                caller = ExternalPackage("com.mozilla.test", PackageCategory.PRODUCTIVITY)
-            )
+                caller = ExternalPackage("com.mozilla.test", PackageCategory.PRODUCTIVITY),
+            ),
         )
 
         val writer = BrowserStateWriter()
         val reader = BrowserStateReader()
 
         val file = AtomicFile(
-            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
         )
 
         assertTrue(writer.writeTab(tab, file))
@@ -196,15 +196,15 @@ class BrowserStateWriterReaderTest {
             title = "Mozilla",
             contextId = "work",
             source = SessionState.Source.External.ActionView(
-                caller = ExternalPackage("com.mozilla.test", category = PackageCategory.UNKNOWN)
-            )
+                caller = ExternalPackage("com.mozilla.test", category = PackageCategory.UNKNOWN),
+            ),
         )
 
         val writer = BrowserStateWriter()
         val reader = BrowserStateReader()
 
         val file = AtomicFile(
-            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
         )
 
         assertTrue(writer.writeTab(tab, file))
@@ -229,14 +229,14 @@ class BrowserStateWriterReaderTest {
             url = "https://www.mozilla.org",
             title = "Mozilla",
             contextId = "work",
-            source = SessionState.Source.External.ActionSend(caller = null)
+            source = SessionState.Source.External.ActionSend(caller = null),
         )
 
         val writer = BrowserStateWriter()
         val reader = BrowserStateReader()
 
         val file = AtomicFile(
-            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
         )
 
         assertTrue(writer.writeTab(tab, file))
@@ -260,14 +260,14 @@ class BrowserStateWriterReaderTest {
             url = "https://www.mozilla.org",
             title = "Mozilla",
             contextId = "work",
-            lastMediaAccessState = LastMediaAccessState("https://www.mozilla.org", lastMediaAccess = 333L, true)
+            lastMediaAccessState = LastMediaAccessState("https://www.mozilla.org", lastMediaAccess = 333L, true),
         )
 
         val writer = BrowserStateWriter()
         val reader = BrowserStateReader()
 
         val file = AtomicFile(
-            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
         )
 
         assertTrue(writer.writeTab(tab, file))
@@ -290,14 +290,14 @@ class BrowserStateWriterReaderTest {
             url = "https://www.mozilla.org",
             title = "Mozilla",
             contextId = "work",
-            createdAt = currentTime
+            createdAt = currentTime,
         )
 
         val writer = BrowserStateWriter()
         val reader = BrowserStateReader()
 
         val file = AtomicFile(
-            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
         )
 
         assertTrue(writer.writeTab(tab, file))
@@ -316,14 +316,14 @@ class BrowserStateWriterReaderTest {
         val tab = createTab(
             url = "https://www.mozilla.org",
             title = "Mozilla",
-            contextId = "work"
+            contextId = "work",
         )
 
         val writer = BrowserStateWriter()
         val reader = BrowserStateReader()
 
         val file = AtomicFile(
-            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
         )
 
         assertTrue(writer.writeTab(tab, file))
@@ -343,14 +343,14 @@ class BrowserStateWriterReaderTest {
             url = "https://www.mozilla.org",
             title = "Mozilla",
             contextId = "work",
-            searchTerms = "test search"
+            searchTerms = "test search",
         )
 
         val writer = BrowserStateWriter()
         val reader = BrowserStateReader()
 
         val file = AtomicFile(
-            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
         )
 
         assertTrue(writer.writeTab(tab, file))
@@ -369,14 +369,14 @@ class BrowserStateWriterReaderTest {
         val tab = createTab(
             url = "https://www.mozilla.org",
             title = "Mozilla",
-            contextId = "work"
+            contextId = "work",
         )
 
         val writer = BrowserStateWriter()
         val reader = BrowserStateReader()
 
         val file = AtomicFile(
-            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
         )
 
         assertTrue(writer.writeTab(tab, file))
@@ -414,7 +414,7 @@ private fun writeTabWithDeprecatedSource(tab: TabSessionState, file: AtomicFile)
 }
 
 private fun JsonWriter.tabWithDeprecatedSource(
-    tab: TabSessionState
+    tab: TabSessionState,
 ) {
     beginObject()
 

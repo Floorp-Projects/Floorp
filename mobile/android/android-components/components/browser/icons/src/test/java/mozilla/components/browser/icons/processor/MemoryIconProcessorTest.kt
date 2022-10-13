@@ -60,7 +60,6 @@ class MemoryIconProcessorTest {
     }
 
     @Test
-
     fun `Inlined icon is saved in cache`() {
         val icon = Icon(mock(), source = Icon.Source.INLINE)
         val cache: MemoryIconProcessor.ProcessorMemoryCache = mock()

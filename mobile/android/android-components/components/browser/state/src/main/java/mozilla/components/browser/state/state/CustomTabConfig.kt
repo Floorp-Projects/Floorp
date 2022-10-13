@@ -40,7 +40,7 @@ data class CustomTabConfig(
     @ColorInt val navigationBarColor: Int? = null,
     val titleVisible: Boolean = false,
     val sessionToken: CustomTabsSessionToken? = null,
-    val externalAppType: ExternalAppType = ExternalAppType.CUSTOM_TAB
+    val externalAppType: ExternalAppType = ExternalAppType.CUSTOM_TAB,
 )
 
 /**
@@ -51,14 +51,16 @@ enum class ExternalAppType {
      * Custom tab is displayed as a normal custom tab with toolbar.
      */
     CUSTOM_TAB,
+
     /**
      * Custom tab toolbar is hidden inside a Progressive Web App created by the browser.
      */
     PROGRESSIVE_WEB_APP,
+
     /**
      * Custom tab is displayed fullscreen inside a Trusted Web Activity from an external app.
      */
-    TRUSTED_WEB_ACTIVITY
+    TRUSTED_WEB_ACTIVITY,
 }
 
 data class CustomTabActionButtonConfig(
@@ -66,10 +68,10 @@ data class CustomTabActionButtonConfig(
     val icon: Bitmap,
     val pendingIntent: PendingIntent,
     val id: Int = CustomTabsIntent.TOOLBAR_ACTION_BUTTON_ID,
-    val tint: Boolean = false
+    val tint: Boolean = false,
 )
 
 data class CustomTabMenuItem(
     val name: String,
-    val pendingIntent: PendingIntent
+    val pendingIntent: PendingIntent,
 )

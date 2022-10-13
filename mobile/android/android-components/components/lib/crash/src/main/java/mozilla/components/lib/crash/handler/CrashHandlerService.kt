@@ -43,13 +43,13 @@ class CrashHandlerService : Service() {
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun handleCrashIntent(
         intent: Intent,
-        scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+        scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = CrashNotification.ensureChannelExists(this)
             val notification = NotificationCompat.Builder(this, channel)
                 .setContentTitle(
-                    getString(R.string.mozac_lib_gathering_crash_data_in_progress)
+                    getString(R.string.mozac_lib_gathering_crash_data_in_progress),
                 )
                 .setSmallIcon(R.drawable.mozac_lib_crash_notification)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)

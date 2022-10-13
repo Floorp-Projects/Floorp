@@ -24,7 +24,8 @@ class LastAccessReducerTest {
         val browserState = BrowserState(tabs = listOf(tab1, tab2))
 
         val updatedState = LastAccessReducer.reduce(
-            browserState, LastAccessAction.UpdateLastAccessAction(tabId = "tab1", lastAccess = 345)
+            browserState,
+            LastAccessAction.UpdateLastAccessAction(tabId = "tab1", lastAccess = 345),
         )
 
         assertEquals(2, updatedState.tabs.size)
@@ -39,7 +40,8 @@ class LastAccessReducerTest {
         val browserState = BrowserState(tabs = listOf(tab1, tab2))
 
         val updatedState = LastAccessReducer.reduce(
-            browserState, LastAccessAction.UpdateLastMediaAccessAction(tabId = "tab1", lastMediaAccess = 345)
+            browserState,
+            LastAccessAction.UpdateLastMediaAccessAction(tabId = "tab1", lastMediaAccess = 345),
         )
 
         assertEquals(2, updatedState.tabs.size)
@@ -56,12 +58,15 @@ class LastAccessReducerTest {
         val normalTab = TabSessionState(id = "tab1", content = ContentState(url = "https:mozilla.org"))
         val privateTab = TabSessionState(id = "tab2", content = ContentState(url = "https:mozilla.org", private = true))
         val customTab = CustomTabSessionState(
-            id = "tab3", content = ContentState(url = "https://mozilla.org"), config = mock()
+            id = "tab3",
+            content = ContentState(url = "https://mozilla.org"),
+            config = mock(),
         )
         val browserState = BrowserState(tabs = listOf(normalTab, privateTab), customTabs = listOf(customTab))
 
         val updatedState = LastAccessReducer.reduce(
-            browserState, LastAccessAction.UpdateLastMediaAccessAction(tabId = "tab3", lastMediaAccess = 345)
+            browserState,
+            LastAccessAction.UpdateLastMediaAccessAction(tabId = "tab3", lastMediaAccess = 345),
         )
 
         assertEquals(2, updatedState.tabs.size)
@@ -77,12 +82,13 @@ class LastAccessReducerTest {
         val tab2 = TabSessionState(
             id = "tab2",
             content = mock(),
-            lastMediaAccessState = LastMediaAccessState("https://mozilla.org", 222, true)
+            lastMediaAccessState = LastMediaAccessState("https://mozilla.org", 222, true),
         )
         val browserState = BrowserState(tabs = listOf(tab1, tab2))
 
         val updatedState = LastAccessReducer.reduce(
-            browserState, LastAccessAction.ResetLastMediaSessionAction(tabId = "tab2")
+            browserState,
+            LastAccessAction.ResetLastMediaSessionAction(tabId = "tab2"),
         )
 
         assertEquals(2, updatedState.tabs.size)
@@ -98,16 +104,19 @@ class LastAccessReducerTest {
         val normalTab = TabSessionState(
             id = "tab2",
             content = mock(),
-            lastMediaAccessState = LastMediaAccessState("https://mozilla.org", 222, true)
+            lastMediaAccessState = LastMediaAccessState("https://mozilla.org", 222, true),
         )
         val privateTab = TabSessionState(id = "tab2", content = ContentState(url = "https:mozilla.org", private = true))
         val customTab = CustomTabSessionState(
-            id = "tab3", content = ContentState(url = "https://mozilla.org"), config = mock()
+            id = "tab3",
+            content = ContentState(url = "https://mozilla.org"),
+            config = mock(),
         )
         val browserState = BrowserState(tabs = listOf(normalTab, privateTab), customTabs = listOf(customTab))
 
         val updatedState = LastAccessReducer.reduce(
-            browserState, LastAccessAction.UpdateLastMediaAccessAction(tabId = "tab3", lastMediaAccess = 345)
+            browserState,
+            LastAccessAction.UpdateLastMediaAccessAction(tabId = "tab3", lastMediaAccess = 345),
         )
 
         assertEquals(2, updatedState.tabs.size)

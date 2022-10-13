@@ -12,7 +12,7 @@ import mozilla.components.browser.icons.IconRequest
  * request doesn't contain a list of resources yet.
  */
 class MemoryIconPreparer(
-    private val cache: PreparerMemoryCache
+    private val cache: PreparerMemoryCache,
 ) : IconPreprarer {
     interface PreparerMemoryCache {
         fun getResources(request: IconRequest): List<IconRequest.Resource>

@@ -51,29 +51,29 @@ class Nimbus(
     appInfo: NimbusAppInfo,
     server: NimbusServerSettings?,
     errorReporter: ErrorReporter = loggingErrorReporter,
-    private val observable: Observable<NimbusInterface.Observer> = ObserverRegistry()
+    private val observable: Observable<NimbusInterface.Observer> = ObserverRegistry(),
 ) : ApplicationServicesNimbus(
     context = context,
     appInfo = appInfo,
     server = server,
     deviceInfo = NimbusDeviceInfo(
-        localeTag = Locale.getDefault().getLocaleTag()
+        localeTag = Locale.getDefault().getLocaleTag(),
     ),
     observer = Observer(observable),
     delegate = NimbusDelegate(
         dbScope = CoroutineScope(
             Executors.newSingleThreadExecutor(
-                NamedThreadFactory("NimbusDbScope")
-            ).asCoroutineDispatcher()
+                NamedThreadFactory("NimbusDbScope"),
+            ).asCoroutineDispatcher(),
         ),
         fetchScope = CoroutineScope(
             Executors.newSingleThreadExecutor(
-                NamedThreadFactory("NimbusFetchScope")
-            ).asCoroutineDispatcher()
+                NamedThreadFactory("NimbusFetchScope"),
+            ).asCoroutineDispatcher(),
         ),
         errorReporter = errorReporter,
-        logger = { logger.info(it) }
-    )
+        logger = { logger.info(it) },
+    ),
 ),
     NimbusApi,
     Observable<NimbusInterface.Observer> by observable {
@@ -99,5 +99,5 @@ class Nimbus(
  */
 class NimbusDisabled(
     override val context: Context,
-    private val delegate: Observable<NimbusInterface.Observer> = ObserverRegistry()
+    private val delegate: Observable<NimbusInterface.Observer> = ObserverRegistry(),
 ) : NimbusApi, Observable<NimbusInterface.Observer> by delegate

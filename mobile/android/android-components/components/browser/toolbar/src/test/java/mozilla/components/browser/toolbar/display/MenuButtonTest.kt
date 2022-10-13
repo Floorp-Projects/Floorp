@@ -26,18 +26,21 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 
 @RunWith(AndroidJUnit4::class)
 class MenuButtonTest {
     @Mock private lateinit var menuBuilder: BrowserMenuBuilder
+
     @Mock private lateinit var menuController: MenuController
+
     @Mock private lateinit var menu: BrowserMenu
+
     @Mock private lateinit var menuButtonInternal: mozilla.components.browser.menu.view.MenuButton
     private lateinit var menuButton: MenuButton
 
@@ -84,10 +87,10 @@ class MenuButtonTest {
                         label = "Test",
                         startImageResource = 0,
                         highlight = highlight,
-                        isHighlighted = { isHighlighted }
-                    )
-                )
-            )
+                        isHighlighted = { isHighlighted },
+                    ),
+                ),
+            ),
         )
         doReturn(menu).`when`(highlightMenuBuilder).build(testContext)
 
@@ -134,9 +137,9 @@ class MenuButtonTest {
             BrowserMenuBuilder(
                 listOf(
                     SimpleBrowserMenuItem("Item 1", listener = onClick),
-                    SimpleBrowserMenuItem("Item 2")
-                )
-            )
+                    SimpleBrowserMenuItem("Item 2"),
+                ),
+            ),
         )
         verify(menuButtonInternal, never()).invalidateBrowserMenu()
 
@@ -146,8 +149,8 @@ class MenuButtonTest {
         verify(menuController).submitList(
             listOf(
                 TextMenuCandidate("Item 1", onClick = onClick),
-                DecorativeTextMenuCandidate("Item 2")
-            )
+                DecorativeTextMenuCandidate("Item 2"),
+            ),
         )
     }
 }

@@ -31,7 +31,7 @@ fun BrowserIcons.Loader(
     url: String,
     size: IconRequest.Size = IconRequest.Size.DEFAULT,
     isPrivate: Boolean = false,
-    content: @Composable IconLoaderScope.() -> Unit
+    content: @Composable IconLoaderScope.() -> Unit,
 ) {
     val request = IconRequest(url, size, emptyList(), null, isPrivate)
     val scope = remember(request) { InternalIconLoaderScope() }
@@ -42,7 +42,7 @@ fun BrowserIcons.Loader(
             BitmapPainter(icon.bitmap.asImageBitmap()),
             icon.color,
             icon.source,
-            icon.maskable
+            icon.maskable,
         )
     }
 

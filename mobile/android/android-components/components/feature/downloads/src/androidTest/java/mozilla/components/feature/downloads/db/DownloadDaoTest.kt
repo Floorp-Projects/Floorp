@@ -118,8 +118,10 @@ class DownloadDaoTest {
     private suspend fun insertMockDownload(id: String, url: String): DownloadState {
         val download = DownloadState(
             id = id,
-            url = url, contentType = "application/zip", contentLength = 5242880,
-            userAgent = "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"
+            url = url,
+            contentType = "application/zip",
+            contentLength = 5242880,
+            userAgent = "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36",
         )
         dao.insert(download.toDownloadEntity())
         return download

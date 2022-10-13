@@ -18,7 +18,7 @@ import java.util.UUID
  */
 data class TabPartition(
     val id: String,
-    val tabGroups: List<TabGroup> = emptyList()
+    val tabGroups: List<TabGroup> = emptyList(),
 )
 
 /**
@@ -31,7 +31,7 @@ data class TabPartition(
 data class TabGroup(
     val id: String = UUID.randomUUID().toString(),
     val name: String = "",
-    val tabIds: List<String> = emptyList()
+    val tabIds: List<String> = emptyList(),
 )
 
 /**

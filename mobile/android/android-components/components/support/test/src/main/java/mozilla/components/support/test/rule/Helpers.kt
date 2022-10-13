@@ -40,7 +40,7 @@ private const val DEFAULT_DISPATCH_TIMEOUT_MS = 60_000L
 @OptIn(ExperimentalCoroutinesApi::class)
 fun runTestOnMain(
     dispatchTimeoutMs: Long = DEFAULT_DISPATCH_TIMEOUT_MS,
-    testBody: suspend TestScope.() -> Unit
+    testBody: suspend TestScope.() -> Unit,
 ): TestResult {
     val mainDispatcher = Dispatchers.Main
     require(mainDispatcher is TestMainDispatcher) {

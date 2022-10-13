@@ -39,8 +39,10 @@ class IconDiskCache :
     DiskIconPreparer.PreparerDiskCache,
     DiskIconProcessor.ProcessorDiskCache {
     private val logger = Logger("Icons/IconDiskCache")
+
     @VisibleForTesting
     internal var iconResourcesCache: DiskLruCache? = null
+
     @VisibleForTesting
     internal var iconDataCache: DiskLruCache? = null
     private val iconResourcesCacheWriteLock = Any()
@@ -153,7 +155,7 @@ class IconDiskCache :
             getIconResourcesCacheDirectory(context),
             RESOURCES_DISK_CACHE_VERSION,
             1,
-            MAXIMUM_CACHE_RESOURCES_BYTES
+            MAXIMUM_CACHE_RESOURCES_BYTES,
         ).also { iconResourcesCache = it }
     }
 
@@ -170,7 +172,7 @@ class IconDiskCache :
             getIconDataCacheDirectory(context),
             ICON_DATA_DISK_CACHE_VERSION,
             1,
-            MAXIMUM_CACHE_ICON_DATA_BYTES
+            MAXIMUM_CACHE_ICON_DATA_BYTES,
         ).also { iconDataCache = it }
     }
 

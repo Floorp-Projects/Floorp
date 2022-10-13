@@ -151,7 +151,7 @@ class WebAppManifestParserTest {
         assertEquals(
             "It's what's happening. From breaking news and entertainment, sports and politics, " +
                 "to big events and everyday interests.",
-            manifest.description
+            manifest.description,
         )
         assertEquals(WebAppManifest.TextDirection.AUTO, manifest.dir)
         assertNull(manifest.lang)
@@ -288,9 +288,9 @@ class WebAppManifestParserTest {
             assertEquals(
                 WebAppManifest.ExternalApplicationResource.Fingerprint(
                     type = "sha256_cert",
-                    value = "92:5A:39:05:C5:B9:EA:BC:71:48:5F:F2"
+                    value = "92:5A:39:05:C5:B9:EA:BC:71:48:5F:F2",
                 ),
-                fingerprints[0]
+                fingerprints[0],
             )
         }
 
@@ -342,11 +342,11 @@ class WebAppManifestParserTest {
                     files = listOf(
                         WebAppManifest.ShareTarget.Files(
                             name = "file",
-                            accept = listOf("image/*")
-                        )
-                    )
+                            accept = listOf("image/*"),
+                        ),
+                    ),
                 ),
-                params
+                params,
             )
         }
     }
@@ -371,11 +371,11 @@ class WebAppManifestParserTest {
                     files = listOf(
                         WebAppManifest.ShareTarget.Files(
                             name = "file",
-                            accept = listOf("image/*")
-                        )
-                    )
+                            accept = listOf("image/*"),
+                        ),
+                    ),
                 ),
-                params
+                params,
             )
         }
     }
@@ -411,7 +411,7 @@ class WebAppManifestParserTest {
                 "share_target",
                 JSONObject().apply {
                     put("method", "POST")
-                }
+                },
             )
         }
         val result = WebAppManifestParser().parse(json)
@@ -428,7 +428,7 @@ class WebAppManifestParserTest {
                 JSONObject().apply {
                     put("action", "https://mozilla.com/target")
                     put("method", "PATCH")
-                }
+                },
             )
         }
         val result = WebAppManifestParser().parse(json)
@@ -445,7 +445,7 @@ class WebAppManifestParserTest {
                 JSONObject().apply {
                     put("action", "https://mozilla.com/target")
                     put("enctype", "text/plain")
-                }
+                },
             )
         }
         val result = WebAppManifestParser().parse(json)
@@ -463,7 +463,7 @@ class WebAppManifestParserTest {
                     put("action", "https://mozilla.com/target")
                     put("method", "GET")
                     put("enctype", "multipart/form-data")
-                }
+                },
             )
         }
         val result = WebAppManifestParser().parse(json)
@@ -580,7 +580,7 @@ class WebAppManifestParserTest {
 
         assertEquals(
             result,
-            WebAppManifestParser().parse(WebAppManifestParser().serialize(manifest))
+            WebAppManifestParser().parse(WebAppManifestParser().serialize(manifest)),
         )
     }
 
@@ -591,7 +591,7 @@ class WebAppManifestParserTest {
 
         assertEquals(
             result,
-            WebAppManifestParser().parse(WebAppManifestParser().serialize(manifest))
+            WebAppManifestParser().parse(WebAppManifestParser().serialize(manifest)),
         )
     }
 

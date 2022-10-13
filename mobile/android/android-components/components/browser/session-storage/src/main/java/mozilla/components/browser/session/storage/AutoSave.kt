@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit
 class AutoSave(
     private val store: BrowserStore,
     private val sessionStorage: Storage,
-    private val minimumIntervalMs: Long
+    private val minimumIntervalMs: Long,
 ) {
     interface Storage {
         /**
@@ -63,17 +63,17 @@ class AutoSave(
         interval: Long = 300,
         unit: TimeUnit = TimeUnit.SECONDS,
         scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
-            NamedThreadFactory("AutoSave")
+            NamedThreadFactory("AutoSave"),
         ),
-        lifecycle: Lifecycle = ProcessLifecycleOwner.get().lifecycle
+        lifecycle: Lifecycle = ProcessLifecycleOwner.get().lifecycle,
     ): AutoSave {
         lifecycle.addObserver(
             AutoSavePeriodically(
                 this,
                 scheduler,
                 interval,
-                unit
-            )
+                unit,
+            ),
         )
         return this
     }
@@ -82,7 +82,7 @@ class AutoSave(
      * Saves the state automatically when the app goes to the background.
      */
     fun whenGoingToBackground(
-        lifecycle: Lifecycle = ProcessLifecycleOwner.get().lifecycle
+        lifecycle: Lifecycle = ProcessLifecycleOwner.get().lifecycle,
     ): AutoSave {
         lifecycle.addObserver(AutoSaveBackground(this))
         return this
@@ -92,7 +92,7 @@ class AutoSave(
      * Saves the state automatically when the sessions change, e.g. sessions get added and removed.
      */
     fun whenSessionsChange(
-        scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+        scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     ): AutoSave {
         scope.launch {
             val monitoring = StateMonitoring(this@AutoSave)
@@ -160,7 +160,7 @@ private class AutoSavePeriodically(
     private val autoSave: AutoSave,
     private val scheduler: ScheduledExecutorService,
     private val interval: Long,
-    private val unit: TimeUnit
+    private val unit: TimeUnit,
 ) : DefaultLifecycleObserver {
     private var scheduledFuture: ScheduledFuture<*>? = null
 
@@ -172,7 +172,7 @@ private class AutoSavePeriodically(
             },
             interval,
             interval,
-            unit
+            unit,
         )
     }
 
@@ -185,7 +185,7 @@ private class AutoSavePeriodically(
  * [LifecycleObserver] to save the state when the app goes to the background.
  */
 private class AutoSaveBackground(
-    private val autoSave: AutoSave
+    private val autoSave: AutoSave,
 ) : DefaultLifecycleObserver {
     override fun onStop(owner: LifecycleOwner) {
         autoSave.logger.info("Save: Background")
@@ -195,7 +195,7 @@ private class AutoSaveBackground(
 }
 
 private class StateMonitoring(
-    private val autoSave: AutoSave
+    private val autoSave: AutoSave,
 ) {
     private var lastObservation: Observation? = null
 
@@ -205,7 +205,7 @@ private class StateMonitoring(
                 Observation(
                     state.selectedTabId,
                     state.normalTabs.size,
-                    state.selectedTab?.content?.loading
+                    state.selectedTab?.content?.loading,
                 )
             }
             .ifChanged()
@@ -243,6 +243,6 @@ private class StateMonitoring(
     private data class Observation(
         val selectedTabId: String?,
         val tabs: Int,
-        val loading: Boolean?
+        val loading: Boolean?,
     )
 }

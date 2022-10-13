@@ -22,7 +22,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 internal class FindInPageInteractor(
     private val feature: FindInPageFeature,
     private val view: FindInPageView,
-    private val engineView: EngineView?
+    private val engineView: EngineView?,
 ) : FindInPageView.Listener {
     private var engineSession: EngineSession? = null
 

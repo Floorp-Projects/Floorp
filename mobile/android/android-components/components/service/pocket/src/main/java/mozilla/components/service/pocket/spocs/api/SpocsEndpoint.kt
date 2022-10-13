@@ -19,7 +19,7 @@ import java.util.UUID
  */
 internal class SpocsEndpoint internal constructor(
     @get:VisibleForTesting internal val rawEndpoint: SpocsEndpointRaw,
-    private val jsonParser: SpocsJSONParser
+    private val jsonParser: SpocsJSONParser,
 ) : SpocsProvider {
 
     /**

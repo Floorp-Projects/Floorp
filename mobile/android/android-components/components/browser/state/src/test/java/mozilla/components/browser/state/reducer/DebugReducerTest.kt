@@ -22,7 +22,8 @@ class DebugReducerTest {
         val browserState = BrowserState(tabs = listOf(tab1, tab2))
 
         val updatedState = DebugReducer.reduce(
-            browserState, DebugAction.UpdateCreatedAtAction(tabId = "tab1", createdAt = 345L)
+            browserState,
+            DebugAction.UpdateCreatedAtAction(tabId = "tab1", createdAt = 345L),
         )
 
         assertEquals(2, updatedState.tabs.size)

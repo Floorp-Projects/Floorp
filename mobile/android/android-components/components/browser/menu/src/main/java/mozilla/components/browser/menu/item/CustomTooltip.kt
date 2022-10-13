@@ -24,7 +24,7 @@ import mozilla.components.browser.menu.R
  */
 internal class CustomTooltip private constructor(
     private val anchor: View,
-    private val tooltipText: CharSequence
+    private val tooltipText: CharSequence,
 ) : OnLongClickListener, View.OnAttachStateChangeListener {
     private val hideTooltipRunnable = Runnable { hide() }
     private var popupWindow: PopupWindow? = null
@@ -83,7 +83,7 @@ internal class CustomTooltip private constructor(
             layout,
             LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT,
-            false
+            false,
         )
 
         val offsets = computeOffsets()
@@ -121,6 +121,7 @@ internal class CustomTooltip private constructor(
     companion object {
         private const val LONG_CLICK_HIDE_TIMEOUT_MS: Long = 2500
         private const val TOOLTIP_EXTRA_VERTICAL_OFFSET_DP = 8
+
         // The tooltip currently being shown properly disposed in hide() / onViewDetachedFromWindow()
         @SuppressLint("StaticFieldLeak")
         private var activeTooltip: CustomTooltip? = null

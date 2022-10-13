@@ -104,9 +104,9 @@ class DrawableMenuIconViewHoldersTest {
             AsyncDrawableMenuIcon(
                 loadDrawable = { _, _ -> throw Exception() },
                 loadingDrawable = loading,
-                fallbackDrawable = fallback
+                fallbackDrawable = fallback,
             ),
-            null
+            null,
         )
         verify(imageView, never()).setImageDrawable(null)
         verify(imageView).setImageDrawable(loading)

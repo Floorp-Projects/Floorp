@@ -81,7 +81,7 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
         val rootView = LayoutInflater.from(requireContext()).inflate(
             R.layout.mozac_downloads_prompt,
             null,
-            false
+            false,
         )
 
         val binding = MozacDownloadsPromptBinding.bind(rootView)
@@ -97,7 +97,7 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
             if (positiveButtonBackgroundColor != DEFAULT_VALUE) {
                 val backgroundTintList = ContextCompat.getColorStateList(
                     requireContext(),
-                    positiveButtonBackgroundColor
+                    positiveButtonBackgroundColor,
                 )
                 binding.downloadButton.backgroundTintList = backgroundTintList
             }
@@ -113,8 +113,8 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
                 shape.setColor(
                     ContextCompat.getColor(
                         requireContext(),
-                        positiveButtonBackgroundColor
-                    )
+                        positiveButtonBackgroundColor,
+                    ),
                 )
                 shape.cornerRadius = positiveButtonRadius
                 binding.downloadButton.background = shape
@@ -123,7 +123,7 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
             if (fileNameEndMargin != DEFAULT_VALUE) {
                 binding.filename.layoutParams = RelativeLayout.LayoutParams(
                     RelativeLayout.LayoutParams.WRAP_CONTENT,
-                    RelativeLayout.LayoutParams.WRAP_CONTENT
+                    RelativeLayout.LayoutParams.WRAP_CONTENT,
                 ).apply {
                     marginEnd = fileNameEndMargin
                     marginStart = binding.filename.marginStart
@@ -137,7 +137,7 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
 
             binding.filename.text = getString(KEY_FILE_NAME, "")
             binding.downloadButton.text = getString(
-                getInt(KEY_DOWNLOAD_TEXT, R.string.mozac_feature_downloads_dialog_download)
+                getInt(KEY_DOWNLOAD_TEXT, R.string.mozac_feature_downloads_dialog_download),
             )
 
             binding.closeButton.setOnClickListener {
@@ -162,8 +162,8 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
                 rootView,
                 LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.MATCH_PARENT
-                )
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                ),
             )
         }
     }
@@ -176,7 +176,7 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
             @StringRes dialogTitleText: Int = R.string.mozac_feature_downloads_dialog_title2,
             @StringRes downloadButtonText: Int = R.string.mozac_feature_downloads_dialog_download,
             @StyleRes themeResId: Int = 0,
-            promptsStyling: DownloadsFeature.PromptsStyling? = null
+            promptsStyling: DownloadsFeature.PromptsStyling? = null,
         ): SimpleDownloadDialogFragment {
             val fragment = SimpleDownloadDialogFragment()
             val arguments = fragment.arguments ?: Bundle()

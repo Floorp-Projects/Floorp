@@ -36,7 +36,7 @@ class PocketStoriesConfigTest {
 
         val defaultFrequency = Frequency(
             DEFAULT_SPONSORED_STORIES_REFRESH_INTERVAL,
-            DEFAULT_SPONSORED_STORIES_REFRESH_TIMEUNIT
+            DEFAULT_SPONSORED_STORIES_REFRESH_TIMEUNIT,
         )
         assertEquals(defaultFrequency.repeatInterval, config.sponsoredStoriesRefreshFrequency.repeatInterval)
         assertEquals(defaultFrequency.repeatIntervalTimeUnit, config.sponsoredStoriesRefreshFrequency.repeatIntervalTimeUnit)

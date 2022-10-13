@@ -13,7 +13,7 @@ import org.mozilla.geckoview.GeckoRuntime
  * ProfilerController object provided by GeckoView.
  */
 class Profiler(
-    private val runtime: GeckoRuntime
+    private val runtime: GeckoRuntime,
 ) : Profiler {
 
     /**
@@ -78,7 +78,7 @@ class Profiler(
             { throwable ->
                 onError(throwable)
                 GeckoResult<Void>()
-            }
+            },
         )
     }
 }

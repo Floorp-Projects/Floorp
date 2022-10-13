@@ -21,7 +21,7 @@ import mozilla.components.concept.menu.candidate.TextMenuIcon
 internal class TextMenuIconViewHolder(
     parent: ConstraintLayout,
     inflater: LayoutInflater,
-    side: Side
+    side: Side,
 ) : MenuIconViewHolder<TextMenuIcon>(parent, inflater) {
 
     private val textView: TextView = inflate(layoutResource).findViewById(R.id.icon)

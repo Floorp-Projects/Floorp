@@ -27,18 +27,18 @@ private const val URL_VIEW_WEIGHT = 4.3f
 internal class OriginView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : LinearLayout(context, attrs, defStyleAttr) {
     internal lateinit var toolbar: BrowserToolbar
 
     private val textSizeUrlNormal = context.resources.getDimension(
-        R.dimen.mozac_browser_toolbar_url_textsize
+        R.dimen.mozac_browser_toolbar_url_textsize,
     )
     private val textSizeUrlWithTitle = context.resources.getDimension(
-        R.dimen.mozac_browser_toolbar_url_with_title_textsize
+        R.dimen.mozac_browser_toolbar_url_with_title_textsize,
     )
     private val textSizeTitle = context.resources.getDimension(
-        R.dimen.mozac_browser_toolbar_title_textsize
+        R.dimen.mozac_browser_toolbar_title_textsize,
     )
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -58,7 +58,7 @@ internal class OriginView @JvmOverloads constructor(
         }
 
         val fadingEdgeSize = resources.getDimensionPixelSize(
-            R.dimen.mozac_browser_toolbar_url_fading_edge_size
+            R.dimen.mozac_browser_toolbar_url_fading_edge_size,
         )
 
         setFadingEdgeLength(fadingEdgeSize)
@@ -72,14 +72,14 @@ internal class OriginView @JvmOverloads constructor(
 
         setTextSize(
             TypedValue.COMPLEX_UNIT_PX,
-            textSizeTitle
+            textSizeTitle,
         )
         gravity = Gravity.CENTER_VERTICAL
 
         setSingleLine()
 
         val fadingEdgeSize = resources.getDimensionPixelSize(
-            R.dimen.mozac_browser_toolbar_url_fading_edge_size
+            R.dimen.mozac_browser_toolbar_url_fading_edge_size,
         )
 
         setFadingEdgeLength(fadingEdgeSize)
@@ -94,8 +94,8 @@ internal class OriginView @JvmOverloads constructor(
             LayoutParams(
                 LayoutParams.MATCH_PARENT,
                 0,
-                TITLE_VIEW_WEIGHT
-            )
+                TITLE_VIEW_WEIGHT,
+            ),
         )
 
         addView(
@@ -103,8 +103,8 @@ internal class OriginView @JvmOverloads constructor(
             LayoutParams(
                 LayoutParams.MATCH_PARENT,
                 0,
-                URL_VIEW_WEIGHT
-            )
+                URL_VIEW_WEIGHT,
+            ),
         )
 
         layoutTransition = LayoutTransition()
@@ -123,7 +123,7 @@ internal class OriginView @JvmOverloads constructor(
                     textSizeUrlWithTitle
                 } else {
                     textSizeUrlNormal
-                }
+                },
             )
         }
 

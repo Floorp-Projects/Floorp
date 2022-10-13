@@ -31,14 +31,14 @@ class WebAppUseCasesTest {
     fun `isInstallable returns false if currentSession has no manifest`() {
         val session = createTestSession(
             secure = true,
-            manifest = null
+            manifest = null,
         )
 
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(session),
-                selectedTabId = session.id
-            )
+                selectedTabId = session.id,
+            ),
         )
 
         val webAppUseCases = WebAppUseCases(testContext, store, mock<WebAppShortcutManager>())
@@ -54,9 +54,9 @@ class WebAppUseCasesTest {
             icons = listOf(
                 WebAppManifest.Icon(
                     src = "https://example.com/icon.png",
-                    sizes = listOf(Size(192, 192))
-                )
-            )
+                    sizes = listOf(Size(192, 192)),
+                ),
+            ),
         )
 
         val session = createTestSession(secure = true, manifest = manifest)
@@ -64,8 +64,8 @@ class WebAppUseCasesTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(session),
-                selectedTabId = session.id
-            )
+                selectedTabId = session.id,
+            ),
         )
 
         val shortcutManager: WebAppShortcutManager = mock()
@@ -85,21 +85,21 @@ class WebAppUseCasesTest {
             icons = listOf(
                 WebAppManifest.Icon(
                     src = "https://example.com/icon.png",
-                    sizes = listOf(Size(192, 192))
-                )
-            )
+                    sizes = listOf(Size(192, 192)),
+                ),
+            ),
         )
 
         val session = createTestSession(
             secure = true,
-            manifest = manifest
+            manifest = manifest,
         )
 
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(session),
-                selectedTabId = session.id
-            )
+                selectedTabId = session.id,
+            ),
         )
 
         val shortcutManager: WebAppShortcutManager = mock()
@@ -119,8 +119,8 @@ class WebAppUseCasesTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(session),
-                selectedTabId = session.id
-            )
+                selectedTabId = session.id,
+            ),
         )
 
         `when`(storage.hasRecentManifest("https://www.mozilla.org", currentTime)).thenReturn(true)
@@ -131,7 +131,7 @@ class WebAppUseCasesTest {
 
 private fun createTestSession(
     secure: Boolean,
-    manifest: WebAppManifest? = null
+    manifest: WebAppManifest? = null,
 ): TabSessionState {
     val protocol = if (secure) {
         "https"
@@ -143,7 +143,7 @@ private fun createTestSession(
     return tab.copy(
         content = tab.content.copy(
             securityInfo = SecurityInfoState(secure = secure),
-            webAppManifest = manifest
-        )
+            webAppManifest = manifest,
+        ),
     )
 }

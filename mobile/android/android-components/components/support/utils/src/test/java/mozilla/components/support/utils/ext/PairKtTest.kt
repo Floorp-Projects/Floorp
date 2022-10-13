@@ -23,7 +23,7 @@ class PairKtTest {
         listOf(
             null to "nonNull",
             null to null,
-            "nonNull" to null
+            "nonNull" to null,
         )
             .map { it.toNullablePair() }
             .forEach { assertNull(it) }

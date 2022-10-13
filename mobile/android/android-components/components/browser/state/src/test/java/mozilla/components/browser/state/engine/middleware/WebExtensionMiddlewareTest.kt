@@ -29,10 +29,10 @@ class WebExtensionMiddlewareTest {
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "1"),
-                    createTab("https://www.firefox.com", id = "2")
-                )
+                    createTab("https://www.firefox.com", id = "2"),
+                ),
             ),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val engineSession1: EngineSession = mock()
@@ -63,11 +63,11 @@ class WebExtensionMiddlewareTest {
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "1"),
-                    createTab("https://www.firefox.com", id = "2")
+                    createTab("https://www.firefox.com", id = "2"),
                 ),
-                selectedTabId = "1"
+                selectedTabId = "1",
             ),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val engineSession1: EngineSession = mock()
@@ -89,11 +89,11 @@ class WebExtensionMiddlewareTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "1")
+                    createTab("https://www.mozilla.org", id = "1"),
                 ),
-                selectedTabId = "1"
+                selectedTabId = "1",
             ),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val engineSession1: EngineSession = mock()
@@ -113,10 +113,10 @@ class WebExtensionMiddlewareTest {
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "1"),
-                    createTab("https://www.firefox.com", id = "2")
-                )
+                    createTab("https://www.firefox.com", id = "2"),
+                ),
             ),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val engineSession1: EngineSession = mock()

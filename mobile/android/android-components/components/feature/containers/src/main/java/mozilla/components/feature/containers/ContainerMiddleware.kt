@@ -29,7 +29,7 @@ import kotlin.coroutines.CoroutineContext
 class ContainerMiddleware(
     applicationContext: Context,
     coroutineContext: CoroutineContext = Dispatchers.IO,
-    private val containerStorage: Storage = ContainerStorage(applicationContext)
+    private val containerStorage: Storage = ContainerStorage(applicationContext),
 ) : Middleware<BrowserState, BrowserAction> {
 
     private var scope = CoroutineScope(coroutineContext)
@@ -37,7 +37,7 @@ class ContainerMiddleware(
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         when (action) {
             is InitAction -> initializeContainers(context.store)
@@ -52,7 +52,7 @@ class ContainerMiddleware(
     }
 
     private fun initializeContainers(
-        store: Store<BrowserState, BrowserAction>
+        store: Store<BrowserState, BrowserAction>,
     ) = scope.launch {
         containerStorage.getContainers().collect { containers ->
             store.dispatch(ContainerAction.AddContainersAction(containers))
@@ -60,19 +60,19 @@ class ContainerMiddleware(
     }
 
     private fun addContainer(
-        action: ContainerAction.AddContainerAction
+        action: ContainerAction.AddContainerAction,
     ) = scope.launch {
         containerStorage.addContainer(
             contextId = action.container.contextId,
             name = action.container.name,
             color = action.container.color,
-            icon = action.container.icon
+            icon = action.container.icon,
         )
     }
 
     private fun removeContainer(
         store: Store<BrowserState, BrowserAction>,
-        action: ContainerAction.RemoveContainerAction
+        action: ContainerAction.RemoveContainerAction,
     ) = scope.launch {
         store.state.containers[action.contextId]?.let {
             containerStorage.removeContainer(it)
@@ -95,7 +95,7 @@ class ContainerMiddleware(
             contextId: String = UUID.randomUUID().toString(),
             name: String,
             color: ContainerState.Color,
-            icon: ContainerState.Icon
+            icon: ContainerState.Icon,
         )
 
         /**

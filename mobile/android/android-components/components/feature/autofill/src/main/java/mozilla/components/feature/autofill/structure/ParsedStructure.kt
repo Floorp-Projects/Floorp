@@ -25,13 +25,13 @@ data class ParsedStructure(
     val usernameId: AutofillId? = null,
     val passwordId: AutofillId? = null,
     val webDomain: String? = null,
-    val packageName: String
+    val packageName: String,
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readParcelable(AutofillId::class.java.classLoader),
         parcel.readParcelable(AutofillId::class.java.classLoader),
         parcel.readString(),
-        parcel.readString() ?: ""
+        parcel.readString() ?: "",
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {

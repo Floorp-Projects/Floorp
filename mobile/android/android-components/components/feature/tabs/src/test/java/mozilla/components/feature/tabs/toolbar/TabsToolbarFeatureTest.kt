@@ -63,7 +63,7 @@ class TabsToolbarFeatureTest {
             sessionId = sessionId,
             lifecycleOwner = lifecycleOwner,
             showTabs = showTabs,
-            tabCounterMenu = tabCounterMenu
+            tabCounterMenu = tabCounterMenu,
         )
 
         verify(toolbar).addBrowserAction(any())
@@ -76,7 +76,7 @@ class TabsToolbarFeatureTest {
             CustomTabSessionState(
                 id = customTabId,
                 content = ContentState("https://mozilla.org"),
-                config = mock()
+                config = mock(),
             )
 
         val browserState = BrowserState(customTabs = listOf(customTabSessionState))
@@ -88,7 +88,7 @@ class TabsToolbarFeatureTest {
             sessionId = customTabId,
             lifecycleOwner = lifecycleOwner,
             showTabs = showTabs,
-            tabCounterMenu = tabCounterMenu
+            tabCounterMenu = tabCounterMenu,
         )
 
         verify(toolbar, never()).addBrowserAction(any())
@@ -107,7 +107,7 @@ class TabsToolbarFeatureTest {
             sessionId = tabId,
             lifecycleOwner = lifecycleOwner,
             showTabs = showTabs,
-            tabCounterMenu = tabCounterMenu
+            tabCounterMenu = tabCounterMenu,
         )
 
         verify(toolbar).addBrowserAction(any())

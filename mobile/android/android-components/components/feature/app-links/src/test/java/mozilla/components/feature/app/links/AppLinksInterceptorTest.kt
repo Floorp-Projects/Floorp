@@ -61,7 +61,7 @@ class AppLinksInterceptorTest {
             context = mockContext,
             interceptLinkClicks = true,
             launchInApp = { true },
-            useCases = mockUseCases
+            useCases = mockUseCases,
         )
     }
 
@@ -95,7 +95,7 @@ class AppLinksInterceptorTest {
             context = mockContext,
             interceptLinkClicks = false,
             launchInApp = { true },
-            useCases = mockUseCases
+            useCases = mockUseCases,
         )
 
         val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, true, false, false, false, false)
@@ -108,7 +108,7 @@ class AppLinksInterceptorTest {
             context = mockContext,
             interceptLinkClicks = true,
             launchInApp = { false },
-            useCases = mockUseCases
+            useCases = mockUseCases,
         )
 
         val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, true, false, false, false, false)
@@ -175,7 +175,7 @@ class AppLinksInterceptorTest {
             interceptLinkClicks = true,
             alwaysDeniedSchemes = setOf(blocklistedScheme),
             launchInApp = { true },
-            useCases = mockUseCases
+            useCases = mockUseCases,
         )
 
         val blocklistedUrl = "$blocklistedScheme://example.com"
@@ -194,7 +194,7 @@ class AppLinksInterceptorTest {
             interceptLinkClicks = true,
             engineSupportedSchemes = setOf(supportedScheme),
             launchInApp = { false },
-            useCases = mockUseCases
+            useCases = mockUseCases,
         )
 
         val supportedUrl = "$supportedScheme://example.com"
@@ -213,7 +213,7 @@ class AppLinksInterceptorTest {
             interceptLinkClicks = false,
             engineSupportedSchemes = setOf(supportedScheme),
             launchInApp = { true },
-            useCases = mockUseCases
+            useCases = mockUseCases,
         )
 
         val supportedUrl = "$supportedScheme://example.com"
@@ -232,7 +232,7 @@ class AppLinksInterceptorTest {
             interceptLinkClicks = true,
             engineSupportedSchemes = setOf(supportedScheme),
             launchInApp = { true },
-            useCases = mockUseCases
+            useCases = mockUseCases,
         )
 
         val supportedUrl = "$supportedScheme://example.com"
@@ -254,7 +254,7 @@ class AppLinksInterceptorTest {
             engineSupportedSchemes = setOf(supportedScheme),
             alwaysDeniedSchemes = setOf(blocklistedScheme),
             launchInApp = { false },
-            useCases = mockUseCases
+            useCases = mockUseCases,
         )
 
         val notSupportedUrl = "$notSupportedScheme://example.com"
@@ -275,7 +275,7 @@ class AppLinksInterceptorTest {
             engineSupportedSchemes = setOf(supportedScheme),
             alwaysDeniedSchemes = setOf(notSupportedScheme),
             launchInApp = { false },
-            useCases = mockUseCases
+            useCases = mockUseCases,
         )
 
         val notSupportedUrl = "$notSupportedScheme://example.com"
@@ -297,7 +297,7 @@ class AppLinksInterceptorTest {
             engineSupportedSchemes = setOf(supportedScheme),
             alwaysDeniedSchemes = setOf(blocklistedScheme),
             launchInApp = { true },
-            useCases = mockUseCases
+            useCases = mockUseCases,
         )
 
         val notSupportedUrl = "$notSupportedScheme://example.com"
@@ -319,7 +319,7 @@ class AppLinksInterceptorTest {
             engineSupportedSchemes = setOf(supportedScheme),
             alwaysDeniedSchemes = setOf(blocklistedScheme),
             launchInApp = { false },
-            useCases = mockUseCases
+            useCases = mockUseCases,
         )
 
         val notSupportedUrl = "$notSupportedScheme://example.com"
@@ -342,7 +342,7 @@ class AppLinksInterceptorTest {
             engineSupportedSchemes = setOf(supportedScheme),
             alwaysDeniedSchemes = setOf(blocklistedScheme),
             launchInApp = { false },
-            useCases = mockUseCases
+            useCases = mockUseCases,
         )
 
         val notSupportedUrl = "$notSupportedScheme://example.com"
@@ -360,7 +360,7 @@ class AppLinksInterceptorTest {
             context = mockContext,
             interceptLinkClicks = false,
             launchInApp = { false },
-            useCases = mockUseCases
+            useCases = mockUseCases,
         )
 
         val intentUrl = "intent://example.com"
@@ -377,7 +377,7 @@ class AppLinksInterceptorTest {
             context = mockContext,
             interceptLinkClicks = false,
             launchInApp = { false },
-            useCases = mockUseCases
+            useCases = mockUseCases,
         )
 
         val intentUrl = "intent://example.com"
@@ -418,7 +418,7 @@ class AppLinksInterceptorTest {
             interceptLinkClicks = true,
             launchInApp = { true },
             useCases = mockUseCases,
-            launchFromInterceptor = true
+            launchFromInterceptor = true,
         )
 
         val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, true, false, false, false, false)
@@ -433,7 +433,7 @@ class AppLinksInterceptorTest {
             interceptLinkClicks = true,
             launchInApp = { false },
             useCases = mockUseCases,
-            launchFromInterceptor = true
+            launchFromInterceptor = true,
         )
 
         val testRedirect = AppLinkRedirect(Intent.parseUri(intentUrl, 0), fallbackUrl, null)
@@ -448,7 +448,7 @@ class AppLinksInterceptorTest {
             interceptLinkClicks = true,
             launchInApp = { false },
             useCases = mockUseCases,
-            launchFromInterceptor = true
+            launchFromInterceptor = true,
         )
 
         val response = appLinksInterceptor.onLoadRequest(mockEngineSession, intentUrl, null, false, true, false, false, false)
@@ -463,7 +463,7 @@ class AppLinksInterceptorTest {
             interceptLinkClicks = true,
             launchInApp = { true },
             useCases = mockUseCases,
-            launchFromInterceptor = true
+            launchFromInterceptor = true,
         )
 
         val testRedirect = AppLinkRedirect(Intent.parseUri(intentUrl, 0), fallbackUrl, null)
@@ -478,7 +478,7 @@ class AppLinksInterceptorTest {
             interceptLinkClicks = true,
             launchInApp = { true },
             useCases = mockUseCases,
-            launchFromInterceptor = true
+            launchFromInterceptor = true,
         )
 
         val testRedirect = AppLinkRedirect(null, fallbackUrl, Intent.parseUri(marketplaceUrl, 0))
@@ -493,7 +493,7 @@ class AppLinksInterceptorTest {
             interceptLinkClicks = true,
             launchInApp = { true },
             useCases = mockUseCases,
-            launchFromInterceptor = true
+            launchFromInterceptor = true,
         )
 
         val testRedirect = AppLinkRedirect(null, fallbackUrl, null)

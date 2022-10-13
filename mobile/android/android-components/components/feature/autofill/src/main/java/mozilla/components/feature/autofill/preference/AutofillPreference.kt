@@ -20,7 +20,7 @@ import mozilla.components.feature.autofill.R
  */
 class AutofillPreference(
     context: Context,
-    attrs: AttributeSet? = null
+    attrs: AttributeSet? = null,
 ) : Preference(context, attrs) {
     private val useCases = AutofillUseCases()
     private var switchView: SwitchCompat? = null

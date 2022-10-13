@@ -22,7 +22,7 @@ class DownloadStorageTest {
             contentType = "application/zip",
             contentLength = 5242880,
             status = DownloadState.Status.DOWNLOADING,
-            destinationDirectory = Environment.DIRECTORY_MUSIC
+            destinationDirectory = Environment.DIRECTORY_MUSIC,
         )
 
         assertTrue(DownloadStorage.isSameDownload(download, download))

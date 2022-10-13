@@ -20,16 +20,16 @@ class LastAccessMiddleware : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
-
         // Since tab removal can affect tab selection we save the
         // selected tab ID before removal to determine if it changed.
         val selectionBeforeRemoval = when (action) {
             is TabListAction.RemoveTabAction,
             is TabListAction.RemoveTabsAction,
             // NB: RemoveAllNormalTabsAction never updates tab selection
-            is TabListAction.RemoveAllPrivateTabsAction -> {
+            is TabListAction.RemoveAllPrivateTabsAction,
+            -> {
                 context.state.selectedTabId
             }
             else -> null
@@ -41,7 +41,8 @@ class LastAccessMiddleware : Middleware<BrowserState, BrowserAction> {
             is TabListAction.RemoveTabAction,
             is TabListAction.RemoveTabsAction,
             // NB: RemoveAllNormalTabsAction never updates tab selection
-            is TabListAction.RemoveAllPrivateTabsAction -> {
+            is TabListAction.RemoveAllPrivateTabsAction,
+            -> {
                 // If the selected tab changed during removal we make sure to update
                 // the lastAccess state of the newly selected tab.
                 val newSelection = context.state.selectedTabId

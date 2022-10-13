@@ -24,7 +24,7 @@ class ReaderViewIntegration(
     store: BrowserStore,
     toolbar: BrowserToolbar,
     view: ReaderViewControlsView,
-    readerViewAppearanceButton: FloatingActionButton
+    readerViewAppearanceButton: FloatingActionButton,
 ) : LifecycleAwareFeature, UserInteractionHandler {
 
     private var readerViewButtonVisible = false
@@ -37,7 +37,7 @@ class ReaderViewIntegration(
         contentDescription = context.getString(R.string.mozac_reader_view_description),
         contentDescriptionSelected = context.getString(R.string.mozac_reader_view_description_selected),
         selected = store.state.selectedTab?.readerState?.active ?: false,
-        visible = { readerViewButtonVisible }
+        visible = { readerViewButtonVisible },
     ) { enabled ->
         if (enabled) {
             feature.showReaderView()

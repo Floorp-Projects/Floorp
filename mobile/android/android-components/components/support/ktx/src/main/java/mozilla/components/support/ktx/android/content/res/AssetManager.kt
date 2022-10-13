@@ -16,5 +16,5 @@ import org.json.JSONObject
 fun AssetManager.readJSONObject(fileName: String) = JSONObject(
     open(fileName).bufferedReader().use {
         it.readText()
-    }
+    },
 )

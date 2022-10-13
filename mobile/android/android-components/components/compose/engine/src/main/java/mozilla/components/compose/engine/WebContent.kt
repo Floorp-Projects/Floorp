@@ -22,7 +22,7 @@ import mozilla.components.concept.engine.EngineView
 fun WebContent(
     engine: Engine,
     store: BrowserStore,
-    target: Target
+    target: Target,
 ) {
     val selectedTab = target.observeAsComposableStateFrom(
         store = store,
@@ -32,9 +32,9 @@ fun WebContent(
                 tab?.id,
                 tab?.engineState?.engineSession,
                 tab?.engineState?.crashed,
-                tab?.content?.firstContentfulPaint
+                tab?.content?.firstContentfulPaint,
             )
-        }
+        },
     )
 
     AndroidView(
@@ -57,6 +57,6 @@ fun WebContent(
                     engineView.render(session)
                 }
             }
-        }
+        },
     )
 }

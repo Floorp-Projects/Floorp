@@ -14,7 +14,7 @@ import org.mozilla.geckoview.GeckoRuntimeSettings
  * Converts a [TrackingProtectionPolicy] into a GeckoView setting that can be used with [GeckoRuntimeSettings.Builder].
  */
 fun TrackingProtectionPolicy.toContentBlockingSetting(
-    safeBrowsingPolicy: Array<EngineSession.SafeBrowsingPolicy> = arrayOf(EngineSession.SafeBrowsingPolicy.RECOMMENDED)
+    safeBrowsingPolicy: Array<EngineSession.SafeBrowsingPolicy> = arrayOf(EngineSession.SafeBrowsingPolicy.RECOMMENDED),
 ) = ContentBlocking.Settings.Builder().apply {
     enhancedTrackingProtectionLevel(getEtpLevel())
     antiTracking(getAntiTrackingPolicy())

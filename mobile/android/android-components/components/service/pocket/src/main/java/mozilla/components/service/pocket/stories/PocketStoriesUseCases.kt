@@ -73,7 +73,7 @@ internal class PocketStoriesUseCases(
      */
     internal inner class GetPocketStories(
         @get:VisibleForTesting
-        internal val context: Context = this@PocketStoriesUseCases.appContext
+        internal val context: Context = this@PocketStoriesUseCases.appContext,
     ) {
         /**
          * Returns the current locally persisted list of Pocket recommended stories.
@@ -91,7 +91,7 @@ internal class PocketStoriesUseCases(
      */
     internal inner class UpdateStoriesTimesShown(
         @get:VisibleForTesting
-        internal val context: Context = this@PocketStoriesUseCases.appContext
+        internal val context: Context = this@PocketStoriesUseCases.appContext,
     ) {
         /**
          * Update how many times certain stories were shown to the user.

@@ -25,7 +25,7 @@ import mozilla.components.concept.fetch.Client
 class NonBlockingHttpIconLoader(
     httpClient: Client,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
-    private val loadCallback: (IconRequest, IconRequest.Resource, IconLoader.Result) -> Unit
+    private val loadCallback: (IconRequest, IconRequest.Resource, IconLoader.Result) -> Unit,
 ) : HttpIconLoader(httpClient) {
     override fun load(context: Context, request: IconRequest, resource: IconRequest.Resource): IconLoader.Result {
         if (!shouldDownload(resource)) {

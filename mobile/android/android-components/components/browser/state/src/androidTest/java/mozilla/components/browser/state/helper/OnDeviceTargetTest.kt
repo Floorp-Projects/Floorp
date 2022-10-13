@@ -38,7 +38,7 @@ class OnDeviceTargetTest {
         rule.setContent {
             val state = target.observeAsComposableStateFrom(
                 store = store,
-                observe = { tab -> tab?.id }
+                observe = { tab -> tab?.id },
             )
             observedTabId = state.value?.id
         }
@@ -46,7 +46,7 @@ class OnDeviceTargetTest {
         assertNull(observedTabId)
 
         store.dispatchBlockingOnIdle(
-            TabListAction.AddTabAction(createTab("https://www.mozilla.org", id = "mozilla"))
+            TabListAction.AddTabAction(createTab("https://www.mozilla.org", id = "mozilla")),
         )
 
         rule.runOnIdle {
@@ -54,7 +54,7 @@ class OnDeviceTargetTest {
         }
 
         store.dispatchBlockingOnIdle(
-            TabListAction.AddTabAction(createTab("https://example.org", id = "example"))
+            TabListAction.AddTabAction(createTab("https://example.org", id = "example")),
         )
 
         rule.runOnIdle {
@@ -62,7 +62,7 @@ class OnDeviceTargetTest {
         }
 
         store.dispatchBlockingOnIdle(
-            TabListAction.SelectTabAction("example")
+            TabListAction.SelectTabAction("example"),
         )
 
         rule.runOnIdle {
@@ -70,7 +70,7 @@ class OnDeviceTargetTest {
         }
 
         store.dispatchBlockingOnIdle(
-            TabListAction.RemoveTabAction("example")
+            TabListAction.RemoveTabAction("example"),
         )
 
         rule.runOnIdle {
@@ -90,10 +90,10 @@ class OnDeviceTargetTest {
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "mozilla"),
-                    createTab("https://www.example.org", id = "example")
+                    createTab("https://www.example.org", id = "example"),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         val target = Target.Tab("mozilla")
@@ -102,7 +102,7 @@ class OnDeviceTargetTest {
         rule.setContent {
             val state = target.observeAsComposableStateFrom(
                 store = store,
-                observe = { tab -> tab?.id }
+                observe = { tab -> tab?.id },
             )
             observedTabId = state.value?.id
         }
@@ -128,13 +128,13 @@ class OnDeviceTargetTest {
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "mozilla"),
-                    createTab("https://www.example.org", id = "example")
+                    createTab("https://www.example.org", id = "example"),
                 ),
                 customTabs = listOf(
-                    createCustomTab("https://www.reddit.com/r/firefox/", id = "reddit")
+                    createCustomTab("https://www.reddit.com/r/firefox/", id = "reddit"),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         val target = Target.CustomTab("reddit")
@@ -144,7 +144,7 @@ class OnDeviceTargetTest {
         rule.setContent {
             val state = target.observeAsComposableStateFrom(
                 store = store,
-                observe = { tab -> tab?.id }
+                observe = { tab -> tab?.id },
             )
             observedTabId = state.value?.id
         }

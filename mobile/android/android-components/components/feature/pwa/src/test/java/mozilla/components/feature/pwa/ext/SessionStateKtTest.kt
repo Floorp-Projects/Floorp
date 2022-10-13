@@ -17,7 +17,7 @@ class SessionStateKtTest {
     private val demoManifest = WebAppManifest(
         name = "Demo",
         startUrl = "https://mozilla.com",
-        display = WebAppManifest.DisplayMode.STANDALONE
+        display = WebAppManifest.DisplayMode.STANDALONE,
     )
     private val demoIcon = WebAppManifest.Icon(src = "https://mozilla.com/example.png")
 
@@ -31,7 +31,7 @@ class SessionStateKtTest {
     fun `web app must have manifest to be installable`() {
         val noManifestSession = createTestSession(
             secure = true,
-            manifest = null
+            manifest = null,
         )
         assertNull(noManifestSession.installableManifest())
     }
@@ -40,13 +40,13 @@ class SessionStateKtTest {
     fun `web app must have an icon to be installable`() {
         val noIconSession = createTestSession(
             secure = true,
-            manifest = demoManifest
+            manifest = demoManifest,
         )
         assertNull(noIconSession.installableManifest())
 
         val noSizeIconSession = createTestSession(
             secure = true,
-            manifest = demoManifest.copy(icons = listOf(demoIcon))
+            manifest = demoManifest.copy(icons = listOf(demoIcon)),
         )
         assertNull(noSizeIconSession.installableManifest())
 
@@ -56,10 +56,10 @@ class SessionStateKtTest {
                 icons = listOf(
                     demoIcon.copy(
                         sizes = listOf(Size(512, 512)),
-                        purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
-                    )
-                )
-            )
+                        purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME),
+                    ),
+                ),
+            ),
         )
         assertNull(onlyBadgeIconSession.installableManifest())
     }
@@ -70,9 +70,9 @@ class SessionStateKtTest {
             secure = true,
             manifest = demoManifest.copy(
                 icons = listOf(
-                    demoIcon.copy(sizes = listOf(Size(32, 32)))
-                )
-            )
+                    demoIcon.copy(sizes = listOf(Size(32, 32))),
+                ),
+            ),
         )
         assertNull(smallIconSession.installableManifest())
 
@@ -80,9 +80,9 @@ class SessionStateKtTest {
             secure = true,
             manifest = demoManifest.copy(
                 icons = listOf(
-                    demoIcon.copy(sizes = listOf(Size(50, 200)))
-                )
-            )
+                    demoIcon.copy(sizes = listOf(Size(50, 200))),
+                ),
+            ),
         )
         assertNull(weirdSizeSession.installableManifest())
 
@@ -90,34 +90,34 @@ class SessionStateKtTest {
             secure = true,
             manifest = demoManifest.copy(
                 icons = listOf(
-                    demoIcon.copy(sizes = listOf(Size(192, 192)))
-                )
-            )
+                    demoIcon.copy(sizes = listOf(Size(192, 192))),
+                ),
+            ),
         )
         assertEquals(
             demoManifest.copy(
                 icons = listOf(
-                    demoIcon.copy(sizes = listOf(Size(192, 192)))
-                )
+                    demoIcon.copy(sizes = listOf(Size(192, 192))),
+                ),
             ),
-            largeIconSession.installableManifest()
+            largeIconSession.installableManifest(),
         )
 
         val multiSizeIconSession = createTestSession(
             secure = true,
             manifest = demoManifest.copy(
                 icons = listOf(
-                    demoIcon.copy(sizes = listOf(Size(16, 16), Size(512, 512)))
-                )
-            )
+                    demoIcon.copy(sizes = listOf(Size(16, 16), Size(512, 512))),
+                ),
+            ),
         )
         assertEquals(
             demoManifest.copy(
                 icons = listOf(
-                    demoIcon.copy(sizes = listOf(Size(16, 16), Size(512, 512)))
-                )
+                    demoIcon.copy(sizes = listOf(Size(16, 16), Size(512, 512))),
+                ),
             ),
-            multiSizeIconSession.installableManifest()
+            multiSizeIconSession.installableManifest(),
         )
 
         val multiIconSession = createTestSession(
@@ -128,10 +128,10 @@ class SessionStateKtTest {
                     demoIcon.copy(sizes = listOf(Size(512, 512))),
                     demoIcon.copy(
                         sizes = listOf(Size(192, 192)),
-                        purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
-                    )
-                )
-            )
+                        purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME),
+                    ),
+                ),
+            ),
         )
         assertEquals(
             demoManifest.copy(
@@ -140,18 +140,18 @@ class SessionStateKtTest {
                     demoIcon.copy(sizes = listOf(Size(512, 512))),
                     demoIcon.copy(
                         sizes = listOf(Size(192, 192)),
-                        purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
-                    )
-                )
+                        purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME),
+                    ),
+                ),
             ),
-            multiIconSession.installableManifest()
+            multiIconSession.installableManifest(),
         )
     }
 }
 
 private fun createTestSession(
     secure: Boolean,
-    manifest: WebAppManifest? = null
+    manifest: WebAppManifest? = null,
 ): SessionState {
     val protocol = if (secure) {
         "https"
@@ -163,7 +163,7 @@ private fun createTestSession(
     return tab.copy(
         content = tab.content.copy(
             securityInfo = SecurityInfoState(secure = secure),
-            webAppManifest = manifest
-        )
+            webAppManifest = manifest,
+        ),
     )
 }

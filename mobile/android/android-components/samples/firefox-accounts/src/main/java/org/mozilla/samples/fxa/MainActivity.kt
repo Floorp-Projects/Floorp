@@ -76,14 +76,14 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
                         Log.log(
                             Log.Priority.ERROR,
                             tag = "mozac-samples-fxa",
-                            message = "Pairing flow failed for $pairingUrl"
+                            message = "Pairing flow failed for $pairingUrl",
                         )
                         return@launch
                     }
                     openWebView(url.url)
                 }
             },
-            scanMessage = R.string.pair_instructions_message
+            scanMessage = R.string.pair_instructions_message,
         )
 
         lifecycle.addObserver(qrFeature)

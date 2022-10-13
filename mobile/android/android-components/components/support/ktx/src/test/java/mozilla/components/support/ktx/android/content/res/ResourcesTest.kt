@@ -65,10 +65,10 @@ class ResourcesTest {
                 resources.getSpanned(
                     id,
                     "App" to StyleSpan(BOLD),
-                    "Website" to StyleSpan(ITALIC)
+                    "Website" to StyleSpan(ITALIC),
                 ),
-                Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE
-            )
+                Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE,
+            ),
         )
     }
 }

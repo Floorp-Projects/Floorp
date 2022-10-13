@@ -19,5 +19,5 @@ typealias ImageSaveRequest = String
  */
 data class ImageLoadRequest(
     val id: String,
-    @Px val size: Int
+    @Px val size: Int,
 )

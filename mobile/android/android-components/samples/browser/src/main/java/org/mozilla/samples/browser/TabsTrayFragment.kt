@@ -59,10 +59,10 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
             feature = TabsFeature(
                 tabsTray = tabsAdapter,
                 store = components.store,
-                onCloseTray = ::closeTabsTray
+                onCloseTray = ::closeTabsTray,
             ),
             owner = this,
-            view = view
+            view = view,
         )
     }
 
@@ -82,7 +82,7 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
         val removeUseCase = RemoveTabWithUndoUseCase(
             components.tabsUseCases.removeTab,
             view,
-            components.tabsUseCases.undo
+            components.tabsUseCases.undo,
         )
         return TabsAdapter(
             thumbnailLoader = ThumbnailLoader(components.thumbnailStorage),
@@ -95,7 +95,7 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
                 override fun onTabClosed(tab: TabSessionState, source: String?) {
                     removeUseCase.invoke(tab.id)
                 }
-            }
+            },
         )
     }
 }
@@ -103,7 +103,7 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
 private class RemoveTabWithUndoUseCase(
     private val actual: TabsUseCases.RemoveTabUseCase,
     private val view: View,
-    private val undo: TabsUseCases.UndoTabRemovalUseCase
+    private val undo: TabsUseCases.UndoTabRemovalUseCase,
 ) : TabsUseCases.RemoveTabUseCase {
     override fun invoke(tabId: String) {
         actual.invoke(tabId)
@@ -114,9 +114,9 @@ private class RemoveTabWithUndoUseCase(
         Snackbar.make(
             view,
             "Tab removed.",
-            Snackbar.LENGTH_LONG
+            Snackbar.LENGTH_LONG,
         ).setAction(
-            "Undo"
+            "Undo",
         ) {
             undo.invoke()
         }.show()

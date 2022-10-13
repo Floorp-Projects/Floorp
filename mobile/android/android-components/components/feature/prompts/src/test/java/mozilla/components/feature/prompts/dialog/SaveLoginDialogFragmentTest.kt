@@ -18,12 +18,12 @@ import mozilla.components.support.test.ext.appCompatContext
 import mozilla.components.support.test.mock
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.robolectric.Shadows
 
 @RunWith(AndroidJUnit4::class)
@@ -42,8 +42,13 @@ class SaveLoginDialogFragmentTest : TestCase() {
         val icon: Bitmap = mock()
         val fragment = spy(
             SaveLoginDialogFragment.newInstance(
-                sessionId, requestUID, shouldDismissOnLoad, hint, entry, icon
-            )
+                sessionId,
+                requestUID,
+                shouldDismissOnLoad,
+                hint,
+                entry,
+                icon,
+            ),
         )
         doReturn(appCompatContext).`when`(fragment).requireContext()
         doAnswer {
@@ -83,8 +88,13 @@ class SaveLoginDialogFragmentTest : TestCase() {
         val icon: Bitmap? = null // null favicon
         val fragment = spy(
             SaveLoginDialogFragment.newInstance(
-                sessionId, requestUID, shouldDismissOnLoad, hint, entry, icon
-            )
+                sessionId,
+                requestUID,
+                shouldDismissOnLoad,
+                hint,
+                entry,
+                icon,
+            ),
         )
         val defaultIconResource = R.drawable.mozac_ic_globe
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -96,7 +106,7 @@ class SaveLoginDialogFragmentTest : TestCase() {
                     ImageView(appCompatContext).apply {
                         id = R.id.host_icon
                         setImageResource(defaultIconResource)
-                    }
+                    },
                 )
             }
         }.`when`(fragment).inflateRootView(any())

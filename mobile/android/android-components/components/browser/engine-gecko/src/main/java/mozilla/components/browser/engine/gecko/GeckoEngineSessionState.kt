@@ -15,7 +15,7 @@ import java.io.IOException
 private const val GECKO_STATE_KEY = "GECKO_STATE"
 
 class GeckoEngineSessionState internal constructor(
-    internal val actualState: GeckoSession.SessionState?
+    internal val actualState: GeckoSession.SessionState?,
 ) : EngineSessionState {
     override fun writeTo(writer: JsonWriter) {
         with(writer) {
@@ -34,7 +34,7 @@ class GeckoEngineSessionState internal constructor(
             val state = json.getString(GECKO_STATE_KEY)
 
             GeckoEngineSessionState(
-                GeckoSession.SessionState.fromString(state)
+                GeckoSession.SessionState.fromString(state),
             )
         } catch (e: JSONException) {
             GeckoEngineSessionState(null)
@@ -60,7 +60,7 @@ class GeckoEngineSessionState internal constructor(
             reader.endObject()
 
             GeckoEngineSessionState(
-                rawState?.let { GeckoSession.SessionState.fromString(it) }
+                rawState?.let { GeckoSession.SessionState.fromString(it) },
             )
         } catch (e: IOException) {
             GeckoEngineSessionState(null)

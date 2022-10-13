@@ -62,7 +62,7 @@ fun View.getRectWithViewLocation(): Rect {
         locationInWindow[0],
         locationInWindow[1],
         locationInWindow[0] + width,
-        locationInWindow[1] + height
+        locationInWindow[1] + height,
     )
 }
 
@@ -75,7 +75,7 @@ fun View.setPadding(padding: Padding) {
             padding.left.dpToPx(displayMetrics),
             padding.top.dpToPx(displayMetrics),
             padding.right.dpToPx(displayMetrics),
-            padding.bottom.dpToPx(displayMetrics)
+            padding.bottom.dpToPx(displayMetrics),
         )
     }
 }
@@ -93,14 +93,16 @@ fun View.setPadding(padding: Padding) {
 fun View.toScope(): CoroutineScope {
     val scope = MainScope()
 
-    addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-        override fun onViewAttachedToWindow(view: View) = Unit
+    addOnAttachStateChangeListener(
+        object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(view: View) = Unit
 
-        override fun onViewDetachedFromWindow(view: View) {
-            scope.cancel()
-            view.removeOnAttachStateChangeListener(this)
-        }
-    })
+            override fun onViewDetachedFromWindow(view: View) {
+                scope.cancel()
+                view.removeOnAttachStateChangeListener(this)
+            }
+        },
+    )
 
     return scope
 }
@@ -136,7 +138,7 @@ inline fun View.onNextGlobalLayout(crossinline callback: () -> Unit) {
 
 private class ShowKeyboard(
     view: View,
-    private val flags: Int = InputMethodManager.SHOW_IMPLICIT
+    private val flags: Int = InputMethodManager.SHOW_IMPLICIT,
 ) : Runnable {
     private val weakReference: WeakReference<View> = WeakReference(view)
     private val handler: Handler = Handler(Looper.getMainLooper())

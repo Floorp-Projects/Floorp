@@ -37,6 +37,6 @@ interface Tab {
     fun restore(
         context: Context,
         engine: Engine,
-        restoreSessionId: Boolean = false
+        restoreSessionId: Boolean = false,
     ): RecoverableTab?
 }

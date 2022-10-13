@@ -30,7 +30,7 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
             Snackbar.make(
                 findViewById(android.R.id.content),
                 "Sorry. We crashed.",
-                Snackbar.LENGTH_LONG
+                Snackbar.LENGTH_LONG,
             )
                 .setAction("Report") { crashReporter.submitReport(crash) }
                 .show()
@@ -54,8 +54,8 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
                 emptyMap(),
                 "sample",
                 Breadcrumb.Level.DEBUG,
-                Breadcrumb.Type.NAVIGATION
-            )
+                Breadcrumb.Type.NAVIGATION,
+            ),
         )
     }
 
@@ -69,8 +69,8 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
                 emptyMap(),
                 "sample",
                 Breadcrumb.Level.DEBUG,
-                Breadcrumb.Type.NAVIGATION
-            )
+                Breadcrumb.Type.NAVIGATION,
+            ),
         )
     }
 
@@ -84,8 +84,8 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
                 emptyMap(),
                 "sample",
                 Breadcrumb.Level.DEBUG,
-                Breadcrumb.Type.NAVIGATION
-            )
+                Breadcrumb.Type.NAVIGATION,
+            ),
         )
     }
 
@@ -99,8 +99,8 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
                         emptyMap(),
                         "sample",
                         Breadcrumb.Level.INFO,
-                        Breadcrumb.Type.USER
-                    )
+                        Breadcrumb.Type.USER,
+                    ),
                 )
 
                 throw RuntimeException("Boom!")
@@ -113,24 +113,24 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
                         emptyMap(),
                         "sample",
                         Breadcrumb.Level.INFO,
-                        Breadcrumb.Type.USER
-                    )
+                        Breadcrumb.Type.USER,
+                    ),
                 )
 
                 // Pretend GeckoView has crashed by re-building a crash Intent and launching the CrashHandlerService.
                 val intent = Intent("org.mozilla.gecko.ACTION_CRASHED")
                 intent.component = ComponentName(
                     packageName,
-                    "mozilla.components.lib.crash.handler.CrashHandlerService"
+                    "mozilla.components.lib.crash.handler.CrashHandlerService",
                 )
                 intent.putExtra(
                     "minidumpPath",
-                    "${filesDir.path}/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp"
+                    "${filesDir.path}/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
                 )
                 intent.putExtra("fatal", false)
                 intent.putExtra(
                     "extrasPath",
-                    "${filesDir.path}/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra"
+                    "${filesDir.path}/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
                 )
                 intent.putExtra("minidumpSuccess", true)
 
@@ -144,8 +144,8 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
                         emptyMap(),
                         "sample",
                         Breadcrumb.Level.INFO,
-                        Breadcrumb.Type.USER
-                    )
+                        Breadcrumb.Type.USER,
+                    ),
                 )
 
                 startService(Intent(this, CrashService::class.java))

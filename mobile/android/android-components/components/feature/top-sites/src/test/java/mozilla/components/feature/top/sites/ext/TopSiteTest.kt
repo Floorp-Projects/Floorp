@@ -18,8 +18,8 @@ class TopSiteTest {
                 id = 1,
                 title = "Mozilla",
                 url = "https://mozilla.com",
-                createdAt = 1
-            )
+                createdAt = 1,
+            ),
         )
 
         assertTrue(topSites.hasUrl("https://mozilla.com"))

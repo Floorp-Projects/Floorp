@@ -143,7 +143,7 @@ interface CreditCardCrypto : KeyProvider {
      */
     fun encrypt(
         key: ManagedKey,
-        plaintextCardNumber: CreditCardNumber.Plaintext
+        plaintextCardNumber: CreditCardNumber.Plaintext,
     ): CreditCardNumber.Encrypted?
 
     /**
@@ -156,7 +156,7 @@ interface CreditCardCrypto : KeyProvider {
      */
     fun decrypt(
         key: ManagedKey,
-        encryptedCardNumber: CreditCardNumber.Encrypted
+        encryptedCardNumber: CreditCardNumber.Encrypted,
     ): CreditCardNumber.Plaintext?
 }
 
@@ -207,7 +207,7 @@ data class CreditCard(
     val timeCreated: Long = 0L,
     val timeLastUsed: Long? = 0L,
     val timeLastModified: Long = 0L,
-    val timesUsed: Long = 0L
+    val timesUsed: Long = 0L,
 ) : Parcelable {
     val obfuscatedCardNumber: String
         get() = ellipsesStart +
@@ -246,7 +246,7 @@ data class CreditCardEntry(
     val number: String,
     val expiryMonth: String,
     val expiryYear: String,
-    val cardType: String
+    val cardType: String,
 ) : Parcelable {
     val obfuscatedCardNumber: String
         get() = ellipsesStart +
@@ -298,7 +298,7 @@ data class NewCreditCardFields(
     val cardNumberLast4: String,
     val expiryMonth: Long,
     val expiryYear: Long,
-    val cardType: String
+    val cardType: String,
 )
 
 /**
@@ -319,7 +319,7 @@ data class UpdatableCreditCardFields(
     val cardNumberLast4: String,
     val expiryMonth: Long,
     val expiryYear: Long,
-    val cardType: String
+    val cardType: String,
 )
 
 /**
@@ -362,7 +362,7 @@ data class Address(
     val timeCreated: Long = 0L,
     val timeLastUsed: Long? = 0L,
     val timeLastModified: Long = 0L,
-    val timesUsed: Long = 0L
+    val timesUsed: Long = 0L,
 ) : Parcelable {
     /**
      * Returns the full name for the [Address]. The combination of names is based on desktop code
@@ -389,7 +389,7 @@ data class Address(
             country,
             postalCode,
             tel,
-            email
+            email,
         ).filter { it.isNotEmpty() }.joinToString(", ")
 
     companion object {
@@ -427,7 +427,7 @@ data class UpdatableAddressFields(
     val postalCode: String,
     val country: String,
     val tel: String,
-    val email: String
+    val email: String,
 )
 
 /**
@@ -479,7 +479,7 @@ interface CreditCardsAddressesStorageDelegate : KeyProvider {
      */
     suspend fun decrypt(
         key: ManagedKey,
-        encryptedCardNumber: CreditCardNumber.Encrypted
+        encryptedCardNumber: CreditCardNumber.Encrypted,
     ): CreditCardNumber.Plaintext?
 
     /**

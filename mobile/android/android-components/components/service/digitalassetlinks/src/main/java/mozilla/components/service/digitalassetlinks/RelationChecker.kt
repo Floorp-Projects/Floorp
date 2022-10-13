@@ -16,6 +16,6 @@ interface RelationChecker {
     fun checkRelationship(
         source: AssetDescriptor.Web,
         relation: Relation,
-        target: AssetDescriptor
+        target: AssetDescriptor,
     ): Boolean
 }

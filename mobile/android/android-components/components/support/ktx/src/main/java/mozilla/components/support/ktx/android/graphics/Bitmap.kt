@@ -44,8 +44,13 @@ fun Bitmap.withRoundedCorners(cornerRadiusPx: Float): Bitmap {
     }
 
     canvas.drawRoundRect(
-        0.0f, 0.0f, width.toFloat(), height.toFloat(),
-        cornerRadiusPx, cornerRadiusPx, paint
+        0.0f,
+        0.0f,
+        width.toFloat(),
+        height.toFloat(),
+        cornerRadiusPx,
+        cornerRadiusPx,
+        paint,
     )
     return roundedBitmap
 }

@@ -20,7 +20,7 @@ class NimbusBranchItemViewHolder(
     private val nimbusBranchesDelegate: NimbusBranchesAdapterDelegate,
     private val selectedIconView: ImageView,
     private val titleView: TextView,
-    private val summaryView: TextView
+    private val summaryView: TextView,
 ) : RecyclerView.ViewHolder(view) {
 
     internal fun bind(branch: Branch, selectedBranch: String) {

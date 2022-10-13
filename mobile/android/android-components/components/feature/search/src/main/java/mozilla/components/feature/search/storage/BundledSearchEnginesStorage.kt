@@ -29,7 +29,7 @@ private val logger = Logger("BundledSearchEnginesStorage")
  * A storage implementation for reading bundled [SearchEngine]s from the app's assets.
  */
 internal class BundledSearchEnginesStorage(
-    private val context: Context
+    private val context: Context,
 ) : SearchMiddleware.BundleStorage {
     /**
      * Load the [SearchMiddleware.BundleStorage.Bundle] for the given [region] and [locale].
@@ -37,7 +37,7 @@ internal class BundledSearchEnginesStorage(
     override suspend fun load(
         region: RegionState,
         locale: Locale,
-        coroutineContext: CoroutineContext
+        coroutineContext: CoroutineContext,
     ): SearchMiddleware.BundleStorage.Bundle = withContext(coroutineContext) {
         val localizedConfiguration = loadAndFilterConfiguration(context, region, locale)
         val searchEngineIdentifiers = localizedConfiguration.visibleDefaultEngines
@@ -46,7 +46,7 @@ internal class BundledSearchEnginesStorage(
             context,
             searchEngineIdentifiers.distinct(),
             SearchEngine.Type.BUNDLED,
-            coroutineContext
+            coroutineContext,
         )
 
         // Reorder the list of search engines according to the configuration.
@@ -70,13 +70,13 @@ internal class BundledSearchEnginesStorage(
 
         SearchMiddleware.BundleStorage.Bundle(
             list = orderedList + unorderedRest,
-            defaultSearchEngineId = defaultEngine.id
+            defaultSearchEngineId = defaultEngine.id,
         )
     }
 
     override suspend fun load(
         ids: List<String>,
-        coroutineContext: CoroutineContext
+        coroutineContext: CoroutineContext,
     ): List<SearchEngine> = withContext(coroutineContext) {
         if (ids.isEmpty()) {
             emptyList()
@@ -85,7 +85,7 @@ internal class BundledSearchEnginesStorage(
                 context,
                 ids.distinct(),
                 SearchEngine.Type.BUNDLED_ADDITIONAL,
-                coroutineContext
+                coroutineContext,
             )
         }
     }
@@ -94,13 +94,13 @@ internal class BundledSearchEnginesStorage(
 private data class SearchEngineListConfiguration(
     val visibleDefaultEngines: List<String>,
     val searchOrder: List<String>,
-    val searchDefault: String?
+    val searchDefault: String?,
 )
 
 private fun loadAndFilterConfiguration(
     context: Context,
     region: RegionState,
-    locale: Locale
+    locale: Locale,
 ): SearchEngineListConfiguration {
     val config = context.assets.readJSONObject("search/list.json")
 
@@ -113,13 +113,13 @@ private fun loadAndFilterConfiguration(
     return SearchEngineListConfiguration(
         applyOverridesIfNeeded(region, config, jsonSearchEngineIdentifiers),
         searchOrder.toList(),
-        searchDefault
+        searchDefault,
     )
 }
 
 private fun pickConfigurationBlocks(
     locale: Locale,
-    config: JSONObject
+    config: JSONObject,
 ): Array<JSONObject> {
     val localesConfig = config.getJSONObject("locales")
 
@@ -144,7 +144,7 @@ private fun pickConfigurationBlocks(
 private fun getSearchEngineIdentifiersFromBlock(
     region: RegionState,
     locale: Locale,
-    configBlocks: Array<JSONObject>
+    configBlocks: Array<JSONObject>,
 ): JSONArray {
     // Now test if there's an override for the region (if it's set)
     return getArrayFromBlock(region, "visibleDefaultEngines", configBlocks)
@@ -153,20 +153,20 @@ private fun getSearchEngineIdentifiersFromBlock(
 
 private fun getSearchDefaultFromBlock(
     region: RegionState,
-    configBlocks: Array<JSONObject>
+    configBlocks: Array<JSONObject>,
 ): String? = getValueFromBlock(region, configBlocks) {
     it.tryGetString("searchDefault")
 }
 
 private fun getSearchOrderFromBlock(
     region: RegionState,
-    configBlocks: Array<JSONObject>
+    configBlocks: Array<JSONObject>,
 ): JSONArray? = getArrayFromBlock(region, "searchOrder", configBlocks)
 
 private fun getArrayFromBlock(
     region: RegionState,
     key: String,
-    blocks: Array<JSONObject>
+    blocks: Array<JSONObject>,
 ): JSONArray? = getValueFromBlock(region, blocks) {
     it.optJSONArray(key)
 }
@@ -183,7 +183,7 @@ private fun getArrayFromBlock(
 private fun <T : Any> getValueFromBlock(
     region: RegionState,
     blocks: Array<JSONObject>,
-    transform: (JSONObject) -> T?
+    transform: (JSONObject) -> T?,
 ): T? {
     val regions = arrayOf(region.home, "default")
 
@@ -198,7 +198,7 @@ private fun <T : Any> getValueFromBlock(
 private fun applyOverridesIfNeeded(
     region: RegionState,
     config: JSONObject,
-    jsonSearchEngineIdentifiers: JSONArray
+    jsonSearchEngineIdentifiers: JSONArray,
 ): List<String> {
     val overrides = config.getJSONObject("regionOverrides")
     val searchEngineIdentifiers = mutableListOf<String>()
@@ -224,7 +224,7 @@ private suspend fun loadSearchEnginesFromList(
     context: Context,
     searchEngineIdentifiers: List<String>,
     type: SearchEngine.Type,
-    coroutineContext: CoroutineContext
+    coroutineContext: CoroutineContext,
 ): List<SearchEngine> {
     val assets = context.assets
     val reader = SearchEngineReader(type)
@@ -235,7 +235,7 @@ private suspend fun loadSearchEnginesFromList(
         deferredSearchEngines.add(
             GlobalScope.async(coroutineContext) {
                 loadSearchEngine(assets, reader, identifier)
-            }
+            },
         )
     }
 
@@ -246,7 +246,7 @@ private suspend fun loadSearchEnginesFromList(
 private fun loadSearchEngine(
     assets: AssetManager,
     reader: SearchEngineReader,
-    identifier: String
+    identifier: String,
 ): SearchEngine? = try {
     assets.open("searchplugins/$identifier.xml").use { stream ->
         reader.loadStream(identifier, stream)

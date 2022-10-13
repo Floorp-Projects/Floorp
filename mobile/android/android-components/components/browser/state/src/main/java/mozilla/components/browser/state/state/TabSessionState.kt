@@ -46,7 +46,7 @@ data class TabSessionState(
     val createdAt: Long = System.currentTimeMillis(),
     val lastMediaAccessState: LastMediaAccessState = LastMediaAccessState(),
     val readerState: ReaderState = ReaderState(),
-    val historyMetadata: HistoryMetadataKey? = null
+    val historyMetadata: HistoryMetadataKey? = null,
 ) : SessionState {
 
     override fun createCopy(
@@ -56,7 +56,7 @@ data class TabSessionState(
         engineState: EngineState,
         extensionState: Map<String, WebExtensionState>,
         mediaSessionState: MediaSessionState?,
-        contextId: String?
+        contextId: String?,
     ): SessionState = copy(
         id = id,
         content = content,
@@ -64,7 +64,7 @@ data class TabSessionState(
         engineState = engineState,
         extensionState = extensionState,
         mediaSessionState = mediaSessionState,
-        contextId = contextId
+        contextId = contextId,
     )
 }
 
@@ -96,7 +96,7 @@ fun createTab(
     webAppManifest: WebAppManifest? = null,
     searchTerms: String = "",
     initialLoadFlags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
-    previewImageUrl: String? = null
+    previewImageUrl: String? = null,
 ): TabSessionState {
     return TabSessionState(
         id = id,
@@ -107,7 +107,7 @@ fun createTab(
             thumbnail = thumbnail,
             webAppManifest = webAppManifest,
             searchTerms = searchTerms,
-            previewImageUrl = previewImageUrl
+            previewImageUrl = previewImageUrl,
         ),
         parentId = parentId ?: parent?.id,
         extensionState = extensions,
@@ -122,9 +122,9 @@ fun createTab(
             engineSession = engineSession,
             engineSessionState = engineSessionState,
             crashed = crashed,
-            initialLoadFlags = initialLoadFlags
+            initialLoadFlags = initialLoadFlags,
         ),
         mediaSessionState = mediaSessionState,
-        historyMetadata = historyMetadata
+        historyMetadata = historyMetadata,
     )
 }

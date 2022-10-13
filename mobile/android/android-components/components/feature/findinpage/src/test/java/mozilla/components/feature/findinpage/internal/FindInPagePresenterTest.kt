@@ -23,10 +23,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
 class FindInPagePresenterTest {
 
@@ -42,10 +42,10 @@ class FindInPagePresenterTest {
         store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "test-tab")
+                    createTab("https://www.mozilla.org", id = "test-tab"),
                 ),
-                selectedTabId = "test-tab"
-            )
+                selectedTabId = "test-tab",
+            ),
         )
     }
 

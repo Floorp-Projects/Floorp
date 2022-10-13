@@ -21,7 +21,7 @@ import mozilla.components.lib.jexl.lexer.Token
  */
 internal class Parser(
     internal val grammar: Grammar,
-    private val stopMap: Map<Token.Type, State> = mapOf()
+    private val stopMap: Map<Token.Type, State> = mapOf(),
 ) {
     private var state: State = State.EXPECT_OPERAND
     internal var tree: AstNode? = null
@@ -155,7 +155,7 @@ internal class StateMap(
     val map: Map<Token.Type, NextState> = mapOf(),
     val completable: Boolean = false,
     val subHandler: ((Parser, AstNode?) -> Unit)? = null,
-    val endStates: Map<Token.Type, State> = mapOf()
+    val endStates: Map<Token.Type, State> = mapOf(),
 )
 
 internal enum class State {
@@ -180,13 +180,13 @@ internal enum class State {
 
 internal class NextState(
     val state: State? = null,
-    val handler: ((Parser, Token) -> Unit)? = null
+    val handler: ((Parser, Token) -> Unit)? = null,
 )
 
 internal val handlers: Map<Token.Type, (Parser, Token) -> Unit> = mapOf(
     Token.Type.LITERAL to { parser, token ->
         parser.placeAtCursor(
-            Literal(token.value)
+            Literal(token.value),
         )
     },
 
@@ -206,7 +206,7 @@ internal val handlers: Map<Token.Type, (Parser, Token) -> Unit> = mapOf(
 
         val node = BinaryExpression(
             left = parser.cursor,
-            operator = token.value.toString()
+            operator = token.value.toString(),
         )
 
         parser.cursor!!.parent = node
@@ -231,7 +231,7 @@ internal val handlers: Map<Token.Type, (Parser, Token) -> Unit> = mapOf(
 
     Token.Type.UNARY_OP to { parser, token ->
         val node = UnaryExpression(
-            operator = token.value.toString()
+            operator = token.value.toString(),
         )
         parser.placeAtCursor(node)
     },
@@ -248,5 +248,5 @@ internal val handlers: Map<Token.Type, (Parser, Token) -> Unit> = mapOf(
         if (parser.nextIdentRelative) {
             parser.relative = true
         }
-    }
+    },
 )

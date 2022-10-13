@@ -50,12 +50,12 @@ class GeckoWebPushDelegateTest {
             "https://example.com",
             null,
             ByteArray(65),
-            ByteArray(16)
+            ByteArray(16),
         )
         val delegate: WebPushDelegate = object : WebPushDelegate {
             override fun onGetSubscription(
                 scope: String,
-                onSubscription: (WebPushSubscription?) -> Unit
+                onSubscription: (WebPushSubscription?) -> Unit,
             ) {
                 onSubscription(subscription)
             }
@@ -84,13 +84,13 @@ class GeckoWebPushDelegateTest {
             "https://example.com",
             null,
             ByteArray(65),
-            ByteArray(16)
+            ByteArray(16),
         )
         val delegate: WebPushDelegate = object : WebPushDelegate {
             override fun onSubscribe(
                 scope: String,
                 serverKey: ByteArray?,
-                onSubscribe: (WebPushSubscription?) -> Unit
+                onSubscribe: (WebPushSubscription?) -> Unit,
             ) {
                 onSubscribe(subscription)
             }
@@ -117,7 +117,7 @@ class GeckoWebPushDelegateTest {
         val delegate: WebPushDelegate = object : WebPushDelegate {
             override fun onUnsubscribe(
                 scope: String,
-                onUnsubscribe: (Boolean) -> Unit
+                onUnsubscribe: (Boolean) -> Unit,
             ) {
                 onUnsubscribe(true)
             }
@@ -136,7 +136,7 @@ class GeckoWebPushDelegateTest {
         val delegate: WebPushDelegate = object : WebPushDelegate {
             override fun onUnsubscribe(
                 scope: String,
-                onUnsubscribe: (Boolean) -> Unit
+                onUnsubscribe: (Boolean) -> Unit,
             ) {
                 onUnsubscribe(false)
             }

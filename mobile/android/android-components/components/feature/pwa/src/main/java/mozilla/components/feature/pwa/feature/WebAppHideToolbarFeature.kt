@@ -49,7 +49,7 @@ class WebAppHideToolbarFeature(
     private val customTabsStore: CustomTabsServiceStore,
     private val tabId: String? = null,
     manifest: WebAppManifest? = null,
-    private val setToolbarVisibility: (Boolean) -> Unit
+    private val setToolbarVisibility: (Boolean) -> Unit,
 ) : LifecycleAwareFeature {
 
     private val manifestScope = listOfNotNull(manifest?.getTrustedScope())
@@ -95,7 +95,7 @@ class WebAppHideToolbarFeature(
      */
     private fun shouldToolbarBeVisible(
         session: SessionState?,
-        customTabState: CustomTabState?
+        customTabState: CustomTabState?,
     ): Boolean {
         val url = session?.content?.url?.toUri() ?: return true
 
@@ -109,7 +109,7 @@ class WebAppHideToolbarFeature(
      * Find corresponding custom tab state, if any.
      */
     private fun CustomTabsServiceState.getCustomTabStateForTab(
-        tab: SessionState?
+        tab: SessionState?,
     ): CustomTabState? {
         return (tab as? CustomTabSessionState)?.config?.sessionToken?.let { sessionToken ->
             tabs[sessionToken]

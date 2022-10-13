@@ -42,7 +42,7 @@ typealias SystemRequest = android.app.DownloadManager.Request
 class AndroidDownloadManager(
     private val applicationContext: Context,
     private val store: BrowserStore,
-    override var onDownloadStopped: onDownloadStopped = noop
+    override var onDownloadStopped: onDownloadStopped = noop,
 ) : BroadcastReceiver(), DownloadManager {
 
     private val downloadRequests = LongSparseArray<SystemRequest>()

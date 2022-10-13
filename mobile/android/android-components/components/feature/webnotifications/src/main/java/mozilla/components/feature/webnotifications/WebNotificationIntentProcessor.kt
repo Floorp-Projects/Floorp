@@ -13,7 +13,7 @@ import mozilla.components.feature.intent.processing.IntentProcessor
  * Intent processor that tries matching a web notification and delegating a click interaction with it.
  */
 class WebNotificationIntentProcessor(
-    private val engine: Engine
+    private val engine: Engine,
 ) : IntentProcessor {
     /**
      * Processes an incoming intent expected to contain information about a web notification.

@@ -28,7 +28,7 @@ internal class SpeculativeSessionFactory {
         runtime: GeckoRuntime,
         private: Boolean,
         contextId: String?,
-        defaultSettings: Settings?
+        defaultSettings: Settings?,
     ) {
         if (speculativeEngineSession?.matches(private, contextId) == true) {
             // We already have a speculative engine session for this configuration. Nothing to do here.
@@ -43,7 +43,7 @@ internal class SpeculativeSessionFactory {
             runtime,
             private,
             contextId,
-            defaultSettings
+            defaultSettings,
         )
     }
 
@@ -64,7 +64,7 @@ internal class SpeculativeSessionFactory {
     @Synchronized
     fun get(
         private: Boolean,
-        contextId: String?
+        contextId: String?,
     ): GeckoEngineSession? {
         val speculativeEngineSession = speculativeEngineSession ?: return null
 
@@ -89,7 +89,7 @@ internal class SpeculativeSessionFactory {
  */
 internal class SpeculativeEngineSession constructor(
     @get:VisibleForTesting internal val engineSession: GeckoEngineSession,
-    @get:VisibleForTesting internal val observer: SpeculativeSessionObserver
+    @get:VisibleForTesting internal val observer: SpeculativeSessionObserver,
 ) {
     /**
      * Checks whether the [SpeculativeEngineSession] matches the given configuration.
@@ -125,7 +125,7 @@ internal class SpeculativeEngineSession constructor(
             runtime: GeckoRuntime,
             private: Boolean,
             contextId: String?,
-            defaultSettings: Settings?
+            defaultSettings: Settings?,
         ): SpeculativeEngineSession {
             val engineSession = GeckoEngineSession(runtime, private, defaultSettings, contextId)
             val observer = SpeculativeSessionObserver(factory)
@@ -141,7 +141,7 @@ internal class SpeculativeEngineSession constructor(
  * [GeckoEngineSession] can no longer be used after a crash.
  */
 internal class SpeculativeSessionObserver(
-    private val factory: SpeculativeSessionFactory
+    private val factory: SpeculativeSessionFactory,
 
 ) : EngineSession.Observer {
     override fun onCrash() {

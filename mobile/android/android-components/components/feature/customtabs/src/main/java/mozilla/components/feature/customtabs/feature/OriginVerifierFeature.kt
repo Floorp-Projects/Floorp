@@ -22,7 +22,7 @@ import mozilla.components.service.digitalassetlinks.RelationChecker
 class OriginVerifierFeature(
     private val packageManager: PackageManager,
     private val relationChecker: RelationChecker,
-    private val dispatch: (CustomTabsAction) -> Unit
+    private val dispatch: (CustomTabsAction) -> Unit,
 ) {
 
     private var cachedVerifier: Triple<String, Int, OriginVerifier>? = null
@@ -31,7 +31,7 @@ class OriginVerifierFeature(
         state: CustomTabState,
         token: CustomTabsSessionToken,
         @Relation relation: Int,
-        origin: Uri
+        origin: Uri,
     ): Boolean {
         val packageName = state.creatorPackageName ?: return false
 

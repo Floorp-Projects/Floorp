@@ -129,7 +129,7 @@ class SyncStoreSupportTest {
             profile.avatar,
             profile.displayName,
             "id",
-            "token"
+            "token",
         )
         store.waitUntilIdle()
         assertEquals(expected, store.state.account)

@@ -28,7 +28,7 @@ enum class InFlightMigrationState(val reuseSessionToken: Boolean) {
     /**
      * "Reuse" in-flight migration present. Can retry migration via [OAuthAccount.retryMigrateFromSessionToken].
      */
-    REUSE_SESSION_TOKEN(true)
+    REUSE_SESSION_TOKEN(true),
 }
 
 /**
@@ -37,7 +37,7 @@ enum class InFlightMigrationState(val reuseSessionToken: Boolean) {
 data class MigratingAccountInfo(
     val sessionToken: String,
     val kSync: String,
-    val kXCS: String
+    val kXCS: String,
 )
 
 /**
@@ -56,7 +56,7 @@ interface OAuthAccount : AutoCloseable {
      */
     suspend fun beginOAuthFlow(
         scopes: Set<String>,
-        entryPoint: String = "android-components"
+        entryPoint: String = "android-components",
     ): AuthFlowUrl?
 
     /**
@@ -72,7 +72,7 @@ interface OAuthAccount : AutoCloseable {
     suspend fun beginPairingFlow(
         pairingUrl: String,
         scopes: Set<String>,
-        entryPoint: String = "android-components"
+        entryPoint: String = "android-components",
     ): AuthFlowUrl?
 
     /**
@@ -286,7 +286,7 @@ enum class AuthFlowError {
     /**
      * Unrecoverable error during account migration.
      */
-    FailedToMigrate
+    FailedToMigrate,
 }
 
 /**
@@ -335,14 +335,14 @@ interface AccountObserver {
 
 data class Avatar(
     val url: String,
-    val isDefault: Boolean
+    val isDefault: Boolean,
 )
 
 data class Profile(
     val uid: String?,
     val email: String?,
     val avatar: Avatar?,
-    val displayName: String?
+    val displayName: String?,
 )
 
 /**
@@ -355,7 +355,7 @@ data class OAuthScopedKey(
     val kty: String,
     val scope: String,
     val kid: String,
-    val k: String
+    val k: String,
 )
 
 /**
@@ -369,5 +369,5 @@ data class AccessTokenInfo(
     val scope: String,
     val token: String,
     val key: OAuthScopedKey?,
-    val expiresAt: Long
+    val expiresAt: Long,
 )

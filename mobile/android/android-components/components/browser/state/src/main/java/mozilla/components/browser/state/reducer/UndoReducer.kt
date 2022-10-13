@@ -20,7 +20,7 @@ internal object UndoReducer {
                 // dispatch an this action to remember those tabs. We only remember the last set
                 // of tabs that got removed and replace them here.
                 state.copy(
-                    undoHistory = UndoHistoryState(action.tag, action.tabs, action.selectedTabId)
+                    undoHistory = UndoHistoryState(action.tag, action.tabs, action.selectedTabId),
                 )
             }
 
@@ -28,14 +28,14 @@ internal object UndoReducer {
                 // The actual restore is handled by a middleware. Here we only need to clear the
                 // state since we assume it got restored.
                 state.copy(
-                    undoHistory = UndoHistoryState()
+                    undoHistory = UndoHistoryState(),
                 )
             }
 
             is UndoAction.ClearRecoverableTabs -> {
                 if (action.tag == state.undoHistory.tag) {
                     state.copy(
-                        undoHistory = UndoHistoryState()
+                        undoHistory = UndoHistoryState(),
                     )
                 } else {
                     state

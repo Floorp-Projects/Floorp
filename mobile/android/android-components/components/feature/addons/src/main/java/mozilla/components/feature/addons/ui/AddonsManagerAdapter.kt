@@ -60,7 +60,7 @@ class AddonsManagerAdapter(
     private val addonsManagerDelegate: AddonsManagerAdapterDelegate,
     addons: List<Addon>,
     private val style: Style? = null,
-    private val excludedAddonIDs: List<String> = emptyList()
+    private val excludedAddonIDs: List<String> = emptyList(),
 ) : ListAdapter<Any, CustomViewHolder>(DifferCallback) {
     private val scope = CoroutineScope(Dispatchers.IO)
     private val logger = Logger("AddonsManagerAdapter")
@@ -101,7 +101,7 @@ class AddonsManagerAdapter(
         val view = inflater.inflate(
             R.layout.mozac_feature_addons_section_unsupported_section_item,
             parent,
-            false
+            false,
         )
         val titleView = view.findViewById<TextView>(R.id.title)
         val descriptionView = view.findViewById<TextView>(R.id.description)
@@ -130,7 +130,7 @@ class AddonsManagerAdapter(
             ratingAccessibleView,
             userCountView,
             addButton,
-            allowedInPrivateBrowsingLabel
+            allowedInPrivateBrowsingLabel,
         )
     }
 
@@ -151,7 +151,7 @@ class AddonsManagerAdapter(
             is AddonViewHolder -> bindAddon(holder, item as Addon)
             is UnsupportedSectionViewHolder -> bindNotYetSupportedSection(
                 holder,
-                item as NotYetSupportedSection
+                item as NotYetSupportedSection,
             )
         }
     }
@@ -171,7 +171,7 @@ class AddonsManagerAdapter(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun bindNotYetSupportedSection(
         holder: UnsupportedSectionViewHolder,
-        section: NotYetSupportedSection
+        section: NotYetSupportedSection,
     ) {
         val unsupportedAddons = addonsMap.values.filter { it.inUnsupportedSection() }
         val context = holder.itemView.context
@@ -182,7 +182,7 @@ class AddonsManagerAdapter(
             } else {
                 context.getString(
                     R.string.mozac_feature_addons_unsupported_caption_plural,
-                    unsupportedAddons.size.toString()
+                    unsupportedAddons.size.toString(),
                 )
             }
 
@@ -199,7 +199,7 @@ class AddonsManagerAdapter(
             val ratingContentDescription =
                 String.format(
                     context.getString(R.string.mozac_feature_addons_rating_content_description),
-                    it.average
+                    it.average,
                 )
             holder.ratingView.contentDescription = ratingContentDescription
             // Android RatingBar is not very accessibility-friendly, we will use non visible TextView
@@ -273,7 +273,7 @@ class AddonsManagerAdapter(
                     val att = context.theme.resolveAttribute(android.R.attr.textColorPrimary)
                     iconView.setColorFilter(ContextCompat.getColor(context, att))
                     iconView.setImageDrawable(
-                        ContextCompat.getDrawable(context, R.drawable.mozac_ic_extensions)
+                        ContextCompat.getDrawable(context, R.drawable.mozac_ic_extensions),
                     )
                 }
                 logger.error("Attempt to fetch the ${addon.id} icon failed", e)
@@ -351,7 +351,7 @@ class AddonsManagerAdapter(
         @ColorRes
         val dividerColor: Int? = null,
         @DimenRes
-        val dividerHeight: Int? = null
+        val dividerHeight: Int? = null,
     ) {
         internal fun maybeSetSectionsTextColor(textView: TextView) {
             sectionsTextColor?.let {

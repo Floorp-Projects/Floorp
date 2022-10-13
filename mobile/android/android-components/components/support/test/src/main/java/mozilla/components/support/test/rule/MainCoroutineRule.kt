@@ -24,7 +24,7 @@ import java.util.concurrent.Executors
  */
 @Deprecated("Use a `TestDispatcher` from the kotlinx-coroutines-test library", ReplaceWith("UnconfinedTestDispatcher()"))
 fun createTestCoroutinesDispatcher(): CoroutineDispatcher = Executors.newSingleThreadExecutor(
-    NamedThreadFactory("TestCoroutinesDispatcher")
+    NamedThreadFactory("TestCoroutinesDispatcher"),
 ).asCoroutineDispatcher()
 
 /**

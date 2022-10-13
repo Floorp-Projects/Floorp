@@ -31,7 +31,7 @@ open class TabTouchCallback(
         dX: Float,
         dY: Float,
         actionState: Int,
-        isCurrentlyActive: Boolean
+        isCurrentlyActive: Boolean,
     ) {
         if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
             // Alpha on an itemView being swiped should decrease to a min over a distance equal to

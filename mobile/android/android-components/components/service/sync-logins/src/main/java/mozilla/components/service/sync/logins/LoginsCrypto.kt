@@ -31,7 +31,7 @@ import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 class LoginsCrypto(
     private val context: Context,
     private val securePrefs: SecureAbove22Preferences,
-    private val storage: SyncableLoginsStorage
+    private val storage: SyncableLoginsStorage,
 ) : KeyManager() {
     private val plaintextPrefs by lazy { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
 

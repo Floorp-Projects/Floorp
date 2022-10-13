@@ -35,7 +35,7 @@ class ContileTopSitesUpdaterWorkerTest {
         val provider: ContileTopSitesProvider = mock()
         val worker = spy(
             TestListenableWorkerBuilder<ContileTopSitesUpdaterWorker>(testContext)
-                .build()
+                .build(),
         )
 
         ContileTopSitesUseCases.initialize(provider)
@@ -52,7 +52,7 @@ class ContileTopSitesUpdaterWorkerTest {
         val provider: ContileTopSitesProvider = mock()
         val worker = spy(
             TestListenableWorkerBuilder<ContileTopSitesUpdaterWorker>(testContext)
-                .build()
+                .build(),
         )
         val throwable = IOException("test")
 

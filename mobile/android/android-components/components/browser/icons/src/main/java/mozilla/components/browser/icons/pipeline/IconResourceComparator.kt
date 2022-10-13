@@ -71,5 +71,5 @@ private val containerTypes = listOf(
     "image/icon",
     "image/x-icon",
     "text/ico",
-    "application/ico"
+    "application/ico",
 )

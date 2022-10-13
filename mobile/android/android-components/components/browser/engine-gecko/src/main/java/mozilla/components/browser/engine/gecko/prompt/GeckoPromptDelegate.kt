@@ -72,7 +72,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     override fun onCreditCardSave(
         session: GeckoSession,
-        request: AutocompleteRequest<Autocomplete.CreditCardSaveOption>
+        request: AutocompleteRequest<Autocomplete.CreditCardSaveOption>,
     ): GeckoResult<PromptResponse> {
         val geckoResult = GeckoResult<PromptResponse>()
 
@@ -80,8 +80,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             if (!request.isComplete) {
                 geckoResult.complete(
                     request.confirm(
-                        Autocomplete.CreditCardSelectOption(creditCard.toAutocompleteCreditCard())
-                    )
+                        Autocomplete.CreditCardSelectOption(creditCard.toAutocompleteCreditCard()),
+                    ),
                 )
             }
         }
@@ -95,12 +95,13 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                 PromptRequest.SaveCreditCard(
                     creditCard = request.options[0].value.toCreditCardEntry(),
                     onConfirm = onConfirm,
-                    onDismiss = onDismiss
+                    onDismiss = onDismiss,
                 ).also {
                     request.delegate = PromptInstanceDismissDelegate(
-                        geckoEngineSession, it
+                        geckoEngineSession,
+                        it,
                     )
-                }
+                },
             )
         }
 
@@ -116,7 +117,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
      */
     override fun onCreditCardSelect(
         session: GeckoSession,
-        request: AutocompleteRequest<Autocomplete.CreditCardSelectOption>
+        request: AutocompleteRequest<Autocomplete.CreditCardSelectOption>,
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
 
@@ -124,8 +125,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             if (!request.isComplete) {
                 geckoResult.complete(
                     request.confirm(
-                        Autocomplete.CreditCardSelectOption(creditCard.toAutocompleteCreditCard())
-                    )
+                        Autocomplete.CreditCardSelectOption(creditCard.toAutocompleteCreditCard()),
+                    ),
                 )
             }
         }
@@ -139,8 +140,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                 PromptRequest.SelectCreditCard(
                     creditCards = request.options.map { it.value.toCreditCardEntry() },
                     onDismiss = onDismiss,
-                    onConfirm = onConfirm
-                )
+                    onConfirm = onConfirm,
+                ),
             )
         }
 
@@ -149,7 +150,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     override fun onLoginSave(
         session: GeckoSession,
-        prompt: AutocompleteRequest<Autocomplete.LoginSaveOption>
+        prompt: AutocompleteRequest<Autocomplete.LoginSaveOption>,
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
         val onConfirmSave: (LoginEntry) -> Unit = { entry ->
@@ -167,12 +168,13 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     hint = prompt.options[0].hint,
                     logins = prompt.options.map { it.value.toLoginEntry() },
                     onConfirm = onConfirmSave,
-                    onDismiss = onDismiss
+                    onDismiss = onDismiss,
                 ).also {
                     prompt.delegate = PromptInstanceDismissDelegate(
-                        geckoEngineSession, it
+                        geckoEngineSession,
+                        it,
                     )
-                }
+                },
             )
         }
         return geckoResult
@@ -180,7 +182,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     override fun onLoginSelect(
         session: GeckoSession,
-        prompt: AutocompleteRequest<Autocomplete.LoginSelectOption>
+        prompt: AutocompleteRequest<Autocomplete.LoginSelectOption>,
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
         val onConfirmSelect: (Login) -> Unit = { login ->
@@ -202,7 +204,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                 formActionOrigin = option.value.formActionOrigin,
                 httpRealm = option.value.httpRealm,
                 username = option.value.username,
-                password = option.value.password
+                password = option.value.password,
             )
         }
 
@@ -211,8 +213,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                 PromptRequest.SelectLoginPrompt(
                     logins = loginList,
                     onConfirm = onConfirmSelect,
-                    onDismiss = onDismiss
-                )
+                    onDismiss = onDismiss,
+                ),
             )
         }
         return geckoResult
@@ -220,7 +222,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     override fun onChoicePrompt(
         session: GeckoSession,
-        geckoPrompt: PromptDelegate.ChoicePrompt
+        geckoPrompt: PromptDelegate.ChoicePrompt,
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
         val choices = convertToChoices(geckoPrompt.choices)
@@ -245,24 +247,24 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             GECKO_PROMPT_CHOICE_TYPE.SINGLE -> SingleChoice(
                 choices,
                 onConfirmSingleChoice,
-                onDismiss
+                onDismiss,
             )
             GECKO_PROMPT_CHOICE_TYPE.MENU -> MenuChoice(
                 choices,
                 onConfirmSingleChoice,
-                onDismiss
+                onDismiss,
             )
             GECKO_PROMPT_CHOICE_TYPE.MULTIPLE -> MultipleChoice(
                 choices,
                 onConfirmMultipleSelection,
-                onDismiss
+                onDismiss,
             )
             else -> throw InvalidParameterException("${geckoPrompt.type} is not a valid Gecko @Choice.ChoiceType")
         }
 
         geckoPrompt.delegate = ChoicePromptDelegate(
             geckoEngineSession,
-            promptRequest
+            promptRequest,
         )
 
         geckoEngineSession.notifyObservers {
@@ -274,7 +276,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     override fun onAddressSelect(
         session: GeckoSession,
-        request: AutocompleteRequest<Autocomplete.AddressSelectOption>
+        request: AutocompleteRequest<Autocomplete.AddressSelectOption>,
     ): GeckoResult<PromptResponse> {
         val geckoResult = GeckoResult<PromptResponse>()
 
@@ -282,8 +284,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             if (!request.isComplete) {
                 geckoResult.complete(
                     request.confirm(
-                        Autocomplete.AddressSelectOption(address.toAutocompleteAddress())
-                    )
+                        Autocomplete.AddressSelectOption(address.toAutocompleteAddress()),
+                    ),
                 )
             }
         }
@@ -297,8 +299,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                 PromptRequest.SelectAddress(
                     addresses = request.options.map { it.value.toAddress() },
                     onConfirm = onConfirm,
-                    onDismiss = onDismiss
-                )
+                    onDismiss = onDismiss,
+                ),
             )
         }
 
@@ -307,7 +309,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     override fun onAlertPrompt(
         session: GeckoSession,
-        prompt: PromptDelegate.AlertPrompt
+        prompt: PromptDelegate.AlertPrompt,
     ): GeckoResult<PromptResponse> {
         val geckoResult = GeckoResult<PromptResponse>()
         val onDismiss: () -> Unit = { prompt.dismissSafely(geckoResult) }
@@ -322,8 +324,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     message,
                     false,
                     onConfirm,
-                    onDismiss
-                )
+                    onDismiss,
+                ),
             )
         }
         return geckoResult
@@ -331,7 +333,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     override fun onFilePrompt(
         session: GeckoSession,
-        prompt: PromptDelegate.FilePrompt
+        prompt: PromptDelegate.FilePrompt,
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
         val isMultipleFilesSelection = prompt.type == GECKO_PROMPT_FILE_TYPE.MULTIPLE
@@ -370,8 +372,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     captureMode,
                     onSelectSingle,
                     onSelectMultiple,
-                    onDismiss
-                )
+                    onDismiss,
+                ),
             )
         }
         return geckoResult
@@ -380,7 +382,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     @Suppress("ComplexMethod")
     override fun onDateTimePrompt(
         session: GeckoSession,
-        prompt: PromptDelegate.DateTimePrompt
+        prompt: PromptDelegate.DateTimePrompt,
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
         val onConfirm: (String) -> Unit = {

@@ -28,13 +28,13 @@ object WebCompatReporterFeature {
     internal var extensionController = WebExtensionController(
         WEBCOMPAT_REPORTER_EXTENSION_ID,
         WEBCOMPAT_REPORTER_EXTENSION_URL,
-        WEBCOMPAT_REPORTER_MESSAGING_ID
+        WEBCOMPAT_REPORTER_MESSAGING_ID,
     )
 
     private class WebcompatReporterBackgroundMessageHandler(
         // This information will be provided as a browser-XXX label to the reporting backend, allowing
         // us to differentiate different android-components based products.
-        private val productName: String
+        private val productName: String,
     ) : MessageHandler {
         override fun onPortConnected(port: Port) {
             port.postMessage(JSONObject().put("productName", productName))
@@ -50,7 +50,7 @@ object WebCompatReporterFeature {
      */
     fun install(runtime: WebExtensionRuntime, productName: String = "android-components") {
         extensionController.registerBackgroundMessageHandler(
-            WebcompatReporterBackgroundMessageHandler(productName)
+            WebcompatReporterBackgroundMessageHandler(productName),
         )
         extensionController.install(
             runtime,
@@ -59,7 +59,7 @@ object WebCompatReporterFeature {
             },
             onError = { throwable ->
                 logger.error("Failed to install WebCompat Reporter webextension: ", throwable)
-            }
+            },
         )
     }
 }

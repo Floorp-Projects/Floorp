@@ -26,7 +26,7 @@ interface ShareDelegate {
         context: Context,
         shareData: ShareData,
         onDismiss: () -> Unit,
-        onSuccess: () -> Unit
+        onSuccess: () -> Unit,
     )
 }
 
@@ -39,11 +39,11 @@ class DefaultShareDelegate : ShareDelegate {
         context: Context,
         shareData: ShareData,
         onDismiss: () -> Unit,
-        onSuccess: () -> Unit
+        onSuccess: () -> Unit,
     ) {
         val shareSucceeded = context.share(
             text = listOfNotNull(shareData.url, shareData.text).joinToString(" "),
-            subject = shareData.title.orEmpty()
+            subject = shareData.title.orEmpty(),
         )
 
         if (shareSucceeded) onSuccess() else onDismiss()

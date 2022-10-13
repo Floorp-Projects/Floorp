@@ -83,7 +83,7 @@ abstract class Client {
                 dataUri,
                 Response.SUCCESS,
                 headers,
-                Response.Body(ByteArrayInputStream(bytes), contentType)
+                Response.Body(ByteArrayInputStream(bytes), contentType),
             )
         } catch (e: Exception) {
             throw IOException("Failed to decode data URI")

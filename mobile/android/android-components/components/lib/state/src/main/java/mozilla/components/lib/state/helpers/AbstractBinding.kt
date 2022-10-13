@@ -21,7 +21,7 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  */
 @ExperimentalCoroutinesApi // Flow
 abstract class AbstractBinding<in S : State>(
-    private val store: Store<S, out Action>
+    private val store: Store<S, out Action>,
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null
 

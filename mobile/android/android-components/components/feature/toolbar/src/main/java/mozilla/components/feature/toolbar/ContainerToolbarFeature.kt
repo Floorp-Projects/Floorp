@@ -23,7 +23,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  */
 class ContainerToolbarFeature(
     private val toolbar: Toolbar,
-    private var store: BrowserStore
+    private var store: BrowserStore,
 ) : LifecycleAwareFeature {
     private var containerPageAction: ContainerToolbarAction? = null
     private var scope: CoroutineScope? = null

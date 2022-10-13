@@ -41,7 +41,7 @@ class WebExtensionBrowserMenuBuilderTest {
             listOf(mockMenuItem(), submenuPlaceholderMenuItem, mockMenuItem()),
             store = store,
             onAddonsManagerTapped = { isAddonsManagerTapped = true },
-            appendExtensionSubMenuAtStart = true
+            appendExtensionSubMenuAtStart = true,
         )
 
         val menu = builder.build(testContext)
@@ -64,20 +64,20 @@ class WebExtensionBrowserMenuBuilderTest {
                 "url",
                 "name",
                 true,
-                browserAction = browserAction
-            )
+                browserAction = browserAction,
+            ),
         )
 
         val store = BrowserStore(BrowserState(extensions = extensions))
         val style = WebExtensionBrowserMenuBuilder.Style(
             addonsManagerMenuItemDrawableRes = R.drawable.mozac_ic_extensions,
-            backPressMenuItemDrawableRes = R.drawable.mozac_ic_back
+            backPressMenuItemDrawableRes = R.drawable.mozac_ic_back,
         )
         val builder = WebExtensionBrowserMenuBuilder(
             listOf(mockMenuItem()),
             store = store,
             style = style,
-            appendExtensionSubMenuAtStart = true
+            appendExtensionSubMenuAtStart = true,
         )
 
         val menu = builder.build(testContext)
@@ -108,14 +108,14 @@ class WebExtensionBrowserMenuBuilderTest {
                 "name",
                 true,
                 browserAction = browserAction,
-                pageAction = pageAction
-            )
+                pageAction = pageAction,
+            ),
         )
 
         val store = BrowserStore(
             BrowserState(
-                extensions = extensions
-            )
+                extensions = extensions,
+            ),
         )
 
         var isAddonsManagerTapped = false
@@ -123,7 +123,7 @@ class WebExtensionBrowserMenuBuilderTest {
             listOf(mockMenuItem(), submenuPlaceholderMenuItem, mockMenuItem()),
             store = store,
             onAddonsManagerTapped = { isAddonsManagerTapped = true },
-            appendExtensionSubMenuAtStart = true
+            appendExtensionSubMenuAtStart = true,
         )
 
         val menu = builder.build(testContext)
@@ -154,20 +154,20 @@ class WebExtensionBrowserMenuBuilderTest {
                 "name",
                 true,
                 browserAction = browserAction,
-                pageAction = pageAction
-            )
+                pageAction = pageAction,
+            ),
         )
 
         val store = BrowserStore(
             BrowserState(
-                extensions = extensions
-            )
+                extensions = extensions,
+            ),
         )
 
         val builder = WebExtensionBrowserMenuBuilder(
             listOf(mockMenuItem(), mockMenuItem(), mockMenuItem()),
             store = store,
-            appendExtensionSubMenuAtStart = true
+            appendExtensionSubMenuAtStart = true,
         )
 
         val menu = builder.build(testContext)
@@ -206,21 +206,21 @@ class WebExtensionBrowserMenuBuilderTest {
                 "name",
                 true,
                 browserAction = browserAction,
-                pageAction = pageAction
-            )
+                pageAction = pageAction,
+            ),
         )
 
         val store = BrowserStore(
             BrowserState(
-                extensions = extensions
-            )
+                extensions = extensions,
+            ),
         )
 
         val builder =
             WebExtensionBrowserMenuBuilder(
                 listOf(mockMenuItem(), mockMenuItem(), mockMenuItem()),
                 store = store,
-                appendExtensionSubMenuAtStart = false
+                appendExtensionSubMenuAtStart = false,
             )
 
         val menu = builder.build(testContext)
@@ -264,7 +264,7 @@ class WebExtensionBrowserMenuBuilderTest {
                 "name",
                 true,
                 browserAction = null,
-                pageAction = pageAction
+                pageAction = pageAction,
             ),
             promotableWebExtensionId to WebExtensionState(
                 promotableWebExtensionId,
@@ -272,31 +272,31 @@ class WebExtensionBrowserMenuBuilderTest {
                 "name",
                 true,
                 browserAction = null,
-                pageAction = pageActionPromotableWebExtension
-            )
+                pageAction = pageActionPromotableWebExtension,
+            ),
         )
         val store = BrowserStore(
             BrowserState(
-                extensions = extensions
-            )
+                extensions = extensions,
+            ),
         )
 
         // 4 items initially on the main menu
         val items = listOf(
             WebExtensionPlaceholderMenuItem(
                 id = promotableWebExtensionId,
-                iconTintColorResource = testIconTintColorResource
+                iconTintColorResource = testIconTintColorResource,
             ),
             mockMenuItem(),
             submenuPlaceholderMenuItem,
-            mockMenuItem()
+            mockMenuItem(),
         )
 
         val builder =
             WebExtensionBrowserMenuBuilder(
                 items,
                 store = store,
-                appendExtensionSubMenuAtStart = false
+                appendExtensionSubMenuAtStart = false,
             )
 
         val menu = builder.build(testContext)
@@ -348,27 +348,27 @@ class WebExtensionBrowserMenuBuilderTest {
                 "name",
                 true,
                 browserAction = null,
-                pageAction = pageAction
-            )
+                pageAction = pageAction,
+            ),
         )
         val store = BrowserStore(
             BrowserState(
-                extensions = extensions
-            )
+                extensions = extensions,
+            ),
         )
 
         // 3 items initially on the main menu
         val items = listOf(
             mockMenuItem(),
             submenuPlaceholderMenuItem,
-            mockMenuItem()
+            mockMenuItem(),
         )
 
         val builder =
             WebExtensionBrowserMenuBuilder(
                 items,
                 store = store,
-                appendExtensionSubMenuAtStart = false
+                appendExtensionSubMenuAtStart = false,
             )
 
         val menu = builder.build(testContext)
@@ -416,22 +416,22 @@ class WebExtensionBrowserMenuBuilderTest {
                 "name",
                 true,
                 browserAction = null,
-                pageAction = pageAction
-            )
+                pageAction = pageAction,
+            ),
         )
         val store = BrowserStore(BrowserState(extensions = extensions))
 
         // 2 items initially on the main menu
         val items = listOf(
             mockMenuItem(),
-            mockMenuItem()
+            mockMenuItem(),
         )
 
         val builder =
             WebExtensionBrowserMenuBuilder(
                 items,
                 store = store,
-                showAddonsInMenu = true
+                showAddonsInMenu = true,
             )
 
         val menu = builder.build(testContext)
@@ -462,22 +462,22 @@ class WebExtensionBrowserMenuBuilderTest {
                 "name",
                 true,
                 browserAction = null,
-                pageAction = pageAction
-            )
+                pageAction = pageAction,
+            ),
         )
         val store = BrowserStore(BrowserState(extensions = extensions))
 
         // 2 items initially on the main menu
         val items = listOf(
             mockMenuItem(),
-            mockMenuItem()
+            mockMenuItem(),
         )
 
         val builder =
             WebExtensionBrowserMenuBuilder(
                 items,
                 store = store,
-                showAddonsInMenu = false
+                showAddonsInMenu = false,
             )
 
         val menu = builder.build(testContext)

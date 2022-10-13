@@ -29,7 +29,7 @@ class AddressPicker(
     private val store: BrowserStore,
     private val addressSelectBar: SelectablePromptView<Address>,
     private val onManageAddresses: () -> Unit = {},
-    private var sessionId: String? = null
+    private var sessionId: String? = null,
 ) : SelectablePromptView.Listener<Address> {
 
     init {

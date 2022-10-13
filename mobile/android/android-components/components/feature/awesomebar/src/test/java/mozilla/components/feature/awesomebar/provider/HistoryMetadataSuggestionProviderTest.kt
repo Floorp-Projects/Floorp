@@ -42,7 +42,7 @@ class HistoryMetadataSuggestionProviderTest {
         updatedAt = System.currentTimeMillis(),
         totalViewTime = 10,
         documentType = DocumentType.Regular,
-        previewImageUrl = null
+        previewImageUrl = null,
     )
 
     @Before
@@ -110,7 +110,9 @@ class HistoryMetadataSuggestionProviderTest {
         val storage: HistoryMetadataStorage = mock()
         doReturn(emptyList<HistoryMetadata>()).`when`(storage).queryHistoryMetadata(anyString(), anyInt())
         val provider = HistoryMetadataSuggestionProvider(
-            historyStorage = storage, loadUrlUseCase = mock(), maxNumberOfSuggestions = 2
+            historyStorage = storage,
+            loadUrlUseCase = mock(),
+            maxNumberOfSuggestions = 2,
         )
 
         provider.onInputChanged("moz")
@@ -124,7 +126,9 @@ class HistoryMetadataSuggestionProviderTest {
         val storage: HistoryMetadataStorage = mock()
         doReturn(emptyList<HistoryMetadata>()).`when`(storage).queryHistoryMetadata(anyString(), anyInt())
         val provider = HistoryMetadataSuggestionProvider(
-            historyStorage = storage, loadUrlUseCase = mock(), maxNumberOfSuggestions = 8
+            historyStorage = storage,
+            loadUrlUseCase = mock(),
+            maxNumberOfSuggestions = 8,
         )
 
         provider.onInputChanged("moz")
@@ -180,11 +184,13 @@ class HistoryMetadataSuggestionProviderTest {
         assertEquals(1, suggestions.size)
 
         val emittedFacts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                emittedFacts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    emittedFacts.add(fact)
+                }
+            },
+        )
 
         suggestions[0].onSuggestionClicked?.invoke()
         assertTrue(emittedFacts.isNotEmpty())
@@ -192,9 +198,9 @@ class HistoryMetadataSuggestionProviderTest {
             Fact(
                 Component.FEATURE_AWESOMEBAR,
                 Action.INTERACTION,
-                AwesomeBarFacts.Items.HISTORY_SUGGESTION_CLICKED
+                AwesomeBarFacts.Items.HISTORY_SUGGESTION_CLICKED,
             ),
-            emittedFacts.first()
+            emittedFacts.first(),
         )
     }
 

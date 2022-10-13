@@ -35,7 +35,7 @@ class MenuViewTest {
 
     private val items = listOf(
         DecorativeTextMenuCandidate("Hello"),
-        DecorativeTextMenuCandidate("World")
+        DecorativeTextMenuCandidate("World"),
     )
     private lateinit var menuView: MenuView
     private lateinit var cardView: CardView

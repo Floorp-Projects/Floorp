@@ -25,7 +25,7 @@ interface DownloadManager {
      */
     fun download(
         download: DownloadState,
-        cookie: String = ""
+        cookie: String = "",
     ): String?
 
     /**
@@ -33,7 +33,7 @@ interface DownloadManager {
      * @param downloadId the id of the previously attempted download
      */
     fun tryAgain(
-        downloadId: String
+        downloadId: String,
     )
 
     fun unregisterListeners() = Unit

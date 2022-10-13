@@ -20,7 +20,7 @@ internal class DefaultController(
     override val provider: SyncedTabsProvider,
     override val accountManager: FxaAccountManager,
     override val view: SyncedTabsView,
-    coroutineContext: CoroutineContext
+    coroutineContext: CoroutineContext,
 ) : SyncedTabsController {
 
     private val scope = CoroutineScope(coroutineContext)

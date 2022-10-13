@@ -123,7 +123,9 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
         super.onTouchEventForDetailResult(event)
             .accept {
                 inputResultDetail = inputResultDetail.copy(
-                    it?.handledResult(), it?.scrollableDirections(), it?.overscrollDirections()
+                    it?.handledResult(),
+                    it?.scrollableDirections(),
+                    it?.overscrollDirections(),
                 )
                 startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL)
             }
@@ -154,7 +156,7 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
         dyConsumed: Int,
         dxUnconsumed: Int,
         dyUnconsumed: Int,
-        offsetInWindow: IntArray?
+        offsetInWindow: IntArray?,
     ): Boolean {
         return childHelper.dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, offsetInWindow)
     }

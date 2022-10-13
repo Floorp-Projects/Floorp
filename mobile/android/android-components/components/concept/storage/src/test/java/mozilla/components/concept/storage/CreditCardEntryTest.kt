@@ -19,7 +19,7 @@ class CreditCardEntryTest {
         number = "4111111111111110",
         expiryMonth = "5",
         expiryYear = "2030",
-        cardType = "amex"
+        cardType = "amex",
     )
 
     @Test
@@ -29,7 +29,7 @@ class CreditCardEntryTest {
                 ellipsis + ellipsis + ellipsis + ellipsis +
                 creditCard.number.last4Digits() +
                 ellipsesEnd,
-            creditCard.obfuscatedCardNumber
+            creditCard.obfuscatedCardNumber,
         )
     }
 
@@ -46,7 +46,7 @@ class CreditCardEntryTest {
             number = "4111111111111110",
             expiryMonth = "5",
             expiryYear = "",
-            cardType = "amex"
+            cardType = "amex",
         )
         val creditCardWithoutMonth = CreditCardEntry(
             guid = "1",
@@ -54,7 +54,7 @@ class CreditCardEntryTest {
             number = "4111111111111110",
             expiryMonth = "",
             expiryYear = "2030",
-            cardType = "amex"
+            cardType = "amex",
         )
         val creditCardWithoutFullDate = CreditCardEntry(
             guid = "1",
@@ -62,7 +62,7 @@ class CreditCardEntryTest {
             number = "4111111111111110",
             expiryMonth = "",
             expiryYear = "",
-            cardType = "amex"
+            cardType = "amex",
         )
 
         assertEquals("", creditCardWithoutYear.expiryDate)

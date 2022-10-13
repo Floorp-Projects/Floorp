@@ -62,7 +62,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
         get() = arguments?.getString(SESSION_ID_KEY)
 
     private val activityResultHandler: List<ViewBoundFeatureWrapper<*>> = listOf(
-        promptFeature
+        promptFeature,
     )
 
     private var _binding: FragmentBrowserBinding? = null
@@ -80,10 +80,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 components.store,
                 components.sessionUseCases.goBack,
                 binding.engineView,
-                sessionId
+                sessionId,
             ),
             owner = this,
-            view = binding.root
+            view = binding.root,
         )
 
         toolbarFeature.set(
@@ -92,24 +92,25 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 components.store,
                 components.sessionUseCases.loadUrl,
                 components.defaultSearchUseCase,
-                sessionId
+                sessionId,
             ),
             owner = this,
-            view = binding.root
+            view = binding.root,
         )
 
         binding.toolbar.display.indicators += listOf(
-            DisplayToolbar.Indicators.TRACKING_PROTECTION, DisplayToolbar.Indicators.HIGHLIGHT
+            DisplayToolbar.Indicators.TRACKING_PROTECTION,
+            DisplayToolbar.Indicators.HIGHLIGHT,
         )
 
         swipeRefreshFeature.set(
             feature = SwipeRefreshFeature(
                 components.store,
                 components.sessionUseCases.reload,
-                binding.swipeToRefresh
+                binding.swipeToRefresh,
             ),
             owner = this,
-            view = binding.root
+            view = binding.root,
         )
 
         downloadsFeature.set(
@@ -124,16 +125,16 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 downloadManager = FetchDownloadManager(
                     requireContext().applicationContext,
                     components.store,
-                    DownloadService::class
+                    DownloadService::class,
                 ),
                 tabId = sessionId,
                 onNeedToRequestPermissions = { permissions ->
                     @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/10358
                     requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
-                }
+                },
             ),
             owner = this,
-            view = binding.root
+            view = binding.root,
         )
 
         val scrollFeature = CoordinateScrollingFeature(components.store, binding.engineView, binding.toolbar)
@@ -146,10 +147,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 tabsUseCases = components.tabsUseCases,
                 contextMenuUseCases = components.contextMenuUseCases,
                 parentView = binding.root,
-                sessionId = sessionId
+                sessionId = sessionId,
             ),
             owner = this,
-            view = binding.root
+            view = binding.root,
         )
 
         appLinksFeature.set(
@@ -159,10 +160,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 sessionId = sessionId,
                 fragmentManager = parentFragmentManager,
                 launchInApp = { components.preferences.getBoolean(DefaultComponents.PREF_LAUNCH_EXTERNAL_APP, false) },
-                loadUrlUseCase = components.sessionUseCases.loadUrl
+                loadUrlUseCase = components.sessionUseCases.loadUrl,
             ),
             owner = this,
-            view = binding.root
+            view = binding.root,
         )
 
         promptFeature.set(
@@ -174,10 +175,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 onNeedToRequestPermissions = { permissions ->
                     @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/10358
                     requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
-                }
+                },
             ),
             owner = this,
-            view = binding.root
+            view = binding.root,
         )
 
         sitePermissionsFeature.set(
@@ -202,28 +203,28 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                     requestPermissions(permissions, REQUEST_CODE_APP_PERMISSIONS)
                 },
                 onShouldShowRequestPermissionRationale = { shouldShowRequestPermissionRationale(it) },
-                store = components.store
+                store = components.store,
             ),
             owner = this,
-            view = binding.root
+            view = binding.root,
         )
 
         findInPageIntegration.set(
             feature = FindInPageIntegration(components.store, binding.findInPage, binding.engineView),
             owner = this,
-            view = binding.root
+            view = binding.root,
         )
 
         val secureWindowFeature = SecureWindowFeature(
             window = requireActivity().window,
             store = components.store,
-            customTabId = sessionId
+            customTabId = sessionId,
         )
 
         // Observe the lifecycle for supported features
         lifecycle.addObservers(
             scrollFeature,
-            secureWindowFeature
+            secureWindowFeature,
         )
 
         return binding.root
@@ -236,7 +237,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                     arrayOf(
                         tab.content.loading,
                         tab.content.canGoBack,
-                        tab.content.canGoForward
+                        tab.content.canGoForward,
                     )
                 }
                 .collect {

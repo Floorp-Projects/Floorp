@@ -42,7 +42,7 @@ import org.mozilla.geckoview.StorageController.ClearFlags
 @Suppress("LargeClass")
 class GeckoSitePermissionsStorage(
     runtime: GeckoRuntime,
-    private val onDiskStorage: SitePermissionsStorage
+    private val onDiskStorage: SitePermissionsStorage,
 ) : SitePermissionsStorage {
 
     private val geckoStorage: StorageController = runtime.storageController
@@ -145,7 +145,7 @@ class GeckoSitePermissionsStorage(
     @Suppress("LongMethod")
     internal suspend fun updateGeckoPermissionIfNeeded(
         userSitePermissions: SitePermissions,
-        permissionRequest: PermissionRequest? = null
+        permissionRequest: PermissionRequest? = null,
     ): SitePermissions {
         var updatedPermission = userSitePermissions
         val geckoPermissionsByType =
@@ -170,7 +170,7 @@ class GeckoSitePermissionsStorage(
                 removeTemporaryPermissionIfAny(geckoNotification)
                 geckoStorage.setPermission(
                     geckoNotification,
-                    userSitePermissions.notification.toGeckoStatus()
+                    userSitePermissions.notification.toGeckoStatus(),
                 )
                 updatedPermission = updatedPermission.copy(notification = NO_DECISION)
             }
@@ -179,7 +179,7 @@ class GeckoSitePermissionsStorage(
                 removeTemporaryPermissionIfAny(geckoLocation)
                 geckoStorage.setPermission(
                     geckoLocation,
-                    userSitePermissions.location.toGeckoStatus()
+                    userSitePermissions.location.toGeckoStatus(),
                 )
                 updatedPermission = updatedPermission.copy(location = NO_DECISION)
             }
@@ -188,7 +188,7 @@ class GeckoSitePermissionsStorage(
                 removeTemporaryPermissionIfAny(geckoMedia)
                 geckoStorage.setPermission(
                     geckoMedia,
-                    userSitePermissions.mediaKeySystemAccess.toGeckoStatus()
+                    userSitePermissions.mediaKeySystemAccess.toGeckoStatus(),
                 )
                 updatedPermission = updatedPermission.copy(mediaKeySystemAccess = NO_DECISION)
             }
@@ -197,7 +197,7 @@ class GeckoSitePermissionsStorage(
                 removeTemporaryPermissionIfAny(geckoLocalStorage)
                 geckoStorage.setPermission(
                     geckoLocalStorage,
-                    userSitePermissions.localStorage.toGeckoStatus()
+                    userSitePermissions.localStorage.toGeckoStatus(),
                 )
                 updatedPermission = updatedPermission.copy(localStorage = NO_DECISION)
             }
@@ -206,7 +206,7 @@ class GeckoSitePermissionsStorage(
                 removeTemporaryPermissionIfAny(geckoCrossOriginStorageAccess)
                 geckoStorage.setPermission(
                     geckoCrossOriginStorageAccess,
-                    userSitePermissions.crossOriginStorageAccess.toGeckoStatus()
+                    userSitePermissions.crossOriginStorageAccess.toGeckoStatus(),
                 )
                 updatedPermission = updatedPermission.copy(crossOriginStorageAccess = NO_DECISION)
             }
@@ -215,7 +215,7 @@ class GeckoSitePermissionsStorage(
                 removeTemporaryPermissionIfAny(geckoAudible)
                 geckoStorage.setPermission(
                     geckoAudible,
-                    userSitePermissions.autoplayAudible.toGeckoStatus()
+                    userSitePermissions.autoplayAudible.toGeckoStatus(),
                 )
                 updatedPermission = updatedPermission.copy(autoplayAudible = AutoplayStatus.BLOCKED)
             }
@@ -224,7 +224,7 @@ class GeckoSitePermissionsStorage(
                 removeTemporaryPermissionIfAny(geckoInAudible)
                 geckoStorage.setPermission(
                     geckoInAudible,
-                    userSitePermissions.autoplayInaudible.toGeckoStatus()
+                    userSitePermissions.autoplayInaudible.toGeckoStatus(),
                 )
                 updatedPermission =
                     updatedPermission.copy(autoplayInaudible = AutoplayStatus.BLOCKED)
@@ -244,7 +244,7 @@ class GeckoSitePermissionsStorage(
     @Suppress("ComplexMethod")
     internal fun mergePermissions(
         onDiskPermissions: SitePermissions?,
-        geckoPermissionByType: Map<Int, List<ContentPermission>>
+        geckoPermissionByType: Map<Int, List<ContentPermission>>,
     ): SitePermissions? {
         var combinedPermissions = onDiskPermissions
 
@@ -268,31 +268,31 @@ class GeckoSitePermissionsStorage(
              */
             if (geckoNotification != null && geckoNotification.value != VALUE_PROMPT) {
                 combinedPermissions = combinedPermissions?.copy(
-                    notification = geckoNotification.value.toStatus()
+                    notification = geckoNotification.value.toStatus(),
                 )
             }
 
             if (geckoLocation != null && geckoLocation.value != VALUE_PROMPT) {
                 combinedPermissions = combinedPermissions?.copy(
-                    location = geckoLocation.value.toStatus()
+                    location = geckoLocation.value.toStatus(),
                 )
             }
 
             if (geckoMedia != null && geckoMedia.value != VALUE_PROMPT) {
                 combinedPermissions = combinedPermissions?.copy(
-                    mediaKeySystemAccess = geckoMedia.value.toStatus()
+                    mediaKeySystemAccess = geckoMedia.value.toStatus(),
                 )
             }
 
             if (geckoStorage != null && geckoStorage.value != VALUE_PROMPT) {
                 combinedPermissions = combinedPermissions?.copy(
-                    localStorage = geckoStorage.value.toStatus()
+                    localStorage = geckoStorage.value.toStatus(),
                 )
             }
 
             if (geckoCrossOriginStorageAccess != null && geckoCrossOriginStorageAccess.value != VALUE_PROMPT) {
                 combinedPermissions = combinedPermissions?.copy(
-                    crossOriginStorageAccess = geckoCrossOriginStorageAccess.value.toStatus()
+                    crossOriginStorageAccess = geckoCrossOriginStorageAccess.value.toStatus(),
                 )
             }
 
@@ -302,13 +302,13 @@ class GeckoSitePermissionsStorage(
              */
             if (geckoAudible != null && geckoAudible.value != VALUE_PROMPT) {
                 combinedPermissions = combinedPermissions?.copy(
-                    autoplayAudible = geckoAudible.value.toAutoPlayStatus()
+                    autoplayAudible = geckoAudible.value.toAutoPlayStatus(),
                 )
             }
 
             if (geckoInAudible != null && geckoInAudible.value != VALUE_PROMPT) {
                 combinedPermissions = combinedPermissions?.copy(
-                    autoplayInaudible = geckoInAudible.value.toAutoPlayStatus()
+                    autoplayInaudible = geckoInAudible.value.toAutoPlayStatus(),
                 )
             }
         }
@@ -318,7 +318,7 @@ class GeckoSitePermissionsStorage(
     @VisibleForTesting
     internal suspend fun findGeckoContentPermissionBy(
         origin: String,
-        includeTemporary: Boolean = false
+        includeTemporary: Boolean = false,
     ): List<ContentPermission>? {
         return withContext(mainScope.coroutineContext) {
             val geckoPermissions = geckoStorage.getPermissions(origin).await()
@@ -377,7 +377,7 @@ class GeckoSitePermissionsStorage(
     }
 
     private suspend fun PermissionRequest?.extractGeckoPermissionsOrQueryTheStore(
-        origin: String
+        origin: String,
     ): Map<Int, List<ContentPermission>> {
         return if (this is GeckoPermissionRequest.Content) {
             mapOf(geckoPermission.permission to listOf(geckoPermission))
@@ -401,7 +401,7 @@ internal fun List<ContentPermission>?.groupByType(): Map<Int, List<ContentPermis
 
 @VisibleForTesting
 internal fun List<ContentPermission>?.filterNotTemporaryPermissions(
-    temporaryPermissions: List<ContentPermission>
+    temporaryPermissions: List<ContentPermission>,
 ): List<ContentPermission>? {
     return this?.filterNot { geckoPermission ->
         temporaryPermissions.any { geckoPermission.areSame(it) }

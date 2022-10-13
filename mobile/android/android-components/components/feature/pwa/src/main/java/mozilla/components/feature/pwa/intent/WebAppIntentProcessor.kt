@@ -29,7 +29,7 @@ class WebAppIntentProcessor(
     private val store: BrowserStore,
     private val addTabUseCase: CustomTabsUseCases.AddWebAppTabUseCase,
     private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase,
-    private val storage: ManifestStorage
+    private val storage: ManifestStorage,
 ) : IntentProcessor {
 
     /**
@@ -85,7 +85,7 @@ class WebAppIntentProcessor(
             url = url,
             source = Source.Internal.HomeScreen,
             webAppManifest = webAppManifest,
-            customTabConfig = webAppManifest.toCustomTabConfig()
+            customTabConfig = webAppManifest.toCustomTabConfig(),
         )
     }
 

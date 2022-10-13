@@ -28,14 +28,14 @@ class LastMediaAccessMiddlewareTest {
                 TabSessionState(content = ContentState("https://mozilla.org/1", private = true)),
                 TabSessionState(
                     content = ContentState(mediaTabUrl, private = false),
-                    id = mediaTabId
+                    id = mediaTabId,
                 ),
-                TabSessionState(content = ContentState("https://mozilla.org/3", private = false))
-            )
+                TabSessionState(content = ContentState("https://mozilla.org/3", private = false)),
+            ),
         )
         val store = BrowserStore(
             initialState = browserState,
-            middleware = listOf(LastMediaAccessMiddleware())
+            middleware = listOf(LastMediaAccessMiddleware()),
         )
 
         store
@@ -45,7 +45,7 @@ class LastMediaAccessMiddlewareTest {
         val updatedMediaState = store.state.tabs[1].lastMediaAccessState
         assertTrue(
             "expected lastMediaAccess (${updatedMediaState.lastMediaAccess}) > 0",
-            updatedMediaState.lastMediaAccess > 0
+            updatedMediaState.lastMediaAccess > 0,
         )
         assertEquals(mediaTabUrl, updatedMediaState.lastMediaUrl)
     }
@@ -59,14 +59,14 @@ class LastMediaAccessMiddlewareTest {
                 TabSessionState(content = ContentState("https://mozilla.org/1", private = true)),
                 TabSessionState(
                     content = ContentState(mediaTabUrl, private = true),
-                    id = mediaTabId
+                    id = mediaTabId,
                 ),
-                TabSessionState(content = ContentState("https://mozilla.org/3", private = false))
-            )
+                TabSessionState(content = ContentState("https://mozilla.org/3", private = false)),
+            ),
         )
         val store = BrowserStore(
             initialState = browserState,
-            middleware = listOf(LastMediaAccessMiddleware())
+            middleware = listOf(LastMediaAccessMiddleware()),
         )
 
         store
@@ -76,7 +76,7 @@ class LastMediaAccessMiddlewareTest {
         val updatedMediaState = store.state.tabs[1].lastMediaAccessState
         assertTrue(
             "expected lastMediaAccess (${updatedMediaState.lastMediaAccess}) > 0",
-            updatedMediaState.lastMediaAccess > 0
+            updatedMediaState.lastMediaAccess > 0,
         )
         assertEquals(mediaTabUrl, updatedMediaState.lastMediaUrl)
     }
@@ -90,13 +90,13 @@ class LastMediaAccessMiddlewareTest {
                 TabSessionState(
                     content = ContentState(mediaTabUrl, private = false),
                     id = mediaTabId,
-                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 222)
-                )
-            )
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 222),
+                ),
+            ),
         )
         val store = BrowserStore(
             initialState = browserState,
-            middleware = listOf(LastMediaAccessMiddleware())
+            middleware = listOf(LastMediaAccessMiddleware()),
         )
 
         store
@@ -115,13 +115,13 @@ class LastMediaAccessMiddlewareTest {
                 TabSessionState(
                     content = ContentState(mediaTabUrl, private = true),
                     id = mediaTabId,
-                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 333)
-                )
-            )
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 333),
+                ),
+            ),
         )
         val store = BrowserStore(
             initialState = browserState,
-            middleware = listOf(LastMediaAccessMiddleware())
+            middleware = listOf(LastMediaAccessMiddleware()),
         )
 
         store
@@ -140,13 +140,13 @@ class LastMediaAccessMiddlewareTest {
                 TabSessionState(
                     content = ContentState(mediaTabUrl, private = false),
                     id = mediaTabId,
-                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 222)
-                )
-            )
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 222),
+                ),
+            ),
         )
         val store = BrowserStore(
             initialState = browserState,
-            middleware = listOf(LastMediaAccessMiddleware())
+            middleware = listOf(LastMediaAccessMiddleware()),
         )
 
         store
@@ -165,13 +165,13 @@ class LastMediaAccessMiddlewareTest {
                 TabSessionState(
                     content = ContentState(mediaTabUrl, private = true),
                     id = mediaTabId,
-                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 333)
-                )
-            )
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 333),
+                ),
+            ),
         )
         val store = BrowserStore(
             initialState = browserState,
-            middleware = listOf(LastMediaAccessMiddleware())
+            middleware = listOf(LastMediaAccessMiddleware()),
         )
 
         store
@@ -190,13 +190,13 @@ class LastMediaAccessMiddlewareTest {
                 TabSessionState(
                     content = ContentState(mediaTabUrl, private = false),
                     id = mediaTabId,
-                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 222)
-                )
-            )
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 222),
+                ),
+            ),
         )
         val store = BrowserStore(
             initialState = browserState,
-            middleware = listOf(LastMediaAccessMiddleware())
+            middleware = listOf(LastMediaAccessMiddleware()),
         )
 
         store
@@ -215,13 +215,13 @@ class LastMediaAccessMiddlewareTest {
                 TabSessionState(
                     content = ContentState(mediaTabUrl, private = true),
                     id = mediaTabId,
-                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 333)
-                )
-            )
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 333),
+                ),
+            ),
         )
         val store = BrowserStore(
             initialState = browserState,
-            middleware = listOf(LastMediaAccessMiddleware())
+            middleware = listOf(LastMediaAccessMiddleware()),
         )
 
         store
@@ -240,13 +240,13 @@ class LastMediaAccessMiddlewareTest {
                 TabSessionState(
                     content = ContentState(mediaTabUrl, private = false),
                     id = mediaTabId,
-                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 222, true)
-                )
-            )
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 222, true),
+                ),
+            ),
         )
         val store = BrowserStore(
             initialState = browserState,
-            middleware = listOf(LastMediaAccessMiddleware())
+            middleware = listOf(LastMediaAccessMiddleware()),
         )
 
         store
@@ -267,13 +267,13 @@ class LastMediaAccessMiddlewareTest {
                 TabSessionState(
                     content = ContentState(mediaTabUrl, private = true),
                     id = mediaTabId,
-                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 333, true)
-                )
-            )
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 333, true),
+                ),
+            ),
         )
         val store = BrowserStore(
             initialState = browserState,
-            middleware = listOf(LastMediaAccessMiddleware())
+            middleware = listOf(LastMediaAccessMiddleware()),
         )
 
         store

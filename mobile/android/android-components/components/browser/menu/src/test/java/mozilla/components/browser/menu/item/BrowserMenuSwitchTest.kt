@@ -27,12 +27,12 @@ class BrowserMenuSwitchTest {
                 "Hello",
                 isChecked = false,
                 end = CompoundMenuCandidate.ButtonType.SWITCH,
-                onCheckedChange = listener
+                onCheckedChange = listener,
             ),
             BrowserMenuSwitch(
                 "Hello",
-                listener = listener
-            ).asCandidate(mock())
+                listener = listener,
+            ).asCandidate(mock()),
         )
     }
 }

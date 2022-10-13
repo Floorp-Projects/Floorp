@@ -14,7 +14,7 @@ import mozilla.components.lib.state.State
  * accessible from both the service and activity.
  */
 data class CustomTabsServiceState(
-    val tabs: Map<CustomTabsSessionToken, CustomTabState> = emptyMap()
+    val tabs: Map<CustomTabsSessionToken, CustomTabState> = emptyMap(),
 ) : State
 
 /**
@@ -29,7 +29,7 @@ data class CustomTabsServiceState(
  */
 data class CustomTabState(
     val creatorPackageName: String? = null,
-    val relationships: Map<OriginRelationPair, VerificationStatus> = emptyMap()
+    val relationships: Map<OriginRelationPair, VerificationStatus> = emptyMap(),
 )
 
 /**
@@ -41,7 +41,7 @@ data class CustomTabState(
  */
 data class OriginRelationPair(
     val origin: Uri,
-    @CustomTabsService.Relation val relation: Int
+    @CustomTabsService.Relation val relation: Int,
 )
 
 /**
@@ -64,5 +64,5 @@ enum class VerificationStatus {
     /**
      * Indicates that verification has completed and the link was invalid.
      */
-    FAILURE
+    FAILURE,
 }

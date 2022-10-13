@@ -32,7 +32,7 @@ class AddressAdapterTest {
         postalCode = "90237",
         country = "USA",
         tel = "00",
-        email = "email"
+        email = "email",
     )
 
     @Test
@@ -40,19 +40,19 @@ class AddressAdapterTest {
         val address2 = address.copy()
 
         assertTrue(
-            AddressDiffCallback.areItemsTheSame(address, address2)
+            AddressDiffCallback.areItemsTheSame(address, address2),
         )
         assertTrue(
-            AddressDiffCallback.areContentsTheSame(address, address2)
+            AddressDiffCallback.areContentsTheSame(address, address2),
         )
 
         val address3 = address.copy(guid = "2")
 
         assertFalse(
-            AddressDiffCallback.areItemsTheSame(address, address3)
+            AddressDiffCallback.areItemsTheSame(address, address3),
         )
         assertFalse(
-            AddressDiffCallback.areItemsTheSame(address, address3)
+            AddressDiffCallback.areItemsTheSame(address, address3),
         )
     }
 

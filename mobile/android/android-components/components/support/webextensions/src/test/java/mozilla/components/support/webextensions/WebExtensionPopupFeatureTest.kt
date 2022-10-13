@@ -32,8 +32,8 @@ class WebExtensionPopupFeatureTest {
         val engineSession: EngineSession = mock()
         val store = BrowserStore(
             BrowserState(
-                extensions = mapOf(extensionId to WebExtensionState(extensionId))
-            )
+                extensions = mapOf(extensionId to WebExtensionState(extensionId)),
+            ),
         )
 
         var extensionOpeningPopup: WebExtensionState? = null

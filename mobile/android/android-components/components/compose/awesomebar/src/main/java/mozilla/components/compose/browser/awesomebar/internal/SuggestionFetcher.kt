@@ -27,11 +27,11 @@ import java.util.concurrent.Executors
  */
 internal class SuggestionFetcher(
     private val groups: List<AwesomeBar.SuggestionProviderGroup>,
-    private val profiler: Profiler?
+    private val profiler: Profiler?,
 ) : RememberObserver {
     private val dispatcher = Executors.newFixedThreadPool(
         groups.fold(0, { acc, group -> acc + group.providers.size }),
-        NamedThreadFactory("SuggestionFetcher")
+        NamedThreadFactory("SuggestionFetcher"),
     ).asCoroutineDispatcher()
 
     @VisibleForTesting
@@ -142,7 +142,7 @@ internal fun emitProviderQueryTimingFact(provider: AwesomeBar.SuggestionProvider
         AwesomeBarFacts.Items.PROVIDER_DURATION,
         metadata = mapOf(
             // We only care about millisecond precision here, so convert from ns to ms before emitting.
-            AwesomeBarFacts.MetadataKeys.DURATION_PAIR to (provider to (timingNs / 1_000_000L))
-        )
+            AwesomeBarFacts.MetadataKeys.DURATION_PAIR to (provider to (timingNs / 1_000_000L)),
+        ),
     )
 }

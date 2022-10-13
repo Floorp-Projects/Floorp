@@ -25,7 +25,7 @@ class ContainerActionTest {
             contextId = "contextId",
             name = "Personal",
             color = ContainerState.Color.GREEN,
-            icon = ContainerState.Icon.CART
+            icon = ContainerState.Icon.CART,
         )
         store.dispatch(ContainerAction.AddContainerAction(container)).joinBlocking()
 
@@ -47,19 +47,19 @@ class ContainerActionTest {
             contextId = "1",
             name = "Personal",
             color = ContainerState.Color.GREEN,
-            icon = ContainerState.Icon.CART
+            icon = ContainerState.Icon.CART,
         )
         val container2 = ContainerState(
             contextId = "2",
             name = "Work",
             color = ContainerState.Color.RED,
-            icon = ContainerState.Icon.FINGERPRINT
+            icon = ContainerState.Icon.FINGERPRINT,
         )
         val container3 = ContainerState(
             contextId = "3",
             name = "Shopping",
             color = ContainerState.Color.BLUE,
-            icon = ContainerState.Icon.BRIEFCASE
+            icon = ContainerState.Icon.BRIEFCASE,
         )
         store.dispatch(ContainerAction.AddContainersAction(listOf(container1, container2))).joinBlocking()
 
@@ -90,13 +90,13 @@ class ContainerActionTest {
             contextId = "1",
             name = "Personal",
             color = ContainerState.Color.BLUE,
-            icon = ContainerState.Icon.BRIEFCASE
+            icon = ContainerState.Icon.BRIEFCASE,
         )
         val container2 = ContainerState(
             contextId = "2",
             name = "Shopping",
             color = ContainerState.Color.GREEN,
-            icon = ContainerState.Icon.CIRCLE
+            icon = ContainerState.Icon.CIRCLE,
         )
         store.dispatch(ContainerAction.AddContainerAction(container1)).joinBlocking()
         store.dispatch(ContainerAction.AddContainerAction(container2)).joinBlocking()

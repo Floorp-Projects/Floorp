@@ -35,7 +35,7 @@ class SendTabFeature(
     accountManager: FxaAccountManager,
     owner: LifecycleOwner = ProcessLifecycleOwner.get(),
     autoPause: Boolean = false,
-    onTabsReceived: (Device?, List<TabData>) -> Unit
+    onTabsReceived: (Device?, List<TabData>) -> Unit,
 ) {
     init {
         val observer = EventsObserver(onTabsReceived)
@@ -47,7 +47,7 @@ class SendTabFeature(
 }
 
 internal class EventsObserver(
-    private val onTabsReceived: (Device?, List<TabData>) -> Unit
+    private val onTabsReceived: (Device?, List<TabData>) -> Unit,
 ) : AccountEventsObserver {
     private val logger = Logger("EventsObserver")
 

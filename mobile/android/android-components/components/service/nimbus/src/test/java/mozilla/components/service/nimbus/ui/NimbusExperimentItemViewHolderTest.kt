@@ -23,7 +23,7 @@ class NimbusExperimentItemViewHolderTest {
         userFacingDescription = "This is a test experiment for diagnostic purposes.",
         userFacingName = "Diagnostic test experiment",
         branches = emptyList(),
-        referenceBranch = null
+        referenceBranch = null,
     )
 
     private lateinit var nimbusExperimentsDelegate: NimbusExperimentsAdapterDelegate

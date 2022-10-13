@@ -25,7 +25,7 @@ class TopSitesUseCasesTest {
         verify(topSitesStorage).addTopSite(
             "Mozilla",
             "https://www.mozilla.org",
-            isDefault = true
+            isDefault = true,
         )
     }
 

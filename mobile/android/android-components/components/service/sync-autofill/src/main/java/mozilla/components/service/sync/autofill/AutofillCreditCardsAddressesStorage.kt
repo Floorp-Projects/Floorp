@@ -37,7 +37,7 @@ const val AUTOFILL_DB_NAME = "autofill.sqlite"
  */
 class AutofillCreditCardsAddressesStorage(
     context: Context,
-    securePrefs: Lazy<SecureAbove22Preferences>
+    securePrefs: Lazy<SecureAbove22Preferences>,
 ) : CreditCardsAddressesStorage, SyncableStore, AutoCloseable {
     private val logger = Logger("AutofillCCAddressesStorage")
 
@@ -60,7 +60,7 @@ class AutofillCreditCardsAddressesStorage(
     }
 
     override suspend fun addCreditCard(
-        creditCardFields: NewCreditCardFields
+        creditCardFields: NewCreditCardFields,
     ): CreditCard = withContext(coroutineContext) {
         val key = crypto.getOrGenerateKey()
 
@@ -72,7 +72,7 @@ class AutofillCreditCardsAddressesStorage(
             cardNumberLast4 = creditCardFields.cardNumberLast4,
             expiryMonth = creditCardFields.expiryMonth,
             expiryYear = creditCardFields.expiryYear,
-            cardType = creditCardFields.cardType
+            cardType = creditCardFields.cardType,
         )
 
         conn.getStorage().addCreditCard(updatableCreditCardFields.into()).into()
@@ -80,7 +80,7 @@ class AutofillCreditCardsAddressesStorage(
 
     override suspend fun updateCreditCard(
         guid: String,
-        creditCardFields: UpdatableCreditCardFields
+        creditCardFields: UpdatableCreditCardFields,
     ) = withContext(coroutineContext) {
         val updatableCreditCardFields = when (creditCardFields.cardNumber) {
             // If credit card number changed, we need to encrypt it.
@@ -88,7 +88,8 @@ class AutofillCreditCardsAddressesStorage(
                 val key = crypto.getOrGenerateKey()
                 // Assume our key is good, and that this operation shouldn't fail.
                 val encryptedCardNumber = crypto.encrypt(
-                    key, creditCardFields.cardNumber as CreditCardNumber.Plaintext
+                    key,
+                    creditCardFields.cardNumber as CreditCardNumber.Plaintext,
                 )!!
                 UpdatableCreditCardFields(
                     billingName = creditCardFields.billingName,
@@ -96,7 +97,7 @@ class AutofillCreditCardsAddressesStorage(
                     cardNumberLast4 = creditCardFields.cardNumberLast4,
                     expiryMonth = creditCardFields.expiryMonth,
                     expiryYear = creditCardFields.expiryYear,
-                    cardType = creditCardFields.cardType
+                    cardType = creditCardFields.cardType,
                 )
             }
             // If card number didn't change, we're just round-tripping an existing encrypted version.
@@ -107,7 +108,7 @@ class AutofillCreditCardsAddressesStorage(
                     cardNumberLast4 = creditCardFields.cardNumberLast4,
                     expiryMonth = creditCardFields.expiryMonth,
                     expiryYear = creditCardFields.expiryYear,
-                    cardType = creditCardFields.cardType
+                    cardType = creditCardFields.cardType,
                 )
             }
         }

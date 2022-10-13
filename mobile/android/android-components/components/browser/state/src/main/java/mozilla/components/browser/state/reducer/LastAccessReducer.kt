@@ -27,8 +27,8 @@ internal object LastAccessReducer {
                     lastMediaAccessState = sessionState.lastMediaAccessState.copy(
                         lastMediaUrl = sessionState.content.url,
                         lastMediaAccess = action.lastMediaAccess,
-                        mediaSessionActive = true
-                    )
+                        mediaSessionActive = true,
+                    ),
                 )
             }
         }
@@ -36,8 +36,8 @@ internal object LastAccessReducer {
             state.updateTabState(action.tabId) { sessionState ->
                 sessionState.copy(
                     lastMediaAccessState = sessionState.lastMediaAccessState.copy(
-                        mediaSessionActive = false
-                    )
+                        mediaSessionActive = false,
+                    ),
                 )
             }
         }

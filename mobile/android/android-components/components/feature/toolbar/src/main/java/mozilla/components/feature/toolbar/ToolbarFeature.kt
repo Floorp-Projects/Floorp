@@ -28,12 +28,14 @@ class ToolbarFeature(
     loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     searchUseCase: SearchUseCase? = null,
     customTabId: String? = null,
-    urlRenderConfiguration: UrlRenderConfiguration? = null
+    urlRenderConfiguration: UrlRenderConfiguration? = null,
 ) : LifecycleAwareFeature, UserInteractionHandler {
     @VisibleForTesting
     internal var presenter = ToolbarPresenter(toolbar, store, customTabId, urlRenderConfiguration)
+
     @VisibleForTesting
     internal var interactor = ToolbarInteractor(toolbar, loadUrlUseCase, searchUseCase)
+
     @VisibleForTesting
     internal var controller = ToolbarBehaviorController(toolbar, store, customTabId)
 
@@ -75,7 +77,7 @@ class ToolbarFeature(
         internal val publicSuffixList: PublicSuffixList,
         @ColorInt internal val registrableDomainColor: Int,
         @ColorInt internal val urlColor: Int? = null,
-        internal val renderStyle: RenderStyle = RenderStyle.ColoredUrl
+        internal val renderStyle: RenderStyle = RenderStyle.ColoredUrl,
     )
 
     /**

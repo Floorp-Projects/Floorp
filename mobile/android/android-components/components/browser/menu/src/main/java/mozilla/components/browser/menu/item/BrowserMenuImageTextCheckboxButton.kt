@@ -48,9 +48,15 @@ class BrowserMenuImageTextCheckboxButton(
     override val isCollapsingMenuLimit: Boolean = false,
     override val isSticky: Boolean = false,
     val isInPrimaryState: () -> Boolean = { true },
-    private val onCheckedChangedListener: (Boolean) -> Unit
+    private val onCheckedChangedListener: (Boolean) -> Unit,
 ) : BrowserMenuImageText(
-    label, imageResource, iconTintColorResource, textColorResource, isCollapsingMenuLimit, isSticky, labelListener
+    label,
+    imageResource,
+    iconTintColorResource,
+    textColorResource,
+    isCollapsingMenuLimit,
+    isSticky,
+    labelListener,
 ) {
     override var visible: () -> Boolean = { true }
     override fun getLayoutResource(): Int = R.layout.mozac_browser_menu_item_image_text_checkbox_button
@@ -67,7 +73,6 @@ class BrowserMenuImageTextCheckboxButton(
     }
 
     private fun bindCheckbox(menu: BrowserMenu, button: AppCompatCheckBox) {
-
         val buttonText = if (isInPrimaryState()) primaryLabel else secondaryLabel
         val tintColor = ContextCompat.getColor(button.context, tintColorResource)
         val buttonDrawableIcon = if (isInPrimaryState()) {
@@ -82,7 +87,7 @@ class BrowserMenuImageTextCheckboxButton(
             0,
             0,
             CHECKBOX_ICON_SIZE_DP.dpToPx(displayMetrics),
-            CHECKBOX_ICON_SIZE_DP.dpToPx(displayMetrics)
+            CHECKBOX_ICON_SIZE_DP.dpToPx(displayMetrics),
         )
 
         button.apply {

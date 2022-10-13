@@ -22,7 +22,7 @@ internal data class IconDirectoryEntry(
     val payloadSize: Int,
     val payloadOffset: Int,
     val payloadIsPNG: Boolean,
-    val directoryIndex: Int
+    val directoryIndex: Int,
 ) : Comparable<IconDirectoryEntry> {
 
     override fun compareTo(other: IconDirectoryEntry): Int = when {
@@ -241,7 +241,7 @@ internal fun decodeDirectoryEntries(data: ByteArray, maxSize: Int): List<IconDir
 internal fun createIconDirectoryEntry(
     data: ByteArray,
     entryOffset: Int,
-    directoryIndex: Int
+    directoryIndex: Int,
 ): IconDirectoryEntry? {
     // Verify that the reserved field is really zero.
     if (data[entryOffset + 3] != ZERO_BYTE) {
@@ -310,6 +310,6 @@ internal fun createIconDirectoryEntry(
         entryLength,
         payloadOffset,
         payloadIsPNG,
-        directoryIndex
+        directoryIndex,
     )
 }

@@ -47,20 +47,20 @@ class SyncedTabsFeature(
         storage,
         accountManager,
         view,
-        coroutineContext
+        coroutineContext,
     ),
     private val presenter: SyncedTabsPresenter = DefaultPresenter(
         context,
         controller,
         accountManager,
         view,
-        lifecycleOwner
+        lifecycleOwner,
     ),
     private val interactor: SyncedTabsInteractor = DefaultInteractor(
         controller,
         view,
-        onTabClicked
-    )
+        onTabClicked,
+    ),
 ) : LifecycleAwareFeature {
 
     override fun start() {

@@ -29,7 +29,7 @@ suspend fun <T> GeckoResult<T>.await() = suspendCoroutine<T?> { continuation ->
         {
             continuation.resumeWithException(it)
             GeckoResult<Void>()
-        }
+        },
     )
 }
 
@@ -49,7 +49,7 @@ fun <T> GeckoResult<T>.asCancellableOperation(): CancellableOperation {
                 { throwable ->
                     result.completeExceptionally(throwable)
                     GeckoResult<Void>()
-                }
+                },
             )
             return result
         }
@@ -63,7 +63,7 @@ fun <T> GeckoResult<T>.asCancellableOperation(): CancellableOperation {
 fun <T> CoroutineScope.launchGeckoResult(
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
-    block: suspend CoroutineScope.() -> T
+    block: suspend CoroutineScope.() -> T,
 ) = GeckoResult<T>().apply {
     launch(context, start) {
         try {

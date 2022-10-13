@@ -28,7 +28,7 @@ internal object SearchReducer {
 }
 
 private fun BrowserState.setSearchEngines(
-    action: SearchAction.SetSearchEnginesAction
+    action: SearchAction.SetSearchEnginesAction,
 ): BrowserState {
     return copy(
         search = search.copy(
@@ -41,23 +41,23 @@ private fun BrowserState.setSearchEngines(
             additionalSearchEngines = action.additionalSearchEngines,
             additionalAvailableSearchEngines = action.additionalAvailableSearchEngines,
             regionSearchEnginesOrder = action.regionSearchEnginesOrder,
-            complete = true
-        )
+            complete = true,
+        ),
     )
 }
 
 private fun BrowserState.setRegion(
-    action: SearchAction.SetRegionAction
+    action: SearchAction.SetRegionAction,
 ): BrowserState {
     return copy(
         search = search.copy(
-            region = action.regionState
-        )
+            region = action.regionState,
+        ),
     )
 }
 
 private fun BrowserState.updateCustomSearchEngine(
-    action: SearchAction.UpdateCustomSearchEngineAction
+    action: SearchAction.UpdateCustomSearchEngineAction,
 ): BrowserState {
     val searchEngines = search.customSearchEngines
     val index = searchEngines.indexOfFirst { searchEngine -> searchEngine.id == action.searchEngine.id }
@@ -70,36 +70,36 @@ private fun BrowserState.updateCustomSearchEngine(
 
     return copy(
         search = search.copy(
-            customSearchEngines = updatedSearchEngines
-        )
+            customSearchEngines = updatedSearchEngines,
+        ),
     )
 }
 
 private fun BrowserState.removeSearchEngine(
-    action: SearchAction.RemoveCustomSearchEngineAction
+    action: SearchAction.RemoveCustomSearchEngineAction,
 ): BrowserState {
     return copy(
         search = search.copy(
-            customSearchEngines = search.customSearchEngines.filter { it.id != action.searchEngineId }
-        )
+            customSearchEngines = search.customSearchEngines.filter { it.id != action.searchEngineId },
+        ),
     )
 }
 
 private fun BrowserState.selectSearchEngine(
-    action: SearchAction.SelectSearchEngineAction
+    action: SearchAction.SelectSearchEngineAction,
 ): BrowserState {
     // We allow setting an ID of a search engine that is not in the state since loading the search
     // engines may happen asynchronously and the search engine may not be loaded yet at this point.
     return copy(
         search = search.copy(
             userSelectedSearchEngineId = action.searchEngineId,
-            userSelectedSearchEngineName = action.searchEngineName
-        )
+            userSelectedSearchEngineName = action.searchEngineName,
+        ),
     )
 }
 
 private fun BrowserState.showSearchEngine(
-    action: SearchAction.ShowSearchEngineAction
+    action: SearchAction.ShowSearchEngineAction,
 ): BrowserState {
     val searchEngine = search.hiddenSearchEngines.find { searchEngine -> searchEngine.id == action.searchEngineId }
 
@@ -109,8 +109,8 @@ private fun BrowserState.showSearchEngine(
                 hiddenSearchEngines = search.hiddenSearchEngines - searchEngine,
                 regionSearchEngines = (search.regionSearchEngines + searchEngine).sortedBy {
                     search.regionSearchEnginesOrder.indexOf(it.id)
-                }
-            )
+                },
+            ),
         )
     } else {
         this
@@ -118,7 +118,7 @@ private fun BrowserState.showSearchEngine(
 }
 
 private fun BrowserState.hideSearchEngine(
-    action: SearchAction.HideSearchEngineAction
+    action: SearchAction.HideSearchEngineAction,
 ): BrowserState {
     val searchEngine = search.regionSearchEngines.find { searchEngine -> searchEngine.id == action.searchEngineId }
 
@@ -126,8 +126,8 @@ private fun BrowserState.hideSearchEngine(
         copy(
             search = search.copy(
                 regionSearchEngines = search.regionSearchEngines - searchEngine,
-                hiddenSearchEngines = search.hiddenSearchEngines + searchEngine
-            )
+                hiddenSearchEngines = search.hiddenSearchEngines + searchEngine,
+            ),
         )
     } else {
         this
@@ -135,7 +135,7 @@ private fun BrowserState.hideSearchEngine(
 }
 
 private fun BrowserState.addAdditionalSearchEngine(
-    action: SearchAction.AddAdditionalSearchEngineAction
+    action: SearchAction.AddAdditionalSearchEngineAction,
 ): BrowserState {
     val searchEngine = search.additionalAvailableSearchEngines.find { searchEngine ->
         searchEngine.id == action.searchEngineId
@@ -145,8 +145,8 @@ private fun BrowserState.addAdditionalSearchEngine(
         copy(
             search = search.copy(
                 additionalSearchEngines = search.additionalSearchEngines + searchEngine,
-                additionalAvailableSearchEngines = search.additionalAvailableSearchEngines - searchEngine
-            )
+                additionalAvailableSearchEngines = search.additionalAvailableSearchEngines - searchEngine,
+            ),
         )
     } else {
         this
@@ -154,7 +154,7 @@ private fun BrowserState.addAdditionalSearchEngine(
 }
 
 private fun BrowserState.removeAdditionalSearchEngine(
-    action: SearchAction.RemoveAdditionalSearchEngineAction
+    action: SearchAction.RemoveAdditionalSearchEngineAction,
 ): BrowserState {
     val searchEngine = search.additionalSearchEngines.find { searchEngine ->
         searchEngine.id == action.searchEngineId
@@ -164,8 +164,8 @@ private fun BrowserState.removeAdditionalSearchEngine(
         copy(
             search = search.copy(
                 additionalAvailableSearchEngines = search.additionalAvailableSearchEngines + searchEngine,
-                additionalSearchEngines = search.additionalSearchEngines - searchEngine
-            )
+                additionalSearchEngines = search.additionalSearchEngines - searchEngine,
+            ),
         )
     } else {
         this

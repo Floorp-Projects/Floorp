@@ -23,11 +23,11 @@ class BrowserMenuSwitch(
     override val isCollapsingMenuLimit: Boolean = false,
     override val isSticky: Boolean = false,
     initialState: () -> Boolean = { false },
-    listener: (Boolean) -> Unit
+    listener: (Boolean) -> Unit,
 ) : BrowserMenuCompoundButton(label, isCollapsingMenuLimit, isSticky, initialState, listener) {
     override fun getLayoutResource(): Int = R.layout.mozac_browser_menu_item_switch
 
     override fun asCandidate(context: Context) = super.asCandidate(context).copy(
-        end = CompoundMenuCandidate.ButtonType.SWITCH
+        end = CompoundMenuCandidate.ButtonType.SWITCH,
     )
 }

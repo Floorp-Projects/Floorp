@@ -94,7 +94,7 @@ class MenuButton2Test {
         assertFalse(notificationIconView.isVisible)
 
         menuButton.setEffect(
-            HighPriorityHighlightEffect(Color.RED)
+            HighPriorityHighlightEffect(Color.RED),
         )
 
         assertTrue(highlightView.isVisible)
@@ -109,7 +109,7 @@ class MenuButton2Test {
         assertFalse(notificationIconView.isVisible)
 
         menuButton.setEffect(
-            LowPriorityHighlightEffect(Color.BLUE)
+            LowPriorityHighlightEffect(Color.BLUE),
         )
 
         assertFalse(highlightView.isVisible)

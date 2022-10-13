@@ -55,9 +55,8 @@ class DeniedPermissionDialogFragment : DialogFragment() {
          * @param message the message of the dialog.
          **/
         fun newInstance(
-            @StringRes message: Int
+            @StringRes message: Int,
         ): DeniedPermissionDialogFragment {
-
             val fragment = DeniedPermissionDialogFragment()
             val arguments = fragment.arguments ?: Bundle()
 

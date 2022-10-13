@@ -101,8 +101,8 @@ class RecentlyClosedTabsStorageTest {
                 id = "first-tab",
                 title = "Mozilla",
                 url = "https://mozilla.org",
-                lastAccess = t1
-            )
+                lastAccess = t1,
+            ),
         )
 
         // Test tab
@@ -113,8 +113,8 @@ class RecentlyClosedTabsStorageTest {
                 id = "second-tab",
                 title = "Pocket",
                 url = "https://pocket.com",
-                lastAccess = t1 - 1000
-            )
+                lastAccess = t1 - 1000,
+            ),
         )
 
         storage.addTabsToCollectionWithMax(listOf(closedTab, secondClosedTab), 1)
@@ -136,8 +136,8 @@ class RecentlyClosedTabsStorageTest {
                 id = "third-tab",
                 title = "Firefox",
                 url = "https://firefox.com",
-                lastAccess = System.currentTimeMillis()
-            )
+                lastAccess = System.currentTimeMillis(),
+            ),
         )
 
         storage.addTabsToCollectionWithMax(listOf(thirdClosedTab), 1)
@@ -162,8 +162,8 @@ class RecentlyClosedTabsStorageTest {
                 id = "first-tab",
                 title = "Mozilla",
                 url = "https://mozilla.org",
-                lastAccess = System.currentTimeMillis()
-            )
+                lastAccess = System.currentTimeMillis(),
+            ),
         )
 
         val updatedTab = closedTab.copy(state = closedTab.state.copy(title = "updated"))
@@ -190,8 +190,8 @@ class RecentlyClosedTabsStorageTest {
                 id = "first-tab",
                 title = "Mozilla",
                 url = "https://mozilla.org",
-                lastAccess = t1
-            )
+                lastAccess = t1,
+            ),
         )
 
         // Test tab
@@ -201,8 +201,8 @@ class RecentlyClosedTabsStorageTest {
                 id = "second-tab",
                 title = "Pocket",
                 url = "https://pocket.com",
-                lastAccess = t1 - 1000
-            )
+                lastAccess = t1 - 1000,
+            ),
         )
 
         storage.addTabsToCollectionWithMax(listOf(closedTab, secondClosedTab), 2)
@@ -235,8 +235,8 @@ class RecentlyClosedTabsStorageTest {
                 id = "first-tab",
                 title = "Mozilla",
                 url = "https://mozilla.org",
-                lastAccess = t1
-            )
+                lastAccess = t1,
+            ),
         )
 
         // Test tab
@@ -247,8 +247,8 @@ class RecentlyClosedTabsStorageTest {
                 id = "second-tab",
                 title = "Pocket",
                 url = "https://pocket.com",
-                lastAccess = t1 - 1000
-            )
+                lastAccess = t1 - 1000,
+            ),
         )
 
         storage.addTabState(closedTab)
@@ -284,8 +284,8 @@ class RecentlyClosedTabsStorageTest {
                 id = "second-tab-fail",
                 title = "Pocket",
                 url = "https://pocket.com",
-                lastAccess = System.currentTimeMillis()
-            )
+                lastAccess = System.currentTimeMillis(),
+            ),
         )
 
         storage.addTabState(closedTab)
@@ -310,8 +310,8 @@ class RecentlyClosedTabsStorageTest {
                 id = "second-tab-boom", // boom will cause an exception to be thrown
                 title = "Pocket",
                 url = "https://pocket.com",
-                lastAccess = System.currentTimeMillis()
-            )
+                lastAccess = System.currentTimeMillis(),
+            ),
         )
         try {
             storage.addTabsToCollectionWithMax(listOf(closedTab), 2)

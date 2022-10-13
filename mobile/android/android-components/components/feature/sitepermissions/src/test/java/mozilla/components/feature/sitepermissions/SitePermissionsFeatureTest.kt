@@ -119,7 +119,7 @@ class SitePermissionsFeatureTest {
 
         selectedTab = mozilla.components.browser.state.state.createTab(
             url = "https://www.mozilla.org",
-            id = SESSION_ID
+            id = SESSION_ID,
         )
         mockStore = spy(BrowserStore(initialState = BrowserState(tabs = listOf(selectedTab), selectedTabId = selectedTab.id)))
         sitePermissionFeature = spy(
@@ -131,8 +131,8 @@ class SitePermissionsFeatureTest {
                 fragmentManager = mockFragmentManager,
                 onShouldShowRequestPermissionRationale = { false },
                 store = mockStore,
-                sessionId = SESSION_ID
-            )
+                sessionId = SESSION_ID,
+            ),
         )
     }
 
@@ -147,7 +147,7 @@ class SitePermissionsFeatureTest {
 
         // then
         verify(mockStore).dispatch(
-            UpdatePermissionHighlightsStateAction.Reset(SESSION_ID)
+            UpdatePermissionHighlightsStateAction.Reset(SESSION_ID),
         )
         verify(mockStorage).clearTemporaryPermissions()
     }
@@ -165,7 +165,7 @@ class SitePermissionsFeatureTest {
 
         // then
         verify(mockStore, never()).dispatch(
-            UpdatePermissionHighlightsStateAction.Reset(SESSION_ID)
+            UpdatePermissionHighlightsStateAction.Reset(SESSION_ID),
         )
     }
 
@@ -177,7 +177,7 @@ class SitePermissionsFeatureTest {
         // then
         verify(mockStore).dispatch(
             ContentAction.ConsumePermissionsRequest
-            ("sessionIdTest", mockPermissionRequest)
+            ("sessionIdTest", mockPermissionRequest),
         )
     }
 
@@ -189,7 +189,7 @@ class SitePermissionsFeatureTest {
         // then
         verify(mockStore).dispatch(
             ContentAction.ConsumePermissionsRequest
-            (selectedTab.id, mockPermissionRequest)
+            (selectedTab.id, mockPermissionRequest),
         )
     }
 
@@ -201,7 +201,7 @@ class SitePermissionsFeatureTest {
         // then
         verify(mockStore).dispatch(
             ContentAction.ConsumeAppPermissionsRequest
-            ("sessionIdTest", mockAppPermissionRequest)
+            ("sessionIdTest", mockAppPermissionRequest),
         )
     }
 
@@ -213,7 +213,7 @@ class SitePermissionsFeatureTest {
         // then
         verify(mockStore).dispatch(
             ContentAction.ConsumeAppPermissionsRequest
-            (selectedTab.id, mockAppPermissionRequest)
+            (selectedTab.id, mockAppPermissionRequest),
         )
     }
 
@@ -242,7 +242,7 @@ class SitePermissionsFeatureTest {
         // when
         sitePermissionFeature.onPermissionsResult(
             arrayOf("permission1", "permission2"),
-            arrayOf(PERMISSION_DENIED, PERMISSION_DENIED).toIntArray()
+            arrayOf(PERMISSION_DENIED, PERMISSION_DENIED).toIntArray(),
         )
 
         // then
@@ -287,7 +287,7 @@ class SitePermissionsFeatureTest {
         doNothing().`when`(sitePermissionFeature)
             .onContentPermissionGranted(mockPermissionRequest, true)
         doReturn(mockPermissionRequest).`when`(sitePermissionFeature).findRequestedPermission(
-            anyString()
+            anyString(),
         )
 
         // when
@@ -323,7 +323,7 @@ class SitePermissionsFeatureTest {
     fun `GIVEN a permission prompt WHEN multiple permission are allowed THEN emit a fact`() {
         CollectionProcessor.withFactCollection { facts ->
             doReturn(
-                listOf(ContentVideoCapture(), ContentVideoCamera(), ContentAudioMicrophone())
+                listOf(ContentVideoCapture(), ContentVideoCamera(), ContentAudioMicrophone()),
             ).`when`(mockPermissionRequest).permissions
             doReturn(true).`when`(mockPermissionRequest).containsVideoAndAudioSources()
             doReturn(mockPermissionRequest).`when`(sitePermissionFeature).findRequestedPermission(anyString())
@@ -336,7 +336,7 @@ class SitePermissionsFeatureTest {
             assertEquals(SitePermissionsFacts.Items.PERMISSIONS, facts[0].item)
             assertEquals(
                 listOf(ContentVideoCapture(), ContentVideoCamera(), ContentAudioMicrophone()).joinToString { it.id!! },
-                facts[0].value
+                facts[0].value,
             )
         }
     }
@@ -348,7 +348,7 @@ class SitePermissionsFeatureTest {
         doNothing().`when`(sitePermissionFeature)
             .onContentPermissionDeny(mockPermissionRequest, true)
         doReturn(mockPermissionRequest).`when`(sitePermissionFeature).findRequestedPermission(
-            anyString()
+            anyString(),
         )
 
         // when
@@ -384,7 +384,7 @@ class SitePermissionsFeatureTest {
     fun `GIVEN a permission prompt WHEN multiple permissions are denied THEN emit a fact`() {
         CollectionProcessor.withFactCollection { facts ->
             doReturn(
-                listOf(ContentVideoCapture(), ContentVideoCamera(), ContentAudioMicrophone())
+                listOf(ContentVideoCapture(), ContentVideoCamera(), ContentAudioMicrophone()),
             ).`when`(mockPermissionRequest).permissions
             doReturn(true).`when`(mockPermissionRequest).containsVideoAndAudioSources()
             doReturn(mockPermissionRequest).`when`(sitePermissionFeature).findRequestedPermission(anyString())
@@ -397,7 +397,7 @@ class SitePermissionsFeatureTest {
             assertEquals(SitePermissionsFacts.Items.PERMISSIONS, facts[0].item)
             assertEquals(
                 listOf(ContentVideoCapture(), ContentVideoCamera(), ContentAudioMicrophone()).joinToString { it.id!! },
-                facts[0].value
+                facts[0].value,
             )
         }
     }
@@ -409,7 +409,7 @@ class SitePermissionsFeatureTest {
         doNothing().`when`(sitePermissionFeature)
             .onContentPermissionDeny(mockPermissionRequest, false)
         doReturn(mockPermissionRequest).`when`(sitePermissionFeature).findRequestedPermission(
-            anyString()
+            anyString(),
         )
 
         // when
@@ -433,7 +433,7 @@ class SitePermissionsFeatureTest {
         doNothing().`when`(sitePermissionFeature)
             .onContentPermissionDeny(mockPermissionRequest, true)
         doReturn(permissionRequest).`when`(sitePermissionFeature).findRequestedPermission(
-            anyString()
+            anyString(),
         )
         doReturn(mock<SelectOrAddUseCase>()).`when`(sitePermissionFeature).selectOrAddUseCase
 
@@ -448,7 +448,7 @@ class SitePermissionsFeatureTest {
         verify(sitePermissionFeature.selectOrAddUseCase).invoke(
             url = STORAGE_ACCESS_DOCUMENTATION_URL,
             private = false,
-            source = SessionState.Source.Internal.TextSelection
+            source = SessionState.Source.Internal.TextSelection,
         )
     }
 
@@ -458,8 +458,9 @@ class SitePermissionsFeatureTest {
         val sitePermissions = SitePermissions(origin = "origin", savedAt = 0)
         doReturn(null).`when`(mockStorage).findSitePermissionsBy(ArgumentMatchers.anyString(), anyBoolean())
         doNothing().`when`(sitePermissionFeature).updatePermissionToolbarIndicator(
-            any(), any(),
-            anyBoolean()
+            any(),
+            any(),
+            anyBoolean(),
         )
         val mockPermissionRequest: PermissionRequest = mock {
             whenever(permissions).thenReturn(listOf(Permission.AppAudio(id = "permission")))
@@ -473,7 +474,7 @@ class SitePermissionsFeatureTest {
             mockContentState,
             mockPermissionRequest,
             ALLOWED,
-            scope
+            scope,
         )
 
         // then
@@ -481,7 +482,7 @@ class SitePermissionsFeatureTest {
         verify(sitePermissionFeature).updatePermissionToolbarIndicator(
             mockPermissionRequest,
             ALLOWED,
-            true
+            true,
         )
     }
 
@@ -503,7 +504,7 @@ class SitePermissionsFeatureTest {
             mockContentState,
             mockPermissionRequest,
             ALLOWED,
-            scope
+            scope,
         )
 
         // then
@@ -517,7 +518,7 @@ class SitePermissionsFeatureTest {
             selectedTab.content.copy(private = true),
             mockPermissionRequest,
             ALLOWED,
-            scope
+            scope,
         )
 
         // when
@@ -539,7 +540,7 @@ class SitePermissionsFeatureTest {
         verify(sitePermissionFeature).storeSitePermissions(
             selectedTab.content,
             mockPermissionRequest,
-            BLOCKED
+            BLOCKED,
         )
     }
 
@@ -556,7 +557,7 @@ class SitePermissionsFeatureTest {
         verify(sitePermissionFeature, never()).storeSitePermissions(
             selectedTab.content,
             mockPermissionRequest,
-            BLOCKED
+            BLOCKED,
         )
     }
 
@@ -573,7 +574,7 @@ class SitePermissionsFeatureTest {
         verify(sitePermissionFeature, never()).storeSitePermissions(
             selectedTab.content,
             mockPermissionRequest,
-            ALLOWED
+            ALLOWED,
         )
     }
 
@@ -613,7 +614,7 @@ class SitePermissionsFeatureTest {
             sitePermissionFeature.onContentPermissionRequested(
                 mockPermissionRequest,
                 URL,
-                scope
+                scope,
             )
         }
 
@@ -640,7 +641,7 @@ class SitePermissionsFeatureTest {
             sitePermissionFeature.onContentPermissionRequested(
                 mockPermissionRequest,
                 URL,
-                scope
+                scope,
             )
         }
 
@@ -668,7 +669,7 @@ class SitePermissionsFeatureTest {
             sitePermissionFeature.onContentPermissionRequested(
                 mockPermissionRequest,
                 URL,
-                scope
+                scope,
             )
         }
 
@@ -736,7 +737,7 @@ class SitePermissionsFeatureTest {
         verify(sitePermissionFeature).consumePermissionRequest(mockPermissionRequest)
         verify(sitePermissionFeature).updatePermissionToolbarIndicator(
             mockPermissionRequest,
-            BLOCKED
+            BLOCKED,
         )
     }
 
@@ -992,7 +993,7 @@ class SitePermissionsFeatureTest {
         verify(sitePermissionFeature).consumePermissionRequest(mockPermissionRequest)
         verify(sitePermissionFeature).updatePermissionToolbarIndicator(
             mockPermissionRequest,
-            BLOCKED
+            BLOCKED,
         )
     }
 
@@ -1031,7 +1032,9 @@ class SitePermissionsFeatureTest {
 
         // then
         verify(sitePermissionFeature).handlingSingleContentPermissions(
-            mockPermissionRequest, ContentGeoLocation(id = "permission"), URL
+            mockPermissionRequest,
+            ContentGeoLocation(id = "permission"),
+            URL,
         )
     }
 
@@ -1050,7 +1053,11 @@ class SitePermissionsFeatureTest {
 
         // then
         verify(sitePermissionFeature).createContentCrossOriginStorageAccessPermissionPrompt(
-            context = testContext, host, permissionRequest, false, true
+            context = testContext,
+            host,
+            permissionRequest,
+            false,
+            true,
         )
     }
 
@@ -1066,7 +1073,11 @@ class SitePermissionsFeatureTest {
 
         // when
         val dialog = sitePermissionFeature.createContentCrossOriginStorageAccessPermissionPrompt(
-            testContext, host, permissionRequest, false, true
+            testContext,
+            host,
+            permissionRequest,
+            false,
+            true,
         )
 
         // then
@@ -1075,9 +1086,9 @@ class SitePermissionsFeatureTest {
             testContext.getString(
                 R.string.mozac_feature_sitepermissions_storage_access_title,
                 host.stripDefaultPort(),
-                selectedTab.content.url.stripDefaultPort()
+                selectedTab.content.url.stripDefaultPort(),
             ),
-            dialog.title
+            dialog.title,
         )
         assertEquals(R.drawable.mozac_ic_cookies, dialog.icon)
         assertEquals(permissionRequest.id, dialog.permissionRequestId)
@@ -1088,13 +1099,13 @@ class SitePermissionsFeatureTest {
         assertEquals(
             testContext.getString(
                 R.string.mozac_feature_sitepermissions_storage_access_message,
-                host.stripDefaultPort()
+                host.stripDefaultPort(),
             ),
-            dialog.message
+            dialog.message,
         )
         assertEquals(
             testContext.getString(R.string.mozac_feature_sitepermissions_storage_access_not_allow),
-            dialog.negativeButtonText
+            dialog.negativeButtonText,
         )
         assertEquals(true, dialog.shouldShowLearnMoreLink)
     }
@@ -1112,7 +1123,7 @@ class SitePermissionsFeatureTest {
                 get() = listOf(
                     ContentVideoCapture("", "back camera"),
                     ContentVideoCamera("", "front camera"),
-                    ContentAudioMicrophone()
+                    ContentAudioMicrophone(),
                 )
 
             override fun grant(permissions: List<Permission>) {
@@ -1132,7 +1143,7 @@ class SitePermissionsFeatureTest {
                 ArgumentMatchers.anyInt(),
                 ArgumentMatchers.anyBoolean(),
                 ArgumentMatchers.anyBoolean(),
-                ArgumentMatchers.anyBoolean()
+                ArgumentMatchers.anyBoolean(),
             )
 
         // when
@@ -1147,7 +1158,7 @@ class SitePermissionsFeatureTest {
             ArgumentMatchers.anyInt(),
             ArgumentMatchers.anyBoolean(),
             ArgumentMatchers.anyBoolean(),
-            ArgumentMatchers.anyBoolean()
+            ArgumentMatchers.anyBoolean(),
         )
     }
 
@@ -1197,7 +1208,7 @@ class SitePermissionsFeatureTest {
                     ArgumentMatchers.anyInt(),
                     ArgumentMatchers.anyBoolean(),
                     ArgumentMatchers.anyBoolean(),
-                    ArgumentMatchers.anyBoolean()
+                    ArgumentMatchers.anyBoolean(),
                 )
 
             sitePermissionFeature.createPrompt(permissionRequest, URL)
@@ -1222,7 +1233,7 @@ class SitePermissionsFeatureTest {
             ContentPersistentStorage(),
             ContentAutoPlayAudible(),
             ContentAutoPlayInaudible(),
-            ContentMediaKeySystemAccess()
+            ContentMediaKeySystemAccess(),
         )
 
         sitePermissionsList.forEach { permission ->
@@ -1256,7 +1267,7 @@ class SitePermissionsFeatureTest {
             ContentVideoCamera(),
             ContentVideoCapture(),
             ContentCrossOriginStorageAccess(),
-            Generic()
+            Generic(),
         )
 
         var exceptionThrown = false
@@ -1339,7 +1350,6 @@ class SitePermissionsFeatureTest {
 
     @Test
     fun `getInitialSitePermissions - WHEN sitePermissionsRules is present the function MUST use the sitePermissionsRules values to create a SitePermissions object`() = runTestOnMain {
-
         val rules = SitePermissionsRules(
             location = SitePermissionsRules.Action.BLOCKED,
             camera = SitePermissionsRules.Action.ASK_TO_ALLOW,
@@ -1349,7 +1359,7 @@ class SitePermissionsFeatureTest {
             autoplayInaudible = SitePermissionsRules.AutoplayAction.ALLOWED,
             persistentStorage = SitePermissionsRules.Action.BLOCKED,
             crossOriginStorageAccess = SitePermissionsRules.Action.ALLOWED,
-            mediaKeySystemAccess = SitePermissionsRules.Action.ASK_TO_ALLOW
+            mediaKeySystemAccess = SitePermissionsRules.Action.ASK_TO_ALLOW,
         )
 
         sitePermissionFeature.sitePermissionsRules = rules
@@ -1374,7 +1384,7 @@ class SitePermissionsFeatureTest {
             ContentVideoCapture("", "back camera"),
             ContentVideoCamera("", "front camera"),
             ContentAudioCapture(),
-            ContentAudioMicrophone()
+            ContentAudioMicrophone(),
         )
 
         permissions.forEach { permission ->

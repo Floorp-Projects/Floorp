@@ -48,8 +48,8 @@ open class MainActivity : AppCompatActivity(), NimbusInterface.Observer {
             BrowserEngagement.click.record(
                 BrowserEngagement.ClickExtra(
                     key1 = "extra_value_1",
-                    key2 = "extra_value_2"
-                )
+                    key2 = "extra_value_2",
+                ),
             )
         }
 

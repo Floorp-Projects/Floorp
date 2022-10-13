@@ -277,7 +277,7 @@ interface Toolbar {
         private val padding: Padding? = null,
         @ColorRes val iconTintColorResource: Int = ViewGroup.NO_ID,
         private val longClickListener: (() -> Unit)? = null,
-        private val listener: () -> Unit
+        private val listener: () -> Unit,
     ) : Action {
 
         override fun createView(parent: ViewGroup): View = AppCompatImageButton(parent.context).also { imageButton ->
@@ -326,7 +326,7 @@ interface Toolbar {
         private var selected: Boolean = false,
         @DrawableRes private val background: Int = 0,
         private val padding: Padding? = null,
-        private val listener: (Boolean) -> Unit
+        private val listener: (Boolean) -> Unit,
     ) : Action {
         private var view: WeakReference<ImageButton>? = null
 
@@ -408,7 +408,7 @@ interface Toolbar {
      */
     open class ActionSpace(
         @Dimension(unit = DP) private val desiredWidth: Int,
-        private val padding: Padding? = null
+        private val padding: Padding? = null,
     ) : Action {
         override fun createView(parent: ViewGroup): View = View(parent.context).apply {
             minimumWidth = desiredWidth
@@ -430,7 +430,7 @@ interface Toolbar {
     open class ActionImage(
         private val imageDrawable: Drawable,
         private val contentDescription: String? = null,
-        private val padding: Padding? = null
+        private val padding: Padding? = null,
     ) : Action {
 
         override fun createView(parent: ViewGroup): View = AppCompatImageView(parent.context).also { image ->
@@ -462,14 +462,17 @@ interface Toolbar {
          * The site has tracking protection enabled, but none trackers have been blocked or detected.
          */
         ON_NO_TRACKERS_BLOCKED,
+
         /**
          * The site has tracking protection enabled, and trackers have been blocked or detected.
          */
         ON_TRACKERS_BLOCKED,
+
         /**
          * Tracking protection has been disabled for a specific site.
          */
         OFF_FOR_A_SITE,
+
         /**
          * Tracking protection has been disabled for all sites.
          */
@@ -484,10 +487,11 @@ interface Toolbar {
          * The site has changed its permissions from their default values.
          */
         PERMISSIONS_CHANGED,
+
         /**
          * The site does not show a dot indicator.
          */
-        NONE
+        NONE,
     }
 }
 

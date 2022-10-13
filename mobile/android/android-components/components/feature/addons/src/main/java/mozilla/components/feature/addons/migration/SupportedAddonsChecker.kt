@@ -64,7 +64,7 @@ interface SupportedAddonsChecker {
 class DefaultSupportedAddonsChecker(
     private val applicationContext: Context,
     private val frequency: Frequency = Frequency(1, TimeUnit.DAYS),
-    onNotificationClickIntent: Intent = createDefaultNotificationIntent(applicationContext)
+    onNotificationClickIntent: Intent = createDefaultNotificationIntent(applicationContext),
 ) : SupportedAddonsChecker {
     private val logger = Logger("DefaultSupportedAddonsChecker")
 
@@ -79,7 +79,7 @@ class DefaultSupportedAddonsChecker(
         WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
             CHECKER_UNIQUE_PERIODIC_WORK_NAME,
             ExistingPeriodicWorkPolicy.REPLACE,
-            createPeriodicWorkerRequest()
+            createPeriodicWorkerRequest(),
         )
         logger.info("Register check for new supported add-ons")
     }
@@ -97,7 +97,7 @@ class DefaultSupportedAddonsChecker(
     internal fun createPeriodicWorkerRequest(): PeriodicWorkRequest {
         return PeriodicWorkRequestBuilder<SupportedAddonsWorker>(
             frequency.repeatInterval,
-            frequency.repeatIntervalTimeUnit
+            frequency.repeatIntervalTimeUnit,
         ).apply {
             setConstraints(getWorkerConstrains())
             addTag(WORK_TAG_PERIODIC)
@@ -136,7 +136,7 @@ class DefaultSupportedAddonsChecker(
  */
 internal class SupportedAddonsWorker(
     val context: Context,
-    params: WorkerParameters
+    params: WorkerParameters,
 ) : CoroutineWorker(context, params) {
     private val logger = Logger("SupportedAddonsWorker")
 
@@ -154,10 +154,11 @@ internal class SupportedAddonsWorker(
             withContext(Dispatchers.Main) {
                 newSupportedAddons.forEach {
                     addonManager.enableAddon(
-                        it, source = EnableSource.APP_SUPPORT,
+                        it,
+                        source = EnableSource.APP_SUPPORT,
                         onError = { error ->
                             GlobalAddonDependencyProvider.onCrash?.invoke(error)
-                        }
+                        },
                     )
                 }
             }
@@ -183,7 +184,7 @@ internal class SupportedAddonsWorker(
         val channel = ChannelData(
             NOTIFICATION_CHANNEL_ID,
             R.string.mozac_feature_addons_supported_checker_notification_channel,
-            NotificationManagerCompat.IMPORTANCE_LOW
+            NotificationManagerCompat.IMPORTANCE_LOW,
         )
         val channelId = ensureNotificationChannelExists(context, channel)
         return NotificationCompat.Builder(context, channelId)
@@ -217,7 +218,7 @@ internal class SupportedAddonsWorker(
                 applicationContext.getString(
                     R.string.mozac_feature_addons_supported_checker_notification_content_one,
                     addonName,
-                    applicationContext.appName
+                    applicationContext.appName,
                 )
             }
             2 -> {
@@ -227,7 +228,7 @@ internal class SupportedAddonsWorker(
                     R.string.mozac_feature_addons_supported_checker_notification_content_two,
                     firstAddonName,
                     secondAddonName,
-                    applicationContext.appName
+                    applicationContext.appName,
                 )
             }
             else -> {
@@ -236,7 +237,7 @@ internal class SupportedAddonsWorker(
                    as we don't know how long the name of an add-on could be.*/
                 applicationContext.getString(
                     R.string.mozac_feature_addons_supported_checker_notification_content_more_than_two,
-                    applicationContext.appName
+                    applicationContext.appName,
                 )
             }
         }
@@ -247,9 +248,10 @@ internal class SupportedAddonsWorker(
             context,
             0,
             onNotificationClickIntent,
-            PendingIntentUtils.defaultFlags or PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntentUtils.defaultFlags or PendingIntent.FLAG_UPDATE_CURRENT,
         )
     }
+
     @Suppress("MaxLineLength")
     companion object {
         private const val NOTIFICATION_CHANNEL_ID =

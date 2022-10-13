@@ -11,9 +11,9 @@ import mozilla.components.support.test.mock
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.isNull
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.WebPushController
 

@@ -35,8 +35,8 @@ class EngineActionTest {
 
         store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
     }
 
@@ -92,26 +92,26 @@ class EngineActionTest {
     @Test
     fun `PurgeHistoryAction - Removes state from sessions without history`() {
         val tab1 = createTab("https://www.mozilla.org").copy(
-            engineState = EngineState(engineSession = null, engineSessionState = mock())
+            engineState = EngineState(engineSession = null, engineSessionState = mock()),
         )
 
         val tab2 = createTab("https://www.firefox.com").copy(
-            engineState = EngineState(engineSession = mock(), engineSessionState = mock())
+            engineState = EngineState(engineSession = mock(), engineSessionState = mock()),
         )
 
         val customTab1 = createCustomTab("http://www.theverge.com").copy(
-            engineState = EngineState(engineSession = null, engineSessionState = mock())
+            engineState = EngineState(engineSession = null, engineSessionState = mock()),
         )
 
         val customTab2 = createCustomTab("https://www.google.com").copy(
-            engineState = EngineState(engineSession = mock(), engineSessionState = mock())
+            engineState = EngineState(engineSession = mock(), engineSessionState = mock()),
         )
 
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(tab1, tab2),
-                customTabs = listOf(customTab1, customTab2)
-            )
+                customTabs = listOf(customTab1, customTab2),
+            ),
         )
 
         store.dispatch(EngineAction.PurgeHistoryAction).joinBlocking()

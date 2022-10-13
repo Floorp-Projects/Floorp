@@ -26,7 +26,7 @@ data class SearchEngine(
     val icon: Bitmap,
     val type: Type,
     val resultUrls: List<String> = emptyList(),
-    val suggestUrl: String? = null
+    val suggestUrl: String? = null,
 ) {
     /**
      * A enum class representing a search engine type.
@@ -56,6 +56,7 @@ data class SearchEngine(
     // Cache these parameters to avoid repeated parsing.
     // Assume we always have at least one entry in `resultUrls`.
     val resultsUrl: Uri by lazy { Uri.parse(this.resultUrls[0]) }
+
     // This assumes that search parameters are always "on their own" within the param value,
     // e.g. always in a form of ?q={searchTerms}, never ?q=somePrefix-{searchTerms}
     val searchParameterName by lazy {

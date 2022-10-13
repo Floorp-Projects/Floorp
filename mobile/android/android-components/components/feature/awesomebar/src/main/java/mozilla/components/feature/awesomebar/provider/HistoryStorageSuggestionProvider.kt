@@ -110,7 +110,7 @@ internal suspend fun Iterable<SearchResult>.into(
             onSuggestionClicked = {
                 loadUrlUseCase.invoke(result.url)
                 emitHistorySuggestionClickedFact()
-            }
+            },
         )
     }
 }

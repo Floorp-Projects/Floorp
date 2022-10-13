@@ -70,8 +70,8 @@ class SessionSuggestionProvider(
                         onSuggestionClicked = {
                             selectTabUseCase(result.id)
                             emitOpenTabSuggestionClickedFact()
-                        }
-                    )
+                        },
+                    ),
                 )
             }
         }

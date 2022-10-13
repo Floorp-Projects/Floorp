@@ -41,7 +41,7 @@ class OnDeviceDownloadStorageTest {
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
         DownloadsDatabase::class.java.canonicalName,
-        FrameworkSQLiteOpenHelperFactory()
+        FrameworkSQLiteOpenHelperFactory(),
     )
 
     @get:Rule
@@ -75,7 +75,7 @@ class OnDeviceDownloadStorageTest {
                     "downloads " +
                     "(id, url, file_name, content_type,content_length,status,destination_directory,created_at) " +
                     "VALUES " +
-                    "(1,'url','file_name','content_type',1,1,'destination_directory',1)"
+                    "(1,'url','file_name','content_type',1,1,'destination_directory',1)",
             )
         }
 
@@ -101,7 +101,7 @@ class OnDeviceDownloadStorageTest {
                     "downloads " +
                     "(id, url, file_name, content_type,content_length,status,destination_directory,created_at,is_private) " +
                     "VALUES " +
-                    "(1,'url','file_name','content_type',1,1,'destination_directory',1,1)"
+                    "(1,'url','file_name','content_type',1,1,'destination_directory',1,1)",
             )
 
             // A normal download
@@ -110,7 +110,7 @@ class OnDeviceDownloadStorageTest {
                     "downloads " +
                     "(id, url, file_name, content_type,content_length,status,destination_directory,created_at,is_private) " +
                     "VALUES " +
-                    "(2,'url','file_name','content_type',1,1,'destination_directory',1,0)"
+                    "(2,'url','file_name','content_type',1,1,'destination_directory',1,0)",
             )
         }
 
@@ -135,7 +135,7 @@ class OnDeviceDownloadStorageTest {
                     "downloads " +
                     "(id, url, file_name, content_type,content_length,status,destination_directory,created_at) " +
                     "VALUES " +
-                    "(1,'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ==','file_name','content_type',1,1,'destination_directory',1)"
+                    "(1,'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ==','file_name','content_type',1,1,'destination_directory',1)",
             )
             // A normal url download
             execSQL(
@@ -143,7 +143,7 @@ class OnDeviceDownloadStorageTest {
                     "downloads " +
                     "(id, url, file_name, content_type,content_length,status,destination_directory,created_at) " +
                     "VALUES " +
-                    "(2,'url','file_name','content_type',1,1,'destination_directory',1)"
+                    "(2,'url','file_name','content_type',1,1,'destination_directory',1)",
             )
         }
 
@@ -282,8 +282,10 @@ class OnDeviceDownloadStorageTest {
     private fun createMockDownload(id: String, url: String): DownloadState {
         return DownloadState(
             id = id,
-            url = url, contentType = "application/zip", contentLength = 5242880,
-            userAgent = "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"
+            url = url,
+            contentType = "application/zip",
+            contentLength = 5242880,
+            userAgent = "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36",
         )
     }
 

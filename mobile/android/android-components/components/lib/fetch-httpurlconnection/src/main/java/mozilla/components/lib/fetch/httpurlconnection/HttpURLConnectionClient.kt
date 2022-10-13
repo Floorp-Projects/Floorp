@@ -27,7 +27,7 @@ import java.util.zip.GZIPInputStream
 class HttpURLConnectionClient : Client() {
     private val defaultHeaders: Headers = MutableHeaders(
         "User-Agent" to "MozacFetch/${BuildConfig.LIBRARY_VERSION}",
-        "Accept-Encoding" to "gzip"
+        "Accept-Encoding" to "gzip",
     )
 
     @Throws(IOException::class)
@@ -121,7 +121,7 @@ private fun HttpURLConnection.toResponse(): Response {
         url.toString(),
         responseCode,
         headers,
-        createBody(this, headers["Content-Type"])
+        createBody(this, headers["Content-Type"]),
     )
 }
 
@@ -155,7 +155,7 @@ private fun createBody(connection: HttpURLConnection, contentType: String?): Res
             connection,
             connection.inputStream,
             gzipped,
-            contentType
+            contentType,
         )
     }
 
@@ -164,7 +164,7 @@ private fun createBody(connection: HttpURLConnection, contentType: String?): Res
             connection,
             connection.errorStream,
             gzipped,
-            contentType
+            contentType,
         )
     }
 
@@ -177,7 +177,7 @@ private class HttpUrlConnectionBody(
     private val connection: HttpURLConnection,
     stream: InputStream,
     gzipped: Boolean,
-    contentType: String?
+    contentType: String?,
 ) : Response.Body(if (gzipped) GZIPInputStream(stream) else stream, contentType) {
     override fun close() {
         super.close()

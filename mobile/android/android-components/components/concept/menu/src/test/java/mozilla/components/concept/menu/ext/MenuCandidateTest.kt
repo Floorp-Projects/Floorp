@@ -26,8 +26,8 @@ class MenuCandidateTest {
             HighPriorityHighlightEffect(Color.BLACK),
             sequenceOf(
                 LowPriorityHighlightEffect(Color.BLUE),
-                HighPriorityHighlightEffect(Color.BLACK)
-            ).max()
+                HighPriorityHighlightEffect(Color.BLACK),
+            ).max(),
         )
     }
 
@@ -37,8 +37,8 @@ class MenuCandidateTest {
             LowPriorityHighlightEffect(Color.BLUE),
             sequenceOf(
                 LowPriorityHighlightEffect(Color.BLUE),
-                LowPriorityHighlightEffect(Color.YELLOW)
-            ).max()
+                LowPriorityHighlightEffect(Color.YELLOW),
+            ).max(),
         )
     }
 
@@ -47,7 +47,7 @@ class MenuCandidateTest {
         assertEquals(
             listOf(
                 LowPriorityHighlightEffect(Color.BLUE),
-                LowPriorityHighlightEffect(Color.YELLOW)
+                LowPriorityHighlightEffect(Color.YELLOW),
             ),
             listOf(
                 RowMenuCandidate(
@@ -56,35 +56,35 @@ class MenuCandidateTest {
                             "",
                             icon = DrawableMenuIcon(
                                 null,
-                                effect = LowPriorityHighlightEffect(Color.BLUE)
-                            )
-                        ),
-                        SmallMenuCandidate(
-                            "",
-                            icon = DrawableMenuIcon(
-                                null,
-                                effect = LowPriorityHighlightEffect(Color.RED)
+                                effect = LowPriorityHighlightEffect(Color.BLUE),
                             ),
-                            containerStyle = ContainerStyle(isVisible = false)
                         ),
                         SmallMenuCandidate(
                             "",
                             icon = DrawableMenuIcon(
                                 null,
-                                effect = LowPriorityHighlightEffect(Color.RED)
+                                effect = LowPriorityHighlightEffect(Color.RED),
                             ),
-                            containerStyle = ContainerStyle(isEnabled = false)
+                            containerStyle = ContainerStyle(isVisible = false),
                         ),
                         SmallMenuCandidate(
                             "",
                             icon = DrawableMenuIcon(
                                 null,
-                                effect = LowPriorityHighlightEffect(Color.YELLOW)
-                            )
-                        )
-                    )
-                )
-            ).effects().toList()
+                                effect = LowPriorityHighlightEffect(Color.RED),
+                            ),
+                            containerStyle = ContainerStyle(isEnabled = false),
+                        ),
+                        SmallMenuCandidate(
+                            "",
+                            icon = DrawableMenuIcon(
+                                null,
+                                effect = LowPriorityHighlightEffect(Color.YELLOW),
+                            ),
+                        ),
+                    ),
+                ),
+            ).effects().toList(),
         )
     }
 
@@ -96,38 +96,38 @@ class MenuCandidateTest {
                 LowPriorityHighlightEffect(Color.YELLOW),
                 HighPriorityHighlightEffect(Color.BLACK),
                 HighPriorityHighlightEffect(Color.BLUE),
-                LowPriorityHighlightEffect(Color.RED)
+                LowPriorityHighlightEffect(Color.RED),
             ),
             listOf(
                 TextMenuCandidate(
                     "",
                     start = DrawableMenuIcon(
                         null,
-                        effect = LowPriorityHighlightEffect(Color.YELLOW)
+                        effect = LowPriorityHighlightEffect(Color.YELLOW),
                     ),
-                    effect = HighPriorityHighlightEffect(Color.BLUE)
+                    effect = HighPriorityHighlightEffect(Color.BLUE),
                 ),
                 DecorativeTextMenuCandidate(""),
                 TextMenuCandidate(""),
                 DividerMenuCandidate(),
                 TextMenuCandidate(
                     "",
-                    effect = HighPriorityHighlightEffect(Color.BLACK)
+                    effect = HighPriorityHighlightEffect(Color.BLACK),
                 ),
                 TextMenuCandidate(
                     "",
                     containerStyle = ContainerStyle(isVisible = false),
-                    effect = HighPriorityHighlightEffect(Color.BLACK)
+                    effect = HighPriorityHighlightEffect(Color.BLACK),
                 ),
                 TextMenuCandidate(
                     "",
                     end = DrawableMenuIcon(
                         null,
-                        effect = LowPriorityHighlightEffect(Color.RED)
+                        effect = LowPriorityHighlightEffect(Color.RED),
                     ),
-                    effect = HighPriorityHighlightEffect(Color.BLUE)
-                )
-            ).effects().toList()
+                    effect = HighPriorityHighlightEffect(Color.BLUE),
+                ),
+            ).effects().toList(),
         )
     }
 
@@ -138,7 +138,7 @@ class MenuCandidateTest {
                 HighPriorityHighlightEffect(Color.BLUE),
                 LowPriorityHighlightEffect(Color.YELLOW),
                 HighPriorityHighlightEffect(Color.BLACK),
-                LowPriorityHighlightEffect(Color.RED)
+                LowPriorityHighlightEffect(Color.RED),
             ),
             listOf(
                 CompoundMenuCandidate(
@@ -146,34 +146,34 @@ class MenuCandidateTest {
                     isChecked = true,
                     start = DrawableMenuIcon(
                         null,
-                        effect = LowPriorityHighlightEffect(Color.YELLOW)
+                        effect = LowPriorityHighlightEffect(Color.YELLOW),
                     ),
                     end = CompoundMenuCandidate.ButtonType.CHECKBOX,
-                    effect = HighPriorityHighlightEffect(Color.BLUE)
+                    effect = HighPriorityHighlightEffect(Color.BLUE),
                 ),
                 CompoundMenuCandidate(
                     "",
                     isChecked = false,
                     end = CompoundMenuCandidate.ButtonType.SWITCH,
-                    effect = HighPriorityHighlightEffect(Color.BLACK)
+                    effect = HighPriorityHighlightEffect(Color.BLACK),
                 ),
                 CompoundMenuCandidate(
                     "",
                     isChecked = false,
                     end = CompoundMenuCandidate.ButtonType.SWITCH,
                     containerStyle = ContainerStyle(isEnabled = false),
-                    effect = HighPriorityHighlightEffect(Color.BLACK)
+                    effect = HighPriorityHighlightEffect(Color.BLACK),
                 ),
                 CompoundMenuCandidate(
                     "",
                     isChecked = true,
                     start = DrawableMenuIcon(
                         null,
-                        effect = LowPriorityHighlightEffect(Color.RED)
+                        effect = LowPriorityHighlightEffect(Color.RED),
                     ),
-                    end = CompoundMenuCandidate.ButtonType.CHECKBOX
-                )
-            ).effects().toList()
+                    end = CompoundMenuCandidate.ButtonType.CHECKBOX,
+                ),
+            ).effects().toList(),
         )
     }
 }

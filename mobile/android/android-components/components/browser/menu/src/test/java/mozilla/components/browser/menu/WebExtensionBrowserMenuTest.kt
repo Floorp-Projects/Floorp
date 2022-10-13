@@ -65,19 +65,19 @@ class WebExtensionBrowserMenuTest {
                 "name",
                 true,
                 browserAction = browserAction,
-                pageAction = pageAction
-            )
+                pageAction = pageAction,
+            ),
         )
 
         val store =
             BrowserStore(
                 BrowserState(
-                    extensions = extensions
-                )
+                    extensions = extensions,
+                ),
             )
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {}
+            SimpleBrowserMenuItem("World") {},
         )
 
         val adapter = BrowserMenuAdapter(testContext, items)
@@ -99,13 +99,14 @@ class WebExtensionBrowserMenuTest {
                 "name",
                 true,
                 browserAction = defaultBrowserAction,
-                pageAction = defaultPageAction
-            )
+                pageAction = defaultPageAction,
+            ),
         )
 
         createTab(
-            "https://www.example.org", id = "tab1",
-            extensions = defaultExtensions
+            "https://www.example.org",
+            id = "tab1",
+            extensions = defaultExtensions,
         )
         assertEquals(1, webExtensionBrowserActions.size)
         assertEquals(1, webExtensionPageActions.size)
@@ -122,13 +123,14 @@ class WebExtensionBrowserMenuTest {
                 "name",
                 true,
                 browserAction = anotherBrowserAction,
-                pageAction = anotherPageAction
-            )
+                pageAction = anotherPageAction,
+            ),
         )
 
         createTab(
-            "https://www.example2.org", id = "tab2",
-            extensions = anotherExtension
+            "https://www.example2.org",
+            id = "tab2",
+            extensions = anotherExtension,
         )
         assertEquals(0, webExtensionBrowserActions.size)
         assertEquals(0, webExtensionPageActions.size)
@@ -152,8 +154,8 @@ class WebExtensionBrowserMenuTest {
                 "name",
                 true,
                 browserAction = defaultBrowserAction,
-                pageAction = defaultPageAction
-            )
+                pageAction = defaultPageAction,
+            ),
         )
         val overriddenExtensions: Map<String, WebExtensionState> = mapOf(
             "id" to WebExtensionState(
@@ -162,21 +164,22 @@ class WebExtensionBrowserMenuTest {
                 "name",
                 true,
                 browserAction = overriddenBrowserAction,
-                pageAction = overriddenPageAction
-            )
+                pageAction = overriddenPageAction,
+            ),
         )
         val store =
             BrowserStore(
                 BrowserState(
                     tabs = listOf(
                         createTab(
-                            "https://www.example.org", id = "tab1",
-                            extensions = overriddenExtensions
-                        )
+                            "https://www.example.org",
+                            id = "tab1",
+                            extensions = overriddenExtensions,
+                        ),
                     ),
                     selectedTabId = "tab1",
-                    extensions = extensions
-                )
+                    extensions = extensions,
+                ),
             )
 
         val browserMenuItems =
@@ -186,13 +189,13 @@ class WebExtensionBrowserMenuTest {
         var actionMenu = browserMenuItems[0]
         assertEquals(
             "overridden_browser_action_title",
-            actionMenu.action.title
+            actionMenu.action.title,
         )
 
         actionMenu = browserMenuItems[1]
         assertEquals(
             "overridden_page_action_title",
-            actionMenu.action.title
+            actionMenu.action.title,
         )
     }
 
@@ -214,7 +217,7 @@ class WebExtensionBrowserMenuTest {
                 "name",
                 true,
                 browserAction = enabledBrowserAction,
-                pageAction = enabledPageAction
+                pageAction = enabledPageAction,
             ),
             "disabled" to WebExtensionState(
                 "disabled",
@@ -222,15 +225,15 @@ class WebExtensionBrowserMenuTest {
                 "name",
                 false,
                 browserAction = disabledBrowserAction,
-                pageAction = disabledPageAction
-            )
+                pageAction = disabledPageAction,
+            ),
         )
 
         val store =
             BrowserStore(
                 BrowserState(
-                    extensions = extensions
-                )
+                    extensions = extensions,
+                ),
             )
 
         val browserMenuItems = getOrUpdateWebExtensionMenuItems(store.state)
@@ -239,12 +242,12 @@ class WebExtensionBrowserMenuTest {
         var menuAction = browserMenuItems[0]
         assertEquals(
             "enabled_browser_action",
-            menuAction.action.title
+            menuAction.action.title,
         )
         menuAction = browserMenuItems[1]
         assertEquals(
             "enabled_page_action",
-            menuAction.action.title
+            menuAction.action.title,
         )
     }
 
@@ -258,7 +261,7 @@ class WebExtensionBrowserMenuTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val pageActionOverride = Action(
@@ -267,7 +270,7 @@ class WebExtensionBrowserMenuTest {
             enabled = false,
             badgeText = "updatedText",
             badgeTextColor = Color.RED,
-            badgeBackgroundColor = Color.GREEN
+            badgeBackgroundColor = Color.GREEN,
         ) {}
 
         val browserAction = Action(
@@ -276,7 +279,7 @@ class WebExtensionBrowserMenuTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val browserActionOverride = Action(
@@ -285,7 +288,7 @@ class WebExtensionBrowserMenuTest {
             enabled = false,
             badgeText = "updatedText",
             badgeTextColor = Color.RED,
-            badgeBackgroundColor = Color.GREEN
+            badgeBackgroundColor = Color.GREEN,
         ) {}
 
         val browserExtensions = HashMap<String, WebExtensionState>()
@@ -319,12 +322,12 @@ class WebExtensionBrowserMenuTest {
         tabExtensions["1"] = WebExtensionState(
             id = "1",
             browserAction = browserActionOverride,
-            pageAction = pageActionOverride
+            pageAction = pageActionOverride,
         )
 
         val tabSessionState = TabSessionState(
             content = mock(),
-            extensionState = tabExtensions
+            extensionState = tabExtensions,
         )
 
         getOrUpdateWebExtensionMenuItems(browserState, tabSessionState)
@@ -360,7 +363,7 @@ class WebExtensionBrowserMenuTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val actionExt2 = Action(
@@ -369,7 +372,7 @@ class WebExtensionBrowserMenuTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val browserExtensions = HashMap<String, WebExtensionState>()
@@ -380,7 +383,7 @@ class WebExtensionBrowserMenuTest {
 
         val tabSessionState = TabSessionState(
             content = mock(),
-            extensionState = emptyMap()
+            extensionState = emptyMap(),
         )
 
         val browserState = BrowserState(extensions = browserExtensions)
@@ -415,15 +418,15 @@ class WebExtensionBrowserMenuTest {
                 "name",
                 true,
                 browserAction = browserAction,
-                pageAction = pageAction
-            )
+                pageAction = pageAction,
+            ),
         )
 
         val store =
             BrowserStore(
                 BrowserState(
-                    extensions = extensions
-                )
+                    extensions = extensions,
+                ),
             )
 
         val browserMenuItems = getOrUpdateWebExtensionMenuItems(store.state)
@@ -454,12 +457,12 @@ class WebExtensionBrowserMenuTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val tabSessionState = TabSessionState(
             content = mock(),
-            extensionState = emptyMap()
+            extensionState = emptyMap(),
         )
         whenever(tabSessionState.content.private).thenReturn(true)
 
@@ -492,22 +495,22 @@ class WebExtensionBrowserMenuTest {
                 "url",
                 "name",
                 true,
-                pageAction = enabledPageAction
+                pageAction = enabledPageAction,
             ),
             "ext2" to WebExtensionState(
                 "ext2",
                 "url",
                 "name",
                 true,
-                pageAction = disabledPageAction
-            )
+                pageAction = disabledPageAction,
+            ),
         )
 
         val store =
             BrowserStore(
                 BrowserState(
-                    extensions = extensions
-                )
+                    extensions = extensions,
+                ),
             )
 
         val browserMenuItems = getOrUpdateWebExtensionMenuItems(store.state)
@@ -516,7 +519,7 @@ class WebExtensionBrowserMenuTest {
         var menuAction = browserMenuItems[0]
         assertEquals(
             "enabled_page_action",
-            menuAction.action.title
+            menuAction.action.title,
         )
     }
 }

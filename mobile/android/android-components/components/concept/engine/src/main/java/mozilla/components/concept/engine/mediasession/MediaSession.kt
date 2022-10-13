@@ -27,7 +27,7 @@ class MediaSession {
         val width: Long = 0L,
         val height: Long = 0L,
         val audioTrackCount: Int = 0,
-        val videoTrackCount: Int = 0
+        val videoTrackCount: Int = 0,
     ) {
         val portrait: Boolean
             get() = height > width
@@ -45,7 +45,7 @@ class MediaSession {
         val title: String? = null,
         val artist: String? = null,
         val album: String? = null,
-        val getArtwork: (suspend () -> Bitmap?)?
+        val getArtwork: (suspend () -> Bitmap?)?,
     )
 
     /**
@@ -58,7 +58,7 @@ class MediaSession {
     data class PositionState(
         val duration: Double = -1.0,
         val position: Double = 0.0,
-        val playbackRate: Double = 0.0
+        val playbackRate: Double = 0.0,
     )
 
     /**
@@ -122,7 +122,7 @@ class MediaSession {
         /**
          * This [MediaSession] is currently playing.
          */
-        PLAYING
+        PLAYING,
     }
 
     /**

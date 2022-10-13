@@ -29,7 +29,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 class LoginSelectBar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr), SelectablePromptView<Login> {
 
     var headerTextStyle: Int? = null
@@ -39,7 +39,7 @@ class LoginSelectBar @JvmOverloads constructor(
             attrs,
             R.styleable.LoginSelectBar,
             defStyleAttr,
-            0
+            0,
         ) {
             val textStyle =
                 getResourceId(R.styleable.LoginSelectBar_mozacLoginSelectHeaderTextStyle, 0)

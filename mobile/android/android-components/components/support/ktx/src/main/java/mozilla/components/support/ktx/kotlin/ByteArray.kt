@@ -33,7 +33,7 @@ fun ByteArray.toBitmap(opts: BitmapFactory.Options? = null): Bitmap? {
 fun ByteArray.toBitmap(
     offset: Int,
     length: Int,
-    opts: BitmapFactory.Options? = null
+    opts: BitmapFactory.Options? = null,
 ): Bitmap? {
     if (length <= 0) {
         return null

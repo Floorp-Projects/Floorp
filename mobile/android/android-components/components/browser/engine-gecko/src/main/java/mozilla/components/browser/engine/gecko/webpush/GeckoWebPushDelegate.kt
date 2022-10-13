@@ -67,7 +67,7 @@ internal fun WebPushSubscription.toGeckoSubscription() = GeckoWebPushSubscriptio
     endpoint,
     appServerKey,
     publicKey,
-    authSecret
+    authSecret,
 )
 
 internal class WebPushException(message: String) : IllegalStateException(message)

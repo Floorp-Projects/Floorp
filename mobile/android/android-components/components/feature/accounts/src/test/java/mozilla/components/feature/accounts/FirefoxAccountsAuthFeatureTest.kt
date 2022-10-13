@@ -32,9 +32,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import kotlin.coroutines.CoroutineContext
@@ -47,7 +47,7 @@ internal class TestableStorageWrapper(
         val account: OAuthAccount = mock()
         `when`(account.deviceConstellation()).thenReturn(mock())
         account
-    }
+    },
 ) : StorageWrapper(manager, accountEventObserverRegistry, serverConfig) {
     override fun obtainAccount(): OAuthAccount = block()
 }
@@ -61,7 +61,7 @@ class TestableFxaAccountManager(
     config: ServerConfig,
     scopes: Set<String>,
     coroutineContext: CoroutineContext,
-    block: () -> OAuthAccount = { mock() }
+    block: () -> OAuthAccount = { mock() },
 ) : FxaAccountManager(context, config, DeviceConfig("test", DeviceType.MOBILE, setOf()), null, scopes, null, coroutineContext) {
     private val testableStorageWrapper = TestableStorageWrapper(this, accountEventObserverRegistry, serverConfig, block)
     override fun getStorageWrapper(): StorageWrapper {
@@ -78,13 +78,13 @@ class FirefoxAccountsAuthFeatureTest {
     @Test
     fun `begin authentication`() = runTest {
         val manager = prepareAccountManagerForSuccessfulAuthentication(
-            this.coroutineContext
+            this.coroutineContext,
         )
         val authUrl = CompletableDeferred<String>()
         val feature = FirefoxAccountsAuthFeature(
             manager,
             "somePath",
-            this.coroutineContext
+            this.coroutineContext,
         ) { _, url ->
             authUrl.complete(url)
         }
@@ -97,13 +97,13 @@ class FirefoxAccountsAuthFeatureTest {
     @Test
     fun `begin pairing authentication`() = runTest {
         val manager = prepareAccountManagerForSuccessfulAuthentication(
-            this.coroutineContext
+            this.coroutineContext,
         )
         val authUrl = CompletableDeferred<String>()
         val feature = FirefoxAccountsAuthFeature(
             manager,
             "somePath",
-            this.coroutineContext
+            this.coroutineContext,
         ) { _, url ->
             authUrl.complete(url)
         }
@@ -116,14 +116,14 @@ class FirefoxAccountsAuthFeatureTest {
     @Test
     fun `begin authentication with errors`() = runTest {
         val manager = prepareAccountManagerForFailedAuthentication(
-            this.coroutineContext
+            this.coroutineContext,
         )
         val authUrl = CompletableDeferred<String>()
 
         val feature = FirefoxAccountsAuthFeature(
             manager,
             "somePath",
-            this.coroutineContext
+            this.coroutineContext,
         ) { _, url ->
             authUrl.complete(url)
         }
@@ -137,14 +137,14 @@ class FirefoxAccountsAuthFeatureTest {
     @Test
     fun `begin pairing authentication with errors`() = runTest {
         val manager = prepareAccountManagerForFailedAuthentication(
-            this.coroutineContext
+            this.coroutineContext,
         )
         val authUrl = CompletableDeferred<String>()
 
         val feature = FirefoxAccountsAuthFeature(
             manager,
             "somePath",
-            this.coroutineContext
+            this.coroutineContext,
         ) { _, url ->
             authUrl.complete(url)
         }
@@ -161,7 +161,7 @@ class FirefoxAccountsAuthFeatureTest {
         val feature = FirefoxAccountsAuthFeature(
             manager,
             redirectUrl,
-            mock()
+            mock(),
         ) { _, _ -> }
 
         // Non-final FxA url.
@@ -183,68 +183,68 @@ class FirefoxAccountsAuthFeatureTest {
         // Code+state, no action.
         assertEquals(
             RequestInterceptor.InterceptionResponse.Url(redirectUrl),
-            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode1&state=testState1", null, false, false, false, false, false)
+            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode1&state=testState1", null, false, false, false, false, false),
         )
 
         shadowOf(getMainLooper()).idle()
 
         verify(manager).finishAuthentication(
-            FxaAuthData(authType = AuthType.OtherExternal(null), code = "testCode1", state = "testState1")
+            FxaAuthData(authType = AuthType.OtherExternal(null), code = "testCode1", state = "testState1"),
         )
 
         // Code+state, action=signin.
         assertEquals(
             RequestInterceptor.InterceptionResponse.Url(redirectUrl),
-            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode2&state=testState2&action=signin", null, false, false, false, false, false)
+            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode2&state=testState2&action=signin", null, false, false, false, false, false),
         )
 
         shadowOf(getMainLooper()).idle()
 
         verify(manager).finishAuthentication(
-            FxaAuthData(authType = AuthType.Signin, code = "testCode2", state = "testState2")
+            FxaAuthData(authType = AuthType.Signin, code = "testCode2", state = "testState2"),
         )
 
         // Code+state, action=signup.
         assertEquals(
             RequestInterceptor.InterceptionResponse.Url(redirectUrl),
-            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode3&state=testState3&action=signup", null, false, false, false, false, false)
+            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode3&state=testState3&action=signup", null, false, false, false, false, false),
         )
 
         shadowOf(getMainLooper()).idle()
 
         verify(manager).finishAuthentication(
-            FxaAuthData(authType = AuthType.Signup, code = "testCode3", state = "testState3")
+            FxaAuthData(authType = AuthType.Signup, code = "testCode3", state = "testState3"),
         )
 
         // Code+state, action=pairing.
         assertEquals(
             RequestInterceptor.InterceptionResponse.Url(redirectUrl),
-            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode4&state=testState4&action=pairing", null, false, false, false, false, false)
+            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode4&state=testState4&action=pairing", null, false, false, false, false, false),
         )
 
         shadowOf(getMainLooper()).idle()
 
         verify(manager).finishAuthentication(
-            FxaAuthData(authType = AuthType.Pairing, code = "testCode4", state = "testState4")
+            FxaAuthData(authType = AuthType.Pairing, code = "testCode4", state = "testState4"),
         )
 
         // Code+state, action is an unknown value.
         assertEquals(
             RequestInterceptor.InterceptionResponse.Url(redirectUrl),
-            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode5&state=testState5&action=someNewActionType", null, false, false, false, false, false)
+            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode5&state=testState5&action=someNewActionType", null, false, false, false, false, false),
         )
 
         shadowOf(getMainLooper()).idle()
 
         verify(manager).finishAuthentication(
-            FxaAuthData(authType = AuthType.OtherExternal("someNewActionType"), code = "testCode5", state = "testState5")
+            FxaAuthData(authType = AuthType.OtherExternal("someNewActionType"), code = "testCode5", state = "testState5"),
         )
         Unit
     }
 
     @Config(sdk = [22])
     private suspend fun prepareAccountManagerForSuccessfulAuthentication(
-        coroutineContext: CoroutineContext
+        coroutineContext: CoroutineContext,
     ): TestableFxaAccountManager {
         val mockAccount: OAuthAccount = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
@@ -259,7 +259,7 @@ class FirefoxAccountsAuthFeatureTest {
             testContext,
             ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
             setOf("test-scope"),
-            coroutineContext
+            coroutineContext,
         ) {
             mockAccount
         }
@@ -271,7 +271,7 @@ class FirefoxAccountsAuthFeatureTest {
 
     @Config(sdk = [22])
     private suspend fun prepareAccountManagerForFailedAuthentication(
-        coroutineContext: CoroutineContext
+        coroutineContext: CoroutineContext,
     ): TestableFxaAccountManager {
         val mockAccount: OAuthAccount = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
@@ -286,7 +286,7 @@ class FirefoxAccountsAuthFeatureTest {
             testContext,
             ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
             setOf("test-scope"),
-            coroutineContext
+            coroutineContext,
         ) {
             mockAccount
         }

@@ -30,7 +30,7 @@ class BrowserStoreSearchAdapterTest {
     private val state = BrowserState(
         tabs = listOf(createTab(id = SELECTED_TAB_ID, url = "https://mozilla.org", private = true)),
         customTabs = listOf(createCustomTab(id = CUSTOM_TAB_ID, url = "https://firefox.com", source = SessionState.Source.Internal.CustomTab)),
-        selectedTabId = SELECTED_TAB_ID
+        selectedTabId = SELECTED_TAB_ID,
     )
 
     @Before
@@ -58,16 +58,16 @@ class BrowserStoreSearchAdapterTest {
         verify(browserStore).dispatch(
             ContentAction.UpdateSearchRequestAction(
                 SELECTED_TAB_ID,
-                SearchRequest(isPrivate = false, query = "normal search")
-            )
+                SearchRequest(isPrivate = false, query = "normal search"),
+            ),
         )
 
         searchAdapter.sendSearch(isPrivate = true, text = "private search")
         verify(browserStore).dispatch(
             ContentAction.UpdateSearchRequestAction(
                 SELECTED_TAB_ID,
-                SearchRequest(isPrivate = true, query = "private search")
-            )
+                SearchRequest(isPrivate = true, query = "private search"),
+            ),
         )
 
         assertTrue(searchAdapter.isPrivateSession())
@@ -80,16 +80,16 @@ class BrowserStoreSearchAdapterTest {
         verify(browserStore).dispatch(
             ContentAction.UpdateSearchRequestAction(
                 CUSTOM_TAB_ID,
-                SearchRequest(isPrivate = false, query = "normal search")
-            )
+                SearchRequest(isPrivate = false, query = "normal search"),
+            ),
         )
 
         searchAdapter.sendSearch(isPrivate = true, text = "private search")
         verify(browserStore).dispatch(
             ContentAction.UpdateSearchRequestAction(
                 CUSTOM_TAB_ID,
-                SearchRequest(isPrivate = true, query = "private search")
-            )
+                SearchRequest(isPrivate = true, query = "private search"),
+            ),
         )
 
         assertFalse(searchAdapter.isPrivateSession())

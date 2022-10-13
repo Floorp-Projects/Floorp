@@ -27,7 +27,7 @@ class TabsTrayPresenter(
     private val store: BrowserStore,
     internal var tabsFilter: (TabSessionState) -> Boolean,
     internal var tabPartitionsFilter: (Map<String, TabPartition>) -> TabPartition?,
-    private val closeTabsTray: () -> Unit
+    private val closeTabsTray: () -> Unit,
 ) {
     private var scope: CoroutineScope? = null
     private var initialOpen: Boolean = true

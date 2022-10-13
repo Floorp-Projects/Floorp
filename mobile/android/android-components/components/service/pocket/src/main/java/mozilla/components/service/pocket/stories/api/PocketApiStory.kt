@@ -24,5 +24,5 @@ internal data class PocketApiStory(
     val imageUrl: String,
     val publisher: String,
     val category: String,
-    val timeToRead: Int
+    val timeToRead: Int,
 )

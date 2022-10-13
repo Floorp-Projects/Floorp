@@ -17,7 +17,7 @@ import mozilla.components.feature.prompts.R
 internal class LoginPanelTextInputLayout(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : TextInputLayout(context, attrs, defStyleAttr) {
     constructor(context: Context) : this(context, null, 0)
 
@@ -28,14 +28,14 @@ internal class LoginPanelTextInputLayout(
             attrs,
             R.styleable.LoginPanelTextInputLayout,
             defStyleAttr,
-            0
+            0,
         ) {
 
             defaultHintTextColor = ColorStateList.valueOf(
                 ContextCompat.getColor(
                     context,
-                    R.color.mozacBoxStrokeColor
-                )
+                    R.color.mozacBoxStrokeColor,
+                ),
             )
 
             getColorOrNull(R.styleable.LoginPanelTextInputLayout_mozacInputLayoutErrorTextColor)?.let { color ->

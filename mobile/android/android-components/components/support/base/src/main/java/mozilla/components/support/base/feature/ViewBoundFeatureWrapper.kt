@@ -149,7 +149,7 @@ class ViewBoundFeatureWrapper<T : LifecycleAwareFeature>() {
 
         if (feature !is UserInteractionHandler) {
             throw IllegalAccessError(
-                "Feature does not implement ${UserInteractionHandler::class.java.simpleName} interface"
+                "Feature does not implement ${UserInteractionHandler::class.java.simpleName} interface",
             )
         }
 
@@ -167,7 +167,7 @@ class ViewBoundFeatureWrapper<T : LifecycleAwareFeature>() {
 
         if (feature !is ActivityResultHandler) {
             throw IllegalAccessError(
-                "Feature does not implement ${ActivityResultHandler::class.java.simpleName} interface"
+                "Feature does not implement ${ActivityResultHandler::class.java.simpleName} interface",
             )
         }
 
@@ -193,7 +193,7 @@ class ViewBoundFeatureWrapper<T : LifecycleAwareFeature>() {
  */
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal class ViewBinding<T : LifecycleAwareFeature>(
-    private val wrapper: ViewBoundFeatureWrapper<T>
+    private val wrapper: ViewBoundFeatureWrapper<T>,
 ) : View.OnAttachStateChangeListener {
     override fun onViewDetachedFromWindow(v: View?) {
         wrapper.clear()
@@ -208,7 +208,7 @@ internal class ViewBinding<T : LifecycleAwareFeature>(
  */
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal class LifecycleBinding<T : LifecycleAwareFeature>(
-    private val wrapper: ViewBoundFeatureWrapper<T>
+    private val wrapper: ViewBoundFeatureWrapper<T>,
 ) : DefaultLifecycleObserver {
     override fun onStart(owner: LifecycleOwner) {
         wrapper.start()

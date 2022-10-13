@@ -28,11 +28,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 class AwesomeBarFeatureTest {
@@ -185,7 +185,9 @@ class AwesomeBarFeatureTest {
 
         val feature = AwesomeBarFeature(awesomeBar, mock())
         feature.addHistoryProvider(
-            historyStorage = mock(), loadUrlUseCase = mock(), maxNumberOfSuggestions = 42
+            historyStorage = mock(),
+            loadUrlUseCase = mock(),
+            maxNumberOfSuggestions = 42,
         )
 
         val provider = argumentCaptor<HistoryStorageSuggestionProvider>()
@@ -199,7 +201,9 @@ class AwesomeBarFeatureTest {
 
         val feature = AwesomeBarFeature(awesomeBar, mock())
         feature.addHistoryProvider(
-            historyStorage = mock(), loadUrlUseCase = mock(), maxNumberOfSuggestions = -1
+            historyStorage = mock(),
+            loadUrlUseCase = mock(),
+            maxNumberOfSuggestions = -1,
         )
 
         val provider = argumentCaptor<HistoryStorageSuggestionProvider>()
@@ -213,7 +217,9 @@ class AwesomeBarFeatureTest {
 
         val feature = AwesomeBarFeature(awesomeBar, mock())
         feature.addHistoryProvider(
-            historyStorage = mock(), loadUrlUseCase = mock(), maxNumberOfSuggestions = 0
+            historyStorage = mock(),
+            loadUrlUseCase = mock(),
+            maxNumberOfSuggestions = 0,
         )
 
         val provider = argumentCaptor<HistoryStorageSuggestionProvider>()
@@ -279,7 +285,7 @@ class AwesomeBarFeatureTest {
             awesomeBar,
             toolbar,
             onEditStart = { startInvoked = true },
-            onEditComplete = { completeInvoked = true }
+            onEditComplete = { completeInvoked = true },
         )
 
         assertFalse(startInvoked)

@@ -25,8 +25,8 @@ class SystemActionTest {
             tabs = listOf(
                 createTab(url = "https://www.mozilla.org", id = "0"),
                 createTab(url = "https://www.firefox.com", id = "1"),
-                createTab(url = "https://www.firefox.com", id = "2")
-            )
+                createTab(url = "https://www.firefox.com", id = "2"),
+            ),
         )
         val store = BrowserStore(initialState)
 
@@ -41,8 +41,8 @@ class SystemActionTest {
 
         store.dispatch(
             SystemAction.LowMemoryAction(
-                ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL
-            )
+                ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL,
+            ),
         ).joinBlocking()
 
         assertNull(store.state.tabs[0].content.thumbnail)
@@ -54,9 +54,9 @@ class SystemActionTest {
 
 private fun createTabWithMockEngineSession(
     id: String,
-    url: String
+    url: String,
 ) = TabSessionState(
     id,
     content = ContentState(url),
-    engineState = EngineState(engineSession = mock())
+    engineState = EngineState(engineSession = mock()),
 )

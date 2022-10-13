@@ -36,7 +36,7 @@ class SearchSuggestionProvider private constructor(
     internal val engine: Engine? = null,
     private val icon: Bitmap? = null,
     private val showDescription: Boolean = true,
-    private val filterExactMatch: Boolean = false
+    private val filterExactMatch: Boolean = false,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -70,7 +70,7 @@ class SearchSuggestionProvider private constructor(
         icon: Bitmap? = null,
         showDescription: Boolean = true,
         filterExactMatch: Boolean = false,
-        private: Boolean = false
+        private: Boolean = false,
     ) : this (
         SearchSuggestionClient(searchEngine) { url -> fetch(fetchClient, url, private) },
         searchUseCase,
@@ -79,7 +79,7 @@ class SearchSuggestionProvider private constructor(
         engine,
         icon,
         showDescription,
-        filterExactMatch
+        filterExactMatch,
     )
 
     /**
@@ -111,7 +111,7 @@ class SearchSuggestionProvider private constructor(
         icon: Bitmap? = null,
         showDescription: Boolean = true,
         filterExactMatch: Boolean = false,
-        private: Boolean = false
+        private: Boolean = false,
     ) : this (
         SearchSuggestionClient(context, store) { url -> fetch(fetchClient, url, private) },
         searchUseCase,
@@ -120,7 +120,7 @@ class SearchSuggestionProvider private constructor(
         engine,
         icon,
         showDescription,
-        filterExactMatch
+        filterExactMatch,
     )
 
     @Suppress("ReturnCount")
@@ -199,8 +199,8 @@ class SearchSuggestionProvider private constructor(
                     onSuggestionClicked = {
                         searchUseCase.invoke(item)
                         emitSearchSuggestionClickedFact()
-                    }
-                )
+                    },
+                ),
             )
         }
 
@@ -233,14 +233,14 @@ class SearchSuggestionProvider private constructor(
                 onChipClicked = { chip ->
                     searchUseCase.invoke(chip.title)
                     emitSearchSuggestionClickedFact()
-                }
-            )
+                },
+            ),
         )
     }
 
     enum class Mode {
         SINGLE_SUGGESTION,
-        MULTIPLE_SUGGESTIONS
+        MULTIPLE_SUGGESTIONS,
     }
 
     companion object {
@@ -255,7 +255,7 @@ class SearchSuggestionProvider private constructor(
                     url = url.sanitizeURL(),
                     readTimeout = Pair(READ_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS),
                     connectTimeout = Pair(CONNECT_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS),
-                    private = private
+                    private = private,
                 )
 
                 val response = fetchClient.fetch(request)

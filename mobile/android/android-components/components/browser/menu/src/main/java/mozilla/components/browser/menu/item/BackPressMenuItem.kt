@@ -25,7 +25,7 @@ class BackPressMenuItem(
     iconTintColorResource: Int = NO_ID,
     @ColorRes
     textColorResource: Int = NO_ID,
-    private var backPressListener: () -> Unit = {}
+    private var backPressListener: () -> Unit = {},
 ) : BrowserMenuImageText(label, imageResource, iconTintColorResource, textColorResource) {
 
     /**
@@ -39,6 +39,7 @@ class BackPressMenuItem(
             menu.dismiss()
         }
     }
+
     /**
      * Sets and replaces the existing [backPressListener] for the back press item.
      */
@@ -54,7 +55,7 @@ class BackPressMenuItem(
             start = parentCandidate.start,
             subMenuItems = null,
             textStyle = parentCandidate.textStyle,
-            containerStyle = parentCandidate.containerStyle
+            containerStyle = parentCandidate.containerStyle,
         )
     }
 }

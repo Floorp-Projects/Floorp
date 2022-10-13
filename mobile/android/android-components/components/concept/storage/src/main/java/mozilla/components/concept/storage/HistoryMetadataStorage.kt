@@ -12,7 +12,7 @@ import kotlinx.parcelize.Parcelize
  */
 enum class DocumentType {
     Regular,
-    Media
+    Media,
 }
 
 /**
@@ -23,16 +23,17 @@ sealed class HistoryMetadataObservation {
      * A [HistoryMetadataObservation] to increment the total view time.
      */
     data class ViewTimeObservation(
-        val viewTime: Int
+        val viewTime: Int,
     ) : HistoryMetadataObservation()
 
     /**
      * A [HistoryMetadataObservation] to update the document type.
      */
     data class DocumentTypeObservation(
-        val documentType: DocumentType
+        val documentType: DocumentType,
     ) : HistoryMetadataObservation()
 }
+
 /**
  * Represents a set of history metadata values that uniquely identify a record. Note that
  * when recording observations, the same set of values may or may not cause a new record to be
@@ -50,7 +51,7 @@ sealed class HistoryMetadataObservation {
 data class HistoryMetadataKey(
     val url: String,
     val searchTerm: String? = null,
-    val referrerUrl: String? = null
+    val referrerUrl: String? = null,
 ) : Parcelable
 
 /**
@@ -72,7 +73,7 @@ data class HistoryMetadata(
     val updatedAt: Long,
     val totalViewTime: Int,
     val documentType: DocumentType,
-    val previewImageUrl: String?
+    val previewImageUrl: String?,
 )
 
 /**
@@ -90,7 +91,7 @@ data class HistoryHighlight(
     val placeId: Int,
     val url: String,
     val title: String?,
-    val previewImageUrl: String?
+    val previewImageUrl: String?,
 )
 
 /**
@@ -104,7 +105,7 @@ data class HistoryHighlight(
  */
 data class HistoryHighlightWeights(
     val viewTime: Double,
-    val frequency: Double
+    val frequency: Double,
 )
 
 /**

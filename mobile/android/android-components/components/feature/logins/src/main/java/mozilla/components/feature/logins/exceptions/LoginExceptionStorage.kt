@@ -17,7 +17,7 @@ import mozilla.components.feature.prompts.login.LoginExceptions
  * A storage implementation for organizing login exceptions.
  */
 class LoginExceptionStorage(
-    context: Context
+    context: Context,
 ) : LoginExceptions {
     internal var database: Lazy<LoginExceptionDatabase> =
         lazy { LoginExceptionDatabase.get(context) }
@@ -29,7 +29,7 @@ class LoginExceptionStorage(
      */
     override fun addLoginException(origin: String) {
         LoginExceptionEntity(
-            origin = origin
+            origin = origin,
         ).also { entity ->
             entity.id = database.value.loginExceptionDao().insertLoginException(entity)
         }
@@ -71,7 +71,7 @@ class LoginExceptionStorage(
         val exception = database.value.loginExceptionDao().findExceptionByOrigin(origin)
         return exception?.let {
             LoginExceptionAdapter(
-                it
+                it,
             )
         }
     }

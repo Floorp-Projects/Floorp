@@ -37,7 +37,7 @@ internal class TimePrecisionPicker @JvmOverloads constructor(
     private val minTime: Calendar = getDefaultMinTime(),
     private val maxTime: Calendar = getDefaultMaxTime(),
     stepValue: Float,
-    private var timeSetListener: OnTimeSetListener? = null
+    private var timeSetListener: OnTimeSetListener? = null,
 ) : ScrollView(context), NumberPicker.OnValueChangeListener {
 
     @VisibleForTesting
@@ -75,12 +75,12 @@ internal class TimePrecisionPicker @JvmOverloads constructor(
         secondView.init(
             selectedTime.second,
             selectedTime.minSecond(),
-            selectedTime.maxSecond()
+            selectedTime.maxSecond(),
         )
         millisecondView.init(
             selectedTime.millisecond,
             selectedTime.minMillisecond(),
-            selectedTime.maxMillisecond()
+            selectedTime.maxMillisecond(),
         )
     }
 
@@ -134,7 +134,7 @@ internal class TimePrecisionPicker @JvmOverloads constructor(
                 selectedTime.hour,
                 selectedTime.minute,
                 selectedTime.second,
-                selectedTime.millisecond
+                selectedTime.millisecond,
             )
         }
 
@@ -168,7 +168,7 @@ internal class TimePrecisionPicker @JvmOverloads constructor(
                 selectedTime.hour,
                 min,
                 selectedTime.second,
-                selectedTime.millisecond
+                selectedTime.millisecond,
             )
             min
         } else {
@@ -202,7 +202,7 @@ internal class TimePrecisionPicker @JvmOverloads constructor(
             hour: Int,
             minute: Int,
             second: Int,
-            millisecond: Int
+            millisecond: Int,
         )
     }
 

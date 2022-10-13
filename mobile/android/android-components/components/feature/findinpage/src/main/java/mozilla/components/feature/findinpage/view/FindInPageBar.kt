@@ -29,9 +29,10 @@ private const val DEFAULT_VALUE = 0
 class FindInPageBar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr), FindInPageView {
     private val styling: FindInPageBarStyling = createStyling(context, attrs, defStyleAttr)
+
     @VisibleForTesting
     internal val queryEditText: EditText
 
@@ -102,7 +103,7 @@ class FindInPageBar @JvmOverloads constructor(
             val ordinal = if (numberOfMatches > 0) activeMatchOrdinal + 1 else activeMatchOrdinal
             resultsCountTextView.text = String.format(resultFormat, ordinal, numberOfMatches)
             resultsCountTextView.setTextColorIfNotDefaultValue(
-                if (numberOfMatches > 0) styling.resultCountTextColor else styling.resultNoMatchesTextColor
+                if (numberOfMatches > 0) styling.resultCountTextColor else styling.resultNoMatchesTextColor,
             )
             val accessibilityLabel = String.format(accessibilityFormat, ordinal, numberOfMatches)
             resultsCountTextView.contentDescription = accessibilityLabel
@@ -113,7 +114,7 @@ class FindInPageBar @JvmOverloads constructor(
     private fun createStyling(
         context: Context,
         attrs: AttributeSet?,
-        defStyleAttr: Int
+        defStyleAttr: Int,
     ): FindInPageBarStyling {
         val attr = context.obtainStyledAttributes(attrs, R.styleable.FindInPageBar, defStyleAttr, 0)
 
@@ -121,29 +122,29 @@ class FindInPageBar @JvmOverloads constructor(
             return FindInPageBarStyling(
                 getColor(
                     R.styleable.FindInPageBar_findInPageQueryTextColor,
-                    DEFAULT_VALUE
+                    DEFAULT_VALUE,
                 ),
                 getColor(
                     R.styleable.FindInPageBar_findInPageQueryHintTextColor,
-                    DEFAULT_VALUE
+                    DEFAULT_VALUE,
                 ),
                 getDimensionPixelSize(
                     R.styleable.FindInPageBar_findInPageQueryTextSize,
-                    DEFAULT_VALUE
+                    DEFAULT_VALUE,
                 ),
                 getColor(
                     R.styleable.FindInPageBar_findInPageResultCountTextColor,
-                    DEFAULT_VALUE
+                    DEFAULT_VALUE,
                 ),
                 getColor(
                     R.styleable.FindInPageBar_findInPageNoMatchesTextColor,
-                    DEFAULT_VALUE
+                    DEFAULT_VALUE,
                 ),
                 getDimensionPixelSize(
                     R.styleable.FindInPageBar_findInPageResultCountTextSize,
-                    DEFAULT_VALUE
+                    DEFAULT_VALUE,
                 ),
-                getColorStateList(R.styleable.FindInPageBar_findInPageButtonsTint)
+                getColorStateList(R.styleable.FindInPageBar_findInPageButtonsTint),
             ).also { recycle() }
         }
     }
@@ -189,25 +190,27 @@ class FindInPageBar @JvmOverloads constructor(
             setTextColorIfNotDefaultValue(styling.queryTextColor)
             setHintTextColorIfNotDefaultValue(styling.queryHintTextColor)
 
-            addTextChangedListener(object : TextWatcher {
-                override fun afterTextChanged(s: Editable?) = Unit
-                override fun beforeTextChanged(
-                    s: CharSequence?,
-                    start: Int,
-                    count: Int,
-                    after: Int
-                ) = Unit
+            addTextChangedListener(
+                object : TextWatcher {
+                    override fun afterTextChanged(s: Editable?) = Unit
+                    override fun beforeTextChanged(
+                        s: CharSequence?,
+                        start: Int,
+                        count: Int,
+                        after: Int,
+                    ) = Unit
 
-                override fun onTextChanged(
-                    newCharacter: CharSequence?,
-                    start: Int,
-                    before: Int,
-                    count: Int
-                ) {
-                    val newQuery = newCharacter?.toString() ?: return
-                    onQueryChange(newQuery)
-                }
-            })
+                    override fun onTextChanged(
+                        newCharacter: CharSequence?,
+                        start: Int,
+                        before: Int,
+                        count: Int,
+                    ) {
+                        val newQuery = newCharacter?.toString() ?: return
+                        onQueryChange(newQuery)
+                    }
+                },
+            )
 
             onFocusChangeListener = OnFocusChangeListener { _, hasFocus ->
                 if (!hasFocus) {
@@ -230,7 +233,7 @@ internal data class FindInPageBarStyling(
     val resultCountTextColor: Int,
     val resultNoMatchesTextColor: Int,
     val resultCountTextSize: Int,
-    val buttonsTint: ColorStateList?
+    val buttonsTint: ColorStateList?,
 )
 
 private fun TextView.setTextSizeIfNotDefaultValue(newValue: Int) {

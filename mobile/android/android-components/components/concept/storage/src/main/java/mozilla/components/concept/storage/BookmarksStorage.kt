@@ -45,7 +45,7 @@ interface BookmarksStorage : Storage {
     suspend fun getRecentBookmarks(
         limit: Int,
         maxAge: Long? = null,
-        currentTime: Long = System.currentTimeMillis()
+        currentTime: Long = System.currentTimeMillis(),
     ): List<BookmarkNode>
 
     /**
@@ -137,7 +137,7 @@ data class BookmarkNode(
     val title: String?,
     val url: String?,
     val dateAdded: Long,
-    val children: List<BookmarkNode>?
+    val children: List<BookmarkNode>?,
 )
 
 /**
@@ -147,7 +147,7 @@ data class BookmarkInfo(
     val parentGuid: String?,
     val position: UInt?,
     val title: String?,
-    val url: String?
+    val url: String?,
 )
 
 /**

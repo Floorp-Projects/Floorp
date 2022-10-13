@@ -83,7 +83,7 @@ class AbstractParentBrowserMenuItemTest {
 
 class DummyParentBrowserMenuItem(
     subMenu: BrowserMenu,
-    endOfMenuAlwaysVisible: Boolean = false
+    endOfMenuAlwaysVisible: Boolean = false,
 ) : AbstractParentBrowserMenuItem(subMenu, endOfMenuAlwaysVisible) {
     override var visible: () -> Boolean = { true }
     override fun getLayoutResource(): Int = R.layout.mozac_browser_menu_item_simple

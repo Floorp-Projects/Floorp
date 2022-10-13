@@ -11,7 +11,7 @@ package mozilla.components.support.test.fakes
  * that can it can invoke. In a test this lambda can be replaced by FakeClock()::time.
  */
 class FakeClock(
-    var time: Long = 0
+    var time: Long = 0,
 ) {
     fun advanceBy(time: Long) {
         this.time += time

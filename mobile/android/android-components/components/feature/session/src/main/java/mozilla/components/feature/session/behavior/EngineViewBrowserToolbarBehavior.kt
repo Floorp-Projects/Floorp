@@ -32,11 +32,12 @@ class EngineViewBrowserToolbarBehavior(
     attrs: AttributeSet?,
     engineViewParent: View,
     toolbarHeight: Int,
-    toolbarPosition: ToolbarPosition
+    toolbarPosition: ToolbarPosition,
 ) : CoordinatorLayout.Behavior<View>(context, attrs) {
 
     @VisibleForTesting
     internal val engineView = engineViewParent.findViewInHierarchy { it is EngineView } as EngineView?
+
     @VisibleForTesting
     internal var toolbarChangedAction: (Float) -> Unit?
     private val bottomToolbarChangedAction = { newToolbarTranslationY: Float ->
@@ -88,5 +89,5 @@ class EngineViewBrowserToolbarBehavior(
  */
 enum class ToolbarPosition {
     TOP,
-    BOTTOM
+    BOTTOM,
 }

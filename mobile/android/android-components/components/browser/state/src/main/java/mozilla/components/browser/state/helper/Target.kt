@@ -55,11 +55,11 @@ sealed class Target {
     @Composable
     fun <R> observeAsComposableStateFrom(
         store: BrowserStore,
-        observe: (SessionState?) -> R
+        observe: (SessionState?) -> R,
     ): State<SessionState?> {
         return store.observeAsComposableState(
             map = { state -> lookupIn(state) },
-            observe = { state -> observe(lookupIn(state)) }
+            observe = { state -> observe(lookupIn(state)) },
         )
     }
 

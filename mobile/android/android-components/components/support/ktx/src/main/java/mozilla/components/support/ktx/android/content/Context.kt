@@ -129,12 +129,12 @@ fun Context.shareMedia(
     filePath: String,
     contentType: String?,
     subject: String? = null,
-    message: String? = null
+    message: String? = null,
 ): Boolean {
     val contentUri = FileProvider.getUriForFile(
         this,
         "${applicationContext.packageName}.feature.downloads.fileprovider", // (packageName + FILE_PROVIDER_EXTENSION)
-        File(filePath)
+        File(filePath),
     )
 
     val intent = Intent().apply {
@@ -177,7 +177,7 @@ fun Context.shareMedia(
  */
 fun Context.email(
     address: String,
-    subject: String = getString(R.string.mozac_support_ktx_share_dialog_title)
+    subject: String = getString(R.string.mozac_support_ktx_share_dialog_title),
 ): Boolean {
     return try {
         val intent = Intent(ACTION_SENDTO, Uri.parse("mailto:$address"))
@@ -185,7 +185,7 @@ fun Context.email(
 
         val emailIntent = Intent.createChooser(
             intent,
-            getString(R.string.mozac_support_ktx_menu_email_with)
+            getString(R.string.mozac_support_ktx_menu_email_with),
         ).apply {
             flags = FLAG_ACTIVITY_NEW_TASK
         }
@@ -208,7 +208,7 @@ fun Context.email(
  */
 fun Context.call(
     phoneNumber: String,
-    subject: String = getString(R.string.mozac_support_ktx_share_dialog_title)
+    subject: String = getString(R.string.mozac_support_ktx_share_dialog_title),
 ): Boolean {
     return try {
         val intent = Intent(ACTION_DIAL, Uri.parse("tel:$phoneNumber"))
@@ -216,7 +216,7 @@ fun Context.call(
 
         val callIntent = Intent.createChooser(
             intent,
-            getString(R.string.mozac_support_ktx_menu_call_with)
+            getString(R.string.mozac_support_ktx_menu_call_with),
         ).apply {
             flags = FLAG_ACTIVITY_NEW_TASK
         }
@@ -236,7 +236,7 @@ fun Context.call(
  * @return true it is able to share email false otherwise.
  */
 fun Context.addContact(
-    address: String
+    address: String,
 ): Boolean {
     return try {
         val intent = Intent(ContactsContract.Intents.Insert.ACTION).apply {
@@ -244,7 +244,7 @@ fun Context.addContact(
             putExtra(ContactsContract.Intents.Insert.EMAIL, address)
             putExtra(
                 ContactsContract.Intents.Insert.EMAIL_TYPE,
-                ContactsContract.CommonDataKinds.Email.TYPE_WORK
+                ContactsContract.CommonDataKinds.Email.TYPE_WORK,
             )
             addFlags(FLAG_ACTIVITY_NEW_TASK)
         }

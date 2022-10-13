@@ -33,9 +33,9 @@ internal abstract class RecentAppsDatabase : RoomDatabase() {
             return Room.databaseBuilder(
                 context,
                 RecentAppsDatabase::class.java,
-                RECENT_APPS_TABLE
+                RECENT_APPS_TABLE,
             ).addMigrations(
-                Migrations.migration_1_2
+                Migrations.migration_1_2,
             ).build().also {
                 instance = it
             }
@@ -46,7 +46,6 @@ internal abstract class RecentAppsDatabase : RoomDatabase() {
 internal object Migrations {
     val migration_1_2 = object : Migration(1, 2) {
         override fun migrate(database: SupportSQLiteDatabase) {
-
             database.execSQL("DROP TABLE RECENT_APPS_TABLE")
             database.execSQL(
                 "CREATE TABLE IF NOT EXISTS " + RECENT_APPS_TABLE +
@@ -54,7 +53,7 @@ internal object Migrations {
                     "`activityName` TEXT NOT NULL, " +
                     "`score` DOUBLE NOT NULL, " +
                     " PRIMARY KEY(`activityName`)" +
-                    ")"
+                    ")",
             )
         }
     }

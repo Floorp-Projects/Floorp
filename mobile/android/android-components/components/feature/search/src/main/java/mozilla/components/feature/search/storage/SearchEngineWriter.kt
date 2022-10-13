@@ -36,7 +36,7 @@ internal class SearchEngineWriter {
     fun saveSearchEngineXML(
         searchEngine: SearchEngine,
         file: AtomicFile,
-        document: Document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
+        document: Document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument(),
     ): Boolean {
         return try {
             buildSearchEngineXML(searchEngine, document)
@@ -57,7 +57,7 @@ internal class SearchEngineWriter {
     @Throws(ParserConfigurationException::class, DOMException::class)
     internal fun buildSearchEngineXML(
         searchEngine: SearchEngine,
-        xmlDocument: Document
+        xmlDocument: Document,
     ) {
         val rootElement = xmlDocument.createElement("OpenSearchDescription")
         rootElement.setAttribute("xmlns", "http://a9.com/-/spec/opensearch/1.1/")

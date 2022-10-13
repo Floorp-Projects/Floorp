@@ -85,7 +85,7 @@ class SettingsTest {
             { settings.clearColor },
             { settings.clearColor = Color.BLUE },
             { settings.enterpriseRootsEnabled },
-            { settings.enterpriseRootsEnabled = false }
+            { settings.enterpriseRootsEnabled = false },
         )
     }
 
@@ -163,7 +163,7 @@ class SettingsTest {
             forceUserScalableContent = true,
             loginAutofillEnabled = true,
             clearColor = Color.BLUE,
-            enterpriseRootsEnabled = true
+            enterpriseRootsEnabled = true,
         )
 
         assertFalse(defaultSettings.domStorageEnabled)

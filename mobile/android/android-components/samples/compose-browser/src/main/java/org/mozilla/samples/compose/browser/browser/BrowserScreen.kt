@@ -82,16 +82,16 @@ fun BrowserScreen(navController: NavController) {
                 browserActions = {
                     TabCounterButton(
                         components().store,
-                        onClicked = { store.dispatch(BrowserScreenAction.ShowTabs) }
+                        onClicked = { store.dispatch(BrowserScreenAction.ShowTabs) },
                     )
-                }
+                },
             )
 
             Box {
                 WebContent(
                     components().engine,
                     components().store,
-                    Target.SelectedTab
+                    Target.SelectedTab,
                 )
 
                 val url = editUrl.value
@@ -104,7 +104,7 @@ fun BrowserScreen(navController: NavController) {
                         },
                         onAutoComplete = { suggestion ->
                             store.dispatch(BrowserScreenAction.UpdateEditText(suggestion.editSuggestion!!))
-                        }
+                        },
                     )
                 }
             }
@@ -121,7 +121,7 @@ fun BrowserScreen(navController: NavController) {
  */
 @Composable
 fun TabsTray(
-    store: Store<BrowserScreenState, BrowserScreenAction>
+    store: Store<BrowserScreenState, BrowserScreenAction>,
 ) {
     val components = components()
 
@@ -134,12 +134,12 @@ fun TabsTray(
             .background(Color.Black.copy(alpha = ContentAlpha.medium))
             .clickable {
                 store.dispatch(BrowserScreenAction.HideTabs)
-            }
+            },
     ) {
         Column(
             modifier = Modifier
                 .fillMaxHeight(fraction = 0.8f)
-                .align(Alignment.BottomStart)
+                .align(Alignment.BottomStart),
         ) {
             TabList(
                 store = components().store,
@@ -150,17 +150,17 @@ fun TabsTray(
                 onTabClosed = { tab ->
                     components.tabsUseCases.removeTab(tab.id)
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             Button(
                 onClick = {
                     components.tabsUseCases.addTab(
                         url = "about:blank",
-                        selectTab = true
+                        selectTab = true,
                     )
                     store.dispatch(BrowserScreenAction.HideTabs)
                     store.dispatch(BrowserScreenAction.ToggleEditMode(true))
-                }
+                },
             ) {
                 Text("+")
             }
@@ -173,7 +173,7 @@ fun TabsTray(
 private fun Suggestions(
     url: String,
     onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
-    onAutoComplete: (AwesomeBar.Suggestion) -> Unit
+    onAutoComplete: (AwesomeBar.Suggestion) -> Unit,
 ) {
     val context = LocalContext.current
     val components = components()
@@ -182,7 +182,7 @@ private fun Suggestions(
         SessionSuggestionProvider(
             context.resources,
             components.store,
-            components.tabsUseCases.selectTab
+            components.tabsUseCases.selectTab,
         )
     }
 
@@ -198,14 +198,14 @@ private fun Suggestions(
             components.client,
             mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
             engine = components.engine,
-            filterExactMatch = true
+            filterExactMatch = true,
         )
     }
 
     val clipboardSuggestionProvider = remember(context) {
         ClipboardSuggestionProvider(
             context,
-            components.sessionUseCases.loadUrl
+            components.sessionUseCases.loadUrl,
         )
     }
 
@@ -217,10 +217,10 @@ private fun Suggestions(
             sessionSuggestionProvider,
             searchActionProvider,
             searchSuggestionProvider,
-            clipboardSuggestionProvider
+            clipboardSuggestionProvider,
         ),
         onSuggestionClicked = { suggestion -> onSuggestionClicked(suggestion) },
         onAutoComplete = { suggestion -> onAutoComplete(suggestion) },
-        onScroll = { keyboardController?.hide() }
+        onScroll = { keyboardController?.hide() },
     )
 }

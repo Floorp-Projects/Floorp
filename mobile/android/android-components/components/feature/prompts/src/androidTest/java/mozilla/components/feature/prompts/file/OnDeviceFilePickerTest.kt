@@ -49,7 +49,7 @@ class OnDeviceFilePickerTest {
             isMultipleFilesSelection = true,
             onDismiss = { onDismissWasExecuted = true },
             onSingleFileSelected = { _, _ -> onSingleFileSelectedWasExecuted = true },
-            onMultipleFilesSelected = { _, _ -> onMultipleFilesSelectedWasExecuted = true }
+            onMultipleFilesSelected = { _, _ -> onMultipleFilesSelectedWasExecuted = true },
         )
 
         val intent = Intent()
@@ -74,7 +74,7 @@ class OnDeviceFilePickerTest {
             isMultipleFilesSelection = true,
             onDismiss = { onDismissWasExecuted = true },
             onSingleFileSelected = { _, _ -> onSingleFileSelectedWasExecuted = true },
-            onMultipleFilesSelected = { _, uris -> urisWereSelected = uris.isNotEmpty() }
+            onMultipleFilesSelected = { _, uris -> urisWereSelected = uris.isNotEmpty() },
         )
 
         val intent = Intent()
@@ -98,7 +98,7 @@ class OnDeviceFilePickerTest {
             arrayOf(""),
             onDismiss = { onDismissWasExecuted = true },
             onSingleFileSelected = { _, _ -> onSingleFileSelectedWasExecuted = true },
-            onMultipleFilesSelected = { _, _ -> onMultipleFilesSelectedWasExecuted = true }
+            onMultipleFilesSelected = { _, _ -> onMultipleFilesSelectedWasExecuted = true },
         )
 
         val intent = Intent()
@@ -122,7 +122,7 @@ class OnDeviceFilePickerTest {
             arrayOf(""),
             onDismiss = { onDismissWasExecuted = true },
             onSingleFileSelected = { _, _ -> onSingleFileSelectedWasExecuted = true },
-            onMultipleFilesSelected = { _, _ -> onMultipleFilesSelectedWasExecuted = true }
+            onMultipleFilesSelected = { _, _ -> onMultipleFilesSelectedWasExecuted = true },
         )
 
         val intent = Intent()

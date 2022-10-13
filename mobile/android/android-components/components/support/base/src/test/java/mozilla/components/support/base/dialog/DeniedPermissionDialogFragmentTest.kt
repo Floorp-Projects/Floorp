@@ -28,7 +28,7 @@ class DeniedPermissionDialogFragmentTest {
     fun `WHEN showing the dialog THEN it has the provided message`() {
         val messageId = R.string.mozac_support_base_permissions_needed_negative_button
         val fragment = spy(
-            DeniedPermissionDialogFragment.newInstance(messageId)
+            DeniedPermissionDialogFragment.newInstance(messageId),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -48,7 +48,7 @@ class DeniedPermissionDialogFragmentTest {
         val messageId = R.string.mozac_support_base_permissions_needed_negative_button
 
         val fragment = spy(
-            DeniedPermissionDialogFragment.newInstance(messageId)
+            DeniedPermissionDialogFragment.newInstance(messageId),
         )
 
         doNothing().`when`(fragment).dismiss()

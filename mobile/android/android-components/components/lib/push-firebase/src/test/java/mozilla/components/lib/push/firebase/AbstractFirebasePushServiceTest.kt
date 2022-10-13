@@ -20,11 +20,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.gms.Shadows
@@ -58,7 +58,7 @@ class AbstractFirebasePushServiceTest {
             "body" to "contents",
             "con" to "encoding",
             "enc" to "salt",
-            "cryptokey" to "dh256"
+            "cryptokey" to "dh256",
         )
         val captor = argumentCaptor<EncryptedPushMessage>()
         `when`(remoteMessage.data).thenReturn(data)
@@ -77,7 +77,7 @@ class AbstractFirebasePushServiceTest {
     fun `malformed message exception should not be thrown`() {
         val remoteMessage: RemoteMessage = mock()
         val data = mapOf(
-            "chid" to "1234"
+            "chid" to "1234",
         )
         val captor = argumentCaptor<EncryptedPushMessage>()
         `when`(remoteMessage.data).thenReturn(data)
@@ -98,7 +98,7 @@ class AbstractFirebasePushServiceTest {
         val data = mapOf(
             "con" to "encoding",
             "enc" to "salt",
-            "cryptokey" to "dh256"
+            "cryptokey" to "dh256",
         )
         `when`(remoteMessage.data).thenReturn(data)
 

@@ -28,7 +28,7 @@ internal class CrashListFragment : Fragment(R.layout.mozac_lib_crash_crashlist) 
         listView.layoutManager = LinearLayoutManager(
             requireContext(),
             LinearLayoutManager.VERTICAL,
-            false
+            false,
         )
 
         val emptyView = view.findViewById<TextView>(R.id.mozac_lib_crash_empty)
@@ -38,7 +38,7 @@ internal class CrashListFragment : Fragment(R.layout.mozac_lib_crash_crashlist) 
 
         val dividerItemDecoration = DividerItemDecoration(
             requireContext(),
-            LinearLayoutManager.VERTICAL
+            LinearLayoutManager.VERTICAL,
         )
         listView.addItemDecoration(dividerItemDecoration)
 
@@ -51,7 +51,7 @@ internal class CrashListFragment : Fragment(R.layout.mozac_lib_crash_crashlist) 
                     } else {
                         adapter.updateList(list)
                     }
-                }
+                },
             )
         } catch (e: SQLiteBlobTooBigException) {
             /* recover by deleting all entries */

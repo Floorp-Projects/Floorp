@@ -54,7 +54,7 @@ class SearchSuggestionProviderTest {
                 name = "Test",
                 url = server.url("/search?q={searchTerms}").toString(),
                 icon = mock(),
-                suggestUrl = server.url("/").toString()
+                suggestUrl = server.url("/").toString(),
             )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
@@ -112,7 +112,7 @@ class SearchSuggestionProviderTest {
                 name = "Test",
                 url = server.url("/search?q={searchTerms}").toString(),
                 icon = mock(),
-                suggestUrl = server.url("/").toString()
+                suggestUrl = server.url("/").toString(),
             )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
@@ -121,7 +121,7 @@ class SearchSuggestionProviderTest {
                 searchEngine,
                 useCase,
                 HttpURLConnectionClient(),
-                mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS
+                mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
             )
 
             try {
@@ -174,7 +174,7 @@ class SearchSuggestionProviderTest {
                 name = "Test",
                 url = server.url("/search?q={searchTerms}").toString(),
                 icon = mock(),
-                suggestUrl = server.url("/").toString()
+                suggestUrl = server.url("/").toString(),
             )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
@@ -184,7 +184,7 @@ class SearchSuggestionProviderTest {
                 useCase,
                 HttpURLConnectionClient(),
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
-                limit = 5
+                limit = 5,
             )
 
             try {
@@ -216,7 +216,7 @@ class SearchSuggestionProviderTest {
                 name = "Test",
                 url = server.url("/search?q={searchTerms}").toString(),
                 icon = mock(),
-                suggestUrl = server.url("/").toString()
+                suggestUrl = server.url("/").toString(),
             )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
@@ -255,7 +255,7 @@ class SearchSuggestionProviderTest {
                 name = "Test",
                 url = server.url("/search?q={searchTerms}").toString(),
                 icon = engineIcon,
-                suggestUrl = server.url("/").toString()
+                suggestUrl = server.url("/").toString(),
             )
 
             val provider = SearchSuggestionProvider(searchEngine, mock(), HttpURLConnectionClient())
@@ -282,14 +282,16 @@ class SearchSuggestionProviderTest {
                 name = "Test",
                 url = server.url("/search?q={searchTerms}").toString(),
                 icon = engineIcon,
-                suggestUrl = server.url("/").toString()
+                suggestUrl = server.url("/").toString(),
             )
 
             val paramIcon = testContext.getDrawable(R.drawable.mozac_ic_search)!!.toBitmap()
 
             val provider = SearchSuggestionProvider(
-                searchEngine, mock(), HttpURLConnectionClient(),
-                icon = paramIcon
+                searchEngine,
+                mock(),
+                HttpURLConnectionClient(),
+                icon = paramIcon,
             )
 
             try {
@@ -316,7 +318,7 @@ class SearchSuggestionProviderTest {
             val searchEngine = createSearchEngine(
                 name = "Test",
                 url = "https://localhost/?q={searchTerms}",
-                icon = mock()
+                icon = mock(),
             )
             val provider = SearchSuggestionProvider(searchEngine, mock(), mock())
 
@@ -340,7 +342,7 @@ class SearchSuggestionProviderTest {
                 name = "Test",
                 url = server.url("/search?q={searchTerms}").toString(),
                 icon = mock(),
-                suggestUrl = server.url("/").toString()
+                suggestUrl = server.url("/").toString(),
             )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
@@ -368,7 +370,7 @@ class SearchSuggestionProviderTest {
                 name = "Test",
                 url = "https://localhost/?q={searchTerms}",
                 icon = mock(),
-                suggestUrl = "https://localhost/suggestions"
+                suggestUrl = "https://localhost/suggestions",
             )
             val useCase: SearchUseCases.SearchUseCase = mock()
 
@@ -405,7 +407,7 @@ class SearchSuggestionProviderTest {
                 name = "Test",
                 url = server.url("/search?q={searchTerms}").toString(),
                 icon = mock(),
-                suggestUrl = server.url("/").toString()
+                suggestUrl = server.url("/").toString(),
             )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
@@ -414,7 +416,7 @@ class SearchSuggestionProviderTest {
                 searchEngine,
                 useCase,
                 HttpURLConnectionClient(),
-                mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS
+                mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
             )
 
             try {
@@ -448,7 +450,7 @@ class SearchSuggestionProviderTest {
                 name = "Test",
                 url = server.url("/search?q={searchTerms}").toString(),
                 icon = mock(),
-                suggestUrl = server.url("/").toString()
+                suggestUrl = server.url("/").toString(),
             )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
@@ -459,7 +461,7 @@ class SearchSuggestionProviderTest {
                 HttpURLConnectionClient(),
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
                 limit = 3,
-                showDescription = false
+                showDescription = false,
             )
 
             try {
@@ -492,7 +494,7 @@ class SearchSuggestionProviderTest {
                 name = "Test",
                 url = server.url("/search?q={searchTerms}").toString(),
                 icon = mock(),
-                suggestUrl = server.url("/").toString()
+                suggestUrl = server.url("/").toString(),
             )
 
             val engine: Engine = mock()
@@ -503,7 +505,7 @@ class SearchSuggestionProviderTest {
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
                 engine = engine,
                 limit = 3,
-                showDescription = false
+                showDescription = false,
             )
 
             try {
@@ -529,7 +531,7 @@ class SearchSuggestionProviderTest {
                 name = "Test",
                 url = server.url("/search?q={searchTerms}").toString(),
                 icon = mock(),
-                suggestUrl = server.url("/").toString()
+                suggestUrl = server.url("/").toString(),
             )
 
             val engine: Engine = mock()
@@ -537,7 +539,7 @@ class SearchSuggestionProviderTest {
                 searchEngine,
                 mock(),
                 HttpURLConnectionClient(),
-                engine = engine
+                engine = engine,
             )
 
             try {
@@ -566,7 +568,7 @@ class SearchSuggestionProviderTest {
                 name = "Test",
                 url = server.url("/search?q={searchTerms}").toString(),
                 icon = mock(),
-                suggestUrl = server.url("/").toString()
+                suggestUrl = server.url("/").toString(),
             )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
@@ -576,7 +578,7 @@ class SearchSuggestionProviderTest {
                 useCase,
                 HttpURLConnectionClient(),
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
-                filterExactMatch = true
+                filterExactMatch = true,
             )
 
             try {
@@ -608,7 +610,7 @@ class SearchSuggestionProviderTest {
                 name = "Test",
                 url = server.url("/search?q={searchTerms}").toString(),
                 icon = mock(),
-                suggestUrl = server.url("/").toString()
+                suggestUrl = server.url("/").toString(),
             )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
@@ -617,7 +619,7 @@ class SearchSuggestionProviderTest {
                 searchEngine,
                 useCase,
                 HttpURLConnectionClient(),
-                filterExactMatch = true
+                filterExactMatch = true,
             )
 
             try {

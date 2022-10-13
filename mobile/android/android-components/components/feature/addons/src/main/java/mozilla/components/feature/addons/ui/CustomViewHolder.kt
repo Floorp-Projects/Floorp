@@ -20,7 +20,7 @@ sealed class CustomViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     class SectionViewHolder(
         view: View,
         val titleView: TextView,
-        val divider: View
+        val divider: View,
     ) : CustomViewHolder(view)
 
     /**
@@ -29,7 +29,7 @@ sealed class CustomViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     class UnsupportedSectionViewHolder(
         view: View,
         val titleView: TextView,
-        val descriptionView: TextView
+        val descriptionView: TextView,
     ) : CustomViewHolder(view)
 
     /**
@@ -45,6 +45,6 @@ sealed class CustomViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val ratingAccessibleView: TextView,
         val userCountView: TextView,
         val addButton: ImageView,
-        val allowedInPrivateBrowsingLabel: ImageView
+        val allowedInPrivateBrowsingLabel: ImageView,
     ) : CustomViewHolder(view)
 }

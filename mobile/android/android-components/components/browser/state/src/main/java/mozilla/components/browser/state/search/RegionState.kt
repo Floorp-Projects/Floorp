@@ -14,7 +14,7 @@ package mozilla.components.browser.state.search
  */
 data class RegionState(
     val home: String,
-    val current: String
+    val current: String,
 ) {
     companion object {
         /**

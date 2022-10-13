@@ -19,6 +19,6 @@ interface IconProcessor {
         request: IconRequest,
         resource: IconRequest.Resource?,
         icon: Icon,
-        desiredSize: DesiredSize
+        desiredSize: DesiredSize,
     ): Icon?
 }

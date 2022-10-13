@@ -41,7 +41,7 @@ class SuspendMiddlewareTest {
         val tab = createTab("https://www.mozilla.org", id = "1")
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val engineSession: EngineSession = mock()
@@ -67,8 +67,8 @@ class SuspendMiddlewareTest {
         val store = spy(
             BrowserStore(
                 initialState = BrowserState(tabs = listOf()),
-                middleware = listOf(middleware)
-            )
+                middleware = listOf(middleware),
+            ),
         )
 
         store.dispatch(EngineAction.SuspendEngineSessionAction("invalid")).joinBlocking()
@@ -83,8 +83,8 @@ class SuspendMiddlewareTest {
         val store = spy(
             BrowserStore(
                 initialState = BrowserState(tabs = listOf(tab)),
-                middleware = listOf(middleware)
-            )
+                middleware = listOf(middleware),
+            ),
         )
 
         store.dispatch(EngineAction.SuspendEngineSessionAction(tab.id)).joinBlocking()
@@ -98,11 +98,11 @@ class SuspendMiddlewareTest {
         val tab = createTab("https://www.mozilla.org", id = "1")
         val suspendStore = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
         val killStore = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         val engineSession: EngineSession = mock()

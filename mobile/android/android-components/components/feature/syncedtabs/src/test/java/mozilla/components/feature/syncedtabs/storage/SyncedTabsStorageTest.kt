@@ -62,11 +62,11 @@ class SyncedTabsStorageTest {
                     tabs = listOf(
                         createTab(id = "tab1", url = "https://www.mozilla.org", lastAccess = 123L),
                         createTab(id = "tab2", url = "https://www.foo.bar", lastAccess = 124L),
-                        createTab(id = "private", url = "https://private.tab", private = true, lastAccess = 125L)
+                        createTab(id = "private", url = "https://private.tab", private = true, lastAccess = 125L),
                     ),
-                    selectedTabId = "tab1"
-                )
-            )
+                    selectedTabId = "tab1",
+                ),
+            ),
         )
         tabsStorage = mock()
         accountManager = mock()
@@ -88,12 +88,14 @@ class SyncedTabsStorageTest {
         verify(tabsStorage, times(2)).store(
             listOf(
                 Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L)
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L),
                 // Private tab is absent.
-            )
+            ),
         )
         verify(accountManager, times(2)).syncNow(
-            SyncReason.User, false, listOf(SyncEngine.Tabs)
+            SyncReason.User,
+            false,
+            listOf(SyncEngine.Tabs),
         )
     }
 
@@ -103,7 +105,7 @@ class SyncedTabsStorageTest {
             accountManager,
             store,
             tabsStorage,
-            debounceMillis = 0
+            debounceMillis = 0,
         )
         feature.start()
         // Run the flow.
@@ -112,8 +114,8 @@ class SyncedTabsStorageTest {
         verify(tabsStorage, times(2)).store(
             listOf(
                 Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L)
-            )
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L),
+            ),
         )
 
         feature.stop()
@@ -129,8 +131,8 @@ class SyncedTabsStorageTest {
             SyncedTabsStorage(
                 accountManager,
                 store,
-                tabsStorage
-            )
+                tabsStorage,
+            ),
         )
         val device1 = Device(
             id = "client1",
@@ -140,7 +142,7 @@ class SyncedTabsStorageTest {
             lastAccessTime = null,
             capabilities = listOf(),
             subscriptionExpired = false,
-            subscription = null
+            subscription = null,
         )
         val device2 = Device(
             id = "client2",
@@ -150,7 +152,7 @@ class SyncedTabsStorageTest {
             lastAccessTime = null,
             capabilities = listOf(),
             subscriptionExpired = false,
-            subscription = null
+            subscription = null,
         )
         doReturn(listOf(device1, device2)).`when`(feature).syncClients()
         val tabsClient1 = listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0))
@@ -159,8 +161,8 @@ class SyncedTabsStorageTest {
             mapOf(
                 SyncClient("client1") to tabsClient1,
                 SyncClient("client2") to tabsClient2,
-                SyncClient("client-unknown") to listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0))
-            )
+                SyncClient("client-unknown") to listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0)),
+            ),
         )
 
         val result = feature.getSyncedDeviceTabs()
@@ -176,8 +178,8 @@ class SyncedTabsStorageTest {
             SyncedTabsStorage(
                 accountManager,
                 store,
-                tabsStorage
-            )
+                tabsStorage,
+            ),
         )
         doReturn(null).`when`(feature).syncClients()
         assertEquals(emptyList<SyncedDeviceTabs>(), feature.getSyncedDeviceTabs())
@@ -189,8 +191,8 @@ class SyncedTabsStorageTest {
             SyncedTabsStorage(
                 accountManager,
                 store,
-                tabsStorage
-            )
+                tabsStorage,
+            ),
         )
         val account: OAuthAccount = mock()
         val constellation: DeviceConstellation = mock()
@@ -207,8 +209,8 @@ class SyncedTabsStorageTest {
                 lastAccessTime = null,
                 capabilities = listOf(),
                 subscriptionExpired = false,
-                subscription = null
-            )
+                subscription = null,
+            ),
         )
         whenever(state.otherDevices).thenReturn(otherDevices)
         assertEquals(otherDevices, feature.syncClients())
@@ -220,8 +222,8 @@ class SyncedTabsStorageTest {
             SyncedTabsStorage(
                 accountManager,
                 store,
-                tabsStorage
-            )
+                tabsStorage,
+            ),
         )
         val account: OAuthAccount = mock()
         val constellation: DeviceConstellation = mock()
@@ -237,8 +239,8 @@ class SyncedTabsStorageTest {
             SyncedTabsStorage(
                 accountManager,
                 store,
-                tabsStorage
-            )
+                tabsStorage,
+            ),
         )
         whenever(accountManager.authenticatedAccount()).thenReturn(null)
         assertEquals(null, feature.syncClients())
@@ -252,16 +254,16 @@ class SyncedTabsStorageTest {
                     createTab(id = "tab1", url = "https://www.mozilla.org", lastAccess = 123L),
                     createTab(id = "tab2", url = "https://www.foo.bar", lastAccess = 124L),
                 ),
-                selectedTabId = "tab1"
-            )
+                selectedTabId = "tab1",
+            ),
         )
         val feature = spy(
             SyncedTabsStorage(
                 accountManager,
                 store,
                 tabsStorage,
-                debounceMillis = 0
-            )
+                debounceMillis = 0,
+            ),
         )
         feature.start()
 
@@ -269,8 +271,8 @@ class SyncedTabsStorageTest {
         verify(tabsStorage, times(1)).store(
             listOf(
                 Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L)
-            )
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L),
+            ),
         )
 
         // Change a tab besides loading it
@@ -289,16 +291,16 @@ class SyncedTabsStorageTest {
                     createUnloadedTab(id = "tab1", url = "https://www.mozilla.org", lastAccess = 123L),
                     createUnloadedTab(id = "tab2", url = "https://www.foo.bar", lastAccess = 124L),
                 ),
-                selectedTabId = "tab1"
-            )
+                selectedTabId = "tab1",
+            ),
         )
         val feature = spy(
             SyncedTabsStorage(
                 accountManager,
                 store,
                 tabsStorage,
-                debounceMillis = 0
-            )
+                debounceMillis = 0,
+            ),
         )
         feature.start()
 
@@ -307,7 +309,7 @@ class SyncedTabsStorageTest {
         verify(tabsStorage).store(
             listOf(
                 Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
-            )
+            ),
         )
     }
 
@@ -319,16 +321,16 @@ class SyncedTabsStorageTest {
                     createTab(id = "tab1", url = "https://www.mozilla.org", lastAccess = 123L),
                     createTab(id = "tab2", url = "https://www.foo.bar", lastAccess = 124L),
                 ),
-                selectedTabId = "tab1"
-            )
+                selectedTabId = "tab1",
+            ),
         )
         val feature = spy(
             SyncedTabsStorage(
                 accountManager,
                 store,
                 tabsStorage,
-                debounceMillis = 0
-            )
+                debounceMillis = 0,
+            ),
         )
         feature.start()
 
@@ -337,8 +339,8 @@ class SyncedTabsStorageTest {
         verify(tabsStorage, times(2)).store(
             listOf(
                 Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L)
-            )
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L),
+            ),
         )
     }
 
@@ -350,16 +352,16 @@ class SyncedTabsStorageTest {
                     createTab(id = "tab1", url = "https://www.mozilla.org", lastAccess = 123L),
                     createTab(id = "tab2", url = "https://www.foo.bar", lastAccess = 124L),
                 ),
-                selectedTabId = "tab1"
-            )
+                selectedTabId = "tab1",
+            ),
         )
         val feature = spy(
             SyncedTabsStorage(
                 accountManager,
                 store,
                 tabsStorage,
-                debounceMillis = 0
-            )
+                debounceMillis = 0,
+            ),
         )
         feature.start()
 
@@ -368,14 +370,14 @@ class SyncedTabsStorageTest {
         verify(tabsStorage, times(1)).store(
             listOf(
                 Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L)
-            )
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L),
+            ),
         )
         verify(tabsStorage, times(1)).store(
             listOf(
                 Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 300L),
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L)
-            )
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L),
+            ),
         )
     }
 

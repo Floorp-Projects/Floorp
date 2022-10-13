@@ -28,11 +28,11 @@ internal fun emitNotificationTryAgainFact() = emitNotificationFact(Action.TRY_AG
 internal fun emitNotificationOpenFact() = emitNotificationFact(Action.OPEN)
 
 private fun emitNotificationFact(
-    action: Action
+    action: Action,
 ) {
     Fact(
         Component.FEATURE_DOWNLOADS,
         action,
-        DownloadsFacts.Items.NOTIFICATION
+        DownloadsFacts.Items.NOTIFICATION,
     ).collect()
 }

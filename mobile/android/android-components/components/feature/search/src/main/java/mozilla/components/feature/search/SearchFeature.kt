@@ -28,7 +28,7 @@ import mozilla.components.support.utils.ext.toNullablePair
 class SearchFeature(
     private val store: BrowserStore,
     private val tabId: String? = null,
-    private val performSearch: (SearchRequest, tabId: String) -> Unit
+    private val performSearch: (SearchRequest, tabId: String) -> Unit,
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null

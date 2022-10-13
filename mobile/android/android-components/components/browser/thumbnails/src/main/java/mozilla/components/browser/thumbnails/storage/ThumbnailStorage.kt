@@ -38,8 +38,8 @@ class ThumbnailStorage(
     private val context: Context,
     jobDispatcher: CoroutineDispatcher = Executors.newFixedThreadPool(
         THREADS,
-        NamedThreadFactory("ThumbnailStorage")
-    ).asCoroutineDispatcher()
+        NamedThreadFactory("ThumbnailStorage"),
+    ).asCoroutineDispatcher(),
 ) {
     private val decoders = AndroidImageDecoder()
     private val logger = Logger("ThumbnailStorage")
@@ -74,7 +74,7 @@ class ThumbnailStorage(
             if (loadedThumbnail != null) {
                 logger.debug(
                     "Loaded thumbnail from disk (id = ${request.id}, " +
-                        "generationId = ${loadedThumbnail.generationId})"
+                        "generationId = ${loadedThumbnail.generationId})",
                 )
             } else {
                 logger.debug("No thumbnail loaded (id = ${request.id})")
@@ -88,7 +88,7 @@ class ThumbnailStorage(
             targetSize = request.size,
             minSize = request.size,
             maxSize = maximumSize,
-            maxScaleFactor = MAXIMUM_SCALE_FACTOR
+            maxScaleFactor = MAXIMUM_SCALE_FACTOR,
         )
 
         val data = sharedDiskCache.getThumbnailData(context, request)
@@ -108,7 +108,7 @@ class ThumbnailStorage(
         scope.launch {
             logger.debug(
                 "Saved thumbnail to disk (id = $request, " +
-                    "generationId = ${bitmap.generationId})"
+                    "generationId = ${bitmap.generationId})",
             )
             sharedDiskCache.putThumbnailBitmap(context, request, bitmap)
         }

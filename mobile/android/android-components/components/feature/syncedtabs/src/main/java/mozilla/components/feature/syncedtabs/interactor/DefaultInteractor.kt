@@ -11,7 +11,7 @@ import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 internal class DefaultInteractor(
     override val controller: SyncedTabsController,
     override val view: SyncedTabsView,
-    override val tabClicked: (Tab) -> Unit
+    override val tabClicked: (Tab) -> Unit,
 ) : SyncedTabsInteractor {
 
     override fun start() {

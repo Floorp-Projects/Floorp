@@ -41,7 +41,7 @@ class LoginExceptionStorageTest {
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
         LoginExceptionStorage::class.java.canonicalName,
-        FrameworkSQLiteOpenHelperFactory()
+        FrameworkSQLiteOpenHelperFactory(),
     )
 
     @Before
@@ -54,7 +54,7 @@ class LoginExceptionStorageTest {
 
         storage =
             LoginExceptionStorage(
-                context
+                context,
             )
         storage.database = lazy { database }
     }

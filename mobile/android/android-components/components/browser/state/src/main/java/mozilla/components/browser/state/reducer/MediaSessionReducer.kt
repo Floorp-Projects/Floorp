@@ -34,7 +34,7 @@ internal object MediaSessionReducer {
                 state.updateFullscreen(
                     action.tabId,
                     action.fullScreen,
-                    action.elementMetadata
+                    action.elementMetadata,
                 )
         }
     }
@@ -42,19 +42,19 @@ internal object MediaSessionReducer {
 
 private fun BrowserState.addMediaSession(
     tabId: String,
-    mediaSessionController: MediaSession.Controller
+    mediaSessionController: MediaSession.Controller,
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
         current.createCopy(
             mediaSessionState = MediaSessionState(
-                controller = mediaSessionController
-            )
+                controller = mediaSessionController,
+            ),
         )
     }
 }
 
 private fun BrowserState.removeMediaSession(
-    tabId: String
+    tabId: String,
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
         current.createCopy(mediaSessionState = null)
@@ -63,65 +63,65 @@ private fun BrowserState.removeMediaSession(
 
 private fun BrowserState.updateMediaMetadata(
     tabId: String,
-    metadata: MediaSession.Metadata
+    metadata: MediaSession.Metadata,
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
         current.createCopy(
             mediaSessionState = current.mediaSessionState?.copy(
-                metadata = metadata
-            )
+                metadata = metadata,
+            ),
         )
     }
 }
 
 private fun BrowserState.updatePlaybackState(
     tabId: String,
-    playbackState: MediaSession.PlaybackState
+    playbackState: MediaSession.PlaybackState,
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
         current.createCopy(
             mediaSessionState = current.mediaSessionState?.copy(
-                playbackState = playbackState
-            )
+                playbackState = playbackState,
+            ),
         )
     }
 }
 
 private fun BrowserState.updateMediaFeature(
     tabId: String,
-    features: MediaSession.Feature
+    features: MediaSession.Feature,
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
         current.createCopy(
             mediaSessionState = current.mediaSessionState?.copy(
-                features = features
-            )
+                features = features,
+            ),
         )
     }
 }
 
 private fun BrowserState.updatePositionState(
     tabId: String,
-    positionState: MediaSession.PositionState
+    positionState: MediaSession.PositionState,
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
         current.createCopy(
             mediaSessionState = current.mediaSessionState?.copy(
-                positionState = positionState
-            )
+                positionState = positionState,
+            ),
         )
     }
 }
 
 private fun BrowserState.updateMuted(
     tabId: String,
-    muted: Boolean
+    muted: Boolean,
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
         current.createCopy(
             mediaSessionState = current.mediaSessionState?.copy(
-                muted = muted
-            )
+                muted = muted,
+            ),
         )
     }
 }
@@ -129,14 +129,14 @@ private fun BrowserState.updateMuted(
 private fun BrowserState.updateFullscreen(
     tabId: String,
     fullscreen: Boolean,
-    elementMetadata: MediaSession.ElementMetadata?
+    elementMetadata: MediaSession.ElementMetadata?,
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
         current.createCopy(
             mediaSessionState = current.mediaSessionState?.copy(
                 fullscreen = fullscreen,
-                elementMetadata = elementMetadata
-            )
+                elementMetadata = elementMetadata,
+            ),
         )
     }
 }

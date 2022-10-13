@@ -61,7 +61,7 @@ class FxaPushSupportFeature(
     private val crashReporter: CrashReporting? = null,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     private val owner: LifecycleOwner = ProcessLifecycleOwner.get(),
-    private val autoPause: Boolean = false
+    private val autoPause: Boolean = false,
 ) {
 
     /**
@@ -86,7 +86,7 @@ class FxaPushSupportFeature(
             scopeValue,
             crashReporter,
             owner,
-            autoPause
+            autoPause,
         )
 
         coroutineScope.launch(Main) {
@@ -111,7 +111,7 @@ internal class AccountObserver(
     private val fxaPushScope: String,
     private val crashReporter: CrashReporting?,
     private val lifecycleOwner: LifecycleOwner,
-    private val autoPause: Boolean
+    private val autoPause: Boolean,
 ) : SyncAccountObserver {
 
     private val logger = Logger(AccountObserver::class.java.simpleName)
@@ -125,7 +125,7 @@ internal class AccountObserver(
             scope = fxaPushScope,
             account = account,
             verifier = verificationDelegate,
-            crashReporter = crashReporter
+            crashReporter = crashReporter,
         )
 
         // NB: can we just expose registerDeviceObserver on account manager?
@@ -160,7 +160,7 @@ internal fun pushSubscribe(
     account: OAuthAccount,
     scope: String,
     crashReporter: CrashReporting?,
-    logContext: String
+    logContext: String,
 ) {
     val logger = Logger("FxaPushSupportFeature")
     val currentDevice = account.deviceConstellation().state()?.currentDevice
@@ -189,7 +189,7 @@ internal fun pushSubscribe(
                     account.deviceConstellation().setDevicePushSubscription(subscription.into())
                 }
             }
-        }
+        },
     )
 }
 
@@ -203,7 +203,7 @@ internal class ConstellationObserver(
     private val scope: String,
     private val account: OAuthAccount,
     private val verifier: VerificationDelegate = VerificationDelegate(context),
-    private val crashReporter: CrashReporting?
+    private val crashReporter: CrashReporting?,
 ) : DeviceConstellationObserver {
 
     private val logger = Logger(ConstellationObserver::class.java.simpleName)
@@ -222,11 +222,11 @@ internal class ConstellationObserver(
 
                 logger.info("Incrementing verifier")
                 logger.debug(
-                    "Verifier state before: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}"
+                    "Verifier state before: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}",
                 )
                 verifier.increment()
                 logger.debug(
-                    "Verifier state after: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}"
+                    "Verifier state after: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}",
                 )
             } else {
                 logger.info("Short-circuiting onDevicesUpdate: rate-limited")
@@ -246,7 +246,7 @@ internal class ConstellationObserver(
 internal class AutoPushObserver(
     private val accountManager: FxaAccountManager,
     private val pushFeature: AutoPushFeature,
-    private val fxaPushScope: String
+    private val fxaPushScope: String,
 ) : AutoPushFeature.Observer {
     private val logger = Logger(AutoPushObserver::class.java.simpleName)
 
@@ -292,7 +292,7 @@ internal class AutoPushObserver(
  */
 internal class VerificationDelegate(
     context: Context,
-    private val disableRateLimit: Boolean = false
+    private val disableRateLimit: Boolean = false,
 ) : SharedPreferencesCache<VerificationState>(context) {
     override val logger: Logger = Logger(VerificationDelegate::class.java.simpleName)
     override val cacheKey: String = PREF_LAST_VERIFIED
@@ -307,7 +307,7 @@ internal class VerificationDelegate(
     override fun fromJSON(obj: JSONObject) =
         VerificationState(
             obj.getLong(KEY_TIMESTAMP),
-            obj.getInt(KEY_TOTAL_COUNT)
+            obj.getInt(KEY_TOTAL_COUNT),
         )
 
     @VisibleForTesting
@@ -390,5 +390,5 @@ internal fun preference(context: Context) = context.getSharedPreferences(PREFERE
 internal fun AutoPushSubscription.into() = DevicePushSubscription(
     endpoint = this.endpoint,
     publicKey = this.publicKey,
-    authKey = this.authKey
+    authKey = this.authKey,
 )

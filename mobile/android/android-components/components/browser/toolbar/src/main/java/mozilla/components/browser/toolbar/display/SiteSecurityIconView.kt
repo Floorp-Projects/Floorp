@@ -18,7 +18,7 @@ import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
 internal class SiteSecurityIconView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : AppCompatImageView(context, attrs, defStyleAttr) {
 
     // We allow null here because in some situations, onCreateDrawableState is getting called from

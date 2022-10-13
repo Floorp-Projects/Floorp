@@ -79,7 +79,7 @@ interface SyncStatusObserver {
  */
 data class LazyStoreWithKey(
     val lazyStore: Lazy<SyncableStore>,
-    val keyProvider: Lazy<KeyProvider>? = null
+    val keyProvider: Lazy<KeyProvider>? = null,
 )
 
 /**
@@ -125,7 +125,7 @@ internal interface SyncDispatcher : Closeable, Observable<SyncStatusObserver> {
  * @param syncConfig A [SyncConfig] object describing how sync should behave.
  */
 internal abstract class SyncManager(
-    private val syncConfig: SyncConfig
+    private val syncConfig: SyncConfig,
 ) {
     open val logger = Logger("SyncManager")
 
@@ -191,7 +191,7 @@ internal abstract class SyncManager(
 
     private fun newDispatcher(
         currentDispatcher: SyncDispatcher?,
-        supportedEngines: Set<SyncEngine>
+        supportedEngines: Set<SyncEngine>,
     ): SyncDispatcher {
         // Let the existing dispatcher, if present, cleanup.
         currentDispatcher?.close()
@@ -209,7 +209,7 @@ internal abstract class SyncManager(
             dispatcher.startPeriodicSync(
                 TimeUnit.MINUTES,
                 period = it.periodMinutes.toLong(),
-                initialDelay = it.initialDelayMinutes.toLong()
+                initialDelay = it.initialDelayMinutes.toLong(),
             )
         }
         dispatcherUpdated(dispatcher)
@@ -217,7 +217,7 @@ internal abstract class SyncManager(
     }
 
     private class PassThroughSyncStatusObserver(
-        private val passThroughRegistry: ObserverRegistry<SyncStatusObserver>
+        private val passThroughRegistry: ObserverRegistry<SyncStatusObserver>,
     ) : SyncStatusObserver {
         override fun onStarted() {
             passThroughRegistry.notifyObservers { onStarted() }

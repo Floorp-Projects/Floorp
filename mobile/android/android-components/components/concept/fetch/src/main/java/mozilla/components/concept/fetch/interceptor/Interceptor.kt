@@ -49,7 +49,7 @@ interface Interceptor {
  * Creates a new [Client] instance that will use the provided list of [Interceptor] instances.
  */
 fun Client.withInterceptors(
-    vararg interceptors: Interceptor
+    vararg interceptors: Interceptor,
 ): Client = InterceptorClient(this, interceptors.toList())
 
 /**
@@ -58,7 +58,7 @@ fun Client.withInterceptors(
  */
 private class InterceptorClient(
     private val actualClient: Client,
-    private val interceptors: List<Interceptor>
+    private val interceptors: List<Interceptor>,
 ) : Client() {
     override fun fetch(request: Request): Response =
         InterceptorChain(actualClient, interceptors.toList(), request)
@@ -72,7 +72,7 @@ private class InterceptorClient(
 private class InterceptorChain(
     private val client: Client,
     private val interceptors: List<Interceptor>,
-    private var currentRequest: Request
+    private var currentRequest: Request,
 ) : Interceptor.Chain {
     private var index = 0
 

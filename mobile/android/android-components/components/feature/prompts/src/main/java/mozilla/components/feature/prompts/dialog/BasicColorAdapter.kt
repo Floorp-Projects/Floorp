@@ -34,7 +34,7 @@ import mozilla.components.support.utils.ColorUtils
 data class ColorItem(
     @ColorInt val color: Int,
     val contentDescription: String,
-    val selected: Boolean = false
+    val selected: Boolean = false,
 )
 
 private object ColorItemDiffCallback : DiffUtil.ItemCallback<ColorItem>() {
@@ -49,7 +49,7 @@ private object ColorItemDiffCallback : DiffUtil.ItemCallback<ColorItem>() {
  * RecyclerView adapter for displaying color items.
  */
 internal class BasicColorAdapter(
-    private val onColorSelected: (Int) -> Unit
+    private val onColorSelected: (Int) -> Unit,
 ) : ListAdapter<ColorItem, ColorViewHolder>(ColorItemDiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ColorViewHolder {
@@ -69,7 +69,7 @@ internal class BasicColorAdapter(
  */
 internal class ColorViewHolder(
     itemView: View,
-    private val onColorSelected: (Int) -> Unit
+    private val onColorSelected: (Int) -> Unit,
 ) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
     @VisibleForTesting
     @ColorInt
@@ -81,7 +81,7 @@ internal class ColorViewHolder(
         itemView.context.theme.resolveAttribute(
             android.R.attr.listPreferredItemHeight,
             typedValue,
-            true
+            true,
         )
         var height = typedValue.getDimension(itemView.context.resources.displayMetrics).toInt()
 
@@ -107,7 +107,7 @@ internal class ColorViewHolder(
         itemView.background = itemView.background.apply {
             colorFilter = createBlendModeColorFilterCompat(
                 colorItem.color,
-                BlendModeCompat.MODULATE
+                BlendModeCompat.MODULATE,
             )
         }
         itemView.contentDescription = colorItem.contentDescription

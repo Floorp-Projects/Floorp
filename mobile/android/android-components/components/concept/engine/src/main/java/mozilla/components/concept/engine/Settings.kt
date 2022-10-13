@@ -226,21 +226,21 @@ data class DefaultSettings(
     override var loginAutofillEnabled: Boolean = false,
     override var clearColor: Int? = null,
     override var enterpriseRootsEnabled: Boolean = false,
-    override var httpsOnlyMode: Engine.HttpsOnlyMode = Engine.HttpsOnlyMode.DISABLED
+    override var httpsOnlyMode: Engine.HttpsOnlyMode = Engine.HttpsOnlyMode.DISABLED,
 ) : Settings()
 
 class UnsupportedSetting<T> {
     operator fun getValue(thisRef: Any?, prop: KProperty<*>): T {
         throw UnsupportedSettingException(
             "The setting ${prop.name} is not supported by this engine or session. " +
-                "Check both the engine and engine session implementation."
+                "Check both the engine and engine session implementation.",
         )
     }
 
     operator fun setValue(thisRef: Any?, prop: KProperty<*>, value: T) {
         throw UnsupportedSettingException(
             "The setting ${prop.name} is not supported by this engine or session. " +
-                "Check both the engine and engine session implementation."
+                "Check both the engine and engine session implementation.",
         )
     }
 }

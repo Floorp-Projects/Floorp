@@ -49,7 +49,7 @@ class TwoStateBrowserMenuImageText(
     val isInPrimaryState: () -> Boolean = { true },
     val isInSecondaryState: () -> Boolean = { false },
     private val primaryStateAction: () -> Unit = { },
-    private val secondaryStateAction: () -> Unit = { }
+    private val secondaryStateAction: () -> Unit = { },
 ) : BrowserMenuImageText(
     primaryLabel,
     primaryStateIconResource,
@@ -57,7 +57,7 @@ class TwoStateBrowserMenuImageText(
     textColorResource,
     isCollapsingMenuLimit,
     isSticky,
-    primaryStateAction
+    primaryStateAction,
 ) {
     override var visible: () -> Boolean = { isInPrimaryState() || isInSecondaryState() }
 
@@ -65,7 +65,6 @@ class TwoStateBrowserMenuImageText(
         R.layout.mozac_browser_menu_item_image_text
 
     override fun bind(menu: BrowserMenu, view: View) {
-
         val isInPrimaryState = isInPrimaryState()
         bindText(view, isInPrimaryState)
         bindImage(view, isInPrimaryState)
@@ -112,9 +111,9 @@ class TwoStateBrowserMenuImageText(
             } else {
                 ContextCompat.getColor(
                     context,
-                    iconTintColorResource
+                    iconTintColorResource,
                 )
-            }
+            },
         ),
         textStyle = TextStyle(
             color = if (textColorResource == NO_ID) {
@@ -122,11 +121,11 @@ class TwoStateBrowserMenuImageText(
             } else {
                 ContextCompat.getColor(
                     context,
-                    textColorResource
+                    textColorResource,
                 )
-            }
+            },
         ),
         containerStyle = ContainerStyle(isVisible = visible()),
-        onClick = if (isInPrimaryState()) primaryStateAction else secondaryStateAction
+        onClick = if (isInPrimaryState()) primaryStateAction else secondaryStateAction,
     )
 }

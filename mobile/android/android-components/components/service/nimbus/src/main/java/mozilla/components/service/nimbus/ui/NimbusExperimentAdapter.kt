@@ -17,7 +17,7 @@ import org.mozilla.experiments.nimbus.AvailableExperiment
  */
 class NimbusExperimentAdapter(
     private val nimbusExperimentsDelegate: NimbusExperimentsAdapterDelegate,
-    experiments: List<AvailableExperiment>
+    experiments: List<AvailableExperiment>,
 ) : ListAdapter<AvailableExperiment, NimbusExperimentItemViewHolder>(DiffCallback) {
 
     init {
@@ -26,7 +26,7 @@ class NimbusExperimentAdapter(
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
-        viewType: Int
+        viewType: Int,
     ): NimbusExperimentItemViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.mozac_service_nimbus_experiment_item, parent, false)

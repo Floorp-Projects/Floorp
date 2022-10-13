@@ -28,7 +28,7 @@ private val typeMap: Map<String, IconRequest.Resource.Type> = mutableMapOf(
     "og:image:url" to IconRequest.Resource.Type.OPENGRAPH,
     "og:image:secure_url" to IconRequest.Resource.Type.OPENGRAPH,
     "twitter:image" to IconRequest.Resource.Type.TWITTER,
-    "msapplication-TileImage" to IconRequest.Resource.Type.MICROSOFT_TILE
+    "msapplication-TileImage" to IconRequest.Resource.Type.MICROSOFT_TILE,
 )
 
 private fun Map<String, IconRequest.Resource.Type>.reverseLookup(type: IconRequest.Resource.Type): String {
@@ -93,7 +93,7 @@ private fun JSONObject.toIconResource(): IconRequest.Resource? {
             type = type,
             sizes = sizes,
             mimeType = if (mimeType.isNullOrEmpty()) null else mimeType,
-            maskable = maskable
+            maskable = maskable,
         )
     } catch (e: JSONException) {
         Logger.warn("Could not parse message from icons extensions", e)

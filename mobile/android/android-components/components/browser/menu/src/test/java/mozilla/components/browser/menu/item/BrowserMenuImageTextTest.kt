@@ -35,7 +35,7 @@ class BrowserMenuImageTextTest {
         val item = BrowserMenuImageText(
             "label",
             android.R.drawable.ic_menu_report_image,
-            android.R.color.black
+            android.R.color.black,
         ) {
             onClickWasPress = true
         }
@@ -51,7 +51,7 @@ class BrowserMenuImageTextTest {
         val item = BrowserMenuImageText(
             "label",
             android.R.drawable.ic_menu_report_image,
-            android.R.color.black
+            android.R.color.black,
         ) {
         }
 
@@ -71,7 +71,7 @@ class BrowserMenuImageTextTest {
     fun `browser menu ImageText with with no iconTintColorResource must not have an imageTintList`() {
         val item = BrowserMenuImageText(
             "label",
-            android.R.drawable.ic_menu_report_image
+            android.R.drawable.ic_menu_report_image,
         )
 
         val view = inflate(item)
@@ -89,16 +89,16 @@ class BrowserMenuImageTextTest {
             TextMenuCandidate(
                 "label",
                 start = DrawableMenuIcon(null),
-                onClick = listener
+                onClick = listener,
             ),
             BrowserMenuImageText(
                 "label",
                 android.R.drawable.ic_menu_report_image,
-                listener = listener
+                listener = listener,
             ).asCandidate(context).let {
                 val text = it as TextMenuCandidate
                 text.copy(start = (text.start as? DrawableMenuIcon)?.copy(drawable = null))
-            }
+            },
         )
 
         assertEquals(
@@ -106,19 +106,19 @@ class BrowserMenuImageTextTest {
                 "label",
                 start = DrawableMenuIcon(
                     null,
-                    tint = getColor(context, android.R.color.black)
+                    tint = getColor(context, android.R.color.black),
                 ),
-                onClick = listener
+                onClick = listener,
             ),
             BrowserMenuImageText(
                 "label",
                 android.R.drawable.ic_menu_report_image,
                 android.R.color.black,
-                listener = listener
+                listener = listener,
             ).asCandidate(context).let {
                 val text = it as TextMenuCandidate
                 text.copy(start = (text.start as? DrawableMenuIcon)?.copy(drawable = null))
-            }
+            },
         )
     }
 

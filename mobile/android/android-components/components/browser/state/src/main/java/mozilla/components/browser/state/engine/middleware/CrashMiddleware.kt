@@ -19,9 +19,8 @@ internal class CrashMiddleware : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
-
         next(action)
 
         // We need to do this after updating the crashed flag in the reducer
@@ -36,13 +35,13 @@ internal class CrashMiddleware : Middleware<BrowserState, BrowserAction> {
 
     private fun onCrash(
         context: MiddlewareContext<BrowserState, BrowserAction>,
-        action: CrashAction.SessionCrashedAction
+        action: CrashAction.SessionCrashedAction,
     ) {
         // We suspend the crashed session here. After that the reducer will mark it as "crashed".
         // That will prevent it from getting recreated until explicitly handling the crash by
         // restoring.
         context.dispatch(
-            EngineAction.SuspendEngineSessionAction(action.tabId)
+            EngineAction.SuspendEngineSessionAction(action.tabId),
         )
     }
 }

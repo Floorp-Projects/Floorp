@@ -33,7 +33,7 @@ class UpdateAttemptStorageTest {
         storage = spy(
             UpdateAttemptStorage(mock()).apply {
                 databaseInitializer = { mockDatabase(mockDAO) }
-            }
+            },
         )
     }
 
@@ -62,7 +62,7 @@ class UpdateAttemptStorageTest {
         return AddonUpdater.UpdateAttempt(
             addonId = "mozilla-dev-ext",
             date = Date(),
-            status = SuccessfullyUpdated
+            status = SuccessfullyUpdated,
         )
     }
 

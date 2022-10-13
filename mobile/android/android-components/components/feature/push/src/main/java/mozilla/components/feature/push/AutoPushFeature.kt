@@ -78,16 +78,16 @@ class AutoPushFeature(
     private val service: PushService,
     val config: PushConfig,
     coroutineContext: CoroutineContext = Executors.newSingleThreadExecutor(
-        NamedThreadFactory("AutoPushFeature")
+        NamedThreadFactory("AutoPushFeature"),
     ).asCoroutineDispatcher(),
     private val connection: PushConnection = RustPushConnection(
         context = context,
         senderId = config.senderId,
         serverHost = config.serverHost,
         socketProtocol = config.protocol,
-        serviceType = config.serviceType
+        serviceType = config.serviceType,
     ),
-    private val crashReporter: CrashReporting? = null
+    private val crashReporter: CrashReporting? = null,
 ) : PushProcessor, Observable<AutoPushFeature.Observer> by ObserverRegistry() {
 
     private val logger = Logger("AutoPushFeature")
@@ -166,7 +166,7 @@ class AutoPushFeature(
                     body = message.body,
                     encoding = message.encoding,
                     salt = message.salt,
-                    cryptoKey = message.cryptoKey
+                    cryptoKey = message.cryptoKey,
                 ) ?: return@launchAndTry
 
                 notifyObservers { onMessageReceived(scope, decryptedMessage) }
@@ -192,7 +192,7 @@ class AutoPushFeature(
         scope: String,
         appServerKey: String? = null,
         onSubscribeError: (Exception) -> Unit = {},
-        onSubscribe: ((AutoPushSubscription) -> Unit) = {}
+        onSubscribe: ((AutoPushSubscription) -> Unit) = {},
     ) {
         connection.ifInitialized {
             coroutineScope.launchAndTry(
@@ -202,7 +202,7 @@ class AutoPushFeature(
                 block = {
                     val sub = subscribe(scope, appServerKey)
                     onSubscribe(sub)
-                }
+                },
             )
         }
     }
@@ -217,7 +217,7 @@ class AutoPushFeature(
     fun unsubscribe(
         scope: String,
         onUnsubscribeError: (Exception) -> Unit = {},
-        onUnsubscribe: (Boolean) -> Unit = {}
+        onUnsubscribe: (Boolean) -> Unit = {},
     ) {
         connection.ifInitialized {
             coroutineScope.launchAndTry(
@@ -232,7 +232,7 @@ class AutoPushFeature(
                     } else {
                         onUnsubscribeError(IllegalStateException("Un-subscribing with the native client failed."))
                     }
-                }
+                },
             )
         }
     }
@@ -248,7 +248,7 @@ class AutoPushFeature(
     fun getSubscription(
         scope: String,
         appServerKey: String? = null,
-        block: (AutoPushSubscription?) -> Unit
+        block: (AutoPushSubscription?) -> Unit,
     ) {
         connection.ifInitialized {
             coroutineScope.launchAndTry {
@@ -368,7 +368,8 @@ internal inline fun exceptionHandler(crossinline onError: (PushError) -> Unit) =
         is CommunicationException,
         is JsonDeserializeException,
         is RequestException,
-        is CommunicationServerException -> false
+        is CommunicationServerException,
+        -> false
         else -> true
     }
 
@@ -384,7 +385,7 @@ internal inline fun exceptionHandler(crossinline onError: (PushError) -> Unit) =
  * (previously) Amazon Device Messaging.
  */
 enum class ServiceType {
-    FCM
+    FCM,
 }
 
 /**
@@ -392,7 +393,7 @@ enum class ServiceType {
  */
 enum class Protocol {
     HTTP,
-    HTTPS
+    HTTPS,
 }
 
 /**
@@ -403,7 +404,7 @@ data class AutoPushSubscription(
     val endpoint: String,
     val publicKey: String,
     val authKey: String,
-    val appServerKey: String?
+    val appServerKey: String?,
 )
 
 /**
@@ -411,7 +412,7 @@ data class AutoPushSubscription(
  */
 data class AutoPushSubscriptionChanged(
     val scope: PushScope,
-    val channelId: String
+    val channelId: String,
 )
 
 /**
@@ -428,5 +429,5 @@ data class PushConfig(
     val serverHost: String = "updates.push.services.mozilla.com",
     val protocol: Protocol = Protocol.HTTPS,
     val serviceType: ServiceType = ServiceType.FCM,
-    val disableRateLimit: Boolean = false
+    val disableRateLimit: Boolean = false,
 )

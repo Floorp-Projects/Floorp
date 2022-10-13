@@ -40,7 +40,7 @@ class AddonManager(
     private val store: BrowserStore,
     private val runtime: WebExtensionRuntime,
     private val addonsProvider: AddonsProvider,
-    private val addonUpdater: AddonUpdater
+    private val addonUpdater: AddonUpdater,
 ) {
 
     @VisibleForTesting
@@ -76,7 +76,7 @@ class AddonManager(
             val locales = listOf(userLanguage)
             val supportedAddons = addonsProvider.getAvailableAddons(allowCache, language = userLanguage)
                 .map {
-                    addon ->
+                        addon ->
                     addon.filterTranslations(locales)
                 }
                 .map { addon ->
@@ -114,7 +114,7 @@ class AddonManager(
                         translatableSummary = mapOf(Addon.DEFAULT_LOCALE to description),
                         siteUrl = extension.url,
                         installedState = installedState,
-                        updatedAt = "1970-01-01T00:00:00Z"
+                        updatedAt = "1970-01-01T00:00:00Z",
                     )
                 }
 
@@ -135,9 +135,8 @@ class AddonManager(
     fun installAddon(
         addon: Addon,
         onSuccess: ((Addon) -> Unit) = { },
-        onError: ((String, Throwable) -> Unit) = { _, _ -> }
+        onError: ((String, Throwable) -> Unit) = { _, _ -> },
     ): CancellableOperation {
-
         // Verify the add-on doesn't require blocked permissions
         // only available to built-in extensions
         BLOCKED_PERMISSIONS.forEach { blockedPermission ->
@@ -160,7 +159,7 @@ class AddonManager(
             onError = { id, throwable ->
                 completePendingAddonAction(pendingAction)
                 onError(id, throwable)
-            }
+            },
         )
     }
 
@@ -174,7 +173,7 @@ class AddonManager(
     fun uninstallAddon(
         addon: Addon,
         onSuccess: (() -> Unit) = { },
-        onError: ((String, Throwable) -> Unit) = { _, _ -> }
+        onError: ((String, Throwable) -> Unit) = { _, _ -> },
     ) {
         val extension = addon.installedState?.let { installedExtensions[it.id] }
         if (extension == null) {
@@ -193,7 +192,7 @@ class AddonManager(
             onError = { id, throwable ->
                 completePendingAddonAction(pendingAction)
                 onError(id, throwable)
-            }
+            },
         )
     }
 
@@ -209,7 +208,7 @@ class AddonManager(
         addon: Addon,
         source: EnableSource = EnableSource.USER,
         onSuccess: ((Addon) -> Unit) = { },
-        onError: ((Throwable) -> Unit) = { }
+        onError: ((Throwable) -> Unit) = { },
     ) {
         val extension = addon.installedState?.let { installedExtensions[it.id] }
         if (extension == null) {
@@ -229,7 +228,7 @@ class AddonManager(
             onError = {
                 completePendingAddonAction(pendingAction)
                 onError(it)
-            }
+            },
         )
     }
 
@@ -245,7 +244,7 @@ class AddonManager(
         addon: Addon,
         source: EnableSource = EnableSource.USER,
         onSuccess: ((Addon) -> Unit) = { },
-        onError: ((Throwable) -> Unit) = { }
+        onError: ((Throwable) -> Unit) = { },
     ) {
         val extension = addon.installedState?.let { installedExtensions[it.id] }
         if (extension == null) {
@@ -265,7 +264,7 @@ class AddonManager(
             onError = {
                 completePendingAddonAction(pendingAction)
                 onError(it)
-            }
+            },
         )
     }
 
@@ -281,7 +280,7 @@ class AddonManager(
         addon: Addon,
         allowed: Boolean,
         onSuccess: ((Addon) -> Unit) = { },
-        onError: ((Throwable) -> Unit) = { }
+        onError: ((Throwable) -> Unit) = { },
     ) {
         val extension = addon.installedState?.let { installedExtensions[it.id] }
         if (extension == null) {
@@ -301,7 +300,7 @@ class AddonManager(
             onError = {
                 completePendingAddonAction(pendingAction)
                 onError(it)
-            }
+            },
         )
     }
 
@@ -376,5 +375,5 @@ private fun WebExtension.toInstalledState() =
         openOptionsPageInTab = getMetadata()?.openOptionsPageInTab ?: false,
         enabled = isEnabled(),
         disabledAsUnsupported = isUnsupported(),
-        allowedInPrivateBrowsing = isAllowedInPrivateBrowsing()
+        allowedInPrivateBrowsing = isAllowedInPrivateBrowsing(),
     )

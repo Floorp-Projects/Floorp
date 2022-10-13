@@ -28,12 +28,12 @@ import org.junit.Assert.assertSame
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.`when`
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -60,7 +60,7 @@ class AutoSaveTest {
             val autoSave = AutoSave(
                 store = store,
                 sessionStorage = sessionStorage,
-                minimumIntervalMs = 0
+                minimumIntervalMs = 0,
             ).whenGoingToBackground(lifecycle)
 
             verifyNoMoreInteractions(sessionStorage)
@@ -91,7 +91,7 @@ class AutoSaveTest {
             val autoSave = AutoSave(
                 store = store,
                 sessionStorage = sessionStorage,
-                minimumIntervalMs = 0
+                minimumIntervalMs = 0,
             ).whenSessionsChange(scope)
 
             dispatcher.scheduler.advanceUntilIdle()
@@ -101,8 +101,8 @@ class AutoSaveTest {
 
             store.dispatch(
                 TabListAction.AddTabAction(
-                    createTab("https://www.mozilla.org")
-                )
+                    createTab("https://www.mozilla.org"),
+                ),
             ).joinBlocking()
 
             dispatcher.scheduler.advanceUntilIdle()
@@ -122,16 +122,16 @@ class AutoSaveTest {
                 BrowserState(
                     tabs = listOf(
                         createTab("https://www.mozilla.org", id = "mozilla"),
-                        createTab("https://www.firefox.com", id = "firefox")
+                        createTab("https://www.firefox.com", id = "firefox"),
                     ),
-                    selectedTabId = "mozilla"
-                )
+                    selectedTabId = "mozilla",
+                ),
             )
 
             val autoSave = AutoSave(
                 store = store,
                 sessionStorage = sessionStorage,
-                minimumIntervalMs = 0
+                minimumIntervalMs = 0,
             ).whenSessionsChange(scope)
 
             dispatcher.scheduler.advanceUntilIdle()
@@ -156,10 +156,10 @@ class AutoSaveTest {
                 BrowserState(
                     tabs = listOf(
                         createTab("https://www.firefox.com", id = "firefox"),
-                        createTab("https://www.mozilla.org", id = "mozilla")
+                        createTab("https://www.mozilla.org", id = "mozilla"),
                     ),
-                    selectedTabId = "mozilla"
-                )
+                    selectedTabId = "mozilla",
+                ),
             )
 
             val sessionStorage: SessionStorage = mock()
@@ -167,7 +167,7 @@ class AutoSaveTest {
             val autoSave = AutoSave(
                 store = store,
                 sessionStorage = sessionStorage,
-                minimumIntervalMs = 0
+                minimumIntervalMs = 0,
             ).whenSessionsChange(scope)
 
             dispatcher.scheduler.advanceUntilIdle()
@@ -191,8 +191,8 @@ class AutoSaveTest {
             val store = BrowserStore(
                 BrowserState(
                     tabs = listOf(createTab("https://www.firefox.com", id = "firefox")),
-                    selectedTabId = "firefox"
-                )
+                    selectedTabId = "firefox",
+                ),
             )
 
             val sessionStorage: SessionStorage = mock()
@@ -200,7 +200,7 @@ class AutoSaveTest {
             val autoSave = AutoSave(
                 store = store,
                 sessionStorage = sessionStorage,
-                minimumIntervalMs = 0
+                minimumIntervalMs = 0,
             ).whenSessionsChange(scope)
 
             dispatcher.scheduler.advanceUntilIdle()
@@ -224,10 +224,10 @@ class AutoSaveTest {
                 BrowserState(
                     tabs = listOf(
                         createTab("https://www.firefox.com", id = "firefox"),
-                        createTab("https://www.mozilla.org", id = "mozilla")
+                        createTab("https://www.mozilla.org", id = "mozilla"),
                     ),
-                    selectedTabId = "firefox"
-                )
+                    selectedTabId = "firefox",
+                ),
             )
 
             val sessionStorage: SessionStorage = mock()
@@ -235,7 +235,7 @@ class AutoSaveTest {
             val autoSave = AutoSave(
                 store = store,
                 sessionStorage = sessionStorage,
-                minimumIntervalMs = 0
+                minimumIntervalMs = 0,
             ).whenSessionsChange(scope)
 
             dispatcher.scheduler.advanceUntilIdle()
@@ -261,23 +261,23 @@ class AutoSaveTest {
             val store = BrowserStore(
                 BrowserState(
                     tabs = listOf(
-                        createTab("https://www.mozilla.org", id = "mozilla")
+                        createTab("https://www.mozilla.org", id = "mozilla"),
                     ),
-                    selectedTabId = "mozilla"
-                )
+                    selectedTabId = "mozilla",
+                ),
             )
 
             val autoSave = AutoSave(
                 store = store,
                 sessionStorage = sessionStorage,
-                minimumIntervalMs = 0
+                minimumIntervalMs = 0,
             ).whenSessionsChange(scope)
 
             store.dispatch(
                 ContentAction.UpdateLoadingStateAction(
                     sessionId = "mozilla",
-                    loading = true
-                )
+                    loading = true,
+                ),
             ).joinBlocking()
 
             dispatcher.scheduler.advanceUntilIdle()
@@ -288,8 +288,8 @@ class AutoSaveTest {
             store.dispatch(
                 ContentAction.UpdateLoadingStateAction(
                     sessionId = "mozilla",
-                    loading = false
-                )
+                    loading = false,
+                ),
             ).joinBlocking()
 
             dispatcher.scheduler.advanceUntilIdle()
@@ -310,8 +310,8 @@ class AutoSaveTest {
                 any(),
                 eq(300L),
                 eq(300L),
-                eq(TimeUnit.SECONDS)
-            )
+                eq(TimeUnit.SECONDS),
+            ),
         ).thenReturn(scheduledFuture)
 
         // LifecycleRegistry only keeps a weak reference to the owner, so it is important to keep
@@ -334,7 +334,7 @@ class AutoSaveTest {
             any(),
             eq(300L),
             eq(300L),
-            eq(TimeUnit.SECONDS)
+            eq(TimeUnit.SECONDS),
         )
 
         verifyNoMoreInteractions(scheduler)
@@ -353,7 +353,7 @@ class AutoSaveTest {
         val autoSave = AutoSave(
             store = store,
             sessionStorage = sessionStorage,
-            minimumIntervalMs = 0
+            minimumIntervalMs = 0,
         )
 
         val runningJob: Job = mock()
@@ -372,7 +372,7 @@ class AutoSaveTest {
         val autoSave = AutoSave(
             store = store,
             sessionStorage = sessionStorage,
-            minimumIntervalMs = 0
+            minimumIntervalMs = 0,
         )
 
         val completed: Job = mock()

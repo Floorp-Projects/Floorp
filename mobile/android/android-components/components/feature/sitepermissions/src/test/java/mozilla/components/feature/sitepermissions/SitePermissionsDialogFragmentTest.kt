@@ -40,8 +40,8 @@ class SitePermissionsDialogFragmentTest {
                 R.drawable.notification_icon_background,
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
-                shouldShowDoNotAskAgainCheckBox = true
-            )
+                shouldShowDoNotAskAgainCheckBox = true,
+            ),
         )
 
         doReturn(testContext).`when`(fragment).requireContext()
@@ -65,8 +65,8 @@ class SitePermissionsDialogFragmentTest {
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = true,
-                shouldSelectDoNotAskAgainCheckBox = false
-            )
+                shouldSelectDoNotAskAgainCheckBox = false,
+            ),
         )
 
         doReturn(testContext).`when`(fragment).requireContext()
@@ -90,8 +90,8 @@ class SitePermissionsDialogFragmentTest {
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = true,
-                shouldSelectDoNotAskAgainCheckBox = true
-            )
+                shouldSelectDoNotAskAgainCheckBox = true,
+            ),
         )
 
         doReturn(testContext).`when`(fragment).requireContext()
@@ -114,8 +114,8 @@ class SitePermissionsDialogFragmentTest {
                 R.drawable.notification_icon_background,
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
-                shouldShowDoNotAskAgainCheckBox = false
-            )
+                shouldShowDoNotAskAgainCheckBox = false,
+            ),
         )
 
         doReturn(testContext).`when`(fragment).requireContext()
@@ -138,8 +138,8 @@ class SitePermissionsDialogFragmentTest {
                 R.drawable.notification_icon_background,
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
-                shouldShowDoNotAskAgainCheckBox = false
-            )
+                shouldShowDoNotAskAgainCheckBox = false,
+            ),
         )
 
         doReturn(testContext).`when`(fragment).requireContext()
@@ -163,8 +163,8 @@ class SitePermissionsDialogFragmentTest {
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = false,
-                message = expectedMessage
-            )
+                message = expectedMessage,
+            ),
         )
 
         doReturn(testContext).`when`(fragment).requireContext()
@@ -187,8 +187,8 @@ class SitePermissionsDialogFragmentTest {
                 R.drawable.notification_icon_background,
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
-                shouldShowDoNotAskAgainCheckBox = false
-            )
+                shouldShowDoNotAskAgainCheckBox = false,
+            ),
         )
 
         doReturn(testContext).`when`(fragment).requireContext()
@@ -212,8 +212,8 @@ class SitePermissionsDialogFragmentTest {
                 permissionRequestId = permissionRequestId,
                 feature = feature,
                 shouldShowDoNotAskAgainCheckBox = false,
-                shouldShowLearnMoreLink = true
-            )
+                shouldShowLearnMoreLink = true,
+            ),
         )
         doNothing().`when`(fragment).dismiss()
         doReturn(testContext).`when`(fragment).requireContext()
@@ -241,8 +241,8 @@ class SitePermissionsDialogFragmentTest {
                 permissionRequestId = permissionRequestId,
                 feature = mockFeature,
                 shouldShowDoNotAskAgainCheckBox = false,
-                shouldSelectDoNotAskAgainCheckBox = false
-            )
+                shouldSelectDoNotAskAgainCheckBox = false,
+            ),
         )
         doNothing().`when`(fragment).dismiss()
 
@@ -273,8 +273,8 @@ class SitePermissionsDialogFragmentTest {
                 permissionRequestId = permissionRequestId,
                 feature = mockFeature,
                 shouldShowDoNotAskAgainCheckBox = false,
-                shouldSelectDoNotAskAgainCheckBox = false
-            )
+                shouldSelectDoNotAskAgainCheckBox = false,
+            ),
         )
         doNothing().`when`(fragment).dismiss()
 
@@ -302,7 +302,7 @@ class SitePermissionsDialogFragmentTest {
                 feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = false,
                 negativeButtonText = expectedText,
-            )
+            ),
         )
         doReturn(testContext).`when`(fragment).requireContext()
 
@@ -323,7 +323,7 @@ class SitePermissionsDialogFragmentTest {
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = false,
-            )
+            ),
         )
         doReturn(testContext).`when`(fragment).requireContext()
 
@@ -345,8 +345,8 @@ class SitePermissionsDialogFragmentTest {
                 permissionRequestId = permissionRequestId,
                 feature = mockFeature,
                 shouldShowDoNotAskAgainCheckBox = false,
-                shouldSelectDoNotAskAgainCheckBox = false
-            )
+                shouldSelectDoNotAskAgainCheckBox = false,
+            ),
         )
         doNothing().`when`(fragment).dismiss()
 
@@ -378,8 +378,8 @@ class SitePermissionsDialogFragmentTest {
                 permissionRequestId = permissionRequestId,
                 feature = mockFeature,
                 shouldShowDoNotAskAgainCheckBox = false,
-                shouldSelectDoNotAskAgainCheckBox = true
-            )
+                shouldSelectDoNotAskAgainCheckBox = true,
+            ),
         )
         doNothing().`when`(fragment).dismiss()
 
@@ -411,8 +411,8 @@ class SitePermissionsDialogFragmentTest {
                 permissionRequestId = permissionRequestId,
                 feature = mockFeature,
                 shouldShowDoNotAskAgainCheckBox = false,
-                shouldSelectDoNotAskAgainCheckBox = true
-            )
+                shouldSelectDoNotAskAgainCheckBox = true,
+            ),
         )
         doNothing().`when`(fragment).dismiss()
 
@@ -446,8 +446,8 @@ class SitePermissionsDialogFragmentTest {
                 R.drawable.notification_icon_background,
                 permissionRequestId = permissionRequestId,
                 feature = mockFeature,
-                shouldShowDoNotAskAgainCheckBox = false
-            )
+                shouldShowDoNotAskAgainCheckBox = false,
+            ),
         )
 
         fragment.feature = mockFeature
@@ -473,8 +473,8 @@ class SitePermissionsDialogFragmentTest {
                 feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = true,
                 shouldSelectDoNotAskAgainCheckBox = false,
-                isNotificationRequest = true
-            )
+                isNotificationRequest = true,
+            ),
         )
 
         doReturn(testContext).`when`(fragment).requireContext()

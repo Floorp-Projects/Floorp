@@ -99,12 +99,12 @@ class BrowserMenuCompoundButtonTest {
                 "Hello",
                 isChecked = false,
                 end = CompoundMenuCandidate.ButtonType.CHECKBOX,
-                onCheckedChange = listener
+                onCheckedChange = listener,
             ),
             SimpleTestBrowserCompoundButton(
                 "Hello",
-                listener = listener
-            ).asCandidate(testContext)
+                listener = listener,
+            ).asCandidate(testContext),
         )
 
         assertEquals(
@@ -112,13 +112,13 @@ class BrowserMenuCompoundButtonTest {
                 "Hello",
                 isChecked = true,
                 end = CompoundMenuCandidate.ButtonType.CHECKBOX,
-                onCheckedChange = listener
+                onCheckedChange = listener,
             ),
             SimpleTestBrowserCompoundButton(
                 "Hello",
                 initialState = { true },
-                listener = listener
-            ).asCandidate(testContext)
+                listener = listener,
+            ).asCandidate(testContext),
         )
     }
 
@@ -183,7 +183,7 @@ class BrowserMenuCompoundButtonTest {
     class SimpleTestBrowserCompoundButton(
         label: String,
         initialState: () -> Boolean = { false },
-        listener: (Boolean) -> Unit
+        listener: (Boolean) -> Unit,
     ) : BrowserMenuCompoundButton(label, false, false, initialState, listener) {
         override fun getLayoutResource(): Int = R.layout.mozac_browser_menu_item_simple
     }

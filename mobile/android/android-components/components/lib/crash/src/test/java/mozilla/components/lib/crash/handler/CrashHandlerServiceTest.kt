@@ -45,25 +45,25 @@ class CrashHandlerServiceTest {
                 shouldPrompt = CrashReporter.Prompt.NEVER,
                 services = listOf(mock()),
                 nonFatalCrashIntent = mock(),
-                scope = scope
-            )
+                scope = scope,
+            ),
         ).install(testContext)
 
         intent.component = ComponentName(
             "org.mozilla.samples.browser",
-            "mozilla.components.lib.crash.handler.CrashHandlerService"
+            "mozilla.components.lib.crash.handler.CrashHandlerService",
         )
         intent.putExtra(
             "uuid",
-            "94f66ed7-50c7-41d1-96a7-299139a8c2af"
+            "94f66ed7-50c7-41d1-96a7-299139a8c2af",
         )
         intent.putExtra(
             "minidumpPath",
-            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp"
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
         )
         intent.putExtra(
             "extrasPath",
-            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra"
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
         )
         intent.putExtra("minidumpSuccess", true)
 

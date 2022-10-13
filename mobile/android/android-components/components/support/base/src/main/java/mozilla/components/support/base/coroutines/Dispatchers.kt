@@ -28,6 +28,6 @@ object Dispatchers {
         Integer.MAX_VALUE,
         60L,
         TimeUnit.SECONDS,
-        SynchronousQueue<Runnable>()
+        SynchronousQueue<Runnable>(),
     ).asCoroutineDispatcher()
 }

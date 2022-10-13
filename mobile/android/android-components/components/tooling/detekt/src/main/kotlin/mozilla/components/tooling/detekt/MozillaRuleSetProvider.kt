@@ -18,7 +18,7 @@ class MozillaRuleSetProvider : RuleSetProvider {
     override fun instance(config: Config) = RuleSet(
         ruleSetId,
         listOf(
-            ProjectLicenseRule(config)
-        )
+            ProjectLicenseRule(config),
+        ),
     )
 }

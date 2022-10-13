@@ -45,5 +45,5 @@ data class BrowserState(
     val search: SearchState = SearchState(),
     val undoHistory: UndoHistoryState = UndoHistoryState(),
     val restoreComplete: Boolean = false,
-    val locale: Locale? = null
+    val locale: Locale? = null,
 ) : State

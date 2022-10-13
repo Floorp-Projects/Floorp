@@ -26,7 +26,7 @@ typealias PersistCallback = mozilla.appservices.fxaclient.PersistedFirefoxAccoun
  */
 class FirefoxAccount internal constructor(
     private val inner: InternalFxAcct,
-    crashReporter: CrashReporting? = null
+    crashReporter: CrashReporting? = null,
 ) : OAuthAccount {
     private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.IO) + job
@@ -43,6 +43,7 @@ class FirefoxAccount internal constructor(
      */
     private class WrappingPersistenceCallback : PersistCallback {
         private val logger = Logger("WrappingPersistenceCallback")
+
         @Volatile
         private var persistenceCallback: StatePersistenceCallback? = null
 
@@ -80,7 +81,7 @@ class FirefoxAccount internal constructor(
      */
     constructor(
         config: ServerConfig,
-        crashReporter: CrashReporting? = null
+        crashReporter: CrashReporting? = null,
     ) : this(InternalFxAcct(config), crashReporter)
 
     override fun close() {
@@ -104,7 +105,7 @@ class FirefoxAccount internal constructor(
     override suspend fun beginPairingFlow(
         pairingUrl: String,
         scopes: Set<String>,
-        entryPoint: String
+        entryPoint: String,
     ) = withContext(scope.coroutineContext) {
         // Eventually we should specify this as a param here, but for now, let's
         // use a generic value (it's used only for server-side telemetry, so the
@@ -148,7 +149,7 @@ class FirefoxAccount internal constructor(
 
     override suspend fun migrateFromAccount(
         authInfo: MigratingAccountInfo,
-        reuseSessionToken: Boolean
+        reuseSessionToken: Boolean,
     ) = withContext(scope.coroutineContext) {
         if (reuseSessionToken) {
             handleFxaExceptions(logger, "migrateFromSessionToken", { null }) {
@@ -261,7 +262,7 @@ class FirefoxAccount internal constructor(
         fun fromJSONString(
             json: String,
             crashReporter: CrashReporting?,
-            persistCallback: PersistCallback? = null
+            persistCallback: PersistCallback? = null,
         ): FirefoxAccount {
             return FirefoxAccount(InternalFxAcct.fromJSONString(json, persistCallback), crashReporter)
         }

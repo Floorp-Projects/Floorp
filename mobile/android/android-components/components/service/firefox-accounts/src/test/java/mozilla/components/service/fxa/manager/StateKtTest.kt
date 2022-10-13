@@ -115,7 +115,7 @@ class StateKtTest {
                 assertNextStateForStateEventPair(
                     ss,
                     it,
-                    ss.next(it)
+                    ss.next(it),
                 )
             }
         }
@@ -126,7 +126,7 @@ class StateKtTest {
                 assertNextStateForStateEventPair(
                     ss,
                     it,
-                    ss.next(it)
+                    ss.next(it),
                 )
             }
         }

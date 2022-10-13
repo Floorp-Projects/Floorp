@@ -13,7 +13,7 @@ import mozilla.components.browser.icons.IconRequest
  * An [IconLoader] implementation that loads icons from an in-memory cache.
  */
 class MemoryIconLoader(
-    private val cache: LoaderMemoryCache
+    private val cache: LoaderMemoryCache,
 ) : IconLoader {
     interface LoaderMemoryCache {
         fun getBitmap(request: IconRequest, resource: IconRequest.Resource): Bitmap?

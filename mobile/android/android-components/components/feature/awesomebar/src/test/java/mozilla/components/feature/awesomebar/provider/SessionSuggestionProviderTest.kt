@@ -17,9 +17,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
 @ExperimentalCoroutinesApi // for runTest
 class SessionSuggestionProviderTest {
@@ -86,8 +86,8 @@ class SessionSuggestionProviderTest {
 
         val store = BrowserStore(
             BrowserState(
-                tabs = listOf(tab1, tab2, tab3)
-            )
+                tabs = listOf(tab1, tab2, tab3),
+            ),
         )
 
         val resources: Resources = mock()
@@ -122,8 +122,8 @@ class SessionSuggestionProviderTest {
 
         val store = BrowserStore(
             BrowserState(
-                tabs = listOf(tab, privateTab1, privateTab2)
-            )
+                tabs = listOf(tab, privateTab1, privateTab2),
+            ),
         )
 
         val resources: Resources = mock()
@@ -146,8 +146,8 @@ class SessionSuggestionProviderTest {
 
         val store = BrowserStore(
             BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         val useCase: TabsUseCases.SelectTabUseCase = mock()
@@ -171,10 +171,10 @@ class SessionSuggestionProviderTest {
             BrowserState(
                 tabs = listOf(
                     createTab(id = "a", url = "https://wikipedia.org"),
-                    createTab(id = "b", url = "https://www.mozilla.org")
+                    createTab(id = "b", url = "https://www.mozilla.org"),
                 ),
-                selectedTabId = "b"
-            )
+                selectedTabId = "b",
+            ),
         )
 
         val resources: Resources = mock()
@@ -196,10 +196,10 @@ class SessionSuggestionProviderTest {
             BrowserState(
                 tabs = listOf(
                     createTab(id = "a", url = "https://wikipedia.org"),
-                    createTab(id = "b", url = "https://www.mozilla.org")
+                    createTab(id = "b", url = "https://www.mozilla.org"),
                 ),
-                selectedTabId = "b"
-            )
+                selectedTabId = "b",
+            ),
         )
 
         val resources: Resources = mock()
@@ -221,10 +221,10 @@ class SessionSuggestionProviderTest {
             BrowserState(
                 tabs = listOf(
                     createTab(id = "a", url = "https://wikipedia.org", title = "Wikipedia"),
-                    createTab(id = "b", url = "https://www.mozilla.org", title = "")
+                    createTab(id = "b", url = "https://www.mozilla.org", title = ""),
                 ),
-                selectedTabId = "b"
-            )
+                selectedTabId = "b",
+            ),
         )
 
         val resources: Resources = mock()

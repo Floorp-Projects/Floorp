@@ -15,5 +15,5 @@ package mozilla.components.browser.state.state
 data class SecurityInfoState(
     val secure: Boolean = false,
     val host: String = "",
-    val issuer: String = ""
+    val issuer: String = "",
 )

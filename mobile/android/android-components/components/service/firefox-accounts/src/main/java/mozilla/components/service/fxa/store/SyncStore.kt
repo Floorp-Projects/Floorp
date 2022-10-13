@@ -11,11 +11,11 @@ import mozilla.components.lib.state.Store
  * [Store] for the global [SyncState]. This should likely be a singleton.
  */
 class SyncStore(
-    middleware: List<Middleware<SyncState, SyncAction>> = emptyList()
+    middleware: List<Middleware<SyncState, SyncAction>> = emptyList(),
 ) : Store<SyncState, SyncAction>(
     initialState = SyncState(),
     reducer = ::reduce,
-    middleware = middleware
+    middleware = middleware,
 )
 
 private fun reduce(syncState: SyncState, syncAction: SyncAction): SyncState {

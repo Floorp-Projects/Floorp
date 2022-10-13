@@ -54,8 +54,10 @@ class FetchDownloadManagerTest {
         store = BrowserStore()
         download = DownloadState(
             "http://ipv4.download.thinkbroadband.com/5MB.zip",
-            "", "application/zip", 5242880,
-            userAgent = "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"
+            "",
+            "application/zip",
+            5242880,
+            userAgent = "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36",
         )
         downloadManager = FetchDownloadManager(testContext, store, MockDownloadService::class, broadcastManager)
     }
@@ -180,7 +182,7 @@ class FetchDownloadManagerTest {
 
         val id = downloadManager.download(
             downloadWithFileName,
-            cookie = "yummy_cookie=choco"
+            cookie = "yummy_cookie=choco",
         )!!
         store.waitUntilIdle()
 
@@ -203,7 +205,7 @@ class FetchDownloadManagerTest {
 
         val id = downloadManager.download(
             downloadWithFileName,
-            cookie = "yummy_cookie=choco"
+            cookie = "yummy_cookie=choco",
         )!!
         store.waitUntilIdle()
         assertEquals(downloadWithFileName, store.state.downloads[downloadWithFileName.id])

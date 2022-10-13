@@ -23,9 +23,9 @@ internal class SearchMetadataStorage(
     private val preferences: Lazy<SharedPreferences> = lazy {
         context.getSharedPreferences(
             PREFERENCE_FILE,
-            Context.MODE_PRIVATE
+            Context.MODE_PRIVATE,
         )
-    }
+    },
 ) : SearchMiddleware.MetadataStorage {
     /**
      * Gets the ID (and optinally name) of the default search engine the user has picked. Returns
@@ -37,7 +37,7 @@ internal class SearchMetadataStorage(
 
         return SearchMiddleware.MetadataStorage.UserChoice(
             id,
-            preferences.value.getString(PREFERENCE_KEY_USER_SELECTED_SEARCH_ENGINE_NAME, null)
+            preferences.value.getString(PREFERENCE_KEY_USER_SELECTED_SEARCH_ENGINE_NAME, null),
         )
     }
 

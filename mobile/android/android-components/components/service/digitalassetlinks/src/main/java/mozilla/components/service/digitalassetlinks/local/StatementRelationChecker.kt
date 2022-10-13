@@ -14,7 +14,7 @@ import mozilla.components.service.digitalassetlinks.StatementListFetcher
  * Checks if a matching relationship is present in a remote statement list.
  */
 class StatementRelationChecker(
-    private val listFetcher: StatementListFetcher
+    private val listFetcher: StatementListFetcher,
 ) : RelationChecker {
 
     override fun checkRelationship(source: AssetDescriptor.Web, relation: Relation, target: AssetDescriptor): Boolean {

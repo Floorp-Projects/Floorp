@@ -39,7 +39,7 @@ class ContileTopSitesProvider(
     context: Context,
     private val client: Client,
     private val endPointURL: String = CONTILE_ENDPOINT_URL,
-    private val maxCacheAgeInMinutes: Long = -1
+    private val maxCacheAgeInMinutes: Long = -1,
 ) : TopSitesProvider {
 
     private val applicationContext = context.applicationContext
@@ -93,7 +93,7 @@ class ContileTopSitesProvider(
 
     private fun fetchTopSites(): List<TopSite.Provided> {
         client.fetch(
-            Request(url = endPointURL)
+            Request(url = endPointURL),
         ).use { response ->
             if (response.isSuccess) {
                 val responseBody = response.body.string(Charsets.UTF_8)
@@ -175,7 +175,7 @@ private fun JSONObject.toTopSite(): TopSite.Provided? {
             clickUrl = getString("click_url"),
             imageUrl = getString("image_url"),
             impressionUrl = getString("impression_url"),
-            createdAt = null
+            createdAt = null,
         )
     } catch (e: JSONException) {
         null

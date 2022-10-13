@@ -25,7 +25,6 @@ class MonthAndYearPickerTest {
 
     @Test
     fun `WHEN picker widget THEN initial values must be displayed`() {
-
         val initialDate = "2018-06".toDate("yyyy-MM").toCalendar()
         val minDate = "2018-04".toDate("yyyy-MM").toCalendar()
         val maxDate = "2018-09".toDate("yyyy-MM").toCalendar()
@@ -34,7 +33,7 @@ class MonthAndYearPickerTest {
             context = testContext,
             selectedDate = initialDate,
             minDate = minDate,
-            maxDate = maxDate
+            maxDate = maxDate,
         )
 
         with(monthAndYearPicker.monthView) {
@@ -52,7 +51,6 @@ class MonthAndYearPickerTest {
 
     @Test
     fun `WHEN selectedDate is a year less than maxDate THEN month picker MUST allow selecting until the last month of the year`() {
-
         val initialDate = "2018-06".toDate("yyyy-MM").toCalendar()
         val minDate = "2018-04".toDate("yyyy-MM").toCalendar()
         val maxDate = "2019-09".toDate("yyyy-MM").toCalendar()
@@ -61,7 +59,7 @@ class MonthAndYearPickerTest {
             context = testContext,
             selectedDate = initialDate,
             minDate = minDate,
-            maxDate = maxDate
+            maxDate = maxDate,
         )
 
         with(monthAndYearPicker.monthView) {
@@ -84,7 +82,7 @@ class MonthAndYearPickerTest {
 
         val monthAndYearPicker = MonthAndYearPicker(
             context = testContext,
-            selectedDate = initialDate.toCalendar()
+            selectedDate = initialDate.toCalendar(),
         )
 
         val yearView = monthAndYearPicker.yearView
@@ -102,7 +100,7 @@ class MonthAndYearPickerTest {
 
         val monthAndYearPicker = MonthAndYearPicker(
             context = testContext,
-            selectedDate = initialDate.toCalendar()
+            selectedDate = initialDate.toCalendar(),
         )
 
         val yearView = monthAndYearPicker.yearView
@@ -120,7 +118,7 @@ class MonthAndYearPickerTest {
 
         val monthAndYearPicker = MonthAndYearPicker(
             context = testContext,
-            selectedDate = initialDate.toCalendar()
+            selectedDate = initialDate.toCalendar(),
         )
 
         var newMonth = 0
@@ -158,7 +156,7 @@ class MonthAndYearPickerTest {
             context = testContext,
             selectedDate = initialDate,
             minDate = minDate,
-            maxDate = maxDate
+            maxDate = maxDate,
         )
 
         with(monthAndYearPicker.monthView) {
@@ -184,7 +182,7 @@ class MonthAndYearPickerTest {
             context = testContext,
             selectedDate = initialDate,
             minDate = minDate,
-            maxDate = maxDate
+            maxDate = maxDate,
         )
 
         with(monthAndYearPicker.monthView) {

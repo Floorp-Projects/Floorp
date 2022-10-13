@@ -16,7 +16,7 @@ import kotlin.math.min
  */
 data class Size(
     val width: Int,
-    val height: Int
+    val height: Int,
 ) {
 
     /**

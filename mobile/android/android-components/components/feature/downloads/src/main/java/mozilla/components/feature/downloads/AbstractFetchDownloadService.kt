@@ -120,7 +120,7 @@ abstract class AbstractFetchDownloadService : Service() {
         var downloadDeleted: Boolean = false,
         var notifiedStopped: Boolean = false,
         var lastNotificationUpdate: Long = 0L,
-        var createdTime: Long = System.currentTimeMillis()
+        var createdTime: Long = System.currentTimeMillis(),
     ) {
         internal fun canUpdateNotification(): Boolean {
             return isUnderNotificationUpdateLimit() && !notifiedStopped
@@ -222,10 +222,11 @@ abstract class AbstractFetchDownloadService : Service() {
                     ACTION_OPEN -> {
                         if (!openFile(context, currentDownloadJobState.state)) {
                             val fileExt = MimeTypeMap.getFileExtensionFromUrl(
-                                currentDownloadJobState.state.filePath.toString()
+                                currentDownloadJobState.state.filePath.toString(),
                             )
                             val errorMessage = applicationContext.getString(
-                                R.string.mozac_feature_downloads_open_not_supported1, fileExt
+                                R.string.mozac_feature_downloads_open_not_supported1,
+                                fileExt,
                             )
 
                             Toast.makeText(applicationContext, errorMessage, Toast.LENGTH_SHORT).show()
@@ -282,7 +283,7 @@ abstract class AbstractFetchDownloadService : Service() {
         val downloadJobState = DownloadJobState(
             state = download.copy(status = actualStatus, notificationId = foregroundServiceId),
             foregroundServiceId = foregroundServiceId,
-            status = actualStatus
+            status = actualStatus,
         )
 
         store.dispatch(DownloadAction.UpdateDownloadAction(downloadJobState.state))
@@ -339,7 +340,7 @@ abstract class AbstractFetchDownloadService : Service() {
      */
     data class Style(
         @ColorRes
-        val notificationAccentColor: Int = R.color.mozac_feature_downloads_notification
+        val notificationAccentColor: Int = R.color.mozac_feature_downloads_notification,
     )
 
     /**
@@ -351,30 +352,30 @@ abstract class AbstractFetchDownloadService : Service() {
     internal fun updateDownloadNotification(
         latestUIStatus: Status,
         download: DownloadJobState,
-        scope: CoroutineScope = CoroutineScope(IO)
+        scope: CoroutineScope = CoroutineScope(IO),
     ) {
         val notification = when (latestUIStatus) {
             DOWNLOADING -> DownloadNotification.createOngoingDownloadNotification(
                 context,
                 download,
-                style.notificationAccentColor
+                style.notificationAccentColor,
             )
             PAUSED -> DownloadNotification.createPausedDownloadNotification(
                 context,
                 download,
-                style.notificationAccentColor
+                style.notificationAccentColor,
             )
             FAILED -> DownloadNotification.createDownloadFailedNotification(
                 context,
                 download,
-                style.notificationAccentColor
+                style.notificationAccentColor,
             )
             COMPLETED -> {
                 addToDownloadSystemDatabaseCompat(download.state, scope)
                 DownloadNotification.createDownloadCompletedNotification(
                     context,
                     download,
-                    style.notificationAccentColor
+                    style.notificationAccentColor,
                 )
             }
             CANCELLED -> {
@@ -444,7 +445,7 @@ abstract class AbstractFetchDownloadService : Service() {
     @VisibleForTesting
     internal fun addToDownloadSystemDatabaseCompat(
         download: DownloadState,
-        scope: CoroutineScope = CoroutineScope(IO)
+        scope: CoroutineScope = CoroutineScope(IO),
     ) {
         if (!shouldUseScopedStorage()) {
             val fileName = download.fileName
@@ -461,7 +462,7 @@ abstract class AbstractFetchDownloadService : Service() {
                     length = download.contentLength ?: file.length(),
                     // Only show notifications if our channel is blocked
                     showNotification = !DownloadNotification.isChannelEnabled(context),
-                    download
+                    download,
                 )
             }
         }
@@ -477,7 +478,7 @@ abstract class AbstractFetchDownloadService : Service() {
         path: String,
         length: Long,
         showNotification: Boolean,
-        download: DownloadState
+        download: DownloadState,
     ) {
         try {
             val url = if (!download.isScheme(listOf("http", "https"))) null else download.url.toUri()
@@ -491,7 +492,7 @@ abstract class AbstractFetchDownloadService : Service() {
                 // Only show notifications if our channel is blocked
                 showNotification = showNotification,
                 uri = url,
-                referer = download.referrerUrl?.toUri()
+                referer = download.referrerUrl?.toUri(),
             )
         } catch (e: IllegalArgumentException) {
             logger.error("Unable add the download to the system database", e)
@@ -545,7 +546,7 @@ abstract class AbstractFetchDownloadService : Service() {
                 DownloadNotification.createDownloadGroupNotification(
                     context,
                     downloadList,
-                    style.notificationAccentColor
+                    style.notificationAccentColor,
                 )
             NotificationManagerCompat.from(context).apply {
                 notify(NOTIFICATION_DOWNLOAD_GROUP_ID, notificationGroup)
@@ -561,7 +562,7 @@ abstract class AbstractFetchDownloadService : Service() {
             DownloadNotification.createOngoingDownloadNotification(
                 context,
                 downloadJobState,
-                style.notificationAccentColor
+                style.notificationAccentColor,
             )
         compatForegroundNotificationId = downloadJobState.foregroundServiceId
         NotificationManagerCompat.from(context).apply {
@@ -598,7 +599,7 @@ abstract class AbstractFetchDownloadService : Service() {
                 it.foregroundServiceId == compatForegroundNotificationId
             }
             downloadJobState.foregroundServiceId to createCompactForegroundNotification(
-                downloadJobState
+                downloadJobState,
             )
         }
 
@@ -675,7 +676,7 @@ abstract class AbstractFetchDownloadService : Service() {
         val request = Request(
             download.url.sanitizeURL(),
             headers = headers,
-            private = download.private
+            private = download.private,
         )
         // When resuming a download we need to use the httpClient as
         // download.response doesn't support adding headers.
@@ -750,17 +751,17 @@ abstract class AbstractFetchDownloadService : Service() {
         downloadJobState: DownloadJobState,
         inStream: InputStream,
         outStream: OutputStream,
-        downloadWithHttpClient: Boolean = false
+        downloadWithHttpClient: Boolean = false,
     ): CopyInChuckStatus {
         val data = ByteArray(CHUNK_SIZE)
         logger.debug(
             "starting copyInChunks ${downloadJobState.state.id}" +
-                " currentBytesCopied ${downloadJobState.state.currentBytesCopied}"
+                " currentBytesCopied ${downloadJobState.state.currentBytesCopied}",
         )
 
         val throttleUpdateDownload = throttleLatest<Long>(
             PROGRESS_UPDATE_INTERVAL,
-            coroutineScope = CoroutineScope(IO)
+            coroutineScope = CoroutineScope(IO),
         ) { copiedBytes ->
             val newState = downloadJobState.state.copy(currentBytesCopied = copiedBytes)
             updateDownloadState(newState)
@@ -798,7 +799,7 @@ abstract class AbstractFetchDownloadService : Service() {
         }
         logger.debug(
             "Finishing copyInChunks ${downloadJobState.state.id} " +
-                "currentBytesCopied ${downloadJobState.currentBytesCopied}"
+                "currentBytesCopied ${downloadJobState.currentBytesCopied}",
         )
         return CopyInChuckStatus.COMPLETED
     }
@@ -827,7 +828,7 @@ abstract class AbstractFetchDownloadService : Service() {
     internal fun useFileStream(
         download: DownloadState,
         append: Boolean,
-        block: (OutputStream) -> Unit
+        block: (OutputStream) -> Unit,
     ) {
         val downloadWithUniqueFileName = makeUniqueFileNameIfNecessary(download, append)
         updateDownloadState(downloadWithUniqueFileName)
@@ -865,7 +866,7 @@ abstract class AbstractFetchDownloadService : Service() {
     @Suppress("Deprecation")
     internal fun makeUniqueFileNameIfNecessary(
         download: DownloadState,
-        append: Boolean
+        append: Boolean,
     ): DownloadState {
         if (append) {
             return download
@@ -875,8 +876,8 @@ abstract class AbstractFetchDownloadService : Service() {
             download.copy(
                 fileName = DownloadUtils.uniqueFileName(
                     Environment.getExternalStoragePublicDirectory(download.destinationDirectory),
-                    it
-                )
+                    it,
+                ),
             )
         } ?: download
     }
@@ -888,7 +889,7 @@ abstract class AbstractFetchDownloadService : Service() {
             put(MediaStore.Downloads.DISPLAY_NAME, download.fileName)
             put(
                 MediaStore.Downloads.MIME_TYPE,
-                getSafeContentType(context, download.filePath, download.contentType)
+                getSafeContentType(context, download.filePath, download.contentType),
             )
             put(MediaStore.Downloads.SIZE, download.contentLength)
             put(MediaStore.Downloads.IS_PENDING, 1)
@@ -994,7 +995,7 @@ abstract class AbstractFetchDownloadService : Service() {
                 queryCollection,
                 queryProjection,
                 queryBundle,
-                null
+                null,
             )?.use {
                 if (it.count > 0) {
                     val idColumnIndex = it.getColumnIndex(MediaStore.Downloads._ID)
@@ -1027,7 +1028,7 @@ abstract class AbstractFetchDownloadService : Service() {
             return FileProvider.getUriForFile(
                 context,
                 context.packageName + FILE_PROVIDER_EXTENSION,
-                File(filePath)
+                File(filePath),
             )
         }
 

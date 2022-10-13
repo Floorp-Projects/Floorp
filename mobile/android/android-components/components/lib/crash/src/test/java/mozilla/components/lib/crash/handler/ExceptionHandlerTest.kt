@@ -39,13 +39,13 @@ class ExceptionHandlerTest {
                 context = testContext,
                 shouldPrompt = CrashReporter.Prompt.NEVER,
                 services = listOf(service),
-                scope = scope
-            )
+                scope = scope,
+            ),
         )
 
         val handler = ExceptionHandler(
             testContext,
-            crashReporter
+            crashReporter,
         )
 
         val exception = RuntimeException("Hello World")
@@ -62,26 +62,28 @@ class ExceptionHandlerTest {
         val crashReporter = CrashReporter(
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.NEVER,
-            services = listOf(object : CrashReporterService {
-                override val id: String = "test"
+            services = listOf(
+                object : CrashReporterService {
+                    override val id: String = "test"
 
-                override val name: String = "TestReporter"
+                    override val name: String = "TestReporter"
 
-                override fun createCrashReportUrl(identifier: String): String? = null
+                    override fun createCrashReportUrl(identifier: String): String? = null
 
-                override fun report(crash: Crash.UncaughtExceptionCrash): String? = null
+                    override fun report(crash: Crash.UncaughtExceptionCrash): String? = null
 
-                override fun report(crash: Crash.NativeCodeCrash): String? = null
+                    override fun report(crash: Crash.NativeCodeCrash): String? = null
 
-                override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? = null
-            }),
-            scope = scope
+                    override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? = null
+                },
+            ),
+            scope = scope,
         ).install(testContext)
 
         val handler = ExceptionHandler(
             testContext,
             crashReporter,
-            defaultExceptionHandler
+            defaultExceptionHandler,
         )
 
         verify(defaultExceptionHandler, never()).uncaughtException(any(), any())

@@ -17,12 +17,12 @@ import mozilla.components.support.test.mock
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
 @Suppress("DEPRECATION")
 @RunWith(AndroidJUnit4::class)
@@ -53,7 +53,6 @@ class ActivityTest {
 
     @Test
     fun `check enterToImmersiveMode sets the correct flags`() {
-
         activity.enterToImmersiveMode()
 
         // verify entering immersive mode

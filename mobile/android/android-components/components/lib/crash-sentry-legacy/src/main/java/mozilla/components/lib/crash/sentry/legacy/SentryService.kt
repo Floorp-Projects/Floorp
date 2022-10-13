@@ -44,7 +44,7 @@ class SentryService(
     environment: String? = null,
     private val sendEventForNativeCrashes: Boolean = false,
     private val sentryProjectUrl: String? = null,
-    clientFactory: SentryClientFactory? = null
+    clientFactory: SentryClientFactory? = null,
 ) : CrashReporterService {
     override val id: String = "sentry"
 
@@ -68,7 +68,7 @@ class SentryService(
 
             // Fenix perf note: we initialize Android...Factory inside the lazy block to avoid
             // calling the slow Logger.getLogger call on cold startup #7441
-            clientFactory ?: AndroidSentryClientFactory(context)
+            clientFactory ?: AndroidSentryClientFactory(context),
         ).apply {
             this.environment = environment
             tags.forEach { entry ->

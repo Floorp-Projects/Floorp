@@ -44,13 +44,13 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.Mockito.`when`
 import mozilla.appservices.fxaclient.AccountEvent as ASAccountEvent
 import mozilla.appservices.fxaclient.Device as NativeDevice
 import mozilla.appservices.fxaclient.DevicePushSubscription as NativeDevicePushSubscription
@@ -192,9 +192,9 @@ class FxaDeviceConstellationTest {
         `when`(account.handlePushMessage("raw events payload")).thenReturn(
             arrayOf(
                 ASAccountEvent.CommandReceived(
-                    command = IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(listOf(testTab1), "flowid", "streamid"))
-                )
-            )
+                    command = IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(listOf(testTab1), "flowid", "streamid")),
+                ),
+            ),
         )
         assertTrue(constellation.processRawEvent("raw events payload"))
 
@@ -209,8 +209,9 @@ class FxaDeviceConstellationTest {
         `when`(account.gatherTelemetry()).thenReturn("{}")
         assertTrue(
             constellation.sendCommandToDevice(
-                "targetID", DeviceCommandOutgoing.SendTab("Mozilla", "https://www.mozilla.org")
-            )
+                "targetID",
+                DeviceCommandOutgoing.SendTab("Mozilla", "https://www.mozilla.org"),
+            ),
         )
 
         verify(account).sendSingleTab("targetID", "Mozilla", "https://www.mozilla.org")
@@ -223,7 +224,8 @@ class FxaDeviceConstellationTest {
         doAnswer { throw exception }.`when`(account).sendSingleTab(any(), any(), any())
 
         val success = constellation.sendCommandToDevice(
-            "targetID", DeviceCommandOutgoing.SendTab("Mozilla", "https://www.mozilla.org")
+            "targetID",
+            DeviceCommandOutgoing.SendTab("Mozilla", "https://www.mozilla.org"),
         )
 
         assertFalse(success)
@@ -237,7 +239,8 @@ class FxaDeviceConstellationTest {
         doAnswer { throw exception }.`when`(account).sendSingleTab(any(), any(), any())
 
         val success = constellation.sendCommandToDevice(
-            "targetID", DeviceCommandOutgoing.SendTab("Mozilla", "https://www.mozilla.org")
+            "targetID",
+            DeviceCommandOutgoing.SendTab("Mozilla", "https://www.mozilla.org"),
         )
 
         assertFalse(success)
@@ -286,8 +289,10 @@ class FxaDeviceConstellationTest {
         // Current device with other devices.
         `when`(account.getDevices()).thenReturn(
             arrayOf(
-                currentDevice, testDevice1, testDevice2
-            )
+                currentDevice,
+                testDevice1,
+                testDevice2,
+            ),
         )
         constellation.refreshDevices()
 
@@ -298,8 +303,9 @@ class FxaDeviceConstellationTest {
         val currentDeviceExpired = testDevice("currentExpired", true, expired = true)
         `when`(account.getDevices()).thenReturn(
             arrayOf(
-                currentDeviceExpired, testDevice2
-            )
+                currentDeviceExpired,
+                testDevice2,
+            ),
         )
 
         `when`(account.pollDeviceCommands()).thenReturn(emptyArray())
@@ -317,8 +323,9 @@ class FxaDeviceConstellationTest {
 
         `when`(account.getDevices()).thenReturn(
             arrayOf(
-                currentDeviceNoSub, testDevice2
-            )
+                currentDeviceNoSub,
+                testDevice2,
+            ),
         )
 
         `when`(account.pollDeviceCommands()).thenReturn(emptyArray())
@@ -354,8 +361,8 @@ class FxaDeviceConstellationTest {
         // Some commands.
         `when`(account.pollDeviceCommands()).thenReturn(
             arrayOf(
-                IncomingDeviceCommand.TabReceived(null, SendTabPayload(emptyList(), "", ""))
-            )
+                IncomingDeviceCommand.TabReceived(null, SendTabPayload(emptyList(), "", "")),
+            ),
         )
         assertTrue(constellation.pollForCommands())
 
@@ -372,8 +379,8 @@ class FxaDeviceConstellationTest {
         // Zero tabs from a single device.
         `when`(account.pollDeviceCommands()).thenReturn(
             arrayOf(
-                IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(emptyList(), "", ""))
-            )
+                IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(emptyList(), "", "")),
+            ),
         )
         assertTrue(constellation.pollForCommands())
 
@@ -386,8 +393,8 @@ class FxaDeviceConstellationTest {
         // Single tab from a single device.
         `when`(account.pollDeviceCommands()).thenReturn(
             arrayOf(
-                IncomingDeviceCommand.TabReceived(testDevice2, SendTabPayload(listOf(testTab1), "", ""))
-            )
+                IncomingDeviceCommand.TabReceived(testDevice2, SendTabPayload(listOf(testTab1), "", "")),
+            ),
         )
         assertTrue(constellation.pollForCommands())
 
@@ -398,8 +405,8 @@ class FxaDeviceConstellationTest {
         // Multiple tabs from a single device.
         `when`(account.pollDeviceCommands()).thenReturn(
             arrayOf(
-                IncomingDeviceCommand.TabReceived(testDevice2, SendTabPayload(listOf(testTab1, testTab3), "", ""))
-            )
+                IncomingDeviceCommand.TabReceived(testDevice2, SendTabPayload(listOf(testTab1, testTab3), "", "")),
+            ),
         )
         assertTrue(constellation.pollForCommands())
 
@@ -411,8 +418,8 @@ class FxaDeviceConstellationTest {
         `when`(account.pollDeviceCommands()).thenReturn(
             arrayOf(
                 IncomingDeviceCommand.TabReceived(testDevice2, SendTabPayload(listOf(testTab1, testTab2), "", "")),
-                IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(listOf(testTab3), "", ""))
-            )
+                IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(listOf(testTab3), "", "")),
+            ),
         )
         assertTrue(constellation.pollForCommands())
 
@@ -473,7 +480,7 @@ class FxaDeviceConstellationTest {
             lastAccessTime = 123L,
             capabilities = listOf(),
             pushEndpointExpired = expired,
-            pushSubscription = if (subscribed) NativeDevicePushSubscription("http://endpoint.com", "pk", "auth key") else null
+            pushSubscription = if (subscribed) NativeDevicePushSubscription("http://endpoint.com", "pk", "auth key") else null,
         )
     }
 

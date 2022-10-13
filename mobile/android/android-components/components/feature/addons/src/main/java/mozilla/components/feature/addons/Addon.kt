@@ -56,7 +56,7 @@ data class Addon(
     val createdAt: String = "",
     val updatedAt: String = "",
     val installedState: InstalledState? = null,
-    val defaultLocale: String = DEFAULT_LOCALE
+    val defaultLocale: String = DEFAULT_LOCALE,
 ) : Parcelable {
     /**
      * Represents an add-on author.
@@ -72,7 +72,7 @@ data class Addon(
         val id: String,
         val name: String,
         val url: String,
-        val username: String
+        val username: String,
     ) : Parcelable
 
     /**
@@ -85,7 +85,7 @@ data class Addon(
     @Parcelize
     data class Rating(
         val average: Float,
-        val reviews: Int
+        val reviews: Int,
     ) : Parcelable
 
     /**
@@ -116,7 +116,7 @@ data class Addon(
         val supported: Boolean = true,
         val disabledAsUnsupported: Boolean = false,
         val allowedInPrivateBrowsing: Boolean = false,
-        val icon: Bitmap? = null
+        val icon: Bitmap? = null,
     ) : Parcelable
 
     /**
@@ -126,6 +126,7 @@ data class Addon(
     fun translatePermissions(context: Context): List<String> {
         return localizePermissions(permissions, context)
     }
+
     /**
      * Returns whether or not this [Addon] is currently installed.
      */
@@ -199,7 +200,7 @@ data class Addon(
             "sessions" to R.string.mozac_feature_addons_permissions_sessions_description,
             "tabHide" to R.string.mozac_feature_addons_permissions_tab_hide_description,
             "topSites" to R.string.mozac_feature_addons_permissions_top_sites_description,
-            "devtools" to R.string.mozac_feature_addons_permissions_devtools_description
+            "devtools" to R.string.mozac_feature_addons_permissions_devtools_description,
         )
 
         /**
@@ -249,7 +250,7 @@ data class Addon(
         private fun formatURLAccessPermission(
             permissionsToTranslations: MutableMap<String, Int>,
             localizedSiteAccessPermissions: MutableList<String>,
-            context: Context
+            context: Context,
         ) {
             val maxShownPermissionsEntries = 4
             fun addExtraEntriesIfNeeded(count: Int, oneExtraPermission: Int, multiplePermissions: Int) {

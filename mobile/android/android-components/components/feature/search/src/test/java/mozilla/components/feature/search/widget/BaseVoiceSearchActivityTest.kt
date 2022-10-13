@@ -52,7 +52,7 @@ class BaseVoiceSearchActivityTest {
         shadowPackageManager.addActivityIfNotPresent(component)
         shadowPackageManager.addIntentFilterForActivity(
             component,
-            IntentFilter(ACTION_RECOGNIZE_SPEECH).apply { addCategory(Intent.CATEGORY_DEFAULT) }
+            IntentFilter(ACTION_RECOGNIZE_SPEECH).apply { addCategory(Intent.CATEGORY_DEFAULT) },
         )
     }
 

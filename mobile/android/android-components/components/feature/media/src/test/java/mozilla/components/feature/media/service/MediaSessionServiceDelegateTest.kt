@@ -117,8 +117,8 @@ class MediaSessionServiceDelegateTest {
         val mediaTab2 = getMediaTab(PlaybackState.PAUSED)
         val store = BrowserStore(
             BrowserState(
-                tabs = listOf(mediaTab1, mediaTab2)
-            )
+                tabs = listOf(mediaTab1, mediaTab2),
+            ),
         )
         val delegate = MediaSessionServiceDelegate(testContext, mock(), store)
         delegate.mediaSession = mock()
@@ -228,8 +228,8 @@ class MediaSessionServiceDelegateTest {
         val mediaTab2 = getMediaTab(PlaybackState.PAUSED)
         val store = BrowserStore(
             BrowserState(
-                tabs = listOf(mediaTab1, mediaTab2)
-            )
+                tabs = listOf(mediaTab1, mediaTab2),
+            ),
         )
         val service: AbstractMediaSessionService = mock()
         val delegate = MediaSessionServiceDelegate(testContext, service, store)
@@ -340,23 +340,23 @@ class MediaSessionServiceDelegateTest {
         assertEquals(expectedPlaybackState.state, playbackStateCaptor.value.state)
         assertEquals(
             (expectedPlaybackState.playbackState as AndroidPlaybackState).state,
-            (playbackStateCaptor.value.playbackState as AndroidPlaybackState).state
+            (playbackStateCaptor.value.playbackState as AndroidPlaybackState).state,
         )
         assertEquals(
             (expectedPlaybackState.playbackState as AndroidPlaybackState).position,
-            (playbackStateCaptor.value.playbackState as AndroidPlaybackState).position
+            (playbackStateCaptor.value.playbackState as AndroidPlaybackState).position,
         )
         assertEquals(
             (expectedPlaybackState.playbackState as AndroidPlaybackState).playbackSpeed,
-            (playbackStateCaptor.value.playbackState as AndroidPlaybackState).playbackSpeed
+            (playbackStateCaptor.value.playbackState as AndroidPlaybackState).playbackSpeed,
         )
         assertEquals(
             (expectedPlaybackState.playbackState as AndroidPlaybackState).actions,
-            (playbackStateCaptor.value.playbackState as AndroidPlaybackState).actions
+            (playbackStateCaptor.value.playbackState as AndroidPlaybackState).actions,
         )
         assertEquals(
             (expectedPlaybackState.playbackState as AndroidPlaybackState).customActions,
-            (playbackStateCaptor.value.playbackState as AndroidPlaybackState).customActions
+            (playbackStateCaptor.value.playbackState as AndroidPlaybackState).customActions,
         )
         assertEquals(expectedPlaybackState.playbackSpeed, playbackStateCaptor.value.playbackSpeed)
         assertEquals(expectedPlaybackState.actions, playbackStateCaptor.value.actions)
@@ -444,9 +444,9 @@ class MediaSessionServiceDelegateTest {
             tabs = listOf(
                 createTab(
                     "https://www.mozilla.org",
-                    mediaSessionState = MediaSessionState(controller, playbackState = PlaybackState.PLAYING)
-                )
-            )
+                    mediaSessionState = MediaSessionState(controller, playbackState = PlaybackState.PLAYING),
+                ),
+            ),
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
@@ -462,6 +462,6 @@ class MediaSessionServiceDelegateTest {
     private fun getMediaTab(playbackState: PlaybackState = PlaybackState.PLAYING) = createTab(
         title = "Mozilla",
         url = "https://www.mozilla.org",
-        mediaSessionState = MediaSessionState(mock(), playbackState = playbackState)
+        mediaSessionState = MediaSessionState(mock(), playbackState = playbackState),
     )
 }

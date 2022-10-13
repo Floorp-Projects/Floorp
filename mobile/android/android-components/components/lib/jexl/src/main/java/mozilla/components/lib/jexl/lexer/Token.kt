@@ -10,7 +10,7 @@ package mozilla.components.lib.jexl.lexer
 data class Token(
     val type: Type,
     val raw: String,
-    val value: Any
+    val value: Any,
 ) {
     enum class Type {
         LITERAL,
@@ -27,6 +27,6 @@ data class Token(
         CLOSE_PAREN,
         QUESTION,
         BINARY_OP,
-        UNARY_OP
+        UNARY_OP,
     }
 }

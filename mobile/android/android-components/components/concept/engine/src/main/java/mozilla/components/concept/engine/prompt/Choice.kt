@@ -24,7 +24,7 @@ data class Choice(
     var selected: Boolean = false,
     val isASeparator:
         Boolean = false,
-    val children: Array<Choice>? = null
+    val children: Array<Choice>? = null,
 ) : Parcelable {
 
     val isGroupType get() = children != null
@@ -35,7 +35,7 @@ data class Choice(
         parcel.readString() ?: "",
         parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte(),
-        parcel.createTypedArray(CREATOR)
+        parcel.createTypedArray(CREATOR),
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {

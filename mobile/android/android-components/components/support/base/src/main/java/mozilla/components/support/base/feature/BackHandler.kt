@@ -18,8 +18,8 @@ interface BackHandler {
         "Use `UserInteractionHandler` instead.",
         ReplaceWith(
             "onBackPressed()",
-            "mozilla.components.support.base.feature.UserInteractionHandler"
-        )
+            "mozilla.components.support.base.feature.UserInteractionHandler",
+        ),
     )
     fun onBackPressed(): Boolean
 }

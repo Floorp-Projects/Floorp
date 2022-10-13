@@ -316,18 +316,17 @@ internal class ExpandableLayout private constructor(context: Context) : FrameLay
         // Avoid IndexOutOfBounds / NullPointer exceptions.
         val validLastVisibleItemIndexWhenCollapsed = getChildPositionForAdapterIndex(
             listView,
-            lastVisibleItemIndexWhenCollapsed
+            lastVisibleItemIndexWhenCollapsed,
         )
         val validStickyItemIndex = getChildPositionForAdapterIndex(
             listView,
-            stickyItemIndex
+            stickyItemIndex,
         )
 
         // Simple sanity check
         if (validLastVisibleItemIndexWhenCollapsed >= listView.childCount ||
             validLastVisibleItemIndexWhenCollapsed <= 0
         ) {
-
             return measuredHeight
         }
 
@@ -414,9 +413,8 @@ internal class ExpandableLayout private constructor(context: Context) : FrameLay
             contentView: ViewGroup,
             lastVisibleItemIndexWhenCollapsed: Int = Int.MAX_VALUE,
             stickyFooterItemIndex: Int = RecyclerView.NO_POSITION,
-            blankTouchListener: (() -> Unit)? = null
+            blankTouchListener: (() -> Unit)? = null,
         ): ExpandableLayout {
-
             val expandableView = ExpandableLayout(contentView.context)
             val params = MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
                 .apply {

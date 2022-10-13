@@ -41,7 +41,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.any
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
@@ -49,6 +48,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.`when`
 import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
 
@@ -264,6 +264,7 @@ class BrowserToolbarTest {
         assertEquals(AccessibilityEvent.TYPE_ANNOUNCEMENT, captor.allValues[0].eventType)
         assertEquals(testContext.getString(R.string.mozac_browser_toolbar_progress_loading), captor.allValues[0].text[0])
     }
+
     @Test
     fun `displayProgress will be forwarded to display toolbar`() {
         val toolbar = BrowserToolbar(testContext)
@@ -752,7 +753,7 @@ class BrowserToolbarTest {
             mock(),
             "imageDrawable",
             "imageSelectedDrawable",
-            visible = { false }
+            visible = { false },
         ) {}
 
         assertEquals(false, button.visible())
@@ -809,7 +810,7 @@ class BrowserToolbarTest {
         assertEquals(
             0,
             edit.views.url.imeOptions and
-                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
+                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING,
         )
         assertEquals(false, toolbar.private)
 
@@ -818,7 +819,7 @@ class BrowserToolbarTest {
         assertNotEquals(
             0,
             edit.views.url.imeOptions and
-                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
+                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING,
         )
         assertTrue(toolbar.private)
 
@@ -827,7 +828,7 @@ class BrowserToolbarTest {
         assertEquals(
             0,
             edit.views.url.imeOptions and
-                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
+                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING,
         )
         assertEquals(false, toolbar.private)
     }

@@ -41,7 +41,7 @@ abstract class BaseSearchTelemetry {
     internal fun installWebExtension(
         engine: Engine,
         store: BrowserStore,
-        extensionInfo: ExtensionInfo
+        extensionInfo: ExtensionInfo,
     ) {
         engine.installWebExtension(
             id = extensionInfo.id,
@@ -51,21 +51,21 @@ abstract class BaseSearchTelemetry {
             },
             onError = { _, throwable ->
                 Logger.error("Could not install ${extensionInfo.id} extension", throwable)
-            }
+            },
         )
     }
 
     protected fun emitFact(
         event: String,
         value: String,
-        metadata: Map<String, Any>? = null
+        metadata: Map<String, Any>? = null,
     ) {
         Fact(
             Component.FEATURE_SEARCH,
             INTERACTION,
             event,
             value,
-            metadata
+            metadata,
         ).collect()
     }
 
@@ -80,7 +80,7 @@ abstract class BaseSearchTelemetry {
             codeParam = "client",
             codePrefixes = listOf("firefox"),
             followOnParams = listOf("oq", "ved", "ei"),
-            extraAdServersRegexps = listOf("^https?:\\/\\/www\\.google(?:adservices)?\\.com\\/(?:pagead\\/)?aclk")
+            extraAdServersRegexps = listOf("^https?:\\/\\/www\\.google(?:adservices)?\\.com\\/(?:pagead\\/)?aclk"),
         ),
         SearchProviderModel(
             name = "duckduckgo",
@@ -90,13 +90,13 @@ abstract class BaseSearchTelemetry {
             codePrefixes = listOf("f"),
             extraAdServersRegexps = listOf(
                 "^https:\\/\\/duckduckgo.com\\/y\\.js",
-                "^https:\\/\\/www\\.amazon\\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)"
-            )
+                "^https:\\/\\/www\\.amazon\\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)",
+            ),
         ),
         SearchProviderModel(
             name = "yahoo",
             regexp = "^https:\\/\\/(?:.*)search\\.yahoo\\.com\\/search",
-            queryParam = "p"
+            queryParam = "p",
         ),
         SearchProviderModel(
             name = "baidu",
@@ -107,8 +107,8 @@ abstract class BaseSearchTelemetry {
             followOnParams = listOf("oq"),
             extraAdServersRegexps = listOf(
                 "^https?://www\\.baidu\\.com/baidu\\.php?",
-                "^https?://m\\.baidu\\.com/baidu\\.php?"
-            )
+                "^https?://m\\.baidu\\.com/baidu\\.php?",
+            ),
         ),
         SearchProviderModel(
             name = "bing",
@@ -123,20 +123,20 @@ abstract class BaseSearchTelemetry {
                     host = "www.bing.com",
                     name = "SRCHS",
                     codeParam = "PC",
-                    codePrefixes = listOf("MOZ", "MZ")
-                )
+                    codePrefixes = listOf("MOZ", "MZ"),
+                ),
             ),
             extraAdServersRegexps = listOf(
                 "^https:\\/\\/www\\.bing\\.com\\/acli?c?k",
-                "^https:\\/\\/www\\.bing\\.com\\/fd\\/ls\\/GLinkPingPost\\.aspx.*acli?c?k"
-            )
-        )
+                "^https:\\/\\/www\\.bing\\.com\\/fd\\/ls\\/GLinkPingPost\\.aspx.*acli?c?k",
+            ),
+        ),
     )
 
     private suspend fun subscribeToUpdates(
         flow: Flow<BrowserState>,
         extension: WebExtension,
-        extensionInfo: ExtensionInfo
+        extensionInfo: ExtensionInfo,
     ) {
         // Whenever we see a new EngineSession in the store then we register our content message
         // handler if it has not been added yet.
@@ -151,7 +151,7 @@ abstract class BaseSearchTelemetry {
                 extension.registerContentMessageHandler(
                     engineSession,
                     extensionInfo.messageId,
-                    SearchTelemetryMessageHandler()
+                    SearchTelemetryMessageHandler(),
                 )
             }
     }

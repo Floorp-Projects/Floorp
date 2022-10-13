@@ -21,7 +21,7 @@ class ColorProcessor : IconProcessor {
         request: IconRequest,
         resource: IconRequest.Resource?,
         icon: Icon,
-        desiredSize: DesiredSize
+        desiredSize: DesiredSize,
     ): Icon {
         // If the icon already has a color set, just return
         if (icon.color != null) return icon

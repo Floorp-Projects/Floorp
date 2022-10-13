@@ -19,7 +19,7 @@ class ConnectionKtTest {
     fun `transform response to PushSubscription`() {
         val response = SubscriptionResponse(
             "992a0f0542383f1ea5ef51b7cf4ae6c4",
-            SubscriptionInfo("https://mozilla.com", KeyInfo("123", "456"))
+            SubscriptionInfo("https://mozilla.com", KeyInfo("123", "456")),
         )
         val sub = response.toPushSubscription("scope")
 
@@ -53,7 +53,7 @@ class ConnectionKtTest {
     fun `transform response to PushSubscriptionChanged`() {
         val response = SubscriptionChanged(
             "992a0f0542383f1ea5ef51b7cf4ae6c4",
-            "scope"
+            "scope",
         )
         val sub = response.toPushSubscriptionChanged()
         assertEquals(response.channelId, sub.channelId)

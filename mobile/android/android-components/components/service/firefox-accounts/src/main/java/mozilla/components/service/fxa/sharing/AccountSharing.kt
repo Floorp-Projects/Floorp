@@ -20,7 +20,7 @@ import mozilla.components.support.ktx.kotlin.toSha256Digest
 data class ShareableAccount(
     val email: String,
     val sourcePackage: String,
-    val authInfo: MigratingAccountInfo
+    val authInfo: MigratingAccountInfo,
 )
 
 /**
@@ -72,7 +72,7 @@ object AccountSharing {
         // Fennec Beta
         "org.mozilla.firefox_beta" to "a78b62a5165b4494b2fead9e76a280d22d937fee6251aece599446b2ea319b04",
         // Fennec Nightly
-        "org.mozilla.fennec_aurora" to "bc0488838d06f4ca6bf32386daab0dd8ebcf3e7730787459f62fb3cd14a1baaa"
+        "org.mozilla.fennec_aurora" to "bc0488838d06f4ca6bf32386daab0dd8ebcf3e7730787459f62fb3cd14a1baaa",
     )
 
     /**
@@ -111,7 +111,9 @@ object AccountSharing {
             client.query(
                 authStateUri,
                 arrayOf(KEY_EMAIL, KEY_SESSION_TOKEN, KEY_KSYNC, KEY_KXSCS),
-                null, null, null
+                null,
+                null,
+                null,
             )?.use { cursor ->
                 cursor.moveToFirst()
 
@@ -126,7 +128,7 @@ object AccountSharing {
                     ShareableAccount(
                         email = email,
                         sourcePackage = packageName,
-                        authInfo = MigratingAccountInfo(sessionToken, kSync, kXSCS)
+                        authInfo = MigratingAccountInfo(sessionToken, kSync, kXSCS),
                     )
                 } else {
                     null
@@ -154,7 +156,7 @@ object AccountSharing {
     fun packageExistsWithSignature(
         packageManager: PackageManager,
         suspectPackage: String,
-        expectedSignature: String
+        expectedSignature: String,
     ): Boolean {
         val suspectSignature = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             getSignaturePostAPI28(packageManager, suspectPackage)

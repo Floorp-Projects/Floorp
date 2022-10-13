@@ -28,7 +28,7 @@ data class MediaSessionState(
     val positionState: MediaSession.PositionState = MediaSession.PositionState(),
     val muted: Boolean = false,
     val fullscreen: Boolean = false,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
 ) : Comparable<MediaSessionState> {
     override operator fun compareTo(other: MediaSessionState): Int {
         if (playbackState == other.playbackState) {

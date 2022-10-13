@@ -28,12 +28,14 @@ private const val PENDING_INTENT_TAG = "mozac.lib.crash.pendingintent"
 internal class CrashNotification(
     private val context: Context,
     private val crash: Crash,
-    private val configuration: CrashReporter.PromptConfiguration
+    private val configuration: CrashReporter.PromptConfiguration,
 ) {
     fun show() {
         val pendingIntent = PendingIntent.getActivity(
-            context, SharedIdsHelper.getNextIdForTag(context, PENDING_INTENT_TAG),
-            CrashPrompt.createIntent(context, crash), getNotificationFlag()
+            context,
+            SharedIdsHelper.getNextIdForTag(context, PENDING_INTENT_TAG),
+            CrashPrompt.createIntent(context, crash),
+            getNotificationFlag(),
         )
 
         val channel = ensureChannelExists(context)
@@ -43,7 +45,7 @@ internal class CrashNotification(
         ) {
             context.getString(
                 R.string.mozac_lib_crash_background_process_notification_title,
-                configuration.appName
+                configuration.appName,
             )
         } else {
             context.getString(R.string.mozac_lib_crash_dialog_title, configuration.appName)
@@ -58,7 +60,7 @@ internal class CrashNotification(
             .addAction(
                 R.drawable.mozac_lib_crash_notification,
                 context.getString(
-                    R.string.mozac_lib_crash_notification_action_report
+                    R.string.mozac_lib_crash_notification_action_report,
                 ),
                 pendingIntent,
             )
@@ -77,7 +79,7 @@ internal class CrashNotification(
          */
         fun shouldShowNotificationInsteadOfPrompt(
             crash: Crash,
-            sdkLevel: Int = Build.VERSION.SDK_INT
+            sdkLevel: Int = Build.VERSION.SDK_INT,
         ): Boolean {
             return when {
                 // We can always launch an activity from a background service pre Android Q.
@@ -99,13 +101,13 @@ internal class CrashNotification(
         fun ensureChannelExists(context: Context): String {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val notificationManager: NotificationManager = context.getSystemService(
-                    Context.NOTIFICATION_SERVICE
+                    Context.NOTIFICATION_SERVICE,
                 ) as NotificationManager
 
                 val channel = NotificationChannel(
                     NOTIFICATION_CHANNEL_ID,
                     context.getString(R.string.mozac_lib_crash_channel),
-                    NotificationManager.IMPORTANCE_DEFAULT
+                    NotificationManager.IMPORTANCE_DEFAULT,
                 )
 
                 notificationManager.createNotificationChannel(channel)

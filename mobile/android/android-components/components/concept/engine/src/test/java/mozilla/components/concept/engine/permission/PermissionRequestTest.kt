@@ -73,7 +73,7 @@ class PermissionRequestTest {
     private class MockPermissionRequest(
         override val permissions: List<Permission>,
         override val uri: String = "",
-        override val id: String = ""
+        override val id: String = "",
     ) : PermissionRequest {
         var granted = false
         var rejected = false

@@ -21,7 +21,7 @@ import mozilla.components.service.pocket.spocs.db.SpocsDao
     entities = [
         PocketStoryEntity::class,
         SpocEntity::class,
-        SpocImpressionEntity::class
+        SpocImpressionEntity::class,
     ],
     version = 4,
 )
@@ -45,7 +45,7 @@ internal abstract class PocketRecommendationsDatabase : RoomDatabase() {
             return Room.databaseBuilder(
                 context,
                 PocketRecommendationsDatabase::class.java,
-                DATABASE_NAME
+                DATABASE_NAME,
             )
                 .addMigrations(
                     Migrations.migration_1_2,
@@ -73,7 +73,7 @@ internal object Migrations {
                     "`clickShim` TEXT NOT NULL, " +
                     "`impressionShim` TEXT NOT NULL, " +
                     "PRIMARY KEY(`url`)" +
-                    ")"
+                    ")",
             )
         }
     }
@@ -87,7 +87,7 @@ internal object Migrations {
             // This migration is expected to only be needed in debug builds
             // with the feature not being live in any Fenix release.
             database.execSQL(
-                "DROP TABLE ${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}"
+                "DROP TABLE ${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}",
             )
 
             database.createNewSpocsTables()
@@ -111,18 +111,18 @@ internal object Migrations {
             // Rename the old tables to allow creating new ones
             database.execSQL(
                 "ALTER TABLE `${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}` " +
-                    "RENAME TO temp_spocs"
+                    "RENAME TO temp_spocs",
             )
             database.execSQL(
                 "ALTER TABLE `${PocketRecommendationsDatabase.TABLE_NAME_SPOCS_IMPRESSIONS}` " +
-                    "RENAME TO temp_spocs_impressions"
+                    "RENAME TO temp_spocs_impressions",
             )
 
             // Create new tables with the new schema
             database.createNewSpocsTables()
             database.execSQL(
                 "CREATE INDEX IF NOT EXISTS `index_spocs_impressions_spocId` " +
-                    "ON `${PocketRecommendationsDatabase.TABLE_NAME_SPOCS_IMPRESSIONS}` (`spocId`)"
+                    "ON `${PocketRecommendationsDatabase.TABLE_NAME_SPOCS_IMPRESSIONS}` (`spocId`)",
             )
 
             // Copy the old data to the new tables
@@ -134,7 +134,7 @@ internal object Migrations {
                     ") SELECT " +
                     "id, url, title, imageUrl, sponsor, clickShim, impressionShim, " +
                     "priority, lifetimeCapCount, flightCapCount, flightCapPeriod " +
-                    "FROM temp_spocs"
+                    "FROM temp_spocs",
             )
             database.execSQL(
                 "INSERT INTO " +
@@ -142,7 +142,7 @@ internal object Migrations {
                     "spocId, impressionId, impressionDateInSeconds" +
                     ") SELECT " +
                     "spocId, impressionId, impressionDateInSeconds " +
-                    "FROM temp_spocs_impressions"
+                    "FROM temp_spocs_impressions",
             )
 
             // Cleanup
@@ -167,7 +167,7 @@ internal object Migrations {
                 "`flightCapCount` INTEGER NOT NULL, " +
                 "`flightCapPeriod` INTEGER NOT NULL, " +
                 "PRIMARY KEY(`id`)" +
-                ")"
+                ")",
         )
 
         execSQL(
@@ -179,7 +179,7 @@ internal object Migrations {
                 "FOREIGN KEY(`spocId`) " +
                 "REFERENCES `spocs`(`id`) " +
                 "ON UPDATE NO ACTION ON DELETE CASCADE " +
-                ")"
+                ")",
         )
     }
 }

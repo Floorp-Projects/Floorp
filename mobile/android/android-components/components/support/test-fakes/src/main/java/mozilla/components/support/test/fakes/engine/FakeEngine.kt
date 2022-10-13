@@ -26,7 +26,7 @@ import org.junit.Assert.assertEquals
  * will expect to always deal with [FakeEngineSessionState] instances.
  */
 class FakeEngine(
-    private val expectToRestoreRealEngineSessionState: Boolean = false
+    private val expectToRestoreRealEngineSessionState: Boolean = false,
 ) : Engine {
     override val version: EngineVersion
         get() = throw NotImplementedError()

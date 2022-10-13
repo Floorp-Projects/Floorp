@@ -29,48 +29,48 @@ private fun emitAddressAutofillDialogFact(
     action: Action,
     item: String,
     value: String? = null,
-    metadata: Map<String, Any>? = null
+    metadata: Map<String, Any>? = null,
 ) {
     Fact(
         Component.FEATURE_PROMPTS,
         action,
         item,
         value,
-        metadata
+        metadata,
     ).collect()
 }
 
 internal fun emitSuccessfulAddressAutofillFormDetectedFact() {
     emitAddressAutofillDialogFact(
         Action.INTERACTION,
-        AddressAutofillDialogFacts.Items.AUTOFILL_ADDRESS_FORM_DETECTED
+        AddressAutofillDialogFacts.Items.AUTOFILL_ADDRESS_FORM_DETECTED,
     )
 }
 
 internal fun emitSuccessfulAddressAutofillSuccessFact() {
     emitAddressAutofillDialogFact(
         Action.INTERACTION,
-        AddressAutofillDialogFacts.Items.AUTOFILL_ADDRESS_SUCCESS
+        AddressAutofillDialogFacts.Items.AUTOFILL_ADDRESS_SUCCESS,
     )
 }
 
 internal fun emitAddressAutofillShownFact() {
     emitAddressAutofillDialogFact(
         Action.INTERACTION,
-        AddressAutofillDialogFacts.Items.AUTOFILL_ADDRESS_PROMPT_SHOWN
+        AddressAutofillDialogFacts.Items.AUTOFILL_ADDRESS_PROMPT_SHOWN,
     )
 }
 
 internal fun emitAddressAutofillExpandedFact() {
     emitAddressAutofillDialogFact(
         Action.INTERACTION,
-        AddressAutofillDialogFacts.Items.AUTOFILL_ADDRESS_PROMPT_EXPANDED
+        AddressAutofillDialogFacts.Items.AUTOFILL_ADDRESS_PROMPT_EXPANDED,
     )
 }
 
 internal fun emitAddressAutofillDismissedFact() {
     emitAddressAutofillDialogFact(
         Action.INTERACTION,
-        AddressAutofillDialogFacts.Items.AUTOFILL_ADDRESS_PROMPT_DISMISSED
+        AddressAutofillDialogFacts.Items.AUTOFILL_ADDRESS_PROMPT_DISMISSED,
     )
 }

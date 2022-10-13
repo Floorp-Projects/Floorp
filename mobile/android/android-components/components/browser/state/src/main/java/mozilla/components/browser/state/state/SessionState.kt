@@ -45,7 +45,7 @@ interface SessionState {
         engineState: EngineState = this.engineState,
         extensionState: Map<String, WebExtensionState> = this.extensionState,
         mediaSessionState: MediaSessionState? = this.mediaSessionState,
-        contextId: String? = this.contextId
+        contextId: String? = this.contextId,
     ): SessionState
 
     /**
@@ -163,7 +163,8 @@ enum class PackageCategory(val id: Int) {
     SOCIAL(4),
     NEWS(5),
     MAPS(6),
-    PRODUCTIVITY(7);
+    PRODUCTIVITY(7),
+    ;
 
     companion object {
         /**

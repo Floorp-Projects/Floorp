@@ -23,11 +23,11 @@ class BrowserMenuCheckbox(
     initialState: () -> Boolean = { false },
     override val isCollapsingMenuLimit: Boolean = false,
     override val isSticky: Boolean = false,
-    listener: (Boolean) -> Unit
+    listener: (Boolean) -> Unit,
 ) : BrowserMenuCompoundButton(label, isCollapsingMenuLimit, isSticky, initialState, listener) {
     override fun getLayoutResource() = R.layout.mozac_browser_menu_item_checkbox
 
     override fun asCandidate(context: Context) = super.asCandidate(context).copy(
-        end = CompoundMenuCandidate.ButtonType.CHECKBOX
+        end = CompoundMenuCandidate.ButtonType.CHECKBOX,
     )
 }

@@ -39,10 +39,10 @@ sealed class BrowserMenuHighlight {
     data class LowPriority(
         @ColorInt val notificationTint: Int,
         override val label: String? = null,
-        override val canPropagate: Boolean = true
+        override val canPropagate: Boolean = true,
     ) : BrowserMenuHighlight() {
         override fun asEffect(context: Context) = LowPriorityHighlightEffect(
-            notificationTint = notificationTint
+            notificationTint = notificationTint,
         )
     }
 
@@ -61,10 +61,10 @@ sealed class BrowserMenuHighlight {
         @ColorInt val backgroundTint: Int,
         override val label: String? = null,
         val endImageResource: Int = NO_ID,
-        override val canPropagate: Boolean = true
+        override val canPropagate: Boolean = true,
     ) : BrowserMenuHighlight() {
         override fun asEffect(context: Context) = HighPriorityHighlightEffect(
-            backgroundTint = backgroundTint
+            backgroundTint = backgroundTint,
         )
     }
 
@@ -83,12 +83,12 @@ sealed class BrowserMenuHighlight {
         @DrawableRes val endImageResource: Int,
         @DrawableRes val backgroundResource: Int,
         @ColorRes val colorResource: Int,
-        override val canPropagate: Boolean = true
+        override val canPropagate: Boolean = true,
     ) : BrowserMenuHighlight() {
         override val label: String? = null
 
         override fun asEffect(context: Context) = HighPriorityHighlightEffect(
-            backgroundTint = ContextCompat.getColor(context, colorResource)
+            backgroundTint = ContextCompat.getColor(context, colorResource),
         )
     }
 }
@@ -101,6 +101,7 @@ interface HighlightableMenuItem {
      * Highlight object representing how the menu item will be displayed when highlighted.
      */
     val highlight: BrowserMenuHighlight
+
     /**
      * Whether or not to display the highlight
      */

@@ -34,7 +34,7 @@ class CustomTabWindowFeature(
     private val activity: Activity,
     private val store: BrowserStore,
     private val sessionId: String,
-    internal val onLaunchUrlFallback: (Uri) -> Unit
+    internal val onLaunchUrlFallback: (Uri) -> Unit,
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null
@@ -47,7 +47,6 @@ class CustomTabWindowFeature(
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun configToIntent(config: CustomTabConfig?): CustomTabsIntent {
         val intent = CustomTabsIntent.Builder().apply {
-
             setInstantAppsEnabled(false)
 
             val customTabColorSchemeBuilder = CustomTabColorSchemeParams.Builder()

@@ -42,7 +42,7 @@ import java.net.URL
  */
 enum class FxaCapability {
     // Enables "choose what to sync" selection during support auth flows (currently, sign-up).
-    CHOOSE_WHAT_TO_SYNC
+    CHOOSE_WHAT_TO_SYNC,
 }
 
 /**
@@ -62,7 +62,7 @@ class FxaWebChannelFeature(
     private val store: BrowserStore,
     private val accountManager: FxaAccountManager,
     private val serverConfig: ServerConfig,
-    private val fxaCapabilities: Set<FxaCapability> = emptySet()
+    private val fxaCapabilities: Set<FxaCapability> = emptySet(),
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null
@@ -72,7 +72,7 @@ class FxaWebChannelFeature(
     internal var extensionController = WebExtensionController(
         WEB_CHANNEL_EXTENSION_ID,
         WEB_CHANNEL_EXTENSION_URL,
-        WEB_CHANNEL_MESSAGING_ID
+        WEB_CHANNEL_MESSAGING_ID,
     )
 
     override fun start() {
@@ -116,7 +116,7 @@ class FxaWebChannelFeature(
     private class WebChannelViewContentMessageHandler(
         private val accountManager: FxaAccountManager,
         private val serverConfig: ServerConfig,
-        private val fxaCapabilities: Set<FxaCapability>
+        private val fxaCapabilities: Set<FxaCapability>,
     ) : MessageHandler {
         @SuppressWarnings("ComplexMethod")
         override fun onPortMessage(message: Any, port: Port) {
@@ -169,7 +169,7 @@ class FxaWebChannelFeature(
     }
 
     private class WebChannelViewBackgroundMessageHandler(
-        private val serverConfig: ServerConfig
+        private val serverConfig: ServerConfig,
     ) : MessageHandler {
         override fun onPortConnected(port: Port) {
             if (Server.values().none { it.contentUrl == serverConfig.contentUrl }) {
@@ -193,7 +193,7 @@ class FxaWebChannelFeature(
         enum class WebChannelCommand {
             CAN_LINK_ACCOUNT,
             OAUTH_LOGIN,
-            FXA_STATUS
+            FXA_STATUS,
         }
 
         // For all possible messages and their meaning/payloads, see:
@@ -238,9 +238,9 @@ class FxaWebChannelFeature(
                             "data",
                             JSONObject().also { data ->
                                 data.put("ok", true)
-                            }
+                            },
                         )
-                    }
+                    },
                 )
             }
         }
@@ -253,7 +253,7 @@ class FxaWebChannelFeature(
         private fun processFxaStatusCommand(
             accountManager: FxaAccountManager,
             messageId: String,
-            fxaCapabilities: Set<FxaCapability>
+            fxaCapabilities: Set<FxaCapability>,
         ): JSONObject {
             val status =  JSONObject()
             status.put("id", CHANNEL_ID)
@@ -274,13 +274,13 @@ class FxaWebChannelFeature(
                                             accountManager.supportedSyncEngines()?.forEach { engine ->
                                                 engines.put(engine.nativeName)
                                             } ?: emptyArray<SyncEngine>()
-                                        }
+                                        },
                                     )
 
                                     if (fxaCapabilities.contains(FxaCapability.CHOOSE_WHAT_TO_SYNC)) {
                                         capabilities.put("choose_what_to_sync", true)
                                     }
-                                }
+                                },
                             )
                             val account = accountManager.authenticatedAccount()
                             if (account == null) {
@@ -291,28 +291,28 @@ class FxaWebChannelFeature(
                                     JSONObject().also { signedInUser ->
                                         signedInUser.put(
                                             "email",
-                                            accountManager.accountProfile()?.email ?: JSONObject.NULL
+                                            accountManager.accountProfile()?.email ?: JSONObject.NULL,
                                         )
                                         signedInUser.put(
                                             "uid",
-                                            accountManager.accountProfile()?.uid ?: JSONObject.NULL
+                                            accountManager.accountProfile()?.uid ?: JSONObject.NULL,
                                         )
                                         signedInUser.put(
                                             "sessionToken",
-                                            account.getSessionToken() ?: JSONObject.NULL
+                                            account.getSessionToken() ?: JSONObject.NULL,
                                         )
                                         // Our account state machine only ever completes authentication for
                                         // "verified" accounts, so this is always 'true'.
                                         signedInUser.put(
                                             "verified",
-                                            true
+                                            true,
                                         )
-                                    }
+                                    },
                                 )
                             }
-                        }
+                        },
                     )
-                }
+                },
             )
             return status
         }
@@ -352,8 +352,8 @@ class FxaWebChannelFeature(
                         authType = authType,
                         code = code,
                         state = state,
-                        declinedEngines = declinedEngines?.toSyncEngines()
-                    )
+                        declinedEngines = declinedEngines?.toSyncEngines(),
+                    ),
                 )
             }
 

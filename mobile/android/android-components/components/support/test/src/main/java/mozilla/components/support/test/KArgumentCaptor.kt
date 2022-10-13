@@ -15,7 +15,7 @@ inline fun <reified T : Any> argumentCaptor(): KArgumentCaptor<T> {
 }
 class KArgumentCaptor<out T : Any?>(
     private val captor: ArgumentCaptor<T>,
-    private val tClass: KClass<*>
+    private val tClass: KClass<*>,
 ) {
 
     /**

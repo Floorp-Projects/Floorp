@@ -70,42 +70,45 @@ class ContextMenuCandidateTest {
         val tabsUseCases = TabsUseCases(store)
         val parentView = CoordinatorLayout(testContext)
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
-            testContext, tabsUseCases, parentView, snackbarDelegate
+            testContext,
+            tabsUseCases,
+            parentView,
+            snackbarDelegate,
         )
 
         assertTrue(
             openInNewTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             openInNewTab.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             openInNewTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             openInNewTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE("https://www.mozilla.org")
-            )
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             openInNewTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.VIDEO("https://www.mozilla.org")
-            )
+                HitResult.VIDEO("https://www.mozilla.org"),
+            ),
         )
     }
 
@@ -113,7 +116,11 @@ class ContextMenuCandidateTest {
     fun `Candidate 'Open Link in New Tab' allows for an additional validation for it to be shown`() {
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
-            testContext, mock(), mock(), snackbarDelegate, additionalValidation
+            testContext,
+            mock(),
+            mock(),
+            snackbarDelegate,
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -121,15 +128,15 @@ class ContextMenuCandidateTest {
         assertFalse(
             openInNewTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             openInNewTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
     }
 
@@ -138,15 +145,18 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", contextId = "1")
-                )
-            )
+                    createTab("https://www.mozilla.org", contextId = "1"),
+                ),
+            ),
         )
 
         val tabsUseCases = TabsUseCases(store)
         val parentView = CoordinatorLayout(testContext)
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
-            testContext, tabsUseCases, parentView, snackbarDelegate
+            testContext,
+            tabsUseCases,
+            parentView,
+            snackbarDelegate,
         )
 
         assertEquals(1, store.state.tabs.size)
@@ -165,15 +175,18 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org")
-                )
-            )
+                    createTab("https://www.mozilla.org"),
+                ),
+            ),
         )
 
         val tabsUseCases = TabsUseCases(store)
         val parentView = CoordinatorLayout(testContext)
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
-            testContext, tabsUseCases, parentView, snackbarDelegate
+            testContext,
+            tabsUseCases,
+            parentView,
+            snackbarDelegate,
         )
 
         assertEquals(1, store.state.tabs.size)
@@ -193,20 +206,23 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = mock(),
-                scope = MainScope()
+                scope = MainScope(),
             ),
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla")
+                    createTab("https://www.mozilla.org", id = "mozilla"),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
         val tabsUseCases = TabsUseCases(store)
         val parentView = CoordinatorLayout(testContext)
 
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
-            testContext, tabsUseCases, parentView, snackbarDelegate
+            testContext,
+            tabsUseCases,
+            parentView,
+            snackbarDelegate,
         )
 
         assertEquals(1, store.state.tabs.size)
@@ -228,24 +244,27 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla")
+                    createTab("https://www.mozilla.org", id = "mozilla"),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         val tabsUseCases = TabsUseCases(store)
         val parentView = CoordinatorLayout(testContext)
 
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
-            testContext, tabsUseCases, parentView, snackbarDelegate
+            testContext,
+            tabsUseCases,
+            parentView,
+            snackbarDelegate,
         )
 
         assertEquals(1, store.state.tabs.size)
 
         openInNewTab.action.invoke(
             store.state.tabs.first(),
-            HitResult.IMAGE_SRC("https://www.mozilla_src.org", "https://www.mozilla_uri.org")
+            HitResult.IMAGE_SRC("https://www.mozilla_src.org", "https://www.mozilla_uri.org"),
         )
         store.waitUntilIdle()
 
@@ -257,51 +276,54 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla")
+                    createTab("https://www.mozilla.org", id = "mozilla"),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         val tabsUseCases = TabsUseCases(store)
         val parentView = CoordinatorLayout(testContext)
         val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
-            testContext, tabsUseCases, parentView, snackbarDelegate
+            testContext,
+            tabsUseCases,
+            parentView,
+            snackbarDelegate,
         )
 
         assertTrue(
             openInPrivateTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             openInPrivateTab.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             openInPrivateTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             openInPrivateTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE("https://www.mozilla.org")
-            )
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             openInPrivateTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.VIDEO("https://www.mozilla.org")
-            )
+                HitResult.VIDEO("https://www.mozilla.org"),
+            ),
         )
     }
 
@@ -309,7 +331,11 @@ class ContextMenuCandidateTest {
     fun `Candidate 'Open Link in Private Tab' allows for an additional validation for it to be shown`() {
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
-            testContext, mock(), mock(), snackbarDelegate, additionalValidation
+            testContext,
+            mock(),
+            mock(),
+            snackbarDelegate,
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -317,22 +343,22 @@ class ContextMenuCandidateTest {
         assertFalse(
             openInPrivateTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             openInPrivateTab.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             openInPrivateTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
     }
 
@@ -341,16 +367,19 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla")
+                    createTab("https://www.mozilla.org", id = "mozilla"),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         val tabsUseCases = TabsUseCases(store)
         val parentView = CoordinatorLayout(testContext)
         val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
-            testContext, tabsUseCases, parentView, snackbarDelegate
+            testContext,
+            tabsUseCases,
+            parentView,
+            snackbarDelegate,
         )
 
         assertEquals(1, store.state.tabs.size)
@@ -370,20 +399,23 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = mock(),
-                scope = MainScope()
+                scope = MainScope(),
             ),
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla")
+                    createTab("https://www.mozilla.org", id = "mozilla"),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         val tabsUseCases = TabsUseCases(store)
         val parentView = CoordinatorLayout(testContext)
         val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
-            testContext, tabsUseCases, parentView, snackbarDelegate
+            testContext,
+            tabsUseCases,
+            parentView,
+            snackbarDelegate,
         )
 
         assertEquals(1, store.state.tabs.size)
@@ -406,22 +438,25 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla")
+                    createTab("https://www.mozilla.org", id = "mozilla"),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         val tabsUseCases = TabsUseCases(store)
         val parentView = CoordinatorLayout(testContext)
         val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
-            testContext, tabsUseCases, parentView, snackbarDelegate
+            testContext,
+            tabsUseCases,
+            parentView,
+            snackbarDelegate,
         )
 
         assertEquals(1, store.state.tabs.size)
         openInPrivateTab.action.invoke(
             store.state.tabs.first(),
-            HitResult.IMAGE_SRC("https://www.mozilla_src.org", "https://www.mozilla_uri.org")
+            HitResult.IMAGE_SRC("https://www.mozilla_src.org", "https://www.mozilla_uri.org"),
         )
         store.waitUntilIdle()
         assertEquals("https://www.mozilla_uri.org", store.state.tabs.last().content.url)
@@ -432,21 +467,24 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = mock(),
-                scope = MainScope()
+                scope = MainScope(),
             ),
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla")
+                    createTab("https://www.mozilla.org", id = "mozilla"),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         val tabsUseCases = TabsUseCases(store)
         val parentView = CoordinatorLayout(testContext)
 
         val openImageInTab = ContextMenuCandidate.createOpenImageInNewTabCandidate(
-            testContext, tabsUseCases, parentView, snackbarDelegate
+            testContext,
+            tabsUseCases,
+            parentView,
+            snackbarDelegate,
         )
 
         // showFor
@@ -454,36 +492,36 @@ class ContextMenuCandidateTest {
         assertFalse(
             openImageInTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             openImageInTab.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             openImageInTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             openImageInTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE("https://www.mozilla.org")
-            )
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             openImageInTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.VIDEO("https://www.mozilla.org")
-            )
+                HitResult.VIDEO("https://www.mozilla.org"),
+            ),
         )
 
         // action
@@ -493,7 +531,7 @@ class ContextMenuCandidateTest {
 
         openImageInTab.action.invoke(
             store.state.tabs.first(),
-            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com")
+            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com"),
         )
 
         store.waitUntilIdle()
@@ -518,7 +556,11 @@ class ContextMenuCandidateTest {
     fun `Candidate 'Open Image in New Tab' allows for an additional validation for it to be shown`() {
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val openImageInTab = ContextMenuCandidate.createOpenImageInNewTabCandidate(
-            testContext, mock(), mock(), snackbarDelegate, additionalValidation
+            testContext,
+            mock(),
+            mock(),
+            snackbarDelegate,
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -526,15 +568,15 @@ class ContextMenuCandidateTest {
         assertFalse(
             openImageInTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             openImageInTab.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE("https://www.mozilla.org")
-            )
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
         )
     }
 
@@ -543,24 +585,27 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla", private = true)
+                    createTab("https://www.mozilla.org", id = "mozilla", private = true),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         val tabsUseCases = TabsUseCases(store)
         val parentView = CoordinatorLayout(testContext)
 
         val openImageInTab = ContextMenuCandidate.createOpenImageInNewTabCandidate(
-            testContext, tabsUseCases, parentView, snackbarDelegate
+            testContext,
+            tabsUseCases,
+            parentView,
+            snackbarDelegate,
         )
 
         assertEquals(1, store.state.tabs.size)
 
         openImageInTab.action.invoke(
             store.state.tabs.first(),
-            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com")
+            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com"),
         )
         store.waitUntilIdle()
 
@@ -574,17 +619,20 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla", contextId = "1")
+                    createTab("https://www.mozilla.org", id = "mozilla", contextId = "1"),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         val tabsUseCases = TabsUseCases(store)
         val parentView = CoordinatorLayout(testContext)
 
         val openImageInTab = ContextMenuCandidate.createOpenImageInNewTabCandidate(
-            testContext, tabsUseCases, parentView, snackbarDelegate
+            testContext,
+            tabsUseCases,
+            parentView,
+            snackbarDelegate,
         )
 
         assertEquals(1, store.state.tabs.size)
@@ -592,7 +640,7 @@ class ContextMenuCandidateTest {
 
         openImageInTab.action.invoke(
             store.state.tabs.first(),
-            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com")
+            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com"),
         )
         store.waitUntilIdle()
 
@@ -606,15 +654,15 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla", private = true)
+                    createTab("https://www.mozilla.org", id = "mozilla", private = true),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         val saveImage = ContextMenuCandidate.createSaveImageCandidate(
             testContext,
-            ContextMenuUseCases(store)
+            ContextMenuUseCases(store),
         )
 
         // showFor
@@ -622,36 +670,36 @@ class ContextMenuCandidateTest {
         assertFalse(
             saveImage.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             saveImage.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             saveImage.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             saveImage.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE("https://www.mozilla.org")
-            )
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             saveImage.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.VIDEO("https://www.mozilla.org")
-            )
+                HitResult.VIDEO("https://www.mozilla.org"),
+            ),
         )
 
         // action
@@ -662,8 +710,8 @@ class ContextMenuCandidateTest {
             store.state.tabs.first(),
             HitResult.IMAGE_SRC(
                 "https://www.mozilla.org/media/img/logos/firefox/logo-quantum.9c5e96634f92.png",
-                "https://firefox.com"
-            )
+                "https://firefox.com",
+            ),
         )
 
         store.waitUntilIdle()
@@ -671,13 +719,13 @@ class ContextMenuCandidateTest {
         assertNotNull(store.state.tabs.first().content.download)
         assertEquals(
             "https://www.mozilla.org/media/img/logos/firefox/logo-quantum.9c5e96634f92.png",
-            store.state.tabs.first().content.download!!.url
+            store.state.tabs.first().content.download!!.url,
         )
         assertTrue(
-            store.state.tabs.first().content.download!!.skipConfirmation
+            store.state.tabs.first().content.download!!.skipConfirmation,
         )
         assertTrue(
-            store.state.tabs.first().content.download!!.private
+            store.state.tabs.first().content.download!!.private,
         )
     }
 
@@ -685,7 +733,9 @@ class ContextMenuCandidateTest {
     fun `Candidate 'Save image' allows for an additional validation for it to be shown`() {
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val saveImage = ContextMenuCandidate.createSaveImageCandidate(
-            testContext, mock(), additionalValidation
+            testContext,
+            mock(),
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -693,15 +743,15 @@ class ContextMenuCandidateTest {
         assertFalse(
             saveImage.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             saveImage.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE("https://www.mozilla.org")
-            )
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
         )
     }
 
@@ -710,15 +760,15 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla", private = true)
+                    createTab("https://www.mozilla.org", id = "mozilla", private = true),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         val saveVideoAudio = ContextMenuCandidate.createSaveVideoAudioCandidate(
             testContext,
-            ContextMenuUseCases(store)
+            ContextMenuUseCases(store),
         )
 
         // showFor
@@ -726,43 +776,43 @@ class ContextMenuCandidateTest {
         assertFalse(
             saveVideoAudio.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             saveVideoAudio.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             saveVideoAudio.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             saveVideoAudio.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE("https://www.mozilla.org")
-            )
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             saveVideoAudio.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.VIDEO("https://www.mozilla.org")
-            )
+                HitResult.VIDEO("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             saveVideoAudio.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.AUDIO("https://www.mozilla.org")
-            )
+                HitResult.AUDIO("https://www.mozilla.org"),
+            ),
         )
 
         // action
@@ -771,7 +821,7 @@ class ContextMenuCandidateTest {
 
         saveVideoAudio.action.invoke(
             store.state.tabs.first(),
-            HitResult.AUDIO("https://developer.mozilla.org/media/examples/t-rex-roar.mp3")
+            HitResult.AUDIO("https://developer.mozilla.org/media/examples/t-rex-roar.mp3"),
         )
 
         store.waitUntilIdle()
@@ -779,14 +829,14 @@ class ContextMenuCandidateTest {
         assertNotNull(store.state.tabs.first().content.download)
         assertEquals(
             "https://developer.mozilla.org/media/examples/t-rex-roar.mp3",
-            store.state.tabs.first().content.download!!.url
+            store.state.tabs.first().content.download!!.url,
         )
         assertTrue(
-            store.state.tabs.first().content.download!!.skipConfirmation
+            store.state.tabs.first().content.download!!.skipConfirmation,
         )
 
         assertTrue(
-            store.state.tabs.first().content.download!!.private
+            store.state.tabs.first().content.download!!.private,
         )
     }
 
@@ -794,7 +844,9 @@ class ContextMenuCandidateTest {
     fun `Candidate 'Save video and audio' allows for an additional validation for it to be shown`() {
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val saveVideoAudio = ContextMenuCandidate.createSaveVideoAudioCandidate(
-            testContext, mock(), additionalValidation
+            testContext,
+            mock(),
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -802,15 +854,15 @@ class ContextMenuCandidateTest {
         assertFalse(
             saveVideoAudio.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.VIDEO("https://www.mozilla.org")
-            )
+                HitResult.VIDEO("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             saveVideoAudio.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.AUDIO("https://www.mozilla.org")
-            )
+                HitResult.AUDIO("https://www.mozilla.org"),
+            ),
         )
     }
 
@@ -819,15 +871,15 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla", private = true)
+                    createTab("https://www.mozilla.org", id = "mozilla", private = true),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         val downloadLink = ContextMenuCandidate.createDownloadLinkCandidate(
             testContext,
-            ContextMenuUseCases(store)
+            ContextMenuUseCases(store),
         )
 
         // showFor
@@ -835,71 +887,71 @@ class ContextMenuCandidateTest {
         assertTrue(
             downloadLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             downloadLink.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             downloadLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             downloadLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE("https://www.mozilla.org")
-            )
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             downloadLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.VIDEO("https://www.mozilla.org")
-            )
+                HitResult.VIDEO("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             downloadLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.PHONE("https://www.mozilla.org")
-            )
+                HitResult.PHONE("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             downloadLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.EMAIL("https://www.mozilla.org")
-            )
+                HitResult.EMAIL("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             downloadLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.GEO("https://www.mozilla.org")
-            )
+                HitResult.GEO("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             downloadLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("https://www.mozilla.org/firefox/products.html")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org/firefox/products.html"),
+            ),
         )
 
         assertFalse(
             downloadLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("https://www.mozilla.org/firefox/products.htm")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org/firefox/products.htm"),
+            ),
         )
 
         // action
@@ -910,8 +962,8 @@ class ContextMenuCandidateTest {
             store.state.tabs.first(),
             HitResult.IMAGE_SRC(
                 "https://www.mozilla.org/media/img/logos/firefox/logo-quantum.9c5e96634f92.png",
-                "https://firefox.com"
-            )
+                "https://firefox.com",
+            ),
         )
 
         store.waitUntilIdle()
@@ -919,10 +971,10 @@ class ContextMenuCandidateTest {
         assertNotNull(store.state.tabs.first().content.download)
         assertEquals(
             "https://www.mozilla.org/media/img/logos/firefox/logo-quantum.9c5e96634f92.png",
-            store.state.tabs.first().content.download!!.url
+            store.state.tabs.first().content.download!!.url,
         )
         assertTrue(
-            store.state.tabs.first().content.download!!.skipConfirmation
+            store.state.tabs.first().content.download!!.skipConfirmation,
         )
 
         assertTrue(store.state.tabs.first().content.download!!.private)
@@ -932,7 +984,9 @@ class ContextMenuCandidateTest {
     fun `Candidate 'download link' allows for an additional validation for it to be shown`() {
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val downloadLink = ContextMenuCandidate.createDownloadLinkCandidate(
-            testContext, mock(), additionalValidation
+            testContext,
+            mock(),
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -940,22 +994,22 @@ class ContextMenuCandidateTest {
         assertFalse(
             downloadLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             downloadLink.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             downloadLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
     }
 
@@ -1044,43 +1098,43 @@ class ContextMenuCandidateTest {
         assertTrue(
             shareLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             shareLink.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             shareLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             shareLink.showFor(
                 createTab("test://www.mozilla.org"),
-                HitResult.UNKNOWN("test://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("test://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             shareLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE("https://www.mozilla.org")
-            )
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             shareLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.VIDEO("https://www.mozilla.org")
-            )
+                HitResult.VIDEO("https://www.mozilla.org"),
+            ),
         )
 
         // action
@@ -1088,15 +1142,15 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla", private = true)
+                    createTab("https://www.mozilla.org", id = "mozilla", private = true),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         shareLink.action.invoke(
             store.state.tabs.first(),
-            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com")
+            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com"),
         )
 
         verify(context).startActivity(any())
@@ -1106,7 +1160,8 @@ class ContextMenuCandidateTest {
     fun `Candidate 'Share Link' allows for an additional validation for it to be shown`() {
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val shareLink = ContextMenuCandidate.createShareLinkCandidate(
-            testContext, additionalValidation
+            testContext,
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -1114,43 +1169,43 @@ class ContextMenuCandidateTest {
         assertFalse(
             shareLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             shareLink.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             shareLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             shareLink.showFor(
                 createTab("test://www.mozilla.org"),
-                HitResult.UNKNOWN("test://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("test://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             shareLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE("https://www.mozilla.org")
-            )
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             shareLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.VIDEO("https://www.mozilla.org")
-            )
+                HitResult.VIDEO("https://www.mozilla.org"),
+            ),
         )
     }
 
@@ -1158,8 +1213,8 @@ class ContextMenuCandidateTest {
     fun `Candidate 'Share image'`() {
         val store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(TabSessionState("123", ContentState(url = "https://www.mozilla.org")))
-            )
+                tabs = listOf(TabSessionState("123", ContentState(url = "https://www.mozilla.org"))),
+            ),
         )
         val context = spy(testContext)
 
@@ -1173,29 +1228,29 @@ class ContextMenuCandidateTest {
         assertTrue(
             shareImage.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE("https://www.mozilla.org")
-            )
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             shareImage.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             shareImage.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.AUDIO("https://www.mozilla.org")
-            )
+                HitResult.AUDIO("https://www.mozilla.org"),
+            ),
         )
 
         // action
 
         shareImage.action.invoke(
             store.state.tabs.first(),
-            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com")
+            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com"),
         )
 
         verify(shareUsecase).invoke(eq("123"), shareStateCaptor.capture())
@@ -1207,7 +1262,9 @@ class ContextMenuCandidateTest {
     fun `Candidate 'Share image' allows for an additional validation for it to be shown`() {
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val shareImage = ContextMenuCandidate.createShareImageCandidate(
-            testContext, mock(), additionalValidation
+            testContext,
+            mock(),
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -1215,15 +1272,15 @@ class ContextMenuCandidateTest {
         assertFalse(
             shareImage.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE("https://www.mozilla.org")
-            )
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             shareImage.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
     }
 
@@ -1232,7 +1289,9 @@ class ContextMenuCandidateTest {
         val parentView = CoordinatorLayout(testContext)
 
         val copyLink = ContextMenuCandidate.createCopyLinkCandidate(
-            testContext, parentView, snackbarDelegate
+            testContext,
+            parentView,
+            snackbarDelegate,
         )
 
         // showFor
@@ -1240,43 +1299,43 @@ class ContextMenuCandidateTest {
         assertTrue(
             copyLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             copyLink.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             copyLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             copyLink.showFor(
                 createTab("test://www.mozilla.org"),
-                HitResult.UNKNOWN("test://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("test://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             copyLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE("https://www.mozilla.org")
-            )
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             copyLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.VIDEO("https://www.mozilla.org")
-            )
+                HitResult.VIDEO("https://www.mozilla.org"),
+            ),
         )
 
         // action
@@ -1284,15 +1343,15 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla", private = true)
+                    createTab("https://www.mozilla.org", id = "mozilla", private = true),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         copyLink.action.invoke(
             store.state.tabs.first(),
-            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com")
+            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com"),
         )
 
         assertTrue(snackbarDelegate.hasShownSnackbar)
@@ -1300,7 +1359,7 @@ class ContextMenuCandidateTest {
         val clipboardManager = testContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         assertEquals(
             "https://getpocket.com",
-            clipboardManager.primaryClip!!.getItemAt(0).text
+            clipboardManager.primaryClip!!.getItemAt(0).text,
         )
     }
 
@@ -1308,7 +1367,10 @@ class ContextMenuCandidateTest {
     fun `Candidate 'Copy Link' allows for an additional validation for it to be shown`() {
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val copyLink = ContextMenuCandidate.createCopyLinkCandidate(
-            testContext, mock(), snackbarDelegate, additionalValidation
+            testContext,
+            mock(),
+            snackbarDelegate,
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -1316,43 +1378,43 @@ class ContextMenuCandidateTest {
         assertFalse(
             copyLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             copyLink.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             copyLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             copyLink.showFor(
                 createTab("test://www.mozilla.org"),
-                HitResult.UNKNOWN("test://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("test://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             copyLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE("https://www.mozilla.org")
-            )
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             copyLink.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.VIDEO("https://www.mozilla.org")
-            )
+                HitResult.VIDEO("https://www.mozilla.org"),
+            ),
         )
     }
 
@@ -1361,7 +1423,9 @@ class ContextMenuCandidateTest {
         val parentView = CoordinatorLayout(testContext)
 
         val copyImageLocation = ContextMenuCandidate.createCopyImageLocationCandidate(
-            testContext, parentView, snackbarDelegate
+            testContext,
+            parentView,
+            snackbarDelegate,
         )
 
         // showFor
@@ -1369,36 +1433,36 @@ class ContextMenuCandidateTest {
         assertFalse(
             copyImageLocation.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             copyImageLocation.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             copyImageLocation.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
 
         assertTrue(
             copyImageLocation.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE("https://www.mozilla.org")
-            )
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             copyImageLocation.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.VIDEO("https://www.mozilla.org")
-            )
+                HitResult.VIDEO("https://www.mozilla.org"),
+            ),
         )
 
         // action
@@ -1406,15 +1470,15 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla", private = true)
+                    createTab("https://www.mozilla.org", id = "mozilla", private = true),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         copyImageLocation.action.invoke(
             store.state.tabs.first(),
-            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com")
+            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com"),
         )
 
         assertTrue(snackbarDelegate.hasShownSnackbar)
@@ -1422,7 +1486,7 @@ class ContextMenuCandidateTest {
         val clipboardManager = testContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         assertEquals(
             "https://firefox.com",
-            clipboardManager.primaryClip!!.getItemAt(0).text
+            clipboardManager.primaryClip!!.getItemAt(0).text,
         )
     }
 
@@ -1430,7 +1494,10 @@ class ContextMenuCandidateTest {
     fun `Candidate 'Copy Image Location' allows for an additional validation for it to be shown`() {
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val copyImageLocation = ContextMenuCandidate.createCopyImageLocationCandidate(
-            testContext, mock(), snackbarDelegate, additionalValidation
+            testContext,
+            mock(),
+            snackbarDelegate,
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -1438,15 +1505,15 @@ class ContextMenuCandidateTest {
         assertFalse(
             copyImageLocation.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
-            )
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             copyImageLocation.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.IMAGE("https://www.mozilla.org")
-            )
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
         )
     }
 
@@ -1456,15 +1523,15 @@ class ContextMenuCandidateTest {
         val getAppLinkRedirectMock: AppLinksUseCases.GetAppLinkRedirect = mock()
 
         doReturn(
-            AppLinkRedirect(mock(), null, null)
+            AppLinkRedirect(mock(), null, null),
         ).`when`(getAppLinkRedirectMock).invoke(eq("https://www.example.com"))
 
         doReturn(
-            AppLinkRedirect(null, null, mock())
+            AppLinkRedirect(null, null, mock()),
         ).`when`(getAppLinkRedirectMock).invoke(eq("intent:www.example.com#Intent;scheme=https;package=org.mozilla.fenix;end"))
 
         doReturn(
-            AppLinkRedirect(null, null, null)
+            AppLinkRedirect(null, null, null),
         ).`when`(getAppLinkRedirectMock).invoke(eq("https://www.otherexample.com"))
 
         // This mock exists only to verify that it was called
@@ -1475,7 +1542,8 @@ class ContextMenuCandidateTest {
         doReturn(openAppLinkRedirectMock).`when`(appLinksUseCasesMock).openAppLink
 
         val openLinkInExternalApp = ContextMenuCandidate.createOpenInExternalAppCandidate(
-            testContext, appLinksUseCasesMock
+            testContext,
+            appLinksUseCasesMock,
         )
 
         // showFor
@@ -1483,67 +1551,67 @@ class ContextMenuCandidateTest {
         assertTrue(
             openLinkInExternalApp.showFor(
                 tab,
-                HitResult.UNKNOWN("https://www.example.com")
-            )
+                HitResult.UNKNOWN("https://www.example.com"),
+            ),
         )
 
         assertTrue(
             openLinkInExternalApp.showFor(
                 tab,
-                HitResult.UNKNOWN("intent:www.example.com#Intent;scheme=https;package=org.mozilla.fenix;end")
-            )
+                HitResult.UNKNOWN("intent:www.example.com#Intent;scheme=https;package=org.mozilla.fenix;end"),
+            ),
         )
 
         assertTrue(
             openLinkInExternalApp.showFor(
                 tab,
-                HitResult.VIDEO("https://www.example.com")
-            )
+                HitResult.VIDEO("https://www.example.com"),
+            ),
         )
 
         assertTrue(
             openLinkInExternalApp.showFor(
                 tab,
-                HitResult.AUDIO("https://www.example.com")
-            )
+                HitResult.AUDIO("https://www.example.com"),
+            ),
         )
 
         assertFalse(
             openLinkInExternalApp.showFor(
                 tab,
-                HitResult.UNKNOWN("https://www.otherexample.com")
-            )
+                HitResult.UNKNOWN("https://www.otherexample.com"),
+            ),
         )
 
         assertFalse(
             openLinkInExternalApp.showFor(
                 tab,
-                HitResult.VIDEO("https://www.otherexample.com")
-            )
+                HitResult.VIDEO("https://www.otherexample.com"),
+            ),
         )
 
         assertFalse(
             openLinkInExternalApp.showFor(
                 tab,
-                HitResult.AUDIO("https://www.otherexample.com")
-            )
+                HitResult.AUDIO("https://www.otherexample.com"),
+            ),
         )
 
         // action
 
         openLinkInExternalApp.action.invoke(
             tab,
-            HitResult.UNKNOWN("https://www.example.com")
+            HitResult.UNKNOWN("https://www.example.com"),
         )
 
         openLinkInExternalApp.action.invoke(
             tab,
-            HitResult.UNKNOWN("intent:www.example.com#Intent;scheme=https;package=org.mozilla.fenix;end")
+            HitResult.UNKNOWN("intent:www.example.com#Intent;scheme=https;package=org.mozilla.fenix;end"),
         )
 
         openLinkInExternalApp.action.invoke(
             tab,
-            HitResult.UNKNOWN("https://www.otherexample.com")
+            HitResult.UNKNOWN("https://www.otherexample.com"),
         )
 
         verify(openAppLinkRedirectMock, times(2)).invoke(any(), anyBoolean(), any())
@@ -1554,10 +1622,10 @@ class ContextMenuCandidateTest {
         val tab = createTab("https://www.mozilla.org")
         val getAppLinkRedirectMock: AppLinksUseCases.GetAppLinkRedirect = mock()
         doReturn(
-            AppLinkRedirect(mock(), null, null)
+            AppLinkRedirect(mock(), null, null),
         ).`when`(getAppLinkRedirectMock).invoke(eq("https://www.example.com"))
         doReturn(
-            AppLinkRedirect(null, null, mock())
+            AppLinkRedirect(null, null, mock()),
         ).`when`(getAppLinkRedirectMock).invoke(eq("intent:www.example.com#Intent;scheme=https;package=org.mozilla.fenix;end"))
         val openAppLinkRedirectMock: AppLinksUseCases.OpenAppLinkRedirect = mock()
         val appLinksUseCasesMock: AppLinksUseCases = mock()
@@ -1565,7 +1633,9 @@ class ContextMenuCandidateTest {
         doReturn(openAppLinkRedirectMock).`when`(appLinksUseCasesMock).openAppLink
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val openLinkInExternalApp = ContextMenuCandidate.createOpenInExternalAppCandidate(
-            testContext, appLinksUseCasesMock, additionalValidation
+            testContext,
+            appLinksUseCasesMock,
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -1573,29 +1643,29 @@ class ContextMenuCandidateTest {
         assertFalse(
             openLinkInExternalApp.showFor(
                 tab,
-                HitResult.UNKNOWN("https://www.example.com")
-            )
+                HitResult.UNKNOWN("https://www.example.com"),
+            ),
         )
 
         assertFalse(
             openLinkInExternalApp.showFor(
                 tab,
-                HitResult.UNKNOWN("intent:www.example.com#Intent;scheme=https;package=org.mozilla.fenix;end")
-            )
+                HitResult.UNKNOWN("intent:www.example.com#Intent;scheme=https;package=org.mozilla.fenix;end"),
+            ),
         )
 
         assertFalse(
             openLinkInExternalApp.showFor(
                 tab,
-                HitResult.VIDEO("https://www.example.com")
-            )
+                HitResult.VIDEO("https://www.example.com"),
+            ),
         )
 
         assertFalse(
             openLinkInExternalApp.showFor(
                 tab,
-                HitResult.AUDIO("https://www.example.com")
-            )
+                HitResult.AUDIO("https://www.example.com"),
+            ),
         )
     }
 
@@ -1604,7 +1674,9 @@ class ContextMenuCandidateTest {
         val parentView = CoordinatorLayout(testContext)
 
         val copyEmailAddress = ContextMenuCandidate.createCopyEmailAddressCandidate(
-            testContext, parentView, snackbarDelegate
+            testContext,
+            parentView,
+            snackbarDelegate,
         )
 
         // showFor
@@ -1612,29 +1684,29 @@ class ContextMenuCandidateTest {
         assertTrue(
             copyEmailAddress.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("mailto:example@example.com")
-            )
+                HitResult.UNKNOWN("mailto:example@example.com"),
+            ),
         )
 
         assertTrue(
             copyEmailAddress.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("mailto:example.com")
-            )
+                HitResult.UNKNOWN("mailto:example.com"),
+            ),
         )
 
         assertFalse(
             copyEmailAddress.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             copyEmailAddress.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("example@example.com")
-            )
+                HitResult.UNKNOWN("example@example.com"),
+            ),
         )
 
         // action
@@ -1642,15 +1714,15 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla", private = true)
+                    createTab("https://www.mozilla.org", id = "mozilla", private = true),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         copyEmailAddress.action.invoke(
             store.state.tabs.first(),
-            HitResult.UNKNOWN("mailto:example@example.com")
+            HitResult.UNKNOWN("mailto:example@example.com"),
         )
 
         assertTrue(snackbarDelegate.hasShownSnackbar)
@@ -1658,7 +1730,7 @@ class ContextMenuCandidateTest {
         val clipboardManager = testContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         assertEquals(
             "example@example.com",
-            clipboardManager.primaryClip!!.getItemAt(0).text
+            clipboardManager.primaryClip!!.getItemAt(0).text,
         )
     }
 
@@ -1666,7 +1738,10 @@ class ContextMenuCandidateTest {
     fun `Candidate 'Copy email address' allows for an additional validation for it to be shown`() {
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val copyEmailAddress = ContextMenuCandidate.createCopyEmailAddressCandidate(
-            testContext, mock(), snackbarDelegate, additionalValidation
+            testContext,
+            mock(),
+            snackbarDelegate,
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -1674,15 +1749,15 @@ class ContextMenuCandidateTest {
         assertFalse(
             copyEmailAddress.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("mailto:example@example.com")
-            )
+                HitResult.UNKNOWN("mailto:example@example.com"),
+            ),
         )
 
         assertFalse(
             copyEmailAddress.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("mailto:example.com")
-            )
+                HitResult.UNKNOWN("mailto:example.com"),
+            ),
         )
     }
 
@@ -1697,29 +1772,29 @@ class ContextMenuCandidateTest {
         assertTrue(
             shareEmailAddress.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("mailto:example@example.com")
-            )
+                HitResult.UNKNOWN("mailto:example@example.com"),
+            ),
         )
 
         assertTrue(
             shareEmailAddress.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("mailto:example.com")
-            )
+                HitResult.UNKNOWN("mailto:example.com"),
+            ),
         )
 
         assertFalse(
             shareEmailAddress.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             shareEmailAddress.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("example@example.com")
-            )
+                HitResult.UNKNOWN("example@example.com"),
+            ),
         )
 
         // action
@@ -1727,15 +1802,15 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla", private = true)
+                    createTab("https://www.mozilla.org", id = "mozilla", private = true),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         shareEmailAddress.action.invoke(
             store.state.tabs.first(),
-            HitResult.UNKNOWN("mailto:example@example.com")
+            HitResult.UNKNOWN("mailto:example@example.com"),
         )
 
         verify(context).startActivity(any())
@@ -1745,7 +1820,8 @@ class ContextMenuCandidateTest {
     fun `Candidate 'Share email address' allows for an additional validation for it to be shown`() {
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val shareEmailAddress = ContextMenuCandidate.createShareEmailAddressCandidate(
-            testContext, additionalValidation
+            testContext,
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -1753,15 +1829,15 @@ class ContextMenuCandidateTest {
         assertFalse(
             shareEmailAddress.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("mailto:example@example.com")
-            )
+                HitResult.UNKNOWN("mailto:example@example.com"),
+            ),
         )
 
         assertFalse(
             shareEmailAddress.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("mailto:example.com")
-            )
+                HitResult.UNKNOWN("mailto:example.com"),
+            ),
         )
     }
 
@@ -1776,29 +1852,29 @@ class ContextMenuCandidateTest {
         assertTrue(
             addToContacts.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("mailto:example@example.com")
-            )
+                HitResult.UNKNOWN("mailto:example@example.com"),
+            ),
         )
 
         assertTrue(
             addToContacts.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("mailto:example.com")
-            )
+                HitResult.UNKNOWN("mailto:example.com"),
+            ),
         )
 
         assertFalse(
             addToContacts.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("https://www.mozilla.org")
-            )
+                HitResult.UNKNOWN("https://www.mozilla.org"),
+            ),
         )
 
         assertFalse(
             addToContacts.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("example@example.com")
-            )
+                HitResult.UNKNOWN("example@example.com"),
+            ),
         )
 
         // action
@@ -1806,15 +1882,15 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "mozilla", private = true)
+                    createTab("https://www.mozilla.org", id = "mozilla", private = true),
                 ),
-                selectedTabId = "mozilla"
-            )
+                selectedTabId = "mozilla",
+            ),
         )
 
         addToContacts.action.invoke(
             store.state.tabs.first(),
-            HitResult.UNKNOWN("mailto:example@example.com")
+            HitResult.UNKNOWN("mailto:example@example.com"),
         )
 
         verify(context).startActivity(any())
@@ -1824,7 +1900,8 @@ class ContextMenuCandidateTest {
     fun `Candidate 'Add to contacts' allows for an additional validation for it to be shown`() {
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val addToContacts = ContextMenuCandidate.createAddContactCandidate(
-            testContext, additionalValidation
+            testContext,
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -1832,15 +1909,15 @@ class ContextMenuCandidateTest {
         assertFalse(
             addToContacts.showFor(
                 createTab("https://www.mozilla.org"),
-                HitResult.UNKNOWN("mailto:example@example.com")
-            )
+                HitResult.UNKNOWN("mailto:example@example.com"),
+            ),
         )
 
         assertFalse(
             addToContacts.showFor(
                 createTab("https://www.mozilla.org", private = true),
-                HitResult.UNKNOWN("mailto:example.com")
-            )
+                HitResult.UNKNOWN("mailto:example.com"),
+            ),
         )
     }
 
@@ -1848,7 +1925,7 @@ class ContextMenuCandidateTest {
     fun `GIVEN SessionState with null EngineSession WHEN isUrlSchemeAllowed is called THEN it returns true`() {
         val sessionState = TabSessionState(
             content = mock(),
-            engineState = EngineState(engineSession = null)
+            engineState = EngineState(engineSession = null),
         )
 
         assertTrue(sessionState.isUrlSchemeAllowed("http://mozilla.org"))
@@ -1860,7 +1937,7 @@ class ContextMenuCandidateTest {
         doReturn(emptyList<String>()).`when`(noBlockedUrlSchemesEngineSession).getBlockedSchemes()
         val sessionState = TabSessionState(
             content = mock(),
-            engineState = EngineState(engineSession = noBlockedUrlSchemesEngineSession)
+            engineState = EngineState(engineSession = noBlockedUrlSchemesEngineSession),
         )
 
         assertTrue(sessionState.isUrlSchemeAllowed("http://mozilla.org"))
@@ -1872,7 +1949,7 @@ class ContextMenuCandidateTest {
         doReturn(listOf("http")).`when`(engineSessionWithBlockedUrlScheme).getBlockedSchemes()
         val sessionState = TabSessionState(
             content = mock(),
-            engineState = EngineState(engineSession = engineSessionWithBlockedUrlScheme)
+            engineState = EngineState(engineSession = engineSessionWithBlockedUrlScheme),
         )
 
         assertFalse(sessionState.isUrlSchemeAllowed("http://mozilla.org"))
@@ -1891,7 +1968,7 @@ class ContextMenuCandidateTest {
         doReturn(listOf("http")).`when`(engineSessionWithBlockedUrlScheme).getBlockedSchemes()
         val sessionState = TabSessionState(
             content = mock(),
-            engineState = EngineState(engineSession = engineSessionWithBlockedUrlScheme)
+            engineState = EngineState(engineSession = engineSessionWithBlockedUrlScheme),
         )
 
         assertTrue(sessionState.isUrlSchemeAllowed("https://mozilla.org"))

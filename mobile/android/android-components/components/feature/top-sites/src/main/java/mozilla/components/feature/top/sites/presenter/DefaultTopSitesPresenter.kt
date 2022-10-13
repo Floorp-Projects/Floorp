@@ -25,7 +25,7 @@ internal class DefaultTopSitesPresenter(
     override val view: TopSitesView,
     override val storage: TopSitesStorage,
     private val config: () -> TopSitesConfig,
-    coroutineContext: CoroutineContext = Dispatchers.IO
+    coroutineContext: CoroutineContext = Dispatchers.IO,
 ) : TopSitesPresenter, TopSitesStorage.Observer {
 
     private val scope = CoroutineScope(coroutineContext)
@@ -47,7 +47,7 @@ internal class DefaultTopSitesPresenter(
             val topSites = storage.getTopSites(
                 totalSites = innerConfig.totalSites,
                 frecencyConfig = innerConfig.frecencyConfig,
-                providerConfig = innerConfig.providerConfig
+                providerConfig = innerConfig.providerConfig,
             )
 
             scope.launch(Dispatchers.Main) {

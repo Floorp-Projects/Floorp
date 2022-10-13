@@ -26,10 +26,12 @@ import mozilla.components.feature.toolbar.ToolbarFeature
  */
 internal class URLRenderer(
     private val toolbar: Toolbar,
-    private val configuration: ToolbarFeature.UrlRenderConfiguration?
+    private val configuration: ToolbarFeature.UrlRenderConfiguration?,
 ) {
     private val scope = CoroutineScope(Dispatchers.Main)
+
     @VisibleForTesting internal var job: Job? = null
+
     @VisibleForTesting internal val channel = Channel<String>(capacity = Channel.CONFLATED)
 
     /**
@@ -89,7 +91,7 @@ private suspend fun getRegistrableDomain(host: String, configuration: ToolbarFea
     configuration.publicSuffixList.getPublicSuffixPlusOne(host).await()
 
 private suspend fun SpannableStringBuilder.colorRegistrableDomain(
-    configuration: ToolbarFeature.UrlRenderConfiguration
+    configuration: ToolbarFeature.UrlRenderConfiguration,
 ) {
     val url = toString()
     val host = url.toUri().host ?: return
@@ -108,7 +110,7 @@ private suspend fun SpannableStringBuilder.colorRegistrableDomain(
         ForegroundColorSpan(configuration.registrableDomainColor),
         index,
         index + registrableDomain.length,
-        SPAN_INCLUSIVE_INCLUSIVE
+        SPAN_INCLUSIVE_INCLUSIVE,
     )
 }
 
@@ -119,6 +121,6 @@ private fun SpannableStringBuilder.color(@ColorInt urlColor: Int?) {
         ForegroundColorSpan(urlColor),
         0,
         length,
-        SPAN_INCLUSIVE_INCLUSIVE
+        SPAN_INCLUSIVE_INCLUSIVE,
     )
 }

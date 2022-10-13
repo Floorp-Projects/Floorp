@@ -19,5 +19,5 @@ data class ShareInternetResourceState(
     val url: String,
     val contentType: String? = null,
     val private: Boolean = false,
-    val response: Response? = null
+    val response: Response? = null,
 )

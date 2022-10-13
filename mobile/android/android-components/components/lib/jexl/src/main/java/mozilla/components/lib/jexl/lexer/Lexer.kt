@@ -25,7 +25,7 @@ internal class Lexer(private val grammar: Grammar) {
         Token.Type.OPEN_PAREN,
         Token.Type.OPEN_BRACKET,
         Token.Type.QUESTION,
-        Token.Type.COLON
+        Token.Type.COLON,
     )
 
     /**
@@ -55,16 +55,16 @@ internal class Lexer(private val grammar: Grammar) {
                     Token(
                         Token.Type.LITERAL,
                         "true",
-                        true
-                    )
+                        true,
+                    ),
                 )
 
                 input.peekEquals("false") -> tokens.add(
                     Token(
                         Token.Type.LITERAL,
                         "false",
-                        false
-                    )
+                        false,
+                    ),
                 )
 
                 input.character() == '#' -> discardComment(input)

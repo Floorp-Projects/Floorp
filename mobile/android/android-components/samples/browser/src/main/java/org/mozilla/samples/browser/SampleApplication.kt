@@ -37,8 +37,8 @@ internal object GleanBuildInfo {
             versionCode = "0.0.1",
             versionName = "0.0.1",
             buildDate = Calendar.getInstance(
-                TimeZone.getTimeZone("GMT+0")
-            ).also { cal -> cal.set(2019, 9, 23, 12, 52, 8) }
+                TimeZone.getTimeZone("GMT+0"),
+            ).also { cal -> cal.set(2019, 9, 23, 12, 52, 8) },
         )
     }
 }
@@ -72,7 +72,7 @@ class SampleApplication : Application() {
             applicationContext,
             uploadEnabled = false,
             configuration = config,
-            buildInfo = GleanBuildInfo.buildInfo
+            buildInfo = GleanBuildInfo.buildInfo,
         )
 
         Facts.registerProcessor(LogFactProcessor())
@@ -87,28 +87,28 @@ class SampleApplication : Application() {
         try {
             GlobalAddonDependencyProvider.initialize(
                 components.addonManager,
-                components.addonUpdater
+                components.addonUpdater,
             )
             WebExtensionSupport.initialize(
                 components.engine,
                 components.store,
                 onNewTabOverride = {
-                    _, engineSession, url ->
+                        _, engineSession, url ->
                     components.tabsUseCases.addTab(url, selectTab = true, engineSession = engineSession)
                 },
                 onCloseTabOverride = {
-                    _, sessionId ->
+                        _, sessionId ->
                     components.tabsUseCases.removeTab(sessionId)
                 },
                 onSelectTabOverride = {
-                    _, sessionId ->
+                        _, sessionId ->
                     components.tabsUseCases.selectTab(sessionId)
                 },
                 onUpdatePermissionRequest = components.addonUpdater::onUpdatePermissionRequest,
                 onExtensionsLoaded = { extensions ->
                     components.addonUpdater.registerForFutureUpdates(extensions)
                     components.supportedAddonsChecker.registerForChecks()
-                }
+                },
             )
         } catch (e: UnsupportedOperationException) {
             // Web extension support is only available for engine gecko

@@ -33,7 +33,7 @@ import java.util.concurrent.TimeoutException
 class GeckoViewFetchClient(
     context: Context,
     runtime: GeckoRuntime = GeckoRuntime.getDefault(context),
-    private val maxReadTimeOut: Pair<Long, TimeUnit> = Pair(MAX_READ_TIMEOUT_MINUTES, TimeUnit.MINUTES)
+    private val maxReadTimeOut: Pair<Long, TimeUnit> = Pair(MAX_READ_TIMEOUT_MINUTES, TimeUnit.MINUTES),
 ) : Client() {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -125,7 +125,7 @@ internal fun WebResponse.toResponse(): Response {
         headers,
         body?.let {
             Response.Body(it, headers["Content-Type"])
-        } ?: Response.Body.empty()
+        } ?: Response.Body.empty(),
     )
 }
 

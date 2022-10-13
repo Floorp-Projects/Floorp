@@ -29,9 +29,10 @@ import mozilla.components.feature.addons.R
 class UnsupportedAddonsAdapter(
     private val addonManager: AddonManager,
     private val unsupportedAddonsAdapterDelegate: UnsupportedAddonsAdapterDelegate,
-    addons: List<Addon>
+    addons: List<Addon>,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val unsupportedAddons = addons.toMutableList()
+
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var pendingUninstall = false
 
@@ -68,7 +69,7 @@ class UnsupportedAddonsAdapter(
                     pendingUninstall = false
                     notifyDataSetChanged()
                     unsupportedAddonsAdapterDelegate.onUninstallError(addonId, throwable)
-                }
+                },
             )
         }
     }
@@ -106,6 +107,6 @@ class UnsupportedAddonsAdapter(
         view: View,
         val iconView: ImageView,
         val titleView: TextView,
-        val removeButton: ImageButton
+        val removeButton: ImageButton,
     ) : RecyclerView.ViewHolder(view)
 }

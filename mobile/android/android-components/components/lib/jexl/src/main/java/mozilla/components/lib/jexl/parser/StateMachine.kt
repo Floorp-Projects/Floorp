@@ -17,134 +17,134 @@ internal val stateMachine: Map<State, StateMap> = mapOf(
         mapOf(
             Token.Type.LITERAL to NextState(State.EXPECT_BIN_OP),
             Token.Type.IDENTIFIER to NextState(
-                State.IDENTIFIER
+                State.IDENTIFIER,
             ),
             Token.Type.UNARY_OP to NextState(),
             Token.Type.OPEN_PAREN to NextState(
-                State.SUB_EXPRESSION
+                State.SUB_EXPRESSION,
             ),
             Token.Type.OPEN_CURL to NextState(
                 State.EXPECT_OBJECT_KEY,
-                ::objectStart
+                ::objectStart,
             ),
             Token.Type.DOT to NextState(State.TRAVERSE),
             Token.Type.OPEN_BRACKET to NextState(
                 State.ARRAY_VALUE,
-                ::arrayStart
-            )
-        )
+                ::arrayStart,
+            ),
+        ),
     ),
     State.EXPECT_BIN_OP to StateMap(
         mapOf(
             Token.Type.BINARY_OP to NextState(
-                State.EXPECT_OPERAND
+                State.EXPECT_OPERAND,
             ),
             Token.Type.PIPE to NextState(State.EXPECT_TRANSFORM),
             Token.Type.DOT to NextState(State.TRAVERSE),
             Token.Type.QUESTION to NextState(
                 State.TERNARY_MID,
-                ::ternaryStart
-            )
+                ::ternaryStart,
+            ),
         ),
-        completable = true
+        completable = true,
     ),
     State.EXPECT_TRANSFORM to StateMap(
         mapOf(
             Token.Type.IDENTIFIER to NextState(
                 State.POST_TRANSFORM,
-                ::transform
-            )
-        )
+                ::transform,
+            ),
+        ),
     ),
     State.EXPECT_OBJECT_KEY to StateMap(
         mapOf(
             Token.Type.IDENTIFIER to NextState(
                 State.EXPECT_KEY_VALUE_SEPARATOR,
-                ::objectKey
+                ::objectKey,
             ),
             Token.Type.CLOSE_CURL to NextState(
-                State.EXPECT_BIN_OP
-            )
-        )
+                State.EXPECT_BIN_OP,
+            ),
+        ),
     ),
     State.EXPECT_KEY_VALUE_SEPARATOR to StateMap(
         mapOf(
-            Token.Type.COLON to NextState(State.OBJECT_VALUE)
-        )
+            Token.Type.COLON to NextState(State.OBJECT_VALUE),
+        ),
     ),
     State.POST_TRANSFORM to StateMap(
         mapOf(
             Token.Type.OPEN_PAREN to NextState(
-                State.ARGUMENT_VALUE
+                State.ARGUMENT_VALUE,
             ),
             Token.Type.BINARY_OP to NextState(
-                State.EXPECT_OPERAND
+                State.EXPECT_OPERAND,
             ),
             Token.Type.DOT to NextState(State.TRAVERSE),
             Token.Type.OPEN_BRACKET to NextState(
-                State.FILTER
+                State.FILTER,
             ),
-            Token.Type.PIPE to NextState(State.EXPECT_TRANSFORM)
+            Token.Type.PIPE to NextState(State.EXPECT_TRANSFORM),
         ),
-        completable = true
+        completable = true,
     ),
     State.POST_TRANSFORM_ARGUMENTS to StateMap(
         mapOf(
             Token.Type.BINARY_OP to NextState(
-                State.EXPECT_OPERAND
+                State.EXPECT_OPERAND,
             ),
             Token.Type.DOT to NextState(State.TRAVERSE),
             Token.Type.OPEN_BRACKET to NextState(
-                State.FILTER
+                State.FILTER,
             ),
-            Token.Type.PIPE to NextState(State.EXPECT_TRANSFORM)
+            Token.Type.PIPE to NextState(State.EXPECT_TRANSFORM),
         ),
-        completable = true
+        completable = true,
     ),
     State.IDENTIFIER to StateMap(
         mapOf(
             Token.Type.BINARY_OP to NextState(
-                State.EXPECT_OPERAND
+                State.EXPECT_OPERAND,
             ),
             Token.Type.DOT to NextState(State.TRAVERSE),
             Token.Type.OPEN_BRACKET to NextState(
-                State.FILTER
+                State.FILTER,
             ),
             Token.Type.PIPE to NextState(State.EXPECT_TRANSFORM),
             Token.Type.QUESTION to NextState(
                 State.TERNARY_MID,
-                ::ternaryStart
-            )
+                ::ternaryStart,
+            ),
         ),
-        completable = true
+        completable = true,
     ),
     State.TRAVERSE to StateMap(
         mapOf(
             Token.Type.IDENTIFIER to NextState(
-                State.IDENTIFIER
-            )
-        )
+                State.IDENTIFIER,
+            ),
+        ),
     ),
     State.FILTER to StateMap(
         subHandler = { parser, node ->
             val expressionNode = FilterExpression(
                 expression = node,
                 relative = parser.subParser!!.relative,
-                subject = parser.cursor
+                subject = parser.cursor,
             )
             parser.placeBeforeCursor(expressionNode)
         },
         endStates = mapOf(
-            Token.Type.CLOSE_BRACKET to State.IDENTIFIER
-        )
+            Token.Type.CLOSE_BRACKET to State.IDENTIFIER,
+        ),
     ),
     State.SUB_EXPRESSION to StateMap(
         subHandler = { parser, node ->
             parser.placeAtCursor(node!!)
         },
         endStates = mapOf(
-            Token.Type.CLOSE_PAREN to State.EXPECT_BIN_OP
-        )
+            Token.Type.CLOSE_PAREN to State.EXPECT_BIN_OP,
+        ),
     ),
     State.ARGUMENT_VALUE to StateMap(
         subHandler = { parser, node ->
@@ -153,8 +153,8 @@ internal val stateMachine: Map<State, StateMap> = mapOf(
         },
         endStates = mapOf(
             Token.Type.COMMA to State.ARGUMENT_VALUE,
-            Token.Type.CLOSE_PAREN to State.EXPECT_BIN_OP
-        )
+            Token.Type.CLOSE_PAREN to State.EXPECT_BIN_OP,
+        ),
     ),
     State.OBJECT_VALUE to StateMap(
         subHandler = { parser, node ->
@@ -165,8 +165,8 @@ internal val stateMachine: Map<State, StateMap> = mapOf(
         },
         endStates = mapOf(
             Token.Type.COMMA to State.EXPECT_OBJECT_KEY,
-            Token.Type.CLOSE_CURL to State.EXPECT_BIN_OP
-        )
+            Token.Type.CLOSE_CURL to State.EXPECT_BIN_OP,
+        ),
     ),
     State.ARRAY_VALUE to StateMap(
         subHandler = { parser, node ->
@@ -176,8 +176,8 @@ internal val stateMachine: Map<State, StateMap> = mapOf(
         },
         endStates = mapOf(
             Token.Type.COMMA to State.ARRAY_VALUE,
-            Token.Type.CLOSE_BRACKET to State.EXPECT_BIN_OP
-        )
+            Token.Type.CLOSE_BRACKET to State.EXPECT_BIN_OP,
+        ),
     ),
     State.TERNARY_MID to StateMap(
         subHandler = { parser, node ->
@@ -185,21 +185,21 @@ internal val stateMachine: Map<State, StateMap> = mapOf(
             cursor.consequent = node
         },
         endStates = mapOf(
-            Token.Type.COLON to State.TERNARY_END
-        )
+            Token.Type.COLON to State.TERNARY_END,
+        ),
     ),
     State.TERNARY_END to StateMap(
         subHandler = { parser, node ->
             val cursor = parser.cursor!! as ConditionalExpression
             cursor.alternate = node
         },
-        completable = true
-    )
+        completable = true,
+    ),
 )
 
 private fun objectStart(parser: Parser, @Suppress("UNUSED_PARAMETER") token: Token) {
     val node = ObjectLiteral(
-        properties = mutableMapOf()
+        properties = mutableMapOf(),
     )
     parser.placeAtCursor(node)
 }
@@ -216,14 +216,14 @@ private fun arrayStart(parser: Parser, @Suppress("UNUSED_PARAMETER") token: Toke
 private fun transform(parser: Parser, token: Token) {
     val node = Transformation(
         name = token.value.toString(),
-        subject = parser.cursor
+        subject = parser.cursor,
     )
     parser.placeBeforeCursor(node)
 }
 
 private fun ternaryStart(parser: Parser, @Suppress("UNUSED_PARAMETER") token: Token) {
     val node = ConditionalExpression(
-        test = parser.tree
+        test = parser.tree,
     )
     parser.tree = node
     parser.cursor = node

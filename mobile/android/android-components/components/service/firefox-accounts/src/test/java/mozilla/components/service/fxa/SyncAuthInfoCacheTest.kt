@@ -27,7 +27,7 @@ class SyncAuthInfoCacheTest {
             // expires in the future (in seconds)
             fxaAccessTokenExpiresAt = (System.currentTimeMillis() / 1000L) + 60,
             syncKey = "long secret key",
-            tokenServerUrl = "http://www.token.server/url"
+            tokenServerUrl = "http://www.token.server/url",
         )
 
         cache.setToCache(authInfo)

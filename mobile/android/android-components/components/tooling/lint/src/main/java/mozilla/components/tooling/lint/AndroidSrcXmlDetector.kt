@@ -44,8 +44,8 @@ class AndroidSrcXmlDetector : ResourceXmlDetector() {
             severity = Severity.ERROR,
             implementation = Implementation(
                 AndroidSrcXmlDetector::class.java,
-                Scope.RESOURCE_FILE_SCOPE
-            )
+                Scope.RESOURCE_FILE_SCOPE,
+            ),
         )
     }
 
@@ -64,7 +64,7 @@ class AndroidSrcXmlDetector : ResourceXmlDetector() {
             FULLY_QUALIFIED_APP_COMPAT_IMAGE_BUTTON,
             FULLY_QUALIFIED_APP_COMPAT_VIEW_CLASS,
             APP_COMPAT_IMAGE_BUTTON,
-            APP_COMPAT_IMAGE_VIEW
+            APP_COMPAT_IMAGE_VIEW,
         )
     }
 
@@ -76,7 +76,7 @@ class AndroidSrcXmlDetector : ResourceXmlDetector() {
             issue = ISSUE_XML_SRC_USAGE,
             scope = node,
             location = context.getLocation(node),
-            message = ERROR_MESSAGE
+            message = ERROR_MESSAGE,
         )
     }
 }

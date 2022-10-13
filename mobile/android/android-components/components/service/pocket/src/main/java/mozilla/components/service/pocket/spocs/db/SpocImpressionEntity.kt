@@ -30,11 +30,11 @@ import mozilla.components.service.pocket.stories.db.PocketRecommendationsDatabas
             parentColumns = arrayOf("id"),
             childColumns = arrayOf("spocId"),
             onDelete = ForeignKey.CASCADE,
-        )
+        ),
     ],
     indices = [
-        Index(value = ["spocId"], unique = false)
-    ]
+        Index(value = ["spocId"], unique = false),
+    ],
 )
 internal data class SpocImpressionEntity(
     val spocId: Int,

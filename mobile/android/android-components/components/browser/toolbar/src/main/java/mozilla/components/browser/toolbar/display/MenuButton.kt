@@ -14,16 +14,18 @@ import mozilla.components.browser.toolbar.facts.emitOpenMenuFact
 import mozilla.components.concept.menu.MenuController
 
 internal class MenuButton(
-    @get:VisibleForTesting internal val impl: mozilla.components.browser.menu.view.MenuButton
+    @get:VisibleForTesting internal val impl: mozilla.components.browser.menu.view.MenuButton,
 ) {
 
     init {
         impl.isVisible = false
-        impl.register(object : mozilla.components.concept.menu.MenuButton.Observer {
-            override fun onShow() {
-                emitOpenMenuFact(impl.menuBuilder?.extras)
-            }
-        })
+        impl.register(
+            object : mozilla.components.concept.menu.MenuButton.Observer {
+                override fun onShow() {
+                    emitOpenMenuFact(impl.menuBuilder?.extras)
+                }
+            },
+        )
     }
 
     /**

@@ -24,7 +24,7 @@ import kotlin.coroutines.CoroutineContext
 class LocaleMiddleware(
     private val applicationContext: Context,
     coroutineContext: CoroutineContext = Dispatchers.IO,
-    private val localeManager: LocaleManager
+    private val localeManager: LocaleManager,
 ) : Middleware<BrowserState, BrowserAction> {
 
     private val logger = Logger("LocaleMiddleware")
@@ -33,7 +33,7 @@ class LocaleMiddleware(
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         when (action) {
             is LocaleAction.RestoreLocaleStateAction -> restoreLocale(context.store)
@@ -50,7 +50,7 @@ class LocaleMiddleware(
         val localeHistory = localeManager.getCurrentLocale(applicationContext)
         if (localeHistory == null) {
             logger.debug(
-                "No recoverable locale has been set. Following device locale."
+                "No recoverable locale has been set. Following device locale.",
             )
         } else {
             logger.debug("Locale restored from the storage $localeHistory")

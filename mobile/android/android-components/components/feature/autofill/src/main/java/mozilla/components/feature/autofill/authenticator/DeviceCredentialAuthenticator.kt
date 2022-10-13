@@ -15,7 +15,7 @@ import mozilla.components.feature.autofill.R
  * [Authenticator] implementation that uses Android's [KeyguardManager] to authenticate the user.
  */
 internal class DeviceCredentialAuthenticator(
-    private val configuration: AutofillConfiguration
+    private val configuration: AutofillConfiguration,
 ) : Authenticator {
     private var callback: Authenticator.Callback? = null
 
@@ -27,9 +27,9 @@ internal class DeviceCredentialAuthenticator(
         val intent = manager!!.createConfirmDeviceCredentialIntent(
             activity.getString(
                 R.string.mozac_feature_autofill_popup_unlock_application,
-                configuration.applicationName
+                configuration.applicationName,
             ),
-            ""
+            "",
         )
         activity.startActivityForResult(intent, configuration.activityRequestCode)
     }

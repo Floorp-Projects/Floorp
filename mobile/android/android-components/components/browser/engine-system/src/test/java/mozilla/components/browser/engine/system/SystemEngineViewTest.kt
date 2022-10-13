@@ -110,13 +110,15 @@ class SystemEngineViewTest {
         var observedUrl = ""
         var observedLoadingState = false
         var observedSecurityChange: Triple<Boolean, String?, String?> = Triple(false, null, null)
-        engineSession.register(object : EngineSession.Observer {
-            override fun onLoadingStateChange(loading: Boolean) { observedLoadingState = loading }
-            override fun onLocationChange(url: String) { observedUrl = url }
-            override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?) {
-                observedSecurityChange = Triple(secure, host, issuer)
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onLoadingStateChange(loading: Boolean) { observedLoadingState = loading }
+                override fun onLocationChange(url: String) { observedUrl = url }
+                override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?) {
+                    observedSecurityChange = Triple(secure, host, issuer)
+                }
+            },
+        )
 
         engineSession.webView.webViewClient.onPageStarted(mock(), "https://wiki.mozilla.org/", null)
         assertEquals(true, observedLoadingState)
@@ -151,11 +153,13 @@ class SystemEngineViewTest {
         val engineView = SystemEngineView(testContext)
         var hitTestResult: HitResult = HitResult.UNKNOWN("")
         engineView.render(engineSession)
-        engineSession.register(object : EngineSession.Observer {
-            override fun onLongPress(hitResult: HitResult) {
-                hitTestResult = hitResult
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onLongPress(hitResult: HitResult) {
+                    hitTestResult = hitResult
+                }
+            },
+        )
 
         engineView.handleLongClick(HitTestResult.EMAIL_TYPE, "mailto:asa@mozilla.com")
         assertTrue(hitTestResult is HitResult.EMAIL)
@@ -198,11 +202,13 @@ class SystemEngineViewTest {
         whenever(message.data.getString("src")).thenReturn("file.png")
 
         engineView.render(engineSession)
-        engineSession.register(object : EngineSession.Observer {
-            override fun onLongPress(hitResult: HitResult) {
-                observerNotified = true
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onLongPress(hitResult: HitResult) {
+                    observerNotified = true
+                }
+            },
+        )
 
         handler.handleMessage(message)
         assertTrue(observerNotified)
@@ -246,9 +252,11 @@ class SystemEngineViewTest {
         engineView.render(engineSession)
 
         var observedProgress = 0
-        engineSession.register(object : EngineSession.Observer {
-            override fun onProgress(progress: Int) { observedProgress = progress }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onProgress(progress: Int) { observedProgress = progress }
+            },
+        )
 
         engineSession.webView.webChromeClient!!.onProgressChanged(null, 100)
         assertEquals(100, observedProgress)
@@ -443,26 +451,28 @@ class SystemEngineViewTest {
 
         var observerNotified = false
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onExternalResource(
-                url: String,
-                fileName: String?,
-                contentLength: Long?,
-                contentType: String?,
-                cookie: String?,
-                userAgent: String?,
-                isPrivate: Boolean,
-                response: Response?
-            ) {
-                assertEquals("https://download.mozilla.org", url)
-                assertEquals("image.png", fileName)
-                assertEquals(1337L, contentLength)
-                assertNull(cookie)
-                assertEquals("Components/1.0", userAgent)
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onExternalResource(
+                    url: String,
+                    fileName: String?,
+                    contentLength: Long?,
+                    contentType: String?,
+                    cookie: String?,
+                    userAgent: String?,
+                    isPrivate: Boolean,
+                    response: Response?,
+                ) {
+                    assertEquals("https://download.mozilla.org", url)
+                    assertEquals("image.png", fileName)
+                    assertEquals(1337L, contentLength)
+                    assertNull(cookie)
+                    assertEquals("Components/1.0", userAgent)
 
-                observerNotified = true
-            }
-        })
+                    observerNotified = true
+                }
+            },
+        )
 
         val listener = engineView.createDownloadListener()
         listener.onDownloadStart(
@@ -470,7 +480,7 @@ class SystemEngineViewTest {
             "Components/1.0",
             "attachment; filename=\"image.png\"",
             "image/png",
-            1337
+            1337,
         )
 
         assertTrue(observerNotified)
@@ -513,11 +523,13 @@ class SystemEngineViewTest {
         whenever(blockedRequest.url).thenReturn(Uri.parse("http://blocked.random"))
 
         var trackerBlocked: Tracker? = null
-        engineSession.register(object : EngineSession.Observer {
-            override fun onTrackerBlocked(tracker: Tracker) {
-                trackerBlocked = tracker
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onTrackerBlocked(tracker: Tracker) {
+                    trackerBlocked = tracker
+                }
+            },
+        )
 
         response = webViewClient.shouldInterceptRequest(engineSession.webView, blockedRequest)
         assertNotNull(response)
@@ -573,7 +585,7 @@ class SystemEngineViewTest {
     """
         SystemEngineView.URL_MATCHER = UrlMatcher.createMatcher(
             StringReader(BLOCK_LIST),
-            StringReader("{}")
+            StringReader("{}"),
         )
 
         val engineSession = SystemEngineSession(testContext)
@@ -585,11 +597,13 @@ class SystemEngineViewTest {
 
         engineSession.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onTrackerBlocked(tracker: Tracker) {
-                trackerBlocked = tracker
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onTrackerBlocked(tracker: Tracker) {
+                    trackerBlocked = tracker
+                }
+            },
+        )
 
         val blockedRequest = mock<WebResourceRequest>()
         whenever(blockedRequest.isForMainFrame).thenReturn(false)
@@ -628,7 +642,7 @@ class SystemEngineViewTest {
             engineSession.webView,
             WebViewClient.ERROR_UNKNOWN,
             null,
-            "http://failed.random"
+            "http://failed.random",
         )
         verifyNoInteractions(requestInterceptor)
 
@@ -638,7 +652,7 @@ class SystemEngineViewTest {
             engineSession.webView,
             WebViewClient.ERROR_UNKNOWN,
             null,
-            "http://failed.random"
+            "http://failed.random",
         )
         verifyNoInteractions(requestInterceptor)
 
@@ -648,7 +662,7 @@ class SystemEngineViewTest {
             engineSession.webView,
             WebViewClient.ERROR_UNKNOWN,
             null,
-            "http://failed.random"
+            "http://failed.random",
         )
         verify(requestInterceptor).onErrorRequest(engineSession, ErrorType.UNKNOWN, "http://failed.random")
 
@@ -662,7 +676,7 @@ class SystemEngineViewTest {
             engineSession.webView,
             WebViewClient.ERROR_UNKNOWN,
             null,
-            "http://failed.random"
+            "http://failed.random",
         )
         verify(webView, never()).loadUrl(ArgumentMatchers.anyString())
 
@@ -672,7 +686,7 @@ class SystemEngineViewTest {
             engineSession.webView,
             WebViewClient.ERROR_UNKNOWN,
             null,
-            "http://failed.random"
+            "http://failed.random",
         )
         verify(webView).loadUrl("about:fail")
 
@@ -681,7 +695,7 @@ class SystemEngineViewTest {
             engineSession.webView,
             WebViewClient.ERROR_UNKNOWN,
             null,
-            "http://failed.random"
+            "http://failed.random",
         )
         verify(webView, never()).loadUrl("about:fail2")
 
@@ -691,7 +705,7 @@ class SystemEngineViewTest {
             engineSession.webView,
             WebViewClient.ERROR_UNKNOWN,
             null,
-            "http://failed.random"
+            "http://failed.random",
         )
         verify(webView).loadUrl("about:fail2")
     }
@@ -790,8 +804,8 @@ class SystemEngineViewTest {
             requestInterceptor.onErrorRequest(
                 engineSession,
                 ErrorType.ERROR_SECURITY_SSL,
-                "http://failed.random"
-            )
+                "http://failed.random",
+            ),
         ).thenReturn(errorResponse)
         webViewClient.onReceivedSslError(engineSession.webView, handler, error)
         verify(webView).loadUrl("about:fail")
@@ -846,14 +860,16 @@ class SystemEngineViewTest {
 
         var observerNotified = false
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean) {
-                assertEquals(0, activeMatchOrdinal)
-                assertEquals(1, numberOfMatches)
-                assertTrue(isDoneCounting)
-                observerNotified = true
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean) {
+                    assertEquals(0, activeMatchOrdinal)
+                    assertEquals(1, numberOfMatches)
+                    assertTrue(isDoneCounting)
+                    observerNotified = true
+                }
+            },
+        )
 
         val listener = engineView.createFindListener()
         listener.onFindResultReceived(0, 1, true)
@@ -995,13 +1011,15 @@ class SystemEngineViewTest {
         var observedUrl = ""
         var observedLoadingState = true
         var observedSecurityChange: Triple<Boolean, String?, String?> = Triple(false, null, null)
-        engineSession.register(object : EngineSession.Observer {
-            override fun onLoadingStateChange(loading: Boolean) { observedLoadingState = loading }
-            override fun onLocationChange(url: String) { observedUrl = url }
-            override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?) {
-                observedSecurityChange = Triple(secure, host, issuer)
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onLoadingStateChange(loading: Boolean) { observedLoadingState = loading }
+                override fun onLocationChange(url: String) { observedUrl = url }
+                override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?) {
+                    observedSecurityChange = Triple(secure, host, issuer)
+                }
+            },
+        )
 
         // We need a certificate to trigger parsing the potentially invalid URL for
         // the host parameter in onSecurityChange
@@ -1028,9 +1046,9 @@ class SystemEngineViewTest {
             TrackingProtectionPolicy.select(
                 arrayOf(
                     TrackingCategory.AD,
-                    TrackingCategory.ANALYTICS
-                )
-            )
+                    TrackingCategory.ANALYTICS,
+                ),
+            ),
         )
         assertEquals(setOf(UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS), urlMatcher.enabledCategories)
 
@@ -1039,9 +1057,9 @@ class SystemEngineViewTest {
             TrackingProtectionPolicy.select(
                 arrayOf(
                     TrackingCategory.AD,
-                    TrackingCategory.SOCIAL
-                )
-            )
+                    TrackingCategory.SOCIAL,
+                ),
+            ),
         )
         assertEquals(setOf(UrlMatcher.ADVERTISING, UrlMatcher.SOCIAL), urlMatcher.enabledCategories)
     }
@@ -1056,14 +1074,14 @@ class SystemEngineViewTest {
             UrlMatcher.ANALYTICS,
             UrlMatcher.SOCIAL,
             UrlMatcher.FINGERPRINTING,
-            UrlMatcher.CRYPTOMINING
+            UrlMatcher.CRYPTOMINING,
         )
         val strictCategories = setOf(
             UrlMatcher.ADVERTISING,
             UrlMatcher.ANALYTICS,
             UrlMatcher.SOCIAL,
             UrlMatcher.FINGERPRINTING,
-            UrlMatcher.CRYPTOMINING
+            UrlMatcher.CRYPTOMINING,
         )
 
         var urlMatcher = SystemEngineView.getOrCreateUrlMatcher(resources, recommendedPolicy)
@@ -1087,15 +1105,17 @@ class SystemEngineViewTest {
 
         var observedPermissionRequest: PermissionRequest? = null
         var cancelledPermissionRequest: PermissionRequest? = null
-        engineSession.register(object : EngineSession.Observer {
-            override fun onContentPermissionRequest(permissionRequest: PermissionRequest) {
-                observedPermissionRequest = permissionRequest
-            }
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onContentPermissionRequest(permissionRequest: PermissionRequest) {
+                    observedPermissionRequest = permissionRequest
+                }
 
-            override fun onCancelContentPermissionRequest(permissionRequest: PermissionRequest) {
-                cancelledPermissionRequest = permissionRequest
-            }
-        })
+                override fun onCancelContentPermissionRequest(permissionRequest: PermissionRequest) {
+                    cancelledPermissionRequest = permissionRequest
+                }
+            },
+        )
 
         engineSession.webView.webChromeClient!!.onPermissionRequest(permissionRequest)
         assertNotNull(observedPermissionRequest)
@@ -1116,15 +1136,17 @@ class SystemEngineViewTest {
 
         var createWindowRequest: WindowRequest? = null
         var closeWindowRequest: WindowRequest? = null
-        engineSession.register(object : EngineSession.Observer {
-            override fun onWindowRequest(windowRequest: WindowRequest) {
-                if (windowRequest.type == WindowRequest.Type.OPEN) {
-                    createWindowRequest = windowRequest
-                } else {
-                    closeWindowRequest = windowRequest
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onWindowRequest(windowRequest: WindowRequest) {
+                    if (windowRequest.type == WindowRequest.Type.OPEN) {
+                        createWindowRequest = windowRequest
+                    } else {
+                        closeWindowRequest = windowRequest
+                    }
                 }
-            }
-        })
+            },
+        )
 
         engineSession.webView.webChromeClient!!.onCreateWindow(mock(), false, false, null)
         assertNotNull(createWindowRequest)
@@ -1144,7 +1166,6 @@ class SystemEngineViewTest {
         var request: PromptRequest? = null
 
         val callback = ValueCallback<Array<Uri>> {
-
             if (it == null) {
                 onDismissWasCalled = true
             } else {
@@ -1156,11 +1177,13 @@ class SystemEngineViewTest {
             }
         }
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest
+                }
+            },
+        )
 
         engineView.render(engineSession)
 
@@ -1214,11 +1237,13 @@ class SystemEngineViewTest {
         val engineView = SystemEngineView(testContext)
         var request: PromptRequest? = null
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest
+                }
+            },
+        )
 
         engineView.render(engineSession)
 
@@ -1245,11 +1270,13 @@ class SystemEngineViewTest {
         val engineView = SystemEngineView(testContext)
         var request: PromptRequest? = null
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest
+                }
+            },
+        )
 
         engineView.render(engineSession)
 
@@ -1260,7 +1287,7 @@ class SystemEngineViewTest {
             "http://www.mozilla.org",
             "message",
             "defaultValue",
-            mockJSPromptResult
+            mockJSPromptResult,
         )
 
         val textPromptRequest = request as PromptRequest.TextPrompt
@@ -1287,11 +1314,13 @@ class SystemEngineViewTest {
 
         var request: PromptRequest? = null
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest
+                }
+            },
+        )
 
         engineView.render(engineSession)
 
@@ -1301,8 +1330,9 @@ class SystemEngineViewTest {
         val wasTheDialogHandled = engineSession.webView.webChromeClient!!.onJsPrompt(
             mock(),
             "http://www.mozilla.org",
-            "message", "defaultValue",
-            mockJSPromptResult
+            "message",
+            "defaultValue",
+            mockJSPromptResult,
         )
 
         assertTrue(wasTheDialogHandled)
@@ -1316,11 +1346,13 @@ class SystemEngineViewTest {
         val engineView = SystemEngineView(testContext)
         var request: PromptRequest? = null
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest
+                }
+            },
+        )
 
         engineView.render(engineSession)
 
@@ -1330,7 +1362,7 @@ class SystemEngineViewTest {
             mock(),
             "http://www.mozilla.org",
             "message",
-            mockJSPromptResult
+            mockJSPromptResult,
         )
 
         val confirmPromptRequest = request as PromptRequest.Confirm
@@ -1419,11 +1451,13 @@ class SystemEngineViewTest {
         val engineView = SystemEngineView(testContext)
         var request: PromptRequest? = null
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest
+                }
+            },
+        )
         engineView.render(engineSession)
 
         val authHandler = mock<HttpAuthHandler>()
@@ -1450,11 +1484,13 @@ class SystemEngineViewTest {
         val engineView = SystemEngineView(testContext)
         var request: PromptRequest? = null
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest
+                }
+            },
+        )
         engineView.render(engineSession)
 
         val authHandler = mock<HttpAuthHandler>()
@@ -1473,11 +1509,13 @@ class SystemEngineViewTest {
 
         var request: PromptRequest? = null
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest
+                }
+            },
+        )
         engineView.render(engineSession)
 
         val webView = engineSession.webView
@@ -1504,11 +1542,13 @@ class SystemEngineViewTest {
         val engineView = SystemEngineView(testContext)
         var request: PromptRequest? = null
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest
+                }
+            },
+        )
 
         engineSession.webView = spy(engineSession.webView)
         engineView.render(engineSession)
@@ -1550,11 +1590,13 @@ class SystemEngineViewTest {
         val engineView = SystemEngineView(testContext)
         var request: PromptRequest? = null
 
-        engineSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest
-            }
-        })
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest
+                }
+            },
+        )
         engineView.render(engineSession)
 
         val host = "mozilla.org"

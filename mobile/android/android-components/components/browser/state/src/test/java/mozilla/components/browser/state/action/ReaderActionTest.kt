@@ -27,8 +27,8 @@ class ReaderActionTest {
 
         store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
     }
 

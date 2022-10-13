@@ -29,7 +29,7 @@ class ContainerToolbarActionTest {
         contextId = "contextId",
         name = "Personal",
         color = ContainerState.Color.GREEN,
-        icon = ContainerState.Icon.CART
+        icon = ContainerState.Icon.CART,
     )
 
     @Test

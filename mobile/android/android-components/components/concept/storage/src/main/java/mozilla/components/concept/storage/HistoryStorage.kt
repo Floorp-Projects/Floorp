@@ -51,7 +51,7 @@ interface HistoryStorage : Storage {
     suspend fun getDetailedVisits(
         start: Long,
         end: Long = Long.MAX_VALUE,
-        excludeTypes: List<VisitType> = listOf()
+        excludeTypes: List<VisitType> = listOf(),
     ): List<VisitInfo>
 
     /**
@@ -69,7 +69,7 @@ interface HistoryStorage : Storage {
     suspend fun getVisitsPaginated(
         offset: Long,
         count: Long,
-        excludeTypes: List<VisitType> = listOf()
+        excludeTypes: List<VisitType> = listOf(),
     ): List<VisitInfo>
 
     /**
@@ -83,7 +83,7 @@ interface HistoryStorage : Storage {
      */
     suspend fun getTopFrecentSites(
         numItems: Int,
-        frecencyThreshold: FrecencyThresholdOption
+        frecencyThreshold: FrecencyThresholdOption,
     ): List<TopFrecentSiteInfo>
 
     /**
@@ -146,7 +146,7 @@ interface HistoryStorage : Storage {
  */
 data class PageVisit(
     val visitType: VisitType,
-    val redirectSource: RedirectSource? = null
+    val redirectSource: RedirectSource? = null,
 )
 
 /**
@@ -168,7 +168,7 @@ enum class RedirectSource {
  */
 data class PageObservation(
     val title: String? = null,
-    val previewImageUrl: String? = null
+    val previewImageUrl: String? = null,
 )
 
 /**
@@ -179,7 +179,7 @@ data class PageObservation(
  */
 data class TopFrecentSiteInfo(
     val url: String,
-    val title: String?
+    val title: String?,
 )
 
 /**
@@ -190,7 +190,7 @@ enum class FrecencyThresholdOption {
     NONE,
 
     /** Skip visited pages that were only visited once. */
-    SKIP_ONE_TIME_PAGES
+    SKIP_ONE_TIME_PAGES,
 }
 
 /**
@@ -231,7 +231,7 @@ enum class VisitType(val type: Int) {
     REDIRECT_TEMPORARY(6),
     DOWNLOAD(7),
     FRAMED_LINK(8),
-    RELOAD(9)
+    RELOAD(9),
 }
 
 /**
@@ -247,7 +247,7 @@ data class SearchResult(
     val id: String,
     val url: String,
     val score: Int,
-    val title: String? = null
+    val title: String? = null,
 )
 
 /**
@@ -263,5 +263,5 @@ data class HistoryAutocompleteResult(
     val text: String,
     val url: String,
     val source: String,
-    val totalItems: Int
+    val totalItems: Int,
 )

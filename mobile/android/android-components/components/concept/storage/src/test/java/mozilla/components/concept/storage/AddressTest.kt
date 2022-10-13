@@ -17,7 +17,7 @@ class AddressTest {
 
         assertEquals(
             "${address.givenName} ${address.additionalName} ${address.familyName}",
-            fullName
+            fullName,
         )
     }
 
@@ -84,7 +84,7 @@ class AddressTest {
             postalCode = "",
             country = "",
             tel = "",
-            email = ""
+            email = "",
         )
 
         assertEquals("", address.addressLabel)

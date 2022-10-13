@@ -35,26 +35,26 @@ class Grammar {
         "?" to GrammarElement(Token.Type.QUESTION),
         "+" to GrammarElement(
             Token.Type.BINARY_OP,
-            30
+            30,
         ) { left, right -> left + right },
         "-" to GrammarElement(Token.Type.BINARY_OP, 30),
         "*" to GrammarElement(
             Token.Type.BINARY_OP,
-            40
+            40,
         ) { left, right -> left * right },
         "/" to GrammarElement(Token.Type.BINARY_OP, 40) { left, right ->
             left / right
         },
         "//" to GrammarElement(
             Token.Type.BINARY_OP,
-            40
+            40,
         ) { left, right ->
             when (val result = left.div(right)) {
                 is JexlInteger -> result
                 is JexlDouble -> JexlInteger(
                     floor(
-                        result.value
-                    ).toInt()
+                        result.value,
+                    ).toInt(),
                 )
                 else -> throw EvaluatorException("Cannot floor type: " + result::class)
             }
@@ -63,79 +63,79 @@ class Grammar {
         "^" to GrammarElement(Token.Type.BINARY_OP, 50),
         "==" to GrammarElement(
             Token.Type.BINARY_OP,
-            20
+            20,
         ) { left, right ->
             JexlBoolean(left == right)
         },
         "!=" to GrammarElement(
             Token.Type.BINARY_OP,
-            20
+            20,
         ) { left, right ->
             JexlBoolean(left != right)
         },
         ">" to GrammarElement(
             Token.Type.BINARY_OP,
-            20
+            20,
         ) { left, right ->
             JexlBoolean(left > right)
         },
         ">=" to GrammarElement(
             Token.Type.BINARY_OP,
-            20
+            20,
         ) { left, right ->
             JexlBoolean(left >= right)
         },
         "<" to GrammarElement(
             Token.Type.BINARY_OP,
-            20
+            20,
         ) { left, right ->
             JexlBoolean(left < right)
         },
         "<=" to GrammarElement(
             Token.Type.BINARY_OP,
-            20
+            20,
         ) { left, right ->
             JexlBoolean(left <= right)
         },
         "&&" to GrammarElement(
             Token.Type.BINARY_OP,
-            10
+            10,
         ) { left, right ->
             JexlBoolean(left.toBoolean() && right.toBoolean())
         },
         "||" to GrammarElement(
             Token.Type.BINARY_OP,
-            10
+            10,
         ) { left, right ->
             JexlBoolean(left.toBoolean() || right.toBoolean())
         },
         "in" to GrammarElement(
             Token.Type.BINARY_OP,
-            20
+            20,
         ) { left, right ->
             when {
                 left is JexlString -> JexlBoolean(
-                    right.toString().contains(left.value)
+                    right.toString().contains(left.value),
                 )
                 right is JexlArray -> JexlBoolean(
-                    right.value.contains(left)
+                    right.value.contains(left),
                 )
                 else -> throw EvaluatorException(
-                    "Operator 'in' not applicable to " + left::class + " and " + right::class
+                    "Operator 'in' not applicable to " + left::class + " and " + right::class,
                 )
             }
         },
         "!" to GrammarElement(
             Token.Type.UNARY_OP,
-            Int.MAX_VALUE
+            Int.MAX_VALUE,
         ) { _, right ->
             JexlBoolean(!right.toBoolean())
-        }
+        },
     )
 }
 
 data class GrammarElement(
     val type: Token.Type,
     val precedence: Int = 0,
-    val evaluate: ((JexlValue, JexlValue) -> JexlValue)? = null
+    val evaluate: ((JexlValue, JexlValue) -> JexlValue)? = null,
 )

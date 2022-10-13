@@ -41,7 +41,7 @@ class LoggerTest {
             priority = Log.Priority.DEBUG,
             tag = "Tag",
             throwable = exception,
-            message = "Hello"
+            message = "Hello",
         )
     }
 
@@ -56,7 +56,7 @@ class LoggerTest {
             priority = Log.Priority.INFO,
             tag = "Tag",
             throwable = exception,
-            message = "Hello"
+            message = "Hello",
         )
     }
 
@@ -71,7 +71,7 @@ class LoggerTest {
             priority = Log.Priority.WARN,
             tag = "Tag",
             throwable = exception,
-            message = "Hello"
+            message = "Hello",
         )
     }
 
@@ -86,7 +86,7 @@ class LoggerTest {
             priority = Log.Priority.ERROR,
             tag = "Tag",
             throwable = exception,
-            message = "Hello"
+            message = "Hello",
         )
     }
 
@@ -99,7 +99,7 @@ class LoggerTest {
             priority = Log.Priority.DEBUG,
             tag = null,
             throwable = debugException,
-            message = "debug message"
+            message = "debug message",
         )
 
         val infoException = RuntimeException()
@@ -109,7 +109,7 @@ class LoggerTest {
             priority = Log.Priority.INFO,
             tag = null,
             throwable = infoException,
-            message = "info message"
+            message = "info message",
         )
 
         val warnException = RuntimeException()
@@ -119,7 +119,7 @@ class LoggerTest {
             priority = Log.Priority.WARN,
             tag = null,
             throwable = warnException,
-            message = "warn message"
+            message = "warn message",
         )
 
         val errorException = RuntimeException()
@@ -129,7 +129,7 @@ class LoggerTest {
             priority = Log.Priority.ERROR,
             tag = null,
             throwable = errorException,
-            message = "error message"
+            message = "error message",
         )
 
         verifyNoMoreInteractions(sink)
@@ -143,14 +143,14 @@ class LoggerTest {
             priority = Log.Priority.DEBUG,
             tag = null,
             throwable = null,
-            message = "⇢ testing"
+            message = "⇢ testing",
         )
 
         verify(sink).log(
             priority = Log.Priority.DEBUG,
             tag = null,
             throwable = null,
-            message = "⇠ testing [0ms]"
+            message = "⇠ testing [0ms]",
         )
 
         verifyNoMoreInteractions(sink)
@@ -169,14 +169,14 @@ class LoggerTest {
             priority = Log.Priority.DEBUG,
             tag = "WithTag",
             throwable = null,
-            message = "⇢ testing"
+            message = "⇢ testing",
         )
 
         verify(sink).log(
             priority = Log.Priority.DEBUG,
             tag = "WithTag",
             throwable = null,
-            message = "⇠ testing [10ms]"
+            message = "⇠ testing [10ms]",
         )
 
         verifyNoMoreInteractions(sink)

@@ -31,7 +31,7 @@ class PocketResponseTest {
 
     @Test
     fun `GIVEN an empty String argument WHEN wrap is called THEN a Failure is returned`() {
-        assertTrue(PocketResponse.wrap("") is PocketResponse.Failure<String >)
+        assertTrue(PocketResponse.wrap("") is PocketResponse.Failure<String>)
     }
 
     @Test

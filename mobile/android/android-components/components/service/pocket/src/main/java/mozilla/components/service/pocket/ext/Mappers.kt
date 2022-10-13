@@ -17,6 +17,7 @@ import mozilla.components.service.pocket.stories.db.PocketStoryEntity
 
 @VisibleForTesting
 internal const val DEFAULT_CATEGORY = "general"
+
 @VisibleForTesting
 internal const val DEFAULT_TIMES_SHOWN = 0L
 
@@ -25,7 +26,13 @@ internal const val DEFAULT_TIMES_SHOWN = 0L
  */
 internal fun PocketApiStory.toPocketLocalStory(): PocketStoryEntity =
     PocketStoryEntity(
-        url, title, imageUrl, publisher, category, timeToRead, DEFAULT_TIMES_SHOWN
+        url,
+        title,
+        imageUrl,
+        publisher,
+        category,
+        timeToRead,
+        DEFAULT_TIMES_SHOWN,
     )
 
 /**
@@ -39,7 +46,7 @@ internal fun PocketStoryEntity.toPocketRecommendedStory(): PocketRecommendedStor
         publisher = publisher,
         category = if (category.isNotBlank()) category else DEFAULT_CATEGORY,
         timeToRead = timeToRead,
-        timesShown = timesShown
+        timesShown = timesShown,
     )
 
 /**
@@ -71,7 +78,7 @@ internal fun ApiSpoc.toLocalSpoc(): SpocEntity =
  * Map Room entities to the object type that we expose to service clients.
  */
 internal fun SpocEntity.toPocketSponsoredStory(
-    impressions: List<Long> = emptyList()
+    impressions: List<Long> = emptyList(),
 ) = PocketSponsoredStory(
     id = id,
     title = title,
@@ -80,7 +87,7 @@ internal fun SpocEntity.toPocketSponsoredStory(
     sponsor = sponsor,
     shim = PocketSponsoredStoryShim(
         click = clickShim,
-        impression = impressionShim
+        impression = impressionShim,
     ),
     priority = priority,
     caps = PocketSponsoredStoryCaps(

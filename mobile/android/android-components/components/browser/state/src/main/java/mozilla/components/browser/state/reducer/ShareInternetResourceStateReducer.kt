@@ -26,7 +26,7 @@ internal object ShareInternetResourceStateReducer {
 internal inline fun updateTheContentState(
     state: BrowserState,
     tabId: String,
-    crossinline update: (ContentState) -> ContentState
+    crossinline update: (ContentState) -> ContentState,
 ): BrowserState {
     return state.updateTabOrCustomTabState(tabId) { current ->
         current.createCopy(content = update(current.content))

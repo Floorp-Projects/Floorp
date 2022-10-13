@@ -34,14 +34,14 @@ class SessionStorageTest {
         val engineSessionState1 = FakeEngineSessionState("engineState1")
 
         val tab1 = createTab("https://www.mozilla.org", id = "tab1").copy(
-            engineState = EngineState(engineSessionState = engineSessionState1)
+            engineState = EngineState(engineSessionState = engineSessionState1),
         )
         val tab2 = createTab("https://getpocket.com", id = "tab2", contextId = "context2")
         val tab3 = createTab("https://www.firefox.com", id = "tab3", parent = tab1)
 
         val state = BrowserState(
             tabs = listOf(tab1, tab2, tab3),
-            selectedTabId = tab1.id
+            selectedTabId = tab1.id,
         )
 
         // Persist the state
@@ -72,18 +72,20 @@ class SessionStorageTest {
         val engineSessionState1 = FakeEngineSessionState("engineState1")
 
         val tab1 = createTab("https://www.mozilla.org", id = "tab1").copy(
-            engineState = EngineState(engineSessionState = engineSessionState1)
+            engineState = EngineState(engineSessionState = engineSessionState1),
         )
         val tab2 = createTab("https://getpocket.com", id = "tab2", contextId = "context")
         val tab3 = createTab("https://www.firefox.com", id = "tab3", parent = tab1)
         val tab4 = createTab(
-            "https://example.com", id = "tab4", contextId = "context",
-            lastAccess = System.currentTimeMillis()
+            "https://example.com",
+            id = "tab4",
+            contextId = "context",
+            lastAccess = System.currentTimeMillis(),
         )
 
         val state = BrowserState(
             tabs = listOf(tab1, tab2, tab3, tab4),
-            selectedTabId = tab1.id
+            selectedTabId = tab1.id,
         )
 
         // Persist the state
@@ -131,7 +133,7 @@ class SessionStorageTest {
 
         val state = BrowserState(
             tabs = listOf(tab1, tab2),
-            selectedTabId = tab1.id
+            selectedTabId = tab1.id,
         )
 
         // Persist the state
@@ -167,7 +169,7 @@ class SessionStorageTest {
         val engine = FakeEngine(expectToRestoreRealEngineSessionState = true)
 
         assertTrue(
-            getFileForEngine(testContext, engine).writeString { json }
+            getFileForEngine(testContext, engine).writeString { json },
         )
 
         val storage = SessionStorage(testContext, engine)
@@ -180,7 +182,7 @@ class SessionStorageTest {
             assertEquals("https://www.mozilla.org/en-US/firefox/", url)
             assertEquals(
                 "Firefox - Protect your life online with privacy-first products — Mozilla",
-                title
+                title,
             )
             assertEquals("e4bc40f1-6da5-4da2-8e32-352f2acdc2bb", id)
             assertNull(parentId)
@@ -219,7 +221,7 @@ class SessionStorageTest {
         val engine = FakeEngine(expectToRestoreRealEngineSessionState = true)
 
         assertTrue(
-            getFileForEngine(testContext, engine).writeString { json }
+            getFileForEngine(testContext, engine).writeString { json },
         )
 
         val storage = SessionStorage(testContext, engine)
@@ -241,11 +243,11 @@ class SessionStorageTest {
         browsingSession.tabs[1].state.apply {
             assertEquals(
                 "https://www.theverge.com/2020/9/10/21429838/google-android-11-go-edition-devices-2gb-ram-20-percent",
-                url
+                url,
             )
             assertEquals(
                 "Android 11 Go is available today, and it will launch apps 20 percent faster",
-                title
+                title,
             )
             assertEquals("d6facb8a-0775-45a1-8bc1-2397e2d2bc53", id)
             assertEquals("28f428ba-2b19-4c24-993b-763fda2be65c", parentId)
@@ -254,7 +256,7 @@ class SessionStorageTest {
             assertTrue(readerState.active)
             assertEquals(
                 "https://www.theverge.com/2020/9/10/21429838/google-android-11-go-edition-devices-2gb-ram-20-percent",
-                readerState.activeUrl
+                readerState.activeUrl,
             )
         }
     }
@@ -265,11 +267,11 @@ class SessionStorageTest {
             id = "first-tab",
             url = "https://www.mozilla.org",
             title = "Mozilla",
-            lastAccess = 101010
+            lastAccess = 101010,
         ).copy(
             engineState = EngineState(
-                engineSessionState = FakeEngineSessionState("engine-state-of-first-tab")
-            )
+                engineSessionState = FakeEngineSessionState("engine-state-of-first-tab"),
+            ),
         )
 
         val secondTab = createTab(
@@ -281,17 +283,17 @@ class SessionStorageTest {
             parent = firstTab,
             readerState = ReaderState(
                 readerable = true,
-                active = true
-            )
+                active = true,
+            ),
         ).copy(
             engineState = EngineState(
-                engineSessionState = FakeEngineSessionState("engine-state-of-second-tab")
-            )
+                engineSessionState = FakeEngineSessionState("engine-state-of-second-tab"),
+            ),
         )
 
         val state = BrowserState(
             tabs = listOf(firstTab, secondTab),
-            selectedTabId = firstTab.id
+            selectedTabId = firstTab.id,
         )
 
         val engine = FakeEngine()
@@ -334,9 +336,9 @@ class SessionStorageTest {
         val state = BrowserState(
             tabs = listOf(
                 createTab(url = "https://www.mozilla.org", id = "mozilla"),
-                createTab(url = "https://getpocket.com", id = "pocket")
+                createTab(url = "https://getpocket.com", id = "pocket"),
             ),
-            selectedTabId = "Does Not Exist"
+            selectedTabId = "Does Not Exist",
         )
 
         val engine = FakeEngine()
@@ -363,9 +365,9 @@ class SessionStorageTest {
         val state = BrowserState(
             tabs = listOf(
                 createTab(url = "about:crashparent", id = "crash"),
-                createTab(url = "https://getpocket.com", id = "pocket")
+                createTab(url = "https://getpocket.com", id = "pocket"),
             ),
-            selectedTabId = "crash"
+            selectedTabId = "crash",
         )
 
         val engine = FakeEngine()
@@ -398,6 +400,6 @@ internal fun TabSessionState.assertSameAs(tab: RecoverableTab) {
     assertEquals(content.private, tab.state.private)
     assertEquals(
         (engineState.engineSessionState as? FakeEngineSessionState)?.value ?: "---",
-        (tab.engineSessionState as FakeEngineSessionState).value
+        (tab.engineSessionState as FakeEngineSessionState).value,
     )
 }

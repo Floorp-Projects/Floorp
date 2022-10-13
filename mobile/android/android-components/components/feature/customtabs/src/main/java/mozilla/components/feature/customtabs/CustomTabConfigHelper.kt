@@ -85,7 +85,7 @@ fun isTrustedWebActivityIntent(safeIntent: SafeIntent) = isCustomTabIntent(safeI
  */
 fun createCustomTabConfigFromIntent(
     intent: Intent,
-    resources: Resources?
+    resources: Resources?,
 ): CustomTabConfig {
     val safeIntent = intent.toSafeIntent()
 
@@ -105,7 +105,7 @@ fun createCustomTabConfigFromIntent(
         } else {
             null
         },
-        externalAppType = ExternalAppType.CUSTOM_TAB
+        externalAppType = ExternalAppType.CUSTOM_TAB,
     )
 }
 
@@ -138,7 +138,7 @@ private fun getActionButtonConfig(intent: SafeIntent): CustomTabActionButtonConf
             description = description,
             icon = icon,
             pendingIntent = pendingIntent,
-            tint = tint
+            tint = tint,
         )
     } else {
         null
@@ -155,7 +155,7 @@ private fun getMenuItems(intent: SafeIntent): List<CustomTabMenuItem> =
             if (name != null && pendingIntent != null) {
                 CustomTabMenuItem(
                     name = name,
-                    pendingIntent = pendingIntent
+                    pendingIntent = pendingIntent,
                 )
             } else {
                 null

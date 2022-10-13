@@ -22,10 +22,10 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import java.util.UUID
 
 @ExperimentalCoroutinesApi
@@ -325,7 +325,7 @@ class SendTabUseCasesTest {
             lastAccessTime = null,
             capabilities = listOf(DeviceCapability.SEND_TAB),
             subscriptionExpired = false,
-            subscription = null
+            subscription = null,
         )
     }
 }

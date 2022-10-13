@@ -11,7 +11,7 @@ import mozilla.components.lib.state.Store
  */
 class AppStore : Store<AppState, AppAction>(
     initialState = AppState(),
-    reducer = ::reduce
+    reducer = ::reduce,
 )
 
 private fun reduce(appState: AppState, appAction: AppAction): AppState {

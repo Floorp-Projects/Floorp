@@ -27,7 +27,7 @@ internal abstract class LoginExceptionDatabase : RoomDatabase() {
             return Room.databaseBuilder(
                 context,
                 LoginExceptionDatabase::class.java,
-                "login_exceptions"
+                "login_exceptions",
             ).build().also {
                 instance = it
             }

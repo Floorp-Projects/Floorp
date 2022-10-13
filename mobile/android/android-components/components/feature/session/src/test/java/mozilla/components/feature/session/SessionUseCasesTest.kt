@@ -54,18 +54,18 @@ class SessionUseCasesTest {
                     createTab(
                         url = "https://mozilla.org",
                         id = "mozilla",
-                        engineSession = engineSession
+                        engineSession = engineSession,
                     ),
                     createTab(
                         url = "https://bugzilla.com",
                         id = "bugzilla",
                         engineSession = childEngineSession,
-                        parentId = "mozilla"
-                    )
+                        parentId = "mozilla",
+                    ),
                 ),
-                selectedTabId = "mozilla"
+                selectedTabId = "mozilla",
             ),
-            middleware = listOf(middleware) + EngineMiddleware.create(engine = mock())
+            middleware = listOf(middleware) + EngineMiddleware.create(engine = mock()),
         )
         useCases = SessionUseCases(store)
     }
@@ -86,7 +86,7 @@ class SessionUseCasesTest {
         middleware.assertNotDispatched(EngineAction.LoadUrlAction::class)
         verify(engineSession).loadUrl(
             url = "https://www.mozilla.org",
-            flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL)
+            flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL),
         )
         middleware.assertLastAction(EngineAction.OptimizedLoadUrlTriggeredAction::class) { action ->
             assertEquals("mozilla", action.tabId)
@@ -106,13 +106,13 @@ class SessionUseCasesTest {
         useCases.loadUrl.invoke(
             "https://developer.mozilla.org",
             store.state.selectedTabId,
-            LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY)
+            LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY),
         )
         store.waitUntilIdle()
         middleware.assertNotDispatched(EngineAction.LoadUrlAction::class)
         verify(engineSession).loadUrl(
             url = "https://developer.mozilla.org",
-            flags = LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY)
+            flags = LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY),
         )
         middleware.assertLastAction(EngineAction.OptimizedLoadUrlTriggeredAction::class) { action ->
             assertEquals("mozilla", action.tabId)
@@ -122,13 +122,13 @@ class SessionUseCasesTest {
 
         useCases.loadUrl.invoke(
             "https://www.mozilla.org/en-CA/firefox/browsers/mobile/",
-            "bugzilla"
+            "bugzilla",
         )
         store.waitUntilIdle()
         middleware.assertNotDispatched(EngineAction.LoadUrlAction::class)
         verify(childEngineSession).loadUrl(
             url = "https://www.mozilla.org/en-CA/firefox/browsers/mobile/",
-            parent = engineSession
+            parent = engineSession,
         )
         middleware.assertLastAction(EngineAction.OptimizedLoadUrlTriggeredAction::class) { action ->
             assertEquals("bugzilla", action.tabId)
@@ -168,7 +168,7 @@ class SessionUseCasesTest {
         useCases.loadUrl.invoke(
             "https://developer.mozilla.org",
             store.state.selectedTabId,
-            LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY)
+            LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY),
         )
         store.waitUntilIdle()
 
@@ -193,7 +193,7 @@ class SessionUseCasesTest {
         useCases.loadData(
             "Should load in WebView",
             "text/plain",
-            tabId = store.state.selectedTabId
+            tabId = store.state.selectedTabId,
         )
         store.waitUntilIdle()
         middleware.assertLastAction(EngineAction.LoadDataAction::class) { action ->
@@ -207,7 +207,7 @@ class SessionUseCasesTest {
             "Should also load in WebView",
             "text/plain",
             "base64",
-            store.state.selectedTabId
+            store.state.selectedTabId,
         )
         store.waitUntilIdle()
         middleware.assertLastAction(EngineAction.LoadDataAction::class) { action ->
@@ -437,16 +437,17 @@ class SessionUseCasesTest {
                 middleware = listOf(middleware),
                 initialState = BrowserState(
                     tabs = listOf(
-                        createTab(url = "https://wwww.mozilla.org", id = "tab1", crashed = true)
+                        createTab(url = "https://wwww.mozilla.org", id = "tab1", crashed = true),
                     ),
                     customTabs = listOf(
                         createCustomTab(
-                            "https://wwww.mozilla.org", id = "customTab1",
-                            crashed = true
-                        )
-                    )
-                )
-            )
+                            "https://wwww.mozilla.org",
+                            id = "customTab1",
+                            crashed = true,
+                        ),
+                    ),
+                ),
+            ),
         )
         val useCases = SessionUseCases(store)
 
@@ -478,8 +479,8 @@ class SessionUseCasesTest {
         store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(tab, otherTab),
-                customTabs = listOf(customTab)
-            )
+                customTabs = listOf(customTab),
+            ),
         )
         useCases = SessionUseCases(store)
 

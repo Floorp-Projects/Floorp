@@ -21,7 +21,7 @@ sealed class CustomTabsAction : Action {
  */
 data class SaveCreatorPackageNameAction(
     override val token: CustomTabsSessionToken,
-    val packageName: String
+    val packageName: String,
 ) : CustomTabsAction()
 
 /**
@@ -36,5 +36,5 @@ data class ValidateRelationshipAction(
     override val token: CustomTabsSessionToken,
     @Relation val relation: Int,
     val origin: Uri,
-    val status: VerificationStatus
+    val status: VerificationStatus,
 ) : CustomTabsAction()

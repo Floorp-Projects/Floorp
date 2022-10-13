@@ -69,9 +69,9 @@ class ViewTest {
                 size = 4f,
                 color = Color.RED,
                 textStyle = Typeface.ITALIC,
-                textAlignment = View.TEXT_ALIGNMENT_CENTER
+                textAlignment = View.TEXT_ALIGNMENT_CENTER,
             ),
-            TextStyle()
+            TextStyle(),
         )
         verify(view).textSize = 4f
         verify(view).setTextColor(Color.RED)

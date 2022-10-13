@@ -21,6 +21,6 @@ interface DataCleanable {
         data: Engine.BrowsingData = Engine.BrowsingData.all(),
         host: String? = null,
         onSuccess: (() -> Unit) = { },
-        onError: ((Throwable) -> Unit) = { }
+        onError: ((Throwable) -> Unit) = { },
     ): Unit = onError(UnsupportedOperationException("Clearing browsing data is not supported."))
 }

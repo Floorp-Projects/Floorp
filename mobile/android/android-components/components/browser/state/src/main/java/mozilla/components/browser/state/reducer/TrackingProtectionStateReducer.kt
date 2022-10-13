@@ -28,7 +28,7 @@ internal object TrackingProtectionStateReducer {
             it.copy(loadedTrackers = emptyList(), blockedTrackers = emptyList())
         }
         is TrackingProtectionAction.ToggleExclusionListAction -> state.copyWithTrackingProtectionState(
-            action.tabId
+            action.tabId,
         ) {
             it.copy(ignoredOnTrackingProtection = action.excluded)
         }
@@ -37,7 +37,7 @@ internal object TrackingProtectionStateReducer {
 
 private inline fun BrowserState.copyWithTrackingProtectionState(
     tabId: String,
-    crossinline update: (TrackingProtectionState) -> TrackingProtectionState
+    crossinline update: (TrackingProtectionState) -> TrackingProtectionState,
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
         current.createCopy(trackingProtection = update(current.trackingProtection))

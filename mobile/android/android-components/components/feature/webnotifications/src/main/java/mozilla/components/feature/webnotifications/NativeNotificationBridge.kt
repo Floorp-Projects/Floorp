@@ -23,7 +23,7 @@ import mozilla.components.support.utils.PendingIntentUtils
 
 internal class NativeNotificationBridge(
     private val icons: BrowserIcons,
-    @DrawableRes private val smallIcon: Int
+    @DrawableRes private val smallIcon: Int,
 ) {
     companion object {
         internal const val EXTRA_ON_CLICK = "mozac.feature.webnotifications.generic.onclick"
@@ -38,7 +38,7 @@ internal class NativeNotificationBridge(
         context: Context,
         channelId: String,
         activityClass: Class<out Activity>?,
-        requestId: Int
+        requestId: Int,
     ): Notification {
         val builder = if (SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(context, channelId)
@@ -94,11 +94,11 @@ internal class NativeNotificationBridge(
                 resources = listOf(
                     IconRequest.Resource(
                         url = iconUrl,
-                        type = IconRequest.Resource.Type.MANIFEST_ICON
-                    )
+                        type = IconRequest.Resource.Type.MANIFEST_ICON,
+                    ),
                 ),
-                isPrivate = isPrivate
-            )
+                isPrivate = isPrivate,
+            ),
         ).await()
 
         return if (icon.source == Source.GENERATOR) null else icon.bitmap

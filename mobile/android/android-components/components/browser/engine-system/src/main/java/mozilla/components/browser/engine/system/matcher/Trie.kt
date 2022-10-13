@@ -9,7 +9,7 @@ import android.util.SparseArray
 /**
  * Simple implementation of a Trie, used for indexing URLs.
  */
-open class Trie constructor (character: Char, parent: Trie?) {
+open class Trie constructor(character: Char, parent: Trie?) {
     val children = SparseArray<Trie>()
     private var terminator = false
 

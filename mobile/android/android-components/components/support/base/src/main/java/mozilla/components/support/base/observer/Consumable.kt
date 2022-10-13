@@ -14,7 +14,7 @@ typealias ConsumableListener = () -> Unit
  */
 class Consumable<T> private constructor(
     internal var value: T?,
-    onConsume: ConsumableListener? = null
+    onConsume: ConsumableListener? = null,
 ) {
 
     private val listeners = mutableSetOf<ConsumableListener>().also { listeners ->
@@ -87,7 +87,7 @@ class Consumable<T> private constructor(
          * Creates a new Consumable stream for the provided values.
          */
         fun <T> stream(vararg values: T): ConsumableStream<T> = ConsumableStream(
-            values.map { Consumable(it) }
+            values.map { Consumable(it) },
         )
 
         /**

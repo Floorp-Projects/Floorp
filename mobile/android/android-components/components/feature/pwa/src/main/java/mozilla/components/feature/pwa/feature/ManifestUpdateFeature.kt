@@ -38,7 +38,7 @@ class ManifestUpdateFeature(
     private val shortcutManager: WebAppShortcutManager,
     private val storage: ManifestStorage,
     private val sessionId: String,
-    private var initialManifest: WebAppManifest
+    private var initialManifest: WebAppManifest,
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null

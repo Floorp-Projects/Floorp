@@ -34,7 +34,7 @@ class GeckoCreditCardsAddressesStorageDelegate(
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     private val validationDelegate: DefaultCreditCardValidationDelegate = DefaultCreditCardValidationDelegate(storage),
     private val isCreditCardAutofillEnabled: () -> Boolean = { false },
-    private val isAddressAutofillEnabled: () -> Boolean = { false }
+    private val isAddressAutofillEnabled: () -> Boolean = { false },
 ) : CreditCardsAddressesStorageDelegate {
 
     override suspend fun getOrGenerateKey(): ManagedKey {
@@ -44,7 +44,7 @@ class GeckoCreditCardsAddressesStorageDelegate(
 
     override suspend fun decrypt(
         key: ManagedKey,
-        encryptedCardNumber: CreditCardNumber.Encrypted
+        encryptedCardNumber: CreditCardNumber.Encrypted,
     ): CreditCardNumber.Plaintext? {
         val crypto = storage.value.getCreditCardCrypto()
         return crypto.decrypt(key, encryptedCardNumber)
@@ -82,8 +82,8 @@ class GeckoCreditCardsAddressesStorageDelegate(
                             cardNumberLast4 = creditCard.number.last4Digits(),
                             expiryMonth = creditCard.expiryMonth.toLong(),
                             expiryYear = creditCard.expiryYear.toLong(),
-                            cardType = creditCard.cardType
-                        )
+                            cardType = creditCard.cardType,
+                        ),
                     )
                 }
                 is CreditCardValidationDelegate.Result.CanBeUpdated -> {
@@ -95,8 +95,8 @@ class GeckoCreditCardsAddressesStorageDelegate(
                             cardNumberLast4 = creditCard.number.last4Digits(),
                             expiryMonth = creditCard.expiryMonth.toLong(),
                             expiryYear = creditCard.expiryYear.toLong(),
-                            cardType = creditCard.cardType
-                        )
+                            cardType = creditCard.cardType,
+                        ),
                     )
                 }
             }

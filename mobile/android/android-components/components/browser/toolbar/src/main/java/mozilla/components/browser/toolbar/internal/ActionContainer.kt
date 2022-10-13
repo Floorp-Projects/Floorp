@@ -20,7 +20,7 @@ import mozilla.components.concept.toolbar.Toolbar
 internal class ActionContainer @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : LinearLayout(context, attrs, defStyleAttr) {
     private val actions = mutableListOf<ActionWrapper>()
     private var actionSize: Int? = null
@@ -31,7 +31,10 @@ internal class ActionContainer @JvmOverloads constructor(
         visibility = View.GONE
 
         context.obtainStyledAttributes(
-            attrs, R.styleable.ActionContainer, defStyleAttr, 0
+            attrs,
+            R.styleable.ActionContainer,
+            defStyleAttr,
+            0,
         ).run {
             actionSize = attrs?.let {
                 getDimensionPixelSize(R.styleable.ActionContainer_actionContainerItemSize, 0)

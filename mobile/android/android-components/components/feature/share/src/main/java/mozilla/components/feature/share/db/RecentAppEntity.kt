@@ -18,5 +18,5 @@ internal data class RecentAppEntity(
     override var activityName: String,
 
     @ColumnInfo(name = "score")
-    override var score: Double = 0.0
+    override var score: Double = 0.0,
 ) : RecentApp

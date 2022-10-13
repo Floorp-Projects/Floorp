@@ -31,7 +31,7 @@ import mozilla.components.feature.session.SessionUseCases.LoadUrlUseCase
  * Contains use cases related to the tabs feature.
  */
 class TabsUseCases(
-    store: BrowserStore
+    store: BrowserStore,
 ) {
     /**
      * Contract for use cases that select a tab.
@@ -44,7 +44,7 @@ class TabsUseCases(
     }
 
     class DefaultSelectTabUseCase internal constructor(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) : SelectTabUseCase {
         /**
          * Marks the tab with the provided [tabId] as selected.
@@ -85,7 +85,7 @@ class TabsUseCases(
      * Default implementation of [RemoveTabUseCase].
      */
     class DefaultRemoveTabUseCase internal constructor(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) : RemoveTabUseCase {
 
         /**
@@ -112,7 +112,7 @@ class TabsUseCases(
     }
 
     class AddNewTabUseCase internal constructor(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) : LoadUrlUseCase {
 
         /**
@@ -155,7 +155,7 @@ class TabsUseCases(
             source: SessionState.Source = SessionState.Source.Internal.NewTab,
             searchTerms: String = "",
             private: Boolean = false,
-            historyMetadata: HistoryMetadataKey? = null
+            historyMetadata: HistoryMetadataKey? = null,
         ): String {
             val tab = createTab(
                 url = url,
@@ -166,7 +166,7 @@ class TabsUseCases(
                 engineSession = engineSession,
                 searchTerms = searchTerms,
                 initialLoadFlags = flags,
-                historyMetadata = historyMetadata
+                historyMetadata = historyMetadata,
             )
 
             store.dispatch(TabListAction.AddTabAction(tab, select = selectTab))
@@ -178,8 +178,8 @@ class TabsUseCases(
                     EngineAction.LoadUrlAction(
                         tab.id,
                         url,
-                        flags
-                    )
+                        flags,
+                    ),
                 )
             }
 
@@ -189,7 +189,7 @@ class TabsUseCases(
 
     @Deprecated("Use AddNewTabUseCase and the private flag")
     class AddNewPrivateTabUseCase internal constructor(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) : LoadUrlUseCase {
 
         /**
@@ -223,7 +223,7 @@ class TabsUseCases(
             flags: LoadUrlFlags = LoadUrlFlags.none(),
             engineSession: EngineSession? = null,
             source: SessionState.Source = SessionState.Source.Internal.NewTab,
-            searchTerms: String? = null
+            searchTerms: String? = null,
         ): String {
             val tab = createTab(
                 url = url,
@@ -232,7 +232,7 @@ class TabsUseCases(
                 parent = parentId?.let { store.state.findTab(it) },
                 engineSession = engineSession,
                 searchTerms = searchTerms ?: "",
-                initialLoadFlags = flags
+                initialLoadFlags = flags,
             )
 
             store.dispatch(TabListAction.AddTabAction(tab, select = selectTab))
@@ -244,8 +244,8 @@ class TabsUseCases(
                     EngineAction.LoadUrlAction(
                         tab.id,
                         url,
-                        flags
-                    )
+                        flags,
+                    ),
                 )
             }
 
@@ -257,7 +257,7 @@ class TabsUseCases(
      * Use case for removing a list of tabs.
      */
     class RemoveTabsUseCase internal constructor(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Removes a specified list of tabs.
@@ -268,7 +268,7 @@ class TabsUseCases(
     }
 
     class RemoveAllTabsUseCase internal constructor(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Removes all tabs.
@@ -283,7 +283,7 @@ class TabsUseCases(
      * Use case for removing all normal (non-private) tabs.
      */
     class RemoveNormalTabsUseCase internal constructor(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Removes all normal (non-private) tabs.
@@ -297,7 +297,7 @@ class TabsUseCases(
      * Use case for removing all private tabs.
      */
     class RemovePrivateTabsUseCase internal constructor(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Removes all private tabs.
@@ -311,7 +311,7 @@ class TabsUseCases(
      * Use case for restoring removed tabs ("undo").
      */
     class UndoTabRemovalUseCase(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Restores the list of tabs in the undo history.
@@ -326,14 +326,14 @@ class TabsUseCases(
      */
     class RestoreUseCase(
         val store: BrowserStore,
-        private val selectTab: SelectTabUseCase
+        private val selectTab: SelectTabUseCase,
     ) {
         /**
          * Restores the given list of [RecoverableTab]s.
          */
         operator fun invoke(tabs: List<RecoverableTab>, selectTabId: String? = null) {
             store.dispatch(
-                TabListAction.RestoreAction(tabs, selectTabId, TabListAction.RestoreAction.RestoreLocation.BEGINNING)
+                TabListAction.RestoreAction(tabs, selectTabId, TabListAction.RestoreAction.RestoreLocation.BEGINNING),
             )
         }
 
@@ -355,7 +355,7 @@ class TabsUseCases(
          */
         suspend operator fun invoke(
             storage: SessionStorage,
-            tabTimeoutInMs: Long = Long.MAX_VALUE
+            tabTimeoutInMs: Long = Long.MAX_VALUE,
         ) = withContext(Dispatchers.IO) {
             val now = System.currentTimeMillis()
             val state = storage.restore {
@@ -377,11 +377,11 @@ class TabsUseCases(
         suspend operator fun invoke(
             tab: TabState,
             engineStateReader: EngineSessionStateStorage,
-            updateSelection: Boolean = true
+            updateSelection: Boolean = true,
         ) = withContext(Dispatchers.IO) {
             val recoverableTab = RecoverableTab(
                 state = tab,
-                engineSessionState = engineStateReader.read(tab.id)
+                engineSessionState = engineStateReader.read(tab.id),
             )
             invoke(listOf(recoverableTab))
 
@@ -395,7 +395,7 @@ class TabsUseCases(
      * Use case for selecting an existing tab or creating a new tab with a specific URL.
      */
     class SelectOrAddUseCase(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Selects an already existing tab with the matching [HistoryMetadataKey] or otherwise
@@ -407,7 +407,7 @@ class TabsUseCases(
          */
         operator fun invoke(
             url: String,
-            historyMetadata: HistoryMetadataKey
+            historyMetadata: HistoryMetadataKey,
         ): String {
             val tab = store.state.tabs.find { it.historyMetadata == historyMetadata }
 
@@ -432,7 +432,7 @@ class TabsUseCases(
             url: String,
             private: Boolean = false,
             source: SessionState.Source = SessionState.Source.Internal.NewTab,
-            flags: LoadUrlFlags = LoadUrlFlags.none()
+            flags: LoadUrlFlags = LoadUrlFlags.none(),
         ): String {
             val existingTab = store.state.findNormalOrPrivateTabByUrl(url, private)
 
@@ -444,15 +444,15 @@ class TabsUseCases(
                     url = url,
                     private = private,
                     source = source,
-                    initialLoadFlags = flags
+                    initialLoadFlags = flags,
                 )
                 store.dispatch(TabListAction.AddTabAction(tab, select = true))
                 store.dispatch(
                     EngineAction.LoadUrlAction(
                         tab.id,
                         url,
-                        flags
-                    )
+                        flags,
+                    ),
                 )
                 tab.id
             }
@@ -463,7 +463,7 @@ class TabsUseCases(
      * Use case for duplicating a tab.
      */
     class DuplicateTabUseCase(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Creates a duplicate of the currently selected tab (including history) and
@@ -487,21 +487,21 @@ class TabsUseCases(
          */
         operator fun invoke(
             tab: TabSessionState,
-            selectNewTab: Boolean = true
+            selectNewTab: Boolean = true,
         ): String {
             val duplicate = createTab(
                 url = tab.content.url,
                 private = tab.content.private,
                 contextId = tab.contextId,
                 parent = tab,
-                engineSessionState = tab.engineState.engineSessionState
+                engineSessionState = tab.engineState.engineSessionState,
             )
 
             store.dispatch(
                 TabListAction.AddTabAction(
                     duplicate,
-                    select = selectNewTab
-                )
+                    select = selectNewTab,
+                ),
             )
             return duplicate.id
         }
@@ -511,7 +511,7 @@ class TabsUseCases(
      * Use case for moving a collection of tabs.
      */
     class MoveTabsUseCase(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Moves the tabs of [tabIds] next to [targetTabId], before/after based on [placeAfter]
@@ -526,12 +526,14 @@ class TabsUseCases(
         operator fun invoke(
             tabIds: List<String>,
             targetTabId: String,
-            placeAfter: Boolean
+            placeAfter: Boolean,
         ) {
             store.dispatch(
                 TabListAction.MoveTabsAction(
-                    tabIds, targetTabId, placeAfter
-                )
+                    tabIds,
+                    targetTabId,
+                    placeAfter,
+                ),
             )
         }
     }
@@ -539,6 +541,7 @@ class TabsUseCases(
     val selectTab: SelectTabUseCase by lazy { DefaultSelectTabUseCase(store) }
     val removeTab: RemoveTabUseCase by lazy { DefaultRemoveTabUseCase(store) }
     val addTab: AddNewTabUseCase by lazy { AddNewTabUseCase(store) }
+
     @Deprecated("Use addTab and the private flag")
     @Suppress("DEPRECATION")
     val addPrivateTab: AddNewPrivateTabUseCase by lazy { AddNewPrivateTabUseCase(store) }

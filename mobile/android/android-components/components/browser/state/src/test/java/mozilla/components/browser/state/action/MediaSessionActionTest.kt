@@ -23,9 +23,9 @@ class MediaSessionActionTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "test-tab")
-                )
-            )
+                    createTab("https://www.mozilla.org", id = "test-tab"),
+                ),
+            ),
         )
 
         val mediaSessionController: MediaSession.Controller = mock()
@@ -33,8 +33,8 @@ class MediaSessionActionTest {
         store.dispatch(
             MediaSessionAction.ActivatedMediaSessionAction(
                 "test-tab",
-                mediaSessionController
-            )
+                mediaSessionController,
+            ),
         ).joinBlocking()
 
         val mediaSessionState: MediaSessionState? = store.state.findTab("test-tab")?.mediaSessionState
@@ -47,9 +47,9 @@ class MediaSessionActionTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "test-tab")
-                )
-            )
+                    createTab("https://www.mozilla.org", id = "test-tab"),
+                ),
+            ),
         )
 
         val mediaSessionController: MediaSession.Controller = mock()
@@ -57,14 +57,14 @@ class MediaSessionActionTest {
         store.dispatch(
             MediaSessionAction.ActivatedMediaSessionAction(
                 "test-tab",
-                mediaSessionController
-            )
+                mediaSessionController,
+            ),
         ).joinBlocking()
 
         store.dispatch(
             MediaSessionAction.DeactivatedMediaSessionAction(
-                "test-tab"
-            )
+                "test-tab",
+            ),
         ).joinBlocking()
 
         val mediaSessionState: MediaSessionState? = store.state.findTab("test-tab")?.mediaSessionState
@@ -76,9 +76,9 @@ class MediaSessionActionTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "test-tab")
-                )
-            )
+                    createTab("https://www.mozilla.org", id = "test-tab"),
+                ),
+            ),
         )
 
         val mediaSessionController: MediaSession.Controller = mock()
@@ -87,15 +87,15 @@ class MediaSessionActionTest {
         store.dispatch(
             MediaSessionAction.ActivatedMediaSessionAction(
                 "test-tab",
-                mediaSessionController
-            )
+                mediaSessionController,
+            ),
         ).joinBlocking()
 
         store.dispatch(
             MediaSessionAction.UpdateMediaMetadataAction(
                 "test-tab",
-                metadata
-            )
+                metadata,
+            ),
         ).joinBlocking()
 
         val mediaSessionState: MediaSessionState? = store.state.findTab("test-tab")?.mediaSessionState
@@ -109,9 +109,9 @@ class MediaSessionActionTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "test-tab")
-                )
-            )
+                    createTab("https://www.mozilla.org", id = "test-tab"),
+                ),
+            ),
         )
 
         val mediaSessionController: MediaSession.Controller = mock()
@@ -120,15 +120,15 @@ class MediaSessionActionTest {
         store.dispatch(
             MediaSessionAction.ActivatedMediaSessionAction(
                 "test-tab",
-                mediaSessionController
-            )
+                mediaSessionController,
+            ),
         ).joinBlocking()
 
         store.dispatch(
             MediaSessionAction.UpdateMediaPlaybackStateAction(
                 "test-tab",
-                playbackState
-            )
+                playbackState,
+            ),
         ).joinBlocking()
 
         val mediaSessionState: MediaSessionState? = store.state.findTab("test-tab")?.mediaSessionState
@@ -142,9 +142,9 @@ class MediaSessionActionTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "test-tab")
-                )
-            )
+                    createTab("https://www.mozilla.org", id = "test-tab"),
+                ),
+            ),
         )
 
         val mediaSessionController: MediaSession.Controller = mock()
@@ -153,15 +153,15 @@ class MediaSessionActionTest {
         store.dispatch(
             MediaSessionAction.ActivatedMediaSessionAction(
                 "test-tab",
-                mediaSessionController
-            )
+                mediaSessionController,
+            ),
         ).joinBlocking()
 
         store.dispatch(
             MediaSessionAction.UpdateMediaFeatureAction(
                 "test-tab",
-                features
-            )
+                features,
+            ),
         ).joinBlocking()
 
         val mediaSessionState: MediaSessionState? = store.state.findTab("test-tab")?.mediaSessionState
@@ -175,9 +175,9 @@ class MediaSessionActionTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "test-tab")
-                )
-            )
+                    createTab("https://www.mozilla.org", id = "test-tab"),
+                ),
+            ),
         )
 
         val mediaSessionController: MediaSession.Controller = mock()
@@ -186,15 +186,15 @@ class MediaSessionActionTest {
         store.dispatch(
             MediaSessionAction.ActivatedMediaSessionAction(
                 "test-tab",
-                mediaSessionController
-            )
+                mediaSessionController,
+            ),
         ).joinBlocking()
 
         store.dispatch(
             MediaSessionAction.UpdateMediaPositionStateAction(
                 "test-tab",
-                positionState
-            )
+                positionState,
+            ),
         ).joinBlocking()
 
         val mediaSessionState: MediaSessionState? = store.state.findTab("test-tab")?.mediaSessionState
@@ -208,9 +208,9 @@ class MediaSessionActionTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "test-tab")
-                )
-            )
+                    createTab("https://www.mozilla.org", id = "test-tab"),
+                ),
+            ),
         )
 
         val mediaSessionController: MediaSession.Controller = mock()
@@ -218,15 +218,15 @@ class MediaSessionActionTest {
         store.dispatch(
             MediaSessionAction.ActivatedMediaSessionAction(
                 "test-tab",
-                mediaSessionController
-            )
+                mediaSessionController,
+            ),
         ).joinBlocking()
 
         store.dispatch(
             MediaSessionAction.UpdateMediaMutedAction(
                 "test-tab",
-                true
-            )
+                true,
+            ),
         ).joinBlocking()
 
         val mediaSessionState: MediaSessionState? = store.state.findTab("test-tab")?.mediaSessionState
@@ -240,9 +240,9 @@ class MediaSessionActionTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "test-tab")
-                )
-            )
+                    createTab("https://www.mozilla.org", id = "test-tab"),
+                ),
+            ),
         )
 
         val mediaSessionController: MediaSession.Controller = mock()
@@ -251,16 +251,16 @@ class MediaSessionActionTest {
         store.dispatch(
             MediaSessionAction.ActivatedMediaSessionAction(
                 "test-tab",
-                mediaSessionController
-            )
+                mediaSessionController,
+            ),
         ).joinBlocking()
 
         store.dispatch(
             MediaSessionAction.UpdateMediaFullscreenAction(
                 "test-tab",
                 true,
-                elementMetadata
-            )
+                elementMetadata,
+            ),
         ).joinBlocking()
 
         val mediaSessionState: MediaSessionState? = store.state.findTab("test-tab")?.mediaSessionState
@@ -275,9 +275,9 @@ class MediaSessionActionTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "test-tab")
-                )
-            )
+                    createTab("https://www.mozilla.org", id = "test-tab"),
+                ),
+            ),
         )
 
         val elementMetadata: MediaSession.ElementMetadata = mock()
@@ -286,8 +286,8 @@ class MediaSessionActionTest {
             MediaSessionAction.UpdateMediaFullscreenAction(
                 "test-tab",
                 true,
-                elementMetadata
-            )
+                elementMetadata,
+            ),
         ).joinBlocking()
 
         val mediaSessionState: MediaSessionState? = store.state.findTab("test-tab")?.mediaSessionState
@@ -296,8 +296,8 @@ class MediaSessionActionTest {
         store.dispatch(
             MediaSessionAction.UpdateMediaMutedAction(
                 "test-tab",
-                true
-            )
+                true,
+            ),
         ).joinBlocking()
         assertNull(mediaSessionState)
     }

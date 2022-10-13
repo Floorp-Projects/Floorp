@@ -29,12 +29,12 @@ class AdsTelemetry : BaseSearchTelemetry() {
 
     override fun install(
         engine: Engine,
-        store: BrowserStore
+        store: BrowserStore,
     ) {
         val info = ExtensionInfo(
             id = ADS_EXTENSION_ID,
             resourceUrl = ADS_EXTENSION_RESOURCE_URL,
-            messageId = ADS_MESSAGE_ID
+            messageId = ADS_MESSAGE_ID,
         )
         installWebExtension(engine, store, info)
     }
@@ -50,7 +50,7 @@ class AdsTelemetry : BaseSearchTelemetry() {
             if (it.containsAdLinks(urls)) {
                 emitFact(
                     SERP_SHOWN_WITH_ADDS,
-                    it.name
+                    it.name,
                 )
             }
         }
@@ -82,7 +82,7 @@ class AdsTelemetry : BaseSearchTelemetry() {
 
         emitFact(
             SERP_ADD_CLICKED,
-            getTrackKey(provider, uri, cachedCookies)
+            getTrackKey(provider, uri, cachedCookies),
         )
     }
 

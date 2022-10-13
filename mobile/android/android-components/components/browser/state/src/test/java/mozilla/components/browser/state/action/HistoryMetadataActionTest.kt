@@ -24,7 +24,7 @@ class HistoryMetadataActionTest {
 
         val historyMetadata = HistoryMetadataKey(
             url = tab.content.url,
-            referrerUrl = "https://firefox.com"
+            referrerUrl = "https://firefox.com",
         )
 
         store.dispatch(HistoryMetadataAction.SetHistoryMetadataKeyAction(tab.id, historyMetadata)).joinBlocking()
@@ -38,12 +38,12 @@ class HistoryMetadataActionTest {
         val store = BrowserStore(BrowserState(tabs = listOf(tab1, tab2)))
         val historyMetadata1 = HistoryMetadataKey(
             url = tab1.content.url,
-            referrerUrl = "https://firefox.com"
+            referrerUrl = "https://firefox.com",
         )
         val historyMetadata2 = HistoryMetadataKey(
             url = tab2.content.url,
             searchTerm = "download Firefox",
-            referrerUrl = "https://google.com/?q=download+firefox"
+            referrerUrl = "https://google.com/?q=download+firefox",
         )
 
         // Okay to do this without any metadata associated with tabs.

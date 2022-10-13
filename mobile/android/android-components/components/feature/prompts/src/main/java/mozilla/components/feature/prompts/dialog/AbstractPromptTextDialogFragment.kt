@@ -17,6 +17,7 @@ import mozilla.components.feature.prompts.R
 
 internal const val KEY_MANY_ALERTS = "KEY_MANY_ALERTS"
 internal const val KEY_USER_CHECK_BOX = "KEY_USER_CHECK_BOX"
+
 /**
  * An abstract alert for showing a text message plus a checkbox for handling [hasShownManyDialogs].
  */
@@ -58,7 +59,7 @@ internal abstract class AbstractPromptTextDialogFragment : PromptDialogFragment(
 
     internal fun addCheckBoxIfNeeded(
         view: View,
-        @IdRes id: Int = R.id.mozac_feature_prompts_no_more_dialogs_check_box
+        @IdRes id: Int = R.id.mozac_feature_prompts_no_more_dialogs_check_box,
     ) {
         if ((hasShownManyDialogs)) {
             val checkBox = view.findViewById<CheckBox>(id)

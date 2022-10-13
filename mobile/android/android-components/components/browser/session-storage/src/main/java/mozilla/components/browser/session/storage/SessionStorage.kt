@@ -33,7 +33,7 @@ private val sessionFileLock = Any()
 class SessionStorage(
     private val context: Context,
     private val engine: Engine,
-    private val crashReporting: CrashReporting? = null
+    private val crashReporting: CrashReporting? = null,
 ) : AutoSave.Storage {
     private val logger = Logger("SessionStorage")
     private val stateWriter = BrowserStateWriter()
@@ -103,7 +103,7 @@ class SessionStorage(
     fun autoSave(
         store: BrowserStore,
         interval: Long = AutoSave.DEFAULT_INTERVAL_MILLISECONDS,
-        unit: TimeUnit = TimeUnit.MILLISECONDS
+        unit: TimeUnit = TimeUnit.MILLISECONDS,
     ): AutoSave {
         return AutoSave(store, this, unit.toMillis(interval))
     }
@@ -122,7 +122,7 @@ internal fun getFileForEngine(context: Context, engine: Engine): AtomicFile {
         File(
             context.filesDir,
             String.format(STORE_FILE_NAME_FORMAT, engine.name())
-                .lowercase(Locale.ROOT)
-        )
+                .lowercase(Locale.ROOT),
+        ),
     )
 }

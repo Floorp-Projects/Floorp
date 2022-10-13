@@ -58,8 +58,8 @@ class RecentlyClosedMiddlewareTest {
             id = "tab-id",
             title = "Mozilla",
             url = "https://mozilla.org",
-            lastAccess = 1234
-        )
+            lastAccess = 1234,
+        ),
     )
 
     @Test
@@ -69,7 +69,7 @@ class RecentlyClosedMiddlewareTest {
 
         val store = BrowserStore(
             initialState = BrowserState(),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         store.dispatch(RecentlyClosedAction.AddClosedTabsAction(listOf(closedTab))).joinBlocking()
@@ -77,7 +77,8 @@ class RecentlyClosedMiddlewareTest {
         store.waitUntilIdle()
 
         verify(storage).addTabsToCollectionWithMax(
-            listOf(closedTab), 5
+            listOf(closedTab),
+            5,
         )
     }
 
@@ -91,9 +92,9 @@ class RecentlyClosedMiddlewareTest {
 
         val store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(tab, tab2)
+                tabs = listOf(tab, tab2),
             ),
-            middleware = listOf(UndoMiddleware(mainScope = scope), middleware)
+            middleware = listOf(UndoMiddleware(mainScope = scope), middleware),
         )
 
         store.dispatch(TabListAction.RemoveTabsAction(listOf("1234", "5678"))).joinBlocking()
@@ -105,7 +106,7 @@ class RecentlyClosedMiddlewareTest {
         val closedTabCaptor = argumentCaptor<List<RecoverableTab>>()
         verify(storage).addTabsToCollectionWithMax(
             closedTabCaptor.capture(),
-            eq(5)
+            eq(5),
         )
         assertEquals(2, closedTabCaptor.value.size)
         assertEquals(tab.content.title, closedTabCaptor.value[0].state.title)
@@ -114,11 +115,11 @@ class RecentlyClosedMiddlewareTest {
         assertEquals(tab2.content.url, closedTabCaptor.value[1].state.url)
         assertEquals(
             tab.engineState.engineSessionState,
-            closedTabCaptor.value[0].engineSessionState
+            closedTabCaptor.value[0].engineSessionState,
         )
         assertEquals(
             tab2.engineState.engineSessionState,
-            closedTabCaptor.value[1].engineSessionState
+            closedTabCaptor.value[1].engineSessionState,
         )
     }
 
@@ -131,9 +132,9 @@ class RecentlyClosedMiddlewareTest {
 
         val store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(tab)
+                tabs = listOf(tab),
             ),
-            middleware = listOf(UndoMiddleware(mainScope = scope), middleware)
+            middleware = listOf(UndoMiddleware(mainScope = scope), middleware),
         )
 
         store.dispatch(TabListAction.RemoveTabAction("1234")).joinBlocking()
@@ -145,14 +146,14 @@ class RecentlyClosedMiddlewareTest {
         val closedTabCaptor = argumentCaptor<List<RecoverableTab>>()
         verify(storage).addTabsToCollectionWithMax(
             closedTabCaptor.capture(),
-            eq(5)
+            eq(5),
         )
         assertEquals(1, closedTabCaptor.value.size)
         assertEquals(tab.content.title, closedTabCaptor.value[0].state.title)
         assertEquals(tab.content.url, closedTabCaptor.value[0].state.url)
         assertEquals(
             tab.engineState.engineSessionState,
-            closedTabCaptor.value[0].engineSessionState
+            closedTabCaptor.value[0].engineSessionState,
         )
     }
 
@@ -165,9 +166,9 @@ class RecentlyClosedMiddlewareTest {
 
         val store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(tab)
+                tabs = listOf(tab),
             ),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         store.dispatch(TabListAction.RemoveTabAction("1234")).joinBlocking()
@@ -188,9 +189,9 @@ class RecentlyClosedMiddlewareTest {
 
         val store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(tab, tab2)
+                tabs = listOf(tab, tab2),
             ),
-            middleware = listOf(UndoMiddleware(mainScope = scope), middleware)
+            middleware = listOf(UndoMiddleware(mainScope = scope), middleware),
         )
 
         store.dispatch(TabListAction.RemoveAllNormalTabsAction).joinBlocking()
@@ -202,14 +203,14 @@ class RecentlyClosedMiddlewareTest {
         val closedTabCaptor = argumentCaptor<List<RecoverableTab>>()
         verify(storage).addTabsToCollectionWithMax(
             closedTabCaptor.capture(),
-            eq(5)
+            eq(5),
         )
         assertEquals(1, closedTabCaptor.value.size)
         assertEquals(tab.content.title, closedTabCaptor.value[0].state.title)
         assertEquals(tab.content.url, closedTabCaptor.value[0].state.url)
         assertEquals(
             tab.engineState.engineSessionState,
-            closedTabCaptor.value[0].engineSessionState
+            closedTabCaptor.value[0].engineSessionState,
         )
     }
 
@@ -223,9 +224,9 @@ class RecentlyClosedMiddlewareTest {
 
         val store = BrowserStore(
             initialState = BrowserState(
-                tabs = listOf(tab, tab2)
+                tabs = listOf(tab, tab2),
             ),
-            middleware = listOf(UndoMiddleware(mainScope = scope), middleware)
+            middleware = listOf(UndoMiddleware(mainScope = scope), middleware),
         )
 
         store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
@@ -237,14 +238,14 @@ class RecentlyClosedMiddlewareTest {
         val closedTabCaptor = argumentCaptor<List<RecoverableTab>>()
         verify(storage).addTabsToCollectionWithMax(
             closedTabCaptor.capture(),
-            eq(5)
+            eq(5),
         )
         assertEquals(1, closedTabCaptor.value.size)
         assertEquals(tab.content.title, closedTabCaptor.value[0].state.title)
         assertEquals(tab.content.url, closedTabCaptor.value[0].state.url)
         assertEquals(
             tab.engineState.engineSessionState,
-            closedTabCaptor.value[0].engineSessionState
+            closedTabCaptor.value[0].engineSessionState,
         )
     }
 
@@ -254,7 +255,7 @@ class RecentlyClosedMiddlewareTest {
         val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
         val store = BrowserStore(
-            middleware = listOf(UndoMiddleware(mainScope = scope), middleware)
+            middleware = listOf(UndoMiddleware(mainScope = scope), middleware),
         )
 
         store.dispatch(TabListAction.AddTabAction(createTab("https://www.mozilla.org", id = "tab1"))).joinBlocking()
@@ -281,7 +282,7 @@ class RecentlyClosedMiddlewareTest {
 
         verify(storage, times(4)).addTabsToCollectionWithMax(
             closedTabCaptor.capture(),
-            eq(5)
+            eq(5),
         )
 
         val tabs = closedTabCaptor.allValues
@@ -332,10 +333,10 @@ class RecentlyClosedMiddlewareTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 closedTabs = listOf(
-                    closedTab.state
-                )
+                    closedTab.state,
+                ),
             ),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         store.dispatch(RecentlyClosedAction.RemoveClosedTabAction(closedTab.state)).joinBlocking()
@@ -354,10 +355,10 @@ class RecentlyClosedMiddlewareTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 closedTabs = listOf(
-                    closedTab.state
-                )
+                    closedTab.state,
+                ),
             ),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         store.dispatch(RecentlyClosedAction.RemoveAllClosedTabAction).joinBlocking()
@@ -371,14 +372,14 @@ class RecentlyClosedMiddlewareTest {
 }
 
 private suspend fun mockStorage(
-    tabs: List<TabState> = emptyList()
+    tabs: List<TabState> = emptyList(),
 ): RecentlyClosedMiddleware.Storage {
     val storage: RecentlyClosedMiddleware.Storage = mock()
 
     whenever(storage.getTabs()).thenReturn(
         flow {
             emit(tabs)
-        }
+        },
     )
 
     return storage

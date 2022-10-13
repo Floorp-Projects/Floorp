@@ -15,7 +15,7 @@ typealias Server = mozilla.appservices.fxaclient.Config.Server
  */
 data class PeriodicSyncConfig(
     val periodMinutes: Int = 240,
-    val initialDelayMinutes: Int = 5
+    val initialDelayMinutes: Int = 5,
 )
 
 /**
@@ -27,7 +27,7 @@ data class PeriodicSyncConfig(
  */
 data class SyncConfig(
     val supportedEngines: Set<SyncEngine>,
-    val periodicSyncConfig: PeriodicSyncConfig?
+    val periodicSyncConfig: PeriodicSyncConfig?,
 )
 
 /**

@@ -10,7 +10,7 @@ import org.mozilla.geckoview.GeckoSession
 
 internal class PromptInstanceDismissDelegate(
     private val geckoSession: GeckoEngineSession,
-    private val promptRequest: PromptRequest
+    private val promptRequest: PromptRequest,
 ) : GeckoSession.PromptDelegate.PromptInstanceDelegate {
 
     override fun onPromptDismiss(prompt: GeckoSession.PromptDelegate.BasePrompt) {

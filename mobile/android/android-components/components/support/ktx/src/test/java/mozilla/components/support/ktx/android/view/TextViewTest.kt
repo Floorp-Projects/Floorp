@@ -26,7 +26,7 @@ class TextViewTest {
 
         assertArrayEquals(
             arrayOf<Drawable?>(null, null, null, null),
-            view.compoundDrawablesRelative
+            view.compoundDrawablesRelative,
         )
     }
 
@@ -38,7 +38,7 @@ class TextViewTest {
 
         assertArrayEquals(
             arrayOf<Drawable?>(null, null, null, null),
-            view.compoundDrawablesRelative
+            view.compoundDrawablesRelative,
         )
     }
 
@@ -51,14 +51,14 @@ class TextViewTest {
 
         assertArrayEquals(
             arrayOf(drawable, null, null, null),
-            view.compoundDrawablesRelative
+            view.compoundDrawablesRelative,
         )
 
         view.putCompoundDrawablesRelative(end = drawable)
 
         assertArrayEquals(
             arrayOf(null, null, drawable, null),
-            view.compoundDrawablesRelative
+            view.compoundDrawablesRelative,
         )
     }
 
@@ -71,14 +71,14 @@ class TextViewTest {
 
         assertArrayEquals(
             arrayOf(drawable, null, null, null),
-            view.compoundDrawablesRelative
+            view.compoundDrawablesRelative,
         )
 
         view.putCompoundDrawablesRelativeWithIntrinsicBounds(end = drawable)
 
         assertArrayEquals(
             arrayOf(null, null, drawable, null),
-            view.compoundDrawablesRelative
+            view.compoundDrawablesRelative,
         )
     }
 

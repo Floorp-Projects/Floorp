@@ -15,14 +15,14 @@ import mozilla.components.concept.menu.candidate.DecorativeTextMenuCandidate
 
 internal class DecorativeTextMenuCandidateViewHolder(
     itemView: View,
-    inflater: LayoutInflater
+    inflater: LayoutInflater,
 ) : MenuCandidateViewHolder<DecorativeTextMenuCandidate>(itemView, inflater) {
 
     private val textView: TextView get() = itemView as TextView
 
     override fun bind(
         newCandidate: DecorativeTextMenuCandidate,
-        oldCandidate: DecorativeTextMenuCandidate?
+        oldCandidate: DecorativeTextMenuCandidate?,
     ) {
         super.bind(newCandidate, oldCandidate)
 

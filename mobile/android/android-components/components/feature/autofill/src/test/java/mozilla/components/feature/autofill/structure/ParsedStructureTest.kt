@@ -34,7 +34,7 @@ class ParsedStructureTest {
             usernameId = AutofillId.CREATOR.createFromParcel(usernameIdAutofillIdParcel),
             passwordId = AutofillId.CREATOR.createFromParcel(passwordIdAutofillParcel),
             packageName = "test",
-            webDomain = "https://mozilla.org"
+            webDomain = "https://mozilla.org",
         )
 
         // Write the object in a new Parcel.

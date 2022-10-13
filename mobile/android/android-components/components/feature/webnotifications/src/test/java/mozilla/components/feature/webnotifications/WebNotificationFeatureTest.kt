@@ -26,12 +26,12 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyBoolean
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -56,7 +56,7 @@ class WebNotificationFeatureTest {
         "rtl",
         "en",
         false,
-        mock()
+        mock(),
     )
 
     @Before
@@ -99,7 +99,7 @@ class WebNotificationFeatureTest {
             android.R.drawable.ic_dialog_alert,
             permissionsStorage,
             null,
-            coroutineContext
+            coroutineContext,
         )
         val permission = SitePermissions(origin = "https://mozilla.org:443", notification = Status.ALLOWED, savedAt = 0)
 
@@ -120,7 +120,7 @@ class WebNotificationFeatureTest {
             android.R.drawable.ic_dialog_alert,
             permissionsStorage,
             null,
-            coroutineContext
+            coroutineContext,
         )
 
         // No permissions found.
@@ -151,7 +151,7 @@ class WebNotificationFeatureTest {
             "en",
             false,
             mock(),
-            triggeredByWebExtension = true
+            triggeredByWebExtension = true,
         )
 
         val feature = WebNotificationFeature(
@@ -161,7 +161,7 @@ class WebNotificationFeatureTest {
             android.R.drawable.ic_dialog_alert,
             permissionsStorage,
             null,
-            coroutineContext
+            coroutineContext,
         )
 
         feature.onShowNotification(webExtensionNotification)

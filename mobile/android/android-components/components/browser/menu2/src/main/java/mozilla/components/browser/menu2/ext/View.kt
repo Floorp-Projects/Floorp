@@ -55,7 +55,7 @@ internal fun ImageView.applyIcon(newIcon: MenuIconWithDrawable, oldIcon: MenuIco
 
 internal fun ImageView.applyNotificationEffect(
     newEffect: LowPriorityHighlightEffect?,
-    oldEffect: MenuEffect?
+    oldEffect: MenuEffect?,
 ) {
     if (newEffect != oldEffect) {
         isVisible = newEffect != null
@@ -68,7 +68,7 @@ internal fun ImageView.applyNotificationEffect(
  */
 internal fun View.applyBackgroundEffect(
     newEffect: MenuCandidateEffect?,
-    oldEffect: MenuCandidateEffect?
+    oldEffect: MenuCandidateEffect?,
 ) {
     if (newEffect == oldEffect) return
 
@@ -78,7 +78,8 @@ internal fun View.applyBackgroundEffect(
 
     if (highlight != null) {
         val selectableBackground = ContextCompat.getDrawable(
-            context, selectableBackgroundRes
+            context,
+            selectableBackgroundRes,
         )
 
         setBackgroundColor(highlight.backgroundTint)

@@ -25,7 +25,7 @@ data class IconRequest(
     val resources: List<Resource> = emptyList(),
     @ColorInt val color: Int? = null,
     val isPrivate: Boolean = false,
-    val waitOnNetworkLoad: Boolean = true
+    val waitOnNetworkLoad: Boolean = true,
 ) {
 
     /**
@@ -36,7 +36,7 @@ data class IconRequest(
     enum class Size(@DimenRes val dimen: Int) {
         DEFAULT(R.dimen.mozac_browser_icons_size_default),
         LAUNCHER(R.dimen.mozac_browser_icons_size_launcher),
-        LAUNCHER_ADAPTIVE(R.dimen.mozac_browser_icons_size_launcher_adaptive)
+        LAUNCHER_ADAPTIVE(R.dimen.mozac_browser_icons_size_launcher_adaptive),
     }
 
     /**
@@ -53,7 +53,7 @@ data class IconRequest(
         val type: Type,
         val sizes: List<HtmlSize> = emptyList(),
         val mimeType: String? = null,
-        val maskable: Boolean = false
+        val maskable: Boolean = false,
     ) {
         /**
          * An icon resource type.
@@ -134,7 +134,7 @@ data class IconRequest(
              *
              * https://developer.mozilla.org/en-US/docs/Web/Manifest/icons
              */
-            MANIFEST_ICON
+            MANIFEST_ICON,
         }
     }
 }

@@ -25,13 +25,13 @@ class SearchEngineKtTest {
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
             resultUrls = listOf(
-                "https://www.startpage.com/sp/search?q={searchTerms}"
-            )
+                "https://www.startpage.com/sp/search?q={searchTerms}",
+            ),
         )
 
         assertEquals(
             "https://www.startpage.com/sp/search?q=Hello%20World",
-            searchEngine.buildSearchUrl("Hello World")
+            searchEngine.buildSearchUrl("Hello World"),
         )
     }
 
@@ -40,12 +40,12 @@ class SearchEngineKtTest {
         val searchEngine = createSearchEngine(
             name = "Ecosia",
             icon = mock(),
-            url = "https://www.ecosia.org/search?q={searchTerms}"
+            url = "https://www.ecosia.org/search?q={searchTerms}",
         )
 
         assertEquals(
             "https://www.ecosia.org/search?q=Hello%20World",
-            searchEngine.buildSearchUrl("Hello World")
+            searchEngine.buildSearchUrl("Hello World"),
         )
     }
 
@@ -54,7 +54,7 @@ class SearchEngineKtTest {
         val searchEngine = createSearchEngine(
             name = "Ecosia",
             icon = mock(),
-            url = "https://www.ecosia.org/search?q={searchTerms}"
+            url = "https://www.ecosia.org/search?q={searchTerms}",
         )
 
         assertNull(searchEngine.parseSearchTerms(Uri.parse("https://www.ecosia.org/search?q=")))
@@ -62,12 +62,12 @@ class SearchEngineKtTest {
 
         assertEquals(
             "second test search",
-            searchEngine.parseSearchTerms(Uri.parse("https://www.ecosia.org/search?q=second%20test%20search"))
+            searchEngine.parseSearchTerms(Uri.parse("https://www.ecosia.org/search?q=second%20test%20search")),
         )
 
         assertEquals(
             "Another test",
-            searchEngine.parseSearchTerms(Uri.parse("https://www.ecosia.org/search?r=134s7&attr=moz-test&q=Another%20test&d=136697676793"))
+            searchEngine.parseSearchTerms(Uri.parse("https://www.ecosia.org/search?r=134s7&attr=moz-test&q=Another%20test&d=136697676793")),
         )
     }
 
@@ -82,41 +82,41 @@ class SearchEngineKtTest {
         val google = createSearchEngine(
             name = "Google",
             icon = mock(),
-            url = "https://google.com/search/?q={searchTerms}"
+            url = "https://google.com/search/?q={searchTerms}",
         )
         val ecosia = createSearchEngine(
             name = "Ecosia",
             icon = mock(),
-            url = "https://www.ecosia.org/search?q={searchTerms}"
+            url = "https://www.ecosia.org/search?q={searchTerms}",
         )
         val baidu = createSearchEngine(
             name = "Baidu",
             icon = mock(),
-            url = "https://www.baidu.com/s?wd={searchTerms}"
+            url = "https://www.baidu.com/s?wd={searchTerms}",
         )
         val searchState = SearchState(
             regionSearchEngines = listOf(google, baidu),
             additionalSearchEngines = listOf(ecosia),
-            customSearchEngines = listOf(baidu, ecosia)
+            customSearchEngines = listOf(baidu, ecosia),
         )
 
         assertNull(searchState.parseSearchTerms("https://www.ecosia.org/search?q="))
         assertNull(searchState.parseSearchTerms("http://help.baidu.com/"))
         assertEquals(
             "神舟十二号载人飞行任务标识发布",
-            searchState.parseSearchTerms("https://www.baidu.com/s?cl=3&tn=baidutop10&fr=top1000&wd=%E7%A5%9E%E8%88%9F%E5%8D%81%E4%BA%8C%E5%8F%B7%E8%BD%BD%E4%BA%BA%E9%A3%9E%E8%A1%8C%E4%BB%BB%E5%8A%A1%E6%A0%87%E8%AF%86%E5%8F%91%E5%B8%83&rsv_idx=2&rsv_dl=fyb_n_homepage&hisfilter=1")
+            searchState.parseSearchTerms("https://www.baidu.com/s?cl=3&tn=baidutop10&fr=top1000&wd=%E7%A5%9E%E8%88%9F%E5%8D%81%E4%BA%8C%E5%8F%B7%E8%BD%BD%E4%BA%BA%E9%A3%9E%E8%A1%8C%E4%BB%BB%E5%8A%A1%E6%A0%87%E8%AF%86%E5%8F%91%E5%B8%83&rsv_idx=2&rsv_dl=fyb_n_homepage&hisfilter=1"),
         )
         assertEquals(
             "the sandbaggers",
-            searchState.parseSearchTerms("https://google.com/search/?q=the%20sandbaggers")
+            searchState.parseSearchTerms("https://google.com/search/?q=the%20sandbaggers"),
         )
         assertEquals(
             "фаерфокс",
-            searchState.parseSearchTerms("https://google.com/search/?q=%D1%84%D0%B0%D0%B5%D1%80%D1%84%D0%BE%D0%BA%D1%81")
+            searchState.parseSearchTerms("https://google.com/search/?q=%D1%84%D0%B0%D0%B5%D1%80%D1%84%D0%BE%D0%BA%D1%81"),
         )
         assertEquals(
             "Another test",
-            searchState.parseSearchTerms("https://www.ecosia.org/search?r=134s7&attr=moz-test&q=Another%20test&d=136697676793")
+            searchState.parseSearchTerms("https://www.ecosia.org/search?r=134s7&attr=moz-test&q=Another%20test&d=136697676793"),
         )
     }
 
@@ -127,11 +127,11 @@ class SearchEngineKtTest {
             name = "invalid",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            resultUrls = listOf("https://mozilla.org/search/?q={invalid}")
+            resultUrls = listOf("https://mozilla.org/search/?q={invalid}"),
         )
 
         val searchState = SearchState(
-            regionSearchEngines = listOf(invalidEngine)
+            regionSearchEngines = listOf(invalidEngine),
         )
 
         assertNull(searchState.parseSearchTerms("https://mozilla.org/search/?q=test"))

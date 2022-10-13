@@ -33,11 +33,11 @@ internal abstract class DownloadsDatabase : RoomDatabase() {
             return Room.databaseBuilder(
                 context,
                 DownloadsDatabase::class.java,
-                "mozac_downloads_database"
+                "mozac_downloads_database",
             ).addMigrations(
                 Migrations.migration_1_2,
                 Migrations.migration_2_3,
-                Migrations.migration_3_4
+                Migrations.migration_3_4,
             ).build().also {
                 instance = it
             }
@@ -50,7 +50,7 @@ internal object Migrations {
     val migration_1_2 = object : Migration(1, 2) {
         override fun migrate(database: SupportSQLiteDatabase) {
             database.execSQL(
-                "ALTER TABLE downloads ADD COLUMN is_private INTEGER NOT NULL DEFAULT 0"
+                "ALTER TABLE downloads ADD COLUMN is_private INTEGER NOT NULL DEFAULT 0",
             )
         }
     }

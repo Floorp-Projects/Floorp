@@ -26,7 +26,7 @@ class TabsFeature(
     private val store: BrowserStore,
     private val onCloseTray: () -> Unit = {},
     private val defaultTabPartitionsFilter: (Map<String, TabPartition>) -> TabPartition? = { null },
-    private val defaultTabsFilter: (TabSessionState) -> Boolean = { true }
+    private val defaultTabsFilter: (TabSessionState) -> Boolean = { true },
 ) : LifecycleAwareFeature {
     @VisibleForTesting
     internal var presenter = TabsTrayPresenter(
@@ -34,7 +34,7 @@ class TabsFeature(
         store,
         defaultTabsFilter,
         defaultTabPartitionsFilter,
-        onCloseTray
+        onCloseTray,
     )
 
     override fun start() {

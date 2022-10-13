@@ -28,7 +28,7 @@ class AbstractBindingTest {
     fun `binding onState is invoked when a flow is created`() {
         val store = Store(
             TestState(counter = 0),
-            ::reducer
+            ::reducer,
         )
 
         val binding = TestBinding(store)
@@ -44,7 +44,7 @@ class AbstractBindingTest {
     fun `binding has no state changes when only stop is invoked`() {
         val store = Store(
             TestState(counter = 0),
-            ::reducer
+            ::reducer,
         )
 
         val binding = TestBinding(store)
@@ -60,7 +60,7 @@ class AbstractBindingTest {
     fun `binding does not get state updates after stopped`() {
         val store = Store(
             TestState(counter = 0),
-            ::reducer
+            ::reducer,
         )
 
         var counter = 0
@@ -88,7 +88,7 @@ class AbstractBindingTest {
 @ExperimentalCoroutinesApi
 class TestBinding(
     store: Store<TestState, TestAction>,
-    private val onStateUpdated: (TestState) -> Unit = {}
+    private val onStateUpdated: (TestState) -> Unit = {},
 ) : AbstractBinding<TestState>(store) {
     var invoked = false
     override suspend fun onState(flow: Flow<TestState>) {

@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
  * when [bind] is called. Use this information to diff the changes between the two values.
  */
 internal abstract class LastItemViewHolder<T>(
-    itemView: View
+    itemView: View,
 ) : RecyclerView.ViewHolder(itemView) {
 
     protected var lastCandidate: T? = null

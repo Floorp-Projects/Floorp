@@ -33,7 +33,7 @@ class BasicLoginAdapterTest {
         Assert.assertEquals(0, adapter.itemCount)
 
         adapter.submitList(
-            listOf(login, login2)
+            listOf(login, login2),
         )
         Assert.assertEquals(2, adapter.itemCount)
     }

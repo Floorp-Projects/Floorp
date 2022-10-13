@@ -22,7 +22,7 @@ internal fun mozilla.components.concept.sync.SyncAuthInfo.toNative(): SyncAuthIn
         kid = this.kid,
         fxaAccessToken = this.fxaAccessToken,
         syncKey = this.syncKey,
-        tokenserverUrl = this.tokenServerUrl
+        tokenserverUrl = this.tokenServerUrl,
     )
 }
 

@@ -48,7 +48,7 @@ class WebExtensionControllerTest {
             eq(extensionId),
             eq(extensionUrl),
             onSuccess.capture(),
-            onError.capture()
+            onError.capture(),
         )
         assertFalse(WebExtensionController.installedExtensions.containsKey(extensionId))
 
@@ -62,7 +62,7 @@ class WebExtensionControllerTest {
             eq(extensionId),
             eq(extensionUrl),
             onSuccess.capture(),
-            onError.capture()
+            onError.capture(),
         )
 
         onError.value.invoke("", mock())
@@ -85,7 +85,7 @@ class WebExtensionControllerTest {
             eq(extensionId),
             eq(extensionUrl),
             onSuccess.capture(),
-            onError.capture()
+            onError.capture(),
         )
         assertTrue(onSuccessInvoked)
         assertFalse(onErrorInvoked)
@@ -115,7 +115,7 @@ class WebExtensionControllerTest {
             eq(extensionId),
             eq(extensionUrl),
             onSuccess.capture(),
-            onError.capture()
+            onError.capture(),
         )
 
         val session: EngineSession = mock()
@@ -172,7 +172,7 @@ class WebExtensionControllerTest {
             eq(extensionId),
             eq(extensionUrl),
             onSuccess.capture(),
-            onError.capture()
+            onError.capture(),
         )
 
         val messageHandler: MessageHandler = mock()

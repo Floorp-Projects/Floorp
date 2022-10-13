@@ -60,7 +60,7 @@ fun WebAppManifest.toCustomTabConfig(): CustomTabConfig {
         showCloseButton = false,
         showShareMenuItem = true,
         menuItems = emptyList(),
-        externalAppType = ExternalAppType.PROGRESSIVE_WEB_APP
+        externalAppType = ExternalAppType.PROGRESSIVE_WEB_APP,
     )
 }
 
@@ -74,9 +74,11 @@ fun WebAppManifest.toCustomTabConfig(): CustomTabConfig {
 fun WebAppManifest.getTrustedScope(): Uri? {
     return when (display) {
         WebAppManifest.DisplayMode.FULLSCREEN,
-        WebAppManifest.DisplayMode.STANDALONE -> (scope ?: startUrl).toUri()
+        WebAppManifest.DisplayMode.STANDALONE,
+        -> (scope ?: startUrl).toUri()
 
         WebAppManifest.DisplayMode.MINIMAL_UI,
-        WebAppManifest.DisplayMode.BROWSER -> null
+        WebAppManifest.DisplayMode.BROWSER,
+        -> null
     }
 }

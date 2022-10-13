@@ -31,7 +31,7 @@ class AdaptiveIconProcessor : IconProcessor {
         request: IconRequest,
         resource: IconRequest.Resource?,
         icon: Icon,
-        desiredSize: DesiredSize
+        desiredSize: DesiredSize,
     ): Icon {
         val maskable = resource?.maskable == true
         if (!maskable && SDK_INT < Build.VERSION_CODES.O) {

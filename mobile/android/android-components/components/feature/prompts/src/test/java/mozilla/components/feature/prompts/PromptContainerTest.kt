@@ -21,6 +21,7 @@ import org.mockito.MockitoAnnotations.openMocks
 class PromptContainerTest {
 
     @Mock private lateinit var activity: Activity
+
     @Mock private lateinit var fragment: Fragment
 
     @Before

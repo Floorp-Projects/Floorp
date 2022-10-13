@@ -28,7 +28,7 @@ class CustomTabListActionTest {
         val customTab = createCustomTab(
             "https://www.mozilla.org",
             config = config,
-            source = SessionState.Source.Internal.CustomTab
+            source = SessionState.Source.Internal.CustomTab,
         )
 
         store.dispatch(CustomTabListAction.AddCustomTabAction(customTab)).joinBlocking()

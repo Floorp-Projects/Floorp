@@ -34,10 +34,10 @@ private const val SO_MANY_TABS_OPEN = "∞"
 fun TabCounterButton(
     store: BrowserStore,
     onClicked: () -> Unit,
-    tabsFilter: (TabSessionState) -> Boolean = { true }
+    tabsFilter: (TabSessionState) -> Boolean = { true },
 ) {
     IconButton(
-        onClick = onClicked
+        onClick = onClicked,
     ) {
         val backgroundColor = MaterialTheme.colors.primarySurface
         val foregroundColor = contentColorFor(backgroundColor)
@@ -47,13 +47,13 @@ fun TabCounterButton(
         Image(
             painter = painterResource(R.drawable.mozac_tabcounter_background),
             contentDescription = createContentDescription(count),
-            colorFilter = ColorFilter.tint(foregroundColor)
+            colorFilter = ColorFilter.tint(foregroundColor),
         )
 
         Text(
             createButtonText(count),
             fontSize = 12.sp,
-            color = foregroundColor
+            color = foregroundColor,
         )
     }
 }
@@ -73,7 +73,7 @@ private fun createContentDescription(count: Int): String {
     } else {
         String.format(
             stringResource(R.string.mozac_tab_counter_open_tab_tray_plural),
-            count.toString()
+            count.toString(),
         )
     }
 }

@@ -24,7 +24,7 @@ class HistoryDelegate(private val historyStorage: Lazy<HistoryStorage>) : Histor
     override suspend fun onPreviewImageChange(uri: String, previewImageUrl: String) {
         historyStorage.value.recordObservation(
             uri,
-            PageObservation(previewImageUrl = previewImageUrl)
+            PageObservation(previewImageUrl = previewImageUrl),
         )
     }
 

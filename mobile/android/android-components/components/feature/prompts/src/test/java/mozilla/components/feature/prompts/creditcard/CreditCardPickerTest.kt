@@ -36,14 +36,14 @@ class CreditCardPickerTest {
         number = "4111111111111110",
         expiryMonth = "5",
         expiryYear = "2030",
-        cardType = ""
+        cardType = "",
     )
     var onDismissCalled = false
     var confirmedCreditCard: CreditCardEntry? = null
     private val promptRequest = PromptRequest.SelectCreditCard(
         creditCards = listOf(creditCard),
         onDismiss = { onDismissCalled = true },
-        onConfirm = { confirmedCreditCard = it }
+        onConfirm = { confirmedCreditCard = it },
     )
 
     var manageCreditCardsCalled = false
@@ -60,7 +60,7 @@ class CreditCardPickerTest {
             store = store,
             creditCardSelectBar = creditCardSelectBar,
             manageCreditCardsCallback = manageCreditCardsCallback,
-            selectCreditCardCallback = selectCreditCardCallback
+            selectCreditCardCallback = selectCreditCardCallback,
         )
 
         whenever(store.state).thenReturn(state)

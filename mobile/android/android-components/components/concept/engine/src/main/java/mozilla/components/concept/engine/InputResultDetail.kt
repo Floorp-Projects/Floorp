@@ -115,7 +115,7 @@ internal const val OVERSCROLL_DIRECTIONS_VERTICAL = 1 shl 1
 class InputResultDetail private constructor(
     val inputResult: Int = INPUT_HANDLING_UNKNOWN,
     val scrollDirections: Int = SCROLL_DIRECTIONS_NONE,
-    val overscrollDirections: Int = OVERSCROLL_DIRECTIONS_NONE
+    val overscrollDirections: Int = OVERSCROLL_DIRECTIONS_NONE,
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -157,7 +157,7 @@ class InputResultDetail private constructor(
     fun copy(
         inputResult: Int? = this.inputResult,
         scrollDirections: Int? = this.scrollDirections,
-        overscrollDirections: Int? = this.overscrollDirections
+        overscrollDirections: Int? = this.overscrollDirections,
     ): InputResultDetail {
         // Ensure this data will not get corrupted by users sending unknown arguments
 
@@ -346,21 +346,33 @@ class InputResultDetail private constructor(
                 OVERSCROLL_DIRECTIONS_VERTICAL
             } else {
                 OVERSCROLL_DIRECTIONS_NONE
-            }
+            },
         )
 
         @VisibleForTesting internal const val TOSTRING_SEPARATOR = ", "
+
         @VisibleForTesting internal const val INPUT_UNKNOWN_HANDLING_DESCRIPTION = "with unknown handling"
+
         @VisibleForTesting internal const val INPUT_HANDLED_TOSTRING_DESCRIPTION = "handled by the browser"
+
         @VisibleForTesting internal const val INPUT_HANDLED_CONTENT_TOSTRING_DESCRIPTION = "handled by the website"
+
         @VisibleForTesting internal const val INPUT_UNHANDLED_TOSTRING_DESCRIPTION = "unhandled"
+
         @VisibleForTesting internal const val SCROLL_IMPOSSIBLE_TOSTRING_DESCRIPTION = "cannot be scrolled"
+
         @VisibleForTesting internal const val OVERSCROLL_IMPOSSIBLE_TOSTRING_DESCRIPTION = "cannot be overscrolled"
+
         @VisibleForTesting internal const val SCROLL_TOSTRING_DESCRIPTION = "can be scrolled to "
+
         @VisibleForTesting internal const val OVERSCROLL_TOSTRING_DESCRIPTION = "can be overscrolled to "
+
         @VisibleForTesting internal const val SCROLL_LEFT_TOSTRING_DESCRIPTION = "left"
+
         @VisibleForTesting internal const val SCROLL_TOP_TOSTRING_DESCRIPTION = "top"
+
         @VisibleForTesting internal const val SCROLL_RIGHT_TOSTRING_DESCRIPTION = "right"
+
         @VisibleForTesting internal const val SCROLL_BOTTOM_TOSTRING_DESCRIPTION = "bottom"
     }
 }

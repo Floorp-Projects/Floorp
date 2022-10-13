@@ -97,8 +97,8 @@ class TextMenuCandidateViewHolderTest {
         holder.bind(
             TextMenuCandidate(
                 "hello",
-                effect = HighPriorityHighlightEffect(Color.RED)
-            )
+                effect = HighPriorityHighlightEffect(Color.RED),
+            ),
         )
         verify(view).setBackgroundColor(Color.RED)
         verify(view, never()).setBackgroundResource(anyInt())
@@ -108,8 +108,8 @@ class TextMenuCandidateViewHolderTest {
         holder.bind(
             TextMenuCandidate(
                 "hello",
-                effect = null
-            )
+                effect = null,
+            ),
         )
         verify(view, never()).setBackgroundColor(anyInt())
         verify(view).setBackgroundResource(anyInt())

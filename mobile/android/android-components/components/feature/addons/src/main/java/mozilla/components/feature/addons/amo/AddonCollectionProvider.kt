@@ -65,7 +65,7 @@ class AddonCollectionProvider(
     private val collectionUser: String = DEFAULT_COLLECTION_USER,
     private val collectionName: String = DEFAULT_COLLECTION_NAME,
     private val sortOption: SortOption = SortOption.POPULARITY_DESC,
-    private val maxCacheAgeInMinutes: Long = -1
+    private val maxCacheAgeInMinutes: Long = -1,
 ) : AddonsProvider {
 
     private val logger = Logger("AddonCollectionProvider")
@@ -95,7 +95,7 @@ class AddonCollectionProvider(
     override suspend fun getAvailableAddons(
         allowCache: Boolean,
         readTimeoutInSeconds: Long?,
-        language: String?
+        language: String?,
     ): List<Addon> {
         // We want to make sure we always use useFallbackFile = false here, as it warranties
         // that we are trying to fetch the latest localized add-ons when the user changes
@@ -122,7 +122,7 @@ class AddonCollectionProvider(
                         logger.info(
                             "Falling back to available add-ons cache from ${
                             SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'", Locale.US).format(cacheLastUpdated)
-                            }"
+                            }",
                         )
                         return it
                     }
@@ -145,8 +145,8 @@ class AddonCollectionProvider(
                     "?page_size=$PAGE_SIZE" +
                     "&sort=${sortOption.value}" +
                     langParam,
-                readTimeout = Pair(readTimeoutInSeconds ?: DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-            )
+                readTimeout = Pair(readTimeoutInSeconds ?: DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+            ),
         )
             .use { response ->
                 if (response.isSuccess) {
@@ -179,7 +179,7 @@ class AddonCollectionProvider(
         var bitmap: Bitmap? = null
         if (addon.iconUrl != "") {
             client.fetch(
-                Request(url = addon.iconUrl.sanitizeURL())
+                Request(url = addon.iconUrl.sanitizeURL()),
             ).use { response ->
                 if (response.isSuccess) {
                     response.body.useStream {
@@ -217,7 +217,7 @@ class AddonCollectionProvider(
 
         context.filesDir
             .listFiles {
-                _, s ->
+                    _, s ->
                 s.startsWith(COLLECTION_FILE_NAME_PREFIX) && s != currentCacheFileName
             }
             ?.forEach {
@@ -231,7 +231,7 @@ class AddonCollectionProvider(
         return getCacheLastUpdated(
             context,
             language,
-            useFallbackFile
+            useFallbackFile,
         ) < Date().time - maxCacheAgeInMinutes * MINUTE_IN_MS
     }
 
@@ -301,7 +301,7 @@ enum class SortOption(val value: String) {
     NAME("name"),
     NAME_DESC("-name"),
     DATE_ADDED("added"),
-    DATE_ADDED_DESC("-added")
+    DATE_ADDED_DESC("-added"),
 }
 
 internal fun JSONObject.getAddons(language: String? = null): List<Addon> {
@@ -339,7 +339,7 @@ internal fun JSONObject.toAddons(language: String? = null): Addon {
                 } else {
                     getSafeString("default_locale").ifEmpty { Addon.DEFAULT_LOCALE }
                 }
-                ).lowercase(Locale.ROOT)
+                ).lowercase(Locale.ROOT),
         )
     }
 }
@@ -349,7 +349,7 @@ internal fun JSONObject.getRating(): Addon.Rating? {
     return if (jsonRating != null) {
         Addon.Rating(
             reviews = jsonRating.optInt("count"),
-            average = jsonRating.optDouble("average").toFloat()
+            average = jsonRating.optDouble("average").toFloat(),
         )
     } else {
         null
@@ -408,7 +408,7 @@ internal fun JSONObject.getAuthors(): List<Addon.Author> {
             id = authorJson.getSafeString("id"),
             name = authorJson.getSafeString("name"),
             username = authorJson.getSafeString("username"),
-            url = authorJson.getSafeString("url")
+            url = authorJson.getSafeString("url"),
         )
     }
 }

@@ -12,5 +12,5 @@ import mozilla.components.concept.toolbar.Toolbar
  */
 internal class ActionWrapper(
     var actual: Toolbar.Action,
-    var view: View? = null
+    var view: View? = null,
 )

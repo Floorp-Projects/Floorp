@@ -27,9 +27,9 @@ class LexerTest {
                 Token(
                     Token.Type.LITERAL,
                     "\"foo\"",
-                    "foo"
-                )
-            )
+                    "foo",
+                ),
+            ),
         )
     }
 
@@ -40,8 +40,8 @@ class LexerTest {
         assertExpressionYieldsTokens(
             expression,
             listOf(
-                Token(Token.Type.LITERAL, "'foo'", "foo")
-            )
+                Token(Token.Type.LITERAL, "'foo'", "foo"),
+            ),
         )
     }
 
@@ -55,19 +55,19 @@ class LexerTest {
                 Token(
                     Token.Type.LITERAL,
                     "\"foo\"",
-                    "foo"
+                    "foo",
                 ),
                 Token(
                     Token.Type.LITERAL,
                     "'bar'",
-                    "bar"
+                    "bar",
                 ),
                 Token(
                     Token.Type.LITERAL,
                     "\"baz\"",
-                    "baz"
-                )
-            )
+                    "baz",
+                ),
+            ),
         )
     }
 
@@ -81,9 +81,9 @@ class LexerTest {
                 Token(
                     Token.Type.LITERAL,
                     "\"f\\\"oo\"",
-                    "f\"oo"
-                )
-            )
+                    "f\"oo",
+                ),
+            ),
         )
     }
 
@@ -97,9 +97,9 @@ class LexerTest {
                 Token(
                     Token.Type.LITERAL,
                     "'f\\'oo'",
-                    "f'oo"
-                )
-            )
+                    "f'oo",
+                ),
+            ),
         )
     }
 
@@ -113,9 +113,9 @@ class LexerTest {
                 Token(
                     Token.Type.IDENTIFIER,
                     "alpha12345",
-                    "alpha12345"
-                )
-            )
+                    "alpha12345",
+                ),
+            ),
         )
     }
 
@@ -126,8 +126,8 @@ class LexerTest {
         assertExpressionYieldsTokens(
             expression,
             listOf(
-                Token(Token.Type.LITERAL, "true", true)
-            )
+                Token(Token.Type.LITERAL, "true", true),
+            ),
         )
     }
 
@@ -138,8 +138,8 @@ class LexerTest {
         assertExpressionYieldsTokens(
             expression,
             listOf(
-                Token(Token.Type.LITERAL, "false", false)
-            )
+                Token(Token.Type.LITERAL, "false", false),
+            ),
         )
     }
 
@@ -158,8 +158,8 @@ class LexerTest {
             expression,
             listOf(
                 Token(Token.Type.LITERAL, "true", true),
-                Token(Token.Type.LITERAL, "false", false)
-            )
+                Token(Token.Type.LITERAL, "false", false),
+            ),
         )
     }
 
@@ -175,7 +175,7 @@ class LexerTest {
                 Token(
                     Token.Type.LITERAL,
                     "false",
-                    false
+                    false,
                 ),
                 Token(Token.Type.BINARY_OP, "-", "-"),
                 Token(Token.Type.LITERAL, "true", true),
@@ -183,11 +183,11 @@ class LexerTest {
                 Token(
                     Token.Type.LITERAL,
                     "false",
-                    false
+                    false,
                 ),
                 Token(Token.Type.BINARY_OP, "+", "+"),
-                Token(Token.Type.BINARY_OP, "+", "+")
-            )
+                Token(Token.Type.BINARY_OP, "+", "+"),
+            ),
         )
     }
 
@@ -203,7 +203,7 @@ class LexerTest {
                 Token(
                     Token.Type.LITERAL,
                     "false",
-                    false
+                    false,
                 ),
                 Token(Token.Type.BINARY_OP, "+", "+"),
                 Token(Token.Type.LITERAL, "true", true),
@@ -211,14 +211,14 @@ class LexerTest {
                 Token(
                     Token.Type.LITERAL,
                     "false",
-                    false
+                    false,
                 ),
                 Token(Token.Type.BINARY_OP, ">=", ">="),
                 Token(Token.Type.LITERAL, "true", true),
                 Token(Token.Type.BINARY_OP, ">", ">"),
                 Token(Token.Type.BINARY_OP, "in", "in"),
-                Token(Token.Type.LITERAL, "false", false)
-            )
+                Token(Token.Type.LITERAL, "false", false),
+            ),
         )
     }
 
@@ -231,8 +231,8 @@ class LexerTest {
             listOf(
                 Token(Token.Type.LITERAL, "1234", 1234),
                 Token(Token.Type.BINARY_OP, "==", "=="),
-                Token(Token.Type.LITERAL, "782", 782)
-            )
+                Token(Token.Type.LITERAL, "782", 782),
+            ),
         )
     }
 
@@ -249,8 +249,8 @@ class LexerTest {
                 Token(Token.Type.LITERAL, "-20", -20),
                 Token(Token.Type.BINARY_OP, "*", "*"),
                 Token(Token.Type.LITERAL, "-1", -1),
-                Token(Token.Type.CLOSE_PAREN, ")", ")")
-            )
+                Token(Token.Type.CLOSE_PAREN, ")", ")"),
+            ),
         )
     }
 
@@ -264,11 +264,11 @@ class LexerTest {
                 Token(
                     Token.Type.LITERAL,
                     "1.337",
-                    1.337
+                    1.337,
                 ),
                 Token(Token.Type.BINARY_OP, "!=", "!="),
-                Token(Token.Type.LITERAL, "2.42", 2.42)
-            )
+                Token(Token.Type.LITERAL, "2.42", 2.42),
+            ),
         )
     }
 
@@ -282,13 +282,13 @@ class LexerTest {
                 Token(
                     Token.Type.IDENTIFIER,
                     "person",
-                    "person"
+                    "person",
                 ),
                 Token(Token.Type.DOT, ".", "."),
                 Token(
                     Token.Type.IDENTIFIER,
                     "age",
-                    "age"
+                    "age",
                 ),
                 Token(Token.Type.BINARY_OP, "==", "=="),
                 Token(Token.Type.LITERAL, "12", 12),
@@ -297,13 +297,13 @@ class LexerTest {
                 Token(
                     Token.Type.IDENTIFIER,
                     "person",
-                    "person"
+                    "person",
                 ),
                 Token(Token.Type.DOT, ".", "."),
                 Token(
                     Token.Type.IDENTIFIER,
                     "hasJob",
-                    "hasJob"
+                    "hasJob",
                 ),
                 Token(Token.Type.BINARY_OP, "==", "=="),
                 Token(Token.Type.LITERAL, "true", true),
@@ -311,22 +311,22 @@ class LexerTest {
                 Token(
                     Token.Type.IDENTIFIER,
                     "person",
-                    "person"
+                    "person",
                 ),
                 Token(Token.Type.DOT, ".", "."),
                 Token(
                     Token.Type.IDENTIFIER,
                     "onVacation",
-                    "onVacation"
+                    "onVacation",
                 ),
                 Token(Token.Type.BINARY_OP, "!=", "!="),
                 Token(
                     Token.Type.LITERAL,
                     "false",
-                    false
+                    false,
                 ),
-                Token(Token.Type.CLOSE_PAREN, ")", ")")
-            )
+                Token(Token.Type.CLOSE_PAREN, ")", ")"),
+            ),
         )
     }
 
@@ -340,15 +340,15 @@ class LexerTest {
                 Token(
                     Token.Type.IDENTIFIER,
                     "age",
-                    "age"
+                    "age",
                 ),
                 Token(Token.Type.BINARY_OP, "*", "*"),
                 Token(Token.Type.OPEN_PAREN, "(", "("),
                 Token(Token.Type.LITERAL, "3", 3),
                 Token(Token.Type.BINARY_OP, "-", "-"),
                 Token(Token.Type.LITERAL, "1", 1),
-                Token(Token.Type.CLOSE_PAREN, ")", ")")
-            )
+                Token(Token.Type.CLOSE_PAREN, ")", ")"),
+            ),
         )
     }
 
@@ -362,9 +362,9 @@ class LexerTest {
                 Token(
                     Token.Type.IDENTIFIER,
                     "inString",
-                    "inString"
-                )
-            )
+                    "inString",
+                ),
+            ),
         )
     }
 
@@ -387,7 +387,7 @@ class LexerTest {
                 Token(
                     Token.Type.LITERAL,
                     "-17.55",
-                    -17.55
+                    -17.55,
                 ),
                 Token(Token.Type.BINARY_OP, "*", "*"),
                 Token(Token.Type.IDENTIFIER, "y", "y"),
@@ -396,24 +396,24 @@ class LexerTest {
                 Token(
                     Token.Type.IDENTIFIER,
                     "foo",
-                    "foo"
+                    "foo",
                 ),
                 Token(Token.Type.DOT, ".", "."),
                 Token(
                     Token.Type.IDENTIFIER,
                     "bar",
-                    "bar"
+                    "bar",
                 ),
                 Token(Token.Type.OPEN_BRACKET, "[", "["),
                 Token(
                     Token.Type.LITERAL,
                     "\"baz\\\"foz\"",
-                    "baz\"foz"
+                    "baz\"foz",
                 ),
                 Token(
                     Token.Type.CLOSE_BRACKET,
                     "]",
-                    "]"
+                    "]",
                 ),
                 Token(Token.Type.BINARY_OP, "&&", "&&"),
                 Token(Token.Type.IDENTIFIER, "b", "b"),
@@ -421,9 +421,9 @@ class LexerTest {
                 Token(
                     Token.Type.LITERAL,
                     "\"not a #comment\"",
-                    "not a #comment"
-                )
-            )
+                    "not a #comment",
+                ),
+            ),
         )
     }
 
@@ -448,8 +448,8 @@ class LexerTest {
                 Token(Token.Type.IDENTIFIER, "bar", "bar"),
                 Token(Token.Type.OPEN_BRACKET, "[", "["),
                 Token(Token.Type.LITERAL, """"baz\\"foz"""", """baz\"foz"""),
-                Token(Token.Type.CLOSE_BRACKET, "]", "]")
-            )
+                Token(Token.Type.CLOSE_BRACKET, "]", "]"),
+            ),
         )
     }
 
@@ -464,8 +464,8 @@ class LexerTest {
                 Token(Token.Type.QUESTION, "?", "?"),
                 Token(Token.Type.LITERAL, "-2", -2),
                 Token(Token.Type.COLON, ":", ":"),
-                Token(Token.Type.LITERAL, "-3", -3)
-            )
+                Token(Token.Type.LITERAL, "-3", -3),
+            ),
         )
     }
 

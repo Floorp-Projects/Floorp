@@ -95,7 +95,6 @@ internal open class SitePermissionsDialogFragment : AppCompatDialogFragment() {
         sheetDialog.setContainerView(rootView)
 
         sheetDialog.window?.apply {
-
             if (dialogGravity != DEFAULT_VALUE) {
                 setGravity(dialogGravity)
             }
@@ -123,17 +122,18 @@ internal open class SitePermissionsDialogFragment : AppCompatDialogFragment() {
                 rootView,
                 LayoutParams(
                     LayoutParams.MATCH_PARENT,
-                    LayoutParams.MATCH_PARENT
-                )
+                    LayoutParams.MATCH_PARENT,
+                ),
             )
         }
     }
+
     @SuppressLint("InflateParams")
     private fun createContainer(): View {
         val rootView = LayoutInflater.from(requireContext()).inflate(
             R.layout.mozac_site_permissions_prompt,
             null,
-            false
+            false,
         )
 
         rootView.findViewById<TextView>(R.id.title).text = title
@@ -217,7 +217,6 @@ internal open class SitePermissionsDialogFragment : AppCompatDialogFragment() {
             negativeButtonText: String? = null,
             shouldShowLearnMoreLink: Boolean = false,
         ): SitePermissionsDialogFragment {
-
             val fragment = SitePermissionsDialogFragment()
             val arguments = fragment.arguments ?: Bundle()
 

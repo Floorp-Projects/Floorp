@@ -25,7 +25,7 @@ import java.util.UUID
 class TabCollectionStorage(
     context: Context,
     private val writer: BrowserStateWriter = BrowserStateWriter(),
-    private val filesDir: File = context.filesDir
+    private val filesDir: File = context.filesDir,
 ) {
     internal var database: Lazy<TabCollectionDatabase> = lazy { TabCollectionDatabase.get(context) }
 
@@ -36,7 +36,7 @@ class TabCollectionStorage(
         val entity = TabCollectionEntity(
             title = title,
             updatedAt = System.currentTimeMillis(),
-            createdAt = System.currentTimeMillis()
+            createdAt = System.currentTimeMillis(),
         ).also { entity ->
             entity.id = database.value.tabCollectionDao().insertTabCollection(entity)
         }
@@ -62,7 +62,7 @@ class TabCollectionStorage(
                 url = session.content.url,
                 stateFile = fileName,
                 tabCollectionId = collection.id!!,
-                createdAt = System.currentTimeMillis()
+                createdAt = System.currentTimeMillis(),
             )
 
             val success = writer.writeTab(session, entity.getStateFile(filesDir))

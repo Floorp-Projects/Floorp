@@ -35,7 +35,7 @@ import mozilla.components.support.ktx.android.content.res.resolveAttribute
 class BrowserMenuItemToolbar(
     private val items: List<Button>,
     override val isCollapsingMenuLimit: Boolean = false,
-    override val isSticky: Boolean = false
+    override val isSticky: Boolean = false,
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
 
@@ -80,7 +80,7 @@ class BrowserMenuItemToolbar(
 
     override fun asCandidate(context: Context) = RowMenuCandidate(
         items = items.map { it.asCandidate(context) },
-        containerStyle = ContainerStyle(isVisible = visible())
+        containerStyle = ContainerStyle(isVisible = visible()),
     )
 
     /**
@@ -100,7 +100,7 @@ class BrowserMenuItemToolbar(
         @ColorRes val iconTintColorResource: Int = NO_ID,
         val isEnabled: () -> Boolean = { true },
         val longClickListener: (() -> Unit)? = null,
-        val listener: () -> Unit
+        val listener: () -> Unit,
     ) {
 
         internal open fun bind(view: ImageView) {
@@ -120,10 +120,10 @@ class BrowserMenuItemToolbar(
             icon = DrawableMenuIcon(
                 context,
                 resource = imageResource,
-                tint = if (iconTintColorResource == NO_ID) null else getColor(context, iconTintColorResource)
+                tint = if (iconTintColorResource == NO_ID) null else getColor(context, iconTintColorResource),
             ),
             containerStyle = ContainerStyle(isEnabled = isEnabled()),
-            onClick = listener
+            onClick = listener,
         )
 
         internal fun setTooltipTextCompatible(view: ImageView, contentDescription: String) {
@@ -161,14 +161,14 @@ class BrowserMenuItemToolbar(
         val isInPrimaryState: () -> Boolean = { true },
         val disableInSecondaryState: Boolean = false,
         longClickListener: (() -> Unit)? = null,
-        listener: () -> Unit
+        listener: () -> Unit,
     ) : Button(
         primaryImageResource,
         primaryContentDescription,
         primaryImageTintResource,
         isInPrimaryState,
         longClickListener = longClickListener,
-        listener = listener
+        listener = listener,
     ) {
 
         private var wasInPrimaryState = false
@@ -204,10 +204,10 @@ class BrowserMenuItemToolbar(
                         null
                     } else {
                         getColor(context, secondaryImageTintResource)
-                    }
+                    },
                 ),
                 containerStyle = ContainerStyle(isEnabled = !disableInSecondaryState),
-                onClick = listener
+                onClick = listener,
             )
         }
     }

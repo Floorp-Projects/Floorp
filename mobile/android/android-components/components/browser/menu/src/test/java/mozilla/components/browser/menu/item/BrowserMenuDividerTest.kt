@@ -32,16 +32,16 @@ class BrowserMenuDividerTest {
     fun `menu divider can be converted to candidate`() {
         assertEquals(
             DividerMenuCandidate(),
-            BrowserMenuDivider().asCandidate(mock())
+            BrowserMenuDivider().asCandidate(mock()),
         )
 
         assertEquals(
             DividerMenuCandidate(
-                containerStyle = ContainerStyle(isVisible = true)
+                containerStyle = ContainerStyle(isVisible = true),
             ),
             BrowserMenuDivider().apply {
                 visible = { true }
-            }.asCandidate(mock())
+            }.asCandidate(mock()),
         )
     }
 }

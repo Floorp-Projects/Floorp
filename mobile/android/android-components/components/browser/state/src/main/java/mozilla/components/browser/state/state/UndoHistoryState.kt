@@ -20,5 +20,5 @@ import mozilla.components.browser.state.state.recover.RecoverableTab
 data class UndoHistoryState(
     val tag: String = "",
     val tabs: List<RecoverableTab> = emptyList(),
-    val selectedTabId: String? = null
+    val selectedTabId: String? = null,
 )

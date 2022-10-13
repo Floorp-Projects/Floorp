@@ -24,7 +24,7 @@ class TabViewHolderTest : TestCase() {
                 tab: TabSessionState,
                 isSelected: Boolean,
                 styling: TabsTrayStyling,
-                delegate: TabsTray.Delegate
+                delegate: TabsTray.Delegate,
             ) { /* noop */ }
         }
 
@@ -41,7 +41,7 @@ class TabViewHolderTest : TestCase() {
                 tab: TabSessionState,
                 isSelected: Boolean,
                 styling: TabsTrayStyling,
-                delegate: TabsTray.Delegate
+                delegate: TabsTray.Delegate,
             ) { /* noop */ }
             override fun updateSelectedTabIndicator(showAsSelected: Boolean) { /* noop */ }
         }

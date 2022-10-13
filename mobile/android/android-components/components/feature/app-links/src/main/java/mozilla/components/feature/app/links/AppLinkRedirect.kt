@@ -12,7 +12,7 @@ import android.content.Intent
 data class AppLinkRedirect(
     val appIntent: Intent?,
     val fallbackUrl: String?,
-    val marketplaceIntent: Intent?
+    val marketplaceIntent: Intent?,
 ) {
     /**
      * If there is a third-party app intent.

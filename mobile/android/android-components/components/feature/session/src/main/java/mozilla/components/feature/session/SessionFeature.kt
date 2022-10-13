@@ -18,7 +18,7 @@ class SessionFeature(
     private val store: BrowserStore,
     private val goBackUseCase: SessionUseCases.GoBackUseCase,
     private val engineView: EngineView,
-    private val tabId: String? = null
+    private val tabId: String? = null,
 ) : LifecycleAwareFeature, UserInteractionHandler {
     internal val presenter = EngineViewPresenter(store, engineView, tabId)
 

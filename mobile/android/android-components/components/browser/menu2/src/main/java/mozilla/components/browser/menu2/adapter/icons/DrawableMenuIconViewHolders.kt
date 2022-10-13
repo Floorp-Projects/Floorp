@@ -35,7 +35,7 @@ import mozilla.components.support.base.log.logger.Logger
 
 internal abstract class MenuIconWithDrawableViewHolder<T : MenuIcon>(
     parent: ConstraintLayout,
-    inflater: LayoutInflater
+    inflater: LayoutInflater,
 ) : MenuIconViewHolder<T>(parent, inflater) {
 
     protected abstract val imageView: ImageView
@@ -70,7 +70,7 @@ internal abstract class MenuIconWithDrawableViewHolder<T : MenuIcon>(
 internal class DrawableMenuIconViewHolder(
     parent: ConstraintLayout,
     inflater: LayoutInflater,
-    side: Side
+    side: Side,
 ) : MenuIconWithDrawableViewHolder<DrawableMenuIcon>(parent, inflater) {
 
     override val imageView: ImageView = inflate(layoutResource).findViewById(R.id.icon)
@@ -119,7 +119,7 @@ internal class DrawableButtonMenuIconViewHolder(
     parent: ConstraintLayout,
     inflater: LayoutInflater,
     side: Side,
-    private val dismiss: () -> Unit
+    private val dismiss: () -> Unit,
 ) : MenuIconWithDrawableViewHolder<DrawableButtonMenuIcon>(parent, inflater), View.OnClickListener {
 
     override val imageView: ImageButton = inflate(layoutResource).findViewById(R.id.icon)
@@ -150,7 +150,7 @@ internal class AsyncDrawableMenuIconViewHolder(
     parent: ConstraintLayout,
     inflater: LayoutInflater,
     side: Side,
-    private val logger: Logger = Logger("mozac-menu2-AsyncDrawableMenuIconViewHolder")
+    private val logger: Logger = Logger("mozac-menu2-AsyncDrawableMenuIconViewHolder"),
 ) : MenuIconWithDrawableViewHolder<AsyncDrawableMenuIcon>(parent, inflater) {
 
     private val scope = MainScope()
@@ -184,14 +184,14 @@ internal class AsyncDrawableMenuIconViewHolder(
     @Suppress("TooGenericExceptionCaught")
     private suspend fun loadIcon(
         loadDrawable: suspend (width: Int, height: Int) -> Drawable?,
-        fallback: Drawable?
+        fallback: Drawable?,
     ) {
         val drawable = try {
             loadDrawable(imageView.measuredWidth, imageView.measuredHeight)
         } catch (throwable: Throwable) {
             logger.error(
                 message = "Failed to load browser action icon, falling back to default.",
-                throwable = throwable
+                throwable = throwable,
             )
             fallback
         }

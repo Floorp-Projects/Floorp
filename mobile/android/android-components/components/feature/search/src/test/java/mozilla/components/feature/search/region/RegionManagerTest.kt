@@ -21,7 +21,7 @@ class RegionManagerTest {
             context = FakeContext(),
             locationService = FakeLocationService(),
             currentTime = FakeClock()::time,
-            preferences = lazy { FakeSharedPreferences() }
+            preferences = lazy { FakeSharedPreferences() },
         )
 
         assertNull(regionManager.region())
@@ -30,14 +30,14 @@ class RegionManagerTest {
     @Test
     fun `First update`() = runTest {
         val locationService = FakeLocationService(
-            region = LocationService.Region("DE", "Germany")
+            region = LocationService.Region("DE", "Germany"),
         )
 
         val regionManager = RegionManager(
             context = FakeContext(),
             locationService = locationService,
             currentTime = FakeClock()::time,
-            preferences = lazy { FakeSharedPreferences() }
+            preferences = lazy { FakeSharedPreferences() },
         )
 
         val updatedRegion = regionManager.update()
@@ -51,14 +51,14 @@ class RegionManagerTest {
         val clock = FakeClock()
 
         val locationService = FakeLocationService(
-            region = LocationService.Region("DE", "Germany")
+            region = LocationService.Region("DE", "Germany"),
         )
 
         val regionManager = RegionManager(
             context = FakeContext(),
             locationService = locationService,
             currentTime = clock::time,
-            preferences = lazy { FakeSharedPreferences() }
+            preferences = lazy { FakeSharedPreferences() },
         )
 
         regionManager.update()
@@ -94,14 +94,14 @@ class RegionManagerTest {
         val clock = FakeClock()
 
         val locationService = FakeLocationService(
-            region = LocationService.Region("DE", "Germany")
+            region = LocationService.Region("DE", "Germany"),
         )
 
         val regionManager = RegionManager(
             context = FakeContext(),
             locationService = locationService,
             currentTime = clock::time,
-            preferences = lazy { FakeSharedPreferences() }
+            preferences = lazy { FakeSharedPreferences() },
         )
 
         regionManager.update()
@@ -139,7 +139,7 @@ class RegionManagerTest {
 
 class FakeLocationService(
     var region: LocationService.Region? = null,
-    private val hasRegionCached: Boolean = false
+    private val hasRegionCached: Boolean = false,
 ) : LocationService {
     override suspend fun fetchRegion(readFromCache: Boolean): LocationService.Region? = region
     override fun hasRegionCached(): Boolean = hasRegionCached

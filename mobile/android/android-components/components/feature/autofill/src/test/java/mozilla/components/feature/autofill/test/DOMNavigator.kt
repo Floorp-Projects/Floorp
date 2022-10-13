@@ -20,7 +20,7 @@ import javax.xml.parsers.DocumentBuilderFactory
  */
 internal class DOMNavigator(
     file: File,
-    override val activityPackageName: String
+    override val activityPackageName: String,
 ) : AutofillNodeNavigator<Element, AutofillId> {
 
     override fun currentText(node: Element): String? {
@@ -105,13 +105,13 @@ internal class DOMNavigator(
         usernameId: AutofillId?,
         passwordId: AutofillId?,
         webDomain: String?,
-        packageName: String
+        packageName: String,
     ): ParsedStructure {
         return ParsedStructure(
             usernameId,
             passwordId,
             webDomain,
-            packageName
+            packageName,
         )
     }
 }

@@ -66,14 +66,14 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
                 cardNumberLast4 = "1111",
                 expiryMonth = 12,
                 expiryYear = 2028,
-                cardType = "amex"
+                cardType = "amex",
             )
             val creditCard = storage.addCreditCard(creditCardFields)
             val key = delegate.getOrGenerateKey()
 
             assertEquals(
                 plaintextNumber,
-                delegate.decrypt(key, creditCard.encryptedCardNumber)
+                delegate.decrypt(key, creditCard.encryptedCardNumber),
             )
         }
 
@@ -119,7 +119,7 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
                 number = cardNumber,
                 expiryMonth = expiryMonth.toString(),
                 expiryYear = expiryYear.toString(),
-                cardType = cardType
+                cardType = cardType,
             )
 
             doReturn(CreditCardValidationDelegate.Result.CanBeCreated).`when`(validationDelegate).shouldCreateOrUpdate(creditCardEntry)
@@ -133,8 +133,8 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
                     cardNumberLast4 = cardNumber.last4Digits(),
                     expiryMonth = expiryMonth,
                     expiryYear = expiryYear,
-                    cardType = cardType
-                )
+                    cardType = cardType,
+                ),
             )
         }
     }
@@ -153,7 +153,7 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
                 number = cardNumber,
                 expiryMonth = expiryMonth.toString(),
                 expiryYear = expiryYear.toString(),
-                cardType = cardType
+                cardType = cardType,
             )
 
             val creditCard = storage.addCreditCard(
@@ -163,13 +163,13 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
                     cardNumberLast4 = "1111",
                     expiryMonth = expiryMonth,
                     expiryYear = expiryYear,
-                    cardType = cardType
-                )
+                    cardType = cardType,
+                ),
             )
             doReturn(CreditCardValidationDelegate.Result.CanBeUpdated(creditCard)).`when`(validationDelegate).shouldCreateOrUpdate(creditCardEntry)
 
             delegate.onCreditCardSave(
-                creditCardEntry
+                creditCardEntry,
             )
 
             verify(storage, times(1)).updateCreditCard(
@@ -180,8 +180,8 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
                     cardNumberLast4 = "4111111111111111".last4Digits(),
                     expiryMonth = expiryMonth,
                     expiryYear = expiryYear,
-                    cardType = cardType
-                )
+                    cardType = cardType,
+                ),
             )
         }
     }

@@ -62,7 +62,7 @@ class SpocsDaoTest {
     fun `GIVEN a story already persisted WHEN another story with different id is tried to be inserted THEN add that to the table`() = runTest {
         val story = PocketTestResources.dbExpectedPocketSpoc
         val newStory = story.copy(
-            id = 1
+            id = 1,
         )
         dao.insertSpocs(listOf(story))
 
@@ -76,7 +76,7 @@ class SpocsDaoTest {
     fun `GIVEN a story already persisted WHEN another story with different url is tried to be inserted THEN replace the existing`() = runTest {
         val story = PocketTestResources.dbExpectedPocketSpoc
         val newStory = story.copy(
-            title = "updated" + story.url
+            title = "updated" + story.url,
         )
         dao.insertSpocs(listOf(story))
 
@@ -90,7 +90,7 @@ class SpocsDaoTest {
     fun `GIVEN a story already persisted WHEN another story with different title is tried to be inserted THEN replace the existing`() = runTest {
         val story = PocketTestResources.dbExpectedPocketSpoc
         val newStory = story.copy(
-            title = "updated" + story.title
+            title = "updated" + story.title,
         )
         dao.insertSpocs(listOf(story))
 
@@ -104,7 +104,7 @@ class SpocsDaoTest {
     fun `GIVEN a story already persisted WHEN another story with different image url is tried to be inserted THEN replace the existing`() = runTest {
         val story = PocketTestResources.dbExpectedPocketSpoc
         val newStory = story.copy(
-            imageUrl = "updated" + story.imageUrl
+            imageUrl = "updated" + story.imageUrl,
         )
         dao.insertSpocs(listOf(story))
 
@@ -118,7 +118,7 @@ class SpocsDaoTest {
     fun `GIVEN a story already persisted WHEN another story with different sponsor is tried to be inserted THEN replace the existing`() = runTest {
         val story = PocketTestResources.dbExpectedPocketSpoc
         val newStory = story.copy(
-            sponsor = "updated" + story.sponsor
+            sponsor = "updated" + story.sponsor,
         )
         dao.insertSpocs(listOf(story))
 
@@ -132,7 +132,7 @@ class SpocsDaoTest {
     fun `GIVEN a story already persisted WHEN another story with different click shim is tried to be inserted THEN replace the existing`() = runTest {
         val story = PocketTestResources.dbExpectedPocketSpoc
         val newStory = story.copy(
-            clickShim = "updated" + story.clickShim
+            clickShim = "updated" + story.clickShim,
         )
         dao.insertSpocs(listOf(story))
 
@@ -146,7 +146,7 @@ class SpocsDaoTest {
     fun `GIVEN a story already persisted WHEN another story with different impression shim is tried to be inserted THEN replace the existing`() = runTest {
         val story = PocketTestResources.dbExpectedPocketSpoc
         val newStory = story.copy(
-            impressionShim = "updated" + story.impressionShim
+            impressionShim = "updated" + story.impressionShim,
         )
         dao.insertSpocs(listOf(story))
 
@@ -160,7 +160,7 @@ class SpocsDaoTest {
     fun `GIVEN a story already persisted WHEN another story with different priority is tried to be inserted THEN replace the existing`() = runTest {
         val story = PocketTestResources.dbExpectedPocketSpoc
         val newStory = story.copy(
-            priority = 765
+            priority = 765,
         )
         dao.insertSpocs(listOf(story))
 
@@ -174,7 +174,7 @@ class SpocsDaoTest {
     fun `GIVEN a story already persisted WHEN another story with a different lifetime cap count is tried to be inserted THEN replace the existing`() = runTest {
         val story = PocketTestResources.dbExpectedPocketSpoc
         val newStory = story.copy(
-            lifetimeCapCount = 123
+            lifetimeCapCount = 123,
         )
         dao.insertSpocs(listOf(story))
 
@@ -188,7 +188,7 @@ class SpocsDaoTest {
     fun `GIVEN a story already persisted WHEN another story with a different flight count cap is tried to be inserted THEN replace the existing`() = runTest {
         val story = PocketTestResources.dbExpectedPocketSpoc
         val newStory = story.copy(
-            flightCapCount = 999
+            flightCapCount = 999,
         )
         dao.insertSpocs(listOf(story))
 
@@ -202,7 +202,7 @@ class SpocsDaoTest {
     fun `GIVEN a story already persisted WHEN another story with a different flight period cap is tried to be inserted THEN replace the existing`() = runTest {
         val story = PocketTestResources.dbExpectedPocketSpoc
         val newStory = story.copy(
-            flightCapPeriod = 1
+            flightCapPeriod = 1,
         )
         dao.insertSpocs(listOf(story))
 
@@ -275,7 +275,7 @@ class SpocsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketSpoc
         val story2 = PocketTestResources.dbExpectedPocketSpoc.copy(id = story1.id * 2)
         val updatedStory1 = story1.copy(
-            id = story1.id * 234
+            id = story1.id * 234,
         )
         dao.insertSpocs(listOf(story1, story2))
 
@@ -292,7 +292,7 @@ class SpocsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketSpoc
         val story2 = PocketTestResources.dbExpectedPocketSpoc.copy(id = story1.id * 2)
         val updatedStory1 = story1.copy(
-            url = "updated" + story1.url
+            url = "updated" + story1.url,
         )
         dao.insertSpocs(listOf(story1, story2))
 
@@ -308,7 +308,7 @@ class SpocsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketSpoc
         val story2 = PocketTestResources.dbExpectedPocketSpoc.copy(id = story1.id * 2)
         val updatedStory1 = story1.copy(
-            title = "updated" + story1.title
+            title = "updated" + story1.title,
         )
         dao.insertSpocs(listOf(story1, story2))
 
@@ -324,7 +324,7 @@ class SpocsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketSpoc
         val story2 = PocketTestResources.dbExpectedPocketSpoc.copy(id = story1.id * 2)
         val updatedStory1 = story1.copy(
-            imageUrl = "updated" + story1.imageUrl
+            imageUrl = "updated" + story1.imageUrl,
         )
         dao.insertSpocs(listOf(story1, story2))
 
@@ -340,7 +340,7 @@ class SpocsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketSpoc
         val story2 = PocketTestResources.dbExpectedPocketSpoc.copy(id = story1.id * 2)
         val updatedStory1 = story1.copy(
-            sponsor = "updated" + story1.sponsor
+            sponsor = "updated" + story1.sponsor,
         )
         dao.insertSpocs(listOf(story1, story2))
 
@@ -356,7 +356,7 @@ class SpocsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketSpoc
         val story2 = PocketTestResources.dbExpectedPocketSpoc.copy(id = story1.id * 2)
         val updatedStory1 = story1.copy(
-            clickShim = "updated" + story1.clickShim
+            clickShim = "updated" + story1.clickShim,
         )
         dao.insertSpocs(listOf(story1, story2))
 
@@ -372,7 +372,7 @@ class SpocsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketSpoc
         val story2 = PocketTestResources.dbExpectedPocketSpoc.copy(id = story1.id * 2)
         val updatedStory1 = story1.copy(
-            impressionShim = "updated" + story1.impressionShim
+            impressionShim = "updated" + story1.impressionShim,
         )
         dao.insertSpocs(listOf(story1, story2))
 
@@ -388,7 +388,7 @@ class SpocsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketSpoc
         val story2 = PocketTestResources.dbExpectedPocketSpoc.copy(id = story1.id * 2)
         val updatedStory1 = story1.copy(
-            priority = 678
+            priority = 678,
         )
         dao.insertSpocs(listOf(story1, story2))
 
@@ -404,7 +404,7 @@ class SpocsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketSpoc
         val story2 = PocketTestResources.dbExpectedPocketSpoc.copy(id = story1.id * 2)
         val updatedStory1 = story1.copy(
-            lifetimeCapCount = 4322
+            lifetimeCapCount = 4322,
         )
         dao.insertSpocs(listOf(story1, story2))
 
@@ -420,7 +420,7 @@ class SpocsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketSpoc
         val story2 = PocketTestResources.dbExpectedPocketSpoc.copy(id = story1.id * 2)
         val updatedStory1 = story1.copy(
-            flightCapCount = 111111
+            flightCapCount = 111111,
         )
         dao.insertSpocs(listOf(story1, story2))
 
@@ -436,7 +436,7 @@ class SpocsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketSpoc
         val story2 = PocketTestResources.dbExpectedPocketSpoc.copy(id = story1.id * 2)
         val updatedStory1 = story1.copy(
-            flightCapPeriod = 7
+            flightCapPeriod = 7,
         )
         dao.insertSpocs(listOf(story1, story2))
 
@@ -467,8 +467,8 @@ class SpocsDaoTest {
             listOf(
                 SpocImpressionEntity(story1.id),
                 SpocImpressionEntity(story2.id),
-                SpocImpressionEntity(story3.id)
-            )
+                SpocImpressionEntity(story3.id),
+            ),
         )
         val result = dao.getSpocsImpressions()
 
@@ -488,8 +488,8 @@ class SpocsDaoTest {
         dao.recordImpressions(
             listOf(
                 SpocImpressionEntity(story1.id),
-                SpocImpressionEntity(story3.id)
-            )
+                SpocImpressionEntity(story3.id),
+            ),
         )
         val result = dao.getSpocsImpressions()
 

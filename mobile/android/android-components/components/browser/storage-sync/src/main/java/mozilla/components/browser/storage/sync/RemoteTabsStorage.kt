@@ -27,7 +27,7 @@ private const val TABS_DB_NAME = "tabs.sqlite"
  */
 open class RemoteTabsStorage(
     private val context: Context,
-    private val crashReporter: CrashReporting? = null
+    private val crashReporter: CrashReporting? = null,
 ) : Storage, SyncableStore {
     internal val api by lazy { RemoteTabsProvider(File(context.filesDir, TABS_DB_NAME).canonicalPath) }
     private val scope by lazy { CoroutineScope(Dispatchers.IO) }
@@ -49,7 +49,7 @@ open class RemoteTabsStorage(
                         val activeTab = it.active()
                         val urlHistory = listOf(activeTab.url) + it.previous().reversed().map { it.url }
                         RemoteTab(activeTab.title, urlHistory, activeTab.iconUrl, it.lastUsed)
-                    }
+                    },
                 )
             } catch (e: RemoteTabProviderException) {
                 crashReporter?.submitCaughtException(e)
@@ -108,7 +108,7 @@ data class SyncClient(val id: String)
 data class Tab(
     val history: List<TabEntry>,
     val active: Int,
-    val lastUsed: Long
+    val lastUsed: Long,
 ) {
     /**
      * The current active tab entry. In other words, this is the page that's currently shown for a
@@ -140,7 +140,7 @@ data class Tab(
  */
 data class SyncedDeviceTabs(
     val device: Device,
-    val tabs: List<Tab>
+    val tabs: List<Tab>,
 )
 
 /**
@@ -149,5 +149,5 @@ data class SyncedDeviceTabs(
 data class TabEntry(
     val title: String,
     val url: String,
-    val iconUrl: String?
+    val iconUrl: String?,
 )

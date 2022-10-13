@@ -91,15 +91,18 @@ class MainActivity :
                 name = "A-C Sync Sample - ${System.currentTimeMillis()}",
                 type = DeviceType.MOBILE,
                 capabilities = setOf(DeviceCapability.SEND_TAB),
-                secureStateAtRest = true
+                secureStateAtRest = true,
             ),
             SyncConfig(
                 setOf(
-                    SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords,
-                    SyncEngine.Addresses, SyncEngine.CreditCards
+                    SyncEngine.History,
+                    SyncEngine.Bookmarks,
+                    SyncEngine.Passwords,
+                    SyncEngine.Addresses,
+                    SyncEngine.CreditCards,
                 ),
-                periodicSyncConfig = PeriodicSyncConfig(periodMinutes = 15, initialDelayMinutes = 5)
-            )
+                periodicSyncConfig = PeriodicSyncConfig(periodMinutes = 15, initialDelayMinutes = 5),
+            ),
         )
     }
 
@@ -151,14 +154,15 @@ class MainActivity :
 
                     targets?.forEach {
                         constellation.sendCommandToDevice(
-                            it.id, DeviceCommandOutgoing.SendTab("Sample tab", "https://www.mozilla.org")
+                            it.id,
+                            DeviceCommandOutgoing.SendTab("Sample tab", "https://www.mozilla.org"),
                         )
                     }
 
                     Toast.makeText(
                         this@MainActivity,
                         "Sent sample tab to ${targets?.size ?: 0} device(s)",
-                        Toast.LENGTH_SHORT
+                        Toast.LENGTH_SHORT,
                     ).show()
                 }
             }
@@ -177,11 +181,11 @@ class MainActivity :
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarksStorage)
         GlobalSyncableStoreProvider.configureStore(
             storePair = SyncEngine.Passwords to passwordsStorage,
-            keyProvider = lazy { passwordsKeyProvider }
+            keyProvider = lazy { passwordsKeyProvider },
         )
         GlobalSyncableStoreProvider.configureStore(
             storePair = SyncEngine.CreditCards to creditCardsAddressesStorage,
-            keyProvider = lazy { creditCardKeyProvider }
+            keyProvider = lazy { creditCardKeyProvider },
         )
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Addresses to creditCardsAddressesStorage)
 
@@ -208,7 +212,7 @@ class MainActivity :
         launch {
             supportFragmentManager.popBackStack()
             accountManager.finishAuthentication(
-                FxaAuthData(action.toAuthType(), code = code, state = state)
+                FxaAuthData(action.toAuthType(), code = code, state = state),
             )
         }
     }
@@ -218,10 +222,15 @@ class MainActivity :
             this@MainActivity,
             getString(
                 R.string.full_device_details,
-                item.id, item.displayName, item.deviceType,
-                item.subscriptionExpired, item.subscription, item.capabilities, item.lastAccessTime
+                item.id,
+                item.displayName,
+                item.deviceType,
+                item.subscriptionExpired,
+                item.subscription,
+                item.capabilities,
+                item.lastAccessTime,
             ),
-            Toast.LENGTH_LONG
+            Toast.LENGTH_LONG,
         ).show()
     }
 
@@ -242,9 +251,13 @@ class MainActivity :
                 if (currentDevice != null) {
                     currentDeviceView.text = getString(
                         R.string.full_device_details,
-                        currentDevice.id, currentDevice.displayName, currentDevice.deviceType,
-                        currentDevice.subscriptionExpired, currentDevice.subscription,
-                        currentDevice.capabilities, currentDevice.lastAccessTime
+                        currentDevice.id,
+                        currentDevice.displayName,
+                        currentDevice.deviceType,
+                        currentDevice.subscriptionExpired,
+                        currentDevice.subscription,
+                        currentDevice.capabilities,
+                        currentDevice.lastAccessTime,
                     )
                 } else {
                     currentDeviceView.text = getString(R.string.current_device_unknown)
@@ -318,7 +331,7 @@ class MainActivity :
                 currentDeviceTextView.text = ""
 
                 val devicesFragment = supportFragmentManager.findFragmentById(
-                    R.id.devices_fragment
+                    R.id.devices_fragment,
                 ) as DeviceFragment
                 devicesFragment.updateDevices(listOf())
 
@@ -359,7 +372,7 @@ class MainActivity :
                 account.deviceConstellation().registerDeviceObserver(
                     deviceConstellationObserver,
                     this@MainActivity,
-                    true
+                    true,
                 )
             }
         }
@@ -372,7 +385,7 @@ class MainActivity :
                 txtView.text = getString(
                     R.string.signed_in_with_profile,
                     lastAuthType::class.simpleName,
-                    "${profile.displayName ?: ""} ${profile.email}"
+                    "${profile.displayName ?: ""} ${profile.email}",
                 )
             }
         }
@@ -386,7 +399,7 @@ class MainActivity :
                         AuthFlowError.FailedToBeginAuth -> "Failed to begin authentication"
                         AuthFlowError.FailedToCompleteAuth -> "Failed to complete authentication"
                         AuthFlowError.FailedToMigrate -> "Failed to migrate"
-                    }
+                    },
                 )
             }
         }
@@ -410,7 +423,9 @@ class MainActivity :
                 // visitedCount is passed twice: to get the correct plural form, and then as
                 // an argument for string formatting.
                 historyResultTextView.text = resources.getQuantityString(
-                    R.plurals.visited_url_count, visitedCount, visitedCount
+                    R.plurals.visited_url_count,
+                    visitedCount,
+                    visitedCount,
                 )
 
                 val bookmarksResultTextView: TextView = findViewById(R.id.bookmarksSyncResult)

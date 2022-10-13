@@ -54,7 +54,7 @@ class PocketStoriesUseCasesTest {
     fun `GIVEN a RefreshPocketStories THEN its visibility is internal`() {
         assertClassVisibility(
             PocketStoriesUseCases.RefreshPocketStories::class,
-            KVisibility.INTERNAL
+            KVisibility.INTERNAL,
         )
     }
 

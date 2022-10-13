@@ -62,11 +62,13 @@ class GeckoTrackingProtectionExceptionStorageTest {
 
         var excludedOnTrackingProtection = false
 
-        session.register(object : EngineSession.Observer {
-            override fun onExcludedOnTrackingProtectionChange(excluded: Boolean) {
-                excludedOnTrackingProtection = excluded
-            }
-        })
+        session.register(
+            object : EngineSession.Observer {
+                override fun onExcludedOnTrackingProtectionChange(excluded: Boolean) {
+                    excludedOnTrackingProtection = excluded
+                }
+            },
+        )
 
         storage.add(session)
 
@@ -88,11 +90,13 @@ class GeckoTrackingProtectionExceptionStorageTest {
 
         var excludedOnTrackingProtection = false
 
-        session.register(object : EngineSession.Observer {
-            override fun onExcludedOnTrackingProtectionChange(excluded: Boolean) {
-                excludedOnTrackingProtection = excluded
-            }
-        })
+        session.register(
+            object : EngineSession.Observer {
+                override fun onExcludedOnTrackingProtectionChange(excluded: Boolean) {
+                    excludedOnTrackingProtection = excluded
+                }
+            },
+        )
 
         storage.add(session, persistInPrivateMode = true)
 
@@ -111,11 +115,13 @@ class GeckoTrackingProtectionExceptionStorageTest {
 
         var excludedOnTrackingProtection = true
 
-        session.register(object : EngineSession.Observer {
-            override fun onExcludedOnTrackingProtectionChange(excluded: Boolean) {
-                excludedOnTrackingProtection = excluded
-            }
-        })
+        session.register(
+            object : EngineSession.Observer {
+                override fun onExcludedOnTrackingProtectionChange(excluded: Boolean) {
+                    excludedOnTrackingProtection = excluded
+                }
+            },
+        )
 
         storage.remove(session)
 
@@ -187,11 +193,13 @@ class GeckoTrackingProtectionExceptionStorageTest {
         val geckoResult = GeckoResult<List<ContentPermission>>()
         var excludedOnTrackingProtection = true
 
-        session.register(object : EngineSession.Observer {
-            override fun onExcludedOnTrackingProtectionChange(excluded: Boolean) {
-                excludedOnTrackingProtection = excluded
-            }
-        })
+        session.register(
+            object : EngineSession.Observer {
+                override fun onExcludedOnTrackingProtectionChange(excluded: Boolean) {
+                    excludedOnTrackingProtection = excluded
+                }
+            },
+        )
 
         whenever(runtime.storageController).thenReturn(storageController)
         whenever(runtime.storageController.allPermissions).thenReturn(geckoResult)

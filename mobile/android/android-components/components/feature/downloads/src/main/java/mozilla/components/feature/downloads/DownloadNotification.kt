@@ -49,7 +49,7 @@ internal object DownloadNotification {
     internal fun createDownloadGroupNotification(
         context: Context,
         notifications: List<DownloadJobState>,
-        notificationAccentColor: Int
+        notificationAccentColor: Int,
     ): Notification {
         val allDownloadsHaveFinished = notifications.all { it.status != DOWNLOADING }
         val icon = if (allDownloadsHaveFinished) {
@@ -65,7 +65,7 @@ internal object DownloadNotification {
             .setSmallIcon(icon)
             .setColor(ContextCompat.getColor(context, notificationAccentColor))
             .setContentTitle(
-                context.applicationContext.getString(R.string.mozac_feature_downloads_notification_channel)
+                context.applicationContext.getString(R.string.mozac_feature_downloads_notification_channel),
             )
             .setContentText(summaryList.joinToString("\n"))
             .setStyle(NotificationCompat.InboxStyle().addLine(summaryLine1).addLine(summaryLine2))
@@ -81,7 +81,7 @@ internal object DownloadNotification {
     fun createOngoingDownloadNotification(
         context: Context,
         downloadJobState: DownloadJobState,
-        notificationAccentColor: Int
+        notificationAccentColor: Int,
     ): Notification {
         val downloadState = downloadJobState.state
         val bytesCopied = downloadJobState.currentBytesCopied
@@ -111,7 +111,7 @@ internal object DownloadNotification {
     fun createPausedDownloadNotification(
         context: Context,
         downloadJobState: DownloadJobState,
-        notificationAccentColor: Int
+        notificationAccentColor: Int,
     ): Notification {
         val channelId = ensureChannelExists(context)
 
@@ -120,7 +120,7 @@ internal object DownloadNotification {
             .setSmallIcon(R.drawable.mozac_feature_download_ic_download)
             .setContentTitle(downloadState.fileName)
             .setContentText(
-                context.applicationContext.getString(R.string.mozac_feature_downloads_paused_notification_text)
+                context.applicationContext.getString(R.string.mozac_feature_downloads_paused_notification_text),
             )
             .setColor(ContextCompat.getColor(context, notificationAccentColor))
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
@@ -140,7 +140,7 @@ internal object DownloadNotification {
     fun createDownloadCompletedNotification(
         context: Context,
         downloadJobState: DownloadJobState,
-        notificationAccentColor: Int
+        notificationAccentColor: Int,
     ): Notification {
         val channelId = ensureChannelExists(context)
         val downloadState = downloadJobState.state
@@ -151,7 +151,7 @@ internal object DownloadNotification {
             .setWhen(downloadJobState.createdTime)
             .setOnlyAlertOnce(true)
             .setContentText(
-                context.applicationContext.getString(R.string.mozac_feature_downloads_completed_notification_text2)
+                context.applicationContext.getString(R.string.mozac_feature_downloads_completed_notification_text2),
             )
             .setColor(ContextCompat.getColor(context, notificationAccentColor))
             .setContentIntent(createPendingIntent(context, ACTION_OPEN, downloadState.id))
@@ -167,7 +167,7 @@ internal object DownloadNotification {
     fun createDownloadFailedNotification(
         context: Context,
         downloadJobState: DownloadJobState,
-        notificationAccentColor: Int
+        notificationAccentColor: Int,
     ): Notification {
         val channelId = ensureChannelExists(context)
         val downloadState = downloadJobState.state
@@ -176,7 +176,7 @@ internal object DownloadNotification {
             .setSmallIcon(R.drawable.mozac_feature_download_ic_download_failed)
             .setContentTitle(downloadState.fileName)
             .setContentText(
-                context.applicationContext.getString(R.string.mozac_feature_downloads_failed_notification_text2)
+                context.applicationContext.getString(R.string.mozac_feature_downloads_failed_notification_text2),
             )
             .setColor(ContextCompat.getColor(context, notificationAccentColor))
             .setCategory(NotificationCompat.CATEGORY_ERROR)
@@ -228,7 +228,7 @@ internal object DownloadNotification {
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
                 context.applicationContext.getString(R.string.mozac_feature_downloads_notification_channel),
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_LOW,
             )
 
             notificationManager.createNotificationChannel(channel)
@@ -245,7 +245,7 @@ internal object DownloadNotification {
         return NotificationCompat.Action.Builder(
             0,
             context.applicationContext.getString(R.string.mozac_feature_downloads_button_pause),
-            pauseIntent
+            pauseIntent,
         ).build()
     }
 
@@ -255,7 +255,7 @@ internal object DownloadNotification {
         return NotificationCompat.Action.Builder(
             0,
             context.applicationContext.getString(R.string.mozac_feature_downloads_button_resume),
-            resumeIntent
+            resumeIntent,
         ).build()
     }
 
@@ -265,7 +265,7 @@ internal object DownloadNotification {
         return NotificationCompat.Action.Builder(
             0,
             context.applicationContext.getString(R.string.mozac_feature_downloads_button_cancel),
-            cancelIntent
+            cancelIntent,
         ).build()
     }
 
@@ -275,7 +275,7 @@ internal object DownloadNotification {
         return NotificationCompat.Action.Builder(
             0,
             context.applicationContext.getString(R.string.mozac_feature_downloads_button_try_again),
-            tryAgainIntent
+            tryAgainIntent,
         ).build()
     }
 
@@ -294,7 +294,7 @@ internal object DownloadNotification {
             context.applicationContext,
             Random.nextInt(),
             intent,
-            PendingIntentUtils.defaultFlags
+            PendingIntentUtils.defaultFlags,
         )
     }
 }
@@ -303,7 +303,9 @@ internal object DownloadNotification {
 internal fun NotificationCompat.Builder.setCompatGroup(groupKey: String): NotificationCompat.Builder {
     return if (SDK_INT >= Build.VERSION_CODES.N) {
         setGroup(groupKey)
-    } else this
+    } else {
+        this
+    }
 }
 
 @VisibleForTesting

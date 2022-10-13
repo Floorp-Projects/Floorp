@@ -20,8 +20,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations.openMocks
 import org.robolectric.Shadows.shadowOf
 
@@ -29,8 +29,11 @@ import org.robolectric.Shadows.shadowOf
 class WebAppActivityFeatureTest {
 
     @Mock private lateinit var activity: Activity
+
     @Mock private lateinit var window: Window
+
     @Mock private lateinit var decorView: View
+
     @Mock private lateinit var icons: BrowserIcons
 
     @Before
@@ -47,12 +50,12 @@ class WebAppActivityFeatureTest {
         val basicManifest = WebAppManifest(
             name = "Demo",
             startUrl = "https://mozilla.com",
-            display = WebAppManifest.DisplayMode.STANDALONE
+            display = WebAppManifest.DisplayMode.STANDALONE,
         )
         WebAppActivityFeature(activity, icons, basicManifest).onResume(mock())
 
         val fullscreenManifest = basicManifest.copy(
-            display = WebAppManifest.DisplayMode.FULLSCREEN
+            display = WebAppManifest.DisplayMode.FULLSCREEN,
         )
         WebAppActivityFeature(activity, icons, fullscreenManifest).onResume(mock())
     }
@@ -62,7 +65,7 @@ class WebAppActivityFeatureTest {
         val manifest = WebAppManifest(
             name = "Test Manifest",
             startUrl = "/",
-            orientation = WebAppManifest.Orientation.LANDSCAPE
+            orientation = WebAppManifest.Orientation.LANDSCAPE,
         )
 
         WebAppActivityFeature(activity, icons, manifest).onResume(mock())
@@ -75,7 +78,7 @@ class WebAppActivityFeatureTest {
     fun `sets task description`() {
         val manifest = WebAppManifest(
             name = "Test Manifest",
-            startUrl = "/"
+            startUrl = "/",
         )
         val icon = Icon(mock(), source = Icon.Source.GENERATOR)
         `when`(icons.loadIcon(any())).thenReturn(CompletableDeferred(icon))

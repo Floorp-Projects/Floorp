@@ -35,7 +35,7 @@ import mozilla.components.support.base.coroutines.Dispatchers as MozillaDispatch
 class UndoMiddleware(
     private val clearAfterMillis: Long = 5000, // For comparison: a LENGTH_LONG Snackbar takes 2750.
     private val mainScope: CoroutineScope = CoroutineScope(Dispatchers.Main),
-    private val waitScope: CoroutineScope = CoroutineScope(MozillaDispatchers.Cached)
+    private val waitScope: CoroutineScope = CoroutineScope(MozillaDispatchers.Cached),
 ) : Middleware<BrowserState, BrowserAction> {
     private val logger = Logger("UndoMiddleware")
     private var clearJob: Job? = null
@@ -43,17 +43,21 @@ class UndoMiddleware(
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         val state = context.state
 
         when (action) {
             // Remember removed tabs
             is TabListAction.RemoveAllNormalTabsAction -> onTabsRemoved(
-                context, state.normalTabs, state.selectedTabId
+                context,
+                state.normalTabs,
+                state.selectedTabId,
             )
             is TabListAction.RemoveAllPrivateTabsAction -> onTabsRemoved(
-                context, state.privateTabs, state.selectedTabId
+                context,
+                state.privateTabs,
+                state.selectedTabId,
             )
             is TabListAction.RemoveAllTabsAction -> {
                 if (action.recoverable) {
@@ -82,7 +86,7 @@ class UndoMiddleware(
     private fun onTabsRemoved(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         tabs: List<SessionState>,
-        selectedTabId: String?
+        selectedTabId: String?,
     ) {
         clearJob?.cancel()
 
@@ -106,7 +110,7 @@ class UndoMiddleware(
         }
 
         context.dispatch(
-            UndoAction.AddRecoverableTabs(tag, recoverableTabs, selectionToRestore)
+            UndoAction.AddRecoverableTabs(tag, recoverableTabs, selectionToRestore),
         )
 
         val store = context.store
@@ -119,7 +123,7 @@ class UndoMiddleware(
 
     private fun restore(
         store: Store<BrowserState, BrowserAction>,
-        state: BrowserState
+        state: BrowserState,
     ) = mainScope.launch {
         clearJob?.cancel()
 
@@ -137,8 +141,8 @@ class UndoMiddleware(
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs,
-                restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX
-            )
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX,
+            ),
         )
 
         // Restore the previous selection if needed.

@@ -43,7 +43,7 @@ private const val TEST_CHANNEL = "testChannel"
 class NativeNotificationBridgeTest {
     private val blankNotification = WebNotification(
         TEST_TITLE, TEST_TAG, TEST_TEXT, TEST_URL, null, null,
-        null, true, mock(), 0
+        null, true, mock(), 0,
     )
 
     private lateinit var icons: BrowserIcons
@@ -65,7 +65,7 @@ class NativeNotificationBridgeTest {
             testContext,
             TEST_CHANNEL,
             null,
-            0
+            0,
         )
 
         assertNull(notification.actions)
@@ -83,7 +83,7 @@ class NativeNotificationBridgeTest {
             testContext,
             TEST_CHANNEL,
             null,
-            0
+            0,
         )
 
         assertEquals(1234567890, notification.`when`)
@@ -96,7 +96,7 @@ class NativeNotificationBridgeTest {
             testContext,
             TEST_CHANNEL,
             null,
-            0
+            0,
         )
 
         verify(icons).loadIcon(
@@ -106,11 +106,11 @@ class NativeNotificationBridgeTest {
                 resources = listOf(
                     Resource(
                         url = "https://example.com/large.png",
-                        type = MANIFEST_ICON
-                    )
+                        type = MANIFEST_ICON,
+                    ),
                 ),
-                isPrivate = true
-            )
+                isPrivate = true,
+            ),
         )
     }
 
@@ -121,7 +121,7 @@ class NativeNotificationBridgeTest {
             testContext,
             TEST_CHANNEL,
             null,
-            0
+            0,
         )
 
         val expectedStyle = BigTextStyle().javaClass.name
@@ -132,7 +132,7 @@ class NativeNotificationBridgeTest {
             testContext,
             TEST_CHANNEL,
             null,
-            0
+            0,
         )
 
         assertNotEquals(expectedStyle, noBodyNotification.extras.getString(Notification.EXTRA_TEMPLATE))

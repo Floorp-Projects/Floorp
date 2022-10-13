@@ -40,7 +40,7 @@ class SearchEngineWriterTest {
             name = "example",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            resultUrls = listOf("https://www.example.com/search?q={searchTerms}'")
+            resultUrls = listOf("https://www.example.com/search?q={searchTerms}'"),
         )
 
         val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
@@ -64,8 +64,8 @@ class SearchEngineWriterTest {
             resultUrls = listOf(
                 "https://www.example.com/search?q=%s",
                 "https://www.example.com/search1?q=%s",
-                "https://www.example.com/search2?q=%s"
-            )
+                "https://www.example.com/search2?q=%s",
+            ),
         )
 
         val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
@@ -89,7 +89,7 @@ class SearchEngineWriterTest {
             name = "example",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            suggestUrl = "https://www.example.com/search-suggestion?q=%s"
+            suggestUrl = "https://www.example.com/search-suggestion?q=%s",
         )
 
         val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
@@ -110,53 +110,53 @@ class SearchEngineWriterTest {
             name = "&&&example&&&",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            suggestUrl = "https://www.example.com/search-suggestion?q=%s"
+            suggestUrl = "https://www.example.com/search-suggestion?q=%s",
         )
         val invalidResultUrlLessSign = SearchEngine(
             id = "id1",
             name = "example",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            resultUrls = listOf("https://www.example.com/search?<q=%s")
+            resultUrls = listOf("https://www.example.com/search?<q=%s"),
         )
         val invalidResultUrlGreaterSign = SearchEngine(
             id = "id1",
             name = "example",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            resultUrls = listOf("https://www.example.com/search?>q=%s")
+            resultUrls = listOf("https://www.example.com/search?>q=%s"),
         )
         val invalidSuggestionUrlApo = SearchEngine(
             id = "id1",
             name = "example",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            suggestUrl = "https://www.example.com/search-'suggestion'?q=%s"
+            suggestUrl = "https://www.example.com/search-'suggestion'?q=%s",
         )
 
         assertNotNull(
             writer.buildSearchEngineXML(
                 invalidSearchEngineNameAmp,
-                DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
-            )
+                DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument(),
+            ),
         )
         assertNotNull(
             writer.buildSearchEngineXML(
                 invalidResultUrlLessSign,
-                DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
-            )
+                DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument(),
+            ),
         )
         assertNotNull(
             writer.buildSearchEngineXML(
                 invalidResultUrlGreaterSign,
-                DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
-            )
+                DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument(),
+            ),
         )
         assertNotNull(
             writer.buildSearchEngineXML(
                 invalidSuggestionUrlApo,
-                DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
-            )
+                DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument(),
+            ),
         )
     }
 
@@ -168,7 +168,7 @@ class SearchEngineWriterTest {
             name = "example",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            resultUrls = listOf("https://www.example.com/search?q=%s'")
+            resultUrls = listOf("https://www.example.com/search?q=%s'"),
         )
 
         val badFile = AtomicFile(File("", ""))
@@ -184,7 +184,7 @@ class SearchEngineWriterTest {
             name = "example",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            resultUrls = listOf("https://www.example.com/search?q=%s'")
+            resultUrls = listOf("https://www.example.com/search?q=%s'"),
         )
 
         val file = storage.getSearchFile(searchEngine.id)

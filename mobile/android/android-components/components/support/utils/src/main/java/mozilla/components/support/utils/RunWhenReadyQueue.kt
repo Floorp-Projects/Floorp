@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * future, i.e. gate becomes open.
  */
 class RunWhenReadyQueue(
-    private val scope: CoroutineScope = MainScope()
+    private val scope: CoroutineScope = MainScope(),
 ) {
 
     private val tasks = mutableListOf<() -> Unit>()

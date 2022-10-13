@@ -58,11 +58,13 @@ class AdsTelemetryTest {
     @Test
     fun `WHEN checkIfAddWasClicked is called with a null session URL THEN don't emit a Fact`() {
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.checkIfAddWasClicked(null, listOf())
 
@@ -73,11 +75,13 @@ class AdsTelemetryTest {
     fun `GIVEN no ads in the redirect path WHEN checkIfAddWasClicked is called THEN don't emit a Fact`() {
         val sessionUrl = "https://www.google.com/search?q=aaa"
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.checkIfAddWasClicked(sessionUrl, listOf("https://www.aaa.com"))
 
@@ -88,15 +92,17 @@ class AdsTelemetryTest {
     fun `GIVEN ads are in the redirect path WHEN checkIfAddWasClicked is called THEN emit an appropriate SERP_ADD_CLICKED Fact`() {
         val sessionUrl = "https://www.google.com/search?q=aaa"
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.checkIfAddWasClicked(
             sessionUrl,
-            listOf("https://www.google.com/aclk", "https://www.aaa.com")
+            listOf("https://www.google.com/aclk", "https://www.aaa.com"),
         )
 
         assertEquals(1, facts.size)
@@ -119,11 +125,13 @@ class AdsTelemetryTest {
         message.put(ADS_MESSAGE_SESSION_URL_KEY, "https://www.google.com/search?q=aaa")
         message.put(ADS_MESSAGE_COOKIES_KEY, cookies)
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.processMessage(message)
 
@@ -147,11 +155,13 @@ class AdsTelemetryTest {
         message.put(ADS_MESSAGE_SESSION_URL_KEY, "https://www.google.com/search?q=aaa")
         message.put(ADS_MESSAGE_COOKIES_KEY, cookies)
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.processMessage(message)
 
@@ -163,11 +173,13 @@ class AdsTelemetryTest {
         val url = "https://www.bing.com/search?q=aaa&pc=MOZMBA&form=QBRERANDOM"
         telemetry.cachedCookies = createCookieList()
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         telemetry.checkIfAddWasClicked(url, listOf("https://www.bing.com/aclik", "https://www.aaa.com"))
 

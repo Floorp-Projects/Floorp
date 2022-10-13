@@ -20,7 +20,7 @@ private val validCodeSet = setOf(
     "firefox-b-lg", "firefox-b-huawei-h1611", "firefox-b-is-oem1", "firefox-b-oem1",
     "firefox-b-oem2", "firefox-b-tinno", "firefox-b-pn-wt", "firefox-b-pn-wt-us", "ubuntu",
     "ffab", "ffcm", "ffhp", "ffip", "ffit", "ffnt", "ffocus", "ffos", "ffsb", "fpas", "fpsa",
-    "ftas", "ftsa", "newext", "1000969a", null
+    "ftas", "ftsa", "newext", "1000969a", null,
 )
 private val validChannelSet = setOf("ts")
 
@@ -32,7 +32,7 @@ private val validChannelSet = setOf("ts")
 internal fun getTrackKey(
     provider: SearchProviderModel,
     uri: Uri,
-    cookies: List<JSONObject>
+    cookies: List<JSONObject>,
 ): String {
     val paramSet = uri.queryParameterNames
     var code: String? = null
@@ -90,7 +90,7 @@ internal fun getTrackKey(
 private fun getTrackKeyFromCookies(
     provider: SearchProviderModel,
     uri: Uri,
-    cookies: List<JSONObject>
+    cookies: List<JSONObject>,
 ): TrackKeyInfo? {
     // Especially Bing requires lots of extra work related to cookies.
     for (followOnCookie in provider.followOnCookies) {
@@ -116,7 +116,7 @@ private fun getTrackKeyFromCookies(
             if (valueList.size == 2 && valueList[0] == followOnCookie.codeParam &&
                 followOnCookie.codePrefixes.any { prefix ->
                     valueList[1].startsWith(
-                            prefix
+                            prefix,
                         )
                 }
             ) {

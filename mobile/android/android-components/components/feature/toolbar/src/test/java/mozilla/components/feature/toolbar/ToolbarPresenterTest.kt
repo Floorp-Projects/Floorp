@@ -45,9 +45,9 @@ class ToolbarPresenterTest {
                 BrowserState(
                     tabs = listOf(createTab("https://www.mozilla.org", id = "tab1")),
                     customTabs = listOf(createCustomTab("https://www.example.org", id = "ct")),
-                    selectedTabId = "tab1"
-                )
-            )
+                    selectedTabId = "tab1",
+                ),
+            ),
         )
         val toolbarPresenter = spy(ToolbarPresenter(toolbar, store))
 
@@ -75,9 +75,9 @@ class ToolbarPresenterTest {
                 BrowserState(
                     tabs = listOf(createTab("https://www.mozilla.org", id = "tab1")),
                     customTabs = listOf(createCustomTab("https://www.example.org", id = "ct")),
-                    selectedTabId = "tab1"
-                )
-            )
+                    selectedTabId = "tab1",
+                ),
+            ),
         )
         val toolbarPresenter = spy(ToolbarPresenter(toolbar, store, customTabId = "ct"))
         toolbarPresenter.renderer = mock()
@@ -103,9 +103,9 @@ class ToolbarPresenterTest {
                 BrowserState(
                     tabs = listOf(createTab("https://www.mozilla.org", id = "tab1")),
                     customTabs = listOf(createCustomTab("https://www.example.org", id = "ct")),
-                    selectedTabId = "tab1"
-                )
-            )
+                    selectedTabId = "tab1",
+                ),
+            ),
         )
 
         val toolbarPresenter = spy(ToolbarPresenter(toolbar, store))
@@ -123,9 +123,9 @@ class ToolbarPresenterTest {
                 SecurityInfoState(
                     secure = true,
                     host = "mozilla.org",
-                    issuer = "Mozilla"
-                )
-            )
+                    issuer = "Mozilla",
+                ),
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -146,13 +146,13 @@ class ToolbarPresenterTest {
                                 url = "https://www.mozilla.org",
                                 securityInfo = SecurityInfoState(true, "mozilla.org", "Mozilla"),
                                 searchTerms = "Hello World",
-                                progress = 60
-                            )
-                        )
+                                progress = 60,
+                            ),
+                        ),
                     ),
-                    selectedTabId = "tab1"
-                )
-            )
+                    selectedTabId = "tab1",
+                ),
+            ),
         )
 
         val toolbarPresenter = spy(ToolbarPresenter(toolbar, store))
@@ -190,9 +190,9 @@ class ToolbarPresenterTest {
                 BrowserState(
                     tabs = listOf(createTab("https://www.mozilla.org", id = "tab1")),
                     customTabs = listOf(createCustomTab("https://www.example.org", id = "ct")),
-                    selectedTabId = "tab1"
-                )
-            )
+                    selectedTabId = "tab1",
+                ),
+            ),
         )
 
         val toolbarPresenter = spy(ToolbarPresenter(toolbar, store))
@@ -207,8 +207,8 @@ class ToolbarPresenterTest {
         store.dispatch(
             ContentAction.UpdateSearchTermsAction(
                 sessionId = "tab1",
-                searchTerms = "Hello World"
-            )
+                searchTerms = "Hello World",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -224,9 +224,9 @@ class ToolbarPresenterTest {
                 BrowserState(
                     tabs = listOf(createTab("https://www.mozilla.org", id = "tab1")),
                     customTabs = listOf(createCustomTab("https://www.example.org", id = "ct")),
-                    selectedTabId = "tab1"
-                )
-            )
+                    selectedTabId = "tab1",
+                ),
+            ),
         )
 
         val toolbarPresenter = spy(ToolbarPresenter(toolbar, store))
@@ -239,7 +239,7 @@ class ToolbarPresenterTest {
         verify(toolbar, never()).displayProgress(75)
 
         store.dispatch(
-            ContentAction.UpdateProgressAction("tab1", 75)
+            ContentAction.UpdateProgressAction("tab1", 75),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -249,7 +249,7 @@ class ToolbarPresenterTest {
         verify(toolbar, never()).displayProgress(90)
 
         store.dispatch(
-            ContentAction.UpdateProgressAction("tab1", 90)
+            ContentAction.UpdateProgressAction("tab1", 90),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -270,14 +270,14 @@ class ToolbarPresenterTest {
                                 url = "https://www.mozilla.org",
                                 securityInfo = SecurityInfoState(true, "mozilla.org", "Mozilla"),
                                 searchTerms = "Hello World",
-                                progress = 60
-                            )
+                                progress = 60,
+                            ),
                         ),
-                        createTab(id = "tab2", url = "https://www.example.org")
+                        createTab(id = "tab2", url = "https://www.example.org"),
                     ),
-                    selectedTabId = "tab1"
-                )
-            )
+                    selectedTabId = "tab1",
+                ),
+            ),
         )
 
         val toolbarPresenter = spy(ToolbarPresenter(toolbar, store))
@@ -313,8 +313,8 @@ class ToolbarPresenterTest {
                                 url = "https://www.mozilla.org",
                                 securityInfo = SecurityInfoState(true, "mozilla.org", "Mozilla"),
                                 searchTerms = "Hello World",
-                                progress = 60
-                            )
+                                progress = 60,
+                            ),
                         ),
                         TabSessionState(
                             id = "tab2",
@@ -323,14 +323,14 @@ class ToolbarPresenterTest {
                                 securityInfo = SecurityInfoState(false, "example.org", "Example"),
                                 searchTerms = "Example",
                                 permissionHighlights = PermissionHighlightsState(true),
-                                progress = 90
+                                progress = 90,
                             ),
-                            trackingProtection = TrackingProtectionState(enabled = true)
-                        )
+                            trackingProtection = TrackingProtectionState(enabled = true),
+                        ),
                     ),
-                    selectedTabId = "tab1"
-                )
-            )
+                    selectedTabId = "tab1",
+                ),
+            ),
         )
 
         val toolbarPresenter = spy(ToolbarPresenter(toolbar, store))
@@ -377,13 +377,13 @@ class ToolbarPresenterTest {
                                 url = "https://www.mozilla.org",
                                 securityInfo = SecurityInfoState(true, "mozilla.org", "Mozilla"),
                                 searchTerms = "Hello World",
-                                progress = 60
-                            )
-                        )
+                                progress = 60,
+                            ),
+                        ),
                     ),
-                    selectedTabId = "tab"
-                )
-            )
+                    selectedTabId = "tab",
+                ),
+            ),
         )
 
         val toolbarPresenter = spy(ToolbarPresenter(toolbar, store))
@@ -430,13 +430,13 @@ class ToolbarPresenterTest {
                                 url = "https://www.mozilla.org",
                                 securityInfo = SecurityInfoState(true, "mozilla.org", "Mozilla"),
                                 searchTerms = "Hello World",
-                                progress = 60
-                            )
-                        )
+                                progress = 60,
+                            ),
+                        ),
                     ),
-                    selectedTabId = "tab"
-                )
-            )
+                    selectedTabId = "tab",
+                ),
+            ),
         )
 
         val toolbarPresenter = spy(ToolbarPresenter(toolbar, store))

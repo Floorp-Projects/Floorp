@@ -32,7 +32,7 @@ class WebExtensionActionMenuCandidateTest {
         badgeText = "",
         badgeTextColor = 0,
         badgeBackgroundColor = 0,
-        onClick = {}
+        onClick = {},
     )
 
     @Test
@@ -45,7 +45,7 @@ class WebExtensionActionMenuCandidateTest {
             badgeText = null,
             badgeTextColor = null,
             badgeBackgroundColor = null,
-            onClick = onClick
+            onClick = onClick,
         ).createMenuCandidate(testContext)
 
         assertEquals("", candidate.text)
@@ -76,7 +76,7 @@ class WebExtensionActionMenuCandidateTest {
                 badgeText = "10",
                 badgeTextColor = Color.DKGRAY,
                 badgeBackgroundColor = Color.YELLOW,
-                enabled = true
+                enabled = true,
             )
             .createMenuCandidate(testContext)
 
@@ -90,9 +90,9 @@ class WebExtensionActionMenuCandidateTest {
             TextMenuIcon(
                 text = "10",
                 backgroundTint = Color.YELLOW,
-                textStyle = TextStyle(color = Color.DKGRAY)
+                textStyle = TextStyle(color = Color.DKGRAY),
             ),
-            candidate.end
+            candidate.end,
         )
     }
 
@@ -105,7 +105,7 @@ class WebExtensionActionMenuCandidateTest {
                 loadIcon = { height ->
                     calledWith = height
                     null
-                }
+                },
             )
             .createMenuCandidate(testContext)
 

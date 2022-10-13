@@ -34,7 +34,7 @@ class SimpleBrowserMenuHighlightableItemTest {
         val item = SimpleBrowserMenuHighlightableItem(
             "label",
             textColorResource = android.R.color.black,
-            backgroundTint = Color.RED
+            backgroundTint = Color.RED,
         ) {
             onClickWasPress = true
         }
@@ -52,7 +52,7 @@ class SimpleBrowserMenuHighlightableItemTest {
             label = "label",
             textColorResource = android.R.color.black,
             backgroundTint = Color.RED,
-            listener = listener
+            listener = listener,
         )
 
         assertTrue(item.visible())
@@ -65,7 +65,7 @@ class SimpleBrowserMenuHighlightableItemTest {
         val item = SimpleBrowserMenuHighlightableItem(
             label = "label",
             textColorResource = android.R.color.black,
-            backgroundTint = Color.RED
+            backgroundTint = Color.RED,
         ) {
             callbackInvoked = true
         }
@@ -90,7 +90,7 @@ class SimpleBrowserMenuHighlightableItemTest {
             textColorResource = android.R.color.black,
             backgroundTint = Color.RED,
             isHighlighted = { false },
-            listener = listener
+            listener = listener,
         )
 
         var view = inflate(item)
@@ -106,7 +106,7 @@ class SimpleBrowserMenuHighlightableItemTest {
             textColorResource = android.R.color.black,
             backgroundTint = Color.RED,
             isHighlighted = { true },
-            listener = listener
+            listener = listener,
         )
 
         view = inflate(highlightedItem)
@@ -127,19 +127,19 @@ class SimpleBrowserMenuHighlightableItemTest {
             textColorResource = android.R.color.black,
             backgroundTint = Color.RED,
             isHighlighted = { shouldHighlight },
-            listener = listener
+            listener = listener,
         )
 
         assertEquals(
             TextMenuCandidate(
                 "label",
                 textStyle = TextStyle(
-                    color = ContextCompat.getColor(testContext, android.R.color.black)
+                    color = ContextCompat.getColor(testContext, android.R.color.black),
                 ),
                 containerStyle = ContainerStyle(true),
-                onClick = listener
+                onClick = listener,
             ),
-            item.asCandidate(testContext)
+            item.asCandidate(testContext),
         )
     }
 

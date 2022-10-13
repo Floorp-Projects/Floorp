@@ -50,11 +50,11 @@ class BrowserMenuImageSwitchTest {
                 isChecked = false,
                 start = DrawableMenuIcon(null),
                 end = CompoundMenuCandidate.ButtonType.SWITCH,
-                onCheckedChange = listener
+                onCheckedChange = listener,
             ),
             BrowserMenuImageSwitch(icon, label, listener = listener).asCandidate(testContext).run {
                 copy(start = (start as DrawableMenuIcon?)?.copy(drawable = null))
-            }
+            },
         )
     }
 }

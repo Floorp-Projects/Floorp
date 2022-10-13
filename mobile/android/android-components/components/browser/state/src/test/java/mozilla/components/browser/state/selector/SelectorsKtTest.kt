@@ -26,7 +26,7 @@ class SelectorsKtTest {
         assertNull(store.state.selectedTab)
 
         store.dispatch(
-            CustomTabListAction.AddCustomTabAction(createCustomTab("https://www.mozilla.org"))
+            CustomTabListAction.AddCustomTabAction(createCustomTab("https://www.mozilla.org")),
         ).joinBlocking()
 
         assertNull(store.state.selectedTab)
@@ -53,7 +53,7 @@ class SelectorsKtTest {
         assertNull(store.state.selectedNormalTab)
 
         store.dispatch(
-            CustomTabListAction.AddCustomTabAction(createCustomTab("https://www.mozilla.org"))
+            CustomTabListAction.AddCustomTabAction(createCustomTab("https://www.mozilla.org")),
         ).joinBlocking()
 
         assertNull(store.state.selectedNormalTab)
@@ -73,7 +73,7 @@ class SelectorsKtTest {
     @Test
     fun `selectedTab extension property - ignores unknown id`() {
         val state = BrowserState(
-            selectedTabId = "no valid id"
+            selectedTabId = "no valid id",
         )
 
         assertNull(state.selectedTab)
@@ -82,7 +82,7 @@ class SelectorsKtTest {
     @Test
     fun `selectedNormalTab extension property - ignores unknown id`() {
         val state = BrowserState(
-            selectedTabId = "no valid id"
+            selectedTabId = "no valid id",
         )
 
         assertNull(state.selectedNormalTab)
@@ -96,7 +96,7 @@ class SelectorsKtTest {
 
         val state = BrowserState(
             tabs = listOf(tab, otherTab),
-            customTabs = listOf(customTab)
+            customTabs = listOf(customTab),
         )
 
         assertEquals(tab, state.findTab(tab.id))
@@ -112,7 +112,7 @@ class SelectorsKtTest {
 
         val state = BrowserState(
             tabs = listOf(privateTab, normalTab),
-            customTabs = listOf(customTab)
+            customTabs = listOf(customTab),
         )
 
         assertEquals(normalTab, state.findNormalTab(normalTab.id))
@@ -128,7 +128,7 @@ class SelectorsKtTest {
 
         val state = BrowserState(
             tabs = listOf(tab, otherTab),
-            customTabs = listOf(customTab)
+            customTabs = listOf(customTab),
         )
 
         assertNull(state.findCustomTab(tab.id))
@@ -145,7 +145,7 @@ class SelectorsKtTest {
         val state = BrowserState(
             tabs = listOf(tab, otherTab),
             customTabs = listOf(customTab),
-            selectedTabId = tab.id
+            selectedTabId = tab.id,
         )
 
         assertEquals(tab, state.findCustomTabOrSelectedTab())
@@ -164,7 +164,7 @@ class SelectorsKtTest {
         val state = BrowserState(
             tabs = listOf(tab, otherTab),
             customTabs = listOf(customTab),
-            selectedTabId = tab.id
+            selectedTabId = tab.id,
         )
 
         assertEquals(tab, state.findTabOrCustomTabOrSelectedTab())
@@ -183,7 +183,7 @@ class SelectorsKtTest {
 
         val state = BrowserState(
             tabs = listOf(tab1, privateTab1, tab2, privateTab2),
-            customTabs = listOf(createCustomTab("https://www.google.com"))
+            customTabs = listOf(createCustomTab("https://www.google.com")),
         )
 
         assertEquals(listOf(tab1, tab2), state.getNormalOrPrivateTabs(private = false))
@@ -202,7 +202,7 @@ class SelectorsKtTest {
 
         val state = BrowserState(
             tabs = listOf(tab1, privateTab1, tab2, privateTab2),
-            customTabs = listOf(createCustomTab("https://www.google.com"))
+            customTabs = listOf(createCustomTab("https://www.google.com")),
         )
 
         assertEquals(listOf(tab1, tab2), state.normalTabs)
@@ -215,22 +215,22 @@ class SelectorsKtTest {
     @Test
     fun `findTabOrCustomTab finds normal and custom tabs`() {
         BrowserState(
-            tabs = listOf(createTab("https://www.mozilla.org", id = "test-id"))
+            tabs = listOf(createTab("https://www.mozilla.org", id = "test-id")),
         ).also { state ->
             assertNotNull(state.findTabOrCustomTab("test-id"))
             assertEquals(
                 "https://www.mozilla.org",
-                state.findTabOrCustomTab("test-id")!!.content.url
+                state.findTabOrCustomTab("test-id")!!.content.url,
             )
         }
 
         BrowserState(
-            customTabs = listOf(createCustomTab("https://www.mozilla.org", id = "test-id"))
+            customTabs = listOf(createCustomTab("https://www.mozilla.org", id = "test-id")),
         ).also { state ->
             assertNotNull(state.findTabOrCustomTab("test-id"))
             assertEquals(
                 "https://www.mozilla.org",
-                state.findTabOrCustomTab("test-id")!!.content.url
+                state.findTabOrCustomTab("test-id")!!.content.url,
             )
         }
     }
@@ -238,16 +238,16 @@ class SelectorsKtTest {
     @Test
     fun `findNormalOrPrivateTabByUrl finds a matching normal tab`() {
         BrowserState(
-            tabs = listOf(createTab("https://www.mozilla.org", id = "test-id", private = false))
+            tabs = listOf(createTab("https://www.mozilla.org", id = "test-id", private = false)),
         ).also { state ->
             assertNotNull(state.findNormalOrPrivateTabByUrl("https://www.mozilla.org", false))
             assertEquals(
                 "https://www.mozilla.org",
-                state.findNormalOrPrivateTabByUrl("https://www.mozilla.org", false)!!.content.url
+                state.findNormalOrPrivateTabByUrl("https://www.mozilla.org", false)!!.content.url,
             )
             assertEquals(
                 "test-id",
-                state.findNormalOrPrivateTabByUrl("https://www.mozilla.org", false)!!.id
+                state.findNormalOrPrivateTabByUrl("https://www.mozilla.org", false)!!.id,
             )
         }
     }
@@ -255,7 +255,7 @@ class SelectorsKtTest {
     @Test
     fun `findNormalOrPrivateTabByUrl finds no matching normal tab`() {
         BrowserState(
-            tabs = listOf(createTab("https://www.mozilla.org", id = "test-id", private = true))
+            tabs = listOf(createTab("https://www.mozilla.org", id = "test-id", private = true)),
         ).also { state ->
             assertNull(state.findNormalOrPrivateTabByUrl("https://www.mozilla.org", false))
         }
@@ -264,16 +264,16 @@ class SelectorsKtTest {
     @Test
     fun `findNormalOrPrivateTabByUrl finds a matching private tab`() {
         BrowserState(
-            tabs = listOf(createTab("https://www.mozilla.org", id = "test-id", private = true))
+            tabs = listOf(createTab("https://www.mozilla.org", id = "test-id", private = true)),
         ).also { state ->
             assertNotNull(state.findNormalOrPrivateTabByUrl("https://www.mozilla.org", true))
             assertEquals(
                 "https://www.mozilla.org",
-                state.findNormalOrPrivateTabByUrl("https://www.mozilla.org", true)!!.content.url
+                state.findNormalOrPrivateTabByUrl("https://www.mozilla.org", true)!!.content.url,
             )
             assertEquals(
                 "test-id",
-                state.findNormalOrPrivateTabByUrl("https://www.mozilla.org", true)!!.id
+                state.findNormalOrPrivateTabByUrl("https://www.mozilla.org", true)!!.id,
             )
         }
     }
@@ -281,7 +281,7 @@ class SelectorsKtTest {
     @Test
     fun `findNormalOrPrivateTabByUrl finds no matching private tab`() {
         BrowserState(
-            tabs = listOf(createTab("https://www.mozilla.org", id = "test-id", private = false))
+            tabs = listOf(createTab("https://www.mozilla.org", id = "test-id", private = false)),
         ).also { state ->
             assertNull(state.findNormalOrPrivateTabByUrl("https://www.mozilla.org", true))
         }

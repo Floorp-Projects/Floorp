@@ -24,7 +24,7 @@ import mozilla.components.support.ktx.android.view.enterToImmersiveMode
 class WebAppActivityFeature(
     private val activity: Activity,
     private val icons: BrowserIcons,
-    private val manifest: WebAppManifest
+    private val manifest: WebAppManifest,
 ) : DefaultLifecycleObserver {
 
     private val scope = MainScope()

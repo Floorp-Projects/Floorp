@@ -43,13 +43,13 @@ object Glean {
         applicationContext: Context,
         uploadEnabled: Boolean,
         configuration: Configuration,
-        buildInfo: BuildInfo
+        buildInfo: BuildInfo,
     ) {
         GleanCore.initialize(
             applicationContext = applicationContext,
             uploadEnabled = uploadEnabled,
             configuration = configuration.toWrappedConfiguration(),
-            buildInfo = buildInfo
+            buildInfo = buildInfo,
         )
     }
 
@@ -91,12 +91,12 @@ object Glean {
     fun setExperimentActive(
         experimentId: String,
         branch: String,
-        extra: Map<String, String>? = null
+        extra: Map<String, String>? = null,
     ) {
         GleanCore.setExperimentActive(
             experimentId = experimentId,
             branch = branch,
-            extra = extra
+            extra = extra,
         )
     }
 

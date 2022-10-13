@@ -20,7 +20,7 @@ class BrowserMenuHighlightTest {
     @Test
     fun `low priority effect keeps notification tint`() {
         val highlight = BrowserMenuHighlight.LowPriority(
-            notificationTint = Color.RED
+            notificationTint = Color.RED,
         )
         assertEquals(LowPriorityHighlightEffect(Color.RED), highlight.asEffect(mock()))
     }
@@ -28,7 +28,7 @@ class BrowserMenuHighlightTest {
     @Test
     fun `high priority effect keeps background tint`() {
         val highlight = BrowserMenuHighlight.HighPriority(
-            backgroundTint = Color.RED
+            backgroundTint = Color.RED,
         )
         assertEquals(HighPriorityHighlightEffect(Color.RED), highlight.asEffect(mock()))
     }
@@ -40,7 +40,7 @@ class BrowserMenuHighlightTest {
             startImageResource = 0,
             endImageResource = 0,
             backgroundResource = 0,
-            colorResource = R.color.photonRed50
+            colorResource = R.color.photonRed50,
         )
         assertEquals(HighPriorityHighlightEffect(testContext.getColor(R.color.photonRed50)), highlight.asEffect(testContext))
     }

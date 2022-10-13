@@ -23,7 +23,7 @@ class SearchEngineSuggestionProviderTest {
     private lateinit var defaultProvider: SearchEngineSuggestionProvider
     private val engineList = listOf(
         createSearchEngine("amazon", "https://www.amazon.org/?q={searchTerms}", mock()),
-        createSearchEngine("bing", "https://www.bing.com/?q={searchTerms}", mock())
+        createSearchEngine("bing", "https://www.bing.com/?q={searchTerms}", mock()),
     )
     private val testContext: Context = mock()
 
@@ -37,7 +37,7 @@ class SearchEngineSuggestionProviderTest {
             "description",
             mock(),
             maxSuggestions = 1,
-            charactersThreshold = 1
+            charactersThreshold = 1,
         )
 
         whenever(testContext.getString(1, "amazon")).thenReturn("Search amazon")
@@ -61,7 +61,13 @@ class SearchEngineSuggestionProviderTest {
     @Test
     fun `Provider returns empty list when text is shorter than charactersThreshold`() = runTest {
         val provider = SearchEngineSuggestionProvider(
-            testContext, engineList, mock(), 1, "description", mock(), charactersThreshold = 3
+            testContext,
+            engineList,
+            mock(),
+            1,
+            "description",
+            mock(),
+            charactersThreshold = 3,
         )
 
         val suggestions = provider.onInputChanged("am")
@@ -71,7 +77,6 @@ class SearchEngineSuggestionProviderTest {
 
     @Test
     fun `Provider returns empty list when list does not contain engines with typed text`() = runTest {
-
         val suggestions = defaultProvider.onInputChanged("x")
 
         assertTrue(suggestions.isEmpty())
@@ -79,7 +84,6 @@ class SearchEngineSuggestionProviderTest {
 
     @Test
     fun `Provider returns a match when list contains the typed engine`() = runTest {
-
         val suggestions = defaultProvider.onInputChanged("am")
 
         assertEquals("Search amazon", suggestions[0].title)
@@ -88,7 +92,12 @@ class SearchEngineSuggestionProviderTest {
     @Test
     fun `Provider returns empty list when the engine list is empty`() = runTest {
         val providerEmpty = SearchEngineSuggestionProvider(
-            testContext, emptyList(), mock(), 1, "description", mock()
+            testContext,
+            emptyList(),
+            mock(),
+            1,
+            "description",
+            mock(),
         )
 
         val suggestions = providerEmpty.onInputChanged("a")

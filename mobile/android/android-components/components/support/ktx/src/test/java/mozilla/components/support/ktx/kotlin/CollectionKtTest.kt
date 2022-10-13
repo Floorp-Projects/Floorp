@@ -44,7 +44,7 @@ class CollectionKtTest {
             2 to 'c',
             3 to 'a',
             3 to 'b',
-            3 to 'c'
+            3 to 'c',
         )
         var position = 0
         numbers.crossProduct(letters) { number, letter ->

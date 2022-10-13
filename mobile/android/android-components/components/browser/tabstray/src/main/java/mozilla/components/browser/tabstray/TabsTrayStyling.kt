@@ -27,5 +27,5 @@ data class TabsTrayStyling(
     val itemTextColor: Int = DEFAULT_ITEM_TEXT_COLOR,
     val selectedItemTextColor: Int = DEFAULT_ITEM_TEXT_SELECTED_COLOR,
     val itemUrlTextColor: Int = DEFAULT_ITEM_TEXT_COLOR,
-    val selectedItemUrlTextColor: Int = DEFAULT_ITEM_TEXT_SELECTED_COLOR
+    val selectedItemUrlTextColor: Int = DEFAULT_ITEM_TEXT_SELECTED_COLOR,
 )

@@ -24,11 +24,12 @@ internal class MonthAndYearPicker @JvmOverloads constructor(
     private val selectedDate: Calendar = now(),
     private val maxDate: Calendar = getDefaultMaxDate(),
     private val minDate: Calendar = getDefaultMinDate(),
-    internal var dateSetListener: OnDateSetListener? = null
+    internal var dateSetListener: OnDateSetListener? = null,
 ) : ScrollView(context), NumberPicker.OnValueChangeListener {
 
     @VisibleForTesting
     internal val monthView: NumberPicker
+
     @VisibleForTesting
     internal val yearView: NumberPicker
     private val monthsLabels: Array<out String>

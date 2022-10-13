@@ -20,7 +20,7 @@ import java.util.concurrent.ThreadFactory
  * the naming scheme will be deferred to [Executors.defaultThreadFactory]
  */
 internal class StoreThreadFactory(
-    threadNamePrefix: String?
+    threadNamePrefix: String?,
 ) : ThreadFactory {
     @Volatile
     private var thread: Thread? = null
@@ -51,7 +51,7 @@ internal class StoreThreadFactory(
         }
 
         throw IllegalThreadStateException(
-            "Expected `store` thread, but running on thread `${currentThread.name}`. Leaked MiddlewareContext?"
+            "Expected `store` thread, but running on thread `${currentThread.name}`. Leaked MiddlewareContext?",
         )
     }
 }

@@ -61,7 +61,7 @@ data class WebAppManifest(
     @ColorInt val themeColor: Int? = null,
     val relatedApplications: List<ExternalApplicationResource> = emptyList(),
     val preferRelatedApplications: Boolean = false,
-    val shareTarget: ShareTarget? = null
+    val shareTarget: ShareTarget? = null,
 ) {
     /**
      * Defines the developers’ preferred display mode for the website.
@@ -89,7 +89,7 @@ data class WebAppManifest(
          * The application opens in a conventional browser tab or new window, depending on the browser and platform.
          * This is the default.
          */
-        BROWSER
+        BROWSER,
     }
 
     /**
@@ -106,7 +106,7 @@ data class WebAppManifest(
         val src: String,
         val sizes: List<Size> = emptyList(),
         val type: String? = null,
-        val purpose: Set<Purpose> = setOf(Purpose.ANY)
+        val purpose: Set<Purpose> = setOf(Purpose.ANY),
     ) {
         enum class Purpose {
             /**
@@ -126,7 +126,7 @@ data class WebAppManifest(
             /**
              * The user agent is free to display the icon in any context (this is the default value).
              */
-            ANY
+            ANY,
         }
     }
 
@@ -141,7 +141,7 @@ data class WebAppManifest(
         LANDSCAPE_SECONDARY,
         PORTRAIT,
         PORTRAIT_PRIMARY,
-        PORTRAIT_SECONDARY
+        PORTRAIT_SECONDARY,
     }
 
     /**
@@ -163,7 +163,7 @@ data class WebAppManifest(
          * If the value is set to auto, the browser will use the Unicode bidirectional algorithm to make a best guess
          * about the text's direction.
          */
-        AUTO
+        AUTO,
     }
 
     /**
@@ -180,7 +180,7 @@ data class WebAppManifest(
         val url: String? = null,
         val id: String? = null,
         val minVersion: String? = null,
-        val fingerprints: List<Fingerprint> = emptyList()
+        val fingerprints: List<Fingerprint> = emptyList(),
     ) {
 
         /**
@@ -189,7 +189,7 @@ data class WebAppManifest(
          */
         data class Fingerprint(
             val type: String,
-            val value: String
+            val value: String,
         )
     }
 
@@ -206,7 +206,7 @@ data class WebAppManifest(
         val action: String,
         val method: RequestMethod = RequestMethod.GET,
         val encType: EncodingType = EncodingType.URL_ENCODED,
-        val params: Params = Params()
+        val params: Params = Params(),
     ) {
 
         /**
@@ -221,7 +221,7 @@ data class WebAppManifest(
             val title: String? = null,
             val text: String? = null,
             val url: String? = null,
-            val files: List<Files> = emptyList()
+            val files: List<Files> = emptyList(),
         )
 
         /**
@@ -232,7 +232,7 @@ data class WebAppManifest(
          */
         data class Files(
             val name: String,
-            val accept: List<String>
+            val accept: List<String>,
         )
 
         /**
@@ -247,7 +247,7 @@ data class WebAppManifest(
          */
         enum class EncodingType(val type: String) {
             URL_ENCODED("application/x-www-form-urlencoded"),
-            MULTIPART("multipart/form-data")
+            MULTIPART("multipart/form-data"),
         }
     }
 }

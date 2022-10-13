@@ -17,15 +17,17 @@ import mozilla.components.browser.menu.R
  */
 class DynamicWidthRecyclerView @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null
+    attrs: AttributeSet? = null,
 ) : RecyclerView(context, attrs) {
     @VisibleForTesting
-    @Px internal var maxWidthOfAllChildren: Int = 0
+    @Px
+    internal var maxWidthOfAllChildren: Int = 0
         set(value) {
             if (field == 0) field = value
         }
 
     @Px var minWidth: Int = -1
+
     @Px var maxWidth: Int = -1
 
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
@@ -50,7 +52,7 @@ class DynamicWidthRecyclerView @JvmOverloads constructor(
     @VisibleForTesting
     internal fun setReconciledDimensions(
         desiredWidth: Int,
-        desiredHeight: Int
+        desiredHeight: Int,
     ) {
         val minimumTapArea = resources.getDimensionPixelSize(R.dimen.mozac_browser_menu_material_min_tap_area)
         val minimumItemWidth = resources.getDimensionPixelSize(R.dimen.mozac_browser_menu_material_min_item_width)

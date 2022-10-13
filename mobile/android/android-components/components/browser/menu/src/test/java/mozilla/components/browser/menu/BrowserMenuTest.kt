@@ -51,7 +51,7 @@ class BrowserMenuTest {
     fun `show returns non-null popup window`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {}
+            SimpleBrowserMenuItem("World") {},
         )
 
         val adapter = BrowserMenuAdapter(testContext, items)
@@ -68,7 +68,7 @@ class BrowserMenuTest {
     fun `show assigns currAnchor and isShown`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {}
+            SimpleBrowserMenuItem("World") {},
         )
 
         val adapter = BrowserMenuAdapter(testContext, items)
@@ -95,7 +95,7 @@ class BrowserMenuTest {
         val menuStyle = MenuStyle(
             backgroundColor = Color.RED,
             minWidth = 20,
-            maxWidth = 500
+            maxWidth = 500,
         )
         val popup = menu.show(anchor, style = menuStyle)
 
@@ -116,7 +116,7 @@ class BrowserMenuTest {
     fun `dismiss sets isShown to false`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {}
+            SimpleBrowserMenuItem("World") {},
         )
 
         val adapter = BrowserMenuAdapter(testContext, items)
@@ -134,7 +134,7 @@ class BrowserMenuTest {
     fun `recyclerview adapter will have items for every menu item`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {}
+            SimpleBrowserMenuItem("World") {},
         )
 
         val adapter = BrowserMenuAdapter(testContext, items)
@@ -156,7 +156,7 @@ class BrowserMenuTest {
     fun `endOfMenuAlwaysVisible will be forwarded to recyclerview layoutManager`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {}
+            SimpleBrowserMenuItem("World") {},
         )
 
         val adapter = spy(BrowserMenuAdapter(testContext, items))
@@ -177,7 +177,7 @@ class BrowserMenuTest {
     fun `endOfMenuAlwaysVisible will be forwarded to scrollOnceToTheBottom on devices with Android M and below`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {}
+            SimpleBrowserMenuItem("World") {},
         )
 
         val adapter = BrowserMenuAdapter(testContext, items)
@@ -198,7 +198,7 @@ class BrowserMenuTest {
     fun `invalidate will be forwarded to recyclerview adapter`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {}
+            SimpleBrowserMenuItem("World") {},
         )
 
         val adapter = spy(BrowserMenuAdapter(testContext, items))
@@ -228,7 +228,7 @@ class BrowserMenuTest {
     fun `created popup window is displayed automatically`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {}
+            SimpleBrowserMenuItem("World") {},
         )
 
         val adapter = BrowserMenuAdapter(testContext, items)
@@ -245,7 +245,7 @@ class BrowserMenuTest {
     fun `dismissing the browser menu will dismiss the popup`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {}
+            SimpleBrowserMenuItem("World") {},
         )
 
         val adapter = BrowserMenuAdapter(testContext, items)
@@ -266,7 +266,7 @@ class BrowserMenuTest {
     fun `determineMenuOrientation returns Orientation-DOWN by default`() {
         assertEquals(
             BrowserMenu.Orientation.DOWN,
-            BrowserMenu.determineMenuOrientation(mock())
+            BrowserMenu.determineMenuOrientation(mock()),
         )
     }
 
@@ -280,7 +280,7 @@ class BrowserMenuTest {
 
         assertEquals(
             BrowserMenu.Orientation.UP,
-            BrowserMenu.determineMenuOrientation(view)
+            BrowserMenu.determineMenuOrientation(view),
         )
     }
 
@@ -294,7 +294,7 @@ class BrowserMenuTest {
 
         assertEquals(
             BrowserMenu.Orientation.DOWN,
-            BrowserMenu.determineMenuOrientation(view)
+            BrowserMenu.determineMenuOrientation(view),
         )
     }
 
@@ -308,7 +308,13 @@ class BrowserMenuTest {
         menu.show(anchor)
 
         val expected = MenuPositioningData(
-            BrowserMenuPlacement.AnchoredToTop.Dropdown(anchor), DOWN, false, true, 0, 100, 28
+            BrowserMenuPlacement.AnchoredToTop.Dropdown(anchor),
+            DOWN,
+            false,
+            true,
+            0,
+            100,
+            28,
         )
         assertEquals(expected, menu.menuPositioningData)
     }
@@ -317,7 +323,7 @@ class BrowserMenuTest {
     fun `configureExpandableMenu will setup a new ExpandabeLayout for a AnchoredToBottom#ManualAnchoring menu`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World", isCollapsingMenuLimit = true) {}
+            SimpleBrowserMenuItem("World", isCollapsingMenuLimit = true) {},
         )
         val adapter = BrowserMenuAdapter(testContext, items)
         val menu = BrowserMenu(adapter)
@@ -335,7 +341,7 @@ class BrowserMenuTest {
     fun `configureExpandableMenu will setup a new ExpandabeLayout for a AnchoredToBottom#Dropdown menu`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World", isCollapsingMenuLimit = true) {}
+            SimpleBrowserMenuItem("World", isCollapsingMenuLimit = true) {},
         )
         val adapter = BrowserMenuAdapter(testContext, items)
         val menu = BrowserMenu(adapter)
@@ -353,7 +359,7 @@ class BrowserMenuTest {
     fun `configureExpandableMenu will not setup a new ExpandableLayout if none of the items can serve as a collapsingMenuLimit`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {}
+            SimpleBrowserMenuItem("World") {},
         )
         val adapter = BrowserMenuAdapter(testContext, items)
         val menu = BrowserMenu(adapter)
@@ -431,7 +437,7 @@ class BrowserMenuTest {
     fun `popup is dismissed when anchor is detached`() {
         val items = listOf(
             SimpleBrowserMenuItem("Mock") {},
-            SimpleBrowserMenuItem("Menu") {}
+            SimpleBrowserMenuItem("Menu") {},
         )
         val adapter = BrowserMenuAdapter(testContext, items)
         val menu = BrowserMenu(adapter)
@@ -472,7 +478,7 @@ class BrowserMenuTest {
         val menuStyle = MenuStyle(
             backgroundColor = Color.GREEN,
             minWidth = 20,
-            maxWidth = 500
+            maxWidth = 500,
         )
         assertEquals(Color.RED, menu.backgroundColor)
 

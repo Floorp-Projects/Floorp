@@ -33,13 +33,13 @@ class DigitalAssetLinksApiTest {
     private val webAsset = AssetDescriptor.Web(site = "https://mozilla.org")
     private val androidAsset = AssetDescriptor.Android(
         packageName = "com.mozilla.fenix",
-        sha256CertFingerprint = "01:23:45:67:89"
+        sha256CertFingerprint = "01:23:45:67:89",
     )
     private val baseRequest = Request(
         url = "https://mozilla.org",
         method = Request.Method.GET,
         connectTimeout = TIMEOUT,
-        readTimeout = TIMEOUT
+        readTimeout = TIMEOUT,
     )
     private val apiKey = "X"
     private lateinit var client: Client
@@ -145,10 +145,10 @@ class DigitalAssetLinksApiTest {
             listOf(
                 Statement(
                     relation = USE_AS_ORIGIN,
-                    target = webAsset
-                )
+                    target = webAsset,
+                ),
             ),
-            api.listStatements(webAsset).toList()
+            api.listStatements(webAsset).toList(),
         )
     }
 
@@ -169,10 +169,10 @@ class DigitalAssetLinksApiTest {
             listOf(
                 Statement(
                     relation = HANDLE_ALL_URLS,
-                    target = androidAsset
-                )
+                    target = androidAsset,
+                ),
             ),
-            api.listStatements(webAsset).toList()
+            api.listStatements(webAsset).toList(),
         )
     }
 
@@ -185,8 +185,8 @@ class DigitalAssetLinksApiTest {
                     "prettyPrint=false&key=X&relation=delegate_permission%2Fcommon.use_as_origin&" +
                     "source.web.site=${Uri.encode("https://mozilla.org")}&" +
                     "target.androidApp.packageName=com.mozilla.fenix&" +
-                    "target.androidApp.certificate.sha256Fingerprint=${Uri.encode("01:23:45:67:89")}"
-            )
+                    "target.androidApp.certificate.sha256Fingerprint=${Uri.encode("01:23:45:67:89")}",
+            ),
         )
     }
 
@@ -198,8 +198,8 @@ class DigitalAssetLinksApiTest {
                 url = "https://digitalassetlinks.googleapis.com/v1/assetlinks:check?" +
                     "prettyPrint=false&key=X&relation=delegate_permission%2Fcommon.handle_all_urls&" +
                     "source.web.site=${Uri.encode("https://mozilla.org")}&" +
-                    "target.web.site=${Uri.encode("https://mozilla.org")}"
-            )
+                    "target.web.site=${Uri.encode("https://mozilla.org")}",
+            ),
         )
     }
 
@@ -209,8 +209,8 @@ class DigitalAssetLinksApiTest {
         verify(client).fetch(
             baseRequest.copy(
                 url = "https://digitalassetlinks.googleapis.com/v1/statements:list?" +
-                    "prettyPrint=false&key=X&source.web.site=${Uri.encode("https://mozilla.org")}"
-            )
+                    "prettyPrint=false&key=X&source.web.site=${Uri.encode("https://mozilla.org")}",
+            ),
         )
     }
 
@@ -218,7 +218,7 @@ class DigitalAssetLinksApiTest {
         url = "",
         status = SUCCESS,
         headers = MutableHeaders(),
-        body = mockBody(data)
+        body = mockBody(data),
     )
 
     private fun mockBody(data: String): Response.Body {

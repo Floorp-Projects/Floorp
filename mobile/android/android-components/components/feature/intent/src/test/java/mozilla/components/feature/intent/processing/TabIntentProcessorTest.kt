@@ -68,7 +68,7 @@ class TabIntentProcessorTest {
         searchEngine = createSearchEngine(
             name = "Test",
             url = "https://localhost/?q={searchTerms}",
-            icon = mock()
+            icon = mock(),
         )
 
         engine = mock()
@@ -79,12 +79,12 @@ class TabIntentProcessorTest {
 
         store = BrowserStore(
             BrowserState(
-                search = SearchState(regionSearchEngines = listOf(searchEngine))
+                search = SearchState(regionSearchEngines = listOf(searchEngine)),
             ),
             middleware = EngineMiddleware.create(
                 engine = mock(),
-                scope = scope
-            ) + listOf(middleware)
+                scope = scope,
+            ) + listOf(middleware),
         )
 
         sessionUseCases = SessionUseCases(store)

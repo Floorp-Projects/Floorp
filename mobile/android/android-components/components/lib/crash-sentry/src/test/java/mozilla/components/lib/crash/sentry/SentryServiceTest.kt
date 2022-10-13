@@ -33,8 +33,8 @@ class SentryServiceTest {
             SentryService(
                 testContext,
                 "https://not:real6@sentry.prod.example.net/405",
-                sendCaughtExceptions = false
-            )
+                sendCaughtExceptions = false,
+            ),
         )
 
         assertFalse(service.isInitialized)
@@ -53,8 +53,8 @@ class SentryServiceTest {
         val service = spy(
             SentryService(
                 testContext,
-                "https://not:real6@sentry.prod.example.net/405"
-            )
+                "https://not:real6@sentry.prod.example.net/405",
+            ),
         )
 
         val exception = RuntimeException("Hello World")
@@ -72,8 +72,8 @@ class SentryServiceTest {
             SentryService(
                 applicationContext = testContext,
                 dsn = "https://not:real6@sentry.prod.example.net/405",
-                sendEventForNativeCrashes = true
-            )
+                sendEventForNativeCrashes = true,
+            ),
         )
 
         val breadcrumbs = arrayListOf<Breadcrumb>()
@@ -83,7 +83,7 @@ class SentryServiceTest {
             minidumpSuccess = true,
             extrasPath = "",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-            breadcrumbs = breadcrumbs
+            breadcrumbs = breadcrumbs,
         )
 
         service.report(nativeCrash)
@@ -98,8 +98,8 @@ class SentryServiceTest {
             SentryService(
                 applicationContext = testContext,
                 dsn = "https://not:real6@sentry.prod.example.net/405",
-                sendEventForNativeCrashes = true
-            )
+                sendEventForNativeCrashes = true,
+            ),
         )
 
         val breadcrumbs = arrayListOf<Breadcrumb>()
@@ -109,7 +109,7 @@ class SentryServiceTest {
             minidumpSuccess = true,
             extrasPath = "",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
-            breadcrumbs = breadcrumbs
+            breadcrumbs = breadcrumbs,
         )
 
         service.report(nativeCrash)
@@ -124,8 +124,8 @@ class SentryServiceTest {
             SentryService(
                 applicationContext = testContext,
                 dsn = "https://not:real6@sentry.prod.example.net/405",
-                sendEventForNativeCrashes = true
-            )
+                sendEventForNativeCrashes = true,
+            ),
         )
 
         val breadcrumbs = arrayListOf<Breadcrumb>()
@@ -135,7 +135,7 @@ class SentryServiceTest {
             minidumpSuccess = true,
             extrasPath = "",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
-            breadcrumbs = breadcrumbs
+            breadcrumbs = breadcrumbs,
         )
 
         service.report(nativeCrash)
@@ -150,8 +150,8 @@ class SentryServiceTest {
             SentryService(
                 applicationContext = testContext,
                 dsn = "https://not:real6@sentry.prod.example.net/405",
-                sendEventForNativeCrashes = false
-            )
+                sendEventForNativeCrashes = false,
+            ),
         )
 
         val breadcrumbs = arrayListOf<Breadcrumb>()
@@ -161,7 +161,7 @@ class SentryServiceTest {
             minidumpSuccess = true,
             extrasPath = "",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
-            breadcrumbs = breadcrumbs
+            breadcrumbs = breadcrumbs,
         )
 
         val result = service.report(nativeCrash)
@@ -176,7 +176,7 @@ class SentryServiceTest {
         val service = SentryService(
             applicationContext = testContext,
             dsn = "https://not:real6@sentry.prod.example.net/405",
-            sendEventForNativeCrashes = false
+            sendEventForNativeCrashes = false,
         )
 
         val breadcrumbs = arrayListOf<Breadcrumb>()
@@ -186,7 +186,7 @@ class SentryServiceTest {
             minidumpSuccess = true,
             extrasPath = "",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-            breadcrumbs = breadcrumbs
+            breadcrumbs = breadcrumbs,
         )
 
         val result = service.createMessage(nativeCrash)
@@ -203,7 +203,7 @@ class SentryServiceTest {
             data = mapOf("key" to "value"),
             category = "category",
             level = MozillaBreadcrumb.Level.INFO,
-            type = MozillaBreadcrumb.Type.DEFAULT
+            type = MozillaBreadcrumb.Type.DEFAULT,
         )
         val sentryBreadcrumb = mozillaBreadcrumb.toSentryBreadcrumb()
 
@@ -216,7 +216,6 @@ class SentryServiceTest {
 
     @Test
     fun `GIVEN MozillaBreadcrumb level WHEN calling toSentryBreadcrumbLevel THEN parse it to a SentryBreadcrumbLevel`() {
-
         assertEquals(MozillaBreadcrumb.Level.CRITICAL.toSentryBreadcrumbLevel(), SentryLevel.FATAL)
         assertEquals(MozillaBreadcrumb.Level.ERROR.toSentryBreadcrumbLevel(), SentryLevel.ERROR)
         assertEquals(MozillaBreadcrumb.Level.WARNING.toSentryBreadcrumbLevel(), SentryLevel.WARNING)
@@ -230,8 +229,8 @@ class SentryServiceTest {
             SentryService(
                 testContext,
                 "https://not:real6@sentry.prod.example.net/405",
-                sendCaughtExceptions = false
-            )
+                sendCaughtExceptions = false,
+            ),
         )
 
         val exception = RuntimeException("Hello World")
@@ -250,7 +249,7 @@ class SentryServiceTest {
             SentryService(
                 testContext,
                 "https://not:real6@sentry.prod.example.net/405",
-            )
+            ),
         )
 
         val exception = RuntimeException("Hello World")

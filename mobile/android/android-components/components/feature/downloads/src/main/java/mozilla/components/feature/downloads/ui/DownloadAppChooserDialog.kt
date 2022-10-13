@@ -66,7 +66,7 @@ internal class DownloadAppChooserDialog : AppCompatDialogFragment() {
         val rootView = LayoutInflater.from(requireContext()).inflate(
             R.layout.mozac_downloader_chooser_prompt,
             null,
-            false
+            false,
         )
 
         val recyclerView = rootView.findViewById<RecyclerView>(R.id.apps_list)
@@ -97,8 +97,8 @@ internal class DownloadAppChooserDialog : AppCompatDialogFragment() {
                 rootView,
                 LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.MATCH_PARENT
-                )
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                ),
             )
         }
     }
@@ -109,7 +109,7 @@ internal class DownloadAppChooserDialog : AppCompatDialogFragment() {
          */
         fun newInstance(
             gravity: Int? = DEFAULT_VALUE,
-            dialogShouldWidthMatchParent: Boolean? = false
+            dialogShouldWidthMatchParent: Boolean? = false,
         ): DownloadAppChooserDialog {
             val fragment = DownloadAppChooserDialog()
             val arguments = fragment.arguments ?: Bundle()

@@ -46,11 +46,11 @@ fun BrowserToolbar(
     hint: String = "",
     editMode: Boolean = false,
     editText: String? = null,
-    browserActions: @Composable () -> Unit = {}
+    browserActions: @Composable () -> Unit = {},
 ) {
     val selectedTab: SessionState? by target.observeAsComposableStateFrom(
         store = store,
-        observe = { tab -> tab?.content?.url }
+        observe = { tab -> tab?.content?.url },
     )
 
     val url = selectedTab?.content?.url ?: ""
@@ -63,7 +63,7 @@ fun BrowserToolbar(
         BrowserEditToolbar(
             url = input,
             onUrlCommitted = { text -> onTextCommit(text) },
-            onUrlEdit = { text -> onTextEdit(text) }
+            onUrlEdit = { text -> onTextEdit(text) },
         )
     } else {
         BrowserDisplayToolbar(
@@ -72,7 +72,7 @@ fun BrowserToolbar(
                 onDisplayToolbarClick()
             },
             onMenuClicked = { onDisplayMenuClicked() },
-            browserActions = browserActions
+            browserActions = browserActions,
         )
     }
 }

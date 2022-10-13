@@ -40,7 +40,7 @@ import java.util.UUID
 sealed class GeckoPermissionRequest constructor(
     override val permissions: List<Permission>,
     private val callback: PermissionDelegate.Callback? = null,
-    override val id: String = UUID.randomUUID().toString()
+    override val id: String = UUID.randomUUID().toString(),
 ) : PermissionRequest {
 
     /**
@@ -56,9 +56,9 @@ sealed class GeckoPermissionRequest constructor(
         override val uri: String,
         private val type: Int,
         internal val geckoPermission: PermissionDelegate.ContentPermission,
-        internal val geckoResult: GeckoResult<Int>
+        internal val geckoResult: GeckoResult<Int>,
     ) : GeckoPermissionRequest(
-        listOf(permissionsMap.getOrElse(type) { Permission.Generic("$type", "Gecko permission type = $type") })
+        listOf(permissionsMap.getOrElse(type) { Permission.Generic("$type", "Gecko permission type = $type") }),
     ) {
         companion object {
             val permissionsMap = mapOf(
@@ -68,7 +68,7 @@ sealed class GeckoPermissionRequest constructor(
                 PERMISSION_AUTOPLAY_INAUDIBLE to Permission.ContentAutoPlayInaudible(),
                 PERMISSION_PERSISTENT_STORAGE to Permission.ContentPersistentStorage(),
                 PERMISSION_MEDIA_KEY_SYSTEM_ACCESS to Permission.ContentMediaKeySystemAccess(),
-                PERMISSION_STORAGE_ACCESS to Permission.ContentCrossOriginStorageAccess()
+                PERMISSION_STORAGE_ACCESS to Permission.ContentCrossOriginStorageAccess(),
             )
         }
 
@@ -100,10 +100,10 @@ sealed class GeckoPermissionRequest constructor(
      */
     data class App(
         private val nativePermissions: List<String>,
-        private val callback: PermissionDelegate.Callback
+        private val callback: PermissionDelegate.Callback,
     ) : GeckoPermissionRequest(
         nativePermissions.map { permissionsMap.getOrElse(it) { Permission.Generic(it) } },
-        callback
+        callback,
     ) {
         override val uri: String? = null
 
@@ -112,7 +112,7 @@ sealed class GeckoPermissionRequest constructor(
                 ACCESS_COARSE_LOCATION to Permission.AppLocationCoarse(ACCESS_COARSE_LOCATION),
                 ACCESS_FINE_LOCATION to Permission.AppLocationFine(ACCESS_FINE_LOCATION),
                 CAMERA to Permission.AppCamera(CAMERA),
-                RECORD_AUDIO to Permission.AppAudio(RECORD_AUDIO)
+                RECORD_AUDIO to Permission.AppAudio(RECORD_AUDIO),
             )
         }
     }
@@ -131,9 +131,9 @@ sealed class GeckoPermissionRequest constructor(
         override val uri: String,
         private val videoSources: List<MediaSource>,
         private val audioSources: List<MediaSource>,
-        private val callback: PermissionDelegate.MediaCallback
+        private val callback: PermissionDelegate.MediaCallback,
     ) : GeckoPermissionRequest(
-        videoSources.map { mapPermission(it) } + audioSources.map { mapPermission(it) }
+        videoSources.map { mapPermission(it) } + audioSources.map { mapPermission(it) },
     ) {
         override fun grant(permissions: List<Permission>) {
             val videos = permissions.mapNotNull { permission -> videoSources.find { it.id == permission.id } }

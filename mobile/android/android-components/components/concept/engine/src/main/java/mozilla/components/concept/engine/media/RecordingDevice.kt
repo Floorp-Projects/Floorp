@@ -12,14 +12,14 @@ package mozilla.components.concept.engine.media
  */
 data class RecordingDevice(
     val type: Type,
-    val status: Status
+    val status: Status,
 ) {
     /**
      * Types of recording devices.
      */
     enum class Type {
         CAMERA,
-        MICROPHONE
+        MICROPHONE,
     }
 
     /**
@@ -27,6 +27,6 @@ data class RecordingDevice(
      */
     enum class Status {
         INACTIVE,
-        RECORDING
+        RECORDING,
     }
 }

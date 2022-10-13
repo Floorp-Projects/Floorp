@@ -20,8 +20,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -45,7 +45,7 @@ class FxaPushSupportFeatureTest {
             accountManager = accountManager,
             pushFeature = pushFeature,
             crashReporter = null,
-            coroutineScope = coroutineTestRule.scope
+            coroutineScope = coroutineTestRule.scope,
         )
     }
 

@@ -28,7 +28,7 @@ import mozilla.components.support.ktx.android.view.toScope
 fun <S : State, A : Action> View.consumeFrom(
     store: Store<S, A>,
     owner: LifecycleOwner,
-    block: (S) -> Unit
+    block: (S) -> Unit,
 ) {
     val scope = toScope()
     val channel = store.channel(owner)

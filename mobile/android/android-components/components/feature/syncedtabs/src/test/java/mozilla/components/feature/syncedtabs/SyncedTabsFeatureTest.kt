@@ -34,7 +34,7 @@ class SyncedTabsFeatureTest {
             lifecycleOwner,
             onTabClicked = {},
             presenter = presenter,
-            interactor = interactor
+            interactor = interactor,
         )
 
     @Test

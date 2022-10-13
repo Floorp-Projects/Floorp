@@ -36,12 +36,13 @@ open class Store<S : State, A : Action>(
     initialState: S,
     reducer: Reducer<S, A>,
     middleware: List<Middleware<S, A>> = emptyList(),
-    threadNamePrefix: String? = null
+    threadNamePrefix: String? = null,
 ) {
     private val threadFactory = StoreThreadFactory(threadNamePrefix)
     private val dispatcher = Executors.newSingleThreadExecutor(threadFactory).asCoroutineDispatcher()
     private val reducerChainBuilder = ReducerChainBuilder(threadFactory, reducer, middleware)
     private val scope = CoroutineScope(dispatcher)
+
     @VisibleForTesting
     internal val subscriptions = Collections.newSetFromMap(ConcurrentHashMap<Subscription<S, A>, Boolean>())
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
@@ -56,6 +57,7 @@ open class Store<S : State, A : Action>(
         scope.cancel()
     }
     private val dispatcherWithExceptionHandler = dispatcher + exceptionHandler
+
     @Volatile private var currentState = initialState
 
     /**
@@ -118,7 +120,7 @@ open class Store<S : State, A : Action>(
      */
     class Subscription<S : State, A : Action> internal constructor(
         internal val observer: Observer<S>,
-        store: Store<S, A>
+        store: Store<S, A>,
     ) {
         private val storeReference = WeakReference(store)
         internal var binding: Binding? = null

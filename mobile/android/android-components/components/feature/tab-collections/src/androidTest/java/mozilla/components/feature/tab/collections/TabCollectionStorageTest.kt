@@ -63,8 +63,8 @@ class TabCollectionStorageTest {
             "Recipes",
             listOf(
                 createTab("https://www.mozilla.org", title = "Mozilla"),
-                createTab("https://www.firefox.com", title = "Firefox")
-            )
+                createTab("https://www.firefox.com", title = "Firefox"),
+            ),
         )
 
         val collections = getAllCollections()
@@ -96,8 +96,8 @@ class TabCollectionStorageTest {
                 collections[0],
                 listOf(
                     createTab("https://www.mozilla.org", title = "Mozilla"),
-                    createTab("https://www.firefox.com", title = "Firefox")
-                )
+                    createTab("https://www.firefox.com", title = "Firefox"),
+                ),
             )
         }
 
@@ -119,8 +119,8 @@ class TabCollectionStorageTest {
             "Articles",
             listOf(
                 createTab("https://www.mozilla.org", title = "Mozilla"),
-                createTab("https://www.firefox.com", title = "Firefox")
-            )
+                createTab("https://www.firefox.com", title = "Firefox"),
+            ),
         )
 
         getAllCollections().let { collections ->
@@ -226,34 +226,34 @@ class TabCollectionStorageTest {
         storage.createCollection(
             "Articles",
             listOf(
-                createTab("https://www.mozilla.org", title = "Mozilla")
-            )
+                createTab("https://www.mozilla.org", title = "Mozilla"),
+            ),
         )
         storage.createCollection(
             "Recipes",
             listOf(
-                createTab("https://www.firefox.com", title = "Firefox")
-            )
+                createTab("https://www.firefox.com", title = "Firefox"),
+            ),
         )
         storage.createCollection(
             "Books",
             listOf(
                 createTab("https://www.youtube.com", title = "YouTube"),
-                createTab("https://www.amazon.com", title = "Amazon")
-            )
+                createTab("https://www.amazon.com", title = "Amazon"),
+            ),
         )
         storage.createCollection(
             "News",
             listOf(
                 createTab("https://www.google.com", title = "Google"),
-                createTab("https://www.facebook.com", title = "Facebook")
-            )
+                createTab("https://www.facebook.com", title = "Facebook"),
+            ),
         )
         storage.createCollection(
             "Blogs",
             listOf(
-                createTab("https://www.wikipedia.org", title = "Wikipedia")
-            )
+                createTab("https://www.wikipedia.org", title = "Wikipedia"),
+            ),
         )
 
         val collections = storage.getCollections().first()
@@ -308,34 +308,34 @@ class TabCollectionStorageTest {
         storage.createCollection(
             "Articles",
             listOf(
-                createTab("https://www.mozilla.org", title = "Mozilla")
-            )
+                createTab("https://www.mozilla.org", title = "Mozilla"),
+            ),
         )
         storage.createCollection(
             "Recipes",
             listOf(
-                createTab("https://www.firefox.com", title = "Firefox")
-            )
+                createTab("https://www.firefox.com", title = "Firefox"),
+            ),
         )
         storage.createCollection(
             "Books",
             listOf(
                 createTab("https://www.youtube.com", title = "YouTube"),
-                createTab("https://www.amazon.com", title = "Amazon")
-            )
+                createTab("https://www.amazon.com", title = "Amazon"),
+            ),
         )
         storage.createCollection(
             "News",
             listOf(
                 createTab("https://www.google.com", title = "Google"),
-                createTab("https://www.facebook.com", title = "Facebook")
-            )
+                createTab("https://www.facebook.com", title = "Facebook"),
+            ),
         )
         storage.createCollection(
             "Blogs",
             listOf(
-                createTab("https://www.wikipedia.org", title = "Wikipedia")
-            )
+                createTab("https://www.wikipedia.org", title = "Wikipedia"),
+            ),
         )
 
         val collections = storage.getCollectionsList()
@@ -390,14 +390,14 @@ class TabCollectionStorageTest {
         storage.createCollection(
             "Articles",
             listOf(
-                createTab("https://www.mozilla.org", title = "Mozilla")
-            )
+                createTab("https://www.mozilla.org", title = "Mozilla"),
+            ),
         )
         storage.createCollection(
             "Recipes",
             listOf(
-                createTab("https://www.firefox.com", title = "Firefox")
-            )
+                createTab("https://www.firefox.com", title = "Firefox"),
+            ),
         )
 
         assertEquals(2, storage.getTabCollectionsCount())
@@ -415,14 +415,14 @@ class TabCollectionStorageTest {
         storage.createCollection(
             "Articles",
             listOf(
-                createTab("https://www.mozilla.org", title = "Mozilla")
-            )
+                createTab("https://www.mozilla.org", title = "Mozilla"),
+            ),
         )
         storage.createCollection(
             "Recipes",
             listOf(
-                createTab("https://www.firefox.com", title = "Firefox")
-            )
+                createTab("https://www.firefox.com", title = "Firefox"),
+            ),
         )
 
         assertEquals(2, storage.getTabCollectionsCount())

@@ -36,7 +36,7 @@ class CombinedHistorySuggestionProviderTest {
         updatedAt = System.currentTimeMillis(),
         totalViewTime = 10,
         documentType = DocumentType.Regular,
-        previewImageUrl = null
+        previewImageUrl = null,
     )
 
     @Test
@@ -146,7 +146,7 @@ class CombinedHistorySuggestionProviderTest {
             updatedAt = System.currentTimeMillis(),
             totalViewTime = 10,
             documentType = DocumentType.Regular,
-            previewImageUrl = null
+            previewImageUrl = null,
         )
 
         val metadataEntry2 = HistoryMetadata(
@@ -156,21 +156,21 @@ class CombinedHistorySuggestionProviderTest {
             updatedAt = System.currentTimeMillis(),
             totalViewTime = 20,
             documentType = DocumentType.Regular,
-            previewImageUrl = null
+            previewImageUrl = null,
         )
 
         val searchResult1 = SearchResult(
             id = "1",
             url = "https://www.mozilla.com",
             title = "mozilla",
-            score = 1
+            score = 1,
         )
 
         val searchResult2 = SearchResult(
             id = "2",
             url = "https://www.mozilla.com/pocket",
             title = "pocket",
-            score = 2
+            score = 2,
         )
 
         val metadataStorage: HistoryMetadataStorage = mock()
@@ -216,7 +216,7 @@ class CombinedHistorySuggestionProviderTest {
         doReturn(
             (1..50).map {
                 SearchResult("id$it", "http://www.mozilla.com/$it/", 10)
-            }
+            },
         ).`when`(history).getSuggestions(eq("moz"), anyInt())
 
         val provider = CombinedHistorySuggestionProvider(history, metadata, mock(), showEditSuggestion = false)
@@ -246,7 +246,7 @@ class CombinedHistorySuggestionProviderTest {
         doReturn(
             (1..50).map {
                 SearchResult("id$it", "http://www.mozilla.com/$it/", 10)
-            }
+            },
         ).`when`(history).getSuggestions(eq("moz"), anyInt())
 
         val provider = CombinedHistorySuggestionProvider(history, metadata, mock(), showEditSuggestion = false)

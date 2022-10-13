@@ -19,7 +19,7 @@ internal data class TrackKeyInfo(
     var provider: String,
     var type: String,
     var code: String?,
-    var channel: String? = null
+    var channel: String? = null,
 ) {
     /**
      * Returns the track key information into the following string format:
@@ -31,6 +31,8 @@ internal data class TrackKeyInfo(
             ".${code?.lowercase(Locale.ROOT) ?: "none"}" +
             if (!channel?.lowercase(Locale.ROOT).isNullOrBlank()) {
                 ".${channel?.lowercase(Locale.ROOT)}"
-            } else ""
+            } else {
+                ""
+            }
     }
 }

@@ -42,7 +42,7 @@ class CreditCardSelectBarTest {
         number = "4111111111111110",
         expiryMonth = "5",
         expiryYear = "2030",
-        cardType = ""
+        cardType = "",
     )
 
     @Before
@@ -86,11 +86,13 @@ class CreditCardSelectBarTest {
         creditCardSelectBar.listener = listener
 
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         creditCardSelectBar.showPrompt(listOf(creditCard))
 
@@ -113,11 +115,13 @@ class CreditCardSelectBarTest {
     @Test
     fun `WHEN the header is clicked THEN view is expanded or collapsed`() {
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         creditCardSelectBar.showPrompt(listOf(creditCard))
 

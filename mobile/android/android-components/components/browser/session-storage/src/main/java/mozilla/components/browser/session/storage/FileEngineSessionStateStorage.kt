@@ -27,7 +27,7 @@ import java.io.File
  */
 class FileEngineSessionStateStorage(
     private val context: Context,
-    private val engine: Engine
+    private val engine: Engine,
 ) : EngineSessionStateStorage {
     private val filesDir by lazy { context.filesDir }
 

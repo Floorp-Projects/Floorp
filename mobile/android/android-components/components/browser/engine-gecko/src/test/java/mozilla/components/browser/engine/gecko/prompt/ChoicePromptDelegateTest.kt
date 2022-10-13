@@ -26,20 +26,22 @@ class ChoicePromptDelegateTest {
         var isOnDismissCalled = false
         var observedPrompt: PromptRequest? = null
         var observedUID: String? = null
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptUpdate(
-                previousPromptRequestUid: String,
-                promptRequest: PromptRequest
-            ) {
-                observedPrompt = promptRequest
-                observedUID = previousPromptRequestUid
-                isOnPromptUpdateCalled = true
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptUpdate(
+                    previousPromptRequestUid: String,
+                    promptRequest: PromptRequest,
+                ) {
+                    observedPrompt = promptRequest
+                    observedUID = previousPromptRequestUid
+                    isOnPromptUpdateCalled = true
+                }
+            },
+        )
         val prompt = PromptRequest.SingleChoice(
             arrayOf(),
             { isOnConfirmCalled = true },
-            { isOnDismissCalled = true }
+            { isOnDismissCalled = true },
         )
         val delegate = ChoicePromptDelegate(mockSession, prompt)
         val updatedPrompt = mock<GeckoSession.PromptDelegate.ChoicePrompt>()
@@ -60,12 +62,14 @@ class ChoicePromptDelegateTest {
     fun `WHEN onPromptDismiss is called from GeckoView THEN notifyObservers is invoked with onPromptDismissed`() {
         val mockSession = GeckoEngineSession(mock())
         var isOnDismissCalled = false
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptDismissed(promptRequest: PromptRequest) {
-                super.onPromptDismissed(promptRequest)
-                isOnDismissCalled = true
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptDismissed(promptRequest: PromptRequest) {
+                    super.onPromptDismissed(promptRequest)
+                    isOnDismissCalled = true
+                }
+            },
+        )
         val basePrompt: GeckoSession.PromptDelegate.ChoicePrompt = mock()
         val prompt: PromptRequest = mock()
         val delegate = ChoicePromptDelegate(mockSession, prompt)

@@ -12,19 +12,19 @@ internal object RecentlyClosedReducer {
         return when (action) {
             is RecentlyClosedAction.AddClosedTabsAction -> {
                 state.copy(
-                    closedTabs = state.closedTabs + action.tabs.map { it.state }
+                    closedTabs = state.closedTabs + action.tabs.map { it.state },
                 )
             }
             is RecentlyClosedAction.PruneClosedTabsAction -> {
                 state.copy(
                     closedTabs = state.closedTabs.sortedByDescending { it.lastAccess }
-                        .take(action.maxTabs)
+                        .take(action.maxTabs),
                 )
             }
             is RecentlyClosedAction.ReplaceTabsAction -> state.copy(closedTabs = action.tabs)
             is RecentlyClosedAction.RemoveClosedTabAction -> {
                 state.copy(
-                    closedTabs = state.closedTabs - action.tab
+                    closedTabs = state.closedTabs - action.tab,
                 )
             }
             is RecentlyClosedAction.RemoveAllClosedTabAction -> {

@@ -14,5 +14,5 @@ package mozilla.components.feature.search.telemetry
 internal data class ExtensionInfo(
     val id: String,
     val resourceUrl: String,
-    val messageId: String
+    val messageId: String,
 )

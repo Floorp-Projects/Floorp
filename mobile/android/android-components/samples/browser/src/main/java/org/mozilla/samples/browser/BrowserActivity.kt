@@ -66,7 +66,7 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
             EngineView::class.java.name -> components.engine.createView(context, attrs).apply {
                 selectionActionDelegate = DefaultSelectionActionDelegate(
                     store = components.store,
-                    context = context
+                    context = context,
                 )
             }.asView()
             else -> super.onCreateView(parent, name, context, attrs)

@@ -14,11 +14,11 @@ import org.jetbrains.uast.UIdentifier
 import org.jetbrains.uast.getContainingUClass
 import org.junit.Ignore
 import org.junit.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
 class LintLogChecksTest {
 

@@ -25,7 +25,7 @@ internal data class SearchProviderModel(
     val codePrefixes: List<String>,
     val followOnParams: List<String>,
     val extraAdServersRegexps: List<Regex>,
-    val followOnCookies: List<SearchProviderCookie>
+    val followOnCookies: List<SearchProviderCookie>,
 ) {
 
     constructor(
@@ -36,7 +36,7 @@ internal data class SearchProviderModel(
         codePrefixes: List<String> = emptyList(),
         followOnParams: List<String> = emptyList(),
         extraAdServersRegexps: List<String> = emptyList(),
-        followOnCookies: List<SearchProviderCookie> = emptyList()
+        followOnCookies: List<SearchProviderCookie> = emptyList(),
     ) : this(
         name = name,
         regexp = regexp.toRegex(),
@@ -45,7 +45,7 @@ internal data class SearchProviderModel(
         codePrefixes = codePrefixes,
         followOnParams = followOnParams,
         extraAdServersRegexps = extraAdServersRegexps.map { it.toRegex() },
-        followOnCookies = followOnCookies
+        followOnCookies = followOnCookies,
     )
 
     /**

@@ -68,7 +68,7 @@ class PlacesStorageTest {
 }
 
 class FakePlacesStorage(
-    context: Context = mock()
+    context: Context = mock(),
 ) : PlacesStorage(context) {
     override val logger = Logger("FakePlacesStorage")
     override fun registerWithSyncManager() {}

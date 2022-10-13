@@ -128,7 +128,7 @@ class FindInPageBarTest {
         assertEquals(
             0,
             edit.imeOptions and
-                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
+                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING,
         )
         assertEquals(false, findInPageBar.private)
 
@@ -137,7 +137,7 @@ class FindInPageBarTest {
         assertNotEquals(
             0,
             edit.imeOptions and
-                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
+                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING,
         )
         assertTrue(findInPageBar.private)
 
@@ -146,7 +146,7 @@ class FindInPageBarTest {
         assertEquals(
             0,
             edit.imeOptions and
-                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
+                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING,
         )
         assertEquals(false, findInPageBar.private)
     }

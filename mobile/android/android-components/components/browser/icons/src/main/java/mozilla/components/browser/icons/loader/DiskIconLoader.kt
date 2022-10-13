@@ -12,7 +12,7 @@ import mozilla.components.browser.icons.IconRequest
  * [IconLoader] implementation that loads icons from a disk cache.
  */
 class DiskIconLoader(
-    private val cache: LoaderDiskCache
+    private val cache: LoaderDiskCache,
 ) : IconLoader {
     interface LoaderDiskCache {
         fun getIconData(context: Context, resource: IconRequest.Resource): ByteArray?

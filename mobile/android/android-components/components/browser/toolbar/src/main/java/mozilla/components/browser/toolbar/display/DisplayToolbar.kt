@@ -70,7 +70,7 @@ import mozilla.components.support.ktx.android.content.isScreenReaderEnabled
 class DisplayToolbar internal constructor(
     private val context: Context,
     private val toolbar: BrowserToolbar,
-    internal val rootView: View
+    internal val rootView: View,
 ) {
     /**
      * Enum of indicators that can be displayed in the toolbar.
@@ -79,7 +79,7 @@ class DisplayToolbar internal constructor(
         SECURITY,
         TRACKING_PROTECTION,
         EMPTY,
-        HIGHLIGHT
+        HIGHLIGHT,
     }
 
     /**
@@ -109,7 +109,7 @@ class DisplayToolbar internal constructor(
         @ColorInt val text: Int,
         @ColorInt val trackingProtection: Int?,
         @ColorInt val separator: Int,
-        @ColorInt val highlight: Int?
+        @ColorInt val highlight: Int?,
     )
 
     /**
@@ -130,7 +130,7 @@ class DisplayToolbar internal constructor(
         val trackingProtectionTrackersBlocked: Drawable,
         val trackingProtectionNothingBlocked: Drawable,
         val trackingProtectionException: Drawable,
-        val highlight: Drawable
+        val highlight: Drawable,
     )
 
     /**
@@ -138,7 +138,7 @@ class DisplayToolbar internal constructor(
      */
     enum class Gravity {
         TOP,
-        BOTTOM
+        BOTTOM,
     }
 
     internal val views = DisplayToolbarViews(
@@ -151,13 +151,13 @@ class DisplayToolbar internal constructor(
         menu = MenuButton(rootView.findViewById(R.id.mozac_browser_toolbar_menu)),
         securityIndicator = rootView.findViewById(R.id.mozac_browser_toolbar_security_indicator),
         trackingProtectionIndicator = rootView.findViewById(
-            R.id.mozac_browser_toolbar_tracking_protection_indicator
+            R.id.mozac_browser_toolbar_tracking_protection_indicator,
         ),
         origin = rootView.findViewById<OriginView>(R.id.mozac_browser_toolbar_origin_view).also {
             it.toolbar = toolbar
         },
         progress = rootView.findViewById<ProgressBar>(R.id.mozac_browser_toolbar_progress),
-        highlight = rootView.findViewById(R.id.mozac_browser_toolbar_permission_indicator)
+        highlight = rootView.findViewById(R.id.mozac_browser_toolbar_permission_indicator),
     )
 
     /**
@@ -173,7 +173,7 @@ class DisplayToolbar internal constructor(
         text = views.origin.textColor,
         trackingProtection = null,
         separator = ContextCompat.getColor(context, R.color.photonGrey80),
-        highlight = null
+        highlight = null,
     )
         set(value) {
             field = value
@@ -202,17 +202,17 @@ class DisplayToolbar internal constructor(
     var icons: Icons = Icons(
         emptyIcon = null,
         trackingProtectionTrackersBlocked = requireNotNull(
-            getDrawable(context, TrackingProtectionIconView.DEFAULT_ICON_ON_TRACKERS_BLOCKED)
+            getDrawable(context, TrackingProtectionIconView.DEFAULT_ICON_ON_TRACKERS_BLOCKED),
         ),
         trackingProtectionNothingBlocked = requireNotNull(
-            getDrawable(context, TrackingProtectionIconView.DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED)
+            getDrawable(context, TrackingProtectionIconView.DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED),
         ),
         trackingProtectionException = requireNotNull(
-            getDrawable(context, TrackingProtectionIconView.DEFAULT_ICON_OFF_FOR_A_SITE)
+            getDrawable(context, TrackingProtectionIconView.DEFAULT_ICON_OFF_FOR_A_SITE),
         ),
         highlight = requireNotNull(
-            getDrawable(context, R.drawable.mozac_dot_notification)
-        )
+            getDrawable(context, R.drawable.mozac_dot_notification),
+        ),
     )
         set(value) {
             field = value
@@ -222,7 +222,7 @@ class DisplayToolbar internal constructor(
             views.trackingProtectionIndicator.setIcons(
                 value.trackingProtectionNothingBlocked,
                 value.trackingProtectionTrackersBlocked,
-                value.trackingProtectionException
+                value.trackingProtectionException,
             )
             views.highlight.setIcon(value.highlight)
         }
@@ -248,7 +248,7 @@ class DisplayToolbar internal constructor(
             context.theme.resolveAttribute(
                 android.R.attr.selectableItemBackgroundBorderless,
                 outValue,
-                true
+                true,
             )
 
             views.securityIndicator.setBackgroundResource(outValue.resourceId)
@@ -271,7 +271,7 @@ class DisplayToolbar internal constructor(
             context.theme.resolveAttribute(
                 android.R.attr.selectableItemBackgroundBorderless,
                 outValue,
-                true
+                true,
             )
 
             views.trackingProtectionIndicator.setBackgroundResource(outValue.resourceId)
@@ -326,7 +326,7 @@ class DisplayToolbar internal constructor(
                 views.progress.id,
                 if (value == Gravity.TOP) ConstraintSet.TOP else ConstraintSet.BOTTOM,
                 ConstraintSet.PARENT_ID,
-                if (value == Gravity.TOP) ConstraintSet.TOP else ConstraintSet.BOTTOM
+                if (value == Gravity.TOP) ConstraintSet.TOP else ConstraintSet.BOTTOM,
             )
             constraintSet.applyTo(layout)
         }
@@ -548,7 +548,7 @@ class DisplayToolbar internal constructor(
             // Announce "loading" for accessibility if it has not been completed
             if (progress < views.progress.max) {
                 views.progress.announceForAccessibility(
-                    context.getString(R.string.mozac_browser_toolbar_progress_loading)
+                    context.getString(R.string.mozac_browser_toolbar_progress_loading),
                 )
             }
         }
@@ -660,5 +660,5 @@ internal class DisplayToolbarViews(
     val trackingProtectionIndicator: TrackingProtectionIconView,
     val origin: OriginView,
     val progress: ProgressBar,
-    val highlight: HighlightView
+    val highlight: HighlightView,
 )

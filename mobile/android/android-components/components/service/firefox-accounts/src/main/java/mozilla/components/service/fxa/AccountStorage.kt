@@ -45,10 +45,10 @@ open class StorageWrapper(
     private val accountManager: FxaAccountManager,
     accountEventObserverRegistry: ObserverRegistry<AccountEventsObserver>,
     private val serverConfig: ServerConfig,
-    private val crashReporter: CrashReporting? = null
+    private val crashReporter: CrashReporting? = null,
 ) {
     private class PersistenceCallback(
-        private val accountManager: WeakReference<FxaAccountManager>
+        private val accountManager: WeakReference<FxaAccountManager>,
     ) : StatePersistenceCallback {
         private val logger = Logger("FxaStatePersistenceCallback")
 
@@ -97,7 +97,7 @@ open class StorageWrapper(
  * For now, we just pass everything downstream as-is.
  */
 internal class AccountEventsIntegration(
-    private val listenerRegistry: ObserverRegistry<AccountEventsObserver>
+    private val listenerRegistry: ObserverRegistry<AccountEventsObserver>,
 ) : AccountEventsObserver {
     private val logger = Logger("AccountEventsIntegration")
 
@@ -124,7 +124,7 @@ internal interface AccountStorage {
 internal class SharedPrefAccountStorage(
     val context: Context,
     private val crashReporter: CrashReporting? = null,
-    migrateFromSecureStorage: Boolean = true
+    migrateFromSecureStorage: Boolean = true,
 ) : AccountStorage {
     internal val logger = Logger("mozac/SharedPrefAccountStorage")
 
@@ -135,7 +135,7 @@ internal class SharedPrefAccountStorage(
             val secureStorage = SecureAbove22AccountStorage(
                 context,
                 crashReporter,
-                migrateFromPlaintextStorage = false
+                migrateFromPlaintextStorage = false,
             )
             try {
                 secureStorage.read()?.let { secureAccount ->
@@ -202,7 +202,7 @@ internal abstract class AbnormalAccountStorageEvent : Exception() {
 internal class SecureAbove22AccountStorage(
     context: Context,
     private val crashReporter: CrashReporting? = null,
-    migrateFromPlaintextStorage: Boolean = true
+    migrateFromPlaintextStorage: Boolean = true,
 ) : AccountStorage {
     companion object {
         private const val STORAGE_NAME = "fxaStateAC"
@@ -212,6 +212,7 @@ internal class SecureAbove22AccountStorage(
     }
 
     private val store = SecureAbove22Preferences(context, STORAGE_NAME)
+
     // Prefs are used here to keep track of abnormal storage behaviour - namely, account state disappearing without
     // being cleared first through this class. Note that clearing application data will clear both 'store' and 'prefs'.
     private val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)

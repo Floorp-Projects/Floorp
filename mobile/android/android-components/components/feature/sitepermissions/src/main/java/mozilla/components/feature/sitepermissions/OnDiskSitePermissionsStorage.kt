@@ -37,7 +37,7 @@ import mozilla.components.feature.sitepermissions.db.toSitePermissionsEntity
  */
 class OnDiskSitePermissionsStorage(
     context: Context,
-    private val dataCleanable: DataCleanable? = null
+    private val dataCleanable: DataCleanable? = null,
 ) : SitePermissionsStorage {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var databaseInitializer = {
@@ -55,7 +55,7 @@ class OnDiskSitePermissionsStorage(
         database
             .sitePermissionsDao()
             .insert(
-                sitePermissions.toSitePermissionsEntity()
+                sitePermissions.toSitePermissionsEntity(),
             )
     }
 
@@ -136,7 +136,7 @@ class OnDiskSitePermissionsStorage(
         database
             .sitePermissionsDao()
             .deleteSitePermissions(
-                sitePermissions.toSitePermissionsEntity()
+                sitePermissions.toSitePermissionsEntity(),
             )
     }
 
@@ -167,7 +167,7 @@ class OnDiskSitePermissionsStorage(
     private fun MutableMap<Permission, MutableList<SitePermissions>>.putIfAllowed(
         permission: Permission,
         status: Status,
-        sitePermissions: SitePermissions
+        sitePermissions: SitePermissions,
     ) {
         if (status == ALLOWED) {
             if (this.containsKey(permission)) {

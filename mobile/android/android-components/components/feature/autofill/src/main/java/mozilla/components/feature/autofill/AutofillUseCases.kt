@@ -18,7 +18,7 @@ import androidx.annotation.VisibleForTesting
  */
 @SuppressLint("NewApi") // All API calls are checked properly.
 class AutofillUseCases(
-    @VisibleForTesting sdkVersion: Int = Build.VERSION.SDK_INT
+    @VisibleForTesting sdkVersion: Int = Build.VERSION.SDK_INT,
 ) {
     private val isAutofillAvailable = sdkVersion >= Build.VERSION_CODES.O
 

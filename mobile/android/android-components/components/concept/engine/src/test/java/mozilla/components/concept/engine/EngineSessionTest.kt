@@ -675,7 +675,7 @@ class EngineSessionTest {
                 contentType = "application/vnd.android.package-archive",
                 cookie = "PHPSESSID=298zf09hf012fh2; csrftoken=u32t4o3tb3gg43; _gat=1;",
                 isPrivate = true,
-                userAgent = "Components/1.0"
+                userAgent = "Components/1.0",
             )
         }
 
@@ -686,7 +686,7 @@ class EngineSessionTest {
             contentType = "application/vnd.android.package-archive",
             cookie = "PHPSESSID=298zf09hf012fh2; csrftoken=u32t4o3tb3gg43; _gat=1;",
             isPrivate = true,
-            userAgent = "Components/1.0"
+            userAgent = "Components/1.0",
         )
     }
 
@@ -700,15 +700,15 @@ class EngineSessionTest {
         session.notifyInternalObservers {
             onHistoryStateChanged(
                 listOf(HistoryItem("Firefox download", "https://download.mozilla.org")),
-                currentIndex = 0
+                currentIndex = 0,
             )
         }
 
         verify(observer).onHistoryStateChanged(
             historyList = listOf(
-                HistoryItem("Firefox download", "https://download.mozilla.org")
+                HistoryItem("Firefox download", "https://download.mozilla.org"),
             ),
-            currentIndex = 0
+            currentIndex = 0,
         )
     }
 
@@ -718,7 +718,7 @@ class EngineSessionTest {
 
         assertEquals(
             recommendedPolicy.trackingCategories.sumOf { it.id },
-            TrackingCategory.RECOMMENDED.id
+            TrackingCategory.RECOMMENDED.id,
         )
 
         assertEquals(recommendedPolicy.cookiePolicy.id, CookiePolicy.ACCEPT_NON_TRACKERS.id)
@@ -728,7 +728,7 @@ class EngineSessionTest {
 
         assertEquals(
             strictPolicy.trackingCategories.sumOf { it.id },
-            TrackingCategory.STRICT.id
+            TrackingCategory.STRICT.id,
         )
 
         assertEquals(strictPolicy.cookiePolicy.id, CookiePolicy.ACCEPT_NON_TRACKERS.id)
@@ -738,7 +738,7 @@ class EngineSessionTest {
 
         assertEquals(
             nonePolicy.trackingCategories.sumOf { it.id },
-            TrackingCategory.NONE.id
+            TrackingCategory.NONE.id,
         )
 
         assertEquals(nonePolicy.cookiePolicy.id, CookiePolicy.ACCEPT_ALL.id)
@@ -752,8 +752,8 @@ class EngineSessionTest {
                 TrackingCategory.CONTENT,
                 TrackingCategory.CRYPTOMINING,
                 TrackingCategory.FINGERPRINTING,
-                TrackingCategory.TEST
-            )
+                TrackingCategory.TEST,
+            ),
         )
 
         assertEquals(
@@ -765,8 +765,8 @@ class EngineSessionTest {
                 TrackingCategory.CONTENT,
                 TrackingCategory.CRYPTOMINING,
                 TrackingCategory.FINGERPRINTING,
-                TrackingCategory.TEST
-            ).sumOf { it.id }
+                TrackingCategory.TEST,
+            ).sumOf { it.id },
         )
     }
 
@@ -774,7 +774,7 @@ class EngineSessionTest {
     fun `tracking protection policies can be specified for session type`() {
         val all = TrackingProtectionPolicy.strict()
         val selected = TrackingProtectionPolicy.select(
-            trackingCategories = arrayOf(TrackingCategory.AD)
+            trackingCategories = arrayOf(TrackingCategory.AD),
 
         )
 
@@ -895,7 +895,7 @@ class EngineSessionTest {
         val custom = TrackingProtectionPolicy.select(
             trackingCategories = emptyArray(),
             cookiePolicy = CookiePolicy.ACCEPT_ONLY_FIRST_PARTY,
-            strictSocialTrackingProtection = true
+            strictSocialTrackingProtection = true,
         )
         val changedFields = listOf("useForPrivateSessions", "useForRegularSessions")
 
@@ -913,7 +913,7 @@ class EngineSessionTest {
         listOf(
             strict,
             default,
-            custom
+            custom,
         ).forEach {
             checkSavedFields(it, it.forPrivateSessionsOnly())
             checkSavedFields(it, it.forRegularSessionsOnly())
@@ -966,7 +966,7 @@ open class DummyEngineSession : EngineSession() {
         url: String,
         parent: EngineSession?,
         flags: LoadUrlFlags,
-        additionalHeaders: Map<String, String>?
+        additionalHeaders: Map<String, String>?,
     ) {}
 
     override fun loadData(data: String, mimeType: String, encoding: String) {}

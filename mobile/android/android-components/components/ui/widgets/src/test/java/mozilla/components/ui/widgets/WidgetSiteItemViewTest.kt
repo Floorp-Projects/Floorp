@@ -54,7 +54,7 @@ class WidgetSiteItemViewTest {
         view.setSecondaryButton(
             icon = drawable,
             contentDescription = "Menu",
-            onClickListener = { clicked = true }
+            onClickListener = { clicked = true },
         )
         assertTrue(secondaryButton.isVisible)
         assertEquals(drawable, secondaryButton.drawable)
@@ -71,7 +71,7 @@ class WidgetSiteItemViewTest {
         view.setSecondaryButton(
             icon = R.drawable.mozac_ic_lock,
             contentDescription = R.string.mozac_error_lock,
-            onClickListener = { clicked = true }
+            onClickListener = { clicked = true },
         )
         assertTrue(secondaryButton.isVisible)
         assertNotNull(secondaryButton.drawable)

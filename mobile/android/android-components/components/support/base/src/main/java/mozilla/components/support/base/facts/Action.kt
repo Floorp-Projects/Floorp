@@ -93,5 +93,5 @@ enum class Action {
     /**
      * The user selected something from a list of options.
      */
-    SELECT
+    SELECT,
 }

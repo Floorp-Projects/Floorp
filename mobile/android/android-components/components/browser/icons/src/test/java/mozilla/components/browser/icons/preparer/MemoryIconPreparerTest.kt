@@ -16,7 +16,7 @@ class MemoryIconPreparerTest {
     fun `Preparer will add resources from cache`() {
         val resources = listOf(
             IconRequest.Resource("https://www.mozilla.org", type = IconRequest.Resource.Type.FAVICON),
-            IconRequest.Resource("https://www.firefox.com", type = IconRequest.Resource.Type.APPLE_TOUCH_ICON)
+            IconRequest.Resource("https://www.firefox.com", type = IconRequest.Resource.Type.APPLE_TOUCH_ICON),
         )
 
         val cache: MemoryIconPreparer.PreparerMemoryCache = mock()
@@ -32,9 +32,9 @@ class MemoryIconPreparerTest {
         assertEquals(
             listOf(
                 "https://www.mozilla.org",
-                "https://www.firefox.com"
+                "https://www.firefox.com",
             ),
-            request.resources.map { it.url }
+            request.resources.map { it.url },
         )
     }
 
@@ -42,7 +42,7 @@ class MemoryIconPreparerTest {
     fun `Preparer will not add resources if request already has resources`() {
         val resources = listOf(
             IconRequest.Resource("https://www.mozilla.org", type = IconRequest.Resource.Type.FAVICON),
-            IconRequest.Resource("https://www.firefox.com", type = IconRequest.Resource.Type.APPLE_TOUCH_ICON)
+            IconRequest.Resource("https://www.firefox.com", type = IconRequest.Resource.Type.APPLE_TOUCH_ICON),
         )
 
         val cache: MemoryIconPreparer.PreparerMemoryCache = mock()
@@ -53,17 +53,17 @@ class MemoryIconPreparerTest {
         val initialRequest = IconRequest(
             url = "https://www.example.org",
             resources = listOf(
-                IconRequest.Resource("https://getpocket.com", type = IconRequest.Resource.Type.FAVICON)
-            )
+                IconRequest.Resource("https://getpocket.com", type = IconRequest.Resource.Type.FAVICON),
+            ),
         )
 
         val request = preparer.prepare(mock(), initialRequest)
 
         assertEquals(
             listOf(
-                "https://getpocket.com"
+                "https://getpocket.com",
             ),
-            request.resources.map { it.url }
+            request.resources.map { it.url },
         )
     }
 }

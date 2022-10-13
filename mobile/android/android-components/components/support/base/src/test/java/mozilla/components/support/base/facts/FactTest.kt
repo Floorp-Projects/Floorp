@@ -29,7 +29,7 @@ class FactTest {
         val fact = Fact(
             Component.SUPPORT_TEST,
             Action.CLICK,
-            "test"
+            "test",
         )
 
         fact.collect()
@@ -46,8 +46,8 @@ class FactTest {
             "test-value",
             mapOf(
                 "key1" to "value1",
-                "key2" to "value2"
-            )
+                "key2" to "value2",
+            ),
         )
 
         assertEquals(Component.SUPPORT_TEST, fact.component)

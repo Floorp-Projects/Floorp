@@ -25,14 +25,14 @@ private fun emitMenuFact(
     action: Action,
     item: String,
     value: String? = null,
-    metadata: Map<String, Any>? = null
+    metadata: Map<String, Any>? = null,
 ) {
     Fact(
         Component.BROWSER_MENU,
         action,
         item,
         value,
-        metadata
+        metadata,
     ).collect()
 }
 
@@ -40,6 +40,6 @@ internal fun emitOpenMenuItemFact(extensionId: String) {
     emitMenuFact(
         Action.CLICK,
         BrowserMenuFacts.Items.WEB_EXTENSION_MENU_ITEM,
-        metadata = mapOf("id" to extensionId)
+        metadata = mapOf("id" to extensionId),
     )
 }

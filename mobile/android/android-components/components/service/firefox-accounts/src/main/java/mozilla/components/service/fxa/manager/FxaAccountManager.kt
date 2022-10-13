@@ -64,8 +64,10 @@ import kotlin.coroutines.CoroutineContext
 
 // Necessary to fetch a profile.
 const val SCOPE_PROFILE = "profile"
+
 // Necessary to obtain sync keys.
 const val SCOPE_SYNC = "https://identity.mozilla.com/apps/oldsync"
+
 // Necessary to obtain a sessionToken, which gives full access to the account.
 const val SCOPE_SESSION = "https://identity.mozilla.com/tokens/session"
 
@@ -102,7 +104,7 @@ enum class MigrationResult {
     /**
      * Sign-in failed due to non-recoverable issues.
      */
-    Failure
+    Failure,
 }
 
 /**
@@ -130,8 +132,8 @@ open class FxaAccountManager(
     // We want a single-threaded execution model for our account-related "actions" (state machine side-effects).
     // That is, we want to ensure a sequential execution flow, but on a background thread.
     private val coroutineContext: CoroutineContext = Executors.newSingleThreadExecutor(
-        NamedThreadFactory("FxaAccountManager")
-    ).asCoroutineDispatcher() + SupervisorJob()
+        NamedThreadFactory("FxaAccountManager"),
+    ).asCoroutineDispatcher() + SupervisorJob(),
 ) : Closeable, Observable<AccountObserver> by ObserverRegistry() {
     private val logger = Logger("FirefoxAccountStateMachine")
 
@@ -173,6 +175,7 @@ open class FxaAccountManager(
     // initialization, instead of triggering the full state machine knowing in advance we'll hit auth problems.
     // See https://github.com/mozilla-mobile/android-components/issues/5102
     @Volatile private var state: State = State.Idle(AccountState.NotAuthenticated)
+
     @Volatile private var isAccountManagerReady: Boolean = false
     private val eventQueue = ConcurrentLinkedQueue<Event>()
 

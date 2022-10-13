@@ -20,14 +20,14 @@ import mozilla.components.feature.session.SessionUseCases
  */
 class CustomTabsUseCases(
     store: BrowserStore,
-    loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase
+    loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase,
 ) {
     /**
      * Use case for adding a new custom tab.
      */
     class AddCustomTabUseCase(
         private val store: BrowserStore,
-        private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase
+        private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase,
     ) {
         /**
          * Adds a new custom tab with URL [url].
@@ -37,7 +37,7 @@ class CustomTabsUseCases(
             customTabConfig: CustomTabConfig,
             private: Boolean = false,
             additionalHeaders: Map<String, String>? = null,
-            source: SessionState.Source
+            source: SessionState.Source,
         ): String {
             val loadUrlFlags = EngineSession.LoadUrlFlags.external()
             val tab = createCustomTab(
@@ -45,7 +45,7 @@ class CustomTabsUseCases(
                 private = private,
                 source = source,
                 config = customTabConfig,
-                initialLoadFlags = loadUrlFlags
+                initialLoadFlags = loadUrlFlags,
             )
 
             store.dispatch(CustomTabListAction.AddCustomTabAction(tab))
@@ -59,7 +59,7 @@ class CustomTabsUseCases(
      */
     class AddWebAppTabUseCase(
         private val store: BrowserStore,
-        private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase
+        private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase,
     ) {
         /**
          * Adds a new web app tab with the given manifest.
@@ -68,7 +68,7 @@ class CustomTabsUseCases(
             url: String,
             source: SessionState.Source,
             customTabConfig: CustomTabConfig,
-            webAppManifest: WebAppManifest
+            webAppManifest: WebAppManifest,
         ): String {
             val loadUrlFlags = EngineSession.LoadUrlFlags.external()
             val tab = createCustomTab(
@@ -76,7 +76,7 @@ class CustomTabsUseCases(
                 source = source,
                 config = customTabConfig,
                 webAppManifest = webAppManifest,
-                initialLoadFlags = loadUrlFlags
+                initialLoadFlags = loadUrlFlags,
             )
 
             store.dispatch(CustomTabListAction.AddCustomTabAction(tab))
@@ -89,7 +89,7 @@ class CustomTabsUseCases(
      * Use case for removing a custom tab.
      */
     class RemoveCustomTabUseCase(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Removes the custom tab with the given [customTabId].
@@ -108,7 +108,7 @@ class CustomTabsUseCases(
      * Use case for migrating a custom tab to a regular tab.
      */
     class MigrateCustomTabUseCase(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Migrates the custom tab with the given [customTabId] to a regular
@@ -119,7 +119,7 @@ class CustomTabsUseCases(
          */
         operator fun invoke(customTabId: String, select: Boolean = true) {
             store.dispatch(
-                CustomTabListAction.TurnCustomTabIntoNormalTabAction(customTabId)
+                CustomTabListAction.TurnCustomTabIntoNormalTabAction(customTabId),
             )
 
             if (select) {

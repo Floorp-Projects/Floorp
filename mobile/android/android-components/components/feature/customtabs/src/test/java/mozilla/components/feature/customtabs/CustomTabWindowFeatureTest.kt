@@ -52,10 +52,10 @@ class CustomTabWindowFeatureTest {
             BrowserStore(
                 BrowserState(
                     customTabs = listOf(
-                        createCustomTab(id = sessionId, url = "https://www.mozilla.org")
-                    )
-                )
-            )
+                        createCustomTab(id = sessionId, url = "https://www.mozilla.org"),
+                    ),
+                ),
+            ),
         )
 
         whenever(activity.packageName).thenReturn("org.mozilla.firefox")
@@ -109,7 +109,7 @@ class CustomTabWindowFeatureTest {
             navigationBarColor = Color.BLUE,
             enableUrlbarHiding = true,
             showShareMenuItem = true,
-            titleVisible = true
+            titleVisible = true,
         )
         val intent = feature.configToIntent(config)
 
@@ -125,13 +125,13 @@ class CustomTabWindowFeatureTest {
             actionButtonConfig = CustomTabActionButtonConfig(
                 description = "button",
                 icon = mock(),
-                pendingIntent = mock()
+                pendingIntent = mock(),
             ),
             menuItems = listOf(
                 CustomTabMenuItem("Item A", mock()),
                 CustomTabMenuItem("Item B", mock()),
-                CustomTabMenuItem("Item C", mock())
-            )
+                CustomTabMenuItem("Item C", mock()),
+            ),
         )
         val intent = feature.configToIntent(config)
 

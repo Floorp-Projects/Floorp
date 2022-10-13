@@ -38,7 +38,7 @@ fun AwesomeBar(
     onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
     onAutoComplete: (AwesomeBar.Suggestion) -> Unit,
     onScroll: () -> Unit = {},
-    profiler: Profiler? = null
+    profiler: Profiler? = null,
 ) {
     val groups = remember(providers) {
         providers
@@ -46,7 +46,7 @@ fun AwesomeBar(
             .map {
                 AwesomeBar.SuggestionProviderGroup(
                     providers = it.value,
-                    title = it.key
+                    title = it.key,
                 )
             }
     }
@@ -59,7 +59,7 @@ fun AwesomeBar(
         onSuggestionClicked = { _, suggestion -> onSuggestionClicked(suggestion) },
         onAutoComplete = { _, suggestion -> onAutoComplete(suggestion) },
         onScroll = onScroll,
-        profiler = profiler
+        profiler = profiler,
     )
 }
 
@@ -83,13 +83,13 @@ fun AwesomeBar(
     onSuggestionClicked: (AwesomeBar.SuggestionProviderGroup, AwesomeBar.Suggestion) -> Unit,
     onAutoComplete: (AwesomeBar.SuggestionProviderGroup, AwesomeBar.Suggestion) -> Unit,
     onScroll: () -> Unit = {},
-    profiler: Profiler? = null
+    profiler: Profiler? = null,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("mozac.awesomebar")
-            .background(colors.background)
+            .background(colors.background),
     ) {
         val fetcher = remember(groups) { SuggestionFetcher(groups, profiler) }
         val suggestions = derivedStateOf { fetcher.state.value }.value.toSortedMap(compareBy { it.title })
@@ -104,7 +104,7 @@ fun AwesomeBar(
             orientation,
             onSuggestionClicked,
             onAutoComplete,
-            onScroll
+            onScroll,
         )
     }
 }

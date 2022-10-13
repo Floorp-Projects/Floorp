@@ -16,5 +16,5 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission
 data class GeckoTrackingProtectionException(
     override val url: String,
     val privateMode: Boolean = false,
-    val contentPermission: ContentPermission
+    val contentPermission: ContentPermission,
 ) : TrackingProtectionException

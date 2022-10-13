@@ -55,7 +55,7 @@ class WebExtensionToolbarTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val action = WebExtensionToolbarAction(browserAction, iconJobDispatcher = testDispatcher) {}
@@ -89,7 +89,7 @@ class WebExtensionToolbarTest {
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val action = WebExtensionToolbarAction(browserAction, iconJobDispatcher = testDispatcher) {}
@@ -110,13 +110,13 @@ class WebExtensionToolbarTest {
             enabled = false,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val action = WebExtensionToolbarAction(
             browserAction,
             padding = Padding(1, 2, 3, 4),
-            iconJobDispatcher = testDispatcher
+            iconJobDispatcher = testDispatcher,
         ) {
             listenerWasClicked = true
         }
@@ -151,13 +151,13 @@ class WebExtensionToolbarTest {
             enabled = false,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
         ) {}
 
         val action = WebExtensionToolbarAction(
             browserAction,
             padding = Padding(1, 2, 3, 4),
-            iconJobDispatcher = testDispatcher
+            iconJobDispatcher = testDispatcher,
         ) {}
 
         val attachListenerCaptor = argumentCaptor<View.OnAttachStateChangeListener>()

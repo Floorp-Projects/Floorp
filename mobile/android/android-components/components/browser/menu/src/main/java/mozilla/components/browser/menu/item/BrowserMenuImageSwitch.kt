@@ -35,7 +35,7 @@ class BrowserMenuImageSwitch(
     override val isCollapsingMenuLimit: Boolean = false,
     override val isSticky: Boolean = false,
     initialState: () -> Boolean = { false },
-    listener: (Boolean) -> Unit
+    listener: (Boolean) -> Unit,
 ) : BrowserMenuCompoundButton(label, isCollapsingMenuLimit, isSticky, initialState, listener) {
     override fun getLayoutResource(): Int = R.layout.mozac_browser_menu_item_image_switch
 
@@ -46,12 +46,15 @@ class BrowserMenuImageSwitch(
 
     private fun bindImage(switch: SwitchCompat) {
         switch.setCompoundDrawablesRelativeWithIntrinsicBounds(
-            imageResource, 0, 0, 0
+            imageResource,
+            0,
+            0,
+            0,
         )
     }
 
     override fun asCandidate(context: Context) = super.asCandidate(context).copy(
         start = DrawableMenuIcon(context, imageResource),
-        end = CompoundMenuCandidate.ButtonType.SWITCH
+        end = CompoundMenuCandidate.ButtonType.SWITCH,
     )
 }

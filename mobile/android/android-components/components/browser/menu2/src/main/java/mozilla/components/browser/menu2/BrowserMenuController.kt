@@ -26,7 +26,7 @@ import mozilla.components.support.base.observer.ObserverRegistry
  */
 class BrowserMenuController(
     private val visibleSide: Side = Side.START,
-    private val style: MenuStyle? = null
+    private val style: MenuStyle? = null,
 ) : MenuController, Observable<MenuController.Observer> by ObserverRegistry() {
 
     private var currentPopupInfo: PopupMenuInfo? = null
@@ -65,7 +65,7 @@ class BrowserMenuController(
                 window = it,
                 anchor = anchor,
                 orientation = orientation,
-                nested = null
+                nested = null,
             )
         }
     }
@@ -129,13 +129,13 @@ class BrowserMenuController(
     }
 
     private class MenuPopupWindow(
-        val view: MenuView
+        val view: MenuView,
     ) : PopupWindow(view, WRAP_CONTENT, WRAP_CONTENT, true)
 
     private data class PopupMenuInfo(
         val window: MenuPopupWindow,
         val anchor: View,
         val orientation: Orientation?,
-        val nested: NestedMenuCandidate? = null
+        val nested: NestedMenuCandidate? = null,
     )
 }

@@ -14,5 +14,5 @@ data class AwesomeBarColors(
     val title: Color,
     val description: Color,
     val autocompleteIcon: Color,
-    val groupTitle: Color
+    val groupTitle: Color,
 )

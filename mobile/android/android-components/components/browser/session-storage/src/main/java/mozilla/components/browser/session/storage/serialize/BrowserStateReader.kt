@@ -39,14 +39,14 @@ class BrowserStateReader {
     fun read(
         engine: Engine,
         file: AtomicFile,
-        predicate: (RecoverableTab) -> Boolean = { true }
+        predicate: (RecoverableTab) -> Boolean = { true },
     ): RecoverableBrowserState? {
         return file.readJSON {
             browsingSession(
                 engine,
                 restoreSessionId = true,
                 restoreParentId = true,
-                predicate = predicate
+                predicate = predicate,
             )
         }
     }
@@ -64,7 +64,7 @@ class BrowserStateReader {
         engine: Engine,
         file: AtomicFile,
         restoreSessionId: Boolean = true,
-        restoreParentId: Boolean = true
+        restoreParentId: Boolean = true,
     ): RecoverableTab? {
         return file.readJSON { tab(engine, restoreSessionId, restoreParentId) }
     }
@@ -75,7 +75,7 @@ private fun JsonReader.browsingSession(
     engine: Engine,
     restoreSessionId: Boolean = true,
     restoreParentId: Boolean = true,
-    predicate: (RecoverableTab) -> Boolean = { true }
+    predicate: (RecoverableTab) -> Boolean = { true },
 ): RecoverableBrowserState? {
     beginObject()
 
@@ -119,7 +119,7 @@ private fun JsonReader.tabs(
     engine: Engine,
     restoreSessionId: Boolean = true,
     restoreParentId: Boolean = true,
-    predicate: (RecoverableTab) -> Boolean = { true }
+    predicate: (RecoverableTab) -> Boolean = { true },
 ): List<RecoverableTab> {
     beginArray()
 
@@ -139,7 +139,7 @@ private fun JsonReader.tabs(
 private fun JsonReader.tab(
     engine: Engine,
     restoreSessionId: Boolean = true,
-    restoreParentId: Boolean = true
+    restoreParentId: Boolean = true,
 ): RecoverableTab? {
     beginObject()
 
@@ -159,8 +159,8 @@ private fun JsonReader.tab(
         engineSessionState = engineSessionState,
         state = tab.state.copy(
             id = if (restoreSessionId) tab.state.id else UUID.randomUUID().toString(),
-            parentId = if (restoreParentId) tab.state.parentId else null
-        )
+            parentId = if (restoreParentId) tab.state.parentId else null,
+        ),
     )
 }
 
@@ -230,13 +230,13 @@ private fun JsonReader.tabSession(): RecoverableTab {
             contextId = contextId,
             readerState = ReaderState(
                 active = readerStateActive ?: false,
-                activeUrl = readerActiveUrl
+                activeUrl = readerActiveUrl,
             ),
             historyMetadata = if (historyMetadataUrl != null) {
                 HistoryMetadataKey(
                     historyMetadataUrl,
                     historyMetadataSearchTerm,
-                    historyMetadataReferrerUrl
+                    historyMetadataReferrerUrl,
                 )
             } else {
                 null
@@ -247,9 +247,9 @@ private fun JsonReader.tabSession(): RecoverableTab {
             lastMediaAccessState = LastMediaAccessState(
                 lastMediaUrl ?: "",
                 lastMediaAccess = lastMediaAccess ?: 0,
-                mediaSessionActive = mediaSessionActive ?: false
+                mediaSessionActive = mediaSessionActive ?: false,
             ),
-            source = SessionState.Source.restore(sourceId, externalSourcePackageId, externalSourceCategory)
-        )
+            source = SessionState.Source.restore(sourceId, externalSourcePackageId, externalSourceCategory),
+        ),
     )
 }

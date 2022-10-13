@@ -25,7 +25,7 @@ class ContextKtTest {
     fun setUp() {
         accessibilityManager = shadowOf(
             testContext
-                .getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+                .getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager,
         )
     }
 

@@ -24,7 +24,7 @@ suspend fun <T> handleFxaExceptions(
     operation: String,
     block: suspend () -> T,
     postHandleAuthErrorBlock: (e: FxaUnauthorizedException) -> T,
-    handleErrorBlock: (e: FxaException) -> T
+    handleErrorBlock: (e: FxaException) -> T,
 ): T {
     return try {
         logger.info("Executing: $operation")
@@ -58,7 +58,7 @@ suspend fun <T> handleFxaExceptions(
     logger: Logger,
     operation: String,
     default: (error: FxaException) -> T,
-    block: suspend () -> T
+    block: suspend () -> T,
 ): T {
     return handleFxaExceptions(logger, operation, block, { default(it) }, { default(it) })
 }
@@ -68,11 +68,13 @@ suspend fun <T> handleFxaExceptions(
  */
 suspend fun handleFxaExceptions(logger: Logger, operation: String, block: () -> Unit): Boolean {
     return handleFxaExceptions(
-        logger, operation, { false },
+        logger,
+        operation,
+        { false },
         {
             block()
             true
-        }
+        },
     )
 }
 
@@ -121,7 +123,7 @@ internal suspend fun <T> withRetries(logger: Logger, retryCount: Int, block: sus
 internal suspend fun withServiceRetries(
     logger: Logger,
     retryCount: Int,
-    block: suspend () -> ServiceResult
+    block: suspend () -> ServiceResult,
 ): ServiceResult {
     var attempt = 0
     do {

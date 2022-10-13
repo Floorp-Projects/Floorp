@@ -28,7 +28,7 @@ class ThumbnailLoader(private val storage: ThumbnailStorage) : ImageLoader {
         view: ImageView,
         request: ImageLoadRequest,
         placeholder: Drawable?,
-        error: Drawable?
+        error: Drawable?,
     ) {
         CoroutineScope(Dispatchers.Main).launch {
             loadIntoViewInternal(WeakReference(view), request, placeholder, error)
@@ -40,7 +40,7 @@ class ThumbnailLoader(private val storage: ThumbnailStorage) : ImageLoader {
         view: WeakReference<ImageView>,
         request: ImageLoadRequest,
         placeholder: Drawable?,
-        error: Drawable?
+        error: Drawable?,
     ) {
         // If we previously started loading into the view, cancel the job.
         val existingJob = view.get()?.getTag(R.id.mozac_browser_thumbnails_tag_job) as? Job

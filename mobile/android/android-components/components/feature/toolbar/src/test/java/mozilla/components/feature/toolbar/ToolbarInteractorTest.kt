@@ -133,7 +133,7 @@ class ToolbarInteractorTest {
             override fun invoke(
                 url: String,
                 flags: EngineSession.LoadUrlFlags,
-                additionalHeaders: Map<String, String>?
+                additionalHeaders: Map<String, String>?,
             ) {
                 useCaseInvokedWithUrl = url
             }

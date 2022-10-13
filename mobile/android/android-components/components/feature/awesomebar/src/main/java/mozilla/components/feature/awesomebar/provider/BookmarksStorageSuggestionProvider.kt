@@ -86,7 +86,7 @@ class BookmarksStorageSuggestionProvider(
                     val flags = LoadUrlFlags.select(LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
                     loadUrlUseCase.invoke(result.url!!, flags = flags)
                     emitBookmarkSuggestionClickedFact()
-                }
+                },
             )
         }
     }

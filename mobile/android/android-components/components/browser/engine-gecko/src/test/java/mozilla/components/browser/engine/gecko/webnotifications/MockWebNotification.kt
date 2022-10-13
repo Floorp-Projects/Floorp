@@ -18,7 +18,7 @@ fun mockWebNotification(
     textDirection: String? = null,
     lang: String? = null,
     source: String? = null,
-    silent: Boolean = false
+    silent: Boolean = false,
 ): WebNotification {
     val webNotification: WebNotification = mock()
     ReflectionUtils.setField(webNotification, "title", title)

@@ -16,7 +16,7 @@ import mozilla.components.feature.autofill.R
  */
 @SuppressLint("NotifyDataSetChanged")
 internal class LoginsAdapter(
-    private val onLoginSelected: (Login) -> Unit
+    private val onLoginSelected: (Login) -> Unit,
 ) : RecyclerView.Adapter<LoginViewHolder>() {
     private var logins: List<Login> = emptyList()
 

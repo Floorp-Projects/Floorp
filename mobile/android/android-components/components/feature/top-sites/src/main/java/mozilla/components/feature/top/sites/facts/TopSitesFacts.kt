@@ -26,6 +26,6 @@ internal fun emitTopSitesCountFact(count: Int) {
         Component.FEATURE_TOP_SITES,
         Action.INTERACTION,
         TopSitesFacts.Items.COUNT,
-        count.toString()
+        count.toString(),
     ).collect()
 }

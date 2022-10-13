@@ -12,5 +12,5 @@ package mozilla.components.concept.menu.candidate
  */
 data class ContainerStyle(
     val isVisible: Boolean = true,
-    val isEnabled: Boolean = true
+    val isEnabled: Boolean = true,
 )

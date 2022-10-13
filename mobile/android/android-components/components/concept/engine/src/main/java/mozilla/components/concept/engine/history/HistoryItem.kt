@@ -11,5 +11,5 @@ package mozilla.components.concept.engine.history
  */
 data class HistoryItem(
     val title: String,
-    val uri: String
+    val uri: String,
 )

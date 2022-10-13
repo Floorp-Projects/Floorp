@@ -30,7 +30,7 @@ open class TabsAdapter(
     private val viewHolderProvider: ViewHolderProvider = { parent ->
         DefaultTabViewHolder(
             LayoutInflater.from(parent.context).inflate(R.layout.mozac_browser_tabstray_item, parent, false),
-            thumbnailLoader
+            thumbnailLoader,
         )
     },
     private val styling: TabsTrayStyling = TabsTrayStyling(),
@@ -52,7 +52,7 @@ open class TabsAdapter(
     override fun onBindViewHolder(
         holder: TabViewHolder,
         position: Int,
-        payloads: List<Any>
+        payloads: List<Any>,
     ) {
         val tabs = currentList
         if (tabs.isEmpty()) return

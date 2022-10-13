@@ -59,7 +59,7 @@ open class BrowserMenuImageText(
     private val textColorResource: Int = NO_ID,
     override val isCollapsingMenuLimit: Boolean = false,
     override val isSticky: Boolean = false,
-    private val listener: () -> Unit = {}
+    private val listener: () -> Unit = {},
 ) : BrowserMenuItem {
 
     override var visible: () -> Boolean = { true }
@@ -96,12 +96,12 @@ open class BrowserMenuImageText(
         start = DrawableMenuIcon(
             context,
             resource = imageResource,
-            tint = if (iconTintColorResource == NO_ID) null else getColor(context, iconTintColorResource)
+            tint = if (iconTintColorResource == NO_ID) null else getColor(context, iconTintColorResource),
         ),
         textStyle = TextStyle(
-            color = if (textColorResource == NO_ID) null else getColor(context, textColorResource)
+            color = if (textColorResource == NO_ID) null else getColor(context, textColorResource),
         ),
         containerStyle = ContainerStyle(isVisible = visible()),
-        onClick = listener
+        onClick = listener,
     )
 }

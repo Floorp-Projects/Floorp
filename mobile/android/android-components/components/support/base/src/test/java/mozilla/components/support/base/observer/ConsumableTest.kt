@@ -76,8 +76,8 @@ class ConsumableTest {
             listOf(
                 { value -> consumer1.invoke(value) },
                 { value -> consumer2.invoke(value) },
-                { value -> consumer3.invoke(value) }
-            )
+                { value -> consumer3.invoke(value) },
+            ),
         )
 
         assertFalse(consumed)
@@ -105,8 +105,8 @@ class ConsumableTest {
             listOf(
                 { value -> consumer1.invoke(value) },
                 { value -> consumer2.invoke(value) },
-                { value -> consumer3.invoke(value) }
-            )
+                { value -> consumer3.invoke(value) },
+            ),
         )
 
         assertTrue(consumed)
@@ -134,8 +134,8 @@ class ConsumableTest {
             listOf(
                 { value -> consumer1.invoke(value) },
                 { value -> consumer2.invoke(value) },
-                { value -> consumer3.invoke(value) }
-            )
+                { value -> consumer3.invoke(value) },
+            ),
         )
 
         assertTrue(consumed)
@@ -217,8 +217,8 @@ class ConsumableTest {
             listOf(
                 { value -> consumer1.invoke(value) },
                 { value -> consumer2.invoke(value) },
-                { value -> consumer3.invoke(value) }
-            )
+                { value -> consumer3.invoke(value) },
+            ),
         )
 
         assertFalse(consumed)
@@ -274,8 +274,8 @@ class ConsumableTest {
                 { false },
                 { false },
                 { false },
-                { false }
-            )
+                { false },
+            ),
         )
 
         assertFalse(callbackInvoked)
@@ -285,8 +285,8 @@ class ConsumableTest {
                 { false },
                 { false },
                 { true },
-                { false }
-            )
+                { false },
+            ),
         )
 
         assertTrue(callbackInvoked)
@@ -334,8 +334,8 @@ class ConsumableTest {
         stream.consumeAllBy(
             listOf(
                 { value -> consumed.add(value) },
-                { value -> consumed.add(value + 1) }
-            )
+                { value -> consumed.add(value + 1) },
+            ),
         )
         assertEquals(listOf(1, 2, 2, 3, 3, 4), consumed)
         assertTrue(stream.isConsumed())
@@ -346,8 +346,8 @@ class ConsumableTest {
         var allConsumed = stream.consumeAllBy(
             listOf(
                 { value -> if (value < 3) consumed.add(value) else false },
-                { _ -> false }
-            )
+                { _ -> false },
+            ),
         )
         assertEquals(listOf(1, 2), consumed)
         assertFalse(allConsumed)
@@ -357,8 +357,8 @@ class ConsumableTest {
         allConsumed = stream.consumeAllBy(
             listOf(
                 { value -> consumed.add(value) },
-                { _ -> false }
-            )
+                { _ -> false },
+            ),
         )
         assertEquals(listOf(1, 2, 3), consumed)
         assertTrue(allConsumed)
@@ -369,8 +369,8 @@ class ConsumableTest {
         stream.consumeAllBy(
             listOf(
                 { _ -> false },
-                { _ -> false }
-            )
+                { _ -> false },
+            ),
         )
         assertFalse(stream.isConsumed())
     }
@@ -382,32 +382,32 @@ class ConsumableTest {
         stream.consumeNextBy(
             listOf(
                 { value -> consumed.add(value) },
-                { value -> consumed.add(value + 1) }
-            )
+                { value -> consumed.add(value + 1) },
+            ),
         )
         assertEquals(listOf(1, 2), consumed)
 
         stream.consumeNextBy(
             listOf(
                 { value -> consumed.add(value + 1) },
-                { _ -> false }
-            )
+                { _ -> false },
+            ),
         )
         assertEquals(listOf(1, 2, 3), consumed)
 
         stream.consumeNextBy(
             listOf(
                 { _ -> false },
-                { _ -> false }
-            )
+                { _ -> false },
+            ),
         )
         assertFalse(stream.isConsumed())
 
         stream.consumeNextBy(
             listOf(
                 { _ -> false },
-                { value -> consumed.add(value + 1) }
-            )
+                { value -> consumed.add(value + 1) },
+            ),
         )
         assertEquals(listOf(1, 2, 3, 4), consumed)
 
@@ -415,9 +415,9 @@ class ConsumableTest {
         assertFalse(
             stream.consumeNextBy(
                 listOf(
-                    { _ -> true }
-                )
-            )
+                    { _ -> true },
+                ),
+            ),
         )
     }
 
@@ -492,7 +492,7 @@ class ConsumableTest {
     }
 
     private class TestConsumer(
-        private val shouldConsume: Boolean
+        private val shouldConsume: Boolean,
     ) {
         var callbackTriggered = false
         var callbackValue: Int? = null

@@ -19,17 +19,17 @@ import androidx.recyclerview.widget.RecyclerView
  */
 open class StickyFooterLinearLayoutManager<T> constructor(
     context: Context,
-    reverseLayout: Boolean = false
+    reverseLayout: Boolean = false,
 ) : StickyItemsLinearLayoutManager<T>(
     context,
     StickyItemPlacement.BOTTOM,
-    reverseLayout
+    reverseLayout,
 ) where T : RecyclerView.Adapter<*>, T : StickyItemsAdapter {
 
     override fun scrollToIndicatedPositionWithOffset(
         position: Int,
         offset: Int,
-        actuallyScrollToPositionWithOffset: (Int, Int) -> Unit
+        actuallyScrollToPositionWithOffset: (Int, Int) -> Unit,
     ) {
         // The following scenarios are handled:
         // - if position is bigger than [stickyItemPosition]

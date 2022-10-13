@@ -52,7 +52,7 @@ class FragmentKtTest {
 
         val store = Store(
             TestState(counter = 23),
-            ::reducer
+            ::reducer,
         )
 
         val onAttachListener = argumentCaptor<View.OnAttachStateChangeListener>()
@@ -111,7 +111,7 @@ class FragmentKtTest {
 
         val store = Store(
             TestState(counter = 23),
-            ::reducer
+            ::reducer,
         )
 
         var receivedValue = 0
@@ -167,7 +167,7 @@ class FragmentKtTest {
 
         val store = Store(
             TestState(counter = 23),
-            ::reducer
+            ::reducer,
         )
 
         val onAttachListener = argumentCaptor<View.OnAttachStateChangeListener>()
@@ -181,7 +181,7 @@ class FragmentKtTest {
 
         fragment.consumeFlow(
             from = store,
-            owner = owner
+            owner = owner,
         ) { flow ->
             flow.collect { state ->
                 receivedValue = state.counter
@@ -229,7 +229,7 @@ class FragmentKtTest {
         val view = mock<View>()
         val store = Store(
             TestState(counter = 23),
-            ::reducer
+            ::reducer,
         )
 
         val onAttachListener = argumentCaptor<View.OnAttachStateChangeListener>()
@@ -242,7 +242,7 @@ class FragmentKtTest {
         doReturn(fragmentLifecycleOwner.lifecycle).`when`(fragment).lifecycle
 
         fragment.consumeFlow(
-            from = store
+            from = store,
         ) { flow ->
             flow.collect { state ->
                 receivedValue = state.counter

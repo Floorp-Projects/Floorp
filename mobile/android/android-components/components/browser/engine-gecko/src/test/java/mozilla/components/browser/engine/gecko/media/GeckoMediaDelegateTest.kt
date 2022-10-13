@@ -36,15 +36,18 @@ class GeckoMediaDelegateTest {
         val mockSession = GeckoEngineSession(runtime)
         var onRecordingWasCalled = false
         val geckoRecordingDevice = createGeckoRecordingDevice(
-            status = GeckoRecordingDevice.Status.RECORDING, type = GeckoRecordingDevice.Type.CAMERA
+            status = GeckoRecordingDevice.Status.RECORDING,
+            type = GeckoRecordingDevice.Type.CAMERA,
         )
         val gecko = GeckoMediaDelegate(mockSession)
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onRecordingStateChanged(devices: List<RecordingDevice>) {
-                onRecordingWasCalled = true
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onRecordingStateChanged(devices: List<RecordingDevice>) {
+                    onRecordingWasCalled = true
+                }
+            },
+        )
 
         gecko.onRecordingStatusChanged(mock(), arrayOf(geckoRecordingDevice))
 
@@ -54,10 +57,10 @@ class GeckoMediaDelegateTest {
     @Test
     fun `GIVEN a GeckoRecordingDevice status WHEN calling toStatus THEN covert to the RecordingDevice status`() {
         val geckoRecordingDevice = createGeckoRecordingDevice(
-            status = GeckoRecordingDevice.Status.RECORDING
+            status = GeckoRecordingDevice.Status.RECORDING,
         )
         val geckoInactiveDevice = createGeckoRecordingDevice(
-            status = GeckoRecordingDevice.Status.INACTIVE
+            status = GeckoRecordingDevice.Status.INACTIVE,
         )
 
         assertEquals(RecordingDevice.Status.RECORDING, geckoRecordingDevice.toStatus())
@@ -67,7 +70,7 @@ class GeckoMediaDelegateTest {
     @Test
     fun `GIVEN an invalid GeckoRecordingDevice status WHEN calling toStatus THEN throw an exception`() {
         val geckoInvalidDevice = createGeckoRecordingDevice(
-            status = 12
+            status = 12,
         )
         try {
             geckoInvalidDevice.toStatus()
@@ -79,10 +82,10 @@ class GeckoMediaDelegateTest {
     @Test
     fun `GIVEN a GeckoRecordingDevice type WHEN calling toType THEN covert to the RecordingDevice type`() {
         val geckoCameraDevice = createGeckoRecordingDevice(
-            type = GeckoRecordingDevice.Type.CAMERA
+            type = GeckoRecordingDevice.Type.CAMERA,
         )
         val geckoMicDevice = createGeckoRecordingDevice(
-            type = GeckoRecordingDevice.Type.MICROPHONE
+            type = GeckoRecordingDevice.Type.MICROPHONE,
         )
 
         assertEquals(RecordingDevice.Type.CAMERA, geckoCameraDevice.toType())
@@ -92,7 +95,7 @@ class GeckoMediaDelegateTest {
     @Test
     fun `GIVEN an invalid GeckoRecordingDevice type WHEN calling toType THEN throw an exception`() {
         val geckoInvalidDevice = createGeckoRecordingDevice(
-            type = 12
+            type = 12,
         )
         try {
             geckoInvalidDevice.toType()
@@ -103,7 +106,7 @@ class GeckoMediaDelegateTest {
 
     private fun createGeckoRecordingDevice(
         status: Long = GeckoRecordingDevice.Status.RECORDING,
-        type: Long = GeckoRecordingDevice.Type.CAMERA
+        type: Long = GeckoRecordingDevice.Type.CAMERA,
     ): GeckoRecordingDevice {
         val device: GeckoRecordingDevice = mock()
         ReflectionUtils.setField(device, "status", status)

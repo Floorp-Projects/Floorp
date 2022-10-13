@@ -54,10 +54,11 @@ class AppLinksInterceptor(
     private val alwaysDeniedSchemes: Set<String> = ALWAYS_DENY_SCHEMES,
     private val launchInApp: () -> Boolean = { false },
     private val useCases: AppLinksUseCases = AppLinksUseCases(
-        context, launchInApp,
-        alwaysDeniedSchemes = alwaysDeniedSchemes
+        context,
+        launchInApp,
+        alwaysDeniedSchemes = alwaysDeniedSchemes,
     ),
-    private val launchFromInterceptor: Boolean = false
+    private val launchFromInterceptor: Boolean = false,
 ) : RequestInterceptor {
     @Suppress("ComplexMethod")
     override fun onLoadRequest(
@@ -68,7 +69,7 @@ class AppLinksInterceptor(
         isSameDomain: Boolean,
         isRedirect: Boolean,
         isDirectNavigation: Boolean,
-        isSubframeRequest: Boolean
+        isSubframeRequest: Boolean,
     ): RequestInterceptor.InterceptionResponse? {
         val encodedUri = Uri.parse(uri)
         val uriScheme = encodedUri.scheme
@@ -116,7 +117,7 @@ class AppLinksInterceptor(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun handleRedirect(
         redirect: AppLinkRedirect,
-        uri: String
+        uri: String,
     ): RequestInterceptor.InterceptionResponse? {
         if (!launchInApp()) {
             redirect.fallbackUrl?.let {

@@ -34,13 +34,14 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 class MediaSessionFeature(
     val applicationContext: Context,
     val mediaServiceClass: Class<*>,
-    val store: BrowserStore
+    val store: BrowserStore,
 ) {
     @VisibleForTesting
     internal var scope: CoroutineScope? = null
 
     @VisibleForTesting
     internal var mediaService: MediaSessionDelegate? = null
+
     @VisibleForTesting
     internal val mediaServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, binder: IBinder) {
@@ -94,7 +95,7 @@ class MediaSessionFeature(
                     applicationContext.bindService(
                         Intent(applicationContext, mediaServiceClass),
                         mediaServiceConnection,
-                        Context.BIND_AUTO_CREATE
+                        Context.BIND_AUTO_CREATE,
                     )
                 }
 

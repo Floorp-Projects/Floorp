@@ -46,7 +46,7 @@ class TabsRemovedMiddlewareTest {
         val tab = createTab("https://www.mozilla.org", id = "1")
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware())
+            middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware()),
         )
 
         val engineSession = linkEngineSession(store, tab.id)
@@ -68,7 +68,7 @@ class TabsRemovedMiddlewareTest {
 
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab1, tab2, tab3)),
-            middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware())
+            middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware()),
         )
 
         val engineSession1 = linkEngineSession(store, tab1.id)
@@ -96,7 +96,7 @@ class TabsRemovedMiddlewareTest {
         val tab3 = createTab("https://www.getpocket.com", id = "3", private = true)
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab1, tab2, tab3)),
-            middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware())
+            middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware()),
         )
 
         val engineSession1 = linkEngineSession(store, tab1.id)
@@ -124,7 +124,7 @@ class TabsRemovedMiddlewareTest {
         val tab3 = createTab("https://www.getpocket.com", id = "3", private = false)
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab1, tab2, tab3)),
-            middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware())
+            middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware()),
         )
 
         val engineSession1 = linkEngineSession(store, tab1.id)
@@ -152,7 +152,7 @@ class TabsRemovedMiddlewareTest {
         val tab3 = createCustomTab("https://www.getpocket.com", id = "3")
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab1, tab2), customTabs = listOf(tab3)),
-            middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware())
+            middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware()),
         )
 
         val engineSession1 = linkEngineSession(store, tab1.id)
@@ -178,7 +178,7 @@ class TabsRemovedMiddlewareTest {
         val tab = createCustomTab("https://www.mozilla.org", id = "1")
         val store = BrowserStore(
             initialState = BrowserState(customTabs = listOf(tab)),
-            middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware())
+            middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware()),
         )
 
         val engineSession = linkEngineSession(store, tab.id)
@@ -199,7 +199,7 @@ class TabsRemovedMiddlewareTest {
         val tab3 = createTab("https://www.getpocket.com", id = "3")
         val store = BrowserStore(
             initialState = BrowserState(customTabs = listOf(tab1, tab2), tabs = listOf(tab3)),
-            middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware())
+            middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware()),
         )
 
         val engineSession1 = linkEngineSession(store, tab1.id)
@@ -232,7 +232,7 @@ class TabsRemovedMiddlewareTest {
         override fun invoke(
             context: MiddlewareContext<BrowserState, BrowserAction>,
             next: (BrowserAction) -> Unit,
-            action: BrowserAction
+            action: BrowserAction,
         ) {
             when (action) {
                 is TabListAction.RemoveAllNormalTabsAction,
@@ -240,7 +240,8 @@ class TabsRemovedMiddlewareTest {
                 is TabListAction.RemoveAllTabsAction,
                 is TabListAction.RemoveTabAction,
                 is CustomTabListAction.RemoveAllCustomTabsAction,
-                is CustomTabListAction.RemoveCustomTabAction -> return
+                is CustomTabListAction.RemoveCustomTabAction,
+                -> return
                 else -> next(action)
             }
         }

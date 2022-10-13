@@ -43,7 +43,7 @@ class FxaDeviceConstellation(
     private val account: FirefoxAccount,
     private val scope: CoroutineScope,
     @get:VisibleForTesting
-    internal val crashReporter: CrashReporting? = null
+    internal val crashReporter: CrashReporting? = null,
 ) : DeviceConstellation, Observable<AccountEventsObserver> by ObserverRegistry() {
     private val logger = Logger("FxaDeviceConstellation")
 
@@ -58,23 +58,25 @@ class FxaDeviceConstellation(
     internal enum class DeviceFinalizeAction {
         Initialize,
         EnsureCapabilities,
-        None
+        None,
     }
 
     @Suppress("ComplexMethod")
     @Throws(FxaPanicException::class)
     override suspend fun finalizeDevice(
         authType: AuthType,
-        config: DeviceConfig
+        config: DeviceConfig,
     ): ServiceResult = withContext(scope.coroutineContext) {
         val finalizeAction = when (authType) {
             AuthType.Signin,
             AuthType.Signup,
             AuthType.Pairing,
             is AuthType.OtherExternal,
-            AuthType.MigratedCopy -> DeviceFinalizeAction.Initialize
+            AuthType.MigratedCopy,
+            -> DeviceFinalizeAction.Initialize
             AuthType.Existing,
-            AuthType.MigratedReuse -> DeviceFinalizeAction.EnsureCapabilities
+            AuthType.MigratedReuse,
+            -> DeviceFinalizeAction.EnsureCapabilities
             AuthType.Recovered -> DeviceFinalizeAction.None
         }
 
@@ -123,7 +125,7 @@ class FxaDeviceConstellation(
     override fun registerDeviceObserver(
         observer: DeviceConstellationObserver,
         owner: LifecycleOwner,
-        autoPause: Boolean
+        autoPause: Boolean,
     ) {
         logger.debug("registering device observer")
         deviceObserverRegistry.register(observer, owner, autoPause)
@@ -140,18 +142,20 @@ class FxaDeviceConstellation(
     }
 
     override suspend fun setDevicePushSubscription(
-        subscription: DevicePushSubscription
+        subscription: DevicePushSubscription,
     ) = withContext(scope.coroutineContext) {
         handleFxaExceptions(logger, "updating device push subscription") {
             account.setDevicePushSubscription(
-                subscription.endpoint, subscription.publicKey, subscription.authKey
+                subscription.endpoint,
+                subscription.publicKey,
+                subscription.authKey,
             )
         }
     }
 
     override suspend fun sendCommandToDevice(
         targetDeviceId: String,
-        outgoingCommand: DeviceCommandOutgoing
+        outgoingCommand: DeviceCommandOutgoing,
     ) = withContext(scope.coroutineContext) {
         val result = handleFxaExceptions(logger, "sending device command", { error -> error }) {
             when (outgoingCommand) {

@@ -34,7 +34,7 @@ class StatementApiTest {
     @Mock private lateinit var httpClient: Client
     private lateinit var listFetcher: StatementListFetcher
     private val jsonHeaders = MutableHeaders(
-        CONTENT_TYPE to CONTENT_TYPE_APPLICATION_JSON
+        CONTENT_TYPE to CONTENT_TYPE_APPLICATION_JSON,
     )
 
     @Before
@@ -50,9 +50,9 @@ class StatementApiTest {
                 Request(
                     url = "https://mozilla.org/.well-known/assetlinks.json",
                     connectTimeout = TIMEOUT,
-                    readTimeout = TIMEOUT
-                )
-            )
+                    readTimeout = TIMEOUT,
+                ),
+            ),
         ).thenThrow(IOException::class.java)
 
         val source = AssetDescriptor.Web("https://mozilla.org")
@@ -65,16 +65,16 @@ class StatementApiTest {
             url = "https://firefox.com/.well-known/assetlinks.json",
             status = 201,
             headers = jsonHeaders,
-            body = mock()
+            body = mock(),
         )
         `when`(
             httpClient.fetch(
                 Request(
                     url = "https://firefox.com/.well-known/assetlinks.json",
                     connectTimeout = TIMEOUT,
-                    readTimeout = TIMEOUT
-                )
-            )
+                    readTimeout = TIMEOUT,
+                ),
+            ),
         ).thenReturn(response)
 
         val source = AssetDescriptor.Web("https://firefox.com")
@@ -87,9 +87,9 @@ class StatementApiTest {
             url = "https://firefox.com/.well-known/assetlinks.json",
             status = 200,
             headers = MutableHeaders(
-                CONTENT_TYPE to CONTENT_TYPE_FORM_URLENCODED
+                CONTENT_TYPE to CONTENT_TYPE_FORM_URLENCODED,
             ),
-            body = mock()
+            body = mock(),
         )
 
         `when`(
@@ -97,9 +97,9 @@ class StatementApiTest {
                 Request(
                     url = "https://firefox.com/.well-known/assetlinks.json",
                     connectTimeout = TIMEOUT,
-                    readTimeout = TIMEOUT
-                )
-            )
+                    readTimeout = TIMEOUT,
+                ),
+            ),
         ).thenReturn(response)
 
         val source = AssetDescriptor.Web("https://firefox.com")
@@ -112,7 +112,7 @@ class StatementApiTest {
             url = "http://firefox.com/.well-known/assetlinks.json",
             status = 200,
             headers = jsonHeaders,
-            body = stringBody("not-json")
+            body = stringBody("not-json"),
         )
 
         `when`(
@@ -120,9 +120,9 @@ class StatementApiTest {
                 Request(
                     url = "http://firefox.com/.well-known/assetlinks.json",
                     connectTimeout = TIMEOUT,
-                    readTimeout = TIMEOUT
-                )
-            )
+                    readTimeout = TIMEOUT,
+                ),
+            ),
         ).thenReturn(response)
 
         val source = AssetDescriptor.Web("http://firefox.com")
@@ -135,7 +135,7 @@ class StatementApiTest {
             url = "http://firefox.com/.well-known/assetlinks.json",
             status = 200,
             headers = jsonHeaders,
-            body = stringBody("[]")
+            body = stringBody("[]"),
         )
 
         `when`(
@@ -143,9 +143,9 @@ class StatementApiTest {
                 Request(
                     url = "http://firefox.com/.well-known/assetlinks.json",
                     connectTimeout = TIMEOUT,
-                    readTimeout = TIMEOUT
-                )
-            )
+                    readTimeout = TIMEOUT,
+                ),
+            ),
         ).thenReturn(response)
 
         val source = AssetDescriptor.Web("http://firefox.com")
@@ -186,17 +186,17 @@ class StatementApiTest {
                     "sha256_cert_fingerprints": ["AA", "BB"]
                 }
             }]
-            """
-            )
+            """,
+            ),
         )
         `when`(
             httpClient.fetch(
                 Request(
                     url = "http://firefox.com/.well-known/assetlinks.json",
                     connectTimeout = TIMEOUT,
-                    readTimeout = TIMEOUT
-                )
-            )
+                    readTimeout = TIMEOUT,
+                ),
+            ),
         ).thenReturn(response)
 
         val source = AssetDescriptor.Web("http://firefox.com")
@@ -204,35 +204,35 @@ class StatementApiTest {
             listOf(
                 Statement(
                     relation = Relation.HANDLE_ALL_URLS,
-                    target = AssetDescriptor.Web("https://www.google.com")
+                    target = AssetDescriptor.Web("https://www.google.com"),
                 ),
                 Statement(
                     relation = Relation.USE_AS_ORIGIN,
-                    target = AssetDescriptor.Web("https://www.google.com")
+                    target = AssetDescriptor.Web("https://www.google.com"),
                 ),
                 Statement(
                     relation = Relation.HANDLE_ALL_URLS,
                     target = AssetDescriptor.Android(
                         packageName = "org.digitalassetlinks.sampleapp",
-                        sha256CertFingerprint = "10:39:38:EE:45:37:E5:9E:8E:E7:92:F6:54:50:4F:B8:34:6F:C6:B3:46:D0:BB:C4:41:5F:C3:39:FC:FC:8E:C1"
-                    )
+                        sha256CertFingerprint = "10:39:38:EE:45:37:E5:9E:8E:E7:92:F6:54:50:4F:B8:34:6F:C6:B3:46:D0:BB:C4:41:5F:C3:39:FC:FC:8E:C1",
+                    ),
                 ),
                 Statement(
                     relation = Relation.HANDLE_ALL_URLS,
                     target = AssetDescriptor.Android(
                         packageName = "org.digitalassetlinks.sampleapp2",
-                        sha256CertFingerprint = "AA"
-                    )
+                        sha256CertFingerprint = "AA",
+                    ),
                 ),
                 Statement(
                     relation = Relation.HANDLE_ALL_URLS,
                     target = AssetDescriptor.Android(
                         packageName = "org.digitalassetlinks.sampleapp2",
-                        sha256CertFingerprint = "BB"
-                    )
-                )
+                        sha256CertFingerprint = "BB",
+                    ),
+                ),
             ),
-            listFetcher.listStatements(source).toList()
+            listFetcher.listStatements(source).toList(),
         )
     }
 
@@ -243,9 +243,9 @@ class StatementApiTest {
                 Request(
                     url = "http://firefox.com/.well-known/assetlinks.json",
                     connectTimeout = TIMEOUT,
-                    readTimeout = TIMEOUT
-                )
-            )
+                    readTimeout = TIMEOUT,
+                ),
+            ),
         ).thenReturn(
             Response(
                 url = "http://firefox.com/.well-known/assetlinks.json",
@@ -262,18 +262,18 @@ class StatementApiTest {
             },{
                 "include": "https://example.com/includedstatements.json"
             }]
-            """
-                )
-            )
+            """,
+                ),
+            ),
         )
         `when`(
             httpClient.fetch(
                 Request(
                     url = "https://example.com/includedstatements.json",
                     connectTimeout = TIMEOUT,
-                    readTimeout = TIMEOUT
-                )
-            )
+                    readTimeout = TIMEOUT,
+                ),
+            ),
         ).thenReturn(
             Response(
                 url = "https://example.com/includedstatements.json",
@@ -288,9 +288,9 @@ class StatementApiTest {
                     "site": "https://www.example.com"
                 }
             }]
-            """
-                )
-            )
+            """,
+                ),
+            ),
         )
 
         val source = AssetDescriptor.Web("http://firefox.com")
@@ -298,14 +298,14 @@ class StatementApiTest {
             listOf(
                 Statement(
                     relation = Relation.USE_AS_ORIGIN,
-                    target = AssetDescriptor.Web("https://www.google.com")
+                    target = AssetDescriptor.Web("https://www.google.com"),
                 ),
                 Statement(
                     relation = Relation.USE_AS_ORIGIN,
-                    target = AssetDescriptor.Web("https://www.example.com")
-                )
+                    target = AssetDescriptor.Web("https://www.example.com"),
+                ),
             ),
-            listFetcher.listStatements(source).toList()
+            listFetcher.listStatements(source).toList(),
         )
     }
 
@@ -316,9 +316,9 @@ class StatementApiTest {
                 Request(
                     url = "http://firefox.com/.well-known/assetlinks.json",
                     connectTimeout = TIMEOUT,
-                    readTimeout = TIMEOUT
-                )
-            )
+                    readTimeout = TIMEOUT,
+                ),
+            ),
         ).thenReturn(
             Response(
                 url = "http://firefox.com/.well-known/assetlinks.json",
@@ -335,9 +335,9 @@ class StatementApiTest {
             },{
                 "include": "http://firefox.com/.well-known/assetlinks.json"
             }]
-            """
-                )
-            )
+            """,
+                ),
+            ),
         )
 
         val source = AssetDescriptor.Web("http://firefox.com")
@@ -345,10 +345,10 @@ class StatementApiTest {
             listOf(
                 Statement(
                     relation = Relation.USE_AS_ORIGIN,
-                    target = AssetDescriptor.Web("https://example.com")
-                )
+                    target = AssetDescriptor.Web("https://example.com"),
+                ),
             ),
-            listFetcher.listStatements(source).toList()
+            listFetcher.listStatements(source).toList(),
         )
     }
 

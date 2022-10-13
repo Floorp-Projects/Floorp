@@ -34,7 +34,7 @@ class ThumbnailDiskCacheTest {
         `when`(bitmap.compress(any(), ArgumentMatchers.anyInt(), any())).thenAnswer {
             Assert.assertEquals(
                 Bitmap.CompressFormat.WEBP_LOSSY,
-                it.arguments[0] as Bitmap.CompressFormat
+                it.arguments[0] as Bitmap.CompressFormat,
             )
             Assert.assertEquals(90, it.arguments[1] as Int) // Quality
 
@@ -61,7 +61,7 @@ class ThumbnailDiskCacheTest {
             Assert.assertEquals(
                 @Suppress("DEPRECATION") // not deprecated in sdk 29
                 Bitmap.CompressFormat.WEBP,
-                it.arguments[0] as Bitmap.CompressFormat
+                it.arguments[0] as Bitmap.CompressFormat,
             )
             Assert.assertEquals(90, it.arguments[1] as Int) // Quality
 

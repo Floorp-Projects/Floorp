@@ -29,13 +29,13 @@ class BrowserStoreKtTest {
                             id = "google",
                             name = "Google",
                             icon = mock(),
-                            type = SearchEngine.Type.BUNDLED
-                        )
+                            type = SearchEngine.Type.BUNDLED,
+                        ),
                     ),
                     userSelectedSearchEngineId = "google",
-                    complete = true
-                )
-            )
+                    complete = true,
+                ),
+            ),
         )
 
         val latch = CountDownLatch(1)
@@ -68,8 +68,8 @@ class BrowserStoreKtTest {
                         id = "google",
                         name = "Google",
                         icon = mock(),
-                        type = SearchEngine.Type.BUNDLED
-                    )
+                        type = SearchEngine.Type.BUNDLED,
+                    ),
                 ),
                 userSelectedSearchEngineId = null,
                 userSelectedSearchEngineName = null,
@@ -78,8 +78,8 @@ class BrowserStoreKtTest {
                 hiddenSearchEngines = emptyList(),
                 additionalAvailableSearchEngines = emptyList(),
                 additionalSearchEngines = emptyList(),
-                regionSearchEnginesOrder = listOf("google")
-            )
+                regionSearchEnginesOrder = listOf("google"),
+            ),
         )
 
         assertTrue(latch.await(10, TimeUnit.SECONDS))
@@ -106,8 +106,8 @@ class BrowserStoreKtTest {
                 hiddenSearchEngines = emptyList(),
                 additionalAvailableSearchEngines = emptyList(),
                 additionalSearchEngines = emptyList(),
-                regionSearchEnginesOrder = listOf("google")
-            )
+                regionSearchEnginesOrder = listOf("google"),
+            ),
         )
 
         assertTrue(latch.await(10, TimeUnit.SECONDS))

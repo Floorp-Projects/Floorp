@@ -24,7 +24,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  */
 class WebExtensionPopupFeature(
     private val store: BrowserStore,
-    private val onOpenPopup: (WebExtensionState) -> Unit = { }
+    private val onOpenPopup: (WebExtensionState) -> Unit = { },
 ) : LifecycleAwareFeature {
     private var popupScope: CoroutineScope? = null
 

@@ -16,7 +16,7 @@ import mozilla.components.concept.storage.CreditCardEntry
  * @param onCreditCardSelected Callback invoked when a credit card item is selected.
  */
 class CreditCardsAdapter(
-    private val onCreditCardSelected: (CreditCardEntry) -> Unit
+    private val onCreditCardSelected: (CreditCardEntry) -> Unit,
 ) : ListAdapter<CreditCardEntry, CreditCardItemViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CreditCardItemViewHolder {

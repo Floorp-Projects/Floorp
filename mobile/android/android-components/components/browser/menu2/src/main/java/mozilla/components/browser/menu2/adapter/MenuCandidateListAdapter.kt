@@ -20,7 +20,7 @@ import mozilla.components.concept.menu.candidate.TextMenuCandidate
 internal class MenuCandidateListAdapter(
     private val inflater: LayoutInflater,
     private val dismiss: () -> Unit,
-    private val reopenMenu: (NestedMenuCandidate) -> Unit
+    private val reopenMenu: (NestedMenuCandidate) -> Unit,
 ) : ListAdapter<MenuCandidate, MenuCandidateViewHolder<out MenuCandidate>>(MenuCandidateDiffer) {
 
     @LayoutRes
@@ -35,7 +35,7 @@ internal class MenuCandidateListAdapter(
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
-        @LayoutRes viewType: Int
+        @LayoutRes viewType: Int,
     ): MenuCandidateViewHolder<out MenuCandidate> {
         val view = inflater.inflate(viewType, parent, false)
         return when (viewType) {

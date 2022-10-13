@@ -13,16 +13,22 @@ import org.json.JSONObject
 
 @VisibleForTesting
 internal const val KEY_ARRAY_SPOCS = "spocs"
+
 @VisibleForTesting
 internal const val JSON_SPOC_SHIMS_KEY = "shim"
+
 @VisibleForTesting
 internal const val JSON_SPOC_CAPS_KEY = "caps"
+
 @VisibleForTesting
 internal const val JSON_SPOC_CAPS_LIFETIME_KEY = "lifetime"
+
 @VisibleForTesting
 internal const val JSON_SPOC_CAPS_FLIGHT_KEY = "campaign"
+
 @VisibleForTesting
 internal const val JSON_SPOC_CAPS_FLIGHT_COUNT_KEY = "count"
+
 @VisibleForTesting
 internal const val JSON_SPOC_CAPS_FLIGHT_PERIOD_KEY = "period"
 private const val JSON_SPOC_FLIGHT_ID_KEY = "flight_id"
@@ -70,7 +76,7 @@ internal object SpocsJSONParser {
 
     private fun jsonToShim(json: JSONObject) = ApiSpocShim(
         click = json.getString(JSON_SPOC_SHIM_CLICK_KEY),
-        impression = json.getString(JSON_SPOC_SHIM_IMPRESSION_KEY)
+        impression = json.getString(JSON_SPOC_SHIM_IMPRESSION_KEY),
     )
 
     private fun jsonToCaps(json: JSONObject): ApiSpocCaps {
@@ -79,7 +85,7 @@ internal object SpocsJSONParser {
         return ApiSpocCaps(
             lifetimeCount = json.getInt(JSON_SPOC_CAPS_LIFETIME_KEY),
             flightCount = flightCaps.getInt(JSON_SPOC_CAPS_FLIGHT_COUNT_KEY),
-            flightPeriod = flightCaps.getInt(JSON_SPOC_CAPS_FLIGHT_PERIOD_KEY)
+            flightPeriod = flightCaps.getInt(JSON_SPOC_CAPS_FLIGHT_PERIOD_KEY),
         )
     }
 }

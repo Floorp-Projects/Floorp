@@ -47,9 +47,9 @@ class IconMessageHandlerTest {
             val store: BrowserStore = BrowserStore(
                 BrowserState(
                     tabs = listOf(
-                        createTab(url = "https://www.theverge.com/", id = "test-url")
-                    )
-                )
+                        createTab(url = "https://www.theverge.com/", id = "test-url"),
+                    ),
+                ),
             )
 
             store.state.findTab("test-url")!!.apply {

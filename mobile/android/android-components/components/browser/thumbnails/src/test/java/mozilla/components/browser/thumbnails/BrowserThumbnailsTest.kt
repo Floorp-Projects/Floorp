@@ -20,12 +20,12 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 class BrowserThumbnailsTest {
@@ -44,11 +44,11 @@ class BrowserThumbnailsTest {
             BrowserStore(
                 BrowserState(
                     tabs = listOf(
-                        createTab("https://www.mozilla.org", id = tabId)
+                        createTab("https://www.mozilla.org", id = tabId),
                     ),
-                    selectedTabId = tabId
-                )
-            )
+                    selectedTabId = tabId,
+                ),
+            ),
         )
         engineView = mock()
         thumbnails = BrowserThumbnails(testContext, engineView, store)

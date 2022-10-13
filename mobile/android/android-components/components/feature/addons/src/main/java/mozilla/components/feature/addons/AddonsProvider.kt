@@ -23,6 +23,6 @@ interface AddonsProvider {
     suspend fun getAvailableAddons(
         allowCache: Boolean = true,
         readTimeoutInSeconds: Long? = null,
-        language: String? = null
+        language: String? = null,
     ): List<Addon>
 }

@@ -47,7 +47,7 @@ class AddressPickerTest {
         postalCode = "90237",
         country = "USA",
         tel = "00",
-        email = "email"
+        email = "email",
     )
 
     private var onDismissCalled = false
@@ -56,7 +56,7 @@ class AddressPickerTest {
     private val promptRequest = PromptRequest.SelectAddress(
         addresses = listOf(address),
         onDismiss = { onDismissCalled = true },
-        onConfirm = { confirmedAddress = it }
+        onConfirm = { confirmedAddress = it },
     )
 
     @Before
@@ -66,7 +66,7 @@ class AddressPickerTest {
         addressSelectBar = mock()
         addressPicker = AddressPicker(
             store = store,
-            addressSelectBar = addressSelectBar
+            addressSelectBar = addressSelectBar,
         )
 
         whenever(store.state).thenReturn(state)
@@ -89,11 +89,13 @@ class AddressPickerTest {
     @Test
     fun `GIVEN a prompt request WHEN handleSelectAddressRequest is called THEN the prompt is shown with the provided addresses`() {
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         assertEquals(0, facts.size)
 
@@ -124,11 +126,13 @@ class AddressPickerTest {
     @Test
     fun `WHEN onManageOptions is called THEN onManageAddresses is invoked and prompt is hidden`() {
         val facts = mutableListOf<Fact>()
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                facts.add(fact)
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
 
         assertEquals(0, facts.size)
 

@@ -35,7 +35,7 @@ class ContainerMiddlewareTest {
         contextId = "contextId",
         name = "Personal",
         color = ContainerState.Color.GREEN,
-        icon = ContainerState.Icon.CART
+        icon = ContainerState.Icon.CART,
     )
 
     @Test
@@ -45,7 +45,7 @@ class ContainerMiddlewareTest {
             val middleware = ContainerMiddleware(testContext, coroutineContext, containerStorage = storage)
             val store = BrowserStore(
                 initialState = BrowserState(),
-                middleware = listOf(middleware)
+                middleware = listOf(middleware),
             )
 
             store.waitUntilIdle() // wait to consume InitAction
@@ -57,7 +57,7 @@ class ContainerMiddlewareTest {
                 container.contextId,
                 container.name,
                 container.color,
-                container.icon
+                container.icon,
             )
         }
 
@@ -68,7 +68,7 @@ class ContainerMiddlewareTest {
             val middleware = ContainerMiddleware(testContext, coroutineContext, containerStorage = storage)
             val store = BrowserStore(
                 initialState = BrowserState(),
-                middleware = listOf(middleware)
+                middleware = listOf(middleware),
             )
 
             store.waitUntilIdle() // wait to consume InitAction
@@ -86,10 +86,10 @@ class ContainerMiddlewareTest {
             val store = BrowserStore(
                 initialState = BrowserState(
                     containers = mapOf(
-                        container.contextId to container
-                    )
+                        container.contextId to container,
+                    ),
                 ),
-                middleware = listOf(middleware)
+                middleware = listOf(middleware),
             )
 
             store.waitUntilIdle() // wait to consume InitAction
@@ -102,13 +102,13 @@ class ContainerMiddlewareTest {
         }
 
     private fun mockStorage(
-        containers: List<ContainerState> = emptyList()
+        containers: List<ContainerState> = emptyList(),
     ): ContainerStorage {
         val storage: ContainerStorage = mock()
         whenever(storage.getContainers()).thenReturn(
             flow {
                 emit(containers)
-            }
+            },
         )
         return storage
     }

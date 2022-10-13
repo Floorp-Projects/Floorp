@@ -17,7 +17,7 @@ import java.util.Locale
 
 enum class DomainList(val listName: String) {
     DEFAULT("default"),
-    CUSTOM("custom")
+    CUSTOM("custom"),
 }
 
 /**
@@ -47,7 +47,7 @@ private fun CustomDomains.asLoader(): DomainsLoader = { context: Context -> load
  */
 open class BaseDomainAutocompleteProvider(
     private val list: DomainList,
-    private val domainsLoader: DomainsLoader
+    private val domainsLoader: DomainsLoader,
 ) : DomainAutocompleteProvider, CoroutineScope by CoroutineScope(Dispatchers.IO) {
 
     // We compute 'domains' on the worker thread; make sure it's immediately visible on the UI thread.
@@ -79,7 +79,7 @@ open class BaseDomainAutocompleteProvider(
                     text = getResultText(query, wwwDomain),
                     url = it.url,
                     source = list.listName,
-                    totalItems = domains.size
+                    totalItems = domains.size,
                 )
             }
 
@@ -89,7 +89,7 @@ open class BaseDomainAutocompleteProvider(
                     text = getResultText(query, it.host),
                     url = it.url,
                     source = list.listName,
-                    totalItems = domains.size
+                    totalItems = domains.size,
                 )
             }
         }
@@ -121,5 +121,5 @@ class DomainAutocompleteResult(
     val text: String,
     val url: String,
     val source: String,
-    val totalItems: Int
+    val totalItems: Int,
 )

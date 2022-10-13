@@ -42,11 +42,11 @@ internal object ReaderStateReducer {
 
 private fun BrowserState.copyWithReaderState(
     tabId: String,
-    update: (ReaderState) -> ReaderState
+    update: (ReaderState) -> ReaderState,
 ): BrowserState {
     return copy(
         tabs = tabs.updateTabs(tabId) { current ->
             current.copy(readerState = update.invoke(current.readerState))
-        } ?: tabs
+        } ?: tabs,
     )
 }

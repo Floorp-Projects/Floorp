@@ -180,19 +180,22 @@ class ToolbarAutocompleteFeatureTest {
                 text = "mozilla.org",
                 url = "https://www.mozilla.org",
                 source = "memoryHistory",
-                totalItems = 1
-            )
+                totalItems = 1,
+            ),
         ).`when`(history).getAutocompleteSuggestion("mo")
 
         verifyNoAutocompleteResult(toolbar, autocompleteDelegate, "hi")
         verifyAutocompleteResult(
-            toolbar, autocompleteDelegate, "mo",
+            toolbar,
+            autocompleteDelegate,
+            "mo",
             AutocompleteResult(
                 input = "mo",
                 text = "mozilla.org",
                 url = "https://www.mozilla.org",
-                source = "memoryHistory", totalItems = 1
-            )
+                source = "memoryHistory",
+                totalItems = 1,
+            ),
         )
 
         // Can autocomplete with just an empty domain provider.
@@ -204,20 +207,22 @@ class ToolbarAutocompleteFeatureTest {
         // Can autocomplete with a non-empty domain provider.
         domains.testDomains(
             listOf(
-                Domain.create("https://www.mozilla.org")
-            )
+                Domain.create("https://www.mozilla.org"),
+            ),
         )
 
         verifyNoAutocompleteResult(toolbar, autocompleteDelegate, "hi")
         verifyAutocompleteResult(
-            toolbar, autocompleteDelegate, "mo",
+            toolbar,
+            autocompleteDelegate,
+            "mo",
             AutocompleteResult(
                 input = "mo",
                 text = "mozilla.org",
                 url = "https://www.mozilla.org",
                 source = "custom",
-                totalItems = 1
-            )
+                totalItems = 1,
+            ),
         )
 
         // Can autocomplete with empty history and domain providers.
@@ -232,19 +237,21 @@ class ToolbarAutocompleteFeatureTest {
         domains.testDomains(
             listOf(
                 Domain.create("https://www.mozilla.org"),
-                Domain.create("https://moscow.ru")
-            )
+                Domain.create("https://moscow.ru"),
+            ),
         )
 
         verifyAutocompleteResult(
-            toolbar, autocompleteDelegate, "mo",
+            toolbar,
+            autocompleteDelegate,
+            "mo",
             AutocompleteResult(
                 input = "mo",
                 text = "mozilla.org",
                 url = "https://www.mozilla.org",
                 source = "custom",
-                totalItems = 2
-            )
+                totalItems = 2,
+            ),
         )
 
         doReturn(
@@ -253,30 +260,34 @@ class ToolbarAutocompleteFeatureTest {
                 text = "mozilla.org",
                 url = "https://www.mozilla.org",
                 source = "memoryHistory",
-                totalItems = 1
-            )
+                totalItems = 1,
+            ),
         ).`when`(history).getAutocompleteSuggestion("mo")
 
         verifyAutocompleteResult(
-            toolbar, autocompleteDelegate, "mo",
+            toolbar,
+            autocompleteDelegate,
+            "mo",
             AutocompleteResult(
                 input = "mo",
                 text = "mozilla.org",
                 url = "https://www.mozilla.org",
                 source = "memoryHistory",
-                totalItems = 1
-            )
+                totalItems = 1,
+            ),
         )
 
         verifyAutocompleteResult(
-            toolbar, autocompleteDelegate, "mos",
+            toolbar,
+            autocompleteDelegate,
+            "mos",
             AutocompleteResult(
                 input = "mos",
                 text = "moscow.ru",
                 url = "https://moscow.ru",
                 source = "custom",
-                totalItems = 2
-            )
+                totalItems = 2,
+            ),
         )
     }
 

@@ -25,12 +25,12 @@ import mozilla.components.lib.state.MiddlewareContext
  * [EngineSessionState].
  */
 internal class SuspendMiddleware(
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
 ) : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         when (action) {
             is EngineAction.SuspendEngineSessionAction -> suspend(context, action.tabId)
@@ -41,15 +41,15 @@ internal class SuspendMiddleware(
 
     private fun suspend(
         context: MiddlewareContext<BrowserState, BrowserAction>,
-        sessionId: String
+        sessionId: String,
     ) {
         val tab = context.state.findTab(sessionId) ?: return
 
         // First we unlink (which clearsEngineSession and state)
         context.dispatch(
             EngineAction.UnlinkEngineSessionAction(
-                tab.id
-            )
+                tab.id,
+            ),
         )
 
         // Now we can close the unlinked EngineSession (on the main thread).

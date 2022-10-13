@@ -18,13 +18,13 @@ internal object EngineStateReducer {
         is EngineAction.LinkEngineSessionAction -> state.copyWithEngineState(action.tabId) {
             it.copy(
                 engineSession = action.engineSession,
-                timestamp = action.timestamp
+                timestamp = action.timestamp,
             )
         }
         is EngineAction.UnlinkEngineSessionAction -> state.copyWithEngineState(action.tabId) {
             it.copy(
                 engineSession = null,
-                engineObserver = null
+                engineObserver = null,
             )
         }
         is EngineAction.UpdateEngineSessionObserverAction -> state.copyWithEngineState(action.tabId) {
@@ -57,13 +57,14 @@ internal object EngineStateReducer {
         is EngineAction.ExitFullScreenModeAction,
         is EngineAction.SaveToPdfAction,
         is EngineAction.KillEngineSessionAction,
-        is EngineAction.ClearDataAction -> {
+        is EngineAction.ClearDataAction,
+        -> {
             throw IllegalStateException("You need to add EngineMiddleware to your BrowserStore. ($action)")
         }
         is EngineAction.PurgeHistoryAction -> {
             state.copy(
                 tabs = purgeEngineStates(state.tabs),
-                customTabs = purgeEngineStates(state.customTabs)
+                customTabs = purgeEngineStates(state.customTabs),
             )
         }
     }
@@ -71,7 +72,7 @@ internal object EngineStateReducer {
 
 private inline fun BrowserState.copyWithEngineState(
     tabId: String,
-    crossinline update: (EngineState) -> EngineState
+    crossinline update: (EngineState) -> EngineState,
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
         current.createCopy(engineState = update(current.engineState))

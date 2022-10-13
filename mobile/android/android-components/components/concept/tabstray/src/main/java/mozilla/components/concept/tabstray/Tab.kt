@@ -25,7 +25,7 @@ import mozilla.components.concept.engine.mediasession.MediaSession
  */
 @Deprecated(
     "This will be removed in a future release",
-    ReplaceWith("TabSessionState", "mozilla.components.browser.state.state")
+    ReplaceWith("TabSessionState", "mozilla.components.browser.state.state"),
 )
 data class Tab(
     val id: String,
@@ -38,5 +38,5 @@ data class Tab(
     val controller: MediaSession.Controller? = null,
     val lastAccess: Long = 0L,
     val createdAt: Long = 0L,
-    val searchTerm: String = ""
+    val searchTerm: String = "",
 )

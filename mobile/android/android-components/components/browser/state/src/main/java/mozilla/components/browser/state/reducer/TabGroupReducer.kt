@@ -125,7 +125,7 @@ private fun BrowserState.assertTabExists(tabId: String) {
 private fun BrowserState.updateTabGroup(
     partitionId: String,
     groupId: String,
-    update: (TabGroup) -> TabGroup
+    update: (TabGroup) -> TabGroup,
 ): BrowserState {
     return updateTabPartition(partitionId) { partition ->
         partition.updateTabGroup(groupId, update)
@@ -137,7 +137,7 @@ private fun BrowserState.updateTabGroup(
  */
 private inline fun BrowserState.updateTabPartition(
     partitionId: String,
-    crossinline update: (TabPartition) -> TabPartition
+    crossinline update: (TabPartition) -> TabPartition,
 ): BrowserState {
     val partition = tabPartitions[partitionId] ?: return this
     return copy(tabPartitions = tabPartitions + (partitionId to update(partition)))
@@ -148,7 +148,7 @@ private inline fun BrowserState.updateTabPartition(
  */
 private inline fun TabPartition.updateTabGroup(
     groupId: String,
-    crossinline update: (TabGroup) -> TabGroup
+    crossinline update: (TabGroup) -> TabGroup,
 ): TabPartition {
     return tabGroups.update(groupId, update)?.let {
         copy(tabGroups = it)
@@ -160,7 +160,7 @@ private inline fun TabPartition.updateTabGroup(
  */
 private inline fun List<TabGroup>.update(
     groupId: String,
-    crossinline update: (TabGroup) -> TabGroup
+    crossinline update: (TabGroup) -> TabGroup,
 ): List<TabGroup>? {
     val groupIndex = indexOfFirst { it.id == groupId }
     if (groupIndex == -1) return null

@@ -21,7 +21,7 @@ interface IconLoaderScope {
  */
 @Composable
 fun IconLoaderScope.WithIcon(
-    content: @Composable (icon: IconLoaderState.Icon) -> Unit
+    content: @Composable (icon: IconLoaderState.Icon) -> Unit,
 ) {
     WithInternalState {
         val state = state.value
@@ -36,7 +36,7 @@ fun IconLoaderScope.WithIcon(
  */
 @Composable
 fun IconLoaderScope.Placeholder(
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     WithInternalState {
         val state = state.value
@@ -48,12 +48,12 @@ fun IconLoaderScope.Placeholder(
 
 @Composable
 private fun IconLoaderScope.WithInternalState(
-    content: @Composable InternalIconLoaderScope.() -> Unit
+    content: @Composable InternalIconLoaderScope.() -> Unit,
 ) {
     val internalScope = this as InternalIconLoaderScope
     internalScope.content()
 }
 
 internal class InternalIconLoaderScope(
-    override val state: MutableState<IconLoaderState> = mutableStateOf(IconLoaderState.Loading)
+    override val state: MutableState<IconLoaderState> = mutableStateOf(IconLoaderState.Loading),
 ) : IconLoaderScope

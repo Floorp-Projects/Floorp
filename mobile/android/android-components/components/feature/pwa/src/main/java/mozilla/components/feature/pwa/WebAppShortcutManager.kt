@@ -59,7 +59,7 @@ class WebAppShortcutManager(
     context: Context,
     httpClient: Client,
     private val storage: ManifestStorage,
-    internal val supportWebApps: Boolean = true
+    internal val supportWebApps: Boolean = true,
 ) {
 
     internal val icons = webAppIcons(context, httpClient)
@@ -75,7 +75,7 @@ class WebAppShortcutManager(
     suspend fun requestPinShortcut(
         context: Context,
         session: SessionState,
-        overrideShortcutName: String? = null
+        overrideShortcutName: String? = null,
     ) {
         if (ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
             val manifest = session.installableManifest()
@@ -95,7 +95,7 @@ class WebAppShortcutManager(
                     context,
                     0,
                     intent,
-                    PendingIntentUtils.defaultFlags or FLAG_UPDATE_CURRENT
+                    PendingIntentUtils.defaultFlags or FLAG_UPDATE_CURRENT,
                 )
                 val intentSender = pendingIntent.intentSender
 
@@ -126,7 +126,7 @@ class WebAppShortcutManager(
     suspend fun buildBasicShortcut(
         context: Context,
         session: SessionState,
-        overrideShortcutName: String? = null
+        overrideShortcutName: String? = null,
     ): ShortcutInfoCompat {
         val shortcutIntent = Intent(Intent.ACTION_VIEW, session.content.url.toUri()).apply {
             addCategory(SHORTCUT_CATEGORY)
@@ -163,7 +163,7 @@ class WebAppShortcutManager(
      */
     suspend fun buildWebAppShortcut(
         context: Context,
-        manifest: WebAppManifest
+        manifest: WebAppManifest,
     ): ShortcutInfoCompat? {
         val shortcutIntent = Intent(context, WebAppLauncherActivity::class.java).apply {
             action = ACTION_PWA_LAUNCHER
@@ -213,7 +213,7 @@ class WebAppShortcutManager(
      */
     suspend fun getWebAppInstallState(
         url: String,
-        @VisibleForTesting currentTimeMs: Long = System.currentTimeMillis()
+        @VisibleForTesting currentTimeMs: Long = System.currentTimeMillis(),
     ): WebAppInstallState {
         if (storage.hasRecentManifest(url, currentTimeMs = currentTimeMs)) {
             return WebAppInstallState.Installed
@@ -230,7 +230,7 @@ class WebAppShortcutManager(
      * @return count of recently used web apps
      */
     suspend fun recentlyUsedWebAppsCount(
-        activeThresholdMs: Long = ManifestStorage.ACTIVE_THRESHOLD_MS
+        activeThresholdMs: Long = ManifestStorage.ACTIVE_THRESHOLD_MS,
     ): Int {
         return storage.recentManifestsCount(activeThresholdMs = activeThresholdMs)
     }
@@ -249,7 +249,7 @@ class WebAppShortcutManager(
      */
     enum class WebAppInstallState {
         NotInstalled,
-        Installed
+        Installed,
     }
 }
 
@@ -260,27 +260,27 @@ class WebAppShortcutManager(
  */
 private fun webAppIcons(
     context: Context,
-    httpClient: Client
+    httpClient: Client,
 ) = BrowserIcons(
     context = context,
     httpClient = httpClient,
     generator = DefaultIconGenerator(cornerRadiusDimen = null),
     preparers = listOf(
-        MemoryIconPreparer(pwaIconMemoryCache)
+        MemoryIconPreparer(pwaIconMemoryCache),
     ),
     loaders = listOf(
         MemoryIconLoader(pwaIconMemoryCache),
         HttpIconLoader(httpClient),
-        DataUriIconLoader()
+        DataUriIconLoader(),
     ),
     decoders = listOf(
         AndroidImageDecoder(),
-        ICOIconDecoder()
+        ICOIconDecoder(),
     ),
     processors = listOf(
         MemoryIconProcessor(pwaIconMemoryCache),
         ResizingProcessor(),
         ColorProcessor(),
-        AdaptiveIconProcessor()
-    )
+        AdaptiveIconProcessor(),
+    ),
 )

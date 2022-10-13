@@ -28,7 +28,7 @@ class ContainerToolbarFeatureTest {
         contextId = "1",
         name = "Personal",
         color = ContainerState.Color.GREEN,
-        icon = ContainerState.Icon.FINGERPRINT
+        icon = ContainerState.Icon.FINGERPRINT,
     )
 
     @get:Rule
@@ -41,14 +41,14 @@ class ContainerToolbarFeatureTest {
             BrowserStore(
                 BrowserState(
                     tabs = listOf(
-                        createTab("https://www.example.org", id = "tab1", contextId = "1")
+                        createTab("https://www.example.org", id = "tab1", contextId = "1"),
                     ),
                     selectedTabId = "tab1",
                     containers = mapOf(
-                        container.contextId to container
-                    )
-                )
-            )
+                        container.contextId to container,
+                    ),
+                ),
+            ),
         )
         val containerToolbarFeature = getContainerToolbarFeature(toolbar, store)
 
@@ -68,14 +68,14 @@ class ContainerToolbarFeatureTest {
                 BrowserState(
                     tabs = listOf(
                         createTab("https://www.example.org", id = "tab1", contextId = "1"),
-                        createTab("https://www.mozilla.org", id = "tab2")
+                        createTab("https://www.mozilla.org", id = "tab2"),
                     ),
                     selectedTabId = "tab1",
                     containers = mapOf(
-                        container.contextId to container
-                    )
-                )
-            )
+                        container.contextId to container,
+                    ),
+                ),
+            ),
         )
         val containerToolbarFeature = getContainerToolbarFeature(toolbar, store)
         store.dispatch(TabListAction.SelectTabAction("tab2")).joinBlocking()
@@ -88,7 +88,7 @@ class ContainerToolbarFeatureTest {
 
     private fun getContainerToolbarFeature(
         toolbar: Toolbar = mock(),
-        store: BrowserStore = BrowserStore()
+        store: BrowserStore = BrowserStore(),
     ): ContainerToolbarFeature {
         val containerToolbarFeature = spy(ContainerToolbarFeature(toolbar, store))
         containerToolbarFeature.start()

@@ -21,7 +21,7 @@ internal data class BaseGleanSyncPing(
     val uploaded: Int,
     val failedToUpload: Int,
     val outgoingBatches: Int,
-    val failureReason: FailureReason?
+    val failureReason: FailureReason?,
 ) {
     companion object {
         const val MILLIS_PER_SEC = 1000L
@@ -50,7 +50,7 @@ internal data class BaseGleanSyncPing(
                 uploaded = uploaded,
                 failedToUpload = failedToUpload,
                 outgoingBatches = info.outgoing.size,
-                failureReason = info.failureReason
+                failureReason = info.failureReason,
             )
         }
     }

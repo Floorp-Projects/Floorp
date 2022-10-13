@@ -42,11 +42,11 @@ class PromptMiddlewareTest {
         store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = tabId)
+                    createTab("https://www.mozilla.org", id = tabId),
                 ),
-                selectedTabId = tabId
+                selectedTabId = tabId,
             ),
-            middleware = listOf(PromptMiddleware())
+            middleware = listOf(PromptMiddleware()),
         )
     }
 

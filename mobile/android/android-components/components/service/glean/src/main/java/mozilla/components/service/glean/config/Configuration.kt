@@ -20,11 +20,11 @@ import mozilla.telemetry.glean.config.Configuration as GleanCoreConfiguration
  *           sent along with all the pings, in the `client_info` section.
  * @property maxEvents (optional) the number of events to store before the events ping is sent
  */
-data class Configuration @JvmOverloads constructor (
+data class Configuration @JvmOverloads constructor(
     val httpClient: PingUploader,
     val serverEndpoint: String = DEFAULT_TELEMETRY_ENDPOINT,
     val channel: String? = null,
-    val maxEvents: Int? = null
+    val maxEvents: Int? = null,
 ) {
     // The following is required to support calling our API from Java.
     companion object {

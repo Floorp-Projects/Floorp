@@ -26,7 +26,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  */
 class WebExtensionBrowserMenu internal constructor(
     adapter: BrowserMenuAdapter,
-    private val store: BrowserStore
+    private val store: BrowserStore,
 ) : BrowserMenu(adapter) {
     private var scope: CoroutineScope? = null
 
@@ -35,7 +35,7 @@ class WebExtensionBrowserMenu internal constructor(
         orientation: Orientation,
         style: MenuStyle?,
         endOfMenuAlwaysVisible: Boolean,
-        onDismiss: () -> Unit
+        onDismiss: () -> Unit,
     ): PopupWindow {
         scope = store.flowScoped { flow ->
             flow.ifChanged { it.selectedTab }
@@ -50,7 +50,7 @@ class WebExtensionBrowserMenu internal constructor(
             orientation,
             style,
             endOfMenuAlwaysVisible,
-            onDismiss
+            onDismiss,
         ).apply {
             setOnDismissListener {
                 adapter.menu = null
@@ -69,7 +69,7 @@ class WebExtensionBrowserMenu internal constructor(
 
         internal fun getOrUpdateWebExtensionMenuItems(
             state: BrowserState,
-            tab: SessionState? = null
+            tab: SessionState? = null,
         ): List<WebExtensionBrowserMenuItem> {
             val menuItems = ArrayList<WebExtensionBrowserMenuItem>()
             val extensions = state.extensions.values.toList()
@@ -84,7 +84,7 @@ class WebExtensionBrowserMenu internal constructor(
                             extension = extension,
                             globalAction = browserAction,
                             tabAction = tab?.extensionState?.get(extension.id)?.browserAction,
-                            menuItems = menuItems
+                            menuItems = menuItems,
                         )
                     }
 
@@ -99,7 +99,7 @@ class WebExtensionBrowserMenu internal constructor(
                                 globalAction = pageAction,
                                 tabAction = tabPageAction,
                                 menuItems = menuItems,
-                                isPageAction = true
+                                isPageAction = true,
                             )
                         }
                     }
@@ -113,7 +113,7 @@ class WebExtensionBrowserMenu internal constructor(
             globalAction: Action,
             tabAction: Action?,
             menuItems: ArrayList<WebExtensionBrowserMenuItem>,
-            isPageAction: Boolean = false
+            isPageAction: Boolean = false,
         ): Boolean {
             val actionMap = if (isPageAction) webExtensionPageActions else webExtensionBrowserActions
 
@@ -126,7 +126,7 @@ class WebExtensionBrowserMenu internal constructor(
                 val browserMenuItem = WebExtensionBrowserMenuItem(
                     action = globalAction,
                     listener = listener,
-                    id = extension.id
+                    id = extension.id,
                 )
                 browserMenuItem
             }

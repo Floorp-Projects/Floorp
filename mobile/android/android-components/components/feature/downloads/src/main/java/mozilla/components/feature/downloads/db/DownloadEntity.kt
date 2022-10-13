@@ -37,7 +37,7 @@ internal data class DownloadEntity(
     var destinationDirectory: String,
 
     @ColumnInfo(name = "created_at")
-    var createdAt: Long
+    var createdAt: Long,
 
 ) {
 
@@ -55,13 +55,12 @@ internal data class DownloadEntity(
             skipConfirmation = false,
             id = id,
             sessionId = null,
-            createdTime = createdAt
+            createdTime = createdAt,
         )
     }
 }
 
 internal fun DownloadState.toDownloadEntity(): DownloadEntity {
-
     /**
      * Data URLs cause problems when restoring the values from the db,
      * as the string could be so long that it could break the maximum allowed size for a cursor,
@@ -82,6 +81,6 @@ internal fun DownloadState.toDownloadEntity(): DownloadEntity {
         contentLength,
         status = status,
         destinationDirectory = destinationDirectory,
-        createdAt = createdTime
+        createdAt = createdTime,
     )
 }

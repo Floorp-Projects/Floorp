@@ -19,7 +19,7 @@ import mozilla.components.feature.downloads.R
 internal class DownloaderAppAdapter(
     context: Context,
     private val apps: List<DownloaderApp>,
-    val onAppSelected: ((DownloaderApp) -> Unit)
+    val onAppSelected: ((DownloaderApp) -> Unit),
 ) : RecyclerView.Adapter<DownloaderAppViewHolder>() {
 
     private val inflater = LayoutInflater.from(context)
@@ -52,7 +52,7 @@ internal class DownloaderAppAdapter(
 internal class DownloaderAppViewHolder(
     itemView: View,
     val nameLabel: TextView,
-    val iconImage: ImageView
+    val iconImage: ImageView,
 ) : RecyclerView.ViewHolder(itemView) {
     fun bind(app: DownloaderApp, onAppSelected: ((DownloaderApp) -> Unit)) {
         itemView.app = app

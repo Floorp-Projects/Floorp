@@ -29,7 +29,7 @@ internal fun UpdatableAddressFields.into(): mozilla.appservices.autofill.Updatab
         postalCode = this.postalCode,
         country = this.country,
         tel = this.tel,
-        email = this.email
+        email = this.email,
     )
 }
 
@@ -47,7 +47,7 @@ internal fun UpdatableCreditCardFields.into(): mozilla.appservices.autofill.Upda
         ccNumberLast4 = this.cardNumberLast4,
         ccExpMonth = this.expiryMonth,
         ccExpYear = this.expiryYear,
-        ccType = this.cardType
+        ccType = this.cardType,
     )
 }
 
@@ -72,7 +72,7 @@ internal fun mozilla.appservices.autofill.Address.into(): Address {
         timeCreated = this.timeCreated,
         timeLastUsed = this.timeLastUsed,
         timeLastModified = this.timeLastModified,
-        timesUsed = this.timesUsed
+        timesUsed = this.timesUsed,
     )
 }
 
@@ -91,6 +91,6 @@ internal fun mozilla.appservices.autofill.CreditCard.into(): CreditCard {
         timeCreated = this.timeCreated,
         timeLastUsed = this.timeLastUsed,
         timeLastModified = this.timeLastModified,
-        timesUsed = this.timesUsed
+        timesUsed = this.timesUsed,
     )
 }

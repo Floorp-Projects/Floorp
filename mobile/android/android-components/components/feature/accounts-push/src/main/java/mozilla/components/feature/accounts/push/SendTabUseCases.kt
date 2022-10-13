@@ -33,14 +33,14 @@ import kotlin.coroutines.CoroutineContext
  */
 class SendTabUseCases(
     accountManager: FxaAccountManager,
-    coroutineContext: CoroutineContext = Dispatchers.IO
+    coroutineContext: CoroutineContext = Dispatchers.IO,
 ) {
     private var job: Job = SupervisorJob()
     private val scope = CoroutineScope(coroutineContext) + job
 
     class SendToDeviceUseCase internal constructor(
         private val accountManager: FxaAccountManager,
-        private val scope: CoroutineScope
+        private val scope: CoroutineScope,
     ) {
         /**
          * Sends the tab to provided deviceId if possible.
@@ -81,7 +81,7 @@ class SendTabUseCases(
                 device?.let {
                     return constellation.sendCommandToDevice(
                         device.id,
-                        SendTab(tab.title, tab.url)
+                        SendTab(tab.title, tab.url),
                     )
                 }
             }
@@ -92,7 +92,7 @@ class SendTabUseCases(
 
     class SendToAllUseCase internal constructor(
         private val accountManager: FxaAccountManager,
-        private val scope: CoroutineScope
+        private val scope: CoroutineScope,
     ) {
 
         /**
@@ -129,7 +129,7 @@ class SendTabUseCases(
         }
 
         private suspend inline fun sendToAll(
-            block: (Collection<Device>) -> List<Pair<Device, TabData>>
+            block: (Collection<Device>) -> List<Pair<Device, TabData>>,
         ): Boolean {
             // Filter devices to send tab capable ones.
             filterSendTabDevices(accountManager) { constellation, devices ->
@@ -142,7 +142,7 @@ class SendTabUseCases(
                     // Send the tab!
                     constellation.sendCommandToDevice(
                         device.id,
-                        SendTab(tab.title, tab.url)
+                        SendTab(tab.title, tab.url),
                     )
                 }.fold(true) { acc, result ->
                     // Collect the results and reduce them into one final result.
@@ -156,14 +156,14 @@ class SendTabUseCases(
     val sendToDeviceAsync: SendToDeviceUseCase by lazy {
         SendToDeviceUseCase(
             accountManager,
-            scope
+            scope,
         )
     }
 
     val sendToAllAsync: SendToAllUseCase by lazy {
         SendToAllUseCase(
             accountManager,
-            scope
+            scope,
         )
     }
 }
@@ -171,7 +171,7 @@ class SendTabUseCases(
 @VisibleForTesting
 internal inline fun filterSendTabDevices(
     accountManager: FxaAccountManager,
-    block: (DeviceConstellation, Collection<Device>) -> Unit
+    block: (DeviceConstellation, Collection<Device>) -> Unit,
 ) {
     val constellation = accountManager.authenticatedAccount()?.deviceConstellation() ?: return
 

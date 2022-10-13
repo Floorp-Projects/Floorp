@@ -16,7 +16,7 @@ private const val MAX_TAG_LENGTH = 23
  * @param defaultTag A default tag that should be used for all logging calls without tag.
  */
 class AndroidLogSink(
-    private val defaultTag: String = "App"
+    private val defaultTag: String = "App",
 ) : LogSink {
     /**
      * Low-level logging call.
@@ -26,7 +26,9 @@ class AndroidLogSink(
 
         val logMessage: String = if (message != null && throwable != null) {
             "$message\n${throwable.getStacktraceAsString()}"
-        } else message ?: (throwable?.getStacktraceAsString() ?: "(empty)")
+        } else {
+            message ?: (throwable?.getStacktraceAsString() ?: "(empty)")
+        }
 
         android.util.Log.println(priority.value, logTag, logMessage)
     }

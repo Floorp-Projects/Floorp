@@ -20,7 +20,7 @@ private const val AUTHENTICATORS =
  * the user.
  */
 internal class BiometricAuthenticator(
-    private val configuration: AutofillConfiguration
+    private val configuration: AutofillConfiguration,
 ) : Authenticator {
 
     override fun prompt(activity: FragmentActivity, callback: Authenticator.Callback) {
@@ -32,8 +32,8 @@ internal class BiometricAuthenticator(
             .setTitle(
                 activity.getString(
                     R.string.mozac_feature_autofill_popup_unlock_application,
-                    configuration.applicationName
-                )
+                    configuration.applicationName,
+                ),
             )
             .build()
 
@@ -65,7 +65,7 @@ internal class BiometricAuthenticator(
 }
 
 private class PromptCallback(
-    private val callback: Authenticator.Callback
+    private val callback: Authenticator.Callback,
 ) : BiometricPrompt.AuthenticationCallback() {
     override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
         callback.onAuthenticationSucceeded()

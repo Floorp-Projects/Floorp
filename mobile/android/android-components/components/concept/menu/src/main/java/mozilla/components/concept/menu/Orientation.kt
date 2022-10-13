@@ -14,10 +14,13 @@ enum class Orientation {
      * Position the menu above the toolbar.
      */
     UP,
+
     /**
      * Position the menu below the toolbar.
      */
-    DOWN;
+    DOWN,
+
+    ;
 
     companion object {
 

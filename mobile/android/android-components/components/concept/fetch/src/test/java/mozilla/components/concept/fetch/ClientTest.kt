@@ -28,7 +28,7 @@ private class TestClient(
     private val responseUrl: String? = null,
     private val responseStatus: Int = 200,
     private val responseHeaders: Headers = MutableHeaders(),
-    private val responseBody: Response.Body = Response.Body.empty()
+    private val responseBody: Response.Body = Response.Body.empty(),
 ) : Client() {
     override fun fetch(request: Request): Response {
         return Response(responseUrl ?: request.url, responseStatus, responseHeaders, responseBody)

@@ -29,8 +29,9 @@ class ActionButtonTest {
         assertEquals(view.paddingBottom, 0)
 
         button = Toolbar.ActionButton(
-            mock(), "imageResource",
-            padding = Padding(16, 20, 24, 28)
+            mock(),
+            "imageResource",
+            padding = Padding(16, 20, 24, 28),
         ) {}
 
         view = button.createView(linearLayout)

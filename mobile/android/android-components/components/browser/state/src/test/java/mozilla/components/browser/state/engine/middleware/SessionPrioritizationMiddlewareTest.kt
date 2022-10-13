@@ -27,9 +27,9 @@ class SessionPrioritizationMiddlewareTest {
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "1"),
-                )
+                ),
             ),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
         val engineSession1: EngineSession = mock()
 
@@ -47,9 +47,9 @@ class SessionPrioritizationMiddlewareTest {
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "1"),
-                )
+                ),
             ),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
         val engineSession1: EngineSession = mock()
 
@@ -70,10 +70,10 @@ class SessionPrioritizationMiddlewareTest {
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "1"),
-                    createTab("https://www.firefox.com", id = "2")
-                )
+                    createTab("https://www.firefox.com", id = "2"),
+                ),
             ),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
         val engineSession1: EngineSession = mock()
         val engineSession2: EngineSession = mock()
@@ -105,10 +105,10 @@ class SessionPrioritizationMiddlewareTest {
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "1"),
-                    createTab("https://www.firefox.com", id = "2")
-                )
+                    createTab("https://www.firefox.com", id = "2"),
+                ),
             ),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         store.dispatch(TabListAction.SelectTabAction("1")).joinBlocking()

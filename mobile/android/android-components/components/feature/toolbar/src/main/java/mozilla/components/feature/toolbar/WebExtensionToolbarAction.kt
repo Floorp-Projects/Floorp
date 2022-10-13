@@ -32,7 +32,7 @@ open class WebExtensionToolbarAction(
     internal var action: WebExtensionBrowserAction,
     internal val padding: Padding? = null,
     internal val iconJobDispatcher: CoroutineDispatcher,
-    internal val listener: () -> Unit
+    internal val listener: () -> Unit,
 ) : Toolbar.Action {
     internal var iconJob: Job? = null
 
@@ -49,13 +49,15 @@ open class WebExtensionToolbarAction(
         rootView.setBackgroundResource(backgroundResource)
         padding?.let { rootView.setPadding(it) }
 
-        parent.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-            override fun onViewDetachedFromWindow(view: View?) {
-                iconJob?.cancel()
-            }
+        parent.addOnAttachStateChangeListener(
+            object : View.OnAttachStateChangeListener {
+                override fun onViewDetachedFromWindow(view: View?) {
+                    iconJob?.cancel()
+                }
 
-            override fun onViewAttachedToWindow(view: View?) = Unit
-        })
+                override fun onViewAttachedToWindow(view: View?) = Unit
+            },
+        )
         return rootView
     }
 
@@ -80,7 +82,7 @@ open class WebExtensionToolbarAction(
                     Log.Priority.ERROR,
                     "mozac-webextensions",
                     throwable,
-                    "Failed to load browser action icon, falling back to default."
+                    "Failed to load browser action icon, falling back to default.",
                 )
             }
         }

@@ -83,9 +83,9 @@ class PocketStoriesServiceTest {
                 client = client,
                 profile = Profile(
                     profileId = profileId,
-                    appId = appId
-                )
-            )
+                    appId = appId,
+                ),
+            ),
         ).apply {
             spocsRefreshscheduler = mock()
         }
@@ -103,8 +103,8 @@ class PocketStoriesServiceTest {
             context = testContext,
             pocketStoriesConfig = PocketStoriesConfig(
                 client = mock(),
-                profile = null
-            )
+                profile = null,
+            ),
         ).apply {
             spocsRefreshscheduler = mock()
         }
@@ -174,9 +174,9 @@ class PocketStoriesServiceTest {
                 client = client,
                 profile = Profile(
                     profileId = profileId,
-                    appId = appId
-                )
-            )
+                    appId = appId,
+                ),
+            ),
         ).apply {
             spocsRefreshscheduler = mock()
         }
@@ -194,8 +194,8 @@ class PocketStoriesServiceTest {
             context = testContext,
             pocketStoriesConfig = PocketStoriesConfig(
                 client = mock(),
-                profile = null
-            )
+                profile = null,
+            ),
         ).apply {
             spocsRefreshscheduler = mock()
         }

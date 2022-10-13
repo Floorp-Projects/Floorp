@@ -105,7 +105,7 @@ class ResizingProcessorTest {
         request: IconRequest = IconRequest("https://mozilla.org"),
         resource: IconRequest.Resource = mock(),
         icon: Icon = Icon(mockBitmap(64), source = Icon.Source.DISK),
-        desiredSize: DesiredSize = DesiredSize(96, 96, 1000, 3f)
+        desiredSize: DesiredSize = DesiredSize(96, 96, 1000, 3f),
     ) = p.process(context, request, resource, icon, desiredSize)
 
     private fun mockContext(density: Float): Context {

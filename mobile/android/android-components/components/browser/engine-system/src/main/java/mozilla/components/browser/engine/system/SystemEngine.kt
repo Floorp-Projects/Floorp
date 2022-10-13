@@ -28,7 +28,7 @@ import java.lang.IllegalStateException
  */
 class SystemEngine(
     private val context: Context,
-    private val defaultSettings: Settings = DefaultSettings()
+    private val defaultSettings: Settings = DefaultSettings(),
 ) : Engine {
     init {
         initDefaultUserAgent(context)
@@ -50,7 +50,7 @@ class SystemEngine(
             throw UnsupportedOperationException("Private browsing is not supported in ${this::class.java.simpleName}")
         } else if (contextId != null) {
             throw UnsupportedOperationException(
-                "Contextual identities are not supported in ${this::class.java.simpleName}"
+                "Contextual identities are not supported in ${this::class.java.simpleName}",
             )
         }
 

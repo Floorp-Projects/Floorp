@@ -20,14 +20,19 @@ typealias OuterDeviceCommandIncoming = DeviceCommandIncoming
 sealed class AccountEvent {
     /** An incoming command from another device */
     data class DeviceCommandIncoming(val command: OuterDeviceCommandIncoming) : AccountEvent()
+
     /** The account's profile was updated */
     object ProfileUpdated : AccountEvent()
+
     /** The authentication state of the account changed - eg, the password changed */
     object AccountAuthStateChanged : AccountEvent()
+
     /** The account itself was destroyed */
     object AccountDestroyed : AccountEvent()
+
     /** Another device connected to the account */
     data class DeviceConnected(val deviceName: String) : AccountEvent()
+
     /** A device (possibly this one) disconnected from the account */
     data class DeviceDisconnected(val deviceId: String, val isLocalDevice: Boolean) : AccountEvent()
 }
@@ -53,5 +58,5 @@ sealed class DeviceCommandOutgoing {
  */
 data class TabData(
     val title: String,
-    val url: String
+    val url: String,
 )

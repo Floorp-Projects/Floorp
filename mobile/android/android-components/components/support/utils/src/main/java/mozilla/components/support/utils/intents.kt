@@ -24,7 +24,7 @@ import android.os.Build
 fun Intent.asForegroundServicePendingIntent(
     context: Context,
     requestCode: Int,
-    flags: Int = PendingIntentUtils.defaultFlags or PendingIntent.FLAG_UPDATE_CURRENT
+    flags: Int = PendingIntentUtils.defaultFlags or PendingIntent.FLAG_UPDATE_CURRENT,
 ): PendingIntent =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         PendingIntent.getForegroundService(context, requestCode, this, flags)

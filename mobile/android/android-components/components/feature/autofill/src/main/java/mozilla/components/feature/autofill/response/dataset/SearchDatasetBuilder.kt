@@ -20,14 +20,14 @@ import mozilla.components.feature.autofill.structure.ParsedStructure
 
 @RequiresApi(Build.VERSION_CODES.O)
 internal data class SearchDatasetBuilder(
-    val parsedStructure: ParsedStructure
+    val parsedStructure: ParsedStructure,
 ) : DatasetBuilder {
 
     @SuppressLint("NewApi")
     override fun build(
         context: Context,
         configuration: AutofillConfiguration,
-        imeSpec: InlinePresentationSpec?
+        imeSpec: InlinePresentationSpec?,
     ): Dataset {
         val dataset = Dataset.Builder()
 
@@ -36,13 +36,13 @@ internal data class SearchDatasetBuilder(
             context,
             configuration.activityRequestCode + MAX_LOGINS,
             searchIntent,
-            PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
+            PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_CANCEL_CURRENT,
         )
         val intentSender: IntentSender = searchPendingIntent.intentSender
 
         val title = context.getString(
             R.string.mozac_feature_autofill_search_suggestions,
-            configuration.applicationName
+            configuration.applicationName,
         )
 
         val usernamePresentation = createViewPresentation(context, title)
@@ -56,7 +56,7 @@ internal data class SearchDatasetBuilder(
                 id,
                 null,
                 usernamePresentation,
-                usernameInlinePresentation
+                usernameInlinePresentation,
             )
         }
 
@@ -65,7 +65,7 @@ internal data class SearchDatasetBuilder(
                 id,
                 null,
                 passwordPresentation,
-                passwordInlinePresentation
+                passwordInlinePresentation,
             )
         }
 

@@ -57,9 +57,9 @@ class WebAppSiteControlsFeatureTest {
         val store = BrowserStore(
             BrowserState(
                 customTabs = listOf(
-                    createCustomTab("https://www.mozilla.org", id = "session-id")
-                )
-            )
+                    createCustomTab("https://www.mozilla.org", id = "session-id"),
+                ),
+            ),
         )
 
         val feature = WebAppSiteControlsFeature(testContext, store, reloadUrlUseCase, "session-id", mock())
@@ -80,22 +80,22 @@ class WebAppSiteControlsFeatureTest {
                     src = "https://mozilla.org/logo_color.svg",
                     sizes = listOf(Size.ANY),
                     type = "image/svg+xml",
-                    purpose = setOf(WebAppManifest.Icon.Purpose.ANY, WebAppManifest.Icon.Purpose.MASKABLE)
+                    purpose = setOf(WebAppManifest.Icon.Purpose.ANY, WebAppManifest.Icon.Purpose.MASKABLE),
                 ),
                 WebAppManifest.Icon(
                     src = "https://mozilla.org/logo_black.svg",
                     sizes = listOf(Size.ANY),
                     type = "image/svg+xml",
-                    purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
-                )
-            )
+                    purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME),
+                ),
+            ),
         )
 
         val session = createCustomTab("https://www.mozilla.org", id = "session-id")
         val store = BrowserStore(
             BrowserState(
-                customTabs = listOf(session)
-            )
+                customTabs = listOf(session),
+            ),
         )
 
         val feature = WebAppSiteControlsFeature(testContext, store, "session-id", manifest, icons = icons)
@@ -111,11 +111,11 @@ class WebAppSiteControlsFeatureTest {
                         type = IconRequest.Resource.Type.MANIFEST_ICON,
                         sizes = listOf(Size.ANY),
                         mimeType = "image/svg+xml",
-                        maskable = false
-                    )
+                        maskable = false,
+                    ),
                 ),
-                color = Color.WHITE
-            )
+                color = Color.WHITE,
+            ),
         )
     }
 }

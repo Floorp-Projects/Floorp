@@ -35,7 +35,7 @@ class SearchFeatureTest {
     @Before
     fun before() {
         store = BrowserStore(
-            mockBrowserState()
+            mockBrowserState(),
         )
         performSearch = mock()
         searchFeature = SearchFeature(store, null, performSearch).apply {
@@ -48,9 +48,9 @@ class SearchFeatureTest {
             tabs = listOf(
                 createTab("https://www.duckduckgo.com", id = "0"),
                 createTab("https://www.mozilla.org", id = SELECTED_TAB_ID),
-                createTab("https://www.wikipedia.org", id = "2")
+                createTab("https://www.wikipedia.org", id = "2"),
             ),
-            selectedTabId = SELECTED_TAB_ID
+            selectedTabId = SELECTED_TAB_ID,
         )
     }
 

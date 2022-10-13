@@ -20,7 +20,7 @@ interface RequestInterceptor {
         data class Content(
             val data: String,
             val mimeType: String = "text/html",
-            val encoding: String = "UTF-8"
+            val encoding: String = "UTF-8",
         ) : InterceptionResponse()
 
         data class Url(val url: String) : InterceptionResponse()
@@ -64,7 +64,7 @@ interface RequestInterceptor {
         isSameDomain: Boolean,
         isRedirect: Boolean,
         isDirectNavigation: Boolean,
-        isSubframeRequest: Boolean
+        isSubframeRequest: Boolean,
     ): InterceptionResponse? = null
 
     /**

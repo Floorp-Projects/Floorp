@@ -27,7 +27,7 @@ class SwipeRefreshFeature(
     private val store: BrowserStore,
     private val reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase,
     private val swipeRefreshLayout: SwipeRefreshLayout,
-    private val tabId: String? = null
+    private val tabId: String? = null,
 ) : LifecycleAwareFeature,
     SwipeRefreshLayout.OnChildScrollUpCallback,
     SwipeRefreshLayout.OnRefreshListener {

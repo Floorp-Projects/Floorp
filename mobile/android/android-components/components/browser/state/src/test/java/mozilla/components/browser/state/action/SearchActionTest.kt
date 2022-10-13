@@ -25,13 +25,13 @@ class SearchActionTest {
             id = "id1",
             name = "search1",
             icon = mock(),
-            type = SearchEngine.Type.BUNDLED
+            type = SearchEngine.Type.BUNDLED,
         )
         val engine2 = SearchEngine(
             id = "id2",
             name = "search2",
             icon = mock(),
-            type = SearchEngine.Type.BUNDLED
+            type = SearchEngine.Type.BUNDLED,
         )
 
         val store = BrowserStore(BrowserState())
@@ -48,8 +48,8 @@ class SearchActionTest {
                 hiddenSearchEngines = emptyList(),
                 additionalSearchEngines = emptyList(),
                 additionalAvailableSearchEngines = emptyList(),
-                regionSearchEnginesOrder = listOf("id1", "id2")
-            )
+                regionSearchEnginesOrder = listOf("id1", "id2"),
+            ),
         ).joinBlocking()
 
         val searchEngines = store.state.search.regionSearchEngines
@@ -65,13 +65,13 @@ class SearchActionTest {
             id = "id1",
             name = "search1",
             icon = mock(),
-            type = SearchEngine.Type.CUSTOM
+            type = SearchEngine.Type.CUSTOM,
         )
         val engine2 = SearchEngine(
             id = "id2",
             name = "search2",
             icon = mock(),
-            type = SearchEngine.Type.CUSTOM
+            type = SearchEngine.Type.CUSTOM,
         )
 
         val store = BrowserStore(BrowserState())
@@ -88,8 +88,8 @@ class SearchActionTest {
                 hiddenSearchEngines = emptyList(),
                 additionalSearchEngines = emptyList(),
                 additionalAvailableSearchEngines = emptyList(),
-                regionSearchEnginesOrder = emptyList()
-            )
+                regionSearchEnginesOrder = emptyList(),
+            ),
         ).joinBlocking()
 
         val searchEngines = store.state.search.customSearchEngines
@@ -109,7 +109,7 @@ class SearchActionTest {
             id = "customId1",
             name = "custom_search",
             icon = mock(),
-            type = SearchEngine.Type.CUSTOM
+            type = SearchEngine.Type.CUSTOM,
         )
 
         // Add a custom search engine
@@ -125,7 +125,7 @@ class SearchActionTest {
             id = "customId2",
             name = "custom_search_second",
             icon = mock(),
-            type = SearchEngine.Type.CUSTOM
+            type = SearchEngine.Type.CUSTOM,
         )
 
         // Add another search engine
@@ -140,7 +140,7 @@ class SearchActionTest {
 
         // Update first search engine
         val updated = customSearchEngine.copy(
-            name = "My awesome search engine"
+            name = "My awesome search engine",
         )
         store.dispatch(SearchAction.UpdateCustomSearchEngineAction(updated)).joinBlocking()
 
@@ -158,15 +158,15 @@ class SearchActionTest {
             id = "customId1",
             name = "custom_search",
             icon = mock(),
-            type = SearchEngine.Type.CUSTOM
+            type = SearchEngine.Type.CUSTOM,
         )
 
         val store = BrowserStore(
             BrowserState(
                 search = SearchState(
-                    customSearchEngines = listOf(customSearchEngine)
-                )
-            )
+                    customSearchEngines = listOf(customSearchEngine),
+                ),
+            ),
         )
 
         assertEquals(1, store.state.search.customSearchEngines.size)
@@ -184,15 +184,15 @@ class SearchActionTest {
             id = "id1",
             name = "search1",
             icon = mock(),
-            type = SearchEngine.Type.BUNDLED
+            type = SearchEngine.Type.BUNDLED,
         )
 
         val store = BrowserStore(
             BrowserState(
                 search = SearchState(
-                    regionSearchEngines = listOf(searchEngine)
-                )
-            )
+                    regionSearchEngines = listOf(searchEngine),
+                ),
+            ),
         )
 
         assertNull(store.state.search.userSelectedSearchEngineId)
@@ -227,17 +227,17 @@ class SearchActionTest {
                 search = SearchState(
                     regionSearchEngines = listOf(
                         SearchEngine(id = "google", name = "Google", icon = mock(), type = SearchEngine.Type.BUNDLED),
-                        SearchEngine(id = "bing", name = "Bing", icon = mock(), type = SearchEngine.Type.BUNDLED)
+                        SearchEngine(id = "bing", name = "Bing", icon = mock(), type = SearchEngine.Type.BUNDLED),
                     ),
                     hiddenSearchEngines = listOf(
-                        SearchEngine(id = "duckduckgo", name = "DuckDuckGo", icon = mock(), type = SearchEngine.Type.BUNDLED)
-                    )
-                )
-            )
+                        SearchEngine(id = "duckduckgo", name = "DuckDuckGo", icon = mock(), type = SearchEngine.Type.BUNDLED),
+                    ),
+                ),
+            ),
         )
 
         store.dispatch(
-            SearchAction.ShowSearchEngineAction("duckduckgo")
+            SearchAction.ShowSearchEngineAction("duckduckgo"),
         ).joinBlocking()
 
         assertEquals(0, store.state.search.hiddenSearchEngines.size)
@@ -255,17 +255,17 @@ class SearchActionTest {
                 search = SearchState(
                     regionSearchEngines = listOf(
                         SearchEngine(id = "google", name = "Google", icon = mock(), type = SearchEngine.Type.BUNDLED),
-                        SearchEngine(id = "bing", name = "Bing", icon = mock(), type = SearchEngine.Type.BUNDLED)
+                        SearchEngine(id = "bing", name = "Bing", icon = mock(), type = SearchEngine.Type.BUNDLED),
                     ),
                     hiddenSearchEngines = listOf(
-                        SearchEngine(id = "duckduckgo", name = "DuckDuckGo", icon = mock(), type = SearchEngine.Type.BUNDLED)
-                    )
-                )
-            )
+                        SearchEngine(id = "duckduckgo", name = "DuckDuckGo", icon = mock(), type = SearchEngine.Type.BUNDLED),
+                    ),
+                ),
+            ),
         )
 
         store.dispatch(
-            SearchAction.HideSearchEngineAction("google")
+            SearchAction.HideSearchEngineAction("google"),
         ).joinBlocking()
 
         assertEquals(2, store.state.search.hiddenSearchEngines.size)
@@ -284,32 +284,32 @@ class SearchActionTest {
                 search = SearchState(
                     regionSearchEngines = listOf(
                         SearchEngine(id = "google", name = "Google", icon = mock(), type = SearchEngine.Type.BUNDLED),
-                        SearchEngine(id = "bing", name = "Bing", icon = mock(), type = SearchEngine.Type.BUNDLED)
+                        SearchEngine(id = "bing", name = "Bing", icon = mock(), type = SearchEngine.Type.BUNDLED),
                     ),
                     hiddenSearchEngines = listOf(
-                        SearchEngine(id = "duckduckgo", name = "DuckDuckGo", icon = mock(), type = SearchEngine.Type.BUNDLED)
+                        SearchEngine(id = "duckduckgo", name = "DuckDuckGo", icon = mock(), type = SearchEngine.Type.BUNDLED),
                     ),
                     customSearchEngines = listOf(
-                        SearchEngine(id = "banana", name = "Banana Search", icon = mock(), type = SearchEngine.Type.CUSTOM)
-                    )
-                )
-            )
+                        SearchEngine(id = "banana", name = "Banana Search", icon = mock(), type = SearchEngine.Type.CUSTOM),
+                    ),
+                ),
+            ),
         )
 
         store.dispatch(
-            SearchAction.ShowSearchEngineAction("banana")
+            SearchAction.ShowSearchEngineAction("banana"),
         ).joinBlocking()
 
         store.dispatch(
-            SearchAction.HideSearchEngineAction("banana")
+            SearchAction.HideSearchEngineAction("banana"),
         ).joinBlocking()
 
         store.dispatch(
-            SearchAction.HideSearchEngineAction("unknown-search")
+            SearchAction.HideSearchEngineAction("unknown-search"),
         ).joinBlocking()
 
         store.dispatch(
-            SearchAction.ShowSearchEngineAction("also-unknown-search")
+            SearchAction.ShowSearchEngineAction("also-unknown-search"),
         ).joinBlocking()
 
         assertEquals(2, store.state.search.regionSearchEngines.size)

@@ -26,7 +26,7 @@ internal fun Suggestions(
     orientation: AwesomeBarOrientation,
     onSuggestionClicked: (AwesomeBar.SuggestionProviderGroup, AwesomeBar.Suggestion) -> Unit,
     onAutoComplete: (AwesomeBar.SuggestionProviderGroup, AwesomeBar.Suggestion) -> Unit,
-    onScroll: () -> Unit
+    onScroll: () -> Unit,
 ) {
     val state = rememberLazyListState()
 
@@ -34,9 +34,8 @@ internal fun Suggestions(
 
     LazyColumn(
         state = state,
-        modifier = Modifier.testTag("mozac.awesomebar.suggestions")
+        modifier = Modifier.testTag("mozac.awesomebar.suggestions"),
     ) {
-
         suggestions.forEach { (group, suggestions) ->
             if (suggestions.isNotEmpty()) {
                 group.title?.let { title ->
@@ -48,14 +47,14 @@ internal fun Suggestions(
 
             items(
                 items = suggestions.take(group.limit),
-                key = { suggestion -> "${group.id}:${suggestion.provider.id}:${suggestion.id}" }
+                key = { suggestion -> "${group.id}:${suggestion.provider.id}:${suggestion.id}" },
             ) { suggestion ->
                 Suggestion(
                     suggestion,
                     colors,
                     orientation,
                     onSuggestionClicked = { onSuggestionClicked(group, suggestion) },
-                    onAutoComplete = { onAutoComplete(group, suggestion) }
+                    onAutoComplete = { onAutoComplete(group, suggestion) },
                 )
             }
         }
@@ -69,7 +68,7 @@ internal fun Suggestions(
 @Composable
 private fun ScrollHandler(
     state: LazyListState,
-    onScroll: () -> Unit
+    onScroll: () -> Unit,
 ) {
     val scrollInProgress = state.isScrollInProgress
     remember(scrollInProgress) {

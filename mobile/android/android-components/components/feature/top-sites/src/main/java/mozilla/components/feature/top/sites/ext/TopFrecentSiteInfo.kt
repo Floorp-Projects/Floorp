@@ -16,6 +16,6 @@ fun TopFrecentSiteInfo.toTopSite(): TopSite {
         id = null,
         title = this.title?.takeIf(String::isNotBlank) ?: this.url.tryGetHostFromUrl(),
         url = this.url,
-        createdAt = null
+        createdAt = null,
     )
 }

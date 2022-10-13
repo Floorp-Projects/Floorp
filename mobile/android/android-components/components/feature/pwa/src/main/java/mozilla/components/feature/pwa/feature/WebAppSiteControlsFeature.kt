@@ -45,7 +45,7 @@ class WebAppSiteControlsFeature(
     private val sessionId: String,
     private val manifest: WebAppManifest? = null,
     private val controlsBuilder: SiteControlsBuilder = SiteControlsBuilder.Default(),
-    private val icons: BrowserIcons? = null
+    private val icons: BrowserIcons? = null,
 ) : BroadcastReceiver(), DefaultLifecycleObserver {
 
     constructor(
@@ -55,14 +55,14 @@ class WebAppSiteControlsFeature(
         sessionId: String,
         manifest: WebAppManifest? = null,
         controlsBuilder: SiteControlsBuilder = SiteControlsBuilder.CopyAndRefresh(reloadUrlUseCase),
-        icons: BrowserIcons? = null
+        icons: BrowserIcons? = null,
     ) : this(
         applicationContext,
         store,
         sessionId,
         manifest,
         controlsBuilder,
-        icons
+        icons,
     )
 
     private var notificationIcon: Deferred<mozilla.components.browser.icons.Icon>? = null
@@ -166,7 +166,7 @@ class WebAppSiteControlsFeature(
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
                 applicationContext.getString(R.string.mozac_feature_pwa_site_controls_notification_channel),
-                NotificationManager.IMPORTANCE_MIN
+                NotificationManager.IMPORTANCE_MIN,
             )
 
             notificationManager.createNotificationChannel(channel)

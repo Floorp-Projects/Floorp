@@ -21,13 +21,14 @@ object WebCompatFeature {
      */
     fun install(runtime: WebExtensionRuntime) {
         runtime.installWebExtension(
-            WEBCOMPAT_EXTENSION_ID, WEBCOMPAT_EXTENSION_URL,
+            WEBCOMPAT_EXTENSION_ID,
+            WEBCOMPAT_EXTENSION_URL,
             onSuccess = {
                 logger.debug("Installed WebCompat webextension: ${it.id}")
             },
             onError = { ext, throwable ->
                 logger.error("Failed to install WebCompat webextension: $ext", throwable)
-            }
+            },
         )
     }
 }

@@ -12,7 +12,7 @@ private const val PUBLIC_SUFFIX_LIST_FILE = "publicsuffixes"
 
 internal object PublicSuffixListLoader {
     fun load(context: Context): PublicSuffixListData = context.assets.open(
-        PUBLIC_SUFFIX_LIST_FILE
+        PUBLIC_SUFFIX_LIST_FILE,
     ).buffered().use { stream ->
         val publicSuffixSize = stream.readInt()
         val publicSuffixBytes = stream.readFully(publicSuffixSize)

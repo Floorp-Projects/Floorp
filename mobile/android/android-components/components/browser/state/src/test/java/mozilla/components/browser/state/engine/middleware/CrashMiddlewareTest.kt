@@ -38,33 +38,33 @@ class CrashMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "tab1").copy(
-                        engineState = EngineState(engineSession1)
+                        engineState = EngineState(engineSession1),
                     ),
                     createTab("https://www.firefox.com", id = "tab2").copy(
-                        engineState = EngineState(engineSession2)
+                        engineState = EngineState(engineSession2),
                     ),
                     createTab("https://getpocket.com", id = "tab3").copy(
-                        engineState = EngineState(engineSession3)
-                    )
-                )
-            )
+                        engineState = EngineState(engineSession3),
+                    ),
+                ),
+            ),
         )
 
         store.dispatch(
             CrashAction.SessionCrashedAction(
-                "tab1"
-            )
+                "tab1",
+            ),
         ).joinBlocking()
 
         store.dispatch(
             CrashAction.SessionCrashedAction(
-                "tab3"
-            )
+                "tab3",
+            ),
         ).joinBlocking()
 
         assertTrue(store.state.tabs[0].engineState.crashed)
@@ -74,8 +74,8 @@ class CrashMiddlewareTest {
         // Restoring crashed session
         store.dispatch(
             CrashAction.RestoreCrashedSessionAction(
-                "tab1"
-            )
+                "tab1",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -87,8 +87,8 @@ class CrashMiddlewareTest {
         // Restoring a non crashed session
         store.dispatch(
             CrashAction.RestoreCrashedSessionAction(
-                "tab2"
-            )
+                "tab2",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -96,8 +96,8 @@ class CrashMiddlewareTest {
         // Restoring unknown session
         store.dispatch(
             CrashAction.RestoreCrashedSessionAction(
-                "unknown"
-            )
+                "unknown",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -116,19 +116,19 @@ class CrashMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "tab1")
-                )
-            )
+                    createTab("https://www.mozilla.org", id = "tab1"),
+                ),
+            ),
         )
 
         store.dispatch(
             CrashAction.SessionCrashedAction(
-                "tab1"
-            )
+                "tab1",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -137,8 +137,8 @@ class CrashMiddlewareTest {
 
         store.dispatch(
             CrashAction.RestoreCrashedSessionAction(
-                "tab1"
-            )
+                "tab1",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()

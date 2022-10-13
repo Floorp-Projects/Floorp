@@ -18,7 +18,7 @@ import mozilla.components.feature.prompts.R
  */
 internal class ChoiceAdapter(
     private val fragment: ChoiceDialogFragment,
-    private val inflater: LayoutInflater
+    private val inflater: LayoutInflater,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -47,12 +47,10 @@ internal class ChoiceAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, type: Int): RecyclerView.ViewHolder {
-
         val layoutId = getLayoutId(type)
         val view = inflater.inflate(layoutId, parent, false)
 
         return when (type) {
-
             TYPE_GROUP -> GroupViewHolder(view)
 
             TYPE_MENU -> MenuViewHolder(view)
@@ -70,10 +68,8 @@ internal class ChoiceAdapter(
     override fun getItemCount(): Int = choices.size
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-
         val choice = choices[position]
         when (holder) {
-
             is MenuSeparatorViewHolder -> return
 
             is GroupViewHolder -> {
@@ -112,7 +108,6 @@ internal class ChoiceAdapter(
         internal val labelView = itemView.findViewById<CheckedTextView>(R.id.labelView)
 
         fun bind(choice: Choice, fragment: ChoiceDialogFragment) {
-
             labelView.choice = choice
             labelView.isChecked = choice.selected
 
@@ -163,7 +158,6 @@ internal class ChoiceAdapter(
         internal val labelView = itemView.findViewById<TextView>(R.id.labelView)
 
         fun bind(choice: Choice, fragment: ChoiceDialogFragment) {
-
             labelView.choice = choice
 
             if (choice.enable) {
@@ -195,9 +189,7 @@ internal class ChoiceAdapter(
     }
 
     private fun addItems(items: Array<Choice>, indent: String? = null) {
-
         for (choice in items) {
-
             if (indent != null && !choice.isGroupType) {
                 choice.label = indent + choice.label
             }

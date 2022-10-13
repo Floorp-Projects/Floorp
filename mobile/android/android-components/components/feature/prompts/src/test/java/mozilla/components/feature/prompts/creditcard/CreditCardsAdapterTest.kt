@@ -16,15 +16,15 @@ class CreditCardsAdapterTest {
             number = "4111111111111110",
             expiryMonth = "5",
             expiryYear = "2030",
-            cardType = "amex"
+            cardType = "amex",
         )
         val creditCard2 = creditCard1.copy()
 
         assertTrue(
-            CreditCardsAdapter.DiffCallback.areItemsTheSame(creditCard1, creditCard2)
+            CreditCardsAdapter.DiffCallback.areItemsTheSame(creditCard1, creditCard2),
         )
         assertTrue(
-            CreditCardsAdapter.DiffCallback.areContentsTheSame(creditCard1, creditCard2)
+            CreditCardsAdapter.DiffCallback.areContentsTheSame(creditCard1, creditCard2),
         )
 
         val creditCard3 = CreditCardEntry(
@@ -33,14 +33,14 @@ class CreditCardsAdapterTest {
             number = "4111111111115555",
             expiryMonth = "1",
             expiryYear = "2030",
-            cardType = "amex"
+            cardType = "amex",
         )
 
         assertFalse(
-            CreditCardsAdapter.DiffCallback.areItemsTheSame(creditCard1, creditCard3)
+            CreditCardsAdapter.DiffCallback.areItemsTheSame(creditCard1, creditCard3),
         )
         assertFalse(
-            CreditCardsAdapter.DiffCallback.areContentsTheSame(creditCard1, creditCard3)
+            CreditCardsAdapter.DiffCallback.areContentsTheSame(creditCard1, creditCard3),
         )
     }
 }

@@ -27,7 +27,7 @@ class InContentTelemetry : BaseSearchTelemetry() {
         val info = ExtensionInfo(
             id = SEARCH_EXTENSION_ID,
             resourceUrl = SEARCH_EXTENSION_RESOURCE_URL,
-            messageId = SEARCH_MESSAGE_ID
+            messageId = SEARCH_MESSAGE_ID,
         )
         installWebExtension(engine, store, info)
     }
@@ -49,7 +49,7 @@ class InContentTelemetry : BaseSearchTelemetry() {
 
         emitFact(
             IN_CONTENT_SEARCH,
-            getTrackKey(provider, uri, cookies)
+            getTrackKey(provider, uri, cookies),
         )
     }
 

@@ -112,7 +112,7 @@ class JSONArrayTest {
         val expected = listOf(
             "a" to 1,
             "b" to 2,
-            "c" to 3
+            "c" to 3,
         )
 
         // Convert expected to input: [JSONObject("a" to 1), null, JSONObject("b" to 2), null, ...]

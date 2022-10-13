@@ -25,7 +25,7 @@ const val MIN_TEXT_SIZE = 1
 class ReaderViewControlsBar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr), ReaderViewControlsView {
 
     override var listener: ReaderViewControlsView.Listener? = null

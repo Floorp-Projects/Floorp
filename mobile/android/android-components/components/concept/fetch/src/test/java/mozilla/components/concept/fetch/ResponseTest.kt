@@ -150,9 +150,9 @@ class ResponseTest {
             headers = MutableHeaders(
                 CONTENT_TYPE to "text/html; charset=utf-8",
                 "Connection" to "Close",
-                "Expires" to "Thu, 08 Nov 2018 15:41:43 GMT"
+                "Expires" to "Thu, 08 Nov 2018 15:41:43 GMT",
             ),
-            body = Response.Body("Hello World".byteInputStream())
+            body = Response.Body("Hello World".byteInputStream()),
         )
 
         assertEquals("https://www.mozilla.org", response.url)

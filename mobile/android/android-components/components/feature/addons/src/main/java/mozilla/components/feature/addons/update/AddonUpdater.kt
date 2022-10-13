@@ -88,7 +88,7 @@ interface AddonUpdater {
         current: WebExtension,
         updated: WebExtension,
         newPermissions: List<String>,
-        onPermissionsGranted: ((Boolean) -> Unit)
+        onPermissionsGranted: ((Boolean) -> Unit),
     )
 
     /**
@@ -149,12 +149,13 @@ interface AddonUpdater {
 @Suppress("LargeClass")
 class DefaultAddonUpdater(
     private val applicationContext: Context,
-    private val frequency: Frequency = Frequency(1, TimeUnit.DAYS)
+    private val frequency: Frequency = Frequency(1, TimeUnit.DAYS),
 ) : AddonUpdater {
     private val logger = Logger("DefaultAddonUpdater")
 
     @VisibleForTesting
     internal var scope = CoroutineScope(Dispatchers.IO)
+
     @VisibleForTesting
     internal val updateStatusStorage = UpdateStatusStorage()
     internal var updateAttempStorage = UpdateAttemptStorage(applicationContext)
@@ -166,7 +167,7 @@ class DefaultAddonUpdater(
         WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
             getUniquePeriodicWorkName(addonId),
             ExistingPeriodicWorkPolicy.KEEP,
-            createPeriodicWorkerRequest(addonId)
+            createPeriodicWorkerRequest(addonId),
         )
         logger.info("registerForFutureUpdates $addonId")
     }
@@ -190,7 +191,7 @@ class DefaultAddonUpdater(
         WorkManager.getInstance(applicationContext).beginUniqueWork(
             getUniqueImmediateWorkName(addonId),
             ExistingWorkPolicy.KEEP,
-            createImmediateWorkerRequest(addonId)
+            createImmediateWorkerRequest(addonId),
         ).enqueue()
         logger.info("update $addonId")
     }
@@ -202,7 +203,7 @@ class DefaultAddonUpdater(
         current: WebExtension,
         updated: WebExtension,
         newPermissions: List<String>,
-        onPermissionsGranted: (Boolean) -> Unit
+        onPermissionsGranted: (Boolean) -> Unit,
     ) {
         logger.info("onUpdatePermissionRequest $current")
 
@@ -239,7 +240,7 @@ class DefaultAddonUpdater(
 
         return PeriodicWorkRequestBuilder<AddonUpdaterWorker>(
             frequency.repeatInterval,
-            frequency.repeatIntervalTimeUnit
+            frequency.repeatIntervalTimeUnit,
         )
             .setConstraints(constraints)
             .setInputData(data)
@@ -265,14 +266,14 @@ class DefaultAddonUpdater(
     @VisibleForTesting
     internal fun createNotification(
         extension: WebExtension,
-        newPermissions: List<String>
+        newPermissions: List<String>,
     ): Notification {
         val notificationId = NotificationHandlerService.getNotificationId(applicationContext, extension.id)
 
         val channel = ChannelData(
             NOTIFICATION_CHANNEL_ID,
             R.string.mozac_feature_addons_updater_notification_channel,
-            NotificationManagerCompat.IMPORTANCE_LOW
+            NotificationManagerCompat.IMPORTANCE_LOW,
         )
         val channelId = ensureNotificationChannelExists(applicationContext, channel)
         val text = createContentText(newPermissions)
@@ -285,7 +286,7 @@ class DefaultAddonUpdater(
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setStyle(
                 NotificationCompat.BigTextStyle()
-                    .bigText(text)
+                    .bigText(text),
             )
             .setContentIntent(createContentIntent())
             .addAction(createAllowAction(extension, notificationId))
@@ -299,7 +300,7 @@ class DefaultAddonUpdater(
     private fun getNotificationTitle(extension: WebExtension): String {
         return applicationContext.getString(
             R.string.mozac_feature_addons_updater_notification_title,
-            extension.getMetadata()?.name
+            extension.getMetadata()?.name,
         )
     }
 
@@ -327,7 +328,10 @@ class DefaultAddonUpdater(
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             } ?: throw IllegalStateException("Package has no launcher intent")
         return PendingIntent.getActivity(
-            applicationContext, 0, intent, PendingIntentUtils.defaultFlags or PendingIntent.FLAG_UPDATE_CURRENT
+            applicationContext,
+            0,
+            intent,
+            PendingIntentUtils.defaultFlags or PendingIntent.FLAG_UPDATE_CURRENT,
         )
     }
 
@@ -346,7 +350,7 @@ class DefaultAddonUpdater(
             applicationContext,
             requestCode,
             allowIntent,
-            PendingIntentUtils.defaultFlags
+            PendingIntentUtils.defaultFlags,
         )
 
         val allowText =
@@ -355,7 +359,7 @@ class DefaultAddonUpdater(
         return NotificationCompat.Action.Builder(
             mozilla.components.ui.icons.R.drawable.mozac_ic_extensions,
             allowText,
-            allowPendingIntent
+            allowPendingIntent,
         ).build()
     }
 
@@ -366,7 +370,7 @@ class DefaultAddonUpdater(
             applicationContext,
             requestCode,
             denyIntent,
-            PendingIntentUtils.defaultFlags
+            PendingIntentUtils.defaultFlags,
         )
 
         val denyText =
@@ -375,7 +379,7 @@ class DefaultAddonUpdater(
         return NotificationCompat.Action.Builder(
             mozilla.components.ui.icons.R.drawable.mozac_ic_extensions,
             denyText,
-            denyPendingIntent
+            denyPendingIntent,
         ).build()
     }
 
@@ -568,13 +572,14 @@ class DefaultAddonUpdater(
  */
 internal class AddonUpdaterWorker(
     context: Context,
-    private val params: WorkerParameters
+    private val params: WorkerParameters,
 ) : CoroutineWorker(context, params) {
     private val logger = Logger("AddonUpdaterWorker")
     internal var updateAttemptStorage = DefaultAddonUpdater.UpdateAttemptStorage(applicationContext)
 
     @Suppress("OverridingDeprecatedMember")
     override val coroutineContext = Dispatchers.Main
+
     @VisibleForTesting
     internal var attemptScope = CoroutineScope(Dispatchers.IO)
 
@@ -606,7 +611,7 @@ internal class AddonUpdaterWorker(
                         is AddonUpdater.Status.Error -> {
                             logger.error(
                                 "Unable to update extension $extensionId, re-schedule ${status.message}",
-                                status.exception
+                                status.exception,
                             )
                             retryIfRecoverable(status.exception)
                         }
@@ -617,7 +622,7 @@ internal class AddonUpdaterWorker(
             } catch (exception: Exception) {
                 logger.error(
                     "Unable to update extension $extensionId, re-schedule ${exception.message}",
-                    exception
+                    exception,
                 )
                 saveUpdateAttempt(extensionId, AddonUpdater.Status.Error(exception.message ?: "", exception))
                 if (exception.shouldReport()) {

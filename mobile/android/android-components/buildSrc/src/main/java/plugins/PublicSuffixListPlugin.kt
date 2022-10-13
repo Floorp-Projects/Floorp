@@ -118,5 +118,5 @@ data class PublicSuffixListData(
     var totalExceptionRuleBytes: Int = 0,
 
     val sortedRules: TreeSet<ByteString> = TreeSet(),
-    val sortedExceptionRules: TreeSet<ByteString> = TreeSet()
+    val sortedExceptionRules: TreeSet<ByteString> = TreeSet(),
 )

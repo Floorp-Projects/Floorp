@@ -36,11 +36,11 @@ import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.any
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import java.io.IOException
 import java.util.Locale
 
@@ -79,22 +79,22 @@ class AddonsManagerAdapterTest {
         assertEquals(7, itemsWithSections.size)
         assertEquals(
             R.string.mozac_feature_addons_enabled,
-            (itemsWithSections[0] as Section).title
+            (itemsWithSections[0] as Section).title,
         )
         assertEquals(installedAddon, itemsWithSections[1])
         assertEquals(
             R.string.mozac_feature_addons_disabled_section,
-            (itemsWithSections[2] as Section).title
+            (itemsWithSections[2] as Section).title,
         )
         assertEquals(disabledAddon, itemsWithSections[3])
         assertEquals(
             R.string.mozac_feature_addons_recommended_section,
-            (itemsWithSections[4] as Section).title
+            (itemsWithSections[4] as Section).title,
         )
         assertEquals(recommendedAddon, itemsWithSections[5])
         assertEquals(
             R.string.mozac_feature_addons_unavailable_section,
-            (itemsWithSections[6] as NotYetSupportedSection).title
+            (itemsWithSections[6] as NotYetSupportedSection).title,
         )
 
         // Test if excluededAddonIDs are excluded from recommended section
@@ -107,11 +107,11 @@ class AddonsManagerAdapterTest {
         // There should be no section between the titles of Recommended & NotYetSupported
         assertEquals(
             R.string.mozac_feature_addons_recommended_section,
-            (itemsWithSections2[4] as Section).title
+            (itemsWithSections2[4] as Section).title,
         )
         assertEquals(
             R.string.mozac_feature_addons_unavailable_section,
-            (itemsWithSections2[5] as NotYetSupportedSection).title
+            (itemsWithSections2[5] as NotYetSupportedSection).title,
         )
     }
 
@@ -206,7 +206,7 @@ class AddonsManagerAdapterTest {
             ratingAccessibleView = ratingAccessibleView,
             userCountView = userCountView,
             addButton = addButton,
-            allowedInPrivateBrowsingLabel = allowedInPrivateBrowsingLabel
+            allowedInPrivateBrowsingLabel = allowedInPrivateBrowsingLabel,
         )
         val addon = Addon(
             id = "id",
@@ -220,7 +220,7 @@ class AddonsManagerAdapterTest {
             updatedAt = "",
             translatableName = mapOf(Addon.DEFAULT_LOCALE to "name", "de" to "Name", "es" to "nombre"),
             translatableDescription = mapOf(Addon.DEFAULT_LOCALE to "description", "de" to "Beschreibung", "es" to "descripción"),
-            translatableSummary = mapOf(Addon.DEFAULT_LOCALE to "summary", "de" to "Kurzfassung", "es" to "resumen")
+            translatableSummary = mapOf(Addon.DEFAULT_LOCALE to "summary", "de" to "Kurzfassung", "es" to "resumen"),
         )
 
         whenever(titleView.context).thenReturn(testContext)
@@ -230,7 +230,7 @@ class AddonsManagerAdapterTest {
         val style = AddonsManagerAdapter.Style(
             sectionsTextColor = android.R.color.black,
             addonNameTextColor = android.R.color.transparent,
-            addonSummaryTextColor = android.R.color.white
+            addonSummaryTextColor = android.R.color.white,
         )
         val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList(), style)
 
@@ -260,7 +260,7 @@ class AddonsManagerAdapterTest {
 
         val style = AddonsManagerAdapter.Style(
             sectionsTextColor = android.R.color.black,
-            sectionsTypeFace = mock()
+            sectionsTypeFace = mock(),
         )
         val adapter = AddonsManagerAdapter(mock(), mock(), emptyList(), style)
 
@@ -283,7 +283,7 @@ class AddonsManagerAdapterTest {
 
         val style = AddonsManagerAdapter.Style(
             sectionsTextColor = android.R.color.black,
-            sectionsTypeFace = mock()
+            sectionsTypeFace = mock(),
         )
         val adapter = AddonsManagerAdapter(mock(), mock(), emptyList(), style)
 
@@ -303,7 +303,7 @@ class AddonsManagerAdapterTest {
 
         val style = AddonsManagerAdapter.Style(
             sectionsTextColor = android.R.color.black,
-            sectionsTypeFace = mock()
+            sectionsTypeFace = mock(),
         )
         val adapter = AddonsManagerAdapter(mock(), mock(), emptyList(), style)
 
@@ -324,7 +324,7 @@ class AddonsManagerAdapterTest {
         val style = AddonsManagerAdapter.Style(
             sectionsTextColor = android.R.color.black,
             sectionsTypeFace = mock(),
-            visibleDividers = false
+            visibleDividers = false,
         )
         val adapter = AddonsManagerAdapter(mock(), mock(), emptyList(), style)
 
@@ -351,7 +351,7 @@ class AddonsManagerAdapterTest {
             sectionsTypeFace = mock(),
             visibleDividers = true,
             dividerColor = dividerColor,
-            dividerHeight = dividerHeight
+            dividerHeight = dividerHeight,
         )
 
         val adapter = AddonsManagerAdapter(mock(), mock(), emptyList(), style)
@@ -381,7 +381,7 @@ class AddonsManagerAdapterTest {
             ratingAccessibleView = mock(),
             userCountView = mock(),
             addButton = mock(),
-            allowedInPrivateBrowsingLabel = allowedInPrivateBrowsingLabel
+            allowedInPrivateBrowsingLabel = allowedInPrivateBrowsingLabel,
         )
         val addon = Addon(
             id = "id",
@@ -391,7 +391,7 @@ class AddonsManagerAdapterTest {
             version = "version",
             permissions = emptyList(),
             createdAt = "",
-            updatedAt = ""
+            updatedAt = "",
         )
         val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
 
@@ -410,7 +410,7 @@ class AddonsManagerAdapterTest {
             version = "version",
             permissions = emptyList(),
             createdAt = "",
-            updatedAt = ""
+            updatedAt = "",
         )
         val adapter = spy(AddonsManagerAdapter(mock(), mock(), listOf(addon)))
 
@@ -433,7 +433,7 @@ class AddonsManagerAdapterTest {
             version = "version",
             permissions = emptyList(),
             createdAt = "",
-            updatedAt = ""
+            updatedAt = "",
         )
 
         val addon2 = Addon(
@@ -444,7 +444,7 @@ class AddonsManagerAdapterTest {
             version = "version",
             permissions = emptyList(),
             createdAt = "",
-            updatedAt = ""
+            updatedAt = "",
         )
         val adapter = spy(AddonsManagerAdapter(mock(), mock(), listOf(addon1, addon2)))
 
@@ -470,7 +470,7 @@ class AddonsManagerAdapterTest {
             version = "version",
             permissions = emptyList(),
             createdAt = "",
-            updatedAt = ""
+            updatedAt = "",
         )
 
         var addon2 = Addon(
@@ -481,7 +481,7 @@ class AddonsManagerAdapterTest {
             version = "version",
             permissions = emptyList(),
             createdAt = "",
-            updatedAt = ""
+            updatedAt = "",
         )
 
         assertTrue(DifferCallback.areItemsTheSame(addon1, addon2))
@@ -507,7 +507,9 @@ class AddonsManagerAdapterTest {
         val descriptionView: TextView = mock()
         val view = View(testContext)
         val unsupportedSectionViewHolder = CustomViewHolder.UnsupportedSectionViewHolder(
-            view, titleView, descriptionView
+            view,
+            titleView,
+            descriptionView,
         )
         val unsupportedAddon = Addon(
             id = "id",
@@ -515,8 +517,8 @@ class AddonsManagerAdapterTest {
                 id = "id",
                 version = "version",
                 optionsPageUrl = "optionsPageUrl",
-                supported = false
-            )
+                supported = false,
+            ),
         )
         val unsupportedAddonTwo = Addon(
             id = "id2",
@@ -524,14 +526,14 @@ class AddonsManagerAdapterTest {
                 id = "id2",
                 version = "version2",
                 optionsPageUrl = "optionsPageUrl2",
-                supported = false
-            )
+                supported = false,
+            ),
         )
         val unsupportedAddons = arrayListOf(unsupportedAddon, unsupportedAddonTwo)
         val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, unsupportedAddons)
         adapter.bindNotYetSupportedSection(unsupportedSectionViewHolder, mock())
         verify(unsupportedSectionViewHolder.descriptionView).setText(
-            testContext.getString(R.string.mozac_feature_addons_unsupported_caption_plural, unsupportedAddons.size)
+            testContext.getString(R.string.mozac_feature_addons_unsupported_caption_plural, unsupportedAddons.size),
         )
 
         unsupportedSectionViewHolder.itemView.performClick()

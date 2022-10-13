@@ -33,7 +33,7 @@ import org.mozilla.geckoview.WebExtension.Action as GeckoNativeWebExtensionActio
  */
 class GeckoWebExtension(
     val nativeExtension: GeckoNativeWebExtension,
-    val runtime: GeckoRuntime
+    val runtime: GeckoRuntime,
 ) : WebExtension(nativeExtension.id, nativeExtension.location, true) {
 
     private val connectedPorts: MutableMap<PortId, GeckoPort> = mutableMapOf()
@@ -80,7 +80,7 @@ class GeckoWebExtension(
                 // We don't use the same delegate instance for multiple apps so we don't need to verify the name.
                 name: String,
                 message: Any,
-                sender: GeckoNativeWebExtension.MessageSender
+                sender: GeckoNativeWebExtension.MessageSender,
             ): GeckoResult<Any>? {
                 val response = messageHandler.onMessage(message, null)
                 return response?.let { GeckoResult.fromValue(it) }
@@ -124,7 +124,7 @@ class GeckoWebExtension(
                 // We don't use the same delegate instance for multiple apps so we don't need to verify the name.
                 name: String,
                 message: Any,
-                sender: GeckoNativeWebExtension.MessageSender
+                sender: GeckoNativeWebExtension.MessageSender,
             ): GeckoResult<Any>? {
                 val response = messageHandler.onMessage(message, session)
                 return response?.let { GeckoResult.fromValue(it) }
@@ -169,7 +169,7 @@ class GeckoWebExtension(
         if (!supportActions) {
             logger.error(
                 "Attempt to register default action handler but browser and page " +
-                    "action support is turned off for this extension: $id"
+                    "action support is turned off for this extension: $id",
             )
             return
         }
@@ -180,7 +180,7 @@ class GeckoWebExtension(
                 ext: GeckoNativeWebExtension,
                 // Session will always be null here for the global default delegate
                 session: GeckoSession?,
-                action: GeckoNativeWebExtensionAction
+                action: GeckoNativeWebExtensionAction,
             ) {
                 actionHandler.onBrowserAction(this@GeckoWebExtension, null, action.convert())
             }
@@ -189,14 +189,14 @@ class GeckoWebExtension(
                 ext: GeckoNativeWebExtension,
                 // Session will always be null here for the global default delegate
                 session: GeckoSession?,
-                action: GeckoNativeWebExtensionAction
+                action: GeckoNativeWebExtensionAction,
             ) {
                 actionHandler.onPageAction(this@GeckoWebExtension, null, action.convert())
             }
 
             override fun onTogglePopup(
                 ext: GeckoNativeWebExtension,
-                action: GeckoNativeWebExtensionAction
+                action: GeckoNativeWebExtensionAction,
             ): GeckoResult<GeckoSession>? {
                 val session = actionHandler.onToggleActionPopup(this@GeckoWebExtension, action.convert())
                 return session?.let { GeckoResult.fromValue((session as GeckoEngineSession).geckoSession) }
@@ -213,7 +213,7 @@ class GeckoWebExtension(
         if (!supportActions) {
             logger.error(
                 "Attempt to register action handler on session but browser and page " +
-                    "action support is turned off for this extension: $id"
+                    "action support is turned off for this extension: $id",
             )
             return
         }
@@ -223,7 +223,7 @@ class GeckoWebExtension(
             override fun onBrowserAction(
                 ext: GeckoNativeWebExtension,
                 geckoSession: GeckoSession?,
-                action: GeckoNativeWebExtensionAction
+                action: GeckoNativeWebExtensionAction,
             ) {
                 actionHandler.onBrowserAction(this@GeckoWebExtension, session, action.convert())
             }
@@ -231,7 +231,7 @@ class GeckoWebExtension(
             override fun onPageAction(
                 ext: GeckoNativeWebExtension,
                 geckoSession: GeckoSession?,
-                action: GeckoNativeWebExtensionAction
+                action: GeckoNativeWebExtensionAction,
             ) {
                 actionHandler.onPageAction(this@GeckoWebExtension, session, action.convert())
             }
@@ -253,24 +253,23 @@ class GeckoWebExtension(
      * See [WebExtension.registerTabHandler].
      */
     override fun registerTabHandler(tabHandler: TabHandler, defaultSettings: Settings?) {
-
         val tabDelegate = object : GeckoNativeWebExtension.TabDelegate {
 
             override fun onNewTab(
                 ext: GeckoNativeWebExtension,
-                tabDetails: GeckoNativeWebExtension.CreateTabDetails
+                tabDetails: GeckoNativeWebExtension.CreateTabDetails,
             ): GeckoResult<GeckoSession>? {
                 val geckoEngineSession = GeckoEngineSession(
                     runtime,
                     defaultSettings = defaultSettings,
-                    openGeckoSession = false
+                    openGeckoSession = false,
                 )
 
                 tabHandler.onNewTab(
                     this@GeckoWebExtension,
                     geckoEngineSession,
                     tabDetails.active == true,
-                    tabDetails.url ?: ""
+                    tabDetails.url ?: "",
                 )
                 return GeckoResult.fromValue(geckoEngineSession.geckoSession)
             }
@@ -281,10 +280,10 @@ class GeckoWebExtension(
                         this@GeckoWebExtension,
                         GeckoEngineSession(
                             runtime,
-                            defaultSettings = defaultSettings
+                            defaultSettings = defaultSettings,
                         ),
                         false,
-                        optionsPageUrl
+                        optionsPageUrl,
                     )
                 }
             }
@@ -297,20 +296,18 @@ class GeckoWebExtension(
      * See [WebExtension.registerTabHandler].
      */
     override fun registerTabHandler(session: EngineSession, tabHandler: TabHandler) {
-
         val tabDelegate = object : GeckoNativeWebExtension.SessionTabDelegate {
 
             override fun onUpdateTab(
                 ext: GeckoNativeWebExtension,
                 geckoSession: GeckoSession,
-                tabDetails: GeckoNativeWebExtension.UpdateTabDetails
+                tabDetails: GeckoNativeWebExtension.UpdateTabDetails,
             ): GeckoResult<AllowOrDeny> {
-
                 return if (tabHandler.onUpdateTab(
                         this@GeckoWebExtension,
                         session,
                         tabDetails.active == true,
-                        tabDetails.url
+                        tabDetails.url,
                     )
                 ) {
                     GeckoResult.allow()
@@ -321,9 +318,8 @@ class GeckoWebExtension(
 
             override fun onCloseTab(
                 ext: GeckoNativeWebExtension?,
-                geckoSession: GeckoSession
+                geckoSession: GeckoSession,
             ): GeckoResult<AllowOrDeny> {
-
                 return if (ext != null) {
                     if (tabHandler.onCloseTab(this@GeckoWebExtension, session)) {
                         GeckoResult.allow()
@@ -367,7 +363,7 @@ class GeckoWebExtension(
                 optionsPageUrl = it.optionsPageUrl,
                 openOptionsPageInTab = it.openOptionsPageInTab,
                 baseUrl = it.baseUrl,
-                temporary = it.temporary
+                temporary = it.temporary,
             )
         }
     }
@@ -399,7 +395,7 @@ class GeckoWebExtension(
  */
 class GeckoPort(
     internal val nativePort: GeckoNativeWebExtension.Port,
-    engineSession: EngineSession? = null
+    engineSession: EngineSession? = null,
 ) : Port(engineSession) {
 
     override fun postMessage(message: JSONObject) {
@@ -433,6 +429,6 @@ private fun GeckoNativeWebExtensionAction.convert(): Action {
         badgeText,
         badgeTextColor,
         badgeBackgroundColor,
-        onClick
+        onClick,
     )
 }

@@ -19,7 +19,7 @@ import mozilla.components.concept.menu.candidate.TextMenuCandidate
 fun CustomTabSessionState.createCustomTabMenuCandidates(context: Context) =
     config.menuItems.map { item ->
         TextMenuCandidate(
-            text = item.name
+            text = item.name,
         ) {
             item.pendingIntent.sendWithUrl(context, content.url)
         }
@@ -28,5 +28,5 @@ fun CustomTabSessionState.createCustomTabMenuCandidates(context: Context) =
 internal fun PendingIntent.sendWithUrl(context: Context, url: String) = send(
     context,
     0,
-    Intent(null, url.toUri())
+    Intent(null, url.toUri()),
 )

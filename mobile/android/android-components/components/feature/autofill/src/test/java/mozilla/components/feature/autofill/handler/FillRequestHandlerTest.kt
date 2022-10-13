@@ -30,8 +30,8 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
 import java.util.UUID
 
@@ -52,7 +52,7 @@ internal class FillRequestHandlerTest {
                     assertEquals(1, builder.logins.size)
                     assertEquals(credentials.second, builder.logins[0])
                     assertEquals(false, builder.needsConfirmation)
-                }
+                },
             )
 
             assertEquals(1, facts.size)
@@ -78,7 +78,7 @@ internal class FillRequestHandlerTest {
                     assertNotNull(builder!!)
                     assertEquals(0, builder.logins.size)
                     assertEquals(false, builder.needsConfirmation)
-                }
+                },
             )
 
             assertEquals(1, facts.size)
@@ -99,12 +99,12 @@ internal class FillRequestHandlerTest {
             filename = "fixtures/app_expensify.xml",
             packageName = "org.me.mobiexpensifyg",
             logins = mapOf(
-                generateRandomLoginFor("expensify.com")
+                generateRandomLoginFor("expensify.com"),
             ),
             assertThat = { builder ->
                 // Unfortunately we are not able to link the app and the website yet.
                 assertNull(builder)
-            }
+            },
         )
     }
 
@@ -119,7 +119,7 @@ internal class FillRequestHandlerTest {
                 assertNotNull(builder!!)
                 assertEquals(1, builder.logins.size)
                 assertEquals(credentials.second, builder.logins[0])
-            }
+            },
         )
     }
 
@@ -134,7 +134,7 @@ internal class FillRequestHandlerTest {
                 assertNotNull(builder!!)
                 assertEquals(1, builder.logins.size)
                 assertEquals(credentials.second, builder.logins[0])
-            }
+            },
         )
     }
 
@@ -149,7 +149,7 @@ internal class FillRequestHandlerTest {
                 assertNotNull(builder!!)
                 assertEquals(1, builder.logins.size)
                 assertEquals(credentials.second, builder.logins[0])
-            }
+            },
         )
     }
 
@@ -164,7 +164,7 @@ internal class FillRequestHandlerTest {
                 assertNotNull(builder!!)
                 assertEquals(1, builder.logins.size)
                 assertEquals(credentials.second, builder.logins[0])
-            }
+            },
         )
     }
 
@@ -179,7 +179,7 @@ internal class FillRequestHandlerTest {
                 assertNotNull(builder!!)
                 assertEquals(0, builder.logins.size)
                 assertEquals(false, builder.needsConfirmation)
-            }
+            },
         )
     }
 }
@@ -190,7 +190,7 @@ private fun <B : FillResponseBuilder> FillRequestHandlerTest.createTestCase(
     packageName: String,
     logins: Map<String, Login>,
     assertThat: (B?) -> Unit,
-    canVerifyRelationship: Boolean = true
+    canVerifyRelationship: Boolean = true,
 ) = runTest {
     val structure = createMockStructure(filename, packageName)
 
@@ -212,12 +212,12 @@ private fun <B : FillResponseBuilder> FillRequestHandlerTest.createTestCase(
         searchActivity = AbstractAutofillSearchActivity::class.java,
         applicationName = "Test",
         httpClient = mock(),
-        verifier = verifier
+        verifier = verifier,
     )
 
     val handler = FillRequestHandler(
         testContext,
-        configuration
+        configuration,
     )
 
     val builder = handler.handle(structure)
@@ -230,6 +230,6 @@ private fun generateRandomLoginFor(origin: String): Pair<String, Login> {
         guid = UUID.randomUUID().toString(),
         origin = origin,
         username = "user" + UUID.randomUUID().toString(),
-        password = "password" + UUID.randomUUID().toString()
+        password = "password" + UUID.randomUUID().toString(),
     )
 }

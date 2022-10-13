@@ -33,7 +33,7 @@ class AndroidAssetFinder {
      */
     fun getAndroidAppAsset(
         packageName: String,
-        packageManager: PackageManager
+        packageManager: PackageManager,
     ): Sequence<AssetDescriptor.Android> {
         return packageManager.getSignatures(packageName).asSequence()
             .mapNotNull { signature -> getCertificateSHA256Fingerprint(signature) }

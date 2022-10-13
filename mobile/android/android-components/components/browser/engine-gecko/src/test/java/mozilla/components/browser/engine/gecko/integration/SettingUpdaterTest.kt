@@ -55,7 +55,7 @@ class SettingUpdaterTest {
 
 class DummySettingUpdater(
     override var value: String = "",
-    var nextValue: String
+    var nextValue: String,
 ) : SettingUpdater<String>() {
 
     var registered = false

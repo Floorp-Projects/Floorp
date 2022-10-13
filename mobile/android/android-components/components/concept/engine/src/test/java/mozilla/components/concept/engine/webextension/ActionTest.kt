@@ -18,7 +18,7 @@ class ActionTest {
         badgeText = "badge",
         badgeTextColor = Color.BLACK,
         badgeBackgroundColor = Color.BLUE,
-        onClick = onClick
+        onClick = onClick,
     )
 
     @Test
@@ -31,8 +31,8 @@ class ActionTest {
                 badgeText = null,
                 badgeTextColor = Color.WHITE,
                 badgeBackgroundColor = null,
-                onClick = onClick
-            )
+                onClick = onClick,
+            ),
         )
 
         assertEquals(
@@ -43,9 +43,9 @@ class ActionTest {
                 badgeText = "badge",
                 badgeTextColor = Color.WHITE,
                 badgeBackgroundColor = Color.BLUE,
-                onClick = onClick
+                onClick = onClick,
             ),
-            overridden
+            overridden,
         )
     }
 

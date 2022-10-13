@@ -32,7 +32,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 class MenuButton2 @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : FrameLayout(context, attrs, defStyleAttr),
     MenuButton,
     View.OnClickListener,

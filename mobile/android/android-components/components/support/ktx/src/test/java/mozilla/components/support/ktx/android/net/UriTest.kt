@@ -28,29 +28,29 @@ class UriTest {
     fun hostWithoutCommonPrefixes() {
         assertEquals(
             "mozilla.org",
-            "https://www.mozilla.org".toUri().hostWithoutCommonPrefixes
+            "https://www.mozilla.org".toUri().hostWithoutCommonPrefixes,
         )
 
         assertEquals(
             "twitter.com",
-            "https://mobile.twitter.com/home".toUri().hostWithoutCommonPrefixes
+            "https://mobile.twitter.com/home".toUri().hostWithoutCommonPrefixes,
         )
 
         assertNull("".toUri().hostWithoutCommonPrefixes)
 
         assertEquals(
             "",
-            "http://".toUri().hostWithoutCommonPrefixes
+            "http://".toUri().hostWithoutCommonPrefixes,
         )
 
         assertEquals(
             "facebook.com",
-            "https://m.facebook.com/".toUri().hostWithoutCommonPrefixes
+            "https://m.facebook.com/".toUri().hostWithoutCommonPrefixes,
         )
 
         assertEquals(
             "github.com",
-            "https://github.com/mozilla-mobile/android-components".toUri().hostWithoutCommonPrefixes
+            "https://github.com/mozilla-mobile/android-components".toUri().hostWithoutCommonPrefixes,
         )
     }
 

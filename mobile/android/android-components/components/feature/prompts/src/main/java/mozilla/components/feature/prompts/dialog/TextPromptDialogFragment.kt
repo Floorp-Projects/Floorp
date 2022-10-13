@@ -108,9 +108,8 @@ internal class TextPromptDialogFragment : AbstractPromptTextDialogFragment(), Te
             title: String,
             inputLabel: String,
             defaultInputValue: String,
-            hasShownManyDialogs: Boolean
+            hasShownManyDialogs: Boolean,
         ): TextPromptDialogFragment {
-
             val fragment = TextPromptDialogFragment()
             val arguments = fragment.arguments ?: Bundle()
 

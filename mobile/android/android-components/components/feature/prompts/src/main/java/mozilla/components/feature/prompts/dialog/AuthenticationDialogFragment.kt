@@ -95,15 +95,17 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
             usernameEditText.visibility = GONE
         } else {
             usernameEditText.setText(username)
-            usernameEditText.addTextChangedListener(object : TextWatcher {
-                override fun afterTextChanged(editable: Editable) {
-                    username = editable.toString()
-                }
+            usernameEditText.addTextChangedListener(
+                object : TextWatcher {
+                    override fun afterTextChanged(editable: Editable) {
+                        username = editable.toString()
+                    }
 
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
 
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
-            })
+                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+                },
+            )
         }
     }
 
@@ -114,15 +116,17 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
         passwordEditText.url = url
 
         passwordEditText.setText(password)
-        passwordEditText.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(editable: Editable) {
-                password = editable.toString()
-            }
+        passwordEditText.addTextChangedListener(
+            object : TextWatcher {
+                override fun afterTextChanged(editable: Editable) {
+                    password = editable.toString()
+                }
 
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
-        })
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            },
+        )
     }
 
     companion object {
@@ -148,9 +152,8 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
             username: String,
             password: String,
             onlyShowPassword: Boolean,
-            url: String?
+            url: String?,
         ): AuthenticationDialogFragment {
-
             val fragment = AuthenticationDialogFragment()
             val arguments = fragment.arguments ?: Bundle()
 

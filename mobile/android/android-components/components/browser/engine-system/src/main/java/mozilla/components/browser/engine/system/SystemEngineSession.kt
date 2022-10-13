@@ -30,7 +30,7 @@ internal val xRequestHeader = mapOf(
     // application. We can't really prevent that but we can at least send an empty value.
     // Unfortunately the additional headers will not be propagated to subsequent requests
     // (e.g. redirects). See issue #696.
-    "X-Requested-With" to ""
+    "X-Requested-With" to "",
 )
 
 /**
@@ -39,14 +39,20 @@ internal val xRequestHeader = mapOf(
 @Suppress("LargeClass", "TooManyFunctions")
 class SystemEngineSession(
     context: Context,
-    private val defaultSettings: Settings? = null
+    private val defaultSettings: Settings? = null,
 ) : EngineSession() {
     private val resources = context.resources
+
     @Volatile internal lateinit var internalSettings: Settings
+
     @Volatile internal var historyTrackingDelegate: HistoryTrackingDelegate? = null
+
     @Volatile internal var trackingProtectionPolicy: TrackingProtectionPolicy? = null
+
     @Volatile internal var webFontsEnabled = true
+
     @Volatile internal var currentUrl = ""
+
     @Volatile internal var useWideViewPort: Boolean? = null // See [toggleDesktopMode]
     @Volatile internal var fullScreenCallback: WebChromeClient.CustomViewCallback? = null
 
@@ -70,7 +76,7 @@ class SystemEngineSession(
         url: String,
         parent: EngineSession?,
         flags: LoadUrlFlags,
-        additionalHeaders: Map<String, String>?
+        additionalHeaders: Map<String, String>?,
     ) {
         val headers =
             if (additionalHeaders == null) {
@@ -308,19 +314,24 @@ class SystemEngineSession(
             @Suppress("DEPRECATION")
             // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/8513
             override var allowFileAccessFromFileURLs by WebSetting(
-                s::getAllowFileAccessFromFileURLs, s::setAllowFileAccessFromFileURLs
+                s::getAllowFileAccessFromFileURLs,
+                s::setAllowFileAccessFromFileURLs,
             )
+
             @Suppress("DEPRECATION")
             // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/8514
             override var allowUniversalAccessFromFileURLs by WebSetting(
-                s::getAllowUniversalAccessFromFileURLs, s::setAllowUniversalAccessFromFileURLs
+                s::getAllowUniversalAccessFromFileURLs,
+                s::setAllowUniversalAccessFromFileURLs,
             )
 
             override var mediaPlaybackRequiresUserGesture by WebSetting(
-                s::getMediaPlaybackRequiresUserGesture, s::setMediaPlaybackRequiresUserGesture
+                s::getMediaPlaybackRequiresUserGesture,
+                s::setMediaPlaybackRequiresUserGesture,
             )
             override var javaScriptCanOpenWindowsAutomatically by WebSetting(
-                s::getJavaScriptCanOpenWindowsAutomatically, s::setJavaScriptCanOpenWindowsAutomatically
+                s::getJavaScriptCanOpenWindowsAutomatically,
+                s::setJavaScriptCanOpenWindowsAutomatically,
             )
 
             override var verticalScrollBarEnabled

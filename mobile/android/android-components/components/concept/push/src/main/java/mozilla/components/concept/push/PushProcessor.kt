@@ -60,7 +60,7 @@ interface PushProcessor {
         }
         val requireInstance: PushProcessor
             get() = instance ?: throw IllegalStateException(
-                "You need to call PushProcessor.install() on your Push instance from Application.onCreate()."
+                "You need to call PushProcessor.install() on your Push instance from Application.onCreate().",
             )
     }
 }
@@ -73,7 +73,7 @@ data class EncryptedPushMessage(
     val body: String?,
     val encoding: String,
     val salt: String = "",
-    val cryptoKey: String = "" // diffie–hellman key
+    val cryptoKey: String = "", // diffie–hellman key
 ) {
     companion object {
         /**
@@ -87,7 +87,7 @@ data class EncryptedPushMessage(
             body: String?,
             encoding: String?,
             salt: String? = null,
-            cryptoKey: String? = null
+            cryptoKey: String? = null,
         ) = EncryptedPushMessage(channelId, body, encoding ?: "aes128gcm", salt ?: "", cryptoKey ?: "")
     }
 }
@@ -98,12 +98,13 @@ data class EncryptedPushMessage(
 sealed class PushError(override val message: String) : Exception() {
     data class Registration(override val message: String) : PushError(message)
     data class Network(override val message: String) : PushError(message)
+
     /**
      * @property cause Original exception from Rust code.
      */
     data class Rust(
         override val cause: Throwable?,
-        override val message: String = cause?.message.orEmpty()
+        override val message: String = cause?.message.orEmpty(),
     ) : PushError(message)
     data class MalformedMessage(override val message: String) : PushError(message)
     data class ServiceUnavailable(override val message: String) : PushError(message)

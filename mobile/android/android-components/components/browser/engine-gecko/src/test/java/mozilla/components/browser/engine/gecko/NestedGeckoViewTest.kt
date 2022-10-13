@@ -104,8 +104,10 @@ class NestedGeckoViewTest {
         doReturn(true).`when`(nestedWebView).callSuperOnTouchEvent(any())
 
         doReturn(true).`when`(mockChildHelper).dispatchNestedPreScroll(
-            anyInt(), anyInt(), any(),
-            any()
+            anyInt(),
+            anyInt(),
+            any(),
+            any(),
         )
 
         nestedWebView.scrollOffset[0] = 1
@@ -116,7 +118,11 @@ class NestedGeckoViewTest {
         assertEquals(nestedWebView.lastY, 8)
 
         doReturn(true).`when`(mockChildHelper).dispatchNestedScroll(
-            anyInt(), anyInt(), anyInt(), anyInt(), any()
+            anyInt(),
+            anyInt(),
+            anyInt(),
+            anyInt(),
+            any(),
         )
 
         nestedWebView.onTouchEvent(mockMotionEvent(ACTION_MOVE, y = 10f))

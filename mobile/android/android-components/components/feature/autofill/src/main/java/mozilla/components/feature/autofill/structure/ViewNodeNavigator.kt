@@ -48,7 +48,7 @@ internal interface AutofillNodeNavigator<Node, Id> {
         usernameId: Id?,
         passwordId: Id?,
         webDomain: String?,
-        packageName: String
+        packageName: String,
     ): ParsedStructure
 
     private fun <T> findFirstRoots(transform: (Node) -> T?): T? {
@@ -88,7 +88,7 @@ internal interface AutofillNodeNavigator<Node, Id> {
 @RequiresApi(Build.VERSION_CODES.O)
 internal class ViewNodeNavigator(
     private val structure: AssistStructure,
-    override val activityPackageName: String
+    override val activityPackageName: String,
 ) : AutofillNodeNavigator<ViewNode, AutofillId> {
     override val rootNodes: List<ViewNode>
         get() = structure.run { (0 until windowNodeCount).map { getWindowNodeAt(it).rootViewNode } }
@@ -100,7 +100,7 @@ internal class ViewNodeNavigator(
         val hints = mutableListOf<CharSequence?>(
             node.text,
             node.idEntry,
-            node.hint // This is localized.
+            node.hint, // This is localized.
         )
 
         node.autofillOptions?.let {
@@ -174,13 +174,13 @@ internal class ViewNodeNavigator(
         usernameId: AutofillId?,
         passwordId: AutofillId?,
         webDomain: String?,
-        packageName: String
+        packageName: String,
     ): ParsedStructure {
         return ParsedStructure(
             usernameId,
             passwordId,
             webDomain,
-            packageName
+            packageName,
         )
     }
 }

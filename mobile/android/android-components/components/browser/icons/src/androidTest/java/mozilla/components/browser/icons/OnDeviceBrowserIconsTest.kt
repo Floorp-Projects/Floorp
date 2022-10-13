@@ -40,9 +40,9 @@ class OnDeviceBrowserIconsTest {
                         "AElFTkSuQmCC",
                     sizes = listOf(Size(64, 64)),
                     mimeType = "image/png",
-                    type = IconRequest.Resource.Type.FAVICON
-                )
-            )
+                    type = IconRequest.Resource.Type.FAVICON,
+                ),
+            ),
         )
 
         val icon = BrowserIcons(
@@ -58,7 +58,7 @@ class OnDeviceBrowserIconsTest {
                     @Suppress("TooGenericExceptionThrown")
                     throw RuntimeException("Generator execution not expected")
                 }
-            }
+            },
         ).loadIcon(request).await()
 
         assertNotNull(icon)

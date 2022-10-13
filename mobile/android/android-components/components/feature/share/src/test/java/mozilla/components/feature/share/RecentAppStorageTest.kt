@@ -56,7 +56,7 @@ class RecentAppStorageTest {
             RecentAppEntity(firstActivityName),
             RecentAppEntity(secondActivityName),
             RecentAppEntity(thirdActivityName),
-            RecentAppEntity(fourthActivityName)
+            RecentAppEntity(fourthActivityName),
         )
 
         recentAppsStorage.updateDatabaseWithNewApps(currentApps)

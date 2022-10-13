@@ -27,14 +27,14 @@ private fun emitContextMenuFact(
     action: Action,
     item: String,
     value: String? = null,
-    metadata: Map<String, Any>? = null
+    metadata: Map<String, Any>? = null,
 ) {
     Fact(
         Component.FEATURE_CONTEXTMENU,
         action,
         item,
         value,
-        metadata
+        metadata,
     ).collect()
 }
 

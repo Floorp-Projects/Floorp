@@ -27,6 +27,6 @@ interface ImageLoader {
         view: ImageView,
         request: ImageLoadRequest,
         placeholder: Drawable? = null,
-        error: Drawable? = null
+        error: Drawable? = null,
     )
 }

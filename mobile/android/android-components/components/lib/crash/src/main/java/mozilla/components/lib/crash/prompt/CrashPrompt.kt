@@ -11,7 +11,7 @@ import mozilla.components.lib.crash.CrashReporter
 
 internal class CrashPrompt(
     private val context: Context,
-    private val crash: Crash
+    private val crash: Crash,
 ) {
     fun show() {
         context.startActivity(createIntent(context, crash))

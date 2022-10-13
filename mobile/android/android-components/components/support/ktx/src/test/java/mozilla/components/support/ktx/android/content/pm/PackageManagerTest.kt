@@ -18,7 +18,7 @@ import org.robolectric.Shadows.shadowOf
 @RunWith(AndroidJUnit4::class)
 class PackageManagerTest {
     private fun createContext(
-        installedApps: List<String> = emptyList()
+        installedApps: List<String> = emptyList(),
     ): Context {
         val pm = testContext.packageManager
         val packageManager = shadowOf(pm)

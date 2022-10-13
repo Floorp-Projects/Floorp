@@ -24,12 +24,12 @@ class CustomTabsFacts {
 
 private fun emitCustomTabsFact(
     action: Action,
-    item: String
+    item: String,
 ) {
     Fact(
         Component.FEATURE_CUSTOMTABS,
         action,
-        item
+        item,
     ).collect()
 }
 

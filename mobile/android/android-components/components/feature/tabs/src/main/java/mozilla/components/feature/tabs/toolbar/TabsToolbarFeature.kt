@@ -26,7 +26,7 @@ class TabsToolbarFeature(
     lifecycleOwner: LifecycleOwner,
     showTabs: () -> Unit,
     tabCounterMenu: TabCounterMenu? = null,
-    countBasedOnSelectedTabType: Boolean = true
+    countBasedOnSelectedTabType: Boolean = true,
 ) {
     init {
         run {
@@ -38,7 +38,7 @@ class TabsToolbarFeature(
                 showTabs = showTabs,
                 store = store,
                 menu = tabCounterMenu,
-                countBasedOnSelectedTabType = countBasedOnSelectedTabType
+                countBasedOnSelectedTabType = countBasedOnSelectedTabType,
             )
             toolbar.addBrowserAction(tabsAction)
         }

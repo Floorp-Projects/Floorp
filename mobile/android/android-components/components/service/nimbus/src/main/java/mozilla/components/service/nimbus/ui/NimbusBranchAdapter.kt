@@ -20,17 +20,18 @@ import org.mozilla.experiments.nimbus.Branch
  * methods for handling the Nimbus branch items.
  */
 class NimbusBranchAdapter(
-    private val nimbusBranchesDelegate: NimbusBranchesAdapterDelegate
+    private val nimbusBranchesDelegate: NimbusBranchesAdapterDelegate,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     // The list of [Branch]s to display.
     private var branches: List<Branch> = emptyList()
+
     // The selected [Branch] slug to highlight.
     private var selectedBranch: String = ""
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
-        viewType: Int
+        viewType: Int,
     ): RecyclerView.ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.mozac_service_nimbus_branch_item, parent, false)
@@ -43,7 +44,7 @@ class NimbusBranchAdapter(
             nimbusBranchesDelegate,
             selectedIconView,
             titleView,
-            summaryView
+            summaryView,
         )
     }
 
@@ -66,8 +67,8 @@ class NimbusBranchAdapter(
                 oldBranches = this.branches,
                 newBranches = branches,
                 oldSelectedBranch = this.selectedBranch,
-                newSelectedBranch = selectedBranch
-            )
+                newSelectedBranch = selectedBranch,
+            ),
         )
 
         this.branches = branches
@@ -81,7 +82,7 @@ internal class NimbusBranchesDiffUtil(
     private val oldBranches: List<Branch>,
     private val newBranches: List<Branch>,
     private val oldSelectedBranch: String,
-    private val newSelectedBranch: String
+    private val newSelectedBranch: String,
 ) : DiffUtil.Callback() {
 
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =

@@ -79,7 +79,7 @@ class SpocsEndpointRawTest {
                 val requestBody = JSONObject(
                     request.body!!.useStream {
                         it.bufferedReader().readText()
-                    }
+                    },
                 )
                 assertEquals(2, requestBody["version"])
                 assertEquals(appId, requestBody["consumer_key"])
@@ -88,7 +88,7 @@ class SpocsEndpointRawTest {
                 request.headers!!.first {
                     it.name.equals("Content-Type", true)
                 }.value.contains("application/json", true)
-            }
+            },
         )
     }
 
@@ -109,7 +109,7 @@ class SpocsEndpointRawTest {
                 val requestBody = JSONObject(
                     request.body!!.useStream {
                         it.bufferedReader().readText()
-                    }
+                    },
                 )
                 assertEquals(2, requestBody["version"])
                 assertEquals(appId, requestBody["consumer_key"])
@@ -118,7 +118,7 @@ class SpocsEndpointRawTest {
                 request.headers!!.first {
                     it.name.equals("Content-Type", true)
                 }.value.contains("application/json", true)
-            }
+            },
         )
     }
 
@@ -156,7 +156,7 @@ class SpocsEndpointRawTest {
             assertParams = { request ->
                 assertEquals(expectedUrl, request.url)
                 assertEquals(Request.Method.DELETE, request.method)
-            }
+            },
         )
     }
 
@@ -173,7 +173,7 @@ class SpocsEndpointRawTest {
             assertParams = { request ->
                 assertEquals(expectedUrl, request.url)
                 assertEquals(Request.Method.DELETE, request.method)
-            }
+            },
         )
     }
 

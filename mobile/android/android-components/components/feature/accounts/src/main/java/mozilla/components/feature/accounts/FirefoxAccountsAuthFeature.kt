@@ -30,7 +30,7 @@ class FirefoxAccountsAuthFeature(
     private val accountManager: FxaAccountManager,
     private val redirectUrl: String,
     private val coroutineContext: CoroutineContext = Dispatchers.IO,
-    private val onBeginAuthentication: (Context, String) -> Unit = { _, _ -> }
+    private val onBeginAuthentication: (Context, String) -> Unit = { _, _ -> },
 ) {
     fun beginAuthentication(context: Context) {
         beginAuthenticationAsync(context) {
@@ -70,7 +70,7 @@ class FirefoxAccountsAuthFeature(
             isSameDomain: Boolean,
             isRedirect: Boolean,
             isDirectNavigation: Boolean,
-            isSubframeRequest: Boolean
+            isSubframeRequest: Boolean,
         ): RequestInterceptor.InterceptionResponse? {
             if (uri.startsWith(redirectUrl)) {
                 val parsedUri = Uri.parse(uri)
@@ -86,8 +86,8 @@ class FirefoxAccountsAuthFeature(
                             FxaAuthData(
                                 authType = authType,
                                 code = code,
-                                state = state
-                            )
+                                state = state,
+                            ),
                         )
                     }
 

@@ -22,7 +22,7 @@ import mozilla.components.concept.menu.candidate.TextStyle
 open class TabCounterMenu(
     context: Context,
     onItemTapped: (Item) -> Unit,
-    iconColor: Int? = null
+    iconColor: Int? = null,
 ) {
 
     /**
@@ -54,9 +54,9 @@ open class TabCounterMenu(
             start = DrawableMenuIcon(
                 context,
                 R.drawable.mozac_ic_new,
-                tint = iconColor ?: getColor(context, R.color.mozac_ui_tabcounter_default_text)
+                tint = iconColor ?: getColor(context, R.color.mozac_ui_tabcounter_default_text),
             ),
-            textStyle = TextStyle()
+            textStyle = TextStyle(),
         ) {
             onItemTapped(Item.NewTab)
         }
@@ -66,9 +66,9 @@ open class TabCounterMenu(
             start = DrawableMenuIcon(
                 context,
                 R.drawable.mozac_ic_private_browsing,
-                tint = iconColor ?: getColor(context, R.color.mozac_ui_tabcounter_default_text)
+                tint = iconColor ?: getColor(context, R.color.mozac_ui_tabcounter_default_text),
             ),
-            textStyle = TextStyle()
+            textStyle = TextStyle(),
         ) {
             onItemTapped(Item.NewPrivateTab)
         }
@@ -78,9 +78,9 @@ open class TabCounterMenu(
             start = DrawableMenuIcon(
                 context,
                 R.drawable.mozac_ic_close,
-                tint = iconColor ?: getColor(context, R.color.mozac_ui_tabcounter_default_text)
+                tint = iconColor ?: getColor(context, R.color.mozac_ui_tabcounter_default_text),
             ),
-            textStyle = TextStyle()
+            textStyle = TextStyle(),
         ) {
             onItemTapped(Item.CloseTab)
         }
@@ -90,9 +90,9 @@ open class TabCounterMenu(
             start = DrawableMenuIcon(
                 context,
                 R.drawable.mozac_ic_tab,
-                tint = iconColor ?: getColor(context, R.color.mozac_ui_tabcounter_default_text)
+                tint = iconColor ?: getColor(context, R.color.mozac_ui_tabcounter_default_text),
             ),
-            textStyle = TextStyle()
+            textStyle = TextStyle(),
         ) {
             onItemTapped(Item.DuplicateTab)
         }

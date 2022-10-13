@@ -56,7 +56,7 @@ internal enum class AccountState {
     NotAuthenticated,
     IncompleteMigration,
     Authenticated,
-    AuthenticationProblem
+    AuthenticationProblem,
 }
 
 internal enum class ProgressState {

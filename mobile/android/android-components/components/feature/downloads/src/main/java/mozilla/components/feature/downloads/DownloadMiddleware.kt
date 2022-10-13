@@ -41,7 +41,7 @@ class DownloadMiddleware(
     private val downloadServiceClass: Class<*>,
     coroutineContext: CoroutineContext = Dispatchers.IO,
     @get:VisibleForTesting
-    internal val downloadStorage: DownloadStorage = DownloadStorage(applicationContext)
+    internal val downloadStorage: DownloadStorage = DownloadStorage(applicationContext),
 ) : Middleware<BrowserState, BrowserAction> {
     private val logger = Logger("DownloadMiddleware")
 
@@ -50,7 +50,7 @@ class DownloadMiddleware(
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         when (action) {
             is DownloadAction.RemoveDownloadAction -> removeDownload(action.downloadId, context.store)
@@ -63,7 +63,7 @@ class DownloadMiddleware(
                     // The download was already added before, so we are ignoring this request.
                     logger.debug(
                         "Ignored add action for ${action.download.id} " +
-                            "download already in store.downloads"
+                            "download already in store.downloads",
                     )
                     return
                 }
@@ -77,9 +77,11 @@ class DownloadMiddleware(
 
         when (action) {
             is TabListAction.RemoveAllTabsAction,
-            is TabListAction.RemoveAllPrivateTabsAction -> removePrivateNotifications(context.store)
+            is TabListAction.RemoveAllPrivateTabsAction,
+            -> removePrivateNotifications(context.store)
             is TabListAction.RemoveTabsAction,
-            is TabListAction.RemoveTabAction -> {
+            is TabListAction.RemoveTabAction,
+            -> {
                 val privateTabs = context.store.state.getNormalOrPrivateTabs(private = true)
                 if (privateTabs.isEmpty()) {
                     removePrivateNotifications(context.store)
@@ -95,7 +97,7 @@ class DownloadMiddleware(
 
     private fun removeDownload(
         downloadId: String,
-        store: Store<BrowserState, BrowserAction>
+        store: Store<BrowserState, BrowserAction>,
     ) = scope.launch {
         store.state.downloads[downloadId]?.let {
             downloadStorage.remove(it)

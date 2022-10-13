@@ -64,65 +64,65 @@ class TrimMemoryMiddlewareTest {
         store = BrowserStore(
             middleware = listOf(
                 TrimMemoryMiddleware(),
-                SuspendMiddleware(scope)
+                SuspendMiddleware(scope),
             ),
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "mozilla").copy(
-                        lastAccess = 5
+                        lastAccess = 5,
                     ),
                     createTab("https://www.theverge.com/", id = "theverge").copy(
                         engineState = EngineState(
                             engineSession = engineSessionTheVerge,
                             engineSessionState = engineSessionStateTheVerge,
-                            engineObserver = mock()
+                            engineObserver = mock(),
                         ),
-                        lastAccess = 2
+                        lastAccess = 2,
                     ),
                     createTab(
                         "https://www.reddit.com/r/firefox/",
                         id = "reddit",
-                        private = true
+                        private = true,
                     ).copy(
                         engineState = EngineState(
                             engineSession = engineSessionReddit,
                             engineSessionState = engineSessionStateReddit,
-                            engineObserver = mock()
+                            engineObserver = mock(),
                         ),
-                        lastAccess = 20
+                        lastAccess = 20,
                     ),
                     createTab("https://github.com/", id = "github").copy(
-                        lastAccess = 12
+                        lastAccess = 12,
                     ),
                     createTab("https://news.google.com", id = "google-news").copy(
                         engineState = EngineState(engineSessionGoogleNews, engineObserver = mock()),
-                        lastAccess = 10
+                        lastAccess = 10,
                     ),
                     createTab("https://www.amazon.com", id = "amazon").copy(
                         engineState = EngineState(engineSessionAmazon, engineObserver = mock()),
-                        lastAccess = 4
+                        lastAccess = 4,
                     ),
                     createTab("https://www.youtube.com", id = "youtube").copy(
                         engineState = EngineState(engineSessionYouTube, engineObserver = mock()),
-                        lastAccess = 4
+                        lastAccess = 4,
                     ),
                     createTab("https://www.facebook.com", id = "facebook").copy(
                         engineState = EngineState(engineSessionFacebook, engineObserver = mock()),
-                        lastAccess = 7
-                    )
+                        lastAccess = 7,
+                    ),
                 ),
                 customTabs = listOf(
                     createCustomTab("https://www.twitch.tv/", id = "twitch").copy(
                         engineState = EngineState(
                             engineSession = engineSessionTwitch,
                             engineSessionState = engineSessionStateTwitch,
-                            engineObserver = mock()
-                        )
+                            engineObserver = mock(),
+                        ),
                     ),
-                    createCustomTab("https://twitter.com/home", id = "twitter")
+                    createCustomTab("https://twitter.com/home", id = "twitter"),
                 ),
-                selectedTabId = "reddit"
-            )
+                selectedTabId = "reddit",
+            ),
         )
     }
 
@@ -130,8 +130,8 @@ class TrimMemoryMiddlewareTest {
     fun `TrimMemoryMiddleware - TRIM_MEMORY_UI_HIDDEN`() {
         store.dispatch(
             SystemAction.LowMemoryAction(
-                level = ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN
-            )
+                level = ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN,
+            ),
         ).joinBlocking()
 
         store.waitUntilIdle()
@@ -194,8 +194,8 @@ class TrimMemoryMiddlewareTest {
     fun `TrimMemoryMiddleware - TRIM_MEMORY_RUNNING_CRITICAL`() {
         store.dispatch(
             SystemAction.LowMemoryAction(
-                level = ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL
-            )
+                level = ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL,
+            ),
         ).joinBlocking()
 
         store.waitUntilIdle()

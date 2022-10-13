@@ -12,7 +12,7 @@ import mozilla.components.support.base.log.logger.Logger
  * A [FactProcessor] implementation that prints collected [Fact] instances to the log.
  */
 class LogFactProcessor(
-    private val logger: Logger = Logger("Facts")
+    private val logger: Logger = Logger("Facts"),
 ) : FactProcessor {
 
     override fun process(fact: Fact) {

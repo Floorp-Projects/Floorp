@@ -48,7 +48,7 @@ class MediaSessionFeatureTest {
         val feature = MediaSessionFeature(
             mock(),
             MediaSessionServiceDelegate::class.java,
-            store
+            store,
         )
         assertNull(feature.scope)
 
@@ -62,7 +62,7 @@ class MediaSessionFeatureTest {
         val feature = MediaSessionFeature(
             mock(),
             MediaSessionServiceDelegate::class.java,
-            mock()
+            mock(),
         )
         feature.scope = CoroutineScope(Dispatchers.Default)
 
@@ -80,7 +80,7 @@ class MediaSessionFeatureTest {
         val feature = MediaSessionFeature(
             mock(),
             mediaServiceClass,
-            store
+            store,
         )
         val mediaService: MediaSessionServiceDelegate = mock()
         val binder = MediaServiceBinder(mediaService)
@@ -112,17 +112,21 @@ class MediaSessionFeatureTest {
         val feature = MediaSessionFeature(
             mockApplicationContext,
             mediaServiceClass,
-            store
+            store,
         )
         doReturn(true).`when`(mockApplicationContext).bindService(
-            any<Intent>(), any(), anyInt()
+            any<Intent>(),
+            any(),
+            anyInt(),
         )
         val mediaServiceIntentCaptor = argumentCaptor<Intent>()
 
         feature.start()
 
         verify(mockApplicationContext).bindService(
-            mediaServiceIntentCaptor.capture(), any(), eq(Context.BIND_AUTO_CREATE)
+            mediaServiceIntentCaptor.capture(),
+            any(),
+            eq(Context.BIND_AUTO_CREATE),
         )
         assertEquals(mediaServiceClass.name, mediaServiceIntentCaptor.value.component!!.className)
     }
@@ -131,13 +135,13 @@ class MediaSessionFeatureTest {
     fun `GIVEN feature and media service are started WHEN media starts playing in a normal tab THEN handle showing the new playing status`() {
         val mediaTab = getMediaTab(PlaybackState.PLAYING)
         val initialState = BrowserState(
-            tabs = listOf(mediaTab)
+            tabs = listOf(mediaTab),
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFeature(
             mock(),
             MediaSessionServiceDelegate::class.java,
-            store
+            store,
         )
         feature.mediaService = mock()
 
@@ -150,13 +154,13 @@ class MediaSessionFeatureTest {
     fun `GIVEN feature and media service are started WHEN media starts playing in a custom tab THEN handle showing the new playing status`() {
         val mediaTab = getCustomTabWithMedia(PlaybackState.PLAYING)
         val initialState = BrowserState(
-            customTabs = listOf(mediaTab)
+            customTabs = listOf(mediaTab),
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFeature(
             mock(),
             MediaSessionServiceDelegate::class.java,
-            store
+            store,
         )
         feature.mediaService = mock()
 
@@ -169,13 +173,13 @@ class MediaSessionFeatureTest {
     fun `GIVEN feature and media service are started WHEN media is paused in a normal tab THEN handle showing the new playing status`() {
         val mediaTab = getMediaTab(PlaybackState.PAUSED)
         val initialState = BrowserState(
-            tabs = listOf(mediaTab)
+            tabs = listOf(mediaTab),
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFeature(
             mock(),
             MediaSessionServiceDelegate::class.java,
-            store
+            store,
         )
         feature.mediaService = mock()
 
@@ -188,13 +192,13 @@ class MediaSessionFeatureTest {
     fun `GIVEN feature and media service are started WHEN media is paused in a custom tab THEN handle showing the new playing status`() {
         val mediaTab = getCustomTabWithMedia(PlaybackState.PAUSED)
         val initialState = BrowserState(
-            customTabs = listOf(mediaTab)
+            customTabs = listOf(mediaTab),
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFeature(
             mock(),
             MediaSessionServiceDelegate::class.java,
-            store
+            store,
         )
         feature.mediaService = mock()
 
@@ -207,13 +211,13 @@ class MediaSessionFeatureTest {
     fun `GIVEN feature and media service are started WHEN media is stopped in a normal tab THEN handle showing the new playing status`() {
         val mediaTab = getMediaTab(PlaybackState.STOPPED)
         val initialState = BrowserState(
-            tabs = listOf(mediaTab)
+            tabs = listOf(mediaTab),
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFeature(
             mock(),
             MediaSessionServiceDelegate::class.java,
-            store
+            store,
         )
         feature.mediaService = mock()
 
@@ -226,13 +230,13 @@ class MediaSessionFeatureTest {
     fun `GIVEN feature and media service are started WHEN media is stopped in a custom tab THEN handle showing the new playing status`() {
         val mediaTab = getCustomTabWithMedia(PlaybackState.STOPPED)
         val initialState = BrowserState(
-            customTabs = listOf(mediaTab)
+            customTabs = listOf(mediaTab),
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFeature(
             mock(),
             MediaSessionServiceDelegate::class.java,
-            store
+            store,
         )
         feature.mediaService = mock()
 
@@ -246,13 +250,13 @@ class MediaSessionFeatureTest {
         val mockApplicationContext: Context = mock()
         val mediaTab = getMediaTab(PlaybackState.UNKNOWN)
         val initialState = BrowserState(
-            tabs = listOf(mediaTab)
+            tabs = listOf(mediaTab),
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFeature(
             mockApplicationContext,
             MediaSessionServiceDelegate::class.java,
-            store
+            store,
         )
         val mediaService: MediaSessionDelegate = mock()
         feature.mediaService = mediaService
@@ -272,7 +276,7 @@ class MediaSessionFeatureTest {
         val feature = MediaSessionFeature(
             mockApplicationContext,
             MediaSessionServiceDelegate::class.java,
-            store
+            store,
         )
         val mediaService: MediaSessionDelegate = mock()
         feature.mediaService = mediaService
@@ -289,13 +293,13 @@ class MediaSessionFeatureTest {
         val mockApplicationContext: Context = mock()
         val mediaTab = getMediaTab(PlaybackState.PLAYING)
         val initialState = BrowserState(
-            tabs = listOf(mediaTab)
+            tabs = listOf(mediaTab),
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFeature(
             mockApplicationContext,
             MediaSessionServiceDelegate::class.java,
-            store
+            store,
         )
         val mediaService: MediaSessionDelegate = mock()
         feature.mediaService = mediaService
@@ -316,13 +320,13 @@ class MediaSessionFeatureTest {
         val customTabWithMedia = getCustomTabWithMedia(PlaybackState.PLAYING)
         val initialState = BrowserState(
             tabs = listOf(mediaTab),
-            customTabs = listOf(customTabWithMedia)
+            customTabs = listOf(customTabWithMedia),
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFeature(
             mockApplicationContext,
             MediaSessionServiceDelegate::class.java,
-            store
+            store,
         )
         val mediaService: MediaSessionDelegate = mock()
         feature.mediaService = mediaService
@@ -340,15 +344,15 @@ class MediaSessionFeatureTest {
         "https://www.mozilla.org",
         mediaSessionState = MediaSessionState(
             mock(),
-            playbackState = playbackState
-        )
+            playbackState = playbackState,
+        ),
     )
 
     private fun getCustomTabWithMedia(playbackState: PlaybackState = PlaybackState.PLAYING) = createCustomTab(
         "https://www.mozilla.org",
         mediaSessionState = MediaSessionState(
             mock(),
-            playbackState = playbackState
-        )
+            playbackState = playbackState,
+        ),
     )
 }

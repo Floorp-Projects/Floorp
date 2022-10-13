@@ -9,5 +9,5 @@ package mozilla.components.compose.browser.awesomebar
  */
 enum class AwesomeBarOrientation {
     TOP,
-    BOTTOM
+    BOTTOM,
 }

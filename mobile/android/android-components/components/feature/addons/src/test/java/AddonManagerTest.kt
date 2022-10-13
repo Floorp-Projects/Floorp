@@ -86,9 +86,9 @@ class AddonManagerTest {
             BrowserState(
                 extensions = mapOf(
                     "ext1" to WebExtensionState("ext1", "url"),
-                    "unsupported_ext" to WebExtensionState("unsupported_ext", "url", enabled = false)
-                )
-            )
+                    "unsupported_ext" to WebExtensionState("unsupported_ext", "url", enabled = false),
+                ),
+            ),
         )
 
         WebExtensionSupport.initialize(engine, store)
@@ -222,7 +222,7 @@ class AddonManagerTest {
             id = "addon1",
             translatableName = mapOf(Addon.DEFAULT_LOCALE to "name", "invalid1" to "Name", "invalid2" to "nombre"),
             translatableDescription = mapOf(Addon.DEFAULT_LOCALE to "description", "invalid1" to "Beschreibung", "invalid2" to "descripción"),
-            translatableSummary = mapOf(Addon.DEFAULT_LOCALE to "summary", "invalid1" to "Kurzfassung", "invalid2" to "resumen")
+            translatableSummary = mapOf(Addon.DEFAULT_LOCALE to "summary", "invalid1" to "Kurzfassung", "invalid2" to "resumen"),
         )
 
         val store = BrowserStore()
@@ -250,7 +250,7 @@ class AddonManagerTest {
     fun `getAddons - suspends until pending actions are completed`() = runTestOnMain {
         val addon = Addon(
             id = "ext1",
-            installedState = Addon.InstalledState("ext1", "1.0", "", true)
+            installedState = Addon.InstalledState("ext1", "1.0", "", true),
         )
 
         val extension: WebExtension = mock()
@@ -326,11 +326,11 @@ class AddonManagerTest {
             BrowserStore(
                 BrowserState(
                     tabs = listOf(
-                        createTab(id = "1", url = "https://www.mozilla.org", engineSession = engineSession)
+                        createTab(id = "1", url = "https://www.mozilla.org", engineSession = engineSession),
                     ),
-                    extensions = mapOf("extensionId" to mock())
-                )
-            )
+                    extensions = mapOf("extensionId" to mock()),
+                ),
+            ),
         )
         val onSuccessCaptor = argumentCaptor<((WebExtension?) -> Unit)>()
         var updateStatus: Status? = null
@@ -365,7 +365,7 @@ class AddonManagerTest {
         verify(store).dispatch(actionCaptor.capture())
         assertEquals(
             WebExtensionState(updatedExt.id, updatedExt.url, updatedExt.getMetadata()?.name, updatedExt.isEnabled()),
-            actionCaptor.allValues.last().updatedExtension
+            actionCaptor.allValues.last().updatedExtension,
         )
 
         // Verify that we registered an action handler for all existing sessions on the extension
@@ -455,11 +455,14 @@ class AddonManagerTest {
             addon,
             onSuccess = {
                 installedAddon = it
-            }
+            },
         )
 
         verify(engine).installWebExtension(
-            eq("ext1"), any(), onSuccessCaptor.capture(), any()
+            eq("ext1"),
+            any(),
+            onSuccessCaptor.capture(),
+            any(),
         )
 
         val extension: WebExtension = mock()
@@ -484,11 +487,14 @@ class AddonManagerTest {
             onError = { errorMsg, caught ->
                 throwable = caught
                 msg = errorMsg
-            }
+            },
         )
 
         verify(engine).installWebExtension(
-            eq("ext1"), any(), any(), onErrorCaptor.capture()
+            eq("ext1"),
+            any(),
+            any(),
+            onErrorCaptor.capture(),
         )
 
         onErrorCaptor.value.invoke(addon.id, IllegalStateException("test"))
@@ -501,7 +507,7 @@ class AddonManagerTest {
     fun `installAddon fails for blocked permission`() {
         val addon = Addon(
             id = "ext1",
-            permissions = listOf("bookmarks", "geckoviewaddons", "nativemessaging")
+            permissions = listOf("bookmarks", "geckoviewaddons", "nativemessaging"),
         )
 
         val engine: Engine = mock()
@@ -514,11 +520,14 @@ class AddonManagerTest {
             onError = { errorMsg, caught ->
                 throwable = caught
                 msg = errorMsg
-            }
+            },
         )
 
         verify(engine, never()).installWebExtension(
-            any(), any(), any(), any()
+            any(),
+            any(),
+            any(),
+            any(),
         )
 
         assertNotNull(throwable!!)
@@ -530,7 +539,7 @@ class AddonManagerTest {
     fun `uninstallAddon successfully`() {
         val installedAddon = Addon(
             id = "ext1",
-            installedState = Addon.InstalledState("ext1", "1.0", "", true)
+            installedState = Addon.InstalledState("ext1", "1.0", "", true),
         )
 
         val extension: WebExtension = mock()
@@ -546,7 +555,7 @@ class AddonManagerTest {
             installedAddon,
             onSuccess = {
                 successCallbackInvoked = true
-            }
+            },
         )
         verify(engine).uninstallWebExtension(eq(extension), onSuccessCaptor.capture(), any())
 
@@ -596,7 +605,7 @@ class AddonManagerTest {
     fun `enableAddon successfully`() {
         val addon = Addon(
             id = "ext1",
-            installedState = Addon.InstalledState("ext1", "1.0", "", true)
+            installedState = Addon.InstalledState("ext1", "1.0", "", true),
         )
 
         val extension: WebExtension = mock()
@@ -612,7 +621,7 @@ class AddonManagerTest {
             addon,
             onSuccess = {
                 enabledAddon = it
-            }
+            },
         )
 
         verify(engine).enableWebExtension(eq(extension), any(), onSuccessCaptor.capture(), any())
@@ -660,7 +669,7 @@ class AddonManagerTest {
     fun `disableAddon successfully`() {
         val addon = Addon(
             id = "ext1",
-            installedState = Addon.InstalledState("ext1", "1.0", "", true)
+            installedState = Addon.InstalledState("ext1", "1.0", "", true),
         )
 
         val extension: WebExtension = mock()
@@ -673,10 +682,11 @@ class AddonManagerTest {
         var disabledAddon: Addon? = null
         val manager = AddonManager(mock(), engine, mock(), mock())
         manager.disableAddon(
-            addon, source = EnableSource.APP_SUPPORT,
+            addon,
+            source = EnableSource.APP_SUPPORT,
             onSuccess = {
                 disabledAddon = it
-            }
+            },
         )
 
         verify(engine).disableWebExtension(eq(extension), eq(EnableSource.APP_SUPPORT), onSuccessCaptor.capture(), any())

@@ -14,5 +14,5 @@ import mozilla.components.browser.state.state.recover.RecoverableTab
  */
 data class RecoverableBrowserState(
     val tabs: List<RecoverableTab>,
-    val selectedTabId: String?
+    val selectedTabId: String?,
 )

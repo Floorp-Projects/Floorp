@@ -44,8 +44,8 @@ class UnsupportedAddonsAdapterTest {
             UnsupportedAddonsAdapter(
                 addonManager,
                 unsupportedAddonsAdapterDelegate,
-                unsupportedAddons
-            )
+                unsupportedAddons,
+            ),
         )
 
         adapter.removeUninstalledAddon(addonOne)
@@ -70,28 +70,28 @@ class UnsupportedAddonsAdapterTest {
             view = mock(),
             iconView = mock(),
             titleView = mock(),
-            removeButton = removeButtonOne
+            removeButton = removeButtonOne,
         )
         val removeButtonTwo = ImageButton(testContext)
         val unsupportedViewHolderTwo = UnsupportedAddonsAdapter.UnsupportedAddonViewHolder(
             view = mock(),
             iconView = mock(),
             titleView = mock(),
-            removeButton = removeButtonTwo
+            removeButton = removeButtonTwo,
         )
         val addonManager: AddonManager = mock()
         val addonOne = Addon("id1")
         val addonTwo = Addon("id2")
         val unsupportedAddons = mapOf(
             unsupportedViewHolderOne to addonOne,
-            unsupportedViewHolderTwo to addonTwo
+            unsupportedViewHolderTwo to addonTwo,
         )
         val adapter = spy(
             UnsupportedAddonsAdapter(
                 addonManager,
                 mock(),
-                unsupportedAddons.values.toList()
-            )
+                unsupportedAddons.values.toList(),
+            ),
         )
 
         // mock the adapter.notifyDataSetChanged() behavior

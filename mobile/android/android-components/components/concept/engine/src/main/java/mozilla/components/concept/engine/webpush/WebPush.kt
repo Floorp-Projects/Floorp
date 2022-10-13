@@ -45,7 +45,7 @@ data class WebPushSubscription(
     val endpoint: String,
     val appServerKey: ByteArray?,
     val publicKey: ByteArray,
-    val authSecret: ByteArray
+    val authSecret: ByteArray,
 ) {
     @Suppress("ComplexMethod")
     override fun equals(other: Any?): Boolean {

@@ -54,7 +54,7 @@ sealed class AccountManagerException(message: String) : Exception(message) {
      * @param operation An operation which triggered an auth recovery flow that hit a circuit breaker.
      */
     class AuthRecoveryCircuitBreakerException(operation: String) : AccountManagerException(
-        "Auth recovery circuit breaker triggered by: $operation"
+        "Auth recovery circuit breaker triggered by: $operation",
     )
 
     /**
@@ -62,7 +62,7 @@ sealed class AccountManagerException(message: String) : Exception(message) {
      * @param operation An operation which triggered this state.
      */
     class MissingKeyFromSyncScopedAccessToken(operation: String) : AccountManagerException(
-        "Encountered an access token without a key: $operation"
+        "Encountered an access token without a key: $operation",
     )
 }
 

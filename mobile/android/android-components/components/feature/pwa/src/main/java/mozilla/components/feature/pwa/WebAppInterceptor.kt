@@ -20,7 +20,7 @@ import mozilla.components.feature.pwa.intent.WebAppIntentProcessor
 class WebAppInterceptor(
     private val context: Context,
     private val manifestStorage: ManifestStorage,
-    private val launchFromInterceptor: Boolean = true
+    private val launchFromInterceptor: Boolean = true,
 ) : RequestInterceptor {
 
     @Suppress("ReturnCount")
@@ -32,7 +32,7 @@ class WebAppInterceptor(
         isSameDomain: Boolean,
         isRedirect: Boolean,
         isDirectNavigation: Boolean,
-        isSubframeRequest: Boolean
+        isSubframeRequest: Boolean,
     ): RequestInterceptor.InterceptionResponse? {
         val scope = manifestStorage.getInstalledScope(uri) ?: return null
         val startUrl = manifestStorage.getStartUrlForInstalledScope(scope) ?: return null

@@ -23,5 +23,5 @@ data class ReaderState(
     val checkRequired: Boolean = false,
     val connectRequired: Boolean = false,
     val baseUrl: String? = null,
-    val activeUrl: String? = null
+    val activeUrl: String? = null,
 )

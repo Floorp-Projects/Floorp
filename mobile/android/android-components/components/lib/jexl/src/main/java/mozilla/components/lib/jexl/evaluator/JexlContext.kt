@@ -36,7 +36,7 @@ import mozilla.components.lib.jexl.value.JexlValue
  * </code>
  */
 class JexlContext(
-    vararg pairs: Pair<String, JexlValue>
+    vararg pairs: Pair<String, JexlValue>,
 ) {
     private val properties: MutableMap<String, JexlValue> = pairs.toMap().toMutableMap()
 

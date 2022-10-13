@@ -21,9 +21,9 @@ object Gecko {
  * Enum for GeckoView release channels.
  */
 enum class GeckoChannel(
-    val artifactName: String
+    val artifactName: String,
 ) {
     NIGHTLY("geckoview-nightly-omni"),
     BETA("geckoview-beta-omni"),
-    RELEASE("geckoview-omni")
+    RELEASE("geckoview-omni"),
 }

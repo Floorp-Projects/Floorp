@@ -15,8 +15,8 @@ internal object CrashReducer {
         is CrashAction.SessionCrashedAction -> state.updateTabOrCustomTabState(action.tabId) { tab ->
             tab.createCopy(
                 engineState = tab.engineState.copy(
-                    crashed = true
-                )
+                    crashed = true,
+                ),
             )
         }
         is CrashAction.RestoreCrashedSessionAction -> state.updateTabOrCustomTabState(action.tabId) { tab ->
@@ -24,8 +24,8 @@ internal object CrashReducer {
             // the engine session will automatically restore this tab lazily.
             tab.createCopy(
                 engineState = tab.engineState.copy(
-                    crashed = false
-                )
+                    crashed = false,
+                ),
             )
         }
     }

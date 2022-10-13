@@ -14,7 +14,7 @@ import mozilla.components.support.base.ext.getStacktraceAsString
  * Database entity modeling a crash that has happened.
  */
 @Entity(
-    tableName = "crashes"
+    tableName = "crashes",
 )
 internal data class CrashEntity(
     /**
@@ -35,14 +35,14 @@ internal data class CrashEntity(
      * Timestamp (in milliseconds) of when the crash happened.
      */
     @ColumnInfo(name = "created_at")
-    var createdAt: Long
+    var createdAt: Long,
 )
 
 internal fun Crash.toEntity(): CrashEntity {
     return CrashEntity(
         uuid = uuid,
         stacktrace = getStacktrace(),
-        createdAt = System.currentTimeMillis()
+        createdAt = System.currentTimeMillis(),
     )
 }
 

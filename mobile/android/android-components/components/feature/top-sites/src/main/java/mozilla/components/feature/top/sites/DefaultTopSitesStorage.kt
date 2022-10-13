@@ -32,7 +32,7 @@ class DefaultTopSitesStorage(
     private val historyStorage: PlacesHistoryStorage,
     private val topSitesProvider: TopSitesProvider? = null,
     private val defaultTopSites: List<Pair<String, String>> = listOf(),
-    coroutineContext: CoroutineContext = Dispatchers.IO
+    coroutineContext: CoroutineContext = Dispatchers.IO,
 ) : TopSitesStorage, Observable<TopSitesStorage.Observer> by ObserverRegistry() {
 
     private var scope = CoroutineScope(coroutineContext)
@@ -86,7 +86,7 @@ class DefaultTopSitesStorage(
     override suspend fun getTopSites(
         totalSites: Int,
         frecencyConfig: TopSitesFrecencyConfig?,
-        providerConfig: TopSitesProviderConfig?
+        providerConfig: TopSitesProviderConfig?,
     ): List<TopSite> {
         val topSites = ArrayList<TopSite>()
         val pinnedSites = pinnedSitesStorage.getPinnedSites().take(totalSites)

@@ -39,7 +39,7 @@ class BiometricPromptAuthTest {
 
                 override fun onAuthError(errorText: String) {
                 }
-            }
+            },
         )
     }
 

@@ -105,7 +105,7 @@ object URLStringUtils {
      */
     fun toDisplayUrl(
         originalUrl: CharSequence,
-        textDirectionHeuristic: TextDirectionHeuristicCompat = FIRSTSTRONG_LTR
+        textDirectionHeuristic: TextDirectionHeuristicCompat = FIRSTSTRONG_LTR,
     ): CharSequence {
         val strippedText = maybeStripTrailingSlash(maybeStripUrlProtocol(originalUrl))
 
@@ -132,7 +132,9 @@ object URLStringUtils {
     private fun maybeStripUrlSubDomain(url: CharSequence): CharSequence {
         return if (url.toString().startsWith(WWW)) {
             url.toString().replaceFirst(WWW, "")
-        } else url
+        } else {
+            url
+        }
     }
 
     private fun maybeStripTrailingSlash(url: CharSequence): CharSequence {

@@ -25,14 +25,14 @@ sealed class MenuIcon
 data class DrawableMenuIcon(
     override val drawable: Drawable?,
     @ColorInt override val tint: Int? = null,
-    val effect: MenuIconEffect? = null
+    val effect: MenuIconEffect? = null,
 ) : MenuIcon(), MenuIconWithDrawable {
 
     constructor(
         context: Context,
         @DrawableRes resource: Int,
         @ColorInt tint: Int? = null,
-        effect: MenuIconEffect? = null
+        effect: MenuIconEffect? = null,
     ) : this(AppCompatResources.getDrawable(context, resource), tint, effect)
 }
 
@@ -46,14 +46,14 @@ data class DrawableMenuIcon(
 data class DrawableButtonMenuIcon(
     override val drawable: Drawable?,
     @ColorInt override val tint: Int? = null,
-    val onClick: () -> Unit = {}
+    val onClick: () -> Unit = {},
 ) : MenuIcon(), MenuIconWithDrawable {
 
     constructor(
         context: Context,
         @DrawableRes resource: Int,
         @ColorInt tint: Int? = null,
-        onClick: () -> Unit = {}
+        onClick: () -> Unit = {},
     ) : this(AppCompatResources.getDrawable(context, resource), tint, onClick)
 }
 
@@ -71,7 +71,7 @@ data class AsyncDrawableMenuIcon(
     val loadingDrawable: Drawable? = null,
     val fallbackDrawable: Drawable? = null,
     @ColorInt val tint: Int? = null,
-    val effect: MenuIconEffect? = null
+    val effect: MenuIconEffect? = null,
 ) : MenuIcon()
 
 /**
@@ -84,7 +84,7 @@ data class AsyncDrawableMenuIcon(
 data class TextMenuIcon(
     val text: String,
     @ColorInt val backgroundTint: Int? = null,
-    val textStyle: TextStyle = TextStyle()
+    val textStyle: TextStyle = TextStyle(),
 ) : MenuIcon()
 
 /**
@@ -92,5 +92,6 @@ data class TextMenuIcon(
  */
 interface MenuIconWithDrawable {
     val drawable: Drawable?
+
     @get:ColorInt val tint: Int?
 }

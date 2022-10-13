@@ -23,7 +23,7 @@ class SpocImpressionEntityTest {
 
         assertTrue(
             LongRange(nowInSeconds - 5, nowInSeconds + 5)
-                .contains(impression.impressionDateInSeconds)
+                .contains(impression.impressionDateInSeconds),
         )
     }
 }

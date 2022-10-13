@@ -32,7 +32,7 @@ class CoordinateScrollingFeature(
     private val store: BrowserStore,
     private val engineView: EngineView,
     private val view: View,
-    private val scrollFlags: Int = DEFAULT_SCROLL_FLAGS
+    private val scrollFlags: Int = DEFAULT_SCROLL_FLAGS,
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null
 

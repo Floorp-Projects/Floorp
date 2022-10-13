@@ -35,7 +35,7 @@ class SearchSuggestionClient {
         context: Context?,
         store: BrowserStore?,
         searchEngine: SearchEngine?,
-        fetcher: SearchSuggestionFetcher
+        fetcher: SearchSuggestionFetcher,
     ) {
         this.context = context
         this.store = store
@@ -49,7 +49,7 @@ class SearchSuggestionClient {
     constructor(
         context: Context,
         store: BrowserStore,
-        fetcher: SearchSuggestionFetcher
+        fetcher: SearchSuggestionFetcher,
     ) : this (context, store, null, fetcher)
 
     /**

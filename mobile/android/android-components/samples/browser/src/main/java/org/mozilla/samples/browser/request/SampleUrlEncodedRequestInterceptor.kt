@@ -26,20 +26,32 @@ class SampleUrlEncodedRequestInterceptor(val context: Context) : RequestIntercep
         isSameDomain: Boolean,
         isRedirect: Boolean,
         isDirectNavigation: Boolean,
-        isSubframeRequest: Boolean
+        isSubframeRequest: Boolean,
     ): InterceptionResponse? {
         return when (uri) {
             "sample:about" -> InterceptionResponse.Content("<h1>I am the sample browser</h1>")
             else -> {
                 var response = context.components.appLinksInterceptor.onLoadRequest(
-                    engineSession, uri, lastUri, hasUserGesture, isSameDomain, isRedirect,
-                    isDirectNavigation, isSubframeRequest
+                    engineSession,
+                    uri,
+                    lastUri,
+                    hasUserGesture,
+                    isSameDomain,
+                    isRedirect,
+                    isDirectNavigation,
+                    isSubframeRequest,
                 )
 
                 if (response == null && !isDirectNavigation) {
                     response = context.components.webAppInterceptor.onLoadRequest(
-                        engineSession, uri, lastUri, hasUserGesture, isSameDomain, isRedirect,
-                        isDirectNavigation, isSubframeRequest
+                        engineSession,
+                        uri,
+                        lastUri,
+                        hasUserGesture,
+                        isSameDomain,
+                        isRedirect,
+                        isDirectNavigation,
+                        isSubframeRequest,
                     )
                 }
 
@@ -51,7 +63,7 @@ class SampleUrlEncodedRequestInterceptor(val context: Context) : RequestIntercep
     override fun onErrorRequest(
         session: EngineSession,
         errorType: ErrorType,
-        uri: String?
+        uri: String?,
     ): ErrorResponse {
         val errorPage = ErrorPages.createUrlEncodedErrorPage(context, errorType, uri)
         return ErrorResponse(errorPage)

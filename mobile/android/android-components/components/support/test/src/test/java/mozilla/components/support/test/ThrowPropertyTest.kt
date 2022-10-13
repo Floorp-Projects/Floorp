@@ -8,6 +8,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ThrowPropertyTest {
     private val testProperty = "test"
+
     @Test(expected = UnsupportedOperationException::class)
     fun `exception thrown when get value is called`() {
         val throwProperty = ThrowProperty<String>()

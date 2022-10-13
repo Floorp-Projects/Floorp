@@ -45,7 +45,7 @@ import mozilla.components.concept.storage.LoginsStorage
  */
 class GeckoLoginStorageDelegate(
     private val loginStorage: Lazy<LoginsStorage>,
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : LoginStorageDelegate {
 
     override fun onLoginUsed(login: Login) {

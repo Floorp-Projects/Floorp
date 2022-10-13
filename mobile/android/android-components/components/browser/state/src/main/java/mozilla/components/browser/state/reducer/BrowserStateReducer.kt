@@ -84,7 +84,7 @@ internal object BrowserStateReducer {
 @Suppress("Unchecked_Cast")
 internal fun BrowserState.updateTabOrCustomTabState(
     tabId: String,
-    update: (SessionState) -> SessionState
+    update: (SessionState) -> SessionState,
 ): BrowserState {
     val newTabs = tabs.updateTabs(tabId, update) as List<TabSessionState>?
     if (newTabs != null) return copy(tabs = newTabs)
@@ -107,7 +107,7 @@ internal fun BrowserState.updateTabOrCustomTabState(
  */
 internal fun BrowserState.updateTabState(
     tabId: String,
-    update: (TabSessionState) -> TabSessionState
+    update: (TabSessionState) -> TabSessionState,
 ): BrowserState {
     return tabs.updateTabs(tabId, update)?.let {
         copy(tabs = it)
@@ -126,7 +126,7 @@ internal fun BrowserState.updateTabState(
  */
 internal fun BrowserState.updateCustomTabState(
     tabId: String,
-    update: (CustomTabSessionState) -> CustomTabSessionState
+    update: (CustomTabSessionState) -> CustomTabSessionState,
 ): BrowserState {
     return customTabs.updateTabs(tabId, update)?.let {
         copy(customTabs = it)
@@ -140,7 +140,7 @@ internal fun BrowserState.updateCustomTabState(
  */
 internal fun <T : SessionState> List<T>.updateTabs(
     tabId: String,
-    update: (T) -> T
+    update: (T) -> T,
 ): List<T>? {
     val tabIndex = indexOfFirst { it.id == tabId }
     if (tabIndex == -1) return null

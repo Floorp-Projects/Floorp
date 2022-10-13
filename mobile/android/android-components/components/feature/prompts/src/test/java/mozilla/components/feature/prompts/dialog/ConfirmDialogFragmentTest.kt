@@ -41,14 +41,13 @@ class ConfirmDialogFragmentTest {
                 "title",
                 "message",
                 "positiveLabel",
-                "negativeLabel"
-            )
+                "negativeLabel",
+            ),
         )
     }
 
     @Test
     fun `build dialog`() {
-
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
@@ -73,7 +72,6 @@ class ConfirmDialogFragmentTest {
 
     @Test
     fun `clicking on positive button notifies the feature`() {
-
         fragment.feature = mockFeature
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -90,7 +88,6 @@ class ConfirmDialogFragmentTest {
 
     @Test
     fun `clicking on negative button notifies the feature`() {
-
         fragment.feature = mockFeature
 
         doReturn(appCompatContext).`when`(fragment).requireContext()

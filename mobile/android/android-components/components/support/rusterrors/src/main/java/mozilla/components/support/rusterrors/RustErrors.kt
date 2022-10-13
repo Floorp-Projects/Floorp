@@ -27,7 +27,7 @@ internal class AppServicesErrorReport(
 ) : Exception(typeName), RustCrashReport
 
 private class AndroidComponentsErrorReportor(
-    val crashReporter: CrashReporting
+    val crashReporter: CrashReporting,
 ) : ApplicationErrorReporter {
     override fun reportError(typeName: String, message: String) {
         crashReporter.submitCaughtException(AppServicesErrorReport(typeName, message))

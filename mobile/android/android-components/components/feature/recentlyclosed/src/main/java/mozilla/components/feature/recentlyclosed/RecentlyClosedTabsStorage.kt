@@ -35,7 +35,7 @@ class RecentlyClosedTabsStorage(
     context: Context,
     engine: Engine,
     private val crashReporting: CrashReporting,
-    private val engineStateStorage: EngineSessionStateStorage = FileEngineSessionStateStorage(context, engine)
+    private val engineStateStorage: EngineSessionStateStorage = FileEngineSessionStateStorage(context, engine),
 ) : RecentlyClosedMiddleware.Storage {
     private val logger = Logger("RecentlyClosedTabsStorage")
 
@@ -86,7 +86,7 @@ class RecentlyClosedTabsStorage(
     @Suppress("TooGenericExceptionCaught")
     override suspend fun addTabsToCollectionWithMax(
         tabs: List<RecoverableTab>,
-        maxTabs: Int
+        maxTabs: Int,
     ) {
         try {
             tabs.takeLast(maxTabs).forEach { addTabState(it) }

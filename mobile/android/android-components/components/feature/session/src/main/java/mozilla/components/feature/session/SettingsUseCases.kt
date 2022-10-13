@@ -19,7 +19,7 @@ import mozilla.components.concept.engine.Settings
  */
 class SettingsUseCases(
     engine: Engine,
-    store: BrowserStore
+    store: BrowserStore,
 ) {
     /**
      * Updates the tracking protection policy to the given policy value when invoked.
@@ -27,7 +27,7 @@ class SettingsUseCases(
      */
     class UpdateTrackingProtectionUseCase internal constructor(
         private val engine: Engine,
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Updates the tracking protection policy for all current and future [EngineSession]

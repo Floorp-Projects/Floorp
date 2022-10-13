@@ -43,18 +43,18 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         store.dispatch(
             EngineAction.LoadUrlAction(
                 "test-tab",
-                "https://www.firefox.com"
-            )
+                "https://www.firefox.com",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -75,18 +75,18 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         store.dispatch(
             EngineAction.LoadUrlAction(
                 "test-tab",
-                "https://www.firefox.com"
-            )
+                "https://www.firefox.com",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -107,18 +107,18 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         store.dispatch(
             EngineAction.LoadUrlAction(
                 "test-tab",
-                "https://www.firefox.com"
-            )
+                "https://www.firefox.com",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -137,22 +137,22 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "test-tab").copy(
-                        engineState = EngineState(engineSession)
-                    )
-                )
-            )
+                        engineState = EngineState(engineSession),
+                    ),
+                ),
+            ),
         )
 
         store.dispatch(
             EngineAction.LoadUrlAction(
                 "test-tab",
-                "https://www.firefox.com"
-            )
+                "https://www.firefox.com",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -171,22 +171,22 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "test-tab", private = true).copy(
-                        engineState = EngineState(engineSession)
-                    )
-                )
-            )
+                        engineState = EngineState(engineSession),
+                    ),
+                ),
+            ),
         )
 
         store.dispatch(
             EngineAction.LoadUrlAction(
                 "test-tab",
-                "https://www.firefox.com"
-            )
+                "https://www.firefox.com",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -205,22 +205,22 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "test-tab", contextId = "test-container").copy(
-                        engineState = EngineState(engineSession)
-                    )
-                )
-            )
+                        engineState = EngineState(engineSession),
+                    ),
+                ),
+            ),
         )
 
         store.dispatch(
             EngineAction.LoadUrlAction(
                 "test-tab",
-                "https://www.firefox.com"
-            )
+                "https://www.firefox.com",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -240,25 +240,25 @@ class EngineDelegateMiddlewareTest {
         val parentEngineSession: EngineSession = mock()
 
         val parent = createTab("https://getpocket.com", id = "parent-tab").copy(
-            engineState = EngineState(parentEngineSession)
+            engineState = EngineState(parentEngineSession),
         )
         val tab = createTab("https://www.mozilla.org", id = "test-tab", parent = parent)
 
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
-                tabs = listOf(parent, tab)
-            )
+                tabs = listOf(parent, tab),
+            ),
         )
 
         store.dispatch(
             EngineAction.LoadUrlAction(
                 "test-tab",
-                "https://www.firefox.com"
-            )
+                "https://www.firefox.com",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -282,18 +282,18 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
-                tabs = listOf(parent, tab)
-            )
+                tabs = listOf(parent, tab),
+            ),
         )
 
         store.dispatch(
             EngineAction.LoadUrlAction(
                 "test-tab",
-                "https://www.firefox.com"
-            )
+                "https://www.firefox.com",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -311,15 +311,15 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = mock(),
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "test-tab").copy(
-                        engineState = EngineState(engineSession)
-                    )
-                )
-            )
+                        engineState = EngineState(engineSession),
+                    ),
+                ),
+            ),
         )
 
         store.dispatch(
@@ -329,9 +329,9 @@ class EngineDelegateMiddlewareTest {
                 EngineSession.LoadUrlFlags.external(),
                 mapOf(
                     "X-Coffee" to "Large",
-                    "X-Sugar" to "None"
-                )
-            )
+                    "X-Sugar" to "None",
+                ),
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -342,8 +342,8 @@ class EngineDelegateMiddlewareTest {
             flags = EngineSession.LoadUrlFlags.external(),
             additionalHeaders = mapOf(
                 "X-Coffee" to "Large",
-                "X-Sugar" to "None"
-            )
+                "X-Sugar" to "None",
+            ),
         )
         assertEquals(engineSession, store.state.tabs[0].engineState.engineSession)
     }
@@ -359,18 +359,18 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         store.dispatch(
             EngineAction.LoadUrlAction(
                 "test-tab",
-                "https://www.mozilla.org"
-            )
+                "https://www.mozilla.org",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -389,20 +389,20 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "test-tab")
-                )
-            )
+                    createTab("https://www.mozilla.org", id = "test-tab"),
+                ),
+            ),
         )
 
         store.dispatch(
             EngineAction.LoadUrlAction(
                 "unknown-tab",
-                "https://www.mozilla.org"
-            )
+                "https://www.mozilla.org",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -422,11 +422,11 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         store.dispatch(
@@ -434,8 +434,8 @@ class EngineDelegateMiddlewareTest {
                 "test-tab",
                 data = "foobar data",
                 mimeType = "something/important",
-                encoding = "UTF-16"
-            )
+                encoding = "UTF-16",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -445,7 +445,7 @@ class EngineDelegateMiddlewareTest {
         verify(engineSession, times(1)).loadData(
             data = "foobar data",
             mimeType = "something/important",
-            encoding = "UTF-16"
+            encoding = "UTF-16",
         )
         assertEquals(engineSession, store.state.tabs[0].engineState.engineSession)
     }
@@ -460,18 +460,18 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         store.dispatch(
             EngineAction.ReloadAction(
                 "test-tab",
-                flags = EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.BYPASS_CACHE)
-            )
+                flags = EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.BYPASS_CACHE),
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -479,7 +479,7 @@ class EngineDelegateMiddlewareTest {
 
         verify(engine).createSession(private = false, contextId = null)
         verify(engineSession, times(1)).reload(
-            EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.BYPASS_CACHE)
+            EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.BYPASS_CACHE),
         )
         assertEquals(engineSession, store.state.tabs[0].engineState.engineSession)
     }
@@ -494,17 +494,17 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         store.dispatch(
             EngineAction.GoForwardAction(
-                "test-tab"
-            )
+                "test-tab",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -525,17 +525,17 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         store.dispatch(
             EngineAction.GoBackAction(
-                "test-tab"
-            )
+                "test-tab",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -556,18 +556,18 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         store.dispatch(
             EngineAction.GoToHistoryIndexAction(
                 "test-tab",
-                index = 42
-            )
+                index = 42,
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -588,18 +588,18 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         store.dispatch(
             EngineAction.ToggleDesktopModeAction(
                 "test-tab",
-                enable = true
-            )
+                enable = true,
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -620,18 +620,18 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         store.dispatch(
             EngineAction.ToggleDesktopModeAction(
                 "test-tab",
-                enable = false
-            )
+                enable = false,
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -652,17 +652,17 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         store.dispatch(
             EngineAction.ExitFullScreenModeAction(
-                "test-tab"
-            )
+                "test-tab",
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -683,18 +683,18 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
 
         store.dispatch(
             EngineAction.ClearDataAction(
                 "test-tab",
-                data = Engine.BrowsingData.allCaches()
-            )
+                data = Engine.BrowsingData.allCaches(),
+            ),
         ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
@@ -713,26 +713,26 @@ class EngineDelegateMiddlewareTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = mock(),
-                scope = scope
+                scope = scope,
             ),
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org").copy(
-                        engineState = EngineState(engineSession = null, engineSessionState = mock())
+                        engineState = EngineState(engineSession = null, engineSessionState = mock()),
                     ),
                     createTab("https://www.firefox.com").copy(
-                        engineState = EngineState(engineSession = engineSession1, engineSessionState = mock())
-                    )
+                        engineState = EngineState(engineSession = engineSession1, engineSessionState = mock()),
+                    ),
                 ),
                 customTabs = listOf(
                     createCustomTab("http://www.theverge.com").copy(
-                        engineState = EngineState(engineSession = null, engineSessionState = mock())
+                        engineState = EngineState(engineSession = null, engineSessionState = mock()),
                     ),
                     createCustomTab("https://www.google.com").copy(
-                        engineState = EngineState(engineSession = engineSession2, engineSessionState = mock())
-                    )
-                )
-            )
+                        engineState = EngineState(engineSession = engineSession2, engineSessionState = mock()),
+                    ),
+                ),
+            ),
         )
 
         store.dispatch(EngineAction.PurgeHistoryAction).joinBlocking()

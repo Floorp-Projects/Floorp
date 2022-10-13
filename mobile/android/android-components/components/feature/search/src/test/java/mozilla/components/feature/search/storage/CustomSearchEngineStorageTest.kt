@@ -24,7 +24,7 @@ class CustomSearchEngineStorageTest {
             name = "example",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            resultUrls = listOf("https://www.example.com/search")
+            resultUrls = listOf("https://www.example.com/search"),
         )
 
         val storage = CustomSearchEngineStorage(testContext, coroutineContext)
@@ -39,7 +39,7 @@ class CustomSearchEngineStorageTest {
             name = "example",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            resultUrls = listOf("https://www.example.com/search")
+            resultUrls = listOf("https://www.example.com/search"),
         )
 
         val storage = CustomSearchEngineStorage(testContext, coroutineContext)
@@ -60,14 +60,14 @@ class CustomSearchEngineStorageTest {
             name = "example",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            resultUrls = listOf("https://www.example.com/search")
+            resultUrls = listOf("https://www.example.com/search"),
         )
         val searchEngineTwo = SearchEngine(
             id = "id2",
             name = "searchTwo",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            resultUrls = listOf("https://www.searchtwo.com/search")
+            resultUrls = listOf("https://www.searchtwo.com/search"),
         )
 
         val storage = CustomSearchEngineStorage(testContext, coroutineContext)
@@ -93,7 +93,7 @@ class CustomSearchEngineStorageTest {
             name = "example",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            resultUrls = listOf("https://www.example.com/search")
+            resultUrls = listOf("https://www.example.com/search"),
         )
 
         val storage = CustomSearchEngineStorage(testContext, coroutineContext)

@@ -16,7 +16,7 @@ import java.lang.ref.WeakReference
  * A wrapper for the [ActivityDelegate] to communicate with the Gecko-based delegate.
  */
 internal class GeckoActivityDelegate(
-    private val delegateRef: WeakReference<ActivityDelegate>
+    private val delegateRef: WeakReference<ActivityDelegate>,
 ) : GeckoRuntime.ActivityDelegate {
 
     private val logger = Logger(GeckoActivityDelegate::javaClass.name)

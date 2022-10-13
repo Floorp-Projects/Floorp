@@ -49,30 +49,33 @@ class SyncedTabsStorageSuggestionProviderTest {
                 lastAccessTime = null,
                 capabilities = listOf(),
                 subscriptionExpired = false,
-                subscription = null
+                subscription = null,
             ),
             listOf(
                 Tab(
                     listOf(
                         TabEntry("Foo", "https://foo.bar", null), /* active tab */
                         TabEntry("Bobo", "https://foo.bar", null),
-                        TabEntry("Foo", "https://bobo.bar", null)
+                        TabEntry("Foo", "https://bobo.bar", null),
                     ),
-                    0, 1
+                    0,
+                    1,
                 ),
                 Tab(
                     listOf(
-                        TabEntry("Hello Bobo", "https://foo.bar", null) /* active tab */
+                        TabEntry("Hello Bobo", "https://foo.bar", null), /* active tab */
                     ),
-                    0, 5
+                    0,
+                    5,
                 ),
                 Tab(
                     listOf(
-                        TabEntry("In URL", "https://bobo.bar", null) /* active tab */
+                        TabEntry("In URL", "https://bobo.bar", null), /* active tab */
                     ),
-                    0, 2
-                )
-            )
+                    0,
+                    2,
+                ),
+            ),
         )
         val deviceTabs2 = SyncedDeviceTabs(
             Device(
@@ -83,17 +86,18 @@ class SyncedTabsStorageSuggestionProviderTest {
                 lastAccessTime = null,
                 capabilities = listOf(),
                 subscriptionExpired = false,
-                subscription = null
+                subscription = null,
             ),
             listOf(
                 Tab(
                     listOf(
                         TabEntry("Bar", "https://bar.bar", null),
-                        TabEntry("BOBO in CAPS", "https://obob.bar", null) /* active tab */
+                        TabEntry("BOBO in CAPS", "https://obob.bar", null), /* active tab */
                     ),
-                    1, 1
-                )
-            )
+                    1,
+                    1,
+                ),
+            ),
         )
         whenever(syncedTabs.getSyncedDeviceTabs()).thenReturn(listOf(deviceTabs1, deviceTabs2))
         whenever(indicatorIcon.desktop).thenReturn(indicatorIconDesktop)

@@ -53,7 +53,7 @@ class AutofillCreditCardsAddressesStorageTest {
             cardNumberLast4 = "1111",
             expiryMonth = 12,
             expiryYear = 2028,
-            cardType = "amex"
+            cardType = "amex",
         )
         val creditCard = storage.addCreditCard(creditCardFields)
 
@@ -70,7 +70,7 @@ class AutofillCreditCardsAddressesStorageTest {
                 CreditCard.ellipsis + CreditCard.ellipsis + CreditCard.ellipsis + CreditCard.ellipsis +
                 creditCardFields.cardNumberLast4 +
                 CreditCard.ellipsesEnd,
-            creditCard.obfuscatedCardNumber
+            creditCard.obfuscatedCardNumber,
         )
     }
 
@@ -83,7 +83,7 @@ class AutofillCreditCardsAddressesStorageTest {
             cardNumberLast4 = "0004",
             expiryMonth = 12,
             expiryYear = 2028,
-            cardType = "amex"
+            cardType = "amex",
         )
         val creditCard = storage.addCreditCard(creditCardFields)
 
@@ -104,7 +104,7 @@ class AutofillCreditCardsAddressesStorageTest {
             cardNumberLast4 = "0004",
             expiryMonth = 12,
             expiryYear = 2028,
-            cardType = "mastercard"
+            cardType = "mastercard",
         )
         val plaintextNumber2 = CreditCardNumber.Plaintext("4111111111111111")
         val creditCardFields2 = NewCreditCardFields(
@@ -113,7 +113,7 @@ class AutofillCreditCardsAddressesStorageTest {
             cardNumberLast4 = "1111",
             expiryMonth = 1,
             expiryYear = 2030,
-            cardType = "visa"
+            cardType = "visa",
         )
         val plaintextNumber3 = CreditCardNumber.Plaintext("340000000000009")
         val creditCardFields3 = NewCreditCardFields(
@@ -122,7 +122,7 @@ class AutofillCreditCardsAddressesStorageTest {
             cardNumberLast4 = "0009",
             expiryMonth = 2,
             expiryYear = 2028,
-            cardType = "amex"
+            cardType = "amex",
         )
         val creditCard1 = storage.addCreditCard(creditCardFields1)
         val creditCard2 = storage.addCreditCard(creditCardFields2)
@@ -151,7 +151,7 @@ class AutofillCreditCardsAddressesStorageTest {
             cardNumberLast4 = "1111",
             expiryMonth = 12,
             expiryYear = 2028,
-            cardType = "visa"
+            cardType = "visa",
         )
 
         var creditCard = storage.addCreditCard(creditCardFields)
@@ -163,7 +163,7 @@ class AutofillCreditCardsAddressesStorageTest {
             cardNumberLast4 = "0004",
             expiryMonth = 12,
             expiryYear = 2038,
-            cardType = "diners"
+            cardType = "diners",
         )
 
         storage.updateCreditCard(creditCard.guid, newCreditCardFields)
@@ -186,7 +186,7 @@ class AutofillCreditCardsAddressesStorageTest {
             cardNumberLast4 = "0004",
             expiryMonth = 12,
             expiryYear = 2038,
-            cardType = "diners"
+            cardType = "diners",
         )
 
         storage.updateCreditCard(creditCard.guid, newCreditCardFields)
@@ -209,7 +209,7 @@ class AutofillCreditCardsAddressesStorageTest {
             cardNumberLast4 = "0004",
             expiryMonth = 12,
             expiryYear = 2028,
-            cardType = "diners"
+            cardType = "diners",
         )
 
         val creditCard = storage.addCreditCard(creditCardFields)
@@ -235,7 +235,7 @@ class AutofillCreditCardsAddressesStorageTest {
             postalCode = "90210",
             country = "US",
             tel = "+1 519 555-5555",
-            email = "foo@bar.com"
+            email = "foo@bar.com",
         )
         val address = storage.addAddress(addressFields)
 
@@ -269,7 +269,7 @@ class AutofillCreditCardsAddressesStorageTest {
             postalCode = "90210",
             country = "US",
             tel = "+1 519 555-5555",
-            email = "foo@bar.com"
+            email = "foo@bar.com",
         )
         val address = storage.addAddress(addressFields)
 
@@ -295,7 +295,7 @@ class AutofillCreditCardsAddressesStorageTest {
             postalCode = "90210",
             country = "US",
             tel = "+1 519 555-5555",
-            email = "foo@bar.com"
+            email = "foo@bar.com",
         )
         val addressFields2 = UpdatableAddressFields(
             givenName = "Mary",
@@ -309,7 +309,7 @@ class AutofillCreditCardsAddressesStorageTest {
             postalCode = "29745",
             country = "US",
             tel = "+19871234567",
-            email = "mary@example.com"
+            email = "mary@example.com",
         )
         val addressFields3 = UpdatableAddressFields(
             givenName = "Timothy",
@@ -323,7 +323,7 @@ class AutofillCreditCardsAddressesStorageTest {
             postalCode = "14055-220",
             country = "BR",
             tel = "+0318522222222",
-            email = "timbr@example.org"
+            email = "timbr@example.org",
         )
         val address1 = storage.addAddress(addressFields1)
         val address2 = storage.addAddress(addressFields2)
@@ -353,7 +353,7 @@ class AutofillCreditCardsAddressesStorageTest {
             postalCode = "90210",
             country = "US",
             tel = "+1 519 555-5555",
-            email = "foo@bar.com"
+            email = "foo@bar.com",
         )
 
         var address = storage.addAddress(addressFields)
@@ -370,7 +370,7 @@ class AutofillCreditCardsAddressesStorageTest {
             postalCode = "29745",
             country = "US",
             tel = "+19871234567",
-            email = "mary@example.com"
+            email = "mary@example.com",
         )
 
         storage.updateAddress(address.guid, newAddressFields)
@@ -405,7 +405,7 @@ class AutofillCreditCardsAddressesStorageTest {
             postalCode = "90210",
             country = "US",
             tel = "+1 519 555-5555",
-            email = "foo@bar.com"
+            email = "foo@bar.com",
         )
 
         val address = storage.addAddress(addressFields)

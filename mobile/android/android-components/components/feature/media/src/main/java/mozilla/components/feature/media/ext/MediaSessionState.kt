@@ -16,7 +16,7 @@ internal fun MediaSessionState.toPlaybackState() =
         .setActions(
             PlaybackStateCompat.ACTION_PLAY_PAUSE or
                 PlaybackStateCompat.ACTION_PLAY or
-                PlaybackStateCompat.ACTION_PAUSE
+                PlaybackStateCompat.ACTION_PAUSE,
         )
         .setState(
             when (playbackState) {
@@ -32,7 +32,7 @@ internal fun MediaSessionState.toPlaybackState() =
                 // https://github.com/mozilla-mobile/android-components/issues/2459
                 MediaSession.PlaybackState.PLAYING -> 1.0f
                 else -> 0.0f
-            }
+            },
         )
         .build()
 

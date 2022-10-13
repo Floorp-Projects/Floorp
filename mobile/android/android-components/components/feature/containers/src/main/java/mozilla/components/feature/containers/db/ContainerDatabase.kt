@@ -32,7 +32,7 @@ internal abstract class ContainerDatabase : RoomDatabase() {
             return Room.databaseBuilder(
                 context,
                 ContainerDatabase::class.java,
-                "containers"
+                "containers",
             ).build().also {
                 instance = it
             }

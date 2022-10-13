@@ -27,8 +27,9 @@ class DomainAutoCompleteProviderTest {
         val provider = DomainAutoCompleteProvider().also {
             it.initialize(
                 testContext,
-                useShippedDomains = true, useCustomDomains = false,
-                loadDomainsFromDisk = false
+                useShippedDomains = true,
+                useCustomDomains = false,
+                loadDomainsFromDisk = false,
             )
 
             it.shippedDomains = listOf("mozilla.org", "google.com", "facebook.com").into()
@@ -58,8 +59,9 @@ class DomainAutoCompleteProviderTest {
         val provider = DomainAutoCompleteProvider().also {
             it.initialize(
                 testContext,
-                useShippedDomains = true, useCustomDomains = true,
-                loadDomainsFromDisk = false
+                useShippedDomains = true,
+                useCustomDomains = true,
+                loadDomainsFromDisk = false,
             )
             it.shippedDomains = domains.into()
             it.customDomains = customDomains.into()
@@ -91,7 +93,7 @@ class DomainAutoCompleteProviderTest {
         domainSource: String,
         sourceSize: Int,
         completion: String,
-        expectedUrl: String
+        expectedUrl: String,
     ) {
         val result = provider.autocomplete(text)
 

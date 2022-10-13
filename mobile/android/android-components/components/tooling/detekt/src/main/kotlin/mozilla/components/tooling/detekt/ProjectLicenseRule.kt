@@ -28,7 +28,7 @@ class ProjectLicenseRule(config: Config = Config.empty) : Rule(config) {
         id = "AbsentOrWrongFileLicense",
         severity = Severity.Style,
         description = "License text is absent or incorrect in the file.",
-        debt = Debt.FIVE_MINS
+        debt = Debt.FIVE_MINS,
     )
 
     override fun visitKtFile(file: KtFile) {
@@ -43,9 +43,10 @@ class ProjectLicenseRule(config: Config = Config.empty) : Rule(config) {
     private fun reportCodeSmell(file: KtFile) {
         report(
             CodeSmell(
-                issue, Entity.from(file),
-                "Expected license not found or incorrect in the file: ${file.name}."
-            )
+                issue,
+                Entity.from(file),
+                "Expected license not found or incorrect in the file: ${file.name}.",
+            ),
         )
     }
 }

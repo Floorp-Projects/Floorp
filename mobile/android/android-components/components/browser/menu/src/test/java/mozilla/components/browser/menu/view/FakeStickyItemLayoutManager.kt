@@ -14,16 +14,16 @@ import androidx.recyclerview.widget.RecyclerView
 open class FakeStickyItemLayoutManager<T> constructor(
     context: Context,
     internal val stickyItemPlacement: StickyItemPlacement = StickyItemPlacement.TOP,
-    reverseLayout: Boolean = false
+    reverseLayout: Boolean = false,
 ) : StickyItemsLinearLayoutManager<T>(
     context,
     stickyItemPlacement,
-    reverseLayout
+    reverseLayout,
 ) where T : RecyclerView.Adapter<*>, T : StickyItemsAdapter {
     override fun scrollToIndicatedPositionWithOffset(
         position: Int,
         offset: Int,
-        actuallyScrollToPositionWithOffset: (Int, Int) -> Unit
+        actuallyScrollToPositionWithOffset: (Int, Int) -> Unit,
     ) { }
 
     override fun shouldStickyItemBeShownForCurrentPosition() = true

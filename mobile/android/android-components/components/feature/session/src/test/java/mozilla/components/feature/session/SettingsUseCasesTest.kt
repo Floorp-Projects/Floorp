@@ -29,24 +29,24 @@ class SettingsUseCasesTest {
             BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "A"),
-                    createTab("https://www.mozilla.org", id = "B")
+                    createTab("https://www.mozilla.org", id = "B"),
                 ),
-                selectedTabId = "A"
-            )
+                selectedTabId = "A",
+            ),
         )
 
         store.dispatch(
             EngineAction.LinkEngineSessionAction(
                 tabId = "A",
-                engineSession = engineSessionA
-            )
+                engineSession = engineSessionA,
+            ),
         ).joinBlocking()
 
         store.dispatch(
             EngineAction.LinkEngineSessionAction(
                 tabId = "B",
-                engineSession = engineSessionB
-            )
+                engineSession = engineSessionB,
+            ),
         ).joinBlocking()
 
         val engine: Engine = mock()

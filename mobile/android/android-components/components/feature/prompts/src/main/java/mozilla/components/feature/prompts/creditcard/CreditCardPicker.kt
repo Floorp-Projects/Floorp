@@ -32,7 +32,7 @@ class CreditCardPicker(
     private val creditCardSelectBar: SelectablePromptView<CreditCardEntry>,
     private val manageCreditCardsCallback: () -> Unit = {},
     private val selectCreditCardCallback: () -> Unit = {},
-    private var sessionId: String? = null
+    private var sessionId: String? = null,
 ) : SelectablePromptView.Listener<CreditCardEntry> {
 
     init {

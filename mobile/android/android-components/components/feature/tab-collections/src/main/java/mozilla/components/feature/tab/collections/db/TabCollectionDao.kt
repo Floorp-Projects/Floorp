@@ -34,7 +34,7 @@ internal interface TabCollectionDao {
         FROM tab_collections LEFT JOIN tabs ON tab_collections.id = tab_collection_id
         GROUP BY tab_collections.id
         ORDER BY tab_collections.created_at DESC
-    """
+    """,
     )
     fun getTabCollectionsPaged(): DataSource.Factory<Int, TabCollectionWithTabs>
 
@@ -44,7 +44,7 @@ internal interface TabCollectionDao {
         SELECT *
         FROM tab_collections
         ORDER BY created_at DESC
-    """
+    """,
     )
     fun getTabCollections(): Flow<List<TabCollectionWithTabs>>
 
@@ -54,7 +54,7 @@ internal interface TabCollectionDao {
         SELECT *
         FROM tab_collections
         ORDER BY created_at DESC
-    """
+    """,
     )
     suspend fun getTabCollectionsList(): List<TabCollectionWithTabs>
 

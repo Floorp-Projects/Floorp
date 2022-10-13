@@ -40,7 +40,7 @@ class UrlMatcher {
         enabledCategories: Set<String>,
         supportedCategories: Set<String>,
         categoryMap: MutableMap<String, Trie>,
-        safelist: Safelist? = null
+        safelist: Safelist? = null,
     ) {
         this.safelist = safelist
         this.categories = categoryMap
@@ -163,7 +163,7 @@ class UrlMatcher {
             SOCIAL,
             CONTENT,
             CRYPTOMINING,
-            FINGERPRINTING
+            FINGERPRINTING,
         )
 
         /**
@@ -177,7 +177,7 @@ class UrlMatcher {
             context: Context,
             @RawRes blocklistFile: Int,
             @RawRes safelistFile: Int,
-            enabledCategories: Set<String> = supportedCategories
+            enabledCategories: Set<String> = supportedCategories,
         ): UrlMatcher =
             createMatcher(context.resources, blocklistFile, safelistFile, enabledCategories)
 
@@ -191,7 +191,7 @@ class UrlMatcher {
             resources: Resources,
             @RawRes blocklistFile: Int,
             @RawRes safelistFile: Int,
-            enabledCategories: Set<String> = supportedCategories
+            enabledCategories: Set<String> = supportedCategories,
         ): UrlMatcher {
             val blocklistReader = InputStreamReader(resources.openRawResource(blocklistFile), UTF_8)
             val safelistReader = InputStreamReader(resources.openRawResource(safelistFile), UTF_8)
@@ -207,12 +207,12 @@ class UrlMatcher {
         fun createMatcher(
             block: Reader,
             safe: Reader,
-            enabledCategories: Set<String> = supportedCategories
+            enabledCategories: Set<String> = supportedCategories,
         ): UrlMatcher {
             val categoryMap = HashMap<String, Trie>()
 
             JsonReader(block).use {
-                jsonReader ->
+                    jsonReader ->
                 loadCategories(jsonReader, categoryMap)
             }
 
@@ -235,7 +235,7 @@ class UrlMatcher {
         private fun loadCategories(
             reader: JsonReader,
             categoryMap: MutableMap<String, Trie>,
-            override: Boolean = false
+            override: Boolean = false,
         ): Map<String, Trie> {
             reader.beginObject()
 

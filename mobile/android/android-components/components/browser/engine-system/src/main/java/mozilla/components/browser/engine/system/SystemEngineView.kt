@@ -72,7 +72,7 @@ import mozilla.components.support.utils.DownloadUtils
 class SystemEngineView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : FrameLayout(context, attrs, defStyleAttr), EngineView, View.OnLongClickListener {
     @VisibleForTesting(otherwise = PRIVATE)
     internal var session: SystemEngineSession? = null
@@ -184,7 +184,7 @@ class SystemEngineView @JvmOverloads constructor(
                     onSecurityChange(
                         secure = cert != null,
                         host = cert?.let { Uri.parse(url).host },
-                        issuer = cert?.issuedBy?.oName
+                        issuer = cert?.issuedBy?.oName,
                     )
                 }
             }
@@ -219,7 +219,7 @@ class SystemEngineView @JvmOverloads constructor(
 
                 val (matches, stringCategory) = getOrCreateUrlMatcher(resources, it).matches(
                     resourceUri,
-                    Uri.parse(session?.currentUrl)
+                    Uri.parse(session?.currentUrl),
                 )
 
                 if (!request.isForMainFrame && matches) {
@@ -228,8 +228,8 @@ class SystemEngineView @JvmOverloads constructor(
                         onTrackerBlocked(
                             Tracker(
                                 resourceUri.toString(),
-                                matchedCategories
-                            )
+                                matchedCategories,
+                            ),
                         )
                     }
                     return WebResourceResponse(null, null, null)
@@ -252,7 +252,7 @@ class SystemEngineView @JvmOverloads constructor(
                         session.currentUrl.tryGetHostFromUrl() == request.url.host,
                         isRedirect,
                         false,
-                        request.isForMainFrame
+                        request.isForMainFrame,
                     )?.apply {
                         return when (this) {
                             is InterceptionResponse.Content ->
@@ -294,7 +294,7 @@ class SystemEngineView @JvmOverloads constructor(
                 session.settings.requestInterceptor?.onErrorRequest(
                     session,
                     ErrorType.ERROR_SECURITY_SSL,
-                    error.url
+                    error.url,
                 )?.apply {
                     view.loadUrl(this.uri)
                 }
@@ -307,7 +307,7 @@ class SystemEngineView @JvmOverloads constructor(
                 session.settings.requestInterceptor?.onErrorRequest(
                     session,
                     errorType,
-                    failingUrl
+                    failingUrl,
                 )?.apply {
                     view.loadUrl(this.uri)
                 }
@@ -324,7 +324,7 @@ class SystemEngineView @JvmOverloads constructor(
                 session.settings.requestInterceptor?.onErrorRequest(
                     session,
                     errorType,
-                    request.url.toString()
+                    request.url.toString(),
                 )?.apply {
                     view.loadUrl(this.uri)
                 }
@@ -366,8 +366,8 @@ class SystemEngineView @JvmOverloads constructor(
                         PromptRequest.Authentication.Method.HOST,
                         PromptRequest.Authentication.Level.NONE,
                         onConfirm = { user, pass -> handler.proceed(user, pass) },
-                        onDismiss = { handler.cancel() }
-                    )
+                        onDismiss = { handler.cancel() },
+                    ),
                 )
             }
         }
@@ -449,8 +449,8 @@ class SystemEngineView @JvmOverloads constructor(
                         message ?: "",
                         false,
                         onConfirm,
-                        onDismiss
-                    )
+                        onDismiss,
+                    ),
                 )
             }
             return true
@@ -461,7 +461,7 @@ class SystemEngineView @JvmOverloads constructor(
             url: String?,
             message: String?,
             defaultValue: String?,
-            result: JsPromptResult
+            result: JsPromptResult,
         ): Boolean {
             val session = session ?: return applyDefaultJsDialogBehavior(result)
 
@@ -483,8 +483,8 @@ class SystemEngineView @JvmOverloads constructor(
                         defaultValue ?: "",
                         false,
                         onConfirm,
-                        onDismiss
-                    )
+                        onDismiss,
+                    ),
                 )
             }
             return true
@@ -518,8 +518,8 @@ class SystemEngineView @JvmOverloads constructor(
                         onConfirmPositiveButton,
                         onConfirmNegativeButton,
                         {},
-                        onDismiss
-                    )
+                        onDismiss,
+                    ),
                 )
             }
             return true
@@ -528,9 +528,8 @@ class SystemEngineView @JvmOverloads constructor(
         override fun onShowFileChooser(
             webView: WebView?,
             filePathCallback: ValueCallback<Array<Uri>>?,
-            fileChooserParams: FileChooserParams?
+            fileChooserParams: FileChooserParams?,
         ): Boolean {
-
             var mimeTypes = fileChooserParams?.acceptTypes ?: arrayOf()
 
             if (mimeTypes.isNotEmpty() && mimeTypes.first().isNullOrEmpty()) {
@@ -565,8 +564,8 @@ class SystemEngineView @JvmOverloads constructor(
                         captureMode,
                         onSelectSingle,
                         onSelectMultiple,
-                        onDismiss
-                    )
+                        onDismiss,
+                    ),
                 )
             }
 
@@ -577,14 +576,19 @@ class SystemEngineView @JvmOverloads constructor(
             view: WebView,
             isDialog: Boolean,
             isUserGesture: Boolean,
-            resultMsg: Message?
+            resultMsg: Message?,
         ): Boolean {
             session?.internalNotifyObservers {
                 val newEngineSession = SystemEngineSession(context, session?.settings)
                 onWindowRequest(
                     SystemWindowRequest(
-                        view, newEngineSession, NestedWebView(context), isDialog, isUserGesture, resultMsg
-                    )
+                        view,
+                        newEngineSession,
+                        NestedWebView(context),
+                        isDialog,
+                        isUserGesture,
+                        resultMsg,
+                    ),
                 )
             }
             return true
@@ -600,7 +604,6 @@ class SystemEngineView @JvmOverloads constructor(
     internal fun createDownloadListener(): DownloadListener {
         return DownloadListener { url, userAgent, contentDisposition, mimetype, contentLength ->
             session?.internalNotifyObservers {
-
                 val fileName = DownloadUtils.guessFileName(contentDisposition, null, url, mimetype)
                 val cookie = CookieManager.getInstance().getCookie(url)
                 onExternalResource(url, fileName, contentLength, mimetype, cookie, userAgent)
@@ -654,7 +657,8 @@ class SystemEngineView @JvmOverloads constructor(
     internal fun addFullScreenView(view: View, callback: WebChromeClient.CustomViewCallback) {
         val webView = findViewWithTag<WebView>("mozac_system_engine_webview")
         val layoutParams = FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT,
         )
         webView?.apply { this.visibility = View.INVISIBLE }
 
@@ -673,8 +677,8 @@ class SystemEngineView @JvmOverloads constructor(
         }
     }
 
-    @Suppress("DEPRECATION")
     // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/8514
+    @Suppress("DEPRECATION")
     class ImageHandler(val session: SystemEngineSession?) : Handler() {
         override fun handleMessage(msg: Message) {
             val url = msg.data.getString("url")
@@ -737,12 +741,14 @@ class SystemEngineView @JvmOverloads constructor(
         val window = (context as Activity).window
 
         PixelCopy.request(
-            window, viewRect, out,
+            window,
+            viewRect,
+            out,
             { copyResult ->
                 val result = if (copyResult == PixelCopy.SUCCESS) out else null
                 onFinish(result)
             },
-            handler
+            handler,
         )
     }
 
@@ -762,7 +768,6 @@ class SystemEngineView @JvmOverloads constructor(
         var credentialsPair = "" to ""
 
         if (!credentials.isNullOrEmpty() && credentials.size == 2) {
-
             val user = credentials[0] ?: ""
             val pass = credentials[1] ?: ""
 
@@ -794,7 +799,7 @@ class SystemEngineView @JvmOverloads constructor(
             UrlMatcher.CONTENT to TrackingProtectionPolicy.TrackingCategory.CONTENT,
             UrlMatcher.SOCIAL to TrackingProtectionPolicy.TrackingCategory.SOCIAL,
             UrlMatcher.CRYPTOMINING to TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING,
-            UrlMatcher.FINGERPRINTING to TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING
+            UrlMatcher.FINGERPRINTING to TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING,
         )
 
         private fun String?.toTrackingProtectionCategories(): List<TrackingProtectionPolicy.TrackingCategory> {
@@ -815,7 +820,7 @@ class SystemEngineView @JvmOverloads constructor(
                     resources,
                     R.raw.domain_blocklist,
                     R.raw.domain_safelist,
-                    categories
+                    categories,
                 )
             }
 

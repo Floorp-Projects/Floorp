@@ -140,7 +140,7 @@ class NestedWebView(context: Context) : WebView(context), NestedScrollingChild {
         dyConsumed: Int,
         dxUnconsumed: Int,
         dyUnconsumed: Int,
-        offsetInWindow: IntArray?
+        offsetInWindow: IntArray?,
     ): Boolean {
         return childHelper.dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, offsetInWindow)
     }
@@ -164,7 +164,7 @@ class NestedWebView(context: Context) : WebView(context), NestedScrollingChild {
                 INPUT_HANDLED
             } else {
                 INPUT_UNHANDLED
-            }
+            },
         )
     }
 }

@@ -24,8 +24,8 @@ class TopSitesFeature(
     private val presenter: TopSitesPresenter = DefaultTopSitesPresenter(
         view,
         storage,
-        config
-    )
+        config,
+    ),
 ) : LifecycleAwareFeature {
 
     override fun start() {

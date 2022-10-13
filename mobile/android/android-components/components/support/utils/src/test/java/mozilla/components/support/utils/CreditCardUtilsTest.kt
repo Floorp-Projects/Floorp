@@ -71,7 +71,7 @@ class CreditCardUtilsTest {
             Pair("8171999927660000", "unionpay"),
             Pair("30569309025904", "diners"),
             Pair("38520000023237", "diners"),
-            Pair("3   8 5 2 0 0 0 0 0 2 3 2 3 7", "diners")
+            Pair("3   8 5 2 0 0 0 0 0 2 3 2 3 7", "diners"),
         )
 
         for ((cardNumber, cardType) in recognizedCards) {
@@ -82,7 +82,7 @@ class CreditCardUtilsTest {
             "411111111111111",
             "41111111111111111",
             "",
-            "9111111111111111"
+            "9111111111111111",
         )
 
         for (cardNumber in unrecognizedCards) {
@@ -94,14 +94,14 @@ class CreditCardUtilsTest {
     fun `GIVEN a various card type strings WHEN creditCardIssuerNetwork is called THEN the correct CreditCardIssuerNetwork is returned`() {
         val amexCard = CreditCardIssuerNetwork(
             name = CreditCardNetworkType.AMEX.cardName,
-            icon = R.drawable.ic_cc_logo_amex
+            icon = R.drawable.ic_cc_logo_amex,
         )
 
         assertEquals(amexCard, CreditCardNetworkType.AMEX.cardName.creditCardIssuerNetwork())
 
         val genericCard = CreditCardIssuerNetwork(
             name = CreditCardNetworkType.GENERIC.cardName,
-            icon = R.drawable.ic_icon_credit_card_generic
+            icon = R.drawable.ic_icon_credit_card_generic,
         )
 
         assertEquals(genericCard, "".creditCardIssuerNetwork())

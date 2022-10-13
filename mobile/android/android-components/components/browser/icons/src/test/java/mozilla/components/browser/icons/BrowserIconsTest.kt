@@ -34,11 +34,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.robolectric.Shadows.shadowOf
 import java.io.OutputStream
 
@@ -79,8 +79,8 @@ class BrowserIconsTest {
         server.enqueue(
             MockResponse().setBody(
 
-                Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer
-            )
+                Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer,
+            ),
         )
 
         server.start()
@@ -94,25 +94,25 @@ class BrowserIconsTest {
                         url = server.url("icon64.png").toString(),
                         sizes = listOf(Size(64, 64)),
                         mimeType = "image/png",
-                        type = IconRequest.Resource.Type.FAVICON
+                        type = IconRequest.Resource.Type.FAVICON,
                     ),
                     IconRequest.Resource(
                         url = server.url("icon128.png").toString(),
                         sizes = listOf(Size(128, 128)),
                         mimeType = "image/png",
-                        type = IconRequest.Resource.Type.FAVICON
+                        type = IconRequest.Resource.Type.FAVICON,
                     ),
                     IconRequest.Resource(
                         url = server.url("icon128.png").toString(),
                         sizes = listOf(Size(180, 180)),
-                        type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
-                    )
-                )
+                        type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
+                    ),
+                ),
             )
 
             val icon = BrowserIcons(
                 testContext,
-                httpClient = HttpURLConnectionClient()
+                httpClient = HttpURLConnectionClient(),
             ).loadIcon(request).await()
 
             assertNotNull(icon)
@@ -131,8 +131,8 @@ class BrowserIconsTest {
 
         server.enqueue(
             MockResponse().setBody(
-                Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer
-            )
+                Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer,
+            ),
         )
 
         server.start()
@@ -145,9 +145,9 @@ class BrowserIconsTest {
                 resources = listOf(
                     IconRequest.Resource(
                         url = server.url("icon64.png").toString(),
-                        type = IconRequest.Resource.Type.FAVICON
-                    )
-                )
+                        type = IconRequest.Resource.Type.FAVICON,
+                    ),
+                ),
             )
 
             val icon = icons.loadIcon(request).await()
@@ -156,7 +156,7 @@ class BrowserIconsTest {
             assertNotNull(icon.bitmap)
 
             val secondIcon = icons.loadIcon(
-                IconRequest("https://www.mozilla.org") // Without resources!
+                IconRequest("https://www.mozilla.org"), // Without resources!
             ).await()
 
             assertEquals(Icon.Source.MEMORY, secondIcon.source)
@@ -174,8 +174,8 @@ class BrowserIconsTest {
 
         server.enqueue(
             MockResponse().setBody(
-                Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer
-            )
+                Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer,
+            ),
         )
 
         server.start()
@@ -188,9 +188,9 @@ class BrowserIconsTest {
                 resources = listOf(
                     IconRequest.Resource(
                         url = server.url("icon64.png").toString(),
-                        type = IconRequest.Resource.Type.FAVICON
-                    )
-                )
+                        type = IconRequest.Resource.Type.FAVICON,
+                    ),
+                ),
             )
 
             val icon = icons.loadIcon(request).await()
@@ -201,7 +201,7 @@ class BrowserIconsTest {
             sharedMemoryCache.clear()
 
             val secondIcon = icons.loadIcon(
-                IconRequest("https://www.mozilla.org") // Without resources!
+                IconRequest("https://www.mozilla.org"), // Without resources!
             ).await()
 
             assertEquals(Icon.Source.DISK, secondIcon.source)
@@ -292,7 +292,7 @@ class BrowserIconsTest {
             url = "https://www.mozilla.org/icon64.png",
             sizes = listOf(Size(64, 64)),
             mimeType = "image/png",
-            type = IconRequest.Resource.Type.FAVICON
+            type = IconRequest.Resource.Type.FAVICON,
         )
         val request = IconRequest(url = "https://www.mozilla.org", resources = listOf(resource))
         sharedDiskCache.putResources(testContext, request)
@@ -329,7 +329,7 @@ class BrowserIconsTest {
 
         assertEquals(
             testContext.resources.getDimensionPixelSize(IconRequest.Size.LAUNCHER_ADAPTIVE.dimen),
-            result.targetSize
+            result.targetSize,
         )
         assertEquals(11, result.minSize)
         assertEquals(101, result.maxSize)

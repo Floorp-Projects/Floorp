@@ -30,10 +30,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 class CreateEngineSessionMiddlewareTest {
@@ -52,7 +52,7 @@ class CreateEngineSessionMiddlewareTest {
         val tab = createTab("https://www.mozilla.org", id = "1")
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
         assertNull(store.state.findTab(tab.id)?.engineState?.engineSession)
 
@@ -80,7 +80,7 @@ class CreateEngineSessionMiddlewareTest {
         val tab = createTab("https://www.mozilla.org", id = "1")
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
         assertNull(store.state.findTab(tab.id)?.engineState?.engineSession)
 
@@ -101,7 +101,7 @@ class CreateEngineSessionMiddlewareTest {
         val middleware = CreateEngineSessionMiddleware(engine, scope)
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf()),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         store.dispatch(EngineAction.CreateEngineSessionAction("invalid")).joinBlocking()
@@ -122,11 +122,11 @@ class CreateEngineSessionMiddlewareTest {
 
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
 
         store.dispatch(
-            EngineAction.CreateEngineSessionAction("non-existent")
+            EngineAction.CreateEngineSessionAction("non-existent"),
         ).joinBlocking()
 
         store.waitUntilIdle()
@@ -146,7 +146,7 @@ class CreateEngineSessionMiddlewareTest {
         val tab = createTab("https://www.mozilla.org", id = "1")
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
         assertNull(store.state.findTab(tab.id)?.engineState?.engineSession)
 
@@ -171,7 +171,7 @@ class CreateEngineSessionMiddlewareTest {
         val tab = createTab("https://www.mozilla.org", id = "1")
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
         assertNull(store.state.findTab(tab.id)?.engineState?.engineSession)
 
@@ -199,7 +199,7 @@ class CreateEngineSessionMiddlewareTest {
         val customTab = createCustomTab("https://www.mozilla.org", id = "1")
         val store = BrowserStore(
             initialState = BrowserState(customTabs = listOf(customTab)),
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
         assertNull(store.state.findCustomTab(customTab.id)?.engineState?.engineSession)
 

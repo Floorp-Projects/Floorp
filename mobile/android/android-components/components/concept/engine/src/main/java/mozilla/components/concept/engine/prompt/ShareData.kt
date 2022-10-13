@@ -20,5 +20,5 @@ import kotlinx.parcelize.Parcelize
 data class ShareData(
     val title: String? = null,
     val text: String? = null,
-    val url: String? = null
+    val url: String? = null,
 ) : Parcelable

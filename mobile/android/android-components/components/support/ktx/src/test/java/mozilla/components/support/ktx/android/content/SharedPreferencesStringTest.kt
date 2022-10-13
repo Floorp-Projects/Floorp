@@ -35,7 +35,7 @@ class SharedPreferencesStringTest {
     @Test
     fun `GIVEN string does not exist and asked to persist the default WHEN asked for it THEN persist the default and return it`() {
         preferencesHolder = StringTestPreferenceHolder(
-            persistDefaultIfNotExists = true
+            persistDefaultIfNotExists = true,
         )
 
         val result = preferencesHolder.string
@@ -47,7 +47,7 @@ class SharedPreferencesStringTest {
     @Test
     fun `GIVEN string does not exist and not asked to persist the default WHEN asked for it THEN return the default but not persist it`() {
         preferencesHolder = StringTestPreferenceHolder(
-            persistDefaultIfNotExists = false
+            persistDefaultIfNotExists = false,
         )
 
         val result = preferencesHolder.string
@@ -60,7 +60,7 @@ class SharedPreferencesStringTest {
     fun `GIVEN string exists and asked to persist the default WHEN asked for it THEN return the existing string and don't persist the default`() {
         testPreferences.edit().putString(key, "test").apply()
         preferencesHolder = StringTestPreferenceHolder(
-            persistDefaultIfNotExists = true
+            persistDefaultIfNotExists = true,
         )
 
         val result = preferencesHolder.string
@@ -72,7 +72,7 @@ class SharedPreferencesStringTest {
     fun `GIVEN string exists and not asked to persist the default WHEN asked for it THEN return the existing string and don't persist the default`() {
         testPreferences.edit().putString(key, "test").apply()
         preferencesHolder = StringTestPreferenceHolder(
-            persistDefaultIfNotExists = true
+            persistDefaultIfNotExists = true,
         )
 
         val result = preferencesHolder.string
@@ -89,7 +89,7 @@ class SharedPreferencesStringTest {
 
         assertEquals(
             "update",
-            testPreferences.getString(key, null)
+            testPreferences.getString(key, null),
         )
     }
 
@@ -101,7 +101,7 @@ class SharedPreferencesStringTest {
 
         assertEquals(
             "test",
-            testPreferences.getString(key, null)
+            testPreferences.getString(key, null),
         )
     }
 

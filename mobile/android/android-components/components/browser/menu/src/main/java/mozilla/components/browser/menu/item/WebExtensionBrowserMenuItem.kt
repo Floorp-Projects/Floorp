@@ -39,7 +39,7 @@ class WebExtensionBrowserMenuItem(
     internal val listener: () -> Unit,
     internal val id: String = "",
     override val isCollapsingMenuLimit: Boolean = false,
-    override val isSticky: Boolean = false
+    override val isSticky: Boolean = false,
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
 
@@ -89,22 +89,22 @@ class WebExtensionBrowserMenuItem(
     override fun asCandidate(context: Context) = TextMenuCandidate(
         action.title.orEmpty(),
         start = AsyncDrawableMenuIcon(
-            loadDrawable = { _, height -> loadIcon(context, height) }
+            loadDrawable = { _, height -> loadIcon(context, height) },
         ),
         end = action.badgeText?.let { badgeText ->
             TextMenuIcon(
                 badgeText,
                 backgroundTint = action.badgeBackgroundColor,
                 textStyle = TextStyle(
-                    color = action.badgeTextColor
-                )
+                    color = action.badgeTextColor,
+                ),
             )
         },
         containerStyle = ContainerStyle(
             isVisible = visible(),
-            isEnabled = action.enabled ?: false
+            isEnabled = action.enabled ?: false,
         ),
-        onClick = listener
+        onClick = listener,
     )
 
     @VisibleForTesting
@@ -126,12 +126,13 @@ class WebExtensionBrowserMenuItem(
                 Log.Priority.ERROR,
                 "mozac-webextensions",
                 throwable,
-                "Failed to load browser action icon, falling back to default."
+                "Failed to load browser action icon, falling back to default.",
             )
 
             getDrawable(context, R.drawable.mozac_ic_web_extension_default_icon)
         }
     }
+
     /**
      * Sets the tint to be applied to the extension icon
      */

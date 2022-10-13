@@ -33,7 +33,7 @@ class PixelCopyShadow {
             srcRect: Rect?,
             dest: Bitmap,
             listener: PixelCopy.OnPixelCopyFinishedListener,
-            listenerThread: Handler?
+            listenerThread: Handler?,
         ) {
             listener.onPixelCopyFinished(copyResult)
         }

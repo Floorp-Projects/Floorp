@@ -30,7 +30,7 @@ class PictureInPictureFeature(
     private val store: BrowserStore,
     private val activity: Activity,
     private val crashReporting: CrashReporting? = null,
-    private val tabId: String? = null
+    private val tabId: String? = null,
 ) {
     internal val logger = Logger("PictureInPictureFeature")
 

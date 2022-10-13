@@ -28,7 +28,7 @@ class ThumbnailsMiddlewareTest {
         val thumbnailStorage: ThumbnailStorage = mock()
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(ThumbnailsMiddleware(thumbnailStorage))
+            middleware = listOf(ThumbnailsMiddleware(thumbnailStorage)),
         )
 
         val bitmap: Bitmap = mock()
@@ -45,10 +45,10 @@ class ThumbnailsMiddlewareTest {
                     createTab("https://www.mozilla.org", id = "test-tab1"),
                     createTab("https://www.firefox.com", id = "test-tab2"),
                     createTab("https://www.wikipedia.com", id = "test-tab3"),
-                    createTab("https://www.example.org", private = true, id = "test-ta4")
-                )
+                    createTab("https://www.example.org", private = true, id = "test-ta4"),
+                ),
             ),
-            middleware = listOf(ThumbnailsMiddleware(thumbnailStorage))
+            middleware = listOf(ThumbnailsMiddleware(thumbnailStorage)),
         )
 
         store.dispatch(TabListAction.RemoveAllNormalTabsAction).joinBlocking()
@@ -66,10 +66,10 @@ class ThumbnailsMiddlewareTest {
                     createTab("https://www.mozilla.org", id = "test-tab1"),
                     createTab("https://www.firefox.com", private = true, id = "test-tab2"),
                     createTab("https://www.wikipedia.com", private = true, id = "test-tab3"),
-                    createTab("https://www.example.org", private = true, id = "test-tab4")
-                )
+                    createTab("https://www.example.org", private = true, id = "test-tab4"),
+                ),
             ),
-            middleware = listOf(ThumbnailsMiddleware(thumbnailStorage))
+            middleware = listOf(ThumbnailsMiddleware(thumbnailStorage)),
         )
 
         store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
@@ -85,10 +85,10 @@ class ThumbnailsMiddlewareTest {
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "test-tab1"),
-                    createTab("https://www.firefox.com", id = "test-tab2")
-                )
+                    createTab("https://www.firefox.com", id = "test-tab2"),
+                ),
             ),
-            middleware = listOf(ThumbnailsMiddleware(thumbnailStorage))
+            middleware = listOf(ThumbnailsMiddleware(thumbnailStorage)),
         )
 
         store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
@@ -103,10 +103,10 @@ class ThumbnailsMiddlewareTest {
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "test-tab1"),
-                    createTab("https://www.firefox.com", id = "test-tab2")
-                )
+                    createTab("https://www.firefox.com", id = "test-tab2"),
+                ),
             ),
-            middleware = listOf(ThumbnailsMiddleware(thumbnailStorage))
+            middleware = listOf(ThumbnailsMiddleware(thumbnailStorage)),
         )
 
         store.dispatch(TabListAction.RemoveTabAction(sessionIdOrUrl)).joinBlocking()
@@ -121,10 +121,10 @@ class ThumbnailsMiddlewareTest {
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "test-tab1"),
-                    createTab("https://www.firefox.com", id = "test-tab2")
-                )
+                    createTab("https://www.firefox.com", id = "test-tab2"),
+                ),
             ),
-            middleware = listOf(ThumbnailsMiddleware(thumbnailStorage))
+            middleware = listOf(ThumbnailsMiddleware(thumbnailStorage)),
         )
 
         store.dispatch(TabListAction.RemoveTabsAction(listOf(sessionIdOrUrl))).joinBlocking()

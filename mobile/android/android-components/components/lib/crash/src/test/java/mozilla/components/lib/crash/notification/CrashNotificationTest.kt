@@ -28,7 +28,7 @@ class CrashNotificationTest {
             minidumpSuccess = true,
             extrasPath = "",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
-            breadcrumbs = arrayListOf()
+            breadcrumbs = arrayListOf(),
         )
 
         assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(foregroundChildNativeCrash, sdkLevel = 21))
@@ -49,7 +49,7 @@ class CrashNotificationTest {
             minidumpSuccess = true,
             extrasPath = "",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-            breadcrumbs = arrayListOf()
+            breadcrumbs = arrayListOf(),
         )
 
         assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(mainProcessNativeCrash, sdkLevel = 21))
@@ -70,7 +70,7 @@ class CrashNotificationTest {
             minidumpSuccess = true,
             extrasPath = "",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
-            breadcrumbs = arrayListOf()
+            breadcrumbs = arrayListOf(),
         )
 
         assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(backgroundChildNativeCrash, sdkLevel = 21))
@@ -111,17 +111,18 @@ class CrashNotificationTest {
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Boom"), arrayListOf())
 
         val crashNotification = CrashNotification(
-            testContext, crash,
+            testContext,
+            crash,
             CrashReporter.PromptConfiguration(
-                appName = "TestApp"
-            )
+                appName = "TestApp",
+            ),
         )
         crashNotification.show()
 
         assertEquals(1, shadowNotificationManager.notificationChannels.size)
         assertEquals(
             "Crashes",
-            (shadowNotificationManager.notificationChannels[0] as NotificationChannel).name
+            (shadowNotificationManager.notificationChannels[0] as NotificationChannel).name,
         )
 
         assertEquals(1, shadowNotificationManager.size())

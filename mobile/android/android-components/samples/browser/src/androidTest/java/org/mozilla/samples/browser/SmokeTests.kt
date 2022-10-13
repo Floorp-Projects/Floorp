@@ -133,8 +133,8 @@ private fun verifyWebsiteContent(text: String) {
         device
             .findObject(
                 UiSelector()
-                    .textContains(text)
+                    .textContains(text),
             )
-            .waitForExists(waitingTime)
+            .waitForExists(waitingTime),
     )
 }

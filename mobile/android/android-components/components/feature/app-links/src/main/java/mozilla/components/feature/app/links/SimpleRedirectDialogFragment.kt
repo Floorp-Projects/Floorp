@@ -62,7 +62,7 @@ class SimpleRedirectDialogFragment : RedirectDialogFragment() {
             @StringRes positiveButtonText: Int = R.string.mozac_feature_applinks_confirm_dialog_confirm,
             @StringRes negativeButtonText: Int = R.string.mozac_feature_applinks_confirm_dialog_deny,
             @StyleRes themeResId: Int = 0,
-            cancelable: Boolean = false
+            cancelable: Boolean = false,
         ): RedirectDialogFragment {
             val fragment = SimpleRedirectDialogFragment()
             val arguments = fragment.arguments ?: Bundle()

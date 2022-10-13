@@ -48,7 +48,7 @@ fun mockMotionEvent(
     eventTime: Long = System.currentTimeMillis(),
     x: Float = 0f,
     y: Float = 0f,
-    metaState: Int = 0
+    metaState: Int = 0,
 ): MotionEvent {
     return MotionEvent.obtain(downTime, eventTime, action, x, y, metaState)
 }

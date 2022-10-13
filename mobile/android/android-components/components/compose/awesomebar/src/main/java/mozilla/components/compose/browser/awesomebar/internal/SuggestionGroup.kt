@@ -19,7 +19,7 @@ import mozilla.components.compose.browser.awesomebar.AwesomeBarColors
 @Composable
 internal fun SuggestionGroup(
     title: String,
-    colors: AwesomeBarColors
+    colors: AwesomeBarColors,
 ) {
     Text(
         title,
@@ -27,7 +27,7 @@ internal fun SuggestionGroup(
         modifier = Modifier
             .padding(
                 vertical = 12.dp,
-                horizontal = 16.dp
+                horizontal = 16.dp,
             )
             .fillMaxWidth(),
         fontSize = 14.sp,

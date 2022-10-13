@@ -30,21 +30,21 @@ internal fun emitStatePauseFact() = emitStateFact(Action.PAUSE)
 internal fun emitStateStopFact() = emitStateFact(Action.STOP)
 
 private fun emitStateFact(
-    action: Action
+    action: Action,
 ) {
     Fact(
         Component.FEATURE_MEDIA,
         action,
-        MediaFacts.Items.STATE
+        MediaFacts.Items.STATE,
     ).collect()
 }
 
 private fun emitNotificationFact(
-    action: Action
+    action: Action,
 ) {
     Fact(
         Component.FEATURE_MEDIA,
         action,
-        MediaFacts.Items.NOTIFICATION
+        MediaFacts.Items.NOTIFICATION,
     ).collect()
 }

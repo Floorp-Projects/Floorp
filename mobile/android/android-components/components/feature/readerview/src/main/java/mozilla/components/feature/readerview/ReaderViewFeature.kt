@@ -52,7 +52,7 @@ class ReaderViewFeature(
     private val engine: Engine,
     private val store: BrowserStore,
     controlsView: ReaderViewControlsView,
-    private val onReaderViewStatusChange: onReaderViewStatusChange = { _, _ -> Unit }
+    private val onReaderViewStatusChange: onReaderViewStatusChange = { _, _ -> Unit },
 ) : LifecycleAwareFeature, UserInteractionHandler {
 
     private var scope: CoroutineScope? = null
@@ -62,7 +62,7 @@ class ReaderViewFeature(
     internal var extensionController = WebExtensionController(
         READER_VIEW_EXTENSION_ID,
         READER_VIEW_EXTENSION_URL,
-        READER_VIEW_CONTENT_PORT
+        READER_VIEW_CONTENT_PORT,
     )
 
     @VisibleForTesting
@@ -129,7 +129,7 @@ class ReaderViewFeature(
                 extensionController.sendContentMessage(
                     createShowReaderMessage(config),
                     it.engineState.engineSession,
-                    READER_VIEW_CONTENT_PORT
+                    READER_VIEW_CONTENT_PORT,
                 )
                 store.dispatch(ReaderAction.UpdateReaderActiveAction(it.id, true))
             }
@@ -151,7 +151,7 @@ class ReaderViewFeature(
                     extensionController.sendContentMessage(
                         createHideReaderMessage(),
                         it.engineState.engineSession,
-                        READER_VIEW_ACTIVE_CONTENT_PORT
+                        READER_VIEW_ACTIVE_CONTENT_PORT,
                     )
                 }
             }
@@ -192,18 +192,19 @@ class ReaderViewFeature(
             extensionController.registerContentMessageHandler(
                 engineSession,
                 ActiveReaderViewContentMessageHandler(store, session.id, WeakReference(config)),
-                READER_VIEW_ACTIVE_CONTENT_PORT
+                READER_VIEW_ACTIVE_CONTENT_PORT,
             )
             extensionController.registerContentMessageHandler(
                 engineSession,
                 ReaderViewContentMessageHandler(store, session.id),
-                READER_VIEW_CONTENT_PORT
+                READER_VIEW_CONTENT_PORT,
             )
             store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(session.id, false))
         }
     }
 
     private var lastNotified: Pair<Boolean, Boolean>? = null
+
     @VisibleForTesting
     internal fun maybeNotifyReaderStatusChange(readerable: Boolean = false, active: Boolean = false) {
         // Make sure we only notify the UI if needed (an actual change happened) to prevent
@@ -220,7 +221,7 @@ class ReaderViewFeature(
             engine,
             onSuccess = {
                 feature.get()?.connectReaderViewContentScript()
-            }
+            },
         )
     }
 
@@ -229,7 +230,7 @@ class ReaderViewFeature(
      */
     private open class ReaderViewContentMessageHandler(
         protected val store: BrowserStore,
-        protected val sessionId: String
+        protected val sessionId: String,
     ) : MessageHandler {
         override fun onPortConnected(port: Port) {
             port.postMessage(createCheckReaderStateMessage())
@@ -253,7 +254,7 @@ class ReaderViewFeature(
         // attached to has a longer lifespan than the feature instance i.e. a tab can remain open,
         // but we don't want to prevent the feature (and therefore its context/fragment) from
         // being garbage collected. The config has references to both the context and feature.
-        private val config: WeakReference<ReaderViewConfig>
+        private val config: WeakReference<ReaderViewConfig>,
     ) : ReaderViewContentMessageHandler(store, sessionId) {
 
         override fun onPortMessage(message: Any, port: Port) {
@@ -276,9 +277,11 @@ class ReaderViewFeature(
         private val logger = Logger("ReaderView")
 
         internal const val READER_VIEW_EXTENSION_ID = "readerview@mozac.org"
+
         // Name of the port connected to all pages for checking whether or not
         // a page is readerable (see readerview_content.js).
         internal const val READER_VIEW_CONTENT_PORT = "mozacReaderview"
+
         // Name of the port connected to active reader pages for updating
         // appearance configuration (see readerview.js).
         internal const val READER_VIEW_ACTIVE_CONTENT_PORT = "mozacReaderviewActive"

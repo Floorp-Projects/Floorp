@@ -17,7 +17,7 @@ fun Autocomplete.CreditCard.toCreditCardEntry() = CreditCardEntry(
     number = number,
     expiryMonth = expirationMonth,
     expiryYear = expirationYear,
-    cardType = number.creditCardIIN()?.creditCardIssuerNetwork?.name ?: ""
+    cardType = number.creditCardIIN()?.creditCardIssuerNetwork?.name ?: "",
 )
 
 /**

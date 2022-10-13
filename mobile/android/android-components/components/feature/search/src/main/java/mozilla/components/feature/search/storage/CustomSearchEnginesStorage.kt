@@ -24,7 +24,7 @@ internal const val SEARCH_DIR_NAME = "search-engines"
  */
 internal class CustomSearchEngineStorage(
     private val context: Context,
-    private val coroutineContext: CoroutineContext = Dispatchers.IO
+    private val coroutineContext: CoroutineContext = Dispatchers.IO,
 ) : SearchMiddleware.CustomStorage {
     private val reader = SearchEngineReader(SearchEngine.Type.CUSTOM)
     private val writer = SearchEngineWriter()

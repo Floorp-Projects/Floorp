@@ -55,7 +55,7 @@ class GleanApplication : Application() {
             applicationContext,
             uploadEnabled = true,
             configuration = config,
-            buildInfo = GleanBuildInfo.buildInfo
+            buildInfo = GleanBuildInfo.buildInfo,
         )
 
         /** Begin Nimbus component specific code. Note: this is not relevant to Glean */
@@ -85,12 +85,12 @@ class GleanApplication : Application() {
         val url = Uri.parse(getString(R.string.nimbus_default_endpoint))
         val appInfo = NimbusAppInfo(
             appName = "samples-glean",
-            channel = "samples"
+            channel = "samples",
         )
         nimbus = Nimbus(
             context = this,
             appInfo = appInfo,
-            server = NimbusServerSettings(url)
+            server = NimbusServerSettings(url),
         ).also { nimbus ->
             if (isFirstRun) {
                 // This file is bundled with the app, but derived from the server at build time.

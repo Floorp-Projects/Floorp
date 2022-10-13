@@ -33,21 +33,21 @@ internal abstract class SitePermissionsDatabase : RoomDatabase() {
             return Room.databaseBuilder(
                 context,
                 SitePermissionsDatabase::class.java,
-                "site_permissions_database"
+                "site_permissions_database",
             ).addMigrations(
-                Migrations.migration_1_2
+                Migrations.migration_1_2,
             ).addMigrations(
-                Migrations.migration_2_3
+                Migrations.migration_2_3,
             ).addMigrations(
-                Migrations.migration_3_4
+                Migrations.migration_3_4,
             ).addMigrations(
-                Migrations.migration_4_5
+                Migrations.migration_4_5,
             ).addMigrations(
-                Migrations.migration_5_6
+                Migrations.migration_5_6,
             ).addMigrations(
-                Migrations.migration_6_7
+                Migrations.migration_6_7,
             ).addMigrations(
-                Migrations.migration_7_8
+                Migrations.migration_7_8,
             ).build().also { instance = it }
         }
     }
@@ -97,10 +97,11 @@ internal object Migrations {
                     "`bluetooth` INTEGER NOT NULL, " +
                     "`local_storage` INTEGER NOT NULL, " +
                     "`saved_at` INTEGER NOT NULL," +
-                    " PRIMARY KEY(`origin`))"
+                    " PRIMARY KEY(`origin`))",
             )
         }
     }
+
     @Suppress("MagicNumber")
     val migration_2_3 = object : Migration(2, 3) {
         override fun migrate(database: SupportSQLiteDatabase) {
@@ -109,16 +110,16 @@ internal object Migrations {
             // the new autoplay fields autoplay_audible and autoplay_inaudible
             if (!haveAutoPlayColumns) {
                 database.execSQL(
-                    "ALTER TABLE site_permissions ADD COLUMN autoplay_audible INTEGER NOT NULL DEFAULT ''"
+                    "ALTER TABLE site_permissions ADD COLUMN autoplay_audible INTEGER NOT NULL DEFAULT ''",
                 )
                 database.execSQL(
-                    "ALTER TABLE site_permissions ADD COLUMN autoplay_inaudible INTEGER NOT NULL DEFAULT ''"
+                    "ALTER TABLE site_permissions ADD COLUMN autoplay_inaudible INTEGER NOT NULL DEFAULT ''",
                 )
 
                 database.execSQL(
                     " UPDATE site_permissions" +
                         " SET autoplay_audible = -1, " + // BLOCKED by default
-                        " `autoplay_inaudible` = 1" // ALLOWED by default
+                        " `autoplay_inaudible` = 1", // ALLOWED by default
                 )
             }
         }
@@ -130,7 +131,7 @@ internal object Migrations {
             val hasEmeColumn = database.query("SELECT * FROM site_permissions").columnCount == 11
             if (!hasEmeColumn) {
                 database.execSQL(
-                    "ALTER TABLE site_permissions ADD COLUMN media_key_system_access INTEGER NOT NULL DEFAULT 0"
+                    "ALTER TABLE site_permissions ADD COLUMN media_key_system_access INTEGER NOT NULL DEFAULT 0",
                 )
                 // default is NO_DECISION
                 database.execSQL("UPDATE site_permissions SET media_key_system_access = 0")
@@ -153,7 +154,7 @@ internal object Migrations {
     val migration_5_6 = object : Migration(5, 6) {
         override fun migrate(database: SupportSQLiteDatabase) {
             database.execSQL(
-                "UPDATE site_permissions SET origin = 'https://'||origin||':443'"
+                "UPDATE site_permissions SET origin = 'https://'||origin||':443'",
             )
         }
     }
@@ -167,7 +168,7 @@ internal object Migrations {
             // This match the default value of desktop block audio only.
             database.execSQL(
                 "UPDATE site_permissions SET autoplay_audible = -1, autoplay_inaudible= 1 " +
-                    "WHERE autoplay_audible = -1 AND autoplay_inaudible = -1"
+                    "WHERE autoplay_audible = -1 AND autoplay_inaudible = -1",
             )
         }
     }
@@ -178,7 +179,7 @@ internal object Migrations {
             val hasCrossOriginStorageAccessColumn = database.query("SELECT * FROM site_permissions").columnCount == 12
             if (!hasCrossOriginStorageAccessColumn) {
                 database.execSQL(
-                    "ALTER TABLE site_permissions ADD COLUMN cross_origin_storage_access INTEGER NOT NULL DEFAULT 0"
+                    "ALTER TABLE site_permissions ADD COLUMN cross_origin_storage_access INTEGER NOT NULL DEFAULT 0",
                 )
                 // default is NO_DECISION
                 database.execSQL("UPDATE site_permissions SET cross_origin_storage_access = 0")

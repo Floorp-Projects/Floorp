@@ -80,7 +80,7 @@ interface Engine : WebExtensionRuntime, DataCleanable {
         /**
          * HTTPS-Only Mode enabled: Only allow HTTPS connections.
          */
-        ENABLED
+        ENABLED,
     }
 
     /**
@@ -173,7 +173,7 @@ interface Engine : WebExtensionRuntime, DataCleanable {
      * @param webNotificationDelegate callback to be invoked for web notification events.
      */
     fun registerWebNotificationDelegate(
-        webNotificationDelegate: WebNotificationDelegate
+        webNotificationDelegate: WebNotificationDelegate,
     ): Unit = throw UnsupportedOperationException("Web notification support is not available in this engine")
 
     /**
@@ -182,14 +182,14 @@ interface Engine : WebExtensionRuntime, DataCleanable {
      * @return A [WebPushHandler] to notify the engine with messages and subscriptions when are delivered.
      */
     fun registerWebPushDelegate(
-        webPushDelegate: WebPushDelegate
+        webPushDelegate: WebPushDelegate,
     ): WebPushHandler = throw UnsupportedOperationException("Web Push support is not available in this engine")
 
     /**
      * Registers an [ActivityDelegate] to be notified on activity events that are needed by the engine.
      */
     fun registerActivityDelegate(
-        activityDelegate: ActivityDelegate
+        activityDelegate: ActivityDelegate,
     ): Unit = throw UnsupportedOperationException("This engine does not have support for an Activity delegate.")
 
     /**
@@ -203,7 +203,7 @@ interface Engine : WebExtensionRuntime, DataCleanable {
      * to lock the the app on a certain screen orientation.
      */
     fun registerScreenOrientationDelegate(
-        delegate: OrientationDelegate
+        delegate: OrientationDelegate,
     ): Unit = throw UnsupportedOperationException("This engine does not have support for an Activity delegate.")
 
     /**
@@ -219,7 +219,7 @@ interface Engine : WebExtensionRuntime, DataCleanable {
      * @param serviceWorkerDelegate [ServiceWorkerDelegate] responding to all service workers events and requests.
      */
     fun registerServiceWorkerDelegate(
-        serviceWorkerDelegate: ServiceWorkerDelegate
+        serviceWorkerDelegate: ServiceWorkerDelegate,
     ): Unit = throw UnsupportedOperationException("Service workers support not available in this engine")
 
     /**
@@ -250,11 +250,11 @@ interface Engine : WebExtensionRuntime, DataCleanable {
     fun getTrackersLog(
         session: EngineSession,
         onSuccess: (List<TrackerLog>) -> Unit,
-        onError: (Throwable) -> Unit = { }
+        onError: (Throwable) -> Unit = { },
     ): Unit = onError(
         UnsupportedOperationException(
-            "getTrackersLog is not supported by this engine."
-        )
+            "getTrackersLog is not supported by this engine.",
+        ),
     )
 
     /**

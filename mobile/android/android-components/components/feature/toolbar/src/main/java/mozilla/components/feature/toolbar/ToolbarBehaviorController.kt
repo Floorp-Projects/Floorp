@@ -24,7 +24,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 class ToolbarBehaviorController(
     private val toolbar: Toolbar,
     private val store: BrowserStore,
-    private val customTabId: String? = null
+    private val customTabId: String? = null,
 ) {
     @VisibleForTesting
     internal var updatesScope: CoroutineScope? = null

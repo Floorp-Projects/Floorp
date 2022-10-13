@@ -17,7 +17,7 @@ package mozilla.components.lib.state
 @RequiresOptIn(
     level = RequiresOptIn.Level.WARNING,
     message = "This is a delicate Action and should only be used for situations that require debugging or testing." +
-        " Make sure you fully read and understand documentation of the action that is marked as a delicate Action."
+        " Make sure you fully read and understand documentation of the action that is marked as a delicate Action.",
 )
 @Target(AnnotationTarget.CLASS)
 public annotation class DelicateAction

@@ -26,7 +26,7 @@ import org.mozilla.samples.compose.browser.app.AppStore
  * Global components of the sample browser.
  */
 class Components(
-    context: Context
+    context: Context,
 ) {
     private val runtime by lazy { GeckoRuntime.create(context) }
 
@@ -37,8 +37,8 @@ class Components(
         BrowserStore(
             middleware = listOf(
                 RegionMiddleware(context, locationService),
-                SearchMiddleware(context)
-            ) + EngineMiddleware.create(engine)
+                SearchMiddleware(context),
+            ) + EngineMiddleware.create(engine),
         )
     }
 

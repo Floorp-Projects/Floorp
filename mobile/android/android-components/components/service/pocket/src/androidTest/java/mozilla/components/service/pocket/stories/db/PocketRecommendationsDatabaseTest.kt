@@ -35,7 +35,7 @@ class PocketRecommendationsDatabaseTest {
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
         PocketRecommendationsDatabase::class.java.canonicalName,
-        FrameworkSQLiteOpenHelperFactory()
+        FrameworkSQLiteOpenHelperFactory(),
     )
 
     @get:Rule
@@ -71,12 +71,12 @@ class PocketRecommendationsDatabaseTest {
                     "'${story.category}'," +
                     "'${story.timeToRead}'," +
                     "'${story.timesShown}'" +
-                    ")"
+                    ")",
             )
         }
         // Validate the persisted data which will be re-checked after migration
         dbVersion1.query(
-            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_STORIES}"
+            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_STORIES}",
         ).use { cursor ->
             assertEquals(1, cursor.count)
 
@@ -91,13 +91,16 @@ class PocketRecommendationsDatabaseTest {
                     category = cursor.getString(4),
                     timeToRead = cursor.getInt(5),
                     timesShown = cursor.getLong(6),
-                )
+                ),
             )
         }
 
         // Migrate the initial database to the version 2 schema
         val dbVersion2 = helper.runMigrationsAndValidate(
-            MIGRATION_TEST_DB, 2, true, Migrations.migration_1_2
+            MIGRATION_TEST_DB,
+            2,
+            true,
+            Migrations.migration_1_2,
         ).apply {
             execSQL(
                 "INSERT INTO " +
@@ -110,12 +113,12 @@ class PocketRecommendationsDatabaseTest {
                     "'${spoc.sponsor}'," +
                     "'${spoc.clickShim}'," +
                     "'${spoc.impressionShim}'" +
-                    ")"
+                    ")",
             )
         }
         // Re-check the initial data we had
         dbVersion2.query(
-            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_STORIES}"
+            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_STORIES}",
         ).use { cursor ->
             assertEquals(1, cursor.count)
 
@@ -130,12 +133,12 @@ class PocketRecommendationsDatabaseTest {
                     category = cursor.getString(4),
                     timeToRead = cursor.getInt(5),
                     timesShown = cursor.getLong(6),
-                )
+                ),
             )
         }
         // Finally validate that the new spocs are persisted successfully
         dbVersion2.query(
-            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}"
+            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}",
         ).use { cursor ->
             assertEquals(1, cursor.count)
 
@@ -165,7 +168,7 @@ class PocketRecommendationsDatabaseTest {
                     "'${story.category}'," +
                     "'${story.timeToRead}'," +
                     "'${story.timesShown}'" +
-                    ")"
+                    ")",
             )
             execSQL(
                 "INSERT INTO " +
@@ -178,13 +181,13 @@ class PocketRecommendationsDatabaseTest {
                     "'${spoc.sponsor}'," +
                     "'${spoc.clickShim}'," +
                     "'${spoc.impressionShim}'" +
-                    ")"
+                    ")",
             )
         }
 
         // Validate the recommended stories data which will be re-checked after migration
         dbVersion2.query(
-            "SELECT * FROM ${Companion.TABLE_NAME_STORIES}"
+            "SELECT * FROM ${Companion.TABLE_NAME_STORIES}",
         ).use { cursor ->
             assertEquals(1, cursor.count)
 
@@ -199,18 +202,21 @@ class PocketRecommendationsDatabaseTest {
                     category = cursor.getString(4),
                     timeToRead = cursor.getInt(5),
                     timesShown = cursor.getLong(6),
-                )
+                ),
             )
         }
 
         // Migrate to v3 database
         val dbVersion3 = helper.runMigrationsAndValidate(
-            MIGRATION_TEST_DB, 3, true, Migrations.migration_2_3
+            MIGRATION_TEST_DB,
+            3,
+            true,
+            Migrations.migration_2_3,
         )
 
         // Check that recommended stories are unchanged.
         dbVersion3.query(
-            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_STORIES}"
+            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_STORIES}",
         ).use { cursor ->
             assertEquals(1, cursor.count)
 
@@ -225,13 +231,13 @@ class PocketRecommendationsDatabaseTest {
                     category = cursor.getString(4),
                     timeToRead = cursor.getInt(5),
                     timesShown = cursor.getLong(6),
-                )
+                ),
             )
         }
 
         // Finally validate that we have two new empty tables for spocs and spocs impressions.
         dbVersion3.query(
-            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}"
+            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}",
         ).use { cursor ->
             assertEquals(0, cursor.count)
             assertEquals(11, cursor.columnCount)
@@ -249,7 +255,7 @@ class PocketRecommendationsDatabaseTest {
             assertEquals("flightCapPeriod", cursor.getColumnName(10))
         }
         dbVersion3.query(
-            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_SPOCS_IMPRESSIONS}"
+            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_SPOCS_IMPRESSIONS}",
         ).use { cursor ->
             assertEquals(0, cursor.count)
             assertEquals(3, cursor.columnCount)
@@ -276,12 +282,12 @@ class PocketRecommendationsDatabaseTest {
                     "'${story.category}'," +
                     "'${story.timeToRead}'," +
                     "'${story.timesShown}'" +
-                    ")"
+                    ")",
             )
         }
         // Validate the persisted data which will be re-checked after migration
         dbVersion1.query(
-            "SELECT * FROM ${Companion.TABLE_NAME_STORIES}"
+            "SELECT * FROM ${Companion.TABLE_NAME_STORIES}",
         ).use { cursor ->
             assertEquals(1, cursor.count)
 
@@ -296,7 +302,7 @@ class PocketRecommendationsDatabaseTest {
                     category = cursor.getString(4),
                     timeToRead = cursor.getInt(5),
                     timesShown = cursor.getLong(6),
-                )
+                ),
             )
         }
 
@@ -306,7 +312,10 @@ class PocketRecommendationsDatabaseTest {
         }
         // Migrate the initial database to the version 2 schema
         val dbVersion3 = helper.runMigrationsAndValidate(
-            MIGRATION_TEST_DB, 3, true, Migrations.migration_1_3
+            MIGRATION_TEST_DB,
+            3,
+            true,
+            Migrations.migration_1_3,
         ).apply {
             execSQL(
                 "INSERT INTO " +
@@ -325,7 +334,7 @@ class PocketRecommendationsDatabaseTest {
                     "'${spoc.lifetimeCapCount}'," +
                     "'${spoc.flightCapCount}'," +
                     "'${spoc.flightCapPeriod}'" +
-                    ")"
+                    ")",
             )
 
             execSQL(
@@ -336,12 +345,12 @@ class PocketRecommendationsDatabaseTest {
                     "'${impression.spocId}'," +
                     "'${impression.impressionId}'," +
                     "'${impression.impressionDateInSeconds}'" +
-                    ")"
+                    ")",
             )
         }
         // Re-check the initial data we had
         dbVersion3.query(
-            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_STORIES}"
+            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_STORIES}",
         ).use { cursor ->
             assertEquals(1, cursor.count)
 
@@ -356,12 +365,12 @@ class PocketRecommendationsDatabaseTest {
                     category = cursor.getString(4),
                     timeToRead = cursor.getInt(5),
                     timesShown = cursor.getLong(6),
-                )
+                ),
             )
         }
         // Finally validate that the new spocs are persisted successfully
         dbVersion3.query(
-            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}"
+            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}",
         ).use { cursor ->
             assertEquals(1, cursor.count)
 
@@ -380,7 +389,7 @@ class PocketRecommendationsDatabaseTest {
         }
         // And that the impression was also persisted successfully
         dbVersion3.query(
-            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_SPOCS_IMPRESSIONS}"
+            "SELECT * FROM ${PocketRecommendationsDatabase.TABLE_NAME_SPOCS_IMPRESSIONS}",
         ).use { cursor ->
             assertEquals(1, cursor.count)
 
@@ -407,7 +416,7 @@ class PocketRecommendationsDatabaseTest {
                     "'${story.category}'," +
                     "'${story.timeToRead}'," +
                     "'${story.timesShown}'" +
-                    ")"
+                    ")",
             )
             execSQL(
                 "INSERT INTO " +
@@ -426,7 +435,7 @@ class PocketRecommendationsDatabaseTest {
                     "'${spoc.lifetimeCapCount}'," +
                     "'${spoc.flightCapCount}'," +
                     "'${spoc.flightCapPeriod}'" +
-                    ")"
+                    ")",
             )
             execSQL(
                 "INSERT INTO " +
@@ -434,7 +443,7 @@ class PocketRecommendationsDatabaseTest {
                     "spocId, impressionId, impressionDateInSeconds" +
                     ") VALUES (" +
                     "${spoc.id}, 0, 1" +
-                    ")"
+                    ")",
             )
             // Add a new impression of the same spoc to test proper the index uniqueness
             execSQL(
@@ -443,13 +452,13 @@ class PocketRecommendationsDatabaseTest {
                     "spocId, impressionId, impressionDateInSeconds" +
                     ") VALUES (" +
                     "${spoc.id}, 1, 2" +
-                    ")"
+                    ")",
             )
         }
 
         // Validate the data before migration
         dbVersion3.query(
-            "SELECT * FROM ${Companion.TABLE_NAME_STORIES}"
+            "SELECT * FROM ${Companion.TABLE_NAME_STORIES}",
         ).use { cursor ->
             assertEquals(1, cursor.count)
 
@@ -464,11 +473,11 @@ class PocketRecommendationsDatabaseTest {
                     category = cursor.getString(4),
                     timeToRead = cursor.getInt(5),
                     timesShown = cursor.getLong(6),
-                )
+                ),
             )
         }
         dbVersion3.query(
-            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS}"
+            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS}",
         ).use { cursor ->
             assertEquals(1, cursor.count)
 
@@ -487,11 +496,11 @@ class PocketRecommendationsDatabaseTest {
                     lifetimeCapCount = cursor.getInt(8),
                     flightCapCount = cursor.getInt(9),
                     flightCapPeriod = cursor.getInt(10),
-                )
+                ),
             )
         }
         dbVersion3.query(
-            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS_IMPRESSIONS}"
+            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS_IMPRESSIONS}",
         ).use { cursor ->
             assertEquals(2, cursor.count)
 
@@ -503,12 +512,15 @@ class PocketRecommendationsDatabaseTest {
 
         // Migrate to v4 database
         val dbVersion4 = helper.runMigrationsAndValidate(
-            MIGRATION_TEST_DB, 4, true, Migrations.migration_3_4
+            MIGRATION_TEST_DB,
+            4,
+            true,
+            Migrations.migration_3_4,
         )
 
         // Check that we have the same data as before. Just that a new index was added for faster queries.
         dbVersion4.query(
-            "SELECT * FROM ${Companion.TABLE_NAME_STORIES}"
+            "SELECT * FROM ${Companion.TABLE_NAME_STORIES}",
         ).use { cursor ->
             assertEquals(1, cursor.count)
 
@@ -523,11 +535,11 @@ class PocketRecommendationsDatabaseTest {
                     category = cursor.getString(4),
                     timeToRead = cursor.getInt(5),
                     timesShown = cursor.getLong(6),
-                )
+                ),
             )
         }
         dbVersion4.query(
-            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS}"
+            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS}",
         ).use { cursor ->
             assertEquals(1, cursor.count)
 
@@ -546,11 +558,11 @@ class PocketRecommendationsDatabaseTest {
                     lifetimeCapCount = cursor.getInt(8),
                     flightCapCount = cursor.getInt(9),
                     flightCapPeriod = cursor.getInt(10),
-                )
+                ),
             )
         }
         dbVersion4.query(
-            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS_IMPRESSIONS}"
+            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS_IMPRESSIONS}",
         ).use { cursor ->
             assertEquals(2, cursor.count)
 
@@ -591,7 +603,7 @@ class PocketRecommendationsDatabaseTest {
                 "'${otherSpoc.lifetimeCapCount}'," +
                 "'${otherSpoc.flightCapCount}'," +
                 "'${otherSpoc.flightCapPeriod}'" +
-                ")"
+                ")",
         )
         dbVersion4.execSQL(
             "INSERT INTO " +
@@ -599,7 +611,7 @@ class PocketRecommendationsDatabaseTest {
                 "spocId, impressionId, impressionDateInSeconds" +
                 ") VALUES (" +
                 "${spoc.id}, 22, 33" +
-                ")"
+                ")",
         )
         // Test a new spoc and a new impressions of it are properly recorded.Z
         dbVersion4.execSQL(
@@ -608,7 +620,7 @@ class PocketRecommendationsDatabaseTest {
                 "spocId, impressionId, impressionDateInSeconds" +
                 ") VALUES (" +
                 "${otherSpoc.id}, 23, 34" +
-                ")"
+                ")",
         )
         // Add a new impression of the same spoc to test proper the index uniqueness
         dbVersion4.execSQL(
@@ -617,10 +629,10 @@ class PocketRecommendationsDatabaseTest {
                 "spocId, impressionId, impressionDateInSeconds" +
                 ") VALUES (" +
                 "${otherSpoc.id}, 24, 35" +
-                ")"
+                ")",
         )
         dbVersion4.query(
-            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS} ORDER BY 'id'"
+            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS} ORDER BY 'id'",
         ).use { cursor ->
             assertEquals(2, cursor.count)
 
@@ -639,7 +651,7 @@ class PocketRecommendationsDatabaseTest {
                     lifetimeCapCount = cursor.getInt(8),
                     flightCapCount = cursor.getInt(9),
                     flightCapPeriod = cursor.getInt(10),
-                )
+                ),
             )
 
             cursor.moveToNext()
@@ -657,11 +669,11 @@ class PocketRecommendationsDatabaseTest {
                     lifetimeCapCount = cursor.getInt(8),
                     flightCapCount = cursor.getInt(9),
                     flightCapPeriod = cursor.getInt(10),
-                )
+                ),
             )
         }
         dbVersion4.query(
-            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS_IMPRESSIONS} ORDER BY 'impressionId'"
+            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS_IMPRESSIONS} ORDER BY 'impressionId'",
         ).use { cursor ->
             assertEquals(5, cursor.count)
 
@@ -696,7 +708,7 @@ private val story = PocketStoryEntity(
     publisher = "Pocket",
     category = "general",
     timeToRead = 4,
-    timesShown = 23
+    timesShown = 23,
 )
 
 private val spoc = SpocEntity(

@@ -28,7 +28,7 @@ private const val READ_TIMEOUT = 10L // Seconds
  * [IconLoader] implementation that will try to download the icon for resources that point to an http(s) URL.
  */
 open class HttpIconLoader(
-    private val httpClient: Client
+    private val httpClient: Client,
 ) : IconLoader {
     private val logger = Logger("HttpIconLoader")
     private val failureCache = FailureCache()
@@ -57,7 +57,7 @@ open class HttpIconLoader(
             readTimeout = Pair(READ_TIMEOUT, TimeUnit.SECONDS),
             redirect = Request.Redirect.FOLLOW,
             useCaches = true,
-            private = request.isPrivate
+            private = request.isPrivate,
         )
 
         return try {

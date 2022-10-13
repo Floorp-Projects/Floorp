@@ -27,12 +27,12 @@ class BrowserMenuCheckboxTest {
                 "Hello",
                 isChecked = false,
                 end = CompoundMenuCandidate.ButtonType.CHECKBOX,
-                onCheckedChange = listener
+                onCheckedChange = listener,
             ),
             BrowserMenuCheckbox(
                 "Hello",
-                listener = listener
-            ).asCandidate(mock())
+                listener = listener,
+            ).asCandidate(mock()),
         )
     }
 }

@@ -34,7 +34,7 @@ class SearchEngineSuggestionProvider(
     private val description: String?,
     private val searchIcon: Bitmap?,
     internal val maxSuggestions: Int = DEFAULT_MAX_SUGGESTIONS,
-    internal val charactersThreshold: Int = DEFAULT_CHARACTERS_THRESHOLD
+    internal val charactersThreshold: Int = DEFAULT_CHARACTERS_THRESHOLD,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -57,7 +57,6 @@ class SearchEngineSuggestionProvider(
      *  Generates a list of [AwesomeBar.Suggestion] from a [SearchEngine] list
      */
     private fun List<SearchEngine>.into(): List<AwesomeBar.Suggestion> {
-
         return this.map {
             AwesomeBar.Suggestion(
                 provider = this@SearchEngineSuggestionProvider,
@@ -67,7 +66,7 @@ class SearchEngineSuggestionProvider(
                 title = context.getString(title, it.name),
                 description = description,
                 onSuggestionClicked = { selectShortcutEngine(it) },
-                score = MAX_VALUE
+                score = MAX_VALUE,
             )
         }
     }

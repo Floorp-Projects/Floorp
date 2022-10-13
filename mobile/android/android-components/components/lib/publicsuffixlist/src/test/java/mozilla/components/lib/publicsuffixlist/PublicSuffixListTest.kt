@@ -26,47 +26,47 @@ class PublicSuffixListTest {
     fun `Verify getPublicSuffixPlusOne for known domains`() = runTest {
         assertEquals(
             "mozilla.org",
-            publicSuffixList.getPublicSuffixPlusOne("www.mozilla.org").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.mozilla.org").await(),
         )
 
         assertEquals(
             "google.com",
-            publicSuffixList.getPublicSuffixPlusOne("google.com").await()
+            publicSuffixList.getPublicSuffixPlusOne("google.com").await(),
         )
 
         assertEquals(
             "foobar.blogspot.com",
-            publicSuffixList.getPublicSuffixPlusOne("foobar.blogspot.com").await()
+            publicSuffixList.getPublicSuffixPlusOne("foobar.blogspot.com").await(),
         )
 
         assertEquals(
             "independent.co.uk",
-            publicSuffixList.getPublicSuffixPlusOne("independent.co.uk").await()
+            publicSuffixList.getPublicSuffixPlusOne("independent.co.uk").await(),
         )
 
         assertEquals(
             "independent.co.uk",
-            publicSuffixList.getPublicSuffixPlusOne("www.independent.co.uk").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.independent.co.uk").await(),
         )
 
         assertEquals(
             "biz.com.ua",
-            publicSuffixList.getPublicSuffixPlusOne("www.biz.com.ua").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.biz.com.ua").await(),
         )
 
         assertEquals(
             "example.org",
-            publicSuffixList.getPublicSuffixPlusOne("example.org").await()
+            publicSuffixList.getPublicSuffixPlusOne("example.org").await(),
         )
 
         assertEquals(
             "example.pvt.k12.ma.us",
-            publicSuffixList.getPublicSuffixPlusOne("www.example.pvt.k12.ma.us").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.example.pvt.k12.ma.us").await(),
         )
 
         assertEquals(
             "δπθ.gr",
-            publicSuffixList.getPublicSuffixPlusOne("www.ουτοπία.δπθ.gr").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.ουτοπία.δπθ.gr").await(),
         )
     }
 
@@ -74,47 +74,47 @@ class PublicSuffixListTest {
     fun `Verify getPublicSuffix for known domains`() = runTest {
         assertEquals(
             "org",
-            publicSuffixList.getPublicSuffix("www.mozilla.org").await()
+            publicSuffixList.getPublicSuffix("www.mozilla.org").await(),
         )
 
         assertEquals(
             "com",
-            publicSuffixList.getPublicSuffix("google.com").await()
+            publicSuffixList.getPublicSuffix("google.com").await(),
         )
 
         assertEquals(
             "blogspot.com",
-            publicSuffixList.getPublicSuffix("foobar.blogspot.com").await()
+            publicSuffixList.getPublicSuffix("foobar.blogspot.com").await(),
         )
 
         assertEquals(
             "co.uk",
-            publicSuffixList.getPublicSuffix("independent.co.uk").await()
+            publicSuffixList.getPublicSuffix("independent.co.uk").await(),
         )
 
         assertEquals(
             "co.uk",
-            publicSuffixList.getPublicSuffix("www.independent.co.uk").await()
+            publicSuffixList.getPublicSuffix("www.independent.co.uk").await(),
         )
 
         assertEquals(
             "com.ua",
-            publicSuffixList.getPublicSuffix("www.biz.com.ua").await()
+            publicSuffixList.getPublicSuffix("www.biz.com.ua").await(),
         )
 
         assertEquals(
             "org",
-            publicSuffixList.getPublicSuffix("example.org").await()
+            publicSuffixList.getPublicSuffix("example.org").await(),
         )
 
         assertEquals(
             "pvt.k12.ma.us",
-            publicSuffixList.getPublicSuffix("www.example.pvt.k12.ma.us").await()
+            publicSuffixList.getPublicSuffix("www.example.pvt.k12.ma.us").await(),
         )
 
         assertEquals(
             "gr",
-            publicSuffixList.getPublicSuffix("www.ουτοπία.δπθ.gr").await()
+            publicSuffixList.getPublicSuffix("www.ουτοπία.δπθ.gr").await(),
         )
     }
 
@@ -122,47 +122,47 @@ class PublicSuffixListTest {
     fun `Verify stripPublicSuffix for known domains`() = runTest {
         assertEquals(
             "www.mozilla",
-            publicSuffixList.stripPublicSuffix("www.mozilla.org").await()
+            publicSuffixList.stripPublicSuffix("www.mozilla.org").await(),
         )
 
         assertEquals(
             "google",
-            publicSuffixList.stripPublicSuffix("google.com").await()
+            publicSuffixList.stripPublicSuffix("google.com").await(),
         )
 
         assertEquals(
             "foobar",
-            publicSuffixList.stripPublicSuffix("foobar.blogspot.com").await()
+            publicSuffixList.stripPublicSuffix("foobar.blogspot.com").await(),
         )
 
         assertEquals(
             "independent",
-            publicSuffixList.stripPublicSuffix("independent.co.uk").await()
+            publicSuffixList.stripPublicSuffix("independent.co.uk").await(),
         )
 
         assertEquals(
             "www.independent",
-            publicSuffixList.stripPublicSuffix("www.independent.co.uk").await()
+            publicSuffixList.stripPublicSuffix("www.independent.co.uk").await(),
         )
 
         assertEquals(
             "www.biz",
-            publicSuffixList.stripPublicSuffix("www.biz.com.ua").await()
+            publicSuffixList.stripPublicSuffix("www.biz.com.ua").await(),
         )
 
         assertEquals(
             "example",
-            publicSuffixList.stripPublicSuffix("example.org").await()
+            publicSuffixList.stripPublicSuffix("example.org").await(),
         )
 
         assertEquals(
             "www.example",
-            publicSuffixList.stripPublicSuffix("www.example.pvt.k12.ma.us").await()
+            publicSuffixList.stripPublicSuffix("www.example.pvt.k12.ma.us").await(),
         )
 
         assertEquals(
             "www.ουτοπία.δπθ",
-            publicSuffixList.stripPublicSuffix("www.ουτοπία.δπθ.gr").await()
+            publicSuffixList.stripPublicSuffix("www.ουτοπία.δπθ.gr").await(),
         )
     }
 
@@ -179,11 +179,11 @@ class PublicSuffixListTest {
         assertNull(publicSuffixList.getPublicSuffixPlusOne("COM").await())
         assertEquals(
             "example.COM",
-            publicSuffixList.getPublicSuffixPlusOne("example.COM").await()
+            publicSuffixList.getPublicSuffixPlusOne("example.COM").await(),
         )
         assertEquals(
             "eXample.COM",
-            publicSuffixList.getPublicSuffixPlusOne("WwW.eXample.COM").await()
+            publicSuffixList.getPublicSuffixPlusOne("WwW.eXample.COM").await(),
         )
 
         // Leading dot.
@@ -193,47 +193,47 @@ class PublicSuffixListTest {
         assertNull(publicSuffixList.getPublicSuffixPlusOne("biz").await())
         assertEquals(
             "domain.biz",
-            publicSuffixList.getPublicSuffixPlusOne("domain.biz").await()
+            publicSuffixList.getPublicSuffixPlusOne("domain.biz").await(),
         )
         assertEquals(
             "domain.biz",
-            publicSuffixList.getPublicSuffixPlusOne("b.domain.biz").await()
+            publicSuffixList.getPublicSuffixPlusOne("b.domain.biz").await(),
         )
         assertEquals(
             "domain.biz",
-            publicSuffixList.getPublicSuffixPlusOne("a.b.domain.biz").await()
+            publicSuffixList.getPublicSuffixPlusOne("a.b.domain.biz").await(),
         )
 
         // TLD with some 2-level rules.
         assertNull(publicSuffixList.getPublicSuffixPlusOne("com").await())
         assertEquals(
             "example.com",
-            publicSuffixList.getPublicSuffixPlusOne("example.com").await()
+            publicSuffixList.getPublicSuffixPlusOne("example.com").await(),
         )
         assertEquals(
             "example.com",
-            publicSuffixList.getPublicSuffixPlusOne("b.example.com").await()
+            publicSuffixList.getPublicSuffixPlusOne("b.example.com").await(),
         )
         assertEquals(
             "example.com",
-            publicSuffixList.getPublicSuffixPlusOne("a.b.example.com").await()
+            publicSuffixList.getPublicSuffixPlusOne("a.b.example.com").await(),
         )
         assertNull(publicSuffixList.getPublicSuffixPlusOne("uk.com").await())
         assertEquals(
             "example.uk.com",
-            publicSuffixList.getPublicSuffixPlusOne("example.uk.com").await()
+            publicSuffixList.getPublicSuffixPlusOne("example.uk.com").await(),
         )
         assertEquals(
             "example.uk.com",
-            publicSuffixList.getPublicSuffixPlusOne("b.example.uk.com").await()
+            publicSuffixList.getPublicSuffixPlusOne("b.example.uk.com").await(),
         )
         assertEquals(
             "example.uk.com",
-            publicSuffixList.getPublicSuffixPlusOne("a.b.example.uk.com").await()
+            publicSuffixList.getPublicSuffixPlusOne("a.b.example.uk.com").await(),
         )
         assertEquals(
             "test.ac",
-            publicSuffixList.getPublicSuffixPlusOne("test.ac").await()
+            publicSuffixList.getPublicSuffixPlusOne("test.ac").await(),
         )
 
         // TLD with only 1 (wildcard) rule.
@@ -241,11 +241,11 @@ class PublicSuffixListTest {
         assertNull(publicSuffixList.getPublicSuffixPlusOne("c.mm").await())
         assertEquals(
             "b.c.mm",
-            publicSuffixList.getPublicSuffixPlusOne("b.c.mm").await()
+            publicSuffixList.getPublicSuffixPlusOne("b.c.mm").await(),
         )
         assertEquals(
             "b.c.mm",
-            publicSuffixList.getPublicSuffixPlusOne("a.b.c.mm").await()
+            publicSuffixList.getPublicSuffixPlusOne("a.b.c.mm").await(),
         )
 
         // More complex TLD.
@@ -256,47 +256,47 @@ class PublicSuffixListTest {
         assertNull(publicSuffixList.getPublicSuffixPlusOne("c.kobe.jp").await())
         assertEquals(
             "test.jp",
-            publicSuffixList.getPublicSuffixPlusOne("test.jp").await()
+            publicSuffixList.getPublicSuffixPlusOne("test.jp").await(),
         )
         assertEquals(
             "test.jp",
-            publicSuffixList.getPublicSuffixPlusOne("www.test.jp").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.test.jp").await(),
         )
         assertEquals(
             "test.ac.jp",
-            publicSuffixList.getPublicSuffixPlusOne("test.ac.jp").await()
+            publicSuffixList.getPublicSuffixPlusOne("test.ac.jp").await(),
         )
         assertEquals(
             "test.ac.jp",
-            publicSuffixList.getPublicSuffixPlusOne("www.test.ac.jp").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.test.ac.jp").await(),
         )
         assertEquals(
             "test.kyoto.jp",
-            publicSuffixList.getPublicSuffixPlusOne("test.kyoto.jp").await()
+            publicSuffixList.getPublicSuffixPlusOne("test.kyoto.jp").await(),
         )
         assertEquals(
             "b.ide.kyoto.jp",
-            publicSuffixList.getPublicSuffixPlusOne("b.ide.kyoto.jp").await()
+            publicSuffixList.getPublicSuffixPlusOne("b.ide.kyoto.jp").await(),
         )
         assertEquals(
             "b.ide.kyoto.jp",
-            publicSuffixList.getPublicSuffixPlusOne("a.b.ide.kyoto.jp").await()
+            publicSuffixList.getPublicSuffixPlusOne("a.b.ide.kyoto.jp").await(),
         )
         assertEquals(
             "b.c.kobe.jp",
-            publicSuffixList.getPublicSuffixPlusOne("b.c.kobe.jp").await()
+            publicSuffixList.getPublicSuffixPlusOne("b.c.kobe.jp").await(),
         )
         assertEquals(
             "b.c.kobe.jp",
-            publicSuffixList.getPublicSuffixPlusOne("a.b.c.kobe.jp").await()
+            publicSuffixList.getPublicSuffixPlusOne("a.b.c.kobe.jp").await(),
         )
         assertEquals(
             "city.kobe.jp",
-            publicSuffixList.getPublicSuffixPlusOne("city.kobe.jp").await()
+            publicSuffixList.getPublicSuffixPlusOne("city.kobe.jp").await(),
         )
         assertEquals(
             "city.kobe.jp",
-            publicSuffixList.getPublicSuffixPlusOne("www.city.kobe.jp").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.city.kobe.jp").await(),
         )
 
         // TLD with a wildcard rule and exceptions.
@@ -304,109 +304,109 @@ class PublicSuffixListTest {
         assertNull(publicSuffixList.getPublicSuffixPlusOne("test.ck").await())
         assertEquals(
             "b.test.ck",
-            publicSuffixList.getPublicSuffixPlusOne("b.test.ck").await()
+            publicSuffixList.getPublicSuffixPlusOne("b.test.ck").await(),
         )
         assertEquals(
             "b.test.ck",
-            publicSuffixList.getPublicSuffixPlusOne("a.b.test.ck").await()
+            publicSuffixList.getPublicSuffixPlusOne("a.b.test.ck").await(),
         )
         assertEquals(
             "www.ck",
-            publicSuffixList.getPublicSuffixPlusOne("www.ck").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.ck").await(),
         )
         assertEquals(
             "www.ck",
-            publicSuffixList.getPublicSuffixPlusOne("www.www.ck").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.www.ck").await(),
         )
 
         // US K12.
         assertNull(publicSuffixList.getPublicSuffixPlusOne("us").await())
         assertEquals(
             "test.us",
-            publicSuffixList.getPublicSuffixPlusOne("test.us").await()
+            publicSuffixList.getPublicSuffixPlusOne("test.us").await(),
         )
         assertEquals(
             "test.us",
-            publicSuffixList.getPublicSuffixPlusOne("www.test.us").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.test.us").await(),
         )
         assertNull(publicSuffixList.getPublicSuffixPlusOne("ak.us").await())
         assertEquals(
             "test.ak.us",
-            publicSuffixList.getPublicSuffixPlusOne("www.test.ak.us").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.test.ak.us").await(),
         )
         assertNull(publicSuffixList.getPublicSuffixPlusOne("k12.ak.us").await())
         assertEquals(
             "test.k12.ak.us",
-            publicSuffixList.getPublicSuffixPlusOne("test.k12.ak.us").await()
+            publicSuffixList.getPublicSuffixPlusOne("test.k12.ak.us").await(),
         )
         assertEquals(
             "test.k12.ak.us",
-            publicSuffixList.getPublicSuffixPlusOne("www.test.k12.ak.us").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.test.k12.ak.us").await(),
         )
 
         // IDN labels.
         assertEquals(
             "食狮.com.cn",
-            publicSuffixList.getPublicSuffixPlusOne("食狮.com.cn").await()
+            publicSuffixList.getPublicSuffixPlusOne("食狮.com.cn").await(),
         )
         // https://github.com/mozilla-mobile/android-components/issues/1777
         assertEquals(
             "食狮.公司.cn",
-            publicSuffixList.getPublicSuffixPlusOne("食狮.公司.cn").await()
+            publicSuffixList.getPublicSuffixPlusOne("食狮.公司.cn").await(),
         )
         assertEquals(
             "食狮.公司.cn",
-            publicSuffixList.getPublicSuffixPlusOne("www.食狮.公司.cn").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.食狮.公司.cn").await(),
         )
         assertEquals(
             "shishi.公司.cn",
-            publicSuffixList.getPublicSuffixPlusOne("shishi.公司.cn").await()
+            publicSuffixList.getPublicSuffixPlusOne("shishi.公司.cn").await(),
         )
         assertNull(publicSuffixList.getPublicSuffixPlusOne("公司.cn").await())
         assertEquals(
             "食狮.中国",
-            publicSuffixList.getPublicSuffixPlusOne("食狮.中国").await()
+            publicSuffixList.getPublicSuffixPlusOne("食狮.中国").await(),
         )
         assertEquals(
             "食狮.中国",
-            publicSuffixList.getPublicSuffixPlusOne("www.食狮.中国").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.食狮.中国").await(),
         )
         assertEquals(
             "shishi.中国",
-            publicSuffixList.getPublicSuffixPlusOne("shishi.中国").await()
+            publicSuffixList.getPublicSuffixPlusOne("shishi.中国").await(),
         )
         assertNull(publicSuffixList.getPublicSuffixPlusOne("中国").await())
 
         // Same as above, but punycoded.
         assertEquals(
             "xn--85x722f.com.cn",
-            publicSuffixList.getPublicSuffixPlusOne("xn--85x722f.com.cn").await()
+            publicSuffixList.getPublicSuffixPlusOne("xn--85x722f.com.cn").await(),
         )
         // https://github.com/mozilla-mobile/android-components/issues/1777
         assertEquals(
             "xn--85x722f.xn--55qx5d.cn",
-            publicSuffixList.getPublicSuffixPlusOne("xn--85x722f.xn--55qx5d.cn").await()
+            publicSuffixList.getPublicSuffixPlusOne("xn--85x722f.xn--55qx5d.cn").await(),
         )
         assertEquals(
             "xn--85x722f.xn--55qx5d.cn",
-            publicSuffixList.getPublicSuffixPlusOne("www.xn--85x722f.xn--55qx5d.cn").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.xn--85x722f.xn--55qx5d.cn").await(),
         )
         assertEquals(
             "shishi.xn--55qx5d.cn",
-            publicSuffixList.getPublicSuffixPlusOne("shishi.xn--55qx5d.cn").await()
+            publicSuffixList.getPublicSuffixPlusOne("shishi.xn--55qx5d.cn").await(),
         )
         assertNull(publicSuffixList.getPublicSuffixPlusOne("xn--55qx5d.cn").await())
         assertEquals(
             "xn--85x722f.xn--fiqs8s",
-            publicSuffixList.getPublicSuffixPlusOne("xn--85x722f.xn--fiqs8s").await()
+            publicSuffixList.getPublicSuffixPlusOne("xn--85x722f.xn--fiqs8s").await(),
         )
         assertEquals(
             "xn--85x722f.xn--fiqs8s",
-            publicSuffixList.getPublicSuffixPlusOne("www.xn--85x722f.xn--fiqs8s").await()
+            publicSuffixList.getPublicSuffixPlusOne("www.xn--85x722f.xn--fiqs8s").await(),
         )
         assertEquals(
             "shishi.xn--fiqs8s",
-            publicSuffixList.getPublicSuffixPlusOne("shishi.xn--fiqs8s").await()
+            publicSuffixList.getPublicSuffixPlusOne("shishi.xn--fiqs8s").await(),
         )
         assertNull(publicSuffixList.getPublicSuffixPlusOne("xn--fiqs8s").await())
     }

@@ -31,7 +31,7 @@ class CoroutineScopeKtTest {
     fun `launchAndTry throws on unrecoverable Rust exceptions`() = runTest {
         CoroutineScope(coroutineContext).launchAndTry(
             errorBlock = { throw InternalException("unit test") },
-            block = { throw MissingRegistrationTokenException("") }
+            block = { throw MissingRegistrationTokenException("") },
         )
     }
 
@@ -39,7 +39,7 @@ class CoroutineScopeKtTest {
     fun `launchAndTry throws original exception`() = runTest {
         CoroutineScope(coroutineContext).launchAndTry(
             errorBlock = { throw InternalException("unit test") },
-            block = { throw ArithmeticException() }
+            block = { throw ArithmeticException() },
         )
     }
 
@@ -47,57 +47,57 @@ class CoroutineScopeKtTest {
     fun `launchAndTry should NOT throw on recoverable Rust exceptions`() = runTest {
         CoroutineScope(coroutineContext).launchAndTry(
             { throw CryptoException("should not fail test") },
-            { assert(true) }
+            { assert(true) },
         ) + exceptionHandler {}
 
         CoroutineScope(coroutineContext).launchAndTry(
             { throw CommunicationServerException("should not fail test") },
-            { assert(true) }
+            { assert(true) },
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
             { throw CommunicationException("should not fail test") },
-            { assert(true) }
+            { assert(true) },
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
             { throw AlreadyRegisteredException("") },
-            { assert(true) }
+            { assert(true) },
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
             { throw StorageException("should not fail test") },
-            { assert(true) }
+            { assert(true) },
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
             { throw MissingRegistrationTokenException("") },
-            { assert(true) }
+            { assert(true) },
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
             { throw StorageSqlException("should not fail test") },
-            { assert(true) }
+            { assert(true) },
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
             { throw TranscodingException("should not fail test") },
-            { assert(true) }
+            { assert(true) },
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
             { throw RecordNotFoundException("should not fail test") },
-            { assert(true) }
+            { assert(true) },
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
             { throw UrlParseException("should not fail test") },
-            { assert(true) }
+            { assert(true) },
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
             { throw GeneralException("should not fail test") },
-            { assert(true) }
+            { assert(true) },
         )
     }
 }

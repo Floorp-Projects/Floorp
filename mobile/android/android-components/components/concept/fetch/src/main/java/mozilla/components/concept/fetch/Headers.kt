@@ -76,7 +76,7 @@ interface Headers : Iterable<Header> {
  */
 data class Header(
     val name: String,
-    val value: String
+    val value: String,
 ) {
     init {
         if (name.isEmpty()) {
@@ -93,7 +93,7 @@ class MutableHeaders(headers: List<Header>) : Headers, MutableIterable<Header> {
     private val headers = headers.toMutableList()
 
     constructor(vararg pairs: Pair<String, String>) : this(
-        pairs.map { (name, value) -> Header(name, value) }.toMutableList()
+        pairs.map { (name, value) -> Header(name, value) }.toMutableList(),
     )
 
     /**

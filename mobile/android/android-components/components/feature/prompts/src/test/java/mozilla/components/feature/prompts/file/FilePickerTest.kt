@@ -56,7 +56,7 @@ class FilePickerTest {
         mimeTypes = emptyArray(),
         onSingleFileSelected = noopSingle,
         onMultipleFilesSelected = noopMulti,
-        onDismiss = {}
+        onDismiss = {},
     )
 
     private lateinit var fragment: PromptContainer
@@ -98,7 +98,7 @@ class FilePickerTest {
         filePicker = spy(
             FilePicker(fragment, store) {
                 onRequestPermissionWasCalled = true
-            }
+            },
         )
 
         doReturn(context).`when`(fragment).context
@@ -195,7 +195,7 @@ class FilePickerTest {
 
         val filePickerRequest = request.copy(
             isMultipleFilesSelection = true,
-            onMultipleFilesSelected = onMultipleFileSelection
+            onMultipleFilesSelected = onMultipleFileSelection,
         )
 
         val selected = prepareSelectedSession(filePickerRequest)
@@ -289,7 +289,7 @@ class FilePickerTest {
         filePicker = spy(
             FilePicker(fragment, store, null) { requested ->
                 permissionsRequested = requested
-            }
+            },
         )
 
         filePicker.askAndroidPermissionsForRequest(permissions, request)
@@ -356,7 +356,7 @@ class FilePickerTest {
             clipData = (
                 ClipData.newRawUri(
                     "Test",
-                    ("file://" + File(testContext.applicationInfo.dataDir, "randomFile").canonicalPath).toUri()
+                    ("file://" + File(testContext.applicationInfo.dataDir, "randomFile").canonicalPath).toUri(),
                 )
                 )
         }

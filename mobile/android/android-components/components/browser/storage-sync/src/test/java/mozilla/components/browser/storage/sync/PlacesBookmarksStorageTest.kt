@@ -113,8 +113,11 @@ class PlacesBookmarksStorageTest {
         bookmarks.updateNode(
             insertedItem,
             BookmarkInfo(
-                parentGuid = folderGuid, title = null, position = 9999u, url = null
-            )
+                parentGuid = folderGuid,
+                title = null,
+                position = 9999u,
+                url = null,
+            ),
         )
         with(bookmarks.getBookmarksWithUrl(url)) {
             assertEquals(1, this.size)
@@ -183,9 +186,13 @@ class PlacesBookmarksStorageTest {
         assertTrue(bookmarks.deleteNode(folderGuid))
 
         for (
-            root in listOf(
-                BookmarkRoot.Mobile, BookmarkRoot.Root, BookmarkRoot.Menu, BookmarkRoot.Toolbar, BookmarkRoot.Unfiled
-            )
+        root in listOf(
+            BookmarkRoot.Mobile,
+            BookmarkRoot.Root,
+            BookmarkRoot.Menu,
+            BookmarkRoot.Toolbar,
+            BookmarkRoot.Unfiled,
+        )
         ) {
             try {
                 bookmarks.deleteNode(root.id)

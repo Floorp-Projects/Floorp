@@ -51,10 +51,10 @@ class SecureWindowFeatureTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = tabId, private = true)
+                    createTab("https://www.mozilla.org", id = tabId, private = true),
                 ),
-                selectedTabId = tabId
-            )
+                selectedTabId = tabId,
+            ),
         )
         val feature = SecureWindowFeature(window, store)
 
@@ -68,10 +68,10 @@ class SecureWindowFeatureTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = tabId, private = false)
+                    createTab("https://www.mozilla.org", id = tabId, private = false),
                 ),
-                selectedTabId = tabId
-            )
+                selectedTabId = tabId,
+            ),
         )
         val feature = SecureWindowFeature(window, store)
 

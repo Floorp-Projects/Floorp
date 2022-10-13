@@ -80,7 +80,7 @@ fun <S : State, A : Action> Fragment.consumeFrom(store: Store<S, A>, block: (S) 
 fun <S : State, A : Action> Fragment.consumeFlow(
     from: Store<S, A>,
     owner: LifecycleOwner? = this,
-    block: suspend (Flow<S>) -> Unit
+    block: suspend (Flow<S>) -> Unit,
 ) {
     val fragment = this
     val view = checkNotNull(view) { "Fragment has no view yet. Call from onViewCreated()." }

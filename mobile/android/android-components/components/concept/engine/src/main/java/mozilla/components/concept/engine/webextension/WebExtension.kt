@@ -23,7 +23,7 @@ import org.json.JSONObject
 abstract class WebExtension(
     val id: String,
     val url: String,
-    val supportActions: Boolean
+    val supportActions: Boolean,
 ) {
     /**
      * Registers a [MessageHandler] for message events from background scripts.
@@ -421,7 +421,7 @@ data class Metadata(
      * Whether or not this extension is temporary i.e. installed using a debug tool
      * such as web-ext, and won't be retained when the application exits.
      */
-    val temporary: Boolean = false
+    val temporary: Boolean = false,
 )
 
 /**

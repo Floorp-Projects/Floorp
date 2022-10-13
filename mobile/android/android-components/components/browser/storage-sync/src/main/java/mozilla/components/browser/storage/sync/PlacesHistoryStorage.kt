@@ -44,7 +44,7 @@ const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
 @Suppress("TooManyFunctions", "LargeClass")
 open class PlacesHistoryStorage(
     context: Context,
-    crashReporter: CrashReporting? = null
+    crashReporter: CrashReporting? = null,
 ) : PlacesStorage(context, crashReporter), HistoryStorage, HistoryMetadataStorage, SyncableStore {
     /**
      * Separate reader used only for autocomplete suggestions allowing to decouple this functionality
@@ -67,8 +67,8 @@ open class PlacesHistoryStorage(
                         uri,
                         visitType = visit.visitType.intoTransitionType(),
                         isRedirectSource = visit.redirectSource != null,
-                        isPermanentRedirectSource = visit.redirectSource == RedirectSource.PERMANENT
-                    )
+                        isPermanentRedirectSource = visit.redirectSource == RedirectSource.PERMANENT,
+                    ),
                 )
             }
         }
@@ -89,8 +89,8 @@ open class PlacesHistoryStorage(
                         url = uri,
                         visitType = null,
                         title = observation.title,
-                        previewImageUrl = observation.previewImageUrl
-                    )
+                        previewImageUrl = observation.previewImageUrl,
+                    ),
                 )
             }
         }
@@ -110,7 +110,7 @@ open class PlacesHistoryStorage(
                 places.reader().getVisitedUrlsInRange(
                     start = 0,
                     end = System.currentTimeMillis(),
-                    includeRemote = true
+                    includeRemote = true,
                 )
             }
         }
@@ -134,7 +134,7 @@ open class PlacesHistoryStorage(
 
     override suspend fun getTopFrecentSites(
         numItems: Int,
-        frecencyThreshold: FrecencyThresholdOption
+        frecencyThreshold: FrecencyThresholdOption,
     ): List<TopFrecentSiteInfo> {
         if (numItems <= 0) {
             return emptyList()
@@ -170,7 +170,7 @@ open class PlacesHistoryStorage(
                 text = it.matchedSegment,
                 url = it.url,
                 source = AUTOCOMPLETE_SOURCE_NAME,
-                totalItems = 1
+                totalItems = 1,
             )
         }
     }
@@ -302,7 +302,7 @@ open class PlacesHistoryStorage(
 
     override suspend fun getHistoryHighlights(
         weights: HistoryHighlightWeights,
-        limit: Int
+        limit: Int,
     ): List<HistoryHighlight> {
         return handlePlacesExceptions("getHistoryHighlights", default = emptyList()) {
             places.reader().getHighlights(weights.into(), limit).intoHighlights()
@@ -311,7 +311,7 @@ open class PlacesHistoryStorage(
 
     override suspend fun noteHistoryMetadataObservation(
         key: HistoryMetadataKey,
-        observation: HistoryMetadataObservation
+        observation: HistoryMetadataObservation,
     ) {
         if (!canAddUri(key.url)) {
             logger.debug("Not recording metadata (canAddUri=false) for: ${key.url}")
@@ -354,7 +354,7 @@ open class PlacesHistoryStorage(
     }
 
     private suspend fun deleteHistoryMetadata(
-        predicate: (mozilla.appservices.places.uniffi.HistoryMetadata) -> Boolean
+        predicate: (mozilla.appservices.places.uniffi.HistoryMetadata) -> Boolean,
     ) {
         // Ideally, we want this to live in A-S as a simple DELETE statement.
         // As-is, this isn't an atomic operation. For how we're using these data, both lack of
@@ -368,8 +368,8 @@ open class PlacesHistoryStorage(
                             HistoryMetadataKey(
                                 url = it.url,
                                 searchTerm = it.searchTerm,
-                                referrerUrl = it.referrerUrl
-                            ).into()
+                                referrerUrl = it.referrerUrl,
+                            ).into(),
                         )
                     }
             }
@@ -397,7 +397,7 @@ open class PlacesHistoryStorage(
 
         val schemasToIgnore = listOf(
             "about", "imap", "news", "mailbox", "moz-anno", "moz-extension",
-            "view-source", "chrome", "resource", "data", "javascript", "blob"
+            "view-source", "chrome", "resource", "data", "javascript", "blob",
         )
 
         return !schemasToIgnore.contains(scheme)

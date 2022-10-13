@@ -26,7 +26,7 @@ class DefaultInteractorTest {
             TestSyncedTabsView()
         val feature = DefaultInteractor(
             controller,
-            view
+            view,
         ) {}
 
         assertNull(view.listener)
@@ -42,7 +42,7 @@ class DefaultInteractorTest {
             TestSyncedTabsView()
         val feature = DefaultInteractor(
             controller,
-            view
+            view,
         ) {}
 
         assertNull(view.listener)
@@ -61,7 +61,7 @@ class DefaultInteractorTest {
         var invoked = false
         val feature = DefaultInteractor(
             controller,
-            view
+            view,
         ) {
             invoked = true
         }
@@ -75,7 +75,7 @@ class DefaultInteractorTest {
     fun `onRefresh does not update devices when there is no constellation`() = runTest {
         val feature = DefaultInteractor(
             controller,
-            view
+            view,
         ) {}
 
         feature.onRefresh()
@@ -87,7 +87,7 @@ class DefaultInteractorTest {
     fun `onRefresh updates devices when there is a constellation`() = runTest {
         val feature = DefaultInteractor(
             controller,
-            view
+            view,
         ) {}
 
         feature.onRefresh()

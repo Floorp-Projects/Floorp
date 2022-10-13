@@ -57,7 +57,7 @@ class GeckoResultTest {
             {
                 assertTrue(it is IllegalStateException)
                 GeckoResult.fromValue(null)
-            }
+            },
         ).await()
     }
 

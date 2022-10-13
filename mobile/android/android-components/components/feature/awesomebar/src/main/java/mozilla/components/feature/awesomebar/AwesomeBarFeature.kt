@@ -38,7 +38,7 @@ class AwesomeBarFeature(
     private val icons: BrowserIcons? = null,
     private val indicatorIcon: Drawable? = null,
     onEditStart: (() -> Unit)? = null,
-    onEditComplete: (() -> Unit)? = null
+    onEditComplete: (() -> Unit)? = null,
 ) {
     init {
         toolbar.setOnEditListener(
@@ -47,8 +47,8 @@ class AwesomeBarFeature(
                 onEditStart,
                 onEditComplete,
                 ::showAwesomeBar,
-                ::hideAwesomeBar
-            )
+                ::hideAwesomeBar,
+            ),
         )
 
         awesomeBar.setOnStopListener { toolbar.displayMode() }
@@ -61,7 +61,7 @@ class AwesomeBarFeature(
     fun addSessionProvider(
         resources: Resources,
         store: BrowserStore,
-        selectTabUseCase: TabsUseCases.SelectTabUseCase
+        selectTabUseCase: TabsUseCases.SelectTabUseCase,
     ): AwesomeBarFeature {
         val provider = SessionSuggestionProvider(resources, store, selectTabUseCase, icons, indicatorIcon)
         awesomeBar.addProviders(provider)
@@ -88,7 +88,7 @@ class AwesomeBarFeature(
         limit: Int = 15,
         mode: SearchSuggestionProvider.Mode = SearchSuggestionProvider.Mode.SINGLE_SUGGESTION,
         engine: Engine? = null,
-        filterExactMatch: Boolean = false
+        filterExactMatch: Boolean = false,
     ): AwesomeBarFeature {
         awesomeBar.addProviders(
             SearchSuggestionProvider(
@@ -98,8 +98,8 @@ class AwesomeBarFeature(
                 limit,
                 mode,
                 engine,
-                filterExactMatch = filterExactMatch
-            )
+                filterExactMatch = filterExactMatch,
+            ),
         )
         return this
     }
@@ -129,7 +129,7 @@ class AwesomeBarFeature(
         limit: Int = 15,
         mode: SearchSuggestionProvider.Mode = SearchSuggestionProvider.Mode.SINGLE_SUGGESTION,
         engine: Engine? = null,
-        filterExactMatch: Boolean = false
+        filterExactMatch: Boolean = false,
     ): AwesomeBarFeature {
         awesomeBar.addProviders(
             SearchSuggestionProvider(
@@ -140,8 +140,8 @@ class AwesomeBarFeature(
                 limit,
                 mode,
                 engine,
-                filterExactMatch = filterExactMatch
-            )
+                filterExactMatch = filterExactMatch,
+            ),
         )
         return this
     }
@@ -159,15 +159,15 @@ class AwesomeBarFeature(
         store: BrowserStore,
         searchUseCase: SearchUseCases.SearchUseCase,
         icon: Bitmap? = null,
-        showDescription: Boolean = false
+        showDescription: Boolean = false,
     ): AwesomeBarFeature {
         awesomeBar.addProviders(
             SearchActionProvider(
                 store,
                 searchUseCase,
                 icon,
-                showDescription
-            )
+                showDescription,
+            ),
         )
         return this
     }
@@ -186,14 +186,14 @@ class AwesomeBarFeature(
         historyStorage: HistoryStorage,
         loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
         engine: Engine? = null,
-        maxNumberOfSuggestions: Int = -1
+        maxNumberOfSuggestions: Int = -1,
     ): AwesomeBarFeature {
         awesomeBar.addProviders(
             if (maxNumberOfSuggestions <= 0) {
                 HistoryStorageSuggestionProvider(historyStorage, loadUrlUseCase, icons, engine)
             } else {
                 HistoryStorageSuggestionProvider(historyStorage, loadUrlUseCase, icons, engine, maxNumberOfSuggestions)
-            }
+            },
         )
         return this
     }
@@ -210,7 +210,7 @@ class AwesomeBarFeature(
     fun addClipboardProvider(
         context: Context,
         loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
-        engine: Engine? = null
+        engine: Engine? = null,
     ): AwesomeBarFeature {
         awesomeBar.addProviders(ClipboardSuggestionProvider(context, loadUrlUseCase, engine = engine))
         return this
@@ -232,7 +232,7 @@ internal class ToolbarEditListener(
     private val onEditStart: (() -> Unit)? = null,
     private val onEditComplete: (() -> Unit)? = null,
     private val showAwesomeBar: () -> Unit,
-    private val hideAwesomeBar: () -> Unit
+    private val hideAwesomeBar: () -> Unit,
 ) : Toolbar.OnEditListener {
     private var inputStarted = false
 

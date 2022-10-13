@@ -16,7 +16,7 @@ import org.mozilla.geckoview.OrientationController
  * and the returned value to a [OrientationDelegate].
  */
 internal class GeckoScreenOrientationDelegate(
-    private val delegate: OrientationDelegate
+    private val delegate: OrientationDelegate,
 ) : OrientationController.OrientationDelegate {
     override fun onOrientationLock(requestedOrientation: Int): GeckoResult<AllowOrDeny> {
         val result = GeckoResult<AllowOrDeny>()

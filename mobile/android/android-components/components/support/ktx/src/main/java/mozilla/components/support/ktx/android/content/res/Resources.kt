@@ -39,7 +39,7 @@ val Resources.locale: Locale
 @Suppress("SpreadOperator")
 fun Resources.getSpanned(
     @StringRes id: Int,
-    vararg spanParts: Pair<Any, Any>
+    vararg spanParts: Pair<Any, Any>,
 ): SpannedString {
     val builder = SpannableStringBuilder()
     val formatArgs = spanParts.map { (text) -> text }.toTypedArray()
@@ -54,7 +54,7 @@ fun Resources.getSpanned(
  */
 private class SpannableAppendable(
     private val builder: SpannableStringBuilder,
-    spanParts: Array<out Pair<Any, Any>>
+    spanParts: Array<out Pair<Any, Any>>,
 ) : Appendable {
 
     /**

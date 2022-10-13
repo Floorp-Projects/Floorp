@@ -33,7 +33,7 @@ class SimpleBrowserMenuItem(
     @ColorRes
     private val textColorResource: Int = NO_ID,
     override val isCollapsingMenuLimit: Boolean = false,
-    private val listener: (() -> Unit)? = null
+    private val listener: (() -> Unit)? = null,
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
 
@@ -63,7 +63,7 @@ class SimpleBrowserMenuItem(
     override fun asCandidate(context: Context): MenuCandidate {
         val textStyle = TextStyle(
             size = if (textSize == NO_ID.toFloat()) null else textSize,
-            color = if (textColorResource == NO_ID) null else getColor(context, textColorResource)
+            color = if (textColorResource == NO_ID) null else getColor(context, textColorResource),
         )
         val containerStyle = ContainerStyle(isVisible = visible())
         return if (listener != null) {
@@ -71,13 +71,13 @@ class SimpleBrowserMenuItem(
                 label,
                 textStyle = textStyle,
                 containerStyle = containerStyle,
-                onClick = listener
+                onClick = listener,
             )
         } else {
             DecorativeTextMenuCandidate(
                 label,
                 textStyle = textStyle,
-                containerStyle = containerStyle
+                containerStyle = containerStyle,
             )
         }
     }

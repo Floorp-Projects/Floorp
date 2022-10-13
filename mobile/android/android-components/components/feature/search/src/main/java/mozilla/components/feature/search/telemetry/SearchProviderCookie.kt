@@ -22,5 +22,5 @@ internal data class SearchProviderCookie(
     val host: String,
     val name: String,
     val codeParam: String,
-    val codePrefixes: List<String>
+    val codePrefixes: List<String>,
 )

@@ -14,14 +14,14 @@ import mozilla.components.browser.state.store.BrowserStore
  * @param store the application's [BrowserStore].
  */
 class DownloadsUseCases(
-    store: BrowserStore
+    store: BrowserStore,
 ) {
 
     /**
      * Use case that cancels the download request from a tab.
      */
     class CancelDownloadRequestUseCase(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Cancels the download request the session with the given [tabId].
@@ -32,7 +32,7 @@ class DownloadsUseCases(
     }
 
     class ConsumeDownloadUseCase(
-        private val store: BrowserStore
+        private val store: BrowserStore,
     ) {
         /**
          * Consumes the download with the given [downloadId] from the session with the given
@@ -41,8 +41,9 @@ class DownloadsUseCases(
         operator fun invoke(tabId: String, downloadId: String) {
             store.dispatch(
                 ContentAction.ConsumeDownloadAction(
-                    tabId, downloadId
-                )
+                    tabId,
+                    downloadId,
+                ),
             )
         }
     }

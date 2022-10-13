@@ -129,7 +129,7 @@ internal class ColorPickerDialogFragment : PromptDialogFragment(), DialogInterfa
             sessionId: String,
             promptRequestUID: String,
             shouldDismissOnLoad: Boolean,
-            defaultColor: String
+            defaultColor: String,
         ) = ColorPickerDialogFragment().apply {
             arguments = (arguments ?: Bundle()).apply {
                 putString(KEY_SESSION_ID, sessionId)
@@ -145,7 +145,7 @@ internal fun Int.toColorItem(selected: Boolean = false): ColorItem {
     return ColorItem(
         color = this,
         contentDescription = toHexColor(),
-        selected = selected
+        selected = selected,
     )
 }
 

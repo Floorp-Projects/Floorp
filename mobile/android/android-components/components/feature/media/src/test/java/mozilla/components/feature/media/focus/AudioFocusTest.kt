@@ -46,14 +46,14 @@ class AudioFocusTest {
         val controller: MediaSession.Controller = mock()
         val mediaSessionState = MediaSessionState(
             controller,
-            playbackState = MediaSession.PlaybackState.PLAYING
+            playbackState = MediaSession.PlaybackState.PLAYING,
         )
         val tabSession = createTab(
             "https://www.mozilla.org",
-            mediaSessionState = mediaSessionState
+            mediaSessionState = mediaSessionState,
         )
         val initialState = BrowserState(
-            tabs = listOf(tabSession)
+            tabs = listOf(tabSession),
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
@@ -76,14 +76,14 @@ class AudioFocusTest {
         val controller: MediaSession.Controller = mock()
         val mediaSessionState = MediaSessionState(
             controller,
-            playbackState = MediaSession.PlaybackState.PLAYING
+            playbackState = MediaSession.PlaybackState.PLAYING,
         )
         val tabSession = createTab(
             "https://www.mozilla.org",
-            mediaSessionState = mediaSessionState
+            mediaSessionState = mediaSessionState,
         )
         val initialState = BrowserState(
-            tabs = listOf(tabSession)
+            tabs = listOf(tabSession),
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
@@ -106,14 +106,14 @@ class AudioFocusTest {
         val controller: MediaSession.Controller = mock()
         val mediaSessionState = MediaSessionState(
             controller,
-            playbackState = MediaSession.PlaybackState.PLAYING
+            playbackState = MediaSession.PlaybackState.PLAYING,
         )
         val tabSession = createTab(
             "https://www.mozilla.org",
-            mediaSessionState = mediaSessionState
+            mediaSessionState = mediaSessionState,
         )
         val initialState = BrowserState(
-            tabs = listOf(tabSession)
+            tabs = listOf(tabSession),
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
@@ -136,14 +136,14 @@ class AudioFocusTest {
         val controller: MediaSession.Controller = mock()
         val mediaSessionState = MediaSessionState(
             controller,
-            playbackState = MediaSession.PlaybackState.PLAYING
+            playbackState = MediaSession.PlaybackState.PLAYING,
         )
         val tabSession = createTab(
             "https://www.mozilla.org",
-            mediaSessionState = mediaSessionState
+            mediaSessionState = mediaSessionState,
         )
         val initialState = BrowserState(
-            tabs = listOf(tabSession)
+            tabs = listOf(tabSession),
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
@@ -176,14 +176,14 @@ class AudioFocusTest {
         val controller: MediaSession.Controller = mock()
         val mediaSessionState = MediaSessionState(
             controller,
-            playbackState = MediaSession.PlaybackState.PAUSED
+            playbackState = MediaSession.PlaybackState.PAUSED,
         )
         val tabSession = createTab(
             "https://www.mozilla.org",
-            mediaSessionState = mediaSessionState
+            mediaSessionState = mediaSessionState,
         )
         val initialState = BrowserState(
-            tabs = listOf(tabSession)
+            tabs = listOf(tabSession),
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
@@ -216,14 +216,14 @@ class AudioFocusTest {
         val controller: MediaSession.Controller = mock()
         val mediaSessionState = MediaSessionState(
             controller,
-            playbackState = MediaSession.PlaybackState.PLAYING
+            playbackState = MediaSession.PlaybackState.PLAYING,
         )
         val tabSession = createTab(
             "https://www.mozilla.org",
-            mediaSessionState = mediaSessionState
+            mediaSessionState = mediaSessionState,
         )
         val initialState = BrowserState(
-            tabs = listOf(tabSession)
+            tabs = listOf(tabSession),
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
@@ -250,14 +250,14 @@ class AudioFocusTest {
         val controller: MediaSession.Controller = mock()
         val mediaSessionState = MediaSessionState(
             controller,
-            playbackState = MediaSession.PlaybackState.PLAYING
+            playbackState = MediaSession.PlaybackState.PLAYING,
         )
         val tabSession = createTab(
             "https://www.mozilla.org",
-            mediaSessionState = mediaSessionState
+            mediaSessionState = mediaSessionState,
         )
         val initialState = BrowserState(
-            tabs = listOf(tabSession)
+            tabs = listOf(tabSession),
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
@@ -277,14 +277,14 @@ class AudioFocusTest {
         val controller: MediaSession.Controller = mock()
         val mediaSessionState = MediaSessionState(
             controller,
-            playbackState = MediaSession.PlaybackState.PLAYING
+            playbackState = MediaSession.PlaybackState.PLAYING,
         )
         val tabSession = createTab(
             "https://www.mozilla.org",
-            mediaSessionState = mediaSessionState
+            mediaSessionState = mediaSessionState,
         )
         val initialState = BrowserState(
-            tabs = listOf(tabSession)
+            tabs = listOf(tabSession),
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
@@ -310,14 +310,14 @@ class AudioFocusTest {
         val controller: MediaSession.Controller = mock()
         val mediaSessionState = MediaSessionState(
             controller,
-            playbackState = MediaSession.PlaybackState.PLAYING
+            playbackState = MediaSession.PlaybackState.PLAYING,
         )
         val tabSession = createTab(
             "https://www.mozilla.org",
-            mediaSessionState = mediaSessionState
+            mediaSessionState = mediaSessionState,
         )
         val initialState = BrowserState(
-            tabs = listOf(tabSession)
+            tabs = listOf(tabSession),
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()

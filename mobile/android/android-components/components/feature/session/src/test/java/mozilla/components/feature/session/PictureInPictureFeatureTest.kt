@@ -95,8 +95,8 @@ class PictureInPictureFeatureTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(selectedSession),
-                selectedTabId = selectedSession.id
-            )
+                selectedTabId = selectedSession.id,
+            ),
         )
         val pictureInPictureFeature =
             spy(PictureInPictureFeature(store, activity, crashReporting))
@@ -113,14 +113,14 @@ class PictureInPictureFeatureTest {
             url = "https://mozilla.org",
             mediaSessionState = MediaSessionState(
                 playbackState = MediaSession.PlaybackState.UNKNOWN,
-                controller = controller
-            )
+                controller = controller,
+            ),
         ).copyWithFullScreen(true)
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(selectedSession),
-                selectedTabId = selectedSession.id
-            )
+                selectedTabId = selectedSession.id,
+            ),
         )
         val pictureInPictureFeature =
             spy(PictureInPictureFeature(store, activity, crashReporting))
@@ -139,14 +139,14 @@ class PictureInPictureFeatureTest {
             url = "https://mozilla.org",
             mediaSessionState = MediaSessionState(
                 playbackState = MediaSession.PlaybackState.PLAYING,
-                controller = controller
-            )
+                controller = controller,
+            ),
         ).copyWithFullScreen(true)
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(selectedSession),
-                selectedTabId = selectedSession.id
-            )
+                selectedTabId = selectedSession.id,
+            ),
         )
         val pictureInPictureFeature =
             spy(PictureInPictureFeature(store, activity, crashReporting))
@@ -165,14 +165,14 @@ class PictureInPictureFeatureTest {
             url = "https://mozilla.org",
             mediaSessionState = MediaSessionState(
                 playbackState = MediaSession.PlaybackState.UNKNOWN,
-                controller = controller
-            )
+                controller = controller,
+            ),
         ).copyWithFullScreen(true)
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(selectedSession),
-                selectedTabId = selectedSession.id
-            )
+                selectedTabId = selectedSession.id,
+            ),
         )
         val pictureInPictureFeature =
             spy(PictureInPictureFeature(store, activity, crashReporting))
@@ -191,14 +191,14 @@ class PictureInPictureFeatureTest {
             url = "https://mozilla.org",
             mediaSessionState = MediaSessionState(
                 playbackState = MediaSession.PlaybackState.PLAYING,
-                controller = controller
-            )
+                controller = controller,
+            ),
         ).copyWithFullScreen(true)
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(selectedSession),
-                selectedTabId = selectedSession.id
-            )
+                selectedTabId = selectedSession.id,
+            ),
         )
         val pictureInPictureFeature =
             spy(PictureInPictureFeature(store, activity, crashReporting))
@@ -241,14 +241,14 @@ class PictureInPictureFeatureTest {
             url = "https://mozilla.org",
             mediaSessionState = MediaSessionState(
                 playbackState = MediaSession.PlaybackState.PLAYING,
-                controller = controller
-            )
+                controller = controller,
+            ),
         ).copyWithFullScreen(true)
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(selectedSession),
-                selectedTabId = selectedSession.id
-            )
+                selectedTabId = selectedSession.id,
+            ),
         )
 
         whenever(activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE))
@@ -290,7 +290,7 @@ class PictureInPictureFeatureTest {
             store,
             activity,
             crashReporting,
-            tabId = "tab-id"
+            tabId = "tab-id",
         )
 
         pipFeature.onPictureInPictureModeChanged(true)
@@ -306,7 +306,7 @@ class PictureInPictureFeatureTest {
     @Suppress("Deprecation")
     private fun verifyDeprecatedPictureInPictureMode(
         activity: Activity,
-        mode: VerificationMode = times(1)
+        mode: VerificationMode = times(1),
     ) {
         verify(activity, mode).enterPictureInPictureMode()
     }

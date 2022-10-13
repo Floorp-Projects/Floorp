@@ -82,7 +82,7 @@ sealed class SystemAction : BrowserAction() {
      * may like to perform. See constants in [ComponentCallbacks2].
      */
     data class LowMemoryAction(
-        val level: Int
+        val level: Int,
     ) : SystemAction()
 }
 
@@ -203,7 +203,7 @@ sealed class TabListAction : BrowserAction() {
     data class RestoreAction(
         val tabs: List<RecoverableTab>,
         val selectedTabId: String? = null,
-        val restoreLocation: RestoreLocation
+        val restoreLocation: RestoreLocation,
     ) : TabListAction() {
 
         /**
@@ -213,7 +213,7 @@ sealed class TabListAction : BrowserAction() {
         enum class RestoreLocation {
             BEGINNING,
             END,
-            AT_INDEX
+            AT_INDEX,
         }
     }
 
@@ -247,7 +247,7 @@ sealed class TabGroupAction : BrowserAction() {
      */
     data class AddTabGroupAction(
         val partition: String,
-        val group: TabGroup
+        val group: TabGroup,
     ) : TabGroupAction()
 
     /**
@@ -260,7 +260,7 @@ sealed class TabGroupAction : BrowserAction() {
      */
     data class RemoveTabGroupAction(
         val partition: String,
-        val group: String
+        val group: String,
     ) : TabGroupAction()
 
     /**
@@ -290,7 +290,7 @@ sealed class TabGroupAction : BrowserAction() {
     data class AddTabsAction(
         val partition: String,
         val group: String,
-        val tabIds: List<String>
+        val tabIds: List<String>,
     ) : TabGroupAction()
 
     /**
@@ -303,7 +303,7 @@ sealed class TabGroupAction : BrowserAction() {
     data class RemoveTabAction(
         val partition: String,
         val group: String,
-        val tabId: String
+        val tabId: String,
     ) : TabGroupAction()
 
     /**
@@ -316,7 +316,7 @@ sealed class TabGroupAction : BrowserAction() {
     data class RemoveTabsAction(
         val partition: String,
         val group: String,
-        val tabIds: List<String>
+        val tabIds: List<String>,
     ) : TabGroupAction()
 }
 
@@ -330,14 +330,14 @@ sealed class UndoAction : BrowserAction() {
     data class AddRecoverableTabs(
         val tag: String,
         val tabs: List<RecoverableTab>,
-        val selectedTabId: String?
+        val selectedTabId: String?,
     ) : UndoAction()
 
     /**
      * Clears the tabs from [UndoHistoryState] for the given [tag].
      */
     data class ClearRecoverableTabs(
-        val tag: String
+        val tag: String,
     ) : UndoAction()
 
     /**
@@ -358,7 +358,7 @@ sealed class LastAccessAction : BrowserAction() {
      */
     data class UpdateLastAccessAction(
         val tabId: String,
-        val lastAccess: Long = System.currentTimeMillis()
+        val lastAccess: Long = System.currentTimeMillis(),
     ) : LastAccessAction()
 
     /**
@@ -370,7 +370,7 @@ sealed class LastAccessAction : BrowserAction() {
      */
     data class UpdateLastMediaAccessAction(
         val tabId: String,
-        val lastMediaAccess: Long = System.currentTimeMillis()
+        val lastMediaAccess: Long = System.currentTimeMillis(),
     ) : LastAccessAction()
 
     /**
@@ -379,7 +379,7 @@ sealed class LastAccessAction : BrowserAction() {
      * @property tabId the ID of the tab to update.
      */
     data class ResetLastMediaSessionAction(
-        val tabId: String
+        val tabId: String,
     ) : LastAccessAction()
 }
 
@@ -509,6 +509,7 @@ sealed class ContentAction : BrowserAction() {
          */
         data class Reset(val tabId: String) : UpdatePermissionHighlightsStateAction()
     }
+
     /**
      * Updates the title of the [ContentState] with the given [sessionId].
      */
@@ -543,7 +544,7 @@ sealed class ContentAction : BrowserAction() {
      */
     data class UpdateSecurityInfoAction(
         val sessionId: String,
-        val securityInfo: SecurityInfoState
+        val securityInfo: SecurityInfoState,
     ) : ContentAction()
 
     /**
@@ -573,6 +574,7 @@ sealed class ContentAction : BrowserAction() {
      * Removes the [DownloadState] of the [ContentState] with the given [sessionId].
      */
     data class ConsumeDownloadAction(val sessionId: String, val downloadId: String) : ContentAction()
+
     /**
      * Updates the [HitResult] of the [ContentState] with the given [sessionId].
      */
@@ -602,7 +604,7 @@ sealed class ContentAction : BrowserAction() {
     data class ReplacePromptRequestAction(
         val sessionId: String,
         val previousPromptUid: String,
-        val promptRequest: PromptRequest
+        val promptRequest: PromptRequest,
     ) : ContentAction()
 
     /**
@@ -670,7 +672,7 @@ sealed class ContentAction : BrowserAction() {
      */
     data class UpdateFirstContentfulPaintStateAction(
         val sessionId: String,
-        val firstContentfulPaint: Boolean
+        val firstContentfulPaint: Boolean,
     ) : ContentAction()
 
     /**
@@ -678,7 +680,7 @@ sealed class ContentAction : BrowserAction() {
      */
     data class UpdateForwardNavigationStateAction(
         val sessionId: String,
-        val canGoForward: Boolean
+        val canGoForward: Boolean,
     ) : ContentAction()
 
     /**
@@ -686,7 +688,7 @@ sealed class ContentAction : BrowserAction() {
      */
     data class UpdateWebAppManifestAction(
         val sessionId: String,
-        val webAppManifest: WebAppManifest
+        val webAppManifest: WebAppManifest,
     ) : ContentAction()
 
     /**
@@ -700,7 +702,7 @@ sealed class ContentAction : BrowserAction() {
     data class UpdateHistoryStateAction(
         val sessionId: String,
         val historyList: List<HistoryItem>,
-        val currentIndex: Int
+        val currentIndex: Int,
     ) : ContentAction()
 
     /**
@@ -713,7 +715,7 @@ sealed class ContentAction : BrowserAction() {
      * */
     data class UpdatePermissionsRequest(
         val sessionId: String,
-        val permissionRequest: PermissionRequest
+        val permissionRequest: PermissionRequest,
     ) : ContentAction()
 
     /**
@@ -721,14 +723,14 @@ sealed class ContentAction : BrowserAction() {
      * */
     data class ConsumePermissionsRequest(
         val sessionId: String,
-        val permissionRequest: PermissionRequest
+        val permissionRequest: PermissionRequest,
     ) : ContentAction()
 
     /**
      * Removes all content permission requests from the [ContentState] list.
      * */
     data class ClearPermissionRequests(
-        val sessionId: String
+        val sessionId: String,
     ) : ContentAction()
 
     /**
@@ -736,7 +738,7 @@ sealed class ContentAction : BrowserAction() {
      * */
     data class UpdateAppPermissionsRequest(
         val sessionId: String,
-        val appPermissionRequest: PermissionRequest
+        val appPermissionRequest: PermissionRequest,
     ) : ContentAction()
 
     /**
@@ -744,14 +746,14 @@ sealed class ContentAction : BrowserAction() {
      * */
     data class ConsumeAppPermissionsRequest(
         val sessionId: String,
-        val appPermissionRequest: PermissionRequest
+        val appPermissionRequest: PermissionRequest,
     ) : ContentAction()
 
     /**
      * Removes all app permission requests from the [ContentState] list.
      * */
     data class ClearAppPermissionRequests(
-        val sessionId: String
+        val sessionId: String,
     ) : ContentAction()
 
     /**
@@ -759,7 +761,7 @@ sealed class ContentAction : BrowserAction() {
      */
     data class SetRecordingDevices(
         val sessionId: String,
-        val devices: List<RecordingDevice>
+        val devices: List<RecordingDevice>,
     ) : ContentAction()
 
     /**
@@ -851,7 +853,7 @@ sealed class WebExtensionAction : BrowserAction() {
      */
     data class UpdateWebExtensionAllowedInPrivateBrowsingAction(
         val extensionId: String,
-        val allowed: Boolean
+        val allowed: Boolean,
     ) :
         WebExtensionAction()
 
@@ -866,7 +868,7 @@ sealed class WebExtensionAction : BrowserAction() {
      */
     data class UpdateBrowserAction(
         val extensionId: String,
-        val browserAction: WebExtensionBrowserAction
+        val browserAction: WebExtensionBrowserAction,
     ) : WebExtensionAction()
 
     /**
@@ -874,7 +876,7 @@ sealed class WebExtensionAction : BrowserAction() {
      */
     data class UpdatePageAction(
         val extensionId: String,
-        val pageAction: WebExtensionPageAction
+        val pageAction: WebExtensionPageAction,
     ) : WebExtensionAction()
 
     /**
@@ -883,7 +885,7 @@ sealed class WebExtensionAction : BrowserAction() {
     data class UpdatePopupSessionAction(
         val extensionId: String,
         val popupSessionId: String? = null,
-        val popupSession: EngineSession? = null
+        val popupSession: EngineSession? = null,
     ) : WebExtensionAction()
 
     /**
@@ -893,7 +895,7 @@ sealed class WebExtensionAction : BrowserAction() {
     data class UpdateTabBrowserAction(
         val sessionId: String,
         val extensionId: String,
-        val browserAction: WebExtensionBrowserAction
+        val browserAction: WebExtensionBrowserAction,
     ) : WebExtensionAction()
 
     /**
@@ -903,7 +905,7 @@ sealed class WebExtensionAction : BrowserAction() {
     data class UpdateTabPageAction(
         val sessionId: String,
         val extensionId: String,
-        val pageAction: WebExtensionPageAction
+        val pageAction: WebExtensionPageAction,
     ) : WebExtensionAction()
 
     /**
@@ -911,7 +913,7 @@ sealed class WebExtensionAction : BrowserAction() {
      * e.g. to support tabs.query({active: true}).
      */
     data class UpdateActiveWebExtensionTabAction(
-        val activeWebExtensionTabId: String?
+        val activeWebExtensionTabId: String?,
     ) : WebExtensionAction()
 }
 
@@ -926,7 +928,7 @@ sealed class EngineAction : BrowserAction() {
     data class CreateEngineSessionAction(
         override val tabId: String,
         val skipLoading: Boolean = false,
-        val followupAction: BrowserAction? = null
+        val followupAction: BrowserAction? = null,
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -936,7 +938,7 @@ sealed class EngineAction : BrowserAction() {
         override val tabId: String,
         val url: String,
         val flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
-        val additionalHeaders: Map<String, String>? = null
+        val additionalHeaders: Map<String, String>? = null,
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -947,7 +949,7 @@ sealed class EngineAction : BrowserAction() {
         override val tabId: String,
         val url: String,
         val flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
-        val additionalHeaders: Map<String, String>? = null
+        val additionalHeaders: Map<String, String>? = null,
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -957,7 +959,7 @@ sealed class EngineAction : BrowserAction() {
         override val tabId: String,
         val data: String,
         val mimeType: String = "text/html",
-        val encoding: String = "UTF-8"
+        val encoding: String = "UTF-8",
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -965,7 +967,7 @@ sealed class EngineAction : BrowserAction() {
      */
     data class ReloadAction(
         override val tabId: String,
-        val flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
+        val flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -973,7 +975,7 @@ sealed class EngineAction : BrowserAction() {
      */
     data class GoBackAction(
         override val tabId: String,
-        val userInteraction: Boolean = true
+        val userInteraction: Boolean = true,
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -981,7 +983,7 @@ sealed class EngineAction : BrowserAction() {
      */
     data class GoForwardAction(
         override val tabId: String,
-        val userInteraction: Boolean = true
+        val userInteraction: Boolean = true,
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -989,7 +991,7 @@ sealed class EngineAction : BrowserAction() {
      */
     data class GoToHistoryIndexAction(
         override val tabId: String,
-        val index: Int
+        val index: Int,
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -997,14 +999,14 @@ sealed class EngineAction : BrowserAction() {
      */
     data class ToggleDesktopModeAction(
         override val tabId: String,
-        val enable: Boolean
+        val enable: Boolean,
     ) : EngineAction(), ActionWithTab
 
     /**
      * Exits fullscreen mode in the tabs with the given [tabId].
      */
     data class ExitFullScreenModeAction(
-        override val tabId: String
+        override val tabId: String,
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -1019,7 +1021,7 @@ sealed class EngineAction : BrowserAction() {
      */
     data class ClearDataAction(
         override val tabId: String,
-        val data: Engine.BrowsingData
+        val data: Engine.BrowsingData,
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -1034,14 +1036,14 @@ sealed class EngineAction : BrowserAction() {
         override val tabId: String,
         val engineSession: EngineSession,
         val timestamp: Long = Clock.elapsedRealtime(),
-        val skipLoading: Boolean = false
+        val skipLoading: Boolean = false,
     ) : EngineAction(), ActionWithTab
 
     /**
      * Suspends the [EngineSession] of the session with the provided [tabId].
      */
     data class SuspendEngineSessionAction(
-        override val tabId: String
+        override val tabId: String,
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -1049,14 +1051,14 @@ sealed class EngineAction : BrowserAction() {
      * content process was killed).
      */
     data class KillEngineSessionAction(
-        override val tabId: String
+        override val tabId: String,
     ) : EngineAction(), ActionWithTab
 
     /**
      * Detaches the current [EngineSession] from the session with the provided [tabId].
      */
     data class UnlinkEngineSessionAction(
-        override val tabId: String
+        override val tabId: String,
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -1064,7 +1066,7 @@ sealed class EngineAction : BrowserAction() {
      */
     data class UpdateEngineSessionInitializingAction(
         override val tabId: String,
-        val initializing: Boolean
+        val initializing: Boolean,
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -1072,7 +1074,7 @@ sealed class EngineAction : BrowserAction() {
      */
     data class UpdateEngineSessionStateAction(
         override val tabId: String,
-        val engineSessionState: EngineSessionState
+        val engineSessionState: EngineSessionState,
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -1080,7 +1082,7 @@ sealed class EngineAction : BrowserAction() {
      */
     data class UpdateEngineSessionObserverAction(
         override val tabId: String,
-        val engineSessionObserver: EngineSession.Observer
+        val engineSessionObserver: EngineSession.Observer,
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -1157,14 +1159,14 @@ sealed class MediaSessionAction : BrowserAction() {
      */
     data class ActivatedMediaSessionAction(
         val tabId: String,
-        val mediaSessionController: MediaSession.Controller
+        val mediaSessionController: MediaSession.Controller,
     ) : MediaSessionAction()
 
     /**
      * Activates [MediaSession] owned by the tab with id [tabId].
      */
     data class DeactivatedMediaSessionAction(
-        val tabId: String
+        val tabId: String,
     ) : MediaSessionAction()
 
     /**
@@ -1172,7 +1174,7 @@ sealed class MediaSessionAction : BrowserAction() {
      */
     data class UpdateMediaMetadataAction(
         val tabId: String,
-        val metadata: MediaSession.Metadata
+        val metadata: MediaSession.Metadata,
     ) : MediaSessionAction()
 
     /**
@@ -1180,7 +1182,7 @@ sealed class MediaSessionAction : BrowserAction() {
      */
     data class UpdateMediaPlaybackStateAction(
         val tabId: String,
-        val playbackState: MediaSession.PlaybackState
+        val playbackState: MediaSession.PlaybackState,
     ) : MediaSessionAction()
 
     /**
@@ -1188,7 +1190,7 @@ sealed class MediaSessionAction : BrowserAction() {
      */
     data class UpdateMediaFeatureAction(
         val tabId: String,
-        val features: MediaSession.Feature
+        val features: MediaSession.Feature,
     ) : MediaSessionAction()
 
     /**
@@ -1196,7 +1198,7 @@ sealed class MediaSessionAction : BrowserAction() {
      */
     data class UpdateMediaPositionStateAction(
         val tabId: String,
-        val positionState: MediaSession.PositionState
+        val positionState: MediaSession.PositionState,
     ) : MediaSessionAction()
 
     /**
@@ -1204,7 +1206,7 @@ sealed class MediaSessionAction : BrowserAction() {
      */
     data class UpdateMediaMutedAction(
         val tabId: String,
-        val muted: Boolean
+        val muted: Boolean,
     ) : MediaSessionAction()
 
     /**
@@ -1213,7 +1215,7 @@ sealed class MediaSessionAction : BrowserAction() {
     data class UpdateMediaFullscreenAction(
         val tabId: String,
         val fullScreen: Boolean,
-        val elementMetadata: MediaSession.ElementMetadata?
+        val elementMetadata: MediaSession.ElementMetadata?,
     ) : MediaSessionAction()
 }
 
@@ -1266,7 +1268,7 @@ sealed class ShareInternetResourceAction : BrowserAction() {
      */
     data class AddShareAction(
         val tabId: String,
-        val internetResource: ShareInternetResourceState
+        val internetResource: ShareInternetResourceState,
     ) : ShareInternetResourceAction()
 
     /**
@@ -1275,7 +1277,7 @@ sealed class ShareInternetResourceAction : BrowserAction() {
      * may have failed. In either case the previous share request is considered completed.
      */
     data class ConsumeShareAction(
-        val tabId: String
+        val tabId: String,
     ) : ShareInternetResourceAction()
 }
 
@@ -1309,14 +1311,14 @@ sealed class HistoryMetadataAction : BrowserAction() {
      */
     data class SetHistoryMetadataKeyAction(
         val tabId: String,
-        val historyMetadataKey: HistoryMetadataKey
+        val historyMetadataKey: HistoryMetadataKey,
     ) : HistoryMetadataAction()
 
     /**
      * Removes [searchTerm] (and referrer) from any history metadata associated with tabs.
      */
     data class DisbandSearchGroupAction(
-        val searchTerm: String
+        val searchTerm: String,
     ) : HistoryMetadataAction()
 }
 
@@ -1341,7 +1343,7 @@ sealed class SearchAction : BrowserAction() {
         val userSelectedSearchEngineId: String?,
         val userSelectedSearchEngineName: String?,
         val regionDefaultSearchEngineId: String,
-        val regionSearchEnginesOrder: List<String>
+        val regionSearchEnginesOrder: List<String>,
     ) : SearchAction()
 
     /**
@@ -1360,7 +1362,7 @@ sealed class SearchAction : BrowserAction() {
      */
     data class SelectSearchEngineAction(
         val searchEngineId: String,
-        val searchEngineName: String?
+        val searchEngineName: String?,
     ) : SearchAction()
 
     /**

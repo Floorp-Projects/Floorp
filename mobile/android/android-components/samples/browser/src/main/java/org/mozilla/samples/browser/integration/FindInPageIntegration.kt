@@ -17,7 +17,7 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 class FindInPageIntegration(
     private val store: BrowserStore,
     private val view: FindInPageView,
-    engineView: EngineView
+    engineView: EngineView,
 ) : LifecycleAwareFeature, UserInteractionHandler {
     private val feature = FindInPageFeature(store, view, engineView, ::onClose)
 

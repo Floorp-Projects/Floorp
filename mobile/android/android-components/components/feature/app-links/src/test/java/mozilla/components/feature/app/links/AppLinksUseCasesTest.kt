@@ -27,10 +27,10 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.robolectric.Shadows.shadowOf
 import java.io.File
 import java.util.concurrent.TimeUnit.MILLISECONDS
@@ -68,9 +68,8 @@ class AppLinksUseCasesTest {
     private fun createContext(
         vararg urlToPackages: Triple<String, String, String>,
         default: Boolean = false,
-        installedApps: List<String> = emptyList()
+        installedApps: List<String> = emptyList(),
     ): Context {
-
         val pm = testContext.packageManager
         val packageManager = shadowOf(pm)
 
@@ -245,7 +244,7 @@ class AppLinksUseCasesTest {
     fun `A URL that matches only general packages is not an app link`() {
         val context = createContext(
             Triple(appUrl, browserPackage, ""),
-            Triple(browserUrl, browserPackage, "")
+            Triple(browserUrl, browserPackage, ""),
         )
         val subject = AppLinksUseCases(context, { true })
 
@@ -261,7 +260,7 @@ class AppLinksUseCasesTest {
         val context = createContext(
             Triple(appUrl, appPackage, ""),
             Triple(appUrl, browserPackage, ""),
-            Triple(browserUrl, browserPackage, "")
+            Triple(browserUrl, browserPackage, ""),
         )
         val subject = AppLinksUseCases(context, { true })
 
@@ -329,7 +328,7 @@ class AppLinksUseCasesTest {
         assertTrue(redirect.isInstallable())
         assert(
             redirect.marketplaceIntent!!.flags and Intent.FLAG_ACTIVITY_NEW_TASK
-                == Intent.FLAG_ACTIVITY_NEW_TASK
+                == Intent.FLAG_ACTIVITY_NEW_TASK,
         )
     }
 

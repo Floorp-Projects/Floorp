@@ -23,7 +23,7 @@ class ByteArrayTest {
         val stringValue = "Android Components"
         assertEquals(
             "d2d01f10a9700b60740bdd20c60839dcf6b82be9e6a02719d564146cbe32d68f",
-            stringValue.toByteArray().toSha256Digest().toHexString()
+            stringValue.toByteArray().toSha256Digest().toHexString(),
         )
     }
 }

@@ -66,12 +66,13 @@ class DownloadCancelDialogFragmentTest {
             titleText = R.string.mozac_feature_downloads_cancel_active_private_downloads_warning_content_body,
             bodyText = R.string.mozac_feature_downloads_cancel_active_downloads_warning_content_title,
             acceptText = R.string.mozac_feature_downloads_cancel_active_private_downloads_deny,
-            denyText = R.string.mozac_feature_downloads_cancel_active_downloads_accept
+            denyText = R.string.mozac_feature_downloads_cancel_active_downloads_accept,
         )
         spy(
             DownloadCancelDialogFragment.newInstance(
-                0, promptText = testText
-            )
+                0,
+                promptText = testText,
+            ),
         ).apply {
             doReturn(testContext).`when`(this).requireContext()
 
@@ -99,13 +100,14 @@ class DownloadCancelDialogFragmentTest {
             shouldWidthMatchParent = false,
             positiveButtonBackgroundColor = android.R.color.white,
             positiveButtonTextColor = android.R.color.black,
-            positiveButtonRadius = 4f
+            positiveButtonRadius = 4f,
         )
 
         spy(
             DownloadCancelDialogFragment.newInstance(
-                0, promptStyling = testStyling
-            )
+                0,
+                promptStyling = testStyling,
+            ),
         ).apply {
             doReturn(testContext).`when`(this).requireContext()
 
@@ -119,20 +121,20 @@ class DownloadCancelDialogFragmentTest {
                     Assert.assertEquals(
                         ContextCompat.getColor(
                             testContext,
-                            testStyling.positiveButtonBackgroundColor!!
+                            testStyling.positiveButtonBackgroundColor!!,
                         ),
-                        (background as GradientDrawable).color?.defaultColor
+                        (background as GradientDrawable).color?.defaultColor,
                     )
                     Assert.assertEquals(
                         testStyling.positiveButtonRadius!!,
-                        (background as GradientDrawable).cornerRadius
+                        (background as GradientDrawable).cornerRadius,
                     )
                     Assert.assertEquals(
                         ContextCompat.getColor(
                             testContext,
-                            testStyling.positiveButtonTextColor!!
+                            testStyling.positiveButtonTextColor!!,
                         ),
-                        textColors.defaultColor
+                        textColors.defaultColor,
                     )
                 }
             }

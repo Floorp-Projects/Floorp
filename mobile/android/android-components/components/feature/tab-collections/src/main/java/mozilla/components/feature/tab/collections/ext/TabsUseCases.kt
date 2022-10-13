@@ -23,12 +23,12 @@ operator fun TabsUseCases.RestoreUseCase.invoke(
     tab: Tab,
     updateLastAccess: Boolean = true,
     onTabRestored: (String) -> Unit,
-    onFailure: () -> Unit
+    onFailure: () -> Unit,
 ) {
     val item = tab.restore(
         context = context,
         engine = engine,
-        restoreSessionId = false
+        restoreSessionId = false,
     )
 
     if (item == null) {
@@ -58,7 +58,7 @@ operator fun TabsUseCases.RestoreUseCase.invoke(
     engine: Engine,
     collection: TabCollection,
     updateLastAccess: Boolean = true,
-    onFailure: (String) -> Unit
+    onFailure: (String) -> Unit,
 ) {
     val tabs = collection.tabs.reversed().mapNotNull { tab ->
         val recoverableTab = tab.restore(context, engine, restoreSessionId = false)

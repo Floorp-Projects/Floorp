@@ -48,7 +48,7 @@ internal class PocketJSONParser {
             // The following three properties are optional.
             publisher = json.tryGetString(JSON_STORY_PUBLISHER_KEY) ?: STRING_NOT_FOUND_DEFAULT_VALUE,
             category = json.tryGetString(JSON_STORY_CATEGORY_KEY) ?: STRING_NOT_FOUND_DEFAULT_VALUE,
-            timeToRead = json.tryGetInt(JSON_STORY_TIME_TO_READ_KEY) ?: INT_NOT_FOUND_DEFAULT_VALUE
+            timeToRead = json.tryGetInt(JSON_STORY_TIME_TO_READ_KEY) ?: INT_NOT_FOUND_DEFAULT_VALUE,
         )
     } catch (e: JSONException) {
         null

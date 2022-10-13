@@ -39,7 +39,7 @@ class WebCompatFeatureTest {
             eq(WebCompatFeature.WEBCOMPAT_EXTENSION_ID),
             eq(WebCompatFeature.WEBCOMPAT_EXTENSION_URL),
             onSuccess.capture(),
-            onError.capture()
+            onError.capture(),
         )
     }
 }

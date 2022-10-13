@@ -24,7 +24,7 @@ class WebAppLauncherActivityTest {
 
     private val baseManifest = WebAppManifest(
         name = "Test",
-        startUrl = "https://www.mozilla.org"
+        startUrl = "https://www.mozilla.org",
     )
 
     @Test

@@ -38,9 +38,8 @@ class ColorPickerDialogFragmentTest {
 
     @Test
     fun `build dialog`() {
-
         val fragment = spy(
-            ColorPickerDialogFragment.newInstance("sessionId", "uid", true, "#e66465")
+            ColorPickerDialogFragment.newInstance("sessionId", "uid", true, "#e66465"),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -56,9 +55,8 @@ class ColorPickerDialogFragmentTest {
 
     @Test
     fun `clicking on positive button notifies the feature`() {
-
         val fragment = spy(
-            ColorPickerDialogFragment.newInstance("sessionId", "uid", false, "#e66465")
+            ColorPickerDialogFragment.newInstance("sessionId", "uid", false, "#e66465"),
         )
 
         fragment.feature = mockFeature
@@ -79,9 +77,8 @@ class ColorPickerDialogFragmentTest {
 
     @Test
     fun `clicking on negative button notifies the feature`() {
-
         val fragment = spy(
-            ColorPickerDialogFragment.newInstance("sessionId", "uid", true, "#e66465")
+            ColorPickerDialogFragment.newInstance("sessionId", "uid", true, "#e66465"),
         )
 
         fragment.feature = mockFeature
@@ -100,9 +97,8 @@ class ColorPickerDialogFragmentTest {
 
     @Test
     fun `touching outside of the dialog must notify the feature onCancel`() {
-
         val fragment = spy(
-            ColorPickerDialogFragment.newInstance("sessionId", "uid", false, "#e66465")
+            ColorPickerDialogFragment.newInstance("sessionId", "uid", false, "#e66465"),
         )
 
         fragment.feature = mockFeature
@@ -116,9 +112,8 @@ class ColorPickerDialogFragmentTest {
 
     @Test
     fun `will show a color item`() {
-
         val fragment = spy(
-            ColorPickerDialogFragment.newInstance("sessionId", "uid", true, "#e66465")
+            ColorPickerDialogFragment.newInstance("sessionId", "uid", true, "#e66465"),
         )
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
@@ -136,9 +131,8 @@ class ColorPickerDialogFragmentTest {
 
     @Test
     fun `clicking on a item will update the selected color`() {
-
         val fragment = spy(
-            ColorPickerDialogFragment.newInstance("sessionId", "uid", false, "#e66465")
+            ColorPickerDialogFragment.newInstance("sessionId", "uid", false, "#e66465"),
         )
         doReturn(appCompatContext).`when`(fragment).requireContext()
 

@@ -276,8 +276,8 @@ class SessionFeatureTest {
             val store = BrowserStore(
                 BrowserState(
                     tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
-                    selectedTabId = "A"
-                )
+                    selectedTabId = "A",
+                ),
             )
 
             val useCase: SessionUseCases.GoBackUseCase = mock()
@@ -292,15 +292,15 @@ class SessionFeatureTest {
             val store = BrowserStore(
                 BrowserState(
                     tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
-                    selectedTabId = "A"
-                )
+                    selectedTabId = "A",
+                ),
             )
 
             store.dispatch(
                 ContentAction.UpdateBackNavigationStateAction(
                     "A",
-                    canGoBack = true
-                )
+                    canGoBack = true,
+                ),
             ).joinBlocking()
 
             val useCase: SessionUseCases.GoBackUseCase = mock()
@@ -380,22 +380,22 @@ class SessionFeatureTest {
     }
 
     private fun prepareStore(
-        middleware: CaptureActionsMiddleware<BrowserState, BrowserAction>? = null
+        middleware: CaptureActionsMiddleware<BrowserState, BrowserAction>? = null,
     ): BrowserStore = BrowserStore(
         BrowserState(
             tabs = listOf(
                 createTab("https://www.mozilla.org", id = "A"),
                 createTab("https://getpocket.com", id = "B"),
-                createTab("https://www.firefox.com", id = "C")
+                createTab("https://www.firefox.com", id = "C"),
             ),
             customTabs = listOf(
-                createCustomTab("https://hubs.mozilla.com/", id = "D")
+                createCustomTab("https://hubs.mozilla.com/", id = "D"),
             ),
-            selectedTabId = "B"
+            selectedTabId = "B",
         ),
         middleware = (if (middleware != null) listOf(middleware) else emptyList()) + EngineMiddleware.create(
             engine = mock(),
-            scope = scope
-        )
+            scope = scope,
+        ),
     )
 }

@@ -12,10 +12,10 @@ package mozilla.components.concept.tabstray
  */
 @Deprecated(
     "This will be removed in future versions",
-    ReplaceWith("TabList", "mozilla.components.feature.tabs.tabstray")
+    ReplaceWith("TabList", "mozilla.components.feature.tabs.tabstray"),
 )
 @Suppress("Deprecation")
 data class Tabs(
     val list: List<Tab>,
-    val selectedTabId: String?
+    val selectedTabId: String?,
 )

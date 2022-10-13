@@ -19,7 +19,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 class AwesomeBarWrapper @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : AbstractComposeView(context, attrs, defStyleAttr), AwesomeBar {
     private val providers = mutableStateOf(emptyList<AwesomeBar.SuggestionProvider>())
     private val text = mutableStateOf("")
@@ -37,7 +37,7 @@ class AwesomeBarWrapper @JvmOverloads constructor(
             },
             onAutoComplete = { suggestion ->
                 onEditSuggestionListener?.invoke(suggestion.editSuggestion!!)
-            }
+            },
         )
     }
 

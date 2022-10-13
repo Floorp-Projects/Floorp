@@ -31,11 +31,15 @@ class OriginVerifierTest {
 
     private val androidAsset = AssetDescriptor.Android(
         packageName = "com.app.name",
-        sha256CertFingerprint = "AA:BB:CC:10:20:30:01:02"
+        sha256CertFingerprint = "AA:BB:CC:10:20:30:01:02",
     )
+
     @Mock private lateinit var packageManager: PackageManager
+
     @Mock private lateinit var response: Response
+
     @Mock private lateinit var body: Response.Body
+
     @Mock private lateinit var checker: RelationChecker
 
     @Suppress("Deprecation")
@@ -61,7 +65,7 @@ class OriginVerifierTest {
         doReturn(true).`when`(checker).checkRelationship(
             AssetDescriptor.Web("https://www.example.com"),
             Relation.USE_AS_ORIGIN,
-            androidAsset
+            androidAsset,
         )
         assertTrue(verifier.verifyOrigin("https://www.example.com".toUri()))
     }
@@ -72,8 +76,8 @@ class OriginVerifierTest {
                 "com.app.name",
                 relation,
                 packageManager,
-                checker
-            )
+                checker,
+            ),
         )
         doReturn(androidAsset).`when`(verifier).androidAsset
         return verifier

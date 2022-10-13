@@ -13,5 +13,5 @@ package mozilla.components.concept.push.exceptions
  */
 class SubscriptionException(
     override val message: String? = null,
-    override val cause: Throwable? = null
+    override val cause: Throwable? = null,
 ) : Exception()

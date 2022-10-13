@@ -59,8 +59,8 @@ class ClipboardSuggestionProviderTest {
             ClipData.newHtmlText(
                 "Label",
                 "Hello mozilla.org",
-                "<b>This is HTML on mozilla.org</b>"
-            )
+                "<b>This is HTML on mozilla.org</b>",
+            ),
         )
 
         assertNull(getSuggestion())
@@ -70,12 +70,12 @@ class ClipboardSuggestionProviderTest {
     fun `provider should return suggestion if clipboard contains url`() = runTestOnMain {
         assertClipboardYieldsUrl(
             "https://www.mozilla.org",
-            "https://www.mozilla.org"
+            "https://www.mozilla.org",
         )
 
         assertClipboardYieldsUrl(
             "https : //mozilla.org is a broken firefox.com URL",
-            "mozilla.org"
+            "mozilla.org",
         )
 
         assertClipboardYieldsUrl(
@@ -85,7 +85,7 @@ class ClipboardSuggestionProviderTest {
                 and it https://www.mozilla.org contains
                 URLs as well. https://www.firefox.com
             """,
-            "https://www.mozilla.org"
+            "https://www.mozilla.org",
         )
 
         assertClipboardYieldsUrl(
@@ -95,7 +95,7 @@ class ClipboardSuggestionProviderTest {
                 and it www.mozilla.org contains
                 URLs as well. https://www.firefox.com
             """,
-            "https://www.firefox.com"
+            "https://www.firefox.com",
         )
 
         assertClipboardYieldsUrl(
@@ -104,7 +104,7 @@ class ClipboardSuggestionProviderTest {
             firefox.com
             mozilla.org/en-US/firefox/developer/
             """,
-            "mozilla.org"
+            "mozilla.org",
         )
 
         // Note that the new, less-lenient URL detection process (Issue #5594) allows the dot
@@ -143,7 +143,7 @@ class ClipboardSuggestionProviderTest {
             mock(),
             title = "My test title",
             icon = bitmap,
-            requireEmptyText = false
+            requireEmptyText = false,
         )
 
         val suggestion = run {
@@ -162,8 +162,8 @@ class ClipboardSuggestionProviderTest {
         clipboardManager.setPrimaryClip(
             ClipData.newPlainText(
                 "Label",
-                "Hello Mozilla, https://www.mozilla.org"
-            )
+                "Hello Mozilla, https://www.mozilla.org",
+            ),
         )
 
         val useCase: SessionUseCases.LoadUrlUseCase = mock()
@@ -189,8 +189,8 @@ class ClipboardSuggestionProviderTest {
         clipboardManager.setPrimaryClip(
             ClipData.newPlainText(
                 "Label",
-                "Hello Mozilla, https://www.mozilla.org"
-            )
+                "Hello Mozilla, https://www.mozilla.org",
+            ),
         )
 
         val provider = ClipboardSuggestionProvider(testContext, mock(), requireEmptyText = true)

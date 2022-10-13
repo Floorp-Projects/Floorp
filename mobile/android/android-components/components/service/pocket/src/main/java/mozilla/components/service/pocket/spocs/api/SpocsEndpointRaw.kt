@@ -40,7 +40,7 @@ private const val SPOCS_PROXY_APP_KEY = "consumer_key"
 internal class SpocsEndpointRaw internal constructor(
     @get:VisibleForTesting internal val client: Client,
     @get:VisibleForTesting internal val profileId: UUID,
-    @get:VisibleForTesting internal val appId: String
+    @get:VisibleForTesting internal val appId: String,
 ) {
     /**
      * Gets the current sponsored stories recommendations from the Pocket server.
@@ -53,7 +53,7 @@ internal class SpocsEndpointRaw internal constructor(
             url = baseUrl + SPOCS_ENDPOINT_DOWNLOAD_SPOCS_PATH,
             method = Method.POST,
             headers = getRequestHeaders(),
-            body = getDownloadStoriesRequestBody()
+            body = getDownloadStoriesRequestBody(),
         )
         return client.fetchBodyOrNull(request)
     }
@@ -69,7 +69,7 @@ internal class SpocsEndpointRaw internal constructor(
             url = baseUrl + SPOCS_ENDPOINT_DELETE_PROFILE_PATH,
             method = Method.DELETE,
             headers = getRequestHeaders(),
-            body = getDeleteProfileRequestBody()
+            body = getDeleteProfileRequestBody(),
         )
 
         val response: Response? = try {
@@ -84,7 +84,7 @@ internal class SpocsEndpointRaw internal constructor(
 
     private fun getRequestHeaders() = MutableHeaders(
         "Content-Type" to "application/json; charset=UTF-8",
-        "Accept" to "*/*"
+        "Accept" to "*/*",
     )
 
     private fun getDownloadStoriesRequestBody(): Body {

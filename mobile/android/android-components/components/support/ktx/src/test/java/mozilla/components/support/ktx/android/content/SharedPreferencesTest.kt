@@ -16,13 +16,14 @@ import org.mockito.ArgumentMatchers.anyFloat
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations.openMocks
 
 class SharedPreferencesTest {
     @Mock private lateinit var sharedPrefs: SharedPreferences
+
     @Mock private lateinit var editor: SharedPreferences.Editor
 
     @Before
@@ -209,7 +210,7 @@ class SharedPreferencesTest {
         defaultInt: Int = 0,
         defaultLong: Long = 0L,
         defaultString: String = "",
-        defaultSet: Set<String> = emptySet()
+        defaultSet: Set<String> = emptySet(),
     ) : PreferencesHolder {
         override val preferences = sharedPrefs
 

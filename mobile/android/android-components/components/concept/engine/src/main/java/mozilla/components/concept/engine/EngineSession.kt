@@ -28,7 +28,7 @@ import mozilla.components.support.base.observer.ObserverRegistry
  */
 @Suppress("TooManyFunctions")
 abstract class EngineSession(
-    private val delegate: Observable<Observer> = ObserverRegistry()
+    private val delegate: Observable<Observer> = ObserverRegistry(),
 ) : Observable<EngineSession.Observer> by delegate, DataCleanable {
     /**
      * Interface to be implemented by classes that want to observe this engine session.
@@ -62,6 +62,7 @@ abstract class EngineSession(
          * Event to indicate that this session has had it's first engine contentful paint of page content.
          */
         fun onFirstContentfulPaint() = Unit
+
         /**
          * Event to indicate that this session has had it's paint status reset.
          */
@@ -171,7 +172,7 @@ abstract class EngineSession(
          */
         fun onMediaFullscreenChanged(
             fullscreen: Boolean,
-            elementMetadata: MediaSession.ElementMetadata?
+            elementMetadata: MediaSession.ElementMetadata?,
         ) = Unit
 
         fun onWebAppManifestLoaded(manifest: WebAppManifest) = Unit
@@ -199,7 +200,7 @@ abstract class EngineSession(
         fun onLoadRequest(
             url: String,
             triggeredByRedirect: Boolean,
-            triggeredByWebContent: Boolean
+            triggeredByWebContent: Boolean,
         ) = Unit
 
         /**
@@ -211,7 +212,7 @@ abstract class EngineSession(
          */
         fun onLaunchIntentRequest(
             url: String,
-            appIntent: Intent?
+            appIntent: Intent?,
         ) = Unit
 
         /**
@@ -236,7 +237,7 @@ abstract class EngineSession(
             cookie: String? = null,
             userAgent: String? = null,
             isPrivate: Boolean = false,
-            response: Response? = null
+            response: Response? = null,
         ) = Unit
 
         /**
@@ -284,7 +285,7 @@ abstract class EngineSession(
         /**
          * Blocks all unsafe sites.
          */
-        RECOMMENDED(MALWARE.id + UNWANTED.id + HARMFUL.id + PHISHING.id)
+        RECOMMENDED(MALWARE.id + UNWANTED.id + HARMFUL.id + PHISHING.id),
     }
 
     /**
@@ -301,7 +302,7 @@ abstract class EngineSession(
         val cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS,
         val cookiePolicyPrivateMode: CookiePolicy = cookiePolicy,
         val strictSocialTrackingProtection: Boolean? = null,
-        val cookiePurging: Boolean = false
+        val cookiePurging: Boolean = false,
     ) {
 
         /**
@@ -344,7 +345,7 @@ abstract class EngineSession(
              * cookies in accordance with the ETP level and isolate non-tracking third-party
              * cookies.
              */
-            ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS(5)
+            ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS(5),
         }
 
         @Suppress("MagicNumber")
@@ -398,19 +399,19 @@ abstract class EngineSession(
 
             RECOMMENDED(
                 AD.id + ANALYTICS.id + SOCIAL.id + TEST.id + MOZILLA_SOCIAL.id +
-                    CRYPTOMINING.id + FINGERPRINTING.id
+                    CRYPTOMINING.id + FINGERPRINTING.id,
             ),
 
             /**
              * Combining the [RECOMMENDED] categories plus [SCRIPTS_AND_SUB_RESOURCES].
              */
-            STRICT(RECOMMENDED.id + SCRIPTS_AND_SUB_RESOURCES.id)
+            STRICT(RECOMMENDED.id + SCRIPTS_AND_SUB_RESOURCES.id),
         }
 
         companion object {
             fun none() = TrackingProtectionPolicy(
                 trackingCategories = arrayOf(TrackingCategory.NONE),
-                cookiePolicy = ACCEPT_ALL
+                cookiePolicy = ACCEPT_ALL,
             )
 
             /**
@@ -422,7 +423,7 @@ abstract class EngineSession(
                 trackingCategory = arrayOf(TrackingCategory.STRICT),
                 cookiePolicy = ACCEPT_NON_TRACKERS,
                 strictSocialTrackingProtection = true,
-                cookiePurging = true
+                cookiePurging = true,
             )
 
             /**
@@ -434,7 +435,7 @@ abstract class EngineSession(
                 trackingCategory = arrayOf(TrackingCategory.RECOMMENDED),
                 cookiePolicy = ACCEPT_NON_TRACKERS,
                 strictSocialTrackingProtection = false,
-                cookiePurging = true
+                cookiePurging = true,
             )
 
             /**
@@ -456,13 +457,13 @@ abstract class EngineSession(
                 cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS,
                 cookiePolicyPrivateMode: CookiePolicy = cookiePolicy,
                 strictSocialTrackingProtection: Boolean? = null,
-                cookiePurging: Boolean = false
+                cookiePurging: Boolean = false,
             ) = TrackingProtectionPolicyForSessionTypes(
                 trackingCategory = trackingCategories,
                 cookiePolicy = cookiePolicy,
                 cookiePolicyPrivateMode = cookiePolicyPrivateMode,
                 strictSocialTrackingProtection = strictSocialTrackingProtection,
-                cookiePurging = cookiePurging
+                cookiePurging = cookiePurging,
             )
         }
 
@@ -503,13 +504,13 @@ abstract class EngineSession(
         cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS,
         cookiePolicyPrivateMode: CookiePolicy = cookiePolicy,
         strictSocialTrackingProtection: Boolean? = null,
-        cookiePurging: Boolean = false
+        cookiePurging: Boolean = false,
     ) : TrackingProtectionPolicy(
         trackingCategories = trackingCategory,
         cookiePolicy = cookiePolicy,
         cookiePolicyPrivateMode = cookiePolicyPrivateMode,
         strictSocialTrackingProtection = strictSocialTrackingProtection,
-        cookiePurging = cookiePurging
+        cookiePurging = cookiePurging,
     ) {
         /**
          * Marks this policy to be used for private sessions only.
@@ -521,7 +522,7 @@ abstract class EngineSession(
             cookiePolicy = cookiePolicy,
             cookiePolicyPrivateMode = cookiePolicyPrivateMode,
             strictSocialTrackingProtection = strictSocialTrackingProtection,
-            cookiePurging = cookiePurging
+            cookiePurging = cookiePurging,
         )
 
         /**
@@ -534,7 +535,7 @@ abstract class EngineSession(
             cookiePolicy = cookiePolicy,
             cookiePolicyPrivateMode = cookiePolicyPrivateMode,
             strictSocialTrackingProtection = strictSocialTrackingProtection,
-            cookiePurging = cookiePurging
+            cookiePurging = cookiePurging,
         )
     }
 
@@ -584,11 +585,12 @@ abstract class EngineSession(
          * Signals to the engine that this session has a default priority.
          */
         DEFAULT(0),
+
         /**
          * Signals to the engine that this session is important, and the Engine should keep
          * the session alive for as long as possible.
          */
-        HIGH(1)
+        HIGH(1),
     }
 
     /**
@@ -604,7 +606,7 @@ abstract class EngineSession(
         url: String,
         parent: EngineSession? = null,
         flags: LoadUrlFlags = LoadUrlFlags.none(),
-        additionalHeaders: Map<String, String>? = null
+        additionalHeaders: Map<String, String>? = null,
     )
 
     /**

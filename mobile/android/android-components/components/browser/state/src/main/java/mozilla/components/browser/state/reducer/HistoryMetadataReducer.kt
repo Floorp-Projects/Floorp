@@ -27,12 +27,12 @@ internal object HistoryMetadataReducer {
 
 private fun BrowserState.updateHistoryMetadataKey(
     tabId: String,
-    key: HistoryMetadataKey
+    key: HistoryMetadataKey,
 ): BrowserState {
     return copy(
         tabs = tabs.updateTabs(tabId) { current ->
             current.copy(historyMetadata = key)
-        } ?: tabs
+        } ?: tabs,
     )
 }
 
@@ -45,6 +45,6 @@ private fun BrowserState.disbandSearchGroup(searchTerm: String): BrowserState {
             } else {
                 tab
             }
-        }
+        },
     )
 }

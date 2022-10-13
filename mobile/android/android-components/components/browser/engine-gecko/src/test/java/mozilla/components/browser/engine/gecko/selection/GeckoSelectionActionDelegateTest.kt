@@ -83,7 +83,7 @@ class GeckoSelectionActionDelegateTest {
  */
 class TestGeckoSelectionActionDelegate(
     activity: Activity,
-    customDelegate: SelectionActionDelegate
+    customDelegate: SelectionActionDelegate,
 ) : GeckoSelectionActionDelegate(activity, customDelegate) {
     public override fun getAllActions() = super.getAllActions()
     public override fun performAction(id: String, item: MenuItem): Boolean {

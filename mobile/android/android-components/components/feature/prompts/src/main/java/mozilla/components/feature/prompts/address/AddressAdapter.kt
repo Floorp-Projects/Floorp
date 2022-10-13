@@ -28,7 +28,7 @@ internal object AddressDiffCallback : DiffUtil.ItemCallback<Address>() {
  * RecyclerView adapter for displaying address items.
  */
 internal class AddressAdapter(
-    private val onAddressSelected: (Address) -> Unit
+    private val onAddressSelected: (Address) -> Unit,
 ) : ListAdapter<Address, AddressViewHolder>(AddressDiffCallback) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AddressViewHolder {
         val view = LayoutInflater
@@ -48,7 +48,7 @@ internal class AddressAdapter(
 @VisibleForTesting
 internal class AddressViewHolder(
     itemView: View,
-    private val onAddressSelected: (Address) -> Unit
+    private val onAddressSelected: (Address) -> Unit,
 ) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
     @VisibleForTesting
     lateinit var address: Address

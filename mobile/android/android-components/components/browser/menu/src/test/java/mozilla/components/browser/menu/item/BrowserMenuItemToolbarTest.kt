@@ -82,18 +82,18 @@ class BrowserMenuItemToolbarTest {
         val buttons = listOf(
             BrowserMenuItemToolbar.Button(
                 R.drawable.abc_ic_ab_back_material,
-                "Button01"
+                "Button01",
             ) {},
             BrowserMenuItemToolbar.Button(
                 R.drawable.abc_ic_ab_back_material,
-                "Button02"
+                "Button02",
             ) {},
             BrowserMenuItemToolbar.TwoStateButton(
                 primaryImageResource = R.drawable.abc_ic_go_search_api_material,
                 primaryContentDescription = "TwoStatePrimary",
                 secondaryImageResource = R.drawable.abc_ic_clear_material,
-                secondaryContentDescription = "TwoStateSecondary"
-            ) {}
+                secondaryContentDescription = "TwoStateSecondary",
+            ) {},
         )
 
         val menu = mock(BrowserMenu::class.java)
@@ -124,8 +124,8 @@ class BrowserMenuItemToolbarTest {
                 imageResource = R.drawable.abc_ic_go_search_api_material,
                 contentDescription = "Button01",
                 iconTintColorResource = R.color.accent_material_light,
-                isEnabled = { false }
-            ) {}
+                isEnabled = { false },
+            ) {},
         )
 
         val menu = mock(BrowserMenu::class.java)
@@ -146,8 +146,8 @@ class BrowserMenuItemToolbarTest {
             BrowserMenuItemToolbar.Button(
                 imageResource = R.drawable.abc_ic_go_search_api_material,
                 contentDescription = "Button01",
-                isEnabled = { isEnabled }
-            ) {}
+                isEnabled = { isEnabled },
+            ) {},
         )
 
         val menu = mock(BrowserMenu::class.java)
@@ -174,8 +174,8 @@ class BrowserMenuItemToolbarTest {
                 secondaryImageResource = R.drawable.abc_ic_clear_material,
                 secondaryContentDescription = "TwoStateDisabled",
                 isInPrimaryState = { false },
-                disableInSecondaryState = true
-            ) {}
+                disableInSecondaryState = true,
+            ) {},
         )
 
         val menu = mock(BrowserMenu::class.java)
@@ -200,7 +200,7 @@ class BrowserMenuItemToolbarTest {
             primaryImageTintResource = R.color.accent_material_dark,
             secondaryImageResource = secondaryResource,
             secondaryContentDescription = "secondary",
-            secondaryImageTintResource = R.color.accent_material_light
+            secondaryImageTintResource = R.color.accent_material_light,
         ) {}
         assertTrue(reloadPageAction.isInPrimaryState.invoke())
 
@@ -211,7 +211,7 @@ class BrowserMenuItemToolbarTest {
             secondaryImageResource = secondaryResource,
             secondaryContentDescription = "secondary",
             secondaryImageTintResource = R.color.accent_material_light,
-            isInPrimaryState = { false }
+            isInPrimaryState = { false },
         ) {}
         assertFalse(reloadPageAction.isInPrimaryState.invoke())
     }
@@ -225,8 +225,8 @@ class BrowserMenuItemToolbarTest {
                 primaryContentDescription = "TwoStateEnabled",
                 secondaryImageResource = R.drawable.abc_ic_clear_material,
                 secondaryContentDescription = "TwoStateDisabled",
-                isInPrimaryState = { isInPrimaryState }
-            ) {}
+                isInPrimaryState = { isInPrimaryState },
+            ) {},
         )
 
         val menu = mock(BrowserMenu::class.java)
@@ -252,7 +252,7 @@ class BrowserMenuItemToolbarTest {
             secondaryImageResource = R.drawable.abc_ic_clear_material,
             secondaryContentDescription = "TwoStateDisabled",
             isInPrimaryState = { isInPrimaryState },
-            disableInSecondaryState = true
+            disableInSecondaryState = true,
         ) {}
 
         val view = mock(AppCompatImageView::class.java)
@@ -272,7 +272,7 @@ class BrowserMenuItemToolbarTest {
 
         val button = BrowserMenuItemToolbar.Button(
             R.drawable.abc_ic_ab_back_material,
-            "Test"
+            "Test",
         ) {
             callbackInvoked = true
         }
@@ -307,7 +307,7 @@ class BrowserMenuItemToolbarTest {
             "Test",
             longClickListener = {
                 callbackInvoked = true
-            }
+            },
         ) {}
 
         assertFalse(callbackInvoked)
@@ -337,7 +337,7 @@ class BrowserMenuItemToolbarTest {
 
         assertEquals(
             RowMenuCandidate(emptyList()),
-            BrowserMenuItemToolbar(emptyList()).asCandidate(testContext)
+            BrowserMenuItemToolbar(emptyList()).asCandidate(testContext),
         )
 
         var isEnabled = false
@@ -348,13 +348,13 @@ class BrowserMenuItemToolbarTest {
                     R.drawable.abc_ic_ab_back_material,
                     "Button01",
                     isEnabled = { isEnabled },
-                    listener = listener
+                    listener = listener,
                 ),
                 BrowserMenuItemToolbar.Button(
                     R.drawable.abc_ic_ab_back_material,
                     "Button02",
                     iconTintColorResource = R.color.accent_material_light,
-                    listener = listener
+                    listener = listener,
                 ),
                 BrowserMenuItemToolbar.TwoStateButton(
                     primaryImageResource = R.drawable.abc_ic_go_search_api_material,
@@ -362,9 +362,9 @@ class BrowserMenuItemToolbarTest {
                     secondaryImageResource = R.drawable.abc_ic_clear_material,
                     secondaryContentDescription = "TwoStateSecondary",
                     isInPrimaryState = { isInPrimaryState },
-                    listener = listener
-                )
-            )
+                    listener = listener,
+                ),
+            ),
         )
 
         assertEquals(
@@ -374,30 +374,30 @@ class BrowserMenuItemToolbarTest {
                         "Button01",
                         icon = DrawableMenuIcon(null),
                         containerStyle = ContainerStyle(isEnabled = false),
-                        onClick = listener
+                        onClick = listener,
                     ),
                     SmallMenuCandidate(
                         "Button02",
                         icon = DrawableMenuIcon(
                             null,
-                            tint = getColor(testContext, R.color.accent_material_light)
+                            tint = getColor(testContext, R.color.accent_material_light),
                         ),
-                        onClick = listener
+                        onClick = listener,
                     ),
                     SmallMenuCandidate(
                         "TwoStatePrimary",
                         icon = DrawableMenuIcon(null),
-                        onClick = listener
-                    )
-                )
+                        onClick = listener,
+                    ),
+                ),
             ),
             toolbarWithTwoState.asCandidate(testContext).run {
                 copy(
                     items = items.map {
                         it.copy(icon = it.icon.copy(drawable = null))
-                    }
+                    },
                 )
-            }
+            },
         )
 
         isEnabled = true
@@ -410,30 +410,30 @@ class BrowserMenuItemToolbarTest {
                         "Button01",
                         icon = DrawableMenuIcon(null),
                         containerStyle = ContainerStyle(isEnabled = true),
-                        onClick = listener
+                        onClick = listener,
                     ),
                     SmallMenuCandidate(
                         "Button02",
                         icon = DrawableMenuIcon(
                             null,
-                            tint = getColor(testContext, R.color.accent_material_light)
+                            tint = getColor(testContext, R.color.accent_material_light),
                         ),
-                        onClick = listener
+                        onClick = listener,
                     ),
                     SmallMenuCandidate(
                         "TwoStateSecondary",
                         icon = DrawableMenuIcon(null),
-                        onClick = listener
-                    )
-                )
+                        onClick = listener,
+                    ),
+                ),
             ),
             toolbarWithTwoState.asCandidate(testContext).run {
                 copy(
                     items = items.map {
                         it.copy(icon = it.icon.copy(drawable = null))
-                    }
+                    },
                 )
-            }
+            },
         )
     }
 }

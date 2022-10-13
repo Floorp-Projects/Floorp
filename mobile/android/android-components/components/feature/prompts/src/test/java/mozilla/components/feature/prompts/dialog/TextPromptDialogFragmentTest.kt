@@ -39,9 +39,8 @@ class TextPromptDialogFragmentTest {
 
     @Test
     fun `build dialog`() {
-
         val fragment = spy(
-            TextPromptDialogFragment.newInstance("sessionId", "uid", true, "title", "label", "defaultValue", true)
+            TextPromptDialogFragment.newInstance("sessionId", "uid", true, "title", "label", "defaultValue", true),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -77,9 +76,8 @@ class TextPromptDialogFragmentTest {
 
     @Test
     fun `TextPrompt with hasShownManyDialogs equals false should not have a checkbox`() {
-
         val fragment = spy(
-            TextPromptDialogFragment.newInstance("sessionId", "uid", false, "title", "label", "defaultValue", false)
+            TextPromptDialogFragment.newInstance("sessionId", "uid", false, "title", "label", "defaultValue", false),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -95,9 +93,8 @@ class TextPromptDialogFragmentTest {
 
     @Test
     fun `Clicking on positive button notifies the feature`() {
-
         val fragment = spy(
-            TextPromptDialogFragment.newInstance("sessionId", "uid", true, "title", "label", "defaultValue", false)
+            TextPromptDialogFragment.newInstance("sessionId", "uid", true, "title", "label", "defaultValue", false),
         )
 
         fragment.feature = mockFeature
@@ -116,9 +113,8 @@ class TextPromptDialogFragmentTest {
 
     @Test
     fun `After checking no more dialogs checkbox feature onNoMoreDialogsChecked must be called`() {
-
         val fragment = spy(
-            TextPromptDialogFragment.newInstance("sessionId", "uid", false, "title", "label", "defaultValue", true)
+            TextPromptDialogFragment.newInstance("sessionId", "uid", false, "title", "label", "defaultValue", true),
         )
 
         fragment.feature = mockFeature
@@ -141,9 +137,8 @@ class TextPromptDialogFragmentTest {
 
     @Test
     fun `touching outside of the dialog must notify the feature onCancel`() {
-
         val fragment = spy(
-            TextPromptDialogFragment.newInstance("sessionId", "uid", true, "title", "label", "defaultValue", true)
+            TextPromptDialogFragment.newInstance("sessionId", "uid", true, "title", "label", "defaultValue", true),
         )
 
         fragment.feature = mockFeature

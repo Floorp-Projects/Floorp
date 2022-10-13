@@ -247,7 +247,7 @@ class GeckoEngineViewTest {
         engineView.render(
             mock<GeckoEngineSession>().apply {
                 whenever(this.geckoSession).thenReturn(mock())
-            }
+            },
         )
 
         verify(geckoSession).selectionActionDelegate = null

@@ -24,12 +24,16 @@ import java.io.Closeable
 
 // Older database that was encrypted using SQLCipher
 const val DB_NAME_SQLCIPHER = "logins.sqlite"
+
 // Current database
 const val DB_NAME = "logins2.sqlite"
+
 // Prefs key that we stored the old SQLCipher encryption key
 const val ENCRYPTION_KEY_SQLCIPHER = "passwords"
+
 // Name of our preferences file
 const val PREFS_NAME = "logins"
+
 // SQLCipher migration status.
 //   - 0 / unset: We haven't done the SQLCipher migration
 //   - 1: We performed v1 of the SQLCipher migration
@@ -98,7 +102,7 @@ typealias RequestFailedException = mozilla.appservices.logins.LoginsStorageExcep
  */
 class SyncableLoginsStorage(
     private val context: Context,
-    private val securePrefs: Lazy<SecureAbove22Preferences>
+    private val securePrefs: Lazy<SecureAbove22Preferences>,
 ) : LoginsStorage, SyncableStore, AutoCloseable {
     private val plaintextPrefs by lazy { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
     private val logger = Logger("SyncableLoginsStorage")
@@ -200,7 +204,7 @@ class SyncableLoginsStorage(
         IncorrectKey::class,
         NoSuchRecordException::class,
         InvalidRecordException::class,
-        LoginsStorageException::class
+        LoginsStorageException::class,
     )
     override suspend fun update(guid: String, entry: LoginEntry) = withContext(coroutineContext) {
         conn.getStorage().update(guid, entry.toLoginEntry(), crypto.getOrGenerateKey().key).toEncryptedLogin()

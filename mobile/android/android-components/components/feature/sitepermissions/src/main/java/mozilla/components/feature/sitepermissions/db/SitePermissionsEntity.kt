@@ -50,7 +50,7 @@ internal data class SitePermissionsEntity(
     var crossOriginStorageAccess: SitePermissions.Status,
 
     @ColumnInfo(name = "saved_at")
-    var savedAt: Long
+    var savedAt: Long,
 ) {
 
     internal fun toSitePermission(): SitePermissions {
@@ -66,7 +66,7 @@ internal data class SitePermissionsEntity(
             autoplayInaudible,
             mediaKeySystemAccess,
             crossOriginStorageAccess,
-            savedAt
+            savedAt,
         )
     }
 }
@@ -84,6 +84,6 @@ internal fun SitePermissions.toSitePermissionsEntity(): SitePermissionsEntity {
         autoplayInaudible,
         mediaKeySystemAccess,
         crossOriginStorageAccess,
-        savedAt
+        savedAt,
     )
 }

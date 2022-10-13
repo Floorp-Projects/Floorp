@@ -26,10 +26,10 @@ class CustomTabsServiceStateReducerTest {
         assertEquals(
             CustomTabsServiceState(
                 tabs = mapOf(
-                    token to CustomTabState(creatorPackageName = "com.example.twa")
-                )
+                    token to CustomTabState(creatorPackageName = "com.example.twa"),
+                ),
             ),
-            CustomTabsServiceStateReducer.reduce(initialState, action)
+            CustomTabsServiceStateReducer.reduce(initialState, action),
         )
     }
 
@@ -38,18 +38,18 @@ class CustomTabsServiceStateReducerTest {
         val token: CustomTabsSessionToken = mock()
         val initialState = CustomTabsServiceState(
             tabs = mapOf(
-                token to CustomTabState(creatorPackageName = "com.example.twa")
-            )
+                token to CustomTabState(creatorPackageName = "com.example.twa"),
+            ),
         )
         val action = SaveCreatorPackageNameAction(token, "com.example.trusted.web.app")
 
         assertEquals(
             CustomTabsServiceState(
                 tabs = mapOf(
-                    token to CustomTabState(creatorPackageName = "com.example.trusted.web.app")
-                )
+                    token to CustomTabState(creatorPackageName = "com.example.trusted.web.app"),
+                ),
             ),
-            CustomTabsServiceStateReducer.reduce(initialState, action)
+            CustomTabsServiceStateReducer.reduce(initialState, action),
         )
     }
 
@@ -58,14 +58,14 @@ class CustomTabsServiceStateReducerTest {
         val token: CustomTabsSessionToken = mock()
         val initialState = CustomTabsServiceState(
             tabs = mapOf(
-                token to CustomTabState(creatorPackageName = "com.example.twa")
-            )
+                token to CustomTabState(creatorPackageName = "com.example.twa"),
+            ),
         )
         val action = ValidateRelationshipAction(
             token,
             RELATION_HANDLE_ALL_URLS,
             "https://example.com".toUri(),
-            VerificationStatus.PENDING
+            VerificationStatus.PENDING,
         )
 
         assertEquals(
@@ -76,13 +76,13 @@ class CustomTabsServiceStateReducerTest {
                         relationships = mapOf(
                             Pair(
                                 OriginRelationPair("https://example.com".toUri(), RELATION_HANDLE_ALL_URLS),
-                                VerificationStatus.PENDING
-                            )
-                        )
-                    )
-                )
+                                VerificationStatus.PENDING,
+                            ),
+                        ),
+                    ),
+                ),
             ),
-            CustomTabsServiceStateReducer.reduce(initialState, action)
+            CustomTabsServiceStateReducer.reduce(initialState, action),
         )
     }
 
@@ -96,17 +96,17 @@ class CustomTabsServiceStateReducerTest {
                     relationships = mapOf(
                         Pair(
                             OriginRelationPair("https://example.com".toUri(), RELATION_HANDLE_ALL_URLS),
-                            VerificationStatus.FAILURE
-                        )
-                    )
-                )
-            )
+                            VerificationStatus.FAILURE,
+                        ),
+                    ),
+                ),
+            ),
         )
         val action = ValidateRelationshipAction(
             token,
             RELATION_USE_AS_ORIGIN,
             "https://example.com".toUri(),
-            VerificationStatus.PENDING
+            VerificationStatus.PENDING,
         )
 
         assertEquals(
@@ -117,17 +117,17 @@ class CustomTabsServiceStateReducerTest {
                         relationships = mapOf(
                             Pair(
                                 OriginRelationPair("https://example.com".toUri(), RELATION_HANDLE_ALL_URLS),
-                                VerificationStatus.FAILURE
+                                VerificationStatus.FAILURE,
                             ),
                             Pair(
                                 OriginRelationPair("https://example.com".toUri(), RELATION_USE_AS_ORIGIN),
-                                VerificationStatus.PENDING
-                            )
-                        )
-                    )
-                )
+                                VerificationStatus.PENDING,
+                            ),
+                        ),
+                    ),
+                ),
             ),
-            CustomTabsServiceStateReducer.reduce(initialState, action)
+            CustomTabsServiceStateReducer.reduce(initialState, action),
         )
     }
 
@@ -141,17 +141,17 @@ class CustomTabsServiceStateReducerTest {
                     relationships = mapOf(
                         Pair(
                             OriginRelationPair("https://example.com".toUri(), RELATION_HANDLE_ALL_URLS),
-                            VerificationStatus.PENDING
-                        )
-                    )
-                )
-            )
+                            VerificationStatus.PENDING,
+                        ),
+                    ),
+                ),
+            ),
         )
         val action = ValidateRelationshipAction(
             token,
             RELATION_HANDLE_ALL_URLS,
             "https://example.com".toUri(),
-            VerificationStatus.SUCCESS
+            VerificationStatus.SUCCESS,
         )
 
         assertEquals(
@@ -162,13 +162,13 @@ class CustomTabsServiceStateReducerTest {
                         relationships = mapOf(
                             Pair(
                                 OriginRelationPair("https://example.com".toUri(), RELATION_HANDLE_ALL_URLS),
-                                VerificationStatus.SUCCESS
-                            )
-                        )
-                    )
-                )
+                                VerificationStatus.SUCCESS,
+                            ),
+                        ),
+                    ),
+                ),
             ),
-            CustomTabsServiceStateReducer.reduce(initialState, action)
+            CustomTabsServiceStateReducer.reduce(initialState, action),
         )
     }
 }

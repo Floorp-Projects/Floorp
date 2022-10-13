@@ -16,5 +16,5 @@ import mozilla.components.concept.engine.history.HistoryItem
  */
 data class HistoryState(
     val items: List<HistoryItem> = emptyList(),
-    val currentIndex: Int = 0
+    val currentIndex: Int = 0,
 )

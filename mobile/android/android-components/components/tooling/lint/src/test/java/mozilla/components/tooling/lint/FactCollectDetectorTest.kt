@@ -29,7 +29,7 @@ class FactCollectDetectorTest {
         )
 
         fun Fact.collect() = Facts.collect(this)
-        """
+        """,
     ).indented()
 
     @Test
@@ -57,9 +57,9 @@ class FactCollectDetectorTest {
                             metadata
                         )
                     }
-                    """
+                    """,
                 ).indented(),
-                factClassfileStub
+                factClassfileStub,
             )
             .issues(FactCollectDetector.ISSUE_FACT_COLLECT_CALLED)
             .run()
@@ -69,7 +69,7 @@ class FactCollectDetectorTest {
                     Fact(
                     ~~~~
                 1 errors, 0 warnings
-                """.trimIndent()
+                """.trimIndent(),
             )
     }
 
@@ -98,9 +98,9 @@ class FactCollectDetectorTest {
                             metadata
                         ).collect()
                     }
-                    """
+                    """,
                 ).indented(),
-                factClassfileStub
+                factClassfileStub,
             )
             .issues(FactCollectDetector.ISSUE_FACT_COLLECT_CALLED)
             .run()
@@ -132,9 +132,9 @@ class FactCollectDetectorTest {
                             metadata
                         )
                     }
-                    """
+                    """,
                 ).indented(),
-                factClassfileStub
+                factClassfileStub,
             )
             .issues(FactCollectDetector.ISSUE_FACT_COLLECT_CALLED)
             .run()
@@ -171,9 +171,9 @@ class FactCollectDetectorTest {
                     private fun method(parameter: Fact) {
                         
                     }
-                    """
+                    """,
                 ).indented(),
-                factClassfileStub
+                factClassfileStub,
             )
             .issues(FactCollectDetector.ISSUE_FACT_COLLECT_CALLED)
             .run()
@@ -209,9 +209,9 @@ class FactCollectDetectorTest {
                             )
                         }
                     }
-                    """
+                    """,
                 ).indented(),
-                factClassfileStub
+                factClassfileStub,
             )
             .issues(FactCollectDetector.ISSUE_FACT_COLLECT_CALLED)
             .run()

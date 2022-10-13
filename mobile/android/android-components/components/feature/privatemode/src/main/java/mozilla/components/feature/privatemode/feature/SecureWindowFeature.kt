@@ -30,7 +30,7 @@ class SecureWindowFeature(
     private val store: BrowserStore,
     private val customTabId: String? = null,
     private val isSecure: (SessionState) -> Boolean = { it.content.private },
-    private val clearFlagOnStop: Boolean = true
+    private val clearFlagOnStop: Boolean = true,
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null

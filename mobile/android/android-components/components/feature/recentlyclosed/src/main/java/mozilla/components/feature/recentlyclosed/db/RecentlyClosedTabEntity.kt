@@ -13,7 +13,7 @@ import mozilla.components.browser.state.state.recover.TabState
  * Internal entity representing recently closed tabs.
  */
 @Entity(
-    tableName = "recently_closed_tabs"
+    tableName = "recently_closed_tabs",
 )
 internal data class RecentlyClosedTabEntity(
     /**
@@ -30,14 +30,14 @@ internal data class RecentlyClosedTabEntity(
     var url: String,
 
     @ColumnInfo(name = "created_at")
-    var createdAt: Long
+    var createdAt: Long,
 ) {
     internal fun asTabState(): TabState {
         return TabState(
             id = uuid,
             title = title,
             url = url,
-            lastAccess = createdAt
+            lastAccess = createdAt,
         )
     }
 }
@@ -47,6 +47,6 @@ internal fun TabState.toRecentlyClosedTabEntity(): RecentlyClosedTabEntity {
         uuid = id,
         title = title,
         url = url,
-        createdAt = lastAccess
+        createdAt = lastAccess,
     )
 }

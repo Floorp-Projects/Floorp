@@ -30,6 +30,6 @@ sealed class IconLoaderState {
         val painter: Painter,
         val color: Int?,
         val source: Source,
-        val maskable: Boolean
+        val maskable: Boolean,
     ) : IconLoaderState()
 }

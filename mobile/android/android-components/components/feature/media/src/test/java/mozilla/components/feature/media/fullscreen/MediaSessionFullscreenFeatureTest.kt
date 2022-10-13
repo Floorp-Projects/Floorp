@@ -50,22 +50,23 @@ class MediaSessionFullscreenFeatureTest {
         val initialState = BrowserState(
             tabs = listOf(
                 createTab(
-                    "https://www.mozilla.org", id = "tab1",
+                    "https://www.mozilla.org",
+                    id = "tab1",
                     mediaSessionState = MediaSessionState(
                         mock(),
                         elementMetadata = elementMetadata,
                         playbackState = MediaSession.PlaybackState.PLAYING,
-                        fullscreen = false
-                    )
-                )
+                        fullscreen = false,
+                    ),
+                ),
             ),
-            selectedTabId = "tab1"
+            selectedTabId = "tab1",
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFullscreenFeature(
             activity,
             store,
-            null
+            null,
         )
 
         feature.start()
@@ -80,22 +81,23 @@ class MediaSessionFullscreenFeatureTest {
         val initialState = BrowserState(
             tabs = listOf(
                 createTab(
-                    "https://www.mozilla.org", id = "tab1",
+                    "https://www.mozilla.org",
+                    id = "tab1",
                     mediaSessionState = MediaSessionState(
                         mock(),
                         elementMetadata = elementMetadata,
                         playbackState = MediaSession.PlaybackState.PLAYING,
-                        fullscreen = true
-                    )
-                )
+                        fullscreen = true,
+                    ),
+                ),
             ),
-            selectedTabId = "tab1"
+            selectedTabId = "tab1",
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFullscreenFeature(
             activity,
             store,
-            null
+            null,
         )
 
         feature.start()
@@ -110,22 +112,23 @@ class MediaSessionFullscreenFeatureTest {
         val initialState = BrowserState(
             tabs = listOf(
                 createTab(
-                    "https://www.mozilla.org", id = "tab1",
+                    "https://www.mozilla.org",
+                    id = "tab1",
                     mediaSessionState = MediaSessionState(
                         mock(),
                         elementMetadata = elementMetadata,
                         playbackState = MediaSession.PlaybackState.PLAYING,
-                        fullscreen = true
-                    )
-                )
+                        fullscreen = true,
+                    ),
+                ),
             ),
-            selectedTabId = "tab1"
+            selectedTabId = "tab1",
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFullscreenFeature(
             activity,
             store,
-            null
+            null,
         )
 
         feature.start()
@@ -142,22 +145,23 @@ class MediaSessionFullscreenFeatureTest {
         val initialState = BrowserState(
             tabs = listOf(
                 createTab(
-                    "https://www.mozilla.org", id = "tab1",
+                    "https://www.mozilla.org",
+                    id = "tab1",
                     mediaSessionState = MediaSessionState(
                         mock(),
                         elementMetadata = elementMetadata,
                         playbackState = MediaSession.PlaybackState.PLAYING,
-                        fullscreen = true
-                    )
-                )
+                        fullscreen = true,
+                    ),
+                ),
             ),
-            selectedTabId = "tab1"
+            selectedTabId = "tab1",
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFullscreenFeature(
             activity,
             store,
-            null
+            null,
         )
 
         feature.start()
@@ -180,22 +184,23 @@ class MediaSessionFullscreenFeatureTest {
         val initialState = BrowserState(
             tabs = listOf(
                 createTab(
-                    "https://www.mozilla.org", id = "tab1",
+                    "https://www.mozilla.org",
+                    id = "tab1",
                     mediaSessionState = MediaSessionState(
                         mock(),
                         elementMetadata = elementMetadata,
                         playbackState = MediaSession.PlaybackState.PLAYING,
-                        fullscreen = true
-                    )
-                )
+                        fullscreen = true,
+                    ),
+                ),
             ),
-            selectedTabId = "tab1"
+            selectedTabId = "tab1",
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFullscreenFeature(
             activity,
             store,
-            null
+            null,
         )
 
         feature.start()
@@ -206,15 +211,16 @@ class MediaSessionFullscreenFeatureTest {
         assertEquals(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED, activity.requestedOrientation)
 
         val tab2 = createTab(
-            url = "https://firefox.com", id = "tab2"
+            url = "https://firefox.com",
+            id = "tab2",
         )
         store.dispatch(TabListAction.AddTabAction(tab2, select = true))
         store.dispatch(
             MediaSessionAction.UpdateMediaFullscreenAction(
                 store.state.tabs[0].id,
                 false,
-                MediaSession.ElementMetadata()
-            )
+                MediaSession.ElementMetadata(),
+            ),
         )
         store.waitUntilIdle()
         assertEquals(ActivityInfo.SCREEN_ORIENTATION_USER, activity.requestedOrientation)
@@ -230,22 +236,23 @@ class MediaSessionFullscreenFeatureTest {
         val initialState = BrowserState(
             tabs = listOf(
                 createTab(
-                    "https://www.mozilla.org", id = "tab1",
+                    "https://www.mozilla.org",
+                    id = "tab1",
                     mediaSessionState = MediaSessionState(
                         mock(),
                         elementMetadata = elementMetadata,
                         playbackState = MediaSession.PlaybackState.PLAYING,
-                        fullscreen = true
-                    )
-                )
+                        fullscreen = true,
+                    ),
+                ),
             ),
-            selectedTabId = "tab1"
+            selectedTabId = "tab1",
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFullscreenFeature(
             activity,
             store,
-            null
+            null,
         )
 
         feature.start()
@@ -262,8 +269,8 @@ class MediaSessionFullscreenFeatureTest {
             MediaSessionAction.UpdateMediaFullscreenAction(
                 store.state.tabs[0].id,
                 false,
-                MediaSession.ElementMetadata()
-            )
+                MediaSession.ElementMetadata(),
+            ),
         )
         store.waitUntilIdle()
 
@@ -279,23 +286,24 @@ class MediaSessionFullscreenFeatureTest {
         val initialState = BrowserState(
             tabs = listOf(
                 createTab(
-                    "https://www.mozilla.org", id = "tab1",
+                    "https://www.mozilla.org",
+                    id = "tab1",
                     mediaSessionState = MediaSessionState(
                         mock(),
                         elementMetadata = elementMetadata,
                         playbackState = MediaSession.PlaybackState.PLAYING,
-                        fullscreen = true
-                    )
-                )
+                        fullscreen = true,
+                    ),
+                ),
             ),
-            selectedTabId = "tab1"
+            selectedTabId = "tab1",
         )
         val store = BrowserStore(initialState)
 
         val feature = MediaSessionFullscreenFeature(
             activity,
             store,
-            null
+            null,
         )
 
         feature.start()
@@ -309,7 +317,7 @@ class MediaSessionFullscreenFeatureTest {
         val customTab = createCustomTab(
             "https://www.mozilla.org",
             source = SessionState.Source.Internal.CustomTab,
-            id = "tab2"
+            id = "tab2",
         )
         store.dispatch(CustomTabListAction.AddCustomTabAction(customTab)).joinBlocking()
         val externalActivity = Robolectric.buildActivity(Activity::class.java).setup().get()
@@ -318,7 +326,7 @@ class MediaSessionFullscreenFeatureTest {
         val featureForExternalAppBrowser = MediaSessionFullscreenFeature(
             externalActivity,
             store,
-            "tab2"
+            "tab2",
         )
         featureForExternalAppBrowser.start()
 
@@ -336,23 +344,24 @@ class MediaSessionFullscreenFeatureTest {
         val initialState = BrowserState(
             tabs = listOf(
                 createTab(
-                    "https://www.mozilla.org", id = "tab1",
+                    "https://www.mozilla.org",
+                    id = "tab1",
                     mediaSessionState = MediaSessionState(
                         mock(),
                         elementMetadata = elementMetadata,
                         playbackState = MediaSession.PlaybackState.PLAYING,
-                        fullscreen = true
-                    )
-                )
+                        fullscreen = true,
+                    ),
+                ),
             ),
-            selectedTabId = "tab1"
+            selectedTabId = "tab1",
         )
         val store = BrowserStore(initialState)
 
         val feature = MediaSessionFullscreenFeature(
             activity,
             store,
-            null
+            null,
         )
         feature.start()
         verify(activity.window).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

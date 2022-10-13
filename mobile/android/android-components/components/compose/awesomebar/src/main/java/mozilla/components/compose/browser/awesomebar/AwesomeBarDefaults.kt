@@ -25,7 +25,7 @@ object AwesomeBarDefaults {
         background: Color = MaterialTheme.colors.background,
         title: Color = MaterialTheme.colors.onBackground,
         description: Color = MaterialTheme.colors.onBackground.copy(
-            alpha = ContentAlpha.medium
+            alpha = ContentAlpha.medium,
         ),
         autocompleteIcon: Color = MaterialTheme.colors.onSurface,
         groupTitle: Color = MaterialTheme.colors.onBackground,
@@ -34,6 +34,6 @@ object AwesomeBarDefaults {
         title,
         description,
         autocompleteIcon,
-        groupTitle
+        groupTitle,
     )
 }

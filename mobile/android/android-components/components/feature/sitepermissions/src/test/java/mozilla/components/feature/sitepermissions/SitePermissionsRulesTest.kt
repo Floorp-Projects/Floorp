@@ -51,7 +51,7 @@ class SitePermissionsRulesTest {
             storage = mockStorage,
             fragmentManager = mock(),
             onShouldShowRequestPermissionRationale = mock(),
-            store = BrowserStore()
+            store = BrowserStore(),
         )
     }
 
@@ -66,7 +66,7 @@ class SitePermissionsRulesTest {
             autoplayInaudible = AutoplayAction.ALLOWED,
             persistentStorage = BLOCKED,
             crossOriginStorageAccess = ALLOWED,
-            mediaKeySystemAccess = ASK_TO_ALLOW
+            mediaKeySystemAccess = ASK_TO_ALLOW,
         )
 
         val mockRequest: PermissionRequest = mock()
@@ -123,7 +123,7 @@ class SitePermissionsRulesTest {
             microphone = BLOCKED,
             autoplayInaudible = AutoplayAction.ALLOWED,
             autoplayAudible = AutoplayAction.BLOCKED,
-            mediaKeySystemAccess = ASK_TO_ALLOW
+            mediaKeySystemAccess = ASK_TO_ALLOW,
         )
 
         val mockRequest: PermissionRequest = mock()
@@ -141,7 +141,7 @@ class SitePermissionsRulesTest {
             autoplayInaudible = AutoplayAction.ALLOWED,
             autoplayAudible = AutoplayAction.BLOCKED,
             persistentStorage = BLOCKED,
-            mediaKeySystemAccess = ASK_TO_ALLOW
+            mediaKeySystemAccess = ASK_TO_ALLOW,
         )
 
         action = rules.getActionFrom(mockRequest)
@@ -161,7 +161,7 @@ class SitePermissionsRulesTest {
             autoplayInaudible = AutoplayStatus.ALLOWED,
             autoplayAudible = AutoplayStatus.BLOCKED,
             mediaKeySystemAccess = Status.BLOCKED,
-            savedAt = 1L
+            savedAt = 1L,
         )
 
         val rules = SitePermissionsRules(
@@ -173,7 +173,7 @@ class SitePermissionsRulesTest {
             autoplayAudible = AutoplayAction.BLOCKED,
             persistentStorage = BLOCKED,
             crossOriginStorageAccess = ALLOWED,
-            mediaKeySystemAccess = BLOCKED
+            mediaKeySystemAccess = BLOCKED,
         )
 
         val convertedSitePermissions = rules.toSitePermissions(origin = "origin", savedAt = 1L)

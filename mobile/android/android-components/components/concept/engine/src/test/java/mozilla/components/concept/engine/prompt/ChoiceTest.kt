@@ -15,7 +15,6 @@ class ChoiceTest {
 
     @Test
     fun `Create a choice`() {
-
         val choice = Choice(id = "id", label = "label", children = arrayOf())
         choice.selected = true
         choice.enable = true

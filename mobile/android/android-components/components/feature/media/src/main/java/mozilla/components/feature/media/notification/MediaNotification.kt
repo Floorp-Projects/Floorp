@@ -31,7 +31,7 @@ import java.util.Locale
  */
 internal class MediaNotification(
     private val context: Context,
-    private val cls: Class<*>
+    private val cls: Class<*>,
 ) {
     /**
      * Creates a new [Notification] for the given [sessionState].
@@ -45,7 +45,7 @@ internal class MediaNotification(
     private fun buildNotification(
         data: NotificationData,
         mediaSession: MediaSessionCompat,
-        isCustomTab: Boolean
+        isCustomTab: Boolean,
     ): Notification {
         val channel = MediaNotificationChannel.ensureChannelExists(context)
         val style = MediaStyle().setMediaSession(mediaSession.sessionToken)
@@ -85,7 +85,7 @@ internal class MediaNotification(
 
 private suspend fun SessionState.toNotificationData(
     context: Context,
-    cls: Class<*>
+    cls: Class<*>,
 ): NotificationData {
     val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.also {
         it.action = AbstractMediaSessionService.ACTION_SWITCH_TAB
@@ -104,15 +104,15 @@ private suspend fun SessionState.toNotificationData(
                     context,
                     0,
                     AbstractMediaSessionService.pauseIntent(context, cls),
-                    getNotificationFlag()
-                )
+                    getNotificationFlag(),
+                ),
             ).build(),
             contentIntent = PendingIntent.getActivity(
                 context,
                 SharedIdsHelper.getIdForTag(context, AbstractMediaSessionService.PENDING_INTENT_TAG),
                 intent?.apply { putExtra(AbstractMediaSessionService.EXTRA_TAB_ID, id) },
-                getUpdateNotificationFlag()
-            )
+                getUpdateNotificationFlag(),
+            ),
         )
         MediaSession.PlaybackState.PAUSED -> NotificationData(
             title = getTitleOrUrl(context, mediaSessionState?.metadata?.title),
@@ -126,15 +126,15 @@ private suspend fun SessionState.toNotificationData(
                     context,
                     0,
                     AbstractMediaSessionService.playIntent(context, cls),
-                    getNotificationFlag()
-                )
+                    getNotificationFlag(),
+                ),
             ).build(),
             contentIntent = PendingIntent.getActivity(
                 context,
                 SharedIdsHelper.getIdForTag(context, AbstractMediaSessionService.PENDING_INTENT_TAG),
                 intent?.apply { putExtra(AbstractMediaSessionService.EXTRA_TAB_ID, id) },
-                getUpdateNotificationFlag()
-            )
+                getUpdateNotificationFlag(),
+            ),
         )
         // Dummy notification used of all other media states.
         else -> NotificationData()
@@ -147,7 +147,7 @@ private data class NotificationData(
     @DrawableRes val icon: Int = R.drawable.mozac_feature_media_playing,
     val largeIcon: Bitmap? = null,
     val action: NotificationCompat.Action? = null,
-    val contentIntent: PendingIntent? = null
+    val contentIntent: PendingIntent? = null,
 )
 
 private fun getNotificationFlag() = PendingIntentUtils.defaultFlags

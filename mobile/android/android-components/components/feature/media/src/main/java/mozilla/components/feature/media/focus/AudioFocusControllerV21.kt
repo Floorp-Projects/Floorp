@@ -12,13 +12,13 @@ import android.media.AudioManager
 @Suppress("DEPRECATION")
 internal class AudioFocusControllerV21(
     private val audioManager: AudioManager,
-    private val listener: AudioManager.OnAudioFocusChangeListener
+    private val listener: AudioManager.OnAudioFocusChangeListener,
 ) : AudioFocusController {
     override fun request(): Int {
         return audioManager.requestAudioFocus(
             listener,
             AudioManager.STREAM_MUSIC,
-            AudioManager.AUDIOFOCUS_GAIN
+            AudioManager.AUDIOFOCUS_GAIN,
         )
     }
 

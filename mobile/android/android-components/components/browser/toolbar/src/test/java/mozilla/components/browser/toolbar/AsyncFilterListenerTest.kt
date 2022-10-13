@@ -35,7 +35,7 @@ class AsyncFilterListenerTest {
         val dispatcher = spy(
             Executor {
                 it.run()
-            }.asCoroutineDispatcher()
+            }.asCoroutineDispatcher(),
         )
 
         val listener = AsyncFilterListener(urlView, dispatcher, filter)
@@ -57,15 +57,15 @@ class AsyncFilterListenerTest {
                     text = "testing.com",
                     url = "http://www.testing.com",
                     source = "asyncTest",
-                    totalItems = 1
-                )
+                    totalItems = 1,
+                ),
             )
         }
 
         val dispatcher = spy(
             Executor {
                 it.run()
-            }.asCoroutineDispatcher()
+            }.asCoroutineDispatcher(),
         )
 
         var didCallApply = 0
@@ -85,7 +85,9 @@ class AsyncFilterListenerTest {
                     fail()
                 }
             },
-            dispatcher, filter, this.coroutineContext
+            dispatcher,
+            filter,
+            this.coroutineContext,
         )
 
         verify(dispatcher, never()).isActive
@@ -105,8 +107,8 @@ class AsyncFilterListenerTest {
                     text = "mozilla.com",
                     url = "http://www.mozilla.com",
                     source = "asyncTestTwo",
-                    totalItems = 2
-                )
+                    totalItems = 2,
+                ),
             )
         }
         listener = AsyncFilterListener(
@@ -124,7 +126,9 @@ class AsyncFilterListenerTest {
                     fail()
                 }
             },
-            dispatcher, filter, this.coroutineContext
+            dispatcher,
+            filter,
+            this.coroutineContext,
         )
 
         async { listener("moz") }.await()
@@ -143,8 +147,8 @@ class AsyncFilterListenerTest {
                     text = "testing.com",
                     url = "http://www.testing.com",
                     source = "asyncTest",
-                    totalItems = 1
-                )
+                    totalItems = 1,
+                ),
             )
         }
 
@@ -164,7 +168,9 @@ class AsyncFilterListenerTest {
                     fail()
                 }
             },
-            dispatcher, filter, this.coroutineContext
+            dispatcher,
+            filter,
+            this.coroutineContext,
         )
 
         listener("test")
@@ -193,7 +199,9 @@ class AsyncFilterListenerTest {
                     fail()
                 }
             },
-            dispatcher, filter, this.coroutineContext
+            dispatcher,
+            filter,
+            this.coroutineContext,
         )
 
         listener("test")
@@ -223,7 +231,9 @@ class AsyncFilterListenerTest {
                     calledNoResults += 1
                 }
             },
-            dispatcher, filter, this.coroutineContext
+            dispatcher,
+            filter,
+            this.coroutineContext,
         )
 
         async { listener("test") }.await()
@@ -244,8 +254,8 @@ class AsyncFilterListenerTest {
                     text = "testing.com",
                     url = "http://www.testing.com",
                     source = "asyncTest",
-                    totalItems = 1
-                )
+                    totalItems = 1,
+                ),
             )
         }
 
@@ -269,7 +279,9 @@ class AsyncFilterListenerTest {
                     fail()
                 }
             },
-            dispatcher, filter, this.coroutineContext
+            dispatcher,
+            filter,
+            this.coroutineContext,
         )
 
         async {
@@ -285,8 +297,8 @@ class AsyncFilterListenerTest {
                 text = "testing.com",
                 url = "http://www.testing.com",
                 source = "asyncCancelled",
-                totalItems = 1
-            )
+                totalItems = 1,
+            ),
         )
 
         assertEquals(2, calledResults)
@@ -319,7 +331,9 @@ class AsyncFilterListenerTest {
                     calledResults += 1
                 }
             },
-            dispatcher, filter, this.coroutineContext
+            dispatcher,
+            filter,
+            this.coroutineContext,
         )
 
         async {

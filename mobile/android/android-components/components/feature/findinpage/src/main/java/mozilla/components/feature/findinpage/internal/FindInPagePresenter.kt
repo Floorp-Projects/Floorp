@@ -21,7 +21,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  */
 internal class FindInPagePresenter(
     private val store: BrowserStore,
-    private val view: FindInPageView
+    private val view: FindInPageView,
 ) {
     @Volatile
     internal var session: SessionState? = null

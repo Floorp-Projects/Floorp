@@ -24,7 +24,7 @@ class PromptMiddleware : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         when (action) {
             is ContentAction.UpdatePromptRequestAction -> {
@@ -42,7 +42,7 @@ class PromptMiddleware : Middleware<BrowserState, BrowserAction> {
 
     private fun shouldBlockPrompt(
         action: ContentAction.UpdatePromptRequestAction,
-        context: MiddlewareContext<BrowserState, BrowserAction>
+        context: MiddlewareContext<BrowserState, BrowserAction>,
     ): Boolean {
         if (action.promptRequest is PromptRequest.Popup) {
             context.state.findTab(action.sessionId)?.let {

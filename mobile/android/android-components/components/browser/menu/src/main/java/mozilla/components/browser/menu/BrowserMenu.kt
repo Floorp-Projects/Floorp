@@ -34,13 +34,15 @@ import mozilla.components.support.ktx.android.view.onNextGlobalLayout
  * A popup menu composed of BrowserMenuItem objects.
  */
 open class BrowserMenu internal constructor(
-    internal val adapter: BrowserMenuAdapter
+    internal val adapter: BrowserMenuAdapter,
 ) : View.OnAttachStateChangeListener {
     protected var currentPopup: PopupWindow? = null
+
     @VisibleForTesting
     internal var menuList: RecyclerView? = null
     internal var currAnchor: View? = null
     internal var isShown = false
+
     @VisibleForTesting
     internal lateinit var menuPositioningData: MenuPositioningData
     internal var backgroundColor: Int = Color.RED
@@ -58,7 +60,7 @@ open class BrowserMenu internal constructor(
         orientation: Orientation = DOWN,
         style: MenuStyle? = null,
         endOfMenuAlwaysVisible: Boolean = false,
-        onDismiss: () -> Unit = {}
+        onDismiss: () -> Unit = {},
     ): PopupWindow {
         var view = LayoutInflater.from(anchor.context).inflate(R.layout.mozac_browser_menu, null)
 
@@ -66,7 +68,9 @@ open class BrowserMenu internal constructor(
 
         menuList = view.findViewById<DynamicWidthRecyclerView>(R.id.mozac_browser_menu_recyclerView).apply {
             layoutManager = StickyItemsLinearLayoutManager.get<BrowserMenuAdapter>(
-                anchor.context, StickyItemPlacement.BOTTOM, false
+                anchor.context,
+                StickyItemPlacement.BOTTOM,
+                false,
             )
 
             adapter = this@BrowserMenu.adapter
@@ -79,11 +83,13 @@ open class BrowserMenu internal constructor(
         menuList?.accessibilityDelegate = object : View.AccessibilityDelegate() {
             override fun onInitializeAccessibilityNodeInfo(
                 host: View?,
-                info: AccessibilityNodeInfo?
+                info: AccessibilityNodeInfo?,
             ) {
                 super.onInitializeAccessibilityNodeInfo(host, info)
                 info?.collectionInfo = AccessibilityNodeInfo.CollectionInfo.obtain(
-                    adapter.interactiveCount, 0, false
+                    adapter.interactiveCount,
+                    0,
+                    false,
                 )
             }
         }
@@ -93,7 +99,7 @@ open class BrowserMenu internal constructor(
         menuPositioningData = inferMenuPositioningData(
             view as ViewGroup,
             anchor,
-            MenuPositioningData(askedOrientation = orientation)
+            MenuPositioningData(askedOrientation = orientation),
         )
 
         view = configureExpandableMenu(view, endOfMenuAlwaysVisible)
@@ -122,33 +128,34 @@ open class BrowserMenu internal constructor(
     @VisibleForTesting
     internal fun configureExpandableMenu(
         view: ViewGroup,
-        endOfMenuAlwaysVisible: Boolean
+        endOfMenuAlwaysVisible: Boolean,
     ): ViewGroup {
         // If the menu is placed at the bottom it should start as collapsed.
         if (menuPositioningData.inferredMenuPlacement is BrowserMenuPlacement.AnchoredToBottom.Dropdown ||
             menuPositioningData.inferredMenuPlacement is BrowserMenuPlacement.AnchoredToBottom.ManualAnchoring
         ) {
-
             val collapsingMenuIndexLimit = adapter.visibleItems.indexOfFirst { it.isCollapsingMenuLimit }
             val stickyFooterPosition = adapter.visibleItems.indexOfLast { it.isSticky }
             if (collapsingMenuIndexLimit > 0) {
                 return ExpandableLayout.wrapContentInExpandableView(
                     view,
                     collapsingMenuIndexLimit,
-                    stickyFooterPosition
+                    stickyFooterPosition,
                 ) { dismiss() }
             }
         } else {
             // The menu is by default set as a bottom one. Reconfigure it as a top one.
             menuList?.layoutManager = StickyItemsLinearLayoutManager.get<BrowserMenuAdapter>(
-                view.context, StickyItemPlacement.TOP
+                view.context,
+                StickyItemPlacement.TOP,
             )
 
             // By default the menu is laid out from and scrolled to top - showing the top most items.
             // For the top menu it may be desired to initially show the bottom most items.
             menuList?.let { list ->
                 list.setEndOfMenuAlwaysVisibleCompact(
-                    endOfMenuAlwaysVisible, list.layoutManager as LinearLayoutManager
+                    endOfMenuAlwaysVisible,
+                    list.layoutManager as LinearLayoutManager,
                 )
             }
         }
@@ -164,7 +171,6 @@ open class BrowserMenu internal constructor(
         val popupHeight = if (view is ExpandableLayout) {
             WindowManager.LayoutParams.MATCH_PARENT
         } else {
-
             // Otherwise wrap the menu. Allowing it to be as big as the parent would result in
             // layout issues if the menu is smaller than the available screen estate.
             WindowManager.LayoutParams.WRAP_CONTENT
@@ -173,13 +179,13 @@ open class BrowserMenu internal constructor(
         return PopupWindow(
             view,
             WindowManager.LayoutParams.WRAP_CONTENT,
-            popupHeight
+            popupHeight,
         )
     }
 
     private fun RecyclerView.setEndOfMenuAlwaysVisibleCompact(
         endOfMenuAlwaysVisible: Boolean,
-        layoutManager: LinearLayoutManager
+        layoutManager: LinearLayoutManager,
     ) {
         // In devices with Android 6 and below stackFromEnd is not working properly,
         // as a result, we have to provided a backwards support.
@@ -239,7 +245,7 @@ open class BrowserMenu internal constructor(
 
     enum class Orientation(val concept: mozilla.components.concept.menu.Orientation) {
         UP(mozilla.components.concept.menu.Orientation.UP),
-        DOWN(mozilla.components.concept.menu.Orientation.DOWN)
+        DOWN(mozilla.components.concept.menu.Orientation.DOWN),
     }
 
     override fun onViewDetachedFromWindow(v: View?) {
@@ -260,7 +266,8 @@ internal fun PopupWindow.displayPopup(currentData: MenuPositioningData) {
         is BrowserMenuPlacement.AnchoredToBottom.Dropdown -> showPopupWithUpOrientation(currentData)
 
         is BrowserMenuPlacement.AnchoredToTop.ManualAnchoring,
-        is BrowserMenuPlacement.AnchoredToBottom.ManualAnchoring -> showAtAnchorLocation(currentData)
+        is BrowserMenuPlacement.AnchoredToBottom.ManualAnchoring,
+        -> showAtAnchorLocation(currentData)
         else -> {
             // no-op
         }

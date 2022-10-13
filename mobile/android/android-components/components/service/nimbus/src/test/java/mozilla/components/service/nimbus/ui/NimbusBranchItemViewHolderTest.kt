@@ -22,7 +22,7 @@ class NimbusBranchItemViewHolderTest {
 
     private val branch = Branch(
         slug = "control",
-        ratio = 1
+        ratio = 1,
     )
     private lateinit var nimbusBranchesDelegate: NimbusBranchesAdapterDelegate
     private lateinit var selectedIconView: ImageView
@@ -45,7 +45,7 @@ class NimbusBranchItemViewHolderTest {
             nimbusBranchesDelegate,
             selectedIconView,
             titleView,
-            summaryView
+            summaryView,
         )
 
         holder.bind(branch, "")
@@ -64,7 +64,7 @@ class NimbusBranchItemViewHolderTest {
                 nimbusBranchesDelegate,
                 selectedIconView,
                 titleView,
-                summaryView
+                summaryView,
             )
 
         holder.bind(branch, "")
@@ -82,7 +82,7 @@ class NimbusBranchItemViewHolderTest {
                 nimbusBranchesDelegate,
                 selectedIconView,
                 titleView,
-                summaryView
+                summaryView,
             )
 
         holder.bind(branch, branch.slug)

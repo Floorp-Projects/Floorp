@@ -67,7 +67,7 @@ class CrashReporterActivity : AppCompatActivity() {
         binding.titleView.text = when (isRecoverableBackgroundCrash(crash)) {
             true -> getString(
                 R.string.mozac_lib_crash_background_process_notification_title,
-                appName
+                appName,
             )
             false -> getString(R.string.mozac_lib_crash_dialog_title, appName)
         }

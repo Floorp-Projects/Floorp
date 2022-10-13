@@ -64,12 +64,12 @@ internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         return LayoutInflater.from(requireContext()).inflate(
             R.layout.mozac_feature_prompt_save_credit_card_prompt,
             container,
-            false
+            false,
         )
     }
 
@@ -86,7 +86,7 @@ internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
             feature?.onConfirm(
                 sessionId = sessionId,
                 promptRequestUID = promptRequestUID,
-                value = creditCard
+                value = creditCard,
             )
             dismiss()
             emitSaveUpdateFact()
@@ -95,7 +95,7 @@ internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
         view.findViewById<Button>(R.id.save_cancel).setOnClickListener {
             feature?.onCancel(
                 sessionId = sessionId,
-                promptRequestUID = promptRequestUID
+                promptRequestUID = promptRequestUID,
             )
             dismiss()
         }
@@ -122,7 +122,7 @@ internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
         super.onCancel(dialog)
         feature?.onCancel(
             sessionId = sessionId,
-            promptRequestUID = promptRequestUID
+            promptRequestUID = promptRequestUID,
         )
     }
 
@@ -139,14 +139,14 @@ internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
                     view = view,
                     header = requireContext().getString(R.string.mozac_feature_prompts_save_credit_card_prompt_title),
                     cancelButtonText = requireContext().getString(R.string.mozac_feature_prompt_not_now),
-                    confirmButtonText = requireContext().getString(R.string.mozac_feature_prompt_save_confirmation)
+                    confirmButtonText = requireContext().getString(R.string.mozac_feature_prompt_save_confirmation),
                 )
                 is Result.CanBeUpdated -> setViewText(
                     view = view,
                     header = requireContext().getString(R.string.mozac_feature_prompts_update_credit_card_prompt_title),
                     cancelButtonText = requireContext().getString(R.string.mozac_feature_prompts_cancel),
                     confirmButtonText = requireContext().getString(R.string.mozac_feature_prompt_update_confirmation),
-                    showMessageBody = false
+                    showMessageBody = false,
                 )
             }
         }
@@ -167,7 +167,7 @@ internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
         header: String,
         cancelButtonText: String,
         confirmButtonText: String,
-        showMessageBody: Boolean = true
+        showMessageBody: Boolean = true,
     ) {
         view.findViewById<AppCompatTextView>(R.id.save_credit_card_message).isVisible =
             showMessageBody
@@ -181,7 +181,7 @@ internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
             sessionId: String,
             promptRequestUID: String,
             shouldDismissOnLoad: Boolean,
-            creditCard: CreditCardEntry
+            creditCard: CreditCardEntry,
         ): CreditCardSaveDialogFragment {
             val fragment = CreditCardSaveDialogFragment()
             val arguments = fragment.arguments ?: Bundle()

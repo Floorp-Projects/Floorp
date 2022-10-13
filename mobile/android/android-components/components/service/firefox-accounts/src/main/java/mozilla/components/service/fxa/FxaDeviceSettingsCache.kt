@@ -41,7 +41,7 @@ class FxaDeviceSettingsCache(context: Context) : SharedPreferencesCache<DeviceSe
         return DeviceSettings(
             fxaDeviceId = obj.getString(KEY_FXA_DEVICE_ID),
             name = obj.getString(KEY_DEVICE_NAME),
-            kind = obj.getString(KEY_DEVICE_TYPE).toDeviceType()
+            kind = obj.getString(KEY_DEVICE_TYPE).toDeviceType(),
         )
     }
 

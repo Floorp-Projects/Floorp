@@ -22,7 +22,7 @@ class BrowserStateWriter {
      */
     fun write(
         state: BrowserState,
-        file: AtomicFile
+        file: AtomicFile,
     ): Boolean = file.streamJSON { state(state) }
 
     /**
@@ -30,7 +30,7 @@ class BrowserStateWriter {
      */
     fun writeTab(
         tab: TabSessionState,
-        file: AtomicFile
+        file: AtomicFile,
     ): Boolean = file.streamJSON { tab(tab) }
 }
 
@@ -38,7 +38,7 @@ class BrowserStateWriter {
  * Writes [BrowserState] to [JsonWriter].
  */
 private fun JsonWriter.state(
-    state: BrowserState
+    state: BrowserState,
 ) {
     beginObject()
 
@@ -65,7 +65,7 @@ private fun JsonWriter.state(
  * Writes a [TabSessionState] to [JsonWriter].
  */
 private fun JsonWriter.tab(
-    tab: TabSessionState
+    tab: TabSessionState,
 ) {
     beginObject()
 

@@ -21,7 +21,7 @@ class NimbusTest {
 
     private val appInfo = NimbusAppInfo(
         appName = "NimbusUnitTest",
-        channel = "test"
+        channel = "test",
     )
 
     @Test

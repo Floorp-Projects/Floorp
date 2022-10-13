@@ -30,7 +30,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
  */
 class WebExtensionToolbarFeature(
     private val toolbar: Toolbar,
-    private var store: BrowserStore
+    private var store: BrowserStore,
 ) : LifecycleAwareFeature {
     // This maps web extension ids to [WebExtensionToolbarAction]s for efficient
     // updates of global and tab-specific browser/page actions within the same
@@ -112,7 +112,7 @@ class WebExtensionToolbarFeature(
                 addOrUpdateAction(
                     extension = extension,
                     globalAction = browserAction,
-                    tabAction = tab?.extensionState?.get(extension.id)?.browserAction
+                    tabAction = tab?.extensionState?.get(extension.id)?.browserAction,
                 )
             }
 
@@ -126,7 +126,7 @@ class WebExtensionToolbarFeature(
                         extension = extension,
                         globalAction = pageAction,
                         tabAction = tabPageAction,
-                        isPageAction = true
+                        isPageAction = true,
                     )
                 }
             }
@@ -135,14 +135,14 @@ class WebExtensionToolbarFeature(
 
     private fun extensionNotAllowedInTab(
         extension: WebExtensionState?,
-        tab: SessionState?
+        tab: SessionState?,
     ): Boolean = extension?.allowedInPrivateBrowsing == false && tab?.content?.private == true
 
     private fun addOrUpdateAction(
         extension: WebExtensionState,
         globalAction: Action,
         tabAction: Action?,
-        isPageAction: Boolean = false
+        isPageAction: Boolean = false,
     ) {
         val actionMap = if (isPageAction) webExtensionPageActions else webExtensionBrowserActions
         // Add the global page/browser action if it doesn't exist
@@ -150,7 +150,7 @@ class WebExtensionToolbarFeature(
             val toolbarAction = WebExtensionToolbarAction(
                 action = globalAction,
                 listener = globalAction.onClick,
-                iconJobDispatcher = iconJobDispatcher
+                iconJobDispatcher = iconJobDispatcher,
             )
             if (isPageAction) {
                 toolbar.addPageAction(toolbarAction)

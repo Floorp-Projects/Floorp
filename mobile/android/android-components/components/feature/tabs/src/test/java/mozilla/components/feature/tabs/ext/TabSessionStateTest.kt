@@ -17,7 +17,7 @@ class TabSessionStateTest {
     fun `GIVEN lastMediaUrl is the same as the current tab url and mediaSessionActive is true WHEN hasMediaPlayed is called THEN return true`() {
         val tab = TabSessionState(
             content = ContentState(url = "https://mozilla.org"),
-            lastMediaAccessState = LastMediaAccessState(lastMediaUrl = "https://mozilla.org", mediaSessionActive = true)
+            lastMediaAccessState = LastMediaAccessState(lastMediaUrl = "https://mozilla.org", mediaSessionActive = true),
         )
 
         assertTrue(tab.hasMediaPlayed())
@@ -27,7 +27,7 @@ class TabSessionStateTest {
     fun `GIVEN lastMediaUrl is the same as the current tab url and and mediaSessionActive is false WHEN hasMediaPlayed is called THEN return true`() {
         val tab = TabSessionState(
             content = ContentState(url = "https://mozilla.org"),
-            lastMediaAccessState = LastMediaAccessState(lastMediaUrl = "https://mozilla.org", mediaSessionActive = false)
+            lastMediaAccessState = LastMediaAccessState(lastMediaUrl = "https://mozilla.org", mediaSessionActive = false),
         )
 
         assertTrue(tab.hasMediaPlayed())
@@ -37,7 +37,7 @@ class TabSessionStateTest {
     fun `GIVEN lastMediaUrl is different than the current tab url and mediaSessionActive is false WHEN hasMediaPlayed is called THEN return false`() {
         val tab = TabSessionState(
             content = ContentState(url = "https://mozilla.org"),
-            lastMediaAccessState = LastMediaAccessState(lastMediaUrl = "https://firefox.com", mediaSessionActive = false)
+            lastMediaAccessState = LastMediaAccessState(lastMediaUrl = "https://firefox.com", mediaSessionActive = false),
         )
 
         assertFalse(tab.hasMediaPlayed())

@@ -42,16 +42,16 @@ class SendCrashReportServiceTest {
     fun setUp() {
         intent.component = ComponentName(
             "org.mozilla.samples.browser",
-            "mozilla.components.lib.crash.handler.CrashHandlerService"
+            "mozilla.components.lib.crash.handler.CrashHandlerService",
         )
         intent.putExtra(
             "minidumpPath",
-            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp"
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
         )
         intent.putExtra("fatal", false)
         intent.putExtra(
             "extrasPath",
-            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra"
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
         )
         intent.putExtra("minidumpSuccess", true)
         intent.putParcelableArrayListExtra("breadcrumbs", null)
@@ -72,30 +72,32 @@ class SendCrashReportServiceTest {
             CrashReporter(
                 context = testContext,
                 shouldPrompt = CrashReporter.Prompt.NEVER,
-                services = listOf(object : CrashReporterService {
-                    override val id: String = "test"
+                services = listOf(
+                    object : CrashReporterService {
+                        override val id: String = "test"
 
-                    override val name: String = "TestReporter"
+                        override val name: String = "TestReporter"
 
-                    override fun createCrashReportUrl(identifier: String): String? = null
+                        override fun createCrashReportUrl(identifier: String): String? = null
 
-                    override fun report(crash: Crash.UncaughtExceptionCrash): String? {
-                        fail("Didn't expect uncaught exception crash")
-                        return null
-                    }
+                        override fun report(crash: Crash.UncaughtExceptionCrash): String? {
+                            fail("Didn't expect uncaught exception crash")
+                            return null
+                        }
 
-                    override fun report(crash: Crash.NativeCodeCrash): String? {
-                        caughtCrash = crash
-                        return null
-                    }
+                        override fun report(crash: Crash.NativeCodeCrash): String? {
+                            caughtCrash = crash
+                            return null
+                        }
 
-                    override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? {
-                        fail("Didn't expect caught exception")
-                        return null
-                    }
-                }),
-                scope = scope
-            )
+                        override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? {
+                            fail("Didn't expect caught exception")
+                            return null
+                        }
+                    },
+                ),
+                scope = scope,
+            ),
         ).install(testContext)
         val originalCrash = Crash.NativeCodeCrash(
             123,
@@ -103,22 +105,22 @@ class SendCrashReportServiceTest {
             true,
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
             Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
-            arrayListOf()
+            arrayListOf(),
         )
 
         val intent = Intent("org.mozilla.gecko.ACTION_CRASHED")
         intent.component = ComponentName(
             "org.mozilla.samples.browser",
-            "mozilla.components.lib.crash.handler.CrashHandlerService"
+            "mozilla.components.lib.crash.handler.CrashHandlerService",
         )
         intent.putExtra(
             "minidumpPath",
-            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp"
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
         )
         intent.putExtra("processType", "FOREGROUND_CHILD")
         intent.putExtra(
             "extrasPath",
-            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra"
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
         )
         intent.putExtra("minidumpSuccess", true)
         intent.putParcelableArrayListExtra("breadcrumbs", null)
@@ -137,11 +139,11 @@ class SendCrashReportServiceTest {
         assertEquals(Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, nativeCrash.processType)
         assertEquals(
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
-            nativeCrash.minidumpPath
+            nativeCrash.minidumpPath,
         )
         assertEquals(
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
-            nativeCrash.extrasPath
+            nativeCrash.extrasPath,
         )
     }
 

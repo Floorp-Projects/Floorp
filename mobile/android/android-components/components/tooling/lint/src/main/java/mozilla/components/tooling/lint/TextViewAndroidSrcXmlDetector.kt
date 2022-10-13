@@ -40,8 +40,8 @@ class TextViewAndroidSrcXmlDetector : ResourceXmlDetector() {
             severity = Severity.ERROR,
             implementation = Implementation(
                 TextViewAndroidSrcXmlDetector::class.java,
-                Scope.RESOURCE_FILE_SCOPE
-            )
+                Scope.RESOURCE_FILE_SCOPE,
+            ),
         )
     }
 
@@ -54,7 +54,7 @@ class TextViewAndroidSrcXmlDetector : ResourceXmlDetector() {
     override fun getApplicableElements(): Collection<String>? {
         return setOf(
             FQCN_TEXT_VIEW,
-            TEXT_VIEW
+            TEXT_VIEW,
         )
     }
 
@@ -62,27 +62,27 @@ class TextViewAndroidSrcXmlDetector : ResourceXmlDetector() {
         val node = when {
             element.hasAttributeNS(SCHEMA, ATTR_DRAWABLE_BOTTOM) -> element.getAttributeNodeNS(
                 SCHEMA,
-                ATTR_DRAWABLE_BOTTOM
+                ATTR_DRAWABLE_BOTTOM,
             )
             element.hasAttributeNS(SCHEMA, ATTR_DRAWABLE_END) -> element.getAttributeNodeNS(
                 SCHEMA,
-                ATTR_DRAWABLE_END
+                ATTR_DRAWABLE_END,
             )
             element.hasAttributeNS(SCHEMA, ATTR_DRAWABLE_LEFT) -> element.getAttributeNodeNS(
                 SCHEMA,
-                ATTR_DRAWABLE_LEFT
+                ATTR_DRAWABLE_LEFT,
             )
             element.hasAttributeNS(
                 SCHEMA,
-                ATTR_DRAWABLE_RIGHT
+                ATTR_DRAWABLE_RIGHT,
             ) -> element.getAttributeNodeNS(SCHEMA, ATTR_DRAWABLE_RIGHT)
             element.hasAttributeNS(
                 SCHEMA,
-                ATTR_DRAWABLE_START
+                ATTR_DRAWABLE_START,
             ) -> element.getAttributeNodeNS(SCHEMA, ATTR_DRAWABLE_START)
             element.hasAttributeNS(SCHEMA, ATTR_DRAWABLE_TOP) -> element.getAttributeNodeNS(
                 SCHEMA,
-                ATTR_DRAWABLE_TOP
+                ATTR_DRAWABLE_TOP,
             )
             else -> null
         } ?: return
@@ -91,7 +91,7 @@ class TextViewAndroidSrcXmlDetector : ResourceXmlDetector() {
             issue = ISSUE_XML_SRC_USAGE,
             scope = node,
             location = context.getLocation(node),
-            message = ERROR_MESSAGE
+            message = ERROR_MESSAGE,
         )
     }
 }

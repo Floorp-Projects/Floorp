@@ -21,7 +21,7 @@ private const val KEY_ID_PREFIX = "id."
 internal class SharedIds(
     private val fileName: String,
     private val idLifeTime: Long,
-    private val offset: Int = 0
+    private val offset: Int = 0,
 ) {
     /**
      * Get a unique ID for the provided unique tag.
