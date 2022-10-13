@@ -2494,7 +2494,7 @@ IdlInterface.prototype.test_member_maplike = function(member) {
         for (const [name, length] of methods) {
             const desc = Object.getOwnPropertyDescriptor(proto, name);
             assert_equals(typeof desc.value, "function", `${name} should be a function`);
-            assert_equals(desc.enumerable, false, `${name} enumerable`);
+            assert_equals(desc.enumerable, true, `${name} enumerable`);
             assert_equals(desc.configurable, true, `${name} configurable`);
             assert_equals(desc.writable, true, `${name} writable`);
             assert_equals(desc.value.length, length, `${name} function object length should be ${length}`);
@@ -2510,7 +2510,7 @@ IdlInterface.prototype.test_member_maplike = function(member) {
         const sizeDesc = Object.getOwnPropertyDescriptor(proto, "size");
         assert_equals(typeof sizeDesc.get, "function", `size getter should be a function`);
         assert_equals(sizeDesc.set, undefined, `size should not have a setter`);
-        assert_equals(sizeDesc.enumerable, false, `size enumerable`);
+        assert_equals(sizeDesc.enumerable, true, `size enumerable`);
         assert_equals(sizeDesc.configurable, true, `size configurable`);
         assert_equals(sizeDesc.get.length, 0, `size getter length should have the right length`);
         assert_equals(sizeDesc.get.name, "get size", `size getter have the right name`);
@@ -2539,7 +2539,7 @@ IdlInterface.prototype.test_member_setlike = function(member) {
         for (const [name, length] of methods) {
             const desc = Object.getOwnPropertyDescriptor(proto, name);
             assert_equals(typeof desc.value, "function", `${name} should be a function`);
-            assert_equals(desc.enumerable, false, `${name} enumerable`);
+            assert_equals(desc.enumerable, true, `${name} enumerable`);
             assert_equals(desc.configurable, true, `${name} configurable`);
             assert_equals(desc.writable, true, `${name} writable`);
             assert_equals(desc.value.length, length, `${name} function object length should be ${length}`);
@@ -2555,7 +2555,7 @@ IdlInterface.prototype.test_member_setlike = function(member) {
         const sizeDesc = Object.getOwnPropertyDescriptor(proto, "size");
         assert_equals(typeof sizeDesc.get, "function", `size getter should be a function`);
         assert_equals(sizeDesc.set, undefined, `size should not have a setter`);
-        assert_equals(sizeDesc.enumerable, false, `size enumerable`);
+        assert_equals(sizeDesc.enumerable, true, `size enumerable`);
         assert_equals(sizeDesc.configurable, true, `size configurable`);
         assert_equals(sizeDesc.get.length, 0, `size getter length should have the right length`);
         assert_equals(sizeDesc.get.name, "size", `size getter have the right name`);
