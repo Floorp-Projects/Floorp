@@ -422,7 +422,7 @@
   min-width: 16px;
   min-height: 16px;
   margin-block-start: 2px;
-  margin-inline: 8px 0;
+  margin-inline: 1.8em 0;
 }
 
 .urlbarView-row:is([type=tip], [dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help[selected] {
