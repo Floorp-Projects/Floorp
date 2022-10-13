@@ -589,43 +589,13 @@ diff --git a/js/src/jit-test/tests/wasm/spec/spec/simd_store8_lane.wast.js b/js/
  /* Copyright 2021 Mozilla Foundation
   *
   * Licensed under the Apache License, Version 2.0 (the "License");
-diff --git a/js/src/jit-test/tests/wasm/spec/function-references/br_on_non_null.wast.js b/js/src/jit-test/tests/wasm/spec/function-references/br_on_non_null.wast.js
-TODO call_ref in dead code
---- a/js/src/jit-test/tests/wasm/spec/function-references/br_on_non_null.wast.js
-+++ b/js/src/jit-test/tests/wasm/spec/function-references/br_on_non_null.wast.js
-@@ -44,9 +44,10 @@ let $0 = instantiate(`(module
-   (func (export "nullable-f") (result i32) (call $$n (ref.func $$f)))
- 
-   (func (export "unreachable") (result i32)
--    (block $$l
--      (return (call_ref (br_on_null $$l (unreachable))))
-+    (block $$l (result (ref func))
-+      (return (br_on_non_null $$l (unreachable)))
-     )
-+    (drop)
-     (i32.const -1)
-   )
- )`);
-diff --git a/js/src/jit-test/tests/wasm/spec/function-references/br_on_null.wast.js b/js/src/jit-test/tests/wasm/spec/function-references/br_on_null.wast.js
-TODO call_ref in dead code
---- a/js/src/jit-test/tests/wasm/spec/function-references/br_on_null.wast.js
-+++ b/js/src/jit-test/tests/wasm/spec/function-references/br_on_null.wast.js
-@@ -41,7 +41,7 @@ let $0 = instantiate(`(module
- 
-   (func (export "unreachable") (result i32)
-     (block $$l
--      (return (call_ref (br_on_null $$l (unreachable))))
-+      (return (drop (br_on_null $$l (unreachable))))
-     )
-     (i32.const -1)
-   )
 diff --git a/js/src/jit-test/tests/wasm/spec/function-references/call_ref.wast.js b/js/src/jit-test/tests/wasm/spec/function-references/call_ref.wast.js
-TODO fix specific function reference types in arguments
+TODO non-nullable references not supported in globals
 --- a/js/src/jit-test/tests/wasm/spec/function-references/call_ref.wast.js
 +++ b/js/src/jit-test/tests/wasm/spec/function-references/call_ref.wast.js
 @@ -39,74 +39,6 @@ let $0 = instantiate(`(module
    (func (export "null") (result i32)
-     (call_ref (i32.const 1) (ref.null $$ii))
+     (call_ref $$ii (i32.const 1) (ref.null $$ii))
    )
 -
 -  ;; Recursion
@@ -642,7 +612,7 @@ TODO fix specific function reference types in arguments
 -      (else
 -        (i64.mul
 -          (local.get 0)
--          (call_ref (i64.sub (local.get 0) (i64.const 1)) (global.get $$fac))
+-          (call_ref $$ll (i64.sub (local.get 0) (i64.const 1)) (global.get $$fac))
 -        )
 -      )
 -    )
@@ -655,7 +625,7 @@ TODO fix specific function reference types in arguments
 -    (if (result i64) (i64.eqz (local.get 0))
 -      (then (local.get 1))
 -      (else
--        (call_ref
+-        (call_ref $$lll
 -          (i64.sub (local.get 0) (i64.const 1))
 -          (i64.mul (local.get 0) (local.get 1))
 -          (global.get $$fac-acc)
@@ -672,8 +642,8 @@ TODO fix specific function reference types in arguments
 -      (then (i64.const 1))
 -      (else
 -        (i64.add
--          (call_ref (i64.sub (local.get 0) (i64.const 2)) (global.get $$fib))
--          (call_ref (i64.sub (local.get 0) (i64.const 1)) (global.get $$fib))
+-          (call_ref $$ll (i64.sub (local.get 0) (i64.const 2)) (global.get $$fib))
+-          (call_ref $$ll (i64.sub (local.get 0) (i64.const 1)) (global.get $$fib))
 -        )
 -      )
 -    )
@@ -686,19 +656,19 @@ TODO fix specific function reference types in arguments
 -  (func $$even (export "even") (type $$ll)
 -    (if (result i64) (i64.eqz (local.get 0))
 -      (then (i64.const 44))
--      (else (call_ref (i64.sub (local.get 0) (i64.const 1)) (global.get $$odd)))
+-      (else (call_ref $$ll (i64.sub (local.get 0) (i64.const 1)) (global.get $$odd)))
 -    )
 -  )
 -  (func $$odd (export "odd") (type $$ll)
 -    (if (result i64) (i64.eqz (local.get 0))
 -      (then (i64.const 99))
--      (else (call_ref (i64.sub (local.get 0) (i64.const 1)) (global.get $$even)))
+-      (else (call_ref $$ll (i64.sub (local.get 0) (i64.const 1)) (global.get $$even)))
 -    )
 -  )
  )`);
  
  // ./test/core/call_ref.wast:94
-@@ -118,84 +50,6 @@ assert_return(() => invoke($0, `run`, [3
+@@ -118,73 +50,6 @@ assert_return(() => invoke($0, `run`, [3
  // ./test/core/call_ref.wast:97
  assert_trap(() => invoke($0, `null`, []), `null function`);
  
@@ -769,22 +739,11 @@ TODO fix specific function reference types in arguments
 -// ./test/core/call_ref.wast:124
 -assert_return(() => invoke($0, `odd`, [77n]), [value("i64", 44n)]);
 -
--// ./test/core/call_ref.wast:129
--let $1 = instantiate(`(module
--  (func (export "unreachable") (result i32)
--    (unreachable)
--    (call_ref)
--  )
--)`);
--
--// ./test/core/call_ref.wast:135
--assert_trap(() => invoke($1, `unreachable`, []), `unreachable`);
--
- // ./test/core/call_ref.wast:137
- let $2 = instantiate(`(module
-   (elem declare func $$f)
+ // ./test/core/call_ref.wast:129
+ let $1 = instantiate(`(module
+   (type $$t (func))
 diff --git a/js/src/jit-test/tests/wasm/spec/function-references/local_get.wast.js b/js/src/jit-test/tests/wasm/spec/function-references/local_get.wast.js
-TODO fix "Error: globals are of different type"
+TODO Error: globals are of different type
 --- a/js/src/jit-test/tests/wasm/spec/function-references/local_get.wast.js
 +++ b/js/src/jit-test/tests/wasm/spec/function-references/local_get.wast.js
 @@ -355,21 +355,6 @@ let $1 = instantiate(`(module
