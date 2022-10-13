@@ -8284,6 +8284,21 @@ telemetry.test:
     record_in_processes:
       - 'socket'
 
+  utility_only_uint:
+    bug_numbers:
+      - 1794409
+    description: A testing uint scalar; not meant to be touched.
+    expires: never
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'thunderbird'
+    record_in_processes:
+      - 'utility'
+
   all_processes_uint:
     bug_numbers:
       - 1278556
