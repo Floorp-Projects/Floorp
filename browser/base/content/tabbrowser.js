@@ -5207,8 +5207,9 @@
         _multiSelectedTabsSet
       ).filter(this._mayTabBeMultiselected);
       if (
-        !_multiSelectedTabsSet.has(selectedTab) &&
-        this._mayTabBeMultiselected(selectedTab)
+        (!_multiSelectedTabsSet.has(selectedTab) &&
+          this._mayTabBeMultiselected(selectedTab)) ||
+        !tabs.length
       ) {
         tabs.push(selectedTab);
       }
