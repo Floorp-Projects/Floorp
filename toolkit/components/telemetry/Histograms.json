@@ -3415,6 +3415,19 @@
     "n_values": 16,
     "description": "SSL Handshake Key Exchange Algorithm for resumed handshake (null=0, rsa=1, dh=2, fortezza=3, ecdh=4)"
   },
+  "OCSP_AGE_AT_CRLITE_OVERRIDE": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "jschanck@mozilla.com"],
+    "bug_numbers": [1794479],
+    "expires_in_version": "113",
+    "kind": "linear",
+    "releaseChannelCollection": "opt-out",
+    "low": 1,
+    "high": 240,
+    "n_buckets": 20,
+    "description": "When OCSP and CRLite differ, how old is the OCSP response (in hours)?"
+  },
   "CRLITE_VS_OCSP_RESULT": {
     "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
