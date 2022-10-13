@@ -10,11 +10,17 @@
     <script>
       /* eslint-disable */
       var foo1 = "globalFoo";
+      var shadowed = Object.assign(Object.create(null), {
+        foo: true
+      });
 
       var foo1Obj = Object.assign(Object.create(null), {
         prop1: "111",
         prop2: {
           prop21: "212121"
+        },
+        method() {
+          debugger;
         }
       });
 
@@ -32,6 +38,10 @@
 
       function secondCall() {
         var foo3 = "fooSecondCall";
+        var shadowed = Object.assign(Object.create(null), {
+          bar: true
+        });
+
 
         var foo3Obj = Object.assign(Object.create(null), {
           prop1: Object.assign(Object.create(null), {
@@ -39,7 +49,7 @@
           })
         });
 
-        debugger;
+        foo1Obj.method();
       }
     </script>
   </head>

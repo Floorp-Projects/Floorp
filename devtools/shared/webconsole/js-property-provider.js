@@ -100,6 +100,7 @@ const MAX_AUTOCOMPLETIONS = (exports.MAX_AUTOCOMPLETIONS = 1500);
 function JSPropertyProvider({
   dbgObject,
   environment,
+  frameActorId,
   inputValue,
   cursor,
   authorizedEvaluations = [],
@@ -135,7 +136,7 @@ function JSPropertyProvider({
   if (webconsoleActor && shouldInputBeEagerlyEvaluated(inputAnalysis)) {
     const eagerResponse = evalWithDebugger(
       mainExpression,
-      { eager: true, selectedNodeActor },
+      { eager: true, selectedNodeActor, frameActor: frameActorId },
       webconsoleActor
     );
 

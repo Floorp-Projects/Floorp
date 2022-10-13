@@ -1406,6 +1406,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       const result = JSPropertyProvider({
         dbgObject,
         environment,
+        frameActorId,
         inputValue: text,
         cursor,
         webconsoleActor: this,
