@@ -3384,11 +3384,15 @@ function UpdateUrlbarSearchSplitterState() {
     return;
   }
 
-  var ibefore = null;
+  let ibefore = null;
+  let resizebefore = "none";
+  let resizeafter = "none";
   if (urlbar && searchbar) {
     if (urlbar.nextElementSibling == searchbar) {
+      resizeafter = "sibling";
       ibefore = searchbar;
     } else if (searchbar.nextElementSibling == urlbar) {
+      resizebefore = "sibling";
       ibefore = urlbar;
     }
   }
@@ -3397,8 +3401,8 @@ function UpdateUrlbarSearchSplitterState() {
     if (!splitter) {
       splitter = document.createXULElement("splitter");
       splitter.id = "urlbar-search-splitter";
-      splitter.setAttribute("resizebefore", "flex");
-      splitter.setAttribute("resizeafter", "flex");
+      splitter.setAttribute("resizebefore", resizebefore);
+      splitter.setAttribute("resizeafter", resizeafter);
       splitter.setAttribute("skipintoolbarset", "true");
       splitter.setAttribute("overflows", "false");
       splitter.className = "chromeclass-toolbar-additional";
