@@ -871,10 +871,6 @@ criteria = "safe-to-deploy"
 version = "0.5.0"
 criteria = "safe-to-run"
 
-[[exemptions.mozrunner]]
-version = "0.14.0"
-criteria = "safe-to-run"
-
 [[exemptions.murmurhash3]]
 version = "0.0.5"
 criteria = "safe-to-deploy"
