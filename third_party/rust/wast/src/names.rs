@@ -81,6 +81,6 @@ pub fn resolve_error(id: Id<'_>, ns: &str) -> Error {
     );
     Error::new(
         id.span(),
-        format!("failed to find {} named `${}`", ns, id.name()),
+        format!("unknown {ns}: failed to find name `${}`", id.name()),
     )
 }

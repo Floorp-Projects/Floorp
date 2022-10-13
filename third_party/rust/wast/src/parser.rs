@@ -455,12 +455,12 @@ impl<'a> Parser<'a> {
     }
 
     pub(crate) fn has_meaningful_tokens(self) -> bool {
-        self.buf.tokens[self.cursor().cur..]
-            .iter()
-            .any(|(t, _)| match t {
-                Token::Whitespace(_) | Token::LineComment(_) | Token::BlockComment(_) => false,
-                _ => true,
-            })
+        self.buf.tokens[self.cursor().cur..].iter().any(|(t, _)| {
+            !matches!(
+                t,
+                Token::Whitespace(_) | Token::LineComment(_) | Token::BlockComment(_)
+            )
+        })
     }
 
     /// Parses a `T` from this [`Parser`].

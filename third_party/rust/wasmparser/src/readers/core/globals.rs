@@ -14,7 +14,7 @@
  */
 
 use crate::{
-    BinaryReader, GlobalType, InitExpr, Result, SectionIteratorLimited, SectionReader,
+    BinaryReader, ConstExpr, GlobalType, Result, SectionIteratorLimited, SectionReader,
     SectionWithLimitedItems,
 };
 use std::ops::Range;
@@ -25,7 +25,7 @@ pub struct Global<'a> {
     /// The global's type.
     pub ty: GlobalType,
     /// The global's initialization expression.
-    pub init_expr: InitExpr<'a>,
+    pub init_expr: ConstExpr<'a>,
 }
 
 /// A reader for the global section of a WebAssembly module.
@@ -73,7 +73,7 @@ impl<'a> GlobalSectionReader<'a> {
         'a: 'b,
     {
         let ty = self.reader.read_global_type()?;
-        let init_expr = self.reader.read_init_expr()?;
+        let init_expr = self.reader.read_const_expr()?;
         Ok(Global { ty, init_expr })
     }
 }

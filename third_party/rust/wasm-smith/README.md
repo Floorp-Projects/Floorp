@@ -46,11 +46,8 @@ $ cargo fuzz add my_wasm_smith_fuzz_target
 
 Next, add `wasm-smith` to your dependencies:
 
-```toml
-# fuzz/Cargo.toml
-
-[dependencies]
-wasm-smith = "0.4.0"
+```shell
+$ cargo add wasm-smith
 ```
 
 Then, define your fuzz target so that it takes arbitrary `wasm_smith::Module`s
@@ -88,13 +85,13 @@ $ cargo fuzz run my_wasm_smith_fuzz_target
 Install the CLI tool via `cargo`:
 
 ```shell
-$ cargo install --git https://github.com/bytecodealliance/wasm-tools
+$ cargo install wasm-tools
 ```
 
 Convert some arbitrary input into a valid Wasm module:
 
 ```shell
-$ head -c 100 /dev/urandom | wasm-smith -o test.wasm
+$ head -c 100 /dev/urandom | wasm-tools smith -o test.wasm
 ```
 
 Finally, run your tool on the generated Wasm module:

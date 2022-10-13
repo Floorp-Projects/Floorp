@@ -95,12 +95,12 @@ impl<'a> Resolver<'a> {
 
             ModuleField::Type(i) => {
                 return self.register_type(i);
-            },
+            }
             ModuleField::Rec(i) => {
                 for ty in &i.types {
                     self.register_type(ty)?;
                 }
-                return Ok(())
+                return Ok(());
             }
             ModuleField::Elem(e) => self.elems.register(e.id, "elem")?,
             ModuleField::Data(d) => self.datas.register(d.id, "data")?,
@@ -606,8 +606,8 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 self.resolver.resolve(&mut i.r#type, Ns::Type)?;
             }
 
-            BrOnFunc(l) | BrOnData(l) | BrOnI31(l) | BrOnArray(l) |
-            BrOnNonFunc(l) | BrOnNonData(l) | BrOnNonI31(l) | BrOnNonArray(l) => {
+            BrOnFunc(l) | BrOnData(l) | BrOnI31(l) | BrOnArray(l) | BrOnNonFunc(l)
+            | BrOnNonData(l) | BrOnNonI31(l) | BrOnNonArray(l) => {
                 self.resolve_label(l)?;
             }
 
@@ -619,16 +619,8 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 }
             }
 
-            RefTest(i)
-            | RefCast(i)
-            | StructNew(i)
-            | StructNewDefault(i)
-            | ArrayNew(i)
-            | ArrayNewDefault(i)
-            | ArrayGet(i)
-            | ArrayGetS(i)
-            | ArrayGetU(i)
-            | ArraySet(i)
+            RefTest(i) | RefCast(i) | StructNew(i) | StructNewDefault(i) | ArrayNew(i)
+            | ArrayNewDefault(i) | ArrayGet(i) | ArrayGetS(i) | ArrayGetU(i) | ArraySet(i)
             | ArrayLen(i) => {
                 self.resolver.resolve(i, Ns::Type)?;
             }
@@ -654,7 +646,7 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 self.resolver.resolve(&mut a.src_array, Ns::Type)?;
             }
 
-            RefNull(ty) => self.resolver.resolve_heaptype(ty)?,
+            RefNull(ty) | CallRef(ty) | ReturnCallRef(ty) => self.resolver.resolve_heaptype(ty)?,
 
             _ => {}
         }

@@ -485,13 +485,12 @@ pub mod kw {
     custom_keyword!(float32);
     custom_keyword!(float64);
     custom_keyword!(variant);
-    custom_keyword!(unit);
     custom_keyword!(flags);
     custom_keyword!(option);
     custom_keyword!(tuple);
     custom_keyword!(list);
+    custom_keyword!(error);
     custom_keyword!(union);
-    custom_keyword!(expected);
     custom_keyword!(canon);
     custom_keyword!(lift);
     custom_keyword!(lower);

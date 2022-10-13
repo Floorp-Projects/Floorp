@@ -139,7 +139,6 @@ impl<'a> Parse<'a> for Component<'a> {
 pub enum ComponentField<'a> {
     CoreModule(CoreModule<'a>),
     CoreInstance(CoreInstance<'a>),
-    CoreAlias(CoreAlias<'a>),
     CoreType(CoreType<'a>),
     Component(NestedComponent<'a>),
     Instance(Instance<'a>),
@@ -172,9 +171,6 @@ impl<'a> Parse<'a> for ComponentField<'a> {
             }
             if parser.peek2::<kw::instance>() {
                 return Ok(Self::CoreInstance(parser.parse()?));
-            }
-            if parser.peek2::<kw::alias>() {
-                return Ok(Self::CoreAlias(parser.parse()?));
             }
             if parser.peek2::<kw::r#type>() {
                 return Ok(Self::CoreType(parser.parse()?));
@@ -222,8 +218,8 @@ pub struct Start<'a> {
     pub func: Index<'a>,
     /// The arguments to pass to the function.
     pub args: Vec<ItemRef<'a, kw::value>>,
-    /// Name of the result value.
-    pub result: Option<Id<'a>>,
+    /// Names of the result values.
+    pub results: Vec<Option<Id<'a>>>,
 }
 
 impl<'a> Parse<'a> for Start<'a> {
@@ -234,23 +230,23 @@ impl<'a> Parse<'a> for Start<'a> {
         while !parser.is_empty() && !parser.peek2::<kw::result>() {
             args.push(parser.parens(|parser| parser.parse())?);
         }
-        let result = if !parser.is_empty() {
-            parser.parens(|parser| {
+
+        let mut results = Vec::new();
+        while !parser.is_empty() && parser.peek2::<kw::result>() {
+            results.push(parser.parens(|parser| {
                 parser.parse::<kw::result>()?;
-                if !parser.is_empty() {
-                    parser.parens(|parser| {
-                        parser.parse::<kw::value>()?;
-                        let id = parser.parse()?;
-                        Ok(Some(id))
-                    })
-                } else {
-                    Ok(None)
-                }
-            })?
-        } else {
-            None
-        };
-        Ok(Start { func, args, result })
+                parser.parens(|parser| {
+                    parser.parse::<kw::value>()?;
+                    parser.parse()
+                })
+            })?);
+        }
+
+        Ok(Start {
+            func,
+            args,
+            results,
+        })
     }
 }
 

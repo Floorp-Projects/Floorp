@@ -17,11 +17,10 @@
 
 ## Usage
 
-Add this to your `Cargo.toml`:
+Add `wast` to your `Cargo.toml`
 
-```toml
-[dependencies]
-wast = "22.0"
+```sh
+$ cargo add wast
 ```
 
 The intent of this crate is to provide utilities, combinators, and built-in
@@ -45,9 +44,8 @@ crate, however, to parse simply an s-expression wasm-related format (like
 only include a lexer, the parsing framework, and a few basic token-related
 parsers.
 
-```toml
-[dependencies]
-wast = { version = "22.0", default-features = false }
+```sh
+$ cargo add wast --no-default-features
 ```
 
 # License

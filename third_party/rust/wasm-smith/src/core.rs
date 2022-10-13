@@ -2,7 +2,7 @@
 
 mod code_builder;
 pub(crate) mod encode;
-mod notrap;
+pub(crate) mod no_traps;
 mod terminate;
 
 use crate::{arbitrary_loop, limited_string, unique_string, Config, DefaultConfig};
@@ -589,14 +589,22 @@ impl Module {
                 None => panic!("signature index refers to a type out of bounds"),
                 Some((_, Some(idx))) => *idx as usize,
                 Some((wasmparser::Type::Func(func_type), index_store)) => {
-                    let multi_value_required = func_type.returns.len() > 1;
+                    let multi_value_required = func_type.results().len() > 1;
                     let new_index = first_type_index + new_types.len();
                     if new_index >= max_types || (multi_value_required && !multi_value_enabled) {
                         return None;
                     }
                     let func_type = Rc::new(FuncType {
-                        params: func_type.params.iter().map(|t| convert_type(*t)).collect(),
-                        results: func_type.returns.iter().map(|t| convert_type(*t)).collect(),
+                        params: func_type
+                            .params()
+                            .iter()
+                            .map(|t| convert_type(*t))
+                            .collect(),
+                        results: func_type
+                            .results()
+                            .iter()
+                            .map(|t| convert_type(*t))
+                            .collect(),
                     });
                     index_store.replace(new_index as u32);
                     new_types.push(Type::Func(Rc::clone(&func_type)));

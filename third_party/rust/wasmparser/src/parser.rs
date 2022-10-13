@@ -1,12 +1,12 @@
 use crate::CoreTypeSectionReader;
 use crate::{
-    limits::MAX_WASM_MODULE_SIZE, AliasSectionReader, BinaryReader, BinaryReaderError,
-    ComponentAliasSectionReader, ComponentCanonicalSectionReader, ComponentExportSectionReader,
-    ComponentImportSectionReader, ComponentInstanceSectionReader, ComponentStartSectionReader,
-    ComponentTypeSectionReader, CustomSectionReader, DataSectionReader, ElementSectionReader,
-    ExportSectionReader, FunctionBody, FunctionSectionReader, GlobalSectionReader,
-    ImportSectionReader, InstanceSectionReader, MemorySectionReader, Result, TableSectionReader,
-    TagSectionReader, TypeSectionReader,
+    limits::MAX_WASM_MODULE_SIZE, BinaryReader, BinaryReaderError, ComponentAliasSectionReader,
+    ComponentCanonicalSectionReader, ComponentExportSectionReader, ComponentImportSectionReader,
+    ComponentInstanceSectionReader, ComponentStartSectionReader, ComponentTypeSectionReader,
+    CustomSectionReader, DataSectionReader, ElementSectionReader, ExportSectionReader,
+    FunctionBody, FunctionSectionReader, GlobalSectionReader, ImportSectionReader,
+    InstanceSectionReader, MemorySectionReader, Result, TableSectionReader, TagSectionReader,
+    TypeSectionReader,
 };
 use std::convert::TryInto;
 use std::fmt;
@@ -209,11 +209,6 @@ pub enum Payload<'a> {
     ///
     /// Currently this section is only parsed in a component.
     InstanceSection(InstanceSectionReader<'a>),
-    /// A core alias section was received and the provided parser can be
-    /// used to parse the contents of the core alias section.
-    ///
-    /// Currently this section is only parsed in a component.
-    AliasSection(AliasSectionReader<'a>),
     /// A core type section was received and the provided parser can be
     /// used to parse the contents of the core type section.
     ///
@@ -295,7 +290,7 @@ impl Parser {
         Parser {
             state: State::Header,
             offset,
-            max_size: u64::max_value(),
+            max_size: u64::MAX,
             // Assume the encoding is a module until we know otherwise
             encoding: Encoding::Module,
         }
@@ -405,7 +400,6 @@ impl Parser {
     ///             // Sections for WebAssembly components
     ///             ModuleSection { .. } => { /* ... */ }
     ///             InstanceSection(_) => { /* ... */ }
-    ///             AliasSection(_) => { /* ... */ }
     ///             CoreTypeSection(_) => { /* ... */ }
     ///             ComponentSection { .. } => { /* ... */ }
     ///             ComponentInstanceSection(_) => { /* ... */ }
@@ -602,15 +596,13 @@ impl Parser {
 
                     // Component sections
                     (Encoding::Component, 1 /* module */)
-                    | (Encoding::Component, 5 /* component */) => {
+                    | (Encoding::Component, 4 /* component */) => {
                         if len as usize > MAX_WASM_MODULE_SIZE {
-                            return Err(BinaryReaderError::new(
-                                format!(
-                                    "{} section is too large",
-                                    if id == 1 { "module" } else { "component " }
-                                ),
+                            bail!(
                                 len_pos,
-                            ));
+                                "{} section is too large",
+                                if id == 1 { "module" } else { "component " }
+                            );
                         }
 
                         let range =
@@ -622,7 +614,7 @@ impl Parser {
 
                         Ok(match id {
                             1 => ModuleSection { parser, range },
-                            5 => ComponentSection { parser, range },
+                            4 => ComponentSection { parser, range },
                             _ => unreachable!(),
                         })
                     }
@@ -630,49 +622,46 @@ impl Parser {
                         section(reader, len, InstanceSectionReader::new, InstanceSection)
                     }
                     (Encoding::Component, 3) => {
-                        section(reader, len, AliasSectionReader::new, AliasSection)
-                    }
-                    (Encoding::Component, 4) => {
                         section(reader, len, CoreTypeSectionReader::new, CoreTypeSection)
                     }
                     // Section 5 handled above
-                    (Encoding::Component, 6) => section(
+                    (Encoding::Component, 5) => section(
                         reader,
                         len,
                         ComponentInstanceSectionReader::new,
                         ComponentInstanceSection,
                     ),
-                    (Encoding::Component, 7) => section(
+                    (Encoding::Component, 6) => section(
                         reader,
                         len,
                         ComponentAliasSectionReader::new,
                         ComponentAliasSection,
                     ),
-                    (Encoding::Component, 8) => section(
+                    (Encoding::Component, 7) => section(
                         reader,
                         len,
                         ComponentTypeSectionReader::new,
                         ComponentTypeSection,
                     ),
-                    (Encoding::Component, 9) => section(
+                    (Encoding::Component, 8) => section(
                         reader,
                         len,
                         ComponentCanonicalSectionReader::new,
                         ComponentCanonicalSection,
                     ),
-                    (Encoding::Component, 10) => section(
+                    (Encoding::Component, 9) => section(
                         reader,
                         len,
                         ComponentStartSectionReader::new,
                         ComponentStartSection,
                     ),
-                    (Encoding::Component, 11) => section(
+                    (Encoding::Component, 10) => section(
                         reader,
                         len,
                         ComponentImportSectionReader::new,
                         ComponentImportSection,
                     ),
-                    (Encoding::Component, 12) => section(
+                    (Encoding::Component, 11) => section(
                         reader,
                         len,
                         ComponentExportSectionReader::new,
@@ -904,10 +893,10 @@ fn single_u32<'a>(
     // expected.
     let index = content.read_var_u32().map_err(clear_hint)?;
     if !content.eof() {
-        return Err(BinaryReaderError::new(
-            format!("unexpected content in the {} section", desc),
+        bail!(
             content.original_position(),
-        ));
+            "unexpected content in the {desc} section",
+        );
     }
     Ok((index, range))
 }
@@ -991,7 +980,6 @@ impl fmt::Debug for Payload<'_> {
                 .field("range", range)
                 .finish(),
             InstanceSection(_) => f.debug_tuple("InstanceSection").field(&"...").finish(),
-            AliasSection(_) => f.debug_tuple("AliasSection").field(&"...").finish(),
             CoreTypeSection(_) => f.debug_tuple("CoreTypeSection").field(&"...").finish(),
             ComponentSection { parser: _, range } => f
                 .debug_struct("ComponentSection")

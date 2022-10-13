@@ -4,18 +4,15 @@ use crate::token::{Id, Index, Span};
 use std::mem;
 
 pub fn run(fields: &mut Vec<ModuleField>) {
-    let mut cur = 0;
-    let mut to_append = Vec::new();
-    while cur < fields.len() {
-        let item = &mut fields[cur];
-        match item {
+    for mut item in mem::take(fields) {
+        match &mut item {
             ModuleField::Func(f) => {
                 for name in f.exports.names.drain(..) {
-                    to_append.push(export(f.span, name, ExportKind::Func, &mut f.id));
+                    fields.push(export(f.span, name, ExportKind::Func, &mut f.id));
                 }
                 match f.kind {
                     FuncKind::Import(import) => {
-                        *item = ModuleField::Import(Import {
+                        item = ModuleField::Import(Import {
                             span: f.span,
                             module: import.module,
                             field: import.field,
@@ -33,11 +30,11 @@ pub fn run(fields: &mut Vec<ModuleField>) {
 
             ModuleField::Memory(m) => {
                 for name in m.exports.names.drain(..) {
-                    to_append.push(export(m.span, name, ExportKind::Memory, &mut m.id));
+                    fields.push(export(m.span, name, ExportKind::Memory, &mut m.id));
                 }
                 match m.kind {
                     MemoryKind::Import { import, ty } => {
-                        *item = ModuleField::Import(Import {
+                        item = ModuleField::Import(Import {
                             span: m.span,
                             module: import.module,
                             field: import.field,
@@ -76,7 +73,7 @@ pub fn run(fields: &mut Vec<ModuleField>) {
                             _ => unreachable!(),
                         };
                         let id = gensym::fill(m.span, &mut m.id);
-                        to_append.push(ModuleField::Data(Data {
+                        fields.push(ModuleField::Data(Data {
                             span: m.span,
                             id: None,
                             name: None,
@@ -100,11 +97,11 @@ pub fn run(fields: &mut Vec<ModuleField>) {
 
             ModuleField::Table(t) => {
                 for name in t.exports.names.drain(..) {
-                    to_append.push(export(t.span, name, ExportKind::Table, &mut t.id));
+                    fields.push(export(t.span, name, ExportKind::Table, &mut t.id));
                 }
                 match &mut t.kind {
                     TableKind::Import { import, ty } => {
-                        *item = ModuleField::Import(Import {
+                        item = ModuleField::Import(Import {
                             span: t.span,
                             module: import.module,
                             field: import.field,
@@ -135,7 +132,7 @@ pub fn run(fields: &mut Vec<ModuleField>) {
                             _ => unreachable!(),
                         };
                         let id = gensym::fill(t.span, &mut t.id);
-                        to_append.push(ModuleField::Elem(Elem {
+                        fields.push(ModuleField::Elem(Elem {
                             span: t.span,
                             id: None,
                             name: None,
@@ -155,11 +152,11 @@ pub fn run(fields: &mut Vec<ModuleField>) {
 
             ModuleField::Global(g) => {
                 for name in g.exports.names.drain(..) {
-                    to_append.push(export(g.span, name, ExportKind::Global, &mut g.id));
+                    fields.push(export(g.span, name, ExportKind::Global, &mut g.id));
                 }
                 match g.kind {
                     GlobalKind::Import(import) => {
-                        *item = ModuleField::Import(Import {
+                        item = ModuleField::Import(Import {
                             span: g.span,
                             module: import.module,
                             field: import.field,
@@ -177,11 +174,11 @@ pub fn run(fields: &mut Vec<ModuleField>) {
 
             ModuleField::Tag(e) => {
                 for name in e.exports.names.drain(..) {
-                    to_append.push(export(e.span, name, ExportKind::Tag, &mut e.id));
+                    fields.push(export(e.span, name, ExportKind::Tag, &mut e.id));
                 }
                 match e.kind {
                     TagKind::Import(import) => {
-                        *item = ModuleField::Import(Import {
+                        item = ModuleField::Import(Import {
                             span: e.span,
                             module: import.module,
                             field: import.field,
@@ -207,11 +204,8 @@ pub fn run(fields: &mut Vec<ModuleField>) {
             | ModuleField::Custom(_) => {}
         }
 
-        fields.splice(cur..cur, to_append.drain(..));
-        cur += 1;
+        fields.push(item);
     }
-
-    assert!(to_append.is_empty());
 
     fn page_size() -> u32 {
         1 << 16
