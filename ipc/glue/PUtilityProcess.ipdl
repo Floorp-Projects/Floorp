@@ -78,6 +78,8 @@ child:
   // The unused returned value is to have a promise we can await.
   async TestTriggerMetrics() returns (bool unused);
 
+  async TestTelemetryProbes();
+
   async StartUtilityAudioDecoderService(Endpoint<PUtilityAudioDecoderParent> aEndpoint);
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)

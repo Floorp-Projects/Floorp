@@ -22,4 +22,11 @@ interface nsIUtilityProcessTest : nsISupports
    * Allowing to stop Utility Process from JS code.
    */
   void stopProcess();
+
+  /**
+   * ** Test-only Method **
+   *
+   * Sending Telemetry probes
+   */
+  void testTelemetryProbes();
 };
