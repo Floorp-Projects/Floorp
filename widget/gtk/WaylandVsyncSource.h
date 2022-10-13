@@ -85,7 +85,8 @@ class WaylandVsyncSource final : public gfx::VsyncSource {
   RefPtr<NativeLayerRootWayland> mNativeLayerRoot;
   TimeDuration mVsyncRate;
   TimeStamp mLastVsyncTimeStamp;
-  guint mIdleTimeoutID;
+  guint mIdleTimerID;
+  const guint mIdleTimeout;
 };
 
 }  // namespace mozilla
