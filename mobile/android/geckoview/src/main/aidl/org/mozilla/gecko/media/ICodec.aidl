@@ -14,7 +14,7 @@ import org.mozilla.gecko.media.SampleBuffer;
 
 interface ICodec {
     void setCallbacks(in ICodecCallbacks callbacks);
-    boolean configure(in FormatParam format, in GeckoSurface surface, in int flags, in String drmStubId);
+    boolean configure(inout FormatParam format, in GeckoSurface surface, in int flags, in String drmStubId);
     boolean isAdaptivePlaybackSupported();
     boolean isHardwareAccelerated();
     boolean isTunneledPlaybackSupported();

@@ -437,6 +437,11 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
   }
 
   @Override
+  public MediaFormat getInputFormat() {
+    return null;
+  }
+
+  @Override
   public void flush() {
     assertCallbacks();
 
