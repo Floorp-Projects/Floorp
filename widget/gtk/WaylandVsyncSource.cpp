@@ -12,6 +12,7 @@
 #  include "nsISupportsImpl.h"
 #  include "MainThreadUtils.h"
 #  include "mozilla/ScopeExit.h"
+#  include "nsGtkUtils.h"
 
 #  include <gdk/gdkwayland.h>
 
@@ -26,6 +27,10 @@ extern mozilla::LazyLogModule gWidgetVsync;
 #  else
 #    define LOG(...)
 #  endif /* MOZ_LOGGING */
+
+// VSync idle timeout is 0.5 sec so we fire two vsync events per seconds
+// when a window becomes hidden.
+#  define VSYNC_IDLE_TIMEOUT (500)
 
 using namespace mozilla::widget;
 
@@ -78,7 +83,8 @@ WaylandVsyncSource::WaylandVsyncSource(nsWindow* aWindow)
       mContainer(nullptr),
       mWindow(aWindow),
       mVsyncRate(TimeDuration::FromMilliseconds(1000.0 / 60.0)),
-      mLastVsyncTimeStamp(TimeStamp::Now()) {
+      mLastVsyncTimeStamp(TimeStamp::Now()),
+      mIdleTimeoutID(0) {
   MOZ_ASSERT(NS_IsMainThread());
 
   gWaylandVsyncSources.AppendElement(this);
@@ -224,9 +230,24 @@ void WaylandVsyncSource::SetupFrameCallback(const MutexAutoLock& aProofOfLock) {
                              this);
     wl_surface_commit(surface);
     wl_display_flush(WaylandDisplayGet()->GetDisplay());
+
+    if (!mIdleTimeoutID) {
+      mIdleTimeoutID = (int)g_timeout_add(
+          VSYNC_IDLE_TIMEOUT,
+          [](void* data) -> gint {
+            WaylandVsyncSource* vsync = static_cast<WaylandVsyncSource*>(data);
+            vsync->IdleCallback();
+            return true;
+          },
+          this);
+    }
   }
 
   mCallbackRequested = true;
+}
+
+void WaylandVsyncSource::IdleCallback() {
+  LOG("WaylandVsyncSource::IdleCallback");
 }
 
 void WaylandVsyncSource::FrameCallback(uint32_t aTime) {
@@ -323,6 +344,7 @@ void WaylandVsyncSource::Shutdown() {
   mIsShutdown = true;
   mVsyncEnabled = false;
   mCallbackRequested = false;
+  MozClearHandleID(mIdleTimeoutID, g_source_remove);
 }
 
 }  // namespace mozilla
