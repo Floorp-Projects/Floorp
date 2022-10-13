@@ -43,6 +43,7 @@
   min-height: 0;
   min-width: 0;
   overflow: auto;
+  contain: size;
   grid-template-columns: 15px 1fr [center-align] var(--browser-viewport-width) 1fr;
   grid-template-rows: 65px [margin-top-offset] var(--browser-viewport-height);
 }
