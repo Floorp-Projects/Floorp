@@ -1355,6 +1355,21 @@ class Method(object):
                         "size_is parameter must have type 'unsigned long'",
                         p.location,
                     )
+            if p.iid_is:
+                iid_param = self.namemap.get(p.iid_is, p.location)
+                if (
+                    p.paramtype.count("in") == 1
+                    and iid_param.paramtype.count("in") == 0
+                ):
+                    raise IDLError(
+                        "iid_is parameter of an input must also be an input",
+                        p.location,
+                    )
+                if getBuiltinOrNativeTypeName(iid_param.realtype) != "[nsid]":
+                    raise IDLError(
+                        "iid_is parameter must be an nsIID",
+                        self.location,
+                    )
 
     def isScriptable(self):
         if not self.iface.attributes.scriptable:
