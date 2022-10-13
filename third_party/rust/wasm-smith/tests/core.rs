@@ -155,16 +155,16 @@ fn smoke_test_imports_config() {
                                 *seen = true
                             }
                             (Some((seen, I::Func(p, r))), TypeRef::Func(sig_idx))
-                                if &sig_types[*sig_idx as usize].params[..] == *p
-                                    && &sig_types[*sig_idx as usize].returns[..] == *r =>
+                                if sig_types[*sig_idx as usize].params() == *p
+                                    && sig_types[*sig_idx as usize].results() == *r =>
                             {
                                 *seen = true
                             }
                             (
                                 Some((seen, I::Tag(p))),
                                 TypeRef::Tag(wasmparser::TagType { func_type_idx, .. }),
-                            ) if &sig_types[*func_type_idx as usize].params[..] == *p
-                                && sig_types[*func_type_idx as usize].returns.is_empty() =>
+                            ) if sig_types[*func_type_idx as usize].params() == *p
+                                && sig_types[*func_type_idx as usize].results().is_empty() =>
                             {
                                 *seen = true
                             }

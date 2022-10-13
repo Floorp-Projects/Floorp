@@ -17,15 +17,15 @@ use crate::{BinaryReader, OperatorsReader};
 
 /// Represents an initialization expression.
 #[derive(Debug, Copy, Clone)]
-pub struct InitExpr<'a> {
+pub struct ConstExpr<'a> {
     offset: usize,
     data: &'a [u8],
 }
 
-impl<'a> InitExpr<'a> {
-    /// Constructs a new `InitExpr` from the given data and offset.
-    pub fn new(data: &[u8], offset: usize) -> InitExpr {
-        InitExpr { offset, data }
+impl<'a> ConstExpr<'a> {
+    /// Constructs a new `ConstExpr` from the given data and offset.
+    pub fn new(data: &[u8], offset: usize) -> ConstExpr {
+        ConstExpr { offset, data }
     }
 
     /// Gets a binary reader for the initialization expression.

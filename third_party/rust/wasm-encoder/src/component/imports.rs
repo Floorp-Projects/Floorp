@@ -86,13 +86,15 @@ impl Encode for ComponentTypeRef {
 /// let mut types = ComponentTypeSection::new();
 ///
 /// // Define a function type of `[string, string] -> string`.
-/// types.function(
-///   [
-///     (Some("a"), PrimitiveValType::String),
-///     (Some("b"), PrimitiveValType::String)
-///   ],
-///   PrimitiveValType::String
-/// );
+/// types
+///   .function()
+///   .params(
+///     [
+///       ("a", PrimitiveValType::String),
+///       ("b", PrimitiveValType::String)
+///     ]
+///   )
+///   .result(PrimitiveValType::String);
 ///
 /// // This imports a function named `f` with the type defined above
 /// let mut imports = ComponentImportSection::new();

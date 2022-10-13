@@ -310,18 +310,18 @@ where
 
 impl WasmFuncType for FuncType {
     fn len_inputs(&self) -> usize {
-        self.params.len()
+        self.params().len()
     }
 
     fn len_outputs(&self) -> usize {
-        self.returns.len()
+        self.results().len()
     }
 
     fn input_at(&self, at: u32) -> Option<ValType> {
-        self.params.get(at as usize).copied()
+        self.params().get(at as usize).copied()
     }
 
     fn output_at(&self, at: u32) -> Option<ValType> {
-        self.returns.get(at as usize).copied()
+        self.results().get(at as usize).copied()
     }
 }

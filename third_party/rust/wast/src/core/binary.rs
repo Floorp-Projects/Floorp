@@ -823,7 +823,7 @@ fn find_names<'a>(
                     names.push((Name::Type, &ty.id, &ty.name, field));
                 }
                 continue;
-            },
+            }
             ModuleField::Elem(e) => (Name::Elem, &e.id, &e.name),
             ModuleField::Data(d) => (Name::Data, &d.id, &d.name),
             ModuleField::Func(f) => (Name::Func, &f.id, &f.name),

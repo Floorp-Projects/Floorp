@@ -12,8 +12,9 @@
 [package]
 edition = "2021"
 name = "wasmparser"
-version = "0.88.0"
+version = "0.91.0"
 authors = ["Yury Delendik <ydelendik@mozilla.com>"]
+exclude = ["benches/*.wasm"]
 description = """
 A simple event-driven library for parsing WebAssembly binary files.
 """
@@ -43,6 +44,9 @@ version = "0.3"
 
 [dev-dependencies.getopts]
 version = "0.2"
+
+[dev-dependencies.once_cell]
+version = "1.13.0"
 
 [dev-dependencies.rayon]
 version = "1.3"

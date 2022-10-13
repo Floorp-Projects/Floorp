@@ -1,8 +1,9 @@
 use crate::core::*;
-use wasm_encoder::{BlockType, ConstExpr, Instruction, ValType};
+use wasm_encoder::{BlockType, Instruction, ValType};
 
 const WASM_PAGE_SIZE: u64 = 65_536;
 
+/// The OpCode is not supported
 #[derive(Debug)]
 pub struct NotSupported<'a> {
     opcode: wasm_encoder::Instruction<'a>,
@@ -346,9 +347,11 @@ impl Module {
                         return Err(NotSupported { opcode: inst })
                     }
 
-                    Instruction::MemoryCopy { src: _, dst: _ } => todo!(),
-                    Instruction::MemoryFill(_) => todo!(),
-                    Instruction::MemoryInit { mem: _, data: _ } => todo!(),
+                    Instruction::MemoryCopy { src: _, dst: _ }
+                    | Instruction::MemoryFill(_)
+                    | Instruction::MemoryInit { mem: _, data: _ } => {
+                        return Err(NotSupported { opcode: inst })
+                    }
 
                     // Unsigned integer division and remainder will trap when
                     // the divisor is 0. To avoid the trap, we will set any 0
@@ -518,14 +521,16 @@ impl Module {
                         // [input_or_0:conv_type]
                         new_insts.push(inst);
                     }
-                    Instruction::TableFill { table: _ } => todo!(),
-                    Instruction::TableSet { table: _ } => todo!(),
-                    Instruction::TableGet { table: _ } => todo!(),
-                    Instruction::TableInit {
+                    Instruction::TableFill { table: _ }
+                    | Instruction::TableSet { table: _ }
+                    | Instruction::TableGet { table: _ }
+                    | Instruction::TableInit {
                         segment: _,
                         table: _,
-                    } => todo!(),
-                    Instruction::TableCopy { src: _, dst: _ } => todo!(),
+                    }
+                    | Instruction::TableCopy { src: _, dst: _ } => {
+                        return Err(NotSupported { opcode: inst })
+                    }
 
                     // None of the other instructions can trap, so just copy them over.
                     inst => new_insts.push(inst),
@@ -578,7 +583,6 @@ impl Module {
                             *offset = Offset::Const32(n as i32);
                         }
                         Offset::Global(_) => *offset = Offset::Const32(0),
-                        _ => unreachable!("Unexpected instruction: {:?}", offset),
                     }
                 }
             }

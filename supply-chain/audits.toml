@@ -1341,6 +1341,11 @@ who = "Yury Delendik <ydelendik@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.14.0 -> 0.15.0"
 
+[[audits.wasm-encoder]]
+who = "Yury Delendik <ydelendik@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.16.0 -> 0.17.0"
+
 [[audits.wasm-smith]]
 who = "Ryan Hunt <rhunt@eqrion.net>"
 criteria = "safe-to-deploy"
@@ -1351,6 +1356,11 @@ notes = "Maintained by the Bytecode Alliance, with contributions from Mozilla. I
 who = "Yury Delendik <ydelendik@mozilla.com>"
 criteria = "safe-to-run"
 delta = "0.11.2 -> 0.11.3"
+
+[[audits.wasm-smith]]
+who = "Yury Delendik <ydelendik@mozilla.com>"
+criteria = "safe-to-run"
+delta = "0.11.4 -> 0.11.5"
 
 [[audits.wasmparser]]
 who = "Ryan Hunt <rhunt@eqrion.net>"
@@ -1363,6 +1373,11 @@ who = "Yury Delendik <ydelendik@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.87.0 -> 0.88.0"
 
+[[audits.wasmparser]]
+who = "Yury Delendik <ydelendik@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.89.1 -> 0.91.0"
+
 [[audits.wast]]
 who = "Ryan Hunt <rhunt@eqrion.net>"
 criteria = "safe-to-deploy"
@@ -1373,6 +1388,11 @@ notes = "Maintained by the Bytecode Alliance, with contributions from Mozilla. w
 who = "Yury Delendik <ydelendik@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "44.0.0 -> 45.0.0"
+
+[[audits.wast]]
+who = "Yury Delendik <ydelendik@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "46.0.0 -> 47.0.0"
 
 [[audits.webdriver]]
 who = "Henrik Skupin <mail@hskupin.info>"

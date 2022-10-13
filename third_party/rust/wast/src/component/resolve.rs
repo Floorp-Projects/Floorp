@@ -17,44 +17,27 @@ pub fn resolve(component: &mut Component<'_>) -> Result<(), Error> {
     resolver.fields(component.id, fields)
 }
 
-enum AnyAlias<'a> {
-    Core(CoreAlias<'a>),
-    Component(Alias<'a>),
-}
-
-impl<'a> From<AnyAlias<'a>> for ComponentField<'a> {
-    fn from(a: AnyAlias<'a>) -> Self {
-        match a {
-            AnyAlias::Core(a) => Self::CoreAlias(a),
-            AnyAlias::Component(a) => Self::Alias(a),
-        }
+impl<'a> From<Alias<'a>> for ComponentField<'a> {
+    fn from(a: Alias<'a>) -> Self {
+        Self::Alias(a)
     }
 }
 
-impl<'a> From<AnyAlias<'a>> for ModuleTypeDecl<'a> {
-    fn from(a: AnyAlias<'a>) -> Self {
-        match a {
-            AnyAlias::Core(a) => Self::Alias(a),
-            AnyAlias::Component(_) => unreachable!("should be core alias"),
-        }
+impl<'a> From<Alias<'a>> for ModuleTypeDecl<'a> {
+    fn from(a: Alias<'a>) -> Self {
+        Self::Alias(a)
     }
 }
 
-impl<'a> From<AnyAlias<'a>> for ComponentTypeDecl<'a> {
-    fn from(a: AnyAlias<'a>) -> Self {
-        match a {
-            AnyAlias::Core(_) => unreachable!("should be component alias"),
-            AnyAlias::Component(a) => Self::Alias(a),
-        }
+impl<'a> From<Alias<'a>> for ComponentTypeDecl<'a> {
+    fn from(a: Alias<'a>) -> Self {
+        Self::Alias(a)
     }
 }
 
-impl<'a> From<AnyAlias<'a>> for InstanceTypeDecl<'a> {
-    fn from(a: AnyAlias<'a>) -> Self {
-        match a {
-            AnyAlias::Core(_) => unreachable!("should be component alias"),
-            AnyAlias::Component(a) => Self::Alias(a),
-        }
+impl<'a> From<Alias<'a>> for InstanceTypeDecl<'a> {
+    fn from(a: Alias<'a>) -> Self {
+        Self::Alias(a)
     }
 }
 
@@ -65,7 +48,7 @@ struct Resolver<'a> {
     // When a name refers to a definition in an outer scope, we'll need to
     // insert an outer alias before it. This collects the aliases to be
     // inserted during resolution.
-    aliases_to_insert: Vec<AnyAlias<'a>>,
+    aliases_to_insert: Vec<Alias<'a>>,
 }
 
 /// Context structure used to perform name resolution.
@@ -127,7 +110,7 @@ impl<'a> Resolver<'a> {
         register: fn(&mut ComponentState<'a>, &T) -> Result<(), Error>,
     ) -> Result<(), Error>
     where
-        T: From<AnyAlias<'a>>,
+        T: From<Alias<'a>>,
     {
         assert!(self.aliases_to_insert.is_empty());
 
@@ -160,11 +143,10 @@ impl<'a> Resolver<'a> {
         match field {
             ComponentField::CoreModule(m) => self.core_module(m),
             ComponentField::CoreInstance(i) => self.core_instance(i),
-            ComponentField::CoreAlias(a) => self.core_alias(a, false),
             ComponentField::CoreType(t) => self.core_ty(t),
             ComponentField::Component(c) => self.component(c),
             ComponentField::Instance(i) => self.instance(i),
-            ComponentField::Alias(a) => self.alias(a),
+            ComponentField::Alias(a) => self.alias(a, false),
             ComponentField::Type(t) => self.ty(t),
             ComponentField::CanonicalFunc(f) => self.canonical_func(f),
             ComponentField::CoreFunc(_) => unreachable!("should be expanded already"),
@@ -345,28 +327,20 @@ impl<'a> Resolver<'a> {
         Ok(())
     }
 
-    fn core_alias(&mut self, alias: &mut CoreAlias<'a>, enclosing_only: bool) -> Result<(), Error> {
-        match &mut alias.target {
-            CoreAliasTarget::Export {
-                instance,
-                name: _,
-                kind: _,
-            } => self.resolve_ns(instance, Ns::CoreInstance),
-            CoreAliasTarget::Outer { outer, index, kind } => {
-                self.outer_alias(outer, index, *kind, alias.span, enclosing_only)
-            }
-        }
-    }
-
-    fn alias(&mut self, alias: &mut Alias<'a>) -> Result<(), Error> {
+    fn alias(&mut self, alias: &mut Alias<'a>, enclosing_only: bool) -> Result<(), Error> {
         match &mut alias.target {
             AliasTarget::Export {
                 instance,
                 name: _,
                 kind: _,
             } => self.resolve_ns(instance, Ns::Instance),
+            AliasTarget::CoreExport {
+                instance,
+                name: _,
+                kind: _,
+            } => self.resolve_ns(instance, Ns::CoreInstance),
             AliasTarget::Outer { outer, index, kind } => {
-                self.outer_alias(outer, index, *kind, alias.span, false)
+                self.outer_alias(outer, index, *kind, alias.span, enclosing_only)
             }
         }
     }
@@ -430,7 +404,10 @@ impl<'a> Resolver<'a> {
                 let mut ns = Namespace::default();
                 for case in v.cases.iter_mut() {
                     let index = ns.register(case.id, "variant case")?;
-                    self.component_val_type(&mut case.ty)?;
+
+                    if let Some(ty) = &mut case.ty {
+                        self.component_val_type(ty)?;
+                    }
 
                     if let Some(refines) = &mut case.refines {
                         if let Refinement::Index(span, idx) = refines {
@@ -463,9 +440,14 @@ impl<'a> Resolver<'a> {
             ComponentDefinedType::Option(o) => {
                 self.component_val_type(&mut *o.element)?;
             }
-            ComponentDefinedType::Expected(r) => {
-                self.component_val_type(&mut *r.ok)?;
-                self.component_val_type(&mut *r.err)?;
+            ComponentDefinedType::Result(r) => {
+                if let Some(ty) = &mut r.ok {
+                    self.component_val_type(ty)?;
+                }
+
+                if let Some(ty) = &mut r.err {
+                    self.component_val_type(ty)?;
+                }
             }
         }
         Ok(())
@@ -500,7 +482,10 @@ impl<'a> Resolver<'a> {
                 for param in f.params.iter_mut() {
                     self.component_val_type(&mut param.ty)?;
                 }
-                self.component_val_type(&mut f.result)?;
+
+                for result in f.results.iter_mut() {
+                    self.component_val_type(&mut result.ty)?;
+                }
             }
             TypeDef::Component(c) => {
                 self.stack.push(ComponentState::new(field.id));
@@ -520,7 +505,7 @@ impl<'a> Resolver<'a> {
         self.resolve_prepending_aliases(
             &mut c.decls,
             |resolver, decl| match decl {
-                ComponentTypeDecl::Alias(alias) => resolver.alias(alias),
+                ComponentTypeDecl::Alias(alias) => resolver.alias(alias, false),
                 ComponentTypeDecl::CoreType(ty) => resolver.core_ty(ty),
                 ComponentTypeDecl::Type(ty) => resolver.ty(ty),
                 ComponentTypeDecl::Import(import) => resolver.item_sig(&mut import.item),
@@ -550,7 +535,7 @@ impl<'a> Resolver<'a> {
         self.resolve_prepending_aliases(
             &mut c.decls,
             |resolver, decl| match decl {
-                InstanceTypeDecl::Alias(alias) => resolver.alias(alias),
+                InstanceTypeDecl::Alias(alias) => resolver.alias(alias, false),
                 InstanceTypeDecl::CoreType(ty) => resolver.core_ty(ty),
                 InstanceTypeDecl::Type(ty) => resolver.ty(ty),
                 InstanceTypeDecl::Export(export) => resolver.item_sig(&mut export.item),
@@ -589,19 +574,19 @@ impl<'a> Resolver<'a> {
 
         // Record an alias to reference the export
         let span = item.idx.span();
-        let alias = CoreAlias {
+        let alias = Alias {
             span,
             id: None,
             name: None,
-            target: CoreAliasTarget::Export {
+            target: AliasTarget::CoreExport {
                 instance: index,
                 name: item.export_name.unwrap(),
                 kind: item.kind.ns().into(),
             },
         };
 
-        index = Index::Num(self.current().register_core_alias(&alias)?, span);
-        self.aliases_to_insert.push(AnyAlias::Core(alias));
+        index = Index::Num(self.current().register_alias(&alias)?, span);
+        self.aliases_to_insert.push(alias);
 
         item.idx = index;
         item.export_name = None;
@@ -642,7 +627,7 @@ impl<'a> Resolver<'a> {
             };
 
             index = Index::Num(self.current().register_alias(&alias)?, span);
-            self.aliases_to_insert.push(AnyAlias::Component(alias));
+            self.aliases_to_insert.push(alias);
         }
 
         item.idx = index;
@@ -690,7 +675,7 @@ impl<'a> Resolver<'a> {
                 },
             };
             let local_index = self.current().register_alias(&alias)?;
-            self.aliases_to_insert.push(AnyAlias::Component(alias));
+            self.aliases_to_insert.push(alias);
             *idx = Index::Num(local_index, span);
             return Ok(());
         }
@@ -705,7 +690,7 @@ impl<'a> Resolver<'a> {
         return self.resolve_prepending_aliases(
             &mut ty.decls,
             |resolver, decl| match decl {
-                ModuleTypeDecl::Alias(alias) => resolver.core_alias(alias, true),
+                ModuleTypeDecl::Alias(alias) => resolver.alias(alias, true),
                 ModuleTypeDecl::Type(_) => Ok(()),
                 ModuleTypeDecl::Import(import) => resolve_item_sig(resolver, &mut import.item),
                 ModuleTypeDecl::Export(_, item) => resolve_item_sig(resolver, item),
@@ -713,7 +698,7 @@ impl<'a> Resolver<'a> {
             |state, decl| {
                 match decl {
                     ModuleTypeDecl::Alias(alias) => {
-                        state.register_core_alias(alias)?;
+                        state.register_alias(alias)?;
                     }
                     ModuleTypeDecl::Type(ty) => {
                         state.core_types.register(ty.id, "type")?;
@@ -775,7 +760,6 @@ impl<'a> ComponentState<'a> {
             ComponentField::CoreInstance(i) => {
                 self.core_instances.register(i.id, "core instance")?
             }
-            ComponentField::CoreAlias(a) => self.register_core_alias(a)?,
             ComponentField::CoreType(t) => self.core_types.register(t.id, "core type")?,
             ComponentField::Component(c) => self.components.register(c.id, "component")?,
             ComponentField::Instance(i) => self.instances.register(i.id, "instance")?,
@@ -788,7 +772,12 @@ impl<'a> ComponentState<'a> {
             ComponentField::CoreFunc(_) | ComponentField::Func(_) => {
                 unreachable!("should be expanded already")
             }
-            ComponentField::Start(s) => self.values.register(s.result, "value")?,
+            ComponentField::Start(s) => {
+                for r in &s.results {
+                    self.values.register(*r, "value")?;
+                }
+                return Ok(());
+            }
             ComponentField::Import(i) => match &i.item.kind {
                 ItemSigKind::CoreModule(_) => {
                     self.core_modules.register(i.item.id, "core module")?
@@ -810,63 +799,37 @@ impl<'a> ComponentState<'a> {
 
     fn register_alias(&mut self, alias: &Alias<'a>) -> Result<u32, Error> {
         match alias.target {
-            AliasTarget::Export {
-                kind: ComponentExportAliasKind::Component,
-                ..
-            }
-            | AliasTarget::Outer {
-                kind: ComponentOuterAliasKind::Component,
-                ..
-            } => self.components.register(alias.id, "component"),
-            AliasTarget::Export {
-                kind: ComponentExportAliasKind::CoreModule,
-                ..
-            }
-            | AliasTarget::Outer {
-                kind: ComponentOuterAliasKind::CoreModule,
-                ..
-            } => self.core_modules.register(alias.id, "core module"),
-            AliasTarget::Export {
-                kind: ComponentExportAliasKind::Type,
-                ..
-            }
-            | AliasTarget::Outer {
-                kind: ComponentOuterAliasKind::Type,
-                ..
-            } => self.types.register(alias.id, "type"),
-            AliasTarget::Outer {
-                kind: ComponentOuterAliasKind::CoreType,
-                ..
-            } => self.core_types.register(alias.id, "core type"),
-            AliasTarget::Export {
-                kind: ComponentExportAliasKind::Func,
-                ..
-            } => self.funcs.register(alias.id, "func"),
-            AliasTarget::Export {
-                kind: ComponentExportAliasKind::Value,
-                ..
-            } => self.values.register(alias.id, "value"),
-            AliasTarget::Export {
-                kind: ComponentExportAliasKind::Instance,
-                ..
-            } => self.instances.register(alias.id, "instance"),
-        }
-    }
-
-    fn register_core_alias(&mut self, alias: &CoreAlias<'a>) -> Result<u32, Error> {
-        match alias.target {
-            CoreAliasTarget::Export { kind, .. } => match kind {
+            AliasTarget::Export { kind, .. } => match kind {
+                ComponentExportAliasKind::CoreModule => {
+                    self.core_modules.register(alias.id, "core module")
+                }
+                ComponentExportAliasKind::Func => self.funcs.register(alias.id, "func"),
+                ComponentExportAliasKind::Value => self.values.register(alias.id, "value"),
+                ComponentExportAliasKind::Type => self.types.register(alias.id, "type"),
+                ComponentExportAliasKind::Component => {
+                    self.components.register(alias.id, "component")
+                }
+                ComponentExportAliasKind::Instance => self.instances.register(alias.id, "instance"),
+            },
+            AliasTarget::CoreExport { kind, .. } => match kind {
                 core::ExportKind::Func => self.core_funcs.register(alias.id, "core func"),
                 core::ExportKind::Table => self.core_tables.register(alias.id, "core table"),
                 core::ExportKind::Memory => self.core_memories.register(alias.id, "core memory"),
                 core::ExportKind::Global => self.core_globals.register(alias.id, "core global"),
                 core::ExportKind::Tag => self.core_tags.register(alias.id, "core tag"),
             },
-            CoreAliasTarget::Outer {
-                outer: _,
-                index: _,
-                kind: CoreOuterAliasKind::Type,
-            } => self.core_types.register(alias.id, "core type"),
+            AliasTarget::Outer { kind, .. } => match kind {
+                ComponentOuterAliasKind::CoreModule => {
+                    self.core_modules.register(alias.id, "core module")
+                }
+                ComponentOuterAliasKind::CoreType => {
+                    self.core_types.register(alias.id, "core type")
+                }
+                ComponentOuterAliasKind::Type => self.types.register(alias.id, "type"),
+                ComponentOuterAliasKind::Component => {
+                    self.components.register(alias.id, "component")
+                }
+            },
         }
     }
 }
@@ -974,14 +937,6 @@ impl From<ComponentOuterAliasKind> for Ns {
             ComponentOuterAliasKind::CoreType => Self::CoreType,
             ComponentOuterAliasKind::Type => Self::Type,
             ComponentOuterAliasKind::Component => Self::Component,
-        }
-    }
-}
-
-impl From<CoreOuterAliasKind> for Ns {
-    fn from(kind: CoreOuterAliasKind) -> Self {
-        match kind {
-            CoreOuterAliasKind::Type => Self::CoreType,
         }
     }
 }

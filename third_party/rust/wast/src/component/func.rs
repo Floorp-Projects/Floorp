@@ -354,7 +354,7 @@ impl<'a> Parse<'a> for CanonOpt<'a> {
     }
 }
 
-fn parse_trailing_item_ref<'a, T>(kind: T, parser: Parser<'a>) -> Result<CoreItemRef<'a, T>> {
+fn parse_trailing_item_ref<T>(kind: T, parser: Parser) -> Result<CoreItemRef<T>> {
     Ok(CoreItemRef {
         kind,
         idx: parser.parse()?,

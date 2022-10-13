@@ -16,11 +16,11 @@ use crate::{
         UnionType, VariantType,
     },
     BinaryReaderError, CanonicalOption, ComponentExternalKind, ComponentOuterAliasKind,
-    ComponentTypeRef, ExternalKind, FuncType, GlobalType, InstantiationArgKind, MemoryType,
-    PrimitiveValType, Result, TableType, TypeBounds, ValType, WasmFeatures,
+    ComponentTypeRef, ExternalKind, FuncType, GlobalType, InstantiationArgKind, MemoryType, Result,
+    TableType, TypeBounds, ValType, WasmFeatures,
 };
 use indexmap::{IndexMap, IndexSet};
-use std::mem;
+use std::{collections::HashSet, mem};
 
 pub(crate) struct ComponentState {
     // Core index spaces
@@ -140,32 +140,6 @@ impl ComponentState {
         Ok(())
     }
 
-    pub fn add_core_alias(
-        components: &mut [Self],
-        alias: crate::Alias,
-        types: &TypeList,
-        offset: usize,
-    ) -> Result<()> {
-        match alias {
-            crate::Alias::InstanceExport {
-                instance_index,
-                kind,
-                name,
-            } => components.last_mut().unwrap().alias_core_instance_export(
-                instance_index,
-                kind,
-                name,
-                types,
-                offset,
-            ),
-            crate::Alias::Outer { kind, count, index } => match kind {
-                crate::OuterAliasKind::Type => {
-                    Self::alias_core_type(components, count, index, offset)
-                }
-            },
-        }
-    }
-
     pub fn add_type(
         components: &mut Vec<Self>,
         ty: crate::ComponentType,
@@ -258,10 +232,11 @@ impl ComponentState {
             .insert(import.name.to_string(), entity)
             .is_some()
         {
-            return Err(BinaryReaderError::new(
-                format!("duplicate import name `{}` already defined", import.name),
+            bail!(
                 offset,
-            ));
+                "duplicate import name `{}` already defined",
+                import.name,
+            );
         }
 
         Ok(())
@@ -281,10 +256,7 @@ impl ComponentState {
         self.type_size = combine_type_sizes(self.type_size, ty.type_size(), offset)?;
 
         if self.exports.insert(name.to_string(), ty).is_some() {
-            return Err(BinaryReaderError::new(
-                format!("duplicate export name `{}` already defined", name),
-                offset,
-            ));
+            bail!(offset, "duplicate export name `{name}` already defined");
         }
 
         Ok(())
@@ -308,26 +280,24 @@ impl ComponentState {
         let info = ty.lower(types, false);
         self.check_options(Some(core_ty), &info, &options, types, offset)?;
 
-        if core_ty.params.as_ref() != info.params.as_slice() {
-            return Err(BinaryReaderError::new(
-                format!(
-                    "lowered parameter types `{:?}` do not match parameter types `{:?}` of core function {core_func_index}",
-                    info.params.as_slice(),
-                    core_ty.params
-                ),
+        if core_ty.params() != info.params.as_slice() {
+            bail!(
                 offset,
-            ));
+                "lowered parameter types `{:?}` do not match parameter types \
+                 `{:?}` of core function {core_func_index}",
+                info.params.as_slice(),
+                core_ty.params(),
+            );
         }
 
-        if core_ty.returns.as_ref() != info.results.as_slice() {
-            return Err(BinaryReaderError::new(
-                format!(
-                    "lowered result types `{:?}` do not match result types `{:?}` of core function {core_func_index}",
-                    info.results.as_slice(),
-                    core_ty.returns
-                ),
+        if core_ty.results() != info.results.as_slice() {
+            bail!(
                 offset,
-            ));
+                "lowered result types `{:?}` do not match result types \
+                 `{:?}` of core function {core_func_index}",
+                info.results.as_slice(),
+                core_ty.results()
+            );
         }
 
         self.funcs.push(self.types[type_index as usize]);
@@ -418,6 +388,17 @@ impl ComponentState {
                 types,
                 offset,
             ),
+            crate::ComponentAlias::CoreInstanceExport {
+                instance_index,
+                kind,
+                name,
+            } => components.last_mut().unwrap().alias_core_instance_export(
+                instance_index,
+                kind,
+                name,
+                types,
+                offset,
+            ),
             crate::ComponentAlias::Outer { kind, count, index } => match kind {
                 ComponentOuterAliasKind::CoreModule => {
                     Self::alias_module(components, count, index, offset)
@@ -437,6 +418,7 @@ impl ComponentState {
         &mut self,
         func_index: u32,
         args: &[u32],
+        results: u32,
         types: &TypeList,
         offset: usize,
     ) -> Result<()> {
@@ -452,37 +434,40 @@ impl ComponentState {
             .unwrap();
 
         if ft.params.len() != args.len() {
-            return Err(BinaryReaderError::new(
-                format!(
-                    "component start function requires {} arguments but was given {}",
-                    ft.params.len(),
-                    args.len()
-                ),
+            bail!(
                 offset,
-            ));
+                "component start function requires {} arguments but was given {}",
+                ft.params.len(),
+                args.len()
+            );
+        }
+
+        if ft.results.len() as u32 != results {
+            bail!(
+                offset,
+                "component start function has a result count of {results} \
+                 but the function type has a result count of {type_results}",
+                type_results = ft.results.len(),
+            );
         }
 
         for (i, ((_, ty), arg)) in ft.params.iter().zip(args).enumerate() {
             // Ensure the value's type is a subtype of the parameter type
-            if !self
-                .value_at(*arg, offset)?
-                .internal_is_subtype_of(ty, types)
-            {
-                return Err(BinaryReaderError::new(
-                    format!(
-                        "value type mismatch for component start function argument {}",
-                        i
-                    ),
+            if !ComponentValType::internal_is_subtype_of(
+                self.value_at(*arg, offset)?,
+                types,
+                ty,
+                types,
+            ) {
+                bail!(
                     offset,
-                ));
+                    "value type mismatch for component start function argument {i}"
+                );
             }
         }
 
-        match ft.result {
-            ComponentValType::Primitive(PrimitiveValType::Unit) => {}
-            ty => {
-                self.values.push((ty, false));
-            }
+        for (_, ty) in ft.results.iter() {
+            self.values.push((*ty, false));
         }
 
         self.has_start = true;
@@ -519,14 +504,12 @@ impl ComponentState {
                 CanonicalOption::UTF8 | CanonicalOption::UTF16 | CanonicalOption::CompactUTF16 => {
                     match encoding {
                         Some(existing) => {
-                            return Err(BinaryReaderError::new(
-                                format!(
-                                    "canonical encoding option `{}` conflicts with option `{}`",
-                                    display(existing),
-                                    display(*option),
-                                ),
+                            bail!(
                                 offset,
-                            ))
+                                "canonical encoding option `{}` conflicts with option `{}`",
+                                display(existing),
+                                display(*option),
+                            )
                         }
                         None => encoding = Some(*option),
                     }
@@ -551,9 +534,9 @@ impl ComponentState {
                             let ty = types[self.core_function_at(*idx, offset)?]
                                 .as_func_type()
                                 .unwrap();
-                            if ty.params.as_ref()
+                            if ty.params()
                                 != [ValType::I32, ValType::I32, ValType::I32, ValType::I32]
-                                || ty.returns.as_ref() != [ValType::I32]
+                                || ty.results() != [ValType::I32]
                             {
                                 return Err(BinaryReaderError::new(
                                     "canonical option `realloc` uses a core function with an incorrect signature",
@@ -584,7 +567,7 @@ impl ComponentState {
                                 .as_func_type()
                                 .unwrap();
 
-                            if ty.params != core_ty.returns || !ty.returns.is_empty() {
+                            if ty.params() != core_ty.results() || !ty.results().is_empty() {
                                 return Err(BinaryReaderError::new(
                                     "canonical option `post-return` uses a core function with an incorrect signature",
                                     offset,
@@ -630,20 +613,14 @@ impl ComponentState {
             ComponentTypeRef::Module(index) => {
                 let id = self.type_at(*index, true, offset)?;
                 types[id].as_module_type().ok_or_else(|| {
-                    BinaryReaderError::new(
-                        format!("core type index {} is not a module type", index),
-                        offset,
-                    )
+                    format_err!(offset, "core type index {index} is not a module type")
                 })?;
                 ComponentEntityType::Module(id)
             }
             ComponentTypeRef::Func(index) => {
                 let id = self.type_at(*index, false, offset)?;
                 types[id].as_component_func_type().ok_or_else(|| {
-                    BinaryReaderError::new(
-                        format!("type index {} is not a function type", index),
-                        offset,
-                    )
+                    format_err!(offset, "type index {index} is not a function type")
                 })?;
                 ComponentEntityType::Func(id)
             }
@@ -662,20 +639,14 @@ impl ComponentState {
             ComponentTypeRef::Instance(index) => {
                 let id = self.type_at(*index, false, offset)?;
                 types[id].as_component_instance_type().ok_or_else(|| {
-                    BinaryReaderError::new(
-                        format!("type index {} is not an instance type", index),
-                        offset,
-                    )
+                    format_err!(offset, "type index {index} is not an instance type")
                 })?;
                 ComponentEntityType::Instance(id)
             }
             ComponentTypeRef::Component(index) => {
                 let id = self.type_at(*index, false, offset)?;
                 types[id].as_component_type().ok_or_else(|| {
-                    BinaryReaderError::new(
-                        format!("type index {} is not a component type", index),
-                        offset,
-                    )
+                    format_err!(offset, "type index {index} is not a component type")
                 })?;
                 ComponentEntityType::Component(id)
             }
@@ -727,39 +698,31 @@ impl ComponentState {
                     let ty = state.check_type_ref(&ty, features, types, offset)?;
                     state.add_export(name, ty, features, offset, true)?;
                 }
-                crate::ModuleTypeDeclaration::Alias(alias) => match alias {
-                    crate::Alias::InstanceExport { .. } => {
+                crate::ModuleTypeDeclaration::OuterAlias { kind, count, index } => {
+                    if count > 1 {
                         return Err(BinaryReaderError::new(
-                            "only outer type aliases are allowed in module type declarations",
-                            offset,
-                        ))
-                    }
-                    crate::Alias::Outer { kind, count, index } => {
-                        if count > 1 {
-                            return Err(BinaryReaderError::new(
                                     "outer type aliases in module type declarations are limited to a maximum count of 1",
                                     offset,
                                 ));
-                        }
-                        match kind {
-                            crate::OuterAliasKind::Type => {
-                                let ty = if count == 0 {
-                                    // Local alias, check the local module state
-                                    state.type_at(index, offset)?
-                                } else {
-                                    // Otherwise, check the enclosing component state
-                                    let component =
-                                        Self::check_alias_count(components, count - 1, offset)?;
-                                    component.type_at(index, true, offset)?
-                                };
+                    }
+                    match kind {
+                        crate::OuterAliasKind::Type => {
+                            let ty = if count == 0 {
+                                // Local alias, check the local module state
+                                state.type_at(index, offset)?
+                            } else {
+                                // Otherwise, check the enclosing component state
+                                let component =
+                                    Self::check_alias_count(components, count - 1, offset)?;
+                                component.type_at(index, true, offset)?
+                            };
 
-                                check_max(state.types.len(), 1, MAX_WASM_TYPES, "types", offset)?;
+                            check_max(state.types.len(), 1, MAX_WASM_TYPES, "types", offset)?;
 
-                                state.types.push(ty);
-                            }
+                            state.types.push(ty);
                         }
                     }
-                },
+                }
                 crate::ModuleTypeDeclaration::Import(import) => {
                     state.add_import(import, features, types, offset)?;
                 }
@@ -900,12 +863,34 @@ impl ComponentState {
     ) -> Result<ComponentFuncType> {
         let mut type_size = 1;
 
+        let mut set =
+            HashSet::with_capacity(std::cmp::max(ty.params.len(), ty.results.type_count()));
+
         let params = ty
             .params
             .iter()
             .map(|(name, ty)| {
+                Self::check_name(name, "function parameter", offset)?;
+                if !set.insert(*name) {
+                    return Err(BinaryReaderError::new("duplicate parameter name", offset));
+                }
+                let ty = self.create_component_val_type(*ty, types, offset)?;
+                type_size = combine_type_sizes(type_size, ty.type_size(), offset)?;
+                Ok((name.to_string(), ty))
+            })
+            .collect::<Result<_>>()?;
+
+        set.clear();
+
+        let results = ty
+            .results
+            .iter()
+            .map(|(name, ty)| {
                 if let Some(name) = name {
-                    Self::check_name(name, "function parameter", offset)?;
+                    Self::check_name(name, "function result", offset)?;
+                    if !set.insert(name) {
+                        return Err(BinaryReaderError::new("duplicate result name", offset));
+                    }
                 }
                 let ty = self.create_component_val_type(*ty, types, offset)?;
                 type_size = combine_type_sizes(type_size, ty.type_size(), offset)?;
@@ -913,22 +898,16 @@ impl ComponentState {
             })
             .collect::<Result<_>>()?;
 
-        let result = self.create_component_val_type(ty.result, types, offset)?;
-        type_size = combine_type_sizes(type_size, result.type_size(), offset)?;
-
         Ok(ComponentFuncType {
             type_size,
             params,
-            result,
+            results,
         })
     }
 
     fn check_name(name: &str, desc: &str, offset: usize) -> Result<()> {
         if name.is_empty() {
-            return Err(BinaryReaderError::new(
-                format!("{} name cannot be empty", desc),
-                offset,
-            ));
+            bail!(offset, "{desc} name cannot be empty");
         }
 
         Ok(())
@@ -948,10 +927,10 @@ impl ComponentState {
             offset: usize,
         ) -> Result<()> {
             if args.insert(name, arg).is_some() {
-                return Err(BinaryReaderError::new(
-                    format!("duplicate module instantiation argument named `{}`", name),
+                bail!(
                     offset,
-                ));
+                    "duplicate module instantiation argument named `{name}`"
+                );
             }
 
             Ok(())
@@ -976,51 +955,46 @@ impl ComponentState {
         let module_type = types[module_type_id].as_module_type().unwrap();
         for ((module, name), expected) in module_type.imports.iter() {
             let instance = args.get(module.as_str()).ok_or_else(|| {
-                BinaryReaderError::new(
-                    format!("missing module instantiation argument named `{}`", module),
+                format_err!(
                     offset,
+                    "missing module instantiation argument named `{module}`"
                 )
             })?;
 
-            let arg = instance.exports(types).get(name.as_str()).ok_or_else(|| {
-                BinaryReaderError::new(
-                    format!(
-                        "module instantiation argument `{}` does not export an item named `{}`",
-                        module, name,
-                    ),
-                    offset,
-                )
-            })?;
+            let arg = instance
+                .internal_exports(types)
+                .get(name.as_str())
+                .ok_or_else(|| {
+                    format_err!(
+                        offset,
+                        "module instantiation argument `{module}` does not \
+                         export an item named `{name}`",
+                    )
+                })?;
 
             match (arg, expected) {
-                (EntityType::Func(_), EntityType::Func(_)) |
-                (EntityType::Table(_), EntityType::Table(_)) |
-                (EntityType::Memory(_), EntityType::Memory(_)) |
-                (EntityType::Global(_), EntityType::Global(_)) |
-                (EntityType::Tag(_), EntityType::Tag(_)) => {},
+                (EntityType::Func(_), EntityType::Func(_))
+                | (EntityType::Table(_), EntityType::Table(_))
+                | (EntityType::Memory(_), EntityType::Memory(_))
+                | (EntityType::Global(_), EntityType::Global(_))
+                | (EntityType::Tag(_), EntityType::Tag(_)) => {}
                 _ => {
-                    return Err(BinaryReaderError::new(
-                        format!(
-                            "module instantiation argument `{}` exports an item named `{}` but it is not a {}",
-                            module,
-                            name,
-                            expected.desc()
-                        ),
+                    bail!(
                         offset,
-                    ))
+                        "module instantiation argument `{module}` exports \
+                         an item named `{name}` but it is not a {}",
+                        expected.desc()
+                    )
                 }
             }
 
-            if !arg.internal_is_subtype_of(expected, types) {
-                return Err(BinaryReaderError::new(
-                    format!(
-                        "{} type mismatch for export `{}` of module instantiation argument `{}`",
-                        expected.desc(),
-                        name,
-                        module,
-                    ),
+            if !EntityType::internal_is_subtype_of(arg, types, expected, types) {
+                bail!(
                     offset,
-                ));
+                    "{} type mismatch for export `{name}` of module \
+                     instantiation argument `{module}`",
+                    expected.desc(),
+                );
             }
         }
 
@@ -1056,13 +1030,10 @@ impl ComponentState {
             offset: usize,
         ) -> Result<()> {
             if args.insert(name, arg).is_some() {
-                return Err(BinaryReaderError::new(
-                    format!(
-                        "duplicate component instantiation argument named `{}`",
-                        name
-                    ),
+                bail!(
                     offset,
-                ));
+                    "duplicate component instantiation argument named `{name}`"
+                );
             }
 
             Ok(())
@@ -1136,33 +1107,28 @@ impl ComponentState {
                         | (ComponentEntityType::Func(_), ComponentEntityType::Func(_))
                         | (ComponentEntityType::Value(_), ComponentEntityType::Value(_)) => {}
                         _ => {
-                            return Err(BinaryReaderError::new(
-                                format!(
-                                "expected component instantiation argument `{}` to be of type `{}`",
-                                name,
-                                expected.desc()
-                            ),
+                            bail!(
                                 offset,
-                            ))
+                                "expected component instantiation argument \
+                                 `{name}` to be of type `{}`",
+                                expected.desc()
+                            )
                         }
                     };
 
-                    if !arg.internal_is_subtype_of(expected, types) {
-                        return Err(BinaryReaderError::new(
-                            format!(
-                                "{} type mismatch for component instantiation argument `{}`",
-                                expected.desc(),
-                                name
-                            ),
+                    if !ComponentEntityType::internal_is_subtype_of(arg, types, expected, types) {
+                        bail!(
                             offset,
-                        ));
+                            "{} type mismatch for component instantiation argument `{name}`",
+                            expected.desc(),
+                        );
                     }
                 }
                 None => {
-                    return Err(BinaryReaderError::new(
-                        format!("missing component instantiation argument named `{}`", name),
+                    bail!(
                         offset,
-                    ))
+                        "missing component instantiation argument named `{name}`"
+                    );
                 }
             }
         }
@@ -1201,13 +1167,10 @@ impl ComponentState {
             *type_size = combine_type_sizes(*type_size, export.type_size(), offset)?;
 
             if exports.insert(name.to_string(), export).is_some() {
-                return Err(BinaryReaderError::new(
-                    format!(
-                        "duplicate instantiation export name `{}` already defined",
-                        name
-                    ),
+                bail!(
                     offset,
-                ));
+                    "duplicate instantiation export name `{name}` already defined",
+                )
             }
 
             Ok(())
@@ -1305,13 +1268,10 @@ impl ComponentState {
             *type_size = combine_type_sizes(*type_size, export.type_size(), offset)?;
 
             if exports.insert(name.to_string(), export).is_some() {
-                return Err(BinaryReaderError::new(
-                    format!(
-                        "duplicate instantiation export name `{}` already defined",
-                        name
-                    ),
+                bail!(
                     offset,
-                ));
+                    "duplicate instantiation export name `{name}` already defined",
+                )
             }
 
             Ok(())
@@ -1394,13 +1354,11 @@ impl ComponentState {
                         Ok(())
                     }
                     _ => {
-                        return Err(BinaryReaderError::new(
-                            format!(
-                                "export `{}` for core instance {} is not a {}",
-                                name, instance_index, $ty
-                            ),
+                        bail!(
                             offset,
-                        ))
+                            "export `{name}` for core instance {instance_index} is not a {}",
+                            $ty
+                        )
                     }
                 }
             }};
@@ -1464,13 +1422,11 @@ impl ComponentState {
                         Ok(())
                     }
                     _ => {
-                        return Err(BinaryReaderError::new(
-                            format!(
-                                "export `{}` for instance {} is not a {}",
-                                name, instance_index, $ty
-                            ),
+                        bail!(
                             offset,
-                        ))
+                            "export `{name}` for instance {instance_index} is not a {}",
+                            $ty
+                        )
                     }
                 }
             }};
@@ -1524,15 +1480,10 @@ impl ComponentState {
                         self.values.push((*ty, false));
                         Ok(())
                     }
-                    _ => {
-                        return Err(BinaryReaderError::new(
-                            format!(
-                                "export `{}` for instance {} is not a value",
-                                name, instance_index
-                            ),
-                            offset,
-                        ))
-                    }
+                    _ => bail!(
+                        offset,
+                        "export `{name}` for instance {instance_index} is not a value",
+                    ),
                 }
             }
             ComponentExternalKind::Type => {
@@ -1611,10 +1562,7 @@ impl ComponentState {
     fn check_alias_count(components: &[Self], count: u32, offset: usize) -> Result<&Self> {
         let count = count as usize;
         if count >= components.len() {
-            return Err(BinaryReaderError::new(
-                format!("invalid outer alias count of {}", count),
-                offset,
-            ));
+            bail!(offset, "invalid outer alias count of {count}");
         }
 
         Ok(&components[components.len() - count - 1])
@@ -1652,12 +1600,14 @@ impl ComponentState {
             crate::ComponentDefinedType::Option(ty) => Ok(ComponentDefinedType::Option(
                 self.create_component_val_type(ty, types, offset)?,
             )),
-            crate::ComponentDefinedType::Expected { ok, error } => {
-                Ok(ComponentDefinedType::Expected(
-                    self.create_component_val_type(ok, types, offset)?,
-                    self.create_component_val_type(error, types, offset)?,
-                ))
-            }
+            crate::ComponentDefinedType::Result { ok, err } => Ok(ComponentDefinedType::Result {
+                ok: ok
+                    .map(|ty| self.create_component_val_type(ty, types, offset))
+                    .transpose()?,
+                err: err
+                    .map(|ty| self.create_component_val_type(ty, types, offset))
+                    .transpose()?,
+            }),
         }
     }
 
@@ -1676,10 +1626,7 @@ impl ComponentState {
             type_size = combine_type_sizes(type_size, ty.type_size(), offset)?;
 
             if field_map.insert(name.to_string(), ty).is_some() {
-                return Err(BinaryReaderError::new(
-                    format!("duplicate field named `{}` in record type", name),
-                    offset,
-                ));
+                bail!(offset, "duplicate field named `{name}` in record type");
             }
         }
 
@@ -1705,6 +1652,13 @@ impl ComponentState {
             ));
         }
 
+        if cases.len() > u32::MAX as usize {
+            return Err(BinaryReaderError::new(
+                "variant type cannot be represented with a 32-bit discriminant value",
+                offset,
+            ));
+        }
+
         for (i, case) in cases.iter().enumerate() {
             Self::check_name(case.name, "variant case", offset)?;
             if let Some(refines) = case.refines {
@@ -1715,8 +1669,13 @@ impl ComponentState {
                     ));
                 }
             }
-            let ty = self.create_component_val_type(case.ty, types, offset)?;
-            type_size = combine_type_sizes(type_size, ty.type_size(), offset)?;
+            let ty = case
+                .ty
+                .map(|ty| self.create_component_val_type(ty, types, offset))
+                .transpose()?;
+
+            type_size =
+                combine_type_sizes(type_size, ty.map(|ty| ty.type_size()).unwrap_or(1), offset)?;
 
             if case_map
                 .insert(
@@ -1728,10 +1687,11 @@ impl ComponentState {
                 )
                 .is_some()
             {
-                return Err(BinaryReaderError::new(
-                    format!("duplicate case named `{}` in variant type", case.name),
+                bail!(
                     offset,
-                ));
+                    "duplicate case named `{}` in variant type",
+                    case.name,
+                );
             }
         }
 
@@ -1766,10 +1726,7 @@ impl ComponentState {
         for name in names {
             Self::check_name(name, "flag", offset)?;
             if !names_set.insert(name.to_string()) {
-                return Err(BinaryReaderError::new(
-                    format!("duplicate flag named `{}`", name),
-                    offset,
-                ));
+                bail!(offset, "duplicate flag named `{name}`");
             }
         }
 
@@ -1777,7 +1734,7 @@ impl ComponentState {
     }
 
     fn create_enum_type(&self, cases: &[&str], offset: usize) -> Result<ComponentDefinedType> {
-        if cases.len() > u32::max_value() as usize {
+        if cases.len() > u32::MAX as usize {
             return Err(BinaryReaderError::new(
                 "enumeration type cannot be represented with a 32-bit discriminant value",
                 offset,
@@ -1789,10 +1746,7 @@ impl ComponentState {
         for tag in cases {
             Self::check_name(tag, "enum tag", offset)?;
             if !tags.insert(tag.to_string()) {
-                return Err(BinaryReaderError::new(
-                    format!("duplicate enum tag named `{}`", tag),
-                    offset,
-                ));
+                bail!(offset, "duplicate enum tag named `{tag}`");
             }
         }
 
@@ -1834,12 +1788,10 @@ impl ComponentState {
 
     pub fn type_at(&self, idx: u32, core: bool, offset: usize) -> Result<TypeId> {
         let types = if core { &self.core_types } else { &self.types };
-        types.get(idx as usize).copied().ok_or_else(|| {
-            BinaryReaderError::new(
-                format!("unknown type {}: type index out of bounds", idx),
-                offset,
-            )
-        })
+        types
+            .get(idx as usize)
+            .copied()
+            .ok_or_else(|| format_err!(offset, "unknown type {idx}: type index out of bounds"))
     }
 
     fn function_type_at<'a>(
@@ -1850,34 +1802,32 @@ impl ComponentState {
     ) -> Result<&'a ComponentFuncType> {
         types[self.type_at(idx, false, offset)?]
             .as_component_func_type()
-            .ok_or_else(|| {
-                BinaryReaderError::new(format!("type index {} is not a function type", idx), offset)
-            })
+            .ok_or_else(|| format_err!(offset, "type index {idx} is not a function type"))
     }
 
     fn function_at(&self, idx: u32, offset: usize) -> Result<TypeId> {
         self.funcs.get(idx as usize).copied().ok_or_else(|| {
-            BinaryReaderError::new(
-                format!("unknown function {}: function index out of bounds", idx),
+            format_err!(
                 offset,
+                "unknown function {idx}: function index out of bounds"
             )
         })
     }
 
     fn component_at(&self, idx: u32, offset: usize) -> Result<TypeId> {
         self.components.get(idx as usize).copied().ok_or_else(|| {
-            BinaryReaderError::new(
-                format!("unknown component {}: component index out of bounds", idx),
+            format_err!(
                 offset,
+                "unknown component {idx}: component index out of bounds"
             )
         })
     }
 
     fn instance_at(&self, idx: u32, offset: usize) -> Result<TypeId> {
         self.instances.get(idx as usize).copied().ok_or_else(|| {
-            BinaryReaderError::new(
-                format!("unknown instance {}: instance index out of bounds", idx),
+            format_err!(
                 offset,
+                "unknown instance {idx}: instance index out of bounds"
             )
         })
     }
@@ -1892,16 +1842,14 @@ impl ComponentState {
         match types[self.instance_at(instance_index, offset)?]
             .as_component_instance_type()
             .unwrap()
-            .exports(types)
+            .internal_exports(types)
             .get(name)
         {
             Some(export) => Ok(export),
-            None => {
-                return Err(BinaryReaderError::new(
-                    format!("instance {} has no export named `{}`", instance_index, name),
-                    offset,
-                ))
-            }
+            None => bail!(
+                offset,
+                "instance {instance_index} has no export named `{name}`"
+            ),
         }
     }
 
@@ -1911,14 +1859,8 @@ impl ComponentState {
                 *used = true;
                 Ok(ty)
             }
-            Some(_) => Err(BinaryReaderError::new(
-                format!("value {} cannot be used more than once", idx),
-                offset,
-            )),
-            None => Err(BinaryReaderError::new(
-                format!("unknown value {}: value index out of bounds", idx),
-                offset,
-            )),
+            Some(_) => bail!(offset, "value {idx} cannot be used more than once"),
+            None => bail!(offset, "unknown value {idx}: value index out of bounds"),
         }
     }
 
@@ -1926,46 +1868,34 @@ impl ComponentState {
         let id = self.type_at(idx, false, offset)?;
         match &types[id] {
             Type::Defined(_) => Ok(id),
-            _ => Err(BinaryReaderError::new(
-                format!("type index {} is not a defined type", id.index),
-                offset,
-            )),
+            _ => bail!(offset, "type index {} is not a defined type", id.index),
         }
     }
 
     fn core_function_at(&self, idx: u32, offset: usize) -> Result<TypeId> {
         match self.core_funcs.get(idx as usize) {
             Some(id) => Ok(*id),
-            None => Err(BinaryReaderError::new(
-                format!(
-                    "unknown core function {}: function index out of bounds",
-                    idx
-                ),
+            None => bail!(
                 offset,
-            )),
+                "unknown core function {idx}: function index out of bounds"
+            ),
         }
     }
 
     fn module_at(&self, idx: u32, offset: usize) -> Result<TypeId> {
         match self.core_modules.get(idx as usize) {
             Some(id) => Ok(*id),
-            None => Err(BinaryReaderError::new(
-                format!("unknown module {}: module index out of bounds", idx),
-                offset,
-            )),
+            None => bail!(offset, "unknown module {idx}: module index out of bounds"),
         }
     }
 
     fn core_instance_at(&self, idx: u32, offset: usize) -> Result<TypeId> {
         match self.core_instances.get(idx as usize) {
             Some(id) => Ok(*id),
-            None => Err(BinaryReaderError::new(
-                format!(
-                    "unknown core instance {}: instance index out of bounds",
-                    idx
-                ),
+            None => bail!(
                 offset,
-            )),
+                "unknown core instance {idx}: instance index out of bounds"
+            ),
         }
     }
 
@@ -1979,49 +1909,35 @@ impl ComponentState {
         match types[self.core_instance_at(instance_index, offset)?]
             .as_instance_type()
             .unwrap()
-            .exports(types)
+            .internal_exports(types)
             .get(name)
         {
             Some(export) => Ok(export),
-            None => {
-                return Err(BinaryReaderError::new(
-                    format!(
-                        "core instance {} has no export named `{}`",
-                        instance_index, name
-                    ),
-                    offset,
-                ))
-            }
+            None => bail!(
+                offset,
+                "core instance {instance_index} has no export named `{name}`"
+            ),
         }
     }
 
     fn global_at(&self, idx: u32, offset: usize) -> Result<&GlobalType> {
         match self.core_globals.get(idx as usize) {
             Some(t) => Ok(t),
-            None => Err(BinaryReaderError::new(
-                format!("unknown global {}: global index out of bounds", idx,),
-                offset,
-            )),
+            None => bail!(offset, "unknown global {idx}: global index out of bounds"),
         }
     }
 
     fn table_at(&self, idx: u32, offset: usize) -> Result<&TableType> {
         match self.core_tables.get(idx as usize) {
             Some(t) => Ok(t),
-            None => Err(BinaryReaderError::new(
-                format!("unknown table {}: table index out of bounds", idx),
-                offset,
-            )),
+            None => bail!(offset, "unknown table {idx}: table index out of bounds"),
         }
     }
 
     fn memory_at(&self, idx: u32, offset: usize) -> Result<&MemoryType> {
         match self.core_memories.get(idx as usize) {
             Some(t) => Ok(t),
-            None => Err(BinaryReaderError::new(
-                format!("unknown memory {}: memory index out of bounds", idx,),
-                offset,
-            )),
+            None => bail!(offset, "unknown memory {idx}: memory index out of bounds"),
         }
     }
 }
