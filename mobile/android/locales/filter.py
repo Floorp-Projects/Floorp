@@ -20,7 +20,6 @@ def test(mod, path, entity=None):
     if mod == "toolkit":
         # keep this file list in sync with jar.mn
         if path in (
-            "chrome/global/aboutReader.properties",
             "chrome/global/commonDialogs.properties",
             "chrome/global/intl.properties",
             "chrome/global/intl.css",
