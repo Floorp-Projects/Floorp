@@ -7,6 +7,7 @@
 #include "DrawTargetWebglInternal.h"
 #include "SourceSurfaceWebgl.h"
 
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/gfx/Blur.h"
 #include "mozilla/gfx/DrawTargetSkia.h"
@@ -335,6 +336,8 @@ static Atomic<bool> sContextInitError(false);
 MOZ_THREAD_LOCAL(DrawTargetWebgl::SharedContext*)
 DrawTargetWebgl::sSharedContext;
 
+RefPtr<DrawTargetWebgl::SharedContext> DrawTargetWebgl::sMainSharedContext;
+
 // Try to initialize a new WebGL context. Verifies that the requested size does
 // not exceed the available texture limits and that shader creation succeeded.
 bool DrawTargetWebgl::Init(const IntSize& size, const SurfaceFormat format) {
@@ -357,6 +360,15 @@ bool DrawTargetWebgl::Init(const IntSize& size, const SurfaceFormat format) {
     }
 
     sSharedContext.set(mSharedContext.get());
+
+    if (NS_IsMainThread()) {
+      // Keep the shared context alive for the main thread by adding a ref.
+      // Ensure the ref will get cleared on shutdown so it doesn't leak.
+      if (!sMainSharedContext) {
+        ClearOnShutdown(&sMainSharedContext);
+      }
+      sMainSharedContext = mSharedContext;
+    }
   } else {
     mSharedContext = sharedContext;
   }
