@@ -7,7 +7,6 @@ import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -124,7 +123,6 @@ class WebControlsTest {
 
     @SmokeTest
     @Test
-    @Ignore("Failing, see https://github.com/mozilla-mobile/focus-android/issues/7363")
     fun verifyDismissTextSelectionToolbarTest() {
         val tab1Url = TestAssetHelper.getGenericTabAsset(webServer, 1).url
         val htmlControlsPage = TestAssetHelper.getHTMLControlsPageAsset(webServer).url
