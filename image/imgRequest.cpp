@@ -350,7 +350,7 @@ void imgRequest::ContinueCancel(nsresult aStatus) {
   RemoveFromCache();
 
   if (mRequest && !(progressTracker->GetProgress() & FLAG_LAST_PART_COMPLETE)) {
-    mRequest->Cancel(aStatus);
+    mRequest->CancelWithReason(aStatus, "imgRequest::ContinueCancel"_ns);
   }
 }
 

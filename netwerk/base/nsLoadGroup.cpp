@@ -232,7 +232,7 @@ nsLoadGroup::Cancel(nsresult status) {
     }
 
     // Cancel the request...
-    rv = request->Cancel(status);
+    rv = request->CancelWithReason(status, mCanceledReason);
 
     // Remember the first failure and return it...
     if (NS_FAILED(rv) && NS_SUCCEEDED(firstError)) firstError = rv;

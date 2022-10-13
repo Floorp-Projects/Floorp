@@ -425,16 +425,16 @@ NullHttpChannel::GetStatus(nsresult* aStatus) {
 }
 
 NS_IMETHODIMP NullHttpChannel::SetCanceledReason(const nsACString& aReason) {
-  return SetCanceledReasonImpl(aReason);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP NullHttpChannel::GetCanceledReason(nsACString& aReason) {
-  return GetCanceledReasonImpl(aReason);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP NullHttpChannel::CancelWithReason(nsresult aStatus,
                                                 const nsACString& aReason) {
-  return CancelWithReasonImpl(aStatus, aReason);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
